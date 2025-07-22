@@ -1,0 +1,24 @@
+{
+  "compileOnSave": false,
+  "compilerOptions": {
+    "rootDir": ".",
+    "sourceMap": true,
+    "moduleResolution": "node",
+    "emitDecoratorMetadata": false,
+    "experimentalDecorators": true,
+    "useDefineForClassFields": false,
+    "importHelpers": true,
+    "target": "es2017",
+    "module": "esnext",
+    "typeRoots": ["node_modules/@types"],
+    "lib": ["es2017", "dom", "dom.iterable"],
+    "skipLibCheck": true,
+    "skipDefaultLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@lit-ui-router/lit-ui-router": ["libs/lit-ui-router/src/index.ts"]
+    },
+    "allowJs": true
+  },
+  "exclude": ["node_modules", "tmp"]
+}

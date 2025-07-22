@@ -1,0 +1,51 @@
+{
+  "$schema": "../../node_modules/nx/schemas/project-schema.json",
+  "sourceRoot": "libs/lit-ui-router/src",
+  "projectType": "library",
+  "generators": {},
+  "targets": {
+    "lint": {
+      "executor": "@nrwl/linter:eslint",
+      "options": {
+        "lintFilePatterns": ["libs/lit-ui-router/**/*.ts"]
+      },
+      "outputs": ["{options.outputFile}"]
+    },
+    "test": {
+      "executor": "@nrwl/jest:jest",
+      "options": {
+        "jestConfig": "libs/lit-ui-router/jest.config.ts",
+        "passWithNoTests": true
+      }
+    },
+    "build": {
+      "executor": "@nrwl/js:tsc",
+      "outputs": ["{options.outputPath}"],
+      "dependsOn": [
+        {
+          "target": "customElements",
+          "projects": "self"
+        }
+      ],
+      "options": {
+        "outputPath": "dist/libs/lit-ui-router",
+        "tsConfig": "libs/lit-ui-router/tsconfig.lib.json",
+        "packageJson": "libs/lit-ui-router/package.json",
+        "main": "libs/lit-ui-router/src/index.ts",
+        "assets": [
+          "libs/lit-ui-router/*.md",
+          "libs/lit-ui-router/custom-elements.json"
+        ]
+      }
+    },
+    "customElements": {
+      "executor": "@nrwl/workspace:run-commands",
+      "outputs": ["libs/lit-ui-router/custom-elements.json"],
+      "options": {
+        "command": "../../node_modules/.bin/cem analyze",
+        "cwd": "libs/lit-ui-router"
+      }
+    }
+  },
+  "tags": []
+}

@@ -1,0 +1,42 @@
+{
+  "npmScope": "lit-ui-router",
+  "affected": {
+    "defaultBase": "main"
+  },
+  "implicitDependencies": {
+    "workspace.json": "*",
+    "package.json": {
+      "dependencies": "*",
+      "devDependencies": "*"
+    },
+    "tsconfig.base.json": "*",
+    "tslint.json": "*",
+    ".eslintrc.json": "*",
+    "nx.json": "*"
+  },
+  "tasksRunnerOptions": {
+    "default": {
+      "runner": "nx/tasks-runners/default",
+      "options": {
+        "cacheableOperations": [
+          "build",
+          "customElements",
+          "lint",
+          "test",
+          "e2e"
+        ],
+        "parallel": 1
+      }
+    }
+  },
+  "cli": {
+    "packageManager": "yarn"
+  },
+  "defaultProject": "sample-app-lit",
+  "$schema": "./node_modules/nx/schemas/nx-schema.json",
+  "targetDefaults": {
+    "build": {
+      "dependsOn": ["^build"]
+    }
+  }
+}
