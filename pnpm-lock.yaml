@@ -76,6 +76,49 @@ importers:
         specifier: ^7.0.5
         version: 7.0.5
 
+  apps/sample-app-lit-e2e:
+    dependencies:
+      '@api-viewer/docs':
+        specifier: ^1.0.0-pre.6
+        version: 1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)
+      '@uirouter/core':
+        specifier: ^6.0.8
+        version: 6.1.1
+      '@uirouter/dsr':
+        specifier: ^1.2.0
+        version: 1.2.0(patch_hash=85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761)(@uirouter/core@6.1.1)
+      '@uirouter/lit':
+        specifier: workspace:*
+        version: link:../../packages/lit-ui-router
+      '@uirouter/sticky-states':
+        specifier: ^1.5.1
+        version: 1.5.1(@uirouter/core@6.1.1)
+      '@uirouter/visualizer':
+        specifier: ^7.2.1
+        version: 7.2.1(@uirouter/core@6.1.1)
+      lit:
+        specifier: ^3.3.1
+        version: 3.3.1
+      lit-dialog:
+        specifier: ^2.0.1
+        version: 2.0.1
+      lodash:
+        specifier: ^4.17.21
+        version: 4.17.21
+    devDependencies:
+      '@types/lodash':
+        specifier: ^4.17.10
+        version: 4.17.20
+      prettier:
+        specifier: 3.6.2
+        version: 3.6.2
+      typescript:
+        specifier: 5.8.3
+        version: 5.8.3
+      vite:
+        specifier: ^7.0.5
+        version: 7.0.5
+
   packages/lit-ui-router:
     dependencies:
       '@uirouter/core':
