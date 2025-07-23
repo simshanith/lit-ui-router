@@ -1,4 +1,4 @@
-import { Dialog } from './Dialog';
+import { Dialog } from './Dialog.js';
 import { html } from 'lit';
 
 export interface DialogProps {
@@ -10,9 +10,9 @@ export interface DialogProps {
 
 export class DialogService implements DialogProps {
   message: string;
-  details = "Are you sure?";
-  confirmMsg = "Yes";
-  denyMsg = "No";
+  details = 'Are you sure?';
+  confirmMsg = 'Yes';
+  denyMsg = 'No';
 
   component = new Dialog(null);
 
@@ -33,15 +33,20 @@ export class DialogService implements DialogProps {
     `;
   }
 
-  confirm = (message, details = "Are you sure?", confirmMsg = "Yes", denyMsg = "No") => {
+  confirm = (
+    message,
+    details = 'Are you sure?',
+    confirmMsg = 'Yes',
+    denyMsg = 'No',
+  ) => {
     Object.assign(this, {
       message,
       details,
       confirmMsg,
-      denyMsg
+      denyMsg,
     });
     return this.component.open();
-  }
+  };
 }
 
 const instance = new DialogService();

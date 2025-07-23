@@ -1,0 +1,342 @@
+{
+  "schemaVersion": "1.0.0",
+  "readme": "",
+  "modules": [
+    {
+      "kind": "javascript-module",
+      "path": "src/lib/ui-router.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "UIRouterLitElement",
+          "slots": [
+            {
+              "description": "<code>&lt;ui-router&gt;</code> renders slotted content.",
+              "name": ""
+            }
+          ],
+          "members": [
+            {
+              "kind": "field",
+              "name": "uiRouter",
+              "type": {
+                "text": "UIRouterLit"
+              },
+              "description": "Root <code>uiRouter</code> singleton.\nIf not provided, the element creates and assigns a new instance."
+            },
+            {
+              "kind": "field",
+              "name": "onUiRouterContextEvent",
+              "privacy": "private"
+            }
+          ],
+          "events": [
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "<code>&lt;ui-router&gt;</code> listens to the <code>ui-router-context</code> event and provides the <code>uiRouter</code> instance.",
+              "name": "ui-router-context"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "summary": "This is the root ui-router component.",
+          "tagName": "ui-router",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "UIRouterLitElement",
+          "declaration": {
+            "name": "UIRouterLitElement",
+            "module": "src/lib/ui-router.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "ui-router",
+          "declaration": {
+            "name": "UIRouterLitElement",
+            "module": "src/lib/ui-router.ts"
+          }
+        }
+      ]
+    },
+    {
+      "kind": "javascript-module",
+      "path": "src/lib/ui-view.ts",
+      "declarations": [
+        {
+          "kind": "class",
+          "description": "",
+          "name": "UiView",
+          "members": [
+            {
+              "kind": "field",
+              "name": "name",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "attribute": "name"
+            },
+            {
+              "kind": "field",
+              "name": "uiRouter",
+              "type": {
+                "text": "UIRouterLit"
+              },
+              "description": "<code>&lt;ui-view&gt;</code> can be used without <code>&lt;ui-router&gt;</code>\nby providing the <code>uiRouter</code> property directly."
+            },
+            {
+              "kind": "field",
+              "name": "viewAddress",
+              "type": {
+                "text": "UiViewAddress"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "component",
+              "type": {
+                "text": "RoutedLitTemplate"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "inner",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "viewId",
+              "privacy": "private",
+              "default": "viewIdCounter++"
+            },
+            {
+              "kind": "field",
+              "name": "_uiViewData",
+              "type": {
+                "text": "ActiveUIView"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "resolveContext",
+              "type": {
+                "text": "ResolveContext"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "_deregisterUIView",
+              "type": {
+                "text": "deregisterFn"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "_deregisterUiCanExitHook",
+              "type": {
+                "text": "deregisterFn"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "_deregisterUiOnParamsChangedHook",
+              "type": {
+                "text": "deregisterFn"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "_viewConfigUpdated",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "config",
+                  "type": {
+                    "text": "ViewConfig"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "method",
+              "name": "_applyUpdatedConfig",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "config",
+                  "type": {
+                    "text": "LitViewConfig"
+                  }
+                }
+              ]
+            },
+            {
+              "kind": "field",
+              "name": "parentView",
+              "type": {
+                "text": "UiView"
+              },
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "onUiViewContextEvent",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "uiViewContextEventName",
+              "type": {
+                "text": "string"
+              },
+              "privacy": "private",
+              "static": true,
+              "default": "'ui-view-context'"
+            },
+            {
+              "kind": "method",
+              "name": "uiViewContextEvent",
+              "privacy": "private",
+              "static": true,
+              "return": {
+                "type": {
+                  "text": "UiViewContextEvent"
+                }
+              }
+            },
+            {
+              "kind": "method",
+              "name": "seekParentView",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "onUiRouterContextEvent",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "seekRouter",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "captureContent",
+              "privacy": "private"
+            },
+            {
+              "kind": "field",
+              "name": "disconnectedHandlers",
+              "type": {
+                "text": "deregisterFn[]"
+              },
+              "privacy": "private",
+              "default": "[]"
+            },
+            {
+              "kind": "method",
+              "name": "setupUiView",
+              "privacy": "private"
+            },
+            {
+              "kind": "method",
+              "name": "_invokeUiCanExitHook",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "trans",
+                  "type": {
+                    "text": "Transition"
+                  }
+                }
+              ],
+              "description": "For each transition, checks the component loaded in the ui-view for:\n\n- has a uiCanExit() component hook\n- is being exited\n\nIf both are true, adds the uiCanExit component function as a hook to that singular Transition."
+            },
+            {
+              "kind": "method",
+              "name": "_invokeUiOnParamsChangedHook",
+              "privacy": "private",
+              "parameters": [
+                {
+                  "name": "$transition$",
+                  "type": {
+                    "text": "Transition"
+                  }
+                }
+              ],
+              "description": "For each transition, checks if any param values changed and notify component"
+            }
+          ],
+          "events": [
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "This event is fired to obtain the <code>uiRouter</code> instance, when not directly provided. Once obtained, the <code>&lt;ui-view&gt;</code> listens and provides the <code>uiRouter</code> to descendants.",
+              "name": "ui-router-context"
+            },
+            {
+              "type": {
+                "text": "CustomEvent"
+              },
+              "description": "This event is fired to obtain the parent <code>&lt;ui-view&gt;</code>.",
+              "name": "ui-view-context"
+            }
+          ],
+          "attributes": [
+            {
+              "name": "name",
+              "type": {
+                "text": "string"
+              },
+              "default": "''",
+              "fieldName": "name"
+            }
+          ],
+          "superclass": {
+            "name": "LitElement",
+            "package": "lit"
+          },
+          "summary": "This is the <code>&lt;ui-view&gt;</code> component.\n\nThe <code>&lt;ui-view&gt;</code> component is a viewport for routed components.\nRouted components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.",
+          "tagName": "ui-view",
+          "customElement": true
+        }
+      ],
+      "exports": [
+        {
+          "kind": "js",
+          "name": "UiView",
+          "declaration": {
+            "name": "UiView",
+            "module": "src/lib/ui-view.ts"
+          }
+        },
+        {
+          "kind": "custom-element-definition",
+          "name": "ui-view",
+          "declaration": {
+            "name": "UiView",
+            "module": "src/lib/ui-view.ts"
+          }
+        }
+      ]
+    }
+  ]
+}

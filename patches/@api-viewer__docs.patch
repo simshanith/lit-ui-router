@@ -1,0 +1,15 @@
+diff --git a/package.json b/package.json
+index f39eb1004707666fa0c01583e8d4594934936678..d2484be78e02d885a7344f102674b91bf6aaeb8e 100644
+--- a/package.json
++++ b/package.json
+@@ -15,8 +15,8 @@
+   "bugs": {
+     "url": "https://github.com/open-wc/api-viewer-element/issues"
+   },
+-  "main": "lib/api-docs.js",
+-  "module": "lib/api-docs.js",
++  "main": "./lib/api-docs.js",
++  "types": "./lib/api-docs.d.ts",
+   "type": "module",
+   "scripts": {
+     "analyze": "cem analyze --litelement --globs 'src/*.ts'",

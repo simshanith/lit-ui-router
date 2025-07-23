@@ -1,0 +1,32 @@
+{
+  "name": "@uirouter/lit",
+  "version": "0.0.1",
+  "type": "module",
+  "module": "./src/index.js",
+  "sideEffects": [
+    "**/ui-router.js",
+    "**/ui-view.js"
+  ],
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "files": [
+    "dist/**"
+  ],
+  "scripts": {
+    "build": "tsc",
+    "check-types": "tsc --noEmit",
+    "format": "prettier --write \"**/*.{ts}\"",
+    "lint": "prettier --check \"**/*.{ts}\"",
+    "build:custom-elements": "cem analyze"
+  },
+  "customElements": "custom-elements.json",
+  "dependencies": {
+    "@uirouter/core": "^6.0.8",
+    "lit": "^2.0.0 || ^3.0.0"
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "typescript": "5.8.3",
+    "@custom-elements-manifest/analyzer": "0.10.4"
+  }
+}

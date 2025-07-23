@@ -1,0 +1,16 @@
+
+
+> sample-app-lit@0.0.1 build /Users/schaap/repos/lit-ui-router/apps/sample-app-lit
+> vite build
+
+[36mvite v7.0.5 [32mbuilding for production...[36m[39m
+[2K[1Gtransforming (1) [2msrc/main.ts[22m[2K[1G[2K[1G[2K[1Gtransforming (43) [2m../../node_modules/.pnpm/marked@4.3.0/node_modules/marked/lib/marked.esm.js[22m[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1Gtransforming (162) [2m../../node_modules/.pnpm/lit@3.3.1/node_modules/lit/directive.js[22m[2K[1Gtransforming (187) [2m../../node_modules/.pnpm/lit-html@3.3.1/node_modules/lit-html/directives/repeat.js[22m[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[2K[1G[33m../../node_modules/.pnpm/lit-dialog@2.0.1/node_modules/lit-dialog/LitDialog.js (1:23): "TemplateResult" is not exported by "../../node_modules/.pnpm/lit@2.2.7/node_modules/lit/index.js", imported by "../../node_modules/.pnpm/lit-dialog@2.0.1/node_modules/lit-dialog/LitDialog.js".[39m
+[2K[1G[32m✓[39m 198 modules transformed.
+[2K[1Grendering chunks (1)...[2K[1Grendering chunks (2)...[2K[1Grendering chunks (3)...[2K[1Grendering chunks (4)...[2K[1Grendering chunks (5)...[2K[1Grendering chunks (6)...[2K[1G[2K[1Gcomputing gzip size (0)...[2K[1Gcomputing gzip size (1)...[2K[1Gcomputing gzip size (2)...[2K[1Gcomputing gzip size (3)...[2K[1Gcomputing gzip size (4)...[2K[1Gcomputing gzip size (5)...[2K[1Gcomputing gzip size (6)...[2K[1Gcomputing gzip size (7)...[2K[1G[2mdist/[22m[32mindex.html                                      [39m[1m[2m  0.84 kB[22m[1m[22m[2m │ gzip:  0.50 kB[22m
+[2mdist/[22m[2massets/[22m[36mstates-DFsGhWsM.js                       [39m[1m[2m  1.37 kB[22m[1m[22m[2m │ gzip:  0.70 kB[22m
+[2mdist/[22m[2massets/[22m[36mstates-DHswN3We.js                       [39m[1m[2m  7.10 kB[22m[1m[22m[2m │ gzip:  2.18 kB[22m
+[2mdist/[22m[2massets/[22m[36mstates-CEi9AEJv.js                       [39m[1m[2m 11.71 kB[22m[1m[22m[2m │ gzip:  3.52 kB[22m
+[2mdist/[22m[2massets/[22m[36mdsr-default-redirect-within-DsJqZY2d.js  [39m[1m[2m 80.24 kB[22m[1m[22m[2m │ gzip: 29.95 kB[22m
+[2mdist/[22m[2massets/[22m[36mui-router-visualizer.esm-DuExvxQ9.js     [39m[1m[2m 83.73 kB[22m[1m[22m[2m │ gzip: 25.65 kB[22m
+[2mdist/[22m[2massets/[22m[36mindex--onpJc6q.js                        [39m[1m[2m246.80 kB[22m[1m[22m[2m │ gzip: 75.24 kB[22m
+[32m✓ built in 782ms[39m

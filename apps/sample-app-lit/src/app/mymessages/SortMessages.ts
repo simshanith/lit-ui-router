@@ -9,7 +9,6 @@ export type ChangeEvent = ReturnType<typeof changeEvent>;
 
 @customElement('sample-sort-messages')
 export class SortMessages extends LitElement {
-
   @property({ attribute: false })
   label: string;
 
@@ -24,20 +23,21 @@ export class SortMessages extends LitElement {
   }
 
   handleClick = () => {
-    const {col, sort } = this;
-    const newSort = sort === `+${col}`
-      ? `-${col}`
-      : `+${col}`;
+    const { col, sort } = this;
+    const newSort = sort === `+${col}` ? `-${col}` : `+${col}`;
     this.dispatchEvent(changeEvent(newSort));
-  }
+  };
 
   render() {
-    const {col, label, sort} = this;
+    const { col, label, sort } = this;
     let sortClass = '';
 
     if (sort == `+${col}`) sortClass = 'fa-sort-asc';
     else if (sort == `-${col}`) sortClass = 'fa-sort-desc';
-    const chevron = html`<i style="padding-left:0.25em" class="fa ${sortClass}"></i>`;
+    const chevron = html`<i
+      style="padding-left:0.25em"
+      class="fa ${sortClass}"
+    ></i>`;
     return html`<span @click=${this.handleClick}>${label} ${chevron}</span>`;
   }
 }

@@ -1,9 +1,0 @@
-{
-  "version": 2,
-  "projects": {
-    "lit-ui-router": "libs/lit-ui-router",
-    "sample-app-lit": "apps/sample-app-lit",
-    "sample-app-lit-e2e": "apps/sample-app-lit-e2e"
-  },
-  "$schema": "./node_modules/nx/schemas/workspace-schema.json"
-}

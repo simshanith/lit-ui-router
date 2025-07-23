@@ -1,6 +1,5 @@
 ## UI-Router 1.0 Lit Sample Application
 
-
 https://github.simloovoo.com/lit-ui-router/#/mymessages/inbox/5648b50cc586cac4aed6836f
 
 This sample app is intended to demonstrate a non-trivial ui-router lit application.
@@ -13,24 +12,23 @@ This sample app is intended to demonstrate a non-trivial ui-router lit applicati
 - REST data retrieval (simulated)
 - [Sticky States](https://github.com/ui-router/sticky-states) with [Deep State Redirect](https://github.com/ui-router/dsr)
 
-
 ---
 
 ### Visualizer
 
 We're using the [State and Transition Visualizer](http://github.com/ui-router/visualizer) to visually represent
-the current state tree, as well as the transitions between states.  Explore how transitions work by hovering
+the current state tree, as well as the transitions between states. Explore how transitions work by hovering
 over them, and clicking to expand details (params and resolves).
 
 Note how states are _entered_ when they were previously not active, _exited_ and re-_entered_ when parameters change,
- and how parent states whose parameters did not change are _retained_.  Each of these (_exited, entered, retained_)
- correspond to a Transition Hook.
+and how parent states whose parameters did not change are _retained_. Each of these (_exited, entered, retained_)
+correspond to a Transition Hook.
 
 ### Structure
 
-The application is written in TypeScript, and utilizes ES6 modules. We are loading the modules and creating bundles using webpack 5 with the @nrwl/web:webpack executor.
+The application is written in TypeScript, and utilizes ES6 modules.
 
-There are many ways to structure a ui-router app.  We aren't super opinionated on application structure.  Use what works for you.  We organized ours in the following way:
+There are many ways to structure a ui-router app. We aren't super opinionated on application structure. Use what works for you. We organized ours in the following way:
 
 - Sub-module (feature) organization
   - Each feature gets its own directory.
@@ -51,7 +49,7 @@ There are many ways to structure a ui-router app.  We aren't super opinionated o
   - Check for metadata in transition hooks
   - Example: `redirectTo`
     - If a transition directly to a state with a `redirectTo` property is started,
-    the transition will be redirected to the state which the property names.
+      the transition will be redirected to the state which the property names.
   - Example: `global/requiresAuth.hook.ts`
     - If a transition to a state with a truthy `data.authRequired: true` property is started and the user is not currently authenticated
 - Defining a default substate for a top-level state

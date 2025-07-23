@@ -1,4 +1,4 @@
-const { NX_GOOGLE_ANALYTICS_TRACKING_ID } = process.env;
+const NX_GOOGLE_ANALYTICS_TRACKING_ID = 'UA-1234567890';
 
 function initGoogleAnalytics() {
   /** Google analytics */

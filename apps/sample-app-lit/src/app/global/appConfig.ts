@@ -1,10 +1,9 @@
 /**
-* This service stores and retrieves user preferences in session storage
-*/
+ * This service stores and retrieves user preferences in session storage
+ */
 export class AppConfig {
-
   sort: string;
-  emailAddress: string;
+  emailAddress: string | undefined;
   restDelay: number;
 
   constructor() {
@@ -14,15 +13,17 @@ export class AppConfig {
     this.load();
   }
 
-  load () {
+  load() {
     try {
       Object.assign(this, {
-        ...JSON.parse(sessionStorage.getItem('appConfig'))
+        ...JSON.parse(sessionStorage.getItem('appConfig') || '{}'),
       });
-    } catch (error) { console.error(error); }
+    } catch (error) {
+      console.error(error);
+    }
   }
 
-  save () {
+  save() {
     sessionStorage.setItem('appConfig', JSON.stringify({ ...this }));
   }
 }

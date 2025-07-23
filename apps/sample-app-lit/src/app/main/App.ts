@@ -1,14 +1,10 @@
 import { html, LitElement } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
-import { isEqual } from 'lodash';
-import {
-  UIViewInjectedProps,
-} from '@lit-ui-router/lit-ui-router';
+import { UIViewInjectedProps } from '@uirouter/lit';
 
-import AuthService from '../global/authService';
-import './NavHeader';
-
+import AuthService from '../global/authService.js';
+import './NavHeader.js';
 
 @customElement('sample-app')
 export class App extends LitElement {
@@ -34,7 +30,8 @@ export class App extends LitElement {
 
   requestUpdate(changedProperties) {
     super.requestUpdate(changedProperties);
-    const navHeader: LitElement = this.renderRoot?.querySelector('sample-nav-header')
+    const navHeader: LitElement =
+      this.renderRoot?.querySelector('sample-nav-header');
     navHeader?.requestUpdate();
   }
 
@@ -49,7 +46,7 @@ export class App extends LitElement {
   handleLogout = () => {
     AuthService.logout();
     this.stateService.go('welcome', {}, { reload: true });
-  }
+  };
 
   displayActive(glob) {
     return styleMap({
@@ -64,10 +61,16 @@ export class App extends LitElement {
           <sample-nav-header @logout=${this.handleLogout}></sample-nav-header>
         </div>
         <ui-view></ui-view>
-        <ui-view name="mymessages" style=${this.displayActive('mymessages.**')}></ui-view>
-        <ui-view name="contacts" style=${this.displayActive('contacts.**')}></ui-view>
+        <ui-view
+          name="mymessages"
+          style=${this.displayActive('mymessages.**')}
+        ></ui-view>
+        <ui-view
+          name="contacts"
+          style=${this.displayActive('contacts.**')}
+        ></ui-view>
       </div>
-    `
+    `;
   }
 }
 

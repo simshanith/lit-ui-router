@@ -1,7 +1,7 @@
 import { customElement } from 'lit/decorators.js';
 import { LitDialog } from 'lit-dialog';
 
-import dialogService from './dialogService';
+import dialogService from './dialogService.js';
 
 @customElement('sample-dialog')
 export class Dialog extends LitDialog {

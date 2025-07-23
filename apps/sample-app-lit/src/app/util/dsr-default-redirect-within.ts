@@ -1,4 +1,7 @@
-export function dsrRedirectToDefaultFromWithin(transition, redirect) {
+export function dsrRedirectToDefaultFromWithin(
+  transition: any,
+  redirect: string,
+) {
   const $state = transition.router.stateService;
   if ($state.includes(transition.to(), null, { relative: transition.from() })) {
     return $state.target(transition.to().dsr.default);

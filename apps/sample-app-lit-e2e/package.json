@@ -1,0 +1,27 @@
+{
+    "name": "sample-app-lit-e2e",
+    "version": "0.0.1",
+    "private": true,
+    "type": "module",
+    "scripts": {
+        "dev": "vite",
+        "build": "vite build"
+    },
+    "dependencies": {
+        "@uirouter/lit": "workspace:*",
+        "lit": "^3.3.1",
+        "lit-dialog": "^2.0.1",
+        "lodash": "^4.17.21",
+        "@api-viewer/docs": "^1.0.0-pre.6",
+        "@uirouter/core": "^6.0.8",
+        "@uirouter/dsr": "^1.2.0",
+        "@uirouter/sticky-states": "^1.5.1",
+        "@uirouter/visualizer": "^7.2.1"
+    },
+    "devDependencies": {
+        "prettier": "3.6.2",
+        "typescript": "5.8.3",
+        "vite": "^7.0.5",
+        "@types/lodash": "^4.17.10"
+    }
+}

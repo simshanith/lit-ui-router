@@ -1,0 +1,7 @@
+packages:
+  - apps/*
+  - packages/*
+
+patchedDependencies:
+  '@api-viewer/docs': patches/@api-viewer__docs.patch
+  '@uirouter/dsr': patches/@uirouter__dsr.patch
