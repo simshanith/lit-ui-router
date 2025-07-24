@@ -7,10 +7,8 @@ export default defineConfig({
   video: true,
   chromeWebSecurity: false,
   e2e: {
-    // TODO: Integrate with the sample app dev server and make this dynamic for CI
     baseUrl: 'http://localhost:5173/app.html/',
-    setupNodeEvents(on, config) {},
     specPattern: './src/integration/**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: false,
+    supportFile: './src/support/e2e.ts',
   },
 });

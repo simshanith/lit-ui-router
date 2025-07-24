@@ -5,6 +5,9 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": []
+    },
+    "test": {
+      "with": ["docs#e2e"]
     }
   }
 }
