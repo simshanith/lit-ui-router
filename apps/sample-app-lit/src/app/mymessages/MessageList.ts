@@ -1,10 +1,10 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { UIViewInjectedProps } from '@lit-ui-router/lit-ui-router';
+import { UIViewInjectedProps } from '@uirouter/lit';
 
-import {MessagesStorage} from '../global/dataSources';
-import { Message } from './interface';
-import './MessageTable';
+import { MessagesStorage } from '../global/dataSources.js';
+import { Message } from './interface.js';
+import './MessageTable.js';
 
 @customElement('sample-message-list')
 export class MessageList extends LitElement {
@@ -47,7 +47,7 @@ export class MessageList extends LitElement {
           .messages=${this.messages}
         ></sample-message-table>
       </div>
-     </div>`;
+    </div>`;
   }
 }
 

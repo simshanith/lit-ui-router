@@ -1,0 +1,19 @@
+diff --git a/package.json b/package.json
+index c969ff262b1e699632ebeb0a141a310e5becc706..b2a412673a337e06e7770a2789ea045f24b09658 100644
+--- a/package.json
++++ b/package.json
+@@ -40,8 +40,9 @@
+     "node": ">=4.0.0"
+   },
+   "jsnext:main": "lib-esm/index.js",
+-  "main": "lib/index.js",
+-  "typings": "lib/index.d.ts",
++  "main": "./lib/index.js",
++  "types": "./lib/index.d.ts",
++  "type": "module",
+   "license": "MIT",
+   "peerDependencies": {
+     "@uirouter/core": ">=5.0.0"
+diff --git a/yarn.lock b/yarn.lock
+deleted file mode 100644
+index 6e9060baa5b6a7f22ad13d160dd56be41c0c5cb8..0000000000000000000000000000000000000000

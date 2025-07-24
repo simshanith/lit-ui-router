@@ -1,11 +1,9 @@
-import { LitStateDeclaration } from '@lit-ui-router/lit-ui-router';
+import { LitStateDeclaration } from '@uirouter/lit';
 
-import App from '../main/App';
-import Welcome from '../main/Welcome';
-import Login from '../main/Login';
-import Home from '../main/Home';
-
-
+import App from '../main/App.js';
+import Welcome from '../main/Welcome.js';
+import Login from '../main/Login.js';
+import Home from '../main/Home.js';
 
 /**
  * This is the parent state for the entire application.
@@ -29,7 +27,7 @@ const welcomeState = {
   parent: 'app',
   name: 'welcome',
   url: '/welcome',
-  component: Welcome
+  component: Welcome,
 };
 
 /**
@@ -41,9 +39,8 @@ const homeState = {
   parent: 'app',
   name: 'home',
   url: '/home',
-  component: Home
+  component: Home,
 };
-
 
 /**
  * This is the login state.  It is activated when the user navigates to /login, or if a unauthenticated
@@ -60,10 +57,10 @@ const loginState = {
   resolve: [
     {
       token: 'returnTo',
-      deps: [ '$transition$' ],
+      deps: ['$transition$'],
       resolveFn: returnTo,
     },
-  ]
+  ],
 };
 
 /**
@@ -73,7 +70,7 @@ const loginState = {
  * they were redirected from.  Otherwise, if they transitioned directly, return the fromState/params.  Otherwise
  * return the main "app" state.
  */
-function returnTo ($transition$) {
+function returnTo($transition$) {
   if ($transition$.redirectedFrom()) {
     // The user was redirected to the login state (e.g., via the requiresAuth hook when trying to activate contacts)
     // Return to the original attempted target state (e.g., contacts)
@@ -85,7 +82,7 @@ function returnTo ($transition$) {
   // The user was not redirected to the login state; they directly activated the login state somehow.
   // Return them to the state they came from.
   if ($transition$.from().name !== '') {
-    return $state.target($transition$.from(), $transition$.params("from"));
+    return $state.target($transition$.from(), $transition$.params('from'));
   }
 
   // If the fromState's name is empty, then this was the initial transition. Just return them to the home state
@@ -116,5 +113,12 @@ export const mymessagesFutureState = {
   lazyLoad: () => import('../mymessages/states'),
 };
 
-
-export default [AppState, welcomeState, homeState, loginState, contactsFutureState, prefsFutureState, mymessagesFutureState];
+export default [
+  AppState,
+  welcomeState,
+  homeState,
+  loginState,
+  contactsFutureState,
+  prefsFutureState,
+  mymessagesFutureState,
+];

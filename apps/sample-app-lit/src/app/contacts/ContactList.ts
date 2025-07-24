@@ -1,16 +1,14 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import {repeat} from 'lit/directives/repeat.js';
-import {
-  uiSref, uiSrefActive
-} from '@lit-ui-router/lit-ui-router';
+import { repeat } from 'lit/directives/repeat.js';
+import { uiSref, uiSrefActive } from '@uirouter/lit';
 
-import './ContactList';
+import './ContactList.js';
 
 @customElement('sample-contact-list')
 export class ContactList extends LitElement {
-  @property()
-  contacts;
+  @property({ attribute: false })
+  contacts: { _id: string; name: { first: string; last: string } }[] = [];
 
   createRenderRoot() {
     return this;
@@ -24,23 +22,26 @@ export class ContactList extends LitElement {
         </button>
       </a>
     `;
-    const contacts = repeat(this.contacts, ({ _id }) => _id, ({_id, name}) =>
-      html`<li>
+    const contacts = repeat(
+      this.contacts,
+      ({ _id }) => _id,
+      ({ _id, name }) =>
+        html`<li>
           <a
             ${uiSrefActive({
-              activeClasses: ['selected']
+              activeClasses: ['selected'],
             })}
-            ${uiSref('.contact', { contactId: _id })}>
-              ${name.first + ' ' + name.last}
-            </a>
-        </li>`
+            ${uiSref('.contact', { contactId: _id })}
+          >
+            ${name.first + ' ' + name.last}
+          </a>
+        </li>`,
     );
-    return html`
-      <ul class="selectlist list-unstyled flex nogrow">
-        <li>${newContact}</li>
-        <li>&nbsp;</li>
-        ${contacts}
-      </ul>`;
+    return html` <ul class="selectlist list-unstyled flex nogrow">
+      <li>${newContact}</li>
+      <li>&nbsp;</li>
+      ${contacts}
+    </ul>`;
   }
 }
 

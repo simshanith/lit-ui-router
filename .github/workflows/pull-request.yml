@@ -1,0 +1,29 @@
+name: Build and Test
+
+on: pull_request
+
+jobs:
+  build_and_test:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.13.1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.1' # Specify Node.js version
+          cache: 'pnpm' # Use pnpm cache instead of npm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Install Playwright Browsers
+        run: pnpm --filter @uirouter/lit exec playwright install --with-deps
+      - name: Install Cypress
+        run: pnpm --filter sample-app-lit-e2e exec cypress install
+      - name: Build and Test
+        run: pnpm run ci

@@ -1,5 +1,5 @@
 import { html } from 'lit';
-import { uiSref } from '@lit-ui-router/lit-ui-router';
+import { uiSref } from '@uirouter/lit';
 
 export function home() {
   return html`<div>

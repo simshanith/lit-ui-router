@@ -1,0 +1,12 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["build:custom-elements"]
+    },
+    "build:custom-elements": {
+      "outputs": ["dist/custom-elements.json"]
+    }
+  }
+}

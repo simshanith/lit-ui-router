@@ -1,0 +1,14 @@
+{
+  "extends": "../tsconfig.base.json",
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "declaration": true,
+    "sourceMap": true
+  },
+  "include": [".vitepress/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+}

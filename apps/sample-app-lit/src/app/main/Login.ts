@@ -1,9 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import {
-  UIViewInjectedProps,
-} from '@lit-ui-router/lit-ui-router';
+import { UIViewInjectedProps } from '@uirouter/lit';
 
 import AuthService from '../global/authService';
 import AppConfig from '../global/appConfig';
@@ -33,10 +31,16 @@ export class Login extends LitElement {
   errorMessage = '';
 
   login = () => {
-    const {router, resolves: { returnTo }} = this._uiViewProps;
-    const done = () => this.authenticating = false;
-    const showError = (errorMessage) => this.errorMessage = errorMessage;
-    const returnToOriginalState = () => router.stateService.go(returnTo.state(), returnTo.params(), { reload: true });
+    const {
+      router,
+      resolves: { returnTo },
+    } = this._uiViewProps;
+    const done = () => (this.authenticating = false);
+    const showError = (errorMessage) => (this.errorMessage = errorMessage);
+    const returnToOriginalState = () =>
+      router.stateService.go(returnTo.state(), returnTo.params(), {
+        reload: true,
+      });
 
     this.authenticating = true;
     AuthService.authenticate(this.username, this.password)
@@ -45,7 +49,7 @@ export class Login extends LitElement {
         done();
         showError(error);
       });
-  }
+  };
 
   handleSubmit(e) {
     e.preventDefault();
@@ -66,9 +70,11 @@ export class Login extends LitElement {
                 name="username"
                 id="username"
                 value=${this.username}
-                @change=${(e => {this.username = e.target.value})}>
+                @change=${(e) => {
+                  this.username = e.target.value;
+                }}>
                 <option value="" disabled selected></option>
-                ${this.usernames.map(option => html`<option key=${option} value=${option}>${option}</option>`)}
+                ${this.usernames.map((option) => html`<option key=${option} value=${option}>${option}</option>`)}
               </select>
               ${!this.username ? html`<label for="username"><i style="display: block; position: relative; bottom: 1.8em; margin-left: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i></label>` : null}
             </div>
@@ -79,10 +85,15 @@ export class Login extends LitElement {
                 type="password"
                 name="password"
                 value=${this.password}
-                @change=${(e => this.password = e.target.value )}/>
-              ${this.username && this.password !== 'password' ? 
-                html`<i style="position: relative; bottom: 1.8em; margin-left: 5em; height: 0" class="fa fa-arrow-left bounce-horizontal">Enter '<b>password</b>' here</i>` :
-                null
+                @change=${(e) => (this.password = e.target.value)}/>
+              ${
+                this.username && this.password !== 'password'
+                  ? html`<i
+                      style="position: relative; bottom: 1.8em; margin-left: 5em; height: 0"
+                      class="fa fa-arrow-left bounce-horizontal"
+                      >Enter '<b>password</b>' here</i
+                    >`
+                  : null
               }
             </div>
             ${this.errorMessage ? html`<div class="well error">${this.errorMessage}</div>` : null}
@@ -98,7 +109,7 @@ export class Login extends LitElement {
             </div>
           </div>
         </div>
-      </div>`
+      </div>`;
   }
 }
 

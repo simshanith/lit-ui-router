@@ -1,0 +1,22 @@
+{
+  "name": "docs",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "docs": "vitepress dev .",
+    "build": "vitepress build .",
+    "docs:preview": "vitepress preview .",
+    "format": "prettier --write \"**/*.{md,json,ts}\"",
+    "lint": "prettier --check \"**/*.{md,json,ts}\"",
+    "e2e": "E2E_TEST=true vitepress dev ."
+  },
+  "devDependencies": {
+    "prettier": "3.6.2",
+    "sample-app-lit": "workspace:*",
+    "typescript": "5.8.3",
+    "vite": "7.0.5",
+    "vitepress": "1.6.3",
+    "vite-plugin-static-copy": "^3.1.1"
+  }
+}

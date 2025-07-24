@@ -1,11 +1,10 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import AppConfig from '../global/appConfig';
+import AppConfig from '../global/appConfig.js';
 
 @customElement('sample-preferences')
 export class Preferences extends LitElement {
-
   createRenderRoot() {
     return this;
   }
@@ -16,29 +15,35 @@ export class Preferences extends LitElement {
   handleResetData = () => {
     sessionStorage.clear();
     document.location.reload();
-  }
+  };
   handleSavePrefs = () => {
     AppConfig.restDelay = this.restDelay;
     AppConfig.save();
     document.location.reload();
-  }
+  };
   handleRestDelayChange = (e) => {
     this.restDelay = Number(e.target.value);
-  }
+  };
   render() {
-    return html`
+    return html` <div>
       <div>
-        <div>
-          <button class="btn btn-primary" @click=${this.handleResetData}>
-            <i class="fa fa-recycle"></i> <span>Reset All Data</span>
-          </button>
-        </div>
-        <div>
-          <label for="restDelay">Simulated REST API delay (ms)</label>
-          <input type="text" name="restDelay" value=${this.restDelay} @change=${this.handleRestDelayChange} />
-          <button class="btn btn-primary" @click=${this.handleSavePrefs}>Save</button>
-        </div>
-      </div>`;
+        <button class="btn btn-primary" @click=${this.handleResetData}>
+          <i class="fa fa-recycle"></i> <span>Reset All Data</span>
+        </button>
+      </div>
+      <div>
+        <label for="restDelay">Simulated REST API delay (ms)</label>
+        <input
+          type="text"
+          name="restDelay"
+          value=${this.restDelay}
+          @change=${this.handleRestDelayChange}
+        />
+        <button class="btn btn-primary" @click=${this.handleSavePrefs}>
+          Save
+        </button>
+      </div>
+    </div>`;
   }
 }
 

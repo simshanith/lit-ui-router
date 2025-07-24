@@ -1,0 +1,41 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "ui": "tui",
+  "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
+    },
+    "lint": {
+      "dependsOn": ["transit"]
+    },
+    "ci": {
+      "dependsOn": ["build", "test", "lint"]
+    },
+    "format": {
+      "dependsOn": ["transit"]
+    },
+    "e2e": {
+      "dependsOn": ["^build","^docs","^e2e"],
+      "cache": false,
+      "persistent": true
+    },
+    "dev": {
+      "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "docs": {
+      "dependsOn": ["^docs"],
+      "cache": false,
+      "persistent": true
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "name": "sample-app-lit",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "lint": "prettier --check \"**/*.{ts,json,md}\""
+  },
+  "dependencies": {
+    "@api-viewer/docs": "^1.0.0-pre.6",
+    "@uirouter/core": "^6.0.8",
+    "@uirouter/dsr": "^1.2.0",
+    "@uirouter/lit": "workspace:*",
+    "@uirouter/sticky-states": "^1.5.1",
+    "@uirouter/visualizer": "^7.2.1",
+    "lit": "^3.3.1",
+    "lit-dialog": "^2.0.1",
+    "lodash": "^4.17.21"
+  },
+  "devDependencies": {
+    "@types/lodash": "^4.17.10",
+    "prettier": "3.6.2",
+    "typescript": "5.8.3",
+    "vite": "^7.0.5",
+    "vite-plugin-checker": "^0.10.1",
+    "vite-plugin-static-copy": "^3.1.1"
+  }
+}

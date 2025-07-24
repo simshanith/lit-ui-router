@@ -1,0 +1,13 @@
+packages:
+  - apps/*
+  - packages/*
+  - docs
+onlyBuiltDependencies:
+  - cypress
+  - playwright
+  - esbuild
+
+patchedDependencies:
+  '@api-viewer/docs': patches/@api-viewer__docs.patch
+  '@uirouter/dsr': patches/@uirouter__dsr.patch
+  lit-dialog: patches/lit-dialog.patch
