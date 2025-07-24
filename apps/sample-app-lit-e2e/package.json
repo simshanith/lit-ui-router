@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cy:open": "cypress open",
+    "e2e": "cypress open",
     "test": "cypress run",
     "build": "tsc",
     "format": "prettier --write \"**/*.{ts,json,md}\"",

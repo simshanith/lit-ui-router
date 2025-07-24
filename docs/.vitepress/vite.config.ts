@@ -24,8 +24,22 @@ export default defineConfig({
         },
       ],
     }),
+    {
+      name: 'sample-app-lit-e2e',
+      configureServer(server) {
+        server.middlewares.use((req, _res, next) => {
+          if (req.url?.startsWith('/app.html/')) {
+            req.url = '/app.html'
+          }
+          
+          next()
+        })
+      },
+    },
   ],
+  
   server: {
+    
     open: true,
   },
 });
