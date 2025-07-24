@@ -1,0 +1,10 @@
+diff --git a/LitDialog.js b/LitDialog.js
+index f1e613363bff17d230928d0bdd86425750e1305a..c8657528ee17f786cbaf428525ded57b39cfaa44 100644
+--- a/LitDialog.js
++++ b/LitDialog.js
+@@ -1,4 +1,4 @@
+-import { html, render, TemplateResult } from 'lit';
++import { html, render } from 'lit';
+ import { classMap } from 'lit/directives/class-map.js';
+ 
+ /**

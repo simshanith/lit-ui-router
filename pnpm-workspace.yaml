@@ -2,6 +2,10 @@ packages:
   - apps/*
   - packages/*
 
+onlyBuiltDependencies:
+  - cypress
+
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   '@uirouter/dsr': patches/@uirouter__dsr.patch
+  lit-dialog: patches/lit-dialog.patch
