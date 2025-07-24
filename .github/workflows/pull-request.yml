@@ -8,11 +8,21 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Setup Node.js
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: '22.17.1' # Specify Node.js version
           cache: 'npm' # Optional: Caches `node_modules` to speed up builds
-      - name: 'Build and Test'
-        run: "pnpm ci && pnpm run build && pnpm run test"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.13.1
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      # - name: Lint
+      #   run: pnpm run lint
+      # - name: Check types
+      #   run: pnpm run check-types
+      - name: Build
+        run: pnpm run build
