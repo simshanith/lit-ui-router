@@ -1,4 +1,4 @@
-const NX_GOOGLE_ANALYTICS_TRACKING_ID = 'UA-1234567890';
+const NX_GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env.NX_GOOGLE_ANALYTICS_TRACKING_ID;
 
 function initGoogleAnalytics() {
   /** Google analytics */
@@ -6,7 +6,7 @@ function initGoogleAnalytics() {
     (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
       m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
   })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  window['ga']('create', process.env.NX_GOOGLE_ANALYTICS_TRACKING_ID, 'auto');
+  window['ga']('create', import.meta.env.NX_GOOGLE_ANALYTICS_TRACKING_ID, 'auto');
   window['ga']('send', 'pageview');
 }
 
