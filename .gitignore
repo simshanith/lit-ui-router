@@ -39,10 +39,4 @@ Thumbs.db
 
 certs/
 
-# Nx
-.nx/
-migrations.json
-.cursor/rules/nx-rules.mdc
-.github/instructions/nx.instructions.md
-
 .turbo

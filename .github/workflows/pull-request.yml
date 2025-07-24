@@ -1,0 +1,18 @@
+name: Build and Test
+
+on: pull_request
+
+jobs:
+  build_and_test:
+    if: github.event.pull_request.head.repo.full_name == github.repository
+    runs-on: ubuntu-latest
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v3
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '22.17.1' # Specify Node.js version
+          cache: 'npm' # Optional: Caches `node_modules` to speed up builds
+      - name: 'Build and Test'
+        run: "pnpm ci && pnpm run build && pnpm run test"
