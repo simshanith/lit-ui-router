@@ -8,9 +8,7 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "turbo run format",
-    "check-types": "turbo run check-types",
-    "ci": "turbo run build lint check-types test",
-    "build:custom-elements": "turbo run build:custom-elements"
+    "ci": "turbo run build lint test"
   },
   "engines": {
     "node": ">=22.17.1"

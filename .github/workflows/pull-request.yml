@@ -20,9 +20,5 @@ jobs:
           cache: 'pnpm' # Use pnpm cache instead of npm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      # - name: Lint
-      #   run: pnpm run lint
-      # - name: Check types
-      #   run: pnpm run check-types
       - name: Build and Test
         run: pnpm run ci
