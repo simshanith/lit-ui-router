@@ -5,6 +5,9 @@ export default defineConfig({
   outDir: 'dist',
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
+  vite: {
+    configFile: './.vitepress/vite.config.ts',
+  },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
     nav: [

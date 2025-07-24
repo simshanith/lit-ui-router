@@ -1,6 +1,6 @@
 {
   "name": "sample-app-lit-e2e",
-  "version": "0.0.1",
+  "version": "0.0.0",
   "private": true,
   "type": "module",
   "scripts": {
