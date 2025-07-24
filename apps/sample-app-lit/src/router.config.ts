@@ -54,6 +54,6 @@ export function configureRouter(router = new UIRouterLit()) {
   return router;
 }
 
-if (import.meta.env.NX_TRACE === 'true') {
+if (import.meta.env.VITE_TRACE === 'true') {
   trace.enable(Category.TRANSITION, Category.VIEWCONFIG, Category.UIVIEW);
 }
