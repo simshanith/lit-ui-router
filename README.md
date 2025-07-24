@@ -1,5 +1,7 @@
 # UI-Router for Lit
 
+[![Build and Test](https://github.com/simshanith/lit-ui-router/actions/workflows/pull-request.yml/badge.svg)](https://github.com/simshanith/lit-ui-router/actions/workflows/pull-request.yml)
+
 ### lit-ui-router: State based routing for Lit (v2+)
 
 ---
