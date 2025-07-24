@@ -6,8 +6,7 @@ describe('unauthenticated sample app', () => {
   });
 
   it('loads', () => {
-    // TODO: Integrate with the sample app dev server
-    cy.visit('https://github.simloovoo.com/lit-ui-router/#/welcome');
+    cy.visit('/');
   });
 
   it('renders home', () => {
