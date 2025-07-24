@@ -20,5 +20,7 @@ jobs:
           cache: 'pnpm' # Use pnpm cache instead of npm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Install Playwright Browsers
+        run: pnpm --filter @uirouter/lit exec playwright install --with-deps
       - name: Build and Test
         run: pnpm run ci
