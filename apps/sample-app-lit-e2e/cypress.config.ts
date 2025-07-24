@@ -11,6 +11,5 @@ export default defineConfig({
   e2e: {
     setupNodeEvents(on, config) {},
     specPattern: './src/integration/**/*.cy.{js,jsx,ts,tsx}',
-    supportFile: './setup.ts',
   },
 })
