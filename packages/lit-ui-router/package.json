@@ -14,19 +14,22 @@
   ],
   "scripts": {
     "build": "tsc",
-    "check-types": "tsc --noEmit",
-    "format": "prettier --write \"**/*.{ts}\"",
-    "lint": "prettier --check \"**/*.{ts}\"",
-    "build:custom-elements": "cem analyze"
+    "test": "vitest run",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "lint": "prettier --check \"**/*.{ts,json,md}\"",
+    "build:custom-elements": "cem analyze --outdir ./dist"
   },
-  "customElements": "custom-elements.json",
+  "customElements": "./dist/custom-elements.json",
   "dependencies": {
     "@uirouter/core": "^6.0.8",
     "lit": "^2.0.0 || ^3.0.0"
   },
   "devDependencies": {
+    "@custom-elements-manifest/analyzer": "0.10.4",
+    "@vitest/browser": "^3.2.4",
+    "playwright": "^1.54.1",
     "prettier": "3.6.2",
     "typescript": "5.8.3",
-    "@custom-elements-manifest/analyzer": "0.10.4"
+    "vitest": "^3.2.4"
   }
 }

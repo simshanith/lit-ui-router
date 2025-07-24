@@ -5,7 +5,9 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build"
+    "build": "vite build",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "lint": "prettier --check \"**/*.{ts,json,md}\""
   },
   "dependencies": {
     "@uirouter/lit": "workspace:*",

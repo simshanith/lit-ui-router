@@ -24,5 +24,5 @@ jobs:
       #   run: pnpm run lint
       # - name: Check types
       #   run: pnpm run check-types
-      - name: Build
-        run: pnpm run build
+      - name: Build and Test
+        run: pnpm run ci

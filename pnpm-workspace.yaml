@@ -1,9 +1,11 @@
 packages:
   - apps/*
   - packages/*
-
+  - docs
 onlyBuiltDependencies:
   - cypress
+  - playwright
+  - esbuild
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch

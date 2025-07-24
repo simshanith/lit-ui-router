@@ -7,8 +7,9 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "prettier --write \"**/*.{ts,md,json,js}\"",
+    "format": "turbo run format",
     "check-types": "turbo run check-types",
+    "ci": "turbo run build lint check-types test",
     "build:custom-elements": "turbo run build:custom-elements"
   },
   "engines": {

@@ -3,19 +3,26 @@
   "ui": "tui",
   "tasks": {
     "build": {
-      "dependsOn": ["^build"]
+      "dependsOn": ["^build"],
+      "outputs": ["dist/**"]
+    },
+    "test": {
+      "dependsOn": ["^test"],
+      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
     },
     "lint": {
       "dependsOn": ["^lint"]
     },
-    "check-types": {
-      "dependsOn": ["^check-types"]
-    },
-    "build:custom-elements": {
-      "dependsOn": ["^build:custom-elements"]
+    "format": {
+      "dependsOn": ["^format"]
     },
     "dev": {
       "dependsOn": ["^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "docs": {
+      "dependsOn": ["^docs"],
       "cache": false,
       "persistent": true
     }

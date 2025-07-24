@@ -1,5 +1,5 @@
-const NX_GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
-  .NX_GOOGLE_ANALYTICS_TRACKING_ID;
+const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
+  .VITE_GOOGLE_ANALYTICS_TRACKING_ID;
 
 function initGoogleAnalytics() {
   /** Google analytics */
@@ -24,13 +24,13 @@ function initGoogleAnalytics() {
   );
   window['ga'](
     'create',
-    import.meta.env.NX_GOOGLE_ANALYTICS_TRACKING_ID,
+    GOOGLE_ANALYTICS_TRACKING_ID,
     'auto',
   );
   window['ga']('send', 'pageview');
 }
 
-if (NX_GOOGLE_ANALYTICS_TRACKING_ID) {
+if (GOOGLE_ANALYTICS_TRACKING_ID) {
   initGoogleAnalytics();
 }
 

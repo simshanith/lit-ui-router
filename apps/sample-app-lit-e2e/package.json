@@ -4,7 +4,10 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "cy:open": "cypress open"
+    "cy:open": "cypress open",
+    "build": "tsc",
+    "format": "prettier --write \"**/*.{ts,json,md}\"",
+    "lint": "prettier --check \"**/*.{ts,json,md}\""
   },
   "dependencies": {
     "@api-viewer/docs": "^1.0.0-pre.6",
