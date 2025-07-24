@@ -9,15 +9,15 @@ jobs:
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.13.1
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '22.17.1' # Specify Node.js version
           cache: 'pnpm' # Use pnpm cache instead of npm
-      - name: Setup pnpm
-        uses: pnpm/action-setup@v2
-        with:
-          version: 10.13.1
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       # - name: Lint
