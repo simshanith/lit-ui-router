@@ -27,8 +27,8 @@ export default defineConfig({
     {
       name: 'sample-app-lit-e2e',
       configureServer(server) {
-        if (process.env.E2E_TEST) {
-          const TIMEOUT_DURATION = 2000; // 2 seconds
+        if (process.env.E2E_TEST && !process.env.CI) {
+          const TIMEOUT_DURATION = 2_000; // 2 seconds
 
           // Start a one-time timeout when server is configured
           setTimeout(() => {
