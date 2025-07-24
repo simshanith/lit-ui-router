@@ -27,7 +27,7 @@
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "0.10.4",
     "@vitest/browser": "^3.2.4",
-    "playwright": "^1.54.1",
+    "playwright": "1.54.1",
     "prettier": "3.6.2",
     "typescript": "5.8.3",
     "vitest": "^3.2.4"

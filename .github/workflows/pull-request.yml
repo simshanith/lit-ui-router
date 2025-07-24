@@ -6,6 +6,11 @@ jobs:
   build_and_test:
     if: github.event.pull_request.head.repo.full_name == github.repository
     runs-on: ubuntu-latest
+
+    container:
+      image: mcr.microsoft.com/playwright:v1.54.1-jammy # Includes browsers and deps
+      options: --ipc=host
+
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v4
@@ -20,7 +25,5 @@ jobs:
           cache: 'pnpm' # Use pnpm cache instead of npm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Browsers
-        run: pnpm --filter @uirouter/lit exec playwright install --with-deps
       - name: Build and Test
         run: pnpm run ci
