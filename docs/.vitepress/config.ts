@@ -5,6 +5,7 @@ export default defineConfig({
   outDir: 'dist',
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
+  cleanUrls: true,
   vite: {
     configFile: './.vitepress/vite.config.ts',
   },

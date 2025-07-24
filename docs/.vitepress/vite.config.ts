@@ -34,7 +34,8 @@ export default defineConfig({
             server.close();
             return;
           }
-          if (req.url?.startsWith('/app.html/')) {
+
+          if (req.url?.startsWith('/app.html/') || req.url?.startsWith('/app/') || req.url === '/app') {
             req.url = '/app.html';
           }
 

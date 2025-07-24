@@ -9,11 +9,11 @@ hero:
   actions:
     - theme: brand
       text: View the Sample App
-      link: /app.html/#
+      link: ./app
       target: _self
     - theme: alt
       text: API Examples
-      link: /api-examples
+      link: ./api-examples
 
 features:
   - title: Feature A
