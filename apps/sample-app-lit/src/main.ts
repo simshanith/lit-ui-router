@@ -1,8 +1,10 @@
 import { html, render } from 'lit';
-import { UIRouterLit, UIRouterLitElement } from '@uirouter/lit';
 import '@api-viewer/docs';
+import { UIRouterLit, UIRouterLitElement } from '@uirouter/lit';
+import customElementsJsonUrl from '@uirouter/lit/dist/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
+import './styles.css';
 
 let router: UIRouterLit;
 const handleUiRouterContext = {
@@ -30,7 +32,7 @@ render(
         <ui-view></ui-view>
       </div>
     </ui-router>
-    <api-docs src="./lib/custom-elements.json"></api-docs>
+    <api-docs src=${customElementsJsonUrl}></api-docs>
   `,
   root,
 );
