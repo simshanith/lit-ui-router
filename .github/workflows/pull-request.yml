@@ -13,7 +13,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22.17.1' # Specify Node.js version
-          cache: 'npm' # Optional: Caches `node_modules` to speed up builds
+          cache: 'pnpm' # Use pnpm cache instead of npm
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
