@@ -16,6 +16,9 @@
     "lint": {
       "dependsOn": ["transit"]
     },
+    "ci": {
+      "dependsOn": ["build", "test", "lint"]
+    },
     "format": {
       "dependsOn": ["transit"]
     },
