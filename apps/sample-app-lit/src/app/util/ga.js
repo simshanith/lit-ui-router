@@ -1,12 +1,32 @@
-const NX_GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env.NX_GOOGLE_ANALYTICS_TRACKING_ID;
+const NX_GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
+  .NX_GOOGLE_ANALYTICS_TRACKING_ID;
 
 function initGoogleAnalytics() {
   /** Google analytics */
-  (function(i,s,o,g,r,a,m){i['GoogleAnalyticsObject']=r;i[r]=i[r]||function(){
-    (i[r].q=i[r].q||[]).push(arguments)},i[r].l=1*new Date();a=s.createElement(o),
-      m=s.getElementsByTagName(o)[0];a.async=1;a.src=g;m.parentNode.insertBefore(a,m)
-  })(window,document,'script','//www.google-analytics.com/analytics.js','ga');
-  window['ga']('create', import.meta.env.NX_GOOGLE_ANALYTICS_TRACKING_ID, 'auto');
+  (function (i, s, o, g, r, a, m) {
+    i['GoogleAnalyticsObject'] = r;
+    ((i[r] =
+      i[r] ||
+      function () {
+        (i[r].q = i[r].q || []).push(arguments);
+      }),
+      (i[r].l = 1 * new Date()));
+    ((a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]));
+    a.async = 1;
+    a.src = g;
+    m.parentNode.insertBefore(a, m);
+  })(
+    window,
+    document,
+    'script',
+    '//www.google-analytics.com/analytics.js',
+    'ga',
+  );
+  window['ga'](
+    'create',
+    import.meta.env.NX_GOOGLE_ANALYTICS_TRACKING_ID,
+    'auto',
+  );
   window['ga']('send', 'pageview');
 }
 
@@ -15,13 +35,15 @@ if (NX_GOOGLE_ANALYTICS_TRACKING_ID) {
 }
 
 export default function googleAnalyticsHook(transitionService) {
-  const vpv = (vpath) =>
-      window['ga']?.('send', 'pageview', vpath);
+  const vpv = (vpath) => window['ga']?.('send', 'pageview', vpath);
 
   const path = (trans) => {
     const formattedRoute = trans.$to().url.format(trans.params());
     const withSitePrefix = location.pathname + formattedRoute;
-    return `/${withSitePrefix.split('/').filter(x => x).join('/')}`;
+    return `/${withSitePrefix
+      .split('/')
+      .filter((x) => x)
+      .join('/')}`;
   };
 
   const error = (trans) => {
@@ -31,6 +53,8 @@ export default function googleAnalyticsHook(transitionService) {
     vpv(path(trans) + ';errorType=' + type + ';errorMessage=' + message);
   };
 
-  transitionService.onSuccess({}, (trans) => vpv(path(trans)), { priority: -10000 });
+  transitionService.onSuccess({}, (trans) => vpv(path(trans)), {
+    priority: -10000,
+  });
   transitionService.onError({}, (trans) => error(trans), { priority: -10000 });
 }

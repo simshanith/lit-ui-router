@@ -17,10 +17,7 @@ describe('unauthenticated sample app', () => {
   });
 
   it('asks for authentication', () => {
-    cy.visit('/#/home')
-      .get('button.btn')
-      .contains('Preferences')
-      .click();
+    cy.visit('/#/home').get('button.btn').contains('Preferences').click();
 
     cy.contains('Log In');
     cy.contains('Username');
@@ -41,28 +38,31 @@ describe('unauthenticated sample app', () => {
     cy.get('select').contains('myself').parent('select').select(EMAIL_ADDRESS);
     cy.get('button').contains('Log in').click();
 
-    cy.contains('Reset All Data')
-      .then(() => {
-        const appConfig = sessionStorage.getItem('appConfig');
-        expect(appConfig).not.to.equal(null);
-        expect(appConfig.emailAddress).not.equal(EMAIL_ADDRESS);
-      });
+    cy.contains('Reset All Data').then(() => {
+      const appConfig = sessionStorage.getItem('appConfig');
+      expect(appConfig).not.to.equal(null);
+      expect(appConfig.emailAddress).not.equal(EMAIL_ADDRESS);
+    });
   });
 });
 
 describe('authenticated sample app', () => {
   var _appConfig = null;
   beforeEach(() => {
-    const applyAppConfig = () =>  {
+    const applyAppConfig = () => {
       window.sessionStorage.clear();
       window.sessionStorage.setItem('appConfig', _appConfig);
     };
 
     if (!_appConfig) {
       cy.visit('/#/login');
-      cy.get('select').contains('myself').parent('select').select(EMAIL_ADDRESS);
+      cy.get('select')
+        .contains('myself')
+        .parent('select')
+        .select(EMAIL_ADDRESS);
       cy.get('button').contains('Log in').click();
-      cy.url().should('include', '#/home')
+      cy.url()
+        .should('include', '#/home')
         .then(() => {
           const appConfig = sessionStorage.getItem('appConfig');
           expect(appConfig).not.to.equal(null);
@@ -136,7 +136,6 @@ describe('authenticated sample app', () => {
     cy.get('button').contains('No').click();
     cy.get('#backdrop').should('not.exist');
     cy.url().should('include', '#/mymessages/compose');
-
 
     cy.get('button').contains('Cancel').click();
     cy.get('#backdrop');

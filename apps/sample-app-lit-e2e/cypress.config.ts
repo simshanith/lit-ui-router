@@ -1,4 +1,4 @@
-import { defineConfig } from 'cypress'
+import { defineConfig } from 'cypress';
 
 export default defineConfig({
   fileServerFolder: '.',
@@ -12,4 +12,4 @@ export default defineConfig({
     setupNodeEvents(on, config) {},
     specPattern: './src/integration/**/*.cy.{js,jsx,ts,tsx}',
   },
-})
+});
