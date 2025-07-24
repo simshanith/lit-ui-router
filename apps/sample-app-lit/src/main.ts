@@ -4,7 +4,6 @@ import { UIRouterLit, UIRouterLitElement } from '@uirouter/lit';
 import customElementsJsonUrl from '@uirouter/lit/dist/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
-import './styles.css';
 
 let router: UIRouterLit;
 const handleUiRouterContext = {
