@@ -35,7 +35,11 @@ export default defineConfig({
             return;
           }
 
-          if (req.url?.startsWith('/app.html/') || req.url?.startsWith('/app/') || req.url === '/app') {
+          if (
+            req.url?.startsWith('/app.html/') ||
+            req.url?.startsWith('/app/') ||
+            req.url === '/app'
+          ) {
             req.url = '/app.html';
           }
 
