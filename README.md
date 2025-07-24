@@ -47,7 +47,7 @@ uiRouter.plugin(hashLocationPlugin);
 states.forEach((state) => uiRouter.stateRegistry.register(state));
 
 render(
-  html` <ui-router .uiRouter=${uiRouter}>
+  html`<ui-router .uiRouter=${uiRouter}>
     <ui-view></ui-view>
   </ui-router>`,
   document.getElementById('root'),
