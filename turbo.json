@@ -2,6 +2,9 @@
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
   "tasks": {
+    "transit": {
+      "dependsOn": ["^transit"]
+    },
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"]
@@ -11,10 +14,10 @@
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
     },
     "lint": {
-      "dependsOn": ["^lint"]
+      "dependsOn": ["transit"]
     },
     "format": {
-      "dependsOn": ["^format"]
+      "dependsOn": ["transit"]
     },
     "dev": {
       "dependsOn": ["^build"],

@@ -1,10 +1,10 @@
 {
-    "$schema": "https://turborepo.com/schema.json",
-    "extends": ["//"],
-    "tasks": {
-        "build": {
-            "dependsOn": ["^build"],
-            "outputs": []
-        }
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["^build"],
+      "outputs": []
     }
+  }
 }
