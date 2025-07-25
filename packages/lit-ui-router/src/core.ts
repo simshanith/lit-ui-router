@@ -14,8 +14,9 @@ import {
 import { html, LitElement } from 'lit';
 
 import {
-  RoutedLitTemplate,
   RoutedLitElement,
+  LitViewDeclaration,
+  LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
 } from './interface.js';
@@ -36,6 +37,14 @@ export class LitViewConfig implements ViewConfig {
   }
 }
 
+export function isLitViewDeclarationTemplate(config: LitViewDeclaration): config is LitViewDeclarationTemplate {
+  return isFunction(config);
+}
+
+export function isRoutedLitElement(component?: unknown): component is RoutedLitElement {
+  return (component as { prototype: unknown})?.prototype instanceof LitElement;
+}
+
 /**
  * This is a [[StateBuilder.builder]] function for lit `views`.
  *
@@ -53,7 +62,7 @@ export function litViewsBuilder(state: StateObject) {
 
   forEach(viewsObject, function (config: NormalizedLitViewDeclaration, name: string) {
     name = name || '$default'; // Account for views: { "": { template... } }
-    if (isFunction(config)) config = { component: config as unknown as RoutedLitTemplate };
+    if (isLitViewDeclarationTemplate(config)) config = { component: config };
     if (Object.keys(config || {}).length === 0) return;
 
     config.$type = 'lit';
@@ -67,8 +76,8 @@ export function litViewsBuilder(state: StateObject) {
     config.$uiViewName = normalized.uiViewName;
     config.$uiViewContextAnchor = normalized.uiViewContextAnchor;
 
-    if (config.component?.prototype instanceof LitElement) {
-      const Component = config.component as unknown as RoutedLitElement;
+    if (isRoutedLitElement(config.component)) {
+      const Component = config.component;
       let component: InstanceType<RoutedLitElement>;
       config.component = (props: UIViewInjectedProps) => {
         component = (Component.sticky && component) || new Component(props);
@@ -77,7 +86,7 @@ export function litViewsBuilder(state: StateObject) {
       };
     }
 
-    views[name] = viewsObject[name] = config as NormalizedLitViewDeclaration;
+    views[name] = viewsObject[name] = config;
   });
   return views;
 }
