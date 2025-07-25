@@ -37,12 +37,16 @@ export class LitViewConfig implements ViewConfig {
   }
 }
 
-export function isLitViewDeclarationTemplate(config: LitViewDeclaration): config is LitViewDeclarationTemplate {
+export function isLitViewDeclarationTemplate(
+  config: LitViewDeclaration,
+): config is LitViewDeclarationTemplate {
   return isFunction(config);
 }
 
-export function isRoutedLitElement(component?: unknown): component is RoutedLitElement {
-  return (component as { prototype: unknown})?.prototype instanceof LitElement;
+export function isRoutedLitElement(
+  component?: unknown,
+): component is RoutedLitElement {
+  return (component as { prototype: unknown })?.prototype instanceof LitElement;
 }
 
 /**
@@ -60,41 +64,42 @@ export function litViewsBuilder(state: StateObject) {
       $default: pick(state, ['component']),
     };
 
-  forEach(viewsObject, function (config: NormalizedLitViewDeclaration, name: string) {
-    name = name || '$default'; // Account for views: { "": { template... } }
-    if (isLitViewDeclarationTemplate(config)) config = { component: config };
-    if (Object.keys(config || {}).length === 0) return;
+  forEach(
+    viewsObject,
+    function (config: NormalizedLitViewDeclaration, name: string) {
+      name = name || '$default'; // Account for views: { "": { template... } }
+      if (isLitViewDeclarationTemplate(config)) config = { component: config };
+      if (Object.keys(config || {}).length === 0) return;
 
-    config.$type = 'lit';
-    config.$context = state;
-    config.$name = name;
+      config.$type = 'lit';
+      config.$context = state;
+      config.$name = name;
 
-    const normalized = ViewService.normalizeUIViewTarget(
-      config.$context,
-      config.$name,
-    );
-    config.$uiViewName = normalized.uiViewName;
-    config.$uiViewContextAnchor = normalized.uiViewContextAnchor;
+      const normalized = ViewService.normalizeUIViewTarget(
+        config.$context,
+        config.$name,
+      );
+      config.$uiViewName = normalized.uiViewName;
+      config.$uiViewContextAnchor = normalized.uiViewContextAnchor;
 
-    if (isRoutedLitElement(config.component)) {
-      const Component = config.component;
-      let component: InstanceType<RoutedLitElement>;
-      config.component = (props: UIViewInjectedProps) => {
-        component = (Component.sticky && component) || new Component(props);
-        component._uiViewProps = props;
-        return html`${component}`;
-      };
-    }
+      if (isRoutedLitElement(config.component)) {
+        const Component = config.component;
+        let component: InstanceType<RoutedLitElement>;
+        config.component = (props: UIViewInjectedProps) => {
+          component = (Component.sticky && component) || new Component(props);
+          component._uiViewProps = props;
+          return html`${component}`;
+        };
+      }
 
-    views[name] = viewsObject[name] = config;
-  });
+      views[name] = viewsObject[name] = config;
+    },
+  );
   return views;
 }
 
-const viewConfigFactory = (
-  path: PathNode[],
-  config: _ViewDeclaration,
-) => new LitViewConfig(path, config);
+const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
+  new LitViewConfig(path, config);
 
 export class UIRouterLit extends UIRouter {
   constructor() {

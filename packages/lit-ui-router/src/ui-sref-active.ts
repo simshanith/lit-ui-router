@@ -205,13 +205,18 @@ export class UiSrefActiveDirective extends AsyncDirective {
    *
    * @internal
    */
-  getSrefStatus(event: TransEvt | undefined, srefTarget: TargetState): SrefStatus {
+  getSrefStatus(
+    event: TransEvt | undefined,
+    srefTarget: TargetState,
+  ): SrefStatus {
     const pathMatchesTarget = pathMatches(srefTarget);
     const tc = event?.trans.treeChanges();
 
     const isStartEvent = event?.evt === 'start';
     const isSuccessEvent = event?.evt === 'success';
-    const activePath: PathNode[] | undefined = isSuccessEvent ? tc?.to : tc?.from;
+    const activePath: PathNode[] | undefined = isSuccessEvent
+      ? tc?.to
+      : tc?.from;
 
     const isActive = () =>
       activePath
@@ -383,7 +388,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   };
 
   onTransitionStateChange = async (e: Event) => {
-    const event = e as unknown as CustomEvent<TransEvt>
+    const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
     if (!status) {
       return;
