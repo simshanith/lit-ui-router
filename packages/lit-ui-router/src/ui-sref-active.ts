@@ -382,7 +382,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.uiSrefs.set(targetState, event.target as UiSrefElement);
   };
 
-  onTransitionStateChange = async (event: Event) => {
+  onTransitionStateChange = async (e: Event) => {
     const event = e as unknown as CustomEvent<TransEvt>
     const status = this.getStatus(event.detail);
     if (!status) {
