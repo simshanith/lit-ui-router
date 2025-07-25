@@ -20,8 +20,9 @@ export class Contacts extends LitElement {
 
   requestUpdate(changedProperties) {
     super.requestUpdate(changedProperties);
-    const contactList: LitElement =
-      this.renderRoot?.querySelector('sample-contact-list');
+    const contactList: LitElement = this.renderRoot?.querySelector(
+      'sample-contact-list',
+    );
     contactList?.requestUpdate();
   }
 
