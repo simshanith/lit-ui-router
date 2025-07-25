@@ -75,8 +75,7 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
     .filter((param: Param) =>
       Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
     );
-  // @ts-expect-error
-  return (path: PathNode[]) => {
+  return (path: PathNode[] = []) => {
     const tailNode = tail(path);
     if (!tailNode || tailNode.state !== state) return false;
     const paramValues = PathUtils.paramValues(path);
@@ -97,8 +96,7 @@ function spreadToSubPaths(
 ): PathNode[][] {
   return appendPath.map((node) =>
     basePath.concat(
-      // @ts-expect-error
-      PathUtils.subPath(appendPath, (n) => n.state === node.state),
+      PathUtils.subPath(appendPath, (n) => n!.state === node.state),
     ),
   );
 }
@@ -115,12 +113,12 @@ function mergeSrefStatus(left: SrefStatus, right: SrefStatus): SrefStatus {
 }
 
 export interface UiSrefActiveParams {
-  activeClasses?: string[];
-  exactClasses?: string[];
-  state?: string;
-  params?: any;
-  options?: TransitionOptions;
-  targetStates?: TargetState[];
+  activeClasses: string[];
+  exactClasses: string[];
+  state: string;
+  params: any;
+  options: TransitionOptions;
+  targetStates: TargetState[];
 }
 
 let _first: UiSrefActiveDirective | null = null;
@@ -130,7 +128,7 @@ type deregisterFn = () => void;
 export class UiSrefActiveDirective extends AsyncDirective {
   element: Element | null = null;
 
-  uiRouter: UIRouterLit | null = null;
+  uiRouter: UIRouterLit | undefined;
   seekRouter() {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
@@ -143,14 +141,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
   activeClasses: string[] = [];
   exactClasses: string[] = [];
 
-  state: string | null = null;
+  state: string | undefined;
   params: any = {};
   options: TransitionOptions = {};
 
-  active: boolean | null = null;
-  exact: boolean | null = null;
-  entering: boolean | null = null;
-  exiting: boolean | null = null;
+  active: boolean | undefined;
+  exact: boolean | undefined;
+  entering: boolean | undefined;
+  exiting: boolean | undefined;
 
   targetStates = new Set<TargetState>();
   uiSrefs = new WeakMap<TargetState, UiSrefElement>();
@@ -169,7 +167,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     _first = _first || this;
   }
 
-  render({ activeClasses, exactClasses }: UiSrefActiveParams) {
+  render({ activeClasses, exactClasses }: Partial<UiSrefActiveParams>) {
     if (!this._firstUpdated) {
       return noChange;
     }
@@ -207,21 +205,20 @@ export class UiSrefActiveDirective extends AsyncDirective {
    *
    * @internal
    */
-  getSrefStatus(event: TransEvt | null, srefTarget: TargetState): SrefStatus {
+  getSrefStatus(event: TransEvt | undefined, srefTarget: TargetState): SrefStatus {
     const pathMatchesTarget = pathMatches(srefTarget);
     const tc = event?.trans.treeChanges();
 
     const isStartEvent = event?.evt === 'start';
     const isSuccessEvent = event?.evt === 'success';
-    // @ts-expect-error
-    const activePath: PathNode[] = isSuccessEvent ? tc?.to : tc?.from;
+    const activePath: PathNode[] | undefined = isSuccessEvent ? tc?.to : tc?.from;
 
     const isActive = () =>
       activePath
         ? spreadToSubPaths([], activePath)
             .map(pathMatchesTarget)
             .reduce(anyTrueR, false)
-        : this.uiRouter?.stateService.includes(
+        : this.uiRouter!.stateService.includes(
             srefTarget.name(),
             srefTarget.params(),
           );
@@ -229,27 +226,23 @@ export class UiSrefActiveDirective extends AsyncDirective {
     const isExact = () =>
       activePath
         ? pathMatchesTarget(activePath)
-        : this.uiRouter?.stateService.is(
+        : this.uiRouter!.stateService.is(
             srefTarget.name(),
             srefTarget.params(),
           );
 
     const isEntering = () =>
-      // @ts-expect-error
-      spreadToSubPaths(tc.retained, tc.entering)
+      spreadToSubPaths(tc!.retained, tc!.entering)
         .map(pathMatchesTarget)
         .reduce(anyTrueR, false);
 
     const isExiting = () =>
-      // @ts-expect-error
-      spreadToSubPaths(tc.retained, tc.exiting)
+      spreadToSubPaths(tc!.retained, tc!.exiting)
         .map(pathMatchesTarget)
         .reduce(anyTrueR, false);
 
     const result: SrefStatus = {
-      // @ts-expect-error
       active: isActive(),
-      // @ts-expect-error
       exact: isExact(),
       entering: isStartEvent ? isEntering() : false,
       exiting: isStartEvent ? isExiting() : false,
@@ -271,11 +264,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
       },
     ]: [UiSrefActiveParams],
   ) {
-    // @ts-expect-error
     this.activeClasses = activeClasses;
-    // @ts-expect-error
     this.exactClasses = exactClasses;
-    // @ts-expect-error
     this.state = state;
     this.params = params;
     this.options = options;
@@ -302,7 +292,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   };
 
   _firstUpdated = false;
-  async firstUpdated({ targetStates }: UiSrefActiveParams) {
+  async firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
@@ -316,33 +306,28 @@ export class UiSrefActiveDirective extends AsyncDirective {
       });
     } else if (this.state) {
       this.targetStates.add(
-        // @ts-expect-error
-        this.uiRouter.stateService.target(
+        this.uiRouter!.stateService.target(
           this.state,
           this.params,
           this.getOptions(),
         ),
       );
     } else {
-      // @ts-expect-error
-      this.element.addEventListener(
+      this.element!.addEventListener(
         UI_SREF_TARGET_EVENT,
         this.onUiSrefTargetEvent as EventListener,
       );
     }
-    // @ts-expect-error
-    this.element.addEventListener(
+    this.element!.addEventListener(
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
-    // @ts-expect-error
-    this._deregisterOnStart = this.uiRouter.transitionService.onStart(
+    this._deregisterOnStart = this.uiRouter!.transitionService.onStart(
       {},
       this.onTransitionStart,
     ) as deregisterFn;
     this._deregisterOnStatesChanged =
-      // @ts-expect-error
-      this.uiRouter.stateRegistry.onStatesChanged(
+      this.uiRouter!.stateRegistry.onStatesChanged(
         this.onStatesChanged,
       ) as deregisterFn;
 
@@ -366,7 +351,6 @@ export class UiSrefActiveDirective extends AsyncDirective {
       UI_SREF_TARGET_EVENT,
       this.onUiSrefTargetEvent as EventListener,
     );
-    // @ts-expect-error
     this.element.removeEventListener(
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
@@ -398,7 +382,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.uiSrefs.set(targetState, event.target as UiSrefElement);
   };
 
-  onTransitionStateChange = async (event: CustomEvent<TransEvt>) => {
+  onTransitionStateChange = async (event: Event) => {
+    const event = e as unknown as CustomEvent<TransEvt>
     const status = this.getStatus(event.detail);
     if (!status) {
       return;
@@ -411,29 +396,25 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.doRender();
   };
 
-  getStatus(transEvt?: TransEvt): SrefStatus {
+  getStatus(transEvt?: TransEvt): SrefStatus | undefined {
     const { targetStates } = this;
     if (!targetStates.size) {
-      // @ts-expect-error
       return;
     }
     const statuses: SrefStatus[] = [];
     for (const target of targetStates) {
-      // @ts-expect-error
       statuses.push(this.getSrefStatus(transEvt, target));
     }
     return statuses.reduce(mergeSrefStatus);
   }
 
   onTransitionStart = (trans: Transition) => {
-    // @ts-expect-error
-    this.element.dispatchEvent(
+    this.element!.dispatchEvent(
       this.createTransitionStateChangeEvent(TransitionStateChange.start, trans),
     );
     trans.promise.then(
       () => {
-        // @ts-expect-error
-        this.element.dispatchEvent(
+        this.element!.dispatchEvent(
           this.createTransitionStateChangeEvent(
             TransitionStateChange.success,
             trans,
@@ -441,8 +422,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
         );
       },
       () => {
-        // @ts-expect-error
-        this.element.dispatchEvent(
+        this.element!.dispatchEvent(
           this.createTransitionStateChangeEvent(
             TransitionStateChange.error,
             trans,

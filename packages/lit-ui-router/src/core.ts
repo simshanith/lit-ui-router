@@ -9,11 +9,11 @@ import {
   UIRouter,
   ViewConfig,
   ViewService,
+  _ViewDeclaration,
 } from '@uirouter/core';
 import { html, LitElement } from 'lit';
 
 import {
-  LitViewDeclaration,
   RoutedLitTemplate,
   RoutedLitElement,
   NormalizedLitViewDeclaration,
@@ -28,7 +28,7 @@ export class LitViewConfig implements ViewConfig {
 
   constructor(
     public path: PathNode[],
-    public viewDecl: NormalizedLitViewDeclaration,
+    public viewDecl: _ViewDeclaration,
   ) {}
 
   load() {
@@ -51,9 +51,9 @@ export function litViewsBuilder(state: StateObject) {
       $default: pick(state, ['component']),
     };
 
-  forEach(viewsObject, function (config: LitViewDeclaration, name: string) {
+  forEach(viewsObject, function (config: NormalizedLitViewDeclaration, name: string) {
     name = name || '$default'; // Account for views: { "": { template... } }
-    if (isFunction(config)) config = { component: config as RoutedLitTemplate };
+    if (isFunction(config)) config = { component: config as unknown as RoutedLitTemplate };
     if (Object.keys(config || {}).length === 0) return;
 
     config.$type = 'lit';
@@ -68,9 +68,8 @@ export function litViewsBuilder(state: StateObject) {
     config.$uiViewContextAnchor = normalized.uiViewContextAnchor;
 
     if (config.component?.prototype instanceof LitElement) {
-      const Component = config.component as RoutedLitElement;
+      const Component = config.component as unknown as RoutedLitElement;
       let component: InstanceType<RoutedLitElement>;
-      // @ts-expect-error
       config.component = (props: UIViewInjectedProps) => {
         component = (Component.sticky && component) || new Component(props);
         component._uiViewProps = props;
@@ -85,7 +84,7 @@ export function litViewsBuilder(state: StateObject) {
 
 const viewConfigFactory = (
   path: PathNode[],
-  config: NormalizedLitViewDeclaration,
+  config: _ViewDeclaration,
 ) => new LitViewConfig(path, config);
 
 export class UIRouterLit extends UIRouter {
@@ -93,7 +92,6 @@ export class UIRouterLit extends UIRouter {
     super();
     this.plugin<ServicesPlugin>(servicesPlugin);
     // Apply lit ui-view handling code
-    // @ts-expect-error
     this.viewService._pluginapi._viewConfigFactory('lit', viewConfigFactory);
     this.stateRegistry.decorator('views', litViewsBuilder);
   }
