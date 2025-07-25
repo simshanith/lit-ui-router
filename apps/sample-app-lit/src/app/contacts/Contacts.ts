@@ -18,8 +18,15 @@ export class Contacts extends LitElement {
     return this._uiViewProps.resolves.contacts;
   }
 
+  requestUpdate(changedProperties) {
+    super.requestUpdate(changedProperties);
+    const contactList: LitElement =
+      this.renderRoot?.querySelector('sample-contact-list');
+    contactList?.requestUpdate();
+  }
+
   render() {
-    return html` <div class="my-contacts flex-h">
+    return html`<div class="my-contacts flex-h">
       <sample-contact-list
         .contacts=${this.contacts}
         class="flex nogrow"
