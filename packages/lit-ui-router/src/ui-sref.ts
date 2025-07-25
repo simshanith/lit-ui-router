@@ -40,7 +40,7 @@ export class UiSrefDirective extends AsyncDirective {
 
   element: UiSrefElement | null = null;
 
-  uiRouter: UIRouterLit | null = null;
+  uiRouter: UIRouterLit | undefined;
   parentView: UiView | null = null;
 
   href: string | null = null;
