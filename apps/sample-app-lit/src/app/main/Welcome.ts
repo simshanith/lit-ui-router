@@ -2,7 +2,7 @@ import { html } from 'lit';
 import { uiSref } from '@uirouter/lit';
 
 export default () =>
-  html` <div class="container-fluid">
+  html`<div class="container-fluid">
     <h3>UI-Router Sample App</h3>
     <p>Welcome to the sample app!</p>
     <p>

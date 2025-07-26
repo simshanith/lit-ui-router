@@ -22,7 +22,7 @@ export class MyMessages extends LitElement {
       this.folders,
       ({ _id }) => _id,
       (folder) =>
-        html` <li
+        html`<li
           class="folder"
           ${uiSrefActive({ activeClasses: ['selected'] })}
         >
@@ -31,7 +31,7 @@ export class MyMessages extends LitElement {
           </a>
         </li>`,
     );
-    return html` <div>
+    return html`<div>
       <div class="my-messages">
         <div class="folderlist">
           <ul class="selectlist list-unstyled">

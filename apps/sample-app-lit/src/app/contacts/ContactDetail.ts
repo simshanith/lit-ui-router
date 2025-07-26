@@ -12,7 +12,7 @@ export class ContactDetail extends LitElement {
 
   render() {
     const { contact } = this;
-    return html` <div class="flex-h">
+    return html`<div class="flex-h">
       <div class="details">
         <h3>${contact.name.first + ' ' + contact.name.last}</h3>
         <div>

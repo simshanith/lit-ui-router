@@ -37,7 +37,7 @@ export class ContactList extends LitElement {
           </a>
         </li>`,
     );
-    return html` <ul class="selectlist list-unstyled flex nogrow">
+    return html`<ul class="selectlist list-unstyled flex nogrow">
       <li>${newContact}</li>
       <li>&nbsp;</li>
       ${contacts}
