@@ -96,7 +96,7 @@ export class MessageTable extends LitElement {
           )}
         </tr>`,
     );
-    return html` <table>
+    return html`<table>
       <thead>
         <tr>
           ${tableHead}

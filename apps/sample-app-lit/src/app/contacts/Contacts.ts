@@ -15,15 +15,7 @@ export class Contacts extends LitElement {
   }
 
   get contacts() {
-    return this._uiViewProps.resolves.contacts;
-  }
-
-  requestUpdate(changedProperties) {
-    super.requestUpdate(changedProperties);
-    const contactList: LitElement = this.renderRoot?.querySelector(
-      'sample-contact-list',
-    );
-    contactList?.requestUpdate();
+    return [...this._uiViewProps.resolves.contacts];
   }
 
   render() {

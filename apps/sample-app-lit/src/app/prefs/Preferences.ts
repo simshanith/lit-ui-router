@@ -25,7 +25,7 @@ export class Preferences extends LitElement {
     this.restDelay = Number(e.target.value);
   };
   render() {
-    return html` <div>
+    return html`<div>
       <div>
         <button class="btn btn-primary" @click=${this.handleResetData}>
           <i class="fa fa-recycle"></i> <span>Reset All Data</span>

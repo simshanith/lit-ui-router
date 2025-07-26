@@ -32,8 +32,8 @@ export class ContactView extends LitElement {
     >
       <i class="fa fa-pencil"></i><span>Edit Contact</span>
     </button>`;
-    return html` <div class="contact">
-      <sample-contact-detail .contact=${contact}> </sample-contact-detail>
+    return html`<div class="contact">
+      <sample-contact-detail .contact=${contact}></sample-contact-detail>
       ${composeButton} ${editContactButton}
     </div>`;
   }
