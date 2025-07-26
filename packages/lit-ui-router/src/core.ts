@@ -12,13 +12,15 @@ import {
   _ViewDeclaration,
 } from '@uirouter/core';
 import { html, LitElement } from 'lit';
+import { property } from 'lit/decorators.js';
 
 import {
-  RoutedLitElement,
+  IRoutedLitElement,
   LitViewDeclaration,
   LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
+  IRoutedLitElementConstructor
 } from './interface.js';
 
 /** @internal */
@@ -45,8 +47,15 @@ export function isLitViewDeclarationTemplate(
 
 export function isRoutedLitElement(
   component?: unknown,
-): component is RoutedLitElement {
+): component is IRoutedLitElementConstructor {
   return (component as { prototype: unknown })?.prototype instanceof LitElement;
+}
+
+export class RoutedLitElement extends LitElement implements IRoutedLitElement {
+  @property({ attribute: false })
+  _uiViewProps?: UIViewInjectedProps;
+
+  static sticky?: boolean;
 }
 
 /**
@@ -84,9 +93,9 @@ export function litViewsBuilder(state: StateObject) {
 
       if (isRoutedLitElement(config.component)) {
         const Component = config.component;
-        let component: InstanceType<RoutedLitElement>;
+        let component: RoutedLitElement;
         config.component = (props: UIViewInjectedProps) => {
-          component = (Component.sticky && component) || new Component(props);
+          component = (Component.sticky && component) || new Component();
           component._uiViewProps = props;
           return html`${component}`;
         };

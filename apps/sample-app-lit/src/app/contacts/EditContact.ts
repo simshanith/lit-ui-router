@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { UIViewInjectedProps, uiSref } from '@uirouter/lit';
+import { UIViewInjectedProps, uiSref, RoutedLitElement } from '@uirouter/lit';
 import { isEqual, cloneDeep } from 'lodash';
 
 import './ContactList.js';
@@ -33,7 +33,7 @@ import DialogService from '../global/dialogService.js';
  *   the `reload: true` option re-fetches the contacts resolve data from the server
  */
 @customElement('sample-edit-contact')
-export class EditContact extends LitElement {
+export class EditContact extends RoutedLitElement {
   createRenderRoot() {
     return this;
   }

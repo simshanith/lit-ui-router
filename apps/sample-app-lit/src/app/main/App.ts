@@ -1,27 +1,18 @@
 import { html, LitElement } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
-import { customElement, property } from 'lit/decorators.js';
-import { UIViewInjectedProps } from '@uirouter/lit';
+import { customElement } from 'lit/decorators.js';
+import { UIViewInjectedProps, RoutedLitElement } from '@uirouter/lit';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
 
 @customElement('sample-app')
-export class App extends LitElement {
+export class App extends RoutedLitElement {
   createRenderRoot() {
     return this;
   }
 
   static sticky = true;
-
-  @property({ attribute: false })
-  _uiViewProps: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-
-    this._uiViewProps = props;
-  }
 
   shouldUpdate(changedProperties) {
     const viewPropsChanged = changedProperties.has('_uiViewProps');

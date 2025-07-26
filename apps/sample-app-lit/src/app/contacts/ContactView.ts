@@ -1,17 +1,13 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { UIViewInjectedProps, uiSref } from '@uirouter/lit';
+import { UIViewInjectedProps, uiSref, RoutedLitElement } from '@uirouter/lit';
 
 import './ContactDetail';
 
 @customElement('sample-contact-view')
-export class ContactView extends LitElement {
+export class ContactView extends RoutedLitElement {
   createRenderRoot() {
     return this;
-  }
-
-  constructor(public _uiViewProps: UIViewInjectedProps) {
-    super();
   }
 
   get contact() {

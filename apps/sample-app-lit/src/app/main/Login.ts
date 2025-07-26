@@ -1,19 +1,15 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import { UIViewInjectedProps } from '@uirouter/lit';
+import { UIViewInjectedProps, RoutedLitElement } from '@uirouter/lit';
 
 import AuthService from '../global/authService';
 import AppConfig from '../global/appConfig';
 
 @customElement('sample-login')
-export class Login extends LitElement {
+export class Login extends RoutedLitElement {
   createRenderRoot() {
     return this;
-  }
-
-  constructor(public _uiViewProps: UIViewInjectedProps) {
-    super();
   }
 
   usernames = AuthService.usernames;
