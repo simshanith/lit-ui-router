@@ -77,7 +77,7 @@ export interface LitViewDeclarationTemplate extends _ViewDeclaration {
 }
 
 export interface IRoutedLitElementConstructor {
-  new(): IRoutedLitElement;
+  new (): IRoutedLitElement;
   sticky?: boolean;
 }
 
@@ -85,7 +85,9 @@ export interface IRoutedLitElement extends LitElement {
   _uiViewProps?: UIViewInjectedProps;
 }
 
-export type RoutedLitComponent = RoutedLitTemplate | IRoutedLitElementConstructor;
+export type RoutedLitComponent =
+  | RoutedLitTemplate
+  | IRoutedLitElementConstructor;
 
 export interface LitViewDeclarationElement
   extends IRoutedLitElement,

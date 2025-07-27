@@ -20,7 +20,7 @@ import {
   LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
-  IRoutedLitElementConstructor
+  IRoutedLitElementConstructor,
 } from './interface.js';
 
 /** @internal */
