@@ -3,8 +3,6 @@ import { customElement, property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { uiSref, uiSrefActive } from '@uirouter/lit';
 
-import './ContactList.js';
-
 @customElement('sample-contact-list')
 export class ContactList extends LitElement {
   @property({ attribute: false })

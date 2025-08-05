@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
-import { UIViewInjectedProps } from '@uirouter/lit';
+import { UIViewInjectedProps, RoutedLitElement } from '@uirouter/lit';
 
 import { MessagesStorage } from '../global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
@@ -9,7 +9,7 @@ import DialogService from '../global/dialogService.js';
 import { Message } from './interface.js';
 
 @customElement('sample-compose')
-export class Compose extends LitElement {
+export class Compose extends RoutedLitElement {
   createRenderRoot() {
     return this;
   }
@@ -22,30 +22,31 @@ export class Compose extends LitElement {
 
   static sticky = true;
 
-  @property({ attribute: false })
-  _uiViewProps: UIViewInjectedProps;
-
-  constructor(_uiViewProps: UIViewInjectedProps) {
-    super();
-    this._uiViewProps = _uiViewProps;
-    this.pristineMessage = this.buildPristineMessage();
-    this.message = { ...this.pristineMessage };
+  get stateParams(): { message: Partial<Message> } {
+    return this._uiViewProps!.resolves.$stateParams;
   }
+
+  get messageStateParam() {
+    return this.stateParams.message;
+  }
+
+  blankMessage: Message = {
+    body: '',
+    to: '',
+    subject: '',
+    from: AppConfig.emailAddress,
+  };
 
   buildPristineMessage(): Message {
     return {
-      body: '',
-      to: '',
-      subject: '',
-      ...this._uiViewProps.resolves.$stateParams.message,
-      from: AppConfig.emailAddress,
+      ...this.blankMessage,
+      ...this.messageStateParam,
     };
   }
 
   async willUpdate() {
     let pristineMessage;
     if (
-      this.pristineMessage &&
       !isEqual(
         this.pristineMessage,
         (pristineMessage = this.buildPristineMessage()),
@@ -56,24 +57,10 @@ export class Compose extends LitElement {
     }
   }
 
-  shouldUpdate(changedProperties: Map<any, any>) {
-    // let pristineMessage;
-    // if (this.pristineMessage && !isEqual(this.pristineMessage, pristineMessage = this.buildPristineMessage())) {
-    //   this.pristineMessage = pristineMessage;
-    //   this.message = {...this.pristineMessage};
-    //   return true;
-    // }
-    return super.shouldUpdate(changedProperties);
-  }
-
   uiOnParamsChanged(changedProperties) {
-    console.info(
-      'uiOnParamsChanged',
-      changedProperties,
-      this._uiViewProps.resolves.$stateParams,
-    );
-    // this.pristineMessage = { body: '', to: '', subject: '', ...this._uiViewProps.resolves.$stateParams.message, from: AppConfig.emailAddress };
-    // this.message = {...this.pristineMessage};
+    console.info('uiOnParamsChanged', changedProperties, this.stateParams);
+
+    this.willUpdate();
   }
 
   canExit: boolean;
@@ -98,12 +85,14 @@ export class Compose extends LitElement {
    * - Checks the transition which activated this controller for a 'from state' that isn't the implicit root state.
    * - If there is no previous state (because the user deep-linked in, etc), then go to 'mymessages.messagelist'
    */
-  gotoPreviousState() {
+  async gotoPreviousState() {
     const { transition, router } = this._uiViewProps;
-    const hasPrevious = !!transition.from().name;
-    const state = hasPrevious ? transition.from() : 'mymessages.messagelist';
-    const params = hasPrevious ? transition.params('from') : {};
-    router.stateService.go(state, params);
+    const hasPrevious = !!transition?.from().name;
+    const exitState = 'mymessages.messagelist';
+    const previousState = hasPrevious ? transition.from() : exitState;
+    const previousParams = hasPrevious ? transition.params('from') : {};
+    await router.stateService.go(exitState);
+    router.stateService.go(previousState, previousParams);
   }
 
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */

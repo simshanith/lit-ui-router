@@ -39,17 +39,19 @@ export class EditContact extends RoutedLitElement {
   }
 
   get contact() {
-    return this._uiViewProps.resolves.contact;
+    return this._uiViewProps?.resolves.contact;
   }
 
   @state()
   canExit = false;
 
   @state()
-  updatedContact = cloneDeep(this.contact);
+  updatedContact;
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
-    super();
+  async willUpdate() {
+    if (!this.updatedContact) {
+      this.updatedContact = cloneDeep(this.contact);
+    }
   }
 
   uiCanExit = async () => {
