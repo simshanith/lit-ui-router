@@ -1,6 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
+import { Rejection } from '@uirouter/core';
 import { UIViewInjectedProps, RoutedLitElement } from '@uirouter/lit';
 
 import { MessagesStorage } from '../global/dataSources.js';
@@ -91,8 +92,16 @@ export class Compose extends RoutedLitElement {
     const exitState = 'mymessages.messagelist';
     const previousState = hasPrevious ? transition.from() : exitState;
     const previousParams = hasPrevious ? transition.params('from') : {};
-    await router.stateService.go(exitState);
-    router.stateService.go(previousState, previousParams);
+    try {
+      await router.stateService.go(exitState);
+      await router.stateService.go(previousState, previousParams);
+    } catch (e) {
+      if (e instanceof Rejection) {
+        console.warn(e);
+      } else {
+        throw e;
+      }
+    }
   }
 
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
