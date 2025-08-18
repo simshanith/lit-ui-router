@@ -69,7 +69,9 @@ export interface UIViewInjectedProps {
   router: UIRouter;
 }
 
-export type RoutedLitTemplate = (props?: UIViewInjectedProps) => TemplateResult;
+export type RoutedLitTemplate =
+  | ((props?: UIViewInjectedProps) => TemplateResult)
+  | ((props: UIViewInjectedProps) => TemplateResult);
 export interface LitViewDeclarationTemplate extends _ViewDeclaration {
   (props?: UIViewInjectedProps): TemplateResult;
 }

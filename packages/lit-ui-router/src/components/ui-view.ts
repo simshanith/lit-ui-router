@@ -200,8 +200,7 @@ export class UiView extends LitElement {
       fqn,
       creationContext,
       configUpdated: this._viewConfigUpdated.bind(this),
-      // @ts-expect-error
-      config: undefined,
+      config: undefined as unknown as ViewConfig,
     };
 
     this.disconnectedHandlers.push(

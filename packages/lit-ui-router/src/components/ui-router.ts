@@ -39,7 +39,7 @@ export class UIRouterLitElement extends LitElement {
   }
 
   /** @internal */
-  static onUiRouterContextEvent(uiRouter: UIRouterLit | undefined) {
+  static onUiRouterContextEvent(uiRouter?: UIRouterLit) {
     return (event: UiRouterContextEvent) => {
       event.stopPropagation();
       event.detail.uiRouter = uiRouter;

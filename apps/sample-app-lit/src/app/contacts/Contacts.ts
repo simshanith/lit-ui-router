@@ -15,11 +15,11 @@ export class Contacts extends LitElement {
   }
 
   get contacts() {
-    return this._uiViewProps.resolves?.contacts;
+    return [...this._uiViewProps.resolves!.contacts];
   }
 
   render() {
-    return html` <div class="my-contacts flex-h">
+    return html`<div class="my-contacts flex-h">
       <sample-contact-list
         .contacts=${this.contacts}
         class="flex nogrow"
