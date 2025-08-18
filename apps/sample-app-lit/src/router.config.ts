@@ -42,9 +42,7 @@ export function configureRouter(router = new UIRouterLit()) {
     }
   });
 
-  appStates.forEach((state) =>
-    stateRegistry.register(state as LitStateDeclaration),
-  );
+  appStates.forEach((state) => stateRegistry.register(state));
 
   urlService.rules.initial({ state: 'welcome' });
 

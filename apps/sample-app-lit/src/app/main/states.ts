@@ -1,9 +1,9 @@
-import { LitStateDeclaration } from '@uirouter/lit';
-
+import { LitStateDeclaration, UIViewInjectedProps } from '@uirouter/lit';
+import { html } from 'lit';
 import App from '../main/App.js';
 import Welcome from '../main/Welcome.js';
-import Login from '../main/Login.js';
 import Home from '../main/Home.js';
+import { Transition } from '@uirouter/core';
 
 /**
  * This is the parent state for the entire application.
@@ -53,7 +53,10 @@ const loginState = {
   parent: 'app',
   name: 'login',
   url: '/login',
-  component: Login,
+  // TODO: UIViewInjectedProps is not typesafe it should accept a generic type
+  component: (props: UIViewInjectedProps) => {
+    return html`<sample-login .uiViewProps=${props}></sample-login>`;
+  },
   resolve: [
     {
       token: 'returnTo',
@@ -70,7 +73,7 @@ const loginState = {
  * they were redirected from.  Otherwise, if they transitioned directly, return the fromState/params.  Otherwise
  * return the main "app" state.
  */
-function returnTo($transition$) {
+function returnTo($transition$: Transition) {
   if ($transition$.redirectedFrom()) {
     // The user was redirected to the login state (e.g., via the requiresAuth hook when trying to activate contacts)
     // Return to the original attempted target state (e.g., contacts)
@@ -94,7 +97,7 @@ export const contactsFutureState = {
   parent: 'app',
   name: 'contacts.**',
   url: '/contacts',
-  lazyLoad: () => import('../contacts/states'),
+  lazyLoad: () => import('../contacts/states.js'),
 };
 
 // Future State (Placeholder) for the prefs module
@@ -102,7 +105,7 @@ export const prefsFutureState = {
   parent: 'app',
   name: 'prefs.**',
   url: '/prefs',
-  lazyLoad: () => import('../prefs/states'),
+  lazyLoad: () => import('../prefs/states.js'),
 };
 
 // Future State (Placeholder) for the mymessages module
@@ -110,10 +113,10 @@ export const mymessagesFutureState = {
   parent: 'app',
   name: 'mymessages.**',
   url: '/mymessages',
-  lazyLoad: () => import('../mymessages/states'),
+  lazyLoad: () => import('../mymessages/states.js'),
 };
 
-export default [
+const states: LitStateDeclaration[] = [
   AppState,
   welcomeState,
   homeState,
@@ -122,3 +125,5 @@ export default [
   prefsFutureState,
   mymessagesFutureState,
 ];
+
+export default states;

@@ -23,14 +23,11 @@ export class App extends LitElement {
     this.uiViewProps = props;
   }
 
-  protected shouldUpdate(changedProperties: PropertyValues<this>) {
-    const viewPropsChanged = changedProperties.has('uiViewProps');
-    return viewPropsChanged || super.shouldUpdate(changedProperties);
-  }
-
   requestUpdate(changedProperties: PropertyKey | undefined) {
     super.requestUpdate(changedProperties);
-    const navHeader: LitElement =
+    // TODO: This manual update should not be necessary
+    // Nav header should be able to detect the change in state and update itself
+    const navHeader: LitElement | null =
       this.renderRoot?.querySelector('sample-nav-header');
     navHeader?.requestUpdate();
   }
@@ -48,7 +45,8 @@ export class App extends LitElement {
     this._stateService?.go('welcome', {}, { reload: true });
   };
 
-  displayActive(glob) {
+  // TODO: Can the ui-view component manage this internally and set a reflected attribute?
+  displayActive(glob: string) {
     return styleMap({
       display: this.isActive(glob) ? 'block' : 'none',
     });
@@ -61,6 +59,7 @@ export class App extends LitElement {
           <sample-nav-header @logout=${this.handleLogout}></sample-nav-header>
         </div>
         <ui-view></ui-view>
+        <!-- TODO: This should probably be renamed to sidebar -->
         <ui-view
           name="mymessages"
           style=${this.displayActive('mymessages.**')}

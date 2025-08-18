@@ -1,4 +1,9 @@
-import { StateDeclaration, Transition } from '@uirouter/core';
+import {
+  HookMatchCriteria,
+  StateObject,
+  Transition,
+  TransitionHookFn,
+} from '@uirouter/core';
 import AuthService from './authService.js';
 
 /**
@@ -10,10 +15,14 @@ import AuthService from './authService.js';
  * - The user is navigating to a state that requires authentication
  */
 
-const hook = {
+const hook: {
+  criteria: HookMatchCriteria;
+  callback: TransitionHookFn;
+} = {
   // Matches if the destination state's data property has a truthy 'requiresAuth' property
   criteria: {
-    to: (state: StateDeclaration) => state.data && state.data.requiresAuth,
+    to: (state: StateObject | undefined) =>
+      state?.data && state.data.requiresAuth,
   },
   // Function that returns a redirect for the current transition to the login state
   // if the user is not currently authenticated (according to the AuthService)
