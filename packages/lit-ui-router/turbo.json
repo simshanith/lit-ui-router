@@ -12,6 +12,10 @@
       "persistent": true,
       "cache": false,
       "outputs": ["dist/**"]
+    },
+    "test:watch": {
+      "persistent": true,
+      "cache": false
     }
   }
 }
