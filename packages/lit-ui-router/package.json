@@ -4,8 +4,7 @@
   "type": "module",
   "module": "./src/index.js",
   "sideEffects": [
-    "**/ui-router.js",
-    "**/ui-view.js"
+    "**/components/*.js"
   ],
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -13,7 +12,9 @@
     "dist/**"
   ],
   "scripts": {
+    "dev": "tsc --watch",
     "build": "tsc",
+    "test:watch": "vitest",
     "test": "vitest run",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
     "lint": "prettier --check \"**/*.{ts,json,md}\"",
@@ -26,10 +27,10 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "0.10.4",
-    "@vitest/browser": "^3.2.4",
+    "@vitest/browser": "3.2.4",
     "playwright": "1.54.1",
     "prettier": "3.6.2",
     "typescript": "5.8.3",
-    "vitest": "^3.2.4"
+    "vitest": "3.2.4"
   }
 }

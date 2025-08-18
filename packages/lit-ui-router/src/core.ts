@@ -104,9 +104,9 @@ export class UIRouterLit extends UIRouter {
     if (this.started) {
       throw new Error('start() called multiple times');
     }
+    this.started = true;
     this.urlMatcherFactory.$get();
     this.urlService.listen();
     this.urlService.sync();
-    this.started = true;
   }
 }

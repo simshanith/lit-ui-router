@@ -9,9 +9,9 @@ import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
-import { UIRouterLit } from './core.js';
-import { UIRouterLitElement } from './ui-router.js';
-import { UiView } from './ui-view.js';
+import { UIRouterLit } from '../core.js';
+import { UIRouterLitElement } from '../components/ui-router.js';
+import { UiView } from '../components/ui-view.js';
 
 export const UI_SREF_TARGET_EVENT = 'uiSrefTarget';
 
@@ -34,17 +34,17 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
 }
 
 export class UiSrefDirective extends AsyncDirective {
-  state: string | null = null;
+  state?: string;
   params: RawParams = {};
   options: TransitionOptions = {};
 
-  element: UiSrefElement | null = null;
+  element?: UiSrefElement;
 
-  uiRouter: UIRouterLit | null = null;
-  parentView: UiView | null = null;
+  uiRouter?: UIRouterLit;
+  parentView?: UiView;
 
-  href: string | null = null;
-  targetState: TargetState | null = null;
+  href?: string;
+  targetState?: TargetState;
 
   unsubscribe: (() => void) | undefined;
 
@@ -107,9 +107,9 @@ export class UiSrefDirective extends AsyncDirective {
 
   disconnected() {
     this.element?.removeEventListener('click', this.onClick as EventListener);
-    this.element = null;
-    this.targetState = null;
-    this.href = null;
+    this.element = undefined;
+    this.targetState = undefined;
+    this.href = undefined;
     this.unsubscribe?.();
   }
 

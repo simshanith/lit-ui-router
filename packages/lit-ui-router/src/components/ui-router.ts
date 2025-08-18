@@ -1,13 +1,8 @@
-import { html, LitElement } from 'lit';
+import { LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
-import { UIRouterLit } from './core.js';
-
-interface UiRouterContextEventDetail {
-  uiRouter: UIRouterLit;
-}
-
-export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
+import { UIRouterLit } from '../core.js';
+import { UiRouterContextEvent } from '../events.js';
 
 /**
  * @summary
@@ -25,37 +20,26 @@ export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
  */
 @customElement('ui-router')
 export class UIRouterLitElement extends LitElement {
+  protected createRenderRoot(): HTMLElement | DocumentFragment {
+    return this;
+  }
+
   /**
    * Root <code>uiRouter</code> singleton.
    * If not provided, the element creates and assigns a new instance.
    */
   @property({ attribute: false })
-  uiRouter: UIRouterLit | null = null;
+  uiRouter: UIRouterLit | undefined;
 
   /** @internal */
-  static uiRouterContextEventName = 'ui-router-context';
-
-  /** @internal */
-  static uiRouterContextEvent(uiRouter: UIRouterLit): UiRouterContextEvent {
-    return new CustomEvent(this.uiRouterContextEventName, {
-      bubbles: true,
-      composed: true,
-      detail: {
-        uiRouter,
-      },
-    });
-  }
-
-  /** @internal */
-  static seekRouter(candidate: Element): UIRouterLit {
-    // @ts-expect-error
-    const uiRouterContextEvent = this.uiRouterContextEvent();
+  static seekRouter(candidate: Element): UIRouterLit | undefined {
+    const uiRouterContextEvent = new UiRouterContextEvent();
     candidate.dispatchEvent(uiRouterContextEvent);
     return uiRouterContextEvent.detail.uiRouter;
   }
 
   /** @internal */
-  static onUiRouterContextEvent(uiRouter: UIRouterLit) {
+  static onUiRouterContextEvent(uiRouter: UIRouterLit | undefined) {
     return (event: UiRouterContextEvent) => {
       event.stopPropagation();
       event.detail.uiRouter = uiRouter;
@@ -63,7 +47,6 @@ export class UIRouterLitElement extends LitElement {
   }
 
   private onUiRouterContextEvent = (event: UiRouterContextEvent) => {
-    // @ts-expect-error
     this.constructor.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
@@ -72,18 +55,20 @@ export class UIRouterLitElement extends LitElement {
     this.uiRouter = this.uiRouter || new UIRouterLit();
 
     this.addEventListener(
-      this.constructor.uiRouterContextEventName,
+      UiRouterContextEvent.eventName,
       this.onUiRouterContextEvent as EventListener,
     );
 
-    this.dispatchEvent(this.constructor.uiRouterContextEvent(this.uiRouter));
-  }
-
-  render() {
-    return html`<slot></slot>`;
+    this.dispatchEvent(new UiRouterContextEvent({ uiRouter: this.uiRouter }));
   }
 }
 
 export interface UIRouterLitElement {
   constructor: typeof UIRouterLitElement;
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'ui-router': UIRouterLitElement;
+  }
 }

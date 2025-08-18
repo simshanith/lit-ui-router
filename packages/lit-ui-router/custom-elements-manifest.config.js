@@ -1,4 +1,4 @@
 export default {
-  globs: ['src/ui-{router,view}.ts'],
+  globs: ['src/components/*.ts'],
   litelement: true,
-}
+};

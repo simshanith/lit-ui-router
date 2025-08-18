@@ -1,6 +1,6 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { UIViewInjectedProps } from '@uirouter/lit';
 
 import AuthService from '../global/authService.js';
@@ -14,38 +14,38 @@ export class App extends LitElement {
 
   static sticky = true;
 
-  @property({ attribute: false })
-  _uiViewProps: UIViewInjectedProps;
+  @state()
+  uiViewProps?: UIViewInjectedProps;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props?: UIViewInjectedProps) {
     super();
 
-    this._uiViewProps = props;
+    this.uiViewProps = props;
   }
 
-  shouldUpdate(changedProperties) {
-    const viewPropsChanged = changedProperties.has('_uiViewProps');
+  protected shouldUpdate(changedProperties: PropertyValues<this>) {
+    const viewPropsChanged = changedProperties.has('uiViewProps');
     return viewPropsChanged || super.shouldUpdate(changedProperties);
   }
 
-  requestUpdate(changedProperties) {
+  requestUpdate(changedProperties: PropertyKey | undefined) {
     super.requestUpdate(changedProperties);
     const navHeader: LitElement =
       this.renderRoot?.querySelector('sample-nav-header');
     navHeader?.requestUpdate();
   }
 
-  get stateService() {
-    return this._uiViewProps.router.stateService;
+  private get _stateService() {
+    return this.uiViewProps?.router?.stateService;
   }
 
   isActive(glob: string) {
-    return this.stateService.includes(glob);
+    return this._stateService?.includes(glob);
   }
 
   handleLogout = () => {
     AuthService.logout();
-    this.stateService.go('welcome', {}, { reload: true });
+    this._stateService?.go('welcome', {}, { reload: true });
   };
 
   displayActive(glob) {

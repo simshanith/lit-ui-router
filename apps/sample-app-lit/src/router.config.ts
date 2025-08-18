@@ -1,6 +1,14 @@
-import { hashLocationPlugin, trace, Category, Rejection } from '@uirouter/core';
+import {
+  hashLocationPlugin,
+  trace,
+  Category,
+  Rejection,
+  UIRouterPlugin,
+  PluginFactory,
+} from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 import { DSRPlugin } from '@uirouter/dsr';
+import { Visualizer } from '@uirouter/visualizer';
 
 import { UIRouterLit, LitStateDeclaration } from '@uirouter/lit';
 
@@ -14,9 +22,7 @@ export const UNLISTED_NESTED_HOME = 'home.unlisted';
 
 export function configureRouter(router = new UIRouterLit()) {
   router.plugin(hashLocationPlugin);
-  import('@uirouter/visualizer').then(({ Visualizer }) =>
-    router.plugin(Visualizer),
-  );
+  router.plugin(Visualizer);
   router.plugin(DSRPlugin);
   router.plugin(StickyStatesPlugin);
 
@@ -56,4 +62,8 @@ export function configureRouter(router = new UIRouterLit()) {
 
 if (import.meta.env.VITE_TRACE === 'true') {
   trace.enable(Category.TRANSITION, Category.VIEWCONFIG, Category.UIVIEW);
+}
+
+declare module '@uirouter/dsr' {
+  export const DSRPlugin: PluginFactory<UIRouterPlugin>;
 }

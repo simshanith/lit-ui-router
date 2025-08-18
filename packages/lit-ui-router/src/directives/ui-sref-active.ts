@@ -16,14 +16,14 @@ import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
-import { UIRouterLit } from './core.js';
-import { UIRouterLitElement } from './ui-router.js';
+import { UIRouterLit } from '../core.js';
+import { UIRouterLitElement } from '../components/ui-router.js';
 import {
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
 } from './ui-sref.js';
-import { UiView } from './ui-view.js';
+import { UiView } from '../components/ui-view.js';
 
 /** @internal */
 interface TransEvt {
@@ -91,7 +91,7 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
  *
  * @internal
  */
-function spreadToSubPaths(
+export function spreadToSubPaths(
   basePath: PathNode[],
   appendPath: PathNode[],
 ): PathNode[][] {
@@ -104,7 +104,10 @@ function spreadToSubPaths(
 }
 
 /** @internal */
-function mergeSrefStatus(left: SrefStatus, right: SrefStatus): SrefStatus {
+export function mergeSrefStatus(
+  left: SrefStatus,
+  right: SrefStatus,
+): SrefStatus {
   return {
     active: left.active || right.active,
     exact: left.exact || right.exact,
@@ -128,14 +131,15 @@ let _first: UiSrefActiveDirective | null = null;
 type deregisterFn = () => void;
 
 export class UiSrefActiveDirective extends AsyncDirective {
-  element: Element | null = null;
+  element?: Element;
 
-  uiRouter: UIRouterLit | null = null;
+  uiRouter?: UIRouterLit;
+
   seekRouter() {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
-  parentView: UiView | null = null;
+  parentView?: UiView;
   seekParentView() {
     this.parentView = UiView.seekParentView(this.element!);
   }
@@ -371,7 +375,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
-    this.element = null;
+    this.element = undefined;
     this._deregisterOnStart?.();
     this._deregisterOnStatesChanged?.();
   }

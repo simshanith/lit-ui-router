@@ -36,11 +36,7 @@ render(
   root,
 );
 
-const element: UIRouterLitElement = root.querySelector('ui-router');
+const element = root.querySelector('ui-router') as UIRouterLitElement;
 const routerFromElement = element.uiRouter;
-router = router || routerFromElement;
 
-if (routerFromElement === router) {
-  console.info('obtained ui-router from element');
-  configureRouter(router);
-}
+configureRouter(routerFromElement);

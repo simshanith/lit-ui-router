@@ -24,9 +24,10 @@ import {
   UiOnExit,
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
-} from './interface.js';
-import { LitViewConfig, UIRouterLit } from './core.js';
-import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
+} from '../interface.js';
+import { LitViewConfig, UIRouterLit } from '../core.js';
+import { UIRouterLitElement } from './ui-router.js';
+import { UiRouterContextEvent, UiViewContextEvent } from '../events.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -35,12 +36,6 @@ export interface UiViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
 }
-
-interface UiViewContextEventDetail {
-  parentView: UiView | null;
-}
-
-type UiViewContextEvent = CustomEvent<UiViewContextEventDetail>;
 
 type deregisterFn = () => void;
 
@@ -147,23 +142,15 @@ export class UiView extends LitElement {
   connectedCallback() {
     super.connectedCallback();
     this.addEventListener(
-      this.constructor.uiViewContextEventName,
+      UiViewContextEvent.eventName,
       this.onUiViewContextEvent as EventListener,
     );
     this.setupUiView();
     this.captureContent();
   }
 
-  private static uiViewContextEventName = 'ui-view-context';
-
   private static uiViewContextEvent(): UiViewContextEvent {
-    return new CustomEvent(this.uiViewContextEventName, {
-      bubbles: true,
-      composed: true,
-      detail: {
-        parentView: null,
-      },
-    });
+    return new UiViewContextEvent();
   }
 
   /** @internal */
@@ -184,7 +171,7 @@ export class UiView extends LitElement {
   private seekRouter() {
     this.uiRouter = this.uiRouter || UIRouterLitElement.seekRouter(this);
     this.addEventListener(
-      UIRouterLitElement.uiRouterContextEventName,
+      UiRouterContextEvent.eventName,
       this.onUiRouterContextEvent as EventListener,
     );
   }
@@ -237,7 +224,7 @@ export class UiView extends LitElement {
   disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener(
-      this.constructor.uiViewContextEventName,
+      UiViewContextEvent.eventName,
       this.onUiViewContextEvent as EventListener,
     );
 

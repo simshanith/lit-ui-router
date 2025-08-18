@@ -1,16 +1,18 @@
+import { Transition, TransitionService } from '@uirouter/core';
+
 const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
   .VITE_GOOGLE_ANALYTICS_TRACKING_ID;
 
 function initGoogleAnalytics() {
   /** Google analytics */
-  (function (i, s, o, g, r, a, m) {
+  (function (i: any, s: any, o: any, g: any, r: any, a?: any, m?: any) {
     i['GoogleAnalyticsObject'] = r;
     ((i[r] =
       i[r] ||
       function () {
         (i[r].q = i[r].q || []).push(arguments);
       }),
-      (i[r].l = 1 * new Date()));
+      (i[r].l = 1 * Number(new Date())));
     ((a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]));
     a.async = 1;
     a.src = g;
@@ -22,11 +24,7 @@ function initGoogleAnalytics() {
     '//www.google-analytics.com/analytics.js',
     'ga',
   );
-  window['ga'](
-    'create',
-    GOOGLE_ANALYTICS_TRACKING_ID,
-    'auto',
-  );
+  window['ga']('create', GOOGLE_ANALYTICS_TRACKING_ID, 'auto');
   window['ga']('send', 'pageview');
 }
 
@@ -34,11 +32,13 @@ if (GOOGLE_ANALYTICS_TRACKING_ID) {
   initGoogleAnalytics();
 }
 
-export default function googleAnalyticsHook(transitionService) {
-  const vpv = (vpath) => window['ga']?.('send', 'pageview', vpath);
+export default function googleAnalyticsHook(
+  transitionService: TransitionService,
+) {
+  const vpv = (vpath: string) => window['ga']?.('send', 'pageview', vpath);
 
-  const path = (trans) => {
-    const formattedRoute = trans.$to().url.format(trans.params());
+  const path = (trans: Transition) => {
+    const formattedRoute = trans.$to()?.url?.format(trans.params());
     const withSitePrefix = location.pathname + formattedRoute;
     return `/${withSitePrefix
       .split('/')
@@ -46,7 +46,7 @@ export default function googleAnalyticsHook(transitionService) {
       .join('/')}`;
   };
 
-  const error = (trans) => {
+  const error = (trans: Transition) => {
     const err = trans.error();
     const type = err && err.hasOwnProperty('type') ? err.type : '_';
     const message = err && err.hasOwnProperty('message') ? err.message : '_';
@@ -57,4 +57,10 @@ export default function googleAnalyticsHook(transitionService) {
     priority: -10000,
   });
   transitionService.onError({}, (trans) => error(trans), { priority: -10000 });
+}
+
+declare global {
+  interface Window {
+    ga: (...args: any[]) => void;
+  }
 }
