@@ -2,7 +2,7 @@ import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
-import './ContactList';
+import './ContactList.js';
 
 @customElement('sample-contacts')
 export class Contacts extends LitElement {
@@ -15,7 +15,7 @@ export class Contacts extends LitElement {
   }
 
   get contacts() {
-    return [...this._uiViewProps.resolves.contacts];
+    return [...(this._uiViewProps.resolves?.contacts ?? [])];
   }
 
   render() {

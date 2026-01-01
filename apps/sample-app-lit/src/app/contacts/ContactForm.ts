@@ -1,6 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { get, set } from 'lodash';
+import { Contact } from './interface.js';
 
 const formInputs = [
   { label: 'First', path: 'name.first' },
@@ -18,15 +19,19 @@ const formInputs = [
 
 @customElement('sample-contact-form')
 export class ContactForm extends LitElement {
-  @property()
-  contact;
+  @property({ attribute: false })
+  contact!: Contact;
 
-  handleChangeFor(path) {
+  handleChangeFor(path: string) {
     const { contact } = this;
-    return (event) => {
+    return (event: Event) => {
       this.dispatchEvent(
         new CustomEvent('change', {
-          detail: set({ ...contact }, path, event.target.value),
+          detail: set(
+            { ...contact },
+            path,
+            (event.target as HTMLInputElement).value,
+          ),
         }),
       );
     };

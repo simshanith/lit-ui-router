@@ -1,3 +1,4 @@
+import { StateObject, Transition } from '@uirouter/core';
 import AuthService from './authService.js';
 /**
  * This file contains a Transition Hook which protects a
@@ -11,11 +12,12 @@ import AuthService from './authService.js';
 const hook = {
   // Matches if the destination state's data property has a truthy 'requiresAuth' property
   criteria: {
-    to: (state) => state.data && state.data.requiresAuth,
+    to: (state: StateObject | undefined) =>
+      state?.data && state.data.requiresAuth,
   },
   // Function that returns a redirect for the current transition to the login state
   // if the user is not currently authenticated (according to the AuthService)
-  callback: (transition) => {
+  callback: (transition: Transition) => {
     const $state = transition.router.stateService;
     if (!AuthService.isAuthenticated()) {
       return $state.target('login', undefined, { location: false });

@@ -38,11 +38,11 @@ class Messages extends SessionStorage {
     super('messages', '/static/data/messages.json');
   }
 
-  byFolder(folder) {
-    const searchObject = { folder: folder._id };
+  byFolder(folder: { _id: string }) {
+    const searchObject: Record<string, string> = { folder: folder._id };
     const toFromAttr =
       ['drafts', 'sent'].indexOf(folder._id) !== -1 ? 'from' : 'to';
-    searchObject[toFromAttr] = AppConfig.emailAddress;
+    searchObject[toFromAttr] = AppConfig.emailAddress ?? '';
     return this.search(searchObject);
   }
 }

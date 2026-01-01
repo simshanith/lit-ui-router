@@ -1,9 +1,11 @@
+import { Transition } from '@uirouter/core';
 import { FoldersStorage, MessagesStorage } from '../global/dataSources.js';
 import MessageListUI from './messageListUIService.js';
+import { Message } from './interface.js';
 
 import Compose from './Compose.js';
 import MyMessages from './MyMessages.js';
-import Message from './Message.js';
+import MessageComponent from './Message.js';
 import MessageList from './MessageList.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
@@ -72,14 +74,14 @@ const messageState = {
     {
       token: 'message',
       deps: ['$transition$'],
-      resolveFn: ($transition$) =>
+      resolveFn: ($transition$: Transition) =>
         MessagesStorage.get($transition$.params().messageId),
     },
     // Provide the component with a function it can query that returns the closest message id
     {
       token: 'nextMessageGetter',
       deps: ['messages'],
-      resolveFn: (messages) =>
+      resolveFn: (messages: Message[]) =>
         MessageListUI.proximalMessageId.bind(MessageListUI, messages),
     },
   ],
@@ -87,7 +89,7 @@ const messageState = {
     // Relatively target the parent-state's parent-state's 'messagecontent' ui-view
     // This could also have been written using ui-view@state addressing: 'messagecontent@mymessages'
     // Or, this could also have been written using absolute ui-view addressing: '!$default.$default.messagecontent'
-    '^.^.messagecontent': Message,
+    '^.^.messagecontent': MessageComponent,
   },
 };
 
@@ -113,7 +115,7 @@ const messageListState = {
     {
       token: 'folder',
       deps: ['$transition$'],
-      resolveFn: ($transition$) =>
+      resolveFn: ($transition$: Transition) =>
         FoldersStorage.get($transition$.params().folderId),
     },
     // The resolved folder object (from the resolve above) is injected into this resolve
@@ -121,7 +123,7 @@ const messageListState = {
     {
       token: 'messages',
       deps: ['folder'],
-      resolveFn: (folder) =>
+      resolveFn: (folder: { _id: string }) =>
         againable(() => MessagesStorage.byFolder(folder))(),
     },
   ],

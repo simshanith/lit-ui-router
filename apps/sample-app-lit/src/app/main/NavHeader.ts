@@ -3,8 +3,8 @@ import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 
-import AppConfig from '../global/appConfig';
-import AuthService from '../global/authService';
+import AppConfig from '../global/appConfig.js';
+import AuthService from '../global/authService.js';
 
 @customElement('sample-nav-header')
 export class NavHeader extends LitElement {

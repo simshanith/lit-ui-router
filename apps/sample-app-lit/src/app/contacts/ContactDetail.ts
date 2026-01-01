@@ -1,10 +1,11 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
+import { Contact } from './interface.js';
 
 @customElement('sample-contact-detail')
 export class ContactDetail extends LitElement {
-  @property()
-  contact;
+  @property({ attribute: false })
+  contact!: Contact;
 
   createRenderRoot() {
     return this;
