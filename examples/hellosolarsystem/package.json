@@ -10,6 +10,7 @@
   },
   "dependencies": {
     "@uirouter/core": "^6.0.8",
+    "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.0.0",
     "lit-ui-router": "^0.0.1"
   },

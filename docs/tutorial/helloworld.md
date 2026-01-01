@@ -9,7 +9,9 @@ This tutorial will guide you through building your first lit-ui-router applicati
 
 ## Live Demo
 
-<a href="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src/main.ts" target="_blank">Open in StackBlitz</a>
+<iframe src="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?embed=1&file=src/main.ts&view=preview" style="width:100%; height:400px; border:0; border-radius: 4px; overflow:hidden;" title="lit-ui-router-helloworld" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"></iframe>
+
+<a href="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld?file=src/main.ts" target="_blank">Open in new tab</a>
 
 ## Full Source Code
 
