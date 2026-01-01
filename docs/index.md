@@ -4,22 +4,22 @@ layout: home
 
 hero:
   name: 'Lit UI Router'
-  text: 'A @uirouter implementation for Lit'
-  tagline: My great project tagline
+  text: 'State-based routing for Lit'
+  tagline: A UI-Router implementation for Lit web components
   actions:
     - theme: brand
-      text: View the Sample App
+      text: Get Started
+      link: /tutorial/helloworld
+    - theme: alt
+      text: View Sample App
       link: ./app
       target: _self
-    - theme: alt
-      text: API Examples
-      link: ./api-examples
 
 features:
-  - title: Feature A
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature B
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
-  - title: Feature C
-    details: Lorem ipsum dolor sit amet, consectetur adipiscing elit
+  - title: State-based Routing
+    details: Organize your app with hierarchical states. Define URLs, components, and data requirements declaratively.
+  - title: Nested Views
+    details: Build complex layouts with nested ui-views. Child states render inside parent state components.
+  - title: Data Resolves
+    details: Fetch data before states activate. Components always have the data they need, with automatic loading states.
 ---

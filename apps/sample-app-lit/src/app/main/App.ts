@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
-import { UIViewInjectedProps } from '@uirouter/lit';
+import { UIViewInjectedProps } from 'lit-ui-router';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';

@@ -1,4 +1,4 @@
-import { LitStateDeclaration } from '@uirouter/lit';
+import { LitStateDeclaration } from 'lit-ui-router';
 
 import App from '../main/App.js';
 import Welcome from '../main/Welcome.js';

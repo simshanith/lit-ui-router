@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { UIViewInjectedProps } from '@uirouter/lit';
+import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from '../global/dataSources';
 import DialogService from '../global/dialogService';
