@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
-import { UIViewInjectedProps } from '@uirouter/lit';
+import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from '../global/dataSources.js';
 import AppConfig from '../global/appConfig.js';

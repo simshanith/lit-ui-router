@@ -1,7 +1,7 @@
 import { html, render } from 'lit';
 import '@api-viewer/docs';
-import { UIRouterLit, UIRouterLitElement } from '@uirouter/lit';
-import customElementsJsonUrl from '@uirouter/lit/dist/custom-elements.json?url';
+import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
+import customElementsJsonUrl from 'lit-ui-router/dist/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
 

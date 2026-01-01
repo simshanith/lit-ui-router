@@ -2,7 +2,7 @@ import { hashLocationPlugin, trace, Category, Rejection } from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 import { DSRPlugin } from '@uirouter/dsr';
 
-import { UIRouterLit, LitStateDeclaration } from '@uirouter/lit';
+import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
 
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';

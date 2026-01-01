@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { UIViewInjectedProps, uiSref, uiSrefActive } from '@uirouter/lit';
+import { UIViewInjectedProps, uiSref, uiSrefActive } from 'lit-ui-router';
 
 @customElement('sample-my-messages')
 export class MyMessages extends LitElement {

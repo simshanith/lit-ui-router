@@ -6,6 +6,7 @@ export default defineConfig({
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
+  ignoreDeadLinks: ['/app'],
   vite: {
     configFile: './.vitepress/vite.config.ts',
   },
@@ -13,14 +14,16 @@ export default defineConfig({
     // https://vitepress.dev/reference/default-theme-config
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Examples', link: '/markdown-examples' },
+      { text: 'Tutorial', link: '/tutorial/helloworld' },
+      { text: 'Sample App', link: '/app', target: '_self' },
     ],
     sidebar: [
       {
-        text: 'Examples',
+        text: 'Tutorial',
         items: [
-          { text: 'Markdown Examples', link: '/markdown-examples' },
-          { text: 'Runtime API Examples', link: '/api-examples' },
+          { text: 'Hello World', link: '/tutorial/helloworld' },
+          { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
+          { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
         ],
       },
     ],

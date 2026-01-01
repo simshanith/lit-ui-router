@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { uiSref, uiSrefActive } from '@uirouter/lit';
+import { uiSref, uiSrefActive } from 'lit-ui-router';
 import { isEqual } from 'lodash';
 
 import { orderBy } from './messageListUIService.js';

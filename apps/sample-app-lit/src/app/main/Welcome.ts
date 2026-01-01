@@ -1,5 +1,5 @@
 import { html } from 'lit';
-import { uiSref } from '@uirouter/lit';
+import { uiSref } from 'lit-ui-router';
 
 export default () =>
   html`<div class="container-fluid">

@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { UIViewInjectedProps, uiSref } from '@uirouter/lit';
+import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
 
 import './ContactDetail';
 

@@ -13,7 +13,7 @@
     "@api-viewer/docs": "^1.0.0-pre.6",
     "@uirouter/core": "^6.0.8",
     "@uirouter/dsr": "^1.2.0",
-    "@uirouter/lit": "workspace:*",
+    "lit-ui-router": "workspace:*",
     "@uirouter/sticky-states": "^1.5.1",
     "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.3.1",

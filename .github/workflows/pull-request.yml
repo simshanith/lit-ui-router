@@ -22,7 +22,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Playwright Browsers
-        run: pnpm --filter @uirouter/lit exec playwright install --with-deps
+        run: pnpm --filter lit-ui-router exec playwright install --with-deps
       - name: Install Cypress
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
