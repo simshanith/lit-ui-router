@@ -164,6 +164,7 @@ const personState: LitStateDeclaration = {
 // Router setup
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
+import('@uirouter/visualizer').then(({ Visualizer }) => router.plugin(Visualizer));
 router.stateRegistry.register(peopleState);
 router.stateRegistry.register(personState);
 router.urlService.rules.initial({ state: 'people' });
