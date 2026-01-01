@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
 import { UIViewInjectedProps } from 'lit-ui-router';
@@ -15,23 +15,27 @@ export class App extends LitElement {
   static sticky = true;
 
   @property({ attribute: false })
-  _uiViewProps: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props?: UIViewInjectedProps) {
     super();
 
-    this._uiViewProps = props;
+    if (props) this._uiViewProps = props;
   }
 
-  shouldUpdate(changedProperties) {
+  shouldUpdate(changedProperties: PropertyValues) {
     const viewPropsChanged = changedProperties.has('_uiViewProps');
     return viewPropsChanged || super.shouldUpdate(changedProperties);
   }
 
-  requestUpdate(changedProperties) {
-    super.requestUpdate(changedProperties);
-    const navHeader: LitElement =
-      this.renderRoot?.querySelector('sample-nav-header');
+  override requestUpdate(
+    name?: PropertyKey,
+    oldValue?: unknown,
+    options?: unknown,
+  ) {
+    super.requestUpdate(name, oldValue, options as never);
+    const navHeader =
+      this.renderRoot?.querySelector<LitElement>('sample-nav-header');
     navHeader?.requestUpdate();
   }
 
@@ -48,7 +52,7 @@ export class App extends LitElement {
     this.stateService.go('welcome', {}, { reload: true });
   };
 
-  displayActive(glob) {
+  displayActive(glob: string) {
     return styleMap({
       display: this.isActive(glob) ? 'block' : 'none',
     });

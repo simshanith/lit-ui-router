@@ -1,3 +1,4 @@
+import { Transition } from '@uirouter/core';
 import { LitStateDeclaration } from 'lit-ui-router';
 
 import App from '../main/App.js';
@@ -70,7 +71,7 @@ const loginState = {
  * they were redirected from.  Otherwise, if they transitioned directly, return the fromState/params.  Otherwise
  * return the main "app" state.
  */
-function returnTo($transition$) {
+function returnTo($transition$: Transition) {
   if ($transition$.redirectedFrom()) {
     // The user was redirected to the login state (e.g., via the requiresAuth hook when trying to activate contacts)
     // Return to the original attempted target state (e.g., contacts)
@@ -94,7 +95,7 @@ export const contactsFutureState = {
   parent: 'app',
   name: 'contacts.**',
   url: '/contacts',
-  lazyLoad: () => import('../contacts/states'),
+  lazyLoad: () => import('../contacts/states.js'),
 };
 
 // Future State (Placeholder) for the prefs module
@@ -102,7 +103,7 @@ export const prefsFutureState = {
   parent: 'app',
   name: 'prefs.**',
   url: '/prefs',
-  lazyLoad: () => import('../prefs/states'),
+  lazyLoad: () => import('../prefs/states.js'),
 };
 
 // Future State (Placeholder) for the mymessages module
@@ -110,7 +111,7 @@ export const mymessagesFutureState = {
   parent: 'app',
   name: 'mymessages.**',
   url: '/mymessages',
-  lazyLoad: () => import('../mymessages/states'),
+  lazyLoad: () => import('../mymessages/states.js'),
 };
 
 export default [

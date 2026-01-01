@@ -1,5 +1,6 @@
 import { hashLocationPlugin, trace, Category, Rejection } from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
+// @ts-expect-error - @uirouter/dsr lacks proper ESM exports field for nodenext resolution
 import { DSRPlugin } from '@uirouter/dsr';
 
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';

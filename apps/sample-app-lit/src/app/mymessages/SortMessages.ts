@@ -10,13 +10,13 @@ export type ChangeEvent = ReturnType<typeof changeEvent>;
 @customElement('sample-sort-messages')
 export class SortMessages extends LitElement {
   @property({ attribute: false })
-  label: string;
+  label = '';
 
   @property({ attribute: false })
-  col: string;
+  col = '';
 
   @property({ attribute: false })
-  sort: string;
+  sort = '';
 
   createRenderRoot() {
     return this;

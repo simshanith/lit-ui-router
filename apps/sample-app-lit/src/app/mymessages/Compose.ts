@@ -1,4 +1,4 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, PropertyValues } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
 import { UIViewInjectedProps } from 'lit-ui-router';
@@ -15,15 +15,17 @@ export class Compose extends LitElement {
   }
 
   @state()
-  pristineMessage: Message;
+  pristineMessage!: Message;
 
   @state()
-  message: Message;
+  message!: Message;
 
   static sticky = true;
 
   @property({ attribute: false })
-  _uiViewProps: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps;
+
+  canExit = false;
 
   constructor(_uiViewProps: UIViewInjectedProps) {
     super();
@@ -37,7 +39,7 @@ export class Compose extends LitElement {
       body: '',
       to: '',
       subject: '',
-      ...this._uiViewProps.resolves.$stateParams.message,
+      ...this._uiViewProps?.resolves?.$stateParams?.message,
       from: AppConfig.emailAddress,
     };
   }
@@ -56,7 +58,7 @@ export class Compose extends LitElement {
     }
   }
 
-  shouldUpdate(changedProperties: Map<any, any>) {
+  shouldUpdate(changedProperties: PropertyValues) {
     // let pristineMessage;
     // if (this.pristineMessage && !isEqual(this.pristineMessage, pristineMessage = this.buildPristineMessage())) {
     //   this.pristineMessage = pristineMessage;
@@ -66,17 +68,15 @@ export class Compose extends LitElement {
     return super.shouldUpdate(changedProperties);
   }
 
-  uiOnParamsChanged(changedProperties) {
+  uiOnParamsChanged(changedProperties: Record<string, unknown>) {
     console.info(
       'uiOnParamsChanged',
       changedProperties,
-      this._uiViewProps.resolves.$stateParams,
+      this._uiViewProps?.resolves?.$stateParams,
     );
     // this.pristineMessage = { body: '', to: '', subject: '', ...this._uiViewProps.resolves.$stateParams.message, from: AppConfig.emailAddress };
     // this.message = {...this.pristineMessage};
   }
-
-  canExit: boolean;
 
   /**
    * Checks if the edited copy and the pristine copy are identical when the state is changing.
@@ -100,9 +100,9 @@ export class Compose extends LitElement {
    */
   gotoPreviousState() {
     const { transition, router } = this._uiViewProps;
-    const hasPrevious = !!transition.from().name;
-    const state = hasPrevious ? transition.from() : 'mymessages.messagelist';
-    const params = hasPrevious ? transition.params('from') : {};
+    const hasPrevious = !!transition?.from().name;
+    const state = hasPrevious ? transition!.from() : 'mymessages.messagelist';
+    const params = hasPrevious ? transition!.params('from') : {};
     router.stateService.go(state, params);
   }
 
@@ -119,10 +119,10 @@ export class Compose extends LitElement {
       .then(() => this.gotoPreviousState());
   }
 
-  handleChangeMessage = (detail: string) => (e) => {
+  handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
-      [detail]: e.target.value,
+      [detail]: (e.target as HTMLInputElement).value,
     };
   };
 

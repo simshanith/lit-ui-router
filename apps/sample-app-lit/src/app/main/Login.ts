@@ -3,8 +3,8 @@ import { customElement, state } from 'lit/decorators.js';
 
 import { UIViewInjectedProps } from 'lit-ui-router';
 
-import AuthService from '../global/authService';
-import AppConfig from '../global/appConfig';
+import AuthService from '../global/authService.js';
+import AppConfig from '../global/appConfig.js';
 
 @customElement('sample-login')
 export class Login extends LitElement {
@@ -31,12 +31,14 @@ export class Login extends LitElement {
   errorMessage = '';
 
   login = () => {
-    const {
-      router,
-      resolves: { returnTo },
-    } = this._uiViewProps;
+    const { router, resolves } = this._uiViewProps;
+    const returnTo = resolves?.returnTo as {
+      state: () => string;
+      params: () => object;
+    };
     const done = () => (this.authenticating = false);
-    const showError = (errorMessage) => (this.errorMessage = errorMessage);
+    const showError = (errorMessage: string) =>
+      (this.errorMessage = errorMessage);
     const returnToOriginalState = () =>
       router.stateService.go(returnTo.state(), returnTo.params(), {
         reload: true,
@@ -45,13 +47,13 @@ export class Login extends LitElement {
     this.authenticating = true;
     AuthService.authenticate(this.username, this.password)
       .then(returnToOriginalState)
-      .catch((error) => {
+      .catch((error: string) => {
         done();
         showError(error);
       });
   };
 
-  handleSubmit(e) {
+  handleSubmit(e: Event) {
     e.preventDefault();
     this.login();
   }
@@ -70,11 +72,11 @@ export class Login extends LitElement {
                 name="username"
                 id="username"
                 value=${this.username}
-                @change=${(e) => {
-                  this.username = e.target.value;
+                @change=${(e: Event) => {
+                  this.username = (e.target as HTMLSelectElement).value;
                 }}>
                 <option value="" disabled selected></option>
-                ${this.usernames.map((option) => html`<option key=${option} value=${option}>${option}</option>`)}
+                ${this.usernames.map((option: string) => html`<option key=${option} value=${option}>${option}</option>`)}
               </select>
               ${!this.username ? html`<label for="username"><i style="display: block; position: relative; bottom: 1.8em; margin-left: 10em; height: 0" class="fa fa-arrow-left bounce-horizontal"> Choose </i></label>` : null}
             </div>
@@ -85,7 +87,7 @@ export class Login extends LitElement {
                 type="password"
                 name="password"
                 value=${this.password}
-                @change=${(e) => (this.password = e.target.value)}/>
+                @change=${(e: Event) => (this.password = (e.target as HTMLInputElement).value)}/>
               ${
                 this.username && this.password !== 'password'
                   ? html`<i

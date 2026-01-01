@@ -2,14 +2,14 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
-import { MessagesStorage } from '../global/dataSources';
-import DialogService from '../global/dialogService';
-import { Message } from './interface';
+import { MessagesStorage } from '../global/dataSources.js';
+import DialogService from '../global/dialogService.js';
+import { Message } from './interface.js';
 
 const messageBody = (msg = '') => msg.split(/\n/).map((p) => html`<p>${p}</p>`);
 const prefixSubject = (prefix: string, message: Message) =>
   prefix + message.subject;
-const makeResponseMsg = (prefix: string, msg: Message) => ({
+const makeResponseMsg = (prefix: string, msg: Message): Partial<Message> => ({
   from: msg.to,
   to: msg.from,
   subject: prefixSubject(prefix, msg),
@@ -36,15 +36,15 @@ export class MessageElement extends LitElement {
   }
 
   get message(): Message {
-    return this._uiViewProps.resolves.message;
+    return this._uiViewProps.resolves!.message;
   }
 
   get nextMessageGetter(): (_id: string) => string {
-    return this._uiViewProps.resolves.nextMessageGetter;
+    return this._uiViewProps.resolves!.nextMessageGetter;
   }
 
   get folder(): { actions: string[] } {
-    return this._uiViewProps.resolves.folder;
+    return this._uiViewProps.resolves!.folder;
   }
 
   get actions() {

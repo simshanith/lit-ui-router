@@ -1,4 +1,6 @@
 import { html } from 'lit';
+import { Transition } from '@uirouter/core';
+import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { ContactsStorage } from '../global/dataSources.js';
 
@@ -6,7 +8,7 @@ import './Contacts.js';
 import ContactView from './ContactView.js';
 import EditContact from './EditContact.js';
 
-import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within';
+import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
 
 /**
  * This state displays the contact list.
@@ -32,7 +34,7 @@ const contactsState = {
   },
   sticky: true,
   views: {
-    contacts: (props) => {
+    contacts: (props: UIViewInjectedProps) => {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
     },
   },
@@ -51,7 +53,7 @@ const viewContactState = {
     {
       token: 'contact',
       deps: ['$transition$'],
-      resolveFn: ($transition$) =>
+      resolveFn: ($transition$: Transition) =>
         ContactsStorage.get($transition$.params().contactId),
     },
   ],
