@@ -16,7 +16,7 @@ import Home from '../main/Home.js';
 export class AppState implements LitStateDeclaration {
   name = 'app';
   redirectTo = 'welcome';
-  component = App as unknown as LitStateDeclaration['component'];
+  component = App;
   static __uiRouterState = true;
 }
 

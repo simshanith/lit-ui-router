@@ -36,15 +36,15 @@ export class MessageElement extends LitElement {
   }
 
   get message(): Message {
-    return this._uiViewProps.resolves?.message;
+    return this._uiViewProps.resolves!.message;
   }
 
   get nextMessageGetter(): (_id: string) => string {
-    return this._uiViewProps.resolves?.nextMessageGetter;
+    return this._uiViewProps.resolves!.nextMessageGetter;
   }
 
   get folder(): { actions: string[] } {
-    return this._uiViewProps.resolves?.folder;
+    return this._uiViewProps.resolves!.folder;
   }
 
   get actions() {

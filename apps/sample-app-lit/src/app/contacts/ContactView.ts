@@ -15,7 +15,7 @@ export class ContactView extends LitElement {
   }
 
   get contact() {
-    return this._uiViewProps.resolves?.contact;
+    return this._uiViewProps.resolves!.contact;
   }
 
   render() {

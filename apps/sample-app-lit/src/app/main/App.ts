@@ -15,12 +15,12 @@ export class App extends LitElement {
   static sticky = true;
 
   @property({ attribute: false })
-  _uiViewProps: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props?: UIViewInjectedProps) {
     super();
 
-    this._uiViewProps = props;
+    if (props) this._uiViewProps = props;
   }
 
   shouldUpdate(changedProperties: PropertyValues) {
