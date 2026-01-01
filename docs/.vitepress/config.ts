@@ -15,6 +15,7 @@ export default defineConfig({
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
+      { text: 'API', link: '/api/' },
       { text: 'Sample App', link: '/app', target: '_self' },
     ],
     sidebar: [
@@ -25,6 +26,10 @@ export default defineConfig({
           { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
           { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
         ],
+      },
+      {
+        text: 'Reference',
+        items: [{ text: 'API', link: '/api/' }],
       },
     ],
     socialLinks: [
