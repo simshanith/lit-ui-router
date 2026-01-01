@@ -14,6 +14,7 @@ Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces *
 ## What We're Building
 
 Instead of navigating between separate list and detail pages, we'll create a layout where:
+
 - The list of planets is always visible on the left
 - The selected planet's details appear on the right
 - Child states are rendered in a nested `<ui-view>`
@@ -32,9 +33,7 @@ const peopleState: LitStateDeclaration = {
   name: 'people',
   url: '/people',
   component: PeopleContainerComponent,
-  resolve: [
-    { token: 'people', resolveFn: () => PeopleService.getAllPeople() },
-  ],
+  resolve: [{ token: 'people', resolveFn: () => PeopleService.getAllPeople() }],
 };
 
 // Child state (note the dot notation: people.person)
@@ -72,9 +71,16 @@ The parent component includes a `<ui-view>` where child components render:
 @customElement('people-container')
 class PeopleContainerComponent extends LitElement {
   static styles = css`
-    .container { display: flex; gap: 32px; }
-    .list { flex: 0 0 200px; }
-    .detail { flex: 1; }
+    .container {
+      display: flex;
+      gap: 32px;
+    }
+    .list {
+      flex: 0 0 200px;
+    }
+    .detail {
+      flex: 1;
+    }
   `;
 
   @property({ attribute: false })
@@ -95,14 +101,13 @@ class PeopleContainerComponent extends LitElement {
         <div class="list">
           <h3>Solar System</h3>
           <ul>
-            ${this.people.map(person => html`
-              <li>
-                <a
-                  ${uiSrefActive({ activeClasses: ['active'] })}
-                  ${uiSref('.person', { personId: person.id })}
-                >${person.name}</a>
-              </li>
-            `)}
+            ${this.people.map(
+              (person) => html`
+                <li>
+                  <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('.person', { personId: person.id })}>${person.name}</a>
+                </li>
+              `,
+            )}
           </ul>
         </div>
         <div class="detail">
@@ -118,6 +123,7 @@ class PeopleContainerComponent extends LitElement {
 ```
 
 The nested `<ui-view>`:
+
 - Renders the child state's component (`PersonDetailComponent`)
 - Shows default content ("Select an item...") when no child state is active
 - Only child states of `people` will render here
@@ -139,6 +145,7 @@ ${uiSref('people.person', { personId: person.id })}
 ```
 
 The `.` means "relative to the current state's context." This is useful because:
+
 - It's shorter to write
 - If you rename the parent state, child references still work
 - It makes the relationship clearer
@@ -169,7 +176,7 @@ const personState: LitStateDeclaration = {
   resolve: [
     {
       token: 'person',
-      deps: ['$transition$', 'people'],  // 'people' comes from parent!
+      deps: ['$transition$', 'people'], // 'people' comes from parent!
       resolveFn: ($transition$, people) => {
         const personId = parseInt($transition$.params().personId);
         return people.find((p: Person) => p.id === personId);
@@ -180,6 +187,7 @@ const personState: LitStateDeclaration = {
 ```
 
 This is powerful because:
+
 - The parent's data is already loaded
 - No need to fetch the entire list again
 - Child resolve can filter or transform parent data
@@ -193,13 +201,7 @@ import { html, LitElement, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import {
-  UIRouterLit,
-  uiSref,
-  uiSrefActive,
-  LitStateDeclaration,
-  UIViewInjectedProps
-} from 'lit-ui-router';
+import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration, UIViewInjectedProps } from 'lit-ui-router';
 
 // Data Service
 interface Person {
@@ -224,14 +226,42 @@ const PeopleService = {
 @customElement('people-container')
 class PeopleContainerComponent extends LitElement {
   static styles = css`
-    .container { display: flex; gap: 32px; }
-    .list { flex: 0 0 200px; }
-    .list ul { list-style: none; padding: 0; margin: 0; }
-    .list li { margin: 8px 0; }
-    .list a { color: #0066cc; text-decoration: none; padding: 4px 8px; display: block; border-radius: 4px; }
-    .list a:hover { background: #f0f0f0; }
-    .list a.active { background: #0066cc; color: white; }
-    .detail { flex: 1; padding: 16px; background: #f9f9f9; border-radius: 8px; min-height: 200px; }
+    .container {
+      display: flex;
+      gap: 32px;
+    }
+    .list {
+      flex: 0 0 200px;
+    }
+    .list ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .list li {
+      margin: 8px 0;
+    }
+    .list a {
+      color: #0066cc;
+      text-decoration: none;
+      padding: 4px 8px;
+      display: block;
+      border-radius: 4px;
+    }
+    .list a:hover {
+      background: #f0f0f0;
+    }
+    .list a.active {
+      background: #0066cc;
+      color: white;
+    }
+    .detail {
+      flex: 1;
+      padding: 16px;
+      background: #f9f9f9;
+      border-radius: 8px;
+      min-height: 200px;
+    }
   `;
 
   @property({ attribute: false })
@@ -252,14 +282,13 @@ class PeopleContainerComponent extends LitElement {
         <div class="list">
           <h3>Solar System</h3>
           <ul>
-            ${this.people.map(person => html`
-              <li>
-                <a
-                  ${uiSrefActive({ activeClasses: ['active'] })}
-                  ${uiSref('.person', { personId: person.id })}
-                >${person.name}</a>
-              </li>
-            `)}
+            ${this.people.map(
+              (person) => html`
+                <li>
+                  <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('.person', { personId: person.id })}>${person.name}</a>
+                </li>
+              `,
+            )}
           </ul>
         </div>
         <div class="detail">
@@ -275,8 +304,14 @@ class PeopleContainerComponent extends LitElement {
 @customElement('person-detail')
 class PersonDetailComponent extends LitElement {
   static styles = css`
-    h3 { margin-top: 0; color: #333; }
-    p { color: #666; line-height: 1.6; }
+    h3 {
+      margin-top: 0;
+      color: #333;
+    }
+    p {
+      color: #666;
+      line-height: 1.6;
+    }
   `;
 
   @property({ attribute: false })
@@ -305,10 +340,21 @@ class PersonDetailComponent extends LitElement {
 @customElement('app-root')
 class AppRoot extends LitElement {
   static styles = css`
-    h2 { color: #333; }
-    nav { margin-bottom: 24px; }
-    nav a { margin-right: 16px; color: #333; text-decoration: none; }
-    nav a.active { font-weight: bold; border-bottom: 2px solid #0066cc; }
+    h2 {
+      color: #333;
+    }
+    nav {
+      margin-bottom: 24px;
+    }
+    nav a {
+      margin-right: 16px;
+      color: #333;
+      text-decoration: none;
+    }
+    nav a.active {
+      font-weight: bold;
+      border-bottom: 2px solid #0066cc;
+    }
   `;
 
   render() {
@@ -345,7 +391,7 @@ const personState: LitStateDeclaration = {
       deps: ['$transition$', 'people'],
       resolveFn: ($transition$: any, people: Person[]) => {
         const personId = parseInt($transition$.params().personId);
-        return people.find(p => p.id === personId);
+        return people.find((p) => p.id === personId);
       },
     },
   ],
@@ -366,7 +412,7 @@ render(
       <app-root></app-root>
     </ui-router>
   `,
-  document.getElementById('root')!
+  document.getElementById('root')!,
 );
 ```
 
@@ -387,6 +433,7 @@ app-root
 ```
 
 When navigating to `/people/3`:
+
 1. `people` state is activated (if not already active)
 2. `PeopleContainerComponent` renders in the root `<ui-view>`
 3. `people.person` state is activated
@@ -398,15 +445,16 @@ When navigating to `/people/3`:
 
 You've now learned the core concepts of lit-ui-router:
 
-| Tutorial | Concepts |
-|----------|----------|
-| Hello World | States, components, navigation with `uiSref`, basic routing |
-| Hello Solar System | Resolves for data fetching, state parameters, accessing route data |
-| Hello Galaxy | Nested states, nested ui-views, relative references, resolve inheritance |
+| Tutorial           | Concepts                                                                 |
+| ------------------ | ------------------------------------------------------------------------ |
+| Hello World        | States, components, navigation with `uiSref`, basic routing              |
+| Hello Solar System | Resolves for data fetching, state parameters, accessing route data       |
+| Hello Galaxy       | Nested states, nested ui-views, relative references, resolve inheritance |
 
 ## What's Next?
 
 Explore the [Sample App](/app) to see a more complete example with:
+
 - Authentication and protected routes
 - Lazy-loaded states
 - Sticky states and deep state redirect

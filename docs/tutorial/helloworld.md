@@ -94,7 +94,7 @@ render(
       <app-root></app-root>
     </ui-router>
   `,
-  document.getElementById('root')!
+  document.getElementById('root')!,
 );
 ```
 
@@ -115,6 +115,7 @@ import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration } from 'lit-ui-r
 ```
 
 We import the essential dependencies:
+
 - **Lit**: `html`, `LitElement`, `css`, `render`, and `customElement` for building web components
 - **@uirouter/core**: `hashLocationPlugin` for hash-based URL routing (e.g., `/#/hello`)
 - **lit-ui-router**: The router class and directives
@@ -223,7 +224,7 @@ render(
       <app-root></app-root>
     </ui-router>
   `,
-  document.getElementById('root')!
+  document.getElementById('root')!,
 );
 ```
 
@@ -236,6 +237,7 @@ render(
 ## Next Steps
 
 Now that you understand the basics, continue to [Hello Solar System](./hellosolarsystem) to learn about:
+
 - Fetching data with **resolves**
 - Using **state parameters** in URLs
 - Passing parameters when navigating

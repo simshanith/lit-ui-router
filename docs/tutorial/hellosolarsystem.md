@@ -51,7 +51,7 @@ export const PeopleService = {
     return Promise.resolve(people);
   },
   getPerson: (id: number): Promise<Person | undefined> => {
-    return Promise.resolve(people.find(p => p.id === id));
+    return Promise.resolve(people.find((p) => p.id === id));
   },
 };
 ```
@@ -73,10 +73,12 @@ const peopleState: LitStateDeclaration = {
 ```
 
 The resolve block:
+
 - **token**: A string identifier for the resolved data
 - **resolveFn**: An async function that returns data (or a Promise)
 
 When navigating to `people`, the router:
+
 1. Calls `PeopleService.getAllPeople()`
 2. Waits for the Promise to resolve
 3. Renders `PeopleListComponent` with the data available
@@ -106,11 +108,13 @@ class PeopleListComponent extends LitElement {
     return html`
       <h3>Solar System</h3>
       <ul>
-        ${this.people.map(person => html`
-          <li>
-            <a ${uiSref('person', { personId: person.id })}>${person.name}</a>
-          </li>
-        `)}
+        ${this.people.map(
+          (person) => html`
+            <li>
+              <a ${uiSref('person', { personId: person.id })}>${person.name}</a>
+            </li>
+          `,
+        )}
       </ul>
     `;
   }
@@ -118,6 +122,7 @@ class PeopleListComponent extends LitElement {
 ```
 
 Key points:
+
 - **`_uiViewProps`**: Injected by `<ui-view>`, contains `resolves`, `router`, and `transition`
 - **Constructor parameter**: The props are passed to the constructor when the component is created
 - **`resolves.people`**: Access data using the resolve's token name
@@ -157,7 +162,7 @@ const personState: LitStateDeclaration = {
 Pass parameters when creating state links:
 
 ```typescript
-html`<a ${uiSref('person', { personId: person.id })}>${person.name}</a>`
+html`<a ${uiSref('person', { personId: person.id })}>${person.name}</a>`;
 ```
 
 The second argument to `uiSref` is a parameters object. This generates a URL like `/people/3`.
@@ -203,13 +208,7 @@ import { html, LitElement, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import {
-  UIRouterLit,
-  uiSref,
-  uiSrefActive,
-  LitStateDeclaration,
-  UIViewInjectedProps
-} from 'lit-ui-router';
+import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration, UIViewInjectedProps } from 'lit-ui-router';
 
 // Data Service
 interface Person {
@@ -228,18 +227,27 @@ const people: Person[] = [
 
 const PeopleService = {
   getAllPeople: (): Promise<Person[]> => Promise.resolve(people),
-  getPerson: (id: number): Promise<Person | undefined> =>
-    Promise.resolve(people.find(p => p.id === id)),
+  getPerson: (id: number): Promise<Person | undefined> => Promise.resolve(people.find((p) => p.id === id)),
 };
 
 // Components
 @customElement('people-list')
 class PeopleListComponent extends LitElement {
   static styles = css`
-    ul { list-style: none; padding: 0; }
-    li { margin: 8px 0; }
-    a { color: #0066cc; text-decoration: none; }
-    a:hover { text-decoration: underline; }
+    ul {
+      list-style: none;
+      padding: 0;
+    }
+    li {
+      margin: 8px 0;
+    }
+    a {
+      color: #0066cc;
+      text-decoration: none;
+    }
+    a:hover {
+      text-decoration: underline;
+    }
   `;
 
   @property({ attribute: false })
@@ -258,11 +266,13 @@ class PeopleListComponent extends LitElement {
     return html`
       <h3>Solar System</h3>
       <ul>
-        ${this.people.map(person => html`
-          <li>
-            <a ${uiSref('person', { personId: person.id })}>${person.name}</a>
-          </li>
-        `)}
+        ${this.people.map(
+          (person) => html`
+            <li>
+              <a ${uiSref('person', { personId: person.id })}>${person.name}</a>
+            </li>
+          `,
+        )}
       </ul>
     `;
   }
@@ -271,7 +281,10 @@ class PeopleListComponent extends LitElement {
 @customElement('person-detail')
 class PersonDetailComponent extends LitElement {
   static styles = css`
-    .back-link { margin-top: 16px; display: block; }
+    .back-link {
+      margin-top: 16px;
+      display: block;
+    }
   `;
 
   @property({ attribute: false })
@@ -303,9 +316,16 @@ class PersonDetailComponent extends LitElement {
 @customElement('app-root')
 class AppRoot extends LitElement {
   static styles = css`
-    nav { margin-bottom: 16px; }
-    nav a { margin-right: 16px; color: #333; }
-    nav a.active { font-weight: bold; }
+    nav {
+      margin-bottom: 16px;
+    }
+    nav a {
+      margin-right: 16px;
+      color: #333;
+    }
+    nav a.active {
+      font-weight: bold;
+    }
   `;
 
   render() {
@@ -363,7 +383,7 @@ render(
       <app-root></app-root>
     </ui-router>
   `,
-  document.getElementById('root')!
+  document.getElementById('root')!,
 );
 ```
 
@@ -372,6 +392,7 @@ render(
 ## URL Persistence
 
 Notice that the URL contains all the state information:
+
 - `/#/people` - The people list
 - `/#/people/3` - Venus details
 
@@ -382,6 +403,7 @@ You can bookmark these URLs or refresh the page, and the application will restor
 ## Next Steps
 
 Continue to [Hello Galaxy](./hellogalaxy) to learn about:
+
 - **Nested states** with parent-child relationships
 - **Nested ui-views** for complex layouts
 - **Relative state references** for navigation within a state hierarchy
