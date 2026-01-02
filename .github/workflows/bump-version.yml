@@ -25,15 +25,17 @@ permissions:
 jobs:
   bump_version:
     runs-on: ubuntu-latest
-
+    environment: publish
     env:
       INCREMENT: ${{ inputs.increment }}
       OTHER_INCREMENT: ${{ inputs.other }}
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
 
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Setup Git user
         run: |
           git config --global user.name "github-actions[bot]"

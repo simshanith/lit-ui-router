@@ -11,14 +11,16 @@ permissions:
 jobs:
   publish_gh:
     runs-on: ubuntu-latest
+    environment: publish
     env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v4
         with:
           fetch-depth: 0
           fetch-tags: true
+          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Setup Git user
         run: |
           git config --global user.name "github-actions[bot]"
