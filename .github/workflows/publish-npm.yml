@@ -31,4 +31,4 @@ jobs:
       - name: Build
         run: npm exec -- turbo run lit-ui-router#build
       - name: Publish
-        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true
+        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true --npm.skipChecks true
