@@ -1,0 +1,56 @@
+name: Bump version
+
+on:
+  workflow_dispatch:
+    inputs:
+      increment:
+        description: 'Increment'
+        required: true
+        default: 'patch'
+        type: choice
+        options:
+        - major
+        - minor
+        - patch
+        - other
+      other:
+        description: 'Other increment'
+        required: false
+        type: string
+
+jobs:
+  bump_version:
+    runs-on: ubuntu-latest
+
+    env:
+      INCREMENT: ${{ inputs.increment }}
+      OTHER_INCREMENT: ${{ inputs.other }}
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+      - name: Setup Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.13.1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.1'
+          cache: 'pnpm'
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Parse increment inputs
+        run: echo "ACTUAL_INCREMENT=$([ "$INCREMENT" != "other" ] && echo "$INCREMENT" || echo "$OTHER_INCREMENT")" >> $GITHUB_ENV
+      - name: Calculate bumped version
+        run: echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --increment $ACTUAL_INCREMENT)" >> $GITHUB_ENV
+      - name: Switch branches
+        run: git checkout -b "release/v$BUMPED_VERSION"
+      - name: Bump version
+        run: pnpm --filter lit-ui-router exec release-it --increment "$BUMPED_VERSION" --git.commit true --git.push true
+      - name: Create PR
+        run: gh pr create --base main --head "release/v$BUMPED_VERSION" --fill-verbose
