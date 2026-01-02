@@ -20,7 +20,7 @@ on:
 
 permissions:
   contents: write
-  pull_requests: write
+  pull-requests: write
 
 jobs:
   bump_version:
