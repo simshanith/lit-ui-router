@@ -18,6 +18,10 @@ on:
         required: false
         type: string
 
+permissions:
+  contents: write
+  pull_requests: write
+
 jobs:
   bump_version:
     runs-on: ubuntu-latest
