@@ -53,8 +53,8 @@ jobs:
       - name: Calculate bumped version
         run: echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --increment "$ACTUAL_INCREMENT")" >> "$GITHUB_ENV"
       - name: Switch branches
-        run: git checkout -b "release/v$BUMPED_VERSION"
+        run: git checkout -b "release/lit-ui-router/v$BUMPED_VERSION"
       - name: Bump version
         run: pnpm --filter lit-ui-router exec release-it --increment "$BUMPED_VERSION" --git.commit true --git.push true
       - name: Create PR
-        run: gh pr create --base main --head "release/v$BUMPED_VERSION" --fill-verbose
+        run: gh pr create --base main --head "release/lit-ui-router/v$BUMPED_VERSION" --fill-verbose
