@@ -45,9 +45,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Parse increment inputs
-        run: echo "ACTUAL_INCREMENT=$([ "$INCREMENT" != "other" ] && echo "$INCREMENT" || echo "$OTHER_INCREMENT")" >> $GITHUB_ENV
+        run: echo "ACTUAL_INCREMENT=$([ "$INCREMENT" != "other" ] && echo "$INCREMENT" || echo "$OTHER_INCREMENT")" >> "$GITHUB_ENV"
       - name: Calculate bumped version
-        run: echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --increment $ACTUAL_INCREMENT)" >> $GITHUB_ENV
+        run: echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --increment "$ACTUAL_INCREMENT")" >> "$GITHUB_ENV"
       - name: Switch branches
         run: git checkout -b "release/v$BUMPED_VERSION"
       - name: Bump version
