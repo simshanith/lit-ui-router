@@ -1,13 +1,18 @@
-name: Main Branch CI
+name: Publish to NPM
 
 on:
   push:
-    branches:
-      - main
+    tags:
+      - lit-ui-router@*
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
 
 jobs:
-  build_and_test:
+  publish_npm:
     runs-on: ubuntu-latest
+    environment: publish
 
     steps:
       - name: 'Checkout code'
@@ -21,11 +26,10 @@ jobs:
         with:
           node-version: '22.17.1'
           cache: 'pnpm'
+      - run: npm install -g npm@latest # Required for OIDC
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Browsers
-        run: pnpm --filter lit-ui-router exec playwright install --with-deps
-      - name: Install Cypress
-        run: pnpm --filter sample-app-lit-e2e exec cypress install
-      - name: Build and Test
-        run: pnpm run ci
+      - name: Build
+        run: npm exec -- turbo run lit-ui-router#build
+      - name: Publish
+        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true --npm.skipChecks true

@@ -1,6 +1,6 @@
 # UI-Router for Lit
 
-[![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/main.yml/badge.svg)](https://github.com/simshanith/lit-ui-router/actions/workflows/main.yml)
+[![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
 [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router)
 
 ### lit-ui-router: State based routing for Lit (v2+)
