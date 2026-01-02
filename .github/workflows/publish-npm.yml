@@ -26,6 +26,7 @@ jobs:
         with:
           node-version: '22.17.1'
           cache: 'pnpm'
+      - run: npm install -g npm@latest # Required for OIDC
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build
