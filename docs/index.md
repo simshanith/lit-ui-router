@@ -5,7 +5,7 @@ layout: home
 hero:
   name: 'Lit UI Router'
   text: 'State-based routing for Lit'
-  tagline: A UI-Router implementation for Lit web components
+  tagline: A <a href="https://ui-router.github.io/" target="_blank">UI-Router</a> implementation for <a href="https://lit.dev" target="_blank">Lit</a> web components
   actions:
     - theme: brand
       text: Get Started
