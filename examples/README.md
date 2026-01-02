@@ -10,6 +10,8 @@ Each example is a self-contained Vite + TypeScript project designed to run direc
 https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/<example-name>
 ```
 
+See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/integration/open-from-github#tips-best-practices)
+
 ### Available Examples
 
 | Example              | Description                                  | StackBlitz                                                                                         |
