@@ -3,6 +3,8 @@
   "version": "1.0.0",
   "type": "module",
   "module": "./dist/index.js",
+  "homepage": "https://lit-ui-router.dev",
+  "license": "MIT",
   "repository": {
     "type": "git",
     "url": "https://github.com/simshanith/lit-ui-router"
