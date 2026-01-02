@@ -4,7 +4,8 @@
     "commit": false,
     "tag": false,
     "tagName": "${npm.name}@${version}",
-    "push": false
+    "push": false,
+    "requireUpstream": false
   },
   "github": {
     "release": false,
