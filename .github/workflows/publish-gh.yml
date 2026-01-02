@@ -12,6 +12,10 @@ jobs:
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v4
+      - name: Setup Git user
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
