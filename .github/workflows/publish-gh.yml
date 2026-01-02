@@ -38,3 +38,4 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Tag & Release
         run: pnpm --filter lit-ui-router exec release-it --no-increment --git.tag true --git.push true --github.release true
+        continue-on-error: true
