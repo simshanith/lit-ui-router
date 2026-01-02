@@ -1,4 +1,4 @@
-name: Main Branch CI
+name: Tag and Release
 
 on:
   push:
@@ -6,7 +6,7 @@ on:
       - main
 
 jobs:
-  build_and_test:
+  publish_gh:
     runs-on: ubuntu-latest
 
     steps:
@@ -23,9 +23,5 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Install Playwright Browsers
-        run: pnpm --filter lit-ui-router exec playwright install --with-deps
-      - name: Install Cypress
-        run: pnpm --filter sample-app-lit-e2e exec cypress install
-      - name: Build and Test
-        run: pnpm run ci
+      - name: Tag & Release
+        run: pnpm --filter lit-ui-router exec release-it --no-increment --git.tag true --git.push true --github.release true

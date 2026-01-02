@@ -1,10 +1,14 @@
 name: Build and Test
 
-on: pull_request
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   build_and_test:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event_name == 'push' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository ) }}
     runs-on: ubuntu-latest
 
     steps:
