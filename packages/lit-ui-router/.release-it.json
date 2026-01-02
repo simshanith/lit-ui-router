@@ -3,6 +3,7 @@
   "git": {
     "commit": false,
     "tag": false,
+    "tagName": "${npm.name}@${version}",
     "push": false
   },
   "github": {
