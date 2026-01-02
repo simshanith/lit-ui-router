@@ -9,3 +9,13 @@
   color: var(--vp-c-brand-2);
   text-decoration: underline;
 }
+
+.VPHero .tagline a>img {
+  transition: box-shadow 0.25s ease-in-out;
+  display: inline-block;
+  box-shadow: 0px 0px 0px 0px currentColor;
+}
+
+.VPHero .tagline a:hover>img {
+  box-shadow: 0px 0px 12px 0px currentColor;
+}

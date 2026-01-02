@@ -5,7 +5,9 @@ layout: home
 hero:
   name: 'Lit UI Router'
   text: 'State-based routing for Lit'
-  tagline: A <a href="https://ui-router.github.io/" target="_blank">UI-Router</a> implementation for <a href="https://lit.dev" target="_blank">Lit</a> web components
+  tagline: |
+    A <a href="https://ui-router.github.io/" target="_blank">UI-Router</a> implementation for <a href="https://lit.dev" target="_blank">Lit</a> web components
+    <a href="https://www.npmjs.com/package/lit-ui-router" target="_blank"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router" /></a> <a href="https://github.com/simshanith/lit-ui-router/releases/latest" target="_blank"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router" /></a>
   actions:
     - theme: brand
       text: Get Started
