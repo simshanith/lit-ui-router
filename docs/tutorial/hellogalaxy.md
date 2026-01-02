@@ -455,7 +455,7 @@ You've now learned the core concepts of lit-ui-router:
 
 ## What's Next?
 
-Explore the [Sample App](/app) to see a more complete example with:
+Explore the <a href="/app" target="_self">Sample App</a> to see a more complete example with:
 
 - Authentication and protected routes
 - Lazy-loaded states
