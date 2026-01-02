@@ -1,0 +1,11 @@
+/* Style links in the homepage tagline */
+.VPHero .tagline a {
+  color: var(--vp-c-brand-1);
+  text-decoration: none;
+  transition: color 0.25s, text-decoration 0.25s;
+}
+
+.VPHero .tagline a:hover {
+  color: var(--vp-c-brand-2);
+  text-decoration: underline;
+}

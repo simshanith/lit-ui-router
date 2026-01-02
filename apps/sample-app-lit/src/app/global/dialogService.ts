@@ -9,7 +9,7 @@ export interface DialogProps {
 }
 
 export class DialogService implements DialogProps {
-  message: string;
+  message = '';
   details = 'Are you sure?';
   confirmMsg = 'Yes';
   denyMsg = 'No';
@@ -34,7 +34,7 @@ export class DialogService implements DialogProps {
   }
 
   confirm = (
-    message,
+    message: string,
     details = 'Are you sure?',
     confirmMsg = 'Yes',
     denyMsg = 'No',

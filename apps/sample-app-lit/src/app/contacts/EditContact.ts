@@ -1,11 +1,11 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { UIViewInjectedProps, uiSref, RoutedLitElement } from '@uirouter/lit';
+import { UIViewInjectedProps, uiSref, RoutedLitElement } from 'lit-ui-router';
 import { isEqual, cloneDeep } from 'lodash';
 
 import './ContactList.js';
-
 import './ContactForm.js';
+import { Contact } from './interface.js';
 import { ContactsStorage } from '../global/dataSources.js';
 import DialogService from '../global/dialogService.js';
 
@@ -38,8 +38,8 @@ export class EditContact extends RoutedLitElement {
     return this;
   }
 
-  get contact() {
-    return this._uiViewProps?.resolves.contact;
+  get contact(): Contact | undefined {
+    return this._uiViewProps.resolves?.contact;
   }
 
   @state()
@@ -63,7 +63,7 @@ export class EditContact extends RoutedLitElement {
     return this.canExit;
   };
 
-  handleChangeContact = (e) => {
+  handleChangeContact = (e: CustomEvent<Contact>) => {
     this.updatedContact = { ...this.updatedContact, ...e.detail };
   };
 
@@ -72,7 +72,7 @@ export class EditContact extends RoutedLitElement {
     const { stateService } = this._uiViewProps.router;
     ContactsStorage.save(this.updatedContact)
       .then(() => (this.canExit = true))
-      .then(() => stateService.go('^', null, { reload: true }));
+      .then(() => stateService.go('^', undefined, { reload: true }));
   };
 
   removeContact = () => {
@@ -80,11 +80,11 @@ export class EditContact extends RoutedLitElement {
     const contact = this.updatedContact;
     const { stateService } = this._uiViewProps.router;
     DialogService.confirm(
-      `Delete contact: ${contact.name.first} ${contact.name.last}`,
+      `Delete contact: ${contact?.name.first} ${contact?.name.last}`,
     )
       .then(() => ContactsStorage.remove(contact))
       .then(() => (this.canExit = true))
-      .then(() => stateService.go('^.^', null, { reload: true }));
+      .then(() => stateService.go('^.^', undefined, { reload: true }));
   };
 
   render() {

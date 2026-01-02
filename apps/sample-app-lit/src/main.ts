@@ -1,11 +1,11 @@
 import { html, render } from 'lit';
 import '@api-viewer/docs';
-import { UIRouterLit, UIRouterLitElement } from '@uirouter/lit';
-import customElementsJsonUrl from '@uirouter/lit/dist/custom-elements.json?url';
+import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
+import customElementsJsonUrl from 'lit-ui-router/dist/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
 
-let router: UIRouterLit;
+let router: UIRouterLit | undefined;
 const handleUiRouterContext = {
   handleEvent(e: CustomEvent<{ uiRouter: UIRouterLit }>) {
     router = e.detail.uiRouter;
@@ -36,9 +36,9 @@ render(
   root,
 );
 
-const element: UIRouterLitElement = root.querySelector('ui-router');
-const routerFromElement = element.uiRouter;
-router = router || routerFromElement;
+const element = root.querySelector('ui-router') as UIRouterLitElement | null;
+const routerFromElement = element?.uiRouter;
+router = router || routerFromElement!;
 
 if (routerFromElement === router) {
   console.info('obtained ui-router from element');

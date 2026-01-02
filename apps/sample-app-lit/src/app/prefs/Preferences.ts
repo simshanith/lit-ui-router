@@ -21,8 +21,8 @@ export class Preferences extends LitElement {
     AppConfig.save();
     document.location.reload();
   };
-  handleRestDelayChange = (e) => {
-    this.restDelay = Number(e.target.value);
+  handleRestDelayChange = (e: Event) => {
+    this.restDelay = Number((e.target as HTMLInputElement).value);
   };
   render() {
     return html`<div>

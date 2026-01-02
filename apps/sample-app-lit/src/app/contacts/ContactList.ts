@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { uiSref, uiSrefActive } from '@uirouter/lit';
+import { uiSref, uiSrefActive } from 'lit-ui-router';
 
 @customElement('sample-contact-list')
 export class ContactList extends LitElement {

@@ -1,8 +1,8 @@
-import { html, LitElement } from 'lit';
+import { html, LitElement, PropertyValues } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
 import { Rejection } from '@uirouter/core';
-import { UIViewInjectedProps, RoutedLitElement } from '@uirouter/lit';
+import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
 import { MessagesStorage } from '../global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
@@ -16,16 +16,20 @@ export class Compose extends RoutedLitElement {
   }
 
   @state()
-  pristineMessage: Message;
+  pristineMessage!: Message;
 
   @state()
-  message: Message;
+  message!: Message;
 
   static sticky = true;
 
   get stateParams(): { message: Partial<Message> } {
     return this._uiViewProps!.resolves.$stateParams;
   }
+  @property({ attribute: false })
+  _uiViewProps!: UIViewInjectedProps;
+
+  canExit = false;
 
   get messageStateParam() {
     return this.stateParams.message;
@@ -64,8 +68,6 @@ export class Compose extends RoutedLitElement {
     this.willUpdate();
   }
 
-  canExit: boolean;
-
   /**
    * Checks if the edited copy and the pristine copy are identical when the state is changing.
    * If they are not identical, the allows the user to confirm navigating away without saving.
@@ -90,8 +92,8 @@ export class Compose extends RoutedLitElement {
     const { transition, router } = this._uiViewProps;
     const hasPrevious = !!transition?.from().name;
     const exitState = 'mymessages.messagelist';
-    const previousState = hasPrevious ? transition.from() : exitState;
-    const previousParams = hasPrevious ? transition.params('from') : {};
+    const previousState = hasPrevious ? transition!.from() : exitState;
+    const previousParams = hasPrevious ? transition!.params('from') : {};
     try {
       await router.stateService.go(exitState);
       await router.stateService.go(previousState, previousParams);
@@ -117,10 +119,10 @@ export class Compose extends RoutedLitElement {
       .then(() => this.gotoPreviousState());
   }
 
-  handleChangeMessage = (detail: string) => (e) => {
+  handleChangeMessage = (detail: string) => (e: Event) => {
     this.message = {
       ...this.message,
-      [detail]: e.target.value,
+      [detail]: (e.target as HTMLInputElement).value,
     };
   };
 

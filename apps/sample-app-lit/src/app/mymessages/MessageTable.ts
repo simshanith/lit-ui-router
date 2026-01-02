@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
-import { uiSref, uiSrefActive } from '@uirouter/lit';
+import { uiSref, uiSrefActive } from 'lit-ui-router';
 import { isEqual } from 'lodash';
 
 import { orderBy } from './messageListUIService.js';
@@ -36,7 +36,7 @@ export class MessageTable extends LitElement {
   }
 
   @property({ attribute: false })
-  columns: { name: string }[];
+  columns: string[] = [];
 
   @property({
     hasChanged(value, oldValue) {
@@ -44,12 +44,12 @@ export class MessageTable extends LitElement {
     },
     attribute: false,
   })
-  messages: Message[];
+  messages: Message[] = [];
 
   @state()
   sort = AppConfig.sort;
 
-  colVisible = (name) => this.columns.indexOf(name) !== -1;
+  colVisible = (name: string) => this.columns.indexOf(name) !== -1;
   changeSort = (e: ChangeEvent) => (this.sort = e.detail.sort);
   formattedContent = (message: Message, col: keyof Message) => {
     if (col === 'date')

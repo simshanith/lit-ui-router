@@ -1,8 +1,8 @@
 import { LitElement, html } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { UIViewInjectedProps, RoutedLitElement } from '@uirouter/lit';
+import { customElement } from 'lit/decorators.js';
+import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
-import './ContactList';
+import './ContactList.js';
 
 @customElement('sample-contacts')
 export class Contacts extends RoutedLitElement {
@@ -11,7 +11,7 @@ export class Contacts extends RoutedLitElement {
   }
 
   get contacts() {
-    return [...this._uiViewProps.resolves.contacts];
+    return [...(this._uiViewProps.resolves?.contacts ?? [])];
   }
 
   render() {

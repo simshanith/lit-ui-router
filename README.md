@@ -1,6 +1,7 @@
 # UI-Router for Lit
 
-[![Build and Test](https://github.com/simshanith/lit-ui-router/actions/workflows/pull-request.yml/badge.svg)](https://github.com/simshanith/lit-ui-router/actions/workflows/pull-request.yml)
+[![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
+[![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router)
 
 ### lit-ui-router: State based routing for Lit (v2+)
 
@@ -20,6 +21,7 @@ application states in a transaction-like manner.
 ## Get Started
 
 - [About UI-Router](https://ui-router.github.io/about)
+- [Examples](./examples) - Try live examples on StackBlitz
 
 The UI-Router package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 

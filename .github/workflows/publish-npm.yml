@@ -1,0 +1,35 @@
+name: Publish to NPM
+
+on:
+  push:
+    tags:
+      - lit-ui-router@*
+
+permissions:
+  id-token: write  # Required for OIDC
+  contents: read
+
+jobs:
+  publish_npm:
+    runs-on: ubuntu-latest
+    environment: publish
+
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v4
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 10.13.1
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22.17.1'
+          cache: 'pnpm'
+      - run: npm install -g npm@latest # Required for OIDC
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Build
+        run: npm exec -- turbo run lit-ui-router#build
+      - name: Publish
+        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true --npm.skipChecks true

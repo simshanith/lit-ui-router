@@ -1,10 +1,14 @@
 name: Build and Test
 
-on: pull_request
+on:
+  pull_request:
+  push:
+    branches:
+      - main
 
 jobs:
   build_and_test:
-    if: github.event.pull_request.head.repo.full_name == github.repository
+    if: ${{ github.event_name == 'push' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository ) }}
     runs-on: ubuntu-latest
 
     steps:
@@ -22,7 +26,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Install Playwright Browsers
-        run: pnpm --filter @uirouter/lit exec playwright install --with-deps
+        run: pnpm --filter lit-ui-router exec playwright install --with-deps
       - name: Install Cypress
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
