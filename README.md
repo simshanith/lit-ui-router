@@ -2,6 +2,8 @@
 
 [![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
 [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router)
+[![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router)](https://github.com/simshanith/lit-ui-router/releases/latest)
+
 
 ### lit-ui-router: State based routing for Lit (v2+)
 
