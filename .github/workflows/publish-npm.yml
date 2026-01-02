@@ -29,6 +29,6 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build
-        run: pnpm exec turbo run lit-ui-router#build
+        run: npm exec -- turbo run lit-ui-router#build
       - name: Publish
         run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true
