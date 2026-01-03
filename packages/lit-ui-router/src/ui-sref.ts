@@ -117,7 +117,7 @@ export class UiSrefDirective extends AsyncDirective {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
     const $state = router?.stateService;
-    if (!$state) {
+    if (!$state || !this.element?.isConnected) {
       return;
     }
     const { button, ctrlKey, metaKey, target } = event;

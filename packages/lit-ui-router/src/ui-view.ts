@@ -203,7 +203,7 @@ export class UiView extends LitElement {
 
     const parentFqn = parentView?._uiViewData?.fqn;
     const creationContext =
-      parentView?.viewContext || router.stateRegistry.root();
+      parentView?.viewContext || router?.stateRegistry.root();
     const fqn = parentFqn ? parentFqn + '.' + name : name;
 
     this._uiViewData = {
@@ -215,6 +215,10 @@ export class UiView extends LitElement {
       configUpdated: this._viewConfigUpdated.bind(this),
       config: undefined as unknown as ViewConfig,
     };
+
+    if (!router) {
+      return;
+    }
 
     this.disconnectedHandlers.push(
       router.transitionService.onBefore({}, (trans) => {
