@@ -2,7 +2,6 @@ import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import {
   memoryLocationPlugin,
-  // StateDeclaration,
   pushStateLocationPlugin,
 } from '@uirouter/core';
 import { page, UserEventClickOptions } from 'vitest/browser';
