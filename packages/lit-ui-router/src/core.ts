@@ -40,7 +40,13 @@ export class LitViewConfig implements ViewConfig {
 export function isLitViewDeclarationTemplate(
   config: LitViewDeclaration,
 ): config is LitViewDeclarationTemplate {
-  return isFunction(config);
+  if (isFunction(config)) {
+    if (config.prototype instanceof LitElement) {
+      return '_uiViewProps' in config.prototype || config.length === 1;
+    }
+    return true;
+  }
+  return false;
 }
 
 export function isRoutedLitElement(

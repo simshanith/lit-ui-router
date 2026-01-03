@@ -1,0 +1,14 @@
+diff --git a/dist/client/__vitest_browser__/tester-g_x0OsgY.js b/dist/client/__vitest_browser__/tester-g_x0OsgY.js
+index 1234567..abcdefg 100644
+--- a/dist/client/__vitest_browser__/tester-g_x0OsgY.js
++++ b/dist/client/__vitest_browser__/tester-g_x0OsgY.js
+@@ -1962,6 +1962,9 @@
+   if (!("iframeId" in data) || data.iframeId !== getBrowserState().iframeId) {
+     return;
+   }
++  if (data.event.startsWith("response:")) {
++    return;
++  }
+   switch (data.event) {
+     case "execute": {
+       const { method, files, context } = data;

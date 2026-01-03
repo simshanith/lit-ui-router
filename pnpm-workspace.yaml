@@ -10,4 +10,5 @@ onlyBuiltDependencies:
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   '@uirouter/dsr': patches/@uirouter__dsr.patch
+  '@vitest/browser@4.0.16': patches/@vitest__browser@4.0.16.patch
   lit-dialog: patches/lit-dialog.patch

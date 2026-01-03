@@ -43,3 +43,4 @@ certs/
 .claude
 
 lit-ui-router-*.tgz
+**/specs/__screenshots__
