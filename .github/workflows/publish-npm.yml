@@ -45,4 +45,6 @@ jobs:
         with:
           subject-path: 'packages/lit-ui-router/lit-ui-router-*.tgz'
       - name: Publish
-        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz"
+        run: pnpm --filter lit-ui-router exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz" --github.draft true
+      - name: Mark Release as final
+        run: pnpm --filter lit-ui-router exec -- release-it --no-increment --github.release true --github.update true --no-github.draft
