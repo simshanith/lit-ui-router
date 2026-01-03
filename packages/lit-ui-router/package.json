@@ -33,6 +33,7 @@
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "0.10.4",
     "@vitest/browser-playwright": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.16",
     "playwright": "1.54.1",
     "prettier": "3.6.2",
     "release-it": "^19.2.2",
