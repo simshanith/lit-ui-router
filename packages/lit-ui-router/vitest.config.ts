@@ -5,8 +5,6 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['src/specs/**/*.spec.ts'],
-    isolate: false,
-    maxWorkers: 1,
     browser: {
       enabled: true,
       headless: true,

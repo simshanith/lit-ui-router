@@ -206,10 +206,7 @@ describe('uiSref directive', () => {
     });
   });
 
-  // TODO: These tests pass individually but trigger vitest browser-mode internal errors
-  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/9379
-  // The uiSref click modifier behavior IS tested in 'click navigation' tests above.
-  describe.skip('click modifiers', () => {
+  describe('click modifiers', () => {
     it('should ignore click with ctrl key', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
@@ -261,10 +258,8 @@ describe('uiSref directive', () => {
     });
   });
 
-  // TODO: These tests pass individually but trigger vitest browser-mode internal errors
-  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/9379
-  describe.skip('target attribute', () => {
-    it.only('should ignore click with target="_blank"', async () => {
+  describe('target attribute', () => {
+    it('should ignore click with target="_blank"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
       const uiRouter = document.createElement(
@@ -290,7 +285,7 @@ describe('uiSref directive', () => {
       expect(goSpy).not.toHaveBeenCalled();
     });
 
-    it.only('should ignore click with rel="external"', async () => {
+    it('should ignore click with rel="external"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
       const uiRouter = document.createElement(
