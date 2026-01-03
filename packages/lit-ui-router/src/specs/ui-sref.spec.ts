@@ -33,8 +33,15 @@ describe('uiSref directive', () => {
   });
 
   afterEach(async () => {
+    // Remove DOM first to trigger directive disconnection
     container.remove();
-    router = undefined;
+    await tick(10);
+
+    // Dispose router to clean up internal subscriptions
+    if (router) {
+      router.dispose();
+      router = undefined;
+    }
     await tick();
   });
 
@@ -198,7 +205,7 @@ describe('uiSref directive', () => {
     });
   });
 
-  describe.skip('click modifiers', () => {
+  describe('click modifiers', () => {
     it('should ignore click with ctrl key', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
@@ -244,7 +251,7 @@ describe('uiSref directive', () => {
     });
   });
 
-  describe.skip('target attribute', () => {
+  describe('target attribute', () => {
     it('should ignore click with target="_blank"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
@@ -298,34 +305,58 @@ describe('uiSref directive', () => {
     });
   });
 
-  describe.skip('uiSrefTarget event', () => {
-    it('should dispatch uiSrefTarget event', async () => {
-      const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
-      const { anchor } = await setupWithSref(states, 'home');
+  describe('uiSrefTarget event', () => {
+    it('should dispatch uiSrefTarget event on href change', async () => {
+      router = createTestRouter([
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ]);
+
+      const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
 
       const eventSpy = vi.fn();
-      anchor.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
 
-      // Trigger a re-render to dispatch event
-      render(html`<a ${uiSref('home')}>Link</a>`, anchor.parentElement!);
+      // Initial render - should dispatch event
+      render(html`<a ${uiSref('home')}>Link</a>`, wrapper);
+      await tick(50);
+
+      expect(eventSpy).toHaveBeenCalled();
+
+      // Change to different state - should dispatch again
+      eventSpy.mockClear();
+      render(html`<a ${uiSref('about')}>Link</a>`, wrapper);
       await tick(50);
 
       expect(eventSpy).toHaveBeenCalled();
     });
 
     it('should include targetState in event detail', async () => {
-      const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
-      const { anchor } = await setupWithSref(states, 'home');
+      router = createTestRouter([{ name: 'home', url: '/home' }]);
+
+      const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
 
       let receivedTargetState: TargetState | undefined;
-      anchor.addEventListener(UI_SREF_TARGET_EVENT, ((
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
         event: UiSrefTargetEvent,
       ) => {
         receivedTargetState = event.detail.targetState;
       }) as EventListener);
 
-      // Trigger a re-render
-      render(html`<a ${uiSref('home')}>Link</a>`, anchor.parentElement!);
+      // Render - should dispatch event with targetState
+      render(html`<a ${uiSref('home')}>Link</a>`, wrapper);
       await tick(50);
 
       expect(receivedTargetState).toBeDefined();
