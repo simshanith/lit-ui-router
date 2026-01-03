@@ -10,6 +10,9 @@ jobs:
   build_and_test:
     if: ${{ github.event_name == 'push' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository ) }}
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
 
     steps:
       - name: 'Checkout code'
@@ -31,3 +34,13 @@ jobs:
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
         run: pnpm run ci
+      - name: Vitest Coverage Report
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          working-directory: packages/lit-ui-router
+      - name: Upload to Codecov
+        uses: codecov/codecov-action@v5
+        with:
+          files: packages/lit-ui-router/coverage/lcov.info
+          fail_ci_if_error: false

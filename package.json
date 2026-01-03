@@ -8,7 +8,8 @@
     "dev": "turbo run dev",
     "lint": "turbo run lint",
     "format": "turbo run format",
-    "ci": "turbo run ci"
+    "ci": "turbo run ci",
+    "test:coverage": "turbo run test:coverage"
   },
   "engines": {
     "node": ">=22.17.1"

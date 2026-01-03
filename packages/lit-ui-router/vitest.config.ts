@@ -5,6 +5,11 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['src/specs/**/*.spec.ts'],
+    coverage: {
+      reporter: ['text', 'json', 'json-summary', 'lcov'],
+      reportsDirectory: './coverage',
+      exclude: ['src/specs/**'],
+    },
     browser: {
       enabled: true,
       headless: true,
