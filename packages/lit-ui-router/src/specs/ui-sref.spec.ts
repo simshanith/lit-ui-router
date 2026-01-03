@@ -207,7 +207,7 @@ describe('uiSref directive', () => {
   });
 
   // TODO: These tests pass individually but trigger vitest browser-mode internal errors
-  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/TODO
+  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/9379
   // The uiSref click modifier behavior IS tested in 'click navigation' tests above.
   describe.skip('click modifiers', () => {
     it('should ignore click with ctrl key', async () => {
@@ -262,7 +262,7 @@ describe('uiSref directive', () => {
   });
 
   // TODO: These tests pass individually but trigger vitest browser-mode internal errors
-  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/TODO
+  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/9379
   describe.skip('target attribute', () => {
     it.only('should ignore click with target="_blank"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
