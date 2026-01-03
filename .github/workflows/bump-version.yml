@@ -17,18 +17,30 @@ on:
         description: 'Other increment'
         required: false
         type: string
+      prBase:
+        description: 'GitHub PR base branch'
+        required: true
+        default: 'main'
+        type: string
+      branchPrefix:
+        description: 'GitHub PR branch prefix'
+        required: false
+        default: 'release/lit-ui-router/v'
+        type: string
 
 permissions:
   contents: write
-  pull-requests: write
+  # pull-requests: write # instead handled by GH_PERSONAL_ACCESS_TOKEN for downstream actions
 
 jobs:
   bump_version:
     runs-on: ubuntu-latest
-    environment: publish
+    environment: bump-version
     env:
       INCREMENT: ${{ inputs.increment }}
       OTHER_INCREMENT: ${{ inputs.other }}
+      PR_BASE: ${{ inputs.prBase }}
+      BRANCH_PREFIX: ${{ inputs.branchPrefix }}
       GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
 
     steps:
@@ -56,8 +68,8 @@ jobs:
       - name: Calculate bumped version
         run: echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --increment "$ACTUAL_INCREMENT")" >> "$GITHUB_ENV"
       - name: Switch branches
-        run: git switch --create "release/lit-ui-router/v$BUMPED_VERSION"
+        run: git switch --create "$BRANCH_PREFIX$BUMPED_VERSION"
       - name: Bump version
         run: pnpm --filter lit-ui-router exec release-it --increment "$BUMPED_VERSION" --git.commit true --git.push true
       - name: Create PR
-        run: gh pr create --base main --head "release/lit-ui-router/v$BUMPED_VERSION" --fill-verbose
+        run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose

@@ -41,3 +41,5 @@ certs/
 
 .turbo
 .claude
+
+lit-ui-router-*.tgz
