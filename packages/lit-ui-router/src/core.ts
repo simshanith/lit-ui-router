@@ -42,7 +42,7 @@ export function isLitViewDeclarationTemplate(
 ): config is LitViewDeclarationTemplate {
   if (isFunction(config)) {
     if (config.prototype instanceof LitElement) {
-      return '_uiViewProps' in config.prototype;
+      return '_uiViewProps' in config.prototype || config.length === 1;
     }
     return true;
   }
