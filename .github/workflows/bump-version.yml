@@ -13,6 +13,7 @@ on:
         - minor
         - patch
         - other
+        - none
       other:
         description: 'Other increment'
         required: false
@@ -64,11 +65,22 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Parse increment inputs
-        run: echo "ACTUAL_INCREMENT=$([ "$INCREMENT" != "other" ] && echo "$INCREMENT" || echo "$OTHER_INCREMENT")" >> "$GITHUB_ENV"
+        run: |
+          echo "ACTUAL_INCREMENT=$(
+            if [ "$INCREMENT" != "other" ]; then
+              if [ "$INCREMENT" != "none" ]; then
+                echo "--increment $INCREMENT"
+              else
+                echo "$OTHER_INCREMENT"
+              fi
+            else
+              echo "--increment $OTHER_INCREMENT"
+            fi
+          )" >> "$GITHUB_ENV"
       - name: Calculate bumped version
         run: |
           read -r -a INCREMENT_ARGS <<< "$ACTUAL_INCREMENT"
-          echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --increment "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
+          echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
       - name: Switch branches
         run: git switch --create "$BRANCH_PREFIX$BUMPED_VERSION"
       - name: Bump version
