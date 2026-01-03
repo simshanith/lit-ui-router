@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
+import { UIViewInjectedProps, uiSref, RoutedLitElement } from 'lit-ui-router';
 import { isEqual, cloneDeep } from 'lodash';
 
 import './ContactList.js';
@@ -33,7 +33,7 @@ import DialogService from '../global/dialogService.js';
  *   the `reload: true` option re-fetches the contacts resolve data from the server
  */
 @customElement('sample-edit-contact')
-export class EditContact extends LitElement {
+export class EditContact extends RoutedLitElement {
   createRenderRoot() {
     return this;
   }
@@ -46,10 +46,12 @@ export class EditContact extends LitElement {
   canExit = false;
 
   @state()
-  updatedContact = cloneDeep(this.contact);
+  updatedContact;
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
-    super();
+  async willUpdate() {
+    if (!this.updatedContact) {
+      this.updatedContact = cloneDeep(this.contact);
+    }
   }
 
   uiCanExit = async () => {

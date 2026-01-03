@@ -1,7 +1,8 @@
 import { html, LitElement, PropertyValues } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
-import { UIViewInjectedProps } from 'lit-ui-router';
+import { Rejection } from '@uirouter/core';
+import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
 import { MessagesStorage } from '../global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
@@ -9,7 +10,7 @@ import DialogService from '../global/dialogService.js';
 import { Message } from './interface.js';
 
 @customElement('sample-compose')
-export class Compose extends LitElement {
+export class Compose extends RoutedLitElement {
   createRenderRoot() {
     return this;
   }
@@ -22,32 +23,35 @@ export class Compose extends LitElement {
 
   static sticky = true;
 
+  get stateParams(): { message: Partial<Message> } {
+    return this._uiViewProps!.resolves.$stateParams;
+  }
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
   canExit = false;
 
-  constructor(_uiViewProps: UIViewInjectedProps) {
-    super();
-    this._uiViewProps = _uiViewProps;
-    this.pristineMessage = this.buildPristineMessage();
-    this.message = { ...this.pristineMessage };
+  get messageStateParam() {
+    return this.stateParams.message;
   }
+
+  blankMessage: Message = {
+    body: '',
+    to: '',
+    subject: '',
+    from: AppConfig.emailAddress,
+  };
 
   buildPristineMessage(): Message {
     return {
-      body: '',
-      to: '',
-      subject: '',
-      ...this._uiViewProps?.resolves?.$stateParams?.message,
-      from: AppConfig.emailAddress,
+      ...this.blankMessage,
+      ...this.messageStateParam,
     };
   }
 
   async willUpdate() {
     let pristineMessage;
     if (
-      this.pristineMessage &&
       !isEqual(
         this.pristineMessage,
         (pristineMessage = this.buildPristineMessage()),
@@ -58,24 +62,10 @@ export class Compose extends LitElement {
     }
   }
 
-  shouldUpdate(changedProperties: PropertyValues) {
-    // let pristineMessage;
-    // if (this.pristineMessage && !isEqual(this.pristineMessage, pristineMessage = this.buildPristineMessage())) {
-    //   this.pristineMessage = pristineMessage;
-    //   this.message = {...this.pristineMessage};
-    //   return true;
-    // }
-    return super.shouldUpdate(changedProperties);
-  }
+  uiOnParamsChanged(changedProperties) {
+    console.info('uiOnParamsChanged', changedProperties, this.stateParams);
 
-  uiOnParamsChanged(changedProperties: Record<string, unknown>) {
-    console.info(
-      'uiOnParamsChanged',
-      changedProperties,
-      this._uiViewProps?.resolves?.$stateParams,
-    );
-    // this.pristineMessage = { body: '', to: '', subject: '', ...this._uiViewProps.resolves.$stateParams.message, from: AppConfig.emailAddress };
-    // this.message = {...this.pristineMessage};
+    this.willUpdate();
   }
 
   /**
@@ -98,12 +88,22 @@ export class Compose extends LitElement {
    * - Checks the transition which activated this controller for a 'from state' that isn't the implicit root state.
    * - If there is no previous state (because the user deep-linked in, etc), then go to 'mymessages.messagelist'
    */
-  gotoPreviousState() {
+  async gotoPreviousState() {
     const { transition, router } = this._uiViewProps;
     const hasPrevious = !!transition?.from().name;
-    const state = hasPrevious ? transition!.from() : 'mymessages.messagelist';
-    const params = hasPrevious ? transition!.params('from') : {};
-    router.stateService.go(state, params);
+    const exitState = 'mymessages.messagelist';
+    const previousState = hasPrevious ? transition!.from() : exitState;
+    const previousParams = hasPrevious ? transition!.params('from') : {};
+    try {
+      await router.stateService.go(exitState);
+      await router.stateService.go(previousState, previousParams);
+    } catch (e) {
+      if (e instanceof Rejection) {
+        console.warn(e);
+      } else {
+        throw e;
+      }
+    }
   }
 
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */

@@ -1,13 +1,13 @@
 import { html, LitElement, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
-import { UIViewInjectedProps } from 'lit-ui-router';
+import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
 
 @customElement('sample-app')
-export class App extends LitElement {
+export class App extends RoutedLitElement {
   createRenderRoot() {
     return this;
   }
