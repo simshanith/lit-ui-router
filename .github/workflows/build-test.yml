@@ -44,3 +44,4 @@ jobs:
         with:
           files: packages/lit-ui-router/coverage/lcov.info
           fail_ci_if_error: false
+          token: ${{ secrets.CODECOV_TOKEN }}
