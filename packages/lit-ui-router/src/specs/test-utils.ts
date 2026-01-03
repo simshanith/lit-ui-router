@@ -5,7 +5,7 @@ import {
   // StateDeclaration,
   pushStateLocationPlugin,
 } from '@uirouter/core';
-
+import { page, UserEventClickOptions } from 'vitest/browser';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { LitStateDeclaration } from '../interface.js';
@@ -65,6 +65,13 @@ export function clickElement(
     ...options,
   });
   element.dispatchEvent(event);
+}
+
+export function clickLocatedElement(
+  element: Element,
+  options: UserEventClickOptions = {},
+) {
+  return page.elementLocator(element).click(options);
 }
 
 /**

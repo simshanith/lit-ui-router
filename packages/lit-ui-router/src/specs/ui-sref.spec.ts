@@ -20,6 +20,7 @@ import {
   waitForUpdate,
   routerGo,
   clickElement,
+  clickLocatedElement,
 } from './test-utils.js';
 
 describe('uiSref directive', () => {
@@ -206,7 +207,7 @@ describe('uiSref directive', () => {
   });
 
   // TODO: These tests pass individually but trigger vitest browser-mode internal errors
-  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/7675
+  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/TODO
   // The uiSref click modifier behavior IS tested in 'click navigation' tests above.
   describe.skip('click modifiers', () => {
     it('should ignore click with ctrl key', async () => {
@@ -214,7 +215,8 @@ describe('uiSref directive', () => {
       const { anchor } = await setupWithSref(states, 'home');
 
       const goSpy = vi.spyOn(router.stateService, 'go');
-      clickElement(anchor, { ctrlKey: true });
+      // clickElement(anchor, { ctrlKey: true });
+      await clickLocatedElement(anchor, { modifiers: ['Control'] });
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
@@ -225,7 +227,9 @@ describe('uiSref directive', () => {
       const { anchor } = await setupWithSref(states, 'home');
 
       const goSpy = vi.spyOn(router.stateService, 'go');
-      clickElement(anchor, { metaKey: true });
+      // clickElement(anchor, { metaKey: true });
+      await clickLocatedElement(anchor, { modifiers: ['Meta'] });
+
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
@@ -236,7 +240,9 @@ describe('uiSref directive', () => {
       const { anchor } = await setupWithSref(states, 'home');
 
       const goSpy = vi.spyOn(router.stateService, 'go');
-      clickElement(anchor, { button: 1 });
+      // clickElement(anchor, { button: 1 });
+      await clickLocatedElement(anchor, { button: 'middle' });
+
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
@@ -247,7 +253,8 @@ describe('uiSref directive', () => {
       const { anchor } = await setupWithSref(states, 'home');
 
       const goSpy = vi.spyOn(router.stateService, 'go');
-      clickElement(anchor, { button: 2 });
+      await clickLocatedElement(anchor, { button: 'right' });
+
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
@@ -255,9 +262,9 @@ describe('uiSref directive', () => {
   });
 
   // TODO: These tests pass individually but trigger vitest browser-mode internal errors
-  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/7675
+  // when run together with other tests. See: https://github.com/vitest-dev/vitest/issues/TODO
   describe.skip('target attribute', () => {
-    it('should ignore click with target="_blank"', async () => {
+    it.only('should ignore click with target="_blank"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
       const uiRouter = document.createElement(
@@ -277,13 +284,13 @@ describe('uiSref directive', () => {
 
       const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
       const goSpy = vi.spyOn(router.stateService, 'go');
-      clickElement(anchor);
+      await clickLocatedElement(anchor);
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
     });
 
-    it('should ignore click with rel="external"', async () => {
+    it.only('should ignore click with rel="external"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
       const uiRouter = document.createElement(
@@ -303,7 +310,7 @@ describe('uiSref directive', () => {
 
       const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
       const goSpy = vi.spyOn(router.stateService, 'go');
-      clickElement(anchor);
+      await clickLocatedElement(anchor);
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
@@ -317,7 +324,9 @@ describe('uiSref directive', () => {
         { name: 'about', url: '/about' },
       ]);
 
-      const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+      const uiRouter = document.createElement(
+        'ui-router',
+      ) as UIRouterLitElement;
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -345,7 +354,9 @@ describe('uiSref directive', () => {
     it('should include targetState in event detail', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+      const uiRouter = document.createElement(
+        'ui-router',
+      ) as UIRouterLitElement;
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
