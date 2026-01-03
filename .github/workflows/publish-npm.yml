@@ -1,22 +1,29 @@
 name: Publish to NPM
-
+# https://docs.npmjs.com/trusted-publishers
+# https://github.com/release-it/release-it/blob/19.2.2/docs/npm.md#trusted-publishing-oidc
 on:
   push:
     tags:
       - lit-ui-router@*
 
 permissions:
-  id-token: write  # Required for OIDC
-  contents: read
+  id-token: write
+  contents: write
+  attestations: write
+  artifact-metadata: write
 
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
     environment: publish
-
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          fetch-tags: true
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
@@ -26,10 +33,16 @@ jobs:
         with:
           node-version: '22.17.1'
           cache: 'pnpm'
-      - run: npm install -g npm@latest # Required for OIDC
+      - name: Update npm
+        run: npm install -g npm@latest # >= 11.5.1
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build
         run: npm exec -- turbo run lit-ui-router#build
+      - name: Pack
+        run: pnpm --filter lit-ui-router pack --pack-destination packages/lit-ui-router
+      - uses: actions/attest-build-provenance@v3
+        with:
+          subject-path: 'packages/lit-ui-router/lit-ui-router-*.tgz'
       - name: Publish
-        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true --npm.skipChecks true
+        run: pnpm --filter lit-ui-router exec release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz"

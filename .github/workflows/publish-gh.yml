@@ -1,4 +1,4 @@
-name: Tag and Release
+name: Tag & push
 
 on:
   push:
@@ -11,7 +11,7 @@ permissions:
 jobs:
   publish_gh:
     runs-on: ubuntu-latest
-    environment: publish
+    environment: tag-release
     env:
       GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     steps:
@@ -36,6 +36,6 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Tag & Release
-        run: pnpm --filter lit-ui-router exec release-it --no-increment --git.tag true --git.push true --github.release true
+      - name: Tag & push
+        run: pnpm --filter lit-ui-router exec release-it --no-increment --git.tag true --git.push true
         continue-on-error: true
