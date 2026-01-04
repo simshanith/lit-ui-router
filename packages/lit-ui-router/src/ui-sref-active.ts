@@ -102,7 +102,10 @@ function spreadToSubPaths(
 }
 
 /** @internal */
-function mergeSrefStatus(left: SrefStatus, right: SrefStatus): SrefStatus {
+export function mergeSrefStatus(
+  left: SrefStatus,
+  right: SrefStatus,
+): SrefStatus {
   return {
     active: left.active || right.active,
     exact: left.exact || right.exact,

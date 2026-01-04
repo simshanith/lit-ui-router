@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render } from 'lit';
-import { TargetState } from '@uirouter/core';
+import { TargetState, Transition } from '@uirouter/core';
 
 import {
   uiSrefActive,
@@ -8,6 +8,7 @@ import {
   SrefStatus,
   TransitionStateChange,
   TRANSITION_STATE_CHANGE_EVENT,
+  mergeSrefStatus,
 } from '../ui-sref-active.js';
 import { uiSref, UI_SREF_TARGET_EVENT } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
@@ -506,5 +507,324 @@ describe('TransitionStateChange enum', () => {
 describe('TRANSITION_STATE_CHANGE_EVENT constant', () => {
   it('should be defined', () => {
     expect(TRANSITION_STATE_CHANGE_EVENT).toBe('transitionStateChange');
+  });
+});
+
+describe('mergeSrefStatus helper', () => {
+  it('should merge active with OR logic', () => {
+    const left: SrefStatus = {
+      active: true,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [],
+    };
+    const right: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [],
+    };
+    const result = mergeSrefStatus(left, right);
+    expect(result.active).toBe(true);
+  });
+
+  it('should merge exact with OR logic', () => {
+    const left: SrefStatus = {
+      active: false,
+      exact: true,
+      entering: false,
+      exiting: false,
+      targetStates: [],
+    };
+    const right: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [],
+    };
+    const result = mergeSrefStatus(left, right);
+    expect(result.exact).toBe(true);
+  });
+
+  it('should merge entering with OR logic', () => {
+    const left: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: true,
+      exiting: false,
+      targetStates: [],
+    };
+    const right: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [],
+    };
+    const result = mergeSrefStatus(left, right);
+    expect(result.entering).toBe(true);
+  });
+
+  it('should merge exiting with OR logic', () => {
+    const left: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: true,
+      targetStates: [],
+    };
+    const right: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [],
+    };
+    const result = mergeSrefStatus(left, right);
+    expect(result.exiting).toBe(true);
+  });
+
+  it('should combine targetStates from both sides', () => {
+    const targetState = {} as TargetState;
+    const left: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [targetState],
+    };
+    const right: SrefStatus = {
+      active: false,
+      exact: false,
+      entering: false,
+      exiting: false,
+      targetStates: [targetState],
+    };
+    const result = mergeSrefStatus(left, right);
+    expect(result.targetStates).toHaveLength(2);
+  });
+});
+
+describe('UiSrefActiveDirective methods', () => {
+  let container: HTMLElement;
+  let router: UIRouterLit;
+  let directive: UiSrefActiveDirective;
+  let element: HTMLDivElement;
+
+  beforeEach(async () => {
+    container = document.createElement('div');
+    document.body.appendChild(container);
+    router = createTestRouter([{ name: 'home', url: '/home' }]);
+
+    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    uiRouter.uiRouter = router;
+    container.appendChild(uiRouter);
+    await waitForUpdate(uiRouter);
+
+    element = document.createElement('div');
+    uiRouter.appendChild(element);
+
+    const partInfo = { type: 6 } as any;
+    directive = new UiSrefActiveDirective(partInfo);
+    directive.element = element;
+    directive.uiRouter = router;
+
+    router.start();
+    await tick();
+  });
+
+  afterEach(async () => {
+    container.remove();
+    await tick();
+  });
+
+  describe('getOptions', () => {
+    it('should return default options when no custom options set', () => {
+      const options = directive.getOptions();
+      expect(options.relative).toBeUndefined();
+    });
+
+    it('should override with custom options', () => {
+      directive.options = { reload: true, inherit: false };
+      const options = directive.getOptions();
+      expect(options.reload).toBe(true);
+      expect(options.inherit).toBe(false);
+    });
+  });
+
+  describe('getStatus', () => {
+    it('should return undefined when targetStates is empty', () => {
+      directive.targetStates.clear();
+      const status = directive.getStatus();
+      expect(status).toBeUndefined();
+    });
+
+    it('should return merged status when targetStates has entries', async () => {
+      const targetState = router.stateService.target('home', {}, {});
+      directive.targetStates.add(targetState);
+      await routerGo(router, 'home');
+      await tick();
+      const status = directive.getStatus();
+      expect(status).toBeDefined();
+      expect(status?.active).toBe(true);
+    });
+  });
+
+  describe('getSrefStatus', () => {
+    it('should handle transition event with empty treeChanges result', async () => {
+      await routerGo(router, 'home');
+      await tick();
+
+      const targetState = router.stateService.target('home', {}, {});
+      const trans = {
+        treeChanges: () => ({
+          to: [],
+          from: [],
+          retained: [],
+          entering: [],
+          exiting: [],
+        }),
+        promise: Promise.resolve(),
+      } as unknown as Transition;
+
+      const event: any = { evt: 'start', trans, status: undefined };
+      const status = directive.getSrefStatus(event, targetState);
+      expect(status).toBeDefined();
+      expect(status?.targetStates).toHaveLength(1);
+    });
+
+    it('should handle multiple target states', async () => {
+      router.stateRegistry.register({ name: 'about', url: '/about' });
+      await tick();
+
+      await routerGo(router, 'home');
+      await tick();
+
+      const targetState1 = router.stateService.target('home', {}, {});
+      const targetState2 = router.stateService.target('about', {}, {});
+
+      directive.targetStates.add(targetState1);
+      directive.targetStates.add(targetState2);
+
+      const status = directive.getStatus();
+      expect(status).toBeDefined();
+      expect(status?.targetStates).toHaveLength(2);
+    });
+  });
+
+  describe('disconnected', () => {
+    it('should remove UI_SREF_TARGET_EVENT listener', async () => {
+      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
+      directive.disconnected();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        UI_SREF_TARGET_EVENT,
+        expect.any(Function),
+      );
+    });
+
+    it('should remove TRANSITION_STATE_CHANGE_EVENT listener', async () => {
+      const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
+      directive.disconnected();
+      expect(removeEventListenerSpy).toHaveBeenCalledWith(
+        TRANSITION_STATE_CHANGE_EVENT,
+        expect.any(Function),
+      );
+    });
+
+    it('should call _deregisterOnStart', async () => {
+      directive._deregisterOnStart = vi.fn();
+      directive.disconnected();
+      expect(directive._deregisterOnStart).toHaveBeenCalled();
+    });
+
+    it('should call _deregisterOnStatesChanged', async () => {
+      directive._deregisterOnStatesChanged = vi.fn();
+      directive.disconnected();
+      expect(directive._deregisterOnStatesChanged).toHaveBeenCalled();
+    });
+
+    it('should set element to null', async () => {
+      directive.disconnected();
+      expect(directive.element).toBeNull();
+    });
+  });
+
+  describe('onTransitionStart', () => {
+    it('should dispatch start event', async () => {
+      const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+      const trans = {
+        treeChanges: () => ({}),
+        promise: Promise.resolve(),
+      } as unknown as Transition;
+      directive.onTransitionStart(trans);
+      expect(dispatchEventSpy).toHaveBeenCalled();
+    });
+  });
+
+  describe('onTransitionStateChange', () => {
+    it('should process transition state change event without throwing', async () => {
+      await routerGo(router, 'home');
+      await tick();
+
+      const targetState = router.stateService.target('home', {}, {});
+      directive.targetStates.add(targetState);
+      directive.uiRouter = router;
+      directive.active = false;
+      directive.exact = false;
+
+      const stateObj = targetState.$state();
+      const pathNode: any = {
+        state: stateObj,
+        paramSchema: [],
+        resolves: [],
+        ownParams: [],
+        paramValues: {},
+      };
+      const trans = {
+        treeChanges: () => ({
+          to: [pathNode],
+          from: [],
+          retained: [],
+          entering: [],
+          exiting: [],
+        }),
+        promise: Promise.resolve(),
+      } as unknown as Transition;
+
+      const event: any = {
+        evt: 'success',
+        trans,
+        status: undefined,
+      };
+      directive.onTransitionStateChange({ detail: event } as any);
+      await tick();
+      expect(directive.active).toBeDefined();
+    });
+
+    it('should return early when status is undefined', async () => {
+      const event: any = {
+        evt: 'success',
+        trans: {} as Transition,
+        status: undefined,
+      };
+      directive.active = undefined;
+      directive.onTransitionStateChange({ detail: event } as any);
+      expect(directive.active).toBeUndefined();
+    });
+  });
+
+  describe('onUiSrefTargetEvent', () => {
+    it('should add targetState to targetStates set', async () => {
+      const targetState = router.stateService.target('home', {}, {}) as any;
+      const event: any = {
+        detail: { targetState },
+        target: element,
+      };
+      directive.onUiSrefTargetEvent(event);
+      expect(directive.targetStates.has(targetState)).toBe(true);
+    });
   });
 });
