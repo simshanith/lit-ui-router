@@ -3,6 +3,11 @@ import { customElement } from 'lit/decorators.js';
 import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
 
 import './ContactDetail.js';
+import { Contact } from './interface.js';
+
+interface ContactViewResolves {
+  contact: Contact;
+}
 
 @customElement('sample-contact-view')
 export class ContactView extends LitElement {
@@ -10,7 +15,7 @@ export class ContactView extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<ContactViewResolves>) {
     super();
   }
 

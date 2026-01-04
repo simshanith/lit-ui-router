@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
@@ -17,7 +17,6 @@ import {
   tick,
   waitForUpdate,
   routerGo,
-  defer,
 } from './test-utils.js';
 
 describe('UiView', () => {
@@ -461,7 +460,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
-      const { uiRouter, uiView } = await setupRouter(states);
+      const { uiView } = await setupRouter(states);
 
       const initialViewCount = router.viewService['_uiViews'].length;
 
@@ -524,7 +523,7 @@ describe('UiView', () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
       ];
-      const { uiView } = await setupRouter(states);
+      await setupRouter(states);
 
       const orphan = document.createElement('div');
       container.appendChild(orphan);

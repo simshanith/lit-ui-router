@@ -1,6 +1,7 @@
 {
   "name": "lit-ui-router-turborepo",
   "version": "0.0.0",
+  "type": "module",
   "license": "MIT",
   "private": true,
   "scripts": {
@@ -19,9 +20,13 @@
     "lit": "2.2.7"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "globals": "^17.0.0",
     "pnpm": "10.13.1",
-    "turbo": "2.5.5",
     "prettier": "3.6.2",
-    "typescript": "5.8.3"
+    "turbo": "2.5.5",
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.51.0"
   }
 }

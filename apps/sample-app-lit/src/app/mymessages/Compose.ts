@@ -8,6 +8,10 @@ import AppConfig from '../global/appConfig.js';
 import DialogService from '../global/dialogService.js';
 import { Message } from './interface.js';
 
+interface ComposeResolves {
+  $stateParams?: { message?: Partial<Message> };
+}
+
 @customElement('sample-compose')
 export class Compose extends LitElement {
   createRenderRoot() {
@@ -23,11 +27,11 @@ export class Compose extends LitElement {
   static sticky = true;
 
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps<ComposeResolves>;
 
   canExit = false;
 
-  constructor(_uiViewProps: UIViewInjectedProps) {
+  constructor(_uiViewProps: UIViewInjectedProps<ComposeResolves>) {
     super();
     this._uiViewProps = _uiViewProps;
     this.pristineMessage = this.buildPristineMessage();
@@ -41,7 +45,7 @@ export class Compose extends LitElement {
       subject: '',
       ...this._uiViewProps?.resolves?.$stateParams?.message,
       from: AppConfig.emailAddress,
-    };
+    } as Message;
   }
 
   async willUpdate() {

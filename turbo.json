@@ -19,7 +19,8 @@
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "dependsOn": ["transit"]
+      "dependsOn": ["transit"],
+      "inputs": ["**/*.ts", "$TURBO_DEFAULT$", "eslint.config.js", ".prettierrc"]
     },
     "ci": {
       "dependsOn": ["build", "test", "test:coverage", "lint"]

@@ -23,7 +23,7 @@
     "test": "vitest run",
     "test:coverage": "vitest run --coverage --browser=chromium",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
-    "lint": "prettier --check \"**/*.{ts,json,md}\"",
+    "lint": "eslint . && prettier --check \"**/*.{ts,json,md}\"",
     "build:custom-elements": "cem analyze --outdir ./dist"
   },
   "customElements": "./dist/custom-elements.json",

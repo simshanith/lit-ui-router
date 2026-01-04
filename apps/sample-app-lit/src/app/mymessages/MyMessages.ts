@@ -3,13 +3,17 @@ import { customElement } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { UIViewInjectedProps, uiSref, uiSrefActive } from 'lit-ui-router';
 
+interface MyMessagesResolves {
+  folders: { _id: string }[];
+}
+
 @customElement('sample-my-messages')
 export class MyMessages extends LitElement {
   createRenderRoot() {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<MyMessagesResolves>) {
     super();
   }
 

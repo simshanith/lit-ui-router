@@ -117,10 +117,10 @@ export class UiView extends LitElement {
   private async _applyUpdatedConfig(config: LitViewConfig) {
     this._uiViewData.config = config;
 
-    if (!this.viewAddress) {
+    if (!this.viewAddress && config?.viewDecl?.$context) {
       this.viewAddress = {
         fqn: this._uiViewData.fqn,
-        context: config?.viewDecl?.$context!,
+        context: config.viewDecl.$context,
       };
     }
 

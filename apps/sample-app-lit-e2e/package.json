@@ -8,7 +8,7 @@
     "test": "cypress run",
     "build": "tsc",
     "format": "prettier --write \"**/*.{ts,json,md}\"",
-    "lint": "prettier --check \"**/*.{ts,json,md}\""
+    "lint": "eslint . && prettier --check \"**/*.{ts,json,md}\""
   },
   "dependencies": {
     "sample-app-lit": "workspace:*"
