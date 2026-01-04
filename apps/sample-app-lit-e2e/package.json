@@ -7,8 +7,8 @@
     "e2e": "cypress open",
     "test": "cypress run",
     "build": "tsc",
-    "format": "prettier --write \"**/*.{ts,json,md}\"",
-    "lint": "eslint . && prettier --check \"**/*.{ts,json,md}\""
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "lint": "eslint ."
   },
   "dependencies": {
     "sample-app-lit": "workspace:*"

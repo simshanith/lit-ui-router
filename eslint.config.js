@@ -1,10 +1,19 @@
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
+import prettier from 'eslint-config-prettier';
+import turbo from 'eslint-plugin-turbo';
 
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  prettier,
+  {
+    plugins: { turbo },
+    rules: {
+      'turbo/no-undeclared-env-vars': 'warn',
+    },
+  },
   {
     ignores: [
       '**/dist/**',
