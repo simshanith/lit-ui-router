@@ -12,6 +12,7 @@ export default defineConfig({
   },
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
+    logo: '/images/lit-ui-router.svg',
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
