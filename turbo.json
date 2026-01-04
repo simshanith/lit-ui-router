@@ -13,11 +13,16 @@
       "dependsOn": ["^test"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
     },
+    "test:coverage": {
+      "dependsOn": ["^test:coverage"],
+      "inputs": ["src/**/*.ts", "vitest.config.ts"],
+      "outputs": ["coverage/**"]
+    },
     "lint": {
       "dependsOn": ["transit"]
     },
     "ci": {
-      "dependsOn": ["build", "test", "lint"]
+      "dependsOn": ["build", "test", "test:coverage", "lint"]
     },
     "format": {
       "dependsOn": ["transit"]

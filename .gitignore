@@ -26,7 +26,6 @@ node_modules
 # misc
 /.sass-cache
 /connect.lock
-/coverage
 /libpeerconnection.log
 npm-debug.log
 yarn-error.log
@@ -44,3 +43,4 @@ certs/
 
 lit-ui-router-*.tgz
 **/specs/__screenshots__
+coverage
