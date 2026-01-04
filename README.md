@@ -6,6 +6,8 @@
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
 
+<img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
+
 ### lit-ui-router: State based routing for Lit (v2+)
 
 ---
