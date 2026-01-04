@@ -1,5 +1,7 @@
 # UI-Router for Lit
 
+<img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
+
 [![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
 [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router)](https://github.com/simshanith/lit-ui-router/releases/latest)
