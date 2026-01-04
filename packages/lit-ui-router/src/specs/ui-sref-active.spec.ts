@@ -845,21 +845,21 @@ describe('UiSrefActiveDirective methods', () => {
       expect(doRenderSpy).toHaveBeenCalled();
     });
 
-    it('should update flags when new state is registered', async () => {
+    it('should call onStatesChanged callback when state is registered', async () => {
       const targetState = router.stateService.target('home', {}, {});
       directive.targetStates.add(targetState);
       directive.uiRouter = router;
       directive.active = undefined;
       directive.exact = undefined;
-
+      directive.isConnected = true;
+      const onStatesChangedSpy = vi.spyOn(directive, 'onStatesChanged');
+      const onStatesChangedRegistrySpy = vi.spyOn(router.stateRegistry, 'onStatesChanged');
+      directive.firstUpdated({});
+      await tick();
+      expect(onStatesChangedRegistrySpy).toHaveBeenCalled();
       router.stateRegistry.register({ name: 'about', url: '/about' });
       await tick();
-
-      const doRenderSpy = vi.spyOn(directive, 'doRender');
-      directive.onStatesChanged();
-
-      expect(directive.active).toBeDefined();
-      expect(doRenderSpy).toHaveBeenCalled();
+      expect(onStatesChangedSpy).toHaveBeenCalled();
     });
   });
 });
