@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, render } from 'lit';
+import { PartInfo, PartType } from 'lit/directive.js';
 import { TargetState, Transition } from '@uirouter/core';
 
 import {
@@ -21,6 +22,10 @@ import {
   waitForUpdate,
   routerGo,
 } from './test-utils.js';
+
+function createPartInfo(type: PartType): PartInfo {
+  return { type } as PartInfo;
+}
 
 describe('uiSrefActive directive', () => {
   let container: HTMLElement;
@@ -459,15 +464,13 @@ describe('uiSrefActive directive', () => {
 describe('UiSrefActiveDirective', () => {
   it('should throw when used on non-element part', () => {
     expect(() => {
-      // Simulate attribute part type (type 1)
-      new UiSrefActiveDirective({ type: 1 } as any);
+      new UiSrefActiveDirective(createPartInfo(PartType.ATTRIBUTE));
     }).toThrow('The `uiSrefActive` directive must be used as an element');
   });
 
   it('should not throw when used on element part', () => {
     expect(() => {
-      // Correct element part type (type 6)
-      new UiSrefActiveDirective({ type: 6 } as any);
+      new UiSrefActiveDirective(createPartInfo(PartType.ELEMENT));
     }).not.toThrow();
   });
 });
@@ -627,8 +630,7 @@ describe('UiSrefActiveDirective methods', () => {
     element = document.createElement('div');
     uiRouter.appendChild(element);
 
-    const partInfo = { type: 6 } as any;
-    directive = new UiSrefActiveDirective(partInfo);
+    directive = new UiSrefActiveDirective(createPartInfo(PartType.ELEMENT));
     directive.element = element;
     directive.uiRouter = router;
 
@@ -853,7 +855,10 @@ describe('UiSrefActiveDirective methods', () => {
       directive.exact = undefined;
       directive.isConnected = true;
       const onStatesChangedSpy = vi.spyOn(directive, 'onStatesChanged');
-      const onStatesChangedRegistrySpy = vi.spyOn(router.stateRegistry, 'onStatesChanged');
+      const onStatesChangedRegistrySpy = vi.spyOn(
+        router.stateRegistry,
+        'onStatesChanged',
+      );
       directive.firstUpdated({});
       await tick();
       expect(onStatesChangedRegistrySpy).toHaveBeenCalled();
