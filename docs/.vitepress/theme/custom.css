@@ -10,12 +10,34 @@
   text-decoration: underline;
 }
 
-.VPHero .tagline a>img {
+.VPHero .tagline a.library {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  margin-bottom: 6px;
+}
+
+.VPHero .tagline a.library>img {
+  display: inline-block;
+  margin: auto 4px auto 2px;
+}
+
+.VPHero .tagline a.badge>img {
   transition: box-shadow 0.25s ease-in-out;
   display: inline-block;
   box-shadow: 0px 0px 0px 0px currentColor;
 }
 
-.VPHero .tagline a:hover>img {
+.VPHero .tagline a.badge:hover>img {
   box-shadow: 0px 0px 12px 0px currentColor;
+}
+
+.VPHero  .tagline {
+    max-width: 292px;
+}
+
+@media (min-width: 960px) {
+  .VPHero  .tagline {
+      max-width: 720px;
+  }
 }
