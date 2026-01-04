@@ -827,4 +827,39 @@ describe('UiSrefActiveDirective methods', () => {
       expect(directive.targetStates.has(targetState)).toBe(true);
     });
   });
+
+  describe('onStatesChanged', () => {
+    it('should update active and exact flags when states change', async () => {
+      await routerGo(router, 'home');
+      await tick();
+
+      const targetState = router.stateService.target('home', {}, {});
+      directive.targetStates.add(targetState);
+      directive.uiRouter = router;
+
+      const doRenderSpy = vi.spyOn(directive, 'doRender');
+
+      directive.onStatesChanged();
+
+      expect(directive.active).toBe(true);
+      expect(doRenderSpy).toHaveBeenCalled();
+    });
+
+    it('should update flags when new state is registered', async () => {
+      const targetState = router.stateService.target('home', {}, {});
+      directive.targetStates.add(targetState);
+      directive.uiRouter = router;
+      directive.active = undefined;
+      directive.exact = undefined;
+
+      router.stateRegistry.register({ name: 'about', url: '/about' });
+      await tick();
+
+      const doRenderSpy = vi.spyOn(directive, 'doRender');
+      directive.onStatesChanged();
+
+      expect(directive.active).toBeDefined();
+      expect(doRenderSpy).toHaveBeenCalled();
+    });
+  });
 });
