@@ -13,7 +13,6 @@ import {
 } from '../ui-sref-active.js';
 import { uiSref, UI_SREF_TARGET_EVENT } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
-import { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {

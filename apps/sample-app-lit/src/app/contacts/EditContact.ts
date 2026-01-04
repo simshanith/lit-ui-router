@@ -9,6 +9,10 @@ import { Contact } from './interface.js';
 import { ContactsStorage } from '../global/dataSources.js';
 import DialogService from '../global/dialogService.js';
 
+interface EditContactResolves {
+  contact?: Contact;
+}
+
 /**
  * The EditContact component
  *
@@ -48,7 +52,7 @@ export class EditContact extends LitElement {
   @state()
   updatedContact = cloneDeep(this.contact);
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<EditContactResolves>) {
     super();
   }
 

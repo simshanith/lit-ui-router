@@ -1,4 +1,4 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { describe, it, expect, beforeEach } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { StateObject, PathNode } from '@uirouter/core';
@@ -6,11 +6,10 @@ import { StateObject, PathNode } from '@uirouter/core';
 import {
   UIRouterLit,
   LitViewConfig,
-  litViewsBuilder,
   isLitViewDeclarationTemplate,
   isRoutedLitElement,
 } from '../core.js';
-import { createTestRouter, tick } from './test-utils.js';
+import { createTestRouter } from './test-utils.js';
 import { UIViewInjectedProps, LitStateDeclaration } from '../interface.js';
 
 describe('UIRouterLit', () => {
@@ -165,7 +164,7 @@ describe('isLitViewDeclarationTemplate', () => {
   });
 
   it('should return true for arrow functions with props', () => {
-    const template = (props: UIViewInjectedProps) => html`<div>test</div>`;
+    const template = (_props: UIViewInjectedProps) => html`<div>test</div>`;
     expect(isLitViewDeclarationTemplate(template)).toBe(true);
   });
 

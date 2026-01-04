@@ -1,10 +1,27 @@
+import type { Transition, StateDeclaration } from '@uirouter/core';
+
+interface DsrStateDeclaration extends StateDeclaration {
+  dsr?: {
+    default?: string;
+  };
+}
+
+interface DsrTransition extends Transition {
+  to(): DsrStateDeclaration;
+}
+
 export function dsrRedirectToDefaultFromWithin(
-  transition: any,
+  transition: DsrTransition,
   redirect: string,
 ) {
   const $state = transition.router.stateService;
-  if ($state.includes(transition.to(), null, { relative: transition.from() })) {
-    return $state.target(transition.to().dsr.default);
+  const toState = transition.to();
+  const dsrDefault = toState.dsr?.default;
+  if (
+    dsrDefault &&
+    $state.includes(toState, undefined, { relative: transition.from() })
+  ) {
+    return $state.target(dsrDefault);
   }
   return redirect;
 }

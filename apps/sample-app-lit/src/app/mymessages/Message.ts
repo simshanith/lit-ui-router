@@ -6,6 +6,12 @@ import { MessagesStorage } from '../global/dataSources.js';
 import DialogService from '../global/dialogService.js';
 import { Message } from './interface.js';
 
+interface MessageResolves {
+  message: Message;
+  nextMessageGetter: (_id: string) => string;
+  folder: { actions: string[] };
+}
+
 const messageBody = (msg = '') => msg.split(/\n/).map((p) => html`<p>${p}</p>`);
 const prefixSubject = (prefix: string, message: Message) =>
   prefix + message.subject;
@@ -31,7 +37,7 @@ export class MessageElement extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<MessageResolves>) {
     super();
   }
 
@@ -39,11 +45,11 @@ export class MessageElement extends LitElement {
     return this._uiViewProps.resolves!.message;
   }
 
-  get nextMessageGetter(): (_id: string) => string {
+  get nextMessageGetter() {
     return this._uiViewProps.resolves!.nextMessageGetter;
   }
 
-  get folder(): { actions: string[] } {
+  get folder() {
     return this._uiViewProps.resolves!.folder;
   }
 

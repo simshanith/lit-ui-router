@@ -22,11 +22,7 @@ function initGoogleAnalytics() {
     '//www.google-analytics.com/analytics.js',
     'ga',
   );
-  window['ga'](
-    'create',
-    GOOGLE_ANALYTICS_TRACKING_ID,
-    'auto',
-  );
+  window['ga']('create', GOOGLE_ANALYTICS_TRACKING_ID, 'auto');
   window['ga']('send', 'pageview');
 }
 

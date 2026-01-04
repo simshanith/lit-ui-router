@@ -6,22 +6,27 @@ import { MessagesStorage } from '../global/dataSources.js';
 import { Message } from './interface.js';
 import './MessageTable.js';
 
+interface MessageListResolves {
+  folder: { columns: string[] };
+  messages: Message[];
+}
+
 @customElement('sample-message-list')
 export class MessageList extends LitElement {
   createRenderRoot() {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps) {
+  constructor(public _uiViewProps: UIViewInjectedProps<MessageListResolves>) {
     super();
     this.onCommit = this.onCommit.bind(this);
   }
 
-  get folder(): { columns: string[] } {
+  get folder() {
     return this._uiViewProps.resolves!.folder;
   }
 
-  get messages(): Message[] {
+  get messages() {
     return this._uiViewProps.resolves!.messages ?? [];
   }
 

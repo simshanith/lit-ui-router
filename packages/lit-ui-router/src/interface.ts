@@ -3,8 +3,8 @@ import {
   HookResult,
   _ViewDeclaration,
   StateDeclaration,
-  TypedMap,
   UIRouter,
+  RawParams,
 } from '@uirouter/core';
 import { TemplateResult, LitElement } from 'lit';
 
@@ -27,10 +27,7 @@ export interface UiOnParamsChanged {
    * - The [[Transition]] which changed the parameter values.
    *
    */
-  uiOnParamsChanged(
-    newParams: { [paramName: string]: any },
-    trans?: Transition,
-  ): void;
+  uiOnParamsChanged(newParams: RawParams, trans?: Transition): void;
 }
 
 export interface UiOnExit {
@@ -61,11 +58,13 @@ export interface UiOnExit {
   uiCanExit(newTransition?: Transition): HookResult;
 }
 
-export type UIViewResolves = TypedMap<any>;
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export type UIViewResolves<T = Record<string, any>> = T;
 
-export interface UIViewInjectedProps {
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+export interface UIViewInjectedProps<T = Record<string, any>> {
   transition?: Transition;
-  resolves?: UIViewResolves;
+  resolves?: UIViewResolves<T>;
   router: UIRouter;
 }
 

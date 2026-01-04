@@ -5,6 +5,7 @@ import {
   PathNode,
   PathUtils,
   Predicate,
+  RawParams,
   StateObject,
   tail,
   TargetState,
@@ -119,7 +120,7 @@ export interface UiSrefActiveParams {
   activeClasses: string[];
   exactClasses: string[];
   state: string;
-  params: any;
+  params: RawParams;
   options: TransitionOptions;
   targetStates: TargetState[];
 }
@@ -145,7 +146,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   exactClasses: string[] = [];
 
   state: string | undefined;
-  params: any = {};
+  params: RawParams = {};
   options: TransitionOptions = {};
 
   active: boolean | undefined;

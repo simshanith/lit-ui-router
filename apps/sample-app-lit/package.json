@@ -6,8 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "format": "prettier --write \"**/*.{ts,json,md}\"",
-    "lint": "prettier --check \"**/*.{ts,json,md}\""
+    "format": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "lint": "eslint ."
   },
   "dependencies": {
     "@api-viewer/docs": "^1.0.0-pre.6",

@@ -1,13 +1,15 @@
 {
   "name": "lit-ui-router-turborepo",
   "version": "0.0.0",
+  "type": "module",
   "license": "MIT",
   "private": true,
   "scripts": {
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
-    "format": "turbo run format",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "ci": "turbo run ci",
     "test:coverage": "turbo run test:coverage"
   },
@@ -19,9 +21,15 @@
     "lit": "2.2.7"
   },
   "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "eslint": "^9.39.2",
+    "eslint-config-prettier": "^10.1.8",
+    "eslint-plugin-turbo": "^2.7.2",
+    "globals": "^17.0.0",
     "pnpm": "10.13.1",
-    "turbo": "2.5.5",
     "prettier": "3.6.2",
-    "typescript": "5.8.3"
+    "turbo": "2.5.5",
+    "typescript": "5.8.3",
+    "typescript-eslint": "^8.51.0"
   }
 }

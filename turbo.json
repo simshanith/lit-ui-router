@@ -19,16 +19,19 @@
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "dependsOn": ["transit"]
+      "inputs": ["**/*.ts", "**/*.js", "$TURBO_DEFAULT$"]
+    },
+    "//#format:check": {
+      "inputs": ["**/*.{ts,js,json,md}", ".prettierrc", ".prettierignore"]
     },
     "ci": {
-      "dependsOn": ["build", "test", "test:coverage", "lint"]
+      "dependsOn": ["build", "test", "test:coverage", "lint", "//#format:check"]
     },
     "format": {
       "dependsOn": ["transit"]
     },
     "e2e": {
-      "dependsOn": ["^build","^docs","^e2e"],
+      "dependsOn": ["^build", "^docs", "^e2e"],
       "cache": false,
       "persistent": true
     },

@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement, render } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { html, render } from 'lit';
 import { TargetState } from '@uirouter/core';
 
 import {
@@ -455,7 +454,7 @@ describe('uiSref directive', () => {
   describe('cleanup', () => {
     it('should remove click listener on disconnect', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
-      const { anchor, uiRouter } = await setupWithSref(states, 'home');
+      const { anchor } = await setupWithSref(states, 'home');
       anchor.remove();
       await tick();
 

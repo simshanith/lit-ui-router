@@ -1,6 +1,4 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
 
 import { UIRouterLitElement, UiRouterContextEvent } from '../ui-router.js';
 import { UIRouterLit } from '../core.js';
@@ -96,15 +94,8 @@ describe('UIRouterLitElement', () => {
       const child = document.createElement('div');
       element.appendChild(child);
 
-      let receivedRouter: UIRouterLit | undefined;
       const seekEvent = UIRouterLitElement.uiRouterContextEvent();
       seekEvent.detail.uiRouter = undefined;
-
-      child.addEventListener('ui-router-context', ((
-        event: UiRouterContextEvent,
-      ) => {
-        receivedRouter = event.detail.uiRouter;
-      }) as EventListener);
 
       child.dispatchEvent(seekEvent);
 
