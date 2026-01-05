@@ -33,7 +33,9 @@ export default defineConfig({
       description = config.description;
       pageUrl = baseUrl;
     } else {
-      title = pageData.frontmatter.title || pageData.title || config.title;
+      title = pageData.frontmatter.title || pageData.title;
+      title = title ? `${config.title} - ${title}` : config.title;
+
       description =
         pageData.frontmatter.description ||
         pageData.description ||
