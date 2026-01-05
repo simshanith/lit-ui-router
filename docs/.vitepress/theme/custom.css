@@ -44,8 +44,8 @@
 
 :root {
   --vp-home-hero-image-background-image: url(/images/lit-flame.svg);
-  --vp-home-hero-image-filter: blur(24px);
-  --vp-home-hero-image-transform: translate(-50%, -60%) scale(1, 1);
+  --vp-home-hero-image-filter: blur(24px) hue-rotate(180deg) invert(1);
+  --vp-home-hero-image-transform: translate(-50%, -55%) scale(1, 1);
   --vp-home-hero-image-width: 80%;
   --vp-home-hero-image-height: 80%;
 
@@ -65,6 +65,7 @@
   left: 50%;
   transform: var(--vp-home-hero-image-transform);
   transition: width 0.5s, height 0.5s, transform 0.5s, filter 0.5s;
+  opacity: 0.8;
 }
 
 .box>.VPImage {
@@ -76,8 +77,8 @@
     :root {
         --vp-home-hero-image-width: 80%;
         --vp-home-hero-image-height: 80%;
-        --vp-home-hero-image-transform: translate(-50%, -55%) scale(0.75, 0.75);
-        --vp-home-hero-image-filter: blur(36px);
+        --vp-home-hero-image-transform: translate(-50%, -52.5%) scale(0.75, 0.75);
+        --vp-home-hero-image-filter: blur(36px) hue-rotate(180deg) invert(1);
     }
 }
 
@@ -85,8 +86,11 @@
     :root {
         --vp-home-hero-image-width: 100%;
         --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-filter: blur(42px);
-        --vp-home-hero-image-transform: translate(-50%, -55%) scale(0.8, 0.8);
+        --vp-home-hero-image-filter: blur(42px) hue-rotate(180deg) invert(1);
+        --vp-home-hero-image-transform: translate(-50%, -60%) scale(0.8, 0.8);
+    }
+    .VPHero.has-image .main.main {
+      max-width: 640px;
     }
 }
 
@@ -94,6 +98,6 @@
     :root {
         --vp-home-hero-image-width: 100%;
         --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate(-50%, -55%) scale(1, 1);
+        --vp-home-hero-image-transform: translate(-50%, -60%) scale(1, 1);
     }
 }
