@@ -1,4 +1,4 @@
-import { defineConfig, HeadConfig, SiteConfig } from 'vitepress';
+import { defineConfig, HeadConfig } from 'vitepress';
 
 const baseUrl = 'https://lit-ui-router.dev';
 
