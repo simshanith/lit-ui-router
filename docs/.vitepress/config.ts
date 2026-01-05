@@ -18,7 +18,7 @@ export default defineConfig({
   ...config,
   transformHead({ pageData }) {
     const head: HeadConfig[] = [];
-    const imageUrl = `${baseUrl}/images/lit-ui-router.svg`;
+    const imageUrl = `${baseUrl}/images/lit-ui-router.png`;
     const imageAlt = 'Lit UI Router logo';
     const twitterCreator = '@simloovoo';
     const twitterCard = 'summary_large_image';
