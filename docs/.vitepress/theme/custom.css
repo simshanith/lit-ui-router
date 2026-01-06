@@ -47,7 +47,7 @@
   --vp-home-hero-image-filter-blur: 24px;
   --vp-home-hero-image-filter-hue-rotate: 0;
   --vp-home-hero-image-filter-invert: 0;
-  --vp-home-hero-image-filter-brightness: 2.5;
+  --vp-home-hero-image-filter-brightness: 250%;
   --vp-home-hero-image-filter: blur(var(--vp-home-hero-image-filter-blur)) hue-rotate(var(--vp-home-hero-image-filter-hue-rotate)) invert(var(--vp-home-hero-image-filter-invert)) brightness(var(--vp-home-hero-image-filter-brightness));
   --vp-home-hero-image-transform: translate3D(-50%, -55%, 0) scale(1, 1);
   --vp-home-hero-image-width: 80%;
@@ -57,7 +57,7 @@
 .dark {
   --vp-home-hero-image-filter-hue-rotate: 180deg;
   --vp-home-hero-image-filter-invert: 1;
-  --vp-home-hero-image-filter-brightness: 0.6;
+  --vp-home-hero-image-filter-brightness: 60%;
 }
 
 .VPHero.has-image .image-bg {
@@ -74,6 +74,15 @@
   left: 50%;
   transform: var(--vp-home-hero-image-transform);
   transition: width 0.5s, height 0.5s, transform 0.5s, filter 0.5s;
+}
+
+
+html.chrome .VPHero .VPImage {
+  mix-blend-mode: multiply;
+}
+
+html.chrome.dark .VPHero .VPImage {
+  mix-blend-mode: plus-lighter;
 }
 
 .box>.VPImage {
