@@ -82,9 +82,8 @@ html.chrome .VPHero .VPImage {
 }
 
 html.chrome.dark .VPHero .VPImage {
-  mix-blend-mode: overlay;
+  mix-blend-mode: plus-lighter;
 }
-
 
 .box>.VPImage {
   background-color: var(--vp-c-bg);
