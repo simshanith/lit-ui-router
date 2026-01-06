@@ -49,7 +49,7 @@
   --vp-home-hero-image-filter-invert: 0;
   --vp-home-hero-image-filter-brightness: 2.5;
   --vp-home-hero-image-filter: blur(var(--vp-home-hero-image-filter-blur)) hue-rotate(var(--vp-home-hero-image-filter-hue-rotate)) invert(var(--vp-home-hero-image-filter-invert)) brightness(var(--vp-home-hero-image-filter-brightness));
-  --vp-home-hero-image-transform: translate(-50%, -55%) scale(1, 1);
+  --vp-home-hero-image-transform: translate3D(-50%, -55%, 0) scale(1, 1);
   --vp-home-hero-image-width: 80%;
   --vp-home-hero-image-height: 80%;
 }
@@ -85,7 +85,7 @@
     :root {
         --vp-home-hero-image-width: 80%;
         --vp-home-hero-image-height: 80%;
-        --vp-home-hero-image-transform: translate(-50%, -52.5%) scale(0.75, 0.75);
+        --vp-home-hero-image-transform: translate3D(-50%, -52.5%, 0) scale(0.75, 0.75);
         --vp-home-hero-image-filter-blur: 36px;
     }
 }
@@ -94,7 +94,7 @@
     :root {
         --vp-home-hero-image-width: 100%;
         --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate(-50%, -60%) scale(0.8, 0.8);
+        --vp-home-hero-image-transform: translate3D(-50%, -60%, 0) scale(0.8, 0.8);
         --vp-home-hero-image-filter-blur: 42px;
     }
 
@@ -107,6 +107,6 @@
     :root {
         --vp-home-hero-image-width: 100%;
         --vp-home-hero-image-height: 100%;
-        --vp-home-hero-image-transform: translate(-50%, -60%) scale(1, 1);
+        --vp-home-hero-image-transform: translate3D(-50%, -60%, 0) scale(1, 1);
     }
 }
