@@ -2,6 +2,7 @@ packages:
   - apps/*
   - packages/*
   - docs
+  - examples
 onlyBuiltDependencies:
   - cypress
   - playwright

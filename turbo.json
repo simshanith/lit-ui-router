@@ -21,14 +21,14 @@
     "lint": {
       "inputs": ["**/*.ts", "**/*.js", "$TURBO_DEFAULT$"]
     },
-    "//#format:check": {
-      "inputs": ["**/*.{ts,js,json,md}", ".prettierrc", ".prettierignore"]
-    },
     "ci": {
-      "dependsOn": ["build", "test", "test:coverage", "lint", "//#format:check"]
+      "dependsOn": ["build", "test", "test:coverage", "lint", "format:check"]
     },
     "format": {
-      "dependsOn": ["transit"]
+      "inputs": ["**/*.{ts,js,json,md}", ".prettierrc", ".prettierignore"]
+    },
+    "format:check": {
+      "inputs": ["**/*.{ts,js,json,md}", ".prettierrc", ".prettierignore"]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],
