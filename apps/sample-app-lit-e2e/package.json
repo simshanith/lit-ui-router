@@ -8,10 +8,11 @@
     "test": "cypress run",
     "build": "tsc",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "lint": "eslint ."
   },
   "dependencies": {
-    "sample-app-lit": "workspace:*"
+    "docs": "workspace:*"
   },
   "devDependencies": {
     "@types/lodash": "^4.17.10",
