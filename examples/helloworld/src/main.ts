@@ -28,7 +28,7 @@ class AboutComponent extends LitElement {
 }
 
 @customElement('app-root')
-class AppRoot extends LitElement {
+export class AppRoot extends LitElement {
   static styles = css`
     nav a {
       padding: 8px 16px;

@@ -1,7 +1,7 @@
 import { html, LitElement, css } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { render } from 'lit';
-import { hashLocationPlugin } from '@uirouter/core';
+import { hashLocationPlugin, Transition } from '@uirouter/core';
 import {
   UIRouterLit,
   uiSref,
@@ -92,15 +92,15 @@ class PeopleContainerComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps?: UIViewInjectedProps;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props?: UIViewInjectedProps) {
     super();
     this._uiViewProps = props;
   }
 
   get people(): Person[] {
-    return this._uiViewProps.resolves.people;
+    return this._uiViewProps!.resolves!.people;
   }
 
   render() {
@@ -148,15 +148,15 @@ class PersonDetailComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps?: UIViewInjectedProps;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props?: UIViewInjectedProps) {
     super();
     this._uiViewProps = props;
   }
 
   get person(): Person | undefined {
-    return this._uiViewProps.resolves.person;
+    return this._uiViewProps!.resolves!.person;
   }
 
   render() {
@@ -171,7 +171,7 @@ class PersonDetailComponent extends LitElement {
 }
 
 @customElement('app-root')
-class AppRoot extends LitElement {
+export class AppRoot extends LitElement {
   static styles = css`
     h2 {
       color: #333;
@@ -225,7 +225,7 @@ const personState: LitStateDeclaration = {
     {
       token: 'person',
       deps: ['$transition$', 'people'],
-      resolveFn: ($transition$: any, people: Person[]) => {
+      resolveFn: ($transition$: Transition, people: Person[]) => {
         const personId = parseInt($transition$.params().personId);
         return people.find((p) => p.id === personId);
       },
