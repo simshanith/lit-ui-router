@@ -76,13 +76,15 @@
   transition: width 0.5s, height 0.5s, transform 0.5s, filter 0.5s;
 }
 
-.VPHero .VPImage {
+
+html.chrome .VPHero .VPImage {
   mix-blend-mode: multiply;
 }
 
-.dark .VPHero .VPImage {
+html.chrome.dark .VPHero .VPImage {
   mix-blend-mode: overlay;
 }
+
 
 .box>.VPImage {
   background-color: var(--vp-c-bg);
