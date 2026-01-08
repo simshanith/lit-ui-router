@@ -1,7 +1,13 @@
 import DefaultTheme from 'vitepress/theme';
 import './custom.css';
+import StackBlitzEmbed from './components/StackBlitzEmbed.vue';
 
-export default DefaultTheme;
+export default {
+  extends: DefaultTheme,
+  enhanceApp({ app }) {
+    app.component('StackBlitzEmbed', StackBlitzEmbed);
+  },
+};
 
 export const isChrome =
   /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);

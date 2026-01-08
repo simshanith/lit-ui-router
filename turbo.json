@@ -41,7 +41,7 @@
       "persistent": true
     },
     "docs": {
-      "dependsOn": ["^docs"],
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     }
