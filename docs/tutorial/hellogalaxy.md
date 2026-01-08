@@ -9,12 +9,9 @@ Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces *
 
 ## Live Demo
 
-<iframe src="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy?embed=1&file=src/main.ts&view=preview" style="width:100%; height:400px; border:0; border-radius: 4px; overflow:hidden;" title="lit-ui-router-hellogalaxy" sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"></iframe>
-
-<a href="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy?file=src/main.ts" target="_blank"><img
-    alt="Open in StackBlitz"
-    src="https://developer.stackblitz.com/img/open_in_stackblitz.svg"
-  /></a>
+<StackBlitzEmbed
+src="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy?embed=1&file=src/main.ts&view=preview"
+title="lit-ui-router-hellogalaxy"><a href="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy?file=src/main.ts" target="_blank"><img alt="Open in StackBlitz" src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" /></a></StackBlitzEmbed>
 
 ## What We're Building
 
