@@ -1,0 +1,49 @@
+const LIT_BASE = 'https://lit.dev/docs/api';
+
+const directiveTemplate = (name: string): Record<string, string> => ({
+  [name]: `${LIT_BASE}/custom-directives/#${name.toLowerCase()}`,
+});
+
+const baseTemplate = (name: string, path: string): Record<string, string> => ({
+  [name]: `${LIT_BASE}/${path}`,
+});
+
+const localTemplate = (name: string): Record<string, string> => ({
+  [name]: `#${name.toLowerCase()}`,
+});
+
+export const LIT_SYMBOLS: Record<string, string> = {
+  ...directiveTemplate('AsyncDirective'),
+  ...directiveTemplate('Directive'),
+  ...directiveTemplate('Part'),
+  ...directiveTemplate('ChildPart'),
+  ...directiveTemplate('ElementPart'),
+  ...directiveTemplate('AttributePart'),
+  ...directiveTemplate('PropertyPart'),
+  ...directiveTemplate('EventPart'),
+
+  ...baseTemplate('LitElement', 'LitElement/'),
+  ...baseTemplate('TemplateResult', 'templates/'),
+  ...baseTemplate('PartInfo', 'custom-directives/#PartInfo'),
+  ...baseTemplate('PartType', 'custom-directives/#PartType'),
+  ...baseTemplate('noChange', 'custom-directives/#noChange'),
+  ...baseTemplate('directive', 'custom-directives/#directive'),
+  ...baseTemplate('ReactiveController', 'ReactiveController/'),
+  ...baseTemplate('ReactiveControllerHost', 'ReactiveControllerHost/'),
+  ...baseTemplate('PropertyDeclaration', 'decorators/#PropertyDeclaration'),
+  ...baseTemplate('PropertyDeclarations', 'decorators/#PropertyDeclarations'),
+
+  // Local lit-ui-router symbols (local anchors)
+  ...localTemplate('UIViewInjectedProps'),
+  ...localTemplate('UiSrefActiveParams'),
+  ...localTemplate('SrefStatus'),
+  ...localTemplate('LitStateDeclaration'),
+  ...localTemplate('LitViewDeclaration'),
+  ...localTemplate('RoutedLitTemplate'),
+  ...localTemplate('RoutedLitElement'),
+  ...localTemplate('UiOnParamsChanged'),
+  ...localTemplate('UiOnExit'),
+  ...localTemplate('UiView'),
+  ...localTemplate('UIRouterLit'),
+  ...localTemplate('UIRouterElement'),
+};

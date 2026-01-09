@@ -21,24 +21,65 @@ const SYMBOL_LINK_REGEX =
   /\[\[([A-Z][a-zA-Z0-9]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?)\]\]/g;
 
 /**
+ * Mapping of local symbol names to their page URLs.
+ * Used for multi-page output where each type has its own file.
+ */
+const LOCAL_SYMBOL_PAGES: Record<string, string> = {
+  // Variables (directives)
+  uiSref: 'variables/',
+  uiSrefActive: 'variables/',
+  // Classes
+  UiSrefDirective: 'classes/',
+  UiSrefActiveDirective: 'classes/',
+  UIRouterLit: 'classes/',
+  UIRouterLitElement: 'classes/',
+  UiView: 'classes/',
+  // Interfaces
+  LitStateDeclaration: 'interfaces/',
+  LitViewDeclaration: 'interfaces/',
+  LitViewDeclarationElement: 'interfaces/',
+  LitViewDeclarationObject: 'interfaces/',
+  LitViewDeclarationTemplate: 'interfaces/',
+  RoutedLitElement: 'interfaces/',
+  SrefStatus: 'interfaces/',
+  UiOnExit: 'interfaces/',
+  UiOnParamsChanged: 'interfaces/',
+  UiSrefActiveParams: 'interfaces/',
+  UIViewInjectedProps: 'interfaces/',
+  UiViewAddress: 'interfaces/',
+  // Type aliases
+  RoutedLitComponent: 'types/',
+  RoutedLitTemplate: 'types/',
+  UIViewResolves: 'types/',
+  UiRouterContextEvent: 'types/',
+};
+
+/**
  * Build link target URL, handling local vs external links differently.
- * - Local anchors: #symbolname.property
+ * - Local anchors: classes/UIRouterLit.html#methodname
  * - External links: url#property
  */
-function buildLinkTarget(url: string, propertyName: string): string {
+function buildLinkTarget(
+  url: string,
+  propertyName: string,
+  symbolName: string,
+): string {
   if (!propertyName) return url;
   const prop = propertyName.substring(1);
+
   if (url.startsWith('#')) {
-    return `${url}.${prop}`;
+    const folder = LOCAL_SYMBOL_PAGES[symbolName] || '';
+    return `${folder}${symbolName}.html#${prop}`;
   }
   return `${url}#${prop}`;
 }
 
 /**
  * Generate anchor HTML, omitting target for local links.
+ * Local links are relative paths (don't start with http/https).
  */
 function buildAnchorHtml(href: string, displayName: string): string {
-  const isLocal = href.startsWith('#');
+  const isLocal = !href.startsWith('http://') && !href.startsWith('https://');
   if (isLocal) {
     return `<a href="${href}">${displayName}</a>`;
   }
@@ -254,8 +295,18 @@ function processComment(
             if (symbolMap.hasOwnProperty(baseName)) {
               const url = symbolMap[baseName];
               const displayName = propertyName ? `${symbolName}` : symbolName;
-              const linkTarget = buildLinkTarget(url, propertyName);
+              const linkTarget = buildLinkTarget(url, propertyName, baseName);
               return buildAnchorHtml(linkTarget, displayName);
+            }
+
+            // Check if it's a local symbol (in LOCAL_SYMBOL_PAGES)
+            if (LOCAL_SYMBOL_PAGES.hasOwnProperty(baseName)) {
+              const folder = LOCAL_SYMBOL_PAGES[baseName];
+              const displayName = propertyName ? `${symbolName}` : symbolName;
+              const anchor = propertyName
+                ? propertyName.substring(1)
+                : baseName.toLowerCase();
+              return `<a href="${folder}${baseName}.html#${anchor}">${displayName}</a>`;
             }
 
             // Unknown symbol - use local anchor
@@ -285,8 +336,18 @@ function processComment(
               if (symbolMap.hasOwnProperty(baseName)) {
                 const url = symbolMap[baseName];
                 const displayName = propertyName ? `${symbolName}` : symbolName;
-                const linkTarget = buildLinkTarget(url, propertyName);
+                const linkTarget = buildLinkTarget(url, propertyName, baseName);
                 return buildAnchorHtml(linkTarget, displayName);
+              }
+
+              // Check if it's a local symbol (in LOCAL_SYMBOL_PAGES)
+              if (LOCAL_SYMBOL_PAGES.hasOwnProperty(baseName)) {
+                const folder = LOCAL_SYMBOL_PAGES[baseName];
+                const displayName = propertyName ? `${symbolName}` : symbolName;
+                const anchor = propertyName
+                  ? propertyName.substring(1)
+                  : baseName.toLowerCase();
+                return `<a href="${folder}${baseName}.html#${anchor}">${displayName}</a>`;
               }
 
               // Unknown symbol - use local anchor

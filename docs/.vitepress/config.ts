@@ -14,19 +14,18 @@ const config = {
   vue: {
     template: {
       compilerOptions: {
-        isCustomElement(tag) {
+        isCustomElement(tag: string) {
           return tag.startsWith('sp-');
         },
       },
     },
   },
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config
     logo: '/images/lit-ui-router.svg',
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'API', link: '/api/' },
+      { text: 'API', link: '/api/reference/' },
       { text: 'Sample App', link: '/app', target: '_self' },
     ],
     sidebar: [
@@ -39,10 +38,92 @@ const config = {
         ],
       },
       {
-        text: 'API',
+        text: 'API Reference',
+        collapsed: false,
         items: [
-          { text: 'Guide', link: '/api/' },
-          { text: 'Reference', link: '/api/reference/' },
+          {
+            text: 'Core',
+            items: [
+              {
+                text: 'UIRouterLit',
+                link: '/api/reference/classes/UIRouterLit',
+              },
+            ],
+          },
+          {
+            text: 'Components',
+            items: [{ text: 'UIView', link: '/api/reference/classes/UiView' }],
+          },
+          {
+            text: 'Directives',
+            items: [
+              { text: 'uiSref', link: '/api/reference/variables/uiSref' },
+              {
+                text: 'uiSrefActive',
+                link: '/api/reference/variables/uiSrefActive',
+              },
+              {
+                text: 'UiSrefDirective',
+                link: '/api/reference/classes/UiSrefDirective',
+              },
+              {
+                text: 'UiSrefActiveDirective',
+                link: '/api/reference/classes/UiSrefActiveDirective',
+              },
+            ],
+          },
+          {
+            text: 'Hooks',
+            items: [
+              { text: 'UiOnExit', link: '/api/reference/interfaces/UiOnExit' },
+              {
+                text: 'UiOnParamsChanged',
+                link: '/api/reference/interfaces/UiOnParamsChanged',
+              },
+            ],
+          },
+          {
+            text: 'Interfaces',
+            items: [
+              {
+                text: 'LitStateDeclaration',
+                link: '/api/reference/interfaces/LitStateDeclaration',
+              },
+              {
+                text: 'RoutedLitElement',
+                link: '/api/reference/interfaces/RoutedLitElement',
+              },
+              {
+                text: 'SrefStatus',
+                link: '/api/reference/interfaces/SrefStatus',
+              },
+              {
+                text: 'UiSrefActiveParams',
+                link: '/api/reference/interfaces/UiSrefActiveParams',
+              },
+              {
+                text: 'UIViewInjectedProps',
+                link: '/api/reference/interfaces/UIViewInjectedProps',
+              },
+            ],
+          },
+          {
+            text: 'Types',
+            items: [
+              {
+                text: 'RoutedLitComponent',
+                link: '/api/reference/types/RoutedLitComponent',
+              },
+              {
+                text: 'RoutedLitTemplate',
+                link: '/api/reference/types/RoutedLitTemplate',
+              },
+              {
+                text: 'UIViewResolves',
+                link: '/api/reference/types/UIViewResolves',
+              },
+            ],
+          },
         ],
       },
     ],
@@ -52,7 +133,6 @@ const config = {
   },
 };
 
-// https://vitepress.dev/reference/site-config
 export default defineConfig({
   ...config,
   transformHead({ pageData }) {

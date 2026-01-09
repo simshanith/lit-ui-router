@@ -59,15 +59,20 @@
   "excludeInternal": true,
   "excludePrivate": true,
   "categorizeByGroup": true,
-  "categoryOrder": ["Core", "Components", "Directives", "Types", "Hooks"],
+  "categoryOrder": ["Core", "Components", "Directives", "Hooks", "Types"],
   "readme": "none",
   "githubPages": false,
   "entryFileName": "index",
-  "outputFileStrategy": "modules",
   "useCodeBlocks": true,
   "expandObjects": true,
   "parametersFormat": "table",
   "propertiesFormat": "table",
   "enumMembersFormat": "table",
-  "typeDeclarationFormat": "table"
+  "typeDeclarationFormat": "table",
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "sort": ["alphabetical", "source-order"],
+  "router": "kind"
 }
