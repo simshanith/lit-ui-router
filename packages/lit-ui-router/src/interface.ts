@@ -82,19 +82,28 @@ export interface UiOnParamsChanged {
  */
 export interface UiOnExit {
   /**
-   * Called when the routed component's state is about to be exited.
+   * A UI-Router view has a Lit `Component` (see [[LitViewDeclaration.component]]).
+   * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
+   * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
    *
-   * The callback can be used to cancel or alter the new Transition that would
-   * otherwise exit the component's state. Return `false` to cancel the transition,
-   * or return a Promise that resolves to control async confirmation flows.
+   * The uiCanExit callback is called when the routed component's state is about to be exited.
+   *
+   * The callback can be used to cancel or alter the new [[Transition]] that would otherwise exit the component's state.
+   *
+   * This callback is used to inform a view that it is about to be exited, due to a new [[Transition]].
+   * The callback can ask for user confirmation, and cancel or alter the new Transition. The callback should
+   * return a value, or a promise for a value. If a promise is returned, the new Transition waits until the
+   * promise settles.
    *
    * Called when:
    * - The component is still active inside a `ui-view`
    * - A new Transition is about to run
    * - The new Transition will exit the view's state
    *
-   * @param newTransition - The Transition that is about to exit the component's state
-   * @returns A hook result which may cancel or alter the pending Transition
+   * Called with:
+   * - The [[Transition]] that is about to exit the component's state
+   *
+   * @returns a hook result which may cancel or alter the pending Transition (see [[HookResult]])
    */
   uiCanExit(newTransition?: Transition): HookResult;
 }
