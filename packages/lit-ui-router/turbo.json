@@ -6,7 +6,13 @@
       "dependsOn": ["build:custom-elements"]
     },
     "build:custom-elements": {
+      "inputs": ["src/**/*.ts"],
       "outputs": ["dist/custom-elements.json"]
+    },
+    "docs:api": {
+      "inputs": ["typedocs.json", "src/**/*.ts"],
+      "outputs": ["../../docs/api/reference/**"],
+      "cache": true
     }
   }
 }

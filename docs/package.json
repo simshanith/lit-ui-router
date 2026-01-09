@@ -9,6 +9,7 @@
     "docs:preview": "vitepress preview .",
     "format": "prettier --write \"**/*.{md,json,ts}\"",
     "format:check": "prettier --check \"**/*.{md,json,ts}\"",
+    "docs:api": "prettier --write \"api/reference**/*.{md,json,ts}\"",
     "lint": "eslint .",
     "e2e": "E2E_TEST=true vitepress dev ."
   },
