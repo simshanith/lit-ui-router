@@ -59,7 +59,7 @@ export enum TransitionStateChange {
  * with links) and the current router state.
  *
  * @see {@link uiSrefActive}
- * @see {@link https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html | TargetState}
+ * @see [[TargetState]]
  *
  * @category Types
  */
@@ -175,6 +175,7 @@ type deregisterFn = () => void;
  * 2. **Container mode**: Automatically watch nested uiSref directives
  *
  * @see {@link uiSrefActive} for the public API
+ * @see [[AsyncDirective]]
  * @see {@link SrefStatus}
  *
  * @category Directives

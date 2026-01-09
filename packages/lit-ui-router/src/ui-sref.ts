@@ -62,7 +62,8 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
  * by setting the `href` attribute and handling click events.
  *
  * @see {@link uiSref} for the public API
- * @see {@link https://ui-router.github.io/core/docs/latest/classes/_state_stateservice_.stateservice.html | StateService.go()}
+ * @see [[AsyncDirective]]
+ * @see [[StateService.go]]
  *
  * @category Directives
  */
@@ -81,6 +82,9 @@ export class UiSrefDirective extends AsyncDirective {
 
   unsubscribe: (() => void) | undefined;
 
+  /**
+   * @internal
+   */
   constructor(partInfo: PartInfo) {
     super(partInfo);
     if (partInfo.type !== PartType.ELEMENT) {
@@ -195,7 +199,10 @@ export class UiSrefDirective extends AsyncDirective {
     return this.render(this.state!, this.params, this.options);
   };
 
-  _firstUpdated = false;
+  private _firstUpdated = false;
+  /**
+   * @internal
+   */
   firstUpdated() {
     if (this._firstUpdated || !this.isConnected) {
       return;
@@ -251,8 +258,8 @@ export class UiSrefDirective extends AsyncDirective {
  * html`<a ${uiSref('^.sibling')}>Go to Sibling</a>`
  * ```
  *
- * @see {@link https://ui-router.github.io/core/docs/latest/modules/_state_interface_.html#rawparams | RawParams}
- * @see {@link https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.transitionoptions.html | TransitionOptions}
+ * @see [[RawParams]]
+ * @see [[TransitionOptions]]
  *
  * @category Directives
  */

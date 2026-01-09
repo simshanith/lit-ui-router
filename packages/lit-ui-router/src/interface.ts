@@ -28,13 +28,13 @@ import { TemplateResult, LitElement } from 'lit';
  * }
  * ```
  *
- * @see {@link https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.transitionoptions.html | TransitionOptions}
+ * @see [[TransitionOptions]]
  *
  * @category Hooks
  */
 export interface UiOnParamsChanged {
   /**
-   * A UI-Router view has an Lit `Component` (see [[LitViewDeclaration.component]]).
+   * A UI-Router view has a Lit `Component` (see [[LitStateDeclaration.component]]).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
    * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
    *
@@ -75,14 +75,14 @@ export interface UiOnParamsChanged {
  * }
  * ```
  *
- * @see {@link https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult | HookResult}
- * @see {@link https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html | Transition}
+ * @see [[HookResult]]
+ * @see [[Transition]]
  *
  * @category Hooks
  */
 export interface UiOnExit {
   /**
-   * A UI-Router view has a Lit `Component` (see [[LitViewDeclaration.component]]).
+   * A UI-Router view has a Lit `Component` (see [[LitStateDeclaration.component]]).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
    * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
    *
@@ -113,8 +113,8 @@ export interface UiOnExit {
  *
  * @template T - The shape of the resolved values object
  *
- * @see {@link UIViewInjectedProps}
- * @see {@link https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html#resolve | StateDeclaration.resolve}
+ * @see [[UIViewInjectedProps]]
+ * @see [[StateDeclaration.resolve]]
  *
  * @category Types
  */
@@ -155,8 +155,8 @@ export type UIViewResolves<T = Record<string, any>> = T;
  * }
  * ```
  *
- * @see {@link https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html | UIRouter}
- * @see {@link https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html | Transition}
+ * @see [[UIRouter]]
+ * @see [[Transition]]
  *
  * @category Types
  */
@@ -197,7 +197,6 @@ export type RoutedLitTemplate =
 
 /**
  * A template function that can be used as a view declaration.
- * @internal
  */
 export interface LitViewDeclarationTemplate extends _ViewDeclaration {
   (props?: UIViewInjectedProps): TemplateResult;
@@ -256,7 +255,6 @@ export type RoutedLitComponent = RoutedLitTemplate | RoutedLitElement;
 
 /**
  * A LitElement class used directly as a view declaration.
- * @internal
  */
 export interface LitViewDeclarationElement
   extends RoutedLitElement,
@@ -264,7 +262,6 @@ export interface LitViewDeclarationElement
 
 /**
  * A view declaration object with an explicit component property.
- * @internal
  */
 export interface LitViewDeclarationObject extends _ViewDeclaration {
   component: RoutedLitComponent;
@@ -277,8 +274,6 @@ export interface LitViewDeclarationObject extends _ViewDeclaration {
  * - An object with a `component` property ({@link LitViewDeclarationObject})
  * - A LitElement class directly ({@link LitViewDeclarationElement})
  * - A template function directly ({@link LitViewDeclarationTemplate})
- *
- * @internal
  */
 export type LitViewDeclaration =
   | LitViewDeclarationObject
@@ -288,8 +283,7 @@ export type LitViewDeclaration =
 /**
  * State declaration interface for Lit applications.
  *
- * Extends the core {@link https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html | StateDeclaration}
- * with Lit-specific component support.
+ * Extends the core [[StateDeclaration]] with Lit-specific component support.
  *
  * @example Basic state with template function
  * ```ts
@@ -321,7 +315,7 @@ export type LitViewDeclaration =
  * ];
  * ```
  *
- * @see {@link https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html | StateDeclaration}
+ * @see [[StateDeclaration]]
  *
  * @category Types
  */
