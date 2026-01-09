@@ -39,8 +39,11 @@ const config = {
         ],
       },
       {
-        text: 'Reference',
-        items: [{ text: 'API', link: '/api/' }],
+        text: 'API',
+        items: [
+          { text: 'Guide', link: '/api/' },
+          { text: 'Reference', link: '/api/reference/' },
+        ],
       },
     ],
     socialLinks: [
