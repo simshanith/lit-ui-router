@@ -33,16 +33,35 @@ interface TransEvt {
   status?: SrefStatus;
 }
 
+/**
+ * Event name dispatched when a transition state changes.
+ * @internal
+ */
 export const TRANSITION_STATE_CHANGE_EVENT = 'transitionStateChange';
 
+/**
+ * Enum representing the different stages of a transition.
+ * @internal
+ */
 export enum TransitionStateChange {
+  /** Transition has started */
   start = 'start',
+  /** Transition completed successfully */
   success = 'success',
+  /** Transition failed with an error */
   error = 'error',
 }
 
 /**
- * UISref status emitted from [[UISrefStatus]]
+ * Status object representing the active state of a uiSref link.
+ *
+ * This interface describes the relationship between a link (or container
+ * with links) and the current router state.
+ *
+ * @see {@link uiSrefActive}
+ * @see {@link https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html | TargetState}
+ *
+ * @category Types
  */
 export interface SrefStatus {
   /** The sref's target state (or one of its children) is currently active */
@@ -116,19 +135,50 @@ export function mergeSrefStatus(
   };
 }
 
+/**
+ * Parameters for the uiSrefActive directive.
+ *
+ * @see {@link uiSrefActive}
+ *
+ * @category Types
+ */
 export interface UiSrefActiveParams {
+  /** CSS classes to add when the state (or a child state) is active */
   activeClasses: string[];
+  /** CSS classes to add only when the exact state is active */
   exactClasses: string[];
+  /** The state name to check for active status */
   state: string;
+  /** State parameters to match */
   params: RawParams;
+  /** Transition options */
   options: TransitionOptions;
+  /** Target states from nested uiSref directives */
   targetStates: TargetState[];
 }
 
+/** @internal */
 let _first: UiSrefActiveDirective | null = null;
 
+/** @internal */
 type deregisterFn = () => void;
 
+/**
+ * Directive class that adds CSS classes based on active state.
+ *
+ * This directive is used internally by the {@link uiSrefActive} directive function.
+ * It watches the current router state and applies CSS classes to elements
+ * when their associated states are active.
+ *
+ * The directive can operate in two modes:
+ * 1. **Explicit state**: Provide a state name to watch
+ * 2. **Container mode**: Automatically watch nested uiSref directives
+ *
+ * @see {@link uiSrefActive} for the public API
+ * @see {@link SrefStatus}
+ *
+ * @category Directives
+ */
 export class UiSrefActiveDirective extends AsyncDirective {
   element: Element | null = null;
 
@@ -449,4 +499,67 @@ export class UiSrefActiveDirective extends AsyncDirective {
   };
 }
 
+/**
+ * Directive that adds CSS classes based on active router state.
+ *
+ * The `uiSrefActive` directive watches the current router state and applies
+ * CSS classes to elements when their associated states are active. It supports
+ * both "active" classes (applied when the state or any child state is active)
+ * and "exact" classes (applied only when the exact state is active).
+ *
+ * @param params - Configuration object with activeClasses, exactClasses, and optional state/params
+ *
+ * @example Basic usage with nested uiSref
+ * ```ts
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ * import { html } from 'lit';
+ *
+ * html`
+ *   <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}>
+ *     Home
+ *   </a>
+ * `
+ * ```
+ *
+ * @example With exact matching
+ * ```ts
+ * html`
+ *   <a ${uiSref('users')}
+ *      ${uiSrefActive({
+ *        activeClasses: ['nav-active'],
+ *        exactClasses: ['nav-exact']
+ *      })}>
+ *     Users
+ *   </a>
+ * `
+ * ```
+ *
+ * @example Container mode (watches nested uiSref directives)
+ * ```ts
+ * html`
+ *   <nav ${uiSrefActive({ activeClasses: ['section-active'] })}>
+ *     <a ${uiSref('users')}>Users</a>
+ *     <a ${uiSref('users.list')}>List</a>
+ *     <a ${uiSref('users.create')}>Create</a>
+ *   </nav>
+ * `
+ * ```
+ *
+ * @example Explicit state (without nested uiSref)
+ * ```ts
+ * html`
+ *   <div ${uiSrefActive({
+ *     state: 'dashboard',
+ *     activeClasses: ['dashboard-active']
+ *   })}>
+ *     Dashboard content
+ *   </div>
+ * `
+ * ```
+ *
+ * @see {@link SrefStatus}
+ * @see {@link UiSrefActiveParams}
+ *
+ * @category Directives
+ */
 export const uiSrefActive = directive(UiSrefActiveDirective);
