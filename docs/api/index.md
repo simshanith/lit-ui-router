@@ -1,6 +1,10 @@
-# API Reference
+# API Guide
 
-This page documents the public API of `lit-ui-router`.
+This page provides a guide to the public API of `lit-ui-router` with usage examples.
+
+::: tip API Reference
+For detailed type signatures and auto-generated documentation, see the [API Reference](./reference/).
+:::
 
 ## Installation
 
