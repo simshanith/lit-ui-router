@@ -10,6 +10,7 @@
   "categoryOrder": ["Core", "Components", "Directives", "Types", "Hooks"],
   "readme": "none",
   "githubPages": false,
+  "entryFileName": "index",
   "outputFileStrategy": "modules",
   "useCodeBlocks": true,
   "expandObjects": true,
