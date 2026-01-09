@@ -1,401 +1,344 @@
 # TypeDoc API Documentation Plan
 
-## Overview
-This plan outlines the strategy for generating API documentation using TypeDoc for the lit-ui-router project, addressing issues #91 and #92.
+**Issues**: #91, #92
+**Goal**: Generate API docs from source comments using TypeDoc (literate programming)
 
-## Current State Analysis
+## Issue Summary
 
-### Existing Documentation Structure
-- **Location**: `docs/api/index.md`
-- **Format**: Manually maintained markdown
-- **Coverage**: Comprehensive user-facing documentation including:
-  - Installation and imports
-  - Core classes (UIRouterLit)
-  - Components (`<ui-router>`, `<ui-view>`)
-  - Directives (uiSref, uiSrefActive)
-  - State declarations (LitStateDeclaration)
-  - Component props (UIViewInjectedProps)
-  - Lifecycle hooks (uiCanExit, uiOnParamsChanged)
+- **#91**: Link to @uirouter/core API reference where possible (interim improvement)
+- **#92**: Generate API docs from source comments instead of maintaining separate markdown
 
-### Source Code Documentation Status
+## Current State
 
-#### Well-Documented Areas
-1. **ui-router.ts**:
-   - Good JSDoc on the `<ui-router>` component
-   - Documents slots, events, and properties
-   - Example: `@summary`, `@slot`, `@event` tags
+### Existing Manual Docs (`docs/api/index.md`)
+- 317 lines of comprehensive markdown
+- Covers: UIRouterLit, components, directives, state declarations, lifecycle hooks
+- Well-structured with examples and tables
 
-2. **ui-view.ts**:
-   - Good JSDoc on the `<ui-view>` component
-   - Documents events and purpose
-   - Internal methods marked with `@internal`
+### Source Code JSDoc Coverage
 
-3. **interface.ts**:
-   - Excellent documentation for lifecycle hooks
-   - UiOnParamsChanged and UiOnExit interfaces well-documented
-   - Detailed explanations of when hooks are called
+| File | Status | Notes |
+|------|--------|-------|
+| `interface.ts` | ✅ Excellent | Lifecycle hooks well-documented |
+| `ui-router.ts` | ✅ Good | Component has @summary, @slot, @event |
+| `ui-view.ts` | ✅ Good | Component documented, @internal used |
+| `core.ts` | ❌ Missing | UIRouterLit class has no JSDoc |
+| `ui-sref.ts` | ❌ Missing | Directive class undocumented |
+| `ui-sref-active.ts` | ⚠️ Partial | SrefStatus documented, directive not |
 
-#### Sparsely Documented Areas
-1. **core.ts**:
-   - UIRouterLit class: No JSDoc comments
-   - LitViewConfig: Minimal documentation
-   - litViewsBuilder: Has some JSDoc but could be enhanced
-   - Critical internal functions lack documentation
+## Tricky Areas
 
-2. **ui-sref.ts**:
-   - UiSrefDirective class: No JSDoc
-   - Public methods undocumented
-   - Directive behavior not explained
-
-3. **ui-sref-active.ts**:
-   - UiSrefActiveDirective class: Minimal documentation
-   - SrefStatus interface documented but directive itself lacks docs
-   - Complex state tracking logic undocumented
-
-## Comparison: Markdown Docs vs Source Comments
-
-### Coverage Gaps
-
-| API Element | Markdown Docs | Source Comments | Gap |
-|------------|---------------|-----------------|-----|
-| UIRouterLit class | ✓ High-level usage | ✗ Missing | Need class-level JSDoc |
-| UIRouterLit.start() | ✓ Documented | ✗ Missing | Need method JSDoc |
-| UIRouterLit.plugin() | ✓ Documented | ✗ Missing | Need method JSDoc |
-| `<ui-router>` component | ✓ Documented | ✓ Good JSDoc | Well aligned |
-| `<ui-view>` component | ✓ Documented | ✓ Good JSDoc | Well aligned |
-| uiSref directive | ✓ Documented | ✗ Missing | Need directive JSDoc |
-| uiSrefActive directive | ✓ Documented | Partial | Need enhancement |
-| LitStateDeclaration | ✓ Documented | ✗ Missing | Need interface JSDoc |
-| UIViewInjectedProps | ✓ Documented | Partial | Need enhancement |
-| Lifecycle hooks | ✓ Documented | ✓ Excellent | Well aligned |
-
-### Documentation Inconsistencies
-1. **Markdown provides usage examples** - Source lacks example JSDoc tags
-2. **Markdown has method tables** - Source methods lack JSDoc
-3. **Markdown documents options** - Source parameter JSDoc incomplete
-
-## Tricky Areas for TypeDoc Generation
-
-### 1. **Lit Directives (uiSref, uiSrefActive)**
-**Challenge**: TypeDoc doesn't naturally understand Lit directive patterns
-- Directives extend `AsyncDirective` from lit/async-directive
-- The `directive()` wrapper function obscures the actual class
-- Documentation should focus on usage, not implementation
-
-**Solution Strategy**:
-- Add comprehensive JSDoc to directive classes
-- Use `@example` tags to show usage patterns
-- Consider custom TypeDoc plugin or manual documentation overlay
-- Use `@public` tags to control visibility
-
-### 2. **Custom Element Registration**
-**Challenge**: `@customElement` decorators auto-register elements
-- `<ui-router>` and `<ui-view>` are registered via decorators
-- TypeDoc may not capture web component metadata properly
-
-**Solution Strategy**:
-- Ensure JSDoc includes HTML usage examples
-- Document element name, attributes, and properties separately
-- Cross-reference with Custom Elements Manifest (already generated)
-- Use `@customelement` or custom tags
-
-### 3. **Internal APIs**
-**Challenge**: Many items marked `@internal` but still exported
-- LitViewConfig, viewConfigFactory, litViewsBuilder, etc.
-- Should be hidden from public API docs but visible for advanced users
-
-**Solution Strategy**:
-- Use TypeDoc's `--excludeInternal` flag
-- Maintain `@internal` tags consistently
-- Consider separate "Advanced API" documentation section
-- Document what users should/shouldn't use
-
-### 4. **Type Exports from @uirouter/core**
-**Challenge**: Heavy reliance on types from external package
-- Transition, StateObject, ViewConfig, etc.
-- TypeDoc may try to document these external types
-
-**Solution Strategy**:
-- Use `--excludeExternals` flag
-- Add links to @uirouter/core documentation
-- Re-export types with additional JSDoc if needed
-- Configure `typedoc.json` to handle external packages
-
-### 5. **Template Functions and Function Overloads**
-**Challenge**: Component can be a class OR a function
-```typescript
-component: RoutedLitTemplate | RoutedLitElement
-```
-
-**Solution Strategy**:
-- Document both patterns with `@example` tags
-- Use TypeDoc's union type rendering
-- Explain when to use each pattern
-- Consider separate documentation for each approach
-
-### 6. **Event-Driven Architecture**
-**Challenge**: Components communicate via CustomEvents
-- ui-router-context event
-- ui-view-context event
-- uiSrefTarget event
-- Complex event bubbling patterns
-
-**Solution Strategy**:
-- Document events with `@event` tags
-- Include event detail types
-- Explain event flow and bubbling
-- Add sequence diagrams if possible
-
-### 7. **State Machine Concepts**
-**Challenge**: Requires understanding of UI-Router core concepts
-- States, transitions, resolves, hooks
-- Not obvious from type signatures alone
-
-**Solution Strategy**:
-- Add conceptual overview in main package JSDoc
-- Link to UI-Router core documentation
-- Include "Getting Started" in generated docs
-- Use `@see` tags for cross-references
-
-### 8. **Generic Types and Type Parameters**
-**Challenge**: UIViewInjectedProps is generic
-```typescript
-UIViewInjectedProps<T = Record<string, any>>
-```
-
-**Solution Strategy**:
-- Document type parameters with `@template` tag
-- Provide concrete examples
-- Explain common use cases
-- Show before/after typing examples
+1. **Lit Directives** - `directive()` wrapper obscures the class; need careful JSDoc placement
+2. **Custom Elements** - TypeDoc doesn't understand `@customElement` decorator natively
+3. **Internal APIs** - Many `@internal` items exported; use `--excludeInternal`
+4. **External Types** - Heavy use of @uirouter/core types; need `--excludeExternals` + links
+5. **Union Types** - `component: RoutedLitTemplate | RoutedLitElement` needs clear examples
 
 ## Implementation Plan
 
-### Phase 1: Add JSDoc Comments (Priority: High)
-**Goal**: Enhance source code documentation
+### Phase 1: Add Missing JSDoc (Priority: High)
 
-#### Core Module (core.ts)
-- [ ] Add class-level JSDoc to `UIRouterLit`
-  - Explain it extends UIRouter from @uirouter/core
-  - Document constructor behavior
-  - Link to getting started guide
-- [ ] Document `start()` method
-  - Explain when to call it
-  - Document thrown errors
-  - Add usage example
-- [ ] Add JSDoc to `LitViewConfig` (mark as @internal)
-- [ ] Document `litViewsBuilder` function
-  - Explain its role in state building
-  - Mark as @internal but explain for advanced users
+**Files to modify:**
 
-#### Directives (ui-sref.ts, ui-sref-active.ts)
-- [ ] Add class-level JSDoc to `UiSrefDirective`
-  - Focus on user-facing usage via `uiSref()`
-  - Include multiple `@example` tags
-  - Document parameters
-- [ ] Add class-level JSDoc to `UiSrefActiveDirective`
-  - Focus on user-facing usage via `uiSrefActive()`
-  - Explain active vs exact classes
-  - Include examples
-- [ ] Document key public interfaces
-  - SrefStatus
-  - UiSrefActiveParams
+#### `packages/lit-ui-router/src/core.ts`
+```typescript
+/**
+ * The main router class for Lit applications.
+ * Extends {@link https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html | UIRouter} from @uirouter/core.
+ *
+ * @example
+ * ```ts
+ * import { UIRouterLit } from 'lit-ui-router';
+ * import { hashLocationPlugin } from '@uirouter/core';
+ *
+ * const router = new UIRouterLit();
+ * router.plugin(hashLocationPlugin);
+ * router.stateRegistry.register({ name: 'home', url: '/home', component: HomeComponent });
+ * router.start();
+ * ```
+ *
+ * @see {@link https://ui-router.github.io/core/docs/latest/ | UI-Router Core Documentation}
+ */
+export class UIRouterLit extends UIRouter { ... }
+```
 
-#### Interfaces (interface.ts)
-- [ ] Add JSDoc to `LitStateDeclaration`
-  - Explain relationship to StateDeclaration
-  - Document the component property
-  - Add state registration examples
-- [ ] Enhance `UIViewInjectedProps` documentation
-  - Add `@template` documentation
-  - Provide typed examples
-  - Explain each property's use case
-- [ ] Add examples to `RoutedLitTemplate` and `RoutedLitElement`
+- Add JSDoc to `UIRouterLit` class
+- Document `start()` method with @throws
+- Mark `LitViewConfig`, `litViewsBuilder` as `@internal`
 
-### Phase 2: TypeDoc Configuration (Priority: High)
-**Goal**: Set up TypeDoc tooling
+#### `packages/lit-ui-router/src/ui-sref.ts`
+- Add class-level JSDoc to `UiSrefDirective`
+- Document the exported `uiSref` directive with @example tags
+- Add @param docs for state, params, options
 
-- [ ] Install TypeDoc and plugins
-  ```bash
-  pnpm add -D typedoc typedoc-plugin-markdown
-  ```
-- [ ] Create `typedoc.json` configuration
-  ```json
-  {
-    "$schema": "https://typedoc.org/schema.json",
-    "entryPoints": ["packages/lit-ui-router/src/index.ts"],
-    "out": "docs/api-generated",
-    "plugin": ["typedoc-plugin-markdown"],
-    "excludeExternals": true,
-    "excludeInternal": true,
-    "categorizeByGroup": true,
-    "includeVersion": true,
-    "readme": "packages/lit-ui-router/README.md",
-    "navigationLinks": {
-      "Home": "https://lit-ui-router.dev",
-      "GitHub": "https://github.com/simshanith/lit-ui-router"
+#### `packages/lit-ui-router/src/ui-sref-active.ts`
+- Add class-level JSDoc to `UiSrefActiveDirective`
+- Enhance `SrefStatus` interface documentation
+- Document `uiSrefActive` with @example
+
+#### `packages/lit-ui-router/src/interface.ts`
+- Add JSDoc to `LitStateDeclaration`
+- Add @template tag to `UIViewInjectedProps`
+- Document type aliases with @example
+
+### Phase 2: TypeDoc Setup + Custom Plugin (Priority: High)
+
+**Reference**: [typedoc-plugin-ui-router](https://github.com/christopherthielen/typedoc-plugin-ui-router) - existing plugin for @uirouter/core
+
+**New files to create:**
+
+#### `packages/typedoc-plugin-lit-ui-router/` (new package)
+
+Create a custom TypeDoc plugin to handle Lit-specific patterns:
+
+```typescript
+// packages/typedoc-plugin-lit-ui-router/src/index.ts
+import { Application, Converter, ReflectionKind } from 'typedoc';
+
+export function load(app: Application) {
+  // 1. Handle Lit directives - document the directive() wrapper result
+  app.converter.on(Converter.EVENT_RESOLVE_END, (context) => {
+    // Find directive exports (uiSref, uiSrefActive)
+    // Link to underlying class documentation
+  });
+
+  // 2. Add @uirouter/core cross-links
+  app.converter.on(Converter.EVENT_RESOLVE, (context, reflection) => {
+    // Add @see links to external UI-Router core types
+  });
+
+  // 3. Custom navigation structure
+  // Group: Core | Components | Directives | Types | Hooks
+}
+```
+
+**Plugin responsibilities:**
+- Rename/organize modules for cleaner navigation
+- Add `@see` links to @uirouter/core API docs (addresses #91)
+- Handle `directive()` wrapper pattern for better directive docs
+- Optionally integrate Custom Elements Manifest data
+
+#### `packages/typedoc-plugin-lit-ui-router/package.json`
+```json
+{
+  "name": "typedoc-plugin-lit-ui-router",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc"
+  },
+  "peerDependencies": {
+    "typedoc": "^0.27.0"
+  },
+  "devDependencies": {
+    "typedoc": "^0.27.0",
+    "typescript": "5.8.3"
+  }
+}
+```
+
+#### `packages/lit-ui-router/typedoc.json`
+```json
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../docs/api/reference",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-plugin-lit-ui-router"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "categorizeByGroup": true,
+  "categoryOrder": ["Core", "Components", "Directives", "Types", "Hooks"],
+  "readme": "none",
+  "githubPages": false
+}
+```
+
+**Modifications:**
+
+#### `packages/lit-ui-router/package.json`
+Add scripts:
+```json
+"docs": "typedoc",
+"docs:watch": "typedoc --watch"
+```
+
+Add devDependencies:
+```json
+"typedoc": "^0.27.x",
+"typedoc-plugin-markdown": "^4.x"
+```
+
+### Phase 3: Add @uirouter/core Links (Addresses #91)
+
+Add `@see` tags linking to ui-router core docs throughout:
+- `HookResult` → https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult
+- `Transition` → https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html
+- `StateDeclaration` → https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html
+
+### Phase 4: Integration with VitePress
+
+**Current docs setup:**
+- VitePress at `docs/` with dev server via `pnpm docs`
+- Build via `vitepress build .`
+- Turbo `docs` task is persistent (dev server)
+
+#### `packages/lit-ui-router/package.json`
+Add TypeDoc script:
+```json
+"docs:api": "typedoc"
+```
+
+#### `docs/package.json`
+Add script to run TypeDoc and format generated output:
+```json
+"docs:api": "pnpm --filter lit-ui-router docs:api && prettier --write api/reference/**/*.md"
+```
+
+#### `docs/turbo.json`
+Add task configuration (local to docs package):
+```json
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "dependsOn": ["docs:api"]
+    },
+    "docs:api": {
+      "dependsOn": ["lit-ui-router#build", "typedoc-plugin-lit-ui-router#build"],
+      "outputs": ["api/reference/**"],
+      "inputs": [
+        "../packages/lit-ui-router/src/**/*.ts",
+        "../packages/lit-ui-router/typedoc.json",
+        "../.prettierrc"
+      ]
+    },
+    "e2e": {
+      "interruptible": true
     }
   }
-  ```
-- [ ] Add npm script to package.json
-  ```json
-  "docs:api": "typedoc"
-  ```
-- [ ] Test generation locally
+}
+```
 
-### Phase 3: Documentation Enhancement (Priority: Medium)
-**Goal**: Improve generated documentation quality
+*Note: `build` depends on `docs:api` so TypeDoc generates before VitePress builds. This runs automatically during Cloudflare deployment.*
 
-- [ ] Add package-level documentation
-  - Create module documentation in index.ts
-  - Add overview and getting started
-  - Include architectural notes
-- [ ] Organize with @category tags
-  - Core (UIRouterLit)
-  - Components (ui-router, ui-view)
-  - Directives (uiSref, uiSrefActive)
-  - Types (interfaces and type aliases)
-  - Hooks (lifecycle interfaces)
-- [ ] Add code examples throughout
-  - Use `@example` tags liberally
-  - Include both TypeScript and JavaScript examples
-  - Show common patterns and use cases
-- [ ] Link to external resources
-  - @uirouter/core documentation
-  - Lit documentation
-  - Tutorial pages
+#### `docs/.vitepress/config.ts`
+Update sidebar to include generated API reference (nested under `/api/`):
+```typescript
+sidebar: [
+  {
+    text: 'Tutorial',
+    items: [...]
+  },
+  {
+    text: 'API',
+    items: [
+      { text: 'Guide', link: '/api/' },
+      { text: 'Reference', link: '/api/reference/' }  // <-- add (generated TypeDoc)
+    ],
+  },
+],
+```
 
-### Phase 4: Integration & Automation (Priority: Medium)
-**Goal**: Integrate TypeDoc into build process
+#### `docs/api/index.md`
+- Keep as "API Guide" with usage examples
+- Add link to generated API reference at top
+- Cross-reference between guide and reference
 
-- [ ] Add TypeDoc to CI/CD pipeline
-  - Generate docs on PR builds
-  - Deploy to docs site on merge to main
-- [ ] Update turbo.json for monorepo support
-- [ ] Consider versioned documentation
-  - Generate docs per release
-  - Archive old versions
-- [ ] Add doc linting/validation
-  - Check for missing JSDoc
-  - Validate examples compile
-  - Ensure no broken links
+#### CI/CD Integration
+- **GitHub workflows**: No changes needed - `turbo ci` doesn't include docs build
+- **Cloudflare deployment**: No changes needed - `docs#build` now depends on `docs:api`
+- TypeDoc generates automatically when `pnpm turbo docs#build` runs
 
-### Phase 5: Migration Strategy (Priority: Low)
-**Goal**: Transition from manual to generated docs
+## Files to Modify
 
-**Option A: Hybrid Approach** (Recommended)
-- Keep existing docs/api/index.md as "API Guide"
-- Generate TypeDoc to docs/api-reference/
-- Update index.md to link to generated reference
-- Maintain both: guide (manual) + reference (generated)
+| File | Action |
+|------|--------|
+| `packages/lit-ui-router/src/core.ts` | Add JSDoc |
+| `packages/lit-ui-router/src/ui-sref.ts` | Add JSDoc |
+| `packages/lit-ui-router/src/ui-sref-active.ts` | Add JSDoc |
+| `packages/lit-ui-router/src/interface.ts` | Enhance JSDoc |
+| `packages/lit-ui-router/package.json` | Add typedoc deps/scripts |
+| `packages/lit-ui-router/typedoc.json` | Create config |
+| `packages/typedoc-plugin-lit-ui-router/` | Create plugin package (new) |
+| `packages/typedoc-plugin-lit-ui-router/src/index.ts` | Plugin implementation |
+| `packages/typedoc-plugin-lit-ui-router/package.json` | Plugin package config |
+| `docs/api/index.md` | Add link to generated docs |
+| `docs/.vitepress/config.ts` | Add API Reference to sidebar |
+| `docs/package.json` | Add `docs:api` script |
+| `docs/turbo.json` | Add `docs:api` task + build dependency |
 
-**Option B: Full Migration**
-- Replace docs/api/index.md with TypeDoc output
-- Requires extensive JSDoc to match current content
-- Higher risk, more work upfront
+*Note: `pnpm-workspace.yaml` already includes `packages/*`, so no changes needed there.*
 
-**Option C: Side-by-side**
-- Generate TypeDoc to separate location
-- Gradually improve JSDoc quality
-- Eventually deprecate manual docs
+## Git Commit Strategy
 
-### Phase 6: Maintenance & Guidelines (Priority: Low)
-**Goal**: Ensure ongoing documentation quality
+Make a git commit after each todo step that edits files:
 
-- [ ] Create CONTRIBUTING.md section on documentation
-- [ ] Establish JSDoc standards
-  - Required tags for public APIs
-  - Example requirements
-  - Style guide
-- [ ] Set up pre-commit hooks
-  - Lint JSDoc comments
-  - Validate TypeDoc generation succeeds
-- [ ] Regular audits
-  - Review generated docs quarterly
-  - Update examples for new Lit versions
-  - Ensure external links valid
+| Step | Commit Message |
+|------|---------------|
+| Plugin package structure | `feat(typedoc-plugin): create package structure` |
+| TypeDoc deps | `build(lit-ui-router): add typedoc dependencies` |
+| typedoc.json | `build(lit-ui-router): add typedoc configuration` |
+| JSDoc core.ts | `docs(lit-ui-router): add JSDoc to UIRouterLit class` |
+| JSDoc ui-sref.ts | `docs(lit-ui-router): add JSDoc to UiSrefDirective` |
+| JSDoc ui-sref-active.ts | `docs(lit-ui-router): add JSDoc to UiSrefActiveDirective` |
+| JSDoc interface.ts | `docs(lit-ui-router): enhance JSDoc in interface.ts` |
+| Plugin implementation | `feat(typedoc-plugin): implement TypeDoc plugin` |
+| docs/package.json | `build(docs): add docs:api script` |
+| docs/turbo.json | `build(docs): add docs:api task configuration` |
+| VitePress sidebar | `feat(docs): add API Reference to sidebar` |
+| docs/api/index.md | `docs: link to generated API reference` |
 
-## Technical Considerations
+## Verification
 
-### TypeDoc Limitations
-1. **Custom Lit decorators**: May need plugin or manual intervention
-2. **Directive patterns**: Not standard class patterns, needs special handling
-3. **Web Components**: TypeDoc doesn't understand custom element semantics natively
-4. **Generic constraints**: Complex generics may render poorly
+1. Build the TypeDoc plugin:
+   ```bash
+   cd packages/typedoc-plugin-lit-ui-router
+   pnpm build
+   ```
 
-### Alternative/Complementary Tools
-- **Custom Elements Manifest**: Already in use, generates custom-elements.json
-- **web-component-analyzer**: Alternative to CEM
-- **API Extractor**: Microsoft tool, more focused on TypeScript libraries
-- **Docusaurus**: Could host generated TypeDoc output
-- **Storybook**: For component documentation with live examples
+2. Format and lint source files:
+   ```bash
+   pnpm turbo format        # Apply formatting fixes
+   pnpm turbo format:check  # Verify formatting (CI)
+   pnpm turbo lint          # Run ESLint
+   ```
 
-### Integration with Existing Tools
-- **Custom Elements Manifest** (already generating)
-  - Keep this for web component metadata
-  - Use TypeDoc for TypeScript API reference
-  - Cross-reference between them
-- **Prettier**: Ensure JSDoc formatted consistently
-- **ESLint**: Add JSDoc linting rules
-- **Vitest**: Document testing utilities with JSDoc
+3. Run TypeDoc generation (from docs package):
+   ```bash
+   cd docs && pnpm docs:api
+   ```
 
-## Success Criteria
+4. Verify output in `docs/api/reference/`:
+   - Check all public APIs are documented
+   - Verify internal APIs are excluded
+   - Confirm @uirouter/core links work
 
-### Must Have
-- [ ] All public APIs have JSDoc comments
-- [ ] TypeDoc generates without errors
-- [ ] Generated docs deployed to website
-- [ ] Documentation matches or exceeds current manual docs
+5. Run VitePress dev server and verify:
+   ```bash
+   cd docs && pnpm docs
+   ```
+   - Navigate to API Reference in sidebar
+   - Verify generated markdown renders correctly
+   - Check navigation between API Guide and API Reference
 
-### Should Have
-- [ ] Examples for all major APIs
-- [ ] Internal APIs appropriately hidden/documented
-- [ ] Clear navigation and categorization
-- [ ] Links to tutorials and guides
+6. Build full docs site:
+   ```bash
+   cd docs && pnpm build
+   ```
+   - Preview with `pnpm docs:preview`
+   - Verify all links work
 
-### Nice to Have
-- [ ] Automated doc generation in CI
-- [ ] Version-specific documentation
-- [ ] Interactive examples (via StackBlitz)
-- [ ] API diff between versions
+## Confirmed Decisions
 
-## Risk Assessment
-
-### High Risk
-- **Breaking existing documentation workflow**: Mitigation: Phased rollout
-- **TypeDoc not handling Lit patterns well**: Mitigation: Test early, consider hybrid approach
-
-### Medium Risk
-- **Maintenance burden increases**: Mitigation: Automation and guidelines
-- **Generated docs less readable than manual**: Mitigation: Extensive JSDoc enhancement
-
-### Low Risk
-- **Tool compatibility issues**: Mitigation: Pin versions, test thoroughly
-- **Performance impact on builds**: Mitigation: Separate doc generation step
-
-## Next Steps
-
-1. **Immediate**: Review this plan with maintainers, discuss issues #91 & #92
-2. **Week 1**: Start Phase 1 - Add JSDoc to core.ts and interface.ts
-3. **Week 2**: Complete Phase 1 and begin Phase 2 - Set up TypeDoc
-4. **Week 3**: Test generation, review output quality, iterate
-5. **Week 4**: Choose migration strategy, implement Phase 3
-6. **Ongoing**: Phases 4-6 based on timeline and priorities
-
-## Questions to Resolve
-
-1. What specific issues are #91 and #92 addressing? (Unable to access GitHub issues)
-2. Preference for hybrid vs. full migration approach?
-3. Should TypeDoc output live in `/docs` or separate location?
-4. Deploy generated docs to lit-ui-router.dev or separate subdomain?
-5. Version-specific docs needed immediately or future enhancement?
-6. Budget for custom TypeDoc plugins if needed for Lit-specific features?
-7. Should we document internal APIs separately for advanced users?
-
-## Resources
-
-- [TypeDoc Documentation](https://typedoc.org/)
-- [TypeDoc JSDoc Tags](https://typedoc.org/guides/tags/)
-- [Lit Documentation Best Practices](https://lit.dev/docs/tools/documentation/)
-- [@custom-elements-manifest/analyzer](https://custom-elements-manifest.open-wc.org/)
-- [UI-Router Core Docs](https://ui-router.github.io/core/)
+- **Output location**: `docs/api/reference/` (nested under existing `/api/` path)
+- **Migration approach**: Hybrid - keep manual guide + generated reference
+- **CI/CD**: Integrated via turbo task dependencies (no workflow changes needed)
+- **Plugin scope**: Internal workspace package only (not published to npm)
