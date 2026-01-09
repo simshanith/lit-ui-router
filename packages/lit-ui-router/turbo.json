@@ -10,8 +10,9 @@
       "outputs": ["dist/custom-elements.json"]
     },
     "docs:api": {
-      "inputs": ["typedocs.json", "src/**/*.ts"],
+      "inputs": ["typedoc.json", "src/**/*.ts"],
       "outputs": ["../../docs/api/reference/**"],
+      "dependsOn": ["^build"],
       "cache": true
     }
   }

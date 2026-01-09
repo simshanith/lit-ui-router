@@ -44,21 +44,26 @@ export function load(app: Application): void {
  * Handle Lit directive wrapper patterns.
  *
  * The `directive()` function from Lit wraps directive classes, which can obscure
- * the documentation. This handler ensures proper linking between the directive
- * function exports (uiSref, uiSrefActive) and their underlying classes.
+ * the documentation. This handler links directive exports to their underlying classes.
  */
 function handleDirectiveWrappers(context: Context, app: Application): void {
   const project = context.project;
 
-  // Find directive exports and link to their class documentation
+  // Find directive exports and link them to their classes
   const directiveNames = ['uiSref', 'uiSrefActive'];
 
   for (const name of directiveNames) {
     const directive = project.getChildByName(name);
     const directiveClass = project.getChildByName(`${name}Directive`);
 
-    if (directive && directiveClass) {
-      app.logger.verbose(`[lit-ui-router] Linking ${name} to ${name}Directive`);
+    if (
+      directive &&
+      directive instanceof DeclarationReflection &&
+      directiveClass
+    ) {
+      app.logger.verbose(
+        `[lit-ui-router] Linking ${name} to ${name}Directive`,
+      );
     }
   }
 }
@@ -103,7 +108,8 @@ function addCategoryTags(reflection: DeclarationReflection): void {
     name === 'UIViewInjectedProps' ||
     name === 'RoutedLitTemplate' ||
     name === 'RoutedLitElement' ||
-    name === 'SrefStatus'
+    name === 'SrefStatus' ||
+    name === 'UiSrefActiveParams'
   ) {
     setCategory(reflection, 'Types');
   }

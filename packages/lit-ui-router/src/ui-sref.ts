@@ -219,9 +219,10 @@ export class UiSrefDirective extends AsyncDirective {
  * UI-Router navigation links. It automatically generates the `href` attribute
  * based on the target state and handles click events to perform state transitions.
  *
- * @param state - The target state name (can be relative like `.child` or `^.sibling`)
- * @param params - Optional state parameters (see [[RawParams]])
- * @param options - Optional transition options (see [[TransitionOptions]])
+ * **Arguments:**
+ * - `state` - The target state name (can be relative like `.child` or `^.sibling`)
+ * - `params` - Optional state parameters (see [[RawParams]])
+ * - `options` - Optional transition options (see [[TransitionOptions]])
  *
  * @example Basic usage
  * ```ts
