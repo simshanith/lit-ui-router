@@ -220,8 +220,8 @@ export class UiSrefDirective extends AsyncDirective {
  * based on the target state and handles click events to perform state transitions.
  *
  * @param state - The target state name (can be relative like `.child` or `^.sibling`)
- * @param params - Optional state parameters
- * @param options - Optional transition options
+ * @param params - Optional state parameters (see [[RawParams]])
+ * @param options - Optional transition options (see [[TransitionOptions]])
  *
  * @example Basic usage
  * ```ts

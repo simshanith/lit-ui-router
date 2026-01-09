@@ -507,7 +507,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * both "active" classes (applied when the state or any child state is active)
  * and "exact" classes (applied only when the exact state is active).
  *
- * @param params - Configuration object with activeClasses, exactClasses, and optional state/params
+ * @param params - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, and optional state/params
  *
  * @example Basic usage with nested uiSref
  * ```ts
