@@ -1,0 +1,20 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../docs/api/reference",
+  "plugin": ["typedoc-plugin-markdown", "typedoc-plugin-lit-ui-router"],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "categorizeByGroup": true,
+  "categoryOrder": ["Core", "Components", "Directives", "Types", "Hooks"],
+  "readme": "none",
+  "githubPages": false,
+  "outputFileStrategy": "modules",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table"
+}
