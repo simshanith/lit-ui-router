@@ -26,7 +26,7 @@
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "lint": "eslint .",
     "build:custom-elements": "cem analyze --outdir ./dist",
-    "docs:api": "typedoc"
+    "docs:api": "rimraf ../../docs/api/reference && typedoc"
   },
   "customElements": "./dist/custom-elements.json",
   "dependencies": {
@@ -40,9 +40,11 @@
     "playwright": "1.54.1",
     "prettier": "3.6.2",
     "release-it": "^19.2.2",
+    "rimraf": "^6.0.0",
     "typedoc": "^0.28.0",
     "typedoc-plugin-lit-ui-router": "workspace:*",
     "typedoc-plugin-markdown": "^4.4.0",
+    "typedoc-vitepress-theme": "^1.1.2",
     "typescript": "5.8.3",
     "vitest": "^4.0.16"
   }

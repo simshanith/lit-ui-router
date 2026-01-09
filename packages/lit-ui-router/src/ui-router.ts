@@ -7,6 +7,9 @@ interface UiRouterContextEventDetail {
   uiRouter?: UIRouterLit;
 }
 
+/**
+ * @internal
+ */
 export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
 
 /**

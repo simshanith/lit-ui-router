@@ -1,7 +1,8 @@
 /**
  * TypeDoc plugin for lit-ui-router.
  *
- * This plugin handles Lit-specific patterns and adds cross-links to @uirouter/core documentation.
+ * This plugin handles Lit-specific patterns, adds cross-links to @uirouter/core documentation,
+ * and reorganizes output by category (core, components, directives, hooks, types).
  *
  * @packageDocumentation
  */
@@ -14,69 +15,110 @@ import {
   Reflection,
   Comment,
   CommentTag,
+  RendererEvent,
 } from 'typedoc';
 import { EXTERNAL_SYMBOLS } from './symbols/index.js';
+import * as fs from 'fs';
+import * as path from 'path';
 
 const SYMBOL_LINK_REGEX =
   /\[\[([A-Z][a-zA-Z0-9]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?)\]\]/g;
 
 /**
- * Mapping of local symbol names to their page URLs.
- * Used for multi-page output where each type has its own file.
+ * Category definitions for organizing output.
  */
-const LOCAL_SYMBOL_PAGES: Record<string, string> = {
-  // Variables (directives)
-  uiSref: 'variables/',
-  uiSrefActive: 'variables/',
-  // Classes
-  UiSrefDirective: 'classes/',
-  UiSrefActiveDirective: 'classes/',
-  UIRouterLit: 'classes/',
-  UIRouterLitElement: 'classes/',
-  UiView: 'classes/',
-  // Interfaces
-  LitStateDeclaration: 'interfaces/',
-  LitViewDeclaration: 'interfaces/',
-  LitViewDeclarationElement: 'interfaces/',
-  LitViewDeclarationObject: 'interfaces/',
-  LitViewDeclarationTemplate: 'interfaces/',
-  RoutedLitElement: 'interfaces/',
-  SrefStatus: 'interfaces/',
-  UiOnExit: 'interfaces/',
-  UiOnParamsChanged: 'interfaces/',
-  UiSrefActiveParams: 'interfaces/',
-  UIViewInjectedProps: 'interfaces/',
-  UiViewAddress: 'interfaces/',
-  // Type aliases
-  RoutedLitComponent: 'types/',
-  RoutedLitTemplate: 'types/',
-  UIViewResolves: 'types/',
-  UiRouterContextEvent: 'types/',
+type Category = 'core' | 'components' | 'directives' | 'hooks' | 'types';
+
+/**
+ * Mapping of symbol names to their categories.
+ */
+const SYMBOL_CATEGORIES: Record<string, Category> = {
+  // Core
+  UIRouterLit: 'core',
+  // Components
+  UIRouterLitElement: 'components',
+  UiView: 'components',
+  // Directives
+  uiSref: 'directives',
+  uiSrefActive: 'directives',
+  UiSrefDirective: 'directives',
+  UiSrefActiveDirective: 'directives',
+  // Hooks
+  UiOnExit: 'hooks',
+  UiOnParamsChanged: 'hooks',
+  // Types
+  LitStateDeclaration: 'types',
+  LitViewDeclaration: 'types',
+  LitViewDeclarationElement: 'types',
+  LitViewDeclarationObject: 'types',
+  LitViewDeclarationTemplate: 'types',
+  RoutedLitElement: 'types',
+  RoutedLitComponent: 'types',
+  RoutedLitTemplate: 'types',
+  SrefStatus: 'types',
+  UiSrefActiveParams: 'types',
+  UIViewInjectedProps: 'types',
+  UIViewResolves: 'types',
+  UiViewAddress: 'types',
+  deregisterFn: 'types',
+};
+
+/**
+ * Mapping of local symbol names to their category-based paths.
+ */
+const LOCAL_SYMBOL_PAGES: Record<string, string> = {};
+
+// Build LOCAL_SYMBOL_PAGES from SYMBOL_CATEGORIES
+for (const [symbol, category] of Object.entries(SYMBOL_CATEGORIES)) {
+  LOCAL_SYMBOL_PAGES[symbol] = `${category}/`;
+}
+
+/**
+ * Category metadata for index generation.
+ */
+const CATEGORY_META: Record<Category, { title: string; description: string }> = {
+  core: {
+    title: 'Core',
+    description: 'The main router class for Lit applications.',
+  },
+  components: {
+    title: 'Components',
+    description: 'Web components for routing integration.',
+  },
+  directives: {
+    title: 'Directives',
+    description: 'Lit directives for navigation and active state styling.',
+  },
+  hooks: {
+    title: 'Hooks',
+    description: 'Lifecycle hooks for routed components.',
+  },
+  types: {
+    title: 'Types',
+    description: 'TypeScript interfaces and type definitions.',
+  },
 };
 
 /**
  * Build link target URL, handling local vs external links differently.
- * - Local anchors: classes/UIRouterLit.html#methodname
- * - External links: url#property
  */
 function buildLinkTarget(
   url: string,
   propertyName: string,
   symbolName: string,
 ): string {
-  if (!propertyName) return url;
-  const prop = propertyName.substring(1);
+  const prop = propertyName ? `${propertyName.substring(1)}` : '';
 
   if (url.startsWith('#')) {
     const folder = LOCAL_SYMBOL_PAGES[symbolName] || '';
-    return `${folder}${symbolName}.html#${prop}`;
+    const basePath = `../${folder}${symbolName}`;
+    return prop ? `${basePath}#${prop}` : basePath;
   }
-  return `${url}#${prop}`;
+  return prop ? `${url}#${prop}` : url;
 }
 
 /**
  * Generate anchor HTML, omitting target for local links.
- * Local links are relative paths (don't start with http/https).
  */
 function buildAnchorHtml(href: string, displayName: string): string {
   const isLocal = !href.startsWith('http://') && !href.startsWith('https://');
@@ -88,8 +130,6 @@ function buildAnchorHtml(href: string, displayName: string): string {
 
 /**
  * Convert flat symbol map to TypeDoc's externalSymbolLinkMappings format.
- *
- * TypeDoc expects: { 'SymbolName': { '': 'url', '.property': 'url#property' } }
  */
 function buildExternalSymbolMappings(
   symbolMap: Record<string, string>,
@@ -107,12 +147,75 @@ function buildExternalSymbolMappings(
 }
 
 /**
+ * Mapping from old TypeDoc paths to new category-based paths.
+ */
+
+type Kind = "classes" | "variables" | "interfaces" | "types";
+
+const SYMBOL_KINDS: Record<keyof typeof SYMBOL_CATEGORIES, Kind> = {
+  UIRouterLit: "classes",
+  UIRouterLitElement: "classes",
+  UiView: "classes",
+  UiSrefDirective: "classes",
+  UiSrefActiveDirective: "classes",
+  uiSref: "variables",
+  uiSrefActive: "variables",
+  UiOnExit: 'interfaces',
+  UiOnParamsChanged: 'interfaces',
+  LitStateDeclaration: 'interfaces',
+  LitViewDeclarationElement: 'interfaces',
+  LitViewDeclarationObject: 'interfaces',
+  LitViewDeclarationTemplate: 'interfaces',
+  RoutedLitElement: 'interfaces',
+  SrefStatus: 'interfaces',
+  UiSrefActiveParams: 'interfaces',
+  UIViewInjectedProps: 'interfaces',
+  UiViewAddress: 'interfaces',
+  LitViewDeclaration: 'types',
+  RoutedLitComponent: 'types',
+  RoutedLitTemplate: 'types',
+  UIViewResolves: 'types',
+  deregisterFn: 'types',
+}
+
+const KIND_REWRITES: Record<keyof typeof SYMBOL_CATEGORIES, Category> = {
+  // classes: {
+    UIRouterLit: "core",
+    UIRouterLitElement: "components",
+    UiView: "components",
+    UiSrefDirective: "directives",
+    UiSrefActiveDirective: "directives",
+  // },
+  // variables: {
+    uiSref: "directives",
+    uiSrefActive: "directives",
+  // },
+  // interfaces: {
+    UiOnExit: 'hooks',
+    UiOnParamsChanged: 'hooks',
+    LitStateDeclaration: 'types',
+    LitViewDeclarationElement: 'types',
+    LitViewDeclarationObject: 'types',
+    LitViewDeclarationTemplate: 'types',
+    RoutedLitElement: 'types',
+    SrefStatus: 'types',
+    UiSrefActiveParams: 'types',
+    UIViewInjectedProps: 'types',
+    UiViewAddress: 'types',
+  // },
+  // types: {},
+};
+
+const PATH_REWRITES: Record<string, string> = {}
+for (const [symbol, category] of Object.entries(KIND_REWRITES)) {
+  const kind = SYMBOL_KINDS[symbol];
+  PATH_REWRITES[`${kind}/${symbol}.md`] = `${category}/${symbol}.md`
+}
+
+/**
  * Load the lit-ui-router TypeDoc plugin.
- *
- * @param app - The TypeDoc application instance
  */
 export function load(app: Application): void {
-  // Log plugin load
   app.logger.info('[lit-ui-router] Plugin loaded');
 
   // Get any custom symbol mappings from typedoc.json options
@@ -122,13 +225,12 @@ export function load(app: Application): void {
       Record<string, string>
     >) || {};
 
-  // Merge built-in symbols with custom ones (custom takes precedence)
+  // Merge built-in symbols with custom ones
   const mergedMappings = {
     ...buildExternalSymbolMappings(EXTERNAL_SYMBOLS),
     ...customMappings,
   };
 
-  // Set the merged mappings for TypeDoc to use
   app.options.setValue('externalSymbolLinkMappings', mergedMappings);
 
   // Handle [[SymbolName]] link conversion
@@ -155,6 +257,266 @@ export function load(app: Application): void {
       }
     },
   );
+
+  // Post-process output to reorganize by category
+  app.renderer.on(RendererEvent.END, (event: RendererEvent) => {
+    reorganizeOutput(event, app);
+  });
+}
+
+/**
+ * Reorganize TypeDoc output by category folders.
+ */
+function reorganizeOutput(event: RendererEvent, app: Application): void {
+  const outDir = event.outputDirectory;
+  app.logger.info(`[lit-ui-router] Reorganizing output in ${outDir}`);
+
+  // Create category directories
+  const categories: Category[] = ['core', 'components', 'directives', 'hooks', 'types'];
+  for (const category of categories) {
+    const categoryDir = path.join(outDir, category);
+    if (!fs.existsSync(categoryDir)) {
+      fs.mkdirSync(categoryDir, { recursive: true });
+    }
+  }
+
+  // Move files to category folders
+  for (const [oldPath, newPath] of Object.entries(PATH_REWRITES)) {
+    // Skip if source and destination are the same
+    if (oldPath === newPath) continue;
+
+    const srcFile = path.join(outDir, oldPath);
+    const destFile = path.join(outDir, newPath);
+
+    if (fs.existsSync(srcFile)) {
+      // Read file content
+      let content = fs.readFileSync(srcFile, 'utf-8');
+
+      // Update internal links to use new paths
+      content = updateInternalLinks(app, content, oldPath, newPath);
+
+      // Write to new location
+      const destDir = path.dirname(destFile);
+      if (!fs.existsSync(destDir)) {
+        fs.mkdirSync(destDir, { recursive: true });
+      }
+      fs.writeFileSync(destFile, content);
+
+      // Delete old file
+      fs.unlinkSync(srcFile);
+      app.logger.verbose(`[lit-ui-router] Moved ${oldPath} -> ${newPath}`);
+    }
+  }
+
+  // Update links in files that weren't moved (types/ -> types/)
+  const typesDir = path.join(outDir, 'types');
+  if (fs.existsSync(typesDir)) {
+    const typeFiles = fs.readdirSync(typesDir).filter((f: string) => f.endsWith('.md'));
+    for (const file of typeFiles) {
+      const filePath = path.join(typesDir, file);
+      let content = fs.readFileSync(filePath, 'utf-8');
+      content = updateInternalLinks(app, content, `types/${file}`, `types/${file}`);
+      fs.writeFileSync(filePath, content);
+    }
+  }
+
+  // Clean up empty old directories (skip types since we keep some files there)
+  const oldDirs = ['classes', 'interfaces', 'variables'];
+  for (const dir of oldDirs) {
+    const dirPath = path.join(outDir, dir);
+    if (fs.existsSync(dirPath)) {
+      try {
+        const files = fs.readdirSync(dirPath);
+        if (files.length === 0) {
+          fs.rmdirSync(dirPath);
+          app.logger.verbose(`[lit-ui-router] Removed empty directory ${dir}`);
+        }
+      } catch {
+        // Directory not empty or other error, skip
+      }
+    }
+  }
+
+  // Generate index.md for each category
+  generateCategoryIndexFiles(outDir, app);
+
+  // Update main index.md
+  updateMainIndex(outDir, app);
+
+  // Update typedoc-sidebar.json if it exists
+  updateSidebarJson(outDir, app);
+}
+
+/**
+ * Update internal links in markdown content.
+ */
+function updateInternalLinks(app: Application, content: string, oldPath: string, newPath: string): string {
+  // Build a reverse mapping for link updates
+  const linkUpdates: Record<string, string> = {};
+
+  const oldContentFolder = path.dirname(oldPath);
+  const newContentFolder = path.dirname(newPath);
+  for (const [oldP, newP] of Object.entries(PATH_REWRITES)) {
+    // Extract just the filename without .md
+    const fileBasename = path.basename(oldP, '.md');
+    const oldFolder = path.dirname(oldP);
+    const newFolder = path.dirname(newP);
+
+    // Has the content moved folders?
+    // Was the link originally in the same folder as the content?
+    // Is the link in the same folder as content after moving?
+    if (oldContentFolder !== newContentFolder && oldFolder === oldContentFolder && newContentFolder !== newFolder) {
+      app.logger.verbose(`Updating link from ${fileBasename}->${path.relative(newContentFolder, newFolder)}/${fileBasename}`);
+      linkUpdates[`${fileBasename}`] = `${path.relative(newContentFolder, newFolder)}/${fileBasename}`
+    }
+
+
+    // Map old folder patterns to new ones
+    linkUpdates[`../${oldFolder}/${fileBasename}`] = `../${newFolder}/${fileBasename}`;
+    linkUpdates[`${oldFolder}/${fileBasename}`] = `${newFolder}/${fileBasename}`;
+    linkUpdates[`./${oldFolder}/${fileBasename}`] = `./${newFolder}/${fileBasename}`;
+  }
+
+  // Apply link updates
+  for (const [oldLink, newLink] of Object.entries(linkUpdates)) {
+    content = content.split(oldLink).join(newLink);
+  }
+
+  return content;
+}
+
+/**
+ * Generate index.md files for each category.
+ */
+function generateCategoryIndexFiles(outDir: string, app: Application): void {
+  const categories: Category[] = ['core', 'components', 'directives', 'hooks', 'types'];
+
+  for (const category of categories) {
+    const categoryDir = path.join(outDir, category);
+    if (!fs.existsSync(categoryDir)) continue;
+
+    const files = fs.readdirSync(categoryDir).filter((f: string) => f.endsWith('.md') && f !== 'index.md');
+    if (files.length === 0) continue;
+
+    const meta = CATEGORY_META[category];
+    const items = files
+      .map((f: string) => {
+        const name = path.basename(f, '.md');
+        return `- [${name}](./${name})`;
+      })
+      .join('\n');
+
+    const indexContent = `# ${meta.title}
+
+${meta.description}
+
+## API
+
+${items}
+`;
+
+    fs.writeFileSync(path.join(categoryDir, 'index.md'), indexContent);
+    app.logger.verbose(`[lit-ui-router] Generated ${category}/index.md`);
+  }
+}
+
+/**
+ * Update the main index.md with links to categories.
+ */
+function updateMainIndex(outDir: string, app: Application): void {
+  const indexPath = path.join(outDir, 'index.md');
+  if (!fs.existsSync(indexPath)) return;
+
+  const content = `# API Reference
+
+Auto-generated API documentation for lit-ui-router.
+
+## Categories
+
+- [Core](./core/) - The main router class
+- [Components](./components/) - Web components for routing
+- [Directives](./directives/) - Navigation and active state directives
+- [Hooks](./hooks/) - Component lifecycle hooks
+- [Types](./types/) - TypeScript interfaces and types
+
+## Quick Links
+
+### Core
+- [UIRouterLit](./core/UIRouterLit) - Main router class
+
+### Components
+- [UiView](./components/UiView) - View rendering component
+
+### Directives
+- [uiSref](./directives/uiSref) - State reference directive
+- [uiSrefActive](./directives/uiSrefActive) - Active state styling directive
+
+### Hooks
+- [UiOnExit](./hooks/UiOnExit) - Exit confirmation hook
+- [UiOnParamsChanged](./hooks/UiOnParamsChanged) - Parameter change hook
+
+### Types
+- [LitStateDeclaration](./types/LitStateDeclaration) - State configuration interface
+- [UIViewInjectedProps](./types/UIViewInjectedProps) - Injected component props
+`;
+
+  fs.writeFileSync(indexPath, content);
+  app.logger.verbose('[lit-ui-router] Updated main index.md');
+}
+
+/**
+ * Update typedoc-sidebar.json with new paths.
+ */
+function updateSidebarJson(outDir: string, app: Application): void {
+  const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
+  if (!fs.existsSync(sidebarPath)) return;
+
+  // Generate a new sidebar structure based on categories
+  const sidebar = [
+    {
+      text: 'Core',
+      link: '/api/reference/core/',
+      items: [{ text: 'UIRouterLit', link: '/api/reference/core/UIRouterLit' }],
+    },
+    {
+      text: 'Components',
+      link: '/api/reference/components/',
+      items: [
+        { text: 'UiView', link: '/api/reference/components/UiView' },
+      ],
+    },
+    {
+      text: 'Directives',
+      link: '/api/reference/directives/',
+      items: [
+        { text: 'uiSref', link: '/api/reference/directives/uiSref' },
+        { text: 'uiSrefActive', link: '/api/reference/directives/uiSrefActive' },
+      ],
+    },
+    {
+      text: 'Hooks',
+      link: '/api/reference/hooks/',
+      items: [
+        { text: 'UiOnExit', link: '/api/reference/hooks/UiOnExit' },
+        { text: 'UiOnParamsChanged', link: '/api/reference/hooks/UiOnParamsChanged' },
+      ],
+    },
+    {
+      text: 'Types',
+      link: '/api/reference/types/',
+      collapsed: true,
+      items: [
+        { text: 'LitStateDeclaration', link: '/api/reference/types/LitStateDeclaration' },
+        { text: 'UIViewInjectedProps', link: '/api/reference/types/UIViewInjectedProps' },
+        { text: 'RoutedLitElement', link: '/api/reference/types/RoutedLitElement' },
+        { text: 'RoutedLitTemplate', link: '/api/reference/types/RoutedLitTemplate' },
+        { text: 'SrefStatus', link: '/api/reference/types/SrefStatus' },
+      ],
+    },
+  ];
+
+  fs.writeFileSync(sidebarPath, JSON.stringify(sidebar, null, 2));
+  app.logger.verbose('[lit-ui-router] Updated typedoc-sidebar.json');
 }
 
 /**
@@ -168,7 +530,6 @@ function handleTypeLinks(context: Context): void {
       linkReflectionTypes(reflection, symbolMap);
     }
 
-    // Recurse into children
     if ('children' in reflection) {
       const withChildren = reflection as { children?: Reflection[] };
       if (withChildren.children) {
@@ -189,10 +550,8 @@ function linkReflectionTypes(
   reflection: DeclarationReflection,
   symbolMap: Record<string, string>,
 ): void {
-  // Handle signatures (functions/methods)
   if (reflection.signatures) {
     for (const sig of reflection.signatures) {
-      // Process return type
       if (sig.type && sig.type.type === 'reference') {
         const typeName = sig.type.name;
         if (symbolMap.hasOwnProperty(typeName)) {
@@ -200,7 +559,6 @@ function linkReflectionTypes(
         }
       }
 
-      // Process parameters
       if (sig.parameters) {
         for (const param of sig.parameters) {
           if (param.type && param.type.type === 'reference') {
@@ -214,7 +572,6 @@ function linkReflectionTypes(
     }
   }
 
-  // Handle property/field types
   if (reflection.type && reflection.type.type === 'reference') {
     const typeName = reflection.type.name;
     if (symbolMap.hasOwnProperty(typeName)) {
@@ -225,9 +582,6 @@ function linkReflectionTypes(
 
 /**
  * Handle [[SymbolName]] links in JSDoc comments.
- *
- * Converts [[SymbolName]] to {@link url | SymbolName} for external documentation.
- * Also links typed parameters to known symbols.
  */
 function handleSymbolLinks(context: Context, app: Application): void {
   const customMappings =
@@ -237,27 +591,23 @@ function handleSymbolLinks(context: Context, app: Application): void {
     >) || {};
   const symbolMap: Record<string, string> = { ...EXTERNAL_SYMBOLS };
 
-  // Flatten custom mappings
   for (const key in customMappings) {
     symbolMap[key] = customMappings[key][''] || '';
   }
 
   const visitReflection = (reflection: Reflection): void => {
-    // Process signature comments (for methods on interfaces)
     if (reflection instanceof DeclarationReflection && reflection.signatures) {
       for (const sig of reflection.signatures) {
         if (sig.comment) {
-          processComment(sig.comment, symbolMap, app);
+          processComment(sig.comment, symbolMap);
         }
       }
     }
 
-    // Process declaration comments
     if (reflection instanceof DeclarationReflection && reflection.comment) {
-      processComment(reflection.comment, symbolMap, app);
+      processComment(reflection.comment, symbolMap);
     }
 
-    // Recurse into children
     if ('children' in reflection) {
       const withChildren = reflection as { children?: Reflection[] };
       if (withChildren.children) {
@@ -277,83 +627,47 @@ function handleSymbolLinks(context: Context, app: Application): void {
 function processComment(
   comment: Comment,
   symbolMap: Record<string, string>,
-  _app: Application,
 ): void {
-  // Process summary
+  const processText = (text: string): string => {
+    if (!SYMBOL_LINK_REGEX.test(text)) return text;
+
+    return text.replace(SYMBOL_LINK_REGEX, (_match, symbolName: string) => {
+      const dotIndex = symbolName.indexOf('.');
+      const baseName = dotIndex === -1 ? symbolName : symbolName.substring(0, dotIndex);
+      const propertyName = dotIndex === -1 ? '' : symbolName.substring(dotIndex);
+
+      if (symbolMap.hasOwnProperty(baseName)) {
+        const url = symbolMap[baseName];
+        const displayName = propertyName ? `${symbolName}` : symbolName;
+        const linkTarget = buildLinkTarget(url, propertyName, baseName);
+        return buildAnchorHtml(linkTarget, displayName);
+      }
+
+      if (LOCAL_SYMBOL_PAGES.hasOwnProperty(baseName)) {
+        const folder = LOCAL_SYMBOL_PAGES[baseName];
+        const prop = propertyName ? `${propertyName.substring(1)}` : '';
+        const basePath = `../${folder}${baseName}`;
+        const href = prop ? `${basePath}#${prop}` : basePath;
+        return `<a href="${href}">${symbolName}</a>`;
+      }
+
+      return symbolName;
+    });
+  };
+
   if (comment.summary) {
     for (const content of comment.summary) {
-      if (content.text && SYMBOL_LINK_REGEX.test(content.text)) {
-        content.text = content.text.replace(
-          SYMBOL_LINK_REGEX,
-          (_match, symbolName: string) => {
-            const dotIndex = symbolName.indexOf('.');
-            const baseName =
-              dotIndex === -1 ? symbolName : symbolName.substring(0, dotIndex);
-            const propertyName =
-              dotIndex === -1 ? '' : symbolName.substring(dotIndex);
-
-            if (symbolMap.hasOwnProperty(baseName)) {
-              const url = symbolMap[baseName];
-              const displayName = propertyName ? `${symbolName}` : symbolName;
-              const linkTarget = buildLinkTarget(url, propertyName, baseName);
-              return buildAnchorHtml(linkTarget, displayName);
-            }
-
-            // Check if it's a local symbol (in LOCAL_SYMBOL_PAGES)
-            if (LOCAL_SYMBOL_PAGES.hasOwnProperty(baseName)) {
-              const folder = LOCAL_SYMBOL_PAGES[baseName];
-              const displayName = propertyName ? `${symbolName}` : symbolName;
-              const anchor = propertyName
-                ? propertyName.substring(1)
-                : baseName.toLowerCase();
-              return `<a href="${folder}${baseName}.html#${anchor}">${displayName}</a>`;
-            }
-
-            // Unknown symbol - use local anchor
-            return `<a href="#${symbolName.toLowerCase()}">${symbolName}</a>`;
-          },
-        );
+      if (content.text) {
+        content.text = processText(content.text);
       }
     }
   }
 
-  // Process block tags (like @returns, @param descriptions)
   if (comment.blockTags) {
     for (const blockTag of comment.blockTags) {
       for (const content of blockTag.content) {
-        if (content.text && SYMBOL_LINK_REGEX.test(content.text)) {
-          content.text = content.text.replace(
-            SYMBOL_LINK_REGEX,
-            (_match, symbolName: string) => {
-              const dotIndex = symbolName.indexOf('.');
-              const baseName =
-                dotIndex === -1
-                  ? symbolName
-                  : symbolName.substring(0, dotIndex);
-              const propertyName =
-                dotIndex === -1 ? '' : symbolName.substring(dotIndex);
-
-              if (symbolMap.hasOwnProperty(baseName)) {
-                const url = symbolMap[baseName];
-                const displayName = propertyName ? `${symbolName}` : symbolName;
-                const linkTarget = buildLinkTarget(url, propertyName, baseName);
-                return buildAnchorHtml(linkTarget, displayName);
-              }
-
-              // Check if it's a local symbol (in LOCAL_SYMBOL_PAGES)
-              if (LOCAL_SYMBOL_PAGES.hasOwnProperty(baseName)) {
-                const folder = LOCAL_SYMBOL_PAGES[baseName];
-                const displayName = propertyName ? `${symbolName}` : symbolName;
-                const anchor = propertyName
-                  ? propertyName.substring(1)
-                  : baseName.toLowerCase();
-                return `<a href="${folder}${baseName}.html#${anchor}">${displayName}</a>`;
-              }
-
-              // Unknown symbol - use local anchor
-              return `<a href="#${symbolName.toLowerCase()}">${symbolName}</a>`;
-            },
-          );
+        if (content.text) {
+          content.text = processText(content.text);
         }
       }
     }
@@ -362,14 +676,9 @@ function processComment(
 
 /**
  * Handle Lit directive wrapper patterns.
- *
- * The `directive()` function from Lit wraps directive classes, which can obscure
- * the documentation. This handler links directive exports to their underlying classes.
  */
 function handleDirectiveWrappers(context: Context, app: Application): void {
   const project = context.project;
-
-  // Find directive exports and link them to their classes
   const directiveNames = ['uiSref', 'uiSrefActive'];
 
   for (const name of directiveNames) {
@@ -388,70 +697,31 @@ function handleDirectiveWrappers(context: Context, app: Application): void {
 
 /**
  * Add category tags to reflections for better organization.
- *
- * Categories:
- * - Core: UIRouterLit
- * - Components: UIRouterElement, UIViewElement
- * - Directives: uiSref, uiSrefActive
- * - Types: LitStateDeclaration, UIViewInjectedProps, etc.
- * - Hooks: UiOnExit, UiOnParamsChanged
  */
 function addCategoryTags(reflection: DeclarationReflection): void {
   const name = reflection.name;
+  const category = SYMBOL_CATEGORIES[name];
 
-  // Core
-  if (name === 'UIRouterLit') {
-    setCategory(reflection, 'Core');
-  }
-  // Components
-  else if (name === 'UIRouterElement' || name === 'UIViewElement') {
-    setCategory(reflection, 'Components');
-  }
-  // Directives
-  else if (
-    name === 'uiSref' ||
-    name === 'uiSrefActive' ||
-    name === 'UiSrefDirective' ||
-    name === 'UiSrefActiveDirective'
-  ) {
-    setCategory(reflection, 'Directives');
-  }
-  // Hooks
-  else if (name === 'UiOnExit' || name === 'UiOnParamsChanged') {
-    setCategory(reflection, 'Hooks');
-  }
-  // Types (interfaces, type aliases)
-  else if (
-    name === 'LitStateDeclaration' ||
-    name === 'UIViewInjectedProps' ||
-    name === 'RoutedLitTemplate' ||
-    name === 'RoutedLitElement' ||
-    name === 'SrefStatus' ||
-    name === 'UiSrefActiveParams'
-  ) {
-    setCategory(reflection, 'Types');
+  if (category && CATEGORY_META[category]) {
+    const categoryTitle = CATEGORY_META[category].title;
+    setCategory(reflection, categoryTitle);
   }
 }
 
 /**
  * Set the category for a reflection.
  */
-function setCategory(
-  reflection: DeclarationReflection,
-  category: string,
-): void {
+function setCategory(reflection: DeclarationReflection, category: string): void {
   if (!reflection.comment) {
     return;
   }
 
-  // Check if category tag already exists
   const hasCategory = reflection.comment.blockTags?.some(
     (tag: CommentTag) => tag.tag === '@category',
   );
 
   if (!hasCategory) {
     reflection.comment.blockTags = reflection.comment.blockTags || [];
-    // Create a new CommentTag using the constructor
     const tag = new CommentTag('@category', [{ kind: 'text', text: category }]);
     reflection.comment.blockTags.push(tag);
   }

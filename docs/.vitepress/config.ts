@@ -1,4 +1,5 @@
 import { defineConfig, HeadConfig } from 'vitepress';
+import typedocSidebarItems from '../api/reference/typedoc-sidebar.json';
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -8,6 +9,7 @@ const config = {
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
   ignoreDeadLinks: ['/app'],
+  // ignoreDeadLinks: true,
   vite: {
     configFile: './.vitepress/vite.config.ts',
   },
@@ -25,7 +27,7 @@ const config = {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'API', link: '/api/reference/' },
+      { text: 'API', link: '/api/' },
       { text: 'Sample App', link: '/app', target: '_self' },
     ],
     sidebar: [
@@ -38,91 +40,14 @@ const config = {
         ],
       },
       {
-        text: 'API Reference',
-        collapsed: false,
+        text: 'API',
         items: [
+          { text: 'Overview', link: '/api/' },
           {
-            text: 'Core',
-            items: [
-              {
-                text: 'UIRouterLit',
-                link: '/api/reference/classes/UIRouterLit',
-              },
-            ],
-          },
-          {
-            text: 'Components',
-            items: [{ text: 'UIView', link: '/api/reference/classes/UiView' }],
-          },
-          {
-            text: 'Directives',
-            items: [
-              { text: 'uiSref', link: '/api/reference/variables/uiSref' },
-              {
-                text: 'uiSrefActive',
-                link: '/api/reference/variables/uiSrefActive',
-              },
-              {
-                text: 'UiSrefDirective',
-                link: '/api/reference/classes/UiSrefDirective',
-              },
-              {
-                text: 'UiSrefActiveDirective',
-                link: '/api/reference/classes/UiSrefActiveDirective',
-              },
-            ],
-          },
-          {
-            text: 'Hooks',
-            items: [
-              { text: 'UiOnExit', link: '/api/reference/interfaces/UiOnExit' },
-              {
-                text: 'UiOnParamsChanged',
-                link: '/api/reference/interfaces/UiOnParamsChanged',
-              },
-            ],
-          },
-          {
-            text: 'Interfaces',
-            items: [
-              {
-                text: 'LitStateDeclaration',
-                link: '/api/reference/interfaces/LitStateDeclaration',
-              },
-              {
-                text: 'RoutedLitElement',
-                link: '/api/reference/interfaces/RoutedLitElement',
-              },
-              {
-                text: 'SrefStatus',
-                link: '/api/reference/interfaces/SrefStatus',
-              },
-              {
-                text: 'UiSrefActiveParams',
-                link: '/api/reference/interfaces/UiSrefActiveParams',
-              },
-              {
-                text: 'UIViewInjectedProps',
-                link: '/api/reference/interfaces/UIViewInjectedProps',
-              },
-            ],
-          },
-          {
-            text: 'Types',
-            items: [
-              {
-                text: 'RoutedLitComponent',
-                link: '/api/reference/types/RoutedLitComponent',
-              },
-              {
-                text: 'RoutedLitTemplate',
-                link: '/api/reference/types/RoutedLitTemplate',
-              },
-              {
-                text: 'UIViewResolves',
-                link: '/api/reference/types/UIViewResolves',
-              },
-            ],
+            text: 'Reference',
+            link: '/api/reference/',
+            collapsed: true,
+            items: typedocSidebarItems,
           },
         ],
       },

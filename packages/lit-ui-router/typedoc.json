@@ -2,7 +2,12 @@
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
   "out": "../../docs/api/reference",
-  "plugin": ["typedoc-plugin-markdown", "typedoc-plugin-lit-ui-router"],
+  "docsRoot": "../../docs",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "typedoc-plugin-lit-ui-router"
+  ],
   "blockTags": [
     "@author",
     "@callback",
@@ -74,5 +79,7 @@
     "includeGroups": true
   },
   "sort": ["alphabetical", "source-order"],
-  "router": "kind"
+  "router": "kind",
+  "formatWithPrettier": true,
+  "prettierConfigFile": "../../.prettierrc"
 }

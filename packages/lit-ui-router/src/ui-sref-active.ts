@@ -160,8 +160,7 @@ export interface UiSrefActiveParams {
 /** @internal */
 let _first: UiSrefActiveDirective | null = null;
 
-/** @internal */
-type deregisterFn = () => void;
+export type deregisterFn = () => void;
 
 /**
  * Directive class that adds CSS classes based on active state.
@@ -420,6 +419,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this._deregisterOnStatesChanged?.();
   }
 
+  /**
+   * @internal
+   */
   createTransitionStateChangeEvent(
     evt: TransitionStateChange,
     trans: Transition,
@@ -456,6 +458,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.doRender();
   };
 
+  /**
+   * @internal
+   */
   getStatus(transEvt?: TransEvt): SrefStatus | undefined {
     const { targetStates } = this;
     if (!targetStates.size) {
