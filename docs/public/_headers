@@ -1,3 +1,6 @@
 /*
   Cross-Origin-Opener-Policy: same-origin
   Cross-Origin-Embedder-Policy: credentialless
+
+/app/*
+  Link: </app>; rel="canonical"
