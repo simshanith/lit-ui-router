@@ -229,7 +229,8 @@ function generateCategoryIndexFiles(outDir: string, app: Application): void {
 
     const files = fs
       .readdirSync(categoryDir)
-      .filter((f: string) => f.endsWith('.md') && f !== 'index.md');
+      .filter((f: string) => f.endsWith('.md') && f !== 'index.md')
+      .sort((a, b) => a.localeCompare(b, undefined, { sensitivity: 'base' }));
     if (files.length === 0) continue;
 
     const meta = CATEGORY_META[category];
