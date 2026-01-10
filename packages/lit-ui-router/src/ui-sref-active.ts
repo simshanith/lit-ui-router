@@ -578,6 +578,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @see {@link SrefStatus}
  * @see {@link UiSrefActiveParams}
+ * @see [[DirectiveResult]]
  *
  * @category directives
  */

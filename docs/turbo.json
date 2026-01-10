@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "docs:preview": {
-      "dependsOn": ["^docs:api"],
+      "dependsOn": ["^docs:api", "^build"],
       "cache": false,
       "persistent": true
     },

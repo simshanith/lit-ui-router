@@ -102,6 +102,11 @@ router.plugin(hashLocationPlugin);
 router.plugin(pushStateLocationPlugin);
 ```
 
+See the [@uirouter/core location plugins documentation](https://ui-router.github.io/core/docs/latest/):
+
+- [PushStateLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_pushstatelocationservice_.pushstatelocationservice.html) - HTML5 history API
+- [HashLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_hashlocationservice_.hashlocationservice.html) - Hash-based URLs
+
 ## Further Reading
 
 - [Tutorial](/tutorial/helloworld) - Step-by-step guide

@@ -224,7 +224,16 @@ function generateCategoryIndexFiles(outDir: string, app: Application): void {
       })
       .join('\n');
 
-    const indexContent = `# ${meta.title}
+    const next = path.basename(files[0], '.md');
+    const indexContent = `---
+next:
+  text: ${next}
+  link: ./${next}
+prev:
+  text: API Reference
+  link: /api/reference
+---
+# ${meta.title}
 
 ${meta.description}
 
@@ -249,7 +258,12 @@ function updateSidebarJson(outDir: string, app: Application): void {
     const category: Category = item.text;
     item.text = CATEGORY_META[category].title;
     item.link = `/api/reference/${category}`;
-    item.collapsed = true;
+    // item.prev = false;
+    // item.next = false;
+    delete item.collapsed;
+    if (category === 'types') {
+      item.collapsed = true;
+    }
   }
 
   fs.writeFileSync(sidebarPath, JSON.stringify(sidebar, null, 2));
@@ -281,38 +295,81 @@ function handleTypeLinks(context: Context): void {
 }
 
 /**
+ * Recursively link types and their nested children to external documentation.
+ */
+function linkTypeRecursively(
+  type: { type?: string; name?: string; externalUrl?: string; typeArguments?: unknown[]; types?: unknown[]; elementType?: unknown },
+  symbolMap: Record<string, string>,
+): void {
+  if (!type) return;
+
+  // Link the type itself if it's a reference
+  if (type.type === 'reference' && type.name && symbolMap[type.name]) {
+    type.externalUrl = symbolMap[type.name];
+  }
+
+  // Recurse into type arguments (for generics like DirectiveResult<T>)
+  if (type.typeArguments) {
+    for (const arg of type.typeArguments) {
+      linkTypeRecursively(arg as typeof type, symbolMap);
+    }
+  }
+
+  // Recurse into union/intersection types
+  if (type.types) {
+    for (const t of type.types) {
+      linkTypeRecursively(t as typeof type, symbolMap);
+    }
+  }
+
+  // Recurse into array element types
+  if (type.elementType) {
+    linkTypeRecursively(type.elementType as typeof type, symbolMap);
+  }
+}
+
+/**
  * Link types in a reflection to external documentation.
  */
 function linkReflectionTypes(
   reflection: DeclarationReflection,
   symbolMap: Record<string, string>,
 ): void {
+  // Handle signatures (return types, parameters)
   if (reflection.signatures) {
     for (const sig of reflection.signatures) {
-      if (sig.type && sig.type.type === 'reference') {
-        const typeName = sig.type.name;
-        if (symbolMap.hasOwnProperty(typeName)) {
-          sig.type.externalUrl = symbolMap[typeName];
-        }
+      if (sig.type) {
+        linkTypeRecursively(sig.type as Parameters<typeof linkTypeRecursively>[0], symbolMap);
       }
 
       if (sig.parameters) {
         for (const param of sig.parameters) {
-          if (param.type && param.type.type === 'reference') {
-            const typeName = param.type.name;
-            if (symbolMap.hasOwnProperty(typeName)) {
-              param.type.externalUrl = symbolMap[typeName];
-            }
+          if (param.type) {
+            linkTypeRecursively(param.type as Parameters<typeof linkTypeRecursively>[0], symbolMap);
           }
         }
       }
     }
   }
 
-  if (reflection.type && reflection.type.type === 'reference') {
-    const typeName = reflection.type.name;
-    if (symbolMap.hasOwnProperty(typeName)) {
-      reflection.type.externalUrl = symbolMap[typeName];
+  // Handle direct type on reflection
+  if (reflection.type) {
+    linkTypeRecursively(reflection.type as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+  }
+
+  // Handle extends clauses
+  const reflectionWithExtends = reflection as DeclarationReflection & { extendedTypes?: unknown[] };
+  if (reflectionWithExtends.extendedTypes) {
+    for (const extType of reflectionWithExtends.extendedTypes) {
+      linkTypeRecursively(extType as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+    }
+  }
+
+  // Handle implemented interfaces
+  const reflectionWithImpl = reflection as DeclarationReflection & { implementedTypes?: unknown[] };
+  if (reflectionWithImpl.implementedTypes) {
+    for (const implType of reflectionWithImpl.implementedTypes) {
+      linkTypeRecursively(implType as Parameters<typeof linkTypeRecursively>[0], symbolMap);
     }
   }
 }

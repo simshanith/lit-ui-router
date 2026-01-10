@@ -28,4 +28,5 @@ export const LIT_SYMBOLS: Record<string, string> = {
   ...baseTemplate('ReactiveControllerHost', 'ReactiveControllerHost/'),
   ...baseTemplate('PropertyDeclaration', 'decorators/#PropertyDeclaration'),
   ...baseTemplate('PropertyDeclarations', 'decorators/#PropertyDeclarations'),
+  ...baseTemplate('DirectiveResult', 'custom-directives/#DirectiveResult'),
 };

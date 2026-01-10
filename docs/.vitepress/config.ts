@@ -3,7 +3,7 @@ import typedocSidebarItems from '../api/reference/typedoc-sidebar.json';
 
 const baseUrl = 'https://lit-ui-router.dev';
 
-function makeSidebar(collapseReference = true) {
+function makeSidebar() {
   return [
     {
       text: 'Tutorial',
@@ -20,7 +20,7 @@ function makeSidebar(collapseReference = true) {
         {
           text: 'Reference',
           link: '/api/reference/',
-          collapsed: collapseReference,
+          collapsed: false,
           items: typedocSidebarItems,
         },
       ],
@@ -55,10 +55,7 @@ const config = {
       { text: 'API', link: '/api/' },
       { text: 'Sample App', link: '/app', target: '_self' },
     ],
-    sidebar: {
-      '/tutorial/': makeSidebar(),
-      '/api/': makeSidebar(false),
-    },
+    sidebar: makeSidebar(),
     socialLinks: [
       { icon: 'github', link: 'https://github.com/simshanith/lit-ui-router' },
     ],

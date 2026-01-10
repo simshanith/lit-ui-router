@@ -262,6 +262,7 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * @see [[RawParams]]
  * @see [[TransitionOptions]]
+ * @see [[DirectiveResult]]
  *
  * @category directives
  */

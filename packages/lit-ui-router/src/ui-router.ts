@@ -13,6 +13,8 @@ interface UiRouterContextEventDetail {
 export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
 
 /**
+ * @hideconstructor
+ *
  * @slot - <code>&lt;ui-router&gt;</code> renders slotted content.
  *
  * @event {CustomEvent} ui-router-context
@@ -25,7 +27,6 @@ export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
  *
  * This is the root ui-router component.
  *
- * @hideconstructor
  */
 @customElement('ui-router')
 export class UIRouterLitElement extends LitElement {

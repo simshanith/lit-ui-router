@@ -80,7 +80,6 @@ export const UIROUTER_SYMBOLS: Record<string, string> = {
   ...interfaceTemplate('ParamTypeDefinition', '_params_interface_'),
   ...interfaceTemplate('Replace', '_params_interface_'),
   ...interfaceTemplate('ViewConfig', '_view_interface_'),
-  ...interfaceTemplate('_ViewDeclaration', '_view_interface_'),
   ...interfaceTemplate('ResolvableLiteral', '_resolve_interface_'),
   ...interfaceTemplate('ProviderLike', '_resolve_interface_'),
   ...interfaceTemplate('UIInjector', '_interface_'),
@@ -110,4 +109,9 @@ export const UIROUTER_SYMBOLS: Record<string, string> = {
   ...enumTemplate('TransitionHookScope', '_transition_interface_'),
   ...enumTemplate('RejectType', '_transition_rejectfactory_'),
   ...enumTemplate('TransitionEventType', '_transition_transitioneventtype_'),
+
+  // Location plugins
+  ...classTemplate('PushStateLocationService', '_vanilla_pushstatelocationservice_'),
+  ...classTemplate('HashLocationService', '_vanilla_hashlocationservice_'),
+  ...classTemplate('BaseLocationServices', '_vanilla_baselocationservice_'),
 };
