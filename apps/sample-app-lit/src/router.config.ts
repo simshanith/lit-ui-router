@@ -10,6 +10,7 @@ import { StickyStatesPlugin } from '@uirouter/sticky-states';
 import { DSRPlugin } from '@uirouter/dsr';
 
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
+import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
@@ -27,10 +28,15 @@ export function configureRouter(router = new UIRouterLit()) {
     document.head.appendChild(base);
   }
 
-  if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE) {
+  if (import.meta.env.VITE_SAMPLE_APP_NAVIGATION_API) {
+    router.plugin(navigationLocationPlugin);
+    console.info('🧑‍🔬 *experimental* navigationLocationPlugin enabled');
+  } else if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE) {
     router.plugin(pushStateLocationPlugin);
+    console.info('pushStateLocationPlugin enabled');
   } else {
     router.plugin(hashLocationPlugin);
+    console.info('hashLocationPlugin enabled');
   }
 
   import('@uirouter/visualizer').then(({ Visualizer }) =>
