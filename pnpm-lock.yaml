@@ -21,10 +21,6 @@ patchedDependencies:
 importers:
 
   .:
-    dependencies:
-      lit:
-        specifier: 2.2.7
-        version: 2.2.7
     devDependencies:
       '@eslint/js':
         specifier: ^9.39.2

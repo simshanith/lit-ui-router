@@ -3,7 +3,11 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "env": ["VITE_SAMPLE_APP_BASE_URL", "VITE_SAMPLE_APP_PUSH_STATE"]
+      "env": [
+        "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
+        "VITE_SAMPLE_APP_BASE_URL",
+        "VITE_SAMPLE_APP_PUSH_STATE"
+      ]
     }
   }
 }

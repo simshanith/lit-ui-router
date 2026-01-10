@@ -28,6 +28,15 @@ function makeSidebar() {
   ];
 }
 
+const GOOGLE_ANALYTICS_TRACKING_ID =
+  process.env.VITE_GOOGLE_ANALYTICS_TRACKING_ID;
+
+if (!GOOGLE_ANALYTICS_TRACKING_ID) {
+  console.warn('GOOGLE_ANALYTICS_TRACKING_ID missing');
+} else {
+  console.info(`GOOGLE_ANALYTICS_TRACKING_ID=${GOOGLE_ANALYTICS_TRACKING_ID}`);
+}
+
 const config = {
   outDir: 'dist',
   title: 'Lit UI Router',
@@ -60,6 +69,23 @@ const config = {
       { icon: 'github', link: 'https://github.com/simshanith/lit-ui-router' },
     ],
   },
+  head: [
+    [
+      'script',
+      {
+        async: '',
+        src: `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_TRACKING_ID}`,
+      },
+    ],
+    [
+      'script',
+      {},
+      `window.dataLayer = window.dataLayer || [];
+      function gtag(){dataLayer.push(arguments);}
+      gtag('js', new Date());
+      gtag('config', '${GOOGLE_ANALYTICS_TRACKING_ID}');`,
+    ],
+  ],
 };
 
 export default defineConfig({
