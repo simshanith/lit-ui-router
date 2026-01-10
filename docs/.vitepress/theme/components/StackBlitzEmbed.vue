@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, onUnmounted } from 'vue';
+import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
 
 const props = defineProps<{
@@ -7,7 +7,7 @@ const props = defineProps<{
   title: string;
 }>();
 
-const container = ref<HTMLElement | null>(null);
+const container = useTemplateRef('container');
 const isFullscreenSupported = ref(false);
 const isFullscreen = ref(false);
 const iconsLoaded = ref(false);
@@ -22,10 +22,16 @@ const handleFullscreenChange = () => {
   isFullscreen.value = screenfull.isFullscreen;
 };
 
+const iframe = useTemplateRef('iframe');
+function refreshIframe() {
+  iframe.value.src += '';
+}
+
 async function loadIcons() {
   await Promise.all([
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
+    import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
   ]);
   iconsLoaded.value = true;
 }
@@ -53,21 +59,25 @@ onUnmounted(() => {
     <iframe
       :src="src"
       :title="title"
+      ref="iframe"
       credentialless
       sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
     />
     <div class="stackblitz-embed-actions">
       <button
-        v-if="isFullscreenSupported && iconsLoaded"
+        v-if="isFullscreenSupported"
         type="button"
-        class="fullscreen-btn"
+        class="fullscreen-btn btn"
         @click="toggleFullscreen"
       >
-        <sp-icon-full-screen-exit v-if="isFullscreen" />
-        <sp-icon-full-screen v-else />
+        <sp-icon-full-screen-exit v-if="iconsLoaded && isFullscreen" />
+        <sp-icon-full-screen v-if="iconsLoaded && !isFullscreen" />
         {{ isFullscreen ? 'Exit Fullscreen' : 'Fullscreen' }}
       </button>
-      <slot />
+      <button @click="refreshIframe" class="refresh-btn btn">
+        <sp-icon-refresh v-if="iconsLoaded" label="Refresh iframe" />
+      </button>
+      <slot></slot>
     </div>
   </div>
 </template>
@@ -115,7 +125,7 @@ onUnmounted(() => {
   margin-top: 8px;
 }
 
-.fullscreen-btn {
+.btn {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -130,17 +140,23 @@ onUnmounted(() => {
   transition: background-color 0.2s, border-color 0.2s;
 }
 
-.fullscreen-btn:hover {
+.btn:hover {
   background: var(--vp-c-bg-mute);
   border-color: var(--vp-c-brand-1);
 }
 
-.open-btn {
+:deep(a) {
   display: inline-flex;
   align-items: center;
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
 }
 
-.open-btn img {
+:deep(a img) {
   height: 32px;
+}
+
+:deep(a:hover) {
+  border-color: var(--vp-c-brand-1);
 }
 </style>
