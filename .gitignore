@@ -44,3 +44,5 @@ certs/
 lit-ui-router-*.tgz
 **/specs/__screenshots__
 coverage
+.wrangler
+.dev.vars

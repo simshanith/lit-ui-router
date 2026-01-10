@@ -1,0 +1,9 @@
+{
+  "name": "lit-ui-router",
+  "compatibility_date": "2025-04-03",
+  "assets": {
+    "directory": "./dist",
+    "not_found_handling": "single-page-application",
+    // "binding": "ASSETS"
+  }
+}
