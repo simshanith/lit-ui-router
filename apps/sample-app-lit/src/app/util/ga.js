@@ -30,7 +30,7 @@ function trackPageView(event) {
   if (!event || !window.gtag) {
     return;
   }
-  if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE) {
+  if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE || import.meta.env.VITE_SAMPLE_APP_NAVIGATION_API) {
     console.debug('manual gtag page_view tracking skipped', event);
   } else {
     console.debug('gtag page_view', event);
