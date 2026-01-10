@@ -52,8 +52,8 @@ router.start();
 
 ### Components
 
-- **`<ui-router>`** - Root component that provides router context to descendants
-- **[`<ui-view>`](./reference/components/UiView)** - Viewport that renders the component for the current state
+- [**`<ui-router>`**](./reference/components/UIRouterLitElement) - Root component that provides router context to descendants
+- [**`<ui-view>`**](./reference/components/UiView) - Viewport that renders the component for the current state
 
 ### Directives
 

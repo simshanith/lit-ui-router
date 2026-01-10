@@ -27,7 +27,7 @@ const SYMBOL_LINK_REGEX =
 /**
  * Category definitions for organizing output.
  */
-type Category = 'core' | 'components' | 'directives' | 'hooks' | 'types';
+type Category = 'core' | 'components' | 'directives' | 'hooks' | 'types' | 'other';
 
 /**
  * Mapping of symbol names to their categories.
@@ -97,6 +97,10 @@ const CATEGORY_META: Record<Category, { title: string; description: string }> = 
     title: 'Types',
     description: 'TypeScript interfaces and type definitions.',
   },
+  other: {
+    title: 'Other',
+    description: '',
+  }
 };
 
 /**
@@ -147,72 +151,6 @@ function buildExternalSymbolMappings(
 }
 
 /**
- * Mapping from old TypeDoc paths to new category-based paths.
- */
-
-type Kind = "classes" | "variables" | "interfaces" | "types";
-
-const SYMBOL_KINDS: Record<keyof typeof SYMBOL_CATEGORIES, Kind> = {
-  UIRouterLit: "classes",
-  UIRouterLitElement: "classes",
-  UiView: "classes",
-  UiSrefDirective: "classes",
-  UiSrefActiveDirective: "classes",
-  uiSref: "variables",
-  uiSrefActive: "variables",
-  UiOnExit: 'interfaces',
-  UiOnParamsChanged: 'interfaces',
-  LitStateDeclaration: 'interfaces',
-  LitViewDeclarationElement: 'interfaces',
-  LitViewDeclarationObject: 'interfaces',
-  LitViewDeclarationTemplate: 'interfaces',
-  RoutedLitElement: 'interfaces',
-  SrefStatus: 'interfaces',
-  UiSrefActiveParams: 'interfaces',
-  UIViewInjectedProps: 'interfaces',
-  UiViewAddress: 'interfaces',
-  LitViewDeclaration: 'types',
-  RoutedLitComponent: 'types',
-  RoutedLitTemplate: 'types',
-  UIViewResolves: 'types',
-  deregisterFn: 'types',
-}
-
-const KIND_REWRITES: Record<keyof typeof SYMBOL_CATEGORIES, Category> = {
-  // classes: {
-    UIRouterLit: "core",
-    UIRouterLitElement: "components",
-    UiView: "components",
-    UiSrefDirective: "directives",
-    UiSrefActiveDirective: "directives",
-  // },
-  // variables: {
-    uiSref: "directives",
-    uiSrefActive: "directives",
-  // },
-  // interfaces: {
-    UiOnExit: 'hooks',
-    UiOnParamsChanged: 'hooks',
-    LitStateDeclaration: 'types',
-    LitViewDeclarationElement: 'types',
-    LitViewDeclarationObject: 'types',
-    LitViewDeclarationTemplate: 'types',
-    RoutedLitElement: 'types',
-    SrefStatus: 'types',
-    UiSrefActiveParams: 'types',
-    UIViewInjectedProps: 'types',
-    UiViewAddress: 'types',
-  // },
-  // types: {},
-};
-
-const PATH_REWRITES: Record<string, string> = {}
-for (const [symbol, category] of Object.entries(KIND_REWRITES)) {
-  const kind = SYMBOL_KINDS[symbol];
-  PATH_REWRITES[`${kind}/${symbol}.md`] = `${category}/${symbol}.md`
-}
-
-/**
  * Load the lit-ui-router TypeDoc plugin.
  */
 export function load(app: Application): void {
@@ -260,136 +198,16 @@ export function load(app: Application): void {
 
   // Post-process output to reorganize by category
   app.renderer.on(RendererEvent.END, (event: RendererEvent) => {
-    reorganizeOutput(event, app);
+    generateCategoryIndexFiles(event.outputDirectory, app);
+    updateSidebarJson(event.outputDirectory, app);
   });
-}
-
-/**
- * Reorganize TypeDoc output by category folders.
- */
-function reorganizeOutput(event: RendererEvent, app: Application): void {
-  const outDir = event.outputDirectory;
-  app.logger.info(`[lit-ui-router] Reorganizing output in ${outDir}`);
-
-  // Create category directories
-  const categories: Category[] = ['core', 'components', 'directives', 'hooks', 'types'];
-  for (const category of categories) {
-    const categoryDir = path.join(outDir, category);
-    if (!fs.existsSync(categoryDir)) {
-      fs.mkdirSync(categoryDir, { recursive: true });
-    }
-  }
-
-  // Move files to category folders
-  for (const [oldPath, newPath] of Object.entries(PATH_REWRITES)) {
-    // Skip if source and destination are the same
-    if (oldPath === newPath) continue;
-
-    const srcFile = path.join(outDir, oldPath);
-    const destFile = path.join(outDir, newPath);
-
-    if (fs.existsSync(srcFile)) {
-      // Read file content
-      let content = fs.readFileSync(srcFile, 'utf-8');
-
-      // Update internal links to use new paths
-      content = updateInternalLinks(app, content, oldPath, newPath);
-
-      // Write to new location
-      const destDir = path.dirname(destFile);
-      if (!fs.existsSync(destDir)) {
-        fs.mkdirSync(destDir, { recursive: true });
-      }
-      fs.writeFileSync(destFile, content);
-
-      // Delete old file
-      fs.unlinkSync(srcFile);
-      app.logger.verbose(`[lit-ui-router] Moved ${oldPath} -> ${newPath}`);
-    }
-  }
-
-  // Update links in files that weren't moved (types/ -> types/)
-  const typesDir = path.join(outDir, 'types');
-  if (fs.existsSync(typesDir)) {
-    const typeFiles = fs.readdirSync(typesDir).filter((f: string) => f.endsWith('.md'));
-    for (const file of typeFiles) {
-      const filePath = path.join(typesDir, file);
-      let content = fs.readFileSync(filePath, 'utf-8');
-      content = updateInternalLinks(app, content, `types/${file}`, `types/${file}`);
-      fs.writeFileSync(filePath, content);
-    }
-  }
-
-  // Clean up empty old directories (skip types since we keep some files there)
-  const oldDirs = ['classes', 'interfaces', 'variables'];
-  for (const dir of oldDirs) {
-    const dirPath = path.join(outDir, dir);
-    if (fs.existsSync(dirPath)) {
-      try {
-        const files = fs.readdirSync(dirPath);
-        if (files.length === 0) {
-          fs.rmdirSync(dirPath);
-          app.logger.verbose(`[lit-ui-router] Removed empty directory ${dir}`);
-        }
-      } catch {
-        // Directory not empty or other error, skip
-      }
-    }
-  }
-
-  // Generate index.md for each category
-  generateCategoryIndexFiles(outDir, app);
-
-  // Update main index.md
-  updateMainIndex(outDir, app);
-
-  // Update typedoc-sidebar.json if it exists
-  updateSidebarJson(outDir, app);
-}
-
-/**
- * Update internal links in markdown content.
- */
-function updateInternalLinks(app: Application, content: string, oldPath: string, newPath: string): string {
-  // Build a reverse mapping for link updates
-  const linkUpdates: Record<string, string> = {};
-
-  const oldContentFolder = path.dirname(oldPath);
-  const newContentFolder = path.dirname(newPath);
-  for (const [oldP, newP] of Object.entries(PATH_REWRITES)) {
-    // Extract just the filename without .md
-    const fileBasename = path.basename(oldP, '.md');
-    const oldFolder = path.dirname(oldP);
-    const newFolder = path.dirname(newP);
-
-    // Has the content moved folders?
-    // Was the link originally in the same folder as the content?
-    // Is the link in the same folder as content after moving?
-    if (oldContentFolder !== newContentFolder && oldFolder === oldContentFolder && newContentFolder !== newFolder) {
-      app.logger.verbose(`Updating link from ${fileBasename}->${path.relative(newContentFolder, newFolder)}/${fileBasename}`);
-      linkUpdates[`${fileBasename}`] = `${path.relative(newContentFolder, newFolder)}/${fileBasename}`
-    }
-
-
-    // Map old folder patterns to new ones
-    linkUpdates[`../${oldFolder}/${fileBasename}`] = `../${newFolder}/${fileBasename}`;
-    linkUpdates[`${oldFolder}/${fileBasename}`] = `${newFolder}/${fileBasename}`;
-    linkUpdates[`./${oldFolder}/${fileBasename}`] = `./${newFolder}/${fileBasename}`;
-  }
-
-  // Apply link updates
-  for (const [oldLink, newLink] of Object.entries(linkUpdates)) {
-    content = content.split(oldLink).join(newLink);
-  }
-
-  return content;
 }
 
 /**
  * Generate index.md files for each category.
  */
 function generateCategoryIndexFiles(outDir: string, app: Application): void {
-  const categories: Category[] = ['core', 'components', 'directives', 'hooks', 'types'];
+  const categories: Category[] = ['core', 'components', 'directives', 'hooks', 'types', 'other'];
 
   for (const category of categories) {
     const categoryDir = path.join(outDir, category);
@@ -402,7 +220,7 @@ function generateCategoryIndexFiles(outDir: string, app: Application): void {
     const items = files
       .map((f: string) => {
         const name = path.basename(f, '.md');
-        return `- [${name}](./${name})`;
+        return `- [\`${name}\`](./${name})`;
       })
       .join('\n');
 
@@ -421,99 +239,18 @@ ${items}
 }
 
 /**
- * Update the main index.md with links to categories.
- */
-function updateMainIndex(outDir: string, app: Application): void {
-  const indexPath = path.join(outDir, 'index.md');
-  if (!fs.existsSync(indexPath)) return;
-
-  const content = `# API Reference
-
-Auto-generated API documentation for lit-ui-router.
-
-## Categories
-
-- [Core](./core/) - The main router class
-- [Components](./components/) - Web components for routing
-- [Directives](./directives/) - Navigation and active state directives
-- [Hooks](./hooks/) - Component lifecycle hooks
-- [Types](./types/) - TypeScript interfaces and types
-
-## Quick Links
-
-### Core
-- [UIRouterLit](./core/UIRouterLit) - Main router class
-
-### Components
-- [UiView](./components/UiView) - View rendering component
-
-### Directives
-- [uiSref](./directives/uiSref) - State reference directive
-- [uiSrefActive](./directives/uiSrefActive) - Active state styling directive
-
-### Hooks
-- [UiOnExit](./hooks/UiOnExit) - Exit confirmation hook
-- [UiOnParamsChanged](./hooks/UiOnParamsChanged) - Parameter change hook
-
-### Types
-- [LitStateDeclaration](./types/LitStateDeclaration) - State configuration interface
-- [UIViewInjectedProps](./types/UIViewInjectedProps) - Injected component props
-`;
-
-  fs.writeFileSync(indexPath, content);
-  app.logger.verbose('[lit-ui-router] Updated main index.md');
-}
-
-/**
  * Update typedoc-sidebar.json with new paths.
  */
 function updateSidebarJson(outDir: string, app: Application): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
   if (!fs.existsSync(sidebarPath)) return;
-
-  // Generate a new sidebar structure based on categories
-  const sidebar = [
-    {
-      text: 'Core',
-      link: '/api/reference/core/',
-      items: [{ text: 'UIRouterLit', link: '/api/reference/core/UIRouterLit' }],
-    },
-    {
-      text: 'Components',
-      link: '/api/reference/components/',
-      items: [
-        { text: 'UiView', link: '/api/reference/components/UiView' },
-      ],
-    },
-    {
-      text: 'Directives',
-      link: '/api/reference/directives/',
-      items: [
-        { text: 'uiSref', link: '/api/reference/directives/uiSref' },
-        { text: 'uiSrefActive', link: '/api/reference/directives/uiSrefActive' },
-      ],
-    },
-    {
-      text: 'Hooks',
-      link: '/api/reference/hooks/',
-      items: [
-        { text: 'UiOnExit', link: '/api/reference/hooks/UiOnExit' },
-        { text: 'UiOnParamsChanged', link: '/api/reference/hooks/UiOnParamsChanged' },
-      ],
-    },
-    {
-      text: 'Types',
-      link: '/api/reference/types/',
-      collapsed: true,
-      items: [
-        { text: 'LitStateDeclaration', link: '/api/reference/types/LitStateDeclaration' },
-        { text: 'UIViewInjectedProps', link: '/api/reference/types/UIViewInjectedProps' },
-        { text: 'RoutedLitElement', link: '/api/reference/types/RoutedLitElement' },
-        { text: 'RoutedLitTemplate', link: '/api/reference/types/RoutedLitTemplate' },
-        { text: 'SrefStatus', link: '/api/reference/types/SrefStatus' },
-      ],
-    },
-  ];
+  const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
+  for (const item of sidebar) {
+    const category: Category = item.text;
+    item.text = CATEGORY_META[category].title;
+    item.link = `/api/reference/${category}`;
+    item.collapsed = true;
+  }
 
   fs.writeFileSync(sidebarPath, JSON.stringify(sidebar, null, 2));
   app.logger.verbose('[lit-ui-router] Updated typedoc-sidebar.json');
@@ -702,9 +439,8 @@ function addCategoryTags(reflection: DeclarationReflection): void {
   const name = reflection.name;
   const category = SYMBOL_CATEGORIES[name];
 
-  if (category && CATEGORY_META[category]) {
-    const categoryTitle = CATEGORY_META[category].title;
-    setCategory(reflection, categoryTitle);
+  if (category) {
+    setCategory(reflection, category);
   }
 }
 

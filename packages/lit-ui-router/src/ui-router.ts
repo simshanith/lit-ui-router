@@ -13,11 +13,6 @@ interface UiRouterContextEventDetail {
 export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
 
 /**
- * @summary
- *
- * This is the root ui-router component.
- *
- *
  * @slot - <code>&lt;ui-router&gt;</code> renders slotted content.
  *
  * @event {CustomEvent} ui-router-context
@@ -25,6 +20,12 @@ export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
  * <code>&lt;ui-router&gt;</code> listens to the
  * <code>ui-router-context</code> event
  * and provides the <code>uiRouter</code> instance.
+ *
+ * @summary
+ *
+ * This is the root ui-router component.
+ *
+ * @hideconstructor
  */
 @customElement('ui-router')
 export class UIRouterLitElement extends LitElement {
@@ -68,6 +69,7 @@ export class UIRouterLitElement extends LitElement {
     this.constructor.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
+  /** @internal */
   async connectedCallback() {
     super.connectedCallback();
     this.uiRouter = this.uiRouter || new UIRouterLit();
@@ -80,11 +82,13 @@ export class UIRouterLitElement extends LitElement {
     this.dispatchEvent(this.constructor.uiRouterContextEvent(this.uiRouter));
   }
 
+  /** @internal */
   render() {
     return html`<slot></slot>`;
   }
 }
 
 export interface UIRouterLitElement {
+  /** @internal */
   constructor: typeof UIRouterLitElement;
 }

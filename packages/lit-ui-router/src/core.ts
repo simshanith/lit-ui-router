@@ -201,7 +201,7 @@ const viewConfigFactory = (path: PathNode[], config: _ViewDeclaration) =>
  * @see {@link https://ui-router.github.io/core/docs/latest/ | UI-Router Core Documentation}
  * @see {@link https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html | UIRouter API Reference}
  *
- * @category Core
+ * @category core
  */
 export class UIRouterLit extends UIRouter {
   /**

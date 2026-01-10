@@ -8,10 +8,6 @@ const baseTemplate = (name: string, path: string): Record<string, string> => ({
   [name]: `${LIT_BASE}/${path}`,
 });
 
-const localTemplate = (name: string): Record<string, string> => ({
-  [name]: `#${name.toLowerCase()}`,
-});
-
 export const LIT_SYMBOLS: Record<string, string> = {
   ...directiveTemplate('AsyncDirective'),
   ...directiveTemplate('Directive'),
@@ -32,18 +28,4 @@ export const LIT_SYMBOLS: Record<string, string> = {
   ...baseTemplate('ReactiveControllerHost', 'ReactiveControllerHost/'),
   ...baseTemplate('PropertyDeclaration', 'decorators/#PropertyDeclaration'),
   ...baseTemplate('PropertyDeclarations', 'decorators/#PropertyDeclarations'),
-
-  // Local lit-ui-router symbols (local anchors)
-  ...localTemplate('UIViewInjectedProps'),
-  ...localTemplate('UiSrefActiveParams'),
-  ...localTemplate('SrefStatus'),
-  ...localTemplate('LitStateDeclaration'),
-  ...localTemplate('LitViewDeclaration'),
-  ...localTemplate('RoutedLitTemplate'),
-  ...localTemplate('RoutedLitElement'),
-  ...localTemplate('UiOnParamsChanged'),
-  ...localTemplate('UiOnExit'),
-  ...localTemplate('UiView'),
-  ...localTemplate('UIRouterLit'),
-  ...localTemplate('UIRouterElement'),
 };

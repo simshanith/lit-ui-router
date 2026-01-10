@@ -30,7 +30,7 @@ import { TemplateResult, LitElement } from 'lit';
  *
  * @see [[TransitionOptions]]
  *
- * @category Hooks
+ * @category hooks
  */
 export interface UiOnParamsChanged {
   /**
@@ -78,7 +78,7 @@ export interface UiOnParamsChanged {
  * @see [[HookResult]]
  * @see [[Transition]]
  *
- * @category Hooks
+ * @category hooks
  */
 export interface UiOnExit {
   /**
@@ -116,7 +116,7 @@ export interface UiOnExit {
  * @see [[UIViewInjectedProps]]
  * @see [[StateDeclaration.resolve]]
  *
- * @category Types
+ * @category types
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UIViewResolves<T = Record<string, any>> = T;
@@ -158,7 +158,7 @@ export type UIViewResolves<T = Record<string, any>> = T;
  * @see [[UIRouter]]
  * @see [[Transition]]
  *
- * @category Types
+ * @category types
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UIViewInjectedProps<T = Record<string, any>> {
@@ -189,7 +189,7 @@ export interface UIViewInjectedProps<T = Record<string, any>> {
  * });
  * ```
  *
- * @category Types
+ * @category types
  */
 export type RoutedLitTemplate =
   | ((props?: UIViewInjectedProps) => TemplateResult)
@@ -231,7 +231,7 @@ export interface LitViewDeclarationTemplate extends _ViewDeclaration {
  * });
  * ```
  *
- * @category Types
+ * @category types
  */
 export interface RoutedLitElement {
   /** Constructor that accepts optional UIViewInjectedProps */
@@ -249,7 +249,7 @@ export interface RoutedLitElement {
  * - A {@link RoutedLitTemplate} function that returns a TemplateResult
  * - A {@link RoutedLitElement} class that extends LitElement
  *
- * @category Types
+ * @category types
  */
 export type RoutedLitComponent = RoutedLitTemplate | RoutedLitElement;
 
@@ -317,7 +317,7 @@ export type LitViewDeclaration =
  *
  * @see [[StateDeclaration]]
  *
- * @category Types
+ * @category types
  */
 export interface LitStateDeclaration extends StateDeclaration {
   /** The Lit component to render for this state */

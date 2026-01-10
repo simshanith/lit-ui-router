@@ -3,6 +3,31 @@ import typedocSidebarItems from '../api/reference/typedoc-sidebar.json';
 
 const baseUrl = 'https://lit-ui-router.dev';
 
+function makeSidebar(collapseReference = true) {
+  return [
+    {
+      text: 'Tutorial',
+      items: [
+        { text: 'Hello World', link: '/tutorial/helloworld' },
+        { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
+        { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
+      ],
+    },
+    {
+      text: 'API',
+      items: [
+        { text: 'Overview', link: '/api/' },
+        {
+          text: 'Reference',
+          link: '/api/reference/',
+          collapsed: collapseReference,
+          items: typedocSidebarItems,
+        },
+      ],
+    },
+  ];
+}
+
 const config = {
   outDir: 'dist',
   title: 'Lit UI Router',
@@ -30,28 +55,10 @@ const config = {
       { text: 'API', link: '/api/' },
       { text: 'Sample App', link: '/app', target: '_self' },
     ],
-    sidebar: [
-      {
-        text: 'Tutorial',
-        items: [
-          { text: 'Hello World', link: '/tutorial/helloworld' },
-          { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
-          { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-        ],
-      },
-      {
-        text: 'API',
-        items: [
-          { text: 'Overview', link: '/api/' },
-          {
-            text: 'Reference',
-            link: '/api/reference/',
-            collapsed: true,
-            items: typedocSidebarItems,
-          },
-        ],
-      },
-    ],
+    sidebar: {
+      '/tutorial/': makeSidebar(),
+      '/api/': makeSidebar(false),
+    },
     socialLinks: [
       { icon: 'github', link: 'https://github.com/simshanith/lit-ui-router' },
     ],

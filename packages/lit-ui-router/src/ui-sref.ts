@@ -65,7 +65,7 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
  * @see [[AsyncDirective]]
  * @see [[StateService.go]]
  *
- * @category Directives
+ * @category directives
  */
 export class UiSrefDirective extends AsyncDirective {
   state: string | null = null;
@@ -80,11 +80,10 @@ export class UiSrefDirective extends AsyncDirective {
   href: string | null = null;
   targetState: TargetState | null = null;
 
+  /** @internal */
   unsubscribe: (() => void) | undefined;
 
-  /**
-   * @internal
-   */
+  /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
     if (partInfo.type !== PartType.ELEMENT) {
@@ -134,14 +133,17 @@ export class UiSrefDirective extends AsyncDirective {
     return noChange;
   }
 
+  /** @internal */
   seekRouter() {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
+  /** @internal */
   seekParentView() {
     this.parentView = UiView.seekParentView(this.element!);
   }
 
+  /** @internal */
   disconnected() {
     this.element?.removeEventListener('click', this.onClick as EventListener);
     this.element = null;
@@ -261,6 +263,6 @@ export class UiSrefDirective extends AsyncDirective {
  * @see [[RawParams]]
  * @see [[TransitionOptions]]
  *
- * @category Directives
+ * @category directives
  */
 export const uiSref = directive(UiSrefDirective);
