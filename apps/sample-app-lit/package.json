@@ -22,7 +22,6 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@cloudflare/vite-plugin": "^1.10.1",
     "@types/lodash": "^4.17.10",
     "prettier": "3.6.2",
     "typescript": "5.8.3",

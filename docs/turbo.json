@@ -3,7 +3,12 @@
   "extends": ["//"],
   "tasks": {
     "docs:preview": {
-      "dependsOn": ["^docs:api", "^build"],
+      "dependsOn": ["^docs:api", "build"],
+      "cache": false,
+      "persistent": true
+    },
+    "wrangler:dev": {
+      "dependsOn": ["^docs:api", "build"],
       "cache": false,
       "persistent": true
     },

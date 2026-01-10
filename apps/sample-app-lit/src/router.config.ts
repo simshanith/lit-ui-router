@@ -1,4 +1,10 @@
-import { hashLocationPlugin, trace, Category, Rejection } from '@uirouter/core';
+import {
+  hashLocationPlugin,
+  pushStateLocationPlugin,
+  trace,
+  Category,
+  Rejection,
+} from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 // @ts-expect-error - @uirouter/dsr lacks proper ESM exports field for nodenext resolution
 import { DSRPlugin } from '@uirouter/dsr';
@@ -14,7 +20,19 @@ export const NESTED_HOME = 'home.nested';
 export const UNLISTED_NESTED_HOME = 'home.unlisted';
 
 export function configureRouter(router = new UIRouterLit()) {
-  router.plugin(hashLocationPlugin);
+  const BASE_URL: string = import.meta.env.VITE_SAMPLE_APP_BASE_URL;
+  if (BASE_URL) {
+    const base = document.createElement('base');
+    base.href = BASE_URL;
+    document.head.appendChild(base);
+  }
+
+  if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE) {
+    router.plugin(pushStateLocationPlugin);
+  } else {
+    router.plugin(hashLocationPlugin);
+  }
+
   import('@uirouter/visualizer').then(({ Visualizer }) =>
     router.plugin(Visualizer),
   );

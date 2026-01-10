@@ -1,8 +1,0 @@
-{
-  "name": "cloudflare-vite-get-started",
-  "compatibility_date": "2025-04-03",
-  "main": "./src/cloudflare-worker.ts",
-  "assets": {
-    "not_found_handling": "single-page-application"
-  }
-}
