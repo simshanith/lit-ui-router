@@ -58,6 +58,7 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   LitViewDeclarationElement: 'types',
   LitViewDeclarationObject: 'types',
   LitViewDeclarationTemplate: 'types',
+  NormalizedLitViewDeclaration: 'types',
   RoutedLitElement: 'types',
   RoutedLitComponent: 'types',
   RoutedLitTemplate: 'types',

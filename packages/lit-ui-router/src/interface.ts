@@ -34,7 +34,7 @@ import { TemplateResult, LitElement } from 'lit';
  */
 export interface UiOnParamsChanged {
   /**
-   * A UI-Router view has a Lit `Component` (see [[LitStateDeclaration.component]]).
+   * A UI-Router view has a Lit `Component` (see [[NormalizedLitViewDeclaration.component]]).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
    * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
    *
@@ -82,7 +82,7 @@ export interface UiOnParamsChanged {
  */
 export interface UiOnExit {
   /**
-   * A UI-Router view has a Lit `Component` (see [[LitStateDeclaration.component]]).
+   * A UI-Router view has a Lit `Component` (see [[NormalizedLitViewDeclaration.component]]).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
    * These callbacks are similar to Transition Hooks ([[IHookRegistry]]), but are only called if the view/component is currently active.
    *
@@ -174,7 +174,8 @@ export interface UIViewInjectedProps<T = Record<string, any>> {
  * A function that returns a Lit TemplateResult for rendering in a `<ui-view>`.
  *
  * This is one of the component types that can be used in state declarations.
- * The function receives {@link UIViewInjectedProps} as its argument.
+ * The function receives [[UIViewInjectedProps]] as its argument.
+ * [[NormalizedLitViewDeclaration.component]] uses this signature.
  *
  * @example
  * ```ts
@@ -325,8 +326,9 @@ export interface LitStateDeclaration extends StateDeclaration {
 }
 
 /**
- * Internal normalized view declaration format.
- * @internal
+ * The `litViewsBuilder` registered in [[UIRouterLit.constructor]] normalizes config to this internal interface.
+ *
+ * @category types
  */
 export interface NormalizedLitViewDeclaration extends _ViewDeclaration {
   component: RoutedLitTemplate;
