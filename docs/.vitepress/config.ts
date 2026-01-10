@@ -85,7 +85,7 @@ const config = {
       gtag('js', new Date());
       gtag('config', '${GOOGLE_ANALYTICS_TRACKING_ID}');`,
     ],
-  ] as HeadConfig[],
+  ] satisfies HeadConfig[],
 };
 
 export default defineConfig({
