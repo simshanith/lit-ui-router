@@ -258,8 +258,6 @@ function updateSidebarJson(outDir: string, app: Application): void {
     const category: Category = item.text;
     item.text = CATEGORY_META[category].title;
     item.link = `/api/reference/${category}`;
-    // item.prev = false;
-    // item.next = false;
     delete item.collapsed;
     if (category === 'types') {
       item.collapsed = true;
