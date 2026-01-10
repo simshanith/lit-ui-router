@@ -196,7 +196,7 @@ importers:
         version: 0.28.15(typescript@5.8.3)
       typedoc-plugin-lit-ui-router:
         specifier: workspace:*
-        version: link:../typedoc-plugin-lit-ui-router
+        version: link:../../tools/typedoc-plugin-lit-ui-router
       typedoc-plugin-markdown:
         specifier: ^4.4.0
         version: 4.9.0(typedoc@0.28.15(typescript@5.8.3))
@@ -210,7 +210,7 @@ importers:
         specifier: ^4.0.16
         version: 4.0.16(@types/node@24.1.0)(@vitest/browser-playwright@4.0.16)(jiti@2.6.1)(yaml@2.8.2)
 
-  packages/typedoc-plugin-lit-ui-router:
+  tools/typedoc-plugin-lit-ui-router:
     devDependencies:
       '@types/node':
         specifier: ^22.0.0

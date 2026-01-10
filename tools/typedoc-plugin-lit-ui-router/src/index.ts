@@ -27,7 +27,13 @@ const SYMBOL_LINK_REGEX =
 /**
  * Category definitions for organizing output.
  */
-type Category = 'core' | 'components' | 'directives' | 'hooks' | 'types' | 'other';
+type Category =
+  | 'core'
+  | 'components'
+  | 'directives'
+  | 'hooks'
+  | 'types'
+  | 'other';
 
 /**
  * Mapping of symbol names to their categories.
@@ -76,32 +82,33 @@ for (const [symbol, category] of Object.entries(SYMBOL_CATEGORIES)) {
 /**
  * Category metadata for index generation.
  */
-const CATEGORY_META: Record<Category, { title: string; description: string }> = {
-  core: {
-    title: 'Core',
-    description: 'The main router class for Lit applications.',
-  },
-  components: {
-    title: 'Components',
-    description: 'Web components for routing integration.',
-  },
-  directives: {
-    title: 'Directives',
-    description: 'Lit directives for navigation and active state styling.',
-  },
-  hooks: {
-    title: 'Hooks',
-    description: 'Lifecycle hooks for routed components.',
-  },
-  types: {
-    title: 'Types',
-    description: 'TypeScript interfaces and type definitions.',
-  },
-  other: {
-    title: 'Other',
-    description: '',
-  }
-};
+const CATEGORY_META: Record<Category, { title: string; description: string }> =
+  {
+    core: {
+      title: 'Core',
+      description: 'The main router class for Lit applications.',
+    },
+    components: {
+      title: 'Components',
+      description: 'Web components for routing integration.',
+    },
+    directives: {
+      title: 'Directives',
+      description: 'Lit directives for navigation and active state styling.',
+    },
+    hooks: {
+      title: 'Hooks',
+      description: 'Lifecycle hooks for routed components.',
+    },
+    types: {
+      title: 'Types',
+      description: 'TypeScript interfaces and type definitions.',
+    },
+    other: {
+      title: 'Other',
+      description: '',
+    },
+  };
 
 /**
  * Build link target URL, handling local vs external links differently.
@@ -207,13 +214,22 @@ export function load(app: Application): void {
  * Generate index.md files for each category.
  */
 function generateCategoryIndexFiles(outDir: string, app: Application): void {
-  const categories: Category[] = ['core', 'components', 'directives', 'hooks', 'types', 'other'];
+  const categories: Category[] = [
+    'core',
+    'components',
+    'directives',
+    'hooks',
+    'types',
+    'other',
+  ];
 
   for (const category of categories) {
     const categoryDir = path.join(outDir, category);
     if (!fs.existsSync(categoryDir)) continue;
 
-    const files = fs.readdirSync(categoryDir).filter((f: string) => f.endsWith('.md') && f !== 'index.md');
+    const files = fs
+      .readdirSync(categoryDir)
+      .filter((f: string) => f.endsWith('.md') && f !== 'index.md');
     if (files.length === 0) continue;
 
     const meta = CATEGORY_META[category];
@@ -296,7 +312,14 @@ function handleTypeLinks(context: Context): void {
  * Recursively link types and their nested children to external documentation.
  */
 function linkTypeRecursively(
-  type: { type?: string; name?: string; externalUrl?: string; typeArguments?: unknown[]; types?: unknown[]; elementType?: unknown },
+  type: {
+    type?: string;
+    name?: string;
+    externalUrl?: string;
+    typeArguments?: unknown[];
+    types?: unknown[];
+    elementType?: unknown;
+  },
   symbolMap: Record<string, string>,
 ): void {
   if (!type) return;
@@ -337,13 +360,19 @@ function linkReflectionTypes(
   if (reflection.signatures) {
     for (const sig of reflection.signatures) {
       if (sig.type) {
-        linkTypeRecursively(sig.type as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+        linkTypeRecursively(
+          sig.type as Parameters<typeof linkTypeRecursively>[0],
+          symbolMap,
+        );
       }
 
       if (sig.parameters) {
         for (const param of sig.parameters) {
           if (param.type) {
-            linkTypeRecursively(param.type as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+            linkTypeRecursively(
+              param.type as Parameters<typeof linkTypeRecursively>[0],
+              symbolMap,
+            );
           }
         }
       }
@@ -352,22 +381,35 @@ function linkReflectionTypes(
 
   // Handle direct type on reflection
   if (reflection.type) {
-    linkTypeRecursively(reflection.type as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+    linkTypeRecursively(
+      reflection.type as Parameters<typeof linkTypeRecursively>[0],
+      symbolMap,
+    );
   }
 
   // Handle extends clauses
-  const reflectionWithExtends = reflection as DeclarationReflection & { extendedTypes?: unknown[] };
+  const reflectionWithExtends = reflection as DeclarationReflection & {
+    extendedTypes?: unknown[];
+  };
   if (reflectionWithExtends.extendedTypes) {
     for (const extType of reflectionWithExtends.extendedTypes) {
-      linkTypeRecursively(extType as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+      linkTypeRecursively(
+        extType as Parameters<typeof linkTypeRecursively>[0],
+        symbolMap,
+      );
     }
   }
 
   // Handle implemented interfaces
-  const reflectionWithImpl = reflection as DeclarationReflection & { implementedTypes?: unknown[] };
+  const reflectionWithImpl = reflection as DeclarationReflection & {
+    implementedTypes?: unknown[];
+  };
   if (reflectionWithImpl.implementedTypes) {
     for (const implType of reflectionWithImpl.implementedTypes) {
-      linkTypeRecursively(implType as Parameters<typeof linkTypeRecursively>[0], symbolMap);
+      linkTypeRecursively(
+        implType as Parameters<typeof linkTypeRecursively>[0],
+        symbolMap,
+      );
     }
   }
 }
@@ -425,17 +467,19 @@ function processComment(
 
     return text.replace(SYMBOL_LINK_REGEX, (_match, symbolName: string) => {
       const dotIndex = symbolName.indexOf('.');
-      const baseName = dotIndex === -1 ? symbolName : symbolName.substring(0, dotIndex);
-      const propertyName = dotIndex === -1 ? '' : symbolName.substring(dotIndex);
+      const baseName =
+        dotIndex === -1 ? symbolName : symbolName.substring(0, dotIndex);
+      const propertyName =
+        dotIndex === -1 ? '' : symbolName.substring(dotIndex);
 
-      if (symbolMap.hasOwnProperty(baseName)) {
+      if (Object.hasOwnProperty.call(symbolMap, baseName)) {
         const url = symbolMap[baseName];
         const displayName = propertyName ? `${symbolName}` : symbolName;
         const linkTarget = buildLinkTarget(url, propertyName, baseName);
         return buildAnchorHtml(linkTarget, displayName);
       }
 
-      if (LOCAL_SYMBOL_PAGES.hasOwnProperty(baseName)) {
+      if (Object.hasOwnProperty.call(LOCAL_SYMBOL_PAGES, baseName)) {
         const folder = LOCAL_SYMBOL_PAGES[baseName];
         const prop = propertyName ? `${propertyName.substring(1)}` : '';
         const basePath = `../${folder}${baseName}`;
@@ -502,7 +546,10 @@ function addCategoryTags(reflection: DeclarationReflection): void {
 /**
  * Set the category for a reflection.
  */
-function setCategory(reflection: DeclarationReflection, category: string): void {
+function setCategory(
+  reflection: DeclarationReflection,
+  category: string,
+): void {
   if (!reflection.comment) {
     return;
   }

@@ -111,7 +111,10 @@ export const UIROUTER_SYMBOLS: Record<string, string> = {
   ...enumTemplate('TransitionEventType', '_transition_transitioneventtype_'),
 
   // Location plugins
-  ...classTemplate('PushStateLocationService', '_vanilla_pushstatelocationservice_'),
+  ...classTemplate(
+    'PushStateLocationService',
+    '_vanilla_pushstatelocationservice_',
+  ),
   ...classTemplate('HashLocationService', '_vanilla_hashlocationservice_'),
   ...classTemplate('BaseLocationServices', '_vanilla_baselocationservice_'),
 };
