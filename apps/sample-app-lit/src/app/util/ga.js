@@ -2,37 +2,47 @@ const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
   .VITE_GOOGLE_ANALYTICS_TRACKING_ID;
 
 function initGoogleAnalytics() {
-  /** Google analytics */
   (function (i, s, o, g, r, a, m) {
-    i['GoogleAnalyticsObject'] = r;
-    ((i[r] =
-      i[r] ||
-      function () {
-        (i[r].q = i[r].q || []).push(arguments);
-      }),
-      (i[r].l = 1 * new Date()));
     ((a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]));
     a.async = 1;
     a.src = g;
     m.parentNode.insertBefore(a, m);
+    i[r] = i[r] || [];
   })(
     window,
     document,
     'script',
-    '//www.google-analytics.com/analytics.js',
-    'ga',
+    `https://www.googletagmanager.com/gtag/js?id=${GOOGLE_ANALYTICS_TRACKING_ID}`,
+    'dataLayer',
   );
-  window['ga']('create', GOOGLE_ANALYTICS_TRACKING_ID, 'auto');
-  window['ga']('send', 'pageview');
+  window.gtag = function () {
+    window.dataLayer.push(arguments);
+  };
+  window.gtag('js', new Date());
+  window.gtag('config', GOOGLE_ANALYTICS_TRACKING_ID);
 }
 
 if (GOOGLE_ANALYTICS_TRACKING_ID) {
   initGoogleAnalytics();
 }
 
-export default function googleAnalyticsHook(transitionService) {
-  const vpv = (vpath) => window['ga']?.('send', 'pageview', vpath);
+function trackPageView(event) {
+  if (!event || !window.gtag) {
+    return;
+  }
+  console.debug('gtag page_view', event);
+  window.gtag('event', 'page_view', event);
+}
 
+function trackException(event) {
+  if (!event || !window.gtag) {
+    return;
+  }
+  console.debug('gtag exception', event);
+  window.gtag('event', 'exception', event);
+}
+
+export default function googleAnalyticsHook(transitionService) {
   const path = (trans) => {
     const formattedRoute = trans.$to().url.format(trans.params());
     const withSitePrefix = location.pathname + formattedRoute;
@@ -46,11 +56,23 @@ export default function googleAnalyticsHook(transitionService) {
     const err = trans.error();
     const type = err && err.hasOwnProperty('type') ? err.type : '_';
     const message = err && err.hasOwnProperty('message') ? err.message : '_';
-    vpv(path(trans) + ';errorType=' + type + ';errorMessage=' + message);
+    if (type === 6) {
+      trackException({
+        error_description: message,
+        fatal: false,
+      });
+    }
   };
 
-  transitionService.onSuccess({}, (trans) => vpv(path(trans)), {
-    priority: -10000,
-  });
+  transitionService.onSuccess(
+    {},
+    (trans) =>
+      trackPageView({
+        page_location: path(trans),
+      }),
+    {
+      priority: -10000,
+    },
+  );
   transitionService.onError({}, (trans) => error(trans), { priority: -10000 });
 }

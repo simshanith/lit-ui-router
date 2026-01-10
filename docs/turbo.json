@@ -3,12 +3,13 @@
   "extends": ["//"],
   "tasks": {
     "docs:preview": {
-      "dependsOn": ["^docs:api", "^build"],
+      "dependsOn": ["^docs:api", "build"],
       "cache": false,
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build", "^docs:api"]
+      "dependsOn": ["^build", "^docs:api"],
+      "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "e2e": {
       "interruptible": true
