@@ -17,9 +17,7 @@
     "node": ">=22.17.1"
   },
   "packageManager": "pnpm@10.13.1",
-  "dependencies": {
-    "lit": "2.2.7"
-  },
+  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",

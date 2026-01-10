@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build": {
+      "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
+    }
+  }
+}
