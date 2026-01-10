@@ -1,0 +1,36 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../docs/api/reference",
+  "docsRoot": "../../docs",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "typedoc-plugin-lit-ui-router"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "categorizeByGroup": false,
+  "categoryOrder": ["core", "components", "directives", "hooks", "types"],
+  "readme": "none",
+  "githubPages": false,
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "navigation": {
+    "includeCategories": true,
+    "includeGroups": true
+  },
+  "sort": ["alphabetical", "source-order"],
+  "router": "category",
+  "formatWithPrettier": true,
+  "prettierConfigFile": "../../.prettierrc",
+  "sidebar": {
+    "pretty": true
+  }
+}

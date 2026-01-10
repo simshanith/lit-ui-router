@@ -1,6 +1,32 @@
 import { defineConfig, HeadConfig } from 'vitepress';
+import typedocSidebarItems from '../api/reference/typedoc-sidebar.json';
 
 const baseUrl = 'https://lit-ui-router.dev';
+
+function makeSidebar() {
+  return [
+    {
+      text: 'Tutorial',
+      items: [
+        { text: 'Hello World', link: '/tutorial/helloworld' },
+        { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
+        { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
+      ],
+    },
+    {
+      text: 'API',
+      items: [
+        { text: 'Overview', link: '/api/' },
+        {
+          text: 'Reference',
+          link: '/api/reference/',
+          collapsed: false,
+          items: typedocSidebarItems,
+        },
+      ],
+    },
+  ];
+}
 
 const config = {
   outDir: 'dist',
@@ -8,20 +34,20 @@ const config = {
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
   ignoreDeadLinks: ['/app'],
+  // ignoreDeadLinks: true,
   vite: {
     configFile: './.vitepress/vite.config.ts',
   },
   vue: {
     template: {
       compilerOptions: {
-        isCustomElement(tag) {
+        isCustomElement(tag: string) {
           return tag.startsWith('sp-');
         },
       },
     },
   },
   themeConfig: {
-    // https://vitepress.dev/reference/default-theme-config
     logo: '/images/lit-ui-router.svg',
     nav: [
       { text: 'Home', link: '/' },
@@ -29,27 +55,13 @@ const config = {
       { text: 'API', link: '/api/' },
       { text: 'Sample App', link: '/app', target: '_self' },
     ],
-    sidebar: [
-      {
-        text: 'Tutorial',
-        items: [
-          { text: 'Hello World', link: '/tutorial/helloworld' },
-          { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
-          { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-        ],
-      },
-      {
-        text: 'Reference',
-        items: [{ text: 'API', link: '/api/' }],
-      },
-    ],
+    sidebar: makeSidebar(),
     socialLinks: [
       { icon: 'github', link: 'https://github.com/simshanith/lit-ui-router' },
     ],
   },
 };
 
-// https://vitepress.dev/reference/site-config
 export default defineConfig({
   ...config,
   transformHead({ pageData }) {

@@ -2,6 +2,14 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    "docs:preview": {
+      "dependsOn": ["^docs:api", "^build"],
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      "dependsOn": ["^build", "^docs:api"]
+    },
     "e2e": {
       "interruptible": true
     }

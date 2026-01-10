@@ -41,9 +41,13 @@
       "persistent": true
     },
     "docs": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^docs:api"],
       "cache": false,
       "persistent": true
+    },
+    "docs:api": {
+      "dependsOn": ["^docs:api"],
+      "cache": false,
     }
   }
 }

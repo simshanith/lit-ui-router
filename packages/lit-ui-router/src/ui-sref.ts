@@ -13,18 +13,39 @@ import { UIRouterLit } from './core.js';
 import { UIRouterLitElement } from './ui-router.js';
 import { UiView } from './ui-view.js';
 
+/**
+ * Event name dispatched when a uiSref target state changes.
+ * @internal
+ */
 export const UI_SREF_TARGET_EVENT = 'uiSrefTarget';
 
+/**
+ * Interface for elements that have been enhanced with uiSref.
+ * @internal
+ */
 export interface UiSrefElement extends Element {
+  /** The href attribute value for the link */
   href: string;
+  /** The target state for the link */
   targetState: TargetState;
 }
 
+/**
+ * Custom event dispatched when a uiSref target state changes.
+ * Used internally by uiSrefActive to track which states are being linked to.
+ * @internal
+ */
 export interface UiSrefTargetEvent
   extends CustomEvent<{ targetState: TargetState }> {
   target: UiSrefElement;
 }
 
+/**
+ * Create a uiSrefTarget event with the given target state.
+ * @param targetState - The target state for the event
+ * @returns A custom event with the target state in the detail
+ * @internal
+ */
 export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
   return new CustomEvent(UI_SREF_TARGET_EVENT, {
     bubbles: true,
@@ -33,6 +54,19 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
   }) as UiSrefTargetEvent;
 }
 
+/**
+ * Directive class that creates state-based navigation links.
+ *
+ * This directive is used internally by the {@link uiSref} directive function.
+ * It transforms elements (typically `<a>` tags) into UI-Router navigation links
+ * by setting the `href` attribute and handling click events.
+ *
+ * @see {@link uiSref} for the public API
+ * @see [[AsyncDirective]]
+ * @see [[StateService.go]]
+ *
+ * @category directives
+ */
 export class UiSrefDirective extends AsyncDirective {
   state: string | null = null;
   params: RawParams = {};
@@ -46,8 +80,10 @@ export class UiSrefDirective extends AsyncDirective {
   href: string | null = null;
   targetState: TargetState | null = null;
 
+  /** @internal */
   unsubscribe: (() => void) | undefined;
 
+  /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
     if (partInfo.type !== PartType.ELEMENT) {
@@ -97,14 +133,17 @@ export class UiSrefDirective extends AsyncDirective {
     return noChange;
   }
 
+  /** @internal */
   seekRouter() {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
+  /** @internal */
   seekParentView() {
     this.parentView = UiView.seekParentView(this.element!);
   }
 
+  /** @internal */
   disconnected() {
     this.element?.removeEventListener('click', this.onClick as EventListener);
     this.element = null;
@@ -162,7 +201,10 @@ export class UiSrefDirective extends AsyncDirective {
     return this.render(this.state!, this.params, this.options);
   };
 
-  _firstUpdated = false;
+  private _firstUpdated = false;
+  /**
+   * @internal
+   */
   firstUpdated() {
     if (this._firstUpdated || !this.isConnected) {
       return;
@@ -179,4 +221,49 @@ export class UiSrefDirective extends AsyncDirective {
   }
 }
 
+/**
+ * Directive that creates state-based navigation links.
+ *
+ * The `uiSref` directive transforms elements (typically `<a>` tags) into
+ * UI-Router navigation links. It automatically generates the `href` attribute
+ * based on the target state and handles click events to perform state transitions.
+ *
+ * **Arguments:**
+ * - `state` - The target state name (can be relative like `.child` or `^.sibling`)
+ * - `params` - Optional state parameters (see [[RawParams]])
+ * - `options` - Optional transition options (see [[TransitionOptions]])
+ *
+ * @example Basic usage
+ * ```ts
+ * import { uiSref } from 'lit-ui-router';
+ * import { html } from 'lit';
+ *
+ * html`<a ${uiSref('home')}>Go Home</a>`
+ * ```
+ *
+ * @example With parameters
+ * ```ts
+ * html`<a ${uiSref('user.detail', { userId: 123 })}>View User</a>`
+ * ```
+ *
+ * @example With transition options
+ * ```ts
+ * html`<a ${uiSref('dashboard', {}, { reload: true })}>Reload Dashboard</a>`
+ * ```
+ *
+ * @example Relative state references
+ * ```ts
+ * // Navigate to child state
+ * html`<a ${uiSref('.child')}>Go to Child</a>`
+ *
+ * // Navigate to sibling state
+ * html`<a ${uiSref('^.sibling')}>Go to Sibling</a>`
+ * ```
+ *
+ * @see [[RawParams]]
+ * @see [[TransitionOptions]]
+ * @see [[DirectiveResult]]
+ *
+ * @category directives
+ */
 export const uiSref = directive(UiSrefDirective);

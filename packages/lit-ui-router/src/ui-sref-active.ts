@@ -33,16 +33,35 @@ interface TransEvt {
   status?: SrefStatus;
 }
 
+/**
+ * Event name dispatched when a transition state changes.
+ * @internal
+ */
 export const TRANSITION_STATE_CHANGE_EVENT = 'transitionStateChange';
 
+/**
+ * Enum representing the different stages of a transition.
+ * @internal
+ */
 export enum TransitionStateChange {
+  /** Transition has started */
   start = 'start',
+  /** Transition completed successfully */
   success = 'success',
+  /** Transition failed with an error */
   error = 'error',
 }
 
 /**
- * UISref status emitted from [[UISrefStatus]]
+ * Status object representing the active state of a uiSref link.
+ *
+ * This interface describes the relationship between a link (or container
+ * with links) and the current router state.
+ *
+ * @see {@link uiSrefActive}
+ * @see [[TargetState]]
+ *
+ * @category types
  */
 export interface SrefStatus {
   /** The sref's target state (or one of its children) is currently active */
@@ -116,28 +135,61 @@ export function mergeSrefStatus(
   };
 }
 
+/**
+ * Parameters for the uiSrefActive directive.
+ *
+ * @see {@link uiSrefActive}
+ *
+ * @category types
+ */
 export interface UiSrefActiveParams {
+  /** CSS classes to add when the state (or a child state) is active */
   activeClasses: string[];
+  /** CSS classes to add only when the exact state is active */
   exactClasses: string[];
+  /** The state name to check for active status */
   state: string;
+  /** State parameters to match */
   params: RawParams;
+  /** Transition options */
   options: TransitionOptions;
+  /** Target states from nested uiSref directives */
   targetStates: TargetState[];
 }
 
+/** @internal */
 let _first: UiSrefActiveDirective | null = null;
 
 type deregisterFn = () => void;
 
+/**
+ * Directive class that adds CSS classes based on active state.
+ *
+ * This directive is used internally by the {@link uiSrefActive} directive function.
+ * It watches the current router state and applies CSS classes to elements
+ * when their associated states are active.
+ *
+ * The directive can operate in two modes:
+ * 1. **Explicit state**: Provide a state name to watch
+ * 2. **Container mode**: Automatically watch nested uiSref directives
+ *
+ * @see {@link uiSrefActive} for the public API
+ * @see [[AsyncDirective]]
+ * @see {@link SrefStatus}
+ *
+ * @category directives
+ */
 export class UiSrefActiveDirective extends AsyncDirective {
   element: Element | null = null;
 
   uiRouter: UIRouterLit | undefined;
+  /** @internal */
   seekRouter() {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
   parentView: UiView | null = null;
+  /** @internal */
   seekParentView() {
     this.parentView = UiView.seekParentView(this.element!);
   }
@@ -157,9 +209,12 @@ export class UiSrefActiveDirective extends AsyncDirective {
   targetStates = new Set<TargetState>();
   uiSrefs = new WeakMap<TargetState, UiSrefElement>();
 
+  /** @internal */
   _deregisterOnStart: deregisterFn | undefined;
+  /** @internal */
   _deregisterOnStatesChanged: deregisterFn | undefined;
 
+  /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
     if (partInfo.type !== PartType.ELEMENT) {
@@ -171,6 +226,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     _first = _first || this;
   }
 
+  /** @internal */
   render({ activeClasses, exactClasses }: Partial<UiSrefActiveParams>) {
     if (!this._firstUpdated) {
       return noChange;
@@ -194,6 +250,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     return noChange;
   }
 
+  /** @internal */
   getOptions(): TransitionOptions {
     const defaultOpts: TransitionOptions = {
       relative: this.parentView?.viewContext?.name,
@@ -260,6 +317,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     return result;
   }
 
+  /** @internal */
   async update(
     part: ElementPart,
     [
@@ -293,6 +351,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     }
   }
 
+  /** @internal */
   doRender = () => {
     return this.render({
       activeClasses: this.activeClasses,
@@ -300,7 +359,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
     });
   };
 
+  /** @internal */
   _firstUpdated = false;
+  /** @internal */
   async firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
     if (this._firstUpdated || !this.isConnected) {
       return;
@@ -352,6 +413,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this._firstUpdated = true;
   }
 
+  /** @internal */
   disconnected() {
     if (!this.element) {
       return;
@@ -369,6 +431,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this._deregisterOnStatesChanged?.();
   }
 
+  /** @internal */
   createTransitionStateChangeEvent(
     evt: TransitionStateChange,
     trans: Transition,
@@ -385,12 +448,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
     });
   }
 
+  /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent) => {
     const { targetState } = event.detail;
     this.targetStates.add(targetState);
     this.uiSrefs.set(targetState, event.target as UiSrefElement);
   };
 
+  /** @internal */
   onTransitionStateChange = async (e: Event) => {
     const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
@@ -405,6 +470,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.doRender();
   };
 
+  /** @internal */
   getStatus(transEvt?: TransEvt): SrefStatus | undefined {
     const { targetStates } = this;
     if (!targetStates.size) {
@@ -417,6 +483,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     return statuses.reduce(mergeSrefStatus);
   }
 
+  /** @internal */
   onTransitionStart = (trans: Transition) => {
     this.element!.dispatchEvent(
       this.createTransitionStateChangeEvent(TransitionStateChange.start, trans),
@@ -441,6 +508,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     );
   };
 
+  /** @internal */
   onStatesChanged = () => {
     const { active, exact } = this.getStatus() || {};
     this.active = active;
@@ -449,4 +517,69 @@ export class UiSrefActiveDirective extends AsyncDirective {
   };
 }
 
+/**
+ * Directive that adds CSS classes based on active router state.
+ *
+ * The `uiSrefActive` directive watches the current router state and applies
+ * CSS classes to elements when their associated states are active. It supports
+ * both "active" classes (applied when the state or any child state is active)
+ * and "exact" classes (applied only when the exact state is active).
+ *
+ * **Arguments:**
+ * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, and optional state/params
+ *
+ * @example Basic usage with nested uiSref
+ * ```ts
+ * import { uiSref, uiSrefActive } from 'lit-ui-router';
+ * import { html } from 'lit';
+ *
+ * html`
+ *   <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}>
+ *     Home
+ *   </a>
+ * `
+ * ```
+ *
+ * @example With exact matching
+ * ```ts
+ * html`
+ *   <a ${uiSref('users')}
+ *      ${uiSrefActive({
+ *        activeClasses: ['nav-active'],
+ *        exactClasses: ['nav-exact']
+ *      })}>
+ *     Users
+ *   </a>
+ * `
+ * ```
+ *
+ * @example Container mode (watches nested uiSref directives)
+ * ```ts
+ * html`
+ *   <nav ${uiSrefActive({ activeClasses: ['section-active'] })}>
+ *     <a ${uiSref('users')}>Users</a>
+ *     <a ${uiSref('users.list')}>List</a>
+ *     <a ${uiSref('users.create')}>Create</a>
+ *   </nav>
+ * `
+ * ```
+ *
+ * @example Explicit state (without nested uiSref)
+ * ```ts
+ * html`
+ *   <div ${uiSrefActive({
+ *     state: 'dashboard',
+ *     activeClasses: ['dashboard-active']
+ *   })}>
+ *     Dashboard content
+ *   </div>
+ * `
+ * ```
+ *
+ * @see {@link SrefStatus}
+ * @see {@link UiSrefActiveParams}
+ * @see [[DirectiveResult]]
+ *
+ * @category directives
+ */
 export const uiSrefActive = directive(UiSrefActiveDirective);

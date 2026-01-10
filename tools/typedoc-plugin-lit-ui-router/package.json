@@ -1,0 +1,28 @@
+{
+  "name": "typedoc-plugin-lit-ui-router",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "lint": "eslint ."
+  },
+  "peerDependencies": {
+    "typedoc": "^0.28.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "typedoc": "^0.28.0",
+    "typescript": "5.8.3"
+  }
+}

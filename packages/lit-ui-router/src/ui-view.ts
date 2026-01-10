@@ -31,6 +31,7 @@ import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
 /** @internal */
 let viewIdCounter = 0;
 
+/** @internal */
 export interface UiViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
@@ -45,13 +46,7 @@ type UiViewContextEvent = CustomEvent<UiViewContextEventDetail>;
 type deregisterFn = () => void;
 
 /**
- * @summary
- *
- * This is the <code>&lt;ui-view&gt;</code> component.
- *
- * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
- * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
- *
+ * @hideconstructor
  * @event {CustomEvent} ui-router-context
  *
  * This event is fired to obtain the <code>uiRouter</code> instance,
@@ -62,6 +57,15 @@ type deregisterFn = () => void;
  * @event {CustomEvent} ui-view-context
  *
  * This event is fired to obtain the parent <code>&lt;ui-view&gt;</code>.
+ *
+ * @summary
+ *
+ * This is the <code>&lt;ui-view&gt;</code> component.
+ *
+ * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
+ * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
+ *
+
  */
 @customElement('ui-view')
 export class UiView extends LitElement {
@@ -144,6 +148,7 @@ export class UiView extends LitElement {
     event.detail.parentView = this;
   };
 
+  /** @internal */
   connectedCallback() {
     super.connectedCallback();
     this.addEventListener(
@@ -237,6 +242,7 @@ export class UiView extends LitElement {
     );
   }
 
+  /** @internal */
   disconnectedCallback() {
     super.disconnectedCallback();
     this.removeEventListener(
@@ -272,6 +278,7 @@ export class UiView extends LitElement {
     }
   }
 
+  /** @internal */
   requestUpdate(...args: Parameters<LitElement['requestUpdate']>) {
     super.requestUpdate(...args);
     const instance = this.firstElementChild as LitElement;
@@ -351,6 +358,7 @@ export class UiView extends LitElement {
     return (this.viewContext as StateObject).self;
   }
 
+  /** @internal */
   render() {
     if (!this.component || !this.viewAddress) {
       return this.inner.cloneNode(true);
@@ -378,5 +386,6 @@ export class UiView extends LitElement {
 }
 
 export interface UiView {
+  /** @internal */
   constructor: typeof UiView;
 }
