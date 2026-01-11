@@ -7,7 +7,7 @@
     "e2e": "cypress open",
     "test:cypress": "cypress run",
     "docs:start-server": "pnpm --filter docs run wrangler:dev --port 8787",
-    "test": "start-server-and-test docs:start-server 'http://localhost:8787' test:cypress",
+    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/' test:cypress",
     "build": "tsc",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
