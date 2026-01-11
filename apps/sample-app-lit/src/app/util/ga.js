@@ -1,3 +1,5 @@
+import { resolveLocationPlugin } from './featureDetection.js';
+
 const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
   .VITE_GOOGLE_ANALYTICS_TRACKING_ID;
 
@@ -30,11 +32,12 @@ function trackPageView(event) {
   if (!event || !window.gtag) {
     return;
   }
-  if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE) {
-    console.debug('manual gtag page_view tracking skipped', event);
-  } else {
+  // Only send manual page views for hash plugin (pushState/navigation handle this automatically)
+  if (resolveLocationPlugin() === 'hash') {
     console.debug('gtag page_view', event);
     window.gtag('event', 'page_view', event);
+  } else {
+    console.debug('manual gtag page_view tracking skipped', event);
   }
 }
 

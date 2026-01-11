@@ -7,7 +7,7 @@ export default defineConfig({
   video: true,
   chromeWebSecurity: false,
   e2e: {
-    baseUrl: `http://localhost:5173/app/`,
+    baseUrl: `http://localhost:8787/app/`,
     specPattern: './src/integration/**/*.cy.{js,jsx,ts,tsx}',
     supportFile: './src/support/e2e.ts',
   },

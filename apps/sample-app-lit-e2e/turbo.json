@@ -7,7 +7,7 @@
       "outputs": []
     },
     "test": {
-      "with": ["docs#e2e"],
+      "dependsOn": ["build", "^test"],
       "cache": false
     }
   }

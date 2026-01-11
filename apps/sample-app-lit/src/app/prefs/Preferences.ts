@@ -2,6 +2,7 @@ import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
 import AppConfig from '../global/appConfig.js';
+import './FeatureFlagsPanel.js';
 
 @customElement('sample-preferences')
 export class Preferences extends LitElement {
@@ -43,6 +44,7 @@ export class Preferences extends LitElement {
           Save
         </button>
       </div>
+      <feature-flags-panel></feature-flags-panel>
     </div>`;
   }
 }

@@ -1,0 +1,33 @@
+{
+  "name": "ui-router-navigation-location-plugin",
+  "version": "0.0.0",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/simshanith/lit-ui-router"
+  },
+  "private": true,
+  "type": "module",
+  "module": "./dist/index.js",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@uirouter/core": "^6.0.8"
+  },
+  "devDependencies": {
+    "@types/dom-navigation": "^1.0.6",
+    "@vitest/browser-playwright": "^4.0.16",
+    "@vitest/coverage-v8": "^4.0.16",
+    "playwright": "1.54.1",
+    "prettier": "3.6.2",
+    "release-it": "^19.2.2",
+    "typescript": "5.8.3",
+    "vitest": "^4.0.16"
+  }
+}

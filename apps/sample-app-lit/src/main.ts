@@ -4,6 +4,7 @@ import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 import customElementsJsonUrl from 'lit-ui-router/dist/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
+import { featureFlags } from './app/util/featureDetection.js';
 
 let router: UIRouterLit | undefined;
 const handleUiRouterContext = {
@@ -25,14 +26,14 @@ const handleUiRouterContext = {
 const root = document.getElementById('root')!;
 
 render(
-  html`
-    <ui-router @ui-router-context=${handleUiRouterContext}>
+  html` <ui-router @ui-router-context=${handleUiRouterContext}>
       <div>
         <ui-view></ui-view>
       </div>
     </ui-router>
-    <api-docs src=${customElementsJsonUrl}></api-docs>
-  `,
+    ${featureFlags.get('enable-api-docs')
+      ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
+      : ''}`,
   root,
 );
 

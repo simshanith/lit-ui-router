@@ -2,7 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
-    "types": ["vite/client"],
+    "types": ["vite/client", "dom-navigation"],
     "noEmit": true,
     "outDir": "dist",
     "rootDir": "."

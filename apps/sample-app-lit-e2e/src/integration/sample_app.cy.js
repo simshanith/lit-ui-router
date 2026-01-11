@@ -1,3 +1,5 @@
+import { visitWithFeatures } from '../support/e2e';
+
 const EMAIL_ADDRESS = 'myself@angular.dev';
 
 describe('unauthenticated sample app', () => {
@@ -6,18 +8,21 @@ describe('unauthenticated sample app', () => {
   });
 
   it('loads', () => {
-    cy.visit('/');
+    visitWithFeatures('/');
   });
 
   it('renders home', () => {
-    cy.visit('/home');
+    visitWithFeatures('/home');
     cy.get('button.btn').contains('Messages');
     cy.get('button.btn').contains('Contacts');
     cy.get('button.btn').contains('Preferences');
   });
 
   it('asks for authentication', () => {
-    cy.visit('/home').get('button.btn').contains('Preferences').click();
+    visitWithFeatures('/home')
+      .get('button.btn')
+      .contains('Preferences')
+      .click();
 
     cy.contains('Log In');
     cy.contains('Username');
@@ -29,7 +34,7 @@ describe('unauthenticated sample app', () => {
   it('can authenticate', () => {
     expect(sessionStorage.getItem('appConfig')).to.equal(null);
 
-    cy.visit('/prefs');
+    visitWithFeatures('/prefs');
 
     cy.contains('Log In');
     cy.contains('Username');
@@ -55,7 +60,7 @@ describe('authenticated sample app', () => {
     };
 
     if (!_appConfig) {
-      cy.visit('/login');
+      visitWithFeatures('/login');
       cy.get('select')
         .contains('myself')
         .parent('select')
@@ -76,23 +81,23 @@ describe('authenticated sample app', () => {
   });
 
   it('navigates to Preferences by url', () => {
-    cy.visit('/prefs');
+    visitWithFeatures('/prefs');
     cy.contains('Reset All Data');
   });
 
   it('navigates to Contacts by url', () => {
-    cy.visit('/contacts');
+    visitWithFeatures('/contacts');
     cy.contains('Select a contact');
   });
 
   it('navigates to Messages by url', () => {
-    cy.visit('/mymessages');
+    visitWithFeatures('/mymessages');
     cy.get('table').contains('Sender');
     cy.get('table').contains('Subject');
   });
 
   it('can send a message', () => {
-    cy.visit('/mymessages');
+    visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
     cy.contains('New Message').click();
     cy.url().should('include', '/mymessages/compose');
@@ -109,7 +114,7 @@ describe('authenticated sample app', () => {
   });
 
   it('can save a draft', () => {
-    cy.visit('/mymessages');
+    visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
     cy.contains('New Message').click();
     cy.get('input#to').type('somebody@somewhere.com');
@@ -125,7 +130,7 @@ describe('authenticated sample app', () => {
   });
 
   it('prompts to save a message being composed', () => {
-    cy.visit('/mymessages');
+    visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
     cy.contains('New Message').click();
     cy.get('input#to').type('somebody@somewhere.com');
@@ -149,7 +154,7 @@ describe('authenticated sample app', () => {
   });
 
   it('navigates through folders', () => {
-    cy.visit('/mymessages');
+    visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
 
     cy.contains('inbox').parent('li').should('have.class', 'selected');
@@ -178,7 +183,7 @@ describe('authenticated sample app', () => {
       cy.get('.message h4').contains(subject);
     };
 
-    cy.visit('/mymessages/finance');
+    visitWithFeatures('/mymessages/finance');
     cy.contains('finance').parent('li').should('have.class', 'selected');
 
     selectMessage('You look angerly', '5648b50cf8ea6dfc7d1a40a8');
@@ -188,7 +193,7 @@ describe('authenticated sample app', () => {
   });
 
   it('navigates through contacts', () => {
-    cy.visit('/contacts');
+    visitWithFeatures('/contacts');
 
     const selectContact = (name, id) => {
       cy.contains(name).click();

@@ -19,9 +19,6 @@
     "build": {
       "dependsOn": ["^build", "^docs:api"],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
-    },
-    "e2e": {
-      "interruptible": true
     }
   }
 }
