@@ -1,4 +1,5 @@
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
   "compatibility_date": "2025-07-12",
   "assets": {

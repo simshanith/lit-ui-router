@@ -7,6 +7,10 @@
       "cache": false,
       "persistent": true
     },
+    "wrangler": {
+      "dependsOn": ["^transit"],
+      "cache": false
+    },
     "wrangler:dev": {
       "dependsOn": ["^docs:api", "build"],
       "cache": false,
