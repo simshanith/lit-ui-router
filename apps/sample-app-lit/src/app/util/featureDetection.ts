@@ -25,7 +25,6 @@ export function isValidLocationPlugin(
   return value === 'pushState' || value === 'navigation' || value === 'hash';
 }
 
-
 /**
  * Resolves location plugin with priority:
  * 1. URL param ?feature-location-plugin=...
@@ -33,13 +32,11 @@ export function isValidLocationPlugin(
  * 3. Env var VITE_SAMPLE_APP_LOCATION_PLUGIN
  */
 export function resolveLocationPluginFeature(): string | undefined {
-  const feature = featureFlags.get('location-plugin')
+  const feature = featureFlags.get('location-plugin');
   if (isValidLocationPlugin(feature)) return feature;
 
   // Check env var
-  return import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as
-    | string
-    | undefined;
+  return import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as string | undefined;
 }
 
 /**
@@ -62,7 +59,7 @@ const FLAG_DEFAULTS: FeatureFlagDefinitions = {
   'location-plugin': undefined,
   'enable-visualizer': true,
   'enable-trace': import.meta.env.VITE_TRACE === 'true',
-  'enable-api-docs':  true,
+  'enable-api-docs': true,
 };
 
 const STORAGE_KEY = 'featureFlags';
@@ -82,7 +79,10 @@ export class FeatureFlags {
         this._flags = JSON.parse(stored);
       }
     } catch (error) {
-      console.error('Failed to load feature flags from session storage:', error);
+      console.error(
+        'Failed to load feature flags from session storage:',
+        error,
+      );
       this._flags = {};
     }
   }

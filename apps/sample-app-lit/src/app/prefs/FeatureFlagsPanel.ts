@@ -1,6 +1,9 @@
 import { html, LitElement, css, TemplateResult } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { featureFlags, FeatureFlagDefinitions } from '../util/featureDetection.js';
+import {
+  featureFlags,
+  FeatureFlagDefinitions,
+} from '../util/featureDetection.js';
 
 interface FlagConfig {
   key: keyof FeatureFlagDefinitions;

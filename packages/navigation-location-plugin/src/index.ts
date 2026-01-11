@@ -18,7 +18,11 @@ export class NavigationLocationService extends BaseLocationServices {
   constructor(router?: UIRouter) {
     super(router!, false);
     this._config = router!.urlService.config;
-    root.navigation.addEventListener('currententrychange', this._listener, false);
+    root.navigation.addEventListener(
+      'currententrychange',
+      this._listener,
+      false,
+    );
   }
 
   /**
@@ -80,7 +84,6 @@ export class NavigationLocationService extends BaseLocationServices {
     root.navigation.removeEventListener('currententrychange', this._listener);
   }
 }
-
 
 /** A `UIRouterPlugin` that gets/sets the current location using the browser's `location` and `navigation` apis */
 export const navigationLocationPlugin = locationPluginFactory(

@@ -52,7 +52,8 @@ export function configureRouter(router = new UIRouterLit()) {
   }
 
   const locationPluginKey = resolveLocationPlugin();
-  const { plugin: locationPlugin, message } = locationPluginConfig[locationPluginKey];
+  const { plugin: locationPlugin, message } =
+    locationPluginConfig[locationPluginKey];
   router.plugin(locationPlugin);
   console.info(message);
 
@@ -61,8 +62,8 @@ export function configureRouter(router = new UIRouterLit()) {
       const url = new URL(event.destination.url);
       event.intercept({
         async handler() {
-          console.debug("intercepted navigation", url);
-        }
+          console.debug('intercepted navigation', url);
+        },
       });
     });
   }
@@ -109,7 +110,6 @@ export function configureRouter(router = new UIRouterLit()) {
   router.start();
   return router;
 }
-
 
 if (featureFlags.get('enable-trace')) {
   trace.enable(Category.TRANSITION, Category.VIEWCONFIG, Category.UIVIEW);

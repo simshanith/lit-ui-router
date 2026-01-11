@@ -26,15 +26,14 @@ const handleUiRouterContext = {
 const root = document.getElementById('root')!;
 
 render(
-  html`
-    <ui-router @ui-router-context=${handleUiRouterContext}>
+  html` <ui-router @ui-router-context=${handleUiRouterContext}>
       <div>
         <ui-view></ui-view>
       </div>
     </ui-router>
-    ${ featureFlags.get('enable-api-docs') ?
-      html`<api-docs src=${customElementsJsonUrl}></api-docs>` :
-      ''}`,
+    ${featureFlags.get('enable-api-docs')
+      ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
+      : ''}`,
   root,
 );
 
