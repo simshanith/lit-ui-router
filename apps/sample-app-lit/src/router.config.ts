@@ -16,6 +16,7 @@ import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
+  featureFlags,
   resolveLocationPlugin,
   LocationPluginFeatureSymbol,
 } from './app/util/featureDetection.js';
@@ -24,10 +25,7 @@ export const HOME = 'home';
 export const NESTED_HOME = 'home.nested';
 export const UNLISTED_NESTED_HOME = 'home.unlisted';
 
-const locationPluginConfig: Record<
-  LocationPluginFeatureSymbol,
-  { plugin: typeof hashLocationPlugin; message: string }
-> = {
+const locationPluginConfig = {
   navigation: {
     plugin: navigationLocationPlugin,
     message: '🧑‍🔬 *experimental* navigationLocationPlugin enabled',
@@ -40,7 +38,10 @@ const locationPluginConfig: Record<
     plugin: hashLocationPlugin,
     message: 'hashLocationPlugin enabled',
   },
-};
+} satisfies Record<
+  LocationPluginFeatureSymbol,
+  { plugin: typeof hashLocationPlugin; message: string }
+>;
 
 export function configureRouter(router = new UIRouterLit()) {
   const BASE_URL: string = import.meta.env.VITE_SAMPLE_APP_BASE_URL;
@@ -50,14 +51,28 @@ export function configureRouter(router = new UIRouterLit()) {
     document.head.appendChild(base);
   }
 
-  const pluginType = resolveLocationPlugin();
-  const { plugin, message } = locationPluginConfig[pluginType];
-  router.plugin(plugin);
+  const locationPluginKey = resolveLocationPlugin();
+  const { plugin: locationPlugin, message } = locationPluginConfig[locationPluginKey];
+  router.plugin(locationPlugin);
   console.info(message);
 
-  import('@uirouter/visualizer').then(({ Visualizer }) =>
-    router.plugin(Visualizer),
-  );
+  if (locationPluginKey === 'navigation') {
+    window.navigation.addEventListener('navigate', (event: NavigateEvent) => {
+      const url = new URL(event.destination.url);
+      event.intercept({
+        async handler() {
+          console.debug("intercepted navigation", url);
+        }
+      });
+    });
+  }
+
+  if (featureFlags.get('enable-visualizer')) {
+    import('@uirouter/visualizer').then(({ Visualizer }) =>
+      router.plugin(Visualizer),
+    );
+  }
+
   router.plugin(DSRPlugin);
   router.plugin(StickyStatesPlugin);
 
@@ -95,6 +110,7 @@ export function configureRouter(router = new UIRouterLit()) {
   return router;
 }
 
-if (import.meta.env.VITE_TRACE === 'true') {
+
+if (featureFlags.get('enable-trace')) {
   trace.enable(Category.TRANSITION, Category.VIEWCONFIG, Category.UIVIEW);
 }

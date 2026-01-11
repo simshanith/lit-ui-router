@@ -14,13 +14,11 @@ import {
 
 export class NavigationLocationService extends BaseLocationServices {
   _config: LocationConfig;
-  _navigation: Navigation;
 
   constructor(router?: UIRouter) {
-    super(router!, true);
+    super(router!, false);
     this._config = router!.urlService.config;
-    this._navigation = root.navigation;
-    root.addEventListener('popstate', this._listener, false);
+    root.navigation.addEventListener('currententrychange', this._listener, false);
   }
 
   /**
@@ -68,28 +66,28 @@ export class NavigationLocationService extends BaseLocationServices {
         ? this._config.baseHref()
         : basePrefix + slash + url;
 
-    this._navigation.navigate(fullUrl, {
+    root.navigation.navigate(fullUrl, {
       state,
       info: {
         title,
       },
-      history: replace ? 'replace' : 'auto',
+      history: replace ? 'replace' : 'push',
     });
   }
 
   public dispose(router: UIRouter) {
     super.dispose(router);
-    root.removeEventListener('popstate', this._listener);
+    root.navigation.removeEventListener('currententrychange', this._listener);
   }
 }
 
+
 /** A `UIRouterPlugin` that gets/sets the current location using the browser's `location` and `navigation` apis */
-export const navigationLocationPlugin: (router: UIRouter) => LocationPlugin =
-  locationPluginFactory(
-    'vanilla.navigationLocation',
-    true,
-    NavigationLocationService satisfies {
-      new (uiRouter?: UIRouter): LocationServices;
-    },
-    BrowserLocationConfig,
-  );
+export const navigationLocationPlugin = locationPluginFactory(
+  'vanilla.navigationLocation',
+  true,
+  NavigationLocationService satisfies {
+    new (uiRouter?: UIRouter): LocationServices;
+  },
+  BrowserLocationConfig,
+) satisfies (router: UIRouter) => LocationPlugin;

@@ -23,6 +23,7 @@
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@types/dom-navigation": "^1.0.6",
     "@types/lodash": "^4.17.10",
     "prettier": "3.6.2",
     "typescript": "5.8.3",

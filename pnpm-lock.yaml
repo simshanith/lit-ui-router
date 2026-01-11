@@ -89,6 +89,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
     devDependencies:
+      '@types/dom-navigation':
+        specifier: ^1.0.6
+        version: 1.0.6
       '@types/lodash':
         specifier: ^4.17.10
         version: 4.17.20
@@ -145,6 +148,9 @@ importers:
       '@spectrum-web-components/icons-workflow':
         specifier: ^1.10.0
         version: 1.10.0
+      '@types/dom-navigation':
+        specifier: ^1.0.6
+        version: 1.0.6
       prettier:
         specifier: 3.6.2
         version: 3.6.2
