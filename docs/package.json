@@ -7,8 +7,8 @@
     "docs": "vitepress dev .",
     "build": "vitepress build .",
     "docs:preview": "vitepress preview .",
-    "wrangler": "wrangler",
-    "wrangler:dev": "wrangler dev",
+    "wrangler": "wrangler --config ../wrangler.jsonc",
+    "wrangler:dev": "npm run wrangler dev",
     "format": "prettier --write \"**/*.{md,json,ts}\"",
     "format:check": "prettier --check \"**/*.{md,json,ts}\"",
     "lint": "eslint .",
@@ -23,7 +23,7 @@
     "vite": "7.0.5",
     "vite-plugin-static-copy": "^3.1.1",
     "vitepress": "1.6.3",
-    "wrangler": "^4.26.0"
+    "wrangler": "^4.58.0"
   },
   "dependencies": {
     "vue": "^3.5.26"
