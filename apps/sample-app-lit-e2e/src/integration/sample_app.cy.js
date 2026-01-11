@@ -19,7 +19,10 @@ describe('unauthenticated sample app', () => {
   });
 
   it('asks for authentication', () => {
-    visitWithFeatures('/home').get('button.btn').contains('Preferences').click();
+    visitWithFeatures('/home')
+      .get('button.btn')
+      .contains('Preferences')
+      .click();
 
     cy.contains('Log In');
     cy.contains('Username');

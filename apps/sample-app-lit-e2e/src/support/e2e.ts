@@ -17,9 +17,13 @@ export function visitWithFeatures(
   }
   const isHashMode = locationPlugin === 'hash';
   const query = params.toString();
-  const url = query ?
-                  isHashMode ? `?${query}#${path}` : `${path}?${query}` :
-                  isHashMode ? `#${path}`          : path;
+  const url = query
+    ? isHashMode
+      ? `?${query}#${path}`
+      : `${path}?${query}`
+    : isHashMode
+      ? `#${path}`
+      : path;
   return cy.visit(url);
 }
 
