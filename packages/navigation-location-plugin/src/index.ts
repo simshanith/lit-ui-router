@@ -60,7 +60,7 @@ export class NavigationLocationService extends BaseLocationServices {
     return pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
   }
 
-  protected _set(state: any, title: string, url: string, replace: boolean) {
+  protected _set(state: unknown, title: string, url: string, replace: boolean) {
     const basePrefix = this._getBasePrefix();
     const slash = url && url[0] !== '/' ? '/' : '';
     const fullUrl =
