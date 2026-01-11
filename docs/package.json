@@ -8,11 +8,10 @@
     "build": "vitepress build .",
     "docs:preview": "vitepress preview .",
     "wrangler": "wrangler --config ../wrangler.jsonc",
-    "wrangler:dev": "npm run wrangler dev",
+    "wrangler:dev": "pnpm run wrangler dev",
     "format": "prettier --write \"**/*.{md,json,ts}\"",
     "format:check": "prettier --check \"**/*.{md,json,ts}\"",
-    "lint": "eslint .",
-    "e2e": "E2E_TEST=true vitepress dev ."
+    "lint": "eslint ."
   },
   "devDependencies": {
     "@spectrum-web-components/icons-workflow": "^1.10.0",

@@ -24,29 +24,6 @@ export default defineConfig({
         },
       ],
     }),
-    {
-      name: 'sample-app-lit-e2e',
-      configureServer(server) {
-        server.middlewares.use((req, res, next) => {
-          if (process.env.E2E_TEST && req.url?.includes('/e2e-done')) {
-            res.statusCode = 200;
-            res.end();
-            server.close();
-            return;
-          }
-
-          if (
-            req.url?.startsWith('/app.html/') ||
-            req.url?.startsWith('/app/') ||
-            req.url === '/app'
-          ) {
-            req.url = '/app.html';
-          }
-
-          next();
-        });
-      },
-    },
   ],
 
   server: {

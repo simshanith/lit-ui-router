@@ -15,10 +15,32 @@ import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
 import googleAnalyticsHook from './app/util/ga.js';
+import {
+  resolveLocationPlugin,
+  LocationPluginFeatureSymbol,
+} from './app/util/featureDetection.js';
 
 export const HOME = 'home';
 export const NESTED_HOME = 'home.nested';
 export const UNLISTED_NESTED_HOME = 'home.unlisted';
+
+const locationPluginConfig: Record<
+  LocationPluginFeatureSymbol,
+  { plugin: typeof hashLocationPlugin; message: string }
+> = {
+  navigation: {
+    plugin: navigationLocationPlugin,
+    message: '🧑‍🔬 *experimental* navigationLocationPlugin enabled',
+  },
+  pushState: {
+    plugin: pushStateLocationPlugin,
+    message: 'pushStateLocationPlugin enabled',
+  },
+  hash: {
+    plugin: hashLocationPlugin,
+    message: 'hashLocationPlugin enabled',
+  },
+};
 
 export function configureRouter(router = new UIRouterLit()) {
   const BASE_URL: string = import.meta.env.VITE_SAMPLE_APP_BASE_URL;
@@ -28,16 +50,10 @@ export function configureRouter(router = new UIRouterLit()) {
     document.head.appendChild(base);
   }
 
-  if (import.meta.env.VITE_SAMPLE_APP_NAVIGATION_API) {
-    router.plugin(navigationLocationPlugin);
-    console.info('🧑‍🔬 *experimental* navigationLocationPlugin enabled');
-  } else if (import.meta.env.VITE_SAMPLE_APP_PUSH_STATE) {
-    router.plugin(pushStateLocationPlugin);
-    console.info('pushStateLocationPlugin enabled');
-  } else {
-    router.plugin(hashLocationPlugin);
-    console.info('hashLocationPlugin enabled');
-  }
+  const pluginType = resolveLocationPlugin();
+  const { plugin, message } = locationPluginConfig[pluginType];
+  router.plugin(plugin);
+  console.info(message);
 
   import('@uirouter/visualizer').then(({ Visualizer }) =>
     router.plugin(Visualizer),
