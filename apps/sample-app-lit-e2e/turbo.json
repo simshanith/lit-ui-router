@@ -7,7 +7,6 @@
       "outputs": []
     },
     "test": {
-      "with": ["docs#e2e"],
       "cache": false
     }
   }
