@@ -1,7 +1,7 @@
 import { html, LitElement, PropertyValues } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
-import { UIViewInjectedProps } from 'lit-ui-router';
+import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
@@ -17,10 +17,9 @@ export class App extends LitElement {
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
-  constructor(props?: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps) {
     super();
-
-    if (props) this._uiViewProps = props;
+    this._uiViewProps = props;
   }
 
   shouldUpdate(changedProperties: PropertyValues) {
@@ -78,4 +77,4 @@ export class App extends LitElement {
   }
 }
 
-export default App;
+export default App satisfies RoutedLitElement;
