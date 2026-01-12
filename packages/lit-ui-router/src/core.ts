@@ -19,7 +19,6 @@ import {
   LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
-  LitViewDeclarationObject,
   LitViewDeclarationElement,
   DefaultResolvesType,
 } from './interface.js';
@@ -86,12 +85,6 @@ export function isLitViewDeclarationTemplate<
     return true;
   }
   return false;
-}
-
-export function isLitViewDeclarationObject<
-  T extends DefaultResolvesType = DefaultResolvesType,
->(config: LitViewDeclaration<T>): config is LitViewDeclarationObject<T> {
-  return 'component' in (config as LitViewDeclarationObject<T>);
 }
 
 /**
