@@ -1,11 +1,11 @@
 import { LitElement, html } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
+import { RoutedLitElement, UIViewInjectedProps, uiSref } from 'lit-ui-router';
 
 import './ContactDetail.js';
 import { Contact } from './interface.js';
 
-interface ContactViewResolves {
+export interface ContactViewResolves {
   contact: Contact;
 }
 
@@ -20,7 +20,7 @@ export class ContactView extends LitElement {
   }
 
   get contact() {
-    return this._uiViewProps.resolves!.contact;
+    return this._uiViewProps.resolves.contact;
   }
 
   render() {
@@ -44,4 +44,4 @@ export class ContactView extends LitElement {
   }
 }
 
-export default ContactView;
+export default ContactView satisfies RoutedLitElement<ContactViewResolves>;

@@ -1,11 +1,16 @@
 import { html } from 'lit';
 import { Transition } from '@uirouter/core';
-import { UIViewInjectedProps } from 'lit-ui-router';
+import {
+  UIViewInjectedProps,
+  LitStateDeclaration,
+  LitViewDeclarationElement,
+  LitViewDeclarationTemplate,
+} from 'lit-ui-router';
 
 import { ContactsStorage } from '../global/dataSources.js';
 
 import './Contacts.js';
-import ContactView from './ContactView.js';
+import ContactView, { type ContactViewResolves } from './ContactView.js';
 import EditContact from './EditContact.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
@@ -34,9 +39,9 @@ const contactsState = {
   },
   sticky: true,
   views: {
-    contacts: (props: UIViewInjectedProps) => {
+    contacts: ((props: UIViewInjectedProps) => {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
-    },
+    }) as LitViewDeclarationTemplate,
   },
 };
 
@@ -53,12 +58,13 @@ const viewContactState = {
     {
       token: 'contact',
       deps: ['$transition$'],
-      resolveFn: ($transition$: Transition) =>
+      resolveFn: async ($transition$: Transition) =>
         ContactsStorage.get($transition$.params().contactId),
     },
   ],
-  component: ContactView,
-};
+  component:
+    ContactView satisfies LitViewDeclarationElement<ContactViewResolves>,
+} satisfies LitStateDeclaration<ContactViewResolves>;
 
 /**
  * This state allows a user to edit a contact
@@ -75,7 +81,7 @@ const editContactState = {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
     // This could also have been written using ui-view@state addressing: $default@contacts
     // Or, this could also have been written using absolute ui-view addressing: !$default.contacts.$default
-    '^.^.$default': EditContact,
+    '^.^.$default': EditContact as LitViewDeclarationElement,
   },
 };
 
@@ -87,7 +93,7 @@ const editContactState = {
 const newContactState = {
   name: 'contacts.new',
   url: '/new',
-  component: EditContact,
+  component: EditContact as LitViewDeclarationElement,
 };
 
 export const states = [
@@ -95,4 +101,5 @@ export const states = [
   viewContactState,
   editContactState,
   newContactState,
-];
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic handles narrowing
+] satisfies LitStateDeclaration<any>[];

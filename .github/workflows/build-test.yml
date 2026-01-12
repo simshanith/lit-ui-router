@@ -1,3 +1,5 @@
+# CI pipeline for pull requests and main branch pushes.
+# Runs build, tests (Vitest + Playwright + Cypress), and coverage reporting.
 name: Build and Test
 
 on:
@@ -8,11 +10,14 @@ on:
 
 jobs:
   build_and_test:
+    # Security: Only run on first-party PRs (not forks) to protect secrets.
+    # Fork PRs don't have access to secrets, so they would fail anyway.
+    # Maintainers should review fork PRs and run CI manually.
     if: ${{ github.event_name == 'push' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository ) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: write # Required for PR coverage comments
 
     steps:
       - name: 'Checkout code'
