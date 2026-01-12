@@ -37,6 +37,8 @@ The release workflows use GitHub protected environments to ensure proper authori
   - Pushing tags
   - Creating PRs that trigger downstream workflows
 
+This is a [Fine-Grained Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens) with  **Read** and **Write** access to [artifact metadata](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-artifact-metadata), [attestations api](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-attestations), [code](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-contents), and [pull requests](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-pull-requests)
+
 - **`CODECOV_TOKEN`** - Used for uploading coverage reports
 
 The `publish` environment uses **OIDC Trusted Publishing** instead of NPM tokens. See [NPM Trusted Publishers](https://docs.npmjs.com/trusted-publishers) for setup.
@@ -111,7 +113,7 @@ The final release stage:
    - Check changelog updates
 
 3. **Merge the release PR:**
-   - Merge with squash or merge commit
+   - Merge with squash commit
    - The merge triggers tagging automatically
 
 4. **Verify the release:**
@@ -167,8 +169,7 @@ Release behavior is configured via `packages/lit-ui-router/.release-it.json`:
     "tagName": "${npm.name}@${version}"
   },
   "github": {
-    "releaseName": "Release ${npm.name}@${version}",
-    "autoGenerate": true
+    "releaseName": "Release ${npm.name}@${version}"
   }
 }
 ```

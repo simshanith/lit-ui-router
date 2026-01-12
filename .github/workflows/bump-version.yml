@@ -34,7 +34,7 @@ on:
 
 permissions:
   contents: write
-  # pull-requests: write
+# pull-requests: write # instead handled by GH_PERSONAL_ACCESS_TOKEN for downstream actions
   # ^ Not using GITHUB_TOKEN for PR creation - PAT required so merging
   # the PR triggers downstream workflows (tag-release, publish)
 
@@ -75,7 +75,7 @@ jobs:
         # Handle the various increment input combinations:
         # - major/minor/patch: Standard semver bumps
         # - other: Custom version string from 'other' input
-        # - none: No bump, use current version
+        # - none: No bump, use current version. No-op unless `other` provided
         run: |
           echo "ACTUAL_INCREMENT=$(
             if [ "$INCREMENT" != "other" ]; then
