@@ -108,6 +108,11 @@ export interface UiOnExit {
   uiCanExit(newTransition?: Transition): HookResult;
 }
 
+/**
+ * Default Resolves Types when not provided to Generic UIViewResolves
+ * @see [[UIViewResolves]]
+ * @category types
+ */
 export type DefaultResolvesType = Record<string, any>;
 
 /**
@@ -116,6 +121,7 @@ export type DefaultResolvesType = Record<string, any>;
  * @template T - The shape of the resolved values object
  *
  * @see [[UIViewInjectedProps]]
+ * @see [[DefaultResolvesType]]
  * @see [[StateDeclaration.resolve]]
  *
  * @category types
