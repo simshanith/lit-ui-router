@@ -19,6 +19,9 @@ import {
   LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
+  LitViewDeclarationObject,
+  LitViewDeclarationElement,
+  DefaultResolvesType,
 } from './interface.js';
 
 /**
@@ -71,9 +74,9 @@ export class LitViewConfig implements ViewConfig {
  * @returns True if the config is a template function
  * @internal
  */
-export function isLitViewDeclarationTemplate(
-  config: LitViewDeclaration,
-): config is LitViewDeclarationTemplate {
+export function isLitViewDeclarationTemplate<T extends DefaultResolvesType = DefaultResolvesType>(
+  config: LitViewDeclaration<T>
+): config is LitViewDeclarationTemplate<T> | LitViewDeclarationElement<T> {
   if (isFunction(config)) {
     if (config.prototype instanceof LitElement) {
       return '_uiViewProps' in config.prototype || config.length === 1;
@@ -83,6 +86,12 @@ export function isLitViewDeclarationTemplate(
   return false;
 }
 
+export function isLitViewDeclarationObject<T extends DefaultResolvesType = DefaultResolvesType>(
+  config: LitViewDeclaration<T>
+): config is LitViewDeclarationObject<T> {
+  return 'component' in (config as LitViewDeclarationObject<T>);
+}
+
 /**
  * Type guard to check if a component is a RoutedLitElement class.
  *
@@ -90,9 +99,9 @@ export function isLitViewDeclarationTemplate(
  * @returns True if the component is a LitElement class
  * @internal
  */
-export function isRoutedLitElement(
+export function isRoutedLitElement<T extends DefaultResolvesType = DefaultResolvesType>(
   component?: unknown,
-): component is RoutedLitElement {
+): component is RoutedLitElement<T> {
   return (component as { prototype: unknown })?.prototype instanceof LitElement;
 }
 
@@ -109,41 +118,46 @@ export function isRoutedLitElement(
  * @returns The normalized views object
  * @internal
  */
-export function litViewsBuilder(state: StateObject) {
-  const views: Record<string, NormalizedLitViewDeclaration> = {},
+export function litViewsBuilder<T extends DefaultResolvesType = DefaultResolvesType>(state: StateObject) {
+  const views: Record<string, NormalizedLitViewDeclaration<T>> = {},
     viewsObject = state.views || {
       $default: pick(state, ['component']),
     };
 
   forEach(
     viewsObject,
-    function (config: NormalizedLitViewDeclaration, name: string) {
+    function (config: LitViewDeclaration<T>, name: string) {
+      let normalizedConfig: NormalizedLitViewDeclaration<T>;
       name = name || '$default'; // Account for views: { "": { template... } }
-      if (isLitViewDeclarationTemplate(config)) config = { component: config };
-      if (Object.keys(config || {}).length === 0) return;
+      if (isLitViewDeclarationTemplate<T>(config)) {
+        normalizedConfig = { component: config as LitViewDeclarationTemplate };
+      } else {
+        normalizedConfig = config as NormalizedLitViewDeclaration<T>;
+      }
+      if (Object.keys(normalizedConfig || {}).length === 0) return;
 
-      config.$type = 'lit';
-      config.$context = state;
-      config.$name = name;
+      normalizedConfig.$type = 'lit';
+      normalizedConfig.$context = state;
+      normalizedConfig.$name = name;
 
-      const normalized = ViewService.normalizeUIViewTarget(
-        config.$context,
-        config.$name,
+      const normalizedTarget = ViewService.normalizeUIViewTarget(
+        normalizedConfig.$context,
+        normalizedConfig.$name,
       );
-      config.$uiViewName = normalized.uiViewName;
-      config.$uiViewContextAnchor = normalized.uiViewContextAnchor;
+      normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
+      normalizedConfig.$uiViewContextAnchor = normalizedTarget.uiViewContextAnchor;
 
-      if (isRoutedLitElement(config.component)) {
-        const Component = config.component;
-        let component: InstanceType<RoutedLitElement>;
-        config.component = (props: UIViewInjectedProps) => {
+      if (isRoutedLitElement<T>(normalizedConfig.component)) {
+        const Component = normalizedConfig.component;
+        let component: InstanceType<RoutedLitElement<T>>;
+        normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
           component = (Component.sticky && component) || new Component(props);
           component._uiViewProps = props;
           return html`${component}`;
         };
       }
 
-      views[name] = viewsObject[name] = config;
+      views[name] = viewsObject[name] = normalizedConfig;
     },
   );
   return views;
