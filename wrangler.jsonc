@@ -1,3 +1,4 @@
+// https://developers.cloudflare.com/workers/static-assets/configuration/
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
