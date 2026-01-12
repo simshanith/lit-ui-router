@@ -52,10 +52,13 @@ jobs:
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: 'packages/lit-ui-router/lit-ui-router-*.tgz'
+      - name: Release version
+        run: |
+          echo "RELEASE_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
       - name: Publish
-        # Create draft release first - allows verification before public visibility
+        # Create draft release first - allows uploading assets after create
         # --npm.skipChecks: Skip npm checks since we're using OIDC auth
-        run: pnpm --filter lit-ui-router exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz" --github.draft true
+        run: pnpm --filter lit-ui-router exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz" --github.draft true --git.tagExclude "\${npm.name}@$RELEASE_VERSION"
+        # Finalize the GitHub release
       - name: Mark Release as final
-        # Finalize the GitHub release after successful npm publish
         run: pnpm --filter lit-ui-router exec -- release-it --no-increment --github.release true --github.update true --no-github.draft

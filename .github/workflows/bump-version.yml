@@ -98,7 +98,13 @@ jobs:
         run: git switch --create "$BRANCH_PREFIX$BUMPED_VERSION"
       - name: Bump version
         # Actually bump the version in package.json and commit
-        run: pnpm --filter lit-ui-router exec release-it --increment "$BUMPED_VERSION" --git.commit true --git.push true
+        run: |
+          pnpm --filter lit-ui-router exec \
+            release-it \
+              --increment "$BUMPED_VERSION" \
+              --git.commit true \
+              --git.push true \
+              --git.commitMessage "$(pnpm --silent --filter lit-ui-router commit:changelog)"
       - name: Create PR
         # Create PR with auto-generated title and body from commit messages
         run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose
