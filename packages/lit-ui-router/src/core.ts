@@ -74,8 +74,10 @@ export class LitViewConfig implements ViewConfig {
  * @returns True if the config is a template function
  * @internal
  */
-export function isLitViewDeclarationTemplate<T extends DefaultResolvesType = DefaultResolvesType>(
-  config: LitViewDeclaration<T>
+export function isLitViewDeclarationTemplate<
+  T extends DefaultResolvesType = DefaultResolvesType,
+>(
+  config: LitViewDeclaration<T>,
 ): config is LitViewDeclarationTemplate<T> | LitViewDeclarationElement<T> {
   if (isFunction(config)) {
     if (config.prototype instanceof LitElement) {
@@ -86,9 +88,9 @@ export function isLitViewDeclarationTemplate<T extends DefaultResolvesType = Def
   return false;
 }
 
-export function isLitViewDeclarationObject<T extends DefaultResolvesType = DefaultResolvesType>(
-  config: LitViewDeclaration<T>
-): config is LitViewDeclarationObject<T> {
+export function isLitViewDeclarationObject<
+  T extends DefaultResolvesType = DefaultResolvesType,
+>(config: LitViewDeclaration<T>): config is LitViewDeclarationObject<T> {
   return 'component' in (config as LitViewDeclarationObject<T>);
 }
 
@@ -99,9 +101,9 @@ export function isLitViewDeclarationObject<T extends DefaultResolvesType = Defau
  * @returns True if the component is a LitElement class
  * @internal
  */
-export function isRoutedLitElement<T extends DefaultResolvesType = DefaultResolvesType>(
-  component?: unknown,
-): component is RoutedLitElement<T> {
+export function isRoutedLitElement<
+  T extends DefaultResolvesType = DefaultResolvesType,
+>(component?: unknown): component is RoutedLitElement<T> {
   return (component as { prototype: unknown })?.prototype instanceof LitElement;
 }
 
@@ -118,48 +120,48 @@ export function isRoutedLitElement<T extends DefaultResolvesType = DefaultResolv
  * @returns The normalized views object
  * @internal
  */
-export function litViewsBuilder<T extends DefaultResolvesType = DefaultResolvesType>(state: StateObject) {
+export function litViewsBuilder<
+  T extends DefaultResolvesType = DefaultResolvesType,
+>(state: StateObject) {
   const views: Record<string, NormalizedLitViewDeclaration<T>> = {},
     viewsObject = state.views || {
       $default: pick(state, ['component']),
     };
 
-  forEach(
-    viewsObject,
-    function (config: LitViewDeclaration<T>, name: string) {
-      let normalizedConfig: NormalizedLitViewDeclaration<T>;
-      name = name || '$default'; // Account for views: { "": { template... } }
-      if (isLitViewDeclarationTemplate<T>(config)) {
-        normalizedConfig = { component: config as LitViewDeclarationTemplate };
-      } else {
-        normalizedConfig = config as NormalizedLitViewDeclaration<T>;
-      }
-      if (Object.keys(normalizedConfig || {}).length === 0) return;
+  forEach(viewsObject, function (config: LitViewDeclaration<T>, name: string) {
+    let normalizedConfig: NormalizedLitViewDeclaration<T>;
+    name = name || '$default'; // Account for views: { "": { template... } }
+    if (isLitViewDeclarationTemplate<T>(config)) {
+      normalizedConfig = { component: config as LitViewDeclarationTemplate };
+    } else {
+      normalizedConfig = config as NormalizedLitViewDeclaration<T>;
+    }
+    if (Object.keys(normalizedConfig || {}).length === 0) return;
 
-      normalizedConfig.$type = 'lit';
-      normalizedConfig.$context = state;
-      normalizedConfig.$name = name;
+    normalizedConfig.$type = 'lit';
+    normalizedConfig.$context = state;
+    normalizedConfig.$name = name;
 
-      const normalizedTarget = ViewService.normalizeUIViewTarget(
-        normalizedConfig.$context,
-        normalizedConfig.$name,
-      );
-      normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
-      normalizedConfig.$uiViewContextAnchor = normalizedTarget.uiViewContextAnchor;
+    const normalizedTarget = ViewService.normalizeUIViewTarget(
+      normalizedConfig.$context,
+      normalizedConfig.$name,
+    );
+    normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
+    normalizedConfig.$uiViewContextAnchor =
+      normalizedTarget.uiViewContextAnchor;
 
-      if (isRoutedLitElement<T>(normalizedConfig.component)) {
-        const Component = normalizedConfig.component;
-        let component: InstanceType<RoutedLitElement<T>>;
-        normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
-          component = (Component.sticky && component) || new Component(props);
-          component._uiViewProps = props;
-          return html`${component}`;
-        };
-      }
+    if (isRoutedLitElement<T>(normalizedConfig.component)) {
+      const Component = normalizedConfig.component;
+      let component: InstanceType<RoutedLitElement<T>>;
+      normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
+        component = (Component.sticky && component) || new Component(props);
+        component._uiViewProps = props;
+        return html`${component}`;
+      };
+    }
 
-      views[name] = viewsObject[name] = normalizedConfig;
-    },
-  );
+    views[name] = viewsObject[name] = normalizedConfig;
+  });
   return views;
 }
 

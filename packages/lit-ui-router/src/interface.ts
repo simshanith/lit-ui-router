@@ -108,7 +108,7 @@ export interface UiOnExit {
   uiCanExit(newTransition?: Transition): HookResult;
 }
 
-export type DefaultResolvesType = Record<string, any>
+export type DefaultResolvesType = Record<string, any>;
 
 /**
  * Type alias for resolved values passed to routed components.
@@ -121,7 +121,9 @@ export type DefaultResolvesType = Record<string, any>
  * @category types
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type UIViewResolves<T extends DefaultResolvesType = DefaultResolvesType> = T;
+export type UIViewResolves<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> = T;
 
 /**
  * Props injected into routed components by the `<ui-view>` element.
@@ -163,7 +165,9 @@ export type UIViewResolves<T extends DefaultResolvesType = DefaultResolvesType> 
  * @category types
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-export interface UIViewInjectedProps<T extends DefaultResolvesType = DefaultResolvesType> {
+export interface UIViewInjectedProps<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> {
   /** The current transition (if one is in progress) */
   transition?: Transition;
   /** Resolved data from state declarations */
@@ -194,14 +198,18 @@ export interface UIViewInjectedProps<T extends DefaultResolvesType = DefaultReso
  *
  * @category types
  */
-export type RoutedLitTemplate<T extends DefaultResolvesType = DefaultResolvesType> =
+export type RoutedLitTemplate<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> =
   | ((props?: UIViewInjectedProps<T>) => TemplateResult)
   | ((props: UIViewInjectedProps<T>) => TemplateResult);
 
 /**
  * A template function that can be used as a view declaration.
  */
-export interface LitViewDeclarationTemplate<T extends DefaultResolvesType = DefaultResolvesType> extends _ViewDeclaration {
+export interface LitViewDeclarationTemplate<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> extends _ViewDeclaration {
   (props: UIViewInjectedProps<T>): TemplateResult;
   (props?: UIViewInjectedProps<T>): TemplateResult;
 }
@@ -237,7 +245,9 @@ export interface LitViewDeclarationTemplate<T extends DefaultResolvesType = Defa
  *
  * @category types
  */
-export interface RoutedLitElement<T extends DefaultResolvesType = DefaultResolvesType> {
+export interface RoutedLitElement<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> {
   /** Overloaded constructor that requires UIViewInjectedProps */
   new (props: UIViewInjectedProps<T>): LitElement & {
     _uiViewProps: UIViewInjectedProps<T>;
@@ -256,19 +266,24 @@ export interface RoutedLitElement<T extends DefaultResolvesType = DefaultResolve
  *
  * @category types
  */
-export type RoutedLitComponent<T extends DefaultResolvesType = DefaultResolvesType> = RoutedLitTemplate<T> | RoutedLitElement<T>;
+export type RoutedLitComponent<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> = RoutedLitTemplate<T> | RoutedLitElement<T>;
 
 /**
  * A LitElement class used directly as a view declaration.
  */
-export interface LitViewDeclarationElement<T extends DefaultResolvesType = DefaultResolvesType>
-  extends RoutedLitElement<T>,
+export interface LitViewDeclarationElement<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> extends RoutedLitElement<T>,
     _ViewDeclaration {}
 
 /**
  * A view declaration object with an explicit component property.
  */
-export interface LitViewDeclarationObject<T extends DefaultResolvesType = DefaultResolvesType> extends _ViewDeclaration {
+export interface LitViewDeclarationObject<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> extends _ViewDeclaration {
   component: RoutedLitComponent<T>;
 }
 
@@ -280,12 +295,12 @@ export interface LitViewDeclarationObject<T extends DefaultResolvesType = Defaul
  * - A LitElement class directly ({@link LitViewDeclarationElement})
  * - A template function directly ({@link LitViewDeclarationTemplate})
  */
-export type LitViewDeclaration<T extends DefaultResolvesType = DefaultResolvesType> =
+export type LitViewDeclaration<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> =
   | LitViewDeclarationObject<T>
   | LitViewDeclarationElement<T>
   | LitViewDeclarationTemplate<T>;
-
-
 
 /**
  * State declaration interface for Lit applications.
@@ -326,7 +341,9 @@ export type LitViewDeclaration<T extends DefaultResolvesType = DefaultResolvesTy
  *
  * @category types
  */
-export interface LitStateDeclaration<T extends DefaultResolvesType = DefaultResolvesType> extends StateDeclaration {
+export interface LitStateDeclaration<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> extends StateDeclaration {
   /** The Lit component to render for this state */
   component?: LitViewDeclaration<T>;
 }
@@ -336,6 +353,8 @@ export interface LitStateDeclaration<T extends DefaultResolvesType = DefaultReso
  *
  * @category types
  */
-export interface NormalizedLitViewDeclaration<T extends DefaultResolvesType = DefaultResolvesType> extends _ViewDeclaration {
+export interface NormalizedLitViewDeclaration<
+  T extends DefaultResolvesType = DefaultResolvesType,
+> extends _ViewDeclaration {
   component: RoutedLitTemplate<T>;
 }
