@@ -1,3 +1,6 @@
+# Automatic tagging workflow - runs on every push to main.
+# Creates git tags for releases, which then trigger the NPM publish workflow.
+# Uses release-it with --no-increment to tag the current version without bumping.
 name: Tag & push
 
 on:
@@ -11,8 +14,11 @@ permissions:
 jobs:
   publish_gh:
     runs-on: ubuntu-latest
+    # Protected environment ensures only authorized pushes create tags
     environment: tag-release
     env:
+      # PAT required to push tags that trigger downstream workflows.
+      # The default GITHUB_TOKEN can't trigger other workflows.
       GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     steps:
       - name: 'Checkout code'
@@ -37,5 +43,9 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Tag & push
+        # --no-increment: Don't bump version, tag current version
+        # --git.tag true: Create git tag (lit-ui-router@X.Y.Z)
+        # --git.push true: Push tag to remote, triggering publish-npm workflow
         run: pnpm --filter lit-ui-router exec release-it --no-increment --git.tag true --git.push true
+        # continue-on-error: Tagging is idempotent - if tag exists, we succeed anyway
         continue-on-error: true
