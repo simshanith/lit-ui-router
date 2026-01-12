@@ -113,6 +113,7 @@ export interface UiOnExit {
  * @see [[UIViewResolves]]
  * @category types
  */
+// eslint-disable-next-line @typescript-eslint/no-explicit-any -- backwards compatible default
 export type DefaultResolvesType = Record<string, any>;
 
 /**
@@ -126,7 +127,6 @@ export type DefaultResolvesType = Record<string, any>;
  *
  * @category types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export type UIViewResolves<
   T extends DefaultResolvesType = DefaultResolvesType,
 > = T;
@@ -170,7 +170,6 @@ export type UIViewResolves<
  *
  * @category types
  */
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export interface UIViewInjectedProps<
   T extends DefaultResolvesType = DefaultResolvesType,
 > {
