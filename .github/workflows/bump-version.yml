@@ -1,3 +1,6 @@
+# Manual workflow to create release PRs with version bumps.
+# Triggered via GitHub Actions UI - select increment type and run.
+# Creates a release branch and PR that, when merged, triggers tagging.
 name: Bump version
 
 on:
@@ -12,8 +15,8 @@ on:
         - major
         - minor
         - patch
-        - other
-        - none
+        - other  # Use with 'other' input for custom versions (e.g., prereleases)
+        - none   # No increment - use current version
       other:
         description: 'Other increment'
         required: false
@@ -31,17 +34,21 @@ on:
 
 permissions:
   contents: write
-  # pull-requests: write # instead handled by GH_PERSONAL_ACCESS_TOKEN for downstream actions
+  # pull-requests: write
+  # ^ Not using GITHUB_TOKEN for PR creation - PAT required so merging
+  # the PR triggers downstream workflows (tag-release, publish)
 
 jobs:
   bump_version:
     runs-on: ubuntu-latest
+    # Protected environment adds approval gate before version bumps
     environment: bump-version
     env:
       INCREMENT: ${{ inputs.increment }}
       OTHER_INCREMENT: ${{ inputs.other }}
       PR_BASE: ${{ inputs.prBase }}
       BRANCH_PREFIX: ${{ inputs.branchPrefix }}
+      # PAT required: PRs created with GITHUB_TOKEN don't trigger workflows when merged
       GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
 
     steps:
@@ -65,6 +72,10 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Parse increment inputs
+        # Handle the various increment input combinations:
+        # - major/minor/patch: Standard semver bumps
+        # - other: Custom version string from 'other' input
+        # - none: No bump, use current version
         run: |
           echo "ACTUAL_INCREMENT=$(
             if [ "$INCREMENT" != "other" ]; then
@@ -78,12 +89,16 @@ jobs:
             fi
           )" >> "$GITHUB_ENV"
       - name: Calculate bumped version
+        # Dry-run release-it to get the new version without making changes
         run: |
           read -r -a INCREMENT_ARGS <<< "$ACTUAL_INCREMENT"
           echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
       - name: Switch branches
+        # Create release branch: release/lit-ui-router/vX.Y.Z
         run: git switch --create "$BRANCH_PREFIX$BUMPED_VERSION"
       - name: Bump version
+        # Actually bump the version in package.json and commit
         run: pnpm --filter lit-ui-router exec release-it --increment "$BUMPED_VERSION" --git.commit true --git.push true
       - name: Create PR
+        # Create PR with auto-generated title and body from commit messages
         run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose
