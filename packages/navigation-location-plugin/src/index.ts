@@ -12,11 +12,28 @@ import {
   UIRouter,
 } from '@uirouter/core';
 
+export interface UIRouterNavigateInfo
+  extends Record<string | number | symbol, unknown> {
+  uiRouter: UIRouter;
+}
+
+export interface UIRouterNavigateEvent extends NavigateEvent {
+  info: UIRouterNavigateInfo;
+}
+
+export function isUIRouterNavigateEvent(
+  event?: NavigateEvent,
+): event is UIRouterNavigateEvent {
+  return (event as UIRouterNavigateEvent)?.info?.uiRouter instanceof UIRouter;
+}
+
 export class NavigationLocationService extends BaseLocationServices {
   _config: LocationConfig;
 
+  private _router: UIRouter;
   constructor(router?: UIRouter) {
     super(router!, false);
+    this._router = router!;
     this._config = router!.urlService.config;
     root.navigation.addEventListener(
       'currententrychange',
@@ -73,8 +90,9 @@ export class NavigationLocationService extends BaseLocationServices {
     root.navigation.navigate(fullUrl, {
       state,
       info: {
+        uiRouter: this._router,
         title,
-      },
+      } satisfies UIRouterNavigateInfo,
       history: replace ? 'replace' : 'push',
     });
   }
