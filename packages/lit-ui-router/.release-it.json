@@ -10,7 +10,7 @@
   "github": {
     "release": false,
     "releaseName": "Release ${npm.name}@${version}",
-    "autoGenerate": true
+    "autoGenerate": false
   },
   "npm": {
     "publish": false
