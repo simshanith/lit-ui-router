@@ -101,4 +101,5 @@ export const states = [
   viewContactState,
   editContactState,
   newContactState,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- generic handles narrowing
 ] satisfies LitStateDeclaration<any>[];
