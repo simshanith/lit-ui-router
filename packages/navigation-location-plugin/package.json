@@ -1,5 +1,6 @@
 {
   "name": "ui-router-navigation-location-plugin",
+  "description": "UI Router Location Plugin for Navigation API",
   "version": "0.0.0",
   "license": "MIT",
   "repository": {
