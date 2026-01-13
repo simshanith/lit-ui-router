@@ -46,3 +46,6 @@ lit-ui-router-*.tgz
 coverage
 .wrangler
 .dev.vars
+
+# bv (beads viewer) local config and caches
+.bv/
