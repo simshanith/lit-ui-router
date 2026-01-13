@@ -33,6 +33,7 @@ pnpm --filter sample-app-lit-e2e test
 Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.
 
 **Quick overview:**
+
 1. Maintainer triggers "Bump version" workflow
 2. Release PR is created and reviewed
 3. Merge triggers automatic tagging
