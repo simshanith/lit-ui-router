@@ -21,6 +21,14 @@ Expires after 7 days
 3. Run `pnpm turbo build --force` to test cache upload
 4. Run `pnpm turbo build` to test cache retrieval
 
+## Cloudflare Workers Build Varaiables & Secrets
+
+```sh
+TURBO_API=https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev
+TURBO_TEAM=team_lit-ui-router
+TURBO_TOKEN=
+```
+
 ## Free Tier Limits (Monthly)
 
 ### R2 Storage

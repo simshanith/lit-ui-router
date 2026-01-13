@@ -42,9 +42,10 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 | Production                                                                                              | `npx turbo docs#build` | `pnpm wrangler deploy`          |
 | Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `npx turbo docs#build` | `pnpm wrangler versions upload` |
 
-### Environment Variables
+### Build Environment Variables
 
-`VITE_GOOGLE_ANALYTICS_TRACKING_ID` is set as a Worker build variable.
+- `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
+- `TURBO_`-prefixed [Remote Cache](./REMOTE_CACHE.md) variables and secrets
 
 ### Local Development
 
