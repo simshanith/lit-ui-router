@@ -10,11 +10,14 @@ export default tseslint.config(
   ...tseslint.configs.recommended,
   {
     extends: [packageJson.configs.recommended],
-    files: ["package.json"],
+    files: ['package.json'],
     rules: {
-      "package-json/require-description": ["error", {
-        "ignorePrivate": true
-      }],
+      'package-json/require-description': [
+        'error',
+        {
+          ignorePrivate: true,
+        },
+      ],
     },
   },
   prettier,
