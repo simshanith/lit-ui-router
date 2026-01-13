@@ -90,28 +90,29 @@ interface UIRouterNavigateInfo {
 
 The Navigation API has limited browser support:
 
-| Browser | Support |
-|---------|---------|
-| Chrome | 102+ |
-| Edge | 102+ |
+| Browser | Support       |
+| ------- | ------------- |
+| Chrome  | 102+          |
+| Edge    | 102+          |
 | Firefox | Not supported |
-| Safari | Not supported |
+| Safari  | Not supported |
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
 For broader browser support, consider using:
+
 - `pushStateLocationPlugin` - History API based (wide support)
 - `hashLocationPlugin` - Hash-based URLs (universal support)
 
 ## Comparison with Other Location Plugins
 
-| Feature | Navigation API | pushState | hash |
-|---------|----------------|-----------|------|
-| Modern standard | Yes | No | No |
-| Event interception | Yes | No | No |
-| Browser support | Limited | Wide | Universal |
-| SEO friendly | Yes | Yes | No |
-| Clean URLs | Yes | Yes | No |
+| Feature            | Navigation API | pushState | hash      |
+| ------------------ | -------------- | --------- | --------- |
+| Modern standard    | Yes            | No        | No        |
+| Event interception | Yes            | No        | No        |
+| Browser support    | Limited        | Wide      | Universal |
+| SEO friendly       | Yes            | Yes       | No        |
+| Clean URLs         | Yes            | Yes       | No        |
 
 ## Links
 
