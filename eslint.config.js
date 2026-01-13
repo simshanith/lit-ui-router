@@ -3,10 +3,20 @@ import tseslint from 'typescript-eslint';
 import globals from 'globals';
 import prettier from 'eslint-config-prettier';
 import turbo from 'eslint-plugin-turbo';
+import packageJson from 'eslint-plugin-package-json';
 
 export default tseslint.config(
   eslint.configs.recommended,
   ...tseslint.configs.recommended,
+  {
+    extends: [packageJson.configs.recommended],
+    files: ["package.json"],
+    rules: {
+      "package-json/require-description": ["error", {
+        "ignorePrivate": true
+      }],
+    },
+  },
   prettier,
   {
     plugins: { turbo },
