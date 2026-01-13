@@ -13,6 +13,8 @@ turbo build
 
 Documentation is deployed to [lit-ui-router.dev](https://lit-ui-router.dev) via [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/).
 
+Additionally, the [Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys [preview URLs](https://developers.cloudflare.com/workers/configuration/previews/) for branches.
+
 ### Configuration Files
 
 | File | Purpose |
@@ -39,7 +41,10 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 ### Local Development
 
 ```bash
+# with pnpm
 pnpm --filter docs wrangler:dev
+# with turbo
+turbo docs#wrangler:dev
 ```
 
 See: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
