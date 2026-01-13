@@ -19,17 +19,21 @@
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "inputs": ["**/*.ts", "**/*.js", "$TURBO_DEFAULT$"]
+      "with": ["//#lint:root"],
+      "inputs": ["**/*.ts", "**/*.js", "eslint.config.js", "$TURBO_DEFAULT$"]
+    },
+    "//#lint:root": {
+      "inputs": ["examples/**/*.{ts,js}", "eslint.config.js", "$TURBO_DEFAULT$"]
     },
     "ci": {
       "dependsOn": ["build", "test", "test:coverage", "lint", "format:check"]
     },
     "format": {
-      "dependsOn": ["//#format:root", "^format"],
+      "with": ["//#format:root"],
       "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
     },
     "format:check": {
-      "dependsOn": ["//#format:check:root", "^format:check"],
+      "with": ["//#format:check:root"],
       "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
     },
     "//#format:root": {

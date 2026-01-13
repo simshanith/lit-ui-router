@@ -8,6 +8,7 @@
     "build": "turbo run build",
     "dev": "turbo run dev",
     "lint": "turbo run lint",
+    "lint:root": "eslint examples --format tap",
     "format": "turbo run format",
     "format:root": "prettier --write \"{examples/**/,}*.{md,ts,js,json,jsonc}\"",
     "format:check": "turbo run format:check",
@@ -19,11 +20,11 @@
     "node": ">=22.17.1"
   },
   "packageManager": "pnpm@10.13.1",
-  "dependencies": {},
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
+    "eslint-formatter-tap": "^9.0.1",
     "eslint-plugin-turbo": "^2.7.3",
     "globals": "^17.0.0",
     "pnpm": "10.13.1",

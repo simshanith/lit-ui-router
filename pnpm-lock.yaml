@@ -31,6 +31,9 @@ importers:
       eslint-config-prettier:
         specifier: ^10.1.8
         version: 10.1.8(eslint@9.39.2(jiti@2.6.1))
+      eslint-formatter-tap:
+        specifier: ^9.0.1
+        version: 9.0.1
       eslint-plugin-turbo:
         specifier: ^2.7.3
         version: 2.7.3(eslint@9.39.2(jiti@2.6.1))(turbo@2.5.5)
@@ -2589,6 +2592,10 @@ packages:
     hasBin: true
     peerDependencies:
       eslint: '>=7.0.0'
+
+  eslint-formatter-tap@9.0.1:
+    resolution: {integrity: sha512-QIeHHd+95igLw38u8ee/7foSGL7feEkpLqP3URo9CARuC0QXN8qZ6zlWsYXmubI+Cb6dbUuKLwj08npSSfvA7A==}
+    engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
   eslint-plugin-turbo@2.7.3:
     resolution: {integrity: sha512-q7kYzJCyvceSLVwHgmn3ZBhqpUihQHxC7LEddq5a1eLe5P+/Ob4TnJrdocP38qO1n9MCuO+cJSUTGUtZb1X3bQ==}
@@ -6654,6 +6661,10 @@ snapshots:
   eslint-config-prettier@10.1.8(eslint@9.39.2(jiti@2.6.1)):
     dependencies:
       eslint: 9.39.2(jiti@2.6.1)
+
+  eslint-formatter-tap@9.0.1:
+    dependencies:
+      js-yaml: 4.1.1
 
   eslint-plugin-turbo@2.7.3(eslint@9.39.2(jiti@2.6.1))(turbo@2.5.5):
     dependencies:
