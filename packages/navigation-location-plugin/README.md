@@ -11,7 +11,7 @@ A UI-Router location plugin that uses the modern browser Navigation API for URL 
 ## Features
 
 - Uses the modern [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) instead of the History API
-- Exposes UIRouter context in navigation events for interception
+- Exposes UIRouter context in navigation events
 - Proper `<base href>` handling for non-root deployments
 - Supports navigation state and title metadata
 
@@ -44,14 +44,8 @@ import { isUIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
 
 window.navigation.addEventListener('navigate', (event) => {
   if (isUIRouterNavigateEvent(event)) {
+    // Access UIRouter during navigation
     const { uiRouter } = event.info;
-
-    event.intercept({
-      async handler() {
-        // Access UIRouter during navigation
-        console.log('Navigating via UIRouter:', uiRouter);
-      },
-    });
   }
 });
 ```
