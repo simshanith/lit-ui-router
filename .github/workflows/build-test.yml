@@ -48,10 +48,10 @@ jobs:
         uses: davelosert/vitest-coverage-report-action@v2
         if: github.event_name == 'pull_request'
         with:
-          working-directory: packages/ui-router-navigation-location-plugin
+          working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/ui-router-navigation-location-plugin/coverage/lcov.info
+          files: packages/lit-ui-router/coverage/lcov.info,packages/navigation-location-plugin/coverage/lcov.info
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
