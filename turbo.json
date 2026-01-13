@@ -14,7 +14,7 @@
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
     },
     "test:coverage": {
-      "dependsOn": ["^test:coverage"],
+      "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts", "vitest.config.ts"],
       "outputs": ["coverage/**"]
     },

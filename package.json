@@ -10,10 +10,10 @@
     "dev": "turbo run dev",
     "format": "turbo run format",
     "format:check": "turbo run format:check",
-    "format:check:root": "prettier --check \"{examples/**/,}*.{md,ts,js,json,jsonc}\"",
-    "format:root": "prettier --write \"{examples/**/,}*.{md,ts,js,json,jsonc}\"",
+    "format:check:root": "prettier --check \"*.{md,ts,js,json,jsonc}\"",
+    "format:root": "prettier --write \"*.{md,ts,js,json,jsonc}\"",
     "lint": "turbo run lint",
-    "lint:root": "eslint --format tap --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages",
+    "lint:root": "eslint --format tap --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples",
     "test:coverage": "turbo run test:coverage"
   },
   "engines": {
