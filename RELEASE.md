@@ -14,21 +14,21 @@ The release process is automated through GitHub Actions with protected environme
 
 ## Tag and Branch Conventions
 
-| Pattern | Purpose | Example |
-|---------|---------|---------|
-| `lit-ui-router@X.Y.Z` | Package release tags | `lit-ui-router@1.2.3` |
-| `release/lit-ui-router/vX.Y.Z` | Release prep branches | `release/lit-ui-router/v1.2.3` |
-| `main` | Primary integration branch | - |
+| Pattern                        | Purpose                    | Example                        |
+| ------------------------------ | -------------------------- | ------------------------------ |
+| `lit-ui-router@X.Y.Z`          | Package release tags       | `lit-ui-router@1.2.3`          |
+| `release/lit-ui-router/vX.Y.Z` | Release prep branches      | `release/lit-ui-router/v1.2.3` |
+| `main`                         | Primary integration branch | -                              |
 
 ## Protected Environments
 
 The release workflows use GitHub protected environments to ensure proper authorization:
 
-| Environment | Purpose | Required For |
-|-------------|---------|--------------|
+| Environment    | Purpose               | Required For                  |
+| -------------- | --------------------- | ----------------------------- |
 | `bump-version` | Version bump workflow | Creating release branches/PRs |
-| `tag-release` | Tagging workflow | Pushing release tags |
-| `publish` | NPM publishing | Publishing to NPM registry |
+| `tag-release`  | Tagging workflow      | Pushing release tags          |
+| `publish`      | NPM publishing        | Publishing to NPM registry    |
 
 ### Environment Secrets
 
@@ -37,7 +37,7 @@ The release workflows use GitHub protected environments to ensure proper authori
   - Pushing tags
   - Creating PRs that trigger downstream workflows
 
-This is a [Fine-Grained Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens) with  **Read** and **Write** access to [artifact metadata](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-artifact-metadata), [attestations api](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-attestations), [code](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-contents), and [pull requests](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-pull-requests)
+This is a [Fine-Grained Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens) with **Read** and **Write** access to [artifact metadata](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-artifact-metadata), [attestations api](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-attestations), [code](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-contents), and [pull requests](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-pull-requests)
 
 - **`CODECOV_TOKEN`** - Used for uploading coverage reports
 
@@ -50,6 +50,7 @@ The `publish` environment uses **OIDC Trusted Publishing** instead of NPM tokens
 **Triggers:** Pull requests, pushes to `main`
 
 Runs the CI pipeline including:
+
 - Build verification
 - Unit tests with Vitest
 - E2E tests with Playwright and Cypress
@@ -63,12 +64,14 @@ Runs the CI pipeline including:
 **Triggers:** Manual dispatch only
 
 Creates a release PR by:
+
 1. Calculating the new version based on increment type
 2. Creating a release branch (`release/lit-ui-router/vX.Y.Z`)
 3. Committing version changes
 4. Opening a PR against `main`
 
 **Inputs:**
+
 - `increment` - Version bump type: `major`, `minor`, `patch`, `other`, `none`
 - `other` - Custom version string (when using `other`)
 - `prBase` - Target branch (default: `main`)
@@ -79,6 +82,7 @@ Creates a release PR by:
 **Triggers:** Push to `main`
 
 When a release PR merges:
+
 1. Uses release-it to create a git tag (`lit-ui-router@X.Y.Z`)
 2. Pushes the tag to origin
 3. Tag push triggers the publish workflow
@@ -90,6 +94,7 @@ When a release PR merges:
 **Triggers:** Tag push matching `lit-ui-router@*`
 
 The final release stage:
+
 1. Builds the package
 2. Creates a tarball
 3. Generates build provenance attestation
@@ -155,6 +160,7 @@ For prereleases like `1.2.3-beta.0`:
 ### Fork PRs not running CI
 
 This is intentional. Fork PRs don't have access to repository secrets for security. Maintainers should:
+
 1. Review the fork PR code
 2. Pull the fork branch locally
 3. Push to a first-party branch to run CI

@@ -33,7 +33,12 @@ pnpm --filter sample-app-lit-e2e test
 Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.
 
 **Quick overview:**
+
 1. Maintainer triggers "Bump version" workflow
 2. Release PR is created and reviewed
 3. Merge triggers automatic tagging
 4. Tag triggers NPM publish and GitHub Release
+
+## Deployment
+
+The [Cloudflare Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push. See [DEPLOY.md](./DEPLOY.md) for details.

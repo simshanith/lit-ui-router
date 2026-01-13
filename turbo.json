@@ -19,16 +19,38 @@
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "inputs": ["**/*.ts", "**/*.js", "$TURBO_DEFAULT$"]
+      "with": ["//#lint:root"],
+      "inputs": ["**/*.ts", "**/*.js", "eslint.config.js", "$TURBO_DEFAULT$"]
+    },
+    "//#lint:root": {
+      "inputs": ["examples/**/*.{ts,js}", "eslint.config.js", "$TURBO_DEFAULT$"]
     },
     "ci": {
       "dependsOn": ["build", "test", "test:coverage", "lint", "format:check"]
     },
     "format": {
-      "inputs": ["**/*.{ts,js,json,md}", ".prettierrc", ".prettierignore"]
+      "with": ["//#format:root"],
+      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
     },
     "format:check": {
-      "inputs": ["**/*.{ts,js,json,md}", ".prettierrc", ".prettierignore"]
+      "with": ["//#format:check:root"],
+      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+    },
+    "//#format:root": {
+      "inputs": [
+        "*.{ts,js,json,jsonc,md}",
+        "examples/**/*.{ts,js,json,jsonc,md}",
+        ".prettierrc",
+        ".prettierignore"
+      ]
+    },
+    "//#format:check:root": {
+      "inputs": [
+        "*.{ts,js,json,jsonc,md}",
+        "examples/**/*.{ts,js,json,jsonc,md}",
+        ".prettierrc",
+        ".prettierignore"
+      ]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],
@@ -47,7 +69,7 @@
     },
     "docs:api": {
       "dependsOn": ["^docs:api"],
-      "cache": false,
+      "cache": false
     }
   }
 }
