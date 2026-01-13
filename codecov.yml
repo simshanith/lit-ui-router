@@ -1,0 +1,29 @@
+# Codecov configuration
+# https://docs.codecov.com/docs/codecov-yaml
+
+coverage:
+  status:
+    project:
+      default:
+        target: auto
+        threshold: 1%
+    patch:
+      default:
+        target: auto
+
+# Component definitions for monorepo packages
+# https://docs.codecov.com/docs/components
+component_management:
+  default_rules:
+    statuses:
+      - type: project
+        target: auto
+  individual_components:
+    - component_id: lit-ui-router
+      name: lit-ui-router
+      paths:
+        - packages/lit-ui-router/src/**
+    - component_id: navigation-location-plugin
+      name: navigation-location-plugin
+      paths:
+        - packages/navigation-location-plugin/src/**

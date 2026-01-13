@@ -39,14 +39,19 @@ jobs:
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
         run: pnpm run ci
-      - name: Vitest Coverage Report
+      - name: lit-ui-router Vitest Coverage Report
         uses: davelosert/vitest-coverage-report-action@v2
         if: github.event_name == 'pull_request'
         with:
           working-directory: packages/lit-ui-router
+      - name: ui-router-navigation-location-plugin Vitest Coverage Report
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: packages/lit-ui-router/coverage/lcov.info
+          files: packages/lit-ui-router/coverage/lcov.info,packages/navigation-location-plugin/coverage/lcov.info
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
