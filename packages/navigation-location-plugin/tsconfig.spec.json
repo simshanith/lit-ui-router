@@ -1,0 +1,15 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "module": "es2022",
+    "moduleResolution": "bundler",
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "declaration": true,
+    "sourceMap": true,
+    "types": ["vitest/globals"]
+  },
+  "include": ["vitest.config.ts", "src/**/*.spec.ts"],
+  "exclude": ["node_modules", "dist"]
+}

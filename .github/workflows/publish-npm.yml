@@ -1,20 +1,24 @@
+# NPM publish workflow - triggered by release tags.
+# Uses OIDC trusted publishing (no NPM_TOKEN needed).
+# See: https://docs.npmjs.com/trusted-publishers
+# See: https://github.com/release-it/release-it/blob/19.2.2/docs/npm.md#trusted-publishing-oidc
 name: Publish to NPM
-# https://docs.npmjs.com/trusted-publishers
-# https://github.com/release-it/release-it/blob/19.2.2/docs/npm.md#trusted-publishing-oidc
+
 on:
   push:
     tags:
-      - lit-ui-router@*
+      - lit-ui-router@* # Only trigger on package release tags
 
 permissions:
-  id-token: write
-  contents: write
-  attestations: write
+  id-token: write      # Required for OIDC trusted publishing to NPM
+  contents: write      # Required for creating GitHub releases
+  attestations: write  # Required for build provenance attestation
   artifact-metadata: write
 
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
+    # Protected environment adds approval gate before publishing
     environment: publish
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
@@ -34,17 +38,27 @@ jobs:
           node-version: '22.17.1'
           cache: 'pnpm'
       - name: Update npm
-        run: npm install -g npm@latest # >= 11.5.1
+        # npm >= 11.5.1 required for OIDC trusted publishing
+        run: npm install -g npm@latest
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: Build
         run: npm exec -- turbo run lit-ui-router#build
       - name: Pack
+        # Create tarball for GitHub release attachment
         run: pnpm --filter lit-ui-router pack --pack-destination packages/lit-ui-router
-      - uses: actions/attest-build-provenance@v3
+      - name: Attest build provenance
+        # Generate SLSA provenance attestation for supply chain security
+        uses: actions/attest-build-provenance@v3
         with:
           subject-path: 'packages/lit-ui-router/lit-ui-router-*.tgz'
+      - name: Release version
+        run: |
+          echo "RELEASE_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
       - name: Publish
-        run: pnpm --filter lit-ui-router exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz" --github.draft true
+        # Create draft release first - allows uploading assets after create
+        # --npm.skipChecks: Skip npm checks since we're using OIDC auth
+        run: pnpm --filter lit-ui-router exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "lit-ui-router-*.tgz" --github.draft true --git.tagExclude "\${npm.name}@$RELEASE_VERSION"
+        # Finalize the GitHub release
       - name: Mark Release as final
         run: pnpm --filter lit-ui-router exec -- release-it --no-increment --github.release true --github.update true --no-github.draft

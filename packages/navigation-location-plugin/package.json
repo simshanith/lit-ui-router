@@ -1,5 +1,6 @@
 {
   "name": "ui-router-navigation-location-plugin",
+  "description": "UI Router Location Plugin for Navigation API",
   "version": "0.0.0",
   "license": "MIT",
   "repository": {
@@ -15,7 +16,9 @@
     "build": "tsc",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "vitest run",
+    "test:coverage": "vitest run --coverage --browser=chromium"
   },
   "dependencies": {
     "@uirouter/core": "^6.0.8"

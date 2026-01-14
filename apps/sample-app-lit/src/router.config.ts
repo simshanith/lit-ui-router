@@ -10,7 +10,10 @@ import { StickyStatesPlugin } from '@uirouter/sticky-states';
 import { DSRPlugin } from '@uirouter/dsr';
 
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
-import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
+import {
+  isUIRouterNavigateEvent,
+  navigationLocationPlugin,
+} from 'ui-router-navigation-location-plugin';
 
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
@@ -60,11 +63,18 @@ export function configureRouter(router = new UIRouterLit()) {
   if (locationPluginKey === 'navigation') {
     window.navigation.addEventListener('navigate', (event: NavigateEvent) => {
       const url = new URL(event.destination.url);
-      event.intercept({
-        async handler() {
-          console.debug('intercepted navigation', url);
-        },
-      });
+      console.debug('navigate', event);
+
+      if (isUIRouterNavigateEvent(event)) {
+        const { uiRouter } = event.info;
+        event.intercept({
+          async handler() {
+            console.debug('intercepted uiRouter navigation', url, uiRouter);
+          },
+        });
+      } else {
+        console.debug('allowed navigation', url);
+      }
     });
   }
 

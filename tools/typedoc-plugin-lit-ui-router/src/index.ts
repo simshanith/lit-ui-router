@@ -68,6 +68,7 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   UIViewResolves: 'types',
   UiViewAddress: 'types',
   deregisterFn: 'types',
+  DefaultResolvesType: 'types',
 };
 
 /**

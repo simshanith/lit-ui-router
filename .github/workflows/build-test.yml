@@ -1,3 +1,5 @@
+# CI pipeline for pull requests and main branch pushes.
+# Runs build, tests (Vitest + Playwright + Cypress), and coverage reporting.
 name: Build and Test
 
 on:
@@ -8,11 +10,14 @@ on:
 
 jobs:
   build_and_test:
+    # Security: Only run on first-party PRs (not forks) to protect secrets.
+    # Fork PRs don't have access to secrets, so they would fail anyway.
+    # Maintainers should review fork PRs and run CI manually.
     if: ${{ github.event_name == 'push' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository ) }}
     runs-on: ubuntu-latest
     permissions:
       contents: read
-      pull-requests: write
+      pull-requests: write # Required for PR coverage comments
 
     steps:
       - name: 'Checkout code'
@@ -34,14 +39,19 @@ jobs:
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
         run: pnpm run ci
-      - name: Vitest Coverage Report
+      - name: lit-ui-router Vitest Coverage Report
         uses: davelosert/vitest-coverage-report-action@v2
         if: github.event_name == 'pull_request'
         with:
           working-directory: packages/lit-ui-router
+      - name: ui-router-navigation-location-plugin Vitest Coverage Report
+        uses: davelosert/vitest-coverage-report-action@v2
+        if: github.event_name == 'pull_request'
+        with:
+          working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
         uses: codecov/codecov-action@v5
         with:
-          files: packages/lit-ui-router/coverage/lcov.info
+          files: packages/lit-ui-router/coverage/lcov.info,packages/navigation-location-plugin/coverage/lcov.info
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
