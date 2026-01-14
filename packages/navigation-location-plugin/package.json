@@ -1,12 +1,12 @@
 {
   "name": "ui-router-navigation-location-plugin",
   "description": "UI Router Location Plugin for Navigation API",
-  "version": "0.1.0",
+  "version": "0.1.0-rc.0",
   "license": "MIT",
   "homepage": "https://lit-ui-router.dev/plugins/navigation-location",
   "repository": {
     "type": "git",
-    "url": "https://github.com/simshanith/lit-ui-router",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
     "directory": "packages/navigation-location-plugin"
   },
   "bugs": {
