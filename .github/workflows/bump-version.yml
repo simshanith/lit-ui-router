@@ -1,11 +1,19 @@
 # Manual workflow to create release PRs with version bumps.
-# Triggered via GitHub Actions UI - select increment type and run.
+# Triggered via GitHub Actions UI - select package, increment type, and run.
 # Creates a release branch and PR that, when merged, triggers tagging.
 name: Bump version
 
 on:
   workflow_dispatch:
     inputs:
+      package:
+        description: 'Package to bump'
+        required: true
+        type: choice
+        options:
+          - lit-ui-router
+          - ui-router-navigation-location-plugin
+        default: 'lit-ui-router'
       increment:
         description: 'Increment'
         required: true
@@ -16,7 +24,7 @@ on:
         - minor
         - patch
         - other  # Use with 'other' input for custom versions (e.g., prereleases)
-        - none   # No increment - use current version
+        - none   # No increment - use current version. No-op unless `other` provided
       other:
         description: 'Other increment'
         required: false
@@ -27,9 +35,8 @@ on:
         default: 'main'
         type: string
       branchPrefix:
-        description: 'GitHub PR branch prefix'
+        description: 'GitHub PR branch prefix (default: release/{package}/v)'
         required: false
-        default: 'release/lit-ui-router/v'
         type: string
 
 permissions:
@@ -44,10 +51,11 @@ jobs:
     # Protected environment adds approval gate before version bumps
     environment: bump-version
     env:
+      PACKAGE: ${{ inputs.package }}
       INCREMENT: ${{ inputs.increment }}
       OTHER_INCREMENT: ${{ inputs.other }}
       PR_BASE: ${{ inputs.prBase }}
-      BRANCH_PREFIX: ${{ inputs.branchPrefix }}
+      BRANCH_PREFIX_INPUT: ${{ inputs.branchPrefix }}
       # PAT required: PRs created with GITHUB_TOKEN don't trigger workflows when merged
       GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
 
@@ -71,6 +79,14 @@ jobs:
           cache: 'pnpm'
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Set branch prefix
+        # Use input if provided, otherwise derive from package name
+        run: |
+          if [ -n "$BRANCH_PREFIX_INPUT" ]; then
+            echo "BRANCH_PREFIX=$BRANCH_PREFIX_INPUT" >> "$GITHUB_ENV"
+          else
+            echo "BRANCH_PREFIX=release/$PACKAGE/v" >> "$GITHUB_ENV"
+          fi
       - name: Parse increment inputs
         # Handle the various increment input combinations:
         # - major/minor/patch: Standard semver bumps
@@ -92,19 +108,19 @@ jobs:
         # Dry-run release-it to get the new version without making changes
         run: |
           read -r -a INCREMENT_ARGS <<< "$ACTUAL_INCREMENT"
-          echo "BUMPED_VERSION=$(pnpm --filter lit-ui-router exec release-it --release-version "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
+          echo "BUMPED_VERSION=$(pnpm --filter $PACKAGE exec release-it --release-version "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
       - name: Switch branches
-        # Create release branch: release/lit-ui-router/vX.Y.Z
+        # Create release branch: release/{package}/vX.Y.Z
         run: git switch --create "$BRANCH_PREFIX$BUMPED_VERSION"
       - name: Bump version
         # Actually bump the version in package.json and commit
         run: |
-          pnpm --filter lit-ui-router exec \
+          pnpm --filter $PACKAGE exec \
             release-it \
               --increment "$BUMPED_VERSION" \
               --git.commit true \
               --git.push true \
-              --git.commitMessage "$(pnpm --silent --filter lit-ui-router commit:changelog)"
+              --git.commitMessage "$(pnpm --silent --filter $PACKAGE commit:changelog)"
       - name: Create PR
         # Create PR with auto-generated title and body from commit messages
         run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose
