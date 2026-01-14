@@ -1,7 +1,7 @@
 {
   "name": "lit-ui-router",
   "description": "State-based routing for Lit",
-  "version": "1.2.2",
+  "version": "1.2.3",
   "type": "module",
   "module": "./dist/index.js",
   "homepage": "https://lit-ui-router.dev",
