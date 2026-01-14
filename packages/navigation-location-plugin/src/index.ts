@@ -85,6 +85,7 @@ export class NavigationLocationService extends BaseLocationServices {
   /**
    * Gets the current URL path, query, and hash relative to the base href.
    * @returns The current URL string (e.g., '/path?query=value#hash')
+   * @internal
    */
   protected _get() {
     let { pathname, hash, search } = this._location;
@@ -110,6 +111,7 @@ export class NavigationLocationService extends BaseLocationServices {
    * @param title - Title for the navigation (passed via info)
    * @param url - The URL path to navigate to
    * @param replace - If true, replaces current entry instead of pushing
+   * @internal
    */
   protected _set(state: unknown, title: string, url: string, replace: boolean) {
     const basePrefix = this._getBasePrefix();
