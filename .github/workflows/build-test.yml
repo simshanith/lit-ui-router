@@ -39,6 +39,10 @@ jobs:
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
         run: pnpm run ci
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: lit-ui-router Vitest Coverage Report
         uses: davelosert/vitest-coverage-report-action@v2
         if: github.event_name == 'pull_request'

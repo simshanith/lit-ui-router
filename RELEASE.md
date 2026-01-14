@@ -43,6 +43,23 @@ This is a [Fine-Grained Personal Access Token](https://docs.github.com/en/authen
 
 The `publish` environment uses **OIDC Trusted Publishing** instead of NPM tokens. See [NPM Trusted Publishers](https://docs.npmjs.com/trusted-publishers) for setup.
 
+### Repository Variables (Turbo Remote Cache)
+
+The following [repository variables](https://docs.github.com/en/actions/reference/variables) enable turborepo remote caching via Cloudflare R2:
+
+| Variable     | Purpose                                      |
+| ------------ | -------------------------------------------- |
+| `TURBO_API`  | Worker endpoint URL (no trailing slash)      |
+| `TURBO_TEAM` | Team identifier (e.g., `team_lit-ui-router`) |
+
+### Repository Secrets (Turbo Remote Cache)
+
+| Secret        | Purpose                               |
+| ------------- | ------------------------------------- |
+| `TURBO_TOKEN` | Authentication token for remote cache |
+
+These are consumed by `build-test.yml` and `publish-npm.yml` to enable remote caching during CI builds.
+
 ## Workflows
 
 ### 1. Build and Test (`build-test.yml`)
