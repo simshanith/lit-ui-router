@@ -35,7 +35,8 @@ jobs:
           PACKAGE_NAME="${TAG%@*}"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
           # Map npm name to directory
-          realpath -s --relative-to="." "$(pnpm list --depth -1 --parseable --filter "$PACKAGE_NAME")"
+          PACKAGE_DIR="$(realpath -s --relative-to="." "$(pnpm list --depth -1 --parseable --filter "$PACKAGE_NAME")")"
+          echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
