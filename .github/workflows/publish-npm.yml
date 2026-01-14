@@ -35,11 +35,7 @@ jobs:
           PACKAGE_NAME="${TAG%@*}"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
           # Map npm name to directory
-          if [ "$PACKAGE_NAME" = "lit-ui-router" ]; then
-            echo "PACKAGE_DIR=lit-ui-router" >> $GITHUB_ENV
-          else
-            echo "PACKAGE_DIR=navigation-location-plugin" >> $GITHUB_ENV
-          fi
+          realpath -s --relative-to="." "$(pnpm list --depth -1 --parseable --filter "$PACKAGE_NAME")"
       - name: Setup pnpm
         uses: pnpm/action-setup@v2
         with:
@@ -62,12 +58,12 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
         # Create tarball for GitHub release attachment
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination packages/${{ env.PACKAGE_DIR }}
+        run: pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security
         uses: actions/attest-build-provenance@v3
         with:
-          subject-path: 'packages/${{ env.PACKAGE_DIR }}/*.tgz'
+          subject-path: '${{ env.PACKAGE_DIR }}/*.tgz'
       - name: Release version
         run: |
           echo "RELEASE_VERSION=$(pnpm --filter ${{ env.PACKAGE_NAME }} exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
