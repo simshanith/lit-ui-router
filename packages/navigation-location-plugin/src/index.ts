@@ -12,6 +12,8 @@ import {
   UIRouter,
 } from '@uirouter/core';
 
+const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
+
 export interface UIRouterNavigateInfo
   extends Record<string | number | symbol, unknown> {
   uiRouter: UIRouter;
@@ -27,16 +29,34 @@ export function isUIRouterNavigateEvent(
   return (event as UIRouterNavigateEvent)?.info?.uiRouter instanceof UIRouter;
 }
 
+/**
+ * Location service implementation using the Navigation API.
+ *
+ * Uses the browser's Navigation API for URL management instead of the
+ * History API, providing better integration with browser navigation
+ * and enabling interception of navigation events.
+ *
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API
+ */
 export class NavigationLocationService extends BaseLocationServices {
   _config: LocationConfig;
 
   private _router: UIRouter;
+
+  /**
+   * Creates a new NavigationLocationService instance.
+   * @param router - The UIRouter instance (required despite optional type signature)
+   * @throws Error if router is not provided
+   */
   constructor(router?: UIRouter) {
-    super(router!, false);
-    this._router = router!;
-    this._config = router!.urlService.config;
+    if (!router) {
+      throw new Error('NavigationLocationService requires a UIRouter instance');
+    }
+    super(router, false);
+    this._router = router;
+    this._config = router.urlService.config;
     root.navigation.addEventListener(
-      'currententrychange',
+      CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
       false,
     );
@@ -62,6 +82,11 @@ export class NavigationLocationService extends BaseLocationServices {
     return stripLastPathElement(this._config.baseHref());
   }
 
+  /**
+   * Gets the current URL path, query, and hash relative to the base href.
+   * @returns The current URL string (e.g., '/path?query=value#hash')
+   * @internal
+   */
   protected _get() {
     let { pathname, hash, search } = this._location;
     search = splitQuery(search)[1]; // strip ? if found
@@ -69,7 +94,8 @@ export class NavigationLocationService extends BaseLocationServices {
 
     const basePrefix = this._getBasePrefix();
     const exactBaseHrefMatch = pathname === this._config.baseHref();
-    const startsWithBase = pathname.substr(0, basePrefix.length) === basePrefix;
+    const startsWithBase =
+      pathname.substring(0, basePrefix.length) === basePrefix;
     pathname = exactBaseHrefMatch
       ? '/'
       : startsWithBase
@@ -79,6 +105,14 @@ export class NavigationLocationService extends BaseLocationServices {
     return pathname + (search ? '?' + search : '') + (hash ? '#' + hash : '');
   }
 
+  /**
+   * Sets the URL using the Navigation API's navigate method.
+   * @param state - State object to associate with the navigation entry
+   * @param title - Title for the navigation (passed via info)
+   * @param url - The URL path to navigate to
+   * @param replace - If true, replaces current entry instead of pushing
+   * @internal
+   */
   protected _set(state: unknown, title: string, url: string, replace: boolean) {
     const basePrefix = this._getBasePrefix();
     const slash = url && url[0] !== '/' ? '/' : '';
@@ -97,9 +131,16 @@ export class NavigationLocationService extends BaseLocationServices {
     });
   }
 
+  /**
+   * Cleans up the location service by removing the navigation event listener.
+   * @param router - The UIRouter instance
+   */
   public dispose(router: UIRouter) {
     super.dispose(router);
-    root.navigation.removeEventListener('currententrychange', this._listener);
+    root.navigation.removeEventListener(
+      CURRENT_ENTRY_CHANGE_EVENT,
+      this._listener,
+    );
   }
 }
 
