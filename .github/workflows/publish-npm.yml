@@ -44,6 +44,10 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Build
         run: npm exec -- turbo run lit-ui-router#build
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
         # Create tarball for GitHub release attachment
         run: pnpm --filter lit-ui-router pack --pack-destination packages/lit-ui-router
