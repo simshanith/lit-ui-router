@@ -33,7 +33,7 @@ jobs:
         run: |
           TAG="${GITHUB_REF#refs/tags/}"
           PACKAGE_NAME="${TAG%@*}"
-          echo "PACKAGE_NAME=$PACKAGE_NAME" >> $GITHUB_ENV
+          echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
           # Map npm name to directory
           realpath -s --relative-to="." "$(pnpm list --depth -1 --parseable --filter "$PACKAGE_NAME")"
       - name: Setup pnpm
