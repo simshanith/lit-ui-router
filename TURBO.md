@@ -10,6 +10,31 @@ This monorepo uses [Turborepo](https://turbo.build/) for orchestrating builds, t
 pnpm add turbo --global
 ```
 
+## Workspace Structure
+
+Turbo manages these workspaces (defined in `pnpm-workspace.yaml`):
+
+| Directory     | Purpose                                    | In CI |
+| ------------- | ------------------------------------------ | ----- |
+| `packages/*`  | Published libraries (lit-ui-router, etc.)  | Yes   |
+| `apps/*`      | Sample applications and e2e tests          | Yes   |
+| `tools/*`     | Internal build tools                       | Yes   |
+| `docs`        | Documentation site                         | Yes   |
+
+**Excluded from turbo:**
+
+| Directory   | Purpose                                          |
+| ----------- | ------------------------------------------------ |
+| `examples/` | Standalone tutorial apps (helloworld, etc.)      |
+
+The `examples/` directory contains tutorial applications (helloworld, hellogalaxy, hellosolarsystem) that are intentionally excluded from turbo. These are standalone Vite dev servers meant for learning - they have no turbo.json files and are not part of the CI pipeline. They use npm (not pnpm) for Stackblitz compatibility:
+
+```bash
+cd examples/helloworld
+npm install
+npm run dev
+```
+
 ## Task Dependency Graph
 
 ### Root Configuration (`turbo.json`)
