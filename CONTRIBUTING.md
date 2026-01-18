@@ -2,12 +2,14 @@
 
 ## Development
 
-```
+```bash
 nvm use
-npm i -g turbo
+pnpm add turbo --global
 pnpm install
 turbo build
 ```
+
+See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
 ## Running Tests
 
