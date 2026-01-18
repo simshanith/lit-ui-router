@@ -54,16 +54,17 @@ export function resolveLocationPluginFeature(): string | undefined {
 
 /**
  * Resolves location plugin with auto-detection:
- * 1. Explicit preference (URL param, session storage, env var) if set
- * 2. Navigation API if available in browser
+ * 1. Detect preference (URL param, session storage, env var) when set
+ * 2. Navigation API when preferred and available in browser
  * 3. Fallback to pushState
  */
 export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
-  const feature = resolveLocationPluginFeature();
+  let feature = resolveLocationPluginFeature();
+  if (feature === 'navigation' && !canUseNavigationAPI()) {
+    feature = 'pushState';
+  }
   if (isValidLocationPlugin(feature)) return feature;
-
-  // Auto-detect: use Navigation API if available, otherwise pushState
-  return canUseNavigationAPI() ? 'navigation' : 'pushState';
+  return 'pushState';
 }
 
 export interface FeatureFlagDefinitions {
