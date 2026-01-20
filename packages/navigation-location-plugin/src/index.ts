@@ -14,8 +14,10 @@ import {
 
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
 
-export interface UIRouterNavigateInfo
-  extends Record<string | number | symbol, unknown> {
+export interface UIRouterNavigateInfo extends Record<
+  string | number | symbol,
+  unknown
+> {
   uiRouter: UIRouter;
 }
 
