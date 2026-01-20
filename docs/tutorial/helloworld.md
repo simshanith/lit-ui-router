@@ -113,8 +113,9 @@ Each "page" in our application is a simple function that returns a Lit html temp
 ```typescript
 () => html`<h3>Hello World!</h3>`;
 
-() => html`<h3>About</h3>
-  <p>This is a simple lit-ui-router application.</p>`;
+() =>
+  html`<h3>About</h3>
+    <p>This is a simple lit-ui-router application.</p>`;
 ```
 
 These are standard Lit templates. When navigation occurs, lit-ui-router will render the appropriate component based on the current state.
