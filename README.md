@@ -13,7 +13,7 @@
 ---
 
 lit-ui-router is a client-side [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application)
-routing framework for [lit](https://lit.dev/).
+routing framework for [Lit](https://lit.dev/).
 
 Routing frameworks for SPAs update the browser's URL as the user navigates through the app. Conversely, this allows
 changes to the browser's URL to drive navigation through the app, thus allowing the user to create a bookmark to a
@@ -23,42 +23,75 @@ UI-Router applications are modeled as a hierarchical tree of states. UI-Router p
 [_state machine_](https://en.wikipedia.org/wiki/Finite-state_machine) to manage the transitions between those
 application states in a transaction-like manner.
 
+## Features
+
+- **Flexible Component Definitions** - Use template functions, LitElement classes, or both
+- **State-based Routing** - Hierarchical states with nested views
+- **Data Resolution** - Fetch data before rendering with built-in resolve system
+- **Navigation Directives** - `uiSref` and `uiSrefActive` for declarative navigation
+
 ## Get Started
 
-- [About UI-Router](https://ui-router.github.io/about)
+- [Documentation](https://lit-ui-router.dev) - Full docs, tutorials, and API reference
 - [Examples](./examples) - Try live examples on StackBlitz
+- [About UI-Router](https://ui-router.github.io/about) - Core concepts
 
 The UI-Router package is distributed using [npm](https://www.npmjs.com/), the node package manager.
 
 ```
-yarn add lit-ui-router
+npm install lit-ui-router
 ```
 
 Import `UIRouterLit` into your project, register some states and you're good to go!
 
-```js
+```ts
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router';
-import Home from './components/Home';
 
-// define your states
-const states = [
-  {
-    name: 'home',
-    url: '/home',
-    component: Home,
-  },
-];
+const router = new UIRouterLit();
+router.plugin(hashLocationPlugin);
 
-const uiRouter = new UIRouterLit();
-uiRouter.plugin(hashLocationPlugin);
-states.forEach((state) => uiRouter.stateRegistry.register(state));
+// Simple routes using template functions - no LitElement classes needed!
+router.stateRegistry.register([
+  { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
+  { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
+]);
+
+router.start();
 
 render(
-  html`<ui-router .uiRouter=${uiRouter}>
+  html`<ui-router .uiRouter=${router}>
     <ui-view></ui-view>
   </ui-router>`,
-  document.getElementById('root'),
+  document.getElementById('root')!,
 );
+```
+
+## Component Styles
+
+lit-ui-router supports multiple ways to define route components:
+
+| Style               | Best For                      | Example                    |
+| ------------------- | ----------------------------- | -------------------------- |
+| Template function   | Simple views, prototyping     | `` () => html`...` ``      |
+| Template with props | Views needing params/resolves | `` (props) => html`...` `` |
+| LitElement class    | Complex views with lifecycle  | `MyComponent`              |
+
+### With Route Parameters
+
+```ts
+{
+  name: 'user',
+  url: '/user/:id',
+  component: (props) => html`<h1>User ${props?.transition?.params().id}</h1>`
+}
+```
+
+### With LitElement Classes
+
+For complex components with lifecycle, state, and styles:
+
+```ts
+{ name: 'dashboard', url: '/dashboard', component: DashboardElement }
 ```
