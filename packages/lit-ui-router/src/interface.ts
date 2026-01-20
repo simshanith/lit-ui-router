@@ -184,21 +184,31 @@ export interface UIViewInjectedProps<
 /**
  * A function that returns a Lit TemplateResult for rendering in a `<ui-view>`.
  *
- * This is one of the component types that can be used in state declarations.
- * The function receives [[UIViewInjectedProps]] as its argument.
- * [[NormalizedLitViewDeclaration.component]] uses this signature.
+ * This is the **simplest way** to define route components - no LitElement class needed.
+ * The function optionally receives [[UIViewInjectedProps]] as its argument.
  *
- * @example
+ * @example Simple template (no props needed)
  * ```ts
- * const HomeView: RoutedLitTemplate = (props) => {
- *   return html`<h1>Welcome Home</h1>`;
- * };
+ * const HomeView: RoutedLitTemplate = () => html`<h1>Welcome Home</h1>`;
  *
- * router.stateRegistry.register({
- *   name: 'home',
- *   url: '/home',
- *   component: HomeView
- * });
+ * // Or use directly inline in a state declaration:
+ * { name: 'home', url: '/', component: () => html`<h1>Home</h1>` }
+ * ```
+ *
+ * @example With route parameters
+ * ```ts
+ * const UserView: RoutedLitTemplate = (props) => html`
+ *   <h1>User: ${props?.transition?.params().id}</h1>
+ * `;
+ * ```
+ *
+ * @example With resolved data (typed)
+ * ```ts
+ * interface UserResolves { user: { name: string } }
+ *
+ * const UserDetail: RoutedLitTemplate<UserResolves> = (props) => html`
+ *   <h1>${props?.resolves?.user?.name}</h1>
+ * `;
  * ```
  *
  * @category types
@@ -311,38 +321,51 @@ export type LitViewDeclaration<
  * State declaration interface for Lit applications.
  *
  * Extends the core [[StateDeclaration]] with Lit-specific component support.
+ * The `component` property accepts template functions, LitElement classes, or both.
  *
- * @example Basic state with template function
+ * @example Simplest: inline template function
  * ```ts
- * const homeState: LitStateDeclaration = {
- *   name: 'home',
- *   url: '/home',
- *   component: () => html`<h1>Home</h1>`
- * };
+ * { name: 'home', url: '/', component: () => html`<h1>Home</h1>` }
  * ```
  *
- * @example State with LitElement class
+ * @example Template with route parameters
  * ```ts
- * const usersState: LitStateDeclaration = {
+ * {
+ *   name: 'user',
+ *   url: '/user/:id',
+ *   component: (props) => html`<h1>User ${props?.transition?.params().id}</h1>`
+ * }
+ * ```
+ *
+ * @example Template with resolved data
+ * ```ts
+ * {
  *   name: 'users',
  *   url: '/users',
- *   component: UserListElement,
- *   resolve: [
- *     { token: 'users', resolveFn: () => fetch('/api/users').then(r => r.json()) }
- *   ]
- * };
+ *   component: (props) => html`
+ *     <ul>${props?.resolves?.users?.map(u => html`<li>${u.name}</li>`)}</ul>
+ *   `,
+ *   resolve: [{ token: 'users', resolveFn: () => fetch('/api/users').then(r => r.json()) }]
+ * }
+ * ```
+ *
+ * @example LitElement class (for complex components)
+ * ```ts
+ * { name: 'dashboard', url: '/dashboard', component: DashboardElement }
  * ```
  *
  * @example Nested states
  * ```ts
  * const states: LitStateDeclaration[] = [
  *   { name: 'app', abstract: true, component: AppShell },
- *   { name: 'app.home', url: '/home', component: HomeView },
+ *   { name: 'app.home', url: '/home', component: () => html`<h1>Home</h1>` },
  *   { name: 'app.users', url: '/users', component: UsersView }
  * ];
  * ```
  *
  * @see [[StateDeclaration]]
+ * @see {@link RoutedLitTemplate}
+ * @see {@link RoutedLitElement}
  *
  * @category types
  */

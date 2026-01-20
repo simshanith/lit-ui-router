@@ -62,16 +62,52 @@ router.start();
 
 ### State Declaration
 
-[`LitStateDeclaration`](./reference/types/LitStateDeclaration) defines a state with its URL and component:
+[`LitStateDeclaration`](./reference/types/LitStateDeclaration) defines a state with its URL and component.
+
+#### Component Styles
+
+lit-ui-router supports multiple ways to define route components:
+
+**Inline Template Function** (simplest)
 
 ```ts
-const state: LitStateDeclaration = {
-  name: 'users.detail',
-  url: '/:userId',
-  component: UserDetailElement,
-  resolve: [{ token: 'user', resolveFn: ($transition$) => fetchUser($transition$.params().userId) }],
-};
+{ name: 'home', url: '/', component: () => html`<h1>Home</h1>` }
 ```
+
+**Template with Route Parameters**
+
+```ts
+{
+  name: 'user',
+  url: '/user/:id',
+  component: (props) => html`<h1>User ${props?.transition?.params().id}</h1>`
+}
+```
+
+**Template with Resolved Data**
+
+```ts
+{
+  name: 'users',
+  url: '/users',
+  component: (props) => html`
+    <ul>${props?.resolves?.users?.map(u => html`<li>${u.name}</li>`)}</ul>
+  `,
+  resolve: [{ token: 'users', resolveFn: () => fetchUsers() }]
+}
+```
+
+**LitElement Class** (for complex components with lifecycle/state)
+
+```ts
+{ name: 'dashboard', url: '/dashboard', component: DashboardElement }
+```
+
+| Style                    | Best For                                       |
+| ------------------------ | ---------------------------------------------- |
+| `() => html\`...\``      | Simple static views                            |
+| `(props) => html\`...\`` | Views needing params or resolves               |
+| `MyElement`              | Complex views with lifecycle, state, or styles |
 
 ### Lifecycle Hooks
 
