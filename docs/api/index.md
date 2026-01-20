@@ -103,11 +103,11 @@ lit-ui-router supports multiple ways to define route components:
 { name: 'dashboard', url: '/dashboard', component: DashboardElement }
 ```
 
-| Style                    | Best For                                       |
-| ------------------------ | ---------------------------------------------- |
-| `() => html\`...\``      | Simple static views                            |
-| `(props) => html\`...\`` | Views needing params or resolves               |
-| `MyElement`              | Complex views with lifecycle, state, or styles |
+| Style                      | Best For                                       |
+| -------------------------- | ---------------------------------------------- |
+| `` () => html`...` ``      | Simple static views                            |
+| `` (props) => html`...` `` | Views needing params or resolves               |
+| `MyElement`                | Complex views with lifecycle, state, or styles |
 
 ### Lifecycle Hooks
 
