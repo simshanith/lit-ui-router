@@ -72,11 +72,11 @@ render(
 
 lit-ui-router supports multiple ways to define route components:
 
-| Style               | Best For                      | Example                  |
-| ------------------- | ----------------------------- | ------------------------ |
-| Template function   | Simple views, prototyping     | `() => html\`...\``      |
-| Template with props | Views needing params/resolves | `(props) => html\`...\`` |
-| LitElement class    | Complex views with lifecycle  | `MyComponent`            |
+| Style               | Best For                      | Example                    |
+| ------------------- | ----------------------------- | -------------------------- |
+| Template function   | Simple views, prototyping     | `` () => html`...` ``      |
+| Template with props | Views needing params/resolves | `` (props) => html`...` `` |
+| LitElement class    | Complex views with lifecycle  | `MyComponent`              |
 
 ### With Route Parameters
 

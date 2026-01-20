@@ -29,11 +29,11 @@ router.start();
 
 ## Component Styles
 
-| Style               | Best For                      | Example                  |
-| ------------------- | ----------------------------- | ------------------------ |
-| Template function   | Simple views, prototyping     | `() => html\`...\``      |
-| Template with props | Views needing params/resolves | `(props) => html\`...\`` |
-| LitElement class    | Complex views with lifecycle  | `MyComponent`            |
+| Style               | Best For                      | Example                    |
+| ------------------- | ----------------------------- | -------------------------- |
+| Template function   | Simple views, prototyping     | `` () => html`...` ``      |
+| Template with props | Views needing params/resolves | `` (props) => html`...` `` |
+| LitElement class    | Complex views with lifecycle  | `MyComponent`              |
 
 ## Documentation
 
