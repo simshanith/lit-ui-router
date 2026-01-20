@@ -24,24 +24,6 @@ import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
 import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration } from 'lit-ui-router';
 
-// Components
-@customElement('hello-component')
-class HelloComponent extends LitElement {
-  render() {
-    return html`<h3>Hello World!</h3>`;
-  }
-}
-
-@customElement('about-component')
-class AboutComponent extends LitElement {
-  render() {
-    return html`
-      <h3>About</h3>
-      <p>This is a simple lit-ui-router application.</p>
-    `;
-  }
-}
-
 @customElement('app-root')
 class AppRoot extends LitElement {
   static styles = css`
@@ -72,13 +54,15 @@ class AppRoot extends LitElement {
 const helloState: LitStateDeclaration = {
   name: 'hello',
   url: '/hello',
-  component: HelloComponent,
+  component: () => html`<h3>Hello World!</h3>`,
 };
 
 const aboutState: LitStateDeclaration = {
   name: 'about',
   url: '/about',
-  component: AboutComponent,
+  component: () =>
+    html`<h3>About</h3>
+      <p>This is a simple lit-ui-router application.</p>`,
 };
 
 // Router setup
@@ -124,28 +108,17 @@ We import the essential dependencies:
 
 ### Creating Components
 
-Each "page" in our application is a Lit web component:
+Each "page" in our application is a simple function that returns a Lit html template:
 
 ```typescript
-@customElement('hello-component')
-class HelloComponent extends LitElement {
-  render() {
-    return html`<h3>Hello World!</h3>`;
-  }
-}
+() => html`<h3>Hello World!</h3>`;
 
-@customElement('about-component')
-class AboutComponent extends LitElement {
-  render() {
-    return html`
-      <h3>About</h3>
-      <p>This is a simple lit-ui-router application.</p>
-    `;
-  }
-}
+() =>
+  html`<h3>About</h3>
+    <p>This is a simple lit-ui-router application.</p>`;
 ```
 
-These are standard LitElement components. When navigation occurs, lit-ui-router will render the appropriate component based on the current state.
+These are standard Lit templates. When navigation occurs, lit-ui-router will render the appropriate component based on the current state.
 
 ### State Definitions
 
@@ -155,13 +128,15 @@ States are the fundamental building blocks of UI Router. Each state defines a UR
 const helloState: LitStateDeclaration = {
   name: 'hello',
   url: '/hello',
-  component: HelloComponent,
+  component: () => html`<h3>Hello World!</h3>`,
 };
 
 const aboutState: LitStateDeclaration = {
   name: 'about',
   url: '/about',
-  component: AboutComponent,
+  component: () =>
+    html`<h3>About</h3>
+      <p>This is a simple lit-ui-router application.</p>`,
 };
 ```
 
