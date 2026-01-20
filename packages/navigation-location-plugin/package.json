@@ -45,10 +45,10 @@
     "@uirouter/core": "^6.1.2",
     "@vitest/browser-playwright": "^4.0.17",
     "@vitest/coverage-v8": "^4.0.17",
-    "playwright": "1.54.1",
-    "prettier": "3.6.2",
+    "playwright": "^1.57.0",
+    "prettier": "^3.8.0",
     "release-it": "^19.2.3",
-    "typescript": "5.8.3",
+    "typescript": "^5.9.3",
     "vitest": "^4.0.17"
   }
 }
