@@ -19,7 +19,7 @@
   "engines": {
     "node": ">=22.17.1"
   },
-  "packageManager": "pnpm@10.26.2",
+  "packageManager": "pnpm@10.28.1",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
     "eslint": "^9.39.2",
