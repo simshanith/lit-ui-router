@@ -9,24 +9,6 @@ import {
   LitStateDeclaration,
 } from 'lit-ui-router';
 
-// Components
-@customElement('hello-component')
-class HelloComponent extends LitElement {
-  render() {
-    return html`<h3>Hello World!</h3>`;
-  }
-}
-
-@customElement('about-component')
-class AboutComponent extends LitElement {
-  render() {
-    return html`
-      <h3>About</h3>
-      <p>This is a simple lit-ui-router application.</p>
-    `;
-  }
-}
-
 @customElement('app-root')
 export class AppRoot extends LitElement {
   static styles = css`
@@ -64,13 +46,15 @@ export class AppRoot extends LitElement {
 const helloState: LitStateDeclaration = {
   name: 'hello',
   url: '/hello',
-  component: HelloComponent,
+  component: () => html`<h3>Hello World!</h3>`,
 };
 
 const aboutState: LitStateDeclaration = {
   name: 'about',
   url: '/about',
-  component: AboutComponent,
+  component: () =>
+    html`<h3>About</h3>
+      <p>This is a simple lit-ui-router application.</p>`,
 };
 
 // Router setup
