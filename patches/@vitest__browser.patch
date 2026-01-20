@@ -1,0 +1,14 @@
+diff --git a/dist/client/__vitest_browser__/tester-k74mgIRa.js b/dist/client/__vitest_browser__/tester-k74mgIRa.js
+index afd67e57598e1b94b13163cdb1d1933545cd90fe..970a383f49bd18fc8f8f41bdd426efcda06544a0 100644
+--- a/dist/client/__vitest_browser__/tester-k74mgIRa.js
++++ b/dist/client/__vitest_browser__/tester-k74mgIRa.js
+@@ -1982,6 +1982,9 @@ channel.addEventListener("message", async (e) => {
+   if (!("iframeId" in data) || data.iframeId !== getBrowserState().iframeId) {
+     return;
+   }
++  if (data.event.startsWith("response:")) {
++    return;
++  }
+   switch (data.event) {
+     case "execute": {
+       const { method, files, context } = data;

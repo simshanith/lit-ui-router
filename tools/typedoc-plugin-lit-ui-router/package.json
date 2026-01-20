@@ -21,8 +21,8 @@
     "typedoc": "^0.28.0"
   },
   "devDependencies": {
-    "@types/node": "^22.0.0",
-    "typedoc": "^0.28.0",
+    "@types/node": "^22.19.7",
+    "typedoc": "^0.28.16",
     "typescript": "5.8.3"
   }
 }

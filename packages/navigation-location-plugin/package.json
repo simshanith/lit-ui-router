@@ -42,13 +42,13 @@
   },
   "devDependencies": {
     "@types/dom-navigation": "^1.0.6",
-    "@uirouter/core": "^6.0.8",
-    "@vitest/browser-playwright": "^4.0.16",
-    "@vitest/coverage-v8": "^4.0.16",
+    "@uirouter/core": "^6.1.2",
+    "@vitest/browser-playwright": "^4.0.17",
+    "@vitest/coverage-v8": "^4.0.17",
     "playwright": "1.54.1",
     "prettier": "3.6.2",
-    "release-it": "^19.2.2",
+    "release-it": "^19.2.3",
     "typescript": "5.8.3",
-    "vitest": "^4.0.16"
+    "vitest": "^4.0.17"
   }
 }
