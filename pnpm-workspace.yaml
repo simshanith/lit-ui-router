@@ -4,10 +4,13 @@ packages:
   - tools/*
   - docs
   - examples
+
 onlyBuiltDependencies:
   - cypress
-  - playwright
   - esbuild
+  - playwright
+  - sharp
+  - workerd
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
