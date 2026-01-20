@@ -25,8 +25,8 @@
   "devDependencies": {
     "@types/dom-navigation": "^1.0.6",
     "@types/lodash": "^4.17.23",
-    "prettier": "3.6.2",
-    "typescript": "5.8.3",
+    "prettier": "^3.8.0",
+    "typescript": "^5.9.3",
     "vite": "^7.3.1",
     "vite-plugin-checker": "^0.10.3",
     "vite-plugin-static-copy": "^3.1.5",
