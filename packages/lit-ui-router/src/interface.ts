@@ -290,8 +290,8 @@ export type RoutedLitComponent<
  */
 export interface LitViewDeclarationElement<
   T extends DefaultResolvesType = DefaultResolvesType,
-> extends RoutedLitElement<T>,
-    _ViewDeclaration {}
+>
+  extends RoutedLitElement<T>, _ViewDeclaration {}
 
 /**
  * A view declaration object with an explicit component property.

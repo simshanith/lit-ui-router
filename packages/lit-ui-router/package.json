@@ -33,22 +33,22 @@
   },
   "customElements": "./dist/custom-elements.json",
   "dependencies": {
-    "@uirouter/core": "^6.0.8",
-    "lit": "^2.0.0 || ^3.0.0"
+    "@uirouter/core": "^6.1.2",
+    "lit": "^3.3.2"
   },
   "devDependencies": {
-    "@custom-elements-manifest/analyzer": "0.10.4",
-    "@vitest/browser-playwright": "^4.0.16",
-    "@vitest/coverage-v8": "^4.0.16",
-    "playwright": "1.54.1",
-    "prettier": "3.6.2",
-    "release-it": "^19.2.2",
-    "rimraf": "^6.0.0",
-    "typedoc": "^0.28.15",
+    "@custom-elements-manifest/analyzer": "^0.10.10",
+    "@vitest/browser-playwright": "^4.0.17",
+    "@vitest/coverage-v8": "^4.0.17",
+    "playwright": "^1.57.0",
+    "prettier": "^3.8.0",
+    "release-it": "^19.2.3",
+    "rimraf": "^6.1.2",
+    "typedoc": "^0.28.16",
     "typedoc-plugin-lit-ui-router": "workspace:*",
-    "typedoc-plugin-markdown": "^4.4.0",
+    "typedoc-plugin-markdown": "^4.9.0",
     "typedoc-vitepress-theme": "^1.1.2",
-    "typescript": "5.8.3",
-    "vitest": "^4.0.16"
+    "typescript": "^5.9.3",
+    "vitest": "^4.0.17"
   }
 }

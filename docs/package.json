@@ -14,17 +14,17 @@
     "lint": "eslint ."
   },
   "devDependencies": {
-    "@spectrum-web-components/icons-workflow": "^1.10.0",
-    "prettier": "3.6.2",
-    "sample-app-lit": "workspace:*",
-    "screenfull": "^6.0.2",
-    "typescript": "5.8.3",
-    "vite": "7.0.5",
-    "vite-plugin-static-copy": "^3.1.1",
-    "vitepress": "1.6.3",
-    "wrangler": "^4.58.0"
+    "prettier": "^3.8.0",
+    "typescript": "^5.9.3",
+    "vite": "^7.3.1",
+    "vite-plugin-static-copy": "^3.1.5",
+    "vitepress": "^1.6.4",
+    "wrangler": "^4.59.2"
   },
   "dependencies": {
-    "vue": "^3.5.26"
+    "@spectrum-web-components/icons-workflow": "^1.10.0",
+    "sample-app-lit": "workspace:*",
+    "screenfull": "^6.0.2",
+    "vue": "^3.5.27"
   }
 }

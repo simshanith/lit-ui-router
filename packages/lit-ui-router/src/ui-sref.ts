@@ -35,8 +35,9 @@ export interface UiSrefElement extends Element {
  * Used internally by uiSrefActive to track which states are being linked to.
  * @internal
  */
-export interface UiSrefTargetEvent
-  extends CustomEvent<{ targetState: TargetState }> {
+export interface UiSrefTargetEvent extends CustomEvent<{
+  targetState: TargetState;
+}> {
   target: UiSrefElement;
 }
 
