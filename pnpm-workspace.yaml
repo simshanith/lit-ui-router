@@ -5,8 +5,6 @@ packages:
   - docs
   - examples
 
-# Route deps added via `pnpm add` into the catalog automatically, so shared
-# versions trend toward a single source of truth in this file.
 catalogMode: prefer
 
 catalog:
