@@ -38,7 +38,7 @@ jobs:
       - name: Install Cypress
         run: pnpm --filter sample-app-lit-e2e exec cypress install
       - name: Build and Test
-        run: pnpm run ci
+        run: pnpm run ci -- --ui=stream
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
