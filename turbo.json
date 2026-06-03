@@ -10,6 +10,7 @@
       "outputs": ["dist/**"]
     },
     "test": {
+      "with": ["//#test:root"],
       "dependsOn": ["^test"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
     },
@@ -26,7 +27,25 @@
       "inputs": ["examples/**/*.{ts,js}", "eslint.config.js", "$TURBO_DEFAULT$"]
     },
     "ci": {
-      "dependsOn": ["build", "test", "test:coverage", "lint", "format:check"]
+      "dependsOn": [
+        "build",
+        "test",
+        "test:coverage",
+        "lint",
+        "format:check",
+        "//#check:catalog"
+      ]
+    },
+    "//#check:catalog": {
+      "inputs": [
+        "scripts/check-catalog.mjs",
+        "scripts/check-catalog.core.mjs",
+        "pnpm-workspace.yaml",
+        "**/package.json"
+      ]
+    },
+    "//#test:root": {
+      "inputs": ["scripts/**"]
     },
     "format": {
       "with": ["//#format:root"],
