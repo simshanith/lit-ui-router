@@ -18,11 +18,11 @@
     "lint": "eslint ."
   },
   "peerDependencies": {
-    "typedoc": "^0.28.0"
+    "typedoc": "catalog:publishedPeer"
   },
   "devDependencies": {
     "@types/node": "^22.19.7",
-    "typedoc": "^0.28.16",
-    "typescript": "^5.9.3"
+    "typedoc": "catalog:",
+    "typescript": "catalog:"
   }
 }
