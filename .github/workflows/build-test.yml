@@ -37,8 +37,15 @@ jobs:
         run: pnpm --filter lit-ui-router exec playwright install --with-deps
       - name: Install Cypress
         run: pnpm --filter sample-app-lit-e2e exec cypress install
+      # Expose the workspace's hoisted binaries (turbo, etc.) on PATH using an
+      # absolute path. Running turbo via `pnpm run`/`pnpm exec` prepends a
+      # *relative* `./node_modules/.bin`, which turbo mis-resolves for workspace
+      # sub-packages and fails with "unable to spawn child process". Invoking the
+      # pinned local turbo binary directly from a clean shell avoids that.
+      - name: Add workspace binaries to PATH
+        run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Build and Test
-        run: pnpm exec turbo run ci --ui=stream
+        run: turbo run ci --ui=stream
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
