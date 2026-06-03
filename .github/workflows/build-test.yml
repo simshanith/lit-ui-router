@@ -37,8 +37,10 @@ jobs:
         run: pnpm --filter lit-ui-router exec playwright install --with-deps
       - name: Install Cypress
         run: pnpm --filter sample-app-lit-e2e exec cypress install
+      - name: Add workspace binaries to PATH
+        run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Build and Test
-        run: pnpm run ci
+        run: turbo run ci --ui=stream
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
