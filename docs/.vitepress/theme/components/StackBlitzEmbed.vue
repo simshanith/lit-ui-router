@@ -60,6 +60,7 @@ onUnmounted(() => {
       :src="src"
       :title="title"
       ref="iframe"
+      allow="cross-origin-isolated"
       credentialless
       sandbox="allow-forms allow-modals allow-popups allow-presentation allow-same-origin allow-scripts"
     />
