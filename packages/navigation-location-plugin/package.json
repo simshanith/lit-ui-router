@@ -45,7 +45,7 @@
     "@uirouter/core": "^6.1.2",
     "@vitest/browser-playwright": "^4.0.17",
     "@vitest/coverage-v8": "^4.0.17",
-    "playwright": "^1.57.0",
+    "playwright": "catalog:",
     "prettier": "^3.8.0",
     "release-it": "^19.2.3",
     "typescript": "^5.9.3",
