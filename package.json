@@ -22,18 +22,20 @@
   "packageManager": "pnpm@10.28.1",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "cypress": "catalog:",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
     "eslint-formatter-tap": "^9.0.1",
     "eslint-plugin-package-json": "^0.88.1",
     "eslint-plugin-turbo": "^2.7.5",
     "globals": "^17.0.0",
+    "playwright": "catalog:",
     "pnpm": "^10.28.1",
-    "prettier": "^3.8.0",
+    "prettier": "catalog:",
     "turbo": "^2.7.5",
-    "typescript": "^5.9.3",
+    "typescript": "catalog:",
     "typescript-eslint": "^8.53.1",
-    "wrangler": "^4.59.2"
+    "wrangler": "catalog:"
   },
   "pnpm": {
     "overrides": {

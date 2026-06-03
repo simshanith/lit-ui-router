@@ -5,6 +5,31 @@ packages:
   - docs
   - examples
 
+catalogMode: prefer
+
+catalog:
+  '@types/dom-navigation': ^1.0.6
+  '@types/lodash': ^4.17.23
+  '@uirouter/core': ^6.1.2
+  '@vitest/browser-playwright': ^4.0.17
+  '@vitest/coverage-v8': ^4.0.17
+  cypress: ^14.5.4
+  lit: ^3.3.2
+  playwright: ^1.57.0
+  prettier: ^3.8.0
+  release-it: ^19.2.3
+  typedoc: ^0.28.16
+  typescript: ^5.9.3
+  vite: ^7.3.1
+  vite-plugin-static-copy: ^3.1.5
+  vitest: ^4.0.17
+  wrangler: ^4.59.2
+
+catalogs:
+  publishedPeer:
+    '@uirouter/core': ^6.0.8
+    typedoc: ^0.28.0
+
 onlyBuiltDependencies:
   - cypress
   - esbuild

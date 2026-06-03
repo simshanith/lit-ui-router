@@ -12,24 +12,24 @@
   },
   "dependencies": {
     "@api-viewer/docs": "1.0.0-pre.10",
-    "@uirouter/core": "^6.1.2",
+    "@uirouter/core": "catalog:",
     "@uirouter/dsr": "^1.2.0",
     "@uirouter/sticky-states": "^1.5.1",
     "@uirouter/visualizer": "^7.2.1",
-    "lit": "^3.3.2",
+    "lit": "catalog:",
     "lit-dialog": "^2.0.1",
     "lit-ui-router": "workspace:*",
     "lodash": "^4.17.21",
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {
-    "@types/dom-navigation": "^1.0.6",
-    "@types/lodash": "^4.17.23",
-    "prettier": "^3.8.0",
-    "typescript": "^5.9.3",
-    "vite": "^7.3.1",
+    "@types/dom-navigation": "catalog:",
+    "@types/lodash": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
     "vite-plugin-checker": "^0.10.3",
-    "vite-plugin-static-copy": "^3.1.5",
-    "wrangler": "^4.59.2"
+    "vite-plugin-static-copy": "catalog:",
+    "wrangler": "catalog:"
   }
 }
