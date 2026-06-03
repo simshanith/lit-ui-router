@@ -6,6 +6,7 @@
   "private": true,
   "scripts": {
     "build": "turbo run build",
+    "check:catalog": "node scripts/check-catalog.mjs",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
     "format": "turbo run format",
@@ -14,7 +15,8 @@
     "format:root": "prettier --write \"*.{md,ts,js,json,jsonc}\"",
     "lint": "turbo run lint",
     "lint:root": "eslint --format tap --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples",
-    "test:coverage": "turbo run test:coverage"
+    "test:coverage": "turbo run test:coverage",
+    "test:root": "node --test \"scripts/**/*.test.mjs\""
   },
   "engines": {
     "node": ">=22.17.1"
@@ -22,6 +24,8 @@
   "packageManager": "pnpm@10.28.1",
   "devDependencies": {
     "@eslint/js": "^9.39.2",
+    "@pnpm/fs.find-packages": "catalog:",
+    "@pnpm/workspace.read-manifest": "catalog:",
     "cypress": "catalog:",
     "eslint": "^9.39.2",
     "eslint-config-prettier": "^10.1.8",
