@@ -24,7 +24,8 @@
       "LocationPlugin": "https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html",
       "LocationServices": "https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationservices.html",
       "LocationConfig": "https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationconfig.html",
-      "Disposable": "https://ui-router.github.io/core/docs/latest/interfaces/_interface_.disposable.html"
+      "Disposable": "https://ui-router.github.io/core/docs/latest/interfaces/_interface_.disposable.html",
+      "UIRouterPlugin": "https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html"
     },
     "@types/dom-navigation": {
       "NavigateEvent": "https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent"

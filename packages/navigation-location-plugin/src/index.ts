@@ -14,6 +14,11 @@ import {
 
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
 
+/**
+ * Shape of the `info` payload this plugin passes to `navigation.navigate()`,
+ * used by {@link isUIRouterNavigateEvent} to recognize its own navigations.
+ * @internal
+ */
 export interface UIRouterNavigateInfo extends Record<
   string | number | symbol,
   unknown
@@ -146,7 +151,7 @@ export class NavigationLocationService extends BaseLocationServices {
   }
 }
 
-/** A `UIRouterPlugin` that gets/sets the current location using the browser's `location` and `navigation` apis */
+/** A [UIRouterPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html) that gets/sets the current location using the browser's `location` and `navigation` apis */
 export const navigationLocationPlugin = locationPluginFactory(
   'vanilla.navigationLocation',
   true,
