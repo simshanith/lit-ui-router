@@ -2,7 +2,7 @@
 
 ## Development
 
-This repo uses [mise](https://mise.jdx.dev) to pin the Node.js, pnpm, and turbo versions used by contributors and CI. Versions are declared in [`.config/mise/config.toml`](./.config/mise/config.toml).
+This repo uses [mise](https://mise.jdx.dev) to provision the Node.js, pnpm, and turbo versions used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm and turbo are pinned in [`.config/mise/config.toml`](./.config/mise/config.toml).
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
@@ -12,7 +12,7 @@ pnpm install
 turbo build
 ```
 
-`mise install` provisions the pinned Node, pnpm, and turbo (as a global tool) and puts them on `PATH` via mise's shims — no `nvm use` or `pnpm add --global` needed. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
+`mise install` provisions the pinned Node, pnpm, and turbo (as a global tool) and puts them on `PATH` via mise's shims — no separate `nvm use` or `pnpm add --global` needed. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
 ## Running Tests
 
