@@ -17,6 +17,33 @@
   "enumMembersFormat": "table",
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
+      "StateDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html",
+      "Transition": "https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html",
+      "TransitionService": "https://ui-router.github.io/core/docs/latest/classes/_transition_transitionservice_.transitionservice.html",
+      "StateService": "https://ui-router.github.io/core/docs/latest/classes/_state_stateservice_.stateservice.html",
+      "RawParams": "https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.rawparams.html",
+      "StateOrName": "https://ui-router.github.io/core/docs/latest/modules/_state_interface_.html#stateorname"
+    },
+    "lit": {
+      "ReactiveController": "https://lit.dev/docs/api/ReactiveController/",
+      "ReactiveControllerHost": "https://lit.dev/docs/api/ReactiveControllerHost/"
+    },
+    "@lit/reactive-element": {
+      "ReactiveController": "https://lit.dev/docs/api/ReactiveController/",
+      "ReactiveControllerHost": "https://lit.dev/docs/api/ReactiveControllerHost/"
+    },
+    "mobx": {
+      "IEqualsComparer": "https://mobx.js.org/computeds.html#built-in-comparers",
+      "IReactionDisposer": "https://mobx.js.org/reactions.html#reaction"
+    },
+    "lit-ui-router": {
+      "UIRouterLit": "/api/reference/core/UIRouterLit",
+      "UIRouterLitElement": "/api/reference/components/UIRouterLitElement"
+    }
+  },
   "formatWithPrettier": true,
   "prettierConfigFile": "../../.prettierrc",
   "sidebar": {
