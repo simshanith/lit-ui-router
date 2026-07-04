@@ -1,7 +1,7 @@
-import { html, LitElement, PropertyValues } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { isEqual } from 'lodash';
-import { UIViewInjectedProps } from 'lit-ui-router';
+import { TransitionController, UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from '../global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
@@ -34,52 +34,39 @@ export class Compose extends LitElement {
   constructor(_uiViewProps: UIViewInjectedProps<ComposeResolves>) {
     super();
     this._uiViewProps = _uiViewProps;
-    this.pristineMessage = this.buildPristineMessage();
-    this.message = { ...this.pristineMessage };
+    this.resetMessage(_uiViewProps?.resolves?.$stateParams?.message);
   }
 
-  buildPristineMessage(): Message {
-    return {
+  // Resets the draft whenever a transition lands on this state. Sticky
+  // instances survive between visits, so the constructor only runs once:
+  // - hostConnected: the element (re)entered the DOM, start a fresh draft.
+  // - onSuccess: a transition targeted this state while composing (Reply/
+  //   Forward/Edit, or a DSR redirect back here); reset only if the message
+  //   param actually changed, so an in-progress draft isn't clobbered.
+  // Params are read from the transition itself, which is authoritative even
+  // before <ui-view> pushes updated props. uiCanExit below still guards
+  // against silently discarding unsaved edits.
+  transitions = new TransitionController(this, {
+    criteria: { to: 'mymessages.compose' },
+    callback: (transition, reason) =>
+      this.resetMessage(
+        transition?.params().message as Partial<Message> | undefined,
+        { force: reason === 'hostConnected' },
+      ),
+  });
+
+  resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    const pristineMessage = {
       body: '',
       to: '',
       subject: '',
-      ...this._uiViewProps?.resolves?.$stateParams?.message,
+      ...message,
       from: AppConfig.emailAddress,
     } as Message;
-  }
-
-  async willUpdate() {
-    let pristineMessage;
-    if (
-      this.pristineMessage &&
-      !isEqual(
-        this.pristineMessage,
-        (pristineMessage = this.buildPristineMessage()),
-      )
-    ) {
-      this.pristineMessage = pristineMessage;
-      this.message = { ...this.pristineMessage };
-    }
-  }
-
-  shouldUpdate(changedProperties: PropertyValues) {
-    // let pristineMessage;
-    // if (this.pristineMessage && !isEqual(this.pristineMessage, pristineMessage = this.buildPristineMessage())) {
-    //   this.pristineMessage = pristineMessage;
-    //   this.message = {...this.pristineMessage};
-    //   return true;
-    // }
-    return super.shouldUpdate(changedProperties);
-  }
-
-  uiOnParamsChanged(changedProperties: Record<string, unknown>) {
-    console.info(
-      'uiOnParamsChanged',
-      changedProperties,
-      this._uiViewProps?.resolves?.$stateParams,
-    );
-    // this.pristineMessage = { body: '', to: '', subject: '', ...this._uiViewProps.resolves.$stateParams.message, from: AppConfig.emailAddress };
-    // this.message = {...this.pristineMessage};
+    if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
+    this.pristineMessage = pristineMessage;
+    this.message = { ...pristineMessage };
+    this.canExit = false;
   }
 
   /**

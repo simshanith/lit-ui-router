@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import { uiSref, uiSrefActive } from 'lit-ui-router';
+import { TransitionController, uiSref, uiSrefActive } from 'lit-ui-router';
 
 import AppConfig from '../global/appConfig.js';
 import AuthService from '../global/authService.js';
@@ -11,6 +11,11 @@ export class NavHeader extends LitElement {
   createRenderRoot() {
     return this;
   }
+
+  // AuthService/AppConfig are plain singletons with no change notification,
+  // but auth changes always ride a transition (login/logout navigate), so
+  // re-rendering on every successful transition keeps this header fresh.
+  transitions = new TransitionController(this);
 
   handleLogout() {
     this.dispatchEvent(new Event('logout'));
