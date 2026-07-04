@@ -27,3 +27,7 @@ component_management:
       name: navigation-location-plugin
       paths:
         - packages/navigation-location-plugin/src/**
+    - component_id: lit-ui-router-mobx
+      name: lit-ui-router-mobx
+      paths:
+        - packages/lit-ui-router-mobx/src/**

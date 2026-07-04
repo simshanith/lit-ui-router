@@ -1,0 +1,25 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../docs/api/lit-ui-router-mobx",
+  "docsRoot": "../../docs",
+  "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "formatWithPrettier": true,
+  "prettierConfigFile": "../../.prettierrc",
+  "sidebar": {
+    "pretty": true
+  }
+}

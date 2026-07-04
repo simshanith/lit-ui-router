@@ -1,37 +1,39 @@
 {
-  "name": "ui-router-navigation-location-plugin",
-  "description": "UI Router Location Plugin for Navigation API",
-  "version": "0.1.1",
+  "name": "lit-ui-router-mobx",
+  "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
+  "version": "0.1.0",
   "license": "MIT",
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
+  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router-mobx",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/simshanith/lit-ui-router.git",
-    "directory": "packages/navigation-location-plugin"
+    "directory": "packages/lit-ui-router-mobx"
   },
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
   "keywords": [
     "ui-router",
-    "navigation-api",
-    "location",
-    "plugin",
-    "spa",
-    "routing"
+    "lit",
+    "mobx",
+    "reactive-controller",
+    "state-management",
+    "routing",
+    "spa"
   ],
   "type": "module",
   "module": "./dist/index.js",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "sideEffects": false,
   "files": [
     "dist/**"
   ],
   "scripts": {
     "build": "tsc",
-    "changelog": "release-it --changelog --git.tagMatch=\"ui-router-navigation-location-plugin@[0-9]*.[0-9]*.[0-9]*\"",
+    "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
-    "docs:api": "rimraf ../../docs/api/navigation-location-plugin && typedoc",
+    "docs:api": "rimraf ../../docs/api/lit-ui-router-mobx && typedoc",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "lint": "eslint .",
@@ -39,13 +41,18 @@
     "test:coverage": "vitest run --coverage --browser=chromium"
   },
   "peerDependencies": {
-    "@uirouter/core": "catalog:publishedPeer"
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:",
+    "lit-ui-router": "workspace:^",
+    "mobx": "catalog:"
   },
   "devDependencies": {
-    "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "workspace:*",
+    "mobx": "catalog:",
     "playwright": "catalog:",
     "prettier": "catalog:",
     "release-it": "catalog:",

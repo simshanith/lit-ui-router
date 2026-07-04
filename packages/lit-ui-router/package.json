@@ -43,11 +43,11 @@
     "playwright": "catalog:",
     "prettier": "catalog:",
     "release-it": "catalog:",
-    "rimraf": "^6.1.2",
+    "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-lit-ui-router": "workspace:*",
-    "typedoc-plugin-markdown": "^4.9.0",
-    "typedoc-vitepress-theme": "^1.1.2",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
