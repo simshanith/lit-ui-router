@@ -22,7 +22,7 @@ export interface ReactionControllerOptions<T> {
  * calls `host.requestUpdate()` when the selected value changes.
  *
  * This is a selector-based alternative to render auto-tracking mixins such
- * as `MobxLitElement`:
+ * as [`MobxLitElement`](https://github.com/adobe/lit-mobx):
  *
  * - No base class required — works on any LitElement (or other host).
  * - Dependencies are explicit: the selector names exactly which observables
