@@ -12,7 +12,7 @@
   "excludeInternal": true,
   "excludePrivate": true,
   "categorizeByGroup": false,
-  "categoryOrder": ["core", "components", "directives", "hooks", "types"],
+  "categoryOrder": ["core", "components", "directives", "controllers", "hooks", "types"],
   "readme": "none",
   "githubPages": false,
   "entryFileName": "index",

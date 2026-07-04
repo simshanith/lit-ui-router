@@ -31,6 +31,7 @@ type Category =
   | 'core'
   | 'components'
   | 'directives'
+  | 'controllers'
   | 'hooks'
   | 'types'
   | 'other';
@@ -49,6 +50,12 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   uiSrefActive: 'directives',
   UiSrefDirective: 'directives',
   UiSrefActiveDirective: 'directives',
+  // Controllers
+  TransitionController: 'controllers',
+  TransitionControllerOptions: 'controllers',
+  TransitionEventType: 'controllers',
+  TransitionCallback: 'controllers',
+  TransitionCallbackReason: 'controllers',
   // Hooks
   UiOnExit: 'hooks',
   UiOnParamsChanged: 'hooks',
@@ -97,6 +104,10 @@ const CATEGORY_META: Record<Category, { title: string; description: string }> =
     directives: {
       title: 'Directives',
       description: 'Lit directives for navigation and active state styling.',
+    },
+    controllers: {
+      title: 'Controllers',
+      description: 'Reactive controllers binding hosts to router transitions.',
     },
     hooks: {
       title: 'Hooks',
@@ -220,6 +231,7 @@ function generateCategoryIndexFiles(outDir: string, app: Application): void {
     'core',
     'components',
     'directives',
+    'controllers',
     'hooks',
     'types',
     'other',
@@ -275,7 +287,11 @@ function updateSidebarJson(outDir: string, app: Application): void {
   const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
   for (const item of sidebar) {
     const category: Category = item.text;
-    item.text = CATEGORY_META[category].title;
+    // Fall back to title-casing so an uncharted @category tag renders
+    // instead of crashing the docs build.
+    item.text =
+      CATEGORY_META[category]?.title ??
+      category.charAt(0).toUpperCase() + category.slice(1);
     item.link = `/api/reference/${category}`;
     delete item.collapsed;
     if (category === 'types') {
