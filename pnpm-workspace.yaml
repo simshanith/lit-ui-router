@@ -6,15 +6,21 @@ packages:
   - examples
 
 catalog:
+  '@api-viewer/docs': 1.0.0-pre.10
   '@pnpm/fs.find-packages': ^1000.0.24
   '@pnpm/workspace.read-manifest': ^1000.3.1
   '@types/dom-navigation': ^1.0.6
   '@types/lodash': ^4.17.23
   '@uirouter/core': ^6.1.2
+  '@uirouter/dsr': ^1.2.0
+  '@uirouter/sticky-states': ^1.5.1
+  '@uirouter/visualizer': ^7.2.1
   '@vitest/browser-playwright': ^4.0.17
   '@vitest/coverage-v8': ^4.0.17
   cypress: ^14.5.4
   lit: ^3.3.2
+  lit-dialog: ^2.0.1
+  lodash: ^4.17.21
   mobx: ^6.16.1
   playwright: ^1.57.0
   prettier: ^3.8.0
@@ -25,6 +31,7 @@ catalog:
   typedoc-vitepress-theme: ^1.1.2
   typescript: ^5.9.3
   vite: ^7.3.1
+  vite-plugin-checker: ^0.10.3
   vite-plugin-static-copy: ^3.1.5
   vitest: ^4.0.17
   wrangler: ^4.59.2

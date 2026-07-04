@@ -1,5 +1,5 @@
 {
-  "name": "sample-app-lit",
+  "name": "sample-app-lit-mobx",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -19,7 +19,9 @@
     "lit": "catalog:",
     "lit-dialog": "catalog:",
     "lit-ui-router": "workspace:*",
+    "lit-ui-router-mobx": "workspace:*",
     "lodash": "catalog:",
+    "mobx": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {

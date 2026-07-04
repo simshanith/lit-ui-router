@@ -32,6 +32,14 @@ jobs:
         run: playwright install --with-deps
       - name: Install Cypress
         run: cypress install
+      - name: Start shared Xvfb display
+        # The vanilla and MobX Cypress suites run concurrently. Without a
+        # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
+        # race ("Fatal server error"); one shared display serves both.
+        # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
+        run: |
+          Xvfb :99 -screen 0 1280x720x24 &
+          echo "DISPLAY=:99" >> "$GITHUB_ENV"
       - name: Build and Test
         run: turbo run ci --ui=stream
         env:
