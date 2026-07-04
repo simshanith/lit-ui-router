@@ -9,6 +9,20 @@ on:
     tags:
       - 'lit-ui-router@*'
       - 'ui-router-navigation-location-plugin@*'
+  workflow_dispatch:
+    inputs:
+      package:
+        description: 'Package to publish (manual/dry-run testing only; real tag pushes derive this from the tag)'
+        required: true
+        type: choice
+        options:
+          - lit-ui-router
+          - ui-router-navigation-location-plugin
+      dryRun:
+        description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   id-token: write      # Required for OIDC trusted publishing to NPM
@@ -31,8 +45,12 @@ jobs:
           fetch-tags: true
       - name: Extract package info from tag
         run: |
-          TAG="${GITHUB_REF#refs/tags/}"
-          PACKAGE_NAME="${TAG%@*}"
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            PACKAGE_NAME="${{ inputs.package }}"
+          else
+            TAG="${GITHUB_REF#refs/tags/}"
+            PACKAGE_NAME="${TAG%@*}"
+          fi
           echo "$PACKAGE_NAME"
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
       - name: Setup mise
@@ -57,7 +75,9 @@ jobs:
         # Create tarball for GitHub release attachment
         run: pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
       - name: Attest build provenance
-        # Generate SLSA provenance attestation for supply chain security
+        # Generate SLSA provenance attestation for supply chain security.
+        # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
+        if: ${{ !inputs.dryRun }}
         uses: actions/attest-build-provenance@v3
         with:
           subject-path: '${{ env.PACKAGE_DIR }}/*.tgz'
@@ -67,7 +87,8 @@ jobs:
       - name: Publish
         # Create draft release first - allows uploading assets after create
         # --npm.skipChecks: Skip npm checks since we're using OIDC auth
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --github.draft true --git.tagExclude "\${npm.name}@$RELEASE_VERSION"
+        # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
+        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --github.draft true --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
         # Finalize the GitHub release
       - name: Mark Release as final
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --github.release true --github.update true --no-github.draft
+        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --github.release true --github.update true --no-github.draft ${{ inputs.dryRun && '--dry-run' || '' }}

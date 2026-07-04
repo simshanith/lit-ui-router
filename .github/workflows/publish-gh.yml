@@ -7,6 +7,13 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      dryRun:
+        description: 'Dry run: log the tag/push release-it would perform without creating it'
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: write
@@ -44,6 +51,7 @@ jobs:
         # --no-increment: Don't bump version, tag current version
         # --git.tag true: Create git tag ({package}@X.Y.Z)
         # --git.push true: Push tag to remote, triggering publish-npm workflow
-        run: pnpm --filter ${{ matrix.package }} exec release-it --no-increment --git.tag true --git.push true
+        # inputs.dryRun is only set for manual workflow_dispatch runs; real pushes to main always tag for real.
+        run: pnpm --filter ${{ matrix.package }} exec release-it --no-increment --git.tag true --git.push true ${{ inputs.dryRun && '--dry-run' || '' }}
         # continue-on-error: Tagging is idempotent - if tag exists, we succeed anyway
         continue-on-error: true
