@@ -24,7 +24,7 @@ catalog:
   mobx: ^6.16.1
   playwright: ^1.57.0
   prettier: ^3.8.0
-  release-it: ^19.2.3
+  release-it: ^20.2.1
   rimraf: ^6.1.2
   typedoc: ^0.28.16
   typedoc-plugin-markdown: ^4.9.0
