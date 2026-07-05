@@ -4,11 +4,7 @@ This monorepo uses [Turborepo](https://turbo.build/) for orchestrating builds, t
 
 ## Installation
 
-[Install turbo globally](https://turborepo.dev/docs/getting-started/installation#global-installation) for the best developer experience:
-
-```bash
-pnpm add turbo --global
-```
+Turbo is provisioned as a global tool by [mise](https://mise.jdx.dev) (pinned in [`.config/mise/config.toml`](./.config/mise/config.toml)) — see [CONTRIBUTING.md](./CONTRIBUTING.md#development) for setup. Running `mise install` puts `turbo` on your `PATH`, no separate global install needed.
 
 ## Workspace Structure
 
