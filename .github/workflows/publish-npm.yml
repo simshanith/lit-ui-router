@@ -104,7 +104,7 @@ jobs:
           # The draft was created moments ago by the Publish step, so it sits
           # at the top of the newest-first list; paginate anyway so stale
           # drafts or a burst of releases can't push it past a page boundary.
-          RELEASE_ID="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases?per_page=100" \
+          RELEASE_ID="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
             --jq ".[] | select(.draft and ((.tag_name == \"$TAG\") or (.name == \"Release $TAG\"))) | .id" | head -1)"
           if [ -z "$RELEASE_ID" ]; then
             echo "::error::No draft release found for $TAG"
