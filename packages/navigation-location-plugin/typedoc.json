@@ -3,7 +3,11 @@
   "entryPoints": ["src/index.ts"],
   "out": "../../docs/api/navigation-location-plugin",
   "docsRoot": "../../docs",
-  "plugin": ["typedoc-plugin-markdown", "typedoc-vitepress-theme"],
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
   "excludeExternals": true,
   "excludeInternal": true,
   "excludePrivate": true,

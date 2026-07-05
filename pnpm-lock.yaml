@@ -444,6 +444,9 @@ importers:
       typedoc:
         specifier: 'catalog:'
         version: 0.28.16(typescript@5.9.3)
+      typedoc-plugin-lit-ui-router:
+        specifier: workspace:*
+        version: link:../../tools/typedoc-plugin-lit-ui-router
       typedoc-plugin-markdown:
         specifier: 'catalog:'
         version: 4.9.0(typedoc@0.28.16(typescript@5.9.3))
@@ -486,6 +489,9 @@ importers:
       typedoc:
         specifier: 'catalog:'
         version: 0.28.16(typescript@5.9.3)
+      typedoc-plugin-lit-ui-router:
+        specifier: workspace:*
+        version: link:../../tools/typedoc-plugin-lit-ui-router
       typedoc-plugin-markdown:
         specifier: 'catalog:'
         version: 4.9.0(typedoc@0.28.16(typescript@5.9.3))
