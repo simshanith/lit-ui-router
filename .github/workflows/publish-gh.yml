@@ -27,6 +27,7 @@ jobs:
       matrix:
         package:
           - lit-ui-router
+          - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
     env:
       # PAT required to push tags that trigger downstream workflows.

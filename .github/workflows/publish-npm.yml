@@ -8,6 +8,7 @@ on:
   push:
     tags:
       - 'lit-ui-router@*'
+      - 'lit-ui-router-mobx@*'
       - 'ui-router-navigation-location-plugin@*'
   workflow_dispatch:
     inputs:
@@ -17,6 +18,7 @@ on:
         type: choice
         options:
           - lit-ui-router
+          - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'

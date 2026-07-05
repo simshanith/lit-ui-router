@@ -12,6 +12,7 @@ on:
         type: choice
         options:
           - lit-ui-router
+          - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
         default: 'lit-ui-router'
       increment:
