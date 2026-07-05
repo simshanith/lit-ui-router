@@ -87,10 +87,10 @@ jobs:
         run: |
           echo "RELEASE_VERSION=$(pnpm --filter ${{ env.PACKAGE_NAME }} exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
       - name: Publish
-        # Create draft release first - allows uploading assets after create
+        # release-it >= 20.1 handles immutable releases natively when assets
+        # are configured: create draft, upload assets, publish — one
+        # invocation, release id held in memory (no by-tag lookup, which
+        # can't see drafts and used to create duplicate releases here).
         # --npm.skipChecks: Skip npm checks since we're using OIDC auth
         # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --github.draft true --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
-        # Finalize the GitHub release
-      - name: Mark Release as final
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --github.release true --github.update true --no-github.draft ${{ inputs.dryRun && '--dry-run' || '' }}
+        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
