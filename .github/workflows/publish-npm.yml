@@ -87,28 +87,10 @@ jobs:
         run: |
           echo "RELEASE_VERSION=$(pnpm --filter ${{ env.PACKAGE_NAME }} exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
       - name: Publish
-        # Create draft release first - allows uploading assets after create
+        # release-it >= 20.1 handles immutable releases natively when assets
+        # are configured: create draft, upload assets, publish — one
+        # invocation, release id held in memory (no by-tag lookup, which
+        # can't see drafts and used to create duplicate releases here).
         # --npm.skipChecks: Skip npm checks since we're using OIDC auth
         # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --github.draft true --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
-        # Finalize the GitHub release
-      - name: Mark Release as final
-        # Flip the draft to published directly by id. release-it's
-        # --github.update resolves releases with the get-release-by-tag API,
-        # which never returns drafts — it created a duplicate published
-        # release instead (empty-changelog 422 on first releases, and under
-        # immutable releases the duplicate permanently burns the tag).
-        if: ${{ !inputs.dryRun }}
-        run: |
-          TAG="$PACKAGE_NAME@$RELEASE_VERSION"
-          # The draft was created moments ago by the Publish step, so it sits
-          # at the top of the newest-first list; paginate anyway so stale
-          # drafts or a burst of releases can't push it past a page boundary.
-          RELEASE_ID="$(gh api --paginate "repos/$GITHUB_REPOSITORY/releases" \
-            --jq ".[] | select(.draft and ((.tag_name == \"$TAG\") or (.name == \"Release $TAG\"))) | .id" | head -1)"
-          if [ -z "$RELEASE_ID" ]; then
-            echo "::error::No draft release found for $TAG"
-            exit 1
-          fi
-          gh api -X PATCH "repos/$GITHUB_REPOSITORY/releases/$RELEASE_ID" \
-            -f tag_name="$TAG" -F draft=false
+        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
