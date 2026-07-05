@@ -17,7 +17,7 @@ export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
  *
  * @slot - <code>&lt;ui-router&gt;</code> renders slotted content.
  *
- * @event {CustomEvent} ui-router-context
+ * @fires {CustomEvent} ui-router-context
  *
  * <code>&lt;ui-router&gt;</code> listens to the
  * <code>ui-router-context</code> event
@@ -51,7 +51,21 @@ export class UIRouterLitElement extends LitElement {
     });
   }
 
-  /** @internal */
+  /**
+   * Discovers the {@link UIRouterLit} instance provided by the nearest
+   * enclosing <code>&lt;ui-router&gt;</code> element.
+   *
+   * Dispatches a bubbling, composed <code>ui-router-context</code> event from
+   * the candidate element; the enclosing <code>&lt;ui-router&gt;</code>
+   * answers it with its router instance. Returns <code>undefined</code> when
+   * the candidate is not inside a <code>&lt;ui-router&gt;</code> (e.g. not
+   * yet connected).
+   *
+   * This is the dependency-injection primitive for integrating external
+   * reactivity systems (state stores, controllers) with the router context —
+   * call it from <code>hostConnected()</code> / <code>connectedCallback()</code>
+   * instead of prop-drilling the router instance.
+   */
   static seekRouter(candidate: Element): UIRouterLit | undefined {
     const uiRouterContextEvent = this.uiRouterContextEvent();
     candidate.dispatchEvent(uiRouterContextEvent);

@@ -1,5 +1,7 @@
 import { defineConfig, HeadConfig } from 'vitepress';
 import typedocSidebarItems from '../api/reference/typedoc-sidebar.json';
+import mobxSidebarItems from '../api/lit-ui-router-mobx/typedoc-sidebar.json';
+import navigationSidebarItems from '../api/navigation-location-plugin/typedoc-sidebar.json';
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -18,10 +20,22 @@ function makeSidebar() {
       items: [
         { text: 'Overview', link: '/api/' },
         {
-          text: 'Reference',
+          text: 'lit-ui-router',
           link: '/api/reference/',
           collapsed: false,
           items: typedocSidebarItems,
+        },
+        {
+          text: 'lit-ui-router-mobx',
+          link: '/api/lit-ui-router-mobx/',
+          collapsed: true,
+          items: mobxSidebarItems,
+        },
+        {
+          text: 'navigation-location-plugin',
+          link: '/api/navigation-location-plugin/',
+          collapsed: true,
+          items: navigationSidebarItems,
         },
       ],
     },
@@ -42,7 +56,7 @@ const config = {
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
-  ignoreDeadLinks: ['/app'],
+  ignoreDeadLinks: ['/app', '/app-mobx'],
   // ignoreDeadLinks: true,
   vite: {
     configFile: './.vitepress/vite.config.ts',
@@ -62,7 +76,13 @@ const config = {
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
       { text: 'API', link: '/api/' },
-      { text: 'Sample App', link: '/app', target: '_self' },
+      {
+        text: 'Sample App',
+        items: [
+          { text: 'Vanilla', link: '/app', target: '_self' },
+          { text: 'MobX', link: '/app-mobx', target: '_self' },
+        ],
+      },
     ],
     sidebar: makeSidebar(),
     socialLinks: [

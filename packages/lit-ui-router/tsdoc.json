@@ -8,7 +8,7 @@
       "syntaxKind": "block"
     },
     {
-      "tagName": "@event",
+      "tagName": "@fires",
       "syntaxKind": "block"
     }
   ]

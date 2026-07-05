@@ -9,6 +9,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./kind-indexes": {
+      "types": "./dist/kind-indexes.d.ts",
+      "default": "./dist/kind-indexes.js"
     }
   },
   "scripts": {

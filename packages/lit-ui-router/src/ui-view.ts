@@ -47,14 +47,14 @@ type deregisterFn = () => void;
 
 /**
  * @hideconstructor
- * @event {CustomEvent} ui-router-context
+ * @fires {CustomEvent} ui-router-context
  *
  * This event is fired to obtain the <code>uiRouter</code> instance,
  * when not directly provided.
  * Once obtained, the <code>&lt;ui-view&gt;</code> listens and
  * provides the <code>uiRouter</code> to descendants.
  *
- * @event {CustomEvent} ui-view-context
+ * @fires {CustomEvent} ui-view-context
  *
  * This event is fired to obtain the parent <code>&lt;ui-view&gt;</code>.
  *

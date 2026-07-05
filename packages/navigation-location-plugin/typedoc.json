@@ -1,0 +1,43 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../docs/api/navigation-location-plugin",
+  "docsRoot": "../../docs",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "BaseLocationServices": "https://ui-router.github.io/core/docs/latest/classes/_vanilla_baselocationservice_.baselocationservices.html",
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
+      "LocationPlugin": "https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html",
+      "LocationServices": "https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationservices.html",
+      "LocationConfig": "https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationconfig.html",
+      "Disposable": "https://ui-router.github.io/core/docs/latest/interfaces/_interface_.disposable.html",
+      "UIRouterPlugin": "https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html"
+    },
+    "@types/dom-navigation": {
+      "NavigateEvent": "https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent"
+    }
+  },
+  "formatWithPrettier": true,
+  "prettierConfigFile": "../../.prettierrc",
+  "sidebar": {
+    "pretty": true
+  }
+}

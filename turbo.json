@@ -87,7 +87,7 @@
       "persistent": true
     },
     "docs:api": {
-      "dependsOn": ["^docs:api"],
+      "dependsOn": ["^build", "^docs:api"],
       "cache": false
     }
   }

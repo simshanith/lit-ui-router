@@ -6,8 +6,10 @@
   "scripts": {
     "e2e": "cypress open",
     "test:cypress": "cypress run",
+    "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
+    "test:cypress:all": "concurrently --names vanilla,mobx --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\"",
     "docs:start-server": "pnpm --filter docs run wrangler:dev --port 8787",
-    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/' test:cypress",
+    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
     "build": "tsc",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
@@ -18,6 +20,7 @@
   },
   "devDependencies": {
     "@types/lodash": "catalog:",
+    "concurrently": "^9.2.1",
     "cypress": "catalog:",
     "prettier": "catalog:",
     "start-server-and-test": "^2.1.3",

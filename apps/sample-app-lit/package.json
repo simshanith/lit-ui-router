@@ -11,15 +11,15 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@api-viewer/docs": "1.0.0-pre.10",
+    "@api-viewer/docs": "catalog:",
     "@uirouter/core": "catalog:",
-    "@uirouter/dsr": "^1.2.0",
-    "@uirouter/sticky-states": "^1.5.1",
-    "@uirouter/visualizer": "^7.2.1",
+    "@uirouter/dsr": "catalog:",
+    "@uirouter/sticky-states": "catalog:",
+    "@uirouter/visualizer": "catalog:",
     "lit": "catalog:",
-    "lit-dialog": "^2.0.1",
+    "lit-dialog": "catalog:",
     "lit-ui-router": "workspace:*",
-    "lodash": "^4.17.21",
+    "lodash": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {
@@ -28,7 +28,7 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-checker": "^0.10.3",
+    "vite-plugin-checker": "catalog:",
     "vite-plugin-static-copy": "catalog:",
     "wrangler": "catalog:"
   }

@@ -1,0 +1,37 @@
+{
+  "name": "sample-app-lit-mobx",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "format": "prettier --write \"**/*.{js,ts,json,md}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json,md}\"",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@api-viewer/docs": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@uirouter/dsr": "catalog:",
+    "@uirouter/sticky-states": "catalog:",
+    "@uirouter/visualizer": "catalog:",
+    "lit": "catalog:",
+    "lit-dialog": "catalog:",
+    "lit-ui-router": "workspace:*",
+    "lit-ui-router-mobx": "workspace:*",
+    "lodash": "catalog:",
+    "mobx": "catalog:",
+    "ui-router-navigation-location-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/dom-navigation": "catalog:",
+    "@types/lodash": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-checker": "catalog:",
+    "vite-plugin-static-copy": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

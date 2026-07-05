@@ -1,3 +1,5 @@
 .vitepress/cache
 dist
 api/reference
+api/lit-ui-router-mobx
+api/navigation-location-plugin
