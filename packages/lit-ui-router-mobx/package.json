@@ -42,9 +42,9 @@
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
-    "lit": "catalog:",
+    "lit": "catalog:publishedPeer",
     "lit-ui-router": "workspace:^",
-    "mobx": "catalog:"
+    "mobx": "catalog:publishedPeer"
   },
   "devDependencies": {
     "@uirouter/core": "catalog:",

@@ -140,29 +140,37 @@ export class MessageElement extends LitElement {
         </div>
         <div class="line2">
           <div>
-            ${this.actions.edit
-              ? html`<button class="btn btn-primary" @click=${this.editDraft}>
-                  <i class="fa fa-pencil"></i> <span>Edit Draft</span>
-                </button>`
-              : null}
-            ${this.actions.reply
-              ? html`<button class="btn btn-primary" @click=${this.reply}>
-                  <i class="fa fa-reply"></i> <span>Reply</span>
-                </button>`
-              : null}
-            ${this.actions.forward
-              ? html`<button class="btn btn-primary" @click=${this.forward}>
-                  <i class="fa fa-forward"></i> <span>Forward</span>
-                </button>`
-              : null}
-            ${this.actions.delete
-              ? html`<button
-                  class="btn btn-primary"
-                  @click=${this.removeMessage}
-                >
-                  <i class="fa fa-close"></i> <span>Delete</span>
-                </button>`
-              : null}
+            ${
+              this.actions.edit
+                ? html`<button class="btn btn-primary" @click=${this.editDraft}>
+                    <i class="fa fa-pencil"></i> <span>Edit Draft</span>
+                  </button>`
+                : null
+            }
+            ${
+              this.actions.reply
+                ? html`<button class="btn btn-primary" @click=${this.reply}>
+                    <i class="fa fa-reply"></i> <span>Reply</span>
+                  </button>`
+                : null
+            }
+            ${
+              this.actions.forward
+                ? html`<button class="btn btn-primary" @click=${this.forward}>
+                    <i class="fa fa-forward"></i> <span>Forward</span>
+                  </button>`
+                : null
+            }
+            ${
+              this.actions.delete
+                ? html`<button
+                    class="btn btn-primary"
+                    @click=${this.removeMessage}
+                  >
+                    <i class="fa fa-close"></i> <span>Delete</span>
+                  </button>`
+                : null
+            }
           </div>
         </div>
       </div>

@@ -9,38 +9,40 @@ catalog:
   '@api-viewer/docs': 1.0.0-pre.10
   '@pnpm/fs.find-packages': ^1000.0.24
   '@pnpm/workspace.read-manifest': ^1000.3.1
-  '@types/dom-navigation': ^1.0.6
-  '@types/lodash': ^4.17.23
+  '@types/dom-navigation': ^1.0.7
+  '@types/lodash': ^4.17.24
   '@uirouter/core': ^6.1.2
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
   '@uirouter/visualizer': ^7.2.1
-  '@vitest/browser-playwright': ^4.0.17
-  '@vitest/coverage-v8': ^4.0.17
-  cypress: ^14.5.4
-  lit: ^3.3.2
+  '@vitest/browser-playwright': ^4.1.9
+  '@vitest/coverage-v8': ^4.1.9
+  cypress: ^15.18.0
+  lit: ^3.3.3
   lit-dialog: ^2.0.1
-  lodash: ^4.17.21
+  lodash: ^4.18.1
   mobx: ^6.16.1
-  playwright: ^1.57.0
-  prettier: ^3.8.0
+  playwright: ^1.61.1
+  prettier: ^3.9.4
   release-it: ^20.2.1
-  rimraf: ^6.1.2
-  typedoc: ^0.28.16
-  typedoc-plugin-markdown: ^4.9.0
-  typedoc-vitepress-theme: ^1.1.2
+  rimraf: ^6.1.3
+  typedoc: ^0.28.19
+  typedoc-plugin-markdown: ^4.12.0
+  typedoc-vitepress-theme: ^1.1.3
   typescript: ^5.9.3
-  vite: ^7.3.1
-  vite-plugin-checker: ^0.10.3
-  vite-plugin-static-copy: ^3.1.5
-  vitest: ^4.0.17
-  wrangler: ^4.59.2
+  vite: ^7.3.6
+  vite-plugin-checker: ^0.14.4
+  vite-plugin-static-copy: ^3.4.0
+  vitest: ^4.1.9
+  wrangler: ^4.107.0
 
 catalogMode: prefer
 
 catalogs:
   publishedPeer:
     '@uirouter/core': ^6.0.8
+    lit: ^3.0.0
+    mobx: ^6.0.0
     typedoc: ^0.28.0
 
 onlyBuiltDependencies:
@@ -52,6 +54,6 @@ onlyBuiltDependencies:
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
-  '@uirouter/dsr': patches/@uirouter__dsr.patch
   '@vitest/browser': patches/@vitest__browser.patch
+  '@uirouter/dsr': patches/@uirouter__dsr.patch
   lit-dialog: patches/lit-dialog.patch
