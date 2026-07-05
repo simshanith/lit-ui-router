@@ -40,7 +40,7 @@ export class MessageTable extends LitElement {
 
   @property({
     hasChanged(value, oldValue) {
-      return isEqual(value, oldValue);
+      return !isEqual(value, oldValue);
     },
     attribute: false,
   })
@@ -81,7 +81,7 @@ export class MessageTable extends LitElement {
         </td>`,
     );
     const tableBody = repeat(
-      messages.sort(orderBy(sort)),
+      [...messages].sort(orderBy(sort)),
       ({ _id }) => _id,
       (message) =>
         html`<tr

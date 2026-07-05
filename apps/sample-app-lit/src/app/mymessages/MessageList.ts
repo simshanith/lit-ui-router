@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from '../global/dataSources.js';
+import { StoreCommitController } from '../util/storeCommitController.js';
 import { Message } from './interface.js';
 import './MessageTable.js';
 
@@ -19,8 +20,9 @@ export class MessageList extends LitElement {
 
   constructor(public _uiViewProps: UIViewInjectedProps<MessageListResolves>) {
     super();
-    this.onCommit = this.onCommit.bind(this);
   }
+
+  commits = new StoreCommitController(this, MessagesStorage);
 
   get folder() {
     return this._uiViewProps.resolves!.folder;
@@ -28,20 +30,6 @@ export class MessageList extends LitElement {
 
   get messages() {
     return this._uiViewProps.resolves!.messages ?? [];
-  }
-
-  onCommit() {
-    this.requestUpdate();
-  }
-
-  connectedCallback() {
-    MessagesStorage.addEventListener('commit', this.onCommit);
-    super.connectedCallback();
-  }
-
-  disconnectedCallback() {
-    super.disconnectedCallback();
-    MessagesStorage.removeEventListener('commit', this.onCommit);
   }
 
   render() {

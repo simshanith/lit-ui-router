@@ -1,7 +1,11 @@
-import { html, LitElement, PropertyValues } from 'lit';
+import { html, LitElement } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
-import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
+import {
+  TransitionController,
+  UIViewInjectedProps,
+  RoutedLitElement,
+} from 'lit-ui-router';
 
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
@@ -22,28 +26,16 @@ export class App extends LitElement {
     this._uiViewProps = props;
   }
 
-  shouldUpdate(changedProperties: PropertyValues) {
-    const viewPropsChanged = changedProperties.has('_uiViewProps');
-    return viewPropsChanged || super.shouldUpdate(changedProperties);
-  }
-
-  override requestUpdate(
-    name?: PropertyKey,
-    oldValue?: unknown,
-    options?: unknown,
-  ) {
-    super.requestUpdate(name, oldValue, options as never);
-    const navHeader =
-      this.renderRoot?.querySelector<LitElement>('sample-nav-header');
-    navHeader?.requestUpdate();
-  }
+  // Re-renders this component after every successful transition, keeping the
+  // named ui-view visibility (displayActive) in sync with the active state.
+  transitions = new TransitionController(this);
 
   get stateService() {
     return this._uiViewProps.router.stateService;
   }
 
   isActive(glob: string) {
-    return this.stateService.includes(glob);
+    return this.transitions.includes(glob);
   }
 
   handleLogout = () => {

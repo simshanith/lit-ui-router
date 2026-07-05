@@ -12,7 +12,14 @@
   "excludeInternal": true,
   "excludePrivate": true,
   "categorizeByGroup": false,
-  "categoryOrder": ["core", "components", "directives", "hooks", "types"],
+  "categoryOrder": [
+    "core",
+    "components",
+    "controllers",
+    "directives",
+    "hooks",
+    "types"
+  ],
   "readme": "none",
   "githubPages": false,
   "entryFileName": "index",
@@ -28,6 +35,42 @@
   },
   "sort": ["alphabetical", "source-order"],
   "router": "category",
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
+      "UIRouterGlobals": "https://ui-router.github.io/core/docs/latest/classes/_globals_.uirouterglobals.html",
+      "Transition": "https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html",
+      "TransitionOptions": "https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.transitionoptions.html",
+      "TargetState": "https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html",
+      "StateDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html",
+      "StateOrName": "https://ui-router.github.io/core/docs/latest/modules/_state_interface_.html#stateorname",
+      "RawParams": "https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.rawparams.html",
+      "HookMatchCriteria": "https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.hookmatchcriteria.html",
+      "HookResult": "https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult"
+    },
+    "lit": {
+      "LitElement": "https://lit.dev/docs/api/LitElement/",
+      "TemplateResult": "https://lit.dev/docs/api/templates/#TemplateResult",
+      "ReactiveController": "https://lit.dev/docs/api/controllers/#ReactiveController",
+      "ReactiveControllerHost": "https://lit.dev/docs/api/controllers/#ReactiveControllerHost",
+      "AsyncDirective": "https://lit.dev/docs/api/custom-directives/#AsyncDirective",
+      "DirectiveResult": "https://lit.dev/docs/api/custom-directives/#DirectiveResult",
+      "ElementPart": "https://lit.dev/docs/api/custom-directives/#ElementPart"
+    },
+    "@lit/reactive-element": {
+      "ReactiveController": "https://lit.dev/docs/api/controllers/#ReactiveController",
+      "ReactiveControllerHost": "https://lit.dev/docs/api/controllers/#ReactiveControllerHost"
+    },
+    "lit-element": {
+      "LitElement": "https://lit.dev/docs/api/LitElement/"
+    },
+    "lit-html": {
+      "TemplateResult": "https://lit.dev/docs/api/templates/#TemplateResult",
+      "AsyncDirective": "https://lit.dev/docs/api/custom-directives/#AsyncDirective",
+      "DirectiveResult": "https://lit.dev/docs/api/custom-directives/#DirectiveResult",
+      "ElementPart": "https://lit.dev/docs/api/custom-directives/#ElementPart"
+    }
+  },
   "formatWithPrettier": true,
   "prettierConfigFile": "../../.prettierrc",
   "sidebar": {

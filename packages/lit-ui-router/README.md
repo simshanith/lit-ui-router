@@ -35,6 +35,38 @@ router.start();
 | Template with props | Views needing params/resolves | `` (props) => html`...` `` |
 | LitElement class    | Complex views with lifecycle  | `MyComponent`              |
 
+## Reacting to Transitions
+
+Any element (routed or not) can stay synchronized with the router using the
+`TransitionController` reactive controller. It registers transition hooks when
+the host connects, calls `host.requestUpdate()` on matching transitions, and
+deregisters everything when the host disconnects — no manual `requestUpdate()`
+plumbing or leaked hooks.
+
+```ts
+import { TransitionController } from 'lit-ui-router';
+
+class NavHeader extends LitElement {
+  private transitions = new TransitionController(this);
+
+  render() {
+    // Re-evaluated after every successful transition
+    return html`Current state: ${this.transitions.current?.name}`;
+  }
+}
+```
+
+Scope it to specific states or react to parameter changes with a callback:
+
+```ts
+class UserDetail extends LitElement {
+  private transitions = new TransitionController(this, {
+    criteria: { to: 'users.detail' },
+    callback: () => this.loadUser(this.transitions.params.userId),
+  });
+}
+```
+
 ## Documentation
 
 Visit [lit-ui-router.dev](https://lit-ui-router.dev) for full documentation, tutorials, and API reference.
