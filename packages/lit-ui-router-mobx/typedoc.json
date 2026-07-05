@@ -28,12 +28,12 @@
       "StateOrName": "https://ui-router.github.io/core/docs/latest/modules/_state_interface_.html#stateorname"
     },
     "lit": {
-      "ReactiveController": "https://lit.dev/docs/api/ReactiveController/",
-      "ReactiveControllerHost": "https://lit.dev/docs/api/ReactiveControllerHost/"
+      "ReactiveController": "https://lit.dev/docs/api/controllers/#ReactiveController",
+      "ReactiveControllerHost": "https://lit.dev/docs/api/controllers/#ReactiveControllerHost"
     },
     "@lit/reactive-element": {
-      "ReactiveController": "https://lit.dev/docs/api/ReactiveController/",
-      "ReactiveControllerHost": "https://lit.dev/docs/api/ReactiveControllerHost/"
+      "ReactiveController": "https://lit.dev/docs/api/controllers/#ReactiveController",
+      "ReactiveControllerHost": "https://lit.dev/docs/api/controllers/#ReactiveControllerHost"
     },
     "mobx": {
       "IEqualsComparer": "https://mobx.js.org/computeds.html#built-in-comparers",
