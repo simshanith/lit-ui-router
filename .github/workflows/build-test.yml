@@ -21,7 +21,7 @@ jobs:
 
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
@@ -49,7 +49,7 @@ jobs:
         with:
           working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
-        uses: codecov/codecov-action@v5
+        uses: codecov/codecov-action@v7
         with:
           files: packages/lit-ui-router/coverage/lcov.info,packages/navigation-location-plugin/coverage/lcov.info
           fail_ci_if_error: false
