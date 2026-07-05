@@ -112,7 +112,7 @@ patchedDependencies:
     hash: 6b5eef7ffca526b50ea84d46aec4ca73c3ac8a7e08ccd297d45eeb8c79e70fd7
     path: patches/@vitest__browser.patch
   lit-dialog:
-    hash: 3c8d91093ae9706f5ee7a99923d8c65b3a5745b0c5b83f7affb303fe91106c88
+    hash: d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a
     path: patches/lit-dialog.patch
 
 importers:
@@ -193,7 +193,7 @@ importers:
         version: 3.3.2
       lit-dialog:
         specifier: 'catalog:'
-        version: 2.0.1(patch_hash=3c8d91093ae9706f5ee7a99923d8c65b3a5745b0c5b83f7affb303fe91106c88)
+        version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
       lit-ui-router:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router
@@ -279,7 +279,7 @@ importers:
         version: 3.3.2
       lit-dialog:
         specifier: 'catalog:'
-        version: 2.0.1(patch_hash=3c8d91093ae9706f5ee7a99923d8c65b3a5745b0c5b83f7affb303fe91106c88)
+        version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
       lit-ui-router:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router
@@ -7157,7 +7157,7 @@ snapshots:
     optionalDependencies:
       enquirer: 2.4.1
 
-  lit-dialog@2.0.1(patch_hash=3c8d91093ae9706f5ee7a99923d8c65b3a5745b0c5b83f7affb303fe91106c88):
+  lit-dialog@2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a):
     dependencies:
       lit: 2.8.0
 

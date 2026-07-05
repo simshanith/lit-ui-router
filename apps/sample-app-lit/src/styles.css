@@ -325,10 +325,11 @@ button.btn i + span {
   opacity: 0;
 }
 
-/* lit-dialog adds the `in` class when the dialog opens.
+/* lit-dialog adds the `in` class when the dialog opens (the backdrop is a
+   sibling of the modal, so key off the backdrop's own `in` class).
    Entrance uses keyframes (not the transition) because the class is added
    in the same frame the element is inserted, so transitions never fire. */
-.dialog.in .backdrop {
+.dialog .backdrop.in {
   opacity: 0.5;
   animation: dialog-backdrop-in 0.25s ease;
 }
@@ -361,6 +362,22 @@ button.btn i + span {
 
 @keyframes dialog-content-in {
   from { top: -200px; }
+}
+
+/* The elements above are lit-dialog's Bootstrap modal markup, aliased by
+   Dialog.ts with the class names the react/angular sample apps share.
+   These rules flatten Bootstrap's own modal skin underneath. */
+.dialog .wrapper {
+  /* .modal-dialog: undo Bootstrap's fixed 600px width + 30px margins */
+  width: auto;
+  margin: 0;
+}
+
+.dialog .content {
+  /* .modal-content: flat card, no Bootstrap border/radius/shadow */
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
 }
 
 

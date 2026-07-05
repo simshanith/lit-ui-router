@@ -46,7 +46,12 @@ describe('confirmation dialog', () => {
 
     // white card horizontally centered over a dimmed backdrop
     cy.get('.dialog#modal').should('have.class', 'in');
-    cy.get('.dialog .backdrop').should('be.visible');
+    // dimmed backdrop (sits underneath the modal, so don't use `be.visible`)
+    cy.get('.dialog .backdrop')
+      .should('have.class', 'in')
+      .and(($backdrop) => {
+        expect(getComputedStyle($backdrop[0]).opacity).to.equal('0.5');
+      });
     cy.get('.dialog .content').then(($content) => {
       const rect = $content[0].getBoundingClientRect();
       const viewportCenter = Cypress.config('viewportWidth') / 2;
@@ -69,10 +74,10 @@ describe('confirmation dialog', () => {
     cy.get('.selectlist').contains('Delia Hunter').should('not.exist');
   });
 
-  it('keeps the contact when dismissed via backdrop', () => {
+  it('keeps the contact when dismissed by clicking outside', () => {
     openDeleteDialog('Underwood Owens', 'uowens');
 
-    cy.get('.dialog .backdrop').click({ force: true });
+    cy.get('.dialog#modal').click('bottom');
     cy.get('#backdrop').should('not.exist');
     cy.get('.selectlist').contains('Underwood Owens');
   });
