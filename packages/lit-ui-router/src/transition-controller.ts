@@ -19,7 +19,7 @@ type DeregisterFn = () => void;
  * Transition lifecycle events that a [[TransitionController]] can observe.
  *
  * Each value corresponds to a
- * {@link https://ui-router.github.io/core/docs/latest/interfaces/transition.ihookregistry.html | TransitionService hook registry}
+ * {@link https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.ihookregistry.html | TransitionService hook registry}
  * method of the same name.
  *
  * @category controllers
@@ -47,7 +47,7 @@ export type TransitionCallbackReason = TransitionEventType | 'hostConnected';
  *
  * For `'onBefore'` and `'onStart'` reasons, the returned value is passed
  * back to UI-Router as a
- * {@link https://ui-router.github.io/core/docs/latest/modules/transition.html#hookresult | HookResult},
+ * {@link https://ui-router.github.io/core/docs/latest/modules/_transition_interface_.html#hookresult | HookResult},
  * so the callback may cancel or redirect the pending transition.
  *
  * @param transition - The [[Transition]] which triggered the callback.
@@ -78,7 +78,7 @@ export interface TransitionControllerOptions {
   router?: UIRouter;
 
   /**
-   * {@link https://ui-router.github.io/core/docs/latest/interfaces/transition.hookmatchcriteria.html | HookMatchCriteria}
+   * {@link https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.hookmatchcriteria.html | HookMatchCriteria}
    * limiting which transitions notify the host.
    *
    * Defaults to `{}` (all transitions).
