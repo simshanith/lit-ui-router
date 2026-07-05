@@ -1,5 +1,5 @@
 diff --git a/LitDialog.js b/LitDialog.js
-index f1e613363bff17d230928d0bdd86425750e1305a..c8657528ee17f786cbaf428525ded57b39cfaa44 100644
+index f1e613363bff17d230928d0bdd86425750e1305a..b4febea16992fcaf68efce5079dd64c55d4e881d 100644
 --- a/LitDialog.js
 +++ b/LitDialog.js
 @@ -1,4 +1,4 @@
@@ -8,3 +8,25 @@ index f1e613363bff17d230928d0bdd86425750e1305a..c8657528ee17f786cbaf428525ded57b
  import { classMap } from 'lit/directives/class-map.js';
  
  /**
+@@ -93,7 +93,7 @@ export class LitDialog extends HTMLElement {
+ 
+     /**
+      * Render Bootstrap modal
+-     * @private
++     * @protected
+      * @returns {TemplateResult}
+      */
+     renderDialog() {
+diff --git a/dist/LitDialog.d.ts b/dist/LitDialog.d.ts
+index 665b1825563b37a785681739a9e7b5a87d9e3c81..19d58b92e2fb849710d7517b2e768d6ba665aed8 100644
+--- a/dist/LitDialog.d.ts
++++ b/dist/LitDialog.d.ts
+@@ -43,7 +43,7 @@ export class LitDialog extends HTMLElement {
+      * @private
+      * @returns {TemplateResult}
+      */
+-    private renderDialog;
++    protected renderDialog(): TemplateResult<1>;
+     /**
+      * Render dialog content.
+      * Should be implemented by implementing classes

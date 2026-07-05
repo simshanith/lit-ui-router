@@ -325,8 +325,16 @@ button.btn i + span {
   opacity: 0;
 }
 
-.dialog.active .backdrop {
+/* lit-dialog adds the `in` class when the dialog opens.
+   Entrance uses keyframes (not the transition) because the class is added
+   in the same frame the element is inserted, so transitions never fire. */
+.dialog.in .backdrop {
   opacity: 0.5;
+  animation: dialog-backdrop-in 0.25s ease;
+}
+
+@keyframes dialog-backdrop-in {
+  from { opacity: 0; }
 }
 
 .dialog .wrapper {
@@ -346,8 +354,13 @@ button.btn i + span {
   top: -200px;
 }
 
-.dialog.active .content {
+.dialog.in .content {
   top: 4em;
+  animation: dialog-content-in 0.25s ease;
+}
+
+@keyframes dialog-content-in {
+  from { top: -200px; }
 }
 
 

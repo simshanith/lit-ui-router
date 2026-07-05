@@ -86,7 +86,8 @@ export class EditContact extends LitElement {
     )
       .then(() => ContactsStorage.remove(contact))
       .then(() => (this.canExit = true))
-      .then(() => stateService.go('^.^', undefined, { reload: true }));
+      .then(() => stateService.go('^.^', undefined, { reload: true }))
+      .catch(() => {}); // user declined
   };
 
   render() {
