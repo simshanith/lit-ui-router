@@ -45,7 +45,7 @@
     "overrides": {
       "d3-color": "3.1.0",
       "dompurify": "3.4.11",
-      "esbuild": "0.27.5",
+      "esbuild": "0.28.1",
       "undici@6": "6.27.0",
       "undici@7": "7.28.0"
     }
