@@ -15,8 +15,8 @@
   "categoryOrder": [
     "core",
     "components",
-    "directives",
     "controllers",
+    "directives",
     "hooks",
     "types"
   ],
