@@ -42,11 +42,11 @@ simulated REST fixtures in `public/` — is imported from `sample-app-shared`.
 Both apps support three location strategies via `locationPluginConfig` in the
 shared `router.config.ts`:
 
-| Plugin       | URL Format | Browser Support        |
-| ------------ | ---------- | ---------------------- |
-| `hash`       | `/#/path`  | All browsers           |
-| `pushState`  | `/path`    | Modern browsers        |
-| `navigation` | `/path`    | Chrome 102+, Edge 102+ |
+| Plugin       | URL Format | Browser Support                              |
+| ------------ | ---------- | -------------------------------------------- |
+| `hash`       | `/#/path`  | All browsers                                 |
+| `pushState`  | `/path`    | Modern browsers                              |
+| `navigation` | `/path`    | Chrome/Edge 102+, Firefox 147+, Safari 26.2+ |
 
 **Auto-detection**: When `navigation` preference is set, the app automatically
 selects the best available plugin:
