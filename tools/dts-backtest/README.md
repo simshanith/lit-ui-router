@@ -22,14 +22,32 @@ mobx, `@uirouter/core`, `lib.dom`) are counted but tolerated, matching what
 a consumer running `skipLibCheck: true` would experience while still holding
 our own declarations to the strict bar.
 
+Every run starts with a **self-test** proving the harness can fail: it
+injects a `NoInfer<>` probe (TypeScript 5.4+ syntax) into a dist `.d.ts`,
+asserts the floor version rejects it and the current version accepts it,
+then restores the file. A green matrix therefore can't be the result of a
+broken diagnostic filter silently classifying everything as third-party.
+
 ## Running
 
 ```sh
 turbo run test --filter=dts-backtest   # builds the packages first
 ```
 
+## Authoring rule for the published packages
+
+The floor constrains only what surfaces in the emitted `dist/*.d.ts` —
+public API signatures and exported types. Implementation code may use any
+feature of the repo's current TypeScript; a newer-TS construct is only a
+problem when it leaks into a declaration (e.g. `NoInfer<T>` in an exported
+signature). When `dts-backtest#test` fails on your change, either keep the
+construct out of the public surface, or you are proposing a floor raise —
+see below.
+
 ## Raising the floor
 
 Bumping the supported consumer floor is a semver-major signal for the
 published packages: change the `typescript-5.0` devDependency alias (and
-`VERSIONS` in `run.mjs`) and rename accordingly.
+`VERSIONS` in `run.mjs`) and rename accordingly. If the new floor is ≥ 5.4
+the self-test's `NoInfer` probe no longer discriminates — swap it for a
+construct the new floor still rejects.

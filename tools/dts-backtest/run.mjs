@@ -11,6 +11,7 @@
 // reported but tolerated, matching what a consumer with skipLibCheck:true
 // would experience while still fully checking OUR declarations.
 
+import { readFileSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -56,7 +57,7 @@ function ownedBy(ts, fileName) {
   return PACKAGE_DIRS.some((dir) => normalized.startsWith(dir));
 }
 
-function run(specifier, configFile) {
+function check(specifier, configFile) {
   const ts = require(specifier);
   const parsed = loadConfig(ts, configFile);
   const program = ts.createProgram({
@@ -89,6 +90,12 @@ function run(specifier, configFile) {
     }
   }
 
+  return { ts, owned, foreign, fileCount: files.length };
+}
+
+function run(specifier, configFile) {
+  const { ts, owned, foreign, fileCount } = check(specifier, configFile);
+
   const label = `TS ${ts.version} · ${configFile}`;
   if (owned.length > 0) {
     const formatHost = {
@@ -102,11 +109,50 @@ function run(specifier, configFile) {
   }
   const foreignNote =
     foreign > 0 ? ` (${foreign} third-party diagnostics ignored)` : '';
-  console.log(`✔ ${label} — ${files.length} files checked${foreignNote}`);
+  console.log(`✔ ${label} — ${fileCount} files checked${foreignNote}`);
   return true;
 }
 
-let ok = true;
+// Self-test: prove the harness can fail. Injects a NoInfer<> probe (TS 5.4+
+// syntax) into a dist .d.ts, then asserts the floor leg rejects it and the
+// current leg accepts it. Guards against a filter/ownership bug that would
+// classify everything as third-party and stay green forever. If the floor is
+// ever raised past 5.4, this fails loudly — pick a newer-syntax probe.
+const PROBE = '\nexport type __dtsBacktestProbe = NoInfer<string>;\n';
+
+function selftest() {
+  const [floor, current] = VERSIONS;
+  const target = join(PACKAGE_DIRS[0], 'index.d.ts');
+  const original = readFileSync(target, 'utf8');
+  writeFileSync(target, original + PROBE);
+  try {
+    const floorRun = check(floor, CONFIGS[0]);
+    const probeCaught = floorRun.owned.some((diagnostic) =>
+      diagnostic.file?.fileName.endsWith('index.d.ts'),
+    );
+    if (!probeCaught) {
+      console.error(
+        `✖ selftest — TS ${floorRun.ts.version} did not reject the NoInfer probe in ${target}`,
+      );
+      return false;
+    }
+    const currentRun = check(current, CONFIGS[0]);
+    if (currentRun.owned.length > 0) {
+      console.error(
+        `✖ selftest — TS ${currentRun.ts.version} unexpectedly rejected the NoInfer probe`,
+      );
+      return false;
+    }
+    console.log(
+      `✔ selftest — floor TS ${floorRun.ts.version} rejects the probe, current TS ${currentRun.ts.version} accepts it`,
+    );
+    return true;
+  } finally {
+    writeFileSync(target, original);
+  }
+}
+
+let ok = selftest();
 for (const specifier of VERSIONS) {
   for (const configFile of CONFIGS) {
     ok = run(specifier, configFile) && ok;
