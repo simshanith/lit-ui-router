@@ -1,0 +1,4 @@
+{
+  // For eslint/IDE tooling only; run.mjs drives the tsconfig.fixture*.json matrix.
+  "extends": "./tsconfig.fixture.json"
+}
