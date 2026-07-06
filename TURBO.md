@@ -148,7 +148,7 @@ turbo build --summarize
 The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the full CI pipeline:
 
 1. **Checkout** - Clone repository
-2. **Setup** - Install pnpm, Node.js 22.17.1, dependencies
+2. **Setup** - Install pnpm, Node.js 22.23.1, dependencies
 3. **Install browsers** - Playwright and Cypress for e2e tests
 4. **Build and Test** - `pnpm run ci` (triggers turbo ci task)
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload

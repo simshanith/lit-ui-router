@@ -1,3 +1,4 @@
+import { defineConfig, globalIgnores } from 'eslint/config';
 import eslint from '@eslint/js';
 import tseslint from 'typescript-eslint';
 import globals from 'globals';
@@ -5,12 +6,12 @@ import prettier from 'eslint-config-prettier';
 import turbo from 'eslint-plugin-turbo';
 import packageJson from 'eslint-plugin-package-json';
 
-export default tseslint.config(
+export default defineConfig(
   eslint.configs.recommended,
-  ...tseslint.configs.recommended,
+  tseslint.configs.recommended,
   {
     extends: [packageJson.configs.recommended],
-    files: ['package.json'],
+    files: ['**/package.json'],
     rules: {
       'package-json/require-description': [
         'error',
@@ -18,6 +19,9 @@ export default tseslint.config(
           ignorePrivate: true,
         },
       ],
+      // packaging decisions deferred: exports map + sideEffects audit for published packages
+      'package-json/require-exports': 'off',
+      'package-json/require-sideEffects': 'off',
     },
   },
   prettier,
@@ -27,16 +31,14 @@ export default tseslint.config(
       'turbo/no-undeclared-env-vars': 'warn',
     },
   },
-  {
-    ignores: [
-      '**/dist/**',
-      '**/coverage/**',
-      '**/node_modules/**',
-      '**/.vitepress/cache/**',
-      '**/*.config.ts',
-      '**/*.config.js',
-    ],
-  },
+  globalIgnores([
+    '**/dist/**',
+    '**/coverage/**',
+    '**/node_modules/**',
+    '**/.vitepress/cache/**',
+    '**/*.config.ts',
+    '**/*.config.js',
+  ]),
   {
     files: ['**/*.ts'],
     languageOptions: {
