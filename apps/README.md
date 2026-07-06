@@ -51,7 +51,8 @@ shared `router.config.ts`:
 **Auto-detection**: When `navigation` preference is set, the app automatically
 selects the best available plugin:
 
-1. Navigation API when supported 🧑‍🔬 _experimental_
+1. Navigation API when supported, via the 🧑‍🔬 _experimental_
+   [navigation plugin](../packages/navigation-location-plugin/)
 2. Push State as fallback for unsupported browsers
 
 **Override options** (in priority order):

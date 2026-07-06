@@ -6,7 +6,7 @@
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=navigation-location-plugin)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=navigation-location-plugin)
 [![Can I Use Navigation API](https://img.shields.io/badge/caniuse-Navigation%20API-orange)](https://caniuse.com/mdn-api_navigation)
 
-> **Experimental**: This plugin uses the [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API), which has limited browser support.
+> **Experimental**: this plugin is a new implementation without the production mileage of the battle-tested `pushState`/`hash` location services. The underlying [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) is also only recently cross-engine (Firefox 147+, Safari 26.2+), so non-Chromium behavior is lightly exercised.
 
 A UI-Router location plugin that uses the modern browser Navigation API for URL management.
 
@@ -90,18 +90,18 @@ interface UIRouterNavigateInfo {
 
 ## Browser Compatibility
 
-The Navigation API has limited browser support:
+The Navigation API is supported in all modern engines:
 
-| Browser | Support       |
-| ------- | ------------- |
-| Chrome  | 102+          |
-| Edge    | 102+          |
-| Firefox | Not supported |
-| Safari  | Not supported |
+| Browser | Support |
+| ------- | ------- |
+| Chrome  | 102+    |
+| Edge    | 102+    |
+| Firefox | 147+    |
+| Safari  | 26.2+   |
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
-For broader browser support, consider using:
+For older browsers, consider using:
 
 - `pushStateLocationPlugin` - History API based (wide support)
 - `hashLocationPlugin` - Hash-based URLs (universal support)
@@ -112,7 +112,8 @@ For broader browser support, consider using:
 | ------------------ | -------------- | --------- | --------- |
 | Modern standard    | Yes            | No        | No        |
 | Event interception | Yes            | No        | No        |
-| Browser support    | Limited        | Wide      | Universal |
+| Browser support    | Modern engines | Wide      | Universal |
+| Production mileage | New            | Wide      | Wide      |
 | SEO friendly       | Yes            | Yes       | No        |
 | Clean URLs         | Yes            | Yes       | No        |
 
