@@ -1,6 +1,6 @@
 ## UI-Router 1.0 Lit Sample Application — MobX variant
 
-This is the [MobX](https://mobx.js.org) variant of the [vanilla sample app](../sample-app-lit/): the same
+This is the [MobX](https://mobx.js.org) variant of the [vanilla sample app](../sample-app-lit-vanilla/): the same
 non-trivial ui-router lit application, with reactivity handled by
 [`lit-ui-router-mobx`](../../packages/lit-ui-router-mobx/) instead of the zero-dependency
 `TransitionController`. The two apps are intentionally behaviorally identical (the same
@@ -15,9 +15,11 @@ What's different here:
 - `ReactionController` selectors observe app stores in `main/NavHeader.ts` and
   `mymessages/MessageList.ts`
 - App state lives in MobX stores: `global/appConfig.ts` and `mymessages/messagesStore.ts`
-- No store wiring in `router.config.ts` — the router store attaches lazily on first use
-- Static data (favicon, simulated REST fixtures) is shared with the vanilla app via
-  Vite's `publicDir` (see `vite.config.ts`) instead of duplicated
+- No store wiring in the shared `router.config.ts` — the router store attaches lazily on
+  first use
+
+See [`apps/README.md`](../README.md) for the full side-by-side comparison, and
+[`sample-app-shared`](../sample-app-shared/) for everything the two apps have in common.
 
 This sample app is intended to demonstrate a non-trivial ui-router lit application.
 
