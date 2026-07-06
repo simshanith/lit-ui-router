@@ -4,16 +4,16 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "e2e": "cypress open",
-    "test:cypress": "cypress run",
-    "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
-    "test:cypress:all": "concurrently --names vanilla,mobx --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\"",
-    "docs:start-server": "pnpm --filter docs run wrangler:dev --port 8787",
-    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
     "build": "tsc",
+    "docs:start-server": "pnpm --filter docs run wrangler:dev --port 8787",
+    "e2e": "cypress open",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
+    "test:cypress": "cypress run",
+    "test:cypress:all": "concurrently --names vanilla,mobx --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\"",
+    "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx"
   },
   "dependencies": {
     "docs": "workspace:*"

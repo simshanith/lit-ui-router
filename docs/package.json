@@ -4,14 +4,14 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "docs": "vitepress dev .",
     "build": "vitepress build .",
+    "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
-    "wrangler": "wrangler --config ../wrangler.jsonc",
-    "wrangler:dev": "pnpm run wrangler dev",
     "format": "prettier --write \"**/*.{md,json,ts}\"",
     "format:check": "prettier --check \"**/*.{md,json,ts}\"",
-    "lint": "eslint ."
+    "lint": "eslint .",
+    "wrangler": "wrangler --config ../wrangler.jsonc",
+    "wrangler:dev": "pnpm run wrangler dev"
   },
   "devDependencies": {
     "prettier": "catalog:",

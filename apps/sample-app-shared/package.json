@@ -4,8 +4,8 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./*.js": "./src/*.ts",
-    "./*": "./src/*"
+    "./*": "./src/*",
+    "./*.js": "./src/*.ts"
   },
   "scripts": {
     "format": "prettier --write \"**/*.{js,ts,json,md,css}\"",

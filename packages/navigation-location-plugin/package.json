@@ -3,6 +3,7 @@
   "description": "UI Router Location Plugin for Navigation API",
   "version": "0.1.2",
   "license": "MIT",
+  "author": "Shane Daniel",
   "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
   "repository": {
     "type": "git",

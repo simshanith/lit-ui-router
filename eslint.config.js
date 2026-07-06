@@ -11,7 +11,7 @@ export default defineConfig(
   tseslint.configs.recommended,
   {
     extends: [packageJson.configs.recommended],
-    files: ['package.json'],
+    files: ['**/package.json'],
     rules: {
       'package-json/require-description': [
         'error',
@@ -19,6 +19,9 @@ export default defineConfig(
           ignorePrivate: true,
         },
       ],
+      // packaging decisions deferred: exports map + sideEffects audit for published packages
+      'package-json/require-exports': 'off',
+      'package-json/require-sideEffects': 'off',
     },
   },
   prettier,

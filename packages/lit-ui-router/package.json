@@ -6,6 +6,7 @@
   "module": "./dist/index.js",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
+  "author": "Shane Daniel",
   "repository": {
     "type": "git",
     "url": "https://github.com/simshanith/lit-ui-router"
