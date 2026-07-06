@@ -1,0 +1,24 @@
+{
+  "name": "dts-backtest",
+  "description": "Typechecks the published packages' built .d.ts with the oldest supported consumer TypeScript",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "format": "prettier --write \"**/*.{ts,js,mjs,json,md}\"",
+    "format:check": "prettier --check \"**/*.{ts,js,mjs,json,md}\"",
+    "lint": "eslint .",
+    "test": "node run.mjs"
+  },
+  "devDependencies": {
+    "@types/dom-navigation": "catalog:",
+    "@uirouter/core": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "workspace:*",
+    "lit-ui-router-mobx": "workspace:*",
+    "mobx": "catalog:",
+    "typescript": "catalog:",
+    "typescript-5.0": "npm:typescript@5.0.4",
+    "ui-router-navigation-location-plugin": "workspace:*"
+  }
+}

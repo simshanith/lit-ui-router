@@ -1,0 +1,8 @@
+{
+  // Same consumer fixture under node16/nodenext resolution (no bundler).
+  "extends": "./tsconfig.fixture.json",
+  "compilerOptions": {
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext"
+  }
+}
