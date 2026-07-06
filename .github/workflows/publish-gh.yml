@@ -18,6 +18,10 @@ on:
 # Serialize runs: a run that checks out before a sibling run pushes its tag
 # will re-create that tag, get its push rejected, and release-it's rollback
 # then deletes the tag from the remote.
+# The queue alone is not enough: release-it's own push sends main + tag
+# together, so a main push that lands mid-run rejects the whole push and the
+# rollback deletes the tag. Hence tagging and pushing are separate steps below,
+# and only the tag ref is ever pushed.
 concurrency:
   group: tag-release
 
@@ -54,11 +58,25 @@ jobs:
         uses: jdx/mise-action@v4
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
-      - name: Tag & push
+      - name: Tag
         # --no-increment: Don't bump version, tag current version
-        # --git.tag true: Create git tag ({package}@X.Y.Z)
-        # --git.push true: Push tag to remote, triggering publish-npm workflow
+        # --git.tag true: Create git tag ({package}@X.Y.Z), locally only
+        # --git.push false: pushing main + tag together is release-it's rollback trap
         # inputs.dryRun is only set for manual workflow_dispatch runs; real pushes to main always tag for real.
-        run: pnpm --filter ${{ matrix.package }} exec release-it --no-increment --git.tag true --git.push true ${{ inputs.dryRun && '--dry-run' || '' }}
+        run: pnpm --filter ${{ matrix.package }} exec release-it --no-increment --git.tag true --git.push false ${{ inputs.dryRun && '--dry-run' || '' }}
         # continue-on-error: Tagging is idempotent - if tag exists, we succeed anyway
+        continue-on-error: true
+      - name: Push tag
+        # Push only the tag ref: a stale local main can't reject the push, and an
+        # already-pushed tag is "Everything up-to-date". Triggers publish-npm.
+        run: |
+          version=$(pnpm --filter ${{ matrix.package }} exec node -p "require('./package.json').version")
+          tag="${{ matrix.package }}@${version}"
+          if [ "${{ inputs.dryRun }}" = "true" ]; then
+            echo "dry-run: would push refs/tags/${tag}"
+          else
+            git push origin "refs/tags/${tag}"
+          fi
+        # continue-on-error: a tag existing on the remote at a different commit is
+        # rejected here, matching the previous tag-exists behavior
         continue-on-error: true
