@@ -25,7 +25,7 @@
     "typedoc": "catalog:publishedPeer"
   },
   "devDependencies": {
-    "@types/node": "^22.20.0",
+    "@types/node": "^24.13.2",
     "typedoc": "catalog:",
     "typescript": "catalog:"
   }
