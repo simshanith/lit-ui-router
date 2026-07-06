@@ -54,9 +54,7 @@ describe('confirmation dialog', () => {
       });
     cy.get('.dialog .content').then(($content) => {
       const rect = $content[0].getBoundingClientRect();
-      // Measure against the document's client width, not the configured
-      // viewport: a classic (non-overlay) vertical scrollbar narrows the
-      // layout area, shifting the centered card by half the scrollbar width.
+      // Measure against the document's client width to account for scrollbar.
       const layoutWidth = $content[0].ownerDocument.documentElement.clientWidth;
       const viewportCenter = layoutWidth / 2;
       const cardCenter = rect.left + rect.width / 2;

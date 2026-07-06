@@ -2,16 +2,11 @@ import { defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
-  // test and test:coverage run concurrently in this directory; sharing
-  // node_modules/.vite lets their dep-optimizer runs corrupt each other
-  // (browsers collect 0 tests, or the run never finishes).
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   test: {
     globals: true,
     include: ['src/specs/**/*.spec.ts'],
-    // vitest 4.1.x browser mode intermittently finishes green but never
-    // exits on ubuntu runners; hanging-process dumps the open handles so
-    // the CI log shows what kept the process alive.
+    // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {
       reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],
@@ -21,10 +16,6 @@ export default defineConfig({
     browser: {
       enabled: true,
       headless: true,
-      // Every concurrent vitest browser process defaults to port 63315 and
-      // races the fallback rebind; a loser's browser can attach to the wrong
-      // server (0 tests collected, or the run waits forever — the CI hang).
-      // Each test script pins a distinct port via VITEST_BROWSER_API_PORT.
       api: process.env.VITEST_BROWSER_API_PORT
         ? { port: Number(process.env.VITEST_BROWSER_API_PORT) }
         : undefined,

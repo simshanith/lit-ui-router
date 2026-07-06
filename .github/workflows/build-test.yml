@@ -14,8 +14,7 @@ on:
         type: boolean
         default: false
 
-# A new push supersedes in-flight PR runs; without this, a run wedged by the
-# vitest browser-mode exit hang keeps a runner busy until the 6h kill.
+# Cancel superseded PR runs.
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
@@ -27,9 +26,6 @@ jobs:
     # Maintainers should review fork PRs and run CI manually.
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
-    # Uncached green runs finish in ~16 min; vitest 4.1.x browser mode
-    # occasionally prints its summary but never exits (browsers + vite stay
-    # alive), which otherwise burns the full 6h default.
     timeout-minutes: 30
     permissions:
       contents: read
@@ -57,10 +53,6 @@ jobs:
           Xvfb :99 -screen 0 1280x720x24 &
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
       - name: Build and Test
-        # --log-order=stream: grouped logs (the CI default) only flush a
-        # task's output when it completes, so a hung task's output — e.g.
-        # vitest's hanging-process handle dump — is swallowed. Streaming
-        # prints task-prefixed lines live instead.
         run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
