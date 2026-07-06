@@ -19,9 +19,6 @@ export default defineConfig(
           ignorePrivate: true,
         },
       ],
-      // packaging decisions deferred: exports map + sideEffects audit for published packages
-      'package-json/require-exports': 'off',
-      'package-json/require-sideEffects': 'off',
     },
   },
   prettier,
