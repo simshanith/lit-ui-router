@@ -57,7 +57,11 @@ jobs:
           Xvfb :99 -screen 0 1280x720x24 &
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
       - name: Build and Test
-        run: turbo run ci --ui=stream ${{ inputs.force && '--force' || '' }}
+        # --log-order=stream: grouped logs (the CI default) only flush a
+        # task's output when it completes, so a hung task's output — e.g.
+        # vitest's hanging-process handle dump — is swallowed. Streaming
+        # prints task-prefixed lines live instead.
+        run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
