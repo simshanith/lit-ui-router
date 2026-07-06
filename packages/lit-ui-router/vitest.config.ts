@@ -5,6 +5,10 @@ export default defineConfig({
   test: {
     globals: true,
     include: ['src/specs/**/*.spec.ts'],
+    // vitest 4.1.x browser mode intermittently finishes green but never
+    // exits on ubuntu runners; hanging-process dumps the open handles so
+    // the CI log shows what kept the process alive.
+    reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {
       reporter: ['text', 'json', 'json-summary', 'lcov', 'html'],
       reportsDirectory: './coverage',
