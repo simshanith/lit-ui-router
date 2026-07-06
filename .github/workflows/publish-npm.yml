@@ -75,16 +75,9 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
         # Create tarball for the GitHub release attachment AND the npm publish
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
-      - name: Verify packed manifest
-        # pnpm pack substitutes catalog:/workspace: refs; fail if any leaked
         run: |
-          TARBALL="$(realpath "$PACKAGE_DIR"/*.tgz)"
-          echo "TARBALL=$TARBALL" >> "$GITHUB_ENV"
-          if tar -xzOf "$TARBALL" package/package.json | grep -nE '"(catalog|workspace):'; then
-            echo "::error::packed manifest contains unsubstituted catalog:/workspace: refs"
-            exit 1
-          fi
+          pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
+          echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
