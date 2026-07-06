@@ -17,8 +17,8 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-static-copy": "catalog:vitepress1",
-    "vitepress": "^1.6.4",
+    "vite-plugin-static-copy": "catalog:",
+    "vitepress": "^2.0.0-alpha.18",
     "wrangler": "catalog:"
   },
   "dependencies": {

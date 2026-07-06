@@ -31,7 +31,7 @@ catalog:
   typedoc-plugin-markdown: ^4.12.0
   typedoc-vitepress-theme: ^1.1.3
   typescript: ^6.0.3
-  vite: ^7.3.6
+  vite: ^8.1.3
   vite-plugin-checker: ^0.14.4
   vite-plugin-static-copy: ^4.1.1
   vitest: ^4.1.9
@@ -45,8 +45,6 @@ catalogs:
     lit: ^3.0.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
-  vitepress1:
-    vite-plugin-static-copy: ^3.4.0
 
 allowBuilds:
   cypress: true
@@ -59,7 +57,6 @@ allowBuilds:
 overrides:
   d3-color: 3.1.0
   dompurify: 3.4.11
-  esbuild: 0.28.1
   'undici@6': 6.27.0
   'undici@7': 7.28.0
 
@@ -70,3 +67,6 @@ patchedDependencies:
   '@vitest/browser': patches/@vitest__browser.patch
   '@uirouter/dsr': patches/@uirouter__dsr.patch
   lit-dialog: patches/lit-dialog.patch
+
+minimumReleaseAgeExclude:
+  - vitepress@2.0.0-alpha.18

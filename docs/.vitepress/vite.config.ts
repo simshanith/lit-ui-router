@@ -25,46 +25,45 @@ function spaFallbackPlugin(): Plugin {
 export default defineConfig({
   plugins: [
     spaFallbackPlugin(),
+    // static-copy v4 matches files only and always preserves source directory
+    // structure; stripBase drops the node_modules/<app>/dist/<dir> prefix.
     viteStaticCopy({
       targets: [
         {
           src: 'node_modules/sample-app-lit-vanilla/dist/assets/*',
           dest: 'assets',
+          rename: { stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-vanilla/dist/index.html',
           dest: '',
-          rename: 'app.html',
+          rename: { name: 'app.html', stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-mobx/dist/assets/*',
           dest: 'assets',
+          rename: { stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-mobx/dist/index.html',
           dest: '',
-          rename: 'app-mobx.html',
+          rename: { name: 'app-mobx.html', stripBase: true },
         },
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/images/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/images/**',
           dest: 'images',
+          rename: { stripBase: 4 },
         },
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/static/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/static/**',
           dest: 'static',
+          rename: { stripBase: 4 },
         },
       ],
     }),
   ],
-
-  build: {
-    // VitePress 1.x defaults this list with `safari14`, but esbuild >=0.27.7
-    // refuses to emit destructuring for Safari <14.1 (JSC array-rest bug,
-    // compat-table/compat-table#2008) and has no lowering transform for it.
-    target: ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'],
-  },
 
   server: {
     open: !Boolean(process.env.CI) && !Boolean(process.env.E2E_TEST),
