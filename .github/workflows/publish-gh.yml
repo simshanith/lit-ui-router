@@ -15,6 +15,12 @@ on:
         default: false
         type: boolean
 
+# Serialize runs: a run that checks out before a sibling run pushes its tag
+# will re-create that tag, get its push rejected, and release-it's rollback
+# then deletes the tag from the remote.
+concurrency:
+  group: tag-release
+
 permissions:
   contents: write
 
