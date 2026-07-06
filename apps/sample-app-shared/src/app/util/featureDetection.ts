@@ -19,6 +19,19 @@ export function parseFeatureParams(
 
 export type LocationPluginFeatureSymbol = 'pushState' | 'navigation' | 'hash';
 
+/**
+ * Detects if the Navigation API is available in the current browser.
+ * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API
+ */
+export function canUseNavigationAPI(): boolean {
+  return (
+    typeof window !== 'undefined' &&
+    'navigation' in window &&
+    typeof (window as { navigation?: { navigate?: unknown } }).navigation
+      ?.navigate === 'function'
+  );
+}
+
 export function isValidLocationPlugin(
   value: string | undefined,
 ): value is LocationPluginFeatureSymbol {
@@ -40,12 +53,18 @@ export function resolveLocationPluginFeature(): string | undefined {
 }
 
 /**
- * Resolves location plugin from feature settings. Fallbacks to 'hash'
+ * Resolves location plugin with auto-detection:
+ * 1. Detect preference (URL param, session storage, env var) when set
+ * 2. Navigation API when preferred and available in browser
+ * 3. Fallback to pushState
  */
 export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
-  const feature = resolveLocationPluginFeature();
+  let feature = resolveLocationPluginFeature();
+  if (feature === 'navigation' && !canUseNavigationAPI()) {
+    feature = 'pushState';
+  }
   if (isValidLocationPlugin(feature)) return feature;
-  return 'hash';
+  return 'pushState';
 }
 
 export interface FeatureFlagDefinitions {
