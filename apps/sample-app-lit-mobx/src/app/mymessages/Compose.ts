@@ -5,10 +5,10 @@ import { isEqual } from 'lodash';
 import { UIViewInjectedProps } from 'lit-ui-router';
 import { RouterReactionController } from 'lit-ui-router-mobx';
 
-import { MessagesStorage } from '../global/dataSources.js';
+import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
-import DialogService from '../global/dialogService.js';
-import { Message } from './interface.js';
+import DialogService from 'sample-app-shared/app/global/dialogService.js';
+import { Message } from 'sample-app-shared/app/mymessages/interface.js';
 
 interface ComposeResolves {
   $stateParams?: { message?: Partial<Message> };

@@ -2,10 +2,10 @@ import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
-import { MessagesStorage } from '../global/dataSources.js';
+import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import { StoreCommitController } from '../util/storeCommitController.js';
-import { Message } from './interface.js';
-import './MessageTable.js';
+import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import 'sample-app-shared/app/mymessages/MessageTable.js';
 
 interface MessageListResolves {
   folder: { columns: string[] };

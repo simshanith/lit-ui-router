@@ -11,16 +11,10 @@
     "lint": "eslint ."
   },
   "dependencies": {
-    "@api-viewer/docs": "catalog:",
-    "@uirouter/core": "catalog:",
-    "@uirouter/dsr": "catalog:",
-    "@uirouter/sticky-states": "catalog:",
-    "@uirouter/visualizer": "catalog:",
     "lit": "catalog:",
-    "lit-dialog": "catalog:",
     "lit-ui-router": "workspace:*",
     "lodash": "catalog:",
-    "ui-router-navigation-location-plugin": "workspace:*"
+    "sample-app-shared": "workspace:*"
   },
   "devDependencies": {
     "@types/dom-navigation": "catalog:",

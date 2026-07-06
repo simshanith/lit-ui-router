@@ -1,0 +1,16 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "allowJs": true,
+    "types": ["vite/client", "dom-navigation"],
+    "noEmit": true,
+    // Standalone typechecking (editors, eslint projectService) resolves the
+    // app-provided modules against the vanilla app; each app's own compile
+    // maps ~app/* to its own src/app via its tsconfig paths.
+    "paths": {
+      "~app/*": ["../sample-app-lit/src/app/*"]
+    }
+  },
+  "include": ["src/**/*"],
+  "exclude": ["node_modules"]
+}
