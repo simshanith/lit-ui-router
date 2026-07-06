@@ -28,6 +28,7 @@
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
     "prettier": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   }
 }

@@ -3,12 +3,7 @@
   "compilerOptions": {
     "allowJs": true,
     "types": ["vite/client", "dom-navigation"],
-    "noEmit": true,
-    // sample-app-shared imports the app-specific modules through ~app/*;
-    // point the alias at this app's implementations.
-    "paths": {
-      "~app/*": ["./src/app/*"]
-    }
+    "noEmit": true
   },
   "include": ["src/**/*", "vite.config.ts"],
   "exclude": ["node_modules", "dist"]

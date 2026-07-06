@@ -3,10 +3,9 @@ import { FoldersStorage, MessagesStorage } from '../global/dataSources.js';
 import MessageListUI from './messageListUIService.js';
 import { Message } from './interface.js';
 
-import Compose from '~app/mymessages/Compose.js';
+import { Compose, MessageList } from '../global/appModules.js';
 import MyMessages from './MyMessages.js';
 import MessageComponent from './Message.js';
-import MessageList from '~app/mymessages/MessageList.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
 

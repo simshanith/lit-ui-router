@@ -337,6 +337,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
 
   docs:
     dependencies:

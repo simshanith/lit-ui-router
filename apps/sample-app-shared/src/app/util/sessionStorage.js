@@ -1,5 +1,5 @@
 import { pushToArr, guid, setProp } from './util.js';
-import AppConfig from '~app/global/appConfig.js';
+import { AppConfig } from '../global/appModules.js';
 
 /**
  * This class simulates a RESTful resource, but the API calls fetch data from

@@ -1,5 +1,5 @@
 import { StateObject, Transition } from '@uirouter/core';
-import AuthService from '~app/global/authService.js';
+import { AuthService } from './appModules.js';
 /**
  * This file contains a Transition Hook which protects a
  * route that requires authentication.

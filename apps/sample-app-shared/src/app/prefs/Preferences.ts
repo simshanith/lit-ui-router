@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 
-import AppConfig from '~app/global/appConfig.js';
+import { AppConfig } from '../global/appModules.js';
 import './FeatureFlagsPanel.js';
 
 @customElement('sample-preferences')

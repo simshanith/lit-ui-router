@@ -1,5 +1,5 @@
 import { SessionStorage } from '../util/sessionStorage.js';
-import AppConfig from '~app/global/appConfig.js';
+import { AppConfig } from './appModules.js';
 /**
  * Fake REST Services (Contacts, Folders, Messages) used in the mymessages submodule.
  *

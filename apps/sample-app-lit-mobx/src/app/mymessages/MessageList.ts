@@ -4,13 +4,8 @@ import { UIViewInjectedProps } from 'lit-ui-router';
 import { ReactionController } from 'lit-ui-router-mobx';
 
 import MessagesStore from './messagesStore.js';
-import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import { MessageListResolves } from 'sample-app-shared/app/mymessages/interface.js';
 import 'sample-app-shared/app/mymessages/MessageTable.js';
-
-interface MessageListResolves {
-  folder: { _id: string; columns: string[] };
-  messages: Message[];
-}
 
 @customElement('sample-message-list')
 export class MessageList extends LitElement {

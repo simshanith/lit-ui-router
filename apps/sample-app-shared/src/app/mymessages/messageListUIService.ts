@@ -1,4 +1,4 @@
-import AppConfig from '~app/global/appConfig.js';
+import { AppConfig } from '../global/appModules.js';
 import { Message } from './interface.js';
 
 export function orderBy(predicate: string) {

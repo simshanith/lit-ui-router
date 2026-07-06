@@ -6,7 +6,7 @@ import { isEqual } from 'lodash';
 
 import { orderBy } from './messageListUIService.js';
 
-import AppConfig from '~app/global/appConfig.js';
+import { AppConfig } from '../global/appModules.js';
 import { SortMessages, ChangeEvent } from './SortMessages.js';
 import { Message } from './interface.js';
 

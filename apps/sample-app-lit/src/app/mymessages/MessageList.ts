@@ -4,13 +4,8 @@ import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import { StoreCommitController } from '../util/storeCommitController.js';
-import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import { MessageListResolves } from 'sample-app-shared/app/mymessages/interface.js';
 import 'sample-app-shared/app/mymessages/MessageTable.js';
-
-interface MessageListResolves {
-  folder: { columns: string[] };
-  messages: Message[];
-}
 
 @customElement('sample-message-list')
 export class MessageList extends LitElement {

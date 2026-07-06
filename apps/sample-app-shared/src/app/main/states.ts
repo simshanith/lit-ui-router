@@ -1,7 +1,7 @@
 import { Transition } from '@uirouter/core';
 import { LitStateDeclaration } from 'lit-ui-router';
 
-import App from '~app/main/App.js';
+import { App } from '../global/appModules.js';
 import Welcome from '../main/Welcome.js';
 import Login from '../main/Login.js';
 import Home from '../main/Home.js';

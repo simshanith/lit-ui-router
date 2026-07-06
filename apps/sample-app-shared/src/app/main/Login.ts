@@ -3,8 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 
 import { UIViewInjectedProps } from 'lit-ui-router';
 
-import AuthService from '~app/global/authService.js';
-import AppConfig from '~app/global/appConfig.js';
+import { AppConfig, AuthService } from '../global/appModules.js';
 
 @customElement('sample-login')
 export class Login extends LitElement {

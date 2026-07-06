@@ -1,3 +1,9 @@
+/** Resolves provided by the `mymessages.messagelist` state (see states.ts). */
+export interface MessageListResolves {
+  folder: { _id: string; columns: string[] };
+  messages: Message[];
+}
+
 export interface Message {
   _id: string;
   read: boolean;
