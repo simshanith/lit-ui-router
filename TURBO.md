@@ -73,12 +73,12 @@ docs
 
 Workspaces extend the root configuration using `"extends": ["//"]`:
 
-| Workspace                 | Custom Configuration                                                         |
-| ------------------------- | ---------------------------------------------------------------------------- |
-| `packages/lit-ui-router`  | Adds `build:custom-elements` before build, configures `docs:api`             |
-| `apps/sample-app-lit`     | Adds env vars for build (VITE\_\*)                                           |
-| `apps/sample-app-lit-e2e` | Disables test caching for e2e tests                                          |
-| `docs`                    | Adds `docs:preview`, `wrangler:dev` tasks, requires `^docs:api` before build |
+| Workspace                     | Custom Configuration                                                         |
+| ----------------------------- | ---------------------------------------------------------------------------- |
+| `packages/lit-ui-router`      | Adds `build:custom-elements` before build, configures `docs:api`             |
+| `apps/sample-app-lit-vanilla` | Adds env vars for build (VITE\_\*)                                           |
+| `apps/sample-app-lit-e2e`     | Disables test caching for e2e tests                                          |
+| `docs`                        | Adds `docs:preview`, `wrangler:dev` tasks, requires `^docs:api` before build |
 
 ## Common Commands
 

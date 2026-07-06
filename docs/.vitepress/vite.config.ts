@@ -28,19 +28,19 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'node_modules/sample-app-lit/dist/assets/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/assets/*',
           dest: 'assets',
         },
         {
-          src: 'node_modules/sample-app-lit/dist/images/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/images/*',
           dest: 'images',
         },
         {
-          src: 'node_modules/sample-app-lit/dist/static/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/static/*',
           dest: 'static',
         },
         {
-          src: 'node_modules/sample-app-lit/dist/index.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/index.html',
           dest: '',
           rename: 'app.html',
         },

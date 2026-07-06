@@ -5,7 +5,7 @@ have in common: the contacts/mymessages/prefs feature modules, router
 configuration, data sources, styles, and the simulated REST fixtures in
 `public/`.
 
-The apps — `sample-app-lit` and `sample-app-lit-mobx` — differ only in their
+The apps — `sample-app-lit-vanilla` and `sample-app-lit-mobx` — differ only in their
 reactivity idiom, so each app keeps just the handful of modules that express
 that idiom:
 
