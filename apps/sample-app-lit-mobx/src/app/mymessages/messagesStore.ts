@@ -32,8 +32,6 @@ export class MessagesStore {
       { autoBind: true },
     );
     MessagesStorage.addEventListener('commit', this.refresh);
-    // This module evaluates during the bootstrap import chain, before
-    // registerAppModules() provides AppConfig to the storage.
     appModulesRegistered.then(this.refresh);
   }
 
