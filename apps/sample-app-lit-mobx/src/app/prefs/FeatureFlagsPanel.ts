@@ -183,9 +183,11 @@ export class FeatureFlagsPanel extends LitElement {
             <div class="flag-info">
               <div class="flag-label">
                 ${config.label}
-                ${featureFlags.isUrlOverridden(config.key)
-                  ? html`<span class="url-override">(URL override)</span>`
-                  : ''}
+                ${
+                  featureFlags.isUrlOverridden(config.key)
+                    ? html`<span class="url-override">(URL override)</span>`
+                    : ''
+                }
               </div>
               <div class="flag-description">${config.description}</div>
             </div>

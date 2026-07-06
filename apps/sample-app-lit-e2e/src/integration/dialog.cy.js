@@ -54,10 +54,12 @@ describe('confirmation dialog', () => {
       });
     cy.get('.dialog .content').then(($content) => {
       const rect = $content[0].getBoundingClientRect();
-      const viewportCenter = Cypress.config('viewportWidth') / 2;
+      // Measure against the document's client width to account for scrollbar.
+      const layoutWidth = $content[0].ownerDocument.documentElement.clientWidth;
+      const viewportCenter = layoutWidth / 2;
       const cardCenter = rect.left + rect.width / 2;
       expect(cardCenter).to.be.closeTo(viewportCenter, 2);
-      expect(rect.width).to.be.lessThan(Cypress.config('viewportWidth') / 2);
+      expect(rect.width).to.be.lessThan(layoutWidth / 2);
     });
     cy.screenshot('delete-contact-dialog');
 

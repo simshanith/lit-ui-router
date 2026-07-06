@@ -65,6 +65,13 @@ export default defineConfig({
     }),
   ],
 
+  build: {
+    // VitePress 1.x defaults this list with `safari14`, but esbuild >=0.27.7
+    // refuses to emit destructuring for Safari <14.1 (JSC array-rest bug,
+    // compat-table/compat-table#2008) and has no lowering transform for it.
+    target: ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'],
+  },
+
   server: {
     open: !Boolean(process.env.CI) && !Boolean(process.env.E2E_TEST),
   },

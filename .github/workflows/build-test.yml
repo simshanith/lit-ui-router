@@ -7,14 +7,26 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
+    inputs:
+      force:
+        description: 'Bypass turbo cache (deflake reproduction: rebuild/retest everything)'
+        type: boolean
+        default: false
+
+# Cancel superseded PR runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
   build_and_test:
     # Security: Only run on first-party PRs (not forks) to protect secrets.
     # Fork PRs don't have access to secrets, so they would fail anyway.
     # Maintainers should review fork PRs and run CI manually.
-    if: ${{ github.event_name == 'push' || ( github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name == github.repository ) }}
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     permissions:
       contents: read
       pull-requests: write # Required for PR coverage comments
@@ -41,7 +53,7 @@ jobs:
           Xvfb :99 -screen 0 1280x720x24 &
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
       - name: Build and Test
-        run: turbo run ci --ui=stream
+        run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}

@@ -28,16 +28,16 @@
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "lint": "eslint .",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage --browser=chromium"
+    "test": "VITEST_BROWSER_API_PORT=63320 vitest run",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium"
   },
   "customElements": "dist/custom-elements.json",
   "dependencies": {
-    "@uirouter/core": "catalog:",
-    "lit": "catalog:"
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer"
   },
   "devDependencies": {
-    "@custom-elements-manifest/analyzer": "^0.10.10",
+    "@custom-elements-manifest/analyzer": "^0.11.0",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "playwright": "catalog:",
