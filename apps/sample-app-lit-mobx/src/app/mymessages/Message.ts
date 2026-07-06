@@ -125,7 +125,8 @@ export class MessageElement extends LitElement {
         this.stateService.go(nextState, params, {
           reload: 'mymessages.messagelist',
         }),
-      );
+      )
+      .catch(() => {}); // user declined
   };
 
   render() {
