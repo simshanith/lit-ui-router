@@ -3,6 +3,7 @@ import { customElement, state } from 'lit/decorators.js';
 import {
   featureFlags,
   FeatureFlagDefinitions,
+  canUseNavigationAPI,
 } from '../util/featureDetection.js';
 
 interface FlagConfig {
@@ -13,6 +14,10 @@ interface FlagConfig {
   options?: { value: string | undefined; label: string }[];
 }
 
+const navigationApiLabel = canUseNavigationAPI()
+  ? 'Navigation API (Available)'
+  : 'Navigation API (Not supported)';
+
 const FLAG_CONFIGS: FlagConfig[] = [
   {
     key: 'location-plugin',
@@ -20,10 +25,10 @@ const FLAG_CONFIGS: FlagConfig[] = [
     description: 'Router location strategy (requires page reload)',
     type: 'select',
     options: [
-      { value: undefined, label: 'None' },
+      { value: undefined, label: 'Auto-detect' },
       { value: 'hash', label: 'Hash' },
       { value: 'pushState', label: 'Push State' },
-      { value: 'navigation', label: 'Navigation API' },
+      { value: 'navigation', label: navigationApiLabel },
     ],
   },
   {
@@ -120,7 +125,11 @@ export class FeatureFlagsPanel extends LitElement {
 
   private _handleSelectChange(flag: keyof FeatureFlagDefinitions, e: Event) {
     const value = (e.target as HTMLSelectElement).value;
-    featureFlags.set(flag, value as FeatureFlagDefinitions[typeof flag]);
+    if (value === '') {
+      featureFlags.reset(flag);
+    } else {
+      featureFlags.set(flag, value as FeatureFlagDefinitions[typeof flag]);
+    }
     this._flags = featureFlags.getAll();
   }
 
@@ -161,7 +170,7 @@ export class FeatureFlagsPanel extends LitElement {
         >
           ${config.options.map(
             (opt) => html`
-              <option value=${opt.value} ?selected=${value === opt.value}>
+              <option value=${opt.value ?? ''} ?selected=${value === opt.value}>
                 ${opt.label}
               </option>
             `,

@@ -37,6 +37,33 @@ Everything else — the contacts/mymessages/prefs features, router
 configuration, transition hooks, data sources, dialogs, styles, and the
 simulated REST fixtures in `public/` — is imported from `sample-app-shared`.
 
+## Location plugin selection
+
+Both apps support three location strategies via `locationPluginConfig` in the
+shared `router.config.ts`:
+
+| Plugin       | URL Format | Browser Support                              |
+| ------------ | ---------- | -------------------------------------------- |
+| `hash`       | `/#/path`  | All browsers                                 |
+| `pushState`  | `/path`    | Modern browsers                              |
+| `navigation` | `/path`    | Chrome/Edge 102+, Firefox 147+, Safari 26.2+ |
+
+**Auto-detection**: When `navigation` preference is set, the app automatically
+selects the best available plugin:
+
+1. Navigation API when supported, via the 🧑‍🔬 _experimental_
+   [navigation plugin](../packages/navigation-location-plugin/)
+2. Push State as fallback for unsupported browsers
+
+**Override options** (in priority order):
+
+1. URL parameter: `?feature-location-plugin=hash`
+2. Session storage: Set via Feature Flags panel in Prefs
+3. Environment variable: `VITE_SAMPLE_APP_LOCATION_PLUGIN=pushState`
+
+The Feature Flags panel shows browser compatibility indicators for each plugin
+option.
+
 ## End-to-end tests
 
 `sample-app-lit-e2e` runs the same Cypress specs against both apps:
