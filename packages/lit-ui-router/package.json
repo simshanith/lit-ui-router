@@ -33,8 +33,8 @@
   },
   "customElements": "dist/custom-elements.json",
   "dependencies": {
-    "@uirouter/core": "catalog:",
-    "lit": "catalog:"
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "^0.11.0",

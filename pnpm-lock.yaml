@@ -93,6 +93,13 @@ catalogs:
     wrangler:
       specifier: ^4.107.0
       version: 4.107.0
+  publishedPeer:
+    '@uirouter/core':
+      specifier: ^6.0.8
+      version: 6.1.2
+    lit:
+      specifier: ^3.0.0
+      version: 3.3.3
 
 overrides:
   d3-color: 3.1.0
@@ -363,10 +370,10 @@ importers:
   packages/lit-ui-router:
     dependencies:
       '@uirouter/core':
-        specifier: 'catalog:'
+        specifier: catalog:publishedPeer
         version: 6.1.2
       lit:
-        specifier: 'catalog:'
+        specifier: catalog:publishedPeer
         version: 3.3.3
     devDependencies:
       '@custom-elements-manifest/analyzer':
