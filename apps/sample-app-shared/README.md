@@ -29,7 +29,9 @@ Shared code just imports the bindings — e.g.
 live, every read after registration sees the app's implementation. The one
 rule this imposes: shared code must read these bindings lazily (inside
 constructors, methods, or lazy-loaded state definitions), never at module
-scope, since shared modules evaluate before `registerAppModules` runs.
+scope, since shared modules evaluate before `registerAppModules` runs. Work
+that must start eagerly can `await appModulesRegistered` instead (see the
+mobx app's `messagesStore.ts`).
 
 There is no build step: apps consume the TypeScript sources directly via the
 package `exports` (`sample-app-shared/app/...js` resolves to

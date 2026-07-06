@@ -11,7 +11,8 @@ import type { MessageListResolves } from '../mymessages/interface.js';
  * apps' `src/main.ts`). Code evaluated before registration — all shared
  * modules, and the app modules `main.ts` imports — must read these bindings
  * lazily (inside constructors, methods, or state definitions), never at
- * module scope.
+ * module scope; work that must start eagerly can `await`
+ * {@link appModulesRegistered} instead.
  */
 export interface AppModules {
   AppConfig: AppConfig;
@@ -44,6 +45,14 @@ export let App: LitViewDeclaration;
 export let Compose: LitViewDeclaration;
 export let MessageList: LitViewDeclaration<MessageListResolves>;
 
+let markRegistered: (modules: AppModules) => void;
+
+/** Resolves with the app's modules once {@link registerAppModules} runs. */
+export const appModulesRegistered = new Promise<AppModules>((resolve) => {
+  markRegistered = resolve;
+});
+
 export function registerAppModules(modules: AppModules) {
   ({ AppConfig, AuthService, App, Compose, MessageList } = modules);
+  markRegistered(modules);
 }

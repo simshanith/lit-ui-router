@@ -1,5 +1,6 @@
 import { makeAutoObservable, observable, runInAction } from 'mobx';
 
+import { appModulesRegistered } from 'sample-app-shared/app/global/appModules.js';
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
@@ -31,9 +32,9 @@ export class MessagesStore {
       { autoBind: true },
     );
     MessagesStorage.addEventListener('commit', this.refresh);
-    // One microtask late: this module evaluates during the bootstrap import
-    // chain, before registerAppModules() provides AppConfig to the storage.
-    queueMicrotask(this.refresh);
+    // This module evaluates during the bootstrap import chain, before
+    // registerAppModules() provides AppConfig to the storage.
+    appModulesRegistered.then(this.refresh);
   }
 
   refresh() {
