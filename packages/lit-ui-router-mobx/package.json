@@ -37,8 +37,8 @@
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
     "lint": "eslint .",
-    "test": "vitest run",
-    "test:coverage": "vitest run --coverage --browser=chromium"
+    "test": "VITEST_BROWSER_API_PORT=63330 vitest run",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63335 vitest run --coverage --browser=chromium"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
