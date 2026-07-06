@@ -17,8 +17,8 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { promisify } from 'node:util';
 
-import { loadWorkspace } from './check-catalog.mjs';
 import { findUnsubstitutedRefs, formatReport } from './check-pack.core.mjs';
+import { loadWorkspace } from './workspace.mjs';
 
 const run = promisify(execFile);
 const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');

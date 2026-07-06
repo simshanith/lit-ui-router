@@ -45,6 +45,7 @@
       "inputs": [
         "scripts/check-catalog.mjs",
         "scripts/check-catalog.core.mjs",
+        "scripts/workspace.mjs",
         "pnpm-workspace.yaml",
         "**/package.json"
       ]
@@ -53,8 +54,8 @@
       "inputs": [
         "scripts/check-pack.mjs",
         "scripts/check-pack.core.mjs",
-        "scripts/check-catalog.mjs",
         "scripts/check-catalog.core.mjs",
+        "scripts/workspace.mjs",
         "pnpm-workspace.yaml",
         "**/package.json"
       ]
