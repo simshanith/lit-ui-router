@@ -1,9 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
-import { comparer } from 'mobx';
 import { isEqual } from 'lodash';
-import { UIViewInjectedProps } from 'lit-ui-router';
-import { RouterReactionController } from 'lit-ui-router-mobx';
+import { TransitionController, UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
@@ -39,33 +37,35 @@ export class Compose extends LitElement {
     this.resetMessage(_uiViewProps?.resolves?.$stateParams?.message);
   }
 
-  // Resets the draft from the observable `message` route param. Sticky
-  // instances survive between visits, so the constructor only runs once;
-  // the controller covers the rest of the lifecycle:
-  // - on every (re)connect it fires immediately, starting a fresh draft
-  //   from the current params (a fresh visit to this state);
-  // - while composing, it fires when the param structurally changes
-  //   (Reply/Forward/Edit), so an in-progress draft isn't clobbered by
-  //   unrelated transitions or identity-only param changes.
-  // uiCanExit below still guards against silently discarding unsaved edits.
-  messageParam = new RouterReactionController(
-    this,
-    (route) => route.params.message as Partial<Message> | undefined,
-    {
-      equals: comparer.structural,
-      onChange: (message) => this.resetMessage(message),
-    },
-  );
+  // Resets the draft whenever a transition lands on this state. Sticky
+  // instances survive between visits, so the constructor only runs once:
+  // - hostConnected: the element (re)entered the DOM, start a fresh draft.
+  // - onSuccess: a transition targeted this state while composing (Reply/
+  //   Forward/Edit, or a DSR redirect back here); reset only if the message
+  //   param actually changed, so an in-progress draft isn't clobbered.
+  // Params are read from the transition itself, which is authoritative even
+  // before <ui-view> pushes updated props. uiCanExit below still guards
+  // against silently discarding unsaved edits.
+  transitions = new TransitionController(this, {
+    criteria: { to: 'mymessages.compose' },
+    callback: (transition, reason) =>
+      this.resetMessage(
+        transition?.params().message as Partial<Message> | undefined,
+        { force: reason === 'hostConnected' },
+      ),
+  });
 
-  resetMessage(message: Partial<Message> = {}) {
-    this.pristineMessage = {
+  resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    const pristineMessage = {
       body: '',
       to: '',
       subject: '',
       ...message,
       from: AppConfig.emailAddress,
     } as Message;
-    this.message = { ...this.pristineMessage };
+    if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
+    this.pristineMessage = pristineMessage;
+    this.message = { ...pristineMessage };
     this.canExit = false;
   }
 

@@ -1,8 +1,9 @@
 import { makeAutoObservable, observable, runInAction } from 'mobx';
 
-import { MessagesStorage } from '../global/dataSources.js';
+import { appModulesRegistered } from 'sample-app-shared/app/global/appModules.js';
+import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
-import { Message } from './interface.js';
+import { Message } from 'sample-app-shared/app/mymessages/interface.js';
 
 /**
  * An observable cache of the fake REST MessagesStorage.
@@ -31,7 +32,7 @@ export class MessagesStore {
       { autoBind: true },
     );
     MessagesStorage.addEventListener('commit', this.refresh);
-    this.refresh();
+    appModulesRegistered.then(this.refresh);
   }
 
   refresh() {

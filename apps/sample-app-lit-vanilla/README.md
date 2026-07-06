@@ -1,24 +1,10 @@
-## UI-Router 1.0 Lit Sample Application — MobX variant
+## UI-Router 1.0 Lit Sample Application — vanilla variant
 
-This is the [MobX](https://mobx.js.org) variant of the [vanilla sample app](../sample-app-lit-vanilla/): the same
-non-trivial ui-router lit application, with reactivity handled by
-[`lit-ui-router-mobx`](../../packages/lit-ui-router-mobx/) instead of the zero-dependency
-`TransitionController`. The two apps are intentionally behaviorally identical (the same
-Cypress suite runs against both) so the integration idioms can be compared file-by-file —
-in the spirit of [TodoMVC](https://todomvc.com) and the
-[ui-router sample apps](https://github.com/ui-router/sample-app-react).
+https://github.simloovoo.com/lit-ui-router/#/mymessages/inbox/5648b50cc586cac4aed6836f
 
-What's different here:
-
-- `RouterReactionController` observes the router (via the observable `RouterStore`) in
-  `main/App.ts` and `mymessages/Compose.ts` — no transition-hook plumbing in components
-- `ReactionController` selectors observe app stores in `main/NavHeader.ts` and
-  `mymessages/MessageList.ts`
-- App state lives in MobX stores: `global/appConfig.ts` and `mymessages/messagesStore.ts`
-- No store wiring in the shared `router.config.ts` — the router store attaches lazily on
-  first use
-
-See [`apps/README.md`](../README.md) for the full side-by-side comparison, and
+This is the zero-dependency variant of the sample app, using `lit-ui-router`'s
+`TransitionController` for reactivity. See [`apps/README.md`](../README.md) for the
+side-by-side comparison with the [MobX variant](../sample-app-lit-mobx/), and
 [`sample-app-shared`](../sample-app-shared/) for everything the two apps have in common.
 
 This sample app is intended to demonstrate a non-trivial ui-router lit application.

@@ -1,0 +1,34 @@
+{
+  "name": "sample-app-shared",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    "./*.js": "./src/*.ts",
+    "./*": "./src/*"
+  },
+  "scripts": {
+    "format": "prettier --write \"**/*.{js,ts,json,md,css}\"",
+    "format:check": "prettier --check \"**/*.{js,ts,json,md,css}\"",
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@api-viewer/docs": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@uirouter/dsr": "catalog:",
+    "@uirouter/sticky-states": "catalog:",
+    "@uirouter/visualizer": "catalog:",
+    "lit": "catalog:",
+    "lit-dialog": "catalog:",
+    "lit-ui-router": "workspace:*",
+    "lodash": "catalog:",
+    "ui-router-navigation-location-plugin": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/dom-navigation": "catalog:",
+    "@types/lodash": "catalog:",
+    "prettier": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  }
+}

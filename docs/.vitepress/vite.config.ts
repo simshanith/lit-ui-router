@@ -28,19 +28,11 @@ export default defineConfig({
     viteStaticCopy({
       targets: [
         {
-          src: 'node_modules/sample-app-lit/dist/assets/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/assets/*',
           dest: 'assets',
         },
         {
-          src: 'node_modules/sample-app-lit/dist/images/*',
-          dest: 'images',
-        },
-        {
-          src: 'node_modules/sample-app-lit/dist/static/*',
-          dest: 'static',
-        },
-        {
-          src: 'node_modules/sample-app-lit/dist/index.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/index.html',
           dest: '',
           rename: 'app.html',
         },
@@ -49,17 +41,19 @@ export default defineConfig({
           dest: 'assets',
         },
         {
-          src: 'node_modules/sample-app-lit-mobx/dist/images/*',
-          dest: 'images',
-        },
-        {
-          src: 'node_modules/sample-app-lit-mobx/dist/static/*',
-          dest: 'static',
-        },
-        {
           src: 'node_modules/sample-app-lit-mobx/dist/index.html',
           dest: '',
           rename: 'app-mobx.html',
+        },
+        // images/ and static/ come from sample-app-shared and are identical
+        // in both apps' dists; copy once so neither can silently clobber.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist/images/*',
+          dest: 'images',
+        },
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist/static/*',
+          dest: 'static',
         },
       ],
     }),

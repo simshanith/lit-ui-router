@@ -178,64 +178,6 @@ importers:
         specifier: 'catalog:'
         version: 4.107.0
 
-  apps/sample-app-lit:
-    dependencies:
-      '@api-viewer/docs':
-        specifier: 'catalog:'
-        version: 1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)
-      '@uirouter/core':
-        specifier: 'catalog:'
-        version: 6.1.2
-      '@uirouter/dsr':
-        specifier: 'catalog:'
-        version: 1.2.0(patch_hash=85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761)(@uirouter/core@6.1.2)
-      '@uirouter/sticky-states':
-        specifier: 'catalog:'
-        version: 1.5.1(@uirouter/core@6.1.2)
-      '@uirouter/visualizer':
-        specifier: 'catalog:'
-        version: 7.2.1(@uirouter/core@6.1.2)
-      lit:
-        specifier: 'catalog:'
-        version: 3.3.3
-      lit-dialog:
-        specifier: 'catalog:'
-        version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
-      lit-ui-router:
-        specifier: workspace:*
-        version: link:../../packages/lit-ui-router
-      lodash:
-        specifier: 'catalog:'
-        version: 4.18.1
-      ui-router-navigation-location-plugin:
-        specifier: workspace:*
-        version: link:../../packages/navigation-location-plugin
-    devDependencies:
-      '@types/dom-navigation':
-        specifier: 'catalog:'
-        version: 1.0.7
-      '@types/lodash':
-        specifier: 'catalog:'
-        version: 4.17.24
-      prettier:
-        specifier: 'catalog:'
-        version: 3.9.4
-      typescript:
-        specifier: 'catalog:'
-        version: 5.9.3
-      vite:
-        specifier: 'catalog:'
-        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
-      vite-plugin-checker:
-        specifier: 'catalog:'
-        version: 0.14.4(eslint@9.39.4(jiti@2.7.0))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
-      vite-plugin-static-copy:
-        specifier: 'catalog:'
-        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
-      wrangler:
-        specifier: 'catalog:'
-        version: 4.107.0
-
   apps/sample-app-lit-e2e:
     dependencies:
       docs:
@@ -266,27 +208,9 @@ importers:
 
   apps/sample-app-lit-mobx:
     dependencies:
-      '@api-viewer/docs':
-        specifier: 'catalog:'
-        version: 1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)
-      '@uirouter/core':
-        specifier: 'catalog:'
-        version: 6.1.2
-      '@uirouter/dsr':
-        specifier: 'catalog:'
-        version: 1.2.0(patch_hash=85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761)(@uirouter/core@6.1.2)
-      '@uirouter/sticky-states':
-        specifier: 'catalog:'
-        version: 1.5.1(@uirouter/core@6.1.2)
-      '@uirouter/visualizer':
-        specifier: 'catalog:'
-        version: 7.2.1(@uirouter/core@6.1.2)
       lit:
         specifier: 'catalog:'
         version: 3.3.3
-      lit-dialog:
-        specifier: 'catalog:'
-        version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
       lit-ui-router:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router
@@ -299,9 +223,9 @@ importers:
       mobx:
         specifier: 'catalog:'
         version: 6.16.1
-      ui-router-navigation-location-plugin:
+      sample-app-shared:
         specifier: workspace:*
-        version: link:../../packages/navigation-location-plugin
+        version: link:../sample-app-shared
     devDependencies:
       '@types/dom-navigation':
         specifier: 'catalog:'
@@ -328,17 +252,106 @@ importers:
         specifier: 'catalog:'
         version: 4.107.0
 
+  apps/sample-app-lit-vanilla:
+    dependencies:
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: workspace:*
+        version: link:../../packages/lit-ui-router
+      lodash:
+        specifier: 'catalog:'
+        version: 4.18.1
+      sample-app-shared:
+        specifier: workspace:*
+        version: link:../sample-app-shared
+    devDependencies:
+      '@types/dom-navigation':
+        specifier: 'catalog:'
+        version: 1.0.7
+      '@types/lodash':
+        specifier: 'catalog:'
+        version: 4.17.24
+      prettier:
+        specifier: 'catalog:'
+        version: 3.9.4
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+      vite-plugin-checker:
+        specifier: 'catalog:'
+        version: 0.14.4(eslint@9.39.4(jiti@2.7.0))(optionator@0.9.4)(typescript@5.9.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+      vite-plugin-static-copy:
+        specifier: 'catalog:'
+        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.107.0
+
+  apps/sample-app-shared:
+    dependencies:
+      '@api-viewer/docs':
+        specifier: 'catalog:'
+        version: 1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@uirouter/dsr':
+        specifier: 'catalog:'
+        version: 1.2.0(patch_hash=85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761)(@uirouter/core@6.1.2)
+      '@uirouter/sticky-states':
+        specifier: 'catalog:'
+        version: 1.5.1(@uirouter/core@6.1.2)
+      '@uirouter/visualizer':
+        specifier: 'catalog:'
+        version: 7.2.1(@uirouter/core@6.1.2)
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-dialog:
+        specifier: 'catalog:'
+        version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
+      lit-ui-router:
+        specifier: workspace:*
+        version: link:../../packages/lit-ui-router
+      lodash:
+        specifier: 'catalog:'
+        version: 4.18.1
+      ui-router-navigation-location-plugin:
+        specifier: workspace:*
+        version: link:../../packages/navigation-location-plugin
+    devDependencies:
+      '@types/dom-navigation':
+        specifier: 'catalog:'
+        version: 1.0.7
+      '@types/lodash':
+        specifier: 'catalog:'
+        version: 4.17.24
+      prettier:
+        specifier: 'catalog:'
+        version: 3.9.4
+      typescript:
+        specifier: 'catalog:'
+        version: 5.9.3
+      vite:
+        specifier: 'catalog:'
+        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+
   docs:
     dependencies:
       '@spectrum-web-components/icons-workflow':
         specifier: ^1.12.1
         version: 1.12.1
-      sample-app-lit:
-        specifier: workspace:*
-        version: link:../apps/sample-app-lit
       sample-app-lit-mobx:
         specifier: workspace:*
         version: link:../apps/sample-app-lit-mobx
+      sample-app-lit-vanilla:
+        specifier: workspace:*
+        version: link:../apps/sample-app-lit-vanilla
       screenfull:
         specifier: ^6.0.2
         version: 6.0.2
