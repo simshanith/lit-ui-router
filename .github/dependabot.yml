@@ -12,6 +12,13 @@ updates:
     # Mirror pnpm's minimumReleaseAge: 24h (pnpm-workspace config)
     cooldown:
       default-days: 1
+    ignore:
+      # node is pinned via mise; keep @types/node on the matching major
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # vite majors change lockfile peer-keys, which the updater corrupts (#14794) — bump manually
+      - dependency-name: 'vite'
+        update-types: ['version-update:semver-major']
     commit-message:
       prefix: 'chore'
       include: 'scope'
