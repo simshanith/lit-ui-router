@@ -1,5 +1,5 @@
-// Feature param for location plugin (can be set via Cypress env)
-export const LOCATION_PLUGIN = Cypress.env('LOCATION_PLUGIN') || '';
+// Feature param for location plugin (settable via `cypress run --expose LOCATION_PLUGIN=hash`)
+export const LOCATION_PLUGIN = Cypress.expose('LOCATION_PLUGIN') || '';
 
 export function visitWithFeatures(
   path: string,
