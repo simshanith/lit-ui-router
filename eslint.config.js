@@ -35,6 +35,7 @@ export default defineConfig(
     '**/.vitepress/cache/**',
     '**/*.config.ts',
     '**/*.config.js',
+    '!**/vitest.config.ts',
   ]),
   {
     files: ['**/*.ts'],
@@ -82,10 +83,22 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.spec.ts', '**/vitest.setup.ts'],
+    files: ['**/vitest.config.ts', '**/vitest.setup.ts'],
     languageOptions: {
       parserOptions: {
-        // Spec and setup files are excluded from tsconfig.json for build purposes
+        // These live in the packages' tsconfig.spec.json, which the
+        // project service (tsconfig.json discovery) never consults.
+        projectService: false,
+        project: 'packages/*/tsconfig.spec.json',
+        tsconfigRootDir: import.meta.dirname,
+      },
+    },
+  },
+  {
+    files: ['**/*.spec.ts'],
+    languageOptions: {
+      parserOptions: {
+        // Spec files are excluded from tsconfig.json for build purposes
         projectService: false,
       },
     },
