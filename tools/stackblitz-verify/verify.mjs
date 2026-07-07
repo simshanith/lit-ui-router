@@ -19,6 +19,8 @@ import { chromium } from 'playwright';
 const REPO = 'simshanith/lit-ui-router';
 const EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 const BOOT_TIMEOUT_MS = 6 * 60 * 1000;
+const IMPORT_STALL_MS = 2.5 * 60 * 1000;
+const ATTEMPTS = 2;
 
 const args = process.argv.slice(2).filter((a) => a !== '--bundled');
 const useBundled = process.argv.includes('--bundled');
@@ -202,7 +204,8 @@ async function verifyExample(browser, name) {
   let preview = null;
   let previewText = null;
   let lastTerm = '';
-  const deadline = Date.now() + BOOT_TIMEOUT_MS;
+  const start = Date.now();
+  const deadline = start + BOOT_TIMEOUT_MS;
   while (Date.now() < deadline) {
     await sleep(8000);
     const term = await terminalText(page);
@@ -222,6 +225,13 @@ async function verifyExample(browser, name) {
         previewText = found.text;
         break;
       }
+    }
+    // StackBlitz sometimes wedges at the import screen (its cable websocket
+    // 404s); with no editor terminal and no app frame by now, waiting out the
+    // full boot timeout is pointless — bail so the caller can retry fresh.
+    if (!preview && !lastTerm && Date.now() - start > IMPORT_STALL_MS) {
+      log('no import progress — aborting attempt early');
+      break;
     }
   }
 
@@ -264,8 +274,14 @@ const browser = await chromium.launch(
 );
 let failures = 0;
 for (const name of targets) {
-  console.log(`\n########## ${name} @ ${branch} ##########`);
-  if (!(await verifyExample(browser, name))) failures++;
+  let ok = false;
+  for (let attempt = 1; attempt <= ATTEMPTS && !ok; attempt++) {
+    console.log(
+      `\n########## ${name} @ ${branch} (attempt ${attempt}/${ATTEMPTS}) ##########`,
+    );
+    ok = await verifyExample(browser, name);
+  }
+  if (!ok) failures++;
 }
 await browser.close();
 console.log(`\nRESULT: ${failures ? `${failures} FAILED` : 'ALL PASS'}`);

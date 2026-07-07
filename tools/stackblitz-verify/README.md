@@ -30,3 +30,8 @@ navigate.
   `--bundled` opts back into the bundled browser.
 - Not part of any turbo pipeline on purpose — it's slow, networked, and
   verifies remote state, so run it manually after pushing a branch.
+- StackBlitz sometimes wedges anonymous GitHub imports at the "Cloning repo"
+  screen (observed after many automated loads in a day — likely throttling).
+  Each example gets 2 attempts with an early bail when the import shows no
+  progress; if both fail with no terminal output at all, wait a while rather
+  than rerunning immediately.
