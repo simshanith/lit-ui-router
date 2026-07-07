@@ -17,7 +17,8 @@
     "lint": "turbo run lint",
     "lint:root": "eslint --format tap --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples",
     "test:coverage": "turbo run test:coverage",
-    "test:root": "node --test \"scripts/**/*.test.mjs\""
+    "test:root": "node --test \"scripts/**/*.test.mjs\"",
+    "vp:build": "vpr --filter './packages/*' --filter './apps/*' --filter './tools/*' --filter './docs' --cache build"
   },
   "engines": {
     "node": ">=24.18.0"
@@ -40,6 +41,7 @@
     "turbo": "^2.10.3",
     "typescript": "catalog:",
     "typescript-eslint": "^8.62.1",
+    "vite-plus": "catalog:",
     "wrangler": "catalog:"
   }
 }
