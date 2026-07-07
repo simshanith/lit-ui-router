@@ -16,6 +16,10 @@ function makeSidebar() {
       ],
     },
     {
+      text: 'Guide',
+      items: [{ text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' }],
+    },
+    {
       text: 'API',
       items: [
         { text: 'Overview', link: '/api/' },
@@ -75,6 +79,7 @@ const config = {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
+      { text: 'Guide', link: '/guide/unmatched-urls' },
       { text: 'API', link: '/api/' },
       {
         text: 'Sample App',
