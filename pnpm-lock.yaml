@@ -82,8 +82,8 @@ catalogs:
       specifier: ^6.0.3
       version: 6.0.3
     vite:
-      specifier: ^7.3.6
-      version: 7.3.6
+      specifier: ^6.4.3
+      version: 6.4.3
     vite-plugin-checker:
       specifier: ^0.14.4
       version: 0.14.4
@@ -199,7 +199,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: 'catalog:'
-        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+        version: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
 
   apps/sample-app-lit-mobx:
     dependencies:
@@ -224,7 +224,7 @@ importers:
     devDependencies:
       '@codecov/vite-plugin':
         specifier: 'catalog:'
-        version: 2.0.1(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 2.0.1(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -239,13 +239,13 @@ importers:
         version: 6.0.3
       vite:
         specifier: 'catalog:'
-        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+        version: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
       vite-plugin-checker:
         specifier: 'catalog:'
-        version: 0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       vite-plugin-static-copy:
         specifier: 'catalog:'
-        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 3.4.0(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       wrangler:
         specifier: 'catalog:'
         version: 4.107.0
@@ -267,7 +267,7 @@ importers:
     devDependencies:
       '@codecov/vite-plugin':
         specifier: 'catalog:'
-        version: 2.0.1(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 2.0.1(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -282,13 +282,13 @@ importers:
         version: 6.0.3
       vite:
         specifier: 'catalog:'
-        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+        version: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
       vite-plugin-checker:
         specifier: 'catalog:'
-        version: 0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       vite-plugin-static-copy:
         specifier: 'catalog:'
-        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 3.4.0(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       wrangler:
         specifier: 'catalog:'
         version: 4.107.0
@@ -340,7 +340,7 @@ importers:
         version: 6.0.3
       vite:
         specifier: 'catalog:'
-        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+        version: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
 
   docs:
     dependencies:
@@ -368,10 +368,10 @@ importers:
         version: 6.0.3
       vite:
         specifier: 'catalog:'
-        version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+        version: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
       vite-plugin-static-copy:
         specifier: 'catalog:'
-        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 3.4.0(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       vitepress:
         specifier: ^1.6.4
         version: 1.6.4(@algolia/client-search@5.55.1)(@types/node@25.0.9)(axios@1.18.1)(change-case@5.4.4)(postcss@8.5.16)(search-insights@2.17.3)(typescript@6.0.3)
@@ -4400,6 +4400,46 @@ packages:
       terser:
         optional: true
 
+  vite@6.4.3:
+    resolution: {integrity: sha512-NTKlcQjlAK7MlQoyb6LgaqHc8sso/pVyUJYWMws3jg21uTJw/LddqIFPcPqP6PzpgbIcZyKI85sFE4HBrQDA8A==}
+    engines: {node: ^18.0.0 || ^20.0.0 || >=22.0.0}
+    hasBin: true
+    peerDependencies:
+      '@types/node': ^18.0.0 || ^20.0.0 || >=22.0.0
+      jiti: '>=1.21.0'
+      less: '*'
+      lightningcss: ^1.21.0
+      sass: '*'
+      sass-embedded: '*'
+      stylus: '*'
+      sugarss: '*'
+      terser: ^5.16.0
+      tsx: ^4.8.1
+      yaml: ^2.4.2
+    peerDependenciesMeta:
+      '@types/node':
+        optional: true
+      jiti:
+        optional: true
+      less:
+        optional: true
+      lightningcss:
+        optional: true
+      sass:
+        optional: true
+      sass-embedded:
+        optional: true
+      stylus:
+        optional: true
+      sugarss:
+        optional: true
+      terser:
+        optional: true
+      tsx:
+        optional: true
+      yaml:
+        optional: true
+
   vite@7.3.6:
     resolution: {integrity: sha512-4XP60spRGjSZFf1qYH+dJIkK2znL3zQfl9KkOV9MkkRR/3Dls0dxaBsQPTloEc5BLXWPL9vsOxopxyKoMmDueg==}
     engines: {node: ^20.19.0 || >=22.12.0}
@@ -4840,11 +4880,11 @@ snapshots:
       unplugin: 1.16.1
       zod: 3.25.76
 
-  '@codecov/vite-plugin@2.0.1(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))':
+  '@codecov/vite-plugin@2.0.1(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))':
     dependencies:
       '@codecov/bundler-plugin-core': 2.0.1
       unplugin: 1.16.1
-      vite: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+      vite: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
 
   '@cspotcode/source-map-support@0.8.1':
     dependencies:
@@ -8456,7 +8496,7 @@ snapshots:
       '@types/unist': 3.0.3
       vfile-message: 4.0.3
 
-  vite-plugin-checker@0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)):
+  vite-plugin-checker@0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)):
     dependencies:
       '@babel/code-frame': 7.29.7
       chokidar: 5.0.0
@@ -8465,19 +8505,19 @@ snapshots:
       picomatch: 4.0.5
       proper-lockfile: 4.1.2
       tiny-invariant: 1.3.3
-      vite: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+      vite: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
     optionalDependencies:
       eslint: 10.6.0(jiti@2.7.0)
       optionator: 0.9.4
       typescript: 6.0.3
 
-  vite-plugin-static-copy@3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)):
+  vite-plugin-static-copy@3.4.0(vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)):
     dependencies:
       chokidar: 3.6.0
       p-map: 7.0.5
       picocolors: 1.1.1
       tinyglobby: 0.2.17
-      vite: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+      vite: 6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
 
   vite@5.4.21(@types/node@25.0.9):
     dependencies:
@@ -8487,6 +8527,20 @@ snapshots:
     optionalDependencies:
       '@types/node': 25.0.9
       fsevents: 2.3.3
+
+  vite@6.4.3(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0):
+    dependencies:
+      esbuild: 0.28.1
+      fdir: 6.5.0(picomatch@4.0.5)
+      picomatch: 4.0.5
+      postcss: 8.5.16
+      rollup: 4.62.2
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 25.0.9
+      fsevents: 2.3.3
+      jiti: 2.7.0
+      yaml: 2.9.0
 
   vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0):
     dependencies:
