@@ -38,6 +38,7 @@ async function loadIcons() {
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-full-screen-exit.js'),
     import('@spectrum-web-components/icons-workflow/icons/sp-icon-refresh.js'),
+    import('@spectrum-web-components/icons-workflow/icons/sp-icon-link-out.js'),
   ]);
   iconsLoaded.value = true;
 }
@@ -84,6 +85,10 @@ onUnmounted(() => {
         <sp-icon-refresh v-if="iconsLoaded" label="Restart example" />
         Restart
       </button>
+      <a :href="src" target="_blank" rel="noopener" class="open-btn btn">
+        <sp-icon-link-out v-if="iconsLoaded" />
+        Open in new tab
+      </a>
       <slot></slot>
     </div>
   </div>
@@ -141,6 +146,7 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-text-1);
+  text-decoration: none;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
@@ -149,26 +155,6 @@ onUnmounted(() => {
 }
 
 .btn:hover {
-  background: var(--vp-c-bg-mute);
-  border-color: var(--vp-c-brand-1);
-}
-
-:deep(a) {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 6px 12px;
-  font-size: 14px;
-  font-weight: 500;
-  color: var(--vp-c-text-1);
-  text-decoration: none;
-  background: var(--vp-c-bg-soft);
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
-  transition: background-color 0.2s, border-color 0.2s;
-}
-
-:deep(a:hover) {
   background: var(--vp-c-bg-mute);
   border-color: var(--vp-c-brand-1);
 }

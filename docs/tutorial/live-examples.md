@@ -20,9 +20,7 @@ workspace.
 Two sibling states, one `<ui-view>`, and `uiSref` navigation — the smallest
 possible router. Walkthrough: [Hello World tutorial](./helloworld).
 
-<ExampleEmbed src="/examples/helloworld/" title="helloworld example" height="360px">
-  <a href="/examples/helloworld/" target="_blank" rel="noopener">Open in new tab</a>
-</ExampleEmbed>
+<ExampleEmbed src="/examples/helloworld/" title="helloworld example" height="360px" />
 
 ## Hello Solar System
 
@@ -30,9 +28,7 @@ A master-detail list of the real solar system: URL parameters, async resolves,
 and transition-driven data loading. Walkthrough:
 [Hello Solar System tutorial](./hellosolarsystem).
 
-<ExampleEmbed src="/examples/hellosolarsystem/" title="hellosolarsystem example" height="480px">
-  <a href="/examples/hellosolarsystem/" target="_blank" rel="noopener">Open in new tab</a>
-</ExampleEmbed>
+<ExampleEmbed src="/examples/hellosolarsystem/" title="hellosolarsystem example" height="480px" />
 
 ## Hello Galaxy
 
@@ -41,6 +37,4 @@ inheritance, and a lazily loaded 3D astronaut (the `model-viewer` chunk only
 downloads when you visit the astronaut state — watch the network tab).
 Walkthrough: [Hello Galaxy tutorial](./hellogalaxy).
 
-<ExampleEmbed src="/examples/hellogalaxy/" title="hellogalaxy example" height="560px">
-  <a href="/examples/hellogalaxy/" target="_blank" rel="noopener">Open in new tab</a>
-</ExampleEmbed>
+<ExampleEmbed src="/examples/hellogalaxy/" title="hellogalaxy example" height="560px" />
