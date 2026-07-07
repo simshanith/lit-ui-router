@@ -560,6 +560,12 @@ importers:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
 
+  tools/stackblitz-verify:
+    devDependencies:
+      playwright:
+        specifier: 'catalog:'
+        version: 1.61.1
+
   tools/typedoc-plugin-lit-ui-router:
     devDependencies:
       '@types/node':
