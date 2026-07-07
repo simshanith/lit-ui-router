@@ -8,6 +8,10 @@ const baseUrl = 'https://lit-ui-router.dev';
 function makeSidebar() {
   return [
     {
+      text: 'Introduction',
+      items: [{ text: 'What is Lit UI Router?', link: '/introduction' }],
+    },
+    {
       text: 'Tutorial',
       items: [
         { text: 'Hello World', link: '/tutorial/helloworld' },
@@ -16,8 +20,20 @@ function makeSidebar() {
       ],
     },
     {
-      text: 'Guide',
-      items: [{ text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' }],
+      text: 'Guides',
+      items: [
+        { text: 'Overview', link: '/guides/' },
+        { text: 'Location Plugins', link: '/guides/location-plugins' },
+        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
+        { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
+        { text: 'Route Guards', link: '/guides/route-guards' },
+        {
+          text: 'Component Lifecycle Hooks',
+          link: '/guides/component-lifecycle',
+        },
+        { text: 'Reactive Components', link: '/guides/reactive-components' },
+        { text: 'MobX Bindings', link: '/guides/mobx' },
+      ],
     },
     {
       text: 'API',
@@ -78,8 +94,9 @@ const config = {
     logo: '/images/lit-ui-router.svg',
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Introduction', link: '/introduction' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'Guide', link: '/guide/unmatched-urls' },
+      { text: 'Guides', link: '/guides/' },
       { text: 'API', link: '/api/' },
       {
         text: 'Sample App',
