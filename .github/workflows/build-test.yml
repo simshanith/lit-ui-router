@@ -62,8 +62,8 @@ jobs:
         # with a count) only if the server fails to come up.
         run: |
           tmp=$(mktemp)
-          # shellcheck disable=SC2094 # separate r/w fds on the same unlinked file is the point
-          exec {w}>"$tmp" {r}<"$tmp"
+          exec {w}>"$tmp"
+          exec {r}<"$tmp"
           rm "$tmp"
           Xvfb :99 -screen 0 1280x720x24 2>&$w &
           xvfb=$!
