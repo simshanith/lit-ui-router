@@ -100,8 +100,8 @@ tool.
   and links ([Hello World](./tutorial/helloworld)), resolves and parameters
   ([Hello Solar System](./tutorial/hellosolarsystem)), nested states and views
   ([Hello Galaxy](./tutorial/hellogalaxy)). Each step runs live on StackBlitz.
-- **Guides** — focused, task-oriented pages, like handling
-  [unmatched URLs](./guide/unmatched-urls).
+- **[Guides](./guide/)** — focused, task-oriented pages on URLs and location,
+  transitions and guards, and reactivity.
 - **[API](./api/)** — an overview plus complete generated references for all
   three packages.
 - **Sample apps** — the same non-trivial application written twice, in

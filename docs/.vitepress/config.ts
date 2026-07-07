@@ -20,11 +20,19 @@ function makeSidebar() {
       ],
     },
     {
-      text: 'Guide',
+      text: 'Guides',
       items: [
-        { text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' },
-        { text: 'MobX Bindings', link: '/guide/mobx' },
+        { text: 'Overview', link: '/guide/' },
+        { text: 'Location Plugins', link: '/guide/location-plugins' },
         { text: 'Navigation API Plugin', link: '/guide/navigation-plugin' },
+        { text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' },
+        { text: 'Route Guards', link: '/guide/route-guards' },
+        {
+          text: 'Component Lifecycle Hooks',
+          link: '/guide/component-lifecycle',
+        },
+        { text: 'Reactive Components', link: '/guide/reactive-components' },
+        { text: 'MobX Bindings', link: '/guide/mobx' },
       ],
     },
     {
@@ -88,7 +96,7 @@ const config = {
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'Guide', link: '/guide/unmatched-urls' },
+      { text: 'Guides', link: '/guide/' },
       { text: 'API', link: '/api/' },
       {
         text: 'Sample App',
