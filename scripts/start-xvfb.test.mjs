@@ -18,25 +18,35 @@ const REAL_LINES = [
   'Errors from xkbcomp are not fatal to the X server',
   '(EE) Fatal server error: Cannot establish any listening sockets',
 ];
-const SAMPLE = [
+const SAMPLE_LINES = [
   REAL_LINES[0],
   ...KEYSYM_NOISE,
   REAL_LINES[1],
   REAL_LINES[2],
   '',
-].join('\n');
+];
+
+async function* asAsyncLines(lines) {
+  yield* lines;
+}
 
 describe('filterStderr', () => {
-  it('drops only exact keysym warnings and counts them', () => {
-    const { kept, filtered } = filterStderr(SAMPLE);
+  it('drops only exact keysym warnings and counts them', async () => {
+    const { kept, filtered } = await filterStderr(SAMPLE_LINES);
     assert.deepEqual(kept, REAL_LINES);
     assert.equal(filtered, 3);
   });
 
-  it('keeps other xkbcomp warnings', () => {
-    const { kept, filtered } = filterStderr(
-      '> Warning:          Type "ONE_LEVEL" has 1 levels\n',
-    );
+  it('accepts async iterables of lines', async () => {
+    const { kept, filtered } = await filterStderr(asAsyncLines(SAMPLE_LINES));
+    assert.deepEqual(kept, REAL_LINES);
+    assert.equal(filtered, 3);
+  });
+
+  it('keeps other xkbcomp warnings', async () => {
+    const { kept, filtered } = await filterStderr([
+      '> Warning:          Type "ONE_LEVEL" has 1 levels',
+    ]);
     assert.deepEqual(kept, [
       '> Warning:          Type "ONE_LEVEL" has 1 levels',
     ]);
@@ -45,8 +55,8 @@ describe('filterStderr', () => {
 });
 
 describe('formatFailure', () => {
-  it('reports real lines and the filtered count', () => {
-    const report = formatFailure(SAMPLE);
+  it('reports real lines and the filtered count', async () => {
+    const report = formatFailure(await filterStderr(SAMPLE_LINES));
     assert.equal(
       report,
       [

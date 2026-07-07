@@ -10,9 +10,10 @@ import { spawn } from 'node:child_process';
 import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
+import readline from 'node:readline';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { formatFailure } from './start-xvfb.core.mjs';
+import { filterStderr, formatFailure } from './start-xvfb.core.mjs';
 
 const display = ':99';
 const xvfbBin = process.env.XVFB_BIN ?? 'Xvfb';
@@ -52,10 +53,10 @@ while (Date.now() < deadline) {
 
 if (!ready) {
   if (spawnError) console.error(String(spawnError));
-  const size = fs.fstatSync(stderrFd).size;
-  const captured = Buffer.alloc(size);
-  if (size > 0) fs.readSync(stderrFd, captured, 0, size, 0);
-  console.error(formatFailure(captured.toString('utf8')));
+  const captured = readline.createInterface({
+    input: fs.createReadStream(null, { fd: stderrFd, start: 0 }),
+  });
+  console.error(formatFailure(await filterStderr(captured)));
   process.exit(1);
 }
 

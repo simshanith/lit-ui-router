@@ -3,10 +3,10 @@
 export const IGNORED_WARNINGS_PATTERN =
   /^> Warning:\s+Could not resolve keysym /;
 
-export function filterStderr(text) {
+export async function filterStderr(lines) {
   const kept = [];
   let filtered = 0;
-  for (const line of text.split('\n')) {
+  for await (const line of lines) {
     if (IGNORED_WARNINGS_PATTERN.test(line)) {
       filtered += 1;
     } else if (line !== '') {
@@ -16,8 +16,7 @@ export function filterStderr(text) {
   return { kept, filtered };
 }
 
-export function formatFailure(text) {
-  const { kept, filtered } = filterStderr(text);
+export function formatFailure({ kept, filtered }) {
   return [
     'Xvfb failed to start:',
     ...kept,
