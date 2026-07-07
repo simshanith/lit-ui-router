@@ -17,6 +17,7 @@ function makeSidebar() {
         { text: 'Hello World', link: '/tutorial/helloworld' },
         { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
         { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
+        { text: 'Live Examples', link: '/tutorial/live-examples' },
       ],
     },
     {
@@ -76,7 +77,7 @@ const config = {
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
-  ignoreDeadLinks: ['/app', '/app-mobx'],
+  ignoreDeadLinks: ['/app', '/app-mobx', /^\/examples\//],
   // ignoreDeadLinks: true,
   vite: {
     configFile: './.vitepress/vite.config.ts',
