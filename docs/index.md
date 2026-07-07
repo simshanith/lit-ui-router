@@ -14,9 +14,6 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /tutorial/helloworld
-    - theme: alt
-      text: What is Lit UI Router?
       link: /introduction
     - theme: alt
       text: View Sample App
