@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { filterStderr, formatFailure } from './start-xvfb.core.mjs';
+import { filterStderr, formatFilteredCount } from './start-xvfb.core.mjs';
 
 const KEYSYM_NOISE = [
   '> Warning:          Could not resolve keysym XF86CameraAccessEnable',
@@ -30,23 +30,34 @@ async function* asAsyncLines(lines) {
   yield* lines;
 }
 
+// Collects a filterStderr generator's yields and its trailing return value
+// (which for-await would discard).
+async function drain(generator) {
+  const kept = [];
+  let next;
+  while (!(next = await generator.next()).done) kept.push(next.value);
+  return { kept, filtered: next.value };
+}
+
 describe('filterStderr', () => {
   it('drops only exact keysym warnings and counts them', async () => {
-    const { kept, filtered } = await filterStderr(SAMPLE_LINES);
+    const { kept, filtered } = await drain(filterStderr(SAMPLE_LINES));
     assert.deepEqual(kept, REAL_LINES);
     assert.equal(filtered, 3);
   });
 
   it('accepts async iterables of lines', async () => {
-    const { kept, filtered } = await filterStderr(asAsyncLines(SAMPLE_LINES));
+    const { kept, filtered } = await drain(
+      filterStderr(asAsyncLines(SAMPLE_LINES)),
+    );
     assert.deepEqual(kept, REAL_LINES);
     assert.equal(filtered, 3);
   });
 
   it('keeps other xkbcomp warnings', async () => {
-    const { kept, filtered } = await filterStderr([
-      '> Warning:          Type "ONE_LEVEL" has 1 levels',
-    ]);
+    const { kept, filtered } = await drain(
+      filterStderr(['> Warning:          Type "ONE_LEVEL" has 1 levels']),
+    );
     assert.deepEqual(kept, [
       '> Warning:          Type "ONE_LEVEL" has 1 levels',
     ]);
@@ -54,16 +65,11 @@ describe('filterStderr', () => {
   });
 });
 
-describe('formatFailure', () => {
-  it('reports real lines and the filtered count', async () => {
-    const report = formatFailure(await filterStderr(SAMPLE_LINES));
+describe('formatFilteredCount', () => {
+  it('reports the filtered count', () => {
     assert.equal(
-      report,
-      [
-        'Xvfb failed to start:',
-        ...REAL_LINES,
-        "(filtered 3 'Could not resolve keysym' warnings)",
-      ].join('\n'),
+      formatFilteredCount(3),
+      "(filtered 3 'Could not resolve keysym' warnings)",
     );
   });
 });

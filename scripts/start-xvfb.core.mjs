@@ -3,23 +3,20 @@
 export const IGNORED_WARNINGS_PATTERN =
   /^> Warning:\s+Could not resolve keysym /;
 
-export async function filterStderr(lines) {
-  const kept = [];
+// Yields the lines worth showing as they arrive; returns (as the generator's
+// return value) the number of filtered keysym warnings.
+export async function* filterStderr(lines) {
   let filtered = 0;
   for await (const line of lines) {
     if (IGNORED_WARNINGS_PATTERN.test(line)) {
       filtered += 1;
     } else if (line !== '') {
-      kept.push(line);
+      yield line;
     }
   }
-  return { kept, filtered };
+  return filtered;
 }
 
-export function formatFailure({ kept, filtered }) {
-  return [
-    'Xvfb failed to start:',
-    ...kept,
-    `(filtered ${filtered} 'Could not resolve keysym' warnings)`,
-  ].join('\n');
+export function formatFilteredCount(filtered) {
+  return `(filtered ${filtered} 'Could not resolve keysym' warnings)`;
 }

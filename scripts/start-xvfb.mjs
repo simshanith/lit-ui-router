@@ -13,7 +13,7 @@ import path from 'node:path';
 import readline from 'node:readline';
 import { setTimeout as delay } from 'node:timers/promises';
 
-import { filterStderr, formatFailure } from './start-xvfb.core.mjs';
+import { filterStderr, formatFilteredCount } from './start-xvfb.core.mjs';
 
 const display = ':99';
 const xvfbBin = process.env.XVFB_BIN ?? 'Xvfb';
@@ -56,7 +56,11 @@ if (!ready) {
   const captured = readline.createInterface({
     input: fs.createReadStream(null, { fd: stderrFd, start: 0 }),
   });
-  console.error(formatFailure(await filterStderr(captured)));
+  console.error('Xvfb failed to start:');
+  const kept = filterStderr(captured);
+  let next;
+  while (!(next = await kept.next()).done) console.error(next.value);
+  console.error(formatFilteredCount(next.value));
   process.exit(1);
 }
 
