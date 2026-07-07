@@ -13,7 +13,8 @@
       "with": ["//#test:root"],
       "dependsOn": ["^test"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "passThroughEnv": ["WRANGLER_LOG"]
     },
     "dts-backtest#test": {
       "dependsOn": ["^build"],
