@@ -79,7 +79,7 @@ jobs:
             pat='^> Warning:[[:space:]]+Could not resolve keysym '
             echo "Xvfb failed to start:"
             grep -Ev "$pat" <<<"$err" || true
-            echo "(filtered $(grep -Ec "$pat" <<<"$err" || true) 'Could not resolve keysym' lines)"
+            echo "(filtered $(grep -Ec "$pat" <<<"$err" || true) 'Could not resolve keysym' warnings)"
             exit 1
           fi
           exec {r}<&-
