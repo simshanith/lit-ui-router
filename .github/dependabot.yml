@@ -2,6 +2,8 @@
 version: 2
 updates:
   # root pnpm workspace — npm ecosystem covers pnpm + catalogs
+  # updater lacks pnpm 11 (workspace updates blocked; alerts unaffected):
+  # https://github.com/dependabot/dependabot-core/issues/14794
   - package-ecosystem: 'npm'
     directory: '/'
     schedule:
@@ -29,6 +31,10 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+      security:
+        applies-to: security-updates
+        patterns:
+          - '*'
 
   # standalone StackBlitz examples
   - package-ecosystem: 'npm'
@@ -49,6 +55,11 @@ updates:
         update-types:
           - 'minor'
           - 'patch'
+      # batch security PRs across the three example lockfiles
+      examples-security:
+        applies-to: security-updates
+        patterns:
+          - '*'
 
   - package-ecosystem: 'github-actions'
     directory: '/'
