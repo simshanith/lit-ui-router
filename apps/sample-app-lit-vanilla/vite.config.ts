@@ -1,3 +1,4 @@
+import { codecovVitePlugin } from '@codecov/vite-plugin';
 import { defineConfig } from 'vite';
 import checker from 'vite-plugin-checker';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -15,6 +16,14 @@ export default defineConfig({
           dest: 'images',
         },
       ],
+    }),
+    // Codecov bundle analysis; no-op unless CODECOV_TOKEN is set (CI).
+    codecovVitePlugin({
+      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
+      bundleName: 'sample-app-lit-vanilla',
+      uploadToken: process.env.CODECOV_TOKEN,
+      gitService: 'github',
+      telemetry: false,
     }),
   ],
   server: {
