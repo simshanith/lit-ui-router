@@ -62,6 +62,11 @@ overrides:
   esbuild: 0.28.1
   'undici@6': 6.27.0
   'undici@7': 7.28.0
+  'vitepress>vite': ^6.4.3
+
+peerDependencyRules:
+  allowedVersions:
+    '@codecov/vite-plugin>vite': '7'
 
 verifyDepsBeforeRun: false
 
