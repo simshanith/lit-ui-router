@@ -74,8 +74,10 @@ jobs:
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
-        # Create tarball for GitHub release attachment
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
+        # Create tarball for the GitHub release attachment AND the npm publish
+        run: |
+          pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
+          echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
@@ -92,5 +94,8 @@ jobs:
         # invocation, release id held in memory (no by-tag lookup, which
         # can't see drafts and used to create duplicate releases here).
         # --npm.skipChecks: Skip npm checks since we're using OIDC auth
+        # --npm.publishPath: publish the pnpm-packed (and attested) tarball;
+        # a bare `npm publish` re-packs from source and ships raw
+        # catalog:/workspace: refs npm can't resolve (broke 1.3.0–1.5.0)
         # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
+        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}

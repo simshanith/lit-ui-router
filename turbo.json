@@ -37,13 +37,25 @@
         "test:coverage",
         "lint",
         "format:check",
-        "//#check:catalog"
+        "//#check:catalog",
+        "//#check:pack"
       ]
     },
     "//#check:catalog": {
       "inputs": [
         "scripts/check-catalog.mjs",
         "scripts/check-catalog.core.mjs",
+        "scripts/workspace.mjs",
+        "pnpm-workspace.yaml",
+        "**/package.json"
+      ]
+    },
+    "//#check:pack": {
+      "inputs": [
+        "scripts/check-pack.mjs",
+        "scripts/check-pack.core.mjs",
+        "scripts/check-catalog.core.mjs",
+        "scripts/workspace.mjs",
         "pnpm-workspace.yaml",
         "**/package.json"
       ]
