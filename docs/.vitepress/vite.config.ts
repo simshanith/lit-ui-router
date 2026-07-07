@@ -5,6 +5,11 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 // `examples#build:embeds` (hash routing, so no _redirects entries needed).
 const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
+// VitePress 1.x / vite 6 default targets list `safari14`, but esbuild >=0.27.7
+// refuses to emit destructuring for Safari <14.1 (JSC array-rest bug,
+// compat-table/compat-table#2008) and has no lowering transform for it.
+const TARGET = ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'];
+
 /**
  * Vite plugin to handle /app/* and /app-mobx/* deep linking in dev server.
  * Mirrors Cloudflare _redirects: `/app/* /app 200`, `/app-mobx/* /app-mobx 200`
@@ -73,10 +78,15 @@ export default defineConfig({
   ],
 
   build: {
-    // VitePress 1.x defaults this list with `safari14`, but esbuild >=0.27.7
-    // refuses to emit destructuring for Safari <14.1 (JSC array-rest bug,
-    // compat-table/compat-table#2008) and has no lowering transform for it.
-    target: ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'],
+    target: TARGET,
+  },
+
+  optimizeDeps: {
+    // the dev dep-optimizer ignores build.target and pre-bundles against
+    // vite's internal ESBUILD_MODULES_TARGET, which still lists safari14
+    esbuildOptions: {
+      target: TARGET,
+    },
   },
 
   server: {
