@@ -1,7 +1,7 @@
 {
   "name": "lit-ui-router-mobx",
   "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
-  "version": "0.3.0",
+  "version": "0.3.1",
   "license": "MIT",
   "author": "Shane Daniel",
   "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router-mobx",
