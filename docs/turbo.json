@@ -17,8 +17,13 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build", "^docs:api"],
+      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
+    },
+    "docs": {
+      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
+      "cache": false,
+      "persistent": true
     }
   }
 }

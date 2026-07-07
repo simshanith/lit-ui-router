@@ -1,17 +1,26 @@
 import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
+// Tutorial examples embedded same-origin at /examples/<name>/; built by
+// `examples#build:embeds` (hash routing, so no _redirects entries needed).
+const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
+
 /**
  * Vite plugin to handle /app/* and /app-mobx/* deep linking in dev server.
  * Mirrors Cloudflare _redirects: `/app/* /app 200`, `/app-mobx/* /app-mobx 200`
  * Rewrites requests to serve the matching sample-app SPA html.
+ * Also resolves /examples/<name>/ directory requests to their index.html
+ * (production gets this from Cloudflare's static-asset index resolution).
  */
 function spaFallbackPlugin(): Plugin {
   return {
     name: 'spa-fallback',
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        if (req.url?.startsWith('/app-mobx')) {
+        const exampleDir = req.url?.match(/^\/examples\/([\w-]+)\/?$/);
+        if (exampleDir) {
+          req.url = `/examples/${exampleDir[1]}/index.html`;
+        } else if (req.url?.startsWith('/app-mobx')) {
           req.url = '/app-mobx.html';
         } else if (req.url?.startsWith('/app')) {
           req.url = '/app.html';
@@ -55,6 +64,10 @@ export default defineConfig({
           src: 'node_modules/sample-app-lit-vanilla/dist/static/*',
           dest: 'static',
         },
+        ...EMBEDDED_EXAMPLES.map((name) => ({
+          src: `../examples/${name}/dist/*`,
+          dest: `examples/${name}`,
+        })),
       ],
     }),
   ],
