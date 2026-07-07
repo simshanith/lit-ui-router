@@ -41,9 +41,17 @@ jobs:
       - name: Add workspace binaries to PATH
         run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Install Playwright Browsers
-        run: playwright install --with-deps
+        # Group collapses the ~1100 lines of apt output from --with-deps.
+        run: |
+          echo "::group::playwright install --with-deps"
+          playwright install --with-deps
+          echo "::endgroup::"
       - name: Install Cypress
-        run: cypress install
+        # Verify up front so the concurrent vanilla/mobx runs skip the
+        # "first time using Cypress" verification banner.
+        run: |
+          cypress install
+          cypress verify
       - name: Start shared Xvfb display
         # The vanilla and MobX Cypress suites run concurrently. Without a
         # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
@@ -59,6 +67,8 @@ jobs:
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          # Silence per-request [wrangler:info] logging from the e2e dev server.
+          WRANGLER_LOG: warn
       - name: lit-ui-router Vitest Coverage Report
         uses: davelosert/vitest-coverage-report-action@v2
         if: github.event_name == 'pull_request'
