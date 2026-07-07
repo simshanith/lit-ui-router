@@ -84,8 +84,8 @@ you need to start; the companions are optional layers.
 | Package                                                                                                      | What it is                                                                                                                              |
 | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | [`lit-ui-router`](https://www.npmjs.com/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./api/reference/) |
-| [`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./guides/mobx)               |
-| [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./guides/navigation-plugin)                        |
+| [`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./guides/mobx)              |
+| [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./guides/navigation-plugin)                       |
 
 Because lit-ui-router is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
