@@ -57,33 +57,9 @@ jobs:
         # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
         # race ("Fatal server error"); one shared display serves both.
         # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
-        # Xvfb's stderr is routine xkbcomp keysym noise on the runner image,
-        # so capture it in an unlinked temp file and print it (noise filtered,
-        # with a count) only if the server fails to come up.
-        run: |
-          stderr_file=$(mktemp)
-          exec {stderr_w}>"$stderr_file"
-          exec {stderr_r}<"$stderr_file"
-          rm "$stderr_file"
-          Xvfb :99 -screen 0 1280x720x24 2>&$stderr_w &
-          xvfb_pid=$!
-          exec {stderr_w}>&-
-          display_ready=""
-          for _ in {1..50}; do
-            kill -0 "$xvfb_pid" 2>/dev/null || break
-            if [ -S /tmp/.X11-unix/X99 ]; then display_ready=1; break; fi
-            sleep 0.1
-          done
-          if [ -z "$display_ready" ]; then
-            captured_stderr=$(cat <&"$stderr_r")
-            ignored_warnings_pattern='^> Warning:[[:space:]]+Could not resolve keysym '
-            echo "Xvfb failed to start:"
-            grep -Ev "$ignored_warnings_pattern" <<<"$captured_stderr" || true
-            echo "(filtered $(grep -Ec "$ignored_warnings_pattern" <<<"$captured_stderr" || true) 'Could not resolve keysym' warnings)"
-            exit 1
-          fi
-          exec {stderr_r}<&-
-          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+        # The script captures Xvfb's stderr (routine xkbcomp keysym noise on
+        # the runner image) and prints it, filtered, only on startup failure.
+        run: node scripts/start-xvfb.mjs
       - name: Build and Test
         run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
         env:
