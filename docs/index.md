@@ -16,6 +16,9 @@ hero:
       text: Get Started
       link: /tutorial/helloworld
     - theme: alt
+      text: What is Lit UI Router?
+      link: /introduction
+    - theme: alt
       text: View Sample App
       link: ./app
       target: _self

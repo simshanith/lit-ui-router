@@ -8,6 +8,10 @@ const baseUrl = 'https://lit-ui-router.dev';
 function makeSidebar() {
   return [
     {
+      text: 'Introduction',
+      items: [{ text: 'What is Lit UI Router?', link: '/introduction' }],
+    },
+    {
       text: 'Tutorial',
       items: [
         { text: 'Hello World', link: '/tutorial/helloworld' },
@@ -17,7 +21,11 @@ function makeSidebar() {
     },
     {
       text: 'Guide',
-      items: [{ text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' }],
+      items: [
+        { text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' },
+        { text: 'MobX Bindings', link: '/guide/mobx' },
+        { text: 'Navigation API Plugin', link: '/guide/navigation-plugin' },
+      ],
     },
     {
       text: 'API',
@@ -78,6 +86,7 @@ const config = {
     logo: '/images/lit-ui-router.svg',
     nav: [
       { text: 'Home', link: '/' },
+      { text: 'Introduction', link: '/introduction' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
       { text: 'Guide', link: '/guide/unmatched-urls' },
       { text: 'API', link: '/api/' },
