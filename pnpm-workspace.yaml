@@ -65,6 +65,11 @@ overrides:
   # vitepress 1 pins vite ^5; GHSA fixes land in 6.4.3 (dependabot alerts 28-30)
   'vitepress>vite': ^6.4.3
 
+# upstream hasn't added vite 7 to its peer range (codecov-javascript-bundler-plugins#264)
+peerDependencyRules:
+  allowedVersions:
+    '@codecov/vite-plugin>vite': '7'
+
 verifyDepsBeforeRun: false
 
 patchedDependencies:
