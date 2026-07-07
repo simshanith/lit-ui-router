@@ -37,6 +37,21 @@ Everything else — the contacts/mymessages/prefs features, router
 configuration, transition hooks, data sources, dialogs, styles, and the
 simulated REST fixtures in `public/` — is imported from `sample-app-shared`.
 
+## Divergences from the upstream sample apps
+
+The feature set tracks the ui-router sample apps, with one deliberate
+addition: **404 handling**. The
+[angularjs sample](https://github.com/ui-router/sample-app-angularjs) silently
+redirects unmatched URLs to `/welcome`; the
+[angular](https://github.com/ui-router/sample-app-angular) and
+[react](https://github.com/ui-router/sample-app-react) samples don't handle
+them at all. This app routes them to a dedicated `notFound` state that
+preserves the URL, plus a transition hook that keeps the 404 from being
+superseded when a URL matches a lazy-loaded future state's prefix but nothing
+inside the loaded module. See the
+[Unmatched URLs (404) guide](https://lit-ui-router.dev/guide/unmatched-urls)
+for the full pattern.
+
 ## Location plugin selection
 
 Both apps support three location strategies via `locationPluginConfig` in the
