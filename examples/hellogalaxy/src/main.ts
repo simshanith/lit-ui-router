@@ -390,6 +390,14 @@ class AstronautViewComponent extends LitElement {
       border: 1px solid #263449;
       border-radius: 12px;
     }
+    .attribution {
+      color: #6b7c95;
+      font-size: 0.8rem;
+      margin: 8px 0 0;
+    }
+    .attribution a {
+      color: #9db2ce;
+    }
   `;
 
   // Injected by <ui-view>; required by the RoutedLitElement contract
@@ -405,12 +413,25 @@ class AstronautViewComponent extends LitElement {
       <h3>Someone is exploring out here too</h3>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
       <model-viewer
-        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
-        alt="3D model of an astronaut"
+        src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb"
+        alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
         camera-controls
         auto-rotate
         ar
       ></model-viewer>
+      <p class="attribution">
+        <a
+          href="https://3d.si.edu/object/3d/neil-armstrong-spacesuit:d8c63ba6-4ebc-11ea-b77f-2e728ce88125"
+          target="_blank"
+          rel="noopener"
+          >Neil Armstrong Space Suit</a
+        >
+        provided by the Smithsonian Digitization Programs Office and the
+        National Air and Space Museum.
+        <a href="https://www.si.edu/Termsofuse" target="_blank" rel="noopener"
+          >Usage Conditions Apply</a
+        >
+      </p>
     `;
   }
 }
