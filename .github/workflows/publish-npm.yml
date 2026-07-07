@@ -82,7 +82,7 @@ jobs:
         # Generate SLSA provenance attestation for supply chain security.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
         if: ${{ !inputs.dryRun }}
-        uses: actions/attest-build-provenance@v3
+        uses: actions/attest-build-provenance@v4
         with:
           subject-path: '${{ env.PACKAGE_DIR }}/*.tgz'
       - name: Release version
