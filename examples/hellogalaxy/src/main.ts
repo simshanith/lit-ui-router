@@ -9,8 +9,6 @@ import {
   LitStateDeclaration,
   UIViewInjectedProps,
 } from 'lit-ui-router';
-// Registers the <model-viewer> custom element used by the astronaut state
-import '@google/model-viewer';
 
 // Data Service
 interface Star {
@@ -490,6 +488,14 @@ const astronautState: LitStateDeclaration = {
   name: 'galaxy.astronaut',
   url: '/astronaut',
   component: AstronautViewComponent,
+  resolve: [
+    {
+      // Resolves can await code, not just data: model-viewer loads on state
+      // activation, and the bundler splits it into its own chunk
+      token: 'modelViewer',
+      resolveFn: () => import('@google/model-viewer'),
+    },
+  ],
 };
 
 // Router setup
