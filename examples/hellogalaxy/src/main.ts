@@ -416,7 +416,10 @@ class AstronautViewComponent extends LitElement {
     model-viewer {
       width: 100%;
       height: 420px;
-      background: rgba(13, 20, 33, 0.75);
+      /* The glass panel mutes the page backdrop to near-black, so show
+         the galactic-center photo directly inside the viewer instead */
+      background: url('https://science.nasa.gov/wp-content/uploads/2023/09/ssc2006-02a-0.jpg?w=2048')
+        center / cover no-repeat;
       border: 1px solid #263449;
       border-radius: 12px;
     }
