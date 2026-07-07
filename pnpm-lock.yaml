@@ -88,8 +88,8 @@ catalogs:
       specifier: ^0.14.4
       version: 0.14.4
     vite-plugin-static-copy:
-      specifier: ^3.4.0
-      version: 3.4.0
+      specifier: ^4.1.1
+      version: 4.1.1
     vitest:
       specifier: ^4.1.9
       version: 4.1.9
@@ -103,6 +103,10 @@ catalogs:
     lit:
       specifier: ^3.0.0
       version: 3.3.3
+  vitepress1:
+    vite-plugin-static-copy:
+      specifier: ^3.4.0
+      version: 3.4.0
 
 overrides:
   d3-color: 3.1.0
@@ -245,7 +249,7 @@ importers:
         version: 0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       vite-plugin-static-copy:
         specifier: 'catalog:'
-        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.1(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       wrangler:
         specifier: 'catalog:'
         version: 4.107.0
@@ -288,7 +292,7 @@ importers:
         version: 0.14.4(eslint@10.6.0(jiti@2.7.0))(optionator@0.9.4)(typescript@6.0.3)(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       vite-plugin-static-copy:
         specifier: 'catalog:'
-        version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
+        version: 4.1.1(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       wrangler:
         specifier: 'catalog:'
         version: 4.107.0
@@ -370,7 +374,7 @@ importers:
         specifier: 'catalog:'
         version: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
       vite-plugin-static-copy:
-        specifier: 'catalog:'
+        specifier: catalog:vitepress1
         version: 3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0))
       vitepress:
         specifier: ^1.6.4
@@ -4368,6 +4372,12 @@ packages:
     engines: {node: ^18.0.0 || >=20.0.0}
     peerDependencies:
       vite: ^5.0.0 || ^6.0.0 || ^7.0.0 || ^8.0.0
+
+  vite-plugin-static-copy@4.1.1:
+    resolution: {integrity: sha512-GrlA8YklrAfSyxJ4M3fdQLOo9oNkp56IM9FYgX/WtEgeIFkPwhu4wzpufBCIuNKCa6Fn77FkRdYxkHqV0FwjAw==}
+    engines: {node: ^22.0.0 || >=24.0.0}
+    peerDependencies:
+      vite: ^6.0.0 || ^7.0.0 || ^8.0.0
 
   vite@5.4.21:
     resolution: {integrity: sha512-o5a9xKjbtuhY6Bi5S3+HvbRERmouabWbyUcpXXUA1u+GNUKoROi9byOJ8M0nHbHYHkYICiMlqxkg1KkYmm25Sw==}
@@ -8472,6 +8482,14 @@ snapshots:
       typescript: 6.0.3
 
   vite-plugin-static-copy@3.4.0(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)):
+    dependencies:
+      chokidar: 3.6.0
+      p-map: 7.0.5
+      picocolors: 1.1.1
+      tinyglobby: 0.2.17
+      vite: 7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)
+
+  vite-plugin-static-copy@4.1.1(vite@7.3.6(@types/node@25.0.9)(jiti@2.7.0)(yaml@2.9.0)):
     dependencies:
       chokidar: 3.6.0
       p-map: 7.0.5
