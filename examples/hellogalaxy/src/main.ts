@@ -417,8 +417,8 @@ class AstronautViewComponent extends LitElement {
       width: 100%;
       height: 420px;
       /* The glass panel mutes the page backdrop to near-black, so show
-         the galactic-center photo directly inside the viewer instead */
-      background: url('https://science.nasa.gov/wp-content/uploads/2023/09/ssc2006-02a-0.jpg?w=2048')
+         Webb's Cosmic Cliffs directly inside the viewer instead */
+      background: url('https://science.nasa.gov/wp-content/uploads/2023/09/web-first-images-release.png')
         center / cover no-repeat;
       border: 1px solid #263449;
       border-radius: 12px;
@@ -464,6 +464,15 @@ class AstronautViewComponent extends LitElement {
         <a href="https://www.si.edu/Termsofuse" target="_blank" rel="noopener"
           >Usage Conditions Apply</a
         >
+      </p>
+      <p class="attribution">
+        Viewer backdrop:
+        <a
+          href="https://science.nasa.gov/image-detail/web-first-images-release/"
+          target="_blank"
+          rel="noopener"
+          >&ldquo;Cosmic Cliffs&rdquo; in the Carina Nebula</a
+        >, James Webb Space Telescope &mdash; NASA, ESA, CSA, and STScI.
       </p>
     `;
   }
