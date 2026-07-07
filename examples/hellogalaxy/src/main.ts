@@ -164,6 +164,14 @@ class GalaxyShellComponent extends LitElement {
       border-color: #7aa2ff;
       font-weight: 600;
     }
+    .backdrop-credit {
+      color: #6b7c95;
+      font-size: 0.75rem;
+      margin: 32px 0 0;
+    }
+    .backdrop-credit a {
+      color: #9db2ce;
+    }
   `;
 
   // Injected by <ui-view>; required by the RoutedLitElement contract
@@ -191,6 +199,16 @@ class GalaxyShellComponent extends LitElement {
       </nav>
       <!-- Child states (galaxy.stars, galaxy.astronaut) render into this nested view -->
       <ui-view></ui-view>
+      <p class="backdrop-credit">
+        Backdrop:
+        <a
+          href="https://science.nasa.gov/image-detail/ssc2006-02a-0/"
+          target="_blank"
+          rel="noopener"
+          >the Milky Way's center in infrared</a
+        >
+        &mdash; NASA, JPL-Caltech, Susan Stolovy (SSC/Caltech) et al.
+      </p>
     `;
   }
 }
