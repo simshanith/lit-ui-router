@@ -109,6 +109,29 @@ export function configureRouter(router = new UIRouterLit()) {
 
   urlService.rules.initial({ state: 'welcome' });
 
+  // 404: otherwise() only fires when no registered rule matches, so the
+  // future states' wildcard rules still win and lazy loading keeps working.
+  // URLs left unmatched after a lazy load re-sync land here too.
+  urlService.rules.otherwise(() => ({
+    state: 'notFound',
+    params: { attemptedPath: urlService.path() },
+  }));
+
+  // When a URL matches a future state's prefix but nothing matches after its
+  // module lazy loads, the core lazyLoad hook re-syncs the URL (triggering
+  // otherwise -> notFound) and returns no redirect, so the original transition
+  // to the now-replaced placeholder keeps running and supersedes the 404.
+  // Abort the stale placeholder transition instead (priority below the core
+  // lazyLoad hook's 0, so this runs after lazy loading resolves).
+  router.transitionService.onBefore(
+    { to: (state) => !!state?.name.endsWith('.**') },
+    (transition) =>
+      transition.router.stateRegistry.get(transition.to().name ?? '') === null
+        ? false
+        : undefined,
+    { priority: -10 },
+  );
+
   // Register the "requires auth" hook with the TransitionsService
   router.transitionService.onBefore(
     reqAuthHook.criteria,
