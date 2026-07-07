@@ -19,6 +19,7 @@
     "sample-app-shared": "workspace:*"
   },
   "devDependencies": {
+    "@codecov/vite-plugin": "catalog:",
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
     "prettier": "catalog:",
