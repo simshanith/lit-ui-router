@@ -34,7 +34,11 @@ export default defineConfig({
     checker({ typescript: true }),
     viteStaticCopy({
       targets: [
-        { src: `${visualizerImages}/**`, dest: 'images', rename: { stripBase } },
+        {
+          src: `${visualizerImages}/**`,
+          dest: 'images',
+          rename: { stripBase },
+        },
       ],
     }),
     // Codecov bundle analysis; no-op unless CODECOV_TOKEN is set (CI).
