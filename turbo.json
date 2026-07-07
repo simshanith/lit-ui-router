@@ -12,7 +12,9 @@
     "test": {
       "with": ["//#test:root"],
       "dependsOn": ["^test"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
+      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
+      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "passThroughEnv": ["WRANGLER_LOG"]
     },
     "dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -21,6 +23,7 @@
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
       "inputs": ["src/**/*.ts", "vitest.config.ts"],
+      "env": ["VITEST_BROWSER_API_PORT", "CI"],
       "outputs": ["coverage/**"]
     },
     "lint": {
