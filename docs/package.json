@@ -17,7 +17,7 @@
     "prettier": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-static-copy": "catalog:",
+    "vite-plugin-static-copy": "catalog:vitepress1",
     "vitepress": "^1.6.4",
     "wrangler": "catalog:"
   },

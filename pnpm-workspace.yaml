@@ -45,6 +45,9 @@ catalogs:
     lit: ^3.0.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
+  # vitepress 1 bundles vite 5; static-copy v4 needs vite >=6 — drop with #178
+  vitepress1:
+    vite-plugin-static-copy: ^3.4.0
 
 allowBuilds:
   cypress: true
