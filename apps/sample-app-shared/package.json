@@ -10,7 +10,7 @@
   "scripts": {
     "format": "prettier --write \"**/*.{js,ts,json,md,css}\"",
     "format:check": "prettier --check \"**/*.{js,ts,json,md,css}\"",
-    "lint": "eslint ."
+    "lint": "oxlint ."
   },
   "dependencies": {
     "@api-viewer/docs": "catalog:",

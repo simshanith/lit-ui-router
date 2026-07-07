@@ -7,7 +7,7 @@
   "scripts": {
     "format": "prettier --write \"**/*.{ts,js,mjs,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,mjs,json,md}\"",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "test": "node run.mjs"
   },
   "devDependencies": {

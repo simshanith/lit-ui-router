@@ -44,7 +44,7 @@
     "docs:api": "rimraf ../../docs/api/navigation-location-plugin && typedoc",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63340 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium"
   },

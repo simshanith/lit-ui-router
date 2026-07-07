@@ -27,11 +27,14 @@
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "with": ["//#lint:root"],
-      "inputs": ["**/*.ts", "**/*.js", "eslint.config.js", "$TURBO_DEFAULT$"]
+      "with": ["//#lint:root", "//#lint:package-json"],
+      "inputs": ["**/*.ts", "**/*.js", ".oxlintrc.json", "$TURBO_DEFAULT$"]
     },
     "//#lint:root": {
-      "inputs": ["examples/**/*.{ts,js}", "eslint.config.js", "$TURBO_DEFAULT$"]
+      "inputs": ["examples/**/*.{ts,js}", ".oxlintrc.json", "$TURBO_DEFAULT$"]
+    },
+    "//#lint:package-json": {
+      "inputs": ["**/package.json", "eslint.config.js"]
     },
     "ci": {
       "dependsOn": [

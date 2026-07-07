@@ -15,7 +15,8 @@
     "format:check:root": "prettier --check \"*.{md,ts,js,json,jsonc}\"",
     "format:root": "prettier --write \"*.{md,ts,js,json,jsonc}\"",
     "lint": "turbo run lint",
-    "lint:root": "eslint --format tap --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples",
+    "lint:package-json": "eslint --format tap --ignore-pattern examples \"**/package.json\"",
+    "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
     "test:coverage": "turbo run test:coverage",
     "test:root": "node --test \"scripts/**/*.test.mjs\""
   },
@@ -24,22 +25,19 @@
   },
   "packageManager": "pnpm@11.10.0",
   "devDependencies": {
-    "@eslint/js": "^10.0.1",
     "@pnpm/fs.find-packages": "catalog:",
     "@pnpm/workspace.read-manifest": "catalog:",
     "cypress": "catalog:",
     "eslint": "^10.6.0",
-    "eslint-config-prettier": "^10.1.8",
     "eslint-formatter-tap": "^9.0.1",
     "eslint-plugin-package-json": "^1.5.0",
     "eslint-plugin-turbo": "^2.10.3",
-    "globals": "^17.7.0",
+    "oxlint": "catalog:",
     "playwright": "catalog:",
     "pnpm": "^11.10.0",
     "prettier": "catalog:",
     "turbo": "^2.10.3",
     "typescript": "catalog:",
-    "typescript-eslint": "^8.62.1",
     "wrangler": "catalog:"
   }
 }
