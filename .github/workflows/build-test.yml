@@ -38,6 +38,10 @@ jobs:
         uses: jdx/mise-action@v4
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          # The Install Cypress step below downloads the binary; skipping it
+          # here keeps download noise out of the pnpm postinstall output.
+          CYPRESS_INSTALL_BINARY: '0'
       - name: Add workspace binaries to PATH
         run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Install Playwright Browsers
@@ -83,5 +87,7 @@ jobs:
         uses: codecov/codecov-action@v7
         with:
           files: packages/lit-ui-router/coverage/lcov.info,packages/navigation-location-plugin/coverage/lcov.info
+          # Files are explicit; skipping the search silences gcov/coverage.py probe warnings.
+          disable_search: true
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
