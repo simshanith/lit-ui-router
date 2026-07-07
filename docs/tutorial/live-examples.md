@@ -37,4 +37,4 @@ inheritance, and a lazily loaded 3D astronaut (the `model-viewer` chunk only
 downloads when you visit the astronaut state — watch the network tab).
 Walkthrough: [Hello Galaxy tutorial](./hellogalaxy).
 
-<ExampleEmbed src="/examples/hellogalaxy/" title="hellogalaxy example" height="800px" />
+<ExampleEmbed src="/examples/hellogalaxy/" title="hellogalaxy example" height="920px" />
