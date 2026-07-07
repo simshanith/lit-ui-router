@@ -43,3 +43,53 @@ features:
       height: 40
     details: Fetch data before states activate. Components always have the data they need, with automatic loading states.
 ---
+
+## Routing in a nutshell
+
+States declare a name, a URL, and a Lit component — an inline template
+function or a full `LitElement` class:
+
+```ts
+import { render, html } from 'lit';
+import { hashLocationPlugin } from '@uirouter/core';
+import { UIRouterLit } from 'lit-ui-router';
+
+const router = new UIRouterLit();
+router.plugin(hashLocationPlugin);
+
+router.stateRegistry.register([
+  { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
+  {
+    name: 'user',
+    url: '/user/:id',
+    component: (props) => html`<h1>User ${props?.transition?.params().id}</h1>`,
+  },
+]);
+
+router.start();
+
+render(
+  html`<ui-router .uiRouter=${router}>
+    <ui-view></ui-view>
+  </ui-router>`,
+  document.getElementById('root')!,
+);
+```
+
+New to UI-Router? Start with the [Introduction](/introduction), then build
+your first app with the three-part [tutorial](/tutorial/helloworld) — every
+step runs live on StackBlitz.
+
+## The packages
+
+| Package                                                            | What it adds                                                                                    |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
+| [`lit-ui-router`](/api/reference/)                                 | The router: states, transitions, resolves, `<ui-router>`/`<ui-view>`, navigation directives     |
+| [`lit-ui-router-mobx`](/guide/mobx)                                | [MobX](https://mobx.js.org) bindings: an observable router store and reaction-based controllers |
+| [`ui-router-navigation-location-plugin`](/guide/navigation-plugin) | Experimental location plugin built on the modern browser Navigation API                         |
+
+And because it's a [`@uirouter/core`](https://ui-router.github.io/) implementation, ecosystem plugins like
+[sticky states](https://github.com/ui-router/sticky-states),
+[deep state redirect](https://github.com/ui-router/dsr), and the
+[visualizer](https://github.com/ui-router/visualizer) work too — see them all
+in action in the <a href="/app" target="_self">sample app</a>.
