@@ -10,6 +10,7 @@ Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces *
 ## Live Demo
 
 <StackBlitzEmbed
+height="920px"
 src="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy?embed=1&file=src/main.ts&view=preview"
 title="lit-ui-router-hellogalaxy"><a href="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy?file=src/main.ts" target="_blank"><img alt="Open in StackBlitz" src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" /></a></StackBlitzEmbed>
 

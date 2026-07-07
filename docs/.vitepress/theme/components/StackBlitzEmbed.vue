@@ -2,10 +2,14 @@
 import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
 
-const props = defineProps<{
-  src: string;
-  title: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    src: string;
+    title: string;
+    height?: string;
+  }>(),
+  { height: '400px' },
+);
 
 const container = useTemplateRef('container');
 const isFullscreenSupported = ref(false);
@@ -59,6 +63,7 @@ onUnmounted(() => {
     <iframe
       :src="src"
       :title="title"
+      :style="{ height: props.height }"
       ref="iframe"
       allow="cross-origin-isolated"
       credentialless
@@ -91,7 +96,6 @@ onUnmounted(() => {
 
 .stackblitz-embed iframe {
   width: 100%;
-  height: 400px;
   border: 0;
   border-radius: 4px;
   overflow: hidden;
@@ -107,7 +111,7 @@ onUnmounted(() => {
 
 .stackblitz-embed:fullscreen iframe,
 .stackblitz-embed:-webkit-full-screen iframe {
-  height: calc(100vh - 80px);
+  height: calc(100vh - 80px) !important;
   border-radius: 8px;
   width: 88%;
   transition: height 0.3s ease, width 0s ease, border-radius 0.3s ease;
