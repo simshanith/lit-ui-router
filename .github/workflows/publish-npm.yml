@@ -82,6 +82,8 @@ jobs:
           (cd "$PACKAGE_DIR" && npm pkg delete devDependencies)
           pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
           echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
+          # restore the stripped manifest: release-it requires a clean working dir
+          git checkout -- "$PACKAGE_DIR/package.json"
       - name: Check packed manifest
         # no devDependencies and no unsubstituted catalog:/workspace: refs may ship
         run: |
