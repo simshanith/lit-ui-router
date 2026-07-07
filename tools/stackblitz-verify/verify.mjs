@@ -72,7 +72,10 @@ async function frameText(frame) {
 async function terminalText(page) {
   try {
     const texts = await page.locator('.xterm-rows').allInnerTexts();
-    return texts.join('\n---\n').replace(/\u00a0/g, ' ').trim();
+    return texts
+      .join('\n---\n')
+      .replace(/\u00a0/g, ' ')
+      .trim();
   } catch {
     return '';
   }
