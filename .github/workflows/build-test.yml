@@ -84,5 +84,6 @@ jobs:
         with:
           files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json
           disable_search: true
+          plugins: noop
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
