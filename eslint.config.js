@@ -82,10 +82,10 @@ export default defineConfig(
     },
   },
   {
-    files: ['**/*.spec.ts'],
+    files: ['**/*.spec.ts', '**/vitest.setup.ts'],
     languageOptions: {
       parserOptions: {
-        // Spec files are excluded from tsconfig.json for build purposes
+        // Spec and setup files are excluded from tsconfig.json for build purposes
         projectService: false,
       },
     },

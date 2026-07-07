@@ -45,11 +45,7 @@ jobs:
       - name: Add workspace binaries to PATH
         run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Install Playwright Browsers
-        # Group collapses the ~1100 lines of apt output from --with-deps.
-        run: |
-          echo "::group::playwright install --with-deps"
-          playwright install --with-deps
-          echo "::endgroup::"
+        run: playwright install --with-deps
       - name: Install Cypress
         # Verify up front so the concurrent vanilla/mobx runs skip the
         # "first time using Cypress" verification banner.
@@ -61,8 +57,32 @@ jobs:
         # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
         # race ("Fatal server error"); one shared display serves both.
         # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
+        # Xvfb's stderr is routine xkbcomp keysym noise on the runner image,
+        # so capture it in an unlinked temp file and print it (noise filtered,
+        # with a count) only if the server fails to come up.
         run: |
-          Xvfb :99 -screen 0 1280x720x24 &
+          tmp=$(mktemp)
+          # shellcheck disable=SC2094 # separate r/w fds on the same unlinked file is the point
+          exec {w}>"$tmp" {r}<"$tmp"
+          rm "$tmp"
+          Xvfb :99 -screen 0 1280x720x24 2>&$w &
+          xvfb=$!
+          exec {w}>&-
+          up=""
+          for _ in {1..50}; do
+            kill -0 "$xvfb" 2>/dev/null || break
+            if [ -S /tmp/.X11-unix/X99 ]; then up=1; break; fi
+            sleep 0.1
+          done
+          if [ -z "$up" ]; then
+            err=$(cat <&"$r")
+            pat='^> Warning:[[:space:]]+Could not resolve keysym '
+            echo "Xvfb failed to start:"
+            grep -Ev "$pat" <<<"$err" || true
+            echo "(filtered $(grep -Ec "$pat" <<<"$err" || true) 'Could not resolve keysym' lines)"
+            exit 1
+          fi
+          exec {r}<&-
           echo "DISPLAY=:99" >> "$GITHUB_ENV"
       - name: Build and Test
         run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
