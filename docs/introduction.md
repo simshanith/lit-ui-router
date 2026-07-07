@@ -56,7 +56,7 @@ This inversion pays off as applications grow:
 - **Navigation is interceptable.** Transition hooks implement cross-cutting
   concerns like authentication guards, analytics, and redirects in one place.
 - **States don't need URLs.** Dialogs, wizards, and error views (like a
-  [404 state](./guide/unmatched-urls)) can participate in routing without
+  [404 state](./guides/unmatched-urls)) can participate in routing without
   claiming an address.
 
 ## What lit-ui-router adds
@@ -84,8 +84,8 @@ you need to start; the companions are optional layers.
 | Package                                                                                                      | What it is                                                                                                                              |
 | ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | [`lit-ui-router`](https://www.npmjs.com/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./api/reference/) |
-| [`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./guide/mobx)               |
-| [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./guide/navigation-plugin)                        |
+| [`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./guides/mobx)               |
+| [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./guides/navigation-plugin)                        |
 
 Because lit-ui-router is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
@@ -100,7 +100,7 @@ tool.
   and links ([Hello World](./tutorial/helloworld)), resolves and parameters
   ([Hello Solar System](./tutorial/hellosolarsystem)), nested states and views
   ([Hello Galaxy](./tutorial/hellogalaxy)). Each step runs live on StackBlitz.
-- **[Guides](./guide/)** — focused, task-oriented pages on URLs and location,
+- **[Guides](./guides/)** — focused, task-oriented pages on URLs and location,
   transitions and guards, and reactivity.
 - **[API](./api/)** — an overview plus complete generated references for all
   three packages.

@@ -22,17 +22,17 @@ function makeSidebar() {
     {
       text: 'Guides',
       items: [
-        { text: 'Overview', link: '/guide/' },
-        { text: 'Location Plugins', link: '/guide/location-plugins' },
-        { text: 'Navigation API Plugin', link: '/guide/navigation-plugin' },
-        { text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' },
-        { text: 'Route Guards', link: '/guide/route-guards' },
+        { text: 'Overview', link: '/guides/' },
+        { text: 'Location Plugins', link: '/guides/location-plugins' },
+        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
+        { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
+        { text: 'Route Guards', link: '/guides/route-guards' },
         {
           text: 'Component Lifecycle Hooks',
-          link: '/guide/component-lifecycle',
+          link: '/guides/component-lifecycle',
         },
-        { text: 'Reactive Components', link: '/guide/reactive-components' },
-        { text: 'MobX Bindings', link: '/guide/mobx' },
+        { text: 'Reactive Components', link: '/guides/reactive-components' },
+        { text: 'MobX Bindings', link: '/guides/mobx' },
       ],
     },
     {
@@ -96,7 +96,7 @@ const config = {
       { text: 'Home', link: '/' },
       { text: 'Introduction', link: '/introduction' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'Guides', link: '/guide/' },
+      { text: 'Guides', link: '/guides/' },
       { text: 'API', link: '/api/' },
       {
         text: 'Sample App',

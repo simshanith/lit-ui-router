@@ -85,8 +85,8 @@ step runs live on StackBlitz.
 | Package                                                            | What it adds                                                                                    |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------- |
 | [`lit-ui-router`](/api/reference/)                                 | The router: states, transitions, resolves, `<ui-router>`/`<ui-view>`, navigation directives     |
-| [`lit-ui-router-mobx`](/guide/mobx)                                | [MobX](https://mobx.js.org) bindings: an observable router store and reaction-based controllers |
-| [`ui-router-navigation-location-plugin`](/guide/navigation-plugin) | Experimental location plugin built on the modern browser Navigation API                         |
+| [`lit-ui-router-mobx`](/guides/mobx)                                | [MobX](https://mobx.js.org) bindings: an observable router store and reaction-based controllers |
+| [`ui-router-navigation-location-plugin`](/guides/navigation-plugin) | Experimental location plugin built on the modern browser Navigation API                         |
 
 And because it's a [`@uirouter/core`](https://ui-router.github.io/) implementation, ecosystem plugins like
 [sticky states](https://github.com/ui-router/sticky-states),

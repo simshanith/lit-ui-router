@@ -49,7 +49,7 @@ them at all. This app routes them to a dedicated `notFound` state that
 preserves the URL, plus a transition hook that keeps the 404 from being
 superseded when a URL matches a lazy-loaded future state's prefix but nothing
 inside the loaded module. See the
-[Unmatched URLs (404) guide](https://lit-ui-router.dev/guide/unmatched-urls)
+[Unmatched URLs (404) guide](https://lit-ui-router.dev/guides/unmatched-urls)
 for the full pattern.
 
 ## Location plugin selection
