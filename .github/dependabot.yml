@@ -1,0 +1,79 @@
+# Dependabot version updates — https://github.com/simshanith/lit-ui-router/issues/23
+# Reference: https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+updates:
+  # Root pnpm workspace (apps/*, packages/*, tools/*, docs, examples — see pnpm-workspace.yaml).
+  # Dependabot resolves pnpm via the npm ecosystem, including pnpm-workspace.yaml catalogs.
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+    # Mirror pnpm's minimumReleaseAge: 24h (pnpm-workspace config) — wait a day
+    # before proposing freshly published versions.
+    cooldown:
+      default-days: 1
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      # vitest and @vitest/* must move in lockstep: patches/@vitest__browser.patch
+      # targets a content-hashed bundle file inside @vitest/browser and silently
+      # no-ops after any vitest bump — regenerate the patch on every update in
+      # this group before merging.
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+      # All other minor + patch updates land as one weekly PR; majors stay
+      # individual so breaking changes get their own review.
+      minor-and-patch:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - 'vitest'
+          - '@vitest/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # StackBlitz examples are standalone projects with their own npm lockfiles,
+  # deliberately outside the main pnpm workspace (issue #23).
+  - package-ecosystem: 'npm'
+    directories:
+      - '/examples/*'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 3
+    cooldown:
+      default-days: 1
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      examples-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
+
+  # GitHub Actions used by .github/workflows.
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    # github-actions supports cooldown default-days only (no semver-specific days).
+    cooldown:
+      default-days: 1
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'
