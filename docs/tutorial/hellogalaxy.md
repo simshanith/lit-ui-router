@@ -101,8 +101,16 @@ class GalaxyShellComponent extends LitElement {
     return html`
       <nav>
         <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('galaxy.stars')}>Stars</a>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('galaxy.astronaut')}>Astronaut</a>
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('galaxy.stars')}
+          >Stars</a
+        >
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('galaxy.astronaut')}
+          >Astronaut</a
+        >
       </nav>
       <!-- Child states (galaxy.stars, galaxy.astronaut) render into this nested view -->
       <ui-view></ui-view>
@@ -142,8 +150,14 @@ class StarsContainerComponent extends LitElement {
               (star) => html`
                 <li>
                   <!-- Relative sref: '.star' resolves against this state (galaxy.stars) -->
-                  <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('.star', { starId: star.id })}>
-                    <span class="dot" style="color: ${spectralColor(star.spectralClass)}"></span>
+                  <a
+                    ${uiSrefActive({ activeClasses: ['active'] })}
+                    ${uiSref('.star', { starId: star.id })}
+                  >
+                    <span
+                      class="dot"
+                      style="color: ${spectralColor(star.spectralClass)}"
+                    ></span>
                     ${star.name}
                   </a>
                 </li>
@@ -183,7 +197,8 @@ const spectralColors: Record<string, string> = {
   M: '#ffab6e',
 };
 
-const spectralColor = (spectralClass: string): string => spectralColors[spectralClass[0]] ?? '#ffffff';
+const spectralColor = (spectralClass: string): string =>
+  spectralColors[spectralClass[0]] ?? '#ffffff';
 ```
 
 ---
@@ -273,11 +288,25 @@ class AstronautViewComponent extends LitElement {
     return html`
       <h3>Someone is exploring out here too</h3>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
-      <model-viewer src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb" alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan" camera-controls auto-rotate ar></model-viewer>
+      <model-viewer
+        src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb"
+        alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
+        camera-controls
+        auto-rotate
+        ar
+      ></model-viewer>
       <p class="attribution">
-        <a href="https://3d.si.edu/object/3d/neil-armstrong-spacesuit:d8c63ba6-4ebc-11ea-b77f-2e728ce88125" target="_blank" rel="noopener">Neil Armstrong Space Suit</a>
-        provided by the Smithsonian Digitization Programs Office and the National Air and Space Museum.
-        <a href="https://www.si.edu/Termsofuse" target="_blank" rel="noopener">Usage Conditions Apply</a>
+        <a
+          href="https://3d.si.edu/object/3d/neil-armstrong-spacesuit:d8c63ba6-4ebc-11ea-b77f-2e728ce88125"
+          target="_blank"
+          rel="noopener"
+          >Neil Armstrong Space Suit</a
+        >
+        provided by the Smithsonian Digitization Programs Office and the
+        National Air and Space Museum.
+        <a href="https://www.si.edu/Termsofuse" target="_blank" rel="noopener"
+          >Usage Conditions Apply</a
+        >
       </p>
     `;
   }
@@ -310,7 +339,9 @@ Note the resolve: instead of a top-level `import '@google/model-viewer'`, the st
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) => router.plugin(Visualizer));
+import('@uirouter/visualizer').then(({ Visualizer }) =>
+  router.plugin(Visualizer),
+);
 router.stateRegistry.register(galaxyState);
 router.stateRegistry.register(starsState);
 router.stateRegistry.register(starState);

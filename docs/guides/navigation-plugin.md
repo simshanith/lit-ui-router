@@ -65,7 +65,9 @@ fall back to the History API — the URLs are identical:
 import { pushStateLocationPlugin } from '@uirouter/core';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
-router.plugin('navigation' in window ? navigationLocationPlugin : pushStateLocationPlugin);
+router.plugin(
+  'navigation' in window ? navigationLocationPlugin : pushStateLocationPlugin,
+);
 ```
 
 This is the strategy the <a href="/app" target="_self">sample app</a> uses —

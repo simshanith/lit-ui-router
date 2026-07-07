@@ -71,7 +71,9 @@ The location service class that extends `BaseLocationServices` from `@uirouter/c
 Type guard function to check if a `NavigateEvent` was triggered by UIRouter.
 
 ```typescript
-function isUIRouterNavigateEvent(event?: NavigateEvent): event is UIRouterNavigateEvent;
+function isUIRouterNavigateEvent(
+  event?: NavigateEvent,
+): event is UIRouterNavigateEvent;
 ```
 
 ### `UIRouterNavigateEvent`

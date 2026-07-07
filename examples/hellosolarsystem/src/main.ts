@@ -297,9 +297,8 @@ class PlanetDetailComponent extends LitElement {
         <h3>${this.planet.name}</h3>
         <span
           class="body"
-          style="display:inline-block;width:${size}px;height:${size}px;background:${
-            this.planet.gradient
-          }"
+          style="display:inline-block;width:${size}px;height:${size}px;background:${this
+            .planet.gradient}"
         ></span>
         <dl>
           <dt>Kind</dt>
