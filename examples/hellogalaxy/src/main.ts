@@ -9,56 +9,210 @@ import {
   LitStateDeclaration,
   UIViewInjectedProps,
 } from 'lit-ui-router';
+// Registers the <model-viewer> custom element used by the astronaut state
+import '@google/model-viewer';
 
 // Data Service
-interface Person {
-  id: number;
+interface Star {
+  id: string;
   name: string;
-  description: string;
+  spectralClass: string;
+  constellation: string;
+  distance: string;
+  apparentMagnitude: string;
+  funFact: string;
 }
 
-const people: Person[] = [
+const stars: Star[] = [
   {
-    id: 1,
+    id: 'sun',
     name: 'Sun',
-    description: 'The star at the center of our solar system.',
+    spectralClass: 'G2V',
+    constellation: '(our star)',
+    distance: '8.3 light-minutes',
+    apparentMagnitude: '-26.74',
+    funFact: "Contains 99.86% of the solar system's mass.",
   },
   {
-    id: 2,
-    name: 'Mercury',
-    description: 'The smallest planet and closest to the Sun.',
+    id: 'proxima-centauri',
+    name: 'Proxima Centauri',
+    spectralClass: 'M5.5Ve',
+    constellation: 'Centaurus',
+    distance: '4.25 ly',
+    apparentMagnitude: '11.13',
+    funFact: 'Closest star to the Sun; hosts the exoplanet Proxima b.',
   },
   {
-    id: 3,
-    name: 'Venus',
-    description: 'The hottest planet with a thick atmosphere.',
+    id: 'alpha-centauri-a',
+    name: 'Alpha Centauri A',
+    spectralClass: 'G2V',
+    constellation: 'Centaurus',
+    distance: '4.37 ly',
+    apparentMagnitude: '0.01',
+    funFact: 'A near-twin of the Sun in the nearest star system.',
   },
   {
-    id: 4,
-    name: 'Earth',
-    description: 'Our home planet, the only known planet with life.',
+    id: 'sirius',
+    name: 'Sirius',
+    spectralClass: 'A1V',
+    constellation: 'Canis Major',
+    distance: '8.6 ly',
+    apparentMagnitude: '-1.46',
+    funFact:
+      'Brightest star in the night sky, with a white dwarf companion, Sirius B.',
   },
   {
-    id: 5,
-    name: 'Mars',
-    description: 'The red planet, a target for future exploration.',
+    id: 'vega',
+    name: 'Vega',
+    spectralClass: 'A0V',
+    constellation: 'Lyra',
+    distance: '25 ly',
+    apparentMagnitude: '0.03',
+    funFact:
+      'First star ever photographed (1850) and the historic zero point of the magnitude scale.',
+  },
+  {
+    id: 'arcturus',
+    name: 'Arcturus',
+    spectralClass: 'K1.5III',
+    constellation: 'Boötes',
+    distance: '36.7 ly',
+    apparentMagnitude: '-0.05',
+    funFact: "Its light was used to open the 1933 Chicago World's Fair.",
+  },
+  {
+    id: 'polaris',
+    name: 'Polaris',
+    spectralClass: 'F7Ib',
+    constellation: 'Ursa Minor',
+    distance: '~433 ly',
+    apparentMagnitude: '1.98',
+    funFact: 'The current North Star, and a pulsating Cepheid variable.',
+  },
+  {
+    id: 'betelgeuse',
+    name: 'Betelgeuse',
+    spectralClass: 'M1-2Ia-Iab',
+    constellation: 'Orion',
+    distance: '~548 ly',
+    apparentMagnitude: '0.5 (variable)',
+    funFact:
+      "A red supergiant so large it would engulf Jupiter's orbit; famously dimmed in 2019-20.",
+  },
+  {
+    id: 'rigel',
+    name: 'Rigel',
+    spectralClass: 'B8Ia',
+    constellation: 'Orion',
+    distance: '~860 ly',
+    apparentMagnitude: '0.13',
+    funFact: 'A blue supergiant roughly 120,000 times as luminous as the Sun.',
+  },
+  {
+    id: 'antares',
+    name: 'Antares',
+    spectralClass: 'M1.5Iab-Ib',
+    constellation: 'Scorpius',
+    distance: '~550 ly',
+    apparentMagnitude: '1.06 (variable)',
+    funFact: 'Its name means "rival of Mars" for its similar reddish hue.',
   },
 ];
 
-const PeopleService = {
-  getAllPeople: (): Promise<Person[]> => Promise.resolve(people),
+const StarService = {
+  // Simulated async fetch; resolves must settle before the state activates
+  getStars: (): Promise<Star[]> =>
+    new Promise((resolve) => setTimeout(() => resolve(stars), 300)),
 };
 
+// Approximate real star colors by spectral class letter (O hottest, M coolest)
+const spectralColors: Record<string, string> = {
+  O: '#92b5ff',
+  B: '#a5c0ff',
+  A: '#cad8ff',
+  F: '#f8f7ff',
+  G: '#ffefc4',
+  K: '#ffd2a1',
+  M: '#ffab6e',
+};
+
+const spectralColor = (spectralClass: string): string =>
+  spectralColors[spectralClass[0]] ?? '#ffffff';
+
 // Components
-@customElement('people-container')
-class PeopleContainerComponent extends LitElement {
+@customElement('galaxy-shell')
+class GalaxyShellComponent extends LitElement {
+  static styles = css`
+    nav {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 24px;
+    }
+    nav a {
+      color: #9db2ce;
+      text-decoration: none;
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid #263449;
+      cursor: pointer;
+    }
+    nav a:hover {
+      color: #e6edf3;
+      border-color: #3d5a80;
+    }
+    nav a.active {
+      color: #0b1020;
+      background: #7aa2ff;
+      border-color: #7aa2ff;
+      font-weight: 600;
+    }
+  `;
+
+  // Injected by <ui-view>; required by the RoutedLitElement contract
+  _uiViewProps!: UIViewInjectedProps;
+
+  constructor(props: UIViewInjectedProps) {
+    super();
+    this._uiViewProps = props;
+  }
+
+  render() {
+    return html`
+      <nav>
+        <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('galaxy.stars')}
+          >Stars</a
+        >
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('galaxy.astronaut')}
+          >Astronaut</a
+        >
+      </nav>
+      <!-- Child states (galaxy.stars, galaxy.astronaut) render into this nested view -->
+      <ui-view></ui-view>
+    `;
+  }
+}
+
+@customElement('stars-container')
+class StarsContainerComponent extends LitElement {
   static styles = css`
     .container {
       display: flex;
-      gap: 32px;
+      gap: 24px;
     }
     .list {
-      flex: 0 0 200px;
+      flex: 0 0 220px;
+    }
+    .list h3 {
+      margin: 0 0 12px;
+      color: #9db2ce;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
     }
     .list ul {
       list-style: none;
@@ -66,67 +220,87 @@ class PeopleContainerComponent extends LitElement {
       margin: 0;
     }
     .list li {
-      margin: 8px 0;
+      margin: 4px 0;
     }
     .list a {
-      color: #0066cc;
+      color: #c9d6ea;
       text-decoration: none;
-      padding: 4px 8px;
-      display: block;
-      border-radius: 4px;
+      padding: 6px 10px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-radius: 6px;
+      cursor: pointer;
     }
     .list a:hover {
-      background: #f0f0f0;
+      background: rgba(122, 162, 255, 0.12);
     }
     .list a.active {
-      background: #0066cc;
-      color: white;
+      background: rgba(122, 162, 255, 0.25);
+      color: #fff;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      flex: none;
+      box-shadow: 0 0 6px 1px currentColor;
     }
     .detail {
       flex: 1;
-      padding: 16px;
-      background: #f9f9f9;
-      border-radius: 8px;
-      min-height: 200px;
+      padding: 20px;
+      background: rgba(13, 20, 33, 0.75);
+      border: 1px solid #263449;
+      border-radius: 12px;
+      min-height: 260px;
+    }
+    .hint {
+      color: #6b7c95;
+      font-style: italic;
     }
   `;
 
   @property({ attribute: false })
-  _uiViewProps?: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps;
 
-  constructor(props?: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps) {
     super();
     this._uiViewProps = props;
   }
 
-  get people(): Person[] {
-    return this._uiViewProps!.resolves!.people;
+  get stars(): Star[] {
+    return this._uiViewProps.resolves!.stars;
   }
 
   render() {
     return html`
       <div class="container">
         <div class="list">
-          <h3>Solar System</h3>
+          <h3>Milky Way stars</h3>
           <ul>
-            ${this.people.map(
-              (person) => html`
+            ${this.stars.map(
+              (star) => html`
                 <li>
+                  <!-- Relative sref: '.star' resolves against this state (galaxy.stars) -->
                   <a
                     ${uiSrefActive({ activeClasses: ['active'] })}
-                    ${uiSref('.person', { personId: person.id })}
-                    >${person.name}</a
+                    ${uiSref('.star', { starId: star.id })}
                   >
+                    <span
+                      class="dot"
+                      style="color: ${spectralColor(star.spectralClass)}"
+                    ></span>
+                    ${star.name}
+                  </a>
                 </li>
               `,
             )}
           </ul>
         </div>
         <div class="detail">
+          <!-- Slotted fallback shows until the child state (galaxy.stars.star) activates -->
           <ui-view>
-            <p style="color: #666; font-style: italic;">
-              Select a planet from the list
-            </p>
+            <p class="hint">Select a star from the list</p>
           </ui-view>
         </div>
       </div>
@@ -134,38 +308,111 @@ class PeopleContainerComponent extends LitElement {
   }
 }
 
-@customElement('person-detail')
-class PersonDetailComponent extends LitElement {
+@customElement('star-detail')
+class StarDetailComponent extends LitElement {
   static styles = css`
     h3 {
-      margin-top: 0;
-      color: #333;
+      margin: 0 0 4px;
+      font-size: 1.5rem;
     }
-    p {
-      color: #666;
+    .constellation {
+      color: #9db2ce;
+      margin: 0 0 16px;
+    }
+    dl {
+      display: grid;
+      grid-template-columns: max-content 1fr;
+      gap: 6px 16px;
+      margin: 0 0 16px;
+    }
+    dt {
+      color: #6b7c95;
+    }
+    dd {
+      margin: 0;
+      color: #e6edf3;
+    }
+    .fact {
+      color: #c9d6ea;
       line-height: 1.6;
+      border-left: 3px solid #7aa2ff;
+      padding-left: 12px;
+      margin: 0;
     }
   `;
 
   @property({ attribute: false })
-  _uiViewProps?: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps;
 
-  constructor(props?: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps) {
     super();
     this._uiViewProps = props;
   }
 
-  get person(): Person | undefined {
-    return this._uiViewProps!.resolves!.person;
+  get star(): Star | undefined {
+    return this._uiViewProps.resolves!.star;
   }
 
   render() {
-    if (!this.person) {
-      return html`<p>Planet not found</p>`;
+    if (!this.star) {
+      return html`<p>Star not found</p>`;
     }
     return html`
-      <h3>${this.person.name}</h3>
-      <p>${this.person.description}</p>
+      <h3 style="color: ${spectralColor(this.star.spectralClass)}">
+        ${this.star.name}
+      </h3>
+      <p class="constellation">${this.star.constellation}</p>
+      <dl>
+        <dt>Spectral class</dt>
+        <dd>${this.star.spectralClass}</dd>
+        <dt>Distance</dt>
+        <dd>${this.star.distance}</dd>
+        <dt>Apparent magnitude</dt>
+        <dd>${this.star.apparentMagnitude}</dd>
+      </dl>
+      <p class="fact">${this.star.funFact}</p>
+    `;
+  }
+}
+
+@customElement('astronaut-view')
+class AstronautViewComponent extends LitElement {
+  static styles = css`
+    h3 {
+      margin: 0 0 12px;
+    }
+    p {
+      color: #9db2ce;
+      margin: 0 0 16px;
+    }
+    model-viewer {
+      width: 100%;
+      height: 420px;
+      background: rgba(13, 20, 33, 0.75);
+      border: 1px solid #263449;
+      border-radius: 12px;
+    }
+  `;
+
+  // Injected by <ui-view>; required by the RoutedLitElement contract
+  _uiViewProps!: UIViewInjectedProps;
+
+  constructor(props: UIViewInjectedProps) {
+    super();
+    this._uiViewProps = props;
+  }
+
+  render() {
+    return html`
+      <h3>Someone is exploring out here too</h3>
+      <p>Drag to orbit the astronaut. Scroll to zoom.</p>
+      <model-viewer
+        src="https://modelviewer.dev/shared-assets/models/Astronaut.glb"
+        alt="3D model of an astronaut"
+        camera-controls
+        auto-rotate
+        ar
+      ></model-viewer>
     `;
   }
 }
@@ -173,64 +420,76 @@ class PersonDetailComponent extends LitElement {
 @customElement('app-root')
 export class AppRoot extends LitElement {
   static styles = css`
-    h2 {
-      color: #333;
+    h1 {
+      margin: 0 0 4px;
+      color: #e6edf3;
+      font-size: 1.7rem;
+      letter-spacing: 0.02em;
     }
-    nav {
-      margin-bottom: 24px;
-    }
-    nav a {
-      margin-right: 16px;
-      color: #333;
-      text-decoration: none;
-    }
-    nav a.active {
-      font-weight: bold;
-      border-bottom: 2px solid #0066cc;
+    .tagline {
+      color: #6b7c95;
+      margin: 0 0 24px;
     }
   `;
 
   render() {
     return html`
-      <h2>Hello Galaxy</h2>
-      <nav>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('people')}
-          >Solar System</a
-        >
-      </nav>
+      <h1>Hello Galaxy</h1>
+      <p class="tagline">
+        Nested states, nested views &mdash; a tour of the Milky Way
+      </p>
+      <!-- Root view: the galaxy shell state renders here -->
       <ui-view></ui-view>
     `;
   }
 }
 
 // State definitions
-const peopleState: LitStateDeclaration = {
-  name: 'people',
-  url: '/people',
-  component: PeopleContainerComponent,
+// Parent shell state; owns the section nav and a nested <ui-view>
+const galaxyState: LitStateDeclaration = {
+  name: 'galaxy',
+  url: '/galaxy',
+  component: GalaxyShellComponent,
+  // Visiting the bare parent forwards to the star list
+  redirectTo: 'galaxy.stars',
+};
+
+// Child state (nested via dot notation) renders inside galaxy's <ui-view>
+const starsState: LitStateDeclaration = {
+  name: 'galaxy.stars',
+  url: '/stars',
+  component: StarsContainerComponent,
   resolve: [
     {
-      token: 'people',
-      resolveFn: () => PeopleService.getAllPeople(),
+      token: 'stars',
+      resolveFn: () => StarService.getStars(),
     },
   ],
 };
 
-// Child state (nested via dot notation)
-const personState: LitStateDeclaration = {
-  name: 'people.person',
-  url: '/:personId',
-  component: PersonDetailComponent,
+// Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
+const starState: LitStateDeclaration = {
+  name: 'galaxy.stars.star',
+  url: '/:starId',
+  component: StarDetailComponent,
   resolve: [
     {
-      token: 'person',
-      deps: ['$transition$', 'people'],
-      resolveFn: ($transition$: Transition, people: Person[]) => {
-        const personId = parseInt($transition$.params().personId);
-        return people.find((p) => p.id === personId);
+      token: 'star',
+      // Resolve inheritance: 'stars' is injected from the parent state's resolve
+      deps: ['$transition$', 'stars'],
+      resolveFn: ($transition$: Transition, stars: Star[]) => {
+        const starId = $transition$.params().starId;
+        return stars.find((s) => s.id === starId);
       },
     },
   ],
+};
+
+// Sibling of galaxy.stars; swaps into the same nested <ui-view>
+const astronautState: LitStateDeclaration = {
+  name: 'galaxy.astronaut',
+  url: '/astronaut',
+  component: AstronautViewComponent,
 };
 
 // Router setup
@@ -239,9 +498,11 @@ router.plugin(hashLocationPlugin);
 import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
-router.stateRegistry.register(peopleState);
-router.stateRegistry.register(personState);
-router.urlService.rules.initial({ state: 'people' });
+router.stateRegistry.register(galaxyState);
+router.stateRegistry.register(starsState);
+router.stateRegistry.register(starState);
+router.stateRegistry.register(astronautState);
+router.urlService.rules.initial({ state: 'galaxy.stars' });
 router.start();
 
 // Render
