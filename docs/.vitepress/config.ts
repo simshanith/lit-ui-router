@@ -17,7 +17,16 @@ function makeSidebar() {
     },
     {
       text: 'Guide',
-      items: [{ text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' }],
+      items: [
+        { text: 'Location Plugins', link: '/guide/location-plugins' },
+        { text: 'Route Guards', link: '/guide/route-guards' },
+        {
+          text: 'Component Lifecycle Hooks',
+          link: '/guide/component-lifecycle',
+        },
+        { text: 'Reactive Components', link: '/guide/reactive-components' },
+        { text: 'Unmatched URLs (404)', link: '/guide/unmatched-urls' },
+      ],
     },
     {
       text: 'API',
@@ -79,7 +88,7 @@ const config = {
     nav: [
       { text: 'Home', link: '/' },
       { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'Guide', link: '/guide/unmatched-urls' },
+      { text: 'Guide', link: '/guide/location-plugins' },
       { text: 'API', link: '/api/' },
       {
         text: 'Sample App',
