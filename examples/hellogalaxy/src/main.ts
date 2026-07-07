@@ -147,11 +147,12 @@ class GalaxyShellComponent extends LitElement {
       margin-bottom: 24px;
     }
     nav a {
-      color: #9db2ce;
+      color: #c9d6ea;
       text-decoration: none;
       padding: 6px 14px;
       border-radius: 999px;
-      border: 1px solid #263449;
+      border: 1px solid #3d5a80;
+      background: rgba(9, 12, 20, 0.6);
       cursor: pointer;
     }
     nav a:hover {
@@ -164,13 +165,22 @@ class GalaxyShellComponent extends LitElement {
       border-color: #7aa2ff;
       font-weight: 600;
     }
+    .panel {
+      background: rgba(9, 12, 20, 0.72);
+      border: 1px solid rgba(61, 90, 128, 0.5);
+      border-radius: 12px;
+      padding: 20px;
+      backdrop-filter: blur(6px);
+      -webkit-backdrop-filter: blur(6px);
+    }
     .backdrop-credit {
-      color: #6b7c95;
+      color: #8fa1bb;
       font-size: 0.75rem;
       margin: 32px 0 0;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
     }
     .backdrop-credit a {
-      color: #9db2ce;
+      color: #c9d6ea;
     }
   `;
 
@@ -198,7 +208,9 @@ class GalaxyShellComponent extends LitElement {
         >
       </nav>
       <!-- Child states (galaxy.stars, galaxy.astronaut) render into this nested view -->
-      <ui-view></ui-view>
+      <div class="panel">
+        <ui-view></ui-view>
+      </div>
       <p class="backdrop-credit">
         Backdrop:
         <a
@@ -459,13 +471,15 @@ export class AppRoot extends LitElement {
   static styles = css`
     h1 {
       margin: 0 0 4px;
-      color: #e6edf3;
+      color: #f2f6fc;
       font-size: 1.7rem;
       letter-spacing: 0.02em;
+      text-shadow: 0 1px 6px rgba(0, 0, 0, 0.9);
     }
     .tagline {
-      color: #6b7c95;
+      color: #a7b8d0;
       margin: 0 0 24px;
+      text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9);
     }
   `;
 
