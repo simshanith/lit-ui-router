@@ -71,26 +71,24 @@
     },
     "format": {
       "with": ["//#format:root"],
-      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".oxfmtrc.json"]
     },
     "format:check": {
       "with": ["//#format:check:root"],
-      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".oxfmtrc.json"]
     },
     "//#format:root": {
       "inputs": [
         "*.{ts,js,json,jsonc,md}",
         "examples/**/*.{ts,js,json,jsonc,md}",
-        ".prettierrc",
-        ".prettierignore"
+        ".oxfmtrc.json"
       ]
     },
     "//#format:check:root": {
       "inputs": [
         "*.{ts,js,json,jsonc,md}",
         "examples/**/*.{ts,js,json,jsonc,md}",
-        ".prettierrc",
-        ".prettierignore"
+        ".oxfmtrc.json"
       ]
     },
     "e2e": {

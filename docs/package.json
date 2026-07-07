@@ -7,14 +7,14 @@
     "build": "vitepress build .",
     "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
-    "format": "prettier --write \"**/*.{md,json,ts}\"",
-    "format:check": "prettier --check \"**/*.{md,json,ts}\"",
+    "format": "oxfmt \"**/*.{md,json,ts}\"",
+    "format:check": "oxfmt --check \"**/*.{md,json,ts}\"",
     "lint": "oxlint .",
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
   },
   "devDependencies": {
-    "prettier": "catalog:",
+    "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:vitepress1",
