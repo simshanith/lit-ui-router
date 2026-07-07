@@ -14,5 +14,19 @@
   },
   "npm": {
     "publish": false
+  },
+  "plugins": {
+    "@release-it/conventional-changelog": {
+      "preset": {
+        "name": "conventionalcommits"
+      },
+      "gitRawCommitsOpts": {
+        "path": "."
+      },
+      "ignoreRecommendedBump": true,
+      "writerOpts": {
+        "headerPartial": ""
+      }
+    }
   }
 }
