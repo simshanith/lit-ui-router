@@ -51,6 +51,36 @@ discussion (see the tool README).
 - A maintainer will review and run CI on your behalf
 - Ensure your changes pass local tests before submitting
 
+## Commit conventions
+
+Every change lands on `main` as a **squash merge**, and the squash commit is
+built from the PR itself:
+
+- **PR title → commit subject.** Must be a [Conventional Commit](https://www.conventionalcommits.org/)
+  header, e.g. `fix(navigation-location-plugin): handle hash-only URLs`.
+  Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+  `build`, `ci`, `chore`, `revert`. Scope is optional.
+- **PR body → commit body.** Write it as you'd write a commit body. An empty
+  body is fine. `BREAKING CHANGE:` footers must start their own line. Don't
+  leave HTML comments (`<!-- … -->`) in the body — they'd land in the commit.
+
+The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces both
+on every PR. Individual commits on your branch don't need to follow the
+convention — only the PR title and body do.
+
+### Enforcement gaps
+
+Honest limits of this setup:
+
+- The merge dialog lets whoever merges overwrite the pre-filled message;
+  auto-merge (`gh pr merge --squash --auto`) avoids that edit entirely.
+- Repository admins (including the release automation's PAT) bypass the
+  `main` ruleset and can push non-conventional commits directly.
+- Release PRs from the "Bump version" workflow are titled `Release X.Y.Z`
+  and rely on the `release` label (or admin bypass) to skip the title lint.
+- A well-formed `BREAKING CHANGE:` line in a body is taken at face value —
+  the check validates format, not intent.
+
 ## Releases
 
 Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.
