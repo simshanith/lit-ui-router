@@ -28,7 +28,13 @@
     },
     "lint": {
       "with": ["//#lint:root", "//#lint:package-json"],
-      "inputs": ["**/*.ts", "**/*.js", ".oxlintrc.json", "$TURBO_DEFAULT$"]
+      "dependsOn": ["^build"],
+      "inputs": [
+        "**/*.ts",
+        "**/*.js",
+        "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_DEFAULT$"
+      ]
     },
     "//#lint:root": {
       "inputs": ["examples/**/*.{ts,js}", ".oxlintrc.json", "$TURBO_DEFAULT$"]

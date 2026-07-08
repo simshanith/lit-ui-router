@@ -209,7 +209,7 @@ class PlanetListComponent extends LitElement {
 
   // Populated by the `planets` resolve on the list state.
   get planets(): SolarBody[] {
-    return this._uiViewProps.resolves!.planets;
+    return this._uiViewProps.resolves.planets;
   }
 
   render() {
@@ -282,7 +282,7 @@ class PlanetDetailComponent extends LitElement {
 
   // Populated by the `planet` resolve, keyed off the :planetId route param.
   get planet(): SolarBody | undefined {
-    return this._uiViewProps.resolves!.planet;
+    return this._uiViewProps.resolves.planet;
   }
 
   render() {
@@ -390,7 +390,7 @@ const planetState: LitStateDeclaration = {
 // Router setup
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) =>
+void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
 router.stateRegistry.register(planetsState);
