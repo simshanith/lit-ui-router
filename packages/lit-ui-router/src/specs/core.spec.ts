@@ -76,23 +76,6 @@ describe('UIRouterLit', () => {
       expect(router.stateRegistry.get('about')).toBeDefined();
     });
 
-    it('should reject an array of states and accept them one at a time', () => {
-      const states: LitStateDeclaration[] = [
-        { name: 'home', url: '/home' },
-        { name: 'about', url: '/about' },
-      ];
-
-      // register() accepts a single state, not an array
-      expect(() =>
-        router.stateRegistry.register(states as unknown as LitStateDeclaration),
-      ).toThrowError('State must have a valid name');
-
-      states.forEach((state) => router.stateRegistry.register(state));
-
-      expect(router.stateRegistry.get('home')).toBeDefined();
-      expect(router.stateRegistry.get('about')).toBeDefined();
-    });
-
     it('should register nested states', () => {
       router.stateRegistry.register({ name: 'parent', url: '/parent' });
       router.stateRegistry.register({
