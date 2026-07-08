@@ -319,7 +319,7 @@ describe('UiView', () => {
         {
           name: 'home',
           url: '/home',
-          component: TestExitComponent as any,
+          component: TestExitComponent,
         },
         {
           name: 'about',
@@ -354,7 +354,7 @@ describe('UiView', () => {
         {
           name: 'home',
           url: '/home',
-          component: TestBlockExitComponent as any,
+          component: TestBlockExitComponent,
         },
         {
           name: 'about',
@@ -402,7 +402,7 @@ describe('UiView', () => {
           params: {
             id: { dynamic: true },
           },
-          component: TestParamsComponent as any,
+          component: TestParamsComponent,
         },
       ];
       const { uiView } = await setupRouter(states);
@@ -440,7 +440,7 @@ describe('UiView', () => {
           params: {
             id: { dynamic: true },
           },
-          component: TestParamsReceiveComponent as any,
+          component: TestParamsReceiveComponent,
         },
       ];
       const { uiView } = await setupRouter(states);

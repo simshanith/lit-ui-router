@@ -67,7 +67,8 @@ export class LitViewConfig implements ViewConfig {
  *
  * A template function is either:
  * - A function that returns a Lit TemplateResult
- * - A LitElement class that accepts props in its constructor
+ * - A LitElement class (constructor props optional — props are also delivered
+ *   via the `_uiViewProps` property; see {@link RoutedLitElement})
  *
  * @param config - The view declaration to check
  * @returns True if the config is a template function
@@ -78,13 +79,7 @@ export function isLitViewDeclarationTemplate<
 >(
   config: LitViewDeclaration<T>,
 ): config is LitViewDeclarationTemplate<T> | LitViewDeclarationElement<T> {
-  if (isFunction(config)) {
-    if (config.prototype instanceof LitElement) {
-      return '_uiViewProps' in config.prototype || config.length === 1;
-    }
-    return true;
-  }
-  return false;
+  return isFunction(config);
 }
 
 /**

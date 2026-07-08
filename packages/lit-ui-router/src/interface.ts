@@ -230,11 +230,15 @@ export type LitViewDeclarationTemplate<
 /**
  * A LitElement class constructor that can be used in state declarations.
  *
- * The class should extend LitElement and optionally accept {@link UIViewInjectedProps}
- * in its constructor. The `sticky` property can be set to `true` to reuse the
- * same component instance across state transitions.
+ * The class should extend LitElement. The router delivers {@link UIViewInjectedProps}
+ * two ways: as a constructor argument on first render, and by assigning the
+ * `_uiViewProps` property on every render (the only channel that fires when a
+ * `sticky` instance is reused). Constructor args are optional — argless
+ * constructors, as is typical for custom elements, work too. The `sticky`
+ * property can be set to `true` to reuse the same component instance across
+ * state transitions.
  *
- * @example
+ * @example Constructor injection
  * ```ts
  * class UserList extends LitElement {
  *   _uiViewProps: UIViewInjectedProps;
@@ -256,14 +260,29 @@ export type LitViewDeclarationTemplate<
  * });
  * ```
  *
+ * @example Argless constructor with property injection (typical Lit)
+ * ```ts
+ * class UserDetail extends LitElement {
+ *   // reactive property: sticky reuse re-renders when props are reassigned
+ *   @property({ attribute: false }) _uiViewProps?: UIViewInjectedProps;
+ *
+ *   render() {
+ *     return html`<h1>${this._uiViewProps?.transition?.params().id}</h1>`;
+ *   }
+ * }
+ * ```
+ *
  * @category types
  */
 export interface RoutedLitElement<
   T extends DefaultResolvesType = DefaultResolvesType,
 > {
-  /** Overloaded constructor that requires UIViewInjectedProps */
+  /**
+   * Construct signature. The router always passes props; classes may declare
+   * the parameter required, optional, or not at all.
+   */
   new (props: UIViewInjectedProps<T>): LitElement & {
-    _uiViewProps: UIViewInjectedProps<T>;
+    _uiViewProps?: UIViewInjectedProps<T>;
   };
 
   /** If true, the same component instance is reused across state transitions */
