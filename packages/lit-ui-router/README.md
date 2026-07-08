@@ -12,17 +12,18 @@ A [UI-Router](https://ui-router.github.io/) implementation for [Lit](https://lit
 ## Quick Start
 
 ```ts
-import { UIRouterLit } from 'lit-ui-router';
+import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
 import { hashLocationPlugin } from '@uirouter/core';
 import { html } from 'lit';
 
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
 
-router.stateRegistry.register([
+const states: LitStateDeclaration[] = [
   { name: 'home', url: '/', component: () => html`<h1>Home</h1>` },
   { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
-]);
+];
+states.forEach((state) => router.stateRegistry.register(state));
 
 router.start();
 ```
