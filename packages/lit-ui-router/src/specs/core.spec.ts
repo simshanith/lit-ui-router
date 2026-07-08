@@ -10,7 +10,12 @@ import {
   isRoutedLitElement,
 } from '../core.js';
 import { createTestRouter } from './test-utils.js';
-import { UIViewInjectedProps, LitStateDeclaration } from '../interface.js';
+import {
+  UIViewInjectedProps,
+  LitStateDeclaration,
+  LitViewDeclaration,
+  NormalizedLitViewDeclaration,
+} from '../interface.js';
 
 describe('UIRouterLit', () => {
   let router: UIRouterLit;
@@ -165,7 +170,6 @@ describe('isLitViewDeclarationTemplate', () => {
 
   it('should return true for arrow functions with props', () => {
     const template = (_props: UIViewInjectedProps) => html`<div>test</div>`;
-    // @ts-expect-error typings gap: required-props templates do not satisfy LitViewDeclarationTemplate's optional-props signature
     expect(isLitViewDeclarationTemplate(template)).toBe(true);
   });
 
@@ -256,7 +260,6 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
-        // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
         $default: component,
       },
     };
@@ -343,9 +346,7 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
-        // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
         header: { component: () => html`<header>Header</header>` },
-        // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
         content: { component: () => html`<main>Content</main>` },
       },
     };
@@ -379,7 +380,8 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
-        empty: {},
+        // runtime skips empty view configs; LitViewDeclaration requires a component
+        empty: {} as LitViewDeclaration,
       },
     };
 
@@ -435,11 +437,31 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
     const state = router.stateRegistry.get('test').$$state?.();
+    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    const views = state?.views as
+      | Record<string, NormalizedLitViewDeclaration>
+      | undefined;
 
     // The component should be wrapped to return a template
-    // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
-    expect(state?.views?.['$default'].component).toBeDefined();
-    // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
-    expect(typeof state?.views?.['$default'].component).toBe('function');
+    expect(views?.['$default'].component).toBeDefined();
+    expect(typeof views?.['$default'].component).toBe('function');
+  });
+});
+
+describe('typings regressions (#239)', () => {
+  it('should accept required-props templates and Lit view declaration shapes', () => {
+    const template = (props: UIViewInjectedProps) =>
+      html`<div>${props.transition?.from().name}</div>`;
+    expect(isLitViewDeclarationTemplate(template)).toBe(true);
+
+    // compiling without @ts-expect-error directives is the assertion
+    const stateDecl: LitStateDeclaration = {
+      name: 'typings-regression',
+      views: {
+        $default: template,
+        header: { component: () => html`<header>Header</header>` },
+      },
+    };
+    expect(Object.keys(stateDecl.views ?? {})).toHaveLength(2);
   });
 });
