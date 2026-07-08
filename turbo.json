@@ -49,9 +49,15 @@
         "test:coverage",
         "lint",
         "format:check",
+        "codecov:bundle",
         "//#check:catalog",
         "//#check:pack"
       ]
+    },
+    "codecov:bundle": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "//#check:catalog": {
       "inputs": [

@@ -2,7 +2,6 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { codecovVitePlugin } from '@codecov/vite-plugin';
 import { defineConfig } from 'vite';
 import checker from 'vite-plugin-checker';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -40,14 +39,6 @@ export default defineConfig({
           rename: { stripBase },
         },
       ],
-    }),
-    // Codecov bundle analysis; no-op unless CODECOV_TOKEN is set (CI).
-    codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
-      bundleName: 'sample-app-lit-mobx',
-      uploadToken: process.env.CODECOV_TOKEN,
-      gitService: 'github',
-      telemetry: false,
     }),
   ],
   server: {

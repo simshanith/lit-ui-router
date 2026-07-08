@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "codecov:bundle": "node ../../scripts/upload-bundle-stats.mjs sample-app-lit-mobx",
     "dev": "vite",
     "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
@@ -19,7 +20,6 @@
     "sample-app-shared": "workspace:*"
   },
   "devDependencies": {
-    "@codecov/vite-plugin": "catalog:",
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
     "oxfmt": "catalog:",
