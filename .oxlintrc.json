@@ -111,12 +111,12 @@
     "typescript/no-misused-spread": "error",
     "typescript/no-redundant-type-constituents": "error",
     "typescript/no-unnecessary-type-assertion": "error",
-    "typescript/no-unsafe-argument": "warn",
-    "typescript/no-unsafe-assignment": "warn",
-    "typescript/no-unsafe-call": "warn",
+    "typescript/no-unsafe-argument": "error",
+    "typescript/no-unsafe-assignment": "error",
+    "typescript/no-unsafe-call": "error",
     "typescript/no-unsafe-enum-comparison": "error",
-    "typescript/no-unsafe-member-access": "warn",
-    "typescript/no-unsafe-return": "warn",
+    "typescript/no-unsafe-member-access": "error",
+    "typescript/no-unsafe-return": "error",
     "typescript/no-unsafe-unary-minus": "error",
     "typescript/only-throw-error": "error",
     "typescript/prefer-promise-reject-errors": "error",
@@ -221,6 +221,16 @@
       },
       "env": {
         "browser": true
+      }
+    },
+    {
+      "files": ["examples/**"],
+      "rules": {
+        "typescript/no-unsafe-argument": "off",
+        "typescript/no-unsafe-assignment": "off",
+        "typescript/no-unsafe-call": "off",
+        "typescript/no-unsafe-member-access": "off",
+        "typescript/no-unsafe-return": "off"
       }
     },
     {
