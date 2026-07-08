@@ -398,9 +398,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onTransitionStart,
     ) as deregisterFn;
     this._deregisterOnStatesChanged =
-      this.uiRouter!.stateRegistry.onStatesChanged(
-        this.onStatesChanged,
-      );
+      this.uiRouter!.stateRegistry.onStatesChanged(this.onStatesChanged);
 
     setTimeout(() => {
       if (this.targetStates.size) {
