@@ -1,14 +1,15 @@
+// ESLint is retained solely for package.json linting (eslint-plugin-package-json).
+// All JS/TS linting lives in oxlint (.oxlintrc.json).
 import { defineConfig, globalIgnores } from 'eslint/config';
-import eslint from '@eslint/js';
-import tseslint from 'typescript-eslint';
-import globals from 'globals';
-import prettier from 'eslint-config-prettier';
-import turbo from 'eslint-plugin-turbo';
 import packageJson from 'eslint-plugin-package-json';
 
 export default defineConfig(
-  eslint.configs.recommended,
-  tseslint.configs.recommended,
+  globalIgnores([
+    '**/dist/**',
+    '**/coverage/**',
+    '**/node_modules/**',
+    '**/.vitepress/cache/**',
+  ]),
   {
     extends: [packageJson.configs.recommended],
     files: ['**/package.json'],
@@ -18,97 +19,6 @@ export default defineConfig(
         {
           ignorePrivate: true,
         },
-      ],
-    },
-  },
-  prettier,
-  {
-    plugins: { turbo },
-    rules: {
-      'turbo/no-undeclared-env-vars': 'warn',
-    },
-  },
-  globalIgnores([
-    '**/dist/**',
-    '**/coverage/**',
-    '**/node_modules/**',
-    '**/.vitepress/cache/**',
-    '**/*.config.ts',
-    '**/*.config.js',
-    '!**/vitest.config.ts',
-  ]),
-  {
-    files: ['**/*.ts'],
-    languageOptions: {
-      parserOptions: {
-        projectService: true,
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-explicit-any': 'warn',
-      '@typescript-eslint/no-unsafe-declaration-merging': 'off',
-      '@typescript-eslint/no-non-null-asserted-optional-chain': 'warn',
-    },
-  },
-  {
-    files: ['**/*.js', '**/*.mjs'],
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        ...globals.node,
-      },
-    },
-    rules: {
-      '@typescript-eslint/no-require-imports': 'off',
-      '@typescript-eslint/no-unused-vars': 'off',
-      '@typescript-eslint/no-unused-expressions': 'off',
-      'no-redeclare': 'off',
-      'no-prototype-builtins': 'off',
-    },
-  },
-  {
-    files: ['**/*.cy.js', '**/cypress/**/*.js'],
-    languageOptions: {
-      globals: {
-        ...globals.browser,
-        cy: 'readonly',
-        Cypress: 'readonly',
-        describe: 'readonly',
-        it: 'readonly',
-        beforeEach: 'readonly',
-        afterEach: 'readonly',
-        expect: 'readonly',
-      },
-    },
-  },
-  {
-    files: ['**/vitest.config.ts', '**/vitest.setup.ts'],
-    languageOptions: {
-      parserOptions: {
-        // These live in the packages' tsconfig.spec.json, which the
-        // project service (tsconfig.json discovery) never consults.
-        projectService: false,
-        project: 'packages/*/tsconfig.spec.json',
-        tsconfigRootDir: import.meta.dirname,
-      },
-    },
-  },
-  {
-    files: ['**/*.spec.ts'],
-    languageOptions: {
-      parserOptions: {
-        // Spec files are excluded from tsconfig.json for build purposes
-        projectService: false,
-      },
-    },
-    rules: {
-      // Tests may use any for mocking
-      '@typescript-eslint/no-explicit-any': 'off',
-      // Allow underscore-prefixed unused vars (common pattern for required but unused params)
-      '@typescript-eslint/no-unused-vars': [
-        'error',
-        { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
       ],
     },
   },

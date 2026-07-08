@@ -9,7 +9,7 @@
     "docs:preview": "vitepress preview .",
     "format": "prettier --write \"**/*.{md,json,ts}\"",
     "format:check": "prettier --check \"**/*.{md,json,ts}\"",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
   },

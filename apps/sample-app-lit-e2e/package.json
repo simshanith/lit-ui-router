@@ -9,7 +9,7 @@
     "e2e": "cypress open",
     "format": "prettier --write \"**/*.{ts,js,json,md}\"",
     "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint .",
+    "lint": "oxlint .",
     "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
     "test:cypress": "cypress run",
     "test:cypress:all": "concurrently --names vanilla,mobx --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\"",
