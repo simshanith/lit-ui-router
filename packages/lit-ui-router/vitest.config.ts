@@ -3,9 +3,6 @@ import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
-  // The umbrella tsconfig.json includes specs, so oxc discovers
-  // experimentalDecorators natively; kept explicit as belt-and-suspenders.
-  oxc: { decorator: { legacy: true } },
   test: {
     globals: true,
     include: ['src/specs/**/*.spec.ts'],
