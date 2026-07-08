@@ -1,4 +1,4 @@
-# CI pipeline for pull requests and main branch pushes.
+# CI pipeline for pull requests and branch/main pushes.
 # Runs build, tests (Vitest + Playwright + Cypress), and coverage reporting.
 name: Build and Test
 
@@ -6,7 +6,12 @@ on:
   pull_request:
   push:
     branches:
-      - main
+      # Branch-head runs: CONFLICTING PRs have no merge ref, so pull_request
+      # runs are skipped entirely; push runs still cover the branch head.
+      - '**'
+      # Dependabot push events get dependabot secrets (no TURBO_TOKEN); its
+      # PRs already get merge-head CI.
+      - '!dependabot/**'
   workflow_dispatch:
     inputs:
       force:
@@ -14,13 +19,16 @@ on:
         type: boolean
         default: false
 
-# Cancel superseded PR runs.
+# Cancel superseded runs per event per ref; never cancel main runs.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build_and_test:
+    # Branch-head (push) runs report under a distinct check name so they can
+    # never satisfy the required "build_and_test" merge gate.
+    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'build_and_test (branch)' || 'build_and_test' }}
     # Security: Only run on first-party PRs (not forks) to protect secrets.
     # Fork PRs don't have access to secrets, so they would fail anyway.
     # Maintainers should review fork PRs and run CI manually.
@@ -66,6 +74,8 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+          # Set on branch-head runs too: it is a declared turbo env hash input
+          # (sample apps' turbo.json); dropping it would defeat cache sharing.
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
@@ -80,6 +90,9 @@ jobs:
         with:
           working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
+        # Skip on branch-head runs: the merge-head/main run uploads for the
+        # same head SHA and a duplicate would churn codecov status checks.
+        if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v7
         with:
           files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json
