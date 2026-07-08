@@ -3,8 +3,8 @@ import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
-  // Vite 8's oxc transform skips tsconfigs that exclude the file (specs are
-  // excluded from tsconfig.json), so enable legacy decorators explicitly.
+  // The umbrella tsconfig.json includes specs, so oxc discovers
+  // experimentalDecorators natively; kept explicit as belt-and-suspenders.
   oxc: { decorator: { legacy: true } },
   test: {
     globals: true,

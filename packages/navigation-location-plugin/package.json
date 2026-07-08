@@ -38,7 +38,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-navigation-location-plugin@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/navigation-location-plugin && typedoc",
