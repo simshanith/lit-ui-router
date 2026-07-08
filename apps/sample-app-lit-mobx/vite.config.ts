@@ -50,7 +50,15 @@ export default defineConfig({
       telemetry: false,
     }),
   ],
+  // Pinned ports (vanilla 5173/4173, mobx 5174/4174): strictPort fails loudly
+  // instead of drifting, and open stays off so `turbo dev` spawns no browsers.
   server: {
-    open: true,
+    port: 5174,
+    strictPort: true,
+    open: false,
+  },
+  preview: {
+    port: 4174,
+    strictPort: true,
   },
 });
