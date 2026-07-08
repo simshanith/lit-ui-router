@@ -85,7 +85,7 @@ export class UIRouterLitElement extends LitElement {
   };
 
   /** @internal */
-  async connectedCallback() {
+  connectedCallback() {
     super.connectedCallback();
     this.uiRouter = this.uiRouter || new UIRouterLit();
 

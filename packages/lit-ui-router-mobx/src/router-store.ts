@@ -81,6 +81,7 @@ export class RouterStore {
   private update(transition?: Transition) {
     const globals = this.router?.globals;
     this.current = globals?.current;
+    // eslint-disable-next-line typescript/no-misused-spread -- snapshot StateParams' own props as a fresh plain object per transition
     this.params = { ...globals?.params };
     this.transition = transition ?? globals?.successfulTransitions.peekTail();
   }

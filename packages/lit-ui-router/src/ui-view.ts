@@ -118,7 +118,7 @@ export class UiView extends LitElement {
     this._applyUpdatedConfig(config);
   }
 
-  private async _applyUpdatedConfig(config: LitViewConfig) {
+  private _applyUpdatedConfig(config: LitViewConfig) {
     this._uiViewData.config = config;
 
     if (!this.viewAddress && config?.viewDecl?.$context) {

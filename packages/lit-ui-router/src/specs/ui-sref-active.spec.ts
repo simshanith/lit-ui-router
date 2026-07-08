@@ -717,7 +717,7 @@ describe('UiSrefActiveDirective methods', () => {
   });
 
   describe('disconnected', () => {
-    it('should remove UI_SREF_TARGET_EVENT listener', async () => {
+    it('should remove UI_SREF_TARGET_EVENT listener', () => {
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
       directive.disconnected();
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
@@ -726,7 +726,7 @@ describe('UiSrefActiveDirective methods', () => {
       );
     });
 
-    it('should remove TRANSITION_STATE_CHANGE_EVENT listener', async () => {
+    it('should remove TRANSITION_STATE_CHANGE_EVENT listener', () => {
       const removeEventListenerSpy = vi.spyOn(element, 'removeEventListener');
       directive.disconnected();
       expect(removeEventListenerSpy).toHaveBeenCalledWith(
@@ -735,26 +735,26 @@ describe('UiSrefActiveDirective methods', () => {
       );
     });
 
-    it('should call _deregisterOnStart', async () => {
+    it('should call _deregisterOnStart', () => {
       directive._deregisterOnStart = vi.fn();
       directive.disconnected();
       expect(directive._deregisterOnStart).toHaveBeenCalled();
     });
 
-    it('should call _deregisterOnStatesChanged', async () => {
+    it('should call _deregisterOnStatesChanged', () => {
       directive._deregisterOnStatesChanged = vi.fn();
       directive.disconnected();
       expect(directive._deregisterOnStatesChanged).toHaveBeenCalled();
     });
 
-    it('should set element to null', async () => {
+    it('should set element to null', () => {
       directive.disconnected();
       expect(directive.element).toBeNull();
     });
   });
 
   describe('onTransitionStart', () => {
-    it('should dispatch start event', async () => {
+    it('should dispatch start event', () => {
       const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
       const trans = {
         treeChanges: () => ({}),
@@ -805,7 +805,7 @@ describe('UiSrefActiveDirective methods', () => {
       expect(directive.active).toBeDefined();
     });
 
-    it('should return early when status is undefined', async () => {
+    it('should return early when status is undefined', () => {
       const event: any = {
         evt: 'success',
         trans: {} as Transition,
@@ -818,7 +818,7 @@ describe('UiSrefActiveDirective methods', () => {
   });
 
   describe('onUiSrefTargetEvent', () => {
-    it('should add targetState to targetStates set', async () => {
+    it('should add targetState to targetStates set', () => {
       const targetState = router.stateService.target('home', {}, {}) as any;
       const event: any = {
         detail: { targetState },

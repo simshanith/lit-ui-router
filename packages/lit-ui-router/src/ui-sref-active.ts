@@ -342,7 +342,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     if (this.element !== element) {
       this.element = element;
       this._firstUpdated = false;
-      await 0;
+      // defer a microtask so the part's element is settled before first render
+      await Promise.resolve();
       this.firstUpdated({ targetStates });
     }
 
@@ -362,7 +363,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   _firstUpdated = false;
   /** @internal */
-  async firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
+  firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
@@ -456,7 +457,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   };
 
   /** @internal */
-  onTransitionStateChange = async (e: Event) => {
+  onTransitionStateChange = (e: Event) => {
     const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
     if (!status) {
