@@ -147,6 +147,131 @@ corepack pnpm exec vp run --last-details
 corepack pnpm exec vp cache clean
 ```
 
+## Local dev alongside turbo
+
+Follow-up evaluation (2026-07-07): even with the CI verdict settled (turbo stays), is
+vp worth using on a developer workstation? Scenarios tested hands-on, fair scope —
+turbo's `--only` flag runs exactly the same 8 `build` scripts vp runs, no `dependsOn`
+edges, isolated `TURBO_CACHE_DIR`.
+
+### Rebuild timings, fair scope (identical 8 scripts)
+
+| Scenario                                       | turbo `--only`      | `vpr --cache`                         |
+| ---------------------------------------------- | ------------------- | ------------------------------------- |
+| Fully cold (both caches empty)                 | 8.93s               | 8.16s                                 |
+| Warm, no changes                               | **0.27s** (8/8 hit) | 5.86s (5/8 — vite builds never cache) |
+| Incremental (`lit-ui-router/src` comment edit) | 8.39s (2 hit)       | **6.55s** (4/8 hit)                   |
+| `touch` all mtimes, content identical          | full hit            | full hit (content-hashed)             |
+| Branch switch A→B→A (content restored)         | **0.28s** (8/8 hit) | re-runs changed tasks every flip      |
+
+Notable results behind the table:
+
+- **turbo's local cache is worktree-shared and multi-entry.** Turbo detects git
+  worktrees and uses one cache at the main repo root (`.turbo/cache`,
+  `is_shared_worktree=true`), keyed by content hash with every historical entry kept —
+  so branch ping-pong and parallel worktrees stay warm. **vp keeps only the latest
+  fingerprint per task**: an A→B→A content flip re-runs the task on every flip even
+  though vp's fingerprint is content-based (verified: `touch`-only is a 100% hit,
+  A→B→A is a miss).
+- **vp's file-level tracking is more precise than turbo's package-level hashing.**
+  After a comment-only edit in `lit-ui-router/src/index.ts`, vp correctly _hit_
+  `lit-ui-router-mobx#build` (its tsc only reads the unchanged `.d.ts` files) while
+  turbo's `^build` re-ran it. That precision is real — but it's swamped by the three
+  never-cacheable vite/vitepress builds in every run.
+
+### Inner loop (single package / app)
+
+- `vp test` is the bundled vitest CLI verbatim, so watch mode etc. all exist — but a
+  single-spec run is 3.00s vs 2.64s with the workspace vitest, plus the permanent
+  "Running mixed versions is not supported" warning. No win.
+- `vp dev` serves `apps/sample-app-lit-vanilla` fine (checked on :5199) — **using the
+  vite 8.1.2 bundled inside `@voidzero-dev/vite-plus-core`, not the workspace's pinned
+  vite 7.3.6** (verified from the bundled `logger.js`). The app's plugins
+  (checker, static-copy, codecov) are installed and CI-tested against vite 7; running
+  them under vite 8/rolldown locally is silent major-version skew (it already surfaces
+  a rolldown deprecation warning about `optimizeDeps.esbuildOptions`). Scripts run via
+  `vpr` still use the workspace vite 7 — only the direct `vp dev` / `vp build`
+  subcommands skew.
+- **vp has no `turbo watch` / `turbo run dev` equivalent** — nothing rebuilds
+  workspace deps while a dev server runs. `vpr -t --cache build` from an app dir is a
+  usable _manual_ pre-dev step (builds the app's dependency chain, 4 tasks, cache-aware),
+  but it's one-shot.
+
+### oxc version skew (vs PRs #231/#232)
+
+The incoming oxlint/oxfmt PRs pin oxlint 1.73.0 / oxfmt 0.58.0; vite-plus 0.2.2
+bundles 1.72.0 / 0.57.0. Tested with the PR branches' configs:
+
+- The _engines_ mostly agree: bundled oxlint 1.72 with `-c .oxlintrc.json` produces
+  the **identical 5 warnings** as standalone 1.73; oxfmt 0.57 vs 0.58 `--check`
+  disagree on exactly **one file today** (`docs/guides/reactive-components.md`) — after
+  #232 lands, a `vp fmt` would rewrite it to 0.57 style and CI's 0.58 `format:check`
+  would fail.
+- The real hazard is the **vp frontends, not the versions**: bare `vp lint` does NOT
+  pick up the root `.oxlintrc.json` (10 unrelated default-config warnings, and it
+  _misses_ all 5 real `turbo/no-undeclared-env-vars` warnings), and bare `vp fmt
+--check` flags ~150 files vs 28 for the bare bundled oxfmt binary with the same
+  config. The bundled _binaries_ run bare discover the config correctly; only the
+  `vp lint`/`vp fmt` subcommands substitute their own defaults. Explicit
+  `-c .oxlintrc.json` / `-c .oxfmtrc.json` restores exact parity.
+
+Hard rule once the oxc PRs land: **never run bare `vp lint`/`vp fmt` here** —
+local-clean/CI-dirty in both directions. With explicit `-c` they are near-parity,
+minus the one-file 0.57/0.58 drift.
+
+### PATH robustness
+
+`mise x npm:vite-plus@0.2.2 -- vp` works exactly like the repo's `npm:turbo` mise
+tool, and a global `vp` detects and defers to the workspace-local `vite-plus`
+version (same global→local pattern as turbo). `vp`/`vpr` are node scripts, so they
+inherit the same node-on-PATH exposure as everything else — but they _do_ remove the
+`corepack pnpm exec` wrapper layer for test/lint/fmt/dev, and as a bare mise shim
+`vpr` sidesteps the turbo-via-pnpm relative-path spawn bug by construction. A modest,
+real ergonomic win; nothing more.
+
+### Mixed-vitest failure mode, spelled out
+
+Today: every `vp test` prints a loud
+`Running mixed versions is not supported and may lead into bugs` banner (bundled
+vitest 4.1.9 + workspace `@vitest/browser@4.1.10`), and tests pass. The repo's
+`@vitest/browser` patch currently reaches vp's nested 4.1.9 copy only because the
+unversioned `patchedDependencies` entry matched and the content-hashed
+`tester-BJtsJFpD.js` filename is identical across 4.1.9/4.1.10. When a future
+vite-plus bump ships a vitest whose tester bundle hash differs, the patch **silently
+stops applying to vp's copy** (see the existing patch-regen runbook): `vp test` then
+resurfaces the recursive `response:*` echo cascade in the `target="_blank"` specs —
+loud, flaky-looking failures with an obscure cause, local-only (CI never runs vp).
+Acceptable for a dev who knows the signature; a trap for anyone else.
+
+### Cache hygiene
+
+Everything vp writes lives in `node_modules/.vite/task-cache` (576 KB after all runs
+here) — inside git-ignored `node_modules`, so it cannot be committed, and turbo hashes
+only git-tracked inputs (`$TURBO_DEFAULT$`), so vp's cache cannot perturb turbo keys.
+`git status` stayed clean across every vp invocation. `vp cache clean` removes it.
+
+### Conditions table
+
+| You want to…                                             | Use                                                                                                                    |
+| -------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------- |
+| Rebuild after branch switch / rebase                     | **turbo** — shared multi-entry cache: 0.28s vs vp re-running                                                           |
+| Warm no-op sanity build                                  | **turbo** — 0.27s vs 5.9s                                                                                              |
+| Iterate on a low-level package, rebuild dependents       | either; **vp** is slightly faster (6.6s vs 8.4s) via file-level hits                                                   |
+| One-shot topo build of an app's dep chain before hacking | **vp** (`vpr -t --cache build`) — zero config, or `turbo build --filter=<app>...`                                      |
+| See _why_ something rebuilt                              | **vp** (`vp run --last-details`) — best-in-class diagnostics; turbo needs `--dry-run`/`--summarize`                    |
+| Run tests (any mode)                                     | **workspace vitest** via pnpm scripts — vp = mixed-version warning + patch-decay trap                                  |
+| Dev server                                               | **`pnpm dev` / `turbo dev`** — `vp dev` runs bundled vite 8 against vite-7-pinned plugins                              |
+| Watch deps + dev server together                         | **turbo watch** — vp has nothing                                                                                       |
+| Lint / format (after #231/#232)                          | **pinned oxlint/oxfmt via scripts** — bare `vp lint`/`vp fmt` uses wrong config; `-c` required and versions still skew |
+| Produce artifacts CI will trust                          | **turbo** — vp misses `build:custom-elements`, `docs:api`, root tasks                                                  |
+
+**Local-dev bottom line:** a developer on this repo gets two genuine things from vp
+today — `vp run --last-details` as a cache-explanation lens, and `vpr -t build` as a
+zero-config dependency-chain build. Everything else is either slower (warm builds),
+riskier (test/dev/lint/fmt version and config skew), or absent (watch). Install it via
+mise if those two are appealing; do not let it touch lint, fmt, tests, or dev servers
+while the version skews documented above exist.
+
 ## Recommendation: wait (do not replace; alongside only in this narrow form)
 
 **Replace turbo: no.** vp cannot express this repo's graph (`build:custom-elements`,
