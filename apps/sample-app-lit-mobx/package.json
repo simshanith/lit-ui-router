@@ -6,8 +6,8 @@
   "scripts": {
     "build": "vite build",
     "dev": "vite",
-    "format": "oxfmt \"**/*.{js,ts,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{js,ts,json,md}\"",
+    "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",
+    "format:check": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
     "lint": "oxlint ."
   },
   "dependencies": {

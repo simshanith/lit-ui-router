@@ -7,8 +7,8 @@
     "build": "vitepress build .",
     "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
-    "format": "oxfmt \"**/*.{md,json,ts}\"",
-    "format:check": "oxfmt --check \"**/*.{md,json,ts}\"",
+    "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
+    "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
