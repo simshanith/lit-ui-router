@@ -32,11 +32,9 @@ render(
         <ui-view></ui-view>
       </div>
     </ui-router>
-    ${
-      featureFlags.get('enable-api-docs')
-        ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
-        : ''
-    }`,
+    ${featureFlags.get('enable-api-docs')
+      ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
+      : ''}`,
   root,
 );
 

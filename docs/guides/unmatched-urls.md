@@ -43,7 +43,8 @@ export const notFoundState = {
     {
       token: 'attemptedPath',
       deps: ['$transition$'],
-      resolveFn: ($transition$: Transition) => $transition$.params().attemptedPath,
+      resolveFn: ($transition$: Transition) =>
+        $transition$.params().attemptedPath,
     },
   ],
   component: NotFound,
@@ -59,8 +60,12 @@ resolved path:
 export default (props: UIViewInjectedProps<NotFoundResolves>) =>
   html`<div class="container-fluid not-found">
     <h3>404 Page Not Found</h3>
-    <p>No state matched the URL <code>${props.resolves.attemptedPath}</code>.</p>
-    <button ${uiSref('welcome')} class="btn btn-primary">Return to Welcome</button>
+    <p>
+      No state matched the URL <code>${props.resolves.attemptedPath}</code>.
+    </p>
+    <button ${uiSref('welcome')} class="btn btn-primary">
+      Return to Welcome
+    </button>
   </div>`;
 ```
 

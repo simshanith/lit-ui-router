@@ -56,17 +56,20 @@ const solarBodies: SolarBody[] = [
     moons: 0,
     orbitalPeriod: '230 million years around the galactic center',
     funFact: "Contains 99.86% of the solar system's mass.",
-    gradient: 'radial-gradient(circle at 35% 35%, #fff7ae, #ffb703 55%, #d00000)',
+    gradient:
+      'radial-gradient(circle at 35% 35%, #fff7ae, #ffb703 55%, #d00000)',
   },
   // ...Mercury, Venus, Earth, Mars, Jupiter, Saturn, Uranus, Neptune, Pluto
 ];
 
 // Simulated network latency so resolves are observably async.
-const delay = <T>(value: T, ms = 300): Promise<T> => new Promise((resolve) => setTimeout(() => resolve(value), ms));
+const delay = <T>(value: T, ms = 300): Promise<T> =>
+  new Promise((resolve) => setTimeout(() => resolve(value), ms));
 
 const SolarSystemService = {
   getAllBodies: (): Promise<SolarBody[]> => delay(solarBodies),
-  getBody: (id: number): Promise<SolarBody | undefined> => delay(solarBodies.find((b) => b.id === id)),
+  getBody: (id: number): Promise<SolarBody | undefined> =>
+    delay(solarBodies.find((b) => b.id === id)),
 };
 ```
 
@@ -131,7 +134,10 @@ class PlanetListComponent extends LitElement {
           (planet) => html`
             <li>
               <a ${uiSref('planet', { planetId: planet.id })}>
-                <span class="body" style="width:${dotSize(planet.diameterKm)}px;height:${dotSize(planet.diameterKm)}px;background:${planet.gradient}"></span>
+                <span
+                  class="body"
+                  style="width:${dotSize(planet.diameterKm)}px;height:${dotSize(planet.diameterKm)}px;background:${planet.gradient}"
+                ></span>
                 <span class="name">${planet.name}</span>
                 <span class="kind">${planet.kind}</span>
               </a>
@@ -154,7 +160,8 @@ Each list item draws its body as a `radial-gradient` circle. A `dotSize` helper 
 
 ```typescript
 // Log scale keeps the Sun and Pluto on the same screen.
-const dotSize = (diameterKm: number): number => Math.round(Math.log2(diameterKm / 1000) * 6 + 10);
+const dotSize = (diameterKm: number): number =>
+  Math.round(Math.log2(diameterKm / 1000) * 6 + 10);
 ```
 
 ---
@@ -220,13 +227,18 @@ class PlanetDetailComponent extends LitElement {
 
   render() {
     if (!this.planet) {
-      return html`<p>Body not found. <a class="back-link" ${uiSref('planets')}>Back</a></p>`;
+      return html`<p>
+        Body not found. <a class="back-link" ${uiSref('planets')}>Back</a>
+      </p>`;
     }
     const size = dotSize(this.planet.diameterKm) * 2;
     return html`
       <div>
         <h3>${this.planet.name}</h3>
-        <span class="body" style="display:inline-block;width:${size}px;height:${size}px;background:${this.planet.gradient}"></span>
+        <span
+          class="body"
+          style="display:inline-block;width:${size}px;height:${size}px;background:${this.planet.gradient}"
+        ></span>
         <dl>
           <dt>Kind</dt>
           <dd>${this.planet.kind}</dd>
@@ -258,7 +270,9 @@ The router configuration is the same as Hello World, plus the [UI Router visuali
 ```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) => router.plugin(Visualizer));
+import('@uirouter/visualizer').then(({ Visualizer }) =>
+  router.plugin(Visualizer),
+);
 router.stateRegistry.register(planetsState);
 router.stateRegistry.register(planetState);
 router.urlService.rules.initial({ state: 'planets' });

@@ -46,7 +46,8 @@ import { StateObject, Transition } from '@uirouter/core';
 const requiresAuthHook = {
   // Matches transitions to any state whose data has a truthy `requiresAuth`
   criteria: {
-    to: (state: StateObject | undefined) => state?.data && state.data.requiresAuth,
+    to: (state: StateObject | undefined) =>
+      state?.data && state.data.requiresAuth,
   },
   // Redirect to login if the user is not authenticated
   callback: (transition: Transition) => {
@@ -64,7 +65,11 @@ redirect, so logging in can return the user to where they were headed.
 ## Register it
 
 ```ts
-router.transitionService.onBefore(requiresAuthHook.criteria, requiresAuthHook.callback, { priority: 10 });
+router.transitionService.onBefore(
+  requiresAuthHook.criteria,
+  requiresAuthHook.callback,
+  { priority: 10 },
+);
 ```
 
 `onBefore` runs before the transition starts any work (before resolves
