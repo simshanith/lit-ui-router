@@ -1,29 +1,33 @@
 {
   "name": "ui-router-navigation-location-plugin",
-  "description": "UI Router Location Plugin for Navigation API",
   "version": "0.2.1",
+  "description": "UI Router Location Plugin for Navigation API",
+  "keywords": [
+    "location",
+    "navigation-api",
+    "plugin",
+    "routing",
+    "spa",
+    "ui-router"
+  ],
+  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
   "license": "MIT",
   "author": "Shane Daniel",
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/simshanith/lit-ui-router.git",
     "directory": "packages/navigation-location-plugin"
   },
-  "bugs": {
-    "url": "https://github.com/simshanith/lit-ui-router/issues"
-  },
-  "keywords": [
-    "ui-router",
-    "navigation-api",
-    "location",
-    "plugin",
-    "spa",
-    "routing"
+  "files": [
+    "dist/**"
   ],
   "type": "module",
-  "module": "./dist/index.js",
+  "sideEffects": false,
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -33,10 +37,6 @@
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
-  "sideEffects": false,
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "build": "tsc",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-navigation-location-plugin@[0-9]*.[0-9]*.[0-9]*\"",
@@ -47,9 +47,6 @@
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63340 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium"
-  },
-  "peerDependencies": {
-    "@uirouter/core": "catalog:publishedPeer"
   },
   "devDependencies": {
     "@types/dom-navigation": "catalog:",
@@ -66,5 +63,8 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer"
   }
 }

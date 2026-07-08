@@ -13,6 +13,13 @@
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
   },
+  "dependencies": {
+    "@spectrum-web-components/icons-workflow": "^1.12.1",
+    "sample-app-lit-mobx": "workspace:*",
+    "sample-app-lit-vanilla": "workspace:*",
+    "screenfull": "^6.0.2",
+    "vue": "^3.5.39"
+  },
   "devDependencies": {
     "oxfmt": "catalog:",
     "typescript": "catalog:",
@@ -20,12 +27,5 @@
     "vite-plugin-static-copy": "catalog:vitepress1",
     "vitepress": "^1.6.4",
     "wrangler": "catalog:"
-  },
-  "dependencies": {
-    "@spectrum-web-components/icons-workflow": "^1.12.1",
-    "sample-app-lit-mobx": "workspace:*",
-    "sample-app-lit-vanilla": "workspace:*",
-    "screenfull": "^6.0.2",
-    "vue": "^3.5.39"
   }
 }

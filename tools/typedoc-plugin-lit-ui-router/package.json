@@ -21,12 +21,12 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint ."
   },
-  "peerDependencies": {
-    "typedoc": "catalog:publishedPeer"
-  },
   "devDependencies": {
     "@types/node": "^24.13.2",
     "typedoc": "catalog:",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "typedoc": "catalog:publishedPeer"
   }
 }

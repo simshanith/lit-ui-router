@@ -1,9 +1,7 @@
 {
   "name": "lit-ui-router",
-  "description": "State-based routing for Lit",
   "version": "1.5.2",
-  "type": "module",
-  "module": "./dist/index.js",
+  "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
   "author": "Shane Daniel",
@@ -11,11 +9,16 @@
     "type": "git",
     "url": "https://github.com/simshanith/lit-ui-router"
   },
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
   "sideEffects": [
     "**/ui-router.js",
     "**/ui-view.js"
   ],
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -25,9 +28,6 @@
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "build": "tsc",
     "build:custom-elements": "cem analyze --outdir ./dist",
@@ -40,7 +40,6 @@
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium"
   },
-  "customElements": "dist/custom-elements.json",
   "dependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer"
@@ -59,5 +58,6 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  }
+  },
+  "customElements": "dist/custom-elements.json"
 }

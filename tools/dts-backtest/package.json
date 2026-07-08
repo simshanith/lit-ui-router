@@ -1,8 +1,8 @@
 {
   "name": "dts-backtest",
-  "description": "Typechecks the published packages' built .d.ts with the oldest supported consumer TypeScript",
   "version": "0.0.1",
   "private": true,
+  "description": "Typechecks the published packages' built .d.ts with the oldest supported consumer TypeScript",
   "type": "module",
   "scripts": {
     "format": "oxfmt \"**/*.{ts,js,mjs,json,md}\"",

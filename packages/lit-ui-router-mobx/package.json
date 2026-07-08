@@ -1,30 +1,34 @@
 {
   "name": "lit-ui-router-mobx",
-  "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
   "version": "0.3.2",
+  "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
+  "keywords": [
+    "lit",
+    "mobx",
+    "reactive-controller",
+    "routing",
+    "spa",
+    "state-management",
+    "ui-router"
+  ],
+  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router-mobx",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
   "license": "MIT",
   "author": "Shane Daniel",
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router-mobx",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/simshanith/lit-ui-router.git",
     "directory": "packages/lit-ui-router-mobx"
   },
-  "bugs": {
-    "url": "https://github.com/simshanith/lit-ui-router/issues"
-  },
-  "keywords": [
-    "ui-router",
-    "lit",
-    "mobx",
-    "reactive-controller",
-    "state-management",
-    "routing",
-    "spa"
+  "files": [
+    "dist/**"
   ],
   "type": "module",
-  "module": "./dist/index.js",
+  "sideEffects": false,
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -34,10 +38,6 @@
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
-  "sideEffects": false,
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "build": "tsc",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
@@ -48,12 +48,6 @@
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63330 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63335 vitest run --coverage --browser=chromium"
-  },
-  "peerDependencies": {
-    "@uirouter/core": "catalog:publishedPeer",
-    "lit": "catalog:publishedPeer",
-    "lit-ui-router": "workspace:^",
-    "mobx": "catalog:publishedPeer"
   },
   "devDependencies": {
     "@uirouter/core": "catalog:",
@@ -72,5 +66,11 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer",
+    "lit-ui-router": "workspace:^",
+    "mobx": "catalog:publishedPeer"
   }
 }
