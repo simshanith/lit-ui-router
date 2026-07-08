@@ -13,7 +13,10 @@ const hook = {
   // Matches if the destination state's data property has a truthy 'requiresAuth' property
   criteria: {
     to: (state: StateObject | undefined) =>
-      state?.data && state.data.requiresAuth,
+      // StateObject.data is typed `any`; requiresAuth is set in state declarations.
+      Boolean(
+        (state?.data as { requiresAuth?: boolean } | undefined)?.requiresAuth,
+      ),
   },
   // Function that returns a redirect for the current transition to the login state
   // if the user is not currently authenticated (according to the AuthService)

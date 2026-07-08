@@ -16,6 +16,12 @@ import { Application, RendererEvent } from 'typedoc';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
+interface SidebarItem {
+  text: string;
+  link?: string;
+}
+
 /** Kind folders emitted by typedoc-plugin-markdown and their page titles. */
 const KIND_FOLDER_TITLES: Record<string, string> = {
   classes: 'Classes',
@@ -114,7 +120,9 @@ function linkSidebarGroups(
     ]),
   );
 
-  const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
+  const sidebar = JSON.parse(
+    fs.readFileSync(sidebarPath, 'utf-8'),
+  ) as SidebarItem[];
   for (const item of sidebar) {
     const folder = folderByTitle[item.text];
     if (folder && fs.existsSync(path.join(outDir, folder, 'index.md'))) {

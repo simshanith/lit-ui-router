@@ -109,7 +109,8 @@ export const notFoundState = {
       token: 'attemptedPath',
       deps: ['$transition$'],
       resolveFn: ($transition$: Transition) =>
-        $transition$.params().attemptedPath,
+        // RawParams values are `any`; attemptedPath is declared `null` above.
+        $transition$.params().attemptedPath as string | null,
     },
   ],
   component: NotFound,

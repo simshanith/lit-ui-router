@@ -98,7 +98,7 @@ export class UiSrefDirective extends AsyncDirective {
       inherit: true,
       source: 'sref',
     };
-    return extend(defaultOpts, opts || {});
+    return extend(defaultOpts, opts || {}) as TransitionOptions;
   }
 
   render(state: string, params?: RawParams, options?: TransitionOptions) {
