@@ -46,7 +46,8 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63340 vitest run",
-    "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium"
+    "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/dom-navigation": "catalog:",
