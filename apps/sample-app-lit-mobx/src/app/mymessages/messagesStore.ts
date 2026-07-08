@@ -32,11 +32,11 @@ export class MessagesStore {
       { autoBind: true },
     );
     MessagesStorage.addEventListener('commit', this.refresh);
-    appModulesRegistered.then(this.refresh);
+    void appModulesRegistered.then(this.refresh);
   }
 
   refresh() {
-    MessagesStorage.all((messages: Message[]) =>
+    void MessagesStorage.all((messages: Message[]) =>
       runInAction(() => {
         this.messages = [...messages];
         this.loaded = true;

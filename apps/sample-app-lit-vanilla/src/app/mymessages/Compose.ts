@@ -94,13 +94,13 @@ export class Compose extends LitElement {
     const hasPrevious = !!transition?.from().name;
     const state = hasPrevious ? transition.from() : 'mymessages.messagelist';
     const params = hasPrevious ? transition.params('from') : {};
-    router.stateService.go(state, params);
+    void router.stateService.go(state, params);
   }
 
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
   send() {
     const { message } = this;
-    MessagesStorage.save({
+    void MessagesStorage.save({
       ...message,
       date: new Date(),
       read: true,
@@ -120,7 +120,7 @@ export class Compose extends LitElement {
   /** Save the message to the 'drafts' folder, and then go to the previous state */
   save() {
     const { message } = this;
-    MessagesStorage.save({
+    void MessagesStorage.save({
       ...message,
       date: new Date(),
       read: true,

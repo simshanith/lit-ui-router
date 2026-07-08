@@ -40,7 +40,7 @@ export class App extends LitElement {
 
   handleLogout = () => {
     AuthService.logout();
-    this.stateService.go('welcome', {}, { reload: true });
+    void this.stateService.go('welcome', {}, { reload: true });
   };
 
   displayActive(glob: string) {

@@ -24,6 +24,7 @@ export class AppConfig {
   }
 
   save() {
+    // eslint-disable-next-line typescript/no-misused-spread -- serialize own props only
     sessionStorage.setItem('appConfig', JSON.stringify({ ...this }));
   }
 }
