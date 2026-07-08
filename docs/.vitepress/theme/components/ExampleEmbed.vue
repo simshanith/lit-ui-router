@@ -62,7 +62,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="container" class="example-embed" :class="{ fullscreen: isFullscreen }">
+  <div
+    ref="container"
+    class="example-embed"
+    :class="{ fullscreen: isFullscreen }"
+  >
     <iframe
       :src="src"
       :title="title"
@@ -97,7 +101,9 @@ onUnmounted(() => {
 <style scoped>
 .example-embed {
   width: 100%;
-  transition: padding 0.3s ease, width 0.3s ease;
+  transition:
+    padding 0.3s ease,
+    width 0.3s ease;
 }
 
 .example-embed iframe {
@@ -106,7 +112,10 @@ onUnmounted(() => {
   border-radius: 4px;
   overflow: hidden;
   background: #fff;
-  transition: height 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0.3s ease,
+    border-radius 0.3s ease;
   margin: auto;
 }
 
@@ -121,13 +130,19 @@ onUnmounted(() => {
   height: calc(100vh - 80px) !important;
   border-radius: 8px;
   width: 88%;
-  transition: height 0.3s ease, width 0s ease, border-radius 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0s ease,
+    border-radius 0.3s ease;
 }
 
 .example-embed.fullscreen:fullscreen iframe,
 .example-embed.fullscreen:-webkit-full-screen iframe {
   width: 100%;
-  transition: height 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0.3s ease,
+    border-radius 0.3s ease;
 }
 
 .example-embed-actions {
@@ -151,7 +166,9 @@ onUnmounted(() => {
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .btn:hover {
