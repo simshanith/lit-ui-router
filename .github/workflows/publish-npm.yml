@@ -75,21 +75,25 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
         # Create tarball for the GitHub release attachment AND the npm publish.
-        # devDependencies are stripped first: they're dev-only metadata and leak
-        # private workspace names (e.g. typedoc-plugin-lit-ui-router) into the
-        # published manifest.
+        # devDependencies and scripts are stripped first: dev-only metadata that
+        # leaks private workspace names (e.g. typedoc-plugin-lit-ui-router) and
+        # monorepo-only commands into the published manifest. None of our
+        # scripts are lifecycle hooks; stripping happens before `pnpm pack`, so
+        # a future prepack/prepare script would be silently skipped — build via
+        # the turbo step above instead.
         run: |
-          (cd "$PACKAGE_DIR" && npm pkg delete devDependencies)
+          (cd "$PACKAGE_DIR" && npm pkg delete devDependencies scripts)
           pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
           echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
           # restore the stripped manifest: release-it requires a clean working dir
           git checkout -- "$PACKAGE_DIR/package.json"
       - name: Check packed manifest
-        # no devDependencies and no unsubstituted catalog:/workspace: refs may ship
+        # no devDependencies, no scripts, and no unsubstituted catalog:/workspace: refs may ship
         run: |
           tar -xOzf "$TARBALL" package/package.json | node -e '
             const m = JSON.parse(require("fs").readFileSync(0));
             if (m.devDependencies) throw new Error("devDependencies leaked into packed manifest");
+            if (m.scripts) throw new Error("scripts leaked into packed manifest");
             const runtime = JSON.stringify([m.dependencies, m.peerDependencies, m.optionalDependencies]);
             if (/catalog:|workspace:/.test(runtime)) throw new Error("unsubstituted refs in packed manifest");
             console.log("packed manifest clean");
