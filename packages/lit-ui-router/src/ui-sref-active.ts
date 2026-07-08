@@ -91,14 +91,14 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
   const targetPath: PathNode[] = PathUtils.buildPath(target);
   const paramSchema: Param[] = targetPath
     .map((node) => node.paramSchema)
-    .reduce(unnestR, [])
+    .reduce<Param[]>(unnestR, [])
     .filter((param: Param) =>
       Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
     );
   return (path: PathNode[] = []) => {
     const tailNode = tail(path);
     if (!tailNode || tailNode.state !== state) return false;
-    const paramValues = PathUtils.paramValues(path);
+    const paramValues = PathUtils.paramValues(path) as RawParams;
     return Param.equals(paramSchema, paramValues, targetParamVals);
   };
 };
@@ -255,7 +255,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     const defaultOpts: TransitionOptions = {
       relative: this.parentView?.viewContext?.name,
     };
-    return extend(defaultOpts, this.options || {});
+    return extend(defaultOpts, this.options || {}) as TransitionOptions;
   }
 
   /**
@@ -373,7 +373,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.targetStates.clear();
     if (targetStates) {
       Array.prototype.forEach.call(targetStates, (targetState) => {
-        this.targetStates.add(targetState);
+        this.targetStates.add(targetState as TargetState);
       });
     } else if (this.state) {
       this.targetStates.add(

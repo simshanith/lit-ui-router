@@ -42,12 +42,17 @@
     "//#lint:package-json": {
       "inputs": ["**/package.json", "eslint.config.js"]
     },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
     "ci": {
       "dependsOn": [
         "build",
         "test",
         "test:coverage",
         "lint",
+        "typecheck",
         "format:check",
         "codecov:bundle",
         "//#check:catalog",

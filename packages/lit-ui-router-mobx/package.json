@@ -39,7 +39,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/lit-ui-router-mobx && typedoc",
@@ -47,7 +47,8 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63330 vitest run",
-    "test:coverage": "VITEST_BROWSER_API_PORT=63335 vitest run --coverage --browser=chromium"
+    "test:coverage": "VITEST_BROWSER_API_PORT=63335 vitest run --coverage --browser=chromium",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@uirouter/core": "catalog:",

@@ -24,6 +24,13 @@ import * as path from 'path';
 const SYMBOL_LINK_REGEX =
   /\[\[([A-Z][a-zA-Z0-9]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?)\]\]/g;
 
+/** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
+interface SidebarItem {
+  text: string;
+  link?: string;
+  collapsed?: boolean;
+}
+
 /**
  * Category definitions for organizing output.
  */
@@ -375,9 +382,11 @@ function aggregateCemTags(comment: Comment): void {
 function updateSidebarJson(outDir: string, app: Application): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
   if (!fs.existsSync(sidebarPath)) return;
-  const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
+  const sidebar = JSON.parse(
+    fs.readFileSync(sidebarPath, 'utf-8'),
+  ) as SidebarItem[];
   for (const item of sidebar) {
-    const category: Category = item.text;
+    const category = item.text as Category;
     // Fall back to title-casing so an uncharted @category tag renders
     // instead of crashing the docs build.
     item.text =

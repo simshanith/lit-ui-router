@@ -121,7 +121,12 @@ export function litViewsBuilder<
       $default: pick(state, ['component']),
     };
 
-  forEach(viewsObject, function (config: LitViewDeclaration<T>, name: string) {
+  (
+    forEach as (
+      obj: object,
+      cb: (config: LitViewDeclaration<T>, name: string) => void,
+    ) => void
+  )(viewsObject, function (config: LitViewDeclaration<T>, name: string) {
     let normalizedConfig: NormalizedLitViewDeclaration<T>;
     name = name || '$default'; // Account for views: { "": { template... } }
     if (isLitViewDeclarationTemplate<T>(config)) {

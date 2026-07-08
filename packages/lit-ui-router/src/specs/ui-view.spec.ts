@@ -275,7 +275,9 @@ describe('UiView', () => {
 
       // Verify nested view is properly registered
       const views = router.viewService['_uiViews'];
-      const nestedView = views.find((v) => v.name === 'nested');
+      const nestedView = views.find(
+        (v: { name: string }) => v.name === 'nested',
+      );
       expect(nestedView).toBeDefined();
     });
   });

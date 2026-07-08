@@ -1,5 +1,7 @@
 // Feature param for location plugin (settable via `cypress run --expose LOCATION_PLUGIN=hash`)
-export const LOCATION_PLUGIN = Cypress.expose('LOCATION_PLUGIN') || '';
+export const LOCATION_PLUGIN =
+  // Cypress.expose(key) is typed `any`.
+  (Cypress.expose('LOCATION_PLUGIN') as string | undefined) || '';
 
 export function visitWithFeatures(
   path: string,
