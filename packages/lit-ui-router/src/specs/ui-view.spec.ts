@@ -92,7 +92,6 @@ describe('UiView', () => {
           name: 'home',
           url: '/home',
           views: {
-            // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
             sidebar: { component: () => html`<div>Sidebar</div>` },
           },
         },
@@ -265,7 +264,6 @@ describe('UiView', () => {
           name: 'parent.child',
           url: '/child',
           views: {
-            // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
             'nested@parent': { component: () => html`<div>Nested</div>` },
           },
         },

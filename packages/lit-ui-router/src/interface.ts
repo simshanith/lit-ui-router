@@ -215,19 +215,17 @@ export interface UIViewInjectedProps<
  */
 export type RoutedLitTemplate<
   T extends DefaultResolvesType = DefaultResolvesType,
-> =
-  | ((props?: UIViewInjectedProps<T>) => TemplateResult)
-  | ((props: UIViewInjectedProps<T>) => TemplateResult);
+> = (props: UIViewInjectedProps<T>) => TemplateResult;
 
 /**
  * A template function that can be used as a view declaration.
+ *
+ * A {@link RoutedLitTemplate} intersected with the core view declaration
+ * metadata (all optional, so plain template functions remain assignable).
  */
-export interface LitViewDeclarationTemplate<
+export type LitViewDeclarationTemplate<
   T extends DefaultResolvesType = DefaultResolvesType,
-> extends _ViewDeclaration {
-  (props: UIViewInjectedProps<T>): TemplateResult;
-  (props?: UIViewInjectedProps<T>): TemplateResult;
-}
+> = RoutedLitTemplate<T> & _ViewDeclaration;
 
 /**
  * A LitElement class constructor that can be used in state declarations.
@@ -374,6 +372,17 @@ export interface LitStateDeclaration<
 > extends StateDeclaration {
   /** The Lit component to render for this state */
   component?: LitViewDeclaration<T>;
+
+  /**
+   * An optional object used to define multiple named views.
+   *
+   * Overrides the core [[StateDeclaration.views]] property so each named view
+   * accepts any {@link LitViewDeclaration} format — a bare component or an
+   * object with a `component` property — threading the resolves generic.
+   *
+   * @see {@link LitViewDeclaration}
+   */
+  views?: { [key: string]: LitViewDeclaration<T> };
 }
 
 /**
