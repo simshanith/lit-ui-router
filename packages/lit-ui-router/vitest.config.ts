@@ -3,9 +3,11 @@ import { playwright } from '@vitest/browser-playwright';
 
 export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
+  // Vite 8's oxc transform skips tsconfigs that exclude the file (specs are
+  // excluded from tsconfig.json), so enable legacy decorators explicitly.
+  oxc: { decorator: { legacy: true } },
   test: {
     globals: true,
-    setupFiles: ['./vitest.setup.ts'],
     include: ['src/specs/**/*.spec.ts'],
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
