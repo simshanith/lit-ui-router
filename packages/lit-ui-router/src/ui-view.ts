@@ -301,7 +301,7 @@ export class UiView extends LitElement {
       const resolveContext: ResolveContext = new ResolveContext(
         this._uiViewData.config.path,
       );
-      const viewCreationTrans =
+      const viewCreationTrans: unknown =
         resolveContext.getResolvable('$transition$').data;
 
       // Exit early if the $transition$ is the same as the view was created within.
@@ -320,11 +320,11 @@ export class UiView extends LitElement {
       const toSchema: Param[] = $transition$
         .treeChanges('to')
         .map(getNodeSchema)
-        .reduce(unnestR, []);
+        .reduce<Param[]>(unnestR, []);
       const fromSchema: Param[] = $transition$
         .treeChanges('from')
         .map(getNodeSchema)
-        .reduce(unnestR, []);
+        .reduce<Param[]>(unnestR, []);
 
       // Find the to params that have different values than the from params
       const changedToParams = toSchema.filter((param: Param) => {
@@ -373,9 +373,9 @@ export class UiView extends LitElement {
       .filter((r) => r.resolved);
 
     const resolves = resolvables
-      .map(({ token }) => [token, injector.get(token)])
+      .map(({ token }) => [token as string, injector.get(token) as unknown])
       .reduce(applyPairs, {});
-    const transition = injector.get(Transition);
+    const transition = injector.get(Transition) as Transition;
 
     return this.component({
       router,
