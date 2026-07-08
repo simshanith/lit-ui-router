@@ -165,6 +165,7 @@ describe('isLitViewDeclarationTemplate', () => {
 
   it('should return true for arrow functions with props', () => {
     const template = (_props: UIViewInjectedProps) => html`<div>test</div>`;
+    // @ts-expect-error typings gap: required-props templates do not satisfy LitViewDeclarationTemplate's optional-props signature
     expect(isLitViewDeclarationTemplate(template)).toBe(true);
   });
 
@@ -255,6 +256,7 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
+        // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
         $default: component,
       },
     };
@@ -341,7 +343,9 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
+        // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
         header: { component: () => html`<header>Header</header>` },
+        // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
         content: { component: () => html`<main>Content</main>` },
       },
     };
@@ -433,7 +437,9 @@ describe('litViewsBuilder', () => {
     const state = router.stateRegistry.get('test').$$state?.();
 
     // The component should be wrapped to return a template
+    // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
     expect(state?.views?.['$default'].component).toBeDefined();
+    // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
     expect(typeof state?.views?.['$default'].component).toBe('function');
   });
 });
