@@ -175,7 +175,8 @@ export class UiSrefDirective extends AsyncDirective {
     ) {
       return;
     }
-    $state.go(state, params, options);
+    // fire-and-forget: @uirouter/core handles transition promise rejections
+    void $state.go(state, params, options);
     event.preventDefault();
   };
 

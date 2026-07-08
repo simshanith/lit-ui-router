@@ -342,7 +342,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     if (this.element !== element) {
       this.element = element;
       this._firstUpdated = false;
-      await 0;
+      // defer a microtask so the part's element is settled before first render
+      await Promise.resolve();
       this.firstUpdated({ targetStates });
     }
 
@@ -362,7 +363,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   _firstUpdated = false;
   /** @internal */
-  async firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
+  firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
@@ -397,9 +398,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onTransitionStart,
     ) as deregisterFn;
     this._deregisterOnStatesChanged =
-      this.uiRouter!.stateRegistry.onStatesChanged(
-        this.onStatesChanged,
-      ) as deregisterFn;
+      this.uiRouter!.stateRegistry.onStatesChanged(this.onStatesChanged);
 
     setTimeout(() => {
       if (this.targetStates.size) {
@@ -452,11 +451,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
   onUiSrefTargetEvent = (event: UiSrefTargetEvent) => {
     const { targetState } = event.detail;
     this.targetStates.add(targetState);
-    this.uiSrefs.set(targetState, event.target as UiSrefElement);
+    this.uiSrefs.set(targetState, event.target);
   };
 
   /** @internal */
-  onTransitionStateChange = async (e: Event) => {
+  onTransitionStateChange = (e: Event) => {
     const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
     if (!status) {

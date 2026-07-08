@@ -30,6 +30,7 @@
     "eslint-plugin-turbo": "^2.10.3",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
     "playwright": "catalog:",
     "pnpm": "^11.10.0",
     "turbo": "^2.10.3",

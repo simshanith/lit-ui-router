@@ -297,7 +297,7 @@ class StarsContainerComponent extends LitElement {
   }
 
   get stars(): Star[] {
-    return this._uiViewProps.resolves!.stars;
+    return this._uiViewProps.resolves.stars;
   }
 
   render() {
@@ -378,7 +378,7 @@ class StarDetailComponent extends LitElement {
   }
 
   get star(): Star | undefined {
-    return this._uiViewProps.resolves!.star;
+    return this._uiViewProps.resolves.star;
   }
 
   render() {
@@ -566,7 +566,7 @@ const astronautState: LitStateDeclaration = {
 // Router setup
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-import('@uirouter/visualizer').then(({ Visualizer }) =>
+void import('@uirouter/visualizer').then(({ Visualizer }) =>
   router.plugin(Visualizer),
 );
 router.stateRegistry.register(galaxyState);
