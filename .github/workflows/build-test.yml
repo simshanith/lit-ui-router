@@ -74,8 +74,6 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          # Set on branch-head runs too: it is a declared turbo env hash input
-          # (sample apps' turbo.json); dropping it would defeat cache sharing.
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
@@ -90,8 +88,7 @@ jobs:
         with:
           working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
-        # Skip on branch-head runs: the merge-head/main run uploads for the
-        # same head SHA and a duplicate would churn codecov status checks.
+        # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v7
         with:
