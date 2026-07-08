@@ -21,6 +21,7 @@
     "test:root": "node --test \"scripts/**/*.test.mjs\""
   },
   "devDependencies": {
+    "@codecov/bundle-analyzer": "catalog:",
     "@pnpm/fs.find-packages": "catalog:",
     "@pnpm/workspace.read-manifest": "catalog:",
     "cypress": "catalog:",

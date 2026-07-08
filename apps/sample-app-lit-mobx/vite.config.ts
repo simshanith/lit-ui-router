@@ -2,7 +2,6 @@ import { createRequire } from 'node:module';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { codecovVitePlugin } from '@codecov/vite-plugin';
 import { defineConfig } from 'vite';
 import checker from 'vite-plugin-checker';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
@@ -30,6 +29,11 @@ export default defineConfig({
   // Static data (favicon, simulated REST fixtures) lives in the shared
   // sample-app package; the apps differ only in their reactivity idiom.
   publicDir: '../sample-app-shared/public',
+  build: {
+    // Provenance for scripts/upload-bundle-stats.mjs: the manifest tells
+    // rollup-emitted assets apart from publicDir/static-copy files.
+    manifest: true,
+  },
   plugins: [
     checker({ typescript: true }),
     viteStaticCopy({
@@ -40,14 +44,6 @@ export default defineConfig({
           rename: { stripBase },
         },
       ],
-    }),
-    // Codecov bundle analysis; no-op unless CODECOV_TOKEN is set (CI).
-    codecovVitePlugin({
-      enableBundleAnalysis: process.env.CODECOV_TOKEN !== undefined,
-      bundleName: 'sample-app-lit-mobx',
-      uploadToken: process.env.CODECOV_TOKEN,
-      gitService: 'github',
-      telemetry: false,
     }),
   ],
   // Pinned ports (vanilla 5173/4173, mobx 5174/4174): strictPort fails loudly
