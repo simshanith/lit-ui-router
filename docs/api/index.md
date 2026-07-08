@@ -13,7 +13,12 @@ pnpm add lit-ui-router
 ## Quick Start
 
 ```ts
-import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration } from 'lit-ui-router';
+import {
+  UIRouterLit,
+  uiSref,
+  uiSrefActive,
+  LitStateDeclaration,
+} from 'lit-ui-router';
 import { hashLocationPlugin } from '@uirouter/core';
 import { html } from 'lit';
 

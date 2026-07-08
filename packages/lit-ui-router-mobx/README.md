@@ -87,7 +87,11 @@ import { comparer } from 'mobx';
 import { ReactionController } from 'lit-ui-router-mobx';
 
 class NavHeader extends LitElement {
-  private auth = new ReactionController(this, () => ({ user: SessionStore.user, loggedIn: SessionStore.loggedIn }), { equals: comparer.structural });
+  private auth = new ReactionController(
+    this,
+    () => ({ user: SessionStore.user, loggedIn: SessionStore.loggedIn }),
+    { equals: comparer.structural },
+  );
 
   render() {
     const { user, loggedIn } = this.auth.value;

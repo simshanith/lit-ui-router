@@ -77,26 +77,30 @@
     },
     "format": {
       "with": ["//#format:root"],
-      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+      "inputs": [
+        "**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
+      ]
     },
     "format:check": {
       "with": ["//#format:check:root"],
-      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+      "inputs": [
+        "**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
+      ]
     },
     "//#format:root": {
       "inputs": [
-        "*.{ts,js,json,jsonc,md}",
-        "examples/**/*.{ts,js,json,jsonc,md}",
-        ".prettierrc",
-        ".prettierignore"
+        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
       ]
     },
     "//#format:check:root": {
       "inputs": [
-        "*.{ts,js,json,jsonc,md}",
-        "examples/**/*.{ts,js,json,jsonc,md}",
-        ".prettierrc",
-        ".prettierignore"
+        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
       ]
     },
     "e2e": {

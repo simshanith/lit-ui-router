@@ -1,9 +1,7 @@
 {
   "name": "lit-ui-router",
-  "description": "State-based routing for Lit",
   "version": "1.5.2",
-  "type": "module",
-  "module": "./dist/index.js",
+  "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
   "author": "Shane Daniel",
@@ -11,11 +9,16 @@
     "type": "git",
     "url": "https://github.com/simshanith/lit-ui-router"
   },
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
   "sideEffects": [
     "**/ui-router.js",
     "**/ui-view.js"
   ],
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -25,22 +28,18 @@
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
     "build": "tsc",
     "build:custom-elements": "cem analyze --outdir ./dist",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/reference && typedoc --defaultCategory other",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium"
   },
-  "customElements": "dist/custom-elements.json",
   "dependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer"
@@ -49,8 +48,8 @@
     "@custom-elements-manifest/analyzer": "^0.11.0",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "oxfmt": "catalog:",
     "playwright": "catalog:",
-    "prettier": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
@@ -59,5 +58,6 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
-  }
+  },
+  "customElements": "dist/custom-elements.json"
 }

@@ -48,16 +48,17 @@ Import `UIRouterLit` into your project, register some states and you're good to 
 ```ts
 import { render, html } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import { UIRouterLit } from 'lit-ui-router';
+import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
 
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
 
 // Simple routes using template functions - no LitElement classes needed!
-router.stateRegistry.register([
+const states: LitStateDeclaration[] = [
   { name: 'home', url: '/home', component: () => html`<h1>Home</h1>` },
   { name: 'about', url: '/about', component: () => html`<h1>About</h1>` },
-]);
+];
+states.forEach((state) => router.stateRegistry.register(state));
 
 router.start();
 

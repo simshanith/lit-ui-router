@@ -71,7 +71,9 @@ API is only recently cross-engine, pair it with a fallback:
 import { pushStateLocationPlugin } from '@uirouter/core';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
-router.plugin('navigation' in window ? navigationLocationPlugin : pushStateLocationPlugin);
+router.plugin(
+  'navigation' in window ? navigationLocationPlugin : pushStateLocationPlugin,
+);
 ```
 
 The <a href="/app" target="_self">sample app</a> ships all three strategies —
