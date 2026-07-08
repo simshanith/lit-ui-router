@@ -33,6 +33,7 @@
     "eslint-plugin-package-json": "^1.5.0",
     "eslint-plugin-turbo": "^2.10.3",
     "oxlint": "catalog:",
+    "oxlint-tsgolint": "catalog:",
     "playwright": "catalog:",
     "pnpm": "^11.10.0",
     "prettier": "catalog:",
