@@ -1,6 +1,9 @@
 // Uploads bundle stats to Codecov from the built dist/ (turbo codecov:bundle,
 // uncached) so the upload runs even when the vite build is a cache replay.
 // Usage: node upload-bundle-stats.mjs <bundle-name> [build-dir=dist]
+import fs from 'node:fs/promises';
+import path from 'node:path';
+
 import { createAndUploadReport } from '@codecov/bundle-analyzer';
 
 const [bundleName, buildDir = 'dist'] = process.argv.slice(2);
@@ -15,6 +18,27 @@ if (!process.env.CODECOV_TOKEN) {
   process.exit(0);
 }
 
+// Provenance filter: report only what rollup emitted (vite build.manifest),
+// not publicDir copies or vite-plugin-static-copy files. The emitted html
+// itself is not a manifest entry, so allow it explicitly; .vite/manifest.json
+// is absent from its own emit list and falls out automatically.
+const manifestPath = path.join(buildDir, '.vite', 'manifest.json');
+let manifest;
+try {
+  manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+} catch (error) {
+  // A missing manifest means build.manifest regressed in the vite config;
+  // silently uploading an empty report would be worse than failing.
+  console.error(`[codecov] ${bundleName}: cannot read ${manifestPath}:`, error);
+  process.exit(1);
+}
+const emitted = new Set(['index.html']);
+for (const entry of Object.values(manifest)) {
+  emitted.add(entry.file);
+  for (const file of entry.css ?? []) emitted.add(file);
+  for (const file of entry.assets ?? []) emitted.add(file);
+}
+
 try {
   const report = await createAndUploadReport(
     [buildDir],
@@ -26,15 +50,11 @@ try {
       enableBundleAnalysis: true,
     },
     {
-      // Match the former in-build vite plugin's scope (rollup-emitted assets
-      // only): drop vite publicDir copies and the static-copied visualizer
-      // images so the codecov size series does not step-change.
-      // (ignorePatterns matches absolute paths unreliably; filter by name.)
+      // Membership in the manifest-derived set, not name patterns.
+      // (The analyzer's own ignorePatterns matches the absolute paths it
+      // feeds micromatch unreliably; likely an upstream bug.)
       beforeReportUpload: async (report) => {
-        report.assets = report.assets.filter(
-          (asset) =>
-            asset.name === 'index.html' || asset.name.startsWith('assets/'),
-        );
+        report.assets = report.assets.filter((asset) => emitted.has(asset.name));
         return report;
       },
     },

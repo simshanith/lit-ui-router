@@ -29,6 +29,11 @@ export default defineConfig({
   // Static data (favicon, simulated REST fixtures) lives in the shared
   // sample-app package; the apps differ only in their reactivity idiom.
   publicDir: '../sample-app-shared/public',
+  build: {
+    // Provenance for scripts/upload-bundle-stats.mjs: the manifest tells
+    // rollup-emitted assets apart from publicDir/static-copy files.
+    manifest: true,
+  },
   plugins: [
     checker({ typescript: true }),
     viteStaticCopy({
