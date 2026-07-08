@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
-    "codecov:bundle": "node ../../scripts/upload-bundle-stats.mjs sample-app-lit-vanilla",
+    "codecov:bundle": "node ../../scripts/upload-bundle-stats.mjs sample-app-lit-vanilla-esm",
     "dev": "vite",
     "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",

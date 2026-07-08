@@ -1,6 +1,8 @@
 // Uploads bundle stats to Codecov from the built dist/ (turbo codecov:bundle,
 // uncached) so the upload runs even when the vite build is a cache replay.
 // Usage: node upload-bundle-stats.mjs <bundle-name> [build-dir=dist]
+// <bundle-name> must match the former @codecov/vite-plugin's <name>-<format>
+// naming (e.g. sample-app-lit-vanilla-esm) or the codecov size series restarts.
 import fs from 'node:fs/promises';
 import path from 'node:path';
 
