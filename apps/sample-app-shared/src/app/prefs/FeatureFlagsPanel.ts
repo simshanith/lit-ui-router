@@ -119,7 +119,7 @@ export class FeatureFlagsPanel extends LitElement {
 
   private _handleBooleanChange(flag: keyof FeatureFlagDefinitions, e: Event) {
     const checked = (e.target as HTMLInputElement).checked;
-    featureFlags.set(flag, checked as FeatureFlagDefinitions[typeof flag]);
+    featureFlags.set(flag, checked);
     this._flags = featureFlags.getAll();
   }
 

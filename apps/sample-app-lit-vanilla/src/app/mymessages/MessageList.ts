@@ -20,11 +20,11 @@ export class MessageList extends LitElement {
   commits = new StoreCommitController(this, MessagesStorage);
 
   get folder() {
-    return this._uiViewProps.resolves!.folder;
+    return this._uiViewProps.resolves.folder;
   }
 
   get messages() {
-    return this._uiViewProps.resolves!.messages ?? [];
+    return this._uiViewProps.resolves.messages ?? [];
   }
 
   render() {

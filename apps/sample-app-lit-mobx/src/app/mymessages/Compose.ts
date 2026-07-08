@@ -92,8 +92,8 @@ export class Compose extends LitElement {
   gotoPreviousState() {
     const { transition, router } = this._uiViewProps;
     const hasPrevious = !!transition?.from().name;
-    const state = hasPrevious ? transition!.from() : 'mymessages.messagelist';
-    const params = hasPrevious ? transition!.params('from') : {};
+    const state = hasPrevious ? transition.from() : 'mymessages.messagelist';
+    const params = hasPrevious ? transition.params('from') : {};
     router.stateService.go(state, params);
   }
 

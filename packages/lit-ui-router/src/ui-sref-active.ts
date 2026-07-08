@@ -399,7 +399,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this._deregisterOnStatesChanged =
       this.uiRouter!.stateRegistry.onStatesChanged(
         this.onStatesChanged,
-      ) as deregisterFn;
+      );
 
     setTimeout(() => {
       if (this.targetStates.size) {
@@ -452,7 +452,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   onUiSrefTargetEvent = (event: UiSrefTargetEvent) => {
     const { targetState } = event.detail;
     this.targetStates.add(targetState);
-    this.uiSrefs.set(targetState, event.target as UiSrefElement);
+    this.uiSrefs.set(targetState, event.target);
   };
 
   /** @internal */

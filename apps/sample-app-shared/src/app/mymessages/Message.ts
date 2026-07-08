@@ -42,15 +42,15 @@ export class MessageElement extends LitElement {
   }
 
   get message(): Message {
-    return this._uiViewProps.resolves!.message;
+    return this._uiViewProps.resolves.message;
   }
 
   get nextMessageGetter() {
-    return this._uiViewProps.resolves!.nextMessageGetter;
+    return this._uiViewProps.resolves.nextMessageGetter;
   }
 
   get folder() {
-    return this._uiViewProps.resolves!.folder;
+    return this._uiViewProps.resolves.folder;
   }
 
   get actions() {
