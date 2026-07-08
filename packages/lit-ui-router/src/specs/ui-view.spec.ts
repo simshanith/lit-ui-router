@@ -92,6 +92,7 @@ describe('UiView', () => {
           name: 'home',
           url: '/home',
           views: {
+            // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
             sidebar: { component: () => html`<div>Sidebar</div>` },
           },
         },
@@ -264,6 +265,7 @@ describe('UiView', () => {
           name: 'parent.child',
           url: '/child',
           views: {
+            // @ts-expect-error typings gap: LitStateDeclaration.views does not model Lit view declarations
             'nested@parent': { component: () => html`<div>Nested</div>` },
           },
         },
@@ -275,7 +277,9 @@ describe('UiView', () => {
 
       // Verify nested view is properly registered
       const views = router.viewService['_uiViews'];
-      const nestedView = views.find((v) => v.name === 'nested');
+      const nestedView = views.find(
+        (v: { name: string }) => v.name === 'nested',
+      );
       expect(nestedView).toBeDefined();
     });
   });
