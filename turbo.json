@@ -48,14 +48,7 @@
       "with": ["//#typecheck:root"]
     },
     "//#typecheck:root": {
-      "inputs": [
-        "scripts/**/*.ts",
-        "examples/build-embeds.ts",
-        "tools/dts-backtest/run.ts",
-        "tools/vue-check/bin.ts",
-        "tsconfig.json",
-        "tsconfig.base.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "ci": {
       "dependsOn": [
