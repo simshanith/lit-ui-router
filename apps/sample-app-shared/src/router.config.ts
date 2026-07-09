@@ -2,7 +2,9 @@ import {
   pushStateLocationPlugin,
   trace,
   Category,
+  LocationPlugin,
   Rejection,
+  UIRouter,
 } from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 // @ts-expect-error - @uirouter/dsr lacks proper ESM exports field for nodenext resolution
@@ -43,7 +45,7 @@ const locationPluginConfig = {
   },
 } satisfies Record<
   LocationPluginFeatureSymbol,
-  { plugin: typeof pushStateLocationPlugin; message: string }
+  { plugin: (router: UIRouter) => LocationPlugin; message: string }
 >;
 
 export function configureRouter(router = new UIRouterLit()) {

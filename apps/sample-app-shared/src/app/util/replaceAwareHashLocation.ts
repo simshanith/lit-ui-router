@@ -1,6 +1,7 @@
 import {
   BrowserLocationConfig,
   HashLocationService,
+  LocationPlugin,
   locationPluginFactory,
   UIRouter,
 } from '@uirouter/core';
@@ -44,4 +45,4 @@ export const replaceAwareHashLocationPlugin = locationPluginFactory(
   false,
   ReplaceAwareHashLocationService,
   BrowserLocationConfig,
-);
+) satisfies (router: UIRouter) => LocationPlugin;
