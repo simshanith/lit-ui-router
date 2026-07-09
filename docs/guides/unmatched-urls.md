@@ -64,28 +64,34 @@ urlService.rules.when(/^\/?$/, () => ({
 with and without a trailing slash on the base href. `location: 'replace'` makes
 Back from `/welcome` leave the app, rather than bouncing off the root.
 
-### Making `replace` work under the hash plugin
+### `replace` under the hash plugin
 
-`location: 'replace'` is a no-op with the stock `hashLocationPlugin`.
-`HashLocationService._set` assigns `location.hash`, which _always_ pushes an
-entry — the flag is ignored:
+`location: 'replace'` is a no-op with the stock `hashLocationPlugin`:
 
 ```ts
 // @uirouter/core
 HashLocationService.prototype._set = function (state, title, url, replace) {
-  this._location.hash = url; // `replace` never read
+  this._location.hash = url; // always pushes
 };
 ```
 
-So the root keeps its entry, Back re-enters it, the rule redirects and pushes
-again: the root becomes a Back-trap. `replaceState` writes the same hash
-without adding an entry, and the class is exported, so a three-line subclass
-fixes it:
+That is by design, not an oversight. `hashLocationPlugin` predates the
+widespread History API — assigning `location.hash` was the only way to change
+the url without a page load, and it always pushes an entry. The hash strategy
+exists _for_ browsers that lack `replaceState`, so it cannot lean on it.
+
+The consequence is that the root keeps its history entry: Back re-enters it,
+the rule redirects and pushes again, and the root becomes a Back-trap. If your
+support target does have the History API, you can opt in. `HashLocationService`
+is exported, so a subclass can write the same hash through `replaceState`, and
+fall back to the inherited behavior where it is missing:
 
 ```ts
 class ReplaceAwareHashLocationService extends HashLocationService {
   _set(state: unknown, title: string, url: string, replace: boolean) {
-    if (!replace) return super._set(state, title, url, replace);
+    if (!replace || typeof this._history.replaceState !== 'function') {
+      return super._set(state, title, url, replace);
+    }
     const { pathname, search } = this._location;
     this._history.replaceState(state, title, `${pathname}${search}#${url}`);
   }
@@ -102,8 +108,9 @@ export const replaceAwareHashLocationPlugin = locationPluginFactory(
 Reaching for `history.go(-2)` to hop over the entry instead is a trap of its
 own: neither `popstate` nor `hashchange` tells you which direction you arrived
 from, so it cannot tell Back from Forward or from a fresh load — and if the
-root is the session's first entry, it walks the user off the site. Not creating
-the entry is the fix.
+root is the session's first entry, it walks the user off the site. It also
+needs the very History API the hash strategy is there to do without. Not
+creating the entry is the better answer.
 
 ## The 404 state
 

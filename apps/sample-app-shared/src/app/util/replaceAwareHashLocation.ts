@@ -6,16 +6,19 @@ import {
 } from '@uirouter/core';
 
 /**
- * A `hashLocationPlugin` whose location service honors the `replace` flag.
+ * A `hashLocationPlugin` whose location service can replace the current history
+ * entry instead of always pushing a new one.
  *
- * `HashLocationService._set` assigns `location.hash`, which always pushes a
- * history entry — it ignores `replace` entirely. A url rule that redirects the
- * app root (`''`) to a state therefore leaves the root behind in history, and
- * pressing Back re-enters it, re-runs the redirect, and pushes again: the root
- * becomes a Back-trap you can never move past.
+ * `HashLocationService` predates the widespread History API: assigning
+ * `location.hash` was the only way to change the url without a page load, and
+ * it always pushes. Honoring `replace` therefore isn't something core left out
+ * — the hash strategy exists precisely for browsers that lack `replaceState`.
  *
- * `replaceState` writes the same hash without adding an entry, so the root is
- * consumed by the redirect and Back reaches whatever preceded it.
+ * The sample app targets browsers that have it, so it opts in: a url rule that
+ * redirects the app root (`''`) to a state would otherwise leave the root in
+ * history, where Back re-enters it, re-runs the redirect, and pushes again,
+ * making the root a Back-trap. Where `replaceState` is missing, fall back to
+ * the base behavior — a spare history entry beats a broken url.
  */
 class ReplaceAwareHashLocationService extends HashLocationService {
   // locationPluginFactory types the router as optional; the base class requires it.
@@ -27,7 +30,7 @@ class ReplaceAwareHashLocationService extends HashLocationService {
   }
 
   _set(state: unknown, title: string, url: string, replace: boolean) {
-    if (!replace) {
+    if (!replace || typeof this._history.replaceState !== 'function') {
       super._set(state, title, url, replace);
       return;
     }
