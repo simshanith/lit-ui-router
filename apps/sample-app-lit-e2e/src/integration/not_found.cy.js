@@ -1,8 +1,4 @@
-import {
-  LOCATION_PLUGIN,
-  visitRootWithFeatures,
-  visitWithFeatures,
-} from '../support/e2e';
+import { visitRootWithFeatures, visitWithFeatures } from '../support/e2e';
 
 describe('404 not found', () => {
   beforeEach(() => {
@@ -16,12 +12,7 @@ describe('404 not found', () => {
     cy.url().should('include', '/welcome');
   });
 
-  // HashLocationService._set ignores the replace flag, so the root keeps its
-  // history entry and Back re-resolves it to welcome in place, never reaching
-  // the login entry. The 404 regression this pins is pushState/navigation only.
-  const itPushesState = LOCATION_PLUGIN === 'hash' ? it.skip : it;
-
-  itPushesState('does not 404 when navigating back to the app root', () => {
+  it('does not 404 when navigating back to the app root', () => {
     visitWithFeatures('/login');
     visitRootWithFeatures();
     cy.contains('Welcome to the sample app!');

@@ -64,11 +64,46 @@ urlService.rules.when(/^\/?$/, () => ({
 with and without a trailing slash on the base href. `location: 'replace'` makes
 Back from `/welcome` leave the app, rather than bouncing off the root.
 
-With the [hash location plugin](https://ui-router.github.io/docs/latest/modules/vanilla.html)
-the `replace` half doesn't apply: `HashLocationService` sets `location.hash`
-directly and ignores the flag, so the root keeps its history entry. Landing on
-it again just re-resolves to welcome. That is the trade — under `hashLocation`
-the root is a redirect you cannot press Back through, but it never 404s.
+### Making `replace` work under the hash plugin
+
+`location: 'replace'` is a no-op with the stock `hashLocationPlugin`.
+`HashLocationService._set` assigns `location.hash`, which _always_ pushes an
+entry — the flag is ignored:
+
+```ts
+// @uirouter/core
+HashLocationService.prototype._set = function (state, title, url, replace) {
+  this._location.hash = url; // `replace` never read
+};
+```
+
+So the root keeps its entry, Back re-enters it, the rule redirects and pushes
+again: the root becomes a Back-trap. `replaceState` writes the same hash
+without adding an entry, and the class is exported, so a three-line subclass
+fixes it:
+
+```ts
+class ReplaceAwareHashLocationService extends HashLocationService {
+  _set(state: unknown, title: string, url: string, replace: boolean) {
+    if (!replace) return super._set(state, title, url, replace);
+    const { pathname, search } = this._location;
+    this._history.replaceState(state, title, `${pathname}${search}#${url}`);
+  }
+}
+
+export const replaceAwareHashLocationPlugin = locationPluginFactory(
+  'sampleApp.replaceAwareHashLocation',
+  false,
+  ReplaceAwareHashLocationService,
+  BrowserLocationConfig,
+);
+```
+
+Reaching for `history.go(-2)` to hop over the entry instead is a trap of its
+own: neither `popstate` nor `hashchange` tells you which direction you arrived
+from, so it cannot tell Back from Forward or from a fresh load — and if the
+root is the session's first entry, it walks the user off the site. Not creating
+the entry is the fix.
 
 ## The 404 state
 

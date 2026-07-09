@@ -1,5 +1,4 @@
 import {
-  hashLocationPlugin,
   pushStateLocationPlugin,
   trace,
   Category,
@@ -23,6 +22,7 @@ import {
   resolveLocationPlugin,
   LocationPluginFeatureSymbol,
 } from './app/util/featureDetection.js';
+import { replaceAwareHashLocationPlugin } from './app/util/replaceAwareHashLocation.js';
 
 export const HOME = 'home';
 export const NESTED_HOME = 'home.nested';
@@ -38,12 +38,12 @@ const locationPluginConfig = {
     message: 'pushStateLocationPlugin enabled',
   },
   hash: {
-    plugin: hashLocationPlugin,
+    plugin: replaceAwareHashLocationPlugin,
     message: 'hashLocationPlugin enabled',
   },
 } satisfies Record<
   LocationPluginFeatureSymbol,
-  { plugin: typeof hashLocationPlugin; message: string }
+  { plugin: typeof pushStateLocationPlugin; message: string }
 >;
 
 export function configureRouter(router = new UIRouterLit()) {
@@ -111,8 +111,6 @@ export function configureRouter(router = new UIRouterLit()) {
   // once a transition has run, so Back to the base href would fall through to
   // otherwise() and 404; match it on every sync instead. `location: 'replace'`
   // keeps the root out of history, so Back from /welcome leaves the app.
-  // HashLocationService._set ignores the replace flag, so under the hash plugin
-  // the root keeps its entry and Back re-resolves it to welcome in place.
   urlService.rules.when(/^\/?$/, () => ({
     state: 'welcome',
     options: { location: 'replace' },
