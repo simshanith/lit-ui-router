@@ -1,10 +1,5 @@
-// Vocabulary the check:* scripts share but none of them owns: the package.json
-// fields they read, and the report their cores hand back. Dependency-free on
-// purpose, so check-catalog.core.ts and check-pack.core.ts can share a
-// definition without importing each other.
-//
-// Types only, but for DEP_FIELDS: DepField derives from it, and a hand-written
-// union would drift from the array the checks actually iterate.
+// Vocabulary the check:* scripts share but none of them owns. Dependency-free
+// on purpose; types only, save for consts the types derive from.
 
 export const DEP_FIELDS = [
   'dependencies',
