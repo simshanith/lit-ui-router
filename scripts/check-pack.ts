@@ -26,11 +26,6 @@ import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 const run = promisify(execFile);
 
-// Node's spawn/exec errors carry a string `code`; narrow before reading it.
-function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
-  return error instanceof Error;
-}
-
 // A package.json is always a JSON object; anything else can't hold dep fields.
 function isManifest(value: unknown): value is Manifest {
   return typeof value === 'object' && value !== null;
@@ -43,7 +38,8 @@ async function pnpmPack(cwd: string, tarball: string): Promise<void> {
   try {
     await run('pnpm', args, { cwd });
   } catch (error) {
-    if (!isErrnoException(error) || error.code !== 'ENOENT') throw error;
+    // ENOENT means pnpm is not on PATH; any other failure is pack's own.
+    if ((error as NodeJS.ErrnoException | null)?.code !== 'ENOENT') throw error;
     await run('corepack', ['pnpm', ...args], { cwd });
   }
 }

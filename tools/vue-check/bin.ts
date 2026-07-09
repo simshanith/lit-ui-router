@@ -29,14 +29,6 @@ function fail(message: string): never {
   process.exit(2);
 }
 
-function tryResolve(specifier: string): string {
-  try {
-    return require.resolve(specifier);
-  } catch {
-    fail(`could not resolve ${specifier} — is vue-tsc installed?`);
-  }
-}
-
 const [projectArg, ...forwarded] = process.argv.slice(2);
 if (!projectArg) fail('missing <project>');
 
@@ -44,7 +36,15 @@ const project = resolve(workspaceRoot, projectArg);
 if (!existsSync(project)) fail(`no such project: ${projectArg}`);
 const projectDir = statSync(project).isDirectory() ? project : dirname(project);
 
-const vueTsc = tryResolve('vue-tsc/bin/vue-tsc.js');
+let vueTsc: string;
+try {
+  vueTsc = require.resolve('vue-tsc/bin/vue-tsc.js');
+} catch (error) {
+  // Rethrown as-is: its `code` separates a missing install (MODULE_NOT_FOUND)
+  // from vue-tsc gaining an exports map (ERR_PACKAGE_PATH_NOT_EXPORTED).
+  console.error('vue-check: could not resolve vue-tsc/bin/vue-tsc.js');
+  throw error;
+}
 
 const result = spawnSync(
   process.execPath,
