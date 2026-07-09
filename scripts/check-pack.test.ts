@@ -13,8 +13,6 @@ describe('findUnsubstitutedRefs', () => {
     assert.deepEqual(findUnsubstitutedRefs(manifest), []);
   });
 
-  // Every dependency field, so dropping one from the shared DEP_FIELDS fails
-  // here rather than silently narrowing both checks.
   it('flags catalog: refs in every dependency field', () => {
     const manifest = {
       dependencies: { lit: 'catalog:publishedPeer' },
