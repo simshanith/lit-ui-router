@@ -44,7 +44,11 @@
     },
     "typecheck": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
+      "with": ["//#typecheck:root"]
+    },
+    "//#typecheck:root": {
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "ci": {
       "dependsOn": [
