@@ -13,15 +13,13 @@
 import { execFile } from 'node:child_process';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { join } from 'node:path';
 import { promisify } from 'node:util';
 
 import { findUnsubstitutedRefs, formatReport } from './check-pack.core.mjs';
-import { loadWorkspace } from './workspace.mjs';
+import { loadWorkspace, workspaceRoot } from './workspace.mjs';
 
 const run = promisify(execFile);
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
 
 /** `pnpm pack` in `cwd`; falls back to corepack when pnpm is not on PATH. */
 async function pnpmPack(cwd, destination) {
@@ -54,7 +52,7 @@ async function packedManifest(packageDir) {
 }
 
 async function main() {
-  const { members } = await loadWorkspace(ROOT);
+  const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(
     (member) =>
       member.dir !== '<root>' &&
@@ -63,7 +61,7 @@ async function main() {
   );
   const results = [];
   for (const { name, dir } of publishable) {
-    const manifest = await packedManifest(join(ROOT, dir));
+    const manifest = await packedManifest(join(workspaceRoot, dir));
     results.push({ name, dir, refs: findUnsubstitutedRefs(manifest) });
   }
   const { ok, text } = formatReport(results);

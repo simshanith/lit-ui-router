@@ -11,6 +11,7 @@
     "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:vue": "vue-check docs/tsconfig.vue.json",
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
   },
@@ -27,6 +28,7 @@
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:vitepress1",
     "vitepress": "^1.6.4",
+    "vue-check": "workspace:*",
     "wrangler": "catalog:"
   }
 }
