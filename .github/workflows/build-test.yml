@@ -1,5 +1,5 @@
 # CI pipeline for pull requests and branch/main pushes.
-# Runs build, tests (Vitest + Playwright + Cypress), and coverage reporting.
+# Runs build, tests (Vitest + Playwright + Cypress), and Codecov upload.
 name: Build and Test
 
 on:
@@ -37,7 +37,6 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-      pull-requests: write # Required for PR coverage comments
 
     steps:
       - name: 'Checkout code'
@@ -77,16 +76,6 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
-      - name: lit-ui-router Vitest Coverage Report
-        uses: davelosert/vitest-coverage-report-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          working-directory: packages/lit-ui-router
-      - name: ui-router-navigation-location-plugin Vitest Coverage Report
-        uses: davelosert/vitest-coverage-report-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          working-directory: packages/navigation-location-plugin
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
