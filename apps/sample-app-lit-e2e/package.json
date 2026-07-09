@@ -24,7 +24,7 @@
     "cypress": "catalog:",
     "oxfmt": "catalog:",
     "start-server-and-test": "^3.0.11",
-    "typescript": "catalog:",
+    "typescript": "catalog:typescript6-compat",
     "vite": "catalog:"
   }
 }
