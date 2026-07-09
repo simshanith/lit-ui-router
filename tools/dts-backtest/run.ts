@@ -118,7 +118,6 @@ function loadConfig(ts: ClassicApi, configFile: string): TS.ParsedCommandLine {
 }
 
 function check(specifier: string, configFile: string) {
-  // `require` is untyped; every leg reaching here is the classic API.
   const ts = require(specifier) as ClassicApi;
   const parsed = loadConfig(ts, configFile);
   const program = ts.createProgram({
@@ -157,7 +156,6 @@ function check(specifier: string, configFile: string) {
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
 async function checkNative(specifier: string, configFile: string) {
-  // TS 7 exposes no types for the unstable sync API; assert the slice we use.
   const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
     import(`${specifier}/unstable/sync`),
     import(specifier),

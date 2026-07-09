@@ -19,8 +19,6 @@ import { dirname, resolve } from 'node:path';
 
 import { workspaceRoot } from '../../scripts/workspace.ts';
 
-// Resolving from this file, rather than the workspace root, picks the vue-tsc
-// instance installed for this package — the store holds one copy per peer.
 const require = createRequire(import.meta.url);
 
 function fail(message: string): never {

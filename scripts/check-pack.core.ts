@@ -37,7 +37,6 @@ export function findUnsubstitutedRefs(
   return refs;
 }
 
-// One packed package's outcome: its name, dir, and any unsubstituted refs.
 export type PackResult = {
   name: string;
   dir: string;

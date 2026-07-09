@@ -36,8 +36,7 @@ if (!process.env.CODECOV_TOKEN) {
 const manifestPath = path.resolve(buildDir, '.vite', 'manifest.json');
 let manifest: Manifest;
 try {
-  // Node reads and parses the JSON; vite wrote the file in the same build, so
-  // vite's own type describes it.
+  // vite wrote this file in the same build, so vite's own type describes it.
   const module = (await import(pathToFileURL(manifestPath).href, {
     with: { type: 'json' },
   })) as { default: Manifest };
@@ -71,10 +70,9 @@ try {
       // Membership in the manifest-derived set, not name patterns.
       // (The analyzer's own ignorePatterns matches the absolute paths it
       // feeds micromatch unreliably; likely an upstream bug.)
-      // `report` is contextually typed as the analyzer's Output; not async
-      // (nothing to await) but still hands back the Promise the hook expects.
-      // Keeping the filtered assets here is what the summary below reports,
-      // so the uploaded payload and the summary cannot drift.
+      // Nothing to await, so hand back a resolved Promise rather than mark it
+      // async. Capturing the assets here is what the summary below reports, so
+      // the uploaded payload and the summary cannot drift.
       beforeReportUpload: (report) => {
         report.assets = report.assets?.filter((asset) =>
           emitted.has(asset.name),

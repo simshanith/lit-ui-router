@@ -13,8 +13,8 @@ export const DEP_FIELDS = [
 /** One of the four npm dependency fields. */
 export type DepField = (typeof DEP_FIELDS)[number];
 
-// A dependency map (dep name -> specifier). Specifiers arrive from parsed
-// package.json, so they stay `unknown` until a guard proves them strings.
+// Specifiers arrive from parsed package.json, so they stay `unknown` until a
+// guard proves them strings.
 export type DependencyMap = Record<string, unknown>;
 
 // The slice of a package.json these checks read.
@@ -27,14 +27,13 @@ export type Manifest = {
   optionalDependencies?: DependencyMap;
 };
 
-// A workspace member: its name, its dir relative to the root, and its manifest.
+// `dir` is relative to the workspace root, and is '<root>' for the root itself.
 export type Member = {
   name: string;
   dir: string;
   manifest?: Manifest;
 };
 
-// One place a dependency is declared inline.
 export type DeclarationSite = { dir: string; field: DepField; spec: string };
 
 // dep name -> consumer package name -> that consumer's declaration sites.
