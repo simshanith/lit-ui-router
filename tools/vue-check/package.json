@@ -8,8 +8,8 @@
   },
   "type": "module",
   "scripts": {
-    "format": "oxfmt \"**/*.{ts,js,mjs,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md}\"",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint ."
   },
   "devDependencies": {

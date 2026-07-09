@@ -115,6 +115,7 @@
       "inputs": [
         "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
         "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        "scripts/**",
         ".oxfmtrc.json"
       ]
     },
@@ -122,6 +123,7 @@
       "inputs": [
         "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
         "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        "scripts/**",
         ".oxfmtrc.json"
       ]
     },
