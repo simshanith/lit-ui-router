@@ -12,21 +12,16 @@
 // ./workspace.mjs, then delegates all decisions to the pure, unit-tested
 // functions in ./check-catalog.core.mjs.
 
-import { dirname, join } from 'node:path';
-import { fileURLToPath } from 'node:url';
-
 import {
   catalogDepNames,
   collectInlineUsage,
   findViolations,
   formatReport,
 } from './check-catalog.core.mjs';
-import { loadWorkspace } from './workspace.mjs';
-
-const ROOT = join(dirname(fileURLToPath(import.meta.url)), '..');
+import { loadWorkspace, workspaceRoot } from './workspace.mjs';
 
 async function main() {
-  const { members, workspaceManifest } = await loadWorkspace(ROOT);
+  const { members, workspaceManifest } = await loadWorkspace(workspaceRoot);
   const violations = findViolations(collectInlineUsage(members));
   const { ok, text } = formatReport(violations, {
     memberCount: members.length,

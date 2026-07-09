@@ -24,7 +24,8 @@ const handleFullscreenChange = () => {
 
 const iframe = useTemplateRef('iframe');
 function refreshIframe() {
-  iframe.value.src += '';
+  const el = iframe.value;
+  if (el) el.src += '';
 }
 
 async function loadIcons() {

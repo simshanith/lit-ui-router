@@ -1,0 +1,19 @@
+{
+  "name": "vue-check",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Typechecks a workspace package's Vue SFCs with vue-tsc, which embeds the TypeScript 6 API",
+  "bin": {
+    "vue-check": "./bin.mjs"
+  },
+  "type": "module",
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,mjs,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md}\"",
+    "lint": "oxlint ."
+  },
+  "devDependencies": {
+    "typescript": "^6.0.3",
+    "vue-tsc": "^3.3.7"
+  }
+}
