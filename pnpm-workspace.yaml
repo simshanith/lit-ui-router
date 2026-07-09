@@ -76,6 +76,8 @@ patchedDependencies:
   '@uirouter/dsr': patches/@uirouter__dsr.patch
   lit-dialog: patches/lit-dialog.patch
 
+minimumReleaseAgeStrict: true
+
 minimumReleaseAgeExclude:
   - '@typescript/typescript-aix-ppc64@7.0.2'
   - '@typescript/typescript-darwin-arm64@7.0.2'
