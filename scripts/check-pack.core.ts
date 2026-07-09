@@ -7,7 +7,8 @@ import {
   DEP_FIELDS,
   type DepField,
   type Manifest,
-} from './check-catalog.core.ts';
+  type Report,
+} from './types.ts';
 
 // Specifier protocols pnpm must substitute at pack time. The npm registry
 // accepts a manifest that still contains them, but consumers then fail with
@@ -44,10 +45,7 @@ export type PackResult = {
 };
 
 /** Render the human-readable report. */
-export function formatReport(results: PackResult[]): {
-  ok: boolean;
-  text: string;
-} {
+export function formatReport(results: PackResult[]): Report {
   if (results.length === 0) {
     return {
       ok: false,

@@ -21,7 +21,7 @@ import {
   formatReport,
   type PackResult,
 } from './check-pack.core.ts';
-import type { Manifest } from './check-catalog.core.ts';
+import type { Manifest } from './types.ts';
 import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 const run = promisify(execFile);

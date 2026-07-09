@@ -3,36 +3,12 @@
 // The IO (enumerating workspace members, reading the workspace manifest) lives in
 // check-catalog.ts and feeds plain objects into these functions.
 
-export const DEP_FIELDS = [
-  'dependencies',
-  'devDependencies',
-  'peerDependencies',
-  'optionalDependencies',
-] as const;
-
-/** One of the four npm dependency fields. */
-export type DepField = (typeof DEP_FIELDS)[number];
-
-// Specifiers arrive from parsed package.json, so they stay `unknown` until a
-// guard proves them strings.
-export type DependencyMap = Record<string, unknown>;
-
-// The slice of a package.json these checks read.
-export type Manifest = {
-  name?: string;
-  private?: boolean;
-  dependencies?: DependencyMap;
-  devDependencies?: DependencyMap;
-  peerDependencies?: DependencyMap;
-  optionalDependencies?: DependencyMap;
-};
-
-// `dir` is relative to the workspace root, and is '<root>' for the root itself.
-export type Member = {
-  name: string;
-  dir: string;
-  manifest?: Manifest;
-};
+import {
+  DEP_FIELDS,
+  type DepField,
+  type Member,
+  type Report,
+} from './types.ts';
 
 export type DeclarationSite = { dir: string; field: DepField; spec: string };
 
@@ -139,7 +115,7 @@ export type FormatReportOptions = {
 export function formatReport(
   violations: Violation[],
   { memberCount, catalogNames = new Set<string>() }: FormatReportOptions = {},
-): { ok: boolean; text: string } {
+): Report {
   if (violations.length === 0) {
     return {
       ok: true,

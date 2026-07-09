@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
 
-import type { Member } from './check-catalog.core.ts';
+import type { Member } from './types.ts';
 
 /** Absolute path to the workspace root. This file lives in <root>/scripts. */
 export const workspaceRoot = join(
