@@ -20,7 +20,7 @@ export default defineConfig({
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {
-      reporter: ['text', 'json', 'json-summary', 'lcov'],
+      reporter: ['text', 'json', 'lcov'],
       reportsDirectory: './coverage',
       exclude: ['src/specs/**'],
     },
