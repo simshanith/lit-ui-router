@@ -39,6 +39,7 @@
     "pnpm": "^11.10.0",
     "turbo": "^2.10.3",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "wrangler": "catalog:"
   },
   "engines": {

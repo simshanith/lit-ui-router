@@ -3,26 +3,11 @@
 // Usage: node upload-bundle-stats.ts <bundle-name> [build-dir=dist]
 // <bundle-name> must match the former @codecov/vite-plugin's <name>-<format>
 // naming (e.g. sample-app-lit-vanilla-esm) or the codecov size series restarts.
-import fs from 'node:fs/promises';
 import path from 'node:path';
+import { pathToFileURL } from 'node:url';
 
 import { createAndUploadReport } from '@codecov/bundle-analyzer';
-
-// Parsed JSON is `unknown`; these guards narrow it at each read boundary
-// instead of trusting the shape.
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
-
-function recordOf(value: unknown): Record<string, unknown> {
-  return isRecord(value) ? value : {};
-}
-
-function stringsOf(value: unknown): string[] {
-  return Array.isArray(value)
-    ? value.filter((item): item is string => typeof item === 'string')
-    : [];
-}
+import type { Manifest } from 'vite';
 
 // The slice of the analyzer's Output we summarise. It types `beforeReportUpload`
 // but is re-exported by neither the analyzer nor its bundler-plugin-core.
@@ -46,22 +31,28 @@ if (!process.env.CODECOV_TOKEN) {
 // not publicDir copies or vite-plugin-static-copy files. The emitted html
 // itself is not a manifest entry, so allow it explicitly; .vite/manifest.json
 // is absent from its own emit list and falls out automatically.
-const manifestPath = path.join(buildDir, '.vite', 'manifest.json');
-let manifest: unknown;
+// `buildDir` is relative to the cwd, but a bare relative import specifier
+// resolves against this module — hence the file URL.
+const manifestPath = path.resolve(buildDir, '.vite', 'manifest.json');
+let manifest: Manifest;
 try {
-  manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
+  // Node reads and parses the JSON; vite wrote the file in the same build, so
+  // vite's own type describes it.
+  const module = (await import(pathToFileURL(manifestPath).href, {
+    with: { type: 'json' },
+  })) as { default: Manifest };
+  manifest = module.default;
 } catch (error) {
-  // A missing manifest means build.manifest regressed in the vite config;
-  // silently uploading an empty report would be worse than failing.
+  // A missing or unparseable manifest means build.manifest regressed in the
+  // vite config; silently uploading an empty report would be worse than failing.
   console.error(`[codecov] ${bundleName}: cannot read ${manifestPath}:`, error);
   process.exit(1);
 }
 const emitted = new Set(['index.html']);
-for (const entry of Object.values(recordOf(manifest))) {
-  if (!isRecord(entry)) continue;
-  if (typeof entry.file === 'string') emitted.add(entry.file);
-  for (const file of stringsOf(entry.css)) emitted.add(file);
-  for (const file of stringsOf(entry.assets)) emitted.add(file);
+for (const entry of Object.values(manifest)) {
+  emitted.add(entry.file);
+  for (const file of entry.css ?? []) emitted.add(file);
+  for (const file of entry.assets ?? []) emitted.add(file);
 }
 
 let uploaded: UploadedAsset[] = [];
