@@ -11,7 +11,7 @@
 // the pure, unit-tested functions in ./check-pack.core.ts.
 
 import { execFile } from 'node:child_process';
-import { mkdtemp, readdir, rm } from 'node:fs/promises';
+import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
@@ -37,8 +37,9 @@ function isManifest(value: unknown): value is Manifest {
 }
 
 /** `pnpm pack` in `cwd`; falls back to corepack when pnpm is not on PATH. */
-async function pnpmPack(cwd: string, destination: string): Promise<void> {
-  const args = ['pack', '--pack-destination', destination];
+async function pnpmPack(cwd: string, tarball: string): Promise<void> {
+  // `--out` names the tarball, so there is nothing to search for afterwards.
+  const args = ['pack', '--out', tarball];
   try {
     await run('pnpm', args, { cwd });
   } catch (error) {
@@ -50,17 +51,12 @@ async function pnpmPack(cwd: string, destination: string): Promise<void> {
 /** Pack one package and return the manifest from inside the tarball. */
 async function packedManifest(packageDir: string): Promise<Manifest> {
   const destination = await mkdtemp(join(tmpdir(), 'check-pack-'));
+  const tarball = join(destination, 'package.tgz');
   try {
-    await pnpmPack(packageDir, destination);
-    const tarball = (await readdir(destination)).find((f) =>
-      f.endsWith('.tgz'),
-    );
-    if (tarball === undefined) {
-      throw new Error(`pnpm pack produced no .tgz in ${destination}`);
-    }
+    await pnpmPack(packageDir, tarball);
     const { stdout } = await run(
       'tar',
-      ['-xzOf', join(destination, tarball), 'package/package.json'],
+      ['-xzOf', tarball, 'package/package.json'],
       { maxBuffer: 16 * 1024 * 1024 },
     );
     const parsed: unknown = JSON.parse(stdout);

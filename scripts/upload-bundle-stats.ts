@@ -24,9 +24,9 @@ function stringsOf(value: unknown): string[] {
     : [];
 }
 
-function arrayOf(value: unknown): unknown[] {
-  return Array.isArray(value) ? value : [];
-}
+// The slice of the analyzer's Output we summarise. It types `beforeReportUpload`
+// but is re-exported by neither the analyzer nor its bundler-plugin-core.
+type UploadedAsset = { name: string; size: number };
 
 const [bundleName, buildDir = 'dist'] = process.argv.slice(2);
 
@@ -64,8 +64,10 @@ for (const entry of Object.values(recordOf(manifest))) {
   for (const file of stringsOf(entry.assets)) emitted.add(file);
 }
 
+let uploaded: UploadedAsset[] = [];
+
 try {
-  const report = await createAndUploadReport(
+  await createAndUploadReport(
     [buildDir],
     {
       bundleName,
@@ -80,24 +82,20 @@ try {
       // feeds micromatch unreliably; likely an upstream bug.)
       // `report` is contextually typed as the analyzer's Output; not async
       // (nothing to await) but still hands back the Promise the hook expects.
+      // Keeping the filtered assets here is what the summary below reports,
+      // so the uploaded payload and the summary cannot drift.
       beforeReportUpload: (report) => {
         report.assets = report.assets?.filter((asset) =>
           emitted.has(asset.name),
         );
+        uploaded = report.assets ?? [];
         return Promise.resolve(report);
       },
     },
   );
-  const parsed: unknown = JSON.parse(report);
-  const assets = arrayOf(isRecord(parsed) ? parsed.assets : undefined);
-  const total = assets.reduce<number>(
-    (sum, asset) =>
-      sum +
-      (isRecord(asset) && typeof asset.size === 'number' ? asset.size : 0),
-    0,
-  );
+  const total = uploaded.reduce((sum, asset) => sum + asset.size, 0);
   console.log(
-    `[codecov] Uploaded ${bundleName} bundle stats: ${assets.length} assets, ${total} bytes.`,
+    `[codecov] Uploaded ${bundleName} bundle stats: ${uploaded.length} assets, ${total} bytes.`,
   );
 } catch (error) {
   // Availability of codecov must not gate CI (parity with the former

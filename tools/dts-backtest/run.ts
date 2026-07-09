@@ -61,10 +61,10 @@ interface NativeSyncModule {
   API: new (options: { cwd: string }) => NativeApi;
   DiagnosticCategory: { Error: number };
 }
-
-// A parsed JSON/CJS export is untyped; narrow it before reading a field.
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
+// Every leg reports its own version from its root export, classic and native
+// alike — the classic legs read it off the API object as `ts.version`.
+interface NativeModule {
+  version: string;
 }
 
 const here = dirname(fileURLToPath(import.meta.url));
@@ -158,20 +158,10 @@ function check(specifier: string, configFile: string) {
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
 async function checkNative(specifier: string, configFile: string) {
   // TS 7 exposes no types for the unstable sync API; assert the slice we use.
-  const { API, DiagnosticCategory } = (await import(
-    `${specifier}/unstable/sync`
-  )) as NativeSyncModule;
-  const versionModule: unknown = require(
-    join(
-      dirname(require.resolve(`${specifier}/package.json`)),
-      'lib',
-      'version.cjs',
-    ),
-  );
-  const version =
-    isRecord(versionModule) && typeof versionModule.version === 'string'
-      ? versionModule.version
-      : 'unknown';
+  const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
+    import(`${specifier}/unstable/sync`),
+    import(specifier),
+  ])) as [NativeSyncModule, NativeModule];
 
   const api = new API({ cwd: here });
   const configPath = join(here, configFile);
