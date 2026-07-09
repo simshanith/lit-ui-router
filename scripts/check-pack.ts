@@ -21,13 +21,13 @@ import {
   formatReport,
   type PackResult,
 } from './check-pack.core.ts';
-import type { Manifest } from './types.ts';
+import type { PackageManifest } from './types.ts';
 import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 const run = promisify(execFile);
 
 // A package.json is always a JSON object; anything else can't hold dep fields.
-function isManifest(value: unknown): value is Manifest {
+function isPackageManifest(value: unknown): value is PackageManifest {
   return typeof value === 'object' && value !== null;
 }
 
@@ -45,7 +45,7 @@ async function pnpmPack(cwd: string, tarball: string): Promise<void> {
 }
 
 /** Pack one package and return the manifest from inside the tarball. */
-async function packedManifest(packageDir: string): Promise<Manifest> {
+async function packedManifest(packageDir: string): Promise<PackageManifest> {
   const destination = await mkdtemp(join(tmpdir(), 'check-pack-'));
   const tarball = join(destination, 'package.tgz');
   try {
@@ -56,7 +56,7 @@ async function packedManifest(packageDir: string): Promise<Manifest> {
       { maxBuffer: 16 * 1024 * 1024 },
     );
     const parsed: unknown = JSON.parse(stdout);
-    return isManifest(parsed) ? parsed : {};
+    return isPackageManifest(parsed) ? parsed : {};
   } finally {
     await rm(destination, { recursive: true, force: true });
   }

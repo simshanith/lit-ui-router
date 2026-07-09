@@ -6,7 +6,7 @@
 import {
   DEP_FIELDS,
   type DepField,
-  type Manifest,
+  type PackageManifest,
   type Report,
 } from './types.ts';
 
@@ -23,7 +23,7 @@ export type UnsubstitutedRef = { field: DepField; dep: string; spec: string };
  * `manifest` is the parsed package.json from inside the packed tarball.
  */
 export function findUnsubstitutedRefs(
-  manifest: Manifest | undefined,
+  manifest: PackageManifest | undefined,
 ): UnsubstitutedRef[] {
   const refs: UnsubstitutedRef[] = [];
   for (const field of DEP_FIELDS) {

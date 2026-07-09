@@ -21,7 +21,7 @@ export type DepField = (typeof DEP_FIELDS)[number];
 export type DependencyMap = Record<string, unknown>;
 
 // The slice of a package.json these checks read.
-export type Manifest = {
+export type PackageManifest = {
   name?: string;
   private?: boolean;
   dependencies?: DependencyMap;

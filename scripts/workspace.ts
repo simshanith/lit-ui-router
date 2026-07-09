@@ -16,7 +16,7 @@ import { fileURLToPath } from 'node:url';
 
 import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
 
-import type { Manifest } from './types.ts';
+import type { PackageManifest } from './types.ts';
 
 /** Absolute path to the workspace root. This file lives in <root>/scripts. */
 export const workspaceRoot = join(
@@ -28,7 +28,7 @@ export const workspaceRoot = join(
 export type Member = {
   name: string;
   dir: string;
-  manifest?: Manifest;
+  manifest?: PackageManifest;
 };
 
 /** Enumerate workspace members (incl. root) and the parsed workspace manifest. */
