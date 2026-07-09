@@ -16,13 +16,20 @@ import { fileURLToPath } from 'node:url';
 
 import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
 
-import type { Member } from './types.ts';
+import type { Manifest } from './types.ts';
 
 /** Absolute path to the workspace root. This file lives in <root>/scripts. */
 export const workspaceRoot = join(
   dirname(fileURLToPath(import.meta.url)),
   '..',
 );
+
+// `dir` is relative to the workspace root, and is '<root>' for the root itself.
+export type Member = {
+  name: string;
+  dir: string;
+  manifest?: Manifest;
+};
 
 /** Enumerate workspace members (incl. root) and the parsed workspace manifest. */
 export async function loadWorkspace(root: string): Promise<{

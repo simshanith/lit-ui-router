@@ -1,7 +1,7 @@
-// Vocabulary shared by the check:* scripts: the package.json fields they read,
-// and the workspace members they read them from. Dependency-free on purpose —
-// it lets check-catalog.core.ts and check-pack.core.ts share a definition
-// without importing each other, and lets workspace.ts name its own return type.
+// Vocabulary the check:* scripts share but none of them owns: the package.json
+// fields they read, and the report their cores hand back. Dependency-free on
+// purpose, so check-catalog.core.ts and check-pack.core.ts can share a
+// definition without importing each other.
 //
 // Types only, but for DEP_FIELDS: DepField derives from it, and a hand-written
 // union would drift from the array the checks actually iterate.
@@ -28,13 +28,6 @@ export type Manifest = {
   devDependencies?: DependencyMap;
   peerDependencies?: DependencyMap;
   optionalDependencies?: DependencyMap;
-};
-
-// `dir` is relative to the workspace root, and is '<root>' for the root itself.
-export type Member = {
-  name: string;
-  dir: string;
-  manifest?: Manifest;
 };
 
 // What every core hands its IO shell: `text` to print, `ok` to exit on.

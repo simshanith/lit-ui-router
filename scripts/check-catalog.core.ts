@@ -3,12 +3,8 @@
 // The IO (enumerating workspace members, reading the workspace manifest) lives in
 // check-catalog.ts and feeds plain objects into these functions.
 
-import {
-  DEP_FIELDS,
-  type DepField,
-  type Member,
-  type Report,
-} from './types.ts';
+import { DEP_FIELDS, type DepField, type Report } from './types.ts';
+import type { Member } from './workspace.ts';
 
 export type DeclarationSite = { dir: string; field: DepField; spec: string };
 
