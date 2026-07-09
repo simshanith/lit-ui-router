@@ -9,6 +9,9 @@ export default defineConfig(
     '**/coverage/**',
     '**/node_modules/**',
     '**/.vitepress/cache/**',
+    // Git worktrees live here; each ships its own eslint.config.js that ESLint
+    // would otherwise load (flat config resolves per-file, and ignores .gitignore).
+    '**/.claude/**',
   ]),
   {
     extends: [packageJson.configs.recommended],
