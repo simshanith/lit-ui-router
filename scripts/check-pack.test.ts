@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { findUnsubstitutedRefs, formatReport } from './check-pack.core.mjs';
+import { findUnsubstitutedRefs, formatReport } from './check-pack.core.ts';
 
 describe('findUnsubstitutedRefs', () => {
   it('passes a fully substituted manifest', () => {
@@ -36,10 +36,7 @@ describe('findUnsubstitutedRefs', () => {
   it('ignores missing fields and non-string specifiers', () => {
     assert.deepEqual(findUnsubstitutedRefs({}), []);
     assert.deepEqual(findUnsubstitutedRefs(undefined), []);
-    assert.deepEqual(
-      findUnsubstitutedRefs({ dependencies: { odd: 42 } }),
-      [],
-    );
+    assert.deepEqual(findUnsubstitutedRefs({ dependencies: { odd: 42 } }), []);
   });
 });
 
@@ -47,7 +44,11 @@ describe('formatReport', () => {
   it('passes when every packed manifest is clean', () => {
     const { ok, text } = formatReport([
       { name: 'lit-ui-router', dir: 'packages/lit-ui-router', refs: [] },
-      { name: 'lit-ui-router-mobx', dir: 'packages/lit-ui-router-mobx', refs: [] },
+      {
+        name: 'lit-ui-router-mobx',
+        dir: 'packages/lit-ui-router-mobx',
+        refs: [],
+      },
     ]);
     assert.equal(ok, true);
     assert.match(text, /✓ pack check passed — 2 publishable packages/);

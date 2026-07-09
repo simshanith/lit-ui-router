@@ -8,7 +8,7 @@
 //
 // This file is the IO shell: it packs each non-private workspace package into
 // a temp dir, extracts the packed package.json, and delegates all decisions to
-// the pure, unit-tested functions in ./check-pack.core.mjs.
+// the pure, unit-tested functions in ./check-pack.core.ts.
 
 import { execFile } from 'node:child_process';
 import { mkdtemp, readdir, rm } from 'node:fs/promises';
@@ -16,36 +16,55 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { promisify } from 'node:util';
 
-import { findUnsubstitutedRefs, formatReport } from './check-pack.core.mjs';
-import { loadWorkspace, workspaceRoot } from './workspace.mjs';
+import {
+  findUnsubstitutedRefs,
+  formatReport,
+  type PackResult,
+} from './check-pack.core.ts';
+import type { Manifest } from './check-catalog.core.ts';
+import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 const run = promisify(execFile);
 
+// Node's spawn/exec errors carry a string `code`; narrow before reading it.
+function isErrnoException(error: unknown): error is NodeJS.ErrnoException {
+  return error instanceof Error;
+}
+
+// A package.json is always a JSON object; anything else can't hold dep fields.
+function isManifest(value: unknown): value is Manifest {
+  return typeof value === 'object' && value !== null;
+}
+
 /** `pnpm pack` in `cwd`; falls back to corepack when pnpm is not on PATH. */
-async function pnpmPack(cwd, destination) {
+async function pnpmPack(cwd: string, destination: string): Promise<void> {
   const args = ['pack', '--pack-destination', destination];
   try {
     await run('pnpm', args, { cwd });
   } catch (error) {
-    if (error.code !== 'ENOENT') throw error;
+    if (!isErrnoException(error) || error.code !== 'ENOENT') throw error;
     await run('corepack', ['pnpm', ...args], { cwd });
   }
 }
 
 /** Pack one package and return the manifest from inside the tarball. */
-async function packedManifest(packageDir) {
+async function packedManifest(packageDir: string): Promise<Manifest> {
   const destination = await mkdtemp(join(tmpdir(), 'check-pack-'));
   try {
     await pnpmPack(packageDir, destination);
     const tarball = (await readdir(destination)).find((f) =>
       f.endsWith('.tgz'),
     );
+    if (tarball === undefined) {
+      throw new Error(`pnpm pack produced no .tgz in ${destination}`);
+    }
     const { stdout } = await run(
       'tar',
       ['-xzOf', join(destination, tarball), 'package/package.json'],
       { maxBuffer: 16 * 1024 * 1024 },
     );
-    return JSON.parse(stdout);
+    const parsed: unknown = JSON.parse(stdout);
+    return isManifest(parsed) ? parsed : {};
   } finally {
     await rm(destination, { recursive: true, force: true });
   }
@@ -59,7 +78,7 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  const results = [];
+  const results: PackResult[] = [];
   for (const { name, dir } of publishable) {
     const manifest = await packedManifest(join(workspaceRoot, dir));
     results.push({ name, dir, refs: findUnsubstitutedRefs(manifest) });

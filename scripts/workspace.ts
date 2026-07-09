@@ -14,6 +14,19 @@
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { Member } from './check-catalog.core.ts';
+
+// The pnpm SDK types, pulled from the (lazily imported) modules' signatures so
+// this file owns no static dependency on the SDK's own type entrypoints.
+type Project = Awaited<
+  ReturnType<typeof import('@pnpm/fs.find-packages').findPackages>
+>[number];
+type WorkspaceManifest = Awaited<
+  ReturnType<
+    typeof import('@pnpm/workspace.read-manifest').readWorkspaceManifest
+  >
+>;
+
 /** Absolute path to the workspace root. This file lives in <root>/scripts. */
 export const workspaceRoot = join(
   dirname(fileURLToPath(import.meta.url)),
@@ -21,7 +34,9 @@ export const workspaceRoot = join(
 );
 
 /** Enumerate workspace members (incl. root) and the parsed workspace manifest. */
-export async function loadWorkspace(root) {
+export async function loadWorkspace(
+  root: string,
+): Promise<{ members: Member[]; workspaceManifest: WorkspaceManifest }> {
   const [{ findPackages }, { readWorkspaceManifest }] = await Promise.all([
     import('@pnpm/fs.find-packages'),
     import('@pnpm/workspace.read-manifest'),
@@ -31,7 +46,7 @@ export async function loadWorkspace(root) {
     patterns: workspaceManifest?.packages,
     includeRoot: true,
   });
-  const members = projects.map((project) => {
+  const members: Member[] = projects.map((project: Project) => {
     const dir = relative(root, project.rootDir) || '<root>';
     return {
       name: project.manifest?.name ?? dir,

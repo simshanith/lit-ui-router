@@ -18,7 +18,7 @@
     },
     "dts-backtest#test": {
       "dependsOn": ["^build"],
-      "inputs": ["fixtures/**", "run.mjs", "tsconfig.fixture*.json"]
+      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
     },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
@@ -66,19 +66,19 @@
     },
     "//#check:catalog": {
       "inputs": [
-        "scripts/check-catalog.mjs",
-        "scripts/check-catalog.core.mjs",
-        "scripts/workspace.mjs",
+        "scripts/check-catalog.ts",
+        "scripts/check-catalog.core.ts",
+        "scripts/workspace.ts",
         "pnpm-workspace.yaml",
         "**/package.json"
       ]
     },
     "//#check:pack": {
       "inputs": [
-        "scripts/check-pack.mjs",
-        "scripts/check-pack.core.mjs",
-        "scripts/check-catalog.core.mjs",
-        "scripts/workspace.mjs",
+        "scripts/check-pack.ts",
+        "scripts/check-pack.core.ts",
+        "scripts/check-catalog.core.ts",
+        "scripts/workspace.ts",
         "pnpm-workspace.yaml",
         "**/package.json"
       ]

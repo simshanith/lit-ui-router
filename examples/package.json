@@ -4,7 +4,7 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:embeds": "node build-embeds.mjs",
+    "build:embeds": "node build-embeds.ts",
     "format": "oxfmt \"**/*.{ts,js,mjs,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md,html}\"",
     "lint": "oxlint ."

@@ -1,6 +1,6 @@
 // Uploads bundle stats to Codecov from the built dist/ (turbo codecov:bundle,
 // uncached) so the upload runs even when the vite build is a cache replay.
-// Usage: node upload-bundle-stats.mjs <bundle-name> [build-dir=dist]
+// Usage: node upload-bundle-stats.ts <bundle-name> [build-dir=dist]
 // <bundle-name> must match the former @codecov/vite-plugin's <name>-<format>
 // naming (e.g. sample-app-lit-vanilla-esm) or the codecov size series restarts.
 import fs from 'node:fs/promises';
@@ -8,15 +8,37 @@ import path from 'node:path';
 
 import { createAndUploadReport } from '@codecov/bundle-analyzer';
 
+// Parsed JSON is `unknown`; these guards narrow it at each read boundary
+// instead of trusting the shape.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function recordOf(value: unknown): Record<string, unknown> {
+  return isRecord(value) ? value : {};
+}
+
+function stringsOf(value: unknown): string[] {
+  return Array.isArray(value)
+    ? value.filter((item): item is string => typeof item === 'string')
+    : [];
+}
+
+function arrayOf(value: unknown): unknown[] {
+  return Array.isArray(value) ? value : [];
+}
+
 const [bundleName, buildDir = 'dist'] = process.argv.slice(2);
 
 if (!bundleName) {
-  console.error('usage: upload-bundle-stats.mjs <bundle-name> [build-dir]');
+  console.error('usage: upload-bundle-stats.ts <bundle-name> [build-dir]');
   process.exit(1);
 }
 
 if (!process.env.CODECOV_TOKEN) {
-  console.log(`[codecov] CODECOV_TOKEN unset; skipping ${bundleName} bundle stats upload.`);
+  console.log(
+    `[codecov] CODECOV_TOKEN unset; skipping ${bundleName} bundle stats upload.`,
+  );
   process.exit(0);
 }
 
@@ -25,7 +47,7 @@ if (!process.env.CODECOV_TOKEN) {
 // itself is not a manifest entry, so allow it explicitly; .vite/manifest.json
 // is absent from its own emit list and falls out automatically.
 const manifestPath = path.join(buildDir, '.vite', 'manifest.json');
-let manifest;
+let manifest: unknown;
 try {
   manifest = JSON.parse(await fs.readFile(manifestPath, 'utf8'));
 } catch (error) {
@@ -35,10 +57,11 @@ try {
   process.exit(1);
 }
 const emitted = new Set(['index.html']);
-for (const entry of Object.values(manifest)) {
-  emitted.add(entry.file);
-  for (const file of entry.css ?? []) emitted.add(file);
-  for (const file of entry.assets ?? []) emitted.add(file);
+for (const entry of Object.values(recordOf(manifest))) {
+  if (!isRecord(entry)) continue;
+  if (typeof entry.file === 'string') emitted.add(entry.file);
+  for (const file of stringsOf(entry.css)) emitted.add(file);
+  for (const file of stringsOf(entry.assets)) emitted.add(file);
 }
 
 try {
@@ -55,15 +78,27 @@ try {
       // Membership in the manifest-derived set, not name patterns.
       // (The analyzer's own ignorePatterns matches the absolute paths it
       // feeds micromatch unreliably; likely an upstream bug.)
-      beforeReportUpload: async (report) => {
-        report.assets = report.assets.filter((asset) => emitted.has(asset.name));
-        return report;
+      // `report` is contextually typed as the analyzer's Output; not async
+      // (nothing to await) but still hands back the Promise the hook expects.
+      beforeReportUpload: (report) => {
+        report.assets = report.assets?.filter((asset) =>
+          emitted.has(asset.name),
+        );
+        return Promise.resolve(report);
       },
     },
   );
-  const { assets } = JSON.parse(report);
-  const total = assets.reduce((sum, a) => sum + a.size, 0);
-  console.log(`[codecov] Uploaded ${bundleName} bundle stats: ${assets.length} assets, ${total} bytes.`);
+  const parsed: unknown = JSON.parse(report);
+  const assets = arrayOf(isRecord(parsed) ? parsed.assets : undefined);
+  const total = assets.reduce<number>(
+    (sum, asset) =>
+      sum +
+      (isRecord(asset) && typeof asset.size === 'number' ? asset.size : 0),
+    0,
+  );
+  console.log(
+    `[codecov] Uploaded ${bundleName} bundle stats: ${assets.length} assets, ${total} bytes.`,
+  );
 } catch (error) {
   // Availability of codecov must not gate CI (parity with the former
   // in-build plugin, which swallowed upload errors).

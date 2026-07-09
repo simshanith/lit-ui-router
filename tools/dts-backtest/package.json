@@ -8,7 +8,7 @@
     "format": "oxfmt \"**/*.{ts,js,mjs,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md}\"",
     "lint": "oxlint .",
-    "test": "node run.mjs"
+    "test": "node run.ts"
   },
   "devDependencies": {
     "@types/dom-navigation": "catalog:",

@@ -13,15 +13,20 @@
 //   or a directory containing tsconfig.json.
 
 import { spawnSync } from 'node:child_process';
-import { existsSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve } from 'node:path';
 
-import { workspaceRoot } from '../../scripts/workspace.mjs';
+import { workspaceRoot } from '../../scripts/workspace.ts';
 
 const require = createRequire(import.meta.url);
 
-function fail(message) {
+// A parsed package.json is untyped; narrow it before reading a field.
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function fail(message: string): never {
   console.error(`vue-check: ${message}`);
   console.error('usage: vue-check <project> [...vue-tsc args]');
   process.exit(2);
@@ -35,8 +40,19 @@ if (!existsSync(project)) fail(`no such project: ${projectArg}`);
 const projectDir = statSync(project).isDirectory() ? project : dirname(project);
 
 const vueTscDir = dirname(require.resolve('vue-tsc/package.json'));
-const { bin } = require(join(vueTscDir, 'package.json'));
-const vueTsc = join(vueTscDir, typeof bin === 'string' ? bin : bin['vue-tsc']);
+// `bin` is either a path string or a { <name>: path } record (npm's two forms).
+const pkg: unknown = JSON.parse(
+  readFileSync(join(vueTscDir, 'package.json'), 'utf8'),
+);
+const bin = isRecord(pkg) ? pkg.bin : undefined;
+const binPath =
+  typeof bin === 'string'
+    ? bin
+    : isRecord(bin) && typeof bin['vue-tsc'] === 'string'
+      ? bin['vue-tsc']
+      : undefined;
+if (!binPath) fail('could not resolve the vue-tsc bin from its package.json');
+const vueTsc = join(vueTscDir, binPath);
 
 const result = spawnSync(
   process.execPath,

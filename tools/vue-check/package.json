@@ -4,7 +4,7 @@
   "private": true,
   "description": "Typechecks a workspace package's Vue SFCs with vue-tsc, which embeds the TypeScript 6 API",
   "bin": {
-    "vue-check": "./bin.mjs"
+    "vue-check": "./bin.ts"
   },
   "type": "module",
   "scripts": {

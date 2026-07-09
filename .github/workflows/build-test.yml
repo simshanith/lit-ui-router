@@ -66,7 +66,7 @@ jobs:
         # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
         # The script captures Xvfb's stderr (routine xkbcomp keysym noise on
         # the runner image) and prints it, filtered, only on startup failure.
-        run: node scripts/start-xvfb.mjs
+        run: node scripts/start-xvfb.ts
       - name: Build and Test
         run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
         env:
