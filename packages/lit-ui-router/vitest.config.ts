@@ -5,6 +5,7 @@ export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   test: {
     globals: true,
+    setupFiles: ['./vitest.setup.ts'],
     include: ['src/specs/**/*.spec.ts'],
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
