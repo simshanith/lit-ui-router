@@ -32,6 +32,44 @@ Passing the attempted path along as a param lets the 404 view show what
 failed to match. If you'd rather silently return home, target your welcome
 state instead — or use the string shorthand, `otherwise('/welcome')`.
 
+## Caveat: the app root
+
+`otherwise()` catches the app root too, and the root is rarely a state url of
+its own. It is tempting to reach for
+[`rules.initial`](https://ui-router.github.io/core/docs/latest/classes/_url_urlrules_.urlrules.html#initial),
+but that rule matches **only while no transition has run yet**:
+
+```ts
+// only fires on the first sync — a later sync of '' or '/' falls through
+urlService.rules.initial({ state: 'welcome' });
+```
+
+So the root works on load, then 404s the moment it is synced again. The common
+way to hit that: the root pushes a _new_ history entry when it redirects, so
+`/app` → `/app/welcome` leaves `/app` sitting in history. Pressing **Back**
+returns to `/app`, `initial` no longer matches, and `otherwise()` renders the
+404 — with an empty attempted path, since the root is the empty path.
+
+Match the empty path on every sync instead, and replace the history entry so
+the root never lingers there at all:
+
+```ts
+urlService.rules.when(/^\/?$/, () => ({
+  state: 'welcome',
+  options: { location: 'replace' },
+}));
+```
+
+`/^\/?$/` covers both `''` and `'/'`, which is what the empty path looks like
+with and without a trailing slash on the base href. `location: 'replace'` makes
+Back from `/welcome` leave the app, rather than bouncing off the root.
+
+With the [hash location plugin](https://ui-router.github.io/docs/latest/modules/vanilla.html)
+the `replace` half doesn't apply: `HashLocationService` sets `location.hash`
+directly and ignores the flag, so the root keeps its history entry. Landing on
+it again just re-resolves to welcome. That is the trade — under `hashLocation`
+the root is a redirect you cannot press Back through, but it never 404s.
+
 ## The 404 state
 
 ```ts
@@ -53,8 +91,9 @@ export const notFoundState = {
 
 The state intentionally declares **no `url`**: the unmatched URL stays in the
 address bar (like a server-rendered 404 page), and the state can only be
-activated by the rule. The view is an ordinary component that reads the
-resolved path:
+activated by the rule. Anything that reads `transition.$to().url` — an
+analytics hook, say — has to tolerate that `null`. The view is an ordinary
+component that reads the resolved path:
 
 ```ts
 export default (props: UIViewInjectedProps<NotFoundResolves>) =>
@@ -97,7 +136,7 @@ router.transitionService.onBefore(
 );
 ```
 
-With the rule, the state, and the hook in place, all three cases behave:
-plain garbage URLs render the 404 view, future-state URLs still lazy load,
-and URLs left unmatched _after_ a lazy load land on the 404 view too. The
-sample app's `not_found.cy.js` Cypress spec pins each case.
+With the rules, the state, and the hook in place, every case behaves: plain
+garbage URLs render the 404 view, the app root goes to welcome, future-state
+URLs still lazy load, and URLs left unmatched _after_ a lazy load land on the
+404 view too. The sample app's `not_found.cy.js` Cypress spec pins each case.

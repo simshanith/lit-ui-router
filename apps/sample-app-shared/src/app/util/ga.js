@@ -51,7 +51,10 @@ function trackException(event) {
 
 export default function googleAnalyticsHook(transitionService) {
   const path = (trans) => {
-    const formattedRoute = trans.$to().url.format(trans.params());
+    // States declared without a url (the 404 state) have no UrlMatcher to
+    // format; their attempted path is already in location.pathname.
+    const urlMatcher = trans.$to().url;
+    const formattedRoute = urlMatcher ? urlMatcher.format(trans.params()) : '';
     const withSitePrefix = location.pathname + formattedRoute;
     return `/${withSitePrefix
       .split('/')
