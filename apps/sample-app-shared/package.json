@@ -10,7 +10,8 @@
   "scripts": {
     "format": "oxfmt \"**/*.{js,ts,json,md,css}\"",
     "format:check": "oxfmt --check \"**/*.{js,ts,json,md,css}\"",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
     "@api-viewer/docs": "catalog:",

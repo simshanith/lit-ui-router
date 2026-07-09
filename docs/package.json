@@ -10,6 +10,7 @@
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
     "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
   },
