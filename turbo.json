@@ -105,18 +105,10 @@
       ]
     },
     "//#format:root": {
-      "inputs": [
-        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        ".oxfmtrc.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "//#format:check:root": {
-      "inputs": [
-        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        ".oxfmtrc.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],

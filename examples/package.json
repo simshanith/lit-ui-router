@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build:embeds": "node build-embeds.ts",
-    "format": "oxfmt \"**/*.{ts,js,mjs,json,md,html}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md,html}\"",
+    "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "lint": "oxlint ."
   }
 }
