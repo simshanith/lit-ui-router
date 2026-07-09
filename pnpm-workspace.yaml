@@ -32,7 +32,7 @@ catalog:
   typedoc: ^0.28.20
   typedoc-plugin-markdown: ^4.12.0
   typedoc-vitepress-theme: ^1.1.3
-  typescript: ^6.0.3
+  typescript: ^7.0.2
   vite: ^8.1.3
   vite-plugin-checker: ^0.14.4
   vite-plugin-static-copy: ^4.1.1
@@ -47,6 +47,8 @@ catalogs:
     lit: ^3.0.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
+  ts6:
+    typescript: npm:@typescript/typescript6@^6.0.2
   vitepress1:
     vite-plugin-static-copy: ^3.4.0
 
@@ -73,3 +75,26 @@ patchedDependencies:
   '@vitest/browser': patches/@vitest__browser.patch
   '@uirouter/dsr': patches/@uirouter__dsr.patch
   lit-dialog: patches/lit-dialog.patch
+
+minimumReleaseAgeExclude:
+  - '@typescript/typescript-aix-ppc64@7.0.2'
+  - '@typescript/typescript-darwin-arm64@7.0.2'
+  - '@typescript/typescript-darwin-x64@7.0.2'
+  - '@typescript/typescript-freebsd-arm64@7.0.2'
+  - '@typescript/typescript-freebsd-x64@7.0.2'
+  - '@typescript/typescript-linux-arm64@7.0.2'
+  - '@typescript/typescript-linux-arm@7.0.2'
+  - '@typescript/typescript-linux-loong64@7.0.2'
+  - '@typescript/typescript-linux-mips64el@7.0.2'
+  - '@typescript/typescript-linux-ppc64@7.0.2'
+  - '@typescript/typescript-linux-riscv64@7.0.2'
+  - '@typescript/typescript-linux-s390x@7.0.2'
+  - '@typescript/typescript-linux-x64@7.0.2'
+  - '@typescript/typescript-netbsd-arm64@7.0.2'
+  - '@typescript/typescript-netbsd-x64@7.0.2'
+  - '@typescript/typescript-openbsd-arm64@7.0.2'
+  - '@typescript/typescript-openbsd-x64@7.0.2'
+  - '@typescript/typescript-sunos-x64@7.0.2'
+  - '@typescript/typescript-win32-arm64@7.0.2'
+  - '@typescript/typescript-win32-x64@7.0.2'
+  - typescript@7.0.2
