@@ -9,6 +9,7 @@ export default defineConfig(
     '**/coverage/**',
     '**/node_modules/**',
     '**/.vitepress/cache/**',
+    '**/.claude/**',
   ]),
   {
     extends: [packageJson.configs.recommended],
