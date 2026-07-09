@@ -20,6 +20,9 @@
       "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
+    "typecheck": {
+      "dependsOn": ["^build", "^docs:api"]
+    },
     "docs": {
       "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
       "cache": false,
