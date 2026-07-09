@@ -22,7 +22,7 @@
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
     "oxfmt": "catalog:",
-    "typescript": "catalog:ts6",
+    "typescript": "catalog:typescript6-compat",
     "vite": "catalog:",
     "vite-plugin-checker": "catalog:",
     "vite-plugin-static-copy": "catalog:",

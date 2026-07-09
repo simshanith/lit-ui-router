@@ -47,7 +47,7 @@ catalogs:
     lit: ^3.0.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
-  ts6:
+  typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
   vitepress1:
     vite-plugin-static-copy: ^3.4.0

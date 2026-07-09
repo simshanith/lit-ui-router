@@ -62,7 +62,7 @@
     "typedoc-plugin-lit-ui-router": "workspace:*",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
-    "typescript": "catalog:ts6",
+    "typescript": "catalog:typescript6-compat",
     "vitest": "catalog:"
   },
   "peerDependencies": {
