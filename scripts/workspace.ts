@@ -14,14 +14,28 @@
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
+
+import type { PackageManifest } from './types.ts';
+
 /** Absolute path to the workspace root. This file lives in <root>/scripts. */
 export const workspaceRoot = join(
   dirname(fileURLToPath(import.meta.url)),
   '..',
 );
 
+// `dir` is relative to the workspace root, and is '<root>' for the root itself.
+export type Member = {
+  name: string;
+  dir: string;
+  manifest?: PackageManifest;
+};
+
 /** Enumerate workspace members (incl. root) and the parsed workspace manifest. */
-export async function loadWorkspace(root) {
+export async function loadWorkspace(root: string): Promise<{
+  members: Member[];
+  workspaceManifest: WorkspaceManifest | undefined;
+}> {
   const [{ findPackages }, { readWorkspaceManifest }] = await Promise.all([
     import('@pnpm/fs.find-packages'),
     import('@pnpm/workspace.read-manifest'),
@@ -31,7 +45,7 @@ export async function loadWorkspace(root) {
     patterns: workspaceManifest?.packages,
     includeRoot: true,
   });
-  const members = projects.map((project) => {
+  const members: Member[] = projects.map((project) => {
     const dir = relative(root, project.rootDir) || '<root>';
     return {
       name: project.manifest?.name ?? dir,

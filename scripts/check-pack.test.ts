@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { findUnsubstitutedRefs, formatReport } from './check-pack.core.mjs';
+import { findUnsubstitutedRefs, formatReport } from './check-pack.core.ts';
 
 describe('findUnsubstitutedRefs', () => {
   it('passes a fully substituted manifest', () => {
@@ -13,14 +13,18 @@ describe('findUnsubstitutedRefs', () => {
     assert.deepEqual(findUnsubstitutedRefs(manifest), []);
   });
 
-  it('flags catalog: refs in any dependency field', () => {
+  it('flags catalog: refs in every dependency field', () => {
     const manifest = {
       dependencies: { lit: 'catalog:publishedPeer' },
       devDependencies: { vitest: 'catalog:' },
+      peerDependencies: { mobx: 'catalog:' },
+      optionalDependencies: { fsevents: 'catalog:' },
     };
     assert.deepEqual(findUnsubstitutedRefs(manifest), [
       { field: 'dependencies', dep: 'lit', spec: 'catalog:publishedPeer' },
       { field: 'devDependencies', dep: 'vitest', spec: 'catalog:' },
+      { field: 'peerDependencies', dep: 'mobx', spec: 'catalog:' },
+      { field: 'optionalDependencies', dep: 'fsevents', spec: 'catalog:' },
     ]);
   });
 
@@ -36,10 +40,7 @@ describe('findUnsubstitutedRefs', () => {
   it('ignores missing fields and non-string specifiers', () => {
     assert.deepEqual(findUnsubstitutedRefs({}), []);
     assert.deepEqual(findUnsubstitutedRefs(undefined), []);
-    assert.deepEqual(
-      findUnsubstitutedRefs({ dependencies: { odd: 42 } }),
-      [],
-    );
+    assert.deepEqual(findUnsubstitutedRefs({ dependencies: { odd: 42 } }), []);
   });
 });
 
@@ -47,7 +48,11 @@ describe('formatReport', () => {
   it('passes when every packed manifest is clean', () => {
     const { ok, text } = formatReport([
       { name: 'lit-ui-router', dir: 'packages/lit-ui-router', refs: [] },
-      { name: 'lit-ui-router-mobx', dir: 'packages/lit-ui-router-mobx', refs: [] },
+      {
+        name: 'lit-ui-router-mobx',
+        dir: 'packages/lit-ui-router-mobx',
+        refs: [],
+      },
     ]);
     assert.equal(ok, true);
     assert.match(text, /✓ pack check passed — 2 publishable packages/);

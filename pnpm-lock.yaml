@@ -24,6 +24,9 @@ catalogs:
     '@types/lodash':
       specifier: ^4.17.24
       version: 4.17.24
+    '@types/node':
+      specifier: ^24.13.2
+      version: 24.13.2
     '@uirouter/core':
       specifier: ^6.1.2
       version: 6.1.2
@@ -145,6 +148,9 @@ importers:
       '@pnpm/workspace.read-manifest':
         specifier: 'catalog:'
         version: 1000.3.1
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
       cypress:
         specifier: 'catalog:'
         version: 15.18.0
@@ -181,6 +187,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.3(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
       wrangler:
         specifier: 'catalog:'
         version: 4.107.0
@@ -574,7 +583,7 @@ importers:
   tools/typedoc-plugin-lit-ui-router:
     devDependencies:
       '@types/node':
-        specifier: ^24.13.2
+        specifier: 'catalog:'
         version: 24.13.2
       typedoc:
         specifier: 'catalog:'
@@ -9434,6 +9443,20 @@ snapshots:
       fsevents: 2.3.3
       jiti: 2.7.0
       lightningcss: 1.32.0
+      yaml: 2.9.0
+
+  vite@8.1.3(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0):
+    dependencies:
+      lightningcss: 1.32.0
+      picomatch: 4.0.5
+      postcss: 8.5.16
+      rolldown: 1.1.4
+      tinyglobby: 0.2.17
+    optionalDependencies:
+      '@types/node': 24.13.2
+      esbuild: 0.28.1
+      fsevents: 2.3.3
+      jiti: 2.7.0
       yaml: 2.9.0
 
   vite@8.1.3(@types/node@25.0.9)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0):

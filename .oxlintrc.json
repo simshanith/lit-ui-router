@@ -250,6 +250,23 @@
         "typescript/no-unsafe-member-access": "off",
         "typescript/no-unsafe-return": "off"
       }
+    },
+    {
+      "files": ["scripts/**/*.test.ts"],
+      "rules": {
+        "typescript/no-floating-promises": "off"
+      }
+    },
+    {
+      "files": ["scripts/start-xvfb.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^XVFB_"]
+          }
+        ]
+      }
     }
   ]
 }

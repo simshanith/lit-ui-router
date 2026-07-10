@@ -15,13 +15,13 @@
 import { spawnSync } from 'node:child_process';
 import { existsSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
-import { dirname, join, resolve } from 'node:path';
+import { dirname, resolve } from 'node:path';
 
-import { workspaceRoot } from '../../scripts/workspace.mjs';
+import { workspaceRoot } from '../../scripts/workspace.ts';
 
 const require = createRequire(import.meta.url);
 
-function fail(message) {
+function fail(message: string): never {
   console.error(`vue-check: ${message}`);
   console.error('usage: vue-check <project> [...vue-tsc args]');
   process.exit(2);
@@ -34,9 +34,7 @@ const project = resolve(workspaceRoot, projectArg);
 if (!existsSync(project)) fail(`no such project: ${projectArg}`);
 const projectDir = statSync(project).isDirectory() ? project : dirname(project);
 
-const vueTscDir = dirname(require.resolve('vue-tsc/package.json'));
-const { bin } = require(join(vueTscDir, 'package.json'));
-const vueTsc = join(vueTscDir, typeof bin === 'string' ? bin : bin['vue-tsc']);
+const vueTsc = require.resolve('vue-tsc/bin/vue-tsc.js');
 
 const result = spawnSync(
   process.execPath,

@@ -1,14 +1,28 @@
 // Pure logic for the catalog-duplication check — no filesystem or pnpm SDK here,
-// so every unit is directly testable with plain fixtures (see check-catalog.test.mjs).
+// so every unit is directly testable with plain fixtures (see check-catalog.test.ts).
 // The IO (enumerating workspace members, reading the workspace manifest) lives in
-// check-catalog.mjs and feeds plain objects into these functions.
+// check-catalog.ts and feeds plain objects into these functions.
 
-export const DEP_FIELDS = [
-  'dependencies',
-  'devDependencies',
-  'peerDependencies',
-  'optionalDependencies',
-];
+import { DEP_FIELDS, type DepField, type Report } from './types.ts';
+import type { Member } from './workspace.ts';
+
+export type DeclarationSite = { dir: string; field: DepField; spec: string };
+
+// dep name -> consumer package name -> that consumer's declaration sites.
+export type InlineUsage = Map<string, Map<string, DeclarationSite[]>>;
+
+// A dependency declared inline by 2+ packages, with every specifier seen.
+export type Violation = {
+  dep: string;
+  consumers: Map<string, DeclarationSite[]>;
+  specs: string[];
+};
+
+// The catalog-bearing shape of pnpm-workspace.yaml that catalogDepNames reads.
+export type WorkspaceCatalogs = {
+  catalog?: Record<string, unknown>;
+  catalogs?: Record<string, Record<string, unknown> | undefined>;
+};
 
 // Specifier prefixes that are already "managed" — i.e. not an inline registry
 // range that could/should be hoisted into the catalog.
@@ -22,7 +36,7 @@ const MANAGED_PREFIXES = [
 ];
 
 /** True when `spec` is a plain registry range/tag (the kind a catalog would hold). */
-export function isInlineRegistryRange(spec) {
+export function isInlineRegistryRange(spec: unknown): spec is string {
   if (typeof spec !== 'string') return false;
   const s = spec.trim();
   if (s.length === 0) return false;
@@ -34,20 +48,25 @@ export function isInlineRegistryRange(spec) {
 
 /**
  * Map each dependency to the workspace packages that declare it inline.
- * @param {Array<{ name: string, dir: string, manifest: object }>} members
- * @returns {Map<string, Map<string, Array<{ dir: string, field: string, spec: string }>>>}
- *          dep name -> consumer package name -> declaration sites
+ * Returns: dep name -> consumer package name -> declaration sites.
  */
-export function collectInlineUsage(members) {
-  const usage = new Map();
+export function collectInlineUsage(members: Member[]): InlineUsage {
+  const usage: InlineUsage = new Map();
   for (const { name, dir, manifest } of members) {
     for (const field of DEP_FIELDS) {
       for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
         if (!isInlineRegistryRange(spec)) continue;
-        if (!usage.has(dep)) usage.set(dep, new Map());
-        const byConsumer = usage.get(dep);
-        if (!byConsumer.has(name)) byConsumer.set(name, []);
-        byConsumer.get(name).push({ dir, field, spec });
+        let byConsumer = usage.get(dep);
+        if (!byConsumer) {
+          byConsumer = new Map();
+          usage.set(dep, byConsumer);
+        }
+        let sites = byConsumer.get(name);
+        if (!sites) {
+          sites = [];
+          byConsumer.set(name, sites);
+        }
+        sites.push({ dir, field, spec });
       }
     }
   }
@@ -56,10 +75,10 @@ export function collectInlineUsage(members) {
 
 /**
  * Reduce usage to violations: deps declared inline by 2+ distinct packages.
- * @returns {Array<{ dep: string, consumers: Map, specs: string[] }>} sorted by dep
+ * The result is sorted by dependency name.
  */
-export function findViolations(usage) {
-  const violations = [];
+export function findViolations(usage: InlineUsage): Violation[] {
+  const violations: Violation[] = [];
   for (const [dep, consumers] of usage) {
     if (consumers.size < 2) continue;
     const specs = [
@@ -71,7 +90,9 @@ export function findViolations(usage) {
 }
 
 /** Set of every dependency name defined in the default or any named catalog. */
-export function catalogDepNames(workspaceManifest) {
+export function catalogDepNames(
+  workspaceManifest: WorkspaceCatalogs | undefined,
+): Set<string> {
   const names = new Set(Object.keys(workspaceManifest?.catalog ?? {}));
   for (const catalog of Object.values(workspaceManifest?.catalogs ?? {})) {
     for (const name of Object.keys(catalog ?? {})) names.add(name);
@@ -79,14 +100,18 @@ export function catalogDepNames(workspaceManifest) {
   return names;
 }
 
-/**
- * Render the human-readable report.
- * @returns {{ ok: boolean, text: string }}
- */
+// Options for formatReport: the count feeds the success line, and the set of
+// already-catalogued dep names decides which fix hint each violation gets.
+export type FormatReportOptions = {
+  memberCount?: number;
+  catalogNames?: Set<string>;
+};
+
+/** Render the human-readable report. */
 export function formatReport(
-  violations,
-  { memberCount, catalogNames = new Set() } = {},
-) {
+  violations: Violation[],
+  { memberCount, catalogNames = new Set<string>() }: FormatReportOptions = {},
+): Report {
   if (violations.length === 0) {
     return {
       ok: true,

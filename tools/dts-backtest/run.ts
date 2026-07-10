@@ -21,6 +21,52 @@ import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// The classic (6.x-and-earlier) compiler API. Every API leg is a `typescript`
+// aliased to a fixed version, all sharing this surface, so one namespace types
+// them all. The native 7 leg (checkNative) uses plain objects instead.
+import type * as TS from 'typescript-5.9';
+
+type ClassicApi = typeof import('typescript-5.9');
+
+// A native (TS 7) diagnostic, as `typescript/unstable/sync` hands them back:
+// plain objects rather than ts.Diagnostic instances.
+type NativeDiagnostic = {
+  fileName?: string;
+  code: number;
+  category: number;
+  text: string;
+  pos?: number;
+  end?: number;
+};
+
+// TypeScript 7 ships no types for its unstable `typescript/unstable/sync`
+// surface, so describe exactly the slice checkNative drives and assert the
+// dynamic import to it.
+interface NativeProgram {
+  getSourceFileNames(): string[];
+  getConfigFileParsingDiagnostics(): NativeDiagnostic[];
+  getGlobalDiagnostics(): NativeDiagnostic[];
+  getSyntacticDiagnostics(): NativeDiagnostic[];
+  getSemanticDiagnostics(): NativeDiagnostic[];
+}
+interface NativeSnapshot {
+  getProject(configPath: string): { program: NativeProgram } | undefined;
+  dispose(): void;
+}
+interface NativeApi {
+  updateSnapshot(options: { openProjects: string[] }): NativeSnapshot;
+  close(): void;
+}
+interface NativeSyncModule {
+  API: new (options: { cwd: string }) => NativeApi;
+  DiagnosticCategory: { Error: number };
+}
+// Every leg reports its own version from its root export, classic and native
+// alike — the classic legs read it off the API object as `ts.version`.
+interface NativeModule {
+  version: string;
+}
+
 const here = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
@@ -41,7 +87,7 @@ const PACKAGE_DIRS = [
 
 // A file we cannot resolve is treated as ours: it means the compiler reported
 // against something we planted or mangled, which must never be tolerated.
-function ownsPath(fileName) {
+function ownsPath(fileName: string): boolean {
   let normalized;
   try {
     normalized = resolve(realpathSync(fileName));
@@ -52,11 +98,11 @@ function ownsPath(fileName) {
   return PACKAGE_DIRS.some((dir) => normalized.startsWith(dir));
 }
 
-function loadConfig(ts, configFile) {
-  let fatal;
+function loadConfig(ts: ClassicApi, configFile: string): TS.ParsedCommandLine {
+  let fatal: string | undefined;
   const host = {
     ...ts.sys,
-    onUnRecoverableConfigFileDiagnostic: (diagnostic) => {
+    onUnRecoverableConfigFileDiagnostic: (diagnostic: TS.Diagnostic) => {
       fatal = ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n');
     },
   };
@@ -71,8 +117,8 @@ function loadConfig(ts, configFile) {
   return parsed;
 }
 
-function check(specifier, configFile) {
-  const ts = require(specifier);
+function check(specifier: string, configFile: string) {
+  const ts = require(specifier) as ClassicApi;
   const parsed = loadConfig(ts, configFile);
   const program = ts.createProgram({
     rootNames: parsed.fileNames,
@@ -94,7 +140,7 @@ function check(specifier, configFile) {
   }
 
   const diagnostics = ts.getPreEmitDiagnostics(program);
-  const owned = [];
+  const owned: TS.Diagnostic[] = [];
   let foreign = 0;
   for (const diagnostic of diagnostics) {
     if (!diagnostic.file || ownsPath(diagnostic.file.fileName)) {
@@ -109,17 +155,11 @@ function check(specifier, configFile) {
 
 // TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
 // ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
-async function checkNative(specifier, configFile) {
-  const { API, DiagnosticCategory } = await import(
-    `${specifier}/unstable/sync`
-  );
-  const { version } = require(
-    join(
-      dirname(require.resolve(`${specifier}/package.json`)),
-      'lib',
-      'version.cjs',
-    ),
-  );
+async function checkNative(specifier: string, configFile: string) {
+  const [{ API, DiagnosticCategory }, { version }] = (await Promise.all([
+    import(`${specifier}/unstable/sync`),
+    import(specifier),
+  ])) as [NativeSyncModule, NativeModule];
 
   const api = new API({ cwd: here });
   const configPath = join(here, configFile);
@@ -129,7 +169,7 @@ async function checkNative(specifier, configFile) {
     if (!project) throw new Error(`no project for ${configFile}`);
     const { program } = project;
 
-    const files = program.getSourceFileNames();
+    const files: string[] = program.getSourceFileNames();
     const missing = PACKAGE_DIRS.filter(
       (dir) => !files.some((file) => resolve(file).startsWith(dir)),
     );
@@ -139,7 +179,7 @@ async function checkNative(specifier, configFile) {
       );
     }
 
-    const owned = [];
+    const owned: NativeDiagnostic[] = [];
     let foreign = 0;
     const diagnostics = [
       ...program.getConfigFileParsingDiagnostics(),
@@ -162,13 +202,13 @@ async function checkNative(specifier, configFile) {
   }
 }
 
-function formatNative(diagnostics) {
+function formatNative(diagnostics: NativeDiagnostic[]): string {
   return diagnostics
     .map((d) => `  ${d.fileName ?? '<unknown>'}: TS${d.code}: ${d.text}`)
     .join('\n');
 }
 
-async function runNative(specifier, configFile) {
+async function runNative(specifier: string, configFile: string) {
   const { version, owned, foreign, fileCount } = await checkNative(
     specifier,
     configFile,
@@ -185,12 +225,12 @@ async function runNative(specifier, configFile) {
   return true;
 }
 
-function run(specifier, configFile) {
+function run(specifier: string, configFile: string) {
   const { ts, owned, foreign, fileCount } = check(specifier, configFile);
 
   const label = `TS ${ts.version} · ${configFile}`;
   if (owned.length > 0) {
-    const formatHost = {
+    const formatHost: TS.FormatDiagnosticsHost = {
       getCurrentDirectory: () => here,
       getCanonicalFileName: (fileName) => fileName,
       getNewLine: () => '\n',
@@ -219,7 +259,10 @@ const NATIVE_PROBE =
 
 // async: the native leg reads the probe after an await, so the restore must not
 // run until the body has fully resolved.
-async function withProbe(probe, body) {
+async function withProbe<T>(
+  probe: string,
+  body: (target: string) => T | Promise<T>,
+): Promise<T> {
   const target = join(PACKAGE_DIRS[0], 'index.d.ts');
   const original = readFileSync(target, 'utf8');
   writeFileSync(target, original + probe);
