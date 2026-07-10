@@ -12,7 +12,7 @@
     "lint": "oxlint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
-    "wrangler": "wrangler --config ../wrangler.jsonc",
+    "wrangler": "wrangler",
     "wrangler:dev": "pnpm run wrangler dev"
   },
   "dependencies": {
