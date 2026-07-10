@@ -150,9 +150,9 @@ export interface UiSrefActiveParams {
   /** The state name to check for active status */
   state: string;
   /** State parameters to match */
-  params: RawParams;
+  params?: RawParams;
   /** Transition options */
-  options: TransitionOptions;
+  options?: TransitionOptions;
   /** Target states from nested uiSref directives */
   targetStates: TargetState[];
 }
