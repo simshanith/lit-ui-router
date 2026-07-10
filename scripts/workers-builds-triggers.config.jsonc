@@ -1,0 +1,20 @@
+// Desired Workers Builds trigger configuration for lit-ui-router.dev — the
+// source of truth the Cloudflare dashboard should match. Mirrors the CURRENT
+// dashboard values; change this file first, then run
+// `pnpm check:workers-builds --apply`.
+{
+  "productionBranch": "main",
+  "production": {
+    "build_command": "npx turbo docs#build",
+    "deploy_command": "pnpm wrangler deploy",
+    // Alias-free alternative (verified in PR #268 — works from either root
+    // directory, with or without the docs `wrangler` package.json script):
+    // "deploy_command": "pnpm --filter docs exec wrangler deploy",
+  },
+  "preview": {
+    "build_command": "npx turbo docs#build",
+    "deploy_command": "pnpm wrangler versions upload",
+    // Alias-free alternative:
+    // "deploy_command": "pnpm --filter docs exec wrangler versions upload",
+  },
+}

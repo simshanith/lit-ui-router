@@ -50,6 +50,53 @@ export function parseJsonc(text: string): unknown {
   return result;
 }
 
+// Strict validation of workers-builds-triggers.config.jsonc: unknown or
+// mistyped keys throw rather than silently un-pinning a field, since --apply
+// writes this state to production.
+export function desiredStateFromConfig(config: unknown): DesiredState {
+  const record = asRecord(config, 'config');
+  for (const key of Object.keys(record)) {
+    if (!['productionBranch', 'production', 'preview'].includes(key)) {
+      throw new Error(`config has unknown key "${key}"`);
+    }
+  }
+  const { productionBranch } = record;
+  if (typeof productionBranch !== 'string' || productionBranch === '') {
+    throw new Error('config "productionBranch" must be a non-empty string');
+  }
+  return {
+    productionBranch,
+    production: desiredTrigger(record.production, 'production'),
+    preview: desiredTrigger(record.preview, 'preview'),
+  };
+}
+
+function asRecord(value: unknown, what: string): Record<string, unknown> {
+  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
+    throw new Error(`${what} must be an object`);
+  }
+  return value as Record<string, unknown>;
+}
+
+function desiredTrigger(value: unknown, kind: TriggerKind): DesiredTrigger {
+  const record = asRecord(value, `config "${kind}"`);
+  const desired: DesiredTrigger = {};
+  for (const key of Object.keys(record)) {
+    const field = PINNABLE_FIELDS.find((candidate) => candidate === key);
+    if (!field) {
+      throw new Error(
+        `config ${kind}.${key} is not a pinnable field (expected: ${PINNABLE_FIELDS.join(', ')})`,
+      );
+    }
+    const spec = record[field];
+    if (typeof spec !== 'string' || spec === '') {
+      throw new Error(`config ${kind}.${field} must be a non-empty string`);
+    }
+    desired[field] = spec;
+  }
+  return desired;
+}
+
 /** The `name` field of a parsed wrangler config, or throw. */
 export function workerNameFromConfig(config: unknown): string {
   const name =

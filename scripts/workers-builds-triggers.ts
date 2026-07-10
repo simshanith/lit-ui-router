@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Dashboard-as-code for the Cloudflare Workers Builds triggers that deploy
-// lit-ui-router.dev. The dashboard config has no PR trail, so DESIRED below is
-// the reviewable source of truth the dashboard should match.
+// lit-ui-router.dev. The dashboard config has no PR trail, so the sibling
+// workers-builds-triggers.config.jsonc is the reviewable source of truth the
+// dashboard should match.
 //
 // Usage:
 //   CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… node scripts/workers-builds-triggers.ts [--apply]
@@ -22,28 +23,30 @@ import { join } from 'node:path';
 import {
   type DesiredState,
   type Trigger,
+  desiredStateFromConfig,
   diffTriggers,
   parseJsonc,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 
-// Source of truth for the dashboard. Mirrors the CURRENT dashboard values —
-// change this constant first, then run with --apply.
-const DESIRED: DesiredState = {
-  productionBranch: 'main',
-  production: {
-    build_command: 'npx turbo docs#build',
-    deploy_command: 'pnpm wrangler deploy',
-  },
-  preview: {
-    build_command: 'npx turbo docs#build',
-    deploy_command: 'pnpm wrangler versions upload',
-  },
-  // Alias-free alternatives (verified in DEPLOY.md — work from either root
-  // directory, with or without the docs `wrangler` package.json script):
-  //   production: { deploy_command: 'pnpm --filter docs exec wrangler deploy' }
-  //   preview: { deploy_command: 'pnpm --filter docs exec wrangler versions upload' }
-};
+// The desired-state source of truth, validated at load time.
+const DESIRED_CONFIG = join(
+  import.meta.dirname,
+  'workers-builds-triggers.config.jsonc',
+);
+
+async function loadDesired(): Promise<DesiredState> {
+  try {
+    return desiredStateFromConfig(
+      parseJsonc(await readFile(DESIRED_CONFIG, 'utf8')),
+    );
+  } catch (error) {
+    throw new Error(
+      `cannot load desired state from ${DESIRED_CONFIG}: ${error instanceof Error ? error.message : String(error)}`,
+      { cause: error },
+    );
+  }
+}
 
 const API_BASE = 'https://api.cloudflare.com/client/v4/accounts';
 
@@ -121,6 +124,8 @@ async function main() {
     return;
   }
 
+  const desired = await loadDesired();
+
   // The worker name comes from the same config wrangler deploys with.
   const configPath = join(import.meta.dirname, '..', 'wrangler.jsonc');
   const name = workerNameFromConfig(
@@ -130,7 +135,7 @@ async function main() {
   const tag = await workerTag(token, accountId, name);
   const { report, drifts } = diffTriggers(
     await getTriggers(token, accountId, tag),
-    DESIRED,
+    desired,
   );
   console.log(`worker: ${name} (${tag})\n`);
   console.log(report.text);
@@ -154,7 +159,7 @@ async function main() {
   }
 
   // Re-read so the confirmation reflects what the API stored, not what we sent.
-  const after = diffTriggers(await getTriggers(token, accountId, tag), DESIRED);
+  const after = diffTriggers(await getTriggers(token, accountId, tag), desired);
   console.log(`\nAfter --apply:\n\n${after.report.text}`);
   if (!after.report.ok) process.exitCode = 1;
 }

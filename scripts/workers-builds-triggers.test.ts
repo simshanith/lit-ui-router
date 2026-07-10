@@ -4,29 +4,39 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import {
-  type DesiredState,
   type Drift,
   type Trigger,
   classifyTrigger,
+  desiredStateFromConfig,
   diffTriggers,
   parseJsonc,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 
 // Expected values live in the fixture so it doubles as documentation of the
-// API trigger shape and the desired dashboard state. readFile keeps the root
-// tsconfig free of JSON-import compiler options.
+// API trigger shape. readFile keeps the root tsconfig free of JSON-import
+// compiler options.
 type Fixtures = {
-  desired: DesiredState;
   triggers: { production: Trigger; preview: Trigger };
   driftScenario: { driftedDeployCommand: string; expectedDrifts: Drift[] };
 };
-const { desired, triggers, driftScenario } = JSON.parse(
+const { triggers, driftScenario } = JSON.parse(
   await readFile(
     join(import.meta.dirname, 'workers-builds-triggers.fixtures.json'),
     'utf8',
   ),
 ) as Fixtures;
+
+// The diff tests run against the real source-of-truth config, so they also
+// prove it parses and validates.
+const desired = desiredStateFromConfig(
+  parseJsonc(
+    await readFile(
+      join(import.meta.dirname, 'workers-builds-triggers.config.jsonc'),
+      'utf8',
+    ),
+  ),
+);
 
 describe('parseJsonc', () => {
   it('parses the repo wrangler.jsonc (comments + trailing commas)', async () => {
@@ -39,6 +49,53 @@ describe('parseJsonc', () => {
 
   it('throws a clear error on malformed input', () => {
     assert.throws(() => parseJsonc('{"a": }'), /invalid JSONC at offset/);
+  });
+});
+
+describe('desiredStateFromConfig', () => {
+  it('accepts the real config (loaded above) with the dashboard values', () => {
+    assert.equal(desired.productionBranch, 'main');
+    assert.equal(desired.production.deploy_command, 'pnpm wrangler deploy');
+    assert.equal(
+      desired.preview.deploy_command,
+      'pnpm wrangler versions upload',
+    );
+  });
+
+  it('rejects non-objects and unknown top-level keys', () => {
+    assert.throws(() => desiredStateFromConfig([]), /must be an object/);
+    assert.throws(
+      () => desiredStateFromConfig({ productionBranch: 'main', prod: {} }),
+      /unknown key "prod"/,
+    );
+  });
+
+  it('requires a non-empty productionBranch and both trigger specs', () => {
+    assert.throws(
+      () => desiredStateFromConfig({ production: {}, preview: {} }),
+      /"productionBranch" must be a non-empty string/,
+    );
+    assert.throws(
+      () => desiredStateFromConfig({ productionBranch: 'main' }),
+      /config "production" must be an object/,
+    );
+  });
+
+  it('rejects typoed or mistyped pinnable fields', () => {
+    const base = { productionBranch: 'main', preview: {} };
+    assert.throws(
+      () =>
+        desiredStateFromConfig({
+          ...base,
+          production: { deploy_comand: 'pnpm wrangler deploy' },
+        }),
+      /production\.deploy_comand is not a pinnable field/,
+    );
+    assert.throws(
+      () =>
+        desiredStateFromConfig({ ...base, production: { build_command: '' } }),
+      /production\.build_command must be a non-empty string/,
+    );
   });
 });
 
