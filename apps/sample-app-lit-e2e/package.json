@@ -21,7 +21,7 @@
   },
   "devDependencies": {
     "@types/lodash": "catalog:",
-    "concurrently": "^10.0.3",
+    "concurrently": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",
     "start-server-and-test": "^3.0.11",
