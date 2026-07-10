@@ -9,7 +9,10 @@ describe('docs site', () => {
   });
 
   it('navigates without a full page load', () => {
-    cy.visit('/');
+    cy.visit('/tutorial/live-examples');
+    // The refresh icon only renders after Vue mounts (see the ExampleEmbed
+    // spec below), so waiting on it keeps the click from racing hydration.
+    cy.get('.restart-btn sp-icon-refresh').should('exist');
     cy.window().then((win) => {
       win.hydrationProbe = true;
     });
@@ -24,6 +27,11 @@ describe('docs site', () => {
     cy.visit('/api/');
     cy.title().should('match', /API Overview/);
     cy.get('h1').should('exist');
+    // A typedoc-authored page must list real exports; an empty or stale
+    // generation would render the shell without them.
+    cy.visit('/api/reference/');
+    // Scoped to main: the sidebar also links UIRouterLit, but collapsed.
+    cy.contains('main a', 'UIRouterLit').should('be.visible');
   });
 
   it('mounts the ExampleEmbed theme component', () => {
@@ -37,6 +45,10 @@ describe('docs site', () => {
   });
 
   it('serves the embedded example apps same-origin', () => {
-    cy.request('/examples/helloworld/').its('status').should('eq', 200);
+    // Wrangler's SPA fallback answers every path with 200 + the docs
+    // homepage, so only embed-unique content proves the asset deployed.
+    cy.request('/examples/helloworld/')
+      .its('body')
+      .should('include', 'Hello World - lit-ui-router Tutorial');
   });
 });
