@@ -200,9 +200,9 @@ class PlanetListComponent extends LitElement {
 
   // The router constructs routed components with injected props.
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps<{ planets: SolarBody[] }>;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps<{ planets: SolarBody[] }>) {
     super();
     this._uiViewProps = props;
   }
@@ -273,9 +273,9 @@ class PlanetDetailComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps<{ planet: SolarBody | undefined }>) {
     super();
     this._uiViewProps = props;
   }
@@ -356,7 +356,7 @@ export class AppRoot extends LitElement {
 }
 
 // State definitions
-const planetsState: LitStateDeclaration = {
+const planetsState: LitStateDeclaration<{ planets: SolarBody[] }> = {
   name: 'planets',
   url: '/planets',
   component: PlanetListComponent,
@@ -369,7 +369,7 @@ const planetsState: LitStateDeclaration = {
   ],
 };
 
-const planetState: LitStateDeclaration = {
+const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
@@ -379,7 +379,9 @@ const planetState: LitStateDeclaration = {
       token: 'planet',
       deps: ['$transition$'],
       resolveFn: ($transition$: Transition) => {
-        const planetId = parseInt($transition$.params().planetId);
+        const planetId = parseInt(
+          $transition$.params<{ planetId: string }>().planetId,
+        );
         return SolarSystemService.getBody(planetId);
       },
     },
