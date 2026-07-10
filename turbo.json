@@ -69,23 +69,10 @@
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "//#check:catalog": {
-      "inputs": [
-        "scripts/check-catalog.ts",
-        "scripts/check-catalog.core.ts",
-        "scripts/workspace.ts",
-        "pnpm-workspace.yaml",
-        "**/package.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
     },
     "//#check:pack": {
-      "inputs": [
-        "scripts/check-pack.ts",
-        "scripts/check-pack.core.ts",
-        "scripts/check-catalog.core.ts",
-        "scripts/workspace.ts",
-        "pnpm-workspace.yaml",
-        "**/package.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
     },
     "//#test:root": {
       "inputs": ["scripts/**"]
