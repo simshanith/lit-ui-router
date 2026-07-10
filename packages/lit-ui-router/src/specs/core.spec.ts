@@ -251,7 +251,7 @@ describe('litViewsBuilder', () => {
     expect($$state).toBeDefined();
     expect($$state).toBe(state.$$state?.());
     expect($$state?.views).toBeDefined();
-    expect($$state?.views?.['$default']).toBeDefined();
+    expect($$state?.views?.$default).toBeDefined();
   });
 
   it('should normalize template function to component object', async () => {
@@ -282,8 +282,8 @@ describe('litViewsBuilder', () => {
     });
     const state = router.stateRegistry.get('test');
 
-    expect(state?.views?.['$default']).toBeDefined();
-    expect(state?.views?.['$default'].$type).toBe('lit');
+    expect(state?.views?.$default).toBeDefined();
+    expect(state?.views?.$default.$type).toBe('lit');
   });
 
   it('should set $context on view declaration', async () => {
@@ -310,8 +310,8 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
     const state = router.stateRegistry.get('test').$$state?.();
-    expect(state?.views?.['$default']).toBeDefined();
-    expect(state?.views?.['$default'].$context).toBeDefined();
+    expect(state?.views?.$default).toBeDefined();
+    expect(state?.views?.$default.$context).toBeDefined();
   });
 
   it('should set $name on view declaration', async () => {
@@ -338,7 +338,7 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
     const state = router.stateRegistry.get('test').$$state?.();
-    expect(state?.views?.['$default'].$name).toBe('$default');
+    expect(state?.views?.$default.$name).toBe('$default');
   });
 
   it('should handle named views', async () => {
@@ -369,10 +369,10 @@ describe('litViewsBuilder', () => {
     });
     const state = router.stateRegistry.get('test');
 
-    expect(state?.views?.['header']).toBeDefined();
-    expect(state?.views?.['content']).toBeDefined();
-    expect(state?.views?.['header'].$name).toBe('header');
-    expect(state?.views?.['content'].$name).toBe('content');
+    expect(state?.views?.header).toBeDefined();
+    expect(state?.views?.content).toBeDefined();
+    expect(state?.views?.header.$name).toBe('header');
+    expect(state?.views?.content.$name).toBe('content');
   });
 
   it('should skip empty view configs', async () => {
@@ -403,7 +403,7 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
 
-    expect(state?.views?.['empty']).toBeUndefined();
+    expect(state?.views?.empty).toBeUndefined();
   });
 
   it('should wrap LitElement class component', async () => {
@@ -443,8 +443,8 @@ describe('litViewsBuilder', () => {
       | undefined;
 
     // The component should be wrapped to return a template
-    expect(views?.['$default'].component).toBeDefined();
-    expect(typeof views?.['$default'].component).toBe('function');
+    expect(views?.$default.component).toBeDefined();
+    expect(typeof views?.$default.component).toBe('function');
   });
 
   it('should register a bare argless LitElement class and deliver props via property (#244)', async () => {
@@ -483,10 +483,10 @@ describe('litViewsBuilder', () => {
 
     // Previously the guard rejected argless classes and the builder silently
     // dropped the view as an empty object config.
-    expect(views?.['$default']).toBeDefined();
+    expect(views?.$default).toBeDefined();
 
     const props = {} as UIViewInjectedProps;
-    const result = views?.['$default'].component(props);
+    const result = views?.$default.component(props);
     const instance = result?.values[0] as TestElement & {
       _uiViewProps?: UIViewInjectedProps;
     };

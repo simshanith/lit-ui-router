@@ -179,7 +179,7 @@ export class UiView extends LitElement {
   }
 
   private seekParentView() {
-    this.parentView = this.constructor.seekParentView(this) as UiView;
+    this.parentView = this.constructor.seekParentView(this)!;
   }
 
   private onUiRouterContextEvent = (event: UiRouterContextEvent) => {

@@ -65,7 +65,7 @@ describe('uiSref directive', () => {
     render(html`<a ${uiSref(srefState, params)}>Link</a>`, wrapper);
     await tick(50);
 
-    const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+    const anchor = wrapper.querySelector('a')!;
 
     router.start();
     await tick(50);
@@ -117,14 +117,14 @@ describe('uiSref directive', () => {
       render(html`<a ${uiSref('user', { id: '1' })}>Link</a>`, wrapper);
       await tick(50);
 
-      let anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      let anchor = wrapper.querySelector('a')!;
       expect(anchor.getAttribute('href')).toContain('/user/1');
 
       // Re-render with id=2
       render(html`<a ${uiSref('user', { id: '2' })}>Link</a>`, wrapper);
       await tick(50);
 
-      anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      anchor = wrapper.querySelector('a')!;
       expect(anchor.getAttribute('href')).toContain('/user/2');
     });
 
@@ -145,7 +145,7 @@ describe('uiSref directive', () => {
       render(html`<a ${uiSref('abstract')}>Link</a>`, wrapper);
       await tick(50);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       // Should not have href or have empty href
       const href = anchor.getAttribute('href');
       expect(href === null || href === '').toBe(true);
@@ -270,7 +270,7 @@ describe('uiSref directive', () => {
 
       router.start();
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       const goSpy = vi.spyOn(router.stateService, 'go');
       await clickLocatedElement(anchor);
       await tick();
@@ -294,7 +294,7 @@ describe('uiSref directive', () => {
 
       router.start();
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       const goSpy = vi.spyOn(router.stateService, 'go');
       await clickLocatedElement(anchor);
       await tick();
@@ -431,7 +431,7 @@ describe('uiSref directive', () => {
         render(html`<a ${uiSref('^.sibling')}>Sibling</a>`, wrapper);
         await tick(50);
 
-        const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+        const anchor = wrapper.querySelector('a')!;
         expect(anchor.getAttribute('href')).toContain('/sibling');
       }
     });
@@ -476,7 +476,7 @@ describe('uiSref directive', () => {
 
       router.start();
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       const goSpy = vi.spyOn(router.stateService, 'go');
       clickElement(anchor);
       await tick();
