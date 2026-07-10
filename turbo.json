@@ -63,7 +63,8 @@
         "format:check",
         "codecov:bundle",
         "//#check:catalog",
-        "//#check:pack"
+        "//#check:pack",
+        "//#lint:workflows"
       ]
     },
     "codecov:bundle": {
