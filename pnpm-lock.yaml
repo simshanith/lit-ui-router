@@ -24,6 +24,9 @@ catalogs:
     '@types/lodash':
       specifier: ^4.17.24
       version: 4.17.24
+    '@types/node':
+      specifier: ^24.13.2
+      version: 24.13.2
     '@uirouter/core':
       specifier: ^6.1.2
       version: 6.1.2
@@ -145,6 +148,9 @@ importers:
       '@pnpm/workspace.read-manifest':
         specifier: 'catalog:'
         version: 1000.3.1
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
       cypress:
         specifier: 'catalog:'
         version: 15.18.0
