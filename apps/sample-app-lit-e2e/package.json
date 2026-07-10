@@ -5,7 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "tsc",
-    "docs:start-server": "pnpm --filter docs exec wrangler --config ../wrangler.jsonc dev --port 8787",
+    "docs:start-server": "pnpm --filter docs exec wrangler dev --port 8787",
     "e2e": "cypress open",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
