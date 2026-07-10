@@ -2,7 +2,7 @@
 import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
 
-const props = defineProps<{
+defineProps<{
   src: string;
   title: string;
 }>();
