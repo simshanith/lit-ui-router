@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
     "wrangler": "wrangler",
-    "wrangler:dev": "pnpm run wrangler dev"
+    "wrangler:dev": "wrangler dev"
   },
   "dependencies": {
     "@spectrum-web-components/icons-workflow": "^1.12.1",
