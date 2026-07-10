@@ -15,8 +15,6 @@
       "outputs": ["*/dist/**"]
     },
     "typecheck": {
-      // The examples typecheck against the published lit-ui-router in their
-      // own npm-ci node_modules, which build:embeds installs.
       "dependsOn": ["build:embeds"]
     }
   }
