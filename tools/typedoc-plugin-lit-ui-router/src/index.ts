@@ -138,7 +138,7 @@ function buildLinkTarget(
   propertyName: string,
   symbolName: string,
 ): string {
-  const prop = propertyName ? `${propertyName.substring(1)}` : '';
+  const prop = propertyName ? propertyName.substring(1) : '';
 
   if (url.startsWith('#')) {
     const folder = LOCAL_SYMBOL_PAGES[symbolName] || '';
@@ -575,14 +575,13 @@ function processComment(
 
       if (Object.hasOwnProperty.call(symbolMap, baseName)) {
         const url = symbolMap[baseName];
-        const displayName = propertyName ? `${symbolName}` : symbolName;
         const linkTarget = buildLinkTarget(url, propertyName, baseName);
-        return buildAnchorHtml(linkTarget, displayName);
+        return buildAnchorHtml(linkTarget, symbolName);
       }
 
       if (Object.hasOwnProperty.call(LOCAL_SYMBOL_PAGES, baseName)) {
         const folder = LOCAL_SYMBOL_PAGES[baseName];
-        const prop = propertyName ? `${propertyName.substring(1)}` : '';
+        const prop = propertyName ? propertyName.substring(1) : '';
         const basePath = `../${folder}${baseName}`;
         const href = prop ? `${basePath}#${prop}` : basePath;
         return `<a href="${href}">${symbolName}</a>`;
