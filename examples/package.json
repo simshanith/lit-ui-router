@@ -7,6 +7,11 @@
     "build:embeds": "node build-embeds.mjs",
     "format": "oxfmt \"**/*.{ts,js,mjs,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md,html}\"",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"tsc -p helloworld\" \"tsc -p hellosolarsystem\" \"tsc -p hellogalaxy\""
+  },
+  "devDependencies": {
+    "concurrently": "catalog:",
+    "typescript": "catalog:"
   }
 }

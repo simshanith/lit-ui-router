@@ -18,6 +18,7 @@ catalog:
   '@uirouter/visualizer': ^7.2.1
   '@vitest/browser-playwright': ^4.1.10
   '@vitest/coverage-v8': ^4.1.10
+  concurrently: ^10.0.3
   cypress: ^15.18.0
   lit: ^3.3.3
   lit-dialog: ^2.0.1
