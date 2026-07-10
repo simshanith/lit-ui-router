@@ -1,0 +1,40 @@
+# Lints .github/workflows with the repo-owned actionlint (github-actionlint).
+# Standalone on purpose: kept out of build_and_test so edits to that workflow
+# are themselves linted by a workflow the edit cannot break.
+name: Lint workflows
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Cancel superseded runs per event per ref; never cancel main runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint_workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+        env:
+          # Cypress's binary is never used here; skip its postinstall download.
+          CYPRESS_INSTALL_BINARY: '0'
+      - name: Lint workflows
+        run: turbo run '//#lint:workflows' --ui=stream --log-order=stream
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+          # github-actionlint authenticates its GitHub Releases binary download.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
