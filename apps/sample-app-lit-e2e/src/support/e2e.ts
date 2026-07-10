@@ -13,7 +13,7 @@ function featureQuery(features: Record<string, string>) {
   return { query: params.toString(), isHashMode: locationPlugin === 'hash' };
 }
 
-// Seeds session storage, not the query string: hash routing never rewrites location.search, so a query param would pin the flag as URL-overridden (select disabled) all session.
+// hash routing never rewrites location.search, so a query param would pin the flag as URL-overridden
 function seedLocationPlugin(win: Cypress.AUTWindow) {
   if (!LOCATION_PLUGIN) return;
   const flags = JSON.parse(
