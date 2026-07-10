@@ -33,6 +33,7 @@
     "eslint-formatter-tap": "^9.0.1",
     "eslint-plugin-package-json": "^1.5.0",
     "eslint-plugin-turbo": "^2.10.4",
+    "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",

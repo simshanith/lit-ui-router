@@ -1,0 +1,44 @@
+{
+  "$comment": "Fixtures for workers-builds-triggers.test.ts. `triggers` documents the shape GET /builds/workers/{tag}/triggers returns; `desired` mirrors the DESIRED constant (the current dashboard values); `driftScenario` is one drifted preview trigger and the exact PATCH body the diff must emit for it.",
+  "desired": {
+    "productionBranch": "main",
+    "production": {
+      "build_command": "npx turbo docs#build",
+      "deploy_command": "pnpm wrangler deploy"
+    },
+    "preview": {
+      "build_command": "npx turbo docs#build",
+      "deploy_command": "pnpm wrangler versions upload"
+    }
+  },
+  "triggers": {
+    "production": {
+      "trigger_uuid": "prod-uuid",
+      "trigger_name": "Deploy production",
+      "build_command": "npx turbo docs#build",
+      "deploy_command": "pnpm wrangler deploy",
+      "branch_includes": ["main"],
+      "branch_excludes": []
+    },
+    "preview": {
+      "trigger_uuid": "preview-uuid",
+      "trigger_name": "Preview",
+      "build_command": "npx turbo docs#build",
+      "deploy_command": "pnpm wrangler versions upload",
+      "branch_includes": ["*"],
+      "branch_excludes": ["main"]
+    }
+  },
+  "driftScenario": {
+    "driftedDeployCommand": "npx wrangler deploy",
+    "expectedDrifts": [
+      {
+        "trigger_uuid": "preview-uuid",
+        "kind": "preview",
+        "patch": {
+          "deploy_command": "pnpm wrangler versions upload"
+        }
+      }
+    ]
+  }
+}

@@ -3,6 +3,8 @@
 // workers-builds-triggers.test.ts). The IO (env, Cloudflare API calls,
 // reading wrangler.jsonc) lives in workers-builds-triggers.ts.
 
+import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
+
 // What the shell prints and exits on.
 export type Report = { ok: boolean; text: string };
 
@@ -34,34 +36,18 @@ export type DesiredState = {
 
 export type TriggerKind = 'production' | 'preview';
 
-// wrangler.jsonc is JSONC: strip // and /* */ comments (string-aware) plus
-// trailing commas, then hand off to JSON.parse. Minimal on purpose — this
-// only ever parses the repo's own config, not arbitrary input.
+// wrangler.jsonc allows comments and trailing commas, so JSON.parse alone
+// won't do; jsonc-parser is the VS Code JSONC implementation.
 export function parseJsonc(text: string): unknown {
-  let out = '';
-  let inString = false;
-  for (let i = 0; i < text.length; i += 1) {
-    const two = text.slice(i, i + 2);
-    if (inString) {
-      out += text[i];
-      if (text[i] === '\\') {
-        out += text[i + 1] ?? '';
-        i += 1;
-      } else if (text[i] === '"') {
-        inString = false;
-      }
-    } else if (two === '//') {
-      while (i < text.length && text[i] !== '\n') i += 1;
-      out += '\n';
-    } else if (two === '/*') {
-      const end = text.indexOf('*/', i + 2);
-      i = end === -1 ? text.length : end + 1;
-    } else {
-      out += text[i];
-      if (text[i] === '"') inString = true;
-    }
+  const errors: ParseError[] = [];
+  const result: unknown = parse(text, errors, { allowTrailingComma: true });
+  const [first] = errors;
+  if (first) {
+    throw new Error(
+      `invalid JSONC at offset ${first.offset}: ${printParseErrorCode(first.error)}`,
+    );
   }
-  return JSON.parse(out.replace(/,(\s*[}\]])/g, '$1'));
+  return result;
 }
 
 /** The `name` field of a parsed wrangler config, or throw. */
