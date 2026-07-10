@@ -28,7 +28,7 @@ export class App extends LitElement {
   // Observes the RouterStore of the enclosing <ui-router> and re-renders
   // only when a section's visibility actually flips — not on every
   // transition.
-  private activeSections = new RouterReactionController(
+  private readonly activeSections = new RouterReactionController(
     this,
     (route) => ({
       mymessages: route.includes('mymessages.**'),

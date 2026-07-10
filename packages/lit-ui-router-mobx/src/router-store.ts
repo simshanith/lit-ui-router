@@ -33,7 +33,7 @@ export class RouterStore {
 
   private router?: UIRouter = undefined;
 
-  private static stores = new WeakMap<UIRouter, RouterStore>();
+  private static readonly stores = new WeakMap<UIRouter, RouterStore>();
 
   /**
    * The observable store for the given router — one per router instance.

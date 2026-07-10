@@ -17,7 +17,7 @@ export class NavHeader extends LitElement {
   // Observes the auth state (AppConfig.emailAddress is a MobX observable);
   // logging in or out re-renders this header with no manual requestUpdate()
   // plumbing. Active tab highlighting is handled by uiSrefActive.
-  private auth = new ReactionController(
+  private readonly auth = new ReactionController(
     this,
     () => ({
       isAuthenticated: AuthService.isAuthenticated(),

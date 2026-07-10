@@ -51,7 +51,7 @@ export function isUIRouterNavigateEvent(
 export class NavigationLocationService extends BaseLocationServices {
   _config: LocationConfig;
 
-  private _router: UIRouter;
+  private readonly _router: UIRouter;
 
   /**
    * Creates a new NavigationLocationService instance.

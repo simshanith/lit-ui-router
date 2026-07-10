@@ -16,13 +16,13 @@ interface CommitEventSource {
  */
 export class StoreCommitController implements ReactiveController {
   constructor(
-    private host: ReactiveControllerHost,
-    private store: CommitEventSource,
+    private readonly host: ReactiveControllerHost,
+    private readonly store: CommitEventSource,
   ) {
     host.addController(this);
   }
 
-  private onCommit = () => this.host.requestUpdate();
+  private readonly onCommit = () => this.host.requestUpdate();
 
   hostConnected() {
     this.store.addEventListener('commit', this.onCommit);

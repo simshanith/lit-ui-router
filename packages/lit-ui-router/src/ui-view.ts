@@ -85,14 +85,14 @@ export class UiView extends LitElement {
   @state()
   private component: RoutedLitTemplate | null = null;
 
-  private inner = document.createDocumentFragment();
+  private readonly inner = document.createDocumentFragment();
 
   /** @internal */
   createRenderRoot() {
     return this;
   }
 
-  private viewId = viewIdCounter++;
+  private readonly viewId = viewIdCounter++;
 
   private _uiViewData!: ActiveUIView;
 
@@ -138,7 +138,7 @@ export class UiView extends LitElement {
   @state()
   private parentView!: UiView;
 
-  private onUiViewContextEvent = (event: UiViewContextEvent) => {
+  private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
     // can't adopt self
     if (event.target === this) {
       return;
@@ -159,7 +159,7 @@ export class UiView extends LitElement {
     this.captureContent();
   }
 
-  private static uiViewContextEventName = 'ui-view-context';
+  private static readonly uiViewContextEventName = 'ui-view-context';
 
   private static uiViewContextEvent(): UiViewContextEvent {
     return new CustomEvent(this.uiViewContextEventName, {
@@ -182,7 +182,7 @@ export class UiView extends LitElement {
     this.parentView = this.constructor.seekParentView(this)!;
   }
 
-  private onUiRouterContextEvent = (event: UiRouterContextEvent) => {
+  private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
@@ -198,7 +198,7 @@ export class UiView extends LitElement {
     this.inner.append(...this.childNodes.values());
   }
 
-  private disconnectedHandlers: deregisterFn[] = [];
+  private readonly disconnectedHandlers: deregisterFn[] = [];
 
   private setupUiView() {
     this.seekRouter();
