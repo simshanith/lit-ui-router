@@ -7,19 +7,13 @@
     "build": "vitepress build .",
     "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
-    "format": "prettier --write \"**/*.{md,json,ts}\"",
-    "format:check": "prettier --check \"**/*.{md,json,ts}\"",
-    "lint": "eslint .",
+    "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
+    "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:vue": "vue-check docs/tsconfig.vue.json",
     "wrangler": "wrangler --config ../wrangler.jsonc",
     "wrangler:dev": "pnpm run wrangler dev"
-  },
-  "devDependencies": {
-    "prettier": "catalog:",
-    "typescript": "catalog:",
-    "vite": "catalog:",
-    "vite-plugin-static-copy": "catalog:",
-    "vitepress": "^1.6.4",
-    "wrangler": "catalog:"
   },
   "dependencies": {
     "@spectrum-web-components/icons-workflow": "^1.12.1",
@@ -27,5 +21,14 @@
     "sample-app-lit-vanilla": "workspace:*",
     "screenfull": "^6.0.2",
     "vue": "^3.5.39"
+  },
+  "devDependencies": {
+    "oxfmt": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:",
+    "vite-plugin-static-copy": "catalog:vitepress1",
+    "vitepress": "^1.6.4",
+    "vue-check": "workspace:*",
+    "wrangler": "catalog:"
   }
 }

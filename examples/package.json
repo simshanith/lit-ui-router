@@ -4,8 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint ."
+    "build:embeds": "node build-embeds.mjs",
+    "format": "oxfmt \"**/*.{ts,js,mjs,json,md,html}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md,html}\"",
+    "lint": "oxlint ."
   }
 }

@@ -215,28 +215,30 @@ export interface UIViewInjectedProps<
  */
 export type RoutedLitTemplate<
   T extends DefaultResolvesType = DefaultResolvesType,
-> =
-  | ((props?: UIViewInjectedProps<T>) => TemplateResult)
-  | ((props: UIViewInjectedProps<T>) => TemplateResult);
+> = (props: UIViewInjectedProps<T>) => TemplateResult;
 
 /**
  * A template function that can be used as a view declaration.
+ *
+ * A {@link RoutedLitTemplate} intersected with the core view declaration
+ * metadata (all optional, so plain template functions remain assignable).
  */
-export interface LitViewDeclarationTemplate<
+export type LitViewDeclarationTemplate<
   T extends DefaultResolvesType = DefaultResolvesType,
-> extends _ViewDeclaration {
-  (props: UIViewInjectedProps<T>): TemplateResult;
-  (props?: UIViewInjectedProps<T>): TemplateResult;
-}
+> = RoutedLitTemplate<T> & _ViewDeclaration;
 
 /**
  * A LitElement class constructor that can be used in state declarations.
  *
- * The class should extend LitElement and optionally accept {@link UIViewInjectedProps}
- * in its constructor. The `sticky` property can be set to `true` to reuse the
- * same component instance across state transitions.
+ * The class should extend LitElement. The router delivers {@link UIViewInjectedProps}
+ * two ways: as a constructor argument on first render, and by assigning the
+ * `_uiViewProps` property on every render (the only channel that fires when a
+ * `sticky` instance is reused). Constructor args are optional — argless
+ * constructors, as is typical for custom elements, work too. The `sticky`
+ * property can be set to `true` to reuse the same component instance across
+ * state transitions.
  *
- * @example
+ * @example Constructor injection
  * ```ts
  * class UserList extends LitElement {
  *   _uiViewProps: UIViewInjectedProps;
@@ -258,14 +260,29 @@ export interface LitViewDeclarationTemplate<
  * });
  * ```
  *
+ * @example Argless constructor with property injection (typical Lit)
+ * ```ts
+ * class UserDetail extends LitElement {
+ *   // reactive property: sticky reuse re-renders when props are reassigned
+ *   @property({ attribute: false }) _uiViewProps?: UIViewInjectedProps;
+ *
+ *   render() {
+ *     return html`<h1>${this._uiViewProps?.transition?.params().id}</h1>`;
+ *   }
+ * }
+ * ```
+ *
  * @category types
  */
 export interface RoutedLitElement<
   T extends DefaultResolvesType = DefaultResolvesType,
 > {
-  /** Overloaded constructor that requires UIViewInjectedProps */
+  /**
+   * Construct signature. The router always passes props; classes may declare
+   * the parameter required, optional, or not at all.
+   */
   new (props: UIViewInjectedProps<T>): LitElement & {
-    _uiViewProps: UIViewInjectedProps<T>;
+    _uiViewProps?: UIViewInjectedProps<T>;
   };
 
   /** If true, the same component instance is reused across state transitions */
@@ -374,6 +391,17 @@ export interface LitStateDeclaration<
 > extends StateDeclaration {
   /** The Lit component to render for this state */
   component?: LitViewDeclaration<T>;
+
+  /**
+   * An optional object used to define multiple named views.
+   *
+   * Overrides the core [[StateDeclaration.views]] property so each named view
+   * accepts any {@link LitViewDeclaration} format — a bare component or an
+   * object with a `component` property — threading the resolves generic.
+   *
+   * @see {@link LitViewDeclaration}
+   */
+  views?: { [key: string]: LitViewDeclaration<T> };
 }
 
 /**

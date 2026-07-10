@@ -46,9 +46,9 @@ export class Login extends LitElement {
     this.authenticating = true;
     AuthService.authenticate(this.username, this.password)
       .then(returnToOriginalState)
-      .catch((error: string) => {
+      .catch((error: Error) => {
         done();
-        showError(error);
+        showError(error.message);
       });
   };
 

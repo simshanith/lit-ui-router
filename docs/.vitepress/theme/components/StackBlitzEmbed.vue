@@ -2,7 +2,7 @@
 import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
 
-const props = defineProps<{
+defineProps<{
   src: string;
   title: string;
 }>();
@@ -24,7 +24,8 @@ const handleFullscreenChange = () => {
 
 const iframe = useTemplateRef('iframe');
 function refreshIframe() {
-  iframe.value.src += '';
+  const el = iframe.value;
+  if (el) el.src += '';
 }
 
 async function loadIcons() {
@@ -55,7 +56,11 @@ onUnmounted(() => {
 </script>
 
 <template>
-  <div ref="container" class="stackblitz-embed" :class="{ fullscreen: isFullscreen }">
+  <div
+    ref="container"
+    class="stackblitz-embed"
+    :class="{ fullscreen: isFullscreen }"
+  >
     <iframe
       :src="src"
       :title="title"
@@ -86,7 +91,9 @@ onUnmounted(() => {
 <style scoped>
 .stackblitz-embed {
   width: 100%;
-  transition: padding 0.3s ease, width 0.3s ease;
+  transition:
+    padding 0.3s ease,
+    width 0.3s ease;
 }
 
 .stackblitz-embed iframe {
@@ -95,7 +102,10 @@ onUnmounted(() => {
   border: 0;
   border-radius: 4px;
   overflow: hidden;
-  transition: height 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0.3s ease,
+    border-radius 0.3s ease;
   margin: auto;
 }
 
@@ -110,13 +120,19 @@ onUnmounted(() => {
   height: calc(100vh - 80px);
   border-radius: 8px;
   width: 88%;
-  transition: height 0.3s ease, width 0s ease, border-radius 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0s ease,
+    border-radius 0.3s ease;
 }
 
 .stackblitz-embed.fullscreen:fullscreen iframe,
 .stackblitz-embed.fullscreen:-webkit-full-screen iframe {
   width: 100%;
-  transition: height 0.3s ease, width 0.3s ease, border-radius 0.3s ease;
+  transition:
+    height 0.3s ease,
+    width 0.3s ease,
+    border-radius 0.3s ease;
 }
 
 .stackblitz-embed-actions {
@@ -138,7 +154,9 @@ onUnmounted(() => {
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
   cursor: pointer;
-  transition: background-color 0.2s, border-color 0.2s;
+  transition:
+    background-color 0.2s,
+    border-color 0.2s;
 }
 
 .btn:hover {

@@ -119,7 +119,7 @@ export class FeatureFlagsPanel extends LitElement {
 
   private _handleBooleanChange(flag: keyof FeatureFlagDefinitions, e: Event) {
     const checked = (e.target as HTMLInputElement).checked;
-    featureFlags.set(flag, checked as FeatureFlagDefinitions[typeof flag]);
+    featureFlags.set(flag, checked);
     this._flags = featureFlags.getAll();
   }
 
@@ -192,11 +192,9 @@ export class FeatureFlagsPanel extends LitElement {
             <div class="flag-info">
               <div class="flag-label">
                 ${config.label}
-                ${
-                  featureFlags.isUrlOverridden(config.key)
-                    ? html`<span class="url-override">(URL override)</span>`
-                    : ''
-                }
+                ${featureFlags.isUrlOverridden(config.key)
+                  ? html`<span class="url-override">(URL override)</span>`
+                  : ''}
               </div>
               <div class="flag-description">${config.description}</div>
             </div>

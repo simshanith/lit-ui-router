@@ -1,13 +1,12 @@
 {
-  "extends": "../../tsconfig.base.json",
+  // Tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit.
+  // The build emits via tsconfig.build.json.
+  "extends": "./tsconfig.build.json",
   "compilerOptions": {
-    "module": "es2022",
-    "moduleResolution": "bundler",
-    "outDir": "dist",
-    "rootDir": "src",
-    "declaration": true,
-    "sourceMap": true
+    "rootDir": ".",
+    "noEmit": true,
+    "types": ["vitest/globals"]
   },
-  "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "include": ["src/**/*", "vitest.config.ts"],
+  "exclude": ["node_modules", "dist"]
 }

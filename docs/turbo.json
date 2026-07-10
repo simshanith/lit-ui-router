@@ -17,8 +17,26 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build", "^docs:api"],
+      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build", "^docs:api"],
+      "with": ["typecheck:vue"]
+    },
+    "docs": {
+      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
+      "cache": false,
+      "persistent": true
+    },
+    "typecheck:vue": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        ".vitepress/env.d.ts",
+        ".vitepress/theme/components/*.vue",
+        "tsconfig.json",
+        "tsconfig.vue.json"
+      ]
     }
   }
 }

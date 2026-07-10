@@ -5,7 +5,7 @@ description: Learn about nested states and views
 
 # Hello Galaxy
 
-Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces **nested states** and **nested ui-views**. We'll refactor our app so the list and detail views appear side-by-side, with the list always visible.
+Building on [Hello Solar System](./hellosolarsystem), this tutorial introduces **nested states** and **nested ui-views**. We'll zoom out to the Milky Way and build a star catalog — ten real stars with spectral class, constellation, distance, and magnitude — in a master-detail layout where the list stays visible. And since we're out here anyway, a sibling state renders a 3D astronaut.
 
 ## Live Demo
 
@@ -15,11 +15,12 @@ title="lit-ui-router-hellogalaxy"><a href="https://stackblitz.com/github/simshan
 
 ## What We're Building
 
-Instead of navigating between separate list and detail pages, we'll create a layout where:
+A three-level state tree:
 
-- The list of planets is always visible on the left
-- The selected planet's details appear on the right
-- Child states are rendered in a nested `<ui-view>`
+- `galaxy` — a parent shell with section navigation and its own nested `<ui-view>`
+- `galaxy.stars` — a master-detail star list; the catalog loads via an async resolve
+- `galaxy.stars.star` — a detail panel for the selected star, at `/:starId`, rendered in a second nested `<ui-view>`
+- `galaxy.astronaut` — a sibling of `galaxy.stars` that renders the Smithsonian's 3D scan of Neil Armstrong's spacesuit with [`@google/model-viewer`](https://modelviewer.dev/)
 
 ---
 
@@ -27,29 +28,44 @@ Instead of navigating between separate list and detail pages, we'll create a lay
 
 ### Parent-Child Relationships
 
-In UI Router, states can have parent-child relationships defined using dot notation:
+In UI Router, states form parent-child relationships using dot notation:
 
 ```typescript
-// Parent state
-const peopleState: LitStateDeclaration = {
-  name: 'people',
-  url: '/people',
-  component: PeopleContainerComponent,
-  resolve: [{ token: 'people', resolveFn: () => PeopleService.getAllPeople() }],
+// Parent shell state; owns the section nav and a nested <ui-view>
+const galaxyState: LitStateDeclaration = {
+  name: 'galaxy',
+  url: '/galaxy',
+  component: GalaxyShellComponent,
+  // Visiting the bare parent forwards to the star list
+  redirectTo: 'galaxy.stars',
 };
 
-// Child state (note the dot notation: people.person)
-const personState: LitStateDeclaration = {
-  name: 'people.person',
-  url: '/:personId',
-  component: PersonDetailComponent,
+// Child state (nested via dot notation) renders inside galaxy's <ui-view>
+const starsState: LitStateDeclaration = {
+  name: 'galaxy.stars',
+  url: '/stars',
+  component: StarsContainerComponent,
   resolve: [
     {
-      token: 'person',
-      deps: ['$transition$', 'people'],
-      resolveFn: ($transition$, people) => {
-        const personId = parseInt($transition$.params().personId);
-        return people.find((p: Person) => p.id === personId);
+      token: 'stars',
+      resolveFn: () => StarService.getStars(),
+    },
+  ],
+};
+
+// Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
+const starState: LitStateDeclaration = {
+  name: 'galaxy.stars.star',
+  url: '/:starId',
+  component: StarDetailComponent,
+  resolve: [
+    {
+      token: 'star',
+      // Resolve inheritance: 'stars' is injected from the parent state's resolve
+      deps: ['$transition$', 'stars'],
+      resolveFn: ($transition$: Transition, stars: Star[]) => {
+        const starId = $transition$.params().starId;
+        return stars.find((s) => s.id === starId);
       },
     },
   ],
@@ -58,33 +74,60 @@ const personState: LitStateDeclaration = {
 
 Key concepts:
 
-1. **Dot notation**: `people.person` means "person is a child of people"
-2. **URL composition**: The child's URL appends to the parent's URL
-   - Parent: `/people`
-   - Child: `/:personId`
-   - Combined: `/people/:personId`
-3. **Resolve inheritance**: Child states can access parent resolves via `deps`
+1. **Dot notation**: `galaxy.stars.star` means "star is a child of stars, which is a child of galaxy"
+2. **URL composition**: Each child's URL appends to its parent's URL
+   - `galaxy`: `/galaxy`
+   - `galaxy.stars`: `/stars` → `/galaxy/stars`
+   - `galaxy.stars.star`: `/:starId` → `/galaxy/stars/:starId`
+3. **`redirectTo`**: Visiting the bare parent state (`/galaxy`) forwards to a sensible default child
+4. **Resolve inheritance**: Child states can access parent resolves via `deps` (more below)
 
-### Nested ui-view
+### The Parent Shell
 
-The parent component includes a `<ui-view>` where child components render:
+The `galaxy` state's component is a shell: section navigation plus a `<ui-view>` where its child states render.
 
 ```typescript
-@customElement('people-container')
-class PeopleContainerComponent extends LitElement {
-  static styles = css`
-    .container {
-      display: flex;
-      gap: 32px;
-    }
-    .list {
-      flex: 0 0 200px;
-    }
-    .detail {
-      flex: 1;
-    }
-  `;
+@customElement('galaxy-shell')
+class GalaxyShellComponent extends LitElement {
+  // Injected by <ui-view>; required by the RoutedLitElement contract
+  _uiViewProps!: UIViewInjectedProps;
 
+  constructor(props: UIViewInjectedProps) {
+    super();
+    this._uiViewProps = props;
+  }
+
+  render() {
+    return html`
+      <nav>
+        <!-- activeClasses use stateService.includes, so Stars stays lit on the nested detail state -->
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('galaxy.stars')}
+          >Stars</a
+        >
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('galaxy.astronaut')}
+          >Astronaut</a
+        >
+      </nav>
+      <!-- Child states (galaxy.stars, galaxy.astronaut) render into this nested view -->
+      <ui-view></ui-view>
+    `;
+  }
+}
+```
+
+Note that `uiSrefActive` matches by state _inclusion_: the Stars tab stays highlighted even when the deeper `galaxy.stars.star` state is active.
+
+### Nested ui-view with Fallback Content
+
+The `galaxy.stars` component splits into a list column and a detail panel. The detail panel is another `<ui-view>` — the grandchild state renders there. Content slotted inside the `<ui-view>` shows as a fallback until a child state activates:
+
+```typescript
+@customElement('stars-container')
+class StarsContainerComponent extends LitElement {
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 
@@ -93,29 +136,39 @@ class PeopleContainerComponent extends LitElement {
     this._uiViewProps = props;
   }
 
-  get people(): Person[] {
-    return this._uiViewProps.resolves.people;
+  get stars(): Star[] {
+    return this._uiViewProps.resolves!.stars;
   }
 
   render() {
     return html`
       <div class="container">
         <div class="list">
-          <h3>Solar System</h3>
+          <h3>Milky Way stars</h3>
           <ul>
-            ${this.people.map(
-              (person) => html`
+            ${this.stars.map(
+              (star) => html`
                 <li>
-                  <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('.person', { personId: person.id })}>${person.name}</a>
+                  <!-- Relative sref: '.star' resolves against this state (galaxy.stars) -->
+                  <a
+                    ${uiSrefActive({ activeClasses: ['active'] })}
+                    ${uiSref('.star', { starId: star.id })}
+                  >
+                    <span
+                      class="dot"
+                      style="color: ${spectralColor(star.spectralClass)}"
+                    ></span>
+                    ${star.name}
+                  </a>
                 </li>
               `,
             )}
           </ul>
         </div>
         <div class="detail">
-          <!-- Child state renders here -->
+          <!-- Slotted fallback shows until the child state (galaxy.stars.star) activates -->
           <ui-view>
-            <p>Select an item from the list</p>
+            <p class="hint">Select a star from the list</p>
           </ui-view>
         </div>
       </div>
@@ -126,9 +179,27 @@ class PeopleContainerComponent extends LitElement {
 
 The nested `<ui-view>`:
 
-- Renders the child state's component (`PersonDetailComponent`)
-- Shows default content ("Select an item...") when no child state is active
-- Only child states of `people` will render here
+- Renders the child state's component (`StarDetailComponent`)
+- Shows the slotted fallback ("Select a star from the list") when no child state is active
+- Only child states of `galaxy.stars` will render here
+
+Each list entry gets a glowing dot colored by the star's spectral class letter — O and B stars render blue, G stars like the Sun render yellow, M stars like Betelgeuse render orange-red:
+
+```typescript
+// Approximate real star colors by spectral class letter (O hottest, M coolest)
+const spectralColors: Record<string, string> = {
+  O: '#92b5ff',
+  B: '#a5c0ff',
+  A: '#cad8ff',
+  F: '#f8f7ff',
+  G: '#ffefc4',
+  K: '#ffd2a1',
+  M: '#ffab6e',
+};
+
+const spectralColor = (spectralClass: string): string =>
+  spectralColors[spectralClass[0]] ?? '#ffffff';
+```
 
 ---
 
@@ -139,17 +210,17 @@ The nested `<ui-view>`:
 When navigating within a state hierarchy, use relative references:
 
 ```typescript
-// From within the 'people' state:
-${uiSref('.person', { personId: person.id })}
+// From within the 'galaxy.stars' state:
+${uiSref('.star', { starId: star.id })}
 
 // This is equivalent to:
-${uiSref('people.person', { personId: person.id })}
+${uiSref('galaxy.stars.star', { starId: star.id })}
 ```
 
 The `.` means "relative to the current state's context." This is useful because:
 
 - It's shorter to write
-- If you rename the parent state, child references still work
+- If you rename an ancestor state, child references still work
 - It makes the relationship clearer
 
 ### Going Up the Hierarchy
@@ -157,31 +228,31 @@ The `.` means "relative to the current state's context." This is useful because:
 You can also navigate up:
 
 ```typescript
-// From 'people.person', go back to parent
-${uiSref('^')}  // Goes to 'people'
+// From 'galaxy.stars.star', go back to parent
+${uiSref('^')}  // Goes to 'galaxy.stars'
 
 // Or use absolute reference
-${uiSref('people')}
+${uiSref('galaxy.stars')}
 ```
 
 ---
 
 ## Resolve Inheritance
 
-Child states can depend on parent resolves:
+The star detail state doesn't re-fetch the catalog. Its resolve declares a dependency on the **parent state's** `stars` resolve, alongside `$transition$` for the route parameter:
 
 ```typescript
-const personState: LitStateDeclaration = {
-  name: 'people.person',
-  url: '/:personId',
-  component: PersonDetailComponent,
+const starState: LitStateDeclaration = {
+  name: 'galaxy.stars.star',
+  url: '/:starId',
+  component: StarDetailComponent,
   resolve: [
     {
-      token: 'person',
-      deps: ['$transition$', 'people'], // 'people' comes from parent!
-      resolveFn: ($transition$, people) => {
-        const personId = parseInt($transition$.params().personId);
-        return people.find((p: Person) => p.id === personId);
+      token: 'star',
+      deps: ['$transition$', 'stars'], // 'stars' comes from the parent!
+      resolveFn: ($transition$: Transition, stars: Star[]) => {
+        const starId = $transition$.params().starId;
+        return stars.find((s) => s.id === starId);
       },
     },
   ],
@@ -191,82 +262,21 @@ const personState: LitStateDeclaration = {
 This is powerful because:
 
 - The parent's data is already loaded
-- No need to fetch the entire list again
-- Child resolve can filter or transform parent data
+- No need to fetch the entire catalog again
+- The child resolve can filter or transform parent data
+
+Note the `:starId` parameter here is a string slug (`sirius`, `proxima-centauri`) rather than a number — no `parseInt` needed.
 
 ---
 
-## Full Source Code
+## A Sibling State: the Astronaut
+
+Nested views aren't just for master-detail. `galaxy.astronaut` is a _sibling_ of `galaxy.stars`: activating it swaps the entire stars UI out of the shell's `<ui-view>` and renders a 3D model instead — the Smithsonian's high-resolution scan of Neil Armstrong's Apollo 11 spacesuit, displayed with the `<model-viewer>` web component:
 
 ```typescript
-import { html, LitElement, css } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
-import { render } from 'lit';
-import { hashLocationPlugin } from '@uirouter/core';
-import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration, UIViewInjectedProps } from 'lit-ui-router';
-
-// Data Service
-interface Person {
-  id: number;
-  name: string;
-  description: string;
-}
-
-const people: Person[] = [
-  { id: 1, name: 'Sun', description: 'The star at the center of our solar system.' },
-  { id: 2, name: 'Mercury', description: 'The smallest planet and closest to the Sun.' },
-  { id: 3, name: 'Venus', description: 'The hottest planet with a thick atmosphere.' },
-  { id: 4, name: 'Earth', description: 'Our home planet, the only known planet with life.' },
-  { id: 5, name: 'Mars', description: 'The red planet, a target for future exploration.' },
-];
-
-const PeopleService = {
-  getAllPeople: (): Promise<Person[]> => Promise.resolve(people),
-};
-
-// Components
-@customElement('people-container')
-class PeopleContainerComponent extends LitElement {
-  static styles = css`
-    .container {
-      display: flex;
-      gap: 32px;
-    }
-    .list {
-      flex: 0 0 200px;
-    }
-    .list ul {
-      list-style: none;
-      padding: 0;
-      margin: 0;
-    }
-    .list li {
-      margin: 8px 0;
-    }
-    .list a {
-      color: #0066cc;
-      text-decoration: none;
-      padding: 4px 8px;
-      display: block;
-      border-radius: 4px;
-    }
-    .list a:hover {
-      background: #f0f0f0;
-    }
-    .list a.active {
-      background: #0066cc;
-      color: white;
-    }
-    .detail {
-      flex: 1;
-      padding: 16px;
-      background: #f9f9f9;
-      border-radius: 8px;
-      min-height: 200px;
-    }
-  `;
-
-  @property({ attribute: false })
+@customElement('astronaut-view')
+class AstronautViewComponent extends LitElement {
+  // Injected by <ui-view>; required by the RoutedLitElement contract
   _uiViewProps!: UIViewInjectedProps;
 
   constructor(props: UIViewInjectedProps) {
@@ -274,149 +284,75 @@ class PeopleContainerComponent extends LitElement {
     this._uiViewProps = props;
   }
 
-  get people(): Person[] {
-    return this._uiViewProps.resolves.people;
-  }
-
   render() {
     return html`
-      <div class="container">
-        <div class="list">
-          <h3>Solar System</h3>
-          <ul>
-            ${this.people.map(
-              (person) => html`
-                <li>
-                  <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('.person', { personId: person.id })}>${person.name}</a>
-                </li>
-              `,
-            )}
-          </ul>
-        </div>
-        <div class="detail">
-          <ui-view>
-            <p style="color: #666; font-style: italic;">Select a planet from the list</p>
-          </ui-view>
-        </div>
-      </div>
+      <h3>Someone is exploring out here too</h3>
+      <p>Drag to orbit the astronaut. Scroll to zoom.</p>
+      <model-viewer
+        src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb"
+        alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
+        camera-controls
+        auto-rotate
+        ar
+      ></model-viewer>
+      <p class="attribution">
+        <a
+          href="https://3d.si.edu/object/3d/neil-armstrong-spacesuit:d8c63ba6-4ebc-11ea-b77f-2e728ce88125"
+          target="_blank"
+          rel="noopener"
+          >Neil Armstrong Space Suit</a
+        >
+        provided by the Smithsonian Digitization Programs Office and the
+        National Air and Space Museum.
+        <a href="https://www.si.edu/Termsofuse" target="_blank" rel="noopener"
+          >Usage Conditions Apply</a
+        >
+      </p>
     `;
   }
 }
 
-@customElement('person-detail')
-class PersonDetailComponent extends LitElement {
-  static styles = css`
-    h3 {
-      margin-top: 0;
-      color: #333;
-    }
-    p {
-      color: #666;
-      line-height: 1.6;
-    }
-  `;
-
-  @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
-
-  constructor(props: UIViewInjectedProps) {
-    super();
-    this._uiViewProps = props;
-  }
-
-  get person(): Person | undefined {
-    return this._uiViewProps.resolves.person;
-  }
-
-  render() {
-    if (!this.person) {
-      return html`<p>Planet not found</p>`;
-    }
-    return html`
-      <h3>${this.person.name}</h3>
-      <p>${this.person.description}</p>
-    `;
-  }
-}
-
-@customElement('app-root')
-class AppRoot extends LitElement {
-  static styles = css`
-    h2 {
-      color: #333;
-    }
-    nav {
-      margin-bottom: 24px;
-    }
-    nav a {
-      margin-right: 16px;
-      color: #333;
-      text-decoration: none;
-    }
-    nav a.active {
-      font-weight: bold;
-      border-bottom: 2px solid #0066cc;
-    }
-  `;
-
-  render() {
-    return html`
-      <h2>Hello Galaxy</h2>
-      <nav>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('people')}>Solar System</a>
-      </nav>
-      <ui-view></ui-view>
-    `;
-  }
-}
-
-// State definitions
-const peopleState: LitStateDeclaration = {
-  name: 'people',
-  url: '/people',
-  component: PeopleContainerComponent,
+// Sibling of galaxy.stars; swaps into the same nested <ui-view>
+const astronautState: LitStateDeclaration = {
+  name: 'galaxy.astronaut',
+  url: '/astronaut',
+  component: AstronautViewComponent,
   resolve: [
     {
-      token: 'people',
-      resolveFn: () => PeopleService.getAllPeople(),
+      // Resolves can await code, not just data: model-viewer loads on state
+      // activation, and the bundler splits it into its own chunk
+      token: 'modelViewer',
+      resolveFn: () => import('@google/model-viewer'),
     },
   ],
 };
+```
 
-const personState: LitStateDeclaration = {
-  name: 'people.person',
-  url: '/:personId',
-  component: PersonDetailComponent,
-  resolve: [
-    {
-      token: 'person',
-      deps: ['$transition$', 'people'],
-      resolveFn: ($transition$: any, people: Person[]) => {
-        const personId = parseInt($transition$.params().personId);
-        return people.find((p) => p.id === personId);
-      },
-    },
-  ],
-};
+Routed components and third-party web components compose naturally — `<model-viewer>` is just another custom element inside a Lit template.
 
-// Router setup
+Note the resolve: instead of a top-level `import '@google/model-viewer'`, the state's `resolveFn` dynamically imports the library. Resolves can await **code, not just data** — the `<model-viewer>` element is registered on state activation, and the bundler splits the (large) library into its own chunk that's only fetched when someone visits the astronaut.
+
+---
+
+## Router Setup
+
+```typescript
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-router.stateRegistry.register(peopleState);
-router.stateRegistry.register(personState);
-router.urlService.rules.initial({ state: 'people' });
-router.start();
-
-// Render
-render(
-  html`
-    <ui-router .uiRouter=${router}>
-      <app-root></app-root>
-    </ui-router>
-  `,
-  document.getElementById('root')!,
+import('@uirouter/visualizer').then(({ Visualizer }) =>
+  router.plugin(Visualizer),
 );
+router.stateRegistry.register(galaxyState);
+router.stateRegistry.register(starsState);
+router.stateRegistry.register(starState);
+router.stateRegistry.register(astronautState);
+router.urlService.rules.initial({ state: 'galaxy.stars' });
+router.start();
 ```
+
+## Full Source Code
+
+The complete source — including the full ten-star catalog and the deep-space styling — is in [`examples/hellogalaxy/src/main.ts`](https://github.com/simshanith/lit-ui-router/blob/main/examples/hellogalaxy/src/main.ts), or browse it in the StackBlitz embed above.
 
 ---
 
@@ -427,19 +363,26 @@ Here's how our states form a hierarchy:
 ```
 app-root
 └── <ui-view> (root viewport)
-    └── people (/people)
-        └── people-container
+    └── galaxy (/galaxy)
+        └── galaxy-shell
             └── <ui-view> (nested viewport)
-                └── people.person (/people/:personId)
-                    └── person-detail
+                ├── galaxy.stars (/galaxy/stars)
+                │   └── stars-container
+                │       └── <ui-view> (nested viewport)
+                │           └── galaxy.stars.star (/galaxy/stars/:starId)
+                │               └── star-detail
+                └── galaxy.astronaut (/galaxy/astronaut)
+                    └── astronaut-view
 ```
 
-When navigating to `/people/3`:
+When navigating to `/galaxy/stars/sirius`:
 
-1. `people` state is activated (if not already active)
-2. `PeopleContainerComponent` renders in the root `<ui-view>`
-3. `people.person` state is activated
-4. `PersonDetailComponent` renders in the nested `<ui-view>` inside `PeopleContainerComponent`
+1. `galaxy` state is activated (if not already active)
+2. `GalaxyShellComponent` renders in the root `<ui-view>`
+3. `galaxy.stars` state is activated; its `stars` resolve fetches the catalog
+4. `StarsContainerComponent` renders in the shell's nested `<ui-view>`
+5. `galaxy.stars.star` state is activated; its `star` resolve finds Sirius in the inherited catalog
+6. `StarDetailComponent` renders in the nested `<ui-view>` inside `StarsContainerComponent`
 
 ---
 
@@ -447,11 +390,11 @@ When navigating to `/people/3`:
 
 You've now learned the core concepts of lit-ui-router:
 
-| Tutorial           | Concepts                                                                 |
-| ------------------ | ------------------------------------------------------------------------ |
-| Hello World        | States, components, navigation with `uiSref`, basic routing              |
-| Hello Solar System | Resolves for data fetching, state parameters, accessing route data       |
-| Hello Galaxy       | Nested states, nested ui-views, relative references, resolve inheritance |
+| Tutorial           | Concepts                                                                               |
+| ------------------ | -------------------------------------------------------------------------------------- |
+| Hello World        | States, components, navigation with `uiSref`, basic routing                            |
+| Hello Solar System | Resolves for data fetching, state parameters, accessing route data                     |
+| Hello Galaxy       | Nested states, nested ui-views, `redirectTo`, relative references, resolve inheritance |
 
 ## What's Next?
 

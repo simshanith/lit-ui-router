@@ -17,16 +17,16 @@
   },
   "scripts": {
     "build": "tsc",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint ."
-  },
-  "peerDependencies": {
-    "typedoc": "catalog:publishedPeer"
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "lint": "oxlint ."
   },
   "devDependencies": {
     "@types/node": "^24.13.2",
     "typedoc": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:typescript6-compat"
+  },
+  "peerDependencies": {
+    "typedoc": "catalog:publishedPeer"
   }
 }

@@ -72,7 +72,7 @@ export class EditContact extends LitElement {
   saveContact = () => {
     // Save the contact, then go to the parent state (either 'contacts' or 'contacts.contact')
     const { stateService } = this._uiViewProps.router;
-    ContactsStorage.save(this.updatedContact)
+    void ContactsStorage.save(this.updatedContact)
       .then(() => (this.canExit = true))
       .then(() => stateService.go('^', undefined, { reload: true }));
   };

@@ -32,23 +32,19 @@ export class ContactDetail extends LitElement {
           <label>Email</label>
           <div>${contact.email}</div>
         </div>
-        ${
-          contact.address
-            ? html`<div class="flex-h">
-                <label>Address</label>
-                <div>
-                  ${contact.address.street}<br />
-                  ${
-                    contact.address.city +
-                    ', ' +
-                    contact.address.state +
-                    ' ' +
-                    contact.address.zip
-                  }
-                </div>
-              </div>`
-            : null
-        }
+        ${contact.address
+          ? html`<div class="flex-h">
+              <label>Address</label>
+              <div>
+                ${contact.address.street}<br />
+                ${contact.address.city +
+                ', ' +
+                contact.address.state +
+                ' ' +
+                contact.address.zip}
+              </div>
+            </div>`
+          : null}
       </div>
 
       <div class="flex nogrow">

@@ -18,7 +18,7 @@ export class MyMessages extends LitElement {
   }
 
   get folders(): { _id: string }[] {
-    return this._uiViewProps.resolves!.folders ?? [];
+    return this._uiViewProps.resolves.folders ?? [];
   }
 
   render() {

@@ -7,7 +7,7 @@ packages:
 
 catalog:
   '@api-viewer/docs': 1.0.0-pre.10
-  '@codecov/vite-plugin': ^2.0.1
+  '@codecov/bundle-analyzer': ^2.0.1
   '@pnpm/fs.find-packages': ^1000.0.24
   '@release-it/conventional-changelog': ^11.0.1
   '@pnpm/workspace.read-manifest': ^1000.3.1
@@ -17,25 +17,27 @@ catalog:
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
   '@uirouter/visualizer': ^7.2.1
-  '@vitest/browser-playwright': ^4.1.9
-  '@vitest/coverage-v8': ^4.1.9
+  '@vitest/browser-playwright': ^4.1.10
+  '@vitest/coverage-v8': ^4.1.10
   cypress: ^15.18.0
   lit: ^3.3.3
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
   mobx: ^6.16.1
+  oxfmt: 0.58.0
+  oxlint: 1.73.0
+  oxlint-tsgolint: 0.24.0
   playwright: ^1.61.1
-  prettier: ^3.9.4
   release-it: ^20.2.1
   rimraf: ^6.1.3
   typedoc: ^0.28.20
   typedoc-plugin-markdown: ^4.12.0
   typedoc-vitepress-theme: ^1.1.3
-  typescript: ^6.0.3
-  vite: ^7.3.6
+  typescript: ^7.0.2
+  vite: ^8.1.3
   vite-plugin-checker: ^0.14.4
-  vite-plugin-static-copy: ^3.4.0
-  vitest: ^4.1.9
+  vite-plugin-static-copy: ^4.1.1
+  vitest: ^4.1.10
   wrangler: ^4.107.0
 
 catalogMode: prefer
@@ -46,6 +48,10 @@ catalogs:
     lit: ^3.0.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
+  typescript6-compat:
+    typescript: npm:@typescript/typescript6@^6.0.2
+  vitepress1:
+    vite-plugin-static-copy: ^3.4.0
 
 allowBuilds:
   cypress: true
@@ -61,6 +67,7 @@ overrides:
   esbuild: 0.28.1
   'undici@6': 6.27.0
   'undici@7': 7.28.0
+  'vitepress>vite': ^6.4.3
 
 verifyDepsBeforeRun: false
 
@@ -69,3 +76,5 @@ patchedDependencies:
   '@vitest/browser': patches/@vitest__browser.patch
   '@uirouter/dsr': patches/@uirouter__dsr.patch
   lit-dialog: patches/lit-dialog.patch
+
+minimumReleaseAgeStrict: true

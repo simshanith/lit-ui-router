@@ -416,16 +416,12 @@ describe.skipIf(!hasNavigationAPI)(
 );
 
 describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin', () => {
-  let _navigateSpy: ReturnType<typeof vi.spyOn>;
-
   beforeEach(() => {
     // Mock navigate to prevent actual navigation
-    _navigateSpy = vi
-      .spyOn(window.navigation, 'navigate')
-      .mockImplementation(() => ({
-        committed: Promise.resolve({} as NavigationHistoryEntry),
-        finished: Promise.resolve({} as NavigationHistoryEntry),
-      }));
+    vi.spyOn(window.navigation, 'navigate').mockImplementation(() => ({
+      committed: Promise.resolve({} as NavigationHistoryEntry),
+      finished: Promise.resolve({} as NavigationHistoryEntry),
+    }));
   });
 
   afterEach(() => {

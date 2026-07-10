@@ -28,13 +28,13 @@ export class MessageList extends LitElement {
   }));
 
   get folder() {
-    return this._uiViewProps.resolves!.folder;
+    return this._uiViewProps.resolves.folder;
   }
 
   get messages() {
     return MessagesStore.loaded
       ? MessagesStore.byFolder(this.folder._id)
-      : (this._uiViewProps.resolves!.messages ?? []);
+      : (this._uiViewProps.resolves.messages ?? []);
   }
 
   render() {

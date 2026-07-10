@@ -35,7 +35,7 @@ class AuthService {
         const validPassword = password === 'password';
         setTimeout(() => {
           if (validUsername && validPassword) resolve(username);
-          else reject('Invalid username or password');
+          else reject(new Error('Invalid username or password'));
         }, 800);
       });
 

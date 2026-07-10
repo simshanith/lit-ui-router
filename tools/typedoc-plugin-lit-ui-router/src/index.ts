@@ -24,6 +24,13 @@ import * as path from 'path';
 const SYMBOL_LINK_REGEX =
   /\[\[([A-Z][a-zA-Z0-9]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?)\]\]/g;
 
+/** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
+interface SidebarItem {
+  text: string;
+  link?: string;
+  collapsed?: boolean;
+}
+
 /**
  * Category definitions for organizing output.
  */
@@ -178,10 +185,7 @@ export function load(app: Application): void {
 
   // Get any custom symbol mappings from typedoc.json options
   const customMappings =
-    (app.options.getValue('externalSymbolLinkMappings') as Record<
-      string,
-      Record<string, string>
-    >) || {};
+    app.options.getValue('externalSymbolLinkMappings') || {};
 
   // Merge built-in symbols with custom ones
   const mergedMappings = {
@@ -378,9 +382,11 @@ function aggregateCemTags(comment: Comment): void {
 function updateSidebarJson(outDir: string, app: Application): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
   if (!fs.existsSync(sidebarPath)) return;
-  const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
+  const sidebar = JSON.parse(
+    fs.readFileSync(sidebarPath, 'utf-8'),
+  ) as SidebarItem[];
   for (const item of sidebar) {
-    const category: Category = item.text;
+    const category = item.text as Category;
     // Fall back to title-casing so an uncharted @category tag renders
     // instead of crashing the docs build.
     item.text =
@@ -458,7 +464,7 @@ function linkTypeRecursively(
 
   // Recurse into array element types
   if (type.elementType) {
-    linkTypeRecursively(type.elementType as typeof type, symbolMap);
+    linkTypeRecursively(type.elementType, symbolMap);
   }
 }
 
@@ -473,19 +479,13 @@ function linkReflectionTypes(
   if (reflection.signatures) {
     for (const sig of reflection.signatures) {
       if (sig.type) {
-        linkTypeRecursively(
-          sig.type as Parameters<typeof linkTypeRecursively>[0],
-          symbolMap,
-        );
+        linkTypeRecursively(sig.type, symbolMap);
       }
 
       if (sig.parameters) {
         for (const param of sig.parameters) {
           if (param.type) {
-            linkTypeRecursively(
-              param.type as Parameters<typeof linkTypeRecursively>[0],
-              symbolMap,
-            );
+            linkTypeRecursively(param.type, symbolMap);
           }
         }
       }
@@ -494,10 +494,7 @@ function linkReflectionTypes(
 
   // Handle direct type on reflection
   if (reflection.type) {
-    linkTypeRecursively(
-      reflection.type as Parameters<typeof linkTypeRecursively>[0],
-      symbolMap,
-    );
+    linkTypeRecursively(reflection.type, symbolMap);
   }
 
   // Handle extends clauses
@@ -506,10 +503,7 @@ function linkReflectionTypes(
   };
   if (reflectionWithExtends.extendedTypes) {
     for (const extType of reflectionWithExtends.extendedTypes) {
-      linkTypeRecursively(
-        extType as Parameters<typeof linkTypeRecursively>[0],
-        symbolMap,
-      );
+      linkTypeRecursively(extType, symbolMap);
     }
   }
 
@@ -519,10 +513,7 @@ function linkReflectionTypes(
   };
   if (reflectionWithImpl.implementedTypes) {
     for (const implType of reflectionWithImpl.implementedTypes) {
-      linkTypeRecursively(
-        implType as Parameters<typeof linkTypeRecursively>[0],
-        symbolMap,
-      );
+      linkTypeRecursively(implType, symbolMap);
     }
   }
 }
@@ -532,10 +523,7 @@ function linkReflectionTypes(
  */
 function handleSymbolLinks(context: Context, app: Application): void {
   const customMappings =
-    (app.options.getValue('externalSymbolLinkMappings') as Record<
-      string,
-      Record<string, string>
-    >) || {};
+    app.options.getValue('externalSymbolLinkMappings') || {};
   const symbolMap: Record<string, string> = { ...EXTERNAL_SYMBOLS };
 
   for (const key in customMappings) {

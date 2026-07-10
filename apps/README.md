@@ -49,7 +49,7 @@ them at all. This app routes them to a dedicated `notFound` state that
 preserves the URL, plus a transition hook that keeps the 404 from being
 superseded when a URL matches a lazy-loaded future state's prefix but nothing
 inside the loaded module. See the
-[Unmatched URLs (404) guide](https://lit-ui-router.dev/guide/unmatched-urls)
+[Unmatched URLs (404) guide](https://lit-ui-router.dev/guides/unmatched-urls)
 for the full pattern.
 
 ## Location plugin selection
@@ -78,6 +78,18 @@ selects the best available plugin:
 
 The Feature Flags panel shows browser compatibility indicators for each plugin
 option.
+
+## Local development
+
+`turbo dev` starts both apps' Vite dev servers on pinned ports —
+`sample-app-lit-vanilla` on `:5173`, `sample-app-lit-mobx` on `:5174` — with
+`strictPort` set, so a taken port fails loudly instead of silently drifting
+to the next free one. Neither server auto-opens a browser. To run one app on
+a different port, override it on the CLI:
+
+```bash
+pnpm --filter sample-app-lit-vanilla dev --port 5273
+```
 
 ## End-to-end tests
 

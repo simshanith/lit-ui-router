@@ -35,8 +35,6 @@
       "NavigateEvent": "https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent"
     }
   },
-  "formatWithPrettier": true,
-  "prettierConfigFile": "../../.prettierrc",
   "sidebar": {
     "pretty": true
   }

@@ -164,7 +164,7 @@ describe('uiSref directive', () => {
       ];
       const { anchor } = await setupWithSref(states, 'about');
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
       clickElement(anchor);
       await tick();
 
@@ -193,7 +193,7 @@ describe('uiSref directive', () => {
       ];
       const { anchor } = await setupWithSref(states, 'user', { id: '456' });
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
       clickElement(anchor);
       await tick();
 
@@ -210,7 +210,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
       // clickElement(anchor, { ctrlKey: true });
       await clickLocatedElement(anchor, { modifiers: ['Control'] });
       await tick();
@@ -222,7 +222,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
       // clickElement(anchor, { metaKey: true });
       await clickLocatedElement(anchor, { modifiers: ['Meta'] });
 
@@ -235,7 +235,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
       // clickElement(anchor, { button: 1 });
       await clickLocatedElement(anchor, { button: 'middle' });
 
@@ -248,7 +248,7 @@ describe('uiSref directive', () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
       await clickLocatedElement(anchor, { button: 'right' });
 
       await tick();
@@ -458,7 +458,7 @@ describe('uiSref directive', () => {
       anchor.remove();
       await tick();
 
-      const goSpy = vi.spyOn(router.stateService, 'go');
+      const goSpy = vi.spyOn(router!.stateService, 'go');
 
       // The directive should be disconnected, so click won't work
       // until it's re-connected properly

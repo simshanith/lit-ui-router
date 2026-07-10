@@ -14,7 +14,7 @@ hero:
   actions:
     - theme: brand
       text: Get Started
-      link: /tutorial/helloworld
+      link: /introduction
     - theme: alt
       text: View Sample App
       link: ./app
