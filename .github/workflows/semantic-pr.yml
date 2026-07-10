@@ -11,6 +11,9 @@ on:
       - edited
       - synchronize
       - reopened
+      # labeled/unlabeled: the release-label exemption must re-run the checks
+      - labeled
+      - unlabeled
 
 permissions:
   pull-requests: read
@@ -46,6 +49,8 @@ jobs:
             release
 
   lint_pr_body:
+    # Release PR bodies are generated changelogs - exempt, matching the title lint's ignoreLabels
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') }}
     runs-on: ubuntu-latest
     steps:
       - name: Check PR body
