@@ -127,7 +127,8 @@
     "typescript/require-await": "error",
     "typescript/restrict-plus-operands": "error",
     "typescript/restrict-template-expressions": "error",
-    "typescript/unbound-method": "off"
+    "typescript/unbound-method": "off",
+    "typescript/use-unknown-in-catch-callback-variable": "error"
   },
   "overrides": [
     {
@@ -209,7 +210,8 @@
         "typescript/prefer-promise-reject-errors": "off",
         "typescript/require-await": "off",
         "typescript/restrict-plus-operands": "off",
-        "typescript/restrict-template-expressions": "off"
+        "typescript/restrict-template-expressions": "off",
+        "typescript/use-unknown-in-catch-callback-variable": "off"
       },
       "env": {
         "browser": true,
