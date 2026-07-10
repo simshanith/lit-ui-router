@@ -10,13 +10,17 @@
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
-    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
+    "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:full",
     "test:cypress": "cypress run",
     "test:cypress:all": "concurrently --names vanilla,mobx,docs --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\" \"pnpm run test:cypress:docs\"",
     "test:cypress:docs": "cypress run --config-file cypress.docs.config.ts",
+    "test:cypress:full": "pnpm run test:cypress:all && pnpm run test:cypress:modes",
     "test:cypress:hash": "cypress run --expose LOCATION_PLUGIN=hash --config videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
     "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
-    "test:hash": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:hash"
+    "test:cypress:modes": "concurrently --names hash,navigation --prefix-colors auto \"pnpm run test:cypress:hash\" \"pnpm run test:cypress:navigation\"",
+    "test:cypress:navigation": "cypress run --expose LOCATION_PLUGIN=navigation --config videosFolder=cypress/videos-navigation,screenshotsFolder=cypress/screenshots-navigation",
+    "test:hash": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:hash",
+    "test:navigation": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:navigation"
   },
   "dependencies": {
     "docs": "workspace:*"

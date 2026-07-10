@@ -9,12 +9,6 @@
     "test": {
       "dependsOn": ["build", "^test"],
       "cache": false
-    },
-    "test:hash": {
-      "dependsOn": ["build"],
-      "cache": false,
-      "env": ["CI"],
-      "passThroughEnv": ["WRANGLER_LOG"]
     }
   }
 }

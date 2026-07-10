@@ -76,15 +76,6 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
-      - name: E2E (hash mode)
-        # The main run's Cypress suites cover pushState only; hash routing is a
-        # published navigation-location-plugin configuration.
-        run: turbo run test:hash --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          WRANGLER_LOG: warn
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
