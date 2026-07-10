@@ -473,7 +473,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   getStatus(transEvt?: TransEvt): SrefStatus | undefined {
     const { targetStates } = this;
     if (!targetStates.size) {
-      return;
+      return undefined;
     }
     const statuses: SrefStatus[] = [];
     for (const target of targetStates) {
