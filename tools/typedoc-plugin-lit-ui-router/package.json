@@ -22,7 +22,7 @@
     "lint": "oxlint ."
   },
   "devDependencies": {
-    "@types/node": "^24.13.2",
+    "@types/node": "catalog:",
     "typedoc": "catalog:",
     "typescript": "catalog:typescript6-compat"
   },

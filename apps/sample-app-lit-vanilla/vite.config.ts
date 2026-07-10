@@ -30,7 +30,7 @@ export default defineConfig({
   // sample-app package; the apps differ only in their reactivity idiom.
   publicDir: '../sample-app-shared/public',
   build: {
-    // Provenance for scripts/upload-bundle-stats.mjs: the manifest tells
+    // Provenance for scripts/upload-bundle-stats.ts: the manifest tells
     // rollup-emitted assets apart from publicDir/static-copy files.
     manifest: true,
   },

@@ -12,6 +12,7 @@ catalog:
   '@pnpm/workspace.read-manifest': ^1000.3.1
   '@types/dom-navigation': ^1.0.7
   '@types/lodash': ^4.17.24
+  '@types/node': ^24.13.2
   '@uirouter/core': ^6.1.2
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1

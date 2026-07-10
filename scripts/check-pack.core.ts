@@ -1,22 +1,31 @@
 // Pure logic for the packed-manifest check — no filesystem or pnpm here, so
-// every unit is directly testable with plain fixtures (see check-pack.test.mjs).
+// every unit is directly testable with plain fixtures (see check-pack.test.ts).
 // The IO (enumerating publishable packages, running `pnpm pack`, extracting
-// the packed package.json) lives in check-pack.mjs.
+// the packed package.json) lives in check-pack.ts.
 
-import { DEP_FIELDS } from './check-catalog.core.mjs';
+import {
+  DEP_FIELDS,
+  type DepField,
+  type PackageManifest,
+  type Report,
+} from './types.ts';
 
 // Specifier protocols pnpm must substitute at pack time. The npm registry
 // accepts a manifest that still contains them, but consumers then fail with
 // EUNSUPPORTEDPROTOCOL — so a leak here means every publish is broken.
 const UNSUBSTITUTED_PREFIXES = ['catalog:', 'workspace:'];
 
+// A specifier pnpm should have substituted at pack time but left in place.
+export type UnsubstitutedRef = { field: DepField; dep: string; spec: string };
+
 /**
  * Declaration sites in a packed manifest whose specifier was not substituted.
- * @param {object} manifest parsed package.json from inside the packed tarball
- * @returns {Array<{ field: string, dep: string, spec: string }>}
+ * `manifest` is the parsed package.json from inside the packed tarball.
  */
-export function findUnsubstitutedRefs(manifest) {
-  const refs = [];
+export function findUnsubstitutedRefs(
+  manifest: PackageManifest | undefined,
+): UnsubstitutedRef[] {
+  const refs: UnsubstitutedRef[] = [];
   for (const field of DEP_FIELDS) {
     for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
       if (typeof spec !== 'string') continue;
@@ -29,12 +38,14 @@ export function findUnsubstitutedRefs(manifest) {
   return refs;
 }
 
-/**
- * Render the human-readable report.
- * @param {Array<{ name: string, dir: string, refs: Array<{ field: string, dep: string, spec: string }> }>} results
- * @returns {{ ok: boolean, text: string }}
- */
-export function formatReport(results) {
+export type PackResult = {
+  name: string;
+  dir: string;
+  refs: UnsubstitutedRef[];
+};
+
+/** Render the human-readable report. */
+export function formatReport(results: PackResult[]): Report {
   if (results.length === 0) {
     return {
       ok: false,

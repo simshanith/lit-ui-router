@@ -5,7 +5,9 @@ export const IGNORED_WARNINGS_PATTERN =
 
 // Yields the lines worth showing as they arrive; returns (as the generator's
 // return value) the number of filtered keysym warnings.
-export async function* filterStderr(lines) {
+export async function* filterStderr(
+  lines: AsyncIterable<string> | Iterable<string>,
+): AsyncGenerator<string, number, void> {
   let filtered = 0;
   for await (const line of lines) {
     if (IGNORED_WARNINGS_PATTERN.test(line)) {
@@ -17,6 +19,6 @@ export async function* filterStderr(lines) {
   return filtered;
 }
 
-export function formatFilteredCount(filtered) {
+export function formatFilteredCount(filtered: number): string {
   return `(filtered ${filtered} 'Could not resolve keysym' warnings)`;
 }

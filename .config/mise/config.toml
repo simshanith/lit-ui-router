@@ -5,4 +5,4 @@ idiomatic_version_file_enable_tools = ["node"]
 [tools]
 # keep in sync with package.json's packageManager/devDependencies pins
 pnpm = "11.10.0"
-"npm:turbo" = "2.10.3"
+"npm:turbo" = "2.10.4"

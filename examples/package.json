@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build:embeds": "node build-embeds.mjs",
-    "format": "oxfmt \"**/*.{ts,js,mjs,json,md,html}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,js,mjs,json,md,html}\"",
+    "build:embeds": "node build-embeds.ts",
+    "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "lint": "oxlint .",
     "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"tsc -p helloworld\" \"tsc -p hellosolarsystem\" \"tsc -p hellogalaxy\""
   },

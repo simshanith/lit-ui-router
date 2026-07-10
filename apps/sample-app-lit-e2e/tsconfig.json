@@ -7,6 +7,6 @@
     "outDir": "dist",
     "rootDir": "."
   },
-  "include": ["src/**/*"],
+  "include": ["src/**/*", "cypress*.config.ts"],
   "exclude": ["node_modules", "dist"]
 }
