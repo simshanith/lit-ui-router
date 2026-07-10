@@ -182,7 +182,11 @@ export class UiSrefDirective extends AsyncDirective {
 
   update(
     part: ElementPart,
-    [state, params = {}, options = {}]: [string, RawParams?, TransitionOptions?],
+    [state, params = {}, options = {}]: [
+      string,
+      RawParams?,
+      TransitionOptions?,
+    ],
   ) {
     this.state = state;
     this.params = params;

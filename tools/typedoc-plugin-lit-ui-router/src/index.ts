@@ -312,7 +312,7 @@ function formatCemTagContent(text: string): string {
   let rest = text.trim();
 
   let type = '';
-  const typeMatch = rest.match(/^\{([^}]+)\}\s*/);
+  const typeMatch = /^\{([^}]+)\}\s*/.exec(rest);
   if (typeMatch) {
     type = typeMatch[1];
     rest = rest.slice(typeMatch[0].length).trim();
@@ -322,7 +322,7 @@ function formatCemTagContent(text: string): string {
   if (rest.startsWith('-')) {
     rest = rest.replace(/^-\s*/, '');
   } else {
-    const nameMatch = rest.match(/^(\S+)\s*(?:-\s*)?/);
+    const nameMatch = /^(\S+)\s*(?:-\s*)?/.exec(rest);
     if (nameMatch) {
       name = nameMatch[1];
       rest = rest.slice(nameMatch[0].length);

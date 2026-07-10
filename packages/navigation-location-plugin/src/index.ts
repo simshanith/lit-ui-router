@@ -104,8 +104,7 @@ export class NavigationLocationService extends BaseLocationServices {
 
     const basePrefix = this._getBasePrefix();
     const exactBaseHrefMatch = pathname === this._config.baseHref();
-    const startsWithBase =
-      pathname.substring(0, basePrefix.length) === basePrefix;
+    const startsWithBase = pathname.startsWith(basePrefix);
     pathname = exactBaseHrefMatch
       ? '/'
       : startsWithBase
@@ -125,7 +124,7 @@ export class NavigationLocationService extends BaseLocationServices {
    */
   protected _set(state: unknown, title: string, url: string, replace: boolean) {
     const basePrefix = this._getBasePrefix();
-    const slash = url && url[0] !== '/' ? '/' : '';
+    const slash = url && !url.startsWith('/') ? '/' : '';
     const fullUrl =
       url === '' || url === '/'
         ? this._config.baseHref()

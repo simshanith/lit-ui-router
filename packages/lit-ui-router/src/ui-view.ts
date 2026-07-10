@@ -266,11 +266,11 @@ export class UiView extends LitElement {
    */
   private _invokeUiCanExitHook(trans: Transition) {
     const instance = this.firstElementChild as UiOnExit & Element;
-    const uiCanExitFn: TransitionHookFn = instance && instance.uiCanExit;
+    const uiCanExitFn: TransitionHookFn = instance?.uiCanExit;
     if (isFunction(uiCanExitFn)) {
       const state: StateDeclaration = this.state;
 
-      if (trans.exiting().indexOf(state) !== -1) {
+      if (trans.exiting().includes(state)) {
         trans.onStart({}, function () {
           return uiCanExitFn.call(instance, trans);
         });
@@ -308,7 +308,7 @@ export class UiView extends LitElement {
       // Exit early if the $transition$ will exit the state the view is for.
       if (
         $transition$ === viewCreationTrans ||
-        $transition$.exiting().indexOf(viewState) !== -1
+        $transition$.exiting().includes(viewState)
       )
         return;
 
@@ -339,9 +339,8 @@ export class UiView extends LitElement {
       if (changedToParams.length) {
         const changedKeys: string[] = changedToParams.map((x) => x.id);
         // Filter the params to only changed/new to params.  `$transition$.params()` may be used to get all params.
-        const newValues = filter(
-          toParams,
-          (_, key) => changedKeys.indexOf(key!) !== -1,
+        const newValues = filter(toParams, (_, key) =>
+          changedKeys.includes(key!),
         );
         instance.uiOnParamsChanged(newValues, $transition$);
       }
