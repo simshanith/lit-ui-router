@@ -42,6 +42,9 @@
     "//#lint:package-json": {
       "inputs": ["**/package.json", "eslint.config.js"]
     },
+    "//#lint:workflows": {
+      "inputs": [".github/**", "$TURBO_DEFAULT$"]
+    },
     "typecheck": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
