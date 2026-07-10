@@ -70,9 +70,8 @@ try {
       // Membership in the manifest-derived set, not name patterns.
       // (The analyzer's own ignorePatterns matches the absolute paths it
       // feeds micromatch unreliably; likely an upstream bug.)
-      // Nothing to await, so hand back a resolved Promise rather than mark it
-      // async. Capturing the assets here is what the summary below reports, so
-      // the uploaded payload and the summary cannot drift.
+      // Capturing the assets here is what the summary below reports, so the
+      // uploaded payload and the summary cannot drift.
       beforeReportUpload: (report) => {
         report.assets = report.assets?.filter((asset) =>
           emitted.has(asset.name),

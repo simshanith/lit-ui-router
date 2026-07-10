@@ -41,7 +41,7 @@ type NativeDiagnostic = {
 
 // TypeScript 7 ships no types for its unstable `typescript/unstable/sync`
 // surface, so describe exactly the slice checkNative drives and assert the
-// dynamic import to it. Narrow, honest, and version-local.
+// dynamic import to it.
 interface NativeProgram {
   getSourceFileNames(): string[];
   getConfigFileParsingDiagnostics(): NativeDiagnostic[];

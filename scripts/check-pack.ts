@@ -33,7 +33,6 @@ function isPackageManifest(value: unknown): value is PackageManifest {
 
 /** `pnpm pack` in `cwd`; falls back to corepack when pnpm is not on PATH. */
 async function pnpmPack(cwd: string, tarball: string): Promise<void> {
-  // `--out` names the tarball, so there is nothing to search for afterwards.
   const args = ['pack', '--out', tarball];
   try {
     await run('pnpm', args, { cwd });
