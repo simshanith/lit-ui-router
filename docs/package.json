@@ -10,7 +10,7 @@
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
     "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
-    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p worker/tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
     "wrangler:dev": "wrangler dev"
   },
@@ -22,6 +22,7 @@
     "vue": "^3.5.39"
   },
   "devDependencies": {
+    "@cloudflare/workers-types": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

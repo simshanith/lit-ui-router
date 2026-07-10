@@ -2,7 +2,7 @@ import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // Tutorial examples embedded same-origin at /examples/<name>/; built by
-// `examples#build:embeds` (hash routing, so no _redirects entries needed).
+// `examples#build:embeds` (hash routing, so no SPA fallback needed).
 const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
 // VitePress 1.x / vite 6 default targets list `safari14`, but esbuild >=0.27.7
@@ -12,8 +12,8 @@ const TARGET = ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'];
 
 /**
  * Vite plugin to handle /app/* and /app-mobx/* deep linking in dev server.
- * Mirrors Cloudflare _redirects: `/app/* /app 200`, `/app-mobx/* /app-mobx 200`
- * Rewrites requests to serve the matching sample-app SPA html.
+ * Mirrors the Cloudflare Worker (docs/worker/index.ts): deep links under a
+ * sample-app mount serve that app's SPA html.
  * Also resolves /examples/<name>/ directory requests to their index.html
  * (production gets this from Cloudflare's static-asset index resolution).
  */
