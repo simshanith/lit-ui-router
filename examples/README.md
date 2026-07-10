@@ -64,6 +64,8 @@ In the monorepo, a root `pnpm install` also installs each example's own npm depe
 
 ```bash
 pnpm --filter examples postinstall
+# or a single example:
+pnpm --filter examples example:install <example-name>
 ```
 
 ## Project Structure

@@ -5,9 +5,10 @@
   "type": "module",
   "scripts": {
     "build:embeds": "node build-embeds.ts",
+    "example:install": "npm ci --no-audit --no-fund --prefix",
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
-    "postinstall": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"npm ci --no-audit --no-fund --prefix helloworld\" \"npm ci --no-audit --no-fund --prefix hellosolarsystem\" \"npm ci --no-audit --no-fund --prefix hellogalaxy\"",
+    "postinstall": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"pnpm run example:install helloworld\" \"pnpm run example:install hellosolarsystem\" \"pnpm run example:install hellogalaxy\"",
     "lint": "oxlint .",
     "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"pnpm run typecheck:helloworld\" \"pnpm run typecheck:hellosolarsystem\" \"pnpm run typecheck:hellogalaxy\"",
     "typecheck:hellogalaxy": "tsc -p hellogalaxy",
