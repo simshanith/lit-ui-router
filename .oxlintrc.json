@@ -142,6 +142,12 @@
     "typescript/require-await": "error",
     "typescript/restrict-plus-operands": "error",
     "typescript/restrict-template-expressions": "error",
+    "typescript/switch-exhaustiveness-check": [
+      "error",
+      {
+        "considerDefaultExhaustiveForUnions": true
+      }
+    ],
     "typescript/unbound-method": "off",
     "typescript/use-unknown-in-catch-callback-variable": "error"
   },
@@ -236,6 +242,7 @@
         "typescript/require-await": "off",
         "typescript/restrict-plus-operands": "off",
         "typescript/restrict-template-expressions": "off",
+        "typescript/switch-exhaustiveness-check": "off",
         "typescript/use-unknown-in-catch-callback-variable": "off"
       },
       "env": {
