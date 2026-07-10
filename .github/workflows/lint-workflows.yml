@@ -1,7 +1,4 @@
-# Lints .github/workflows with the project-pinned actionlint (mise aqua backend).
-# Standalone on purpose: kept out of build_and_test so edits to that workflow
-# are themselves linted by a workflow the edit cannot break. build_and_test
-# runs the same lint again via `turbo run ci` as a second net.
+# Standalone actionlint workflow
 name: Lint workflows
 
 on:
