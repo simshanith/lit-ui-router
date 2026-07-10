@@ -10,7 +10,12 @@ import {
   isRoutedLitElement,
 } from '../core.js';
 import { createTestRouter } from './test-utils.js';
-import { UIViewInjectedProps, LitStateDeclaration } from '../interface.js';
+import {
+  UIViewInjectedProps,
+  LitStateDeclaration,
+  LitViewDeclaration,
+  NormalizedLitViewDeclaration,
+} from '../interface.js';
 
 describe('UIRouterLit', () => {
   let router: UIRouterLit;
@@ -173,10 +178,10 @@ describe('isLitViewDeclarationTemplate', () => {
     expect(isLitViewDeclarationTemplate(obj)).toBe(false);
   });
 
-  it('should return false for LitElement classes', () => {
+  it('should return true for LitElement classes with argless constructors', () => {
     @customElement('test-element-guard-1')
     class TestElement extends LitElement {}
-    expect(isLitViewDeclarationTemplate(TestElement as any)).toBe(false);
+    expect(isLitViewDeclarationTemplate(TestElement)).toBe(true);
   });
 });
 
@@ -375,7 +380,8 @@ describe('litViewsBuilder', () => {
       name: 'test',
       url: '/test',
       views: {
-        empty: {},
+        // runtime skips empty view configs; LitViewDeclaration requires a component
+        empty: {} as LitViewDeclaration,
       },
     };
 
@@ -411,7 +417,7 @@ describe('litViewsBuilder', () => {
     const stateDecl: LitStateDeclaration = {
       name: 'test',
       url: '/test',
-      component: TestRoutedElement as any,
+      component: TestRoutedElement,
     };
 
     await new Promise((resolve) => {
@@ -431,9 +437,78 @@ describe('litViewsBuilder', () => {
       router.stateRegistry.register(stateDecl);
     });
     const state = router.stateRegistry.get('test').$$state?.();
+    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    const views = state?.views as
+      | Record<string, NormalizedLitViewDeclaration>
+      | undefined;
 
     // The component should be wrapped to return a template
-    expect(state?.views?.['$default'].component).toBeDefined();
-    expect(typeof state?.views?.['$default'].component).toBe('function');
+    expect(views?.['$default'].component).toBeDefined();
+    expect(typeof views?.['$default'].component).toBe('function');
+  });
+
+  it('should register a bare argless LitElement class and deliver props via property (#244)', async () => {
+    @customElement('test-element-argless-1')
+    class TestElement extends LitElement {}
+
+    const stateDecl: LitStateDeclaration = {
+      name: 'argless',
+      url: '/argless',
+      views: {
+        $default: TestElement,
+      },
+    };
+
+    await new Promise((resolve) => {
+      const offStatesChanged = router.stateRegistry.onStatesChanged(
+        (event, states) => {
+          switch (event) {
+            case 'registered':
+              offStatesChanged();
+              resolve(states);
+              break;
+            default:
+              break;
+          }
+        },
+      );
+
+      router.stateRegistry.register(stateDecl);
+    });
+    const state = router.stateRegistry.get('argless').$$state?.();
+    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    const views = state?.views as
+      | Record<string, NormalizedLitViewDeclaration>
+      | undefined;
+
+    // Previously the guard rejected argless classes and the builder silently
+    // dropped the view as an empty object config.
+    expect(views?.['$default']).toBeDefined();
+
+    const props = {} as UIViewInjectedProps;
+    const result = views?.['$default'].component(props);
+    const instance = result?.values[0] as TestElement & {
+      _uiViewProps?: UIViewInjectedProps;
+    };
+    expect(instance).toBeInstanceOf(TestElement);
+    expect(instance._uiViewProps).toBe(props);
+  });
+});
+
+describe('typings regressions (#239)', () => {
+  it('should accept required-props templates and Lit view declaration shapes', () => {
+    const template = (props: UIViewInjectedProps) =>
+      html`<div>${props.transition?.from().name}</div>`;
+    expect(isLitViewDeclarationTemplate(template)).toBe(true);
+
+    // compiling without @ts-expect-error directives is the assertion
+    const stateDecl: LitStateDeclaration = {
+      name: 'typings-regression',
+      views: {
+        $default: template,
+        header: { component: () => html`<header>Header</header>` },
+      },
+    };
+    expect(Object.keys(stateDecl.views ?? {})).toHaveLength(2);
   });
 });

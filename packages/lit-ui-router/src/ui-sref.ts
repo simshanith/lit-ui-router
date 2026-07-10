@@ -98,7 +98,7 @@ export class UiSrefDirective extends AsyncDirective {
       inherit: true,
       source: 'sref',
     };
-    return extend(defaultOpts, opts || {});
+    return extend(defaultOpts, opts || {}) as TransitionOptions;
   }
 
   render(state: string, params?: RawParams, options?: TransitionOptions) {
@@ -175,7 +175,8 @@ export class UiSrefDirective extends AsyncDirective {
     ) {
       return;
     }
-    $state.go(state, params, options);
+    // fire-and-forget: @uirouter/core handles transition promise rejections
+    void $state.go(state, params, options);
     event.preventDefault();
   };
 

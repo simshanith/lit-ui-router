@@ -11,6 +11,7 @@ import { ContactsStorage } from '../global/dataSources.js';
 
 import './Contacts.js';
 import ContactView, { type ContactViewResolves } from './ContactView.js';
+import { type Contact } from './interface.js';
 import EditContact from './EditContact.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
@@ -59,7 +60,10 @@ const viewContactState = {
       token: 'contact',
       deps: ['$transition$'],
       resolveFn: async ($transition$: Transition) =>
-        ContactsStorage.get($transition$.params().contactId),
+        // The untyped SessionStorage fake-REST client resolves a Contact here.
+        ContactsStorage.get(
+          $transition$.params().contactId,
+        ) as Promise<Contact>,
     },
   ],
   component:

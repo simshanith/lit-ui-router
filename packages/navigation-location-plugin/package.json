@@ -1,29 +1,33 @@
 {
   "name": "ui-router-navigation-location-plugin",
+  "version": "0.2.1",
   "description": "UI Router Location Plugin for Navigation API",
-  "version": "0.2.0",
+  "keywords": [
+    "location",
+    "navigation-api",
+    "plugin",
+    "routing",
+    "spa",
+    "ui-router"
+  ],
+  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
   "license": "MIT",
   "author": "Shane Daniel",
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/simshanith/lit-ui-router.git",
     "directory": "packages/navigation-location-plugin"
   },
-  "bugs": {
-    "url": "https://github.com/simshanith/lit-ui-router/issues"
-  },
-  "keywords": [
-    "ui-router",
-    "navigation-api",
-    "location",
-    "plugin",
-    "spa",
-    "routing"
+  "files": [
+    "dist/**"
   ],
   "type": "module",
-  "module": "./dist/index.js",
+  "sideEffects": false,
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -33,38 +37,35 @@
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
-  "sideEffects": false,
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-navigation-location-plugin@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/navigation-location-plugin && typedoc",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint .",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63340 vitest run",
-    "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium"
-  },
-  "peerDependencies": {
-    "@uirouter/core": "catalog:publishedPeer"
+    "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "oxfmt": "catalog:",
     "playwright": "catalog:",
-    "prettier": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-lit-ui-router": "workspace:*",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
-    "typescript": "catalog:",
+    "typescript": "catalog:typescript6-compat",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer"
   }
 }

@@ -71,8 +71,6 @@
       "ElementPart": "https://lit.dev/docs/api/custom-directives/#ElementPart"
     }
   },
-  "formatWithPrettier": true,
-  "prettierConfigFile": "../../.prettierrc",
   "sidebar": {
     "pretty": true
   }

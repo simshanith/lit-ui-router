@@ -16,6 +16,12 @@ import { Application, RendererEvent } from 'typedoc';
 import * as fs from 'fs';
 import * as path from 'path';
 
+/** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
+interface SidebarItem {
+  text: string;
+  link?: string;
+}
+
 /** Kind folders emitted by typedoc-plugin-markdown and their page titles. */
 const KIND_FOLDER_TITLES: Record<string, string> = {
   classes: 'Classes',
@@ -43,7 +49,8 @@ export function load(app: Application): void {
  * typedoc-vitepress-theme `docsRoot` option (e.g. `/api/lit-ui-router-mobx/`).
  */
 function resolveBaseLink(outDir: string, app: Application): string {
-  const docsRoot = String(app.options.getValue('docsRoot') ?? '');
+  const docsRootValue = app.options.getValue('docsRoot');
+  const docsRoot = typeof docsRootValue === 'string' ? docsRootValue : '';
   if (!docsRoot) return './';
   const relative = path.relative(path.resolve(docsRoot), outDir);
   return `/${relative.split(path.sep).join('/')}/`;
@@ -113,7 +120,9 @@ function linkSidebarGroups(
     ]),
   );
 
-  const sidebar = JSON.parse(fs.readFileSync(sidebarPath, 'utf-8'));
+  const sidebar = JSON.parse(
+    fs.readFileSync(sidebarPath, 'utf-8'),
+  ) as SidebarItem[];
   for (const item of sidebar) {
     const folder = folderByTitle[item.text];
     if (folder && fs.existsSync(path.join(outDir, folder, 'index.md'))) {

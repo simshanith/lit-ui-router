@@ -25,7 +25,10 @@ type DeregisterFn = () => void;
  * @category controllers
  */
 export type TransitionEventType =
-  'onBefore' | 'onStart' | 'onSuccess' | 'onError';
+  | 'onBefore'
+  | 'onStart'
+  | 'onSuccess'
+  | 'onError';
 
 /**
  * The reason a [[TransitionController]] invoked its callback.

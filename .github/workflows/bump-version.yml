@@ -21,11 +21,11 @@ on:
         default: 'patch'
         type: choice
         options:
-        - major
-        - minor
-        - patch
-        - other  # Use with 'other' input for custom versions (e.g., prereleases)
-        - none   # No increment - use current version. No-op unless `other` provided
+          - major
+          - minor
+          - patch
+          - other # Use with 'other' input for custom versions (e.g., prereleases)
+          - none # No increment - use current version. No-op unless `other` provided
       other:
         description: 'Other increment'
         required: false
@@ -48,8 +48,8 @@ on:
 permissions:
   contents: write
 # pull-requests: write # instead handled by GH_PERSONAL_ACCESS_TOKEN for downstream actions
-  # ^ Not using GITHUB_TOKEN for PR creation - PAT required so merging
-  # the PR triggers downstream workflows (tag-release, publish)
+# ^ Not using GITHUB_TOKEN for PR creation - PAT required so merging
+# the PR triggers downstream workflows (tag-release, publish)
 
 jobs:
   bump_version:
@@ -67,7 +67,7 @@ jobs:
 
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
         with:
           fetch-depth: 0
           fetch-tags: true

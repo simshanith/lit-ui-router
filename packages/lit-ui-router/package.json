@@ -1,9 +1,7 @@
 {
   "name": "lit-ui-router",
+  "version": "1.6.0",
   "description": "State-based routing for Lit",
-  "version": "1.5.1",
-  "type": "module",
-  "module": "./dist/index.js",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
   "author": "Shane Daniel",
@@ -11,11 +9,16 @@
     "type": "git",
     "url": "https://github.com/simshanith/lit-ui-router"
   },
+  "files": [
+    "dist/**"
+  ],
+  "type": "module",
   "sideEffects": [
     "**/ui-router.js",
     "**/ui-view.js"
   ],
   "main": "./dist/index.js",
+  "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
@@ -25,22 +28,19 @@
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
-  "files": [
-    "dist/**"
-  ],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc -p tsconfig.build.json",
     "build:custom-elements": "cem analyze --outdir ./dist",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/reference && typedoc --defaultCategory other",
-    "format": "prettier --write \"**/*.{ts,js,json,md}\"",
-    "format:check": "prettier --check \"**/*.{ts,js,json,md}\"",
-    "lint": "eslint .",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run",
-    "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium"
+    "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
-  "customElements": "dist/custom-elements.json",
   "dependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer"
@@ -49,15 +49,16 @@
     "@custom-elements-manifest/analyzer": "^0.11.0",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "oxfmt": "catalog:",
     "playwright": "catalog:",
-    "prettier": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-lit-ui-router": "workspace:*",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
-    "typescript": "catalog:",
+    "typescript": "catalog:typescript6-compat",
     "vitest": "catalog:"
-  }
+  },
+  "customElements": "dist/custom-elements.json"
 }

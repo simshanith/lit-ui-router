@@ -12,7 +12,9 @@
     "test": {
       "with": ["//#test:root"],
       "dependsOn": ["^test"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"]
+      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
+      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "passThroughEnv": ["WRANGLER_LOG"]
     },
     "dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -21,14 +23,28 @@
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
       "inputs": ["src/**/*.ts", "vitest.config.ts"],
+      "env": ["VITEST_BROWSER_API_PORT", "CI"],
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "with": ["//#lint:root"],
-      "inputs": ["**/*.ts", "**/*.js", "eslint.config.js", "$TURBO_DEFAULT$"]
+      "with": ["//#lint:root", "//#lint:package-json"],
+      "dependsOn": ["^build"],
+      "inputs": [
+        "**/*.ts",
+        "**/*.js",
+        "$TURBO_ROOT$/.oxlintrc.json",
+        "$TURBO_DEFAULT$"
+      ]
     },
     "//#lint:root": {
-      "inputs": ["examples/**/*.{ts,js}", "eslint.config.js", "$TURBO_DEFAULT$"]
+      "inputs": ["examples/**/*.{ts,js}", ".oxlintrc.json", "$TURBO_DEFAULT$"]
+    },
+    "//#lint:package-json": {
+      "inputs": ["**/package.json", "eslint.config.js"]
+    },
+    "typecheck": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "ci": {
       "dependsOn": [
@@ -36,10 +52,17 @@
         "test",
         "test:coverage",
         "lint",
+        "typecheck",
         "format:check",
+        "codecov:bundle",
         "//#check:catalog",
         "//#check:pack"
       ]
+    },
+    "codecov:bundle": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "//#check:catalog": {
       "inputs": [
@@ -65,26 +88,30 @@
     },
     "format": {
       "with": ["//#format:root"],
-      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+      "inputs": [
+        "**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
+      ]
     },
     "format:check": {
       "with": ["//#format:check:root"],
-      "inputs": ["**/*.{ts,js,json,jsonc,md}", ".prettierrc", ".prettierignore"]
+      "inputs": [
+        "**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
+      ]
     },
     "//#format:root": {
       "inputs": [
-        "*.{ts,js,json,jsonc,md}",
-        "examples/**/*.{ts,js,json,jsonc,md}",
-        ".prettierrc",
-        ".prettierignore"
+        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
       ]
     },
     "//#format:check:root": {
       "inputs": [
-        "*.{ts,js,json,jsonc,md}",
-        "examples/**/*.{ts,js,json,jsonc,md}",
-        ".prettierrc",
-        ".prettierignore"
+        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
+        ".oxfmtrc.json"
       ]
     },
     "e2e": {

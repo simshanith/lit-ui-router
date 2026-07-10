@@ -1,0 +1,85 @@
+# Dependabot version updates https://docs.github.com/en/code-security/dependabot/working-with-dependabot/dependabot-options-reference
+version: 2
+updates:
+  # root pnpm workspace — npm ecosystem covers pnpm + catalogs
+  # updater lacks pnpm 11 (workspace updates blocked; alerts unaffected):
+  # https://github.com/dependabot/dependabot-core/issues/14794
+  - package-ecosystem: 'npm'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 10
+    # Mirror pnpm's minimumReleaseAge: 24h (pnpm-workspace config)
+    cooldown:
+      default-days: 1
+    ignore:
+      # node is pinned via mise; keep @types/node on the matching major
+      - dependency-name: '@types/node'
+        update-types: ['version-update:semver-major']
+      # vite majors change lockfile peer-keys, which the updater corrupts (#14794) — bump manually
+      - dependency-name: 'vite'
+        update-types: ['version-update:semver-major']
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      # regenerate patches/@vitest__browser.patch on every vitest bump (content-hashed target)
+      vitest:
+        patterns:
+          - 'vitest'
+          - '@vitest/*'
+      # majors excluded — breaking changes get individual PRs
+      minor-and-patch:
+        patterns:
+          - '*'
+        exclude-patterns:
+          - 'vitest'
+          - '@vitest/*'
+        update-types:
+          - 'minor'
+          - 'patch'
+      security:
+        applies-to: security-updates
+        patterns:
+          - '*'
+
+  # standalone StackBlitz examples — security updates only:
+  # version-updates bump package.json without regenerating package-lock.json,
+  # and no CI covers examples/, so broken PRs sail through green
+  - package-ecosystem: 'npm'
+    directories:
+      - '/examples/*'
+    schedule:
+      interval: 'weekly'
+    # 0 disables version updates; security updates (and their grouping) still apply
+    open-pull-requests-limit: 0
+    cooldown:
+      default-days: 1
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      # batch security PRs across the three example lockfiles
+      examples-security:
+        applies-to: security-updates
+        patterns:
+          - '*'
+
+  - package-ecosystem: 'github-actions'
+    directory: '/'
+    schedule:
+      interval: 'weekly'
+    open-pull-requests-limit: 5
+    # github-actions cooldown supports default-days only
+    cooldown:
+      default-days: 1
+    commit-message:
+      prefix: 'chore'
+      include: 'scope'
+    groups:
+      actions-minor-and-patch:
+        patterns:
+          - '*'
+        update-types:
+          - 'minor'
+          - 'patch'

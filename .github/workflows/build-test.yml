@@ -1,12 +1,17 @@
-# CI pipeline for pull requests and main branch pushes.
-# Runs build, tests (Vitest + Playwright + Cypress), and coverage reporting.
+# CI pipeline for pull requests and branch/main pushes.
+# Runs build, tests (Vitest + Playwright + Cypress), and Codecov upload.
 name: Build and Test
 
 on:
   pull_request:
   push:
     branches:
-      - main
+      # Branch-head runs: CONFLICTING PRs have no merge ref, so pull_request
+      # runs are skipped entirely; push runs still cover the branch head.
+      - '**'
+      # Dependabot push events get dependabot secrets (no TURBO_TOKEN); its
+      # PRs already get merge-head CI.
+      - '!dependabot/**'
   workflow_dispatch:
     inputs:
       force:
@@ -14,13 +19,16 @@ on:
         type: boolean
         default: false
 
-# Cancel superseded PR runs.
+# Cancel superseded runs per event per ref; never cancel main runs.
 concurrency:
-  group: ${{ github.workflow }}-${{ github.ref }}
-  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
   build_and_test:
+    # Branch-head (push) runs report under a distinct check name so they can
+    # never satisfy the required "build_and_test" merge gate.
+    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'build_and_test (branch)' || 'build_and_test' }}
     # Security: Only run on first-party PRs (not forks) to protect secrets.
     # Fork PRs don't have access to secrets, so they would fail anyway.
     # Maintainers should review fork PRs and run CI manually.
@@ -29,48 +37,52 @@ jobs:
     timeout-minutes: 30
     permissions:
       contents: read
-      pull-requests: write # Required for PR coverage comments
 
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v5
+        uses: actions/checkout@v7
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+        env:
+          # The Install Cypress step below downloads the binary; skipping it
+          # here keeps download noise out of the pnpm postinstall output.
+          CYPRESS_INSTALL_BINARY: '0'
       - name: Add workspace binaries to PATH
         run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Install Playwright Browsers
         run: playwright install --with-deps
       - name: Install Cypress
-        run: cypress install
+        # Verify up front so the concurrent vanilla/mobx runs skip the
+        # "first time using Cypress" verification banner.
+        run: |
+          cypress install
+          cypress verify
       - name: Start shared Xvfb display
         # The vanilla and MobX Cypress suites run concurrently. Without a
         # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
         # race ("Fatal server error"); one shared display serves both.
         # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
-        run: |
-          Xvfb :99 -screen 0 1280x720x24 &
-          echo "DISPLAY=:99" >> "$GITHUB_ENV"
+        # The script captures Xvfb's stderr (routine xkbcomp keysym noise on
+        # the runner image) and prints it, filtered, only on startup failure.
+        run: node scripts/start-xvfb.mjs
       - name: Build and Test
         run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      - name: lit-ui-router Vitest Coverage Report
-        uses: davelosert/vitest-coverage-report-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          working-directory: packages/lit-ui-router
-      - name: ui-router-navigation-location-plugin Vitest Coverage Report
-        uses: davelosert/vitest-coverage-report-action@v2
-        if: github.event_name == 'pull_request'
-        with:
-          working-directory: packages/navigation-location-plugin
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          # Silence per-request [wrangler:info] logging from the e2e dev server.
+          WRANGLER_LOG: warn
       - name: Upload to Codecov
+        # Branch-head runs skip upload; merge-head/main covers the same SHA.
+        if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v7
         with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/navigation-location-plugin/coverage/lcov.info
+          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json
+          disable_search: true
+          plugins: noop
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}

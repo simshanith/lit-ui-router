@@ -1,9 +1,10 @@
 import {
-  hashLocationPlugin,
   pushStateLocationPlugin,
   trace,
   Category,
+  LocationPlugin,
   Rejection,
+  UIRouter,
 } from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 // @ts-expect-error - @uirouter/dsr lacks proper ESM exports field for nodenext resolution
@@ -23,6 +24,7 @@ import {
   resolveLocationPlugin,
   LocationPluginFeatureSymbol,
 } from './app/util/featureDetection.js';
+import { replaceAwareHashLocationPlugin } from './app/util/replaceAwareHashLocation.js';
 
 export const HOME = 'home';
 export const NESTED_HOME = 'home.nested';
@@ -38,12 +40,12 @@ const locationPluginConfig = {
     message: 'pushStateLocationPlugin enabled',
   },
   hash: {
-    plugin: hashLocationPlugin,
+    plugin: replaceAwareHashLocationPlugin,
     message: 'hashLocationPlugin enabled',
   },
 } satisfies Record<
   LocationPluginFeatureSymbol,
-  { plugin: typeof hashLocationPlugin; message: string }
+  { plugin: (router: UIRouter) => LocationPlugin; message: string }
 >;
 
 export function configureRouter(router = new UIRouterLit()) {
@@ -107,7 +109,37 @@ export function configureRouter(router = new UIRouterLit()) {
     stateRegistry.register(state as LitStateDeclaration),
   );
 
-  urlService.rules.initial({ state: 'welcome' });
+  // The app root ('' or '/') has no state url. rules.initial() stops matching
+  // once a transition has run, so Back to the base href would fall through to
+  // otherwise() and 404; match it on every sync instead. `location: 'replace'`
+  // keeps the root out of history, so Back from /welcome leaves the app.
+  urlService.rules.when(/^\/?$/, () => ({
+    state: 'welcome',
+    options: { location: 'replace' },
+  }));
+
+  // 404: otherwise() only fires when no registered rule matches, so the
+  // future states' wildcard rules still win and lazy loading keeps working.
+  // URLs left unmatched after a lazy load re-sync land here too.
+  urlService.rules.otherwise(() => ({
+    state: 'notFound',
+    params: { attemptedPath: urlService.path() },
+  }));
+
+  // When a URL matches a future state's prefix but nothing matches after its
+  // module lazy loads, the core lazyLoad hook re-syncs the URL (triggering
+  // otherwise -> notFound) and returns no redirect, so the original transition
+  // to the now-replaced placeholder keeps running and supersedes the 404.
+  // Abort the stale placeholder transition instead (priority below the core
+  // lazyLoad hook's 0, so this runs after lazy loading resolves).
+  router.transitionService.onBefore(
+    { to: (state) => !!state?.name.endsWith('.**') },
+    (transition) =>
+      transition.router.stateRegistry.get(transition.to().name ?? '') === null
+        ? false
+        : undefined,
+    { priority: -10 },
+  );
 
   // Register the "requires auth" hook with the TransitionsService
   router.transitionService.onBefore(

@@ -91,14 +91,14 @@ const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
   const targetPath: PathNode[] = PathUtils.buildPath(target);
   const paramSchema: Param[] = targetPath
     .map((node) => node.paramSchema)
-    .reduce(unnestR, [])
+    .reduce<Param[]>(unnestR, [])
     .filter((param: Param) =>
       Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
     );
   return (path: PathNode[] = []) => {
     const tailNode = tail(path);
     if (!tailNode || tailNode.state !== state) return false;
-    const paramValues = PathUtils.paramValues(path);
+    const paramValues = PathUtils.paramValues(path) as RawParams;
     return Param.equals(paramSchema, paramValues, targetParamVals);
   };
 };
@@ -255,7 +255,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     const defaultOpts: TransitionOptions = {
       relative: this.parentView?.viewContext?.name,
     };
-    return extend(defaultOpts, this.options || {});
+    return extend(defaultOpts, this.options || {}) as TransitionOptions;
   }
 
   /**
@@ -342,7 +342,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     if (this.element !== element) {
       this.element = element;
       this._firstUpdated = false;
-      await 0;
+      // defer a microtask so the part's element is settled before first render
+      await Promise.resolve();
       this.firstUpdated({ targetStates });
     }
 
@@ -362,7 +363,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   _firstUpdated = false;
   /** @internal */
-  async firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
+  firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
@@ -372,7 +373,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.targetStates.clear();
     if (targetStates) {
       Array.prototype.forEach.call(targetStates, (targetState) => {
-        this.targetStates.add(targetState);
+        this.targetStates.add(targetState as TargetState);
       });
     } else if (this.state) {
       this.targetStates.add(
@@ -397,9 +398,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.onTransitionStart,
     ) as deregisterFn;
     this._deregisterOnStatesChanged =
-      this.uiRouter!.stateRegistry.onStatesChanged(
-        this.onStatesChanged,
-      ) as deregisterFn;
+      this.uiRouter!.stateRegistry.onStatesChanged(this.onStatesChanged);
 
     setTimeout(() => {
       if (this.targetStates.size) {
@@ -452,11 +451,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
   onUiSrefTargetEvent = (event: UiSrefTargetEvent) => {
     const { targetState } = event.detail;
     this.targetStates.add(targetState);
-    this.uiSrefs.set(targetState, event.target as UiSrefElement);
+    this.uiSrefs.set(targetState, event.target);
   };
 
   /** @internal */
-  onTransitionStateChange = async (e: Event) => {
+  onTransitionStateChange = (e: Event) => {
     const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
     if (!status) {

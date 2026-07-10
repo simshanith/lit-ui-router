@@ -1,14 +1,35 @@
 diff --git a/dist/client/__vitest_browser__/tester-BJtsJFpD.js b/dist/client/__vitest_browser__/tester-BJtsJFpD.js
-index 0594ada..d8e8328 100644
+index 0594ada9d0e554d9ed42e08dfb51b9744cb01370..74641e14405c4a5f5cade0785e0583350ee17464 100644
 --- a/dist/client/__vitest_browser__/tester-BJtsJFpD.js
 +++ b/dist/client/__vitest_browser__/tester-BJtsJFpD.js
-@@ -2098,6 +2098,9 @@ channel.addEventListener("message", async (e) => {
-   if (!("iframeId" in data) || data.iframeId !== getBrowserState().iframeId) {
-     return;
-   }
-+  if (data.event === "ready" || data.event.startsWith("response:")) {
+@@ -2086,7 +2086,13 @@ const traces = new Traces({
+ });
+ let rootTesterSpan;
+ getBrowserState().traces = traces;
++// a tester opened as a top-level window (e.g. a test clicking <a target="_blank">
++// at the tester URL) would echo `response:` events back recursively
++const isEmbedded = window.self !== window.top;
+ channel.addEventListener("message", async (e) => {
++  if (!isEmbedded) {
 +    return;
 +  }
-   switch (data.event) {
-     case "execute": {
-       const { method, files, context } = data;
+   await client.waitForConnection();
+   const data = e.data;
+   debug == null ? void 0 : debug("event from orchestrator", JSON.stringify(e.data));
+@@ -2151,10 +2157,12 @@ const commands = new CommandsManager();
+ getBrowserState().commands = commands;
+ getBrowserState().activeTraceTaskIds = /* @__PURE__ */ new Set();
+ getBrowserState().iframeId = iframeId;
+-channel.postMessage({
+-  event: "ready",
+-  iframeId
+-});
++if (isEmbedded) {
++  channel.postMessage({
++    event: "ready",
++    iframeId
++  });
++}
+ let contextSwitched = false;
+ async function prepareTestEnvironment(options) {
+   debug == null ? void 0 : debug("trying to resolve the runner");

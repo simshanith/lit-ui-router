@@ -14,6 +14,9 @@ import {
 
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
 
+// @uirouter/core types `root` as `any`; it is the global object in browsers.
+const globalRoot = root as typeof globalThis;
+
 /**
  * Shape of the `info` payload this plugin passes to `navigation.navigate()`,
  * used by {@link isUIRouterNavigateEvent} to recognize its own navigations.
@@ -62,7 +65,7 @@ export class NavigationLocationService extends BaseLocationServices {
     super(router, false);
     this._router = router;
     this._config = router.urlService.config;
-    root.navigation.addEventListener(
+    globalRoot.navigation.addEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
       false,
@@ -128,7 +131,7 @@ export class NavigationLocationService extends BaseLocationServices {
         ? this._config.baseHref()
         : basePrefix + slash + url;
 
-    root.navigation.navigate(fullUrl, {
+    globalRoot.navigation.navigate(fullUrl, {
       state,
       info: {
         uiRouter: this._router,
@@ -144,7 +147,7 @@ export class NavigationLocationService extends BaseLocationServices {
    */
   public dispose(router: UIRouter) {
     super.dispose(router);
-    root.navigation.removeEventListener(
+    globalRoot.navigation.removeEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
     );

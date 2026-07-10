@@ -95,7 +95,7 @@ export class FeatureFlags {
     try {
       const stored = sessionStorage.getItem(STORAGE_KEY);
       if (stored) {
-        this._flags = JSON.parse(stored);
+        this._flags = JSON.parse(stored) as Partial<FeatureFlagDefinitions>;
       }
     } catch (error) {
       console.error(

@@ -22,7 +22,12 @@ import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration } from 'lit-ui-router';
+import {
+  UIRouterLit,
+  uiSref,
+  uiSrefActive,
+  LitStateDeclaration,
+} from 'lit-ui-router';
 
 @customElement('app-root')
 class AppRoot extends LitElement {
@@ -42,8 +47,12 @@ class AppRoot extends LitElement {
   render() {
     return html`
       <nav>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}>Hello</a>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}>About</a>
+        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
+          >Hello</a
+        >
+        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}
+          >About</a
+        >
       </nav>
       <ui-view></ui-view>
     `;
@@ -97,7 +106,12 @@ import { html, LitElement, css } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { render } from 'lit';
 import { hashLocationPlugin } from '@uirouter/core';
-import { UIRouterLit, uiSref, uiSrefActive, LitStateDeclaration } from 'lit-ui-router';
+import {
+  UIRouterLit,
+  uiSref,
+  uiSrefActive,
+  LitStateDeclaration,
+} from 'lit-ui-router';
 ```
 
 We import the essential dependencies:
@@ -154,8 +168,12 @@ class AppRoot extends LitElement {
   render() {
     return html`
       <nav>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}>Hello</a>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}>About</a>
+        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
+          >Hello</a
+        >
+        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}
+          >About</a
+        >
       </nav>
       <ui-view></ui-view>
     `;

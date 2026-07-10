@@ -42,15 +42,15 @@ export class MessageElement extends LitElement {
   }
 
   get message(): Message {
-    return this._uiViewProps.resolves!.message;
+    return this._uiViewProps.resolves.message;
   }
 
   get nextMessageGetter() {
-    return this._uiViewProps.resolves!.nextMessageGetter;
+    return this._uiViewProps.resolves.nextMessageGetter;
   }
 
   get folder() {
-    return this._uiViewProps.resolves!.folder;
+    return this._uiViewProps.resolves.folder;
   }
 
   get actions() {
@@ -76,7 +76,7 @@ export class MessageElement extends LitElement {
       return;
     }
     this.message.read = true;
-    MessagesStorage.put(this.message);
+    void MessagesStorage.put(this.message);
   }
 
   /**
@@ -84,7 +84,7 @@ export class MessageElement extends LitElement {
    */
   reply = () => {
     const replyMsg = makeResponseMsg('Re: ', this.message);
-    this.stateService.go('mymessages.compose', { message: replyMsg });
+    void this.stateService.go('mymessages.compose', { message: replyMsg });
   };
 
   /**
@@ -93,14 +93,14 @@ export class MessageElement extends LitElement {
   forward = () => {
     const fwdMsg = makeResponseMsg('Fwd: ', this.message);
     delete fwdMsg.to;
-    this.stateService.go('mymessages.compose', { message: fwdMsg });
+    void this.stateService.go('mymessages.compose', { message: fwdMsg });
   };
 
   /**
    * Continue composing this (draft) message
    */
   editDraft = () => {
-    this.stateService.go('mymessages.compose', { message: this.message });
+    void this.stateService.go('mymessages.compose', { message: this.message });
   };
 
   /**
@@ -141,37 +141,29 @@ export class MessageElement extends LitElement {
         </div>
         <div class="line2">
           <div>
-            ${
-              this.actions.edit
-                ? html`<button class="btn btn-primary" @click=${this.editDraft}>
-                    <i class="fa fa-pencil"></i> <span>Edit Draft</span>
-                  </button>`
-                : null
-            }
-            ${
-              this.actions.reply
-                ? html`<button class="btn btn-primary" @click=${this.reply}>
-                    <i class="fa fa-reply"></i> <span>Reply</span>
-                  </button>`
-                : null
-            }
-            ${
-              this.actions.forward
-                ? html`<button class="btn btn-primary" @click=${this.forward}>
-                    <i class="fa fa-forward"></i> <span>Forward</span>
-                  </button>`
-                : null
-            }
-            ${
-              this.actions.delete
-                ? html`<button
-                    class="btn btn-primary"
-                    @click=${this.removeMessage}
-                  >
-                    <i class="fa fa-close"></i> <span>Delete</span>
-                  </button>`
-                : null
-            }
+            ${this.actions.edit
+              ? html`<button class="btn btn-primary" @click=${this.editDraft}>
+                  <i class="fa fa-pencil"></i> <span>Edit Draft</span>
+                </button>`
+              : null}
+            ${this.actions.reply
+              ? html`<button class="btn btn-primary" @click=${this.reply}>
+                  <i class="fa fa-reply"></i> <span>Reply</span>
+                </button>`
+              : null}
+            ${this.actions.forward
+              ? html`<button class="btn btn-primary" @click=${this.forward}>
+                  <i class="fa fa-forward"></i> <span>Forward</span>
+                </button>`
+              : null}
+            ${this.actions.delete
+              ? html`<button
+                  class="btn btn-primary"
+                  @click=${this.removeMessage}
+                >
+                  <i class="fa fa-close"></i> <span>Delete</span>
+                </button>`
+              : null}
           </div>
         </div>
       </div>

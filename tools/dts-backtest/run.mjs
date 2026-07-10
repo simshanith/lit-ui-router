@@ -10,8 +10,13 @@
 // declarations (lit, mobx, @uirouter/core, lib.dom, …) are counted and
 // reported but tolerated, matching what a consumer with skipLibCheck:true
 // would experience while still fully checking OUR declarations.
+//
+// Legs through 6.x drive the classic `ts.createProgram` API. TypeScript 7
+// dropped that API, so its leg drives the native compiler through
+// `typescript/unstable/sync` — a different, still-unstable surface that 7.1 is
+// expected to replace.
 
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -19,8 +24,11 @@ import { fileURLToPath } from 'node:url';
 const here = dirname(fileURLToPath(import.meta.url));
 const require = createRequire(import.meta.url);
 
-// devDependency aliases; "typescript" is the repo's current catalog version.
-const VERSIONS = ['typescript-5.0', 'typescript'];
+// devDependency aliases, oldest first; every leg is pinned so none tracks the
+// repo's own catalog. 6.x is the newest TypeScript with the classic API.
+const API_VERSIONS = ['typescript-5.0', 'typescript-5.9', 'typescript-6'];
+
+const NATIVE_VERSION = 'typescript-7';
 
 const CONFIGS = ['tsconfig.fixture.json', 'tsconfig.fixture.nodenext.json'];
 
@@ -30,6 +38,19 @@ const PACKAGE_DIRS = [
   'lit-ui-router-mobx',
   'navigation-location-plugin',
 ].map((dir) => resolve(here, '..', '..', 'packages', dir, 'dist') + sep);
+
+// A file we cannot resolve is treated as ours: it means the compiler reported
+// against something we planted or mangled, which must never be tolerated.
+function ownsPath(fileName) {
+  let normalized;
+  try {
+    normalized = resolve(realpathSync(fileName));
+  } catch {
+    return true;
+  }
+  if (normalized.startsWith(here + sep)) return true;
+  return PACKAGE_DIRS.some((dir) => normalized.startsWith(dir));
+}
 
 function loadConfig(ts, configFile) {
   let fatal;
@@ -48,13 +69,6 @@ function loadConfig(ts, configFile) {
     throw new Error(`failed to parse ${configFile}: ${fatal ?? 'unknown'}`);
   }
   return parsed;
-}
-
-function ownedBy(ts, fileName) {
-  const real = ts.sys.realpath ? ts.sys.realpath(fileName) : fileName;
-  const normalized = resolve(real);
-  if (normalized.startsWith(here + sep)) return true;
-  return PACKAGE_DIRS.some((dir) => normalized.startsWith(dir));
 }
 
 function check(specifier, configFile) {
@@ -83,7 +97,7 @@ function check(specifier, configFile) {
   const owned = [];
   let foreign = 0;
   for (const diagnostic of diagnostics) {
-    if (!diagnostic.file || ownedBy(ts, diagnostic.file.fileName)) {
+    if (!diagnostic.file || ownsPath(diagnostic.file.fileName)) {
       owned.push(diagnostic);
     } else {
       foreign += 1;
@@ -91,6 +105,84 @@ function check(specifier, configFile) {
   }
 
   return { ts, owned, foreign, fileCount: files.length };
+}
+
+// TypeScript 7 equivalent of check(). Diagnostics come back as plain objects
+// ({ fileName, pos, end, code, category, text }) rather than ts.Diagnostic.
+async function checkNative(specifier, configFile) {
+  const { API, DiagnosticCategory } = await import(
+    `${specifier}/unstable/sync`
+  );
+  const { version } = require(
+    join(
+      dirname(require.resolve(`${specifier}/package.json`)),
+      'lib',
+      'version.cjs',
+    ),
+  );
+
+  const api = new API({ cwd: here });
+  const configPath = join(here, configFile);
+  const snapshot = api.updateSnapshot({ openProjects: [configPath] });
+  try {
+    const project = snapshot.getProject(configPath);
+    if (!project) throw new Error(`no project for ${configFile}`);
+    const { program } = project;
+
+    const files = program.getSourceFileNames();
+    const missing = PACKAGE_DIRS.filter(
+      (dir) => !files.some((file) => resolve(file).startsWith(dir)),
+    );
+    if (missing.length > 0) {
+      throw new Error(
+        `dist .d.ts missing from program (run \`turbo run build\` first):\n  ${missing.join('\n  ')}`,
+      );
+    }
+
+    const owned = [];
+    let foreign = 0;
+    const diagnostics = [
+      ...program.getConfigFileParsingDiagnostics(),
+      ...program.getGlobalDiagnostics(),
+      ...program.getSyntacticDiagnostics(),
+      ...program.getSemanticDiagnostics(),
+    ];
+    for (const diagnostic of diagnostics) {
+      if (diagnostic.category !== DiagnosticCategory.Error) continue;
+      if (!diagnostic.fileName || ownsPath(diagnostic.fileName)) {
+        owned.push(diagnostic);
+      } else {
+        foreign += 1;
+      }
+    }
+    return { version, owned, foreign, fileCount: files.length };
+  } finally {
+    snapshot.dispose();
+    api.close();
+  }
+}
+
+function formatNative(diagnostics) {
+  return diagnostics
+    .map((d) => `  ${d.fileName ?? '<unknown>'}: TS${d.code}: ${d.text}`)
+    .join('\n');
+}
+
+async function runNative(specifier, configFile) {
+  const { version, owned, foreign, fileCount } = await checkNative(
+    specifier,
+    configFile,
+  );
+  const label = `TS ${version} · ${configFile}`;
+  if (owned.length > 0) {
+    console.error(`✖ ${label}`);
+    console.error(formatNative(owned));
+    return false;
+  }
+  const foreignNote =
+    foreign > 0 ? ` (${foreign} third-party diagnostics ignored)` : '';
+  console.log(`✔ ${label} — ${fileCount} files checked${foreignNote}`);
+  return true;
 }
 
 function run(specifier, configFile) {
@@ -120,12 +212,28 @@ function run(specifier, configFile) {
 // ever raised past 5.4, this fails loudly — pick a newer-syntax probe.
 const PROBE = '\nexport type __dtsBacktestProbe = NoInfer<string>;\n';
 
-function selftest() {
-  const [floor, current] = VERSIONS;
+// The native leg has its own ownership filter, so it needs its own proof. An
+// unresolvable name must surface as an owned diagnostic, not a tolerated one.
+const NATIVE_PROBE =
+  '\nexport type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
+
+// async: the native leg reads the probe after an await, so the restore must not
+// run until the body has fully resolved.
+async function withProbe(probe, body) {
   const target = join(PACKAGE_DIRS[0], 'index.d.ts');
   const original = readFileSync(target, 'utf8');
-  writeFileSync(target, original + PROBE);
+  writeFileSync(target, original + probe);
   try {
+    return await body(target);
+  } finally {
+    writeFileSync(target, original);
+  }
+}
+
+function selftest() {
+  const floor = API_VERSIONS[0];
+  const current = API_VERSIONS[API_VERSIONS.length - 1];
+  return withProbe(PROBE, (target) => {
     const floorRun = check(floor, CONFIGS[0]);
     const probeCaught = floorRun.owned.some((diagnostic) =>
       diagnostic.file?.fileName.endsWith('index.d.ts'),
@@ -147,15 +255,32 @@ function selftest() {
       `✔ selftest — floor TS ${floorRun.ts.version} rejects the probe, current TS ${currentRun.ts.version} accepts it`,
     );
     return true;
-  } finally {
-    writeFileSync(target, original);
-  }
+  });
 }
 
-let ok = selftest();
-for (const specifier of VERSIONS) {
+async function selftestNative() {
+  const { version, owned } = await withProbe(NATIVE_PROBE, () =>
+    checkNative(NATIVE_VERSION, CONFIGS[0]),
+  );
+  const caught = owned.some((diagnostic) =>
+    diagnostic.fileName?.endsWith('index.d.ts'),
+  );
+  if (!caught) {
+    console.error(`✖ selftest native — TS ${version} did not reject the probe`);
+    return false;
+  }
+  console.log(`✔ selftest native — TS ${version} rejects the probe`);
+  return true;
+}
+
+let ok = await selftest();
+ok = (await selftestNative()) && ok;
+for (const specifier of API_VERSIONS) {
   for (const configFile of CONFIGS) {
     ok = run(specifier, configFile) && ok;
   }
+}
+for (const configFile of CONFIGS) {
+  ok = (await runNative(NATIVE_VERSION, configFile)) && ok;
 }
 process.exit(ok ? 0 : 1);

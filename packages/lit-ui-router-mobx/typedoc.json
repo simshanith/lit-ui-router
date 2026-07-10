@@ -48,8 +48,6 @@
       "UIRouterLitElement": "/api/reference/components/UIRouterLitElement"
     }
   },
-  "formatWithPrettier": true,
-  "prettierConfigFile": "../../.prettierrc",
   "sidebar": {
     "pretty": true
   }

@@ -1,0 +1,18 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "build:embeds": {
+      "inputs": [
+        "build-embeds.mjs",
+        "*/index.html",
+        "*/package.json",
+        "*/package-lock.json",
+        "*/src/**",
+        "*/tsconfig.json",
+        "*/vite.config.ts"
+      ],
+      "outputs": ["*/dist/**"]
+    }
+  }
+}
