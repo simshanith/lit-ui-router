@@ -7,7 +7,8 @@ import {
   findViolations,
   formatReport,
   isInlineRegistryRange,
-} from './check-catalog.core.mjs';
+  type Violation,
+} from './check-catalog.core.ts';
 
 describe('isInlineRegistryRange', () => {
   it('accepts plain registry ranges and tags', () => {
@@ -82,12 +83,12 @@ const members = [
 describe('collectInlineUsage + findViolations', () => {
   const usage = collectInlineUsage(members);
   const violations = findViolations(usage);
-  const byDep = new Map(violations.map((v) => [v.dep, v]));
+  const byDep = new Map(violations.map((v): [string, Violation] => [v.dep, v]));
 
   it('flags a dep declared inline by 2+ distinct packages', () => {
     assert.ok(byDep.has('lodash'));
-    assert.equal(byDep.get('lodash').consumers.size, 2);
-    assert.deepEqual(byDep.get('lodash').specs, ['^4.17.21', '^4.18.0']);
+    assert.equal(byDep.get('lodash')!.consumers.size, 2);
+    assert.deepEqual(byDep.get('lodash')!.specs, ['^4.17.21', '^4.18.0']);
   });
 
   it('ignores catalog/workspace specifiers', () => {
@@ -101,7 +102,7 @@ describe('collectInlineUsage + findViolations', () => {
 
   it('counts multiple fields in one package as a single consumer', () => {
     assert.ok(!byDep.has('dup'));
-    assert.equal(usage.get('dup').size, 1);
+    assert.equal(usage.get('dup')!.size, 1);
   });
 
   it('sorts violations by dependency name', () => {

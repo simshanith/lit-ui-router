@@ -12,7 +12,8 @@
     "lint": "oxlint .",
     "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
     "test:cypress": "cypress run",
-    "test:cypress:all": "concurrently --names vanilla,mobx --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\"",
+    "test:cypress:all": "concurrently --names vanilla,mobx,docs --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\" \"pnpm run test:cypress:docs\"",
+    "test:cypress:docs": "cypress run --config-file cypress.docs.config.ts",
     "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx"
   },
   "dependencies": {

@@ -18,7 +18,7 @@
     },
     "dts-backtest#test": {
       "dependsOn": ["^build"],
-      "inputs": ["fixtures/**", "run.mjs", "tsconfig.fixture*.json"]
+      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
     },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
@@ -44,7 +44,11 @@
     },
     "typecheck": {
       "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
+      "with": ["//#typecheck:root"]
+    },
+    "//#typecheck:root": {
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "ci": {
       "dependsOn": [
@@ -65,23 +69,10 @@
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "//#check:catalog": {
-      "inputs": [
-        "scripts/check-catalog.mjs",
-        "scripts/check-catalog.core.mjs",
-        "scripts/workspace.mjs",
-        "pnpm-workspace.yaml",
-        "**/package.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
     },
     "//#check:pack": {
-      "inputs": [
-        "scripts/check-pack.mjs",
-        "scripts/check-pack.core.mjs",
-        "scripts/check-catalog.core.mjs",
-        "scripts/workspace.mjs",
-        "pnpm-workspace.yaml",
-        "**/package.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
     },
     "//#test:root": {
       "inputs": ["scripts/**"]
@@ -101,18 +92,10 @@
       ]
     },
     "//#format:root": {
-      "inputs": [
-        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        ".oxfmtrc.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "//#format:check:root": {
-      "inputs": [
-        "*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        "examples/**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        ".oxfmtrc.json"
-      ]
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],

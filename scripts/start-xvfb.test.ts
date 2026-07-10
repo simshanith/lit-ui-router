@@ -6,7 +6,7 @@ import os from 'node:os';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { filterStderr, formatFilteredCount } from './start-xvfb.core.mjs';
+import { filterStderr, formatFilteredCount } from './start-xvfb.core.ts';
 
 const KEYSYM_NOISE = [
   '> Warning:          Could not resolve keysym XF86CameraAccessEnable',
@@ -26,15 +26,17 @@ const SAMPLE_LINES = [
   '',
 ];
 
-async function* asAsyncLines(lines) {
-  yield* lines;
+// A genuine async iterable — the shape filterStderr must accept — by resolving
+// each line through a microtask before yielding it.
+async function* asAsyncLines(lines: Iterable<string>): AsyncGenerator<string> {
+  for (const line of lines) yield await Promise.resolve(line);
 }
 
 // Collects a filterStderr generator's yields and its trailing return value
 // (which for-await would discard).
-async function drain(generator) {
-  const kept = [];
-  let next;
+async function drain(generator: AsyncGenerator<string, number, void>) {
+  const kept: string[] = [];
+  let next: IteratorResult<string, number>;
   while (!(next = await generator.next()).done) kept.push(next.value);
   return { kept, filtered: next.value };
 }
@@ -74,22 +76,22 @@ describe('formatFilteredCount', () => {
   });
 });
 
-const scriptPath = fileURLToPath(new URL('./start-xvfb.mjs', import.meta.url));
+const scriptPath = fileURLToPath(new URL('./start-xvfb.ts', import.meta.url));
 
-function writeFakeXvfb(dir, body) {
+function writeFakeXvfb(dir: string, body: string): string {
   const bin = path.join(dir, 'fake-xvfb.mjs');
   fs.writeFileSync(bin, `#!/usr/bin/env node\n${body}`, { mode: 0o755 });
   return bin;
 }
 
-function runStartXvfb(env) {
+function runStartXvfb(env: NodeJS.ProcessEnv) {
   return spawnSync(process.execPath, [scriptPath], {
     encoding: 'utf8',
     env: { ...process.env, XVFB_TIMEOUT_MS: '3000', ...env },
   });
 }
 
-describe('start-xvfb.mjs', () => {
+describe('start-xvfb.ts', () => {
   it('fails with filtered stderr when Xvfb dies', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xvfb-test-'));
     const bin = writeFakeXvfb(
