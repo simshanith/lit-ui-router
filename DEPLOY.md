@@ -44,10 +44,11 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 
 ### Dashboard as Code
 
-[`scripts/workers-builds-triggers.ts`](./scripts/workers-builds-triggers.ts) mirrors the dashboard values above
-(`DESIRED`) and diffs them against the live triggers: `pnpm check:workers-builds` is read-only (exit 1 on drift);
-add `--apply` to update. Requires `CLOUDFLARE_API_TOKEN` (user-scoped, **Workers Builds Configuration: Edit**)
-and `CLOUDFLARE_ACCOUNT_ID`. Manual-only — never part of CI.
+[`scripts/workers-builds-triggers.config.jsonc`](./scripts/workers-builds-triggers.config.jsonc) mirrors the
+dashboard values above; [`scripts/workers-builds-triggers.ts`](./scripts/workers-builds-triggers.ts) diffs it
+against the live triggers: `pnpm check:workers-builds` is read-only (exit 1 on drift); add `--apply` to update.
+Requires `CLOUDFLARE_API_TOKEN` (user-scoped, **Workers Builds Configuration: Edit**) and `CLOUDFLARE_ACCOUNT_ID`.
+Manual-only — never part of CI.
 
 ### Build Environment Variables
 
