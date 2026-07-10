@@ -103,15 +103,15 @@ describe('UIRouterLit', () => {
 
     it('should navigate to a state', async () => {
       await router.stateService.go('home');
-      expect(router.stateService.current.name).toBe('home');
+      expect(router.globals.current.name).toBe('home');
     });
 
     it('should navigate between states', async () => {
       await router.stateService.go('home');
-      expect(router.stateService.current.name).toBe('home');
+      expect(router.globals.current.name).toBe('home');
 
       await router.stateService.go('about');
-      expect(router.stateService.current.name).toBe('about');
+      expect(router.globals.current.name).toBe('about');
     });
 
     it('should navigate with parameters', async () => {
@@ -121,8 +121,8 @@ describe('UIRouterLit', () => {
       });
 
       await router.stateService.go('user', { id: '123' });
-      expect(router.stateService.current.name).toBe('user');
-      expect(router.stateService.params.id).toBe('123');
+      expect(router.globals.current.name).toBe('user');
+      expect(router.globals.params.id).toBe('123');
     });
   });
 });
