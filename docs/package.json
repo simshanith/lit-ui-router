@@ -12,7 +12,6 @@
     "lint": "oxlint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
-    "wrangler": "wrangler",
     "wrangler:dev": "wrangler dev"
   },
   "dependencies": {
