@@ -13,9 +13,6 @@
         "*/vite.config.ts"
       ],
       "outputs": ["*/dist/**"]
-    },
-    "typecheck": {
-      "dependsOn": ["build:embeds"]
     }
   }
 }

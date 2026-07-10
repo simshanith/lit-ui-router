@@ -7,7 +7,7 @@
     "build:embeds": "node build-embeds.ts",
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
-    "postinstall": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"node build-embeds.ts --install helloworld\" \"node build-embeds.ts --install hellosolarsystem\" \"node build-embeds.ts --install hellogalaxy\"",
+    "postinstall": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"npm ci --no-audit --no-fund --prefix helloworld\" \"npm ci --no-audit --no-fund --prefix hellosolarsystem\" \"npm ci --no-audit --no-fund --prefix hellogalaxy\"",
     "lint": "oxlint .",
     "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"pnpm run typecheck:helloworld\" \"pnpm run typecheck:hellosolarsystem\" \"pnpm run typecheck:hellogalaxy\"",
     "typecheck:hellogalaxy": "tsc -p hellogalaxy",
