@@ -6,8 +6,8 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "check:catalog": "node scripts/check-catalog.mjs",
-    "check:pack": "node scripts/check-pack.mjs",
+    "check:catalog": "node scripts/check-catalog.ts",
+    "check:pack": "node scripts/check-pack.ts",
     "check:workers-builds": "node scripts/workers-builds-triggers.ts",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
@@ -19,7 +19,9 @@
     "lint:package-json": "eslint --format tap \"**/package.json\"",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
     "test:coverage": "turbo run test:coverage",
-    "test:root": "node --test \"scripts/**/*.test.mjs\" \"scripts/**/*.test.ts\""
+    "test:root": "node --test \"scripts/**/*.test.ts\"",
+    "typecheck": "turbo run typecheck",
+    "typecheck:root": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@codecov/bundle-analyzer": "catalog:",
@@ -30,14 +32,15 @@
     "eslint": "^10.6.0",
     "eslint-formatter-tap": "^9.0.1",
     "eslint-plugin-package-json": "^1.5.0",
-    "eslint-plugin-turbo": "^2.10.3",
+    "eslint-plugin-turbo": "^2.10.4",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "playwright": "catalog:",
     "pnpm": "^11.10.0",
-    "turbo": "^2.10.3",
+    "turbo": "^2.10.4",
     "typescript": "catalog:",
+    "vite": "catalog:",
     "wrangler": "catalog:"
   },
   "engines": {

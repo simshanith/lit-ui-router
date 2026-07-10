@@ -256,6 +256,17 @@
       "rules": {
         "typescript/no-floating-promises": "off"
       }
+    },
+    {
+      "files": ["scripts/start-xvfb.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^XVFB_"]
+          }
+        ]
+      }
     }
   ]
 }

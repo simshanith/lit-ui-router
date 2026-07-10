@@ -1,0 +1,25 @@
+{
+  // Owns the repo's tooling scripts, which Node runs directly via type
+  // stripping — so imports carry the .ts extension and nothing is ever emitted.
+  // Without this, oxlint's type-aware rules see every import as `any`.
+  //
+  // Scoped to files no other tsconfig claims: tools/dts-backtest/tsconfig.json
+  // covers only fixtures/**, and tools/typedoc-plugin-lit-ui-router has its own.
+  "extends": "./tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    // Node can only strip types, not transform them: no enums, no namespaces,
+    // no parameter properties.
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "types": ["node"],
+    "lib": ["ES2022"]
+  },
+  "include": [
+    "scripts/**/*.ts",
+    "examples/build-embeds.ts",
+    "tools/dts-backtest/run.ts",
+    "tools/vue-check/bin.ts"
+  ]
+}

@@ -9,16 +9,16 @@
 // back in (e.g. via hand-edited package.json or a `--save-catalog`-less add).
 //
 // This file is the IO shell: it enumerates workspace members via
-// ./workspace.mjs, then delegates all decisions to the pure, unit-tested
-// functions in ./check-catalog.core.mjs.
+// ./workspace.ts, then delegates all decisions to the pure, unit-tested
+// functions in ./check-catalog.core.ts.
 
 import {
   catalogDepNames,
   collectInlineUsage,
   findViolations,
   formatReport,
-} from './check-catalog.core.mjs';
-import { loadWorkspace, workspaceRoot } from './workspace.mjs';
+} from './check-catalog.core.ts';
+import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 async function main() {
   const { members, workspaceManifest } = await loadWorkspace(workspaceRoot);

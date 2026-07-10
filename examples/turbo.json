@@ -4,7 +4,7 @@
   "tasks": {
     "build:embeds": {
       "inputs": [
-        "build-embeds.mjs",
+        "build-embeds.ts",
         "*/index.html",
         "*/package.json",
         "*/package-lock.json",

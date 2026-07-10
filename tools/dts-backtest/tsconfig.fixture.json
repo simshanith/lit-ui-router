@@ -1,7 +1,7 @@
 {
   // Simulates a consumer project: fixtures import the built dist of the
   // published packages. skipLibCheck is OFF so the packages' .d.ts are fully
-  // checked under each TypeScript version; run.mjs filters out diagnostics
+  // checked under each TypeScript version; run.ts filters out diagnostics
   // from third-party declarations.
   "compilerOptions": {
     "target": "ES2022",

@@ -6,7 +6,7 @@ upgraded without raising the `.d.ts` floor for consumers.
 
 ## What it checks
 
-`run.mjs` typechecks the [consumer fixtures](./fixtures) — real-world usage
+`run.ts` typechecks the [consumer fixtures](./fixtures) — real-world usage
 of `lit-ui-router`, `lit-ui-router-mobx`, and
 `ui-router-navigation-location-plugin` — under a matrix of:
 
@@ -48,6 +48,6 @@ see below.
 
 Bumping the supported consumer floor is a semver-major signal for the
 published packages: change the `typescript-5.0` devDependency alias (and
-`VERSIONS` in `run.mjs`) and rename accordingly. If the new floor is ≥ 5.4
+`VERSIONS` in `run.ts`) and rename accordingly. If the new floor is ≥ 5.4
 the self-test's `NoInfer` probe no longer discriminates — swap it for a
 construct the new floor still rejects.
