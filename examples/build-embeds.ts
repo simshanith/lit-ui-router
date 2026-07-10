@@ -11,10 +11,19 @@ import { fileURLToPath } from 'node:url';
 const root = dirname(fileURLToPath(import.meta.url));
 const EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
-for (const name of EXAMPLES) {
+// `--install <name>` runs only the npm ci step, for tasks (typecheck) that
+// need the example's node_modules but can't rely on a cached build:embeds.
+const installOnly = process.argv[2] === '--install';
+const only = installOnly ? process.argv[3] : undefined;
+if (installOnly && (only === undefined || !EXAMPLES.includes(only))) {
+  throw new Error(`--install expects one of: ${EXAMPLES.join(', ')}`);
+}
+
+for (const name of only ? [only] : EXAMPLES) {
   const cwd = join(root, name);
   console.log(`\n[build-embeds] ${name}: npm ci`);
   execSync('npm ci --no-audit --no-fund', { cwd, stdio: 'inherit' });
+  if (installOnly) continue;
   console.log(`[build-embeds] ${name}: vite build --base=/examples/${name}/`);
   execSync(`npm run build -- --base=/examples/${name}/`, {
     cwd,

@@ -9,9 +9,9 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "lint": "oxlint .",
     "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"pnpm run typecheck:helloworld\" \"pnpm run typecheck:hellosolarsystem\" \"pnpm run typecheck:hellogalaxy\"",
-    "typecheck:hellogalaxy": "tsc -p hellogalaxy",
-    "typecheck:hellosolarsystem": "tsc -p hellosolarsystem",
-    "typecheck:helloworld": "tsc -p helloworld"
+    "typecheck:hellogalaxy": "node build-embeds.ts --install hellogalaxy && tsc -p hellogalaxy",
+    "typecheck:hellosolarsystem": "node build-embeds.ts --install hellosolarsystem && tsc -p hellosolarsystem",
+    "typecheck:helloworld": "node build-embeds.ts --install helloworld && tsc -p helloworld"
   },
   "devDependencies": {
     "concurrently": "catalog:",
