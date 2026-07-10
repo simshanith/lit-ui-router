@@ -1,4 +1,4 @@
-# Lints .github/workflows with the repo-owned actionlint (github-actionlint).
+# Lints .github/workflows with the project-pinned actionlint (mise go backend).
 # Standalone on purpose: kept out of build_and_test so edits to that workflow
 # are themselves linted by a workflow the edit cannot break.
 name: Lint workflows
@@ -36,5 +36,3 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          # github-actionlint authenticates its GitHub Releases binary download.
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

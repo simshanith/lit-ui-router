@@ -20,7 +20,6 @@ catalog:
   '@vitest/browser-playwright': ^4.1.10
   '@vitest/coverage-v8': ^4.1.10
   cypress: ^15.18.0
-  github-actionlint: 1.7.12
   lit: ^3.3.3
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
