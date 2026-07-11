@@ -8,8 +8,7 @@
     "directory": "./docs/dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    // Only sample-app deep links invoke the worker; everything else is
-    // served straight from assets, with misses falling back to 404.html.
+    // Only sample-app deep links invoke the worker; other misses serve 404.html.
     "run_worker_first": ["/app/*", "/app-mobx/*"],
   },
 }
