@@ -42,9 +42,9 @@ export class ReactionController<T> implements ReactiveController {
   private dispose?: IReactionDisposer;
 
   constructor(
-    private host: ReactiveControllerHost,
-    private expression: () => T,
-    private options: ReactionControllerOptions<T> = {},
+    private readonly host: ReactiveControllerHost,
+    private readonly expression: () => T,
+    private readonly options: ReactionControllerOptions<T> = {},
   ) {
     host.addController(this);
   }

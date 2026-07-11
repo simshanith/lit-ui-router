@@ -3,8 +3,8 @@ import { Message } from './interface.js';
 
 export function orderBy(predicate: string) {
   let descending = 1;
-  if (predicate.charAt(0) === '+' || predicate.charAt(0) === '-') {
-    descending = predicate.charAt(0) === '-' ? -1 : 1;
+  if (predicate.startsWith('+') || predicate.startsWith('-')) {
+    descending = predicate.startsWith('-') ? -1 : 1;
     predicate = predicate.substring(1);
   }
   return (a: Message, b: Message) => {

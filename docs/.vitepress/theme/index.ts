@@ -13,7 +13,8 @@ export default {
 } satisfies Theme;
 
 export const isChrome =
-  /Chrome/.test(navigator.userAgent) && /Google Inc/.test(navigator.vendor);
+  navigator.userAgent.includes('Chrome') &&
+  navigator.vendor.includes('Google Inc');
 if (isChrome) {
   document.documentElement.classList.add('chrome');
 }

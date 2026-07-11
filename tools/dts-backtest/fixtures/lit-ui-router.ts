@@ -49,7 +49,7 @@ export class UserElement
 
   _uiViewProps: UIViewInjectedProps<UserResolves>;
 
-  private transitions = new TransitionController(this, {
+  private readonly transitions = new TransitionController(this, {
     events: ['onSuccess', 'onError'],
     callback: onTransition,
   });
