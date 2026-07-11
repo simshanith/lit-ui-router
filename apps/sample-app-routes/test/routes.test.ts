@@ -8,7 +8,7 @@ import {
   routePathPatterns,
   routeSegments,
 } from '../src/routes.ts';
-import { matchesAppRoute } from '../src/matchers.ts';
+import { matchAppRoute, matchesAppRoute } from '../src/matchers.ts';
 
 const ACCEPTED = [
   '/welcome',
@@ -90,5 +90,57 @@ describe('matchesAppRoute', () => {
         control.some((matcher) => matcher.exec(path) !== null);
       assert.equal(matchesAppRoute(path), controlVerdict, path);
     }
+  });
+});
+
+describe('matchAppRoute', () => {
+  it('names the matched state and extracts its params', () => {
+    assert.deepEqual(matchAppRoute('/welcome'), {
+      state: 'welcome',
+      params: {},
+    });
+    assert.deepEqual(matchAppRoute('/prefs'), { state: 'prefs', params: {} });
+    assert.deepEqual(matchAppRoute('/contacts/3'), {
+      state: 'contacts.contact',
+      params: { contactId: '3' },
+    });
+    assert.deepEqual(matchAppRoute('/contacts/3/edit'), {
+      state: 'contacts.contact.edit',
+      params: { contactId: '3' },
+    });
+    assert.deepEqual(matchAppRoute('/mymessages/inbox'), {
+      state: 'mymessages.messagelist',
+      params: { folderId: 'inbox' },
+    });
+    assert.deepEqual(matchAppRoute('/mymessages/inbox/5'), {
+      state: 'mymessages.messagelist.message',
+      params: { folderId: 'inbox', messageId: '5' },
+    });
+  });
+
+  it('prefers static segments over placeholders, like the router', () => {
+    // '/contacts/new' also satisfies '/contacts/:contactId'; identity must be
+    // the static state, exactly as ui-router's rule ordering resolves it.
+    assert.deepEqual(matchAppRoute('/contacts/new'), {
+      state: 'contacts.new',
+      params: {},
+    });
+    assert.deepEqual(matchAppRoute('/mymessages/compose'), {
+      state: 'mymessages.compose',
+      params: {},
+    });
+  });
+
+  it('returns null for paths no state url matches', () => {
+    for (const path of REJECTED) {
+      assert.equal(matchAppRoute(path), null, path);
+    }
+  });
+
+  it('returns null for the app root, which has no state url', () => {
+    assert.equal(matchAppRoute(''), null);
+    assert.equal(matchAppRoute('/'), null);
+    // ...while matchesAppRoute still shells it (router.config.ts when-rule).
+    assert.equal(matchesAppRoute('/'), true);
   });
 });
