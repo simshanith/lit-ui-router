@@ -17,14 +17,14 @@ import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
-import type { UIRouterLit } from './core.js';
-import type { UiView } from './ui-view.js';
-import { seekParentView, seekRouter } from './context.js';
+import { UIRouterLit } from './core.js';
+import { UIRouterLitElement } from './ui-router.js';
 import {
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
 } from './ui-sref.js';
+import { UiView } from './ui-view.js';
 
 /** @internal */
 interface TransEvt {
@@ -185,13 +185,13 @@ export class UiSrefActiveDirective extends AsyncDirective {
   uiRouter: UIRouterLit | undefined;
   /** @internal */
   seekRouter() {
-    this.uiRouter = seekRouter(this.element!);
+    this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
   parentView: UiView | null = null;
   /** @internal */
   seekParentView() {
-    this.parentView = seekParentView(this.element!);
+    this.parentView = UiView.seekParentView(this.element!);
   }
 
   activeClasses: string[] = [];

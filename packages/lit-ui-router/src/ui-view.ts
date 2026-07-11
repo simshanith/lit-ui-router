@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
   ResolveContext,
@@ -27,11 +27,6 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit } from './core.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
-import {
-  UI_VIEW_CONTEXT_EVENT,
-  seekParentView,
-  type UiViewContextEvent,
-} from './context.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -41,6 +36,12 @@ export interface UiViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
 }
+
+interface UiViewContextEventDetail {
+  parentView: UiView | null;
+}
+
+type UiViewContextEvent = CustomEvent<UiViewContextEventDetail>;
 
 type deregisterFn = () => void;
 
@@ -66,7 +67,6 @@ type deregisterFn = () => void;
  *
 
  */
-@customElement('ui-view')
 export class UiView extends LitElement {
   @property()
   name = '';
@@ -158,11 +158,23 @@ export class UiView extends LitElement {
     this.captureContent();
   }
 
-  private static uiViewContextEventName = UI_VIEW_CONTEXT_EVENT;
+  private static uiViewContextEventName = 'ui-view-context';
+
+  private static uiViewContextEvent(): UiViewContextEvent {
+    return new CustomEvent(this.uiViewContextEventName, {
+      bubbles: true,
+      composed: true,
+      detail: {
+        parentView: null,
+      },
+    });
+  }
 
   /** @internal */
   static seekParentView(candidate: Element) {
-    return seekParentView(candidate);
+    const uiViewContextEvent = this.uiViewContextEvent();
+    candidate.dispatchEvent(uiViewContextEvent);
+    return uiViewContextEvent.detail.parentView;
   }
 
   private seekParentView() {
@@ -375,10 +387,4 @@ export class UiView extends LitElement {
 export interface UiView {
   /** @internal */
   constructor: typeof UiView;
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'ui-view': UiView;
-  }
 }

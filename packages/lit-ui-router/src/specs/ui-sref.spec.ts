@@ -10,7 +10,7 @@ import {
   UiSrefTargetEvent,
 } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
-import '../ui-view.js';
+import '../register.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {

@@ -7,7 +7,7 @@ import {
   TransitionController,
   TransitionControllerOptions,
 } from '../transition-controller.js';
-import '../ui-router.js';
+import '../register.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {

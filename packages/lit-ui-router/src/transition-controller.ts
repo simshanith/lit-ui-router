@@ -10,7 +10,7 @@ import {
 } from '@uirouter/core';
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
-import { seekRouter } from './context.js';
+import { UIRouterLitElement } from './ui-router.js';
 
 /** @internal */
 type DeregisterFn = () => void;
@@ -211,7 +211,8 @@ export class TransitionController implements ReactiveController {
 
   /** @internal */
   hostConnected() {
-    this._router ??= this.options.router ?? seekRouter(this.host);
+    this._router ??=
+      this.options.router ?? UIRouterLitElement.seekRouter(this.host);
 
     const router = this._router;
     if (!router) {
