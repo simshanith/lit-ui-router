@@ -3,6 +3,12 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "imports": {
+    "#uirouter/*": {
+      "node": "@uirouter/core/lib/*",
+      "default": "@uirouter/core/lib-esm/*"
+    }
+  },
   "exports": {
     ".": "./src/routes.ts",
     "./matchers.js": "./src/matchers.ts"
