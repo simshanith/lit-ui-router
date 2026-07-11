@@ -18,7 +18,8 @@ export default {
       return env.ASSETS.fetch(request);
     }
     // Entry redirects (e.g. '/' -> '/welcome') answer 302 instead of serving
-    // the shell at a stale URL; the original query string is preserved.
+    // the shell at a stale URL; the original query string is preserved
+    // (projected targets are path-only, so appending url.search is safe).
     const redirect = await computeAppRedirect(pathname.slice(mount.length));
     if (redirect !== null) {
       return new Response(null, {

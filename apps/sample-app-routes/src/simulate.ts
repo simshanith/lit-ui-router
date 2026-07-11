@@ -8,15 +8,16 @@ import { rootRedirectTarget, routeSegments } from './routes.ts';
 // in the DOM-free ES lib this package compiles against.
 declare function setTimeout(handler: () => void, ms: number): unknown;
 
-// Dotted names nest, so the flat segment map registers as the real state tree.
-const slimStates: StateDeclaration[] = Object.entries(routeSegments).map(
-  ([name, url]) => ({ name, url }),
-);
-
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
 
 export function createAppRouter(): UIRouter {
+  // Fresh declarations per router: core mutates registered declarations
+  // ($$state), so sharing them across routers breaks concurrent calls.
+  // Dotted names nest, so the flat segment map registers as the real tree.
+  const slimStates: StateDeclaration[] = Object.entries(routeSegments).map(
+    ([name, url]) => ({ name, url }),
+  );
   const router = createHeadlessRouter(slimStates);
   // Mirror router.config.ts: the app root has no state url and is routed by a
   // when(/^\/?$/) rule. Its otherwise() -> notFound rule is NOT mirrored, so

@@ -31,6 +31,15 @@ describe('computeAppRedirect', () => {
     assert.equal(await computeAppRedirect('/mymessages'), null);
   });
 
+  it('isolates concurrent calls (core mutates registered declarations)', async () => {
+    const results = await Promise.all([
+      computeAppRedirect('/'),
+      computeAppRedirect('/welcome'),
+      computeAppRedirect('/'),
+    ]);
+    assert.deepEqual(results, ['/welcome', null, '/welcome']);
+  });
+
   it('registers no otherwise() rule, so unknowns cannot become 302s', () => {
     const router = createAppRouter();
     const unmatched = router.urlService.match({
