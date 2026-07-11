@@ -127,7 +127,7 @@ async function main() {
   const desired = await loadDesired();
 
   // The worker name comes from the same config wrangler deploys with.
-  const configPath = join(import.meta.dirname, '..', 'wrangler.jsonc');
+  const configPath = join(import.meta.dirname, '..', '..', 'wrangler.jsonc');
   const name = workerNameFromConfig(
     parseJsonc(await readFile(configPath, 'utf8')),
   );
@@ -164,7 +164,7 @@ async function main() {
   if (!after.report.ok) process.exitCode = 1;
 }
 
-main().catch((error) => {
+main().catch((error: unknown) => {
   console.error(error instanceof Error ? error.message : error);
   process.exitCode = 2;
 });

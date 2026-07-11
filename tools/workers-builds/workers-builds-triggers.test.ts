@@ -41,7 +41,7 @@ const desired = desiredStateFromConfig(
 describe('parseJsonc', () => {
   it('parses the repo wrangler.jsonc (comments + trailing commas)', async () => {
     const raw = await readFile(
-      join(import.meta.dirname, '..', 'wrangler.jsonc'),
+      join(import.meta.dirname, '..', '..', 'wrangler.jsonc'),
       'utf8',
     );
     assert.equal(workerNameFromConfig(parseJsonc(raw)), 'lit-ui-router');
