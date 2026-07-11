@@ -7,6 +7,7 @@
   "scripts": {
     "build": "turbo run build",
     "check:catalog": "node scripts/check-catalog.ts",
+    "check:mjs": "node scripts/check-mjs.ts",
     "check:pack": "node scripts/check-pack.ts",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
