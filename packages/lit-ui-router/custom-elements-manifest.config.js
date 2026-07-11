@@ -1,5 +1,5 @@
 export default {
-  globs: ['src/ui-{router,view}.ts', 'src/register.ts'],
+  globs: ['src/ui-{router,view}.ts', 'src/ui-{router,view}.register.ts'],
   litelement: true,
   plugins: [
     {

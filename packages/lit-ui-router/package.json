@@ -15,7 +15,9 @@
   "type": "module",
   "sideEffects": [
     "./dist/index.js",
-    "./dist/register.js"
+    "./dist/register.js",
+    "./dist/ui-router.register.js",
+    "./dist/ui-view.register.js"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -34,6 +36,14 @@
     "./register": {
       "types": "./dist/register.d.ts",
       "default": "./dist/register.js"
+    },
+    "./ui-router.register": {
+      "types": "./dist/ui-router.register.d.ts",
+      "default": "./dist/ui-router.register.js"
+    },
+    "./ui-view.register": {
+      "types": "./dist/ui-view.register.d.ts",
+      "default": "./dist/ui-view.register.js"
     }
   },
   "scripts": {

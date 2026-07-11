@@ -3,7 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import { page, UserEventClickOptions } from 'vitest/browser';
 import { UIRouterLit } from '../core.js';
-import '../register.js';
+import '../ui-router.register.js';
 import { LitStateDeclaration } from '../interface.js';
 
 /**

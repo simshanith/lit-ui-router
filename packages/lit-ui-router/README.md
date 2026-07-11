@@ -35,13 +35,14 @@ router.start();
 | `import { ... } from 'lit-ui-router'`      | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.        |
 | `import { ... } from 'lit-ui-router/pure'` | The same full API — element classes included — with no registration and no `HTMLElementTagNameMap` globals. |
 | `import 'lit-ui-router/register'`          | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.     |
+| `import 'lit-ui-router/ui-view.register'`  | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto). |
 | `import type { ... } from 'lit-ui-router'` | Types are erased at compile time — always free, from any entry.                                             |
 
 The root entry is exactly `pure` + `register`: reach for `lit-ui-router/pure`
 when you need the APIs (or the element classes themselves, e.g. for scoped
 registries or custom tag names) without touching the global registry, and pair
-it with `lit-ui-router/register` to opt into the standard registration
-explicitly.
+it with `lit-ui-router/register` — or a single `*.register` entry — to opt
+into registration explicitly.
 
 ## Component Styles
 

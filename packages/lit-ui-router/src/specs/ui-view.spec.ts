@@ -4,6 +4,7 @@ import { customElement } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
+import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { UIRouterLit } from '../core.js';
 import {

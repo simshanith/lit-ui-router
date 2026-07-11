@@ -24,6 +24,8 @@ import {
   type UiRouterContextEvent,
 } from 'lit-ui-router';
 import 'lit-ui-router/register';
+import 'lit-ui-router/ui-router.register';
+import 'lit-ui-router/ui-view.register';
 import {
   TransitionController as PureTransitionController,
   UIRouterLitElement as PureUIRouterLitElement,
