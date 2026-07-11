@@ -63,7 +63,6 @@
         "format:check",
         "codecov:bundle",
         "//#check:catalog",
-        "//#check:mjs",
         "//#check:pack"
       ]
     },
@@ -74,9 +73,6 @@
     },
     "//#check:catalog": {
       "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
-    },
-    "//#check:mjs": {
-      "inputs": ["$TURBO_DEFAULT$", "**/*.mjs", "**/*.cjs"]
     },
     "//#check:pack": {
       "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
