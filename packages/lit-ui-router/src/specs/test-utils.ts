@@ -3,7 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import { page, UserEventClickOptions } from 'vitest/browser';
 import { UIRouterLit } from '../core.js';
-import { UIRouterLitElement } from '../ui-router.js';
+import '../ui-router.js';
 import { LitStateDeclaration } from '../interface.js';
 
 /**
@@ -94,6 +94,12 @@ export class TestRouterContainer extends LitElement {
   }
 }
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'test-router-container': TestRouterContainer;
+  }
+}
+
 /**
  * Creates a test fixture with a router and container element.
  */
@@ -113,7 +119,7 @@ export async function createTestFixture(
 
   if (template) {
     const wrapper = document.createElement('test-router-container');
-    (wrapper as TestRouterContainer).router = router;
+    wrapper.router = router;
     container.appendChild(wrapper);
 
     // Create a temporary element to render the template into
@@ -126,11 +132,9 @@ export async function createTestFixture(
       wrapper.appendChild(tempContainer.firstChild);
     }
 
-    await waitForUpdate(wrapper as LitElement);
+    await waitForUpdate(wrapper);
   } else {
-    const uiRouterEl = document.createElement(
-      'ui-router',
-    ) as UIRouterLitElement;
+    const uiRouterEl = document.createElement('ui-router');
     uiRouterEl.uiRouter = router;
     container.appendChild(uiRouterEl);
     await waitForUpdate(uiRouterEl);
@@ -148,18 +152,22 @@ export async function createTestFixture(
 /**
  * Mounts an element inside a ui-router context and returns it.
  */
-export async function mountInRouter<T extends HTMLElement>(
-  tagName: string,
+export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
+  tagName: K,
   router: UIRouterLit,
   attributes: Record<string, string> = {},
-): Promise<{ element: T; container: HTMLElement; cleanup: () => void }> {
+): Promise<{
+  element: HTMLElementTagNameMap[K];
+  container: HTMLElement;
+  cleanup: () => void;
+}> {
   const container = document.createElement('div');
   document.body.appendChild(container);
 
-  const uiRouterEl = document.createElement('ui-router') as UIRouterLitElement;
+  const uiRouterEl = document.createElement('ui-router');
   uiRouterEl.uiRouter = router;
 
-  const element = document.createElement(tagName) as T;
+  const element = document.createElement(tagName);
   Object.entries(attributes).forEach(([key, value]) => {
     element.setAttribute(key, value);
   });

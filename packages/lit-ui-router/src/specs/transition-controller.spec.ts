@@ -7,7 +7,7 @@ import {
   TransitionController,
   TransitionControllerOptions,
 } from '../transition-controller.js';
-import { UIRouterLitElement } from '../ui-router.js';
+import '../ui-router.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
@@ -30,6 +30,12 @@ class TransitionControllerHost extends LitElement {
   render() {
     this.renderCount++;
     return html`<span>${this.controller?.current?.name ?? ''}</span>`;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'test-transition-controller-host': TransitionControllerHost;
   }
 }
 
@@ -57,15 +63,11 @@ describe('TransitionController', () => {
     options?: TransitionControllerOptions,
     { withContext = true }: { withContext?: boolean } = {},
   ) {
-    const host = document.createElement(
-      'test-transition-controller-host',
-    ) as TransitionControllerHost;
+    const host = document.createElement('test-transition-controller-host');
     host.controller = new TransitionController(host, options);
 
     if (withContext) {
-      const uiRouterEl = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouterEl = document.createElement('ui-router');
       uiRouterEl.uiRouter = router;
       container.appendChild(uiRouterEl);
       await waitForUpdate(uiRouterEl);
