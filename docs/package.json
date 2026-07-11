@@ -23,7 +23,6 @@
     "vue": "^3.5.39"
   },
   "devDependencies": {
-    "@cloudflare/workers-types": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

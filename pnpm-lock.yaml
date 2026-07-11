@@ -9,9 +9,6 @@ catalogs:
     '@api-viewer/docs':
       specifier: 1.0.0-pre.10
       version: 1.0.0-pre.10
-    '@cloudflare/workers-types':
-      specifier: ^4.20260701.1
-      version: 4.20260702.1
     '@codecov/bundle-analyzer':
       specifier: ^2.0.1
       version: 2.0.1
@@ -400,9 +397,6 @@ importers:
         specifier: ^3.5.39
         version: 3.5.39(typescript@7.0.2)
     devDependencies:
-      '@cloudflare/workers-types':
-        specifier: 'catalog:'
-        version: 4.20260702.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
@@ -5485,7 +5479,8 @@ snapshots:
   '@cloudflare/workerd-windows-64@1.20260701.1':
     optional: true
 
-  '@cloudflare/workers-types@4.20260702.1': {}
+  '@cloudflare/workers-types@4.20260702.1':
+    optional: true
 
   '@codecov/bundle-analyzer@2.0.1':
     dependencies:

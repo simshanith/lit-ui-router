@@ -1,9 +1,5 @@
 import { matchesAppRoute } from 'sample-app-routes/matchers.js';
 
-interface Env {
-  ASSETS: Fetcher;
-}
-
 // Longest mount first: '/app' is a prefix of '/app-mobx'.
 const MOUNTS = ['/app-mobx', '/app'];
 

@@ -3,5 +3,5 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": true,
-  "ignorePatterns": []
+  "ignorePatterns": ["**/worker-configuration.d.ts"]
 }
