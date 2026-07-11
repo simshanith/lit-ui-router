@@ -10,4 +10,8 @@ declare global {
 // Guarded so a duplicate package copy degrades to first-definition-wins instead of a define() throw.
 if (!customElements.get('ui-view')) {
   customElements.define('ui-view', UiView);
+} else {
+  console.warn(
+    'lit-ui-router: <ui-view> is already defined; skipping registration. Multiple copies of lit-ui-router may be loaded.',
+  );
 }
