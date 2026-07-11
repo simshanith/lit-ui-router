@@ -1,4 +1,4 @@
-import { matchesAppRoute } from 'sample-app-shared/app/routeMatchers.js';
+import { matchesAppRoute } from 'sample-app-routes/matchers.js';
 
 interface Env {
   ASSETS: Fetcher;

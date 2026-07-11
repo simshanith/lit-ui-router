@@ -6,7 +6,7 @@ import Welcome from '../main/Welcome.js';
 import Login from '../main/Login.js';
 import Home from '../main/Home.js';
 import NotFound from '../main/NotFound.js';
-import { routeSegments } from '../routes.js';
+import { routeSegments } from 'sample-app-routes';
 
 /**
  * This is the parent state for the entire application.

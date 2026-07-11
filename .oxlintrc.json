@@ -254,7 +254,7 @@
     {
       "files": [
         "scripts/**/*.test.ts",
-        "apps/sample-app-shared/src/**/*.test.ts"
+        "apps/sample-app-routes/test/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"

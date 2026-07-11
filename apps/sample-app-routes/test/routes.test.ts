@@ -5,8 +5,8 @@ import {
   routePathPattern,
   routePathPatterns,
   routeSegments,
-} from './routes.ts';
-import { matchesAppRoute } from './routeMatchers.ts';
+} from '../src/routes.ts';
+import { matchesAppRoute } from '../src/matchers.ts';
 
 describe('routePathPattern', () => {
   it('passes top-level segments through', () => {

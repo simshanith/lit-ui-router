@@ -2,9 +2,7 @@
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "allowJs": true,
-    // node types + .ts-extension imports: node --test runs src/**/*.test.ts directly.
-    "allowImportingTsExtensions": true,
-    "types": ["vite/client", "dom-navigation", "node"],
+    "types": ["vite/client", "dom-navigation"],
     "noEmit": true
   },
   "include": ["src/**/*"],

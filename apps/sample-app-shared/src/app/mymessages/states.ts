@@ -8,7 +8,7 @@ import MyMessages from './MyMessages.js';
 import MessageComponent from './Message.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
-import { routeSegments } from '../routes.js';
+import { routeSegments } from 'sample-app-routes';
 
 /**
  * This state allows the user to compose a new message, edit a drafted message, send a message,

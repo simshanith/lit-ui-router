@@ -1,5 +1,5 @@
 import Preferences from './Preferences.js';
-import { routeSegments } from '../routes.js';
+import { routeSegments } from 'sample-app-routes';
 /**
  * This state allows the user to set their application preferences
  */

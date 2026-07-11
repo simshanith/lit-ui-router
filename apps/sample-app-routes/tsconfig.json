@@ -1,0 +1,13 @@
+{
+  // Runtime-neutral: no DOM, node, or workers types — this code is shared by
+  // the browser sample apps and the docs worker, and the compiler enforces it.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/**/*"]
+}
