@@ -1,3 +1,5 @@
+import { matchesAppRoute } from 'sample-app-shared/app/routeMatchers.js';
+
 interface Env {
   ASSETS: Fetcher;
 }
@@ -9,7 +11,8 @@ export default {
   async fetch(request, env) {
     const pathname = new URL(request.url).pathname;
     const mount = MOUNTS.find((prefix) => pathname.startsWith(`${prefix}/`));
-    if (!mount) {
+    // Non-route paths under a mount fall through to assets' 404 handling.
+    if (!mount || !matchesAppRoute(pathname.slice(mount.length))) {
       return env.ASSETS.fetch(request);
     }
     const shell = await env.ASSETS.fetch(
