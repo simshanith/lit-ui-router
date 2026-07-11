@@ -67,6 +67,7 @@
         "typecheck",
         "format:check",
         "codecov:bundle",
+        "//#check:mjs",
         "//#check:pack"
       ]
     },
@@ -74,6 +75,11 @@
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
+    },
+      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
+    },
+    "//#check:mjs": {
+      "inputs": ["$TURBO_DEFAULT$", "**/*.mjs", "**/*.cjs"]
     },
     "//#check:pack": {
       "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
