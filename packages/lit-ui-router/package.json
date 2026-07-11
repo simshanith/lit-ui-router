@@ -14,8 +14,9 @@
   ],
   "type": "module",
   "sideEffects": [
-    "**/ui-router.js",
-    "**/ui-view.js"
+    "./dist/index.js",
+    "./dist/ui-router.js",
+    "./dist/ui-view.js"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
