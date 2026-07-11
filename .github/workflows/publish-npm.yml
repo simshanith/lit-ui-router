@@ -26,6 +26,10 @@ on:
         default: false
         type: boolean
 
+# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
+env:
+  HUSKY: 0
+
 permissions:
   id-token: write # Required for OIDC trusted publishing to NPM
   contents: write # Required for creating GitHub releases

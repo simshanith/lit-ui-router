@@ -22,6 +22,10 @@ on:
 # together, so a main push that lands mid-run rejects the whole push and the
 # rollback deletes the tag. Hence tagging and pushing are separate steps below,
 # and only the tag ref is ever pushed.
+# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
+env:
+  HUSKY: 0
+
 concurrency:
   group: tag-release
 
