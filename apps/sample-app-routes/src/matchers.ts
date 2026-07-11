@@ -1,4 +1,3 @@
-// Deep imports keep the router out of the worker bundle (~57 KiB vs ~202 KiB).
 // #uirouter/* maps to lib-esm/* for bundlers and lib/* (CJS) under node,
 // whose ESM loader can't resolve lib-esm's extensionless relative imports.
 // Either way these are internal layout, not part of @uirouter/core's semver.
@@ -6,8 +5,7 @@ import { UrlMatcher } from '#uirouter/url/urlMatcher.js';
 import { ParamTypes } from '#uirouter/params/paramTypes.js';
 import { Param, DefType } from '#uirouter/params/param.js';
 import { services } from '#uirouter/common/coreservices.js';
-// Types from the same #uirouter universe: lib and lib-esm declare private
-// members separately, so mixing them with the barrel's types won't unify.
+// lib and lib-esm d.ts declare privates separately; barrel types won't unify.
 import type { ParamFactory } from '#uirouter/url/urlMatcherFactory.js';
 import type { ParamType } from '#uirouter/params/paramType.js';
 import type { StateDeclaration } from '#uirouter/state/interface.js';
