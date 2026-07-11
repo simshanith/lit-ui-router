@@ -23,10 +23,10 @@ import {
   type UiOnParamsChanged,
   type UiRouterContextEvent,
 } from 'lit-ui-router';
-import 'lit-ui-router/elements';
+import 'lit-ui-router/register';
 import {
   TransitionController as PureTransitionController,
-  seekRouter,
+  UIRouterLitElement as PureUIRouterLitElement,
   type UIRouterLit as PureUIRouterLit,
 } from 'lit-ui-router/pure';
 
@@ -117,5 +117,10 @@ TransitionController satisfies typeof PureTransitionController;
 
 export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   void new PureTransitionController(host);
-  return seekRouter(host);
+  return PureUIRouterLitElement.seekRouter(host);
+}
+
+// The register import above puts the tag-map augmentation in scope.
+export function typedTag(): UiView {
+  return document.createElement('ui-view');
 }
