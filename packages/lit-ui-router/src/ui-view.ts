@@ -389,3 +389,9 @@ export interface UiView {
   /** @internal */
   constructor: typeof UiView;
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'ui-view': UiView;
+  }
+}
