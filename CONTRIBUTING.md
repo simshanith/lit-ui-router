@@ -51,6 +51,40 @@ discussion (see the tool README).
 - A maintainer will review and run CI on your behalf
 - Ensure your changes pass local tests before submitting
 
+## Commit conventions
+
+Every change lands on `main` as a **squash merge**, and the squash commit is
+built from the PR itself:
+
+- **PR title → commit subject.** Must be a [Conventional Commit](https://www.conventionalcommits.org/)
+  header, e.g. `fix(navigation-location-plugin): handle hash-only URLs`.
+  Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+  `build`, `ci`, `chore`, `revert`. Scope is optional; `!` after the
+  type/scope marks a breaking change.
+- **Branch commit messages → commit body.** The squash body is assembled from
+  the PR's individual commit messages (GitHub's `COMMIT_MESSAGES` setting), so
+  write branch commits as conventional commits too — a `BREAKING CHANGE:`
+  footer in a commit message (or `!` in the PR title) is what signals a major.
+- **PR description → review artifact only.** It never lands in git history;
+  write whatever helps reviewers, HTML comments and all.
+
+The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
+title on every PR.
+
+### Enforcement gaps
+
+Honest limits of this setup:
+
+- The merge dialog lets whoever merges overwrite the pre-filled message;
+  auto-merge (`gh pr merge --squash --auto`) avoids that edit entirely.
+- Repository admins (including the release automation's PAT) bypass the
+  `main` ruleset and can push non-conventional commits directly.
+- Release PRs from the "Bump version" workflow are titled `Release X.Y.Z`
+  and rely on the `release` label (or admin bypass) to skip the title lint.
+- Branch commit messages land in the squash body unchecked by this workflow,
+  and refreshing a branch via merge adds `Merge branch 'main' into …` noise
+  bullets to it — prefer rebase to refresh.
+
 ## Releases
 
 Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.

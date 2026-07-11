@@ -1,0 +1,50 @@
+# Lints the PR title: with squash merges configured as PR_TITLE/COMMIT_MESSAGES,
+# the title becomes the conventional commit subject on main. The PR body is a
+# review artifact that never lands in git history, so it is not linted.
+name: Semantic PR
+
+on:
+  # pull_request_target runs the main-branch workflow with repo secrets;
+  # checking out PR code here is forbidden - validate event payload only.
+  pull_request_target:
+    types:
+      - opened
+      - edited
+      - synchronize
+      - reopened
+      # labeled/unlabeled: the release-label exemption must re-run the check
+      - labeled
+      - unlabeled
+
+permissions:
+  pull-requests: read
+
+# Re-validate only the latest title per PR
+concurrency:
+  group: semantic-pr-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint_pr_title:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: amannn/action-semantic-pull-request@v6
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          # Types seen in main history plus the conventional-commit-types set
+          types: |
+            feat
+            fix
+            docs
+            style
+            refactor
+            perf
+            test
+            build
+            ci
+            chore
+            revert
+          # Escape hatch for bump-version release PRs ("Release X.Y.Z" titles)
+          ignoreLabels: |
+            release

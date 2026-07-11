@@ -126,6 +126,7 @@ jobs:
               --git.push true \
               --git.commitMessage "$(pnpm --silent --filter "$PACKAGE" commit:changelog)"
       - name: Create PR
-        # Create PR with auto-generated title and body from commit messages
+        # Create PR with auto-generated title and body from commit messages.
+        # The release label exempts it from the semantic-pr title check.
         if: ${{ !inputs.dryRun }}
-        run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose
+        run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose --label release
