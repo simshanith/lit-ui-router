@@ -15,6 +15,10 @@ on:
         default: false
         type: boolean
 
+# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
+env:
+  HUSKY: 0
+
 # Serialize runs: a run that checks out before a sibling run pushes its tag
 # will re-create that tag, get its push rejected, and release-it's rollback
 # then deletes the tag from the remote.
@@ -22,10 +26,6 @@ on:
 # together, so a main push that lands mid-run rejects the whole push and the
 # rollback deletes the tag. Hence tagging and pushing are separate steps below,
 # and only the tag ref is ever pushed.
-# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
-env:
-  HUSKY: 0
-
 concurrency:
   group: tag-release
 

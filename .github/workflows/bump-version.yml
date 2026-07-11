@@ -45,8 +45,7 @@ on:
         default: false
         type: boolean
 
-# HUSKY: 0 is load-bearing here, not just the standard husky CI skip: release-it
-# git-commits "Release X.Y.Z", which the commit-msg hook rejects by design.
+# Load-bearing: the commit-msg hook rejects release-it's "Release X.Y.Z" commit by design.
 env:
   HUSKY: 0
 
