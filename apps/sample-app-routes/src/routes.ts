@@ -30,3 +30,7 @@ export function routePathPattern(name: AppRouteName): string {
 export const routePathPatterns: string[] = (
   Object.keys(routeSegments) as AppRouteName[]
 ).map(routePathPattern);
+
+// The app root ('' or '/') has no state url; router.config.ts routes it to
+// 'welcome' with a urlService.rules.when(/^\/?$/) rule.
+export const rootRedirectTarget: AppRouteName = 'welcome';
