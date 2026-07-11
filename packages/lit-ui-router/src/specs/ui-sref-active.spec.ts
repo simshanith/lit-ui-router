@@ -44,7 +44,7 @@ describe('uiSrefActive directive', () => {
   ): Promise<{ wrapper: HTMLElement; uiRouter: UIRouterLitElement }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
     container.appendChild(uiRouter);
 
@@ -621,7 +621,7 @@ describe('UiSrefActiveDirective methods', () => {
     document.body.appendChild(container);
     router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
     container.appendChild(uiRouter);
     await waitForUpdate(uiRouter);

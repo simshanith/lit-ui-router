@@ -22,6 +22,12 @@ class RouterReactionHost extends LitElement {
   }
 }
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'router-reaction-host': RouterReactionHost;
+  }
+}
+
 const cleanups: (() => void)[] = [];
 
 afterEach(() => {
@@ -29,7 +35,7 @@ afterEach(() => {
 });
 
 function createHost(): RouterReactionHost {
-  return document.createElement('router-reaction-host') as RouterReactionHost;
+  return document.createElement('router-reaction-host');
 }
 
 /** Mounts the host inside a <ui-router> providing the given router. */
@@ -37,7 +43,7 @@ async function mountInRouter(
   host: RouterReactionHost,
   router: UIRouterLit,
 ): Promise<UIRouterLitElement> {
-  const uiRouterEl = document.createElement('ui-router') as UIRouterLitElement;
+  const uiRouterEl = document.createElement('ui-router');
   uiRouterEl.uiRouter = router;
   uiRouterEl.appendChild(host);
   document.body.appendChild(uiRouterEl);

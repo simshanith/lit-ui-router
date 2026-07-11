@@ -16,12 +16,16 @@ class ReactionControllerHost extends LitElement {
   }
 }
 
+declare global {
+  interface HTMLElementTagNameMap {
+    'reaction-controller-host': ReactionControllerHost;
+  }
+}
+
 const cleanups: (() => void)[] = [];
 
 async function mountHost(): Promise<ReactionControllerHost> {
-  const host = document.createElement(
-    'reaction-controller-host',
-  ) as ReactionControllerHost;
+  const host = document.createElement('reaction-controller-host');
   document.body.appendChild(host);
   cleanups.push(() => host.remove());
   await waitForUpdate(host);
@@ -35,9 +39,7 @@ afterEach(() => {
 describe('ReactionController', () => {
   it('selects the current value immediately on connect', async () => {
     const state = observable({ count: 7 });
-    const host = document.createElement(
-      'reaction-controller-host',
-    ) as ReactionControllerHost;
+    const host = document.createElement('reaction-controller-host');
     const controller = new ReactionController(host, () => state.count);
 
     document.body.appendChild(host);

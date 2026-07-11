@@ -107,3 +107,9 @@ export interface UIRouterLitElement {
   /** @internal */
   constructor: typeof UIRouterLitElement;
 }
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'ui-router': UIRouterLitElement;
+  }
+}

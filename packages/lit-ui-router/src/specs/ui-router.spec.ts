@@ -22,7 +22,7 @@ describe('UIRouterLitElement', () => {
     });
 
     it('should create router instance if not provided', async () => {
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       container.appendChild(element);
       await waitForUpdate(element);
 
@@ -31,7 +31,7 @@ describe('UIRouterLitElement', () => {
 
     it('should use provided router instance', async () => {
       const router = createTestRouter();
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       element.uiRouter = router;
       container.appendChild(element);
       await waitForUpdate(element);
@@ -40,7 +40,7 @@ describe('UIRouterLitElement', () => {
     });
 
     it('should render slot content', async () => {
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       element.innerHTML = '<div id="test-content">Hello</div>';
       container.appendChild(element);
       await waitForUpdate(element);
@@ -53,7 +53,7 @@ describe('UIRouterLitElement', () => {
   describe('ui-router-context event', () => {
     it('should dispatch ui-router-context event on connect', async () => {
       const router = createTestRouter();
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       element.uiRouter = router;
 
       const eventSpy = vi.fn();
@@ -67,7 +67,7 @@ describe('UIRouterLitElement', () => {
 
     it('should provide router in event detail', async () => {
       const router = createTestRouter();
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       element.uiRouter = router;
 
       let receivedRouter: UIRouterLit | undefined;
@@ -85,7 +85,7 @@ describe('UIRouterLitElement', () => {
 
     it('should stop propagation and provide router to child events', async () => {
       const router = createTestRouter();
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       element.uiRouter = router;
       container.appendChild(element);
       await waitForUpdate(element);
@@ -106,7 +106,7 @@ describe('UIRouterLitElement', () => {
   describe('seekRouter static method', () => {
     it('should find router from descendant element', async () => {
       const router = createTestRouter();
-      const element = document.createElement('ui-router') as UIRouterLitElement;
+      const element = document.createElement('ui-router');
       element.uiRouter = router;
       container.appendChild(element);
       await waitForUpdate(element);
@@ -184,14 +184,10 @@ describe('UIRouterLitElement', () => {
       const outerRouter = createTestRouter();
       const innerRouter = createTestRouter();
 
-      const outerElement = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const outerElement = document.createElement('ui-router');
       outerElement.uiRouter = outerRouter;
 
-      const innerElement = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const innerElement = document.createElement('ui-router');
       innerElement.uiRouter = innerRouter;
 
       outerElement.appendChild(innerElement);
@@ -212,17 +208,13 @@ describe('UIRouterLitElement', () => {
       const outerRouter = createTestRouter();
       const innerRouter = createTestRouter();
 
-      const outerElement = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const outerElement = document.createElement('ui-router');
       outerElement.uiRouter = outerRouter;
 
       const middleDiv = document.createElement('div');
       outerElement.appendChild(middleDiv);
 
-      const innerElement = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const innerElement = document.createElement('ui-router');
       innerElement.uiRouter = innerRouter;
       middleDiv.appendChild(innerElement);
 
