@@ -1,4 +1,4 @@
-// Derived from @uirouter/core (MIT) — UrlMatcher/Param/ParamTypes, https://github.com/ui-router/core
+// Derived from @uirouter/core (MIT, Copyright (c) 2013-2015 The AngularUI Team, Karsten Sperling) — UrlMatcher/Param/ParamTypes, https://github.com/ui-router/core
 
 /**
  * Standalone URL path matching: compiles ui-router URL patterns
@@ -12,8 +12,10 @@
  * case-insensitive modes, static defaults and squash policies, `exec`.
  * Out of scope (compile errors, never silent divergence): url building,
  * array params, `replace` configs, function (injected) defaults, and the
- * `json`/`hash`/`any` types. Search params parse but never affect path
- * matching; `exec` resolves them to their static defaults.
+ * `json`/`hash`/`any` types — erroring beats compiling `{x:json}` into the
+ * literal regexp /json/, which is what an unregistered name means to the
+ * parser. Search params parse but never affect path matching; `exec`
+ * resolves them to their static defaults.
  */
 
 /** The pieces of a ui-router ParamType that path matching exercises. */
@@ -66,8 +68,8 @@ const builtinTypes: Record<string, ParamType> = {
   },
 };
 
-// Upstream registers these, but they only mean something with url building or
-// search-value handling; erroring beats compiling `{x:json}` into /json/.
+// Upstream registers these, but they only mean something with url building
+// or search-value handling; rejected at compile (see the module docblock).
 const unsupportedTypes = new Set(['hash', 'json', 'any']);
 
 /** A per-param configuration: ui-router's ParamDeclaration, matching subset. */
