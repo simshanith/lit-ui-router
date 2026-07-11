@@ -1,4 +1,5 @@
 import { matchesAppRoute } from 'sample-app-routes/matchers.js';
+import { computeAppRedirect } from 'sample-app-routes/simulate.js';
 
 interface Env {
   ASSETS: Fetcher;
@@ -9,11 +10,21 @@ const MOUNTS = ['/app-mobx', '/app'];
 
 export default {
   async fetch(request, env) {
-    const pathname = new URL(request.url).pathname;
+    const url = new URL(request.url);
+    const { pathname } = url;
     const mount = MOUNTS.find((prefix) => pathname.startsWith(`${prefix}/`));
     // Non-route paths under a mount fall through to assets' 404 handling.
     if (!mount || !matchesAppRoute(pathname.slice(mount.length))) {
       return env.ASSETS.fetch(request);
+    }
+    // Entry redirects (e.g. '/' -> '/welcome') answer 302 instead of serving
+    // the shell at a stale URL; the original query string is preserved.
+    const redirect = await computeAppRedirect(pathname.slice(mount.length));
+    if (redirect !== null) {
+      return new Response(null, {
+        status: 302,
+        headers: { Location: `${mount}${redirect}${url.search}` },
+      });
     }
     const shell = await env.ASSETS.fetch(
       new Request(new URL(mount, request.url), request),
