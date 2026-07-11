@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     ".": "./src/routes.ts",
-    "./matchers.js": "./src/matchers.ts"
+    "./matchers.js": "./src/matchers.ts",
+    "./url-matcher.js": "./src/url-matcher.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{ts,json,md}\"",
@@ -14,11 +15,9 @@
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
   },
-  "dependencies": {
-    "@uirouter/core": "catalog:"
-  },
   "devDependencies": {
     "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:"
   }

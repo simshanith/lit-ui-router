@@ -312,14 +312,13 @@ importers:
         version: 4.107.0(@cloudflare/workers-types@4.20260702.1)
 
   apps/sample-app-routes:
-    dependencies:
-      '@uirouter/core':
-        specifier: 'catalog:'
-        version: 6.1.2
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.2
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
