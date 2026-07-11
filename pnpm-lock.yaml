@@ -187,9 +187,6 @@ importers:
       eslint-plugin-turbo:
         specifier: ^2.10.4
         version: 2.10.4(eslint@10.6.0(jiti@2.7.0)(supports-color@8.1.1))(turbo@2.10.4)
-      jsonc-parser:
-        specifier: 'catalog:'
-        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
@@ -640,6 +637,18 @@ importers:
       vue-tsc:
         specifier: ^3.3.7
         version: 3.3.7(typescript@6.0.3)
+
+  tools/workers-builds:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
 packages:
 
