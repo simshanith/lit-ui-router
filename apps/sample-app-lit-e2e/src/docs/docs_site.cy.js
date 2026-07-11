@@ -45,10 +45,19 @@ describe('docs site', () => {
   });
 
   it('serves the embedded example apps same-origin', () => {
-    // Wrangler's SPA fallback answers every path with 200 + the docs
-    // homepage, so only embed-unique content proves the asset deployed.
+    // Only embed-unique content proves the asset deployed, not a fallback.
     cy.request('/examples/helloworld/')
       .its('body')
       .should('include', 'Hello World - lit-ui-router Tutorial');
+  });
+
+  it('serves a real 404 for unknown urls', () => {
+    cy.request({ url: '/definitely-missing', failOnStatusCode: false }).then(
+      (response) => {
+        expect(response.status).to.eq(404);
+        // The title proves the vitepress 404 page rendered, not a null body.
+        expect(response.body).to.include('<title>404 | Lit UI Router</title>');
+      },
+    );
   });
 });
