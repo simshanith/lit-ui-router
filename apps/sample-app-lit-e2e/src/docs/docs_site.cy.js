@@ -60,4 +60,30 @@ describe('docs site', () => {
       },
     );
   });
+
+  it('serves the app shell for real routes under the spa mounts', () => {
+    for (const mount of ['/app', '/app-mobx']) {
+      // The root (hash-mode home) plus a static and a parameterized route.
+      for (const path of ['/', '/welcome', '/contacts/1/edit']) {
+        cy.request(`${mount}${path}`).then((response) => {
+          expect(response.status, `${mount}${path}`).to.eq(200);
+          // Prefix only: the mobx shell's title carries a " (MobX)" suffix.
+          expect(response.body).to.include('<title>UI-Router Lit sample app');
+        });
+      }
+    }
+  });
+
+  it('serves a real 404 for unknown urls under the spa mounts', () => {
+    for (const url of [
+      '/app/definitely-not-a-route',
+      '/app/contacts/1/edit/extra',
+      '/app-mobx/definitely-not-a-route',
+    ]) {
+      cy.request({ url, failOnStatusCode: false }).then((response) => {
+        expect(response.status, url).to.eq(404);
+        expect(response.body).to.include('<title>404 | Lit UI Router</title>');
+      });
+    }
+  });
 });

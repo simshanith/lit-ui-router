@@ -43,3 +43,25 @@ export function visitRootWithFeatures(features: Record<string, string> = {}) {
   const root = (Cypress.config('baseUrl') ?? '').replace(/\/+$/, '');
   return cy.visit(query ? `${root}?${query}` : root);
 }
+
+interface UIRouterElement extends HTMLElement {
+  uiRouter?: { urlService: { url: (newUrl: string) => void } };
+}
+
+/**
+ * Drives a client-side URL change through the running app's router, like an
+ * in-app link. Direct loads of unmatched URLs get the server 404 instead
+ * (see src/docs/docs_site.cy.js), so the in-router 404 is only reachable this way.
+ */
+export function syncUrl(path: string) {
+  return cy
+    .get('ui-router')
+    .should(($el) => {
+      const element = $el[0] as UIRouterElement;
+      expect(element.uiRouter, 'ui-router element upgraded').to.be.an('object');
+    })
+    .then(($el) => {
+      const element = $el[0] as UIRouterElement;
+      element.uiRouter!.urlService.url(path);
+    });
+}

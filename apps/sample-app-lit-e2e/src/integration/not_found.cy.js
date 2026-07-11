@@ -1,4 +1,8 @@
-import { visitRootWithFeatures, visitWithFeatures } from '../support/e2e';
+import {
+  syncUrl,
+  visitRootWithFeatures,
+  visitWithFeatures,
+} from '../support/e2e';
 
 describe('404 not found', () => {
   beforeEach(() => {
@@ -24,8 +28,13 @@ describe('404 not found', () => {
     cy.contains('404 Page Not Found').should('not.exist');
   });
 
+  // Direct loads of unmatched URLs now get the server 404 (the worker only
+  // serves the shell for real routes), so client-side navigation is the way
+  // to reach the in-router 404 page.
   it('shows the 404 page for an unmatched URL', () => {
-    visitWithFeatures('/no/such/page');
+    visitRootWithFeatures();
+    cy.contains('Welcome to the sample app!');
+    syncUrl('/no/such/page');
     cy.contains('404 Page Not Found');
     cy.get('code').contains('/no/such/page');
     // The unmatched URL stays in the address bar (the 404 state has no url)
@@ -33,7 +42,9 @@ describe('404 not found', () => {
   });
 
   it('links back to the welcome page', () => {
-    visitWithFeatures('/no/such/page');
+    visitRootWithFeatures();
+    cy.contains('Welcome to the sample app!');
+    syncUrl('/no/such/page');
     cy.contains('404 Page Not Found');
     cy.get('button').contains('Return to Welcome').click();
     cy.url().should('include', '/welcome');
@@ -51,7 +62,9 @@ describe('404 not found', () => {
   it('shows the 404 page for URLs unmatched after a future state lazy loads', () => {
     // matches the contacts.** wildcard prefix, so the module lazy loads;
     // after the re-sync no contacts state matches this URL, so otherwise fires
-    visitWithFeatures('/contacts/no/such/contact');
+    visitRootWithFeatures();
+    cy.contains('Welcome to the sample app!');
+    syncUrl('/contacts/no/such/contact');
     cy.contains('404 Page Not Found');
     cy.get('code').contains('/contacts/no/such/contact');
   });
