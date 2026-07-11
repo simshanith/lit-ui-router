@@ -40,8 +40,7 @@ class Messages extends SessionStorage {
 
   byFolder(folder: { _id: string }) {
     const searchObject: Record<string, string> = { folder: folder._id };
-    const toFromAttr =
-      ['drafts', 'sent'].indexOf(folder._id) !== -1 ? 'from' : 'to';
+    const toFromAttr = ['drafts', 'sent'].includes(folder._id) ? 'from' : 'to';
     searchObject[toFromAttr] = AppConfig.emailAddress ?? '';
     return this.search(searchObject);
   }

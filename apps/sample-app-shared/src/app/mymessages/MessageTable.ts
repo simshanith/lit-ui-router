@@ -49,7 +49,7 @@ export class MessageTable extends LitElement {
   @state()
   sort = AppConfig.sort;
 
-  colVisible = (name: string) => this.columns.indexOf(name) !== -1;
+  colVisible = (name: string) => this.columns.includes(name);
   changeSort = (e: ChangeEvent) => (this.sort = e.detail.sort);
   formattedContent = (message: Message, col: keyof Message) => {
     if (col === 'date')

@@ -1,7 +1,7 @@
 import './styles.css';
 import { html, render } from 'lit';
 import '@api-viewer/docs';
-import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
+import { UIRouterLit } from 'lit-ui-router';
 import customElementsJsonUrl from 'lit-ui-router/dist/custom-elements.json?url';
 
 import { configureRouter } from './router.config.js';
@@ -38,7 +38,7 @@ render(
   root,
 );
 
-const element = root.querySelector('ui-router') as UIRouterLitElement | null;
+const element = root.querySelector('ui-router');
 const routerFromElement = element?.uiRouter;
 router = router || routerFromElement!;
 

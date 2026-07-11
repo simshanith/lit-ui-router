@@ -54,13 +54,10 @@ export class MessageElement extends LitElement {
   }
 
   get actions() {
-    return this.folder.actions.reduce(
-      (obj, action) => {
-        obj[action] = true;
-        return obj;
-      },
-      {} as Record<string, true>,
-    );
+    return this.folder.actions.reduce<Record<string, true>>((obj, action) => {
+      obj[action] = true;
+      return obj;
+    }, {});
   }
 
   get stateService() {

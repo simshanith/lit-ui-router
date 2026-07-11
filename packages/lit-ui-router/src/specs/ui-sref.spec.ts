@@ -10,7 +10,7 @@ import {
   UiSrefTargetEvent,
 } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
-import { UiView } from '../ui-view.js';
+import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
@@ -52,7 +52,7 @@ describe('uiSref directive', () => {
   ): Promise<{ anchor: HTMLAnchorElement; uiRouter: UIRouterLitElement }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
     container.appendChild(uiRouter);
 
@@ -65,7 +65,7 @@ describe('uiSref directive', () => {
     render(html`<a ${uiSref(srefState, params)}>Link</a>`, wrapper);
     await tick(50);
 
-    const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+    const anchor = wrapper.querySelector('a')!;
 
     router.start();
     await tick(50);
@@ -105,9 +105,7 @@ describe('uiSref directive', () => {
     it('should update href when state params change', async () => {
       router = createTestRouter([{ name: 'user', url: '/user/:id' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -119,14 +117,14 @@ describe('uiSref directive', () => {
       render(html`<a ${uiSref('user', { id: '1' })}>Link</a>`, wrapper);
       await tick(50);
 
-      let anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      let anchor = wrapper.querySelector('a')!;
       expect(anchor.getAttribute('href')).toContain('/user/1');
 
       // Re-render with id=2
       render(html`<a ${uiSref('user', { id: '2' })}>Link</a>`, wrapper);
       await tick(50);
 
-      anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      anchor = wrapper.querySelector('a')!;
       expect(anchor.getAttribute('href')).toContain('/user/2');
     });
 
@@ -136,9 +134,7 @@ describe('uiSref directive', () => {
       ];
 
       router = createTestRouter(states);
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -149,7 +145,7 @@ describe('uiSref directive', () => {
       render(html`<a ${uiSref('abstract')}>Link</a>`, wrapper);
       await tick(50);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       // Should not have href or have empty href
       const href = anchor.getAttribute('href');
       expect(href === null || href === '').toBe(true);
@@ -261,9 +257,7 @@ describe('uiSref directive', () => {
     it('should ignore click with target="_blank"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -276,7 +270,7 @@ describe('uiSref directive', () => {
 
       router.start();
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       const goSpy = vi.spyOn(router.stateService, 'go');
       await clickLocatedElement(anchor);
       await tick();
@@ -287,9 +281,7 @@ describe('uiSref directive', () => {
     it('should ignore click with rel="external"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -302,7 +294,7 @@ describe('uiSref directive', () => {
 
       router.start();
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       const goSpy = vi.spyOn(router.stateService, 'go');
       await clickLocatedElement(anchor);
       await tick();
@@ -318,9 +310,7 @@ describe('uiSref directive', () => {
         { name: 'about', url: '/about' },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -348,9 +338,7 @@ describe('uiSref directive', () => {
     it('should include targetState in event detail', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -420,12 +408,10 @@ describe('uiSref directive', () => {
         },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
 
-      const uiView = document.createElement('ui-view') as UiView;
+      const uiView = document.createElement('ui-view');
       uiRouter.appendChild(uiView);
       container.appendChild(uiRouter);
 
@@ -445,7 +431,7 @@ describe('uiSref directive', () => {
         render(html`<a ${uiSref('^.sibling')}>Sibling</a>`, wrapper);
         await tick(50);
 
-        const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+        const anchor = wrapper.querySelector('a')!;
         expect(anchor.getAttribute('href')).toContain('/sibling');
       }
     });
@@ -474,9 +460,7 @@ describe('uiSref directive', () => {
         { name: 'about', url: '/about' },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -492,7 +476,7 @@ describe('uiSref directive', () => {
 
       router.start();
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       const goSpy = vi.spyOn(router.stateService, 'go');
       clickElement(anchor);
       await tick();

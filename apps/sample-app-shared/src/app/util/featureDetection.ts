@@ -149,7 +149,7 @@ export class FeatureFlags {
     return newValue;
   }
 
-  reset<K extends keyof FeatureFlagDefinitions>(flag: K): void {
+  reset(flag: keyof FeatureFlagDefinitions): void {
     delete this._flags[flag];
     this.save();
   }

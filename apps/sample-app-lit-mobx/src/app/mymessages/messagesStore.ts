@@ -54,7 +54,7 @@ export class MessagesStore {
     return this.messages.filter(
       (message) =>
         message.folder === folderId &&
-        `${message[toFromAttr] ?? ''}`.includes(emailAddress),
+        (message[toFromAttr] ?? '').includes(emailAddress),
     );
   }
 }

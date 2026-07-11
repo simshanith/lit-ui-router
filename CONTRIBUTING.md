@@ -51,6 +51,51 @@ discussion (see the tool README).
 - A maintainer will review and run CI on your behalf
 - Ensure your changes pass local tests before submitting
 
+## Commit conventions
+
+Every change lands on `main` as a **squash merge**, and the squash commit is
+built from the PR itself:
+
+- **PR title → commit subject.** Must be a [Conventional Commit](https://www.conventionalcommits.org/)
+  header, e.g. `fix(navigation-location-plugin): handle hash-only URLs`.
+  Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+  `build`, `ci`, `chore`, `revert`. Scope is optional; `!` after the
+  type/scope marks a breaking change.
+- **Branch commit messages → commit body.** The squash body is assembled from
+  the PR's individual commit messages (GitHub's `COMMIT_MESSAGES` setting), so
+  write branch commits as conventional commits too — a `BREAKING CHANGE:`
+  footer in a commit message (or `!` in the PR title) is what signals a major.
+- **PR description → review artifact only.** It never lands in git history;
+  write whatever helps reviewers, HTML comments and all.
+
+The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
+title on every PR. The `Commitlint` workflow
+(`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
+messages that become the squash body — with
+[commitlint](https://commitlint.js.org/) via
+`wagoid/commitlint-github-action`. The rules live in `commitlint.config.mjs`:
+`@commitlint/config-conventional` plus its default ignores (GitHub's
+`Merge branch '…'` wordings, reverts, `fixup!`/`squash!`) and one extra ignore
+for hand-typed `merge <x> into <y>` freshens. To check a message locally:
+
+```sh
+echo "feat(scope): my subject" | pnpm exec commitlint
+```
+
+### Enforcement gaps
+
+Honest limits of this setup:
+
+- The merge dialog lets whoever merges overwrite the pre-filled message;
+  auto-merge (`gh pr merge --squash --auto`) avoids that edit entirely.
+- Repository admins (including the release automation's PAT) bypass the
+  `main` ruleset and can push non-conventional commits directly.
+- Release PRs from the "Bump version" workflow are titled `Release X.Y.Z`
+  and rely on the `release` label (or admin bypass) to skip the title lint.
+- Merge commits are exempt from the commit lint, so refreshing a branch via
+  merge adds `Merge branch 'main' into …` noise bullets to the squash body —
+  prefer rebase to refresh.
+
 ## Releases
 
 Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.

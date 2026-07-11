@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
   ResolveContext,
@@ -67,7 +67,6 @@ type deregisterFn = () => void;
  *
 
  */
-@customElement('ui-view')
 export class UiView extends LitElement {
   @property()
   name = '';
@@ -85,14 +84,14 @@ export class UiView extends LitElement {
   @state()
   private component: RoutedLitTemplate | null = null;
 
-  private inner = document.createDocumentFragment();
+  private readonly inner = document.createDocumentFragment();
 
   /** @internal */
   createRenderRoot() {
     return this;
   }
 
-  private viewId = viewIdCounter++;
+  private readonly viewId = viewIdCounter++;
 
   private _uiViewData!: ActiveUIView;
 
@@ -138,7 +137,7 @@ export class UiView extends LitElement {
   @state()
   private parentView!: UiView;
 
-  private onUiViewContextEvent = (event: UiViewContextEvent) => {
+  private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
     // can't adopt self
     if (event.target === this) {
       return;
@@ -159,7 +158,7 @@ export class UiView extends LitElement {
     this.captureContent();
   }
 
-  private static uiViewContextEventName = 'ui-view-context';
+  private static readonly uiViewContextEventName = 'ui-view-context';
 
   private static uiViewContextEvent(): UiViewContextEvent {
     return new CustomEvent(this.uiViewContextEventName, {
@@ -179,10 +178,10 @@ export class UiView extends LitElement {
   }
 
   private seekParentView() {
-    this.parentView = this.constructor.seekParentView(this) as UiView;
+    this.parentView = this.constructor.seekParentView(this)!;
   }
 
-  private onUiRouterContextEvent = (event: UiRouterContextEvent) => {
+  private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
@@ -198,7 +197,7 @@ export class UiView extends LitElement {
     this.inner.append(...this.childNodes.values());
   }
 
-  private disconnectedHandlers: deregisterFn[] = [];
+  private readonly disconnectedHandlers: deregisterFn[] = [];
 
   private setupUiView() {
     this.seekRouter();
@@ -266,11 +265,11 @@ export class UiView extends LitElement {
    */
   private _invokeUiCanExitHook(trans: Transition) {
     const instance = this.firstElementChild as UiOnExit & Element;
-    const uiCanExitFn: TransitionHookFn = instance && instance.uiCanExit;
+    const uiCanExitFn: TransitionHookFn = instance?.uiCanExit;
     if (isFunction(uiCanExitFn)) {
       const state: StateDeclaration = this.state;
 
-      if (trans.exiting().indexOf(state) !== -1) {
+      if (trans.exiting().includes(state)) {
         trans.onStart({}, function () {
           return uiCanExitFn.call(instance, trans);
         });
@@ -308,7 +307,7 @@ export class UiView extends LitElement {
       // Exit early if the $transition$ will exit the state the view is for.
       if (
         $transition$ === viewCreationTrans ||
-        $transition$.exiting().indexOf(viewState) !== -1
+        $transition$.exiting().includes(viewState)
       )
         return;
 
@@ -339,9 +338,8 @@ export class UiView extends LitElement {
       if (changedToParams.length) {
         const changedKeys: string[] = changedToParams.map((x) => x.id);
         // Filter the params to only changed/new to params.  `$transition$.params()` may be used to get all params.
-        const newValues = filter(
-          toParams,
-          (_, key) => changedKeys.indexOf(key!) !== -1,
+        const newValues = filter(toParams, (_, key) =>
+          changedKeys.includes(key!),
         );
         instance.uiOnParamsChanged(newValues, $transition$);
       }

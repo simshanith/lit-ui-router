@@ -56,9 +56,9 @@ export class RouterReactionController<T> implements ReactiveController {
   private dispose?: IReactionDisposer;
 
   constructor(
-    private host: ReactiveControllerHost & Element,
-    private selector: (store: RouterStore) => T,
-    private options: RouterReactionControllerOptions<T> = {},
+    private readonly host: ReactiveControllerHost & Element,
+    private readonly selector: (store: RouterStore) => T,
+    private readonly options: RouterReactionControllerOptions<T> = {},
   ) {
     host.addController(this);
   }

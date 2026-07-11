@@ -13,6 +13,7 @@ import {
 } from '../ui-sref-active.js';
 import { uiSref, UI_SREF_TARGET_EVENT } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
+import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
@@ -44,7 +45,7 @@ describe('uiSrefActive directive', () => {
   ): Promise<{ wrapper: HTMLElement; uiRouter: UIRouterLitElement }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
     container.appendChild(uiRouter);
 
@@ -80,7 +81,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
     });
 
@@ -104,7 +105,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
 
       await routerGo(router, 'about');
@@ -136,7 +137,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'parent');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
       expect(anchor.classList.contains('exact')).toBe(true);
     });
@@ -164,7 +165,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'parent.child');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
       expect(anchor.classList.contains('exact')).toBe(false);
     });
@@ -191,7 +192,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
       expect(anchor.classList.contains('is-active')).toBe(true);
       expect(anchor.classList.contains('nav-active')).toBe(true);
@@ -217,7 +218,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('exact')).toBe(true);
       expect(anchor.classList.contains('is-exact')).toBe(true);
     });
@@ -245,7 +246,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
       expect(anchor.classList.contains('is-active')).toBe(true);
       expect(anchor.classList.contains('exact')).toBe(true);
@@ -279,7 +280,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'user', { id: '123' });
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
     });
 
@@ -305,7 +306,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'user', { id: '456' });
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       // Different param value, should not be active
       expect(anchor.classList.contains('active')).toBe(false);
       expect(anchor.classList.contains('exact')).toBe(false);
@@ -336,7 +337,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const div = wrapper.querySelector('div') as HTMLDivElement;
+      const div = wrapper.querySelector('div')!;
       expect(div.classList.contains('active')).toBe(true);
     });
   });
@@ -359,7 +360,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const li = wrapper.querySelector('li') as HTMLLIElement;
+      const li = wrapper.querySelector('li')!;
       expect(li.classList.contains('active')).toBe(true);
     });
 
@@ -384,7 +385,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'about');
       await tick(100);
 
-      const nav = wrapper.querySelector('nav') as HTMLElement;
+      const nav = wrapper.querySelector('nav')!;
       expect(nav.classList.contains('has-active')).toBe(true);
     });
   });
@@ -446,7 +447,7 @@ describe('uiSrefActive directive', () => {
       await routerGo(router, 'home');
       await tick(100);
 
-      const anchor = wrapper.querySelector('a') as HTMLAnchorElement;
+      const anchor = wrapper.querySelector('a')!;
       expect(anchor.classList.contains('active')).toBe(true);
 
       // Remove the element
@@ -621,7 +622,7 @@ describe('UiSrefActiveDirective methods', () => {
     document.body.appendChild(container);
     router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
     container.appendChild(uiRouter);
     await waitForUpdate(uiRouter);

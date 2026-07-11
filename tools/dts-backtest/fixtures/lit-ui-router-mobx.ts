@@ -15,17 +15,21 @@ const structural: ReactionControllerOptions<string | undefined> = {
 };
 
 export class NavElement extends LitElement {
-  private store = RouterStore.for(new UIRouterLit());
+  private readonly store = RouterStore.for(new UIRouterLit());
 
-  private stateName = new RouterReactionController(
+  private readonly stateName = new RouterReactionController(
     this,
     (store: RouterStore) => store.current?.name,
     structural satisfies RouterReactionControllerOptions<string | undefined>,
   );
 
-  private params = new ReactionController(this, () => this.store.params, {
-    equals: comparer.structural,
-  });
+  private readonly params = new ReactionController(
+    this,
+    () => this.store.params,
+    {
+      equals: comparer.structural,
+    },
+  );
 
   render(): TemplateResult {
     const transition = this.stateName.store?.transition;

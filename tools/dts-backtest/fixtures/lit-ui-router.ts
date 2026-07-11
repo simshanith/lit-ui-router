@@ -23,6 +23,14 @@ import {
   type UiOnParamsChanged,
   type UiRouterContextEvent,
 } from 'lit-ui-router';
+import 'lit-ui-router/register';
+import 'lit-ui-router/ui-router.register';
+import 'lit-ui-router/ui-view.register';
+import {
+  TransitionController as PureTransitionController,
+  UIRouterLitElement as PureUIRouterLitElement,
+  type UIRouterLit as PureUIRouterLit,
+} from 'lit-ui-router/pure';
 
 interface UserResolves {
   user: { name: string };
@@ -49,7 +57,7 @@ export class UserElement
 
   _uiViewProps: UIViewInjectedProps<UserResolves>;
 
-  private transitions = new TransitionController(this, {
+  private readonly transitions = new TransitionController(this, {
     events: ['onSuccess', 'onError'],
     callback: onTransition,
   });
@@ -104,4 +112,17 @@ export function elements(root: Element): void {
 
 export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {
   return mergeSrefStatus(a, b);
+}
+
+// Both entries must expose the same declarations.
+TransitionController satisfies typeof PureTransitionController;
+
+export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
+  void new PureTransitionController(host);
+  return PureUIRouterLitElement.seekRouter(host);
+}
+
+// The register import above puts the tag-map augmentation in scope.
+export function typedTag(): UiView {
+  return document.createElement('ui-view');
 }

@@ -150,9 +150,9 @@ export interface UiSrefActiveParams {
   /** The state name to check for active status */
   state: string;
   /** State parameters to match */
-  params: RawParams;
+  params?: RawParams;
   /** Transition options */
-  options: TransitionOptions;
+  options?: TransitionOptions;
   /** Target states from nested uiSref directives */
   targetStates: TargetState[];
 }
@@ -473,7 +473,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   getStatus(transEvt?: TransEvt): SrefStatus | undefined {
     const { targetStates } = this;
     if (!targetStates.size) {
-      return;
+      return undefined;
     }
     const statuses: SrefStatus[] = [];
     for (const target of targetStates) {
