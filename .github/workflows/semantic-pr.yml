@@ -1,5 +1,6 @@
-# Lints PR title + body: with squash merges configured as PR_TITLE/PR_BODY,
-# they become the conventional commit subject/body on main.
+# Lints the PR title: with squash merges configured as PR_TITLE/COMMIT_MESSAGES,
+# the title becomes the conventional commit subject on main. The PR body is a
+# review artifact that never lands in git history, so it is not linted.
 name: Semantic PR
 
 on:
@@ -11,14 +12,14 @@ on:
       - edited
       - synchronize
       - reopened
-      # labeled/unlabeled: the release-label exemption must re-run the checks
+      # labeled/unlabeled: the release-label exemption must re-run the check
       - labeled
       - unlabeled
 
 permissions:
   pull-requests: read
 
-# Re-validate only the latest title/body per PR
+# Re-validate only the latest title per PR
 concurrency:
   group: semantic-pr-${{ github.event.pull_request.number }}
   cancel-in-progress: true
@@ -47,28 +48,3 @@ jobs:
           # Escape hatch for bump-version release PRs ("Release X.Y.Z" titles)
           ignoreLabels: |
             release
-
-  lint_pr_body:
-    # Release PR bodies are generated changelogs - exempt, matching the title lint's ignoreLabels
-    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') }}
-    runs-on: ubuntu-latest
-    steps:
-      - name: Check PR body
-        # Body is untrusted fork data - read only via env var, never interpolate
-        env:
-          PR_BODY: ${{ github.event.pull_request.body }}
-        run: |
-          # Empty body is allowed
-          [ -z "$PR_BODY" ] && exit 0
-
-          # HTML comments (PR-template noise) would leak into the squash commit body
-          if grep -q '<!--' <<< "$PR_BODY"; then
-            echo '::error::PR body contains HTML comments (<!--). Remove them - the body becomes the squash commit body.'
-            exit 1
-          fi
-
-          # BREAKING CHANGE footers must start a line or conventional-changelog misses them
-          if grep -nE 'BREAKING[- ]CHANGE:' <<< "$PR_BODY" | grep -vE '^[0-9]+:BREAKING[- ]CHANGE:'; then
-            echo '::error::BREAKING CHANGE: footer found mid-line. It must start its own line to be parsed.'
-            exit 1
-          fi

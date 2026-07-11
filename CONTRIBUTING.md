@@ -59,14 +59,17 @@ built from the PR itself:
 - **PR title → commit subject.** Must be a [Conventional Commit](https://www.conventionalcommits.org/)
   header, e.g. `fix(navigation-location-plugin): handle hash-only URLs`.
   Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
-  `build`, `ci`, `chore`, `revert`. Scope is optional.
-- **PR body → commit body.** Write it as you'd write a commit body. An empty
-  body is fine. `BREAKING CHANGE:` footers must start their own line. Don't
-  leave HTML comments (`<!-- … -->`) in the body — they'd land in the commit.
+  `build`, `ci`, `chore`, `revert`. Scope is optional; `!` after the
+  type/scope marks a breaking change.
+- **Branch commit messages → commit body.** The squash body is assembled from
+  the PR's individual commit messages (GitHub's `COMMIT_MESSAGES` setting), so
+  write branch commits as conventional commits too — a `BREAKING CHANGE:`
+  footer in a commit message (or `!` in the PR title) is what signals a major.
+- **PR description → review artifact only.** It never lands in git history;
+  write whatever helps reviewers, HTML comments and all.
 
-The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces both
-on every PR. Individual commits on your branch don't need to follow the
-convention — only the PR title and body do.
+The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
+title on every PR.
 
 ### Enforcement gaps
 
@@ -78,8 +81,9 @@ Honest limits of this setup:
   `main` ruleset and can push non-conventional commits directly.
 - Release PRs from the "Bump version" workflow are titled `Release X.Y.Z`
   and rely on the `release` label (or admin bypass) to skip the title lint.
-- A well-formed `BREAKING CHANGE:` line in a body is taken at face value —
-  the check validates format, not intent.
+- Branch commit messages land in the squash body unchecked by this workflow,
+  and refreshing a branch via merge adds `Merge branch 'main' into …` noise
+  bullets to it — prefer rebase to refresh.
 
 ## Releases
 
