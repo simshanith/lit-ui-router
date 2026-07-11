@@ -69,7 +69,18 @@ built from the PR itself:
   write whatever helps reviewers, HTML comments and all.
 
 The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
-title on every PR.
+title on every PR. The `Commitlint` workflow
+(`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
+messages that become the squash body — with
+[commitlint](https://commitlint.js.org/) via
+`wagoid/commitlint-github-action`. The rules live in `commitlint.config.mjs`:
+`@commitlint/config-conventional` plus its default ignores (GitHub's
+`Merge branch '…'` wordings, reverts, `fixup!`/`squash!`) and one extra ignore
+for hand-typed `merge <x> into <y>` freshens. To check a message locally:
+
+```sh
+echo "feat(scope): my subject" | pnpm exec commitlint
+```
 
 ### Enforcement gaps
 
@@ -81,9 +92,9 @@ Honest limits of this setup:
   `main` ruleset and can push non-conventional commits directly.
 - Release PRs from the "Bump version" workflow are titled `Release X.Y.Z`
   and rely on the `release` label (or admin bypass) to skip the title lint.
-- Branch commit messages land in the squash body unchecked by this workflow,
-  and refreshing a branch via merge adds `Merge branch 'main' into …` noise
-  bullets to it — prefer rebase to refresh.
+- Merge commits are exempt from the commit lint, so refreshing a branch via
+  merge adds `Merge branch 'main' into …` noise bullets to the squash body —
+  prefer rebase to refresh.
 
 ## Releases
 

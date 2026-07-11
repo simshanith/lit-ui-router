@@ -1,0 +1,41 @@
+# Lints the PR's branch commits: with squash merges configured as
+# PR_TITLE/COMMIT_MESSAGES, they become the squash commit body on main.
+# Kept separate from semantic-pr.yml so the lint_pr_commits check name is
+# only ever produced by this trigger - a skipped twin job under another
+# event would still satisfy a required status check.
+name: Commitlint
+
+on:
+  # pull_request runs the PR-branch workflow file with no secrets, so
+  # checking out and reading the PR's own commits is safe.
+  pull_request:
+    types:
+      - opened
+      - synchronize
+      - reopened
+      # labeled/unlabeled: the release-label exemption must re-run the check
+      - labeled
+      - unlabeled
+
+# Re-validate only the latest commits per PR
+concurrency:
+  group: commitlint-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+jobs:
+  lint_pr_commits:
+    # Release PRs carry "Release X.Y.Z" commits by design - same exemption
+    # as the title lint's ignoreLabels.
+    if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') }}
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          # Full history so the action can walk the PR's commit range
+          fetch-depth: 0
+      # Lints with the repo's commitlint.config.mjs (merge/revert/fixup
+      # exemptions live there; the action loads only ESM .mjs configs)
+      - uses: wagoid/commitlint-github-action@v6
