@@ -31,7 +31,7 @@ The Cloudflare [Github integration](https://developers.cloudflare.com/workers/ci
 Wrangler is installed in both:
 
 - Root `package.json` - for deployment commands
-- `docs/package.json` - references root config via `--config ../wrangler.jsonc`
+- `docs/package.json` - wrangler discovers the root `wrangler.jsonc` by walking up from the docs directory
 
 See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
 

@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "docs:api": {
+      "outputs": ["../../docs/api/lit-ui-router-mobx/**"]
+    }
+  }
+}

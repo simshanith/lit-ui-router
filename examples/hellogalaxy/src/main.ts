@@ -289,9 +289,9 @@ class StarsContainerComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps<{ stars: Star[] }>;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps<{ stars: Star[] }>) {
     super();
     this._uiViewProps = props;
   }
@@ -370,9 +370,9 @@ class StarDetailComponent extends LitElement {
   `;
 
   @property({ attribute: false })
-  _uiViewProps!: UIViewInjectedProps;
+  _uiViewProps!: UIViewInjectedProps<{ star: Star | undefined }>;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps<{ star: Star | undefined }>) {
     super();
     this._uiViewProps = props;
   }
@@ -518,7 +518,7 @@ const galaxyState: LitStateDeclaration = {
 };
 
 // Child state (nested via dot notation) renders inside galaxy's <ui-view>
-const starsState: LitStateDeclaration = {
+const starsState: LitStateDeclaration<{ stars: Star[] }> = {
   name: 'galaxy.stars',
   url: '/stars',
   component: StarsContainerComponent,
@@ -531,7 +531,7 @@ const starsState: LitStateDeclaration = {
 };
 
 // Grandchild state with a URL param, rendered inside galaxy.stars's <ui-view>
-const starState: LitStateDeclaration = {
+const starState: LitStateDeclaration<{ star: Star | undefined }> = {
   name: 'galaxy.stars.star',
   url: '/:starId',
   component: StarDetailComponent,
@@ -541,7 +541,7 @@ const starState: LitStateDeclaration = {
       // Resolve inheritance: 'stars' is injected from the parent state's resolve
       deps: ['$transition$', 'stars'],
       resolveFn: ($transition$: Transition, stars: Star[]) => {
-        const starId = $transition$.params().starId;
+        const starId = $transition$.params<{ starId: string }>().starId;
         return stars.find((s) => s.id === starId);
       },
     },

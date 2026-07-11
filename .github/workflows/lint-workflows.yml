@@ -1,0 +1,27 @@
+# Standalone actionlint workflow
+name: Lint workflows
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+# Cancel superseded runs per event per ref; never cancel main runs.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  lint_workflows:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Lint workflows
+        run: actionlint

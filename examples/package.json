@@ -5,8 +5,20 @@
   "type": "module",
   "scripts": {
     "build:embeds": "node build-embeds.ts",
+    "example:install:hellogalaxy": "npm ci --no-audit --no-fund --prefix hellogalaxy",
+    "example:install:hellosolarsystem": "npm ci --no-audit --no-fund --prefix hellosolarsystem",
+    "example:install:helloworld": "npm ci --no-audit --no-fund --prefix helloworld",
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
-    "lint": "oxlint ."
+    "postinstall": "concurrently \"npm:example:install:*\"",
+    "lint": "oxlint .",
+    "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"pnpm run typecheck:helloworld\" \"pnpm run typecheck:hellosolarsystem\" \"pnpm run typecheck:hellogalaxy\"",
+    "typecheck:hellogalaxy": "tsc -p hellogalaxy",
+    "typecheck:hellosolarsystem": "tsc -p hellosolarsystem",
+    "typecheck:helloworld": "tsc -p helloworld"
+  },
+  "devDependencies": {
+    "concurrently": "catalog:",
+    "typescript": "catalog:"
   }
 }

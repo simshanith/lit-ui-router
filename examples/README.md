@@ -60,6 +60,14 @@ npm install
 npm run dev
 ```
 
+In the monorepo, a root `pnpm install` also installs each example's own npm dependencies via this package's `postinstall` hook. pnpm skips lifecycle scripts when the workspace is already up to date, so to restore a manually deleted `examples/<example-name>/node_modules` run the hook directly:
+
+```bash
+pnpm --filter examples postinstall
+# or a single example:
+pnpm --filter examples example:install:<example-name>
+```
+
 ## Project Structure
 
 Each example follows the same structure:

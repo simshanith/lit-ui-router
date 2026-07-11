@@ -1,0 +1,9 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "docs:api": {
+      "outputs": ["../../docs/api/navigation-location-plugin/**"]
+    }
+  }
+}
