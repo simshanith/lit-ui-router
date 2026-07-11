@@ -1,0 +1,12 @@
+# Run by prek (mise-managed, see .config/mise/config.toml), installed once
+# via `pnpm run hooks:install`. Shares commitlint.config.mjs with CI.
+default_install_hook_types: [commit-msg]
+repos:
+  - repo: local
+    hooks:
+      - id: commitlint
+        name: commitlint
+        # commit-msg stage passes the message file as the trailing argument
+        entry: pnpm exec commitlint --edit
+        language: system
+        stages: [commit-msg]

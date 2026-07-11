@@ -7,3 +7,4 @@ idiomatic_version_file_enable_tools = ["node"]
 pnpm = "11.10.0"
 "npm:turbo" = "2.10.4"
 "aqua:rhysd/actionlint" = "1.7.12"
+"aqua:j178/prek" = "0.4.8"
