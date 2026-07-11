@@ -82,6 +82,15 @@ for hand-typed `merge <x> into <y>` freshens. To check a message locally:
 echo "feat(scope): my subject" | pnpm exec commitlint
 ```
 
+Commits are also checked at commit time: `pnpm install` installs a
+[husky](https://typicode.github.io/husky/) `commit-msg` hook (via the root
+`prepare` script) that runs commitlint locally, and CI re-checks the same
+messages via the `lint_pr_commits` job. If the hook is missing — pnpm 11
+skips lifecycle scripts on "Already up to date" installs — run
+`pnpm run prepare`. To skip the hook for one commit (`git commit -n`) or
+disable husky entirely (`HUSKY=0`, which CI sets), see
+[husky's how-to](https://typicode.github.io/husky/how-to.html).
+
 ### Enforcement gaps
 
 Honest limits of this setup:
