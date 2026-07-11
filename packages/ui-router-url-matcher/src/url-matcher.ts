@@ -411,11 +411,11 @@ export class UrlMatcher {
 }
 
 /**
- * Creates a matcher compiler with ui-router's UrlMatcherFactory defaults:
- * strict trailing-slash matching, case-sensitive, percent-decoding on, and a
- * default squash policy of false.
+ * Creates a matcher compiler — named for core's UrlMatcherFactory, whose
+ * defaults it keeps: strict trailing-slash matching, case-sensitive,
+ * percent-decoding on, and a default squash policy of false.
  */
-export function makeUrlMatcherCompiler(config: UrlMatcherCompilerConfig = {}): {
+export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
   compile: (pattern: string, options?: UrlMatcherCompileOptions) => UrlMatcher;
 } {
   const {

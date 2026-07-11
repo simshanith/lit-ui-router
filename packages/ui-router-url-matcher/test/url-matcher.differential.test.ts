@@ -3,7 +3,7 @@ import { describe, it } from 'node:test';
 
 import { services, UIRouter } from '@uirouter/core';
 
-import { makeUrlMatcherCompiler } from '../src/url-matcher.ts';
+import { urlMatcherFactory } from '../src/url-matcher.ts';
 import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 
 // The divergence guard for the standalone extraction: every pattern/url pair
@@ -18,8 +18,8 @@ services.$injector = {
   invoke: (fn: () => unknown) => fn(),
 } as typeof services.$injector;
 
-const { urlMatcherFactory } = new UIRouter();
-const { compile } = makeUrlMatcherCompiler();
+const { urlMatcherFactory: coreFactory } = new UIRouter();
+const { compile } = urlMatcherFactory();
 
 const coreCompile = (
   pattern: string,
@@ -30,7 +30,7 @@ const coreCompile = (
   if (options.caseInsensitive !== undefined)
     config.caseInsensitive = options.caseInsensitive;
   if (options.params !== undefined) config.state = { params: options.params };
-  return urlMatcherFactory.compile(pattern, config);
+  return coreFactory.compile(pattern, config);
 };
 
 interface DifferentialCase {

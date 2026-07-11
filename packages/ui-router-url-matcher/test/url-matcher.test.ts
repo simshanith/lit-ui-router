@@ -1,12 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { makeUrlMatcherCompiler } from '../src/url-matcher.ts';
+import { urlMatcherFactory } from '../src/url-matcher.ts';
 
 // Behavior specs for the standalone matcher on its own. Fidelity against
 // @uirouter/core is asserted separately, case by case, by the differential
 // suite (url-matcher.differential.test.ts).
-const { compile } = makeUrlMatcherCompiler();
+const { compile } = urlMatcherFactory();
 
 describe('factory defaults', () => {
   it('is strict about trailing slashes', () => {
@@ -115,7 +115,7 @@ describe('explicit rejections (fail at compile, never diverge silently)', () => 
     );
     assert.throws(
       () =>
-        makeUrlMatcherCompiler({
+        urlMatcherFactory({
           defaultSquashPolicy: 5 as unknown as boolean,
         }),
       /Invalid squash policy/,
