@@ -1,7 +1,6 @@
 var Markov = require('./markov').Markov;
 
-var zlib = require('zlib'),
-  fs = require('fs');
+var fs = require('fs');
 var path = require('path');
 
 var currentMarkov;
@@ -21,10 +20,10 @@ function sen2gibberish(mult, sentence) {
   var start = currentMarkov.randomStart();
   var gibberish = currentMarkov.generate(start, words);
 
-  var sentence = gibberish;
+  sentence = gibberish;
 
   while (sentence.match(/^ *[,.?!]/)) {
-    var words = sentence.split(/\s/);
+    words = sentence.split(/\s/);
     var newWord = currentMarkov.generate(words.slice(-2), 1);
     sentence = words.slice(1).join(' ') + newWord;
   }

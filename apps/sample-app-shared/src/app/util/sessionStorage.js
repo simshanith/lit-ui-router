@@ -39,7 +39,7 @@ export class SessionStorage {
       try {
         // Try to parse the existing data from the Session Storage API
         data = JSON.parse(fromSession);
-      } catch (e) {
+      } catch {
         console.log(
           'Unable to parse session messages, retrieving intial data.',
         );
@@ -68,7 +68,7 @@ export class SessionStorage {
 
   /** Helper which simulates a delay, then provides the `thenFn` with the data */
   all = (thenFn) => {
-    let promise = new Promise((resolve, reject) => {
+    let promise = new Promise((resolve) => {
       setTimeout(() => resolve(this._data), AppConfig.restDelay);
     });
     return promise.then(thenFn);
