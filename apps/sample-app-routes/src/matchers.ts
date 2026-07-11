@@ -63,12 +63,12 @@ const matchers = (Object.keys(routeSegments) as AppRouteName[])
   }))
   .sort((a, b) => UrlMatcher.compare(a.matcher, b.matcher));
 
-// The app root has no state url (router.config.ts matches it with
-// when(/^\/?$/)), so it reports the empty state name.
+// The app root has no state url (router.config.ts matches it with a
+// when(/^\/?$/) rule), so it has no match identity: matchAppRoute reports
+// null there while matchesAppRoute stays true.
 export function matchAppRoute(
   path: string,
 ): { state: string; params: RawParams } | null {
-  if (/^\/?$/.test(path)) return { state: '', params: {} };
   for (const { state, matcher } of matchers) {
     const params = matcher.exec(path);
     if (params !== null) return { state, params };
@@ -77,5 +77,5 @@ export function matchAppRoute(
 }
 
 export function matchesAppRoute(path: string): boolean {
-  return matchAppRoute(path) !== null;
+  return /^\/?$/.test(path) || matchAppRoute(path) !== null;
 }

@@ -104,9 +104,13 @@ describe('matchesAppRoute', () => {
     );
   });
 
-  it('reports the app root as the empty state name', () => {
-    assert.deepEqual(matchAppRoute(''), { state: '', params: {} });
-    assert.deepEqual(matchAppRoute('/'), { state: '', params: {} });
+  // The root is matched by a when-rule, not a state url: it has match truth
+  // but no match identity, and must never be treated as a state.
+  it('reports no identity for the app root, which still matches', () => {
+    for (const root of ['', '/']) {
+      assert.equal(matchAppRoute(root), null, root);
+      assert.equal(matchesAppRoute(root), true, root);
+    }
   });
 
   it('reports null for every rejected path', () => {
