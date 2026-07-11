@@ -28,6 +28,20 @@ states.forEach((state) => router.stateRegistry.register(state));
 router.start();
 ```
 
+## Entry Points
+
+| Import                                     | Effect                                                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `import { ... } from 'lit-ui-router'`      | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.  |
+| `import { ... } from 'lit-ui-router/pure'` | Side-effect-free values (router, controller, directives, types). Never registers the custom elements. |
+| `import 'lit-ui-router/elements'`          | Registration only: defines `<ui-router>` and `<ui-view>`, exports nothing.                            |
+| `import type { ... } from 'lit-ui-router'` | Types are erased at compile time — always free, from any entry.                                       |
+
+The root entry is `pure` + `elements`: reach for `lit-ui-router/pure` when you
+need router APIs (`UIRouterLit`, `TransitionController`, `uiSref`,
+`uiSrefActive`, `seekRouter`) without custom-element registration, and pair it
+with `lit-ui-router/elements` to register the viewport elements explicitly.
+
 ## Component Styles
 
 | Style               | Best For                      | Example                    |

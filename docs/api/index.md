@@ -10,6 +10,15 @@ npm install lit-ui-router
 pnpm add lit-ui-router
 ```
 
+## Entry Points
+
+| Import                                     | Effect                                                                                                |
+| ------------------------------------------ | ----------------------------------------------------------------------------------------------------- |
+| `import { ... } from 'lit-ui-router'`      | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.  |
+| `import { ... } from 'lit-ui-router/pure'` | Side-effect-free values (router, controller, directives, types). Never registers the custom elements. |
+| `import 'lit-ui-router/elements'`          | Registration only: defines `<ui-router>` and `<ui-view>`, exports nothing.                            |
+| `import type { ... } from 'lit-ui-router'` | Types are erased at compile time — always free, from any entry.                                       |
+
 ## Quick Start
 
 ```ts
