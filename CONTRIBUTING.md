@@ -73,7 +73,7 @@ title on every PR. The `Commitlint` workflow
 (`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
 messages that become the squash body — with
 [commitlint](https://commitlint.js.org/) via
-`wagoid/commitlint-github-action`. The rules live in `commitlint.config.mjs`:
+`wagoid/commitlint-github-action`. The rules live in `commitlint.config.ts`:
 `@commitlint/config-conventional` plus its default ignores (GitHub's
 `Merge branch '…'` wordings, reverts, `fixup!`/`squash!`) and one extra ignore
 for hand-typed `merge <x> into <y>` freshens. To check a message locally:

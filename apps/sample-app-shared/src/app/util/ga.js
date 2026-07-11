@@ -5,7 +5,8 @@ const GOOGLE_ANALYTICS_TRACKING_ID = import.meta.env
 
 function initGoogleAnalytics() {
   (function (i, s, o, g, r, a, m) {
-    ((a = s.createElement(o)), (m = s.getElementsByTagName(o)[0]));
+    a = s.createElement(o);
+    m = s.getElementsByTagName(o)[0];
     a.async = 1;
     a.src = g;
     m.parentNode.insertBefore(a, m);
@@ -64,8 +65,12 @@ export default function googleAnalyticsHook(transitionService) {
 
   const error = (trans) => {
     const err = trans.error();
-    const type = err && err.hasOwnProperty('type') ? err.type : '_';
-    const message = err && err.hasOwnProperty('message') ? err.message : '_';
+    const type =
+      err && Object.prototype.hasOwnProperty.call(err, 'type') ? err.type : '_';
+    const message =
+      err && Object.prototype.hasOwnProperty.call(err, 'message')
+        ? err.message
+        : '_';
     if (type === 6) {
       trackException({
         error_description: message,

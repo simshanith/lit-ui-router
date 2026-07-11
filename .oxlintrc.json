@@ -18,7 +18,8 @@
     "**/.vitepress/cache/**",
     "**/*.config.ts",
     "**/*.config.js",
-    "!**/vitest.config.ts"
+    "!**/vitest.config.ts",
+    "!**/commitlint.config.ts"
   ],
   "rules": {
     "constructor-super": "error",
@@ -210,11 +211,7 @@
     {
       "files": ["**/*.js", "**/*.mjs", "**/*.cjs"],
       "rules": {
-        "no-redeclare": "off",
-        "no-prototype-builtins": "off",
         "no-undef": "error",
-        "no-unused-vars": "off",
-        "no-unused-expressions": "off",
         "typescript/no-require-imports": "off",
         "typescript/await-thenable": "off",
         "typescript/consistent-return": "off",
