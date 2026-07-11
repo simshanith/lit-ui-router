@@ -3,10 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "docs:api": {
-      "inputs": ["typedoc.json", "src/**/*.ts"],
-      "outputs": ["../../docs/api/lit-ui-router-mobx/**"],
-      "dependsOn": ["^build"],
-      "cache": true
+      "outputs": ["../../docs/api/lit-ui-router-mobx/**"]
     }
   }
 }
