@@ -350,6 +350,9 @@ importers:
       '@types/lodash':
         specifier: 'catalog:'
         version: 4.17.24
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
@@ -358,7 +361,7 @@ importers:
         version: 7.0.2
       vite:
         specifier: 'catalog:'
-        version: 8.1.3(@types/node@25.0.9)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
+        version: 8.1.3(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
 
   docs:
     dependencies:
@@ -371,6 +374,9 @@ importers:
       sample-app-lit-vanilla:
         specifier: workspace:*
         version: link:../apps/sample-app-lit-vanilla
+      sample-app-shared:
+        specifier: workspace:*
+        version: link:../apps/sample-app-shared
       screenfull:
         specifier: ^6.0.2
         version: 6.0.2

@@ -15,6 +15,7 @@ import { type Contact } from './interface.js';
 import EditContact from './EditContact.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
+import { routeSegments } from '../routes.js';
 
 /**
  * This state displays the contact list.
@@ -25,7 +26,7 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
 const contactsState = {
   parent: 'app', // declares that 'contacts' is a child of 'app'
   name: 'contacts',
-  url: '/contacts',
+  url: routeSegments.contacts,
   resolve: [
     // Resolve all the contacts. The resolved contacts are injected as props into the Contacts component.
     {
@@ -52,7 +53,7 @@ const contactsState = {
  */
 const viewContactState = {
   name: 'contacts.contact',
-  url: '/:contactId',
+  url: routeSegments['contacts.contact'],
   resolve: [
     // Resolve the contact, based on the contactId parameter value.
     // The resolved contact is provided to the contactComponent's contact binding
@@ -80,7 +81,7 @@ const viewContactState = {
  */
 const editContactState = {
   name: 'contacts.contact.edit',
-  url: '/edit',
+  url: routeSegments['contacts.contact.edit'],
   views: {
     // Relatively target the grand-parent-state's $default (unnamed) ui-view
     // This could also have been written using ui-view@state addressing: $default@contacts
@@ -96,7 +97,7 @@ const editContactState = {
  */
 const newContactState = {
   name: 'contacts.new',
-  url: '/new',
+  url: routeSegments['contacts.new'],
   component: EditContact as LitViewDeclarationElement,
 };
 

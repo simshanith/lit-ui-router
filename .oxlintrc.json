@@ -252,7 +252,10 @@
       }
     },
     {
-      "files": ["scripts/**/*.test.ts"],
+      "files": [
+        "scripts/**/*.test.ts",
+        "apps/sample-app-shared/src/**/*.test.ts"
+      ],
       "rules": {
         "typescript/no-floating-promises": "off"
       }

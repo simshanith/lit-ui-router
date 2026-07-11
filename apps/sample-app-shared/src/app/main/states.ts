@@ -6,6 +6,7 @@ import Welcome from '../main/Welcome.js';
 import Login from '../main/Login.js';
 import Home from '../main/Home.js';
 import NotFound from '../main/NotFound.js';
+import { routeSegments } from '../routes.js';
 
 /**
  * This is the parent state for the entire application.
@@ -28,7 +29,7 @@ export class AppState implements LitStateDeclaration {
 const welcomeState = {
   parent: 'app',
   name: 'welcome',
-  url: '/welcome',
+  url: routeSegments.welcome,
   component: Welcome,
 };
 
@@ -40,7 +41,7 @@ const welcomeState = {
 const homeState = {
   parent: 'app',
   name: 'home',
-  url: '/home',
+  url: routeSegments.home,
   component: Home,
 };
 
@@ -54,7 +55,7 @@ const homeState = {
 const loginState = {
   parent: 'app',
   name: 'login',
-  url: '/login',
+  url: routeSegments.login,
   component: Login,
   resolve: [
     {
@@ -120,7 +121,7 @@ export const notFoundState = {
 export const contactsFutureState = {
   parent: 'app',
   name: 'contacts.**',
-  url: '/contacts',
+  url: routeSegments.contacts,
   lazyLoad: () => import('../contacts/states.js'),
 };
 
@@ -128,7 +129,7 @@ export const contactsFutureState = {
 export const prefsFutureState = {
   parent: 'app',
   name: 'prefs.**',
-  url: '/prefs',
+  url: routeSegments.prefs,
   lazyLoad: () => import('../prefs/states.js'),
 };
 
@@ -136,7 +137,7 @@ export const prefsFutureState = {
 export const mymessagesFutureState = {
   parent: 'app',
   name: 'mymessages.**',
-  url: '/mymessages',
+  url: routeSegments.mymessages,
   lazyLoad: () => import('../mymessages/states.js'),
 };
 

@@ -8,6 +8,7 @@ import MyMessages from './MyMessages.js';
 import MessageComponent from './Message.js';
 
 import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-within.js';
+import { routeSegments } from '../routes.js';
 
 /**
  * This state allows the user to compose a new message, edit a drafted message, send a message,
@@ -17,7 +18,7 @@ import { dsrRedirectToDefaultFromWithin } from '../util/dsr-default-redirect-wit
  */
 const composeState = {
   name: 'mymessages.compose',
-  url: '/compose',
+  url: routeSegments['mymessages.compose'],
   // Declares that this state has a 'message' parameter, that defaults to an empty object.
   // Note the parameter does not appear in the URL.
   params: {
@@ -39,7 +40,7 @@ const composeState = {
 const mymessagesState = {
   parent: 'app',
   name: 'mymessages',
-  url: '/mymessages',
+  url: routeSegments.mymessages,
   resolve: [
     // All the folders are fetched from the Folders service
     {
@@ -67,7 +68,7 @@ const mymessagesState = {
  */
 const messageState = {
   name: 'mymessages.messagelist.message',
-  url: '/:messageId',
+  url: routeSegments['mymessages.messagelist.message'],
   resolve: [
     // Fetch the message from the Messages service using the messageId parameter
     {
@@ -105,7 +106,7 @@ function againable<T>(fn: () => T) {
  */
 const messageListState = {
   name: 'mymessages.messagelist',
-  url: '/:folderId',
+  url: routeSegments['mymessages.messagelist'],
   // The folderId parameter is part of the URL. This params block sets 'inbox' as the default value.
   // If no parameter value for folderId is provided on the transition, then it will be defaulted to 'inbox'
   params: { folderId: 'inbox' },
