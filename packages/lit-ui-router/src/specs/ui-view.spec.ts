@@ -373,7 +373,7 @@ describe('UiView', () => {
       await tick(50);
 
       // Should still be on home
-      expect(router.stateService.current.name).toBe('home');
+      expect(router.globals.current.name).toBe('home');
     });
   });
 

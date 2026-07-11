@@ -146,11 +146,11 @@ export interface TransitionControllerOptions {
  * @category controllers
  */
 export class TransitionController implements ReactiveController {
-  private host: ReactiveControllerHost & Element;
+  private readonly host: ReactiveControllerHost & Element;
 
-  private options: TransitionControllerOptions;
+  private readonly options: TransitionControllerOptions;
 
-  private deregisterFns: DeregisterFn[] = [];
+  private readonly deregisterFns: DeregisterFn[] = [];
 
   private _router?: UIRouter;
 

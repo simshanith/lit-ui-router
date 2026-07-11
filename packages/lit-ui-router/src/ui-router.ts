@@ -79,7 +79,7 @@ export class UIRouterLitElement extends LitElement {
     };
   }
 
-  private onUiRouterContextEvent = (event: UiRouterContextEvent) => {
+  private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
     this.constructor.onUiRouterContextEvent(this.uiRouter)(event);
   };
 

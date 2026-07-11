@@ -13,7 +13,7 @@ export const pushToArr = <T>(array: T[], item: T): T[] => {
   return array;
 };
 export const uniqReduce = <T>(arr: T[], item: T): T[] =>
-  arr.indexOf(item) !== -1 ? arr : pushToArr(arr, item);
+  arr.includes(item) ? arr : pushToArr(arr, item);
 export const flattenReduce = <T>(arr: T[], item: T | T[]): T[] =>
   arr.concat(item);
 const guidChar = (c: string): string =>

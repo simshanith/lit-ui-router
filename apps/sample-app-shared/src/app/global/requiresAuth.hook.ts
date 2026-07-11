@@ -25,6 +25,7 @@ const hook = {
     if (!AuthService.isAuthenticated()) {
       return $state.target('login', undefined, { location: false });
     }
+    return undefined;
   },
 };
 
