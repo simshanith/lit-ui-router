@@ -50,6 +50,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "catalog:",
     "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/browser-playwright": "catalog:",
