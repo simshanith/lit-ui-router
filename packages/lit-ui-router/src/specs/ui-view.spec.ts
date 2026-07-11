@@ -37,10 +37,10 @@ describe('UiView', () => {
   ): Promise<{ uiRouter: UIRouterLitElement; uiView: UiView }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
 
-    const uiView = document.createElement('ui-view') as UiView;
+    const uiView = document.createElement('ui-view');
     uiRouter.appendChild(uiView);
     container.appendChild(uiRouter);
 
@@ -59,7 +59,7 @@ describe('UiView', () => {
     });
 
     it('should render without router context', async () => {
-      const uiView = document.createElement('ui-view') as UiView;
+      const uiView = document.createElement('ui-view');
       container.appendChild(uiView);
       await waitForUpdate(uiView);
 
@@ -97,12 +97,10 @@ describe('UiView', () => {
         },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
 
-      const uiView = document.createElement('ui-view') as UiView;
+      const uiView = document.createElement('ui-view');
       uiView.setAttribute('name', 'sidebar');
       uiRouter.appendChild(uiView);
       container.appendChild(uiRouter);
@@ -286,12 +284,10 @@ describe('UiView', () => {
     it('should render slot content when no component is active', async () => {
       router = createTestRouter([]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
 
-      const uiView = document.createElement('ui-view') as UiView;
+      const uiView = document.createElement('ui-view');
       uiView.innerHTML = '<div class="fallback">Loading...</div>';
       uiRouter.appendChild(uiView);
       container.appendChild(uiRouter);

@@ -10,7 +10,7 @@ import {
   UiSrefTargetEvent,
 } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
-import { UiView } from '../ui-view.js';
+import '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
@@ -52,7 +52,7 @@ describe('uiSref directive', () => {
   ): Promise<{ anchor: HTMLAnchorElement; uiRouter: UIRouterLitElement }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router') as UIRouterLitElement;
+    const uiRouter = document.createElement('ui-router');
     uiRouter.uiRouter = router;
     container.appendChild(uiRouter);
 
@@ -105,9 +105,7 @@ describe('uiSref directive', () => {
     it('should update href when state params change', async () => {
       router = createTestRouter([{ name: 'user', url: '/user/:id' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -136,9 +134,7 @@ describe('uiSref directive', () => {
       ];
 
       router = createTestRouter(states);
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -261,9 +257,7 @@ describe('uiSref directive', () => {
     it('should ignore click with target="_blank"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -287,9 +281,7 @@ describe('uiSref directive', () => {
     it('should ignore click with rel="external"', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -318,9 +310,7 @@ describe('uiSref directive', () => {
         { name: 'about', url: '/about' },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -348,9 +338,7 @@ describe('uiSref directive', () => {
     it('should include targetState in event detail', async () => {
       router = createTestRouter([{ name: 'home', url: '/home' }]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
@@ -420,12 +408,10 @@ describe('uiSref directive', () => {
         },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
 
-      const uiView = document.createElement('ui-view') as UiView;
+      const uiView = document.createElement('ui-view');
       uiRouter.appendChild(uiView);
       container.appendChild(uiRouter);
 
@@ -474,9 +460,7 @@ describe('uiSref directive', () => {
         { name: 'about', url: '/about' },
       ]);
 
-      const uiRouter = document.createElement(
-        'ui-router',
-      ) as UIRouterLitElement;
+      const uiRouter = document.createElement('ui-router');
       uiRouter.uiRouter = router;
       container.appendChild(uiRouter);
       await waitForUpdate(uiRouter);
