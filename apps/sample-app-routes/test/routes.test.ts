@@ -8,7 +8,7 @@ import {
   routePathPatterns,
   routeSegments,
 } from '../src/routes.ts';
-import { matchesAppRoute } from '../src/matchers.ts';
+import { matchAppRoute, matchesAppRoute } from '../src/matchers.ts';
 
 const ACCEPTED = [
   '/welcome',
@@ -74,6 +74,44 @@ describe('matchesAppRoute', () => {
   it('rejects paths no state url matches', () => {
     for (const path of REJECTED) {
       assert.equal(matchesAppRoute(path), false, path);
+    }
+  });
+
+  it('reports which state matched, with its params', () => {
+    assert.deepEqual(matchAppRoute('/welcome'), {
+      state: 'welcome',
+      params: {},
+    });
+    assert.deepEqual(matchAppRoute('/contacts/3'), {
+      state: 'contacts.contact',
+      params: { contactId: '3' },
+    });
+    assert.deepEqual(matchAppRoute('/contacts/3/edit'), {
+      state: 'contacts.contact.edit',
+      params: { contactId: '3' },
+    });
+    assert.deepEqual(matchAppRoute('/mymessages/inbox/5'), {
+      state: 'mymessages.messagelist.message',
+      params: { folderId: 'inbox', messageId: '5' },
+    });
+  });
+
+  it('prefers static segments over params, like the router', () => {
+    assert.equal(matchAppRoute('/contacts/new')?.state, 'contacts.new');
+    assert.equal(
+      matchAppRoute('/mymessages/compose')?.state,
+      'mymessages.compose',
+    );
+  });
+
+  it('reports the app root as the empty state name', () => {
+    assert.deepEqual(matchAppRoute(''), { state: '', params: {} });
+    assert.deepEqual(matchAppRoute('/'), { state: '', params: {} });
+  });
+
+  it('reports null for every rejected path', () => {
+    for (const path of REJECTED) {
+      assert.equal(matchAppRoute(path), null, path);
     }
   });
 

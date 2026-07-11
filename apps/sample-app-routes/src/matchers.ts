@@ -8,11 +8,13 @@ import { services } from '#uirouter/common/coreservices.js';
 // lib and lib-esm d.ts declare privates separately; barrel types won't unify.
 import type { ParamFactory } from '#uirouter/url/urlMatcherFactory.js';
 import type { ParamType } from '#uirouter/params/paramType.js';
+import type { RawParams } from '#uirouter/params/interface.js';
 import type { StateDeclaration } from '#uirouter/state/interface.js';
 import type { UrlConfig } from '#uirouter/url/urlConfig.js';
 
 // .ts extension: node --test runs this graph directly via type stripping.
-import { routePathPatterns } from './routes.ts';
+import { routePathPattern, routeSegments } from './routes.ts';
+import type { AppRouteName } from './routes.ts';
 
 // Core routes even static param defaults through services.$injector.invoke
 // (params/param.ts); no framework installs one here, so exec() would throw
@@ -52,12 +54,28 @@ export function compileAppPattern(
   });
 }
 
-const matchers = routePathPatterns.map((pattern) => compileAppPattern(pattern));
+// UrlMatcher.compare is the router's specificity sort (static segments before
+// params), so '/contacts/new' resolves to contacts.new, not contacts.contact.
+const matchers = (Object.keys(routeSegments) as AppRouteName[])
+  .map((state) => ({
+    state,
+    matcher: compileAppPattern(routePathPattern(state)),
+  }))
+  .sort((a, b) => UrlMatcher.compare(a.matcher, b.matcher));
 
-// The app root has no state url; router.config.ts matches it with when(/^\/?$/).
+// The app root has no state url (router.config.ts matches it with
+// when(/^\/?$/)), so it reports the empty state name.
+export function matchAppRoute(
+  path: string,
+): { state: string; params: RawParams } | null {
+  if (/^\/?$/.test(path)) return { state: '', params: {} };
+  for (const { state, matcher } of matchers) {
+    const params = matcher.exec(path);
+    if (params !== null) return { state, params };
+  }
+  return null;
+}
+
 export function matchesAppRoute(path: string): boolean {
-  return (
-    /^\/?$/.test(path) ||
-    matchers.some((matcher) => matcher.exec(path) !== null)
-  );
+  return matchAppRoute(path) !== null;
 }
