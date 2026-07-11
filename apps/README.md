@@ -93,22 +93,6 @@ pnpm --filter sample-app-lit-vanilla dev --port 5273
 
 ## End-to-end tests
 
-`sample-app-lit-e2e` runs the same Cypress specs against both apps:
-
-```bash
-pnpm --filter sample-app-lit-e2e test
-```
-
-That production-like flow builds the docs site (which embeds both apps'
-builds), serves it with wrangler on `:8787`, and runs the vanilla (`/app/`)
-and MobX (`/app-mobx/`) suites concurrently. For faster iteration, point the
-suite at a running dev server instead:
-
-```bash
-# in one terminal
-pnpm --filter sample-app-lit-vanilla dev
-
-# in another (adjust port/base to the dev server)
-cd apps/sample-app-lit-e2e
-pnpm exec cypress run --config baseUrl=http://localhost:5173/app/
-```
+`sample-app-lit-e2e` runs one Cypress suite against both apps, the docs site,
+and every published location strategy. See the
+[`sample-app-lit-e2e` README](./sample-app-lit-e2e/README.md).
