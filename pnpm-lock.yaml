@@ -18,6 +18,9 @@ catalogs:
     '@commitlint/config-conventional':
       specifier: ^21.2.0
       version: 21.2.0
+    '@commitlint/types':
+      specifier: ^21.2.0
+      version: 21.2.0
     '@pnpm/fs.find-packages':
       specifier: ^1000.0.24
       version: 1000.0.24
@@ -158,6 +161,9 @@ importers:
         specifier: 'catalog:'
         version: 21.2.1(@types/node@24.13.2)(conventional-commits-parser@7.1.0)(typescript@7.0.2)
       '@commitlint/config-conventional':
+        specifier: 'catalog:'
+        version: 21.2.0
+      '@commitlint/types':
         specifier: 'catalog:'
         version: 21.2.0
       '@pnpm/fs.find-packages':

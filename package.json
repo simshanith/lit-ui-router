@@ -27,6 +27,7 @@
     "@codecov/bundle-analyzer": "catalog:",
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
+    "@commitlint/types": "catalog:",
     "@pnpm/fs.find-packages": "catalog:",
     "@pnpm/workspace.read-manifest": "catalog:",
     "@types/node": "catalog:",

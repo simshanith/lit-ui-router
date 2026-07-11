@@ -36,6 +36,10 @@ jobs:
         with:
           # Full history so the action can walk the PR's commit range
           fetch-depth: 0
-      # Lints with the repo's commitlint.config.mjs (merge/revert/fixup
-      # exemptions live there; the action loads only ESM .mjs configs)
+      # Lints with the repo's commitlint config (merge/revert/fixup
+      # exemptions live there). configFile must be explicit: the action's
+      # default is commitlint.config.mjs and it silently falls back to bare
+      # config-conventional when that file is missing.
       - uses: wagoid/commitlint-github-action@v6
+        with:
+          configFile: commitlint.config.ts

@@ -18,7 +18,8 @@
     "**/.vitepress/cache/**",
     "**/*.config.ts",
     "**/*.config.js",
-    "!**/vitest.config.ts"
+    "!**/vitest.config.ts",
+    "!**/commitlint.config.ts"
   ],
   "rules": {
     "constructor-super": "error",

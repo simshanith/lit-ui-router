@@ -1,5 +1,7 @@
 // Commit-level companion to the semantic-pr.yml PR-title lint.
 // config-conventional's type-enum already matches the PR-title type list.
+import type { UserConfig } from '@commitlint/types';
+
 export default {
   extends: ['@commitlint/config-conventional'],
   ignores: [
@@ -7,4 +9,4 @@ export default {
     // ignores only match GitHub's capitalized "Merge branch ..." wording.
     (message) => /^merge\s+\S+\s+into\s+\S+/i.test(message),
   ],
-};
+} satisfies UserConfig;
