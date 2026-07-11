@@ -6,7 +6,7 @@
       "dependsOn": ["build:custom-elements"]
     },
     "build:custom-elements": {
-      "inputs": ["src/**/*.ts"],
+      "inputs": ["src/**/*.ts", "custom-elements-manifest.config.js"],
       "outputs": ["dist/custom-elements.json"]
     },
     "docs:api": {

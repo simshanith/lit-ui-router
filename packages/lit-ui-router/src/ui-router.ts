@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { property } from 'lit/decorators.js';
 
 import { UIRouterLit } from './core.js';
 
@@ -28,7 +28,6 @@ export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
  * This is the root ui-router component.
  *
  */
-@customElement('ui-router')
 export class UIRouterLitElement extends LitElement {
   /**
    * Root <code>uiRouter</code> singleton.
@@ -106,10 +105,4 @@ export class UIRouterLitElement extends LitElement {
 export interface UIRouterLitElement {
   /** @internal */
   constructor: typeof UIRouterLitElement;
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'ui-router': UIRouterLitElement;
-  }
 }

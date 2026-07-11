@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import { customElement, property, state } from 'lit/decorators.js';
+import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
   ResolveContext,
@@ -67,7 +67,6 @@ type deregisterFn = () => void;
  *
 
  */
-@customElement('ui-view')
 export class UiView extends LitElement {
   @property()
   name = '';
@@ -387,10 +386,4 @@ export class UiView extends LitElement {
 export interface UiView {
   /** @internal */
   constructor: typeof UiView;
-}
-
-declare global {
-  interface HTMLElementTagNameMap {
-    'ui-view': UiView;
-  }
 }
