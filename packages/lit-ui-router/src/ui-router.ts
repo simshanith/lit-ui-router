@@ -2,15 +2,15 @@ import { html, LitElement } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 
 import { UIRouterLit } from './core.js';
+import {
+  UI_ROUTER_CONTEXT_EVENT,
+  onUiRouterContextEvent,
+  seekRouter,
+  uiRouterContextEvent,
+  type UiRouterContextEvent,
+} from './context.js';
 
-interface UiRouterContextEventDetail {
-  uiRouter?: UIRouterLit;
-}
-
-/**
- * @internal
- */
-export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
+export type { UiRouterContextEvent } from './context.js';
 
 /**
  * @hideconstructor
@@ -38,46 +38,28 @@ export class UIRouterLitElement extends LitElement {
   uiRouter: UIRouterLit | undefined;
 
   /** @internal */
-  static uiRouterContextEventName = 'ui-router-context';
+  static uiRouterContextEventName = UI_ROUTER_CONTEXT_EVENT;
 
   /** @internal */
   static uiRouterContextEvent(uiRouter?: UIRouterLit): UiRouterContextEvent {
-    return new CustomEvent(this.uiRouterContextEventName, {
-      bubbles: true,
-      composed: true,
-      detail: {
-        uiRouter,
-      },
-    });
+    return uiRouterContextEvent(uiRouter);
   }
 
   /**
    * Discovers the {@link UIRouterLit} instance provided by the nearest
    * enclosing <code>&lt;ui-router&gt;</code> element.
    *
-   * Dispatches a bubbling, composed <code>ui-router-context</code> event from
-   * the candidate element; the enclosing <code>&lt;ui-router&gt;</code>
-   * answers it with its router instance. Returns <code>undefined</code> when
-   * the candidate is not inside a <code>&lt;ui-router&gt;</code> (e.g. not
-   * yet connected).
-   *
-   * This is the dependency-injection primitive for integrating external
-   * reactivity systems (state stores, controllers) with the router context —
-   * call it from <code>hostConnected()</code> / <code>connectedCallback()</code>
-   * instead of prop-drilling the router instance.
+   * Delegates to the standalone {@link seekRouter} function, which is also
+   * importable from <code>lit-ui-router/pure</code> without registering the
+   * custom elements.
    */
   static seekRouter(candidate: Element): UIRouterLit | undefined {
-    const uiRouterContextEvent = this.uiRouterContextEvent();
-    candidate.dispatchEvent(uiRouterContextEvent);
-    return uiRouterContextEvent.detail.uiRouter;
+    return seekRouter(candidate);
   }
 
   /** @internal */
   static onUiRouterContextEvent(uiRouter?: UIRouterLit) {
-    return (event: UiRouterContextEvent) => {
-      event.stopPropagation();
-      event.detail.uiRouter = uiRouter;
-    };
+    return onUiRouterContextEvent(uiRouter);
   }
 
   private onUiRouterContextEvent = (event: UiRouterContextEvent) => {

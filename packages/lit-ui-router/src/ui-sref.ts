@@ -9,9 +9,9 @@ import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
-import { UIRouterLit } from './core.js';
-import { UIRouterLitElement } from './ui-router.js';
-import { UiView } from './ui-view.js';
+import type { UIRouterLit } from './core.js';
+import type { UiView } from './ui-view.js';
+import { seekParentView, seekRouter } from './context.js';
 
 /**
  * Event name dispatched when a uiSref target state changes.
@@ -136,12 +136,12 @@ export class UiSrefDirective extends AsyncDirective {
 
   /** @internal */
   seekRouter() {
-    this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
+    this.uiRouter = seekRouter(this.element!);
   }
 
   /** @internal */
   seekParentView() {
-    this.parentView = UiView.seekParentView(this.element!);
+    this.parentView = seekParentView(this.element!);
   }
 
   /** @internal */

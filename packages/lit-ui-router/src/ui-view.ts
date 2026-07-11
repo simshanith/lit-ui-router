@@ -27,6 +27,11 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit } from './core.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
+import {
+  UI_VIEW_CONTEXT_EVENT,
+  seekParentView,
+  type UiViewContextEvent,
+} from './context.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -36,12 +41,6 @@ export interface UiViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
 }
-
-interface UiViewContextEventDetail {
-  parentView: UiView | null;
-}
-
-type UiViewContextEvent = CustomEvent<UiViewContextEventDetail>;
 
 type deregisterFn = () => void;
 
@@ -159,23 +158,11 @@ export class UiView extends LitElement {
     this.captureContent();
   }
 
-  private static uiViewContextEventName = 'ui-view-context';
-
-  private static uiViewContextEvent(): UiViewContextEvent {
-    return new CustomEvent(this.uiViewContextEventName, {
-      bubbles: true,
-      composed: true,
-      detail: {
-        parentView: null,
-      },
-    });
-  }
+  private static uiViewContextEventName = UI_VIEW_CONTEXT_EVENT;
 
   /** @internal */
   static seekParentView(candidate: Element) {
-    const uiViewContextEvent = this.uiViewContextEvent();
-    candidate.dispatchEvent(uiViewContextEvent);
-    return uiViewContextEvent.detail.parentView;
+    return seekParentView(candidate);
   }
 
   private seekParentView() {
