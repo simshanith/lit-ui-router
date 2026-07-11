@@ -43,7 +43,7 @@
       "inputs": ["**/package.json", "eslint.config.js"]
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^transit"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "with": ["//#typecheck:root"]
     },
