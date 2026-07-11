@@ -117,7 +117,7 @@
     },
     "docs:api": {
       "dependsOn": ["^build", "^docs:api"],
-      "cache": false
+      "inputs": ["$TURBO_DEFAULT$"]
     }
   }
 }
