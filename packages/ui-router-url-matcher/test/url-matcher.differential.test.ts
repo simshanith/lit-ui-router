@@ -5,7 +5,6 @@ import { services, UIRouter } from '@uirouter/core';
 
 import { makeUrlMatcherCompiler } from '../src/url-matcher.ts';
 import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
-import { routePathPatterns } from '../src/routes.ts';
 
 // The divergence guard for the standalone extraction: every pattern/url pair
 // runs through BOTH matchers and must produce identical verdicts and
@@ -40,9 +39,26 @@ interface DifferentialCase {
   urls: string[];
 }
 
-// Probed against every repo route pattern: each pattern must agree with core
-// on the full url set, matches and rejections alike.
-const repoProbes = [
+// A nested-app pattern set (the sample apps' route shapes, kept as
+// self-contained fixtures — the app-level parity leg against the live
+// routeSegments lives in sample-app-routes' routes.test.ts). Every pattern
+// must agree with core on the full url set, matches and rejections alike.
+const appPatterns = [
+  '/welcome',
+  '/home',
+  '/login',
+  '/contacts',
+  '/contacts/:contactId',
+  '/contacts/:contactId/edit',
+  '/contacts/new',
+  '/mymessages',
+  '/mymessages/compose',
+  '/mymessages/:folderId',
+  '/mymessages/:folderId/:messageId',
+  '/prefs',
+];
+
+const appProbes = [
   '',
   '/',
   '/welcome',
@@ -67,9 +83,9 @@ const repoProbes = [
   '/definitely-not-a-route',
 ];
 
-const repoCases: DifferentialCase[] = routePathPatterns.map((pattern) => ({
+const appCases: DifferentialCase[] = appPatterns.map((pattern) => ({
   pattern,
-  urls: repoProbes,
+  urls: appProbes,
 }));
 
 const featureCases: DifferentialCase[] = [
@@ -225,19 +241,10 @@ const featureCases: DifferentialCase[] = [
   { pattern: '/café/:x', urls: ['/café/1', '/caf%C3%A9/1', '/cafe/1'] },
 ];
 
-const allCases = [...repoCases, ...featureCases];
+const allCases = [...appCases, ...featureCases];
 const comparisons = allCases.reduce((sum, c) => sum + c.urls.length, 0);
 
 describe(`differential: standalone matcher vs @uirouter/core (${allCases.length} patterns, ${comparisons} comparisons)`, () => {
-  it('covers every repo route pattern', () => {
-    for (const pattern of routePathPatterns) {
-      assert.ok(
-        repoCases.some((c) => c.pattern === pattern),
-        `missing differential coverage for '${pattern}'`,
-      );
-    }
-  });
-
   for (const { pattern, options, urls } of allCases) {
     const label = options ? `${pattern} ${JSON.stringify(options)}` : pattern;
     it(label, () => {

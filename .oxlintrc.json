@@ -254,7 +254,8 @@
     {
       "files": [
         "scripts/**/*.test.ts",
-        "apps/sample-app-routes/test/**/*.test.ts"
+        "apps/sample-app-routes/test/**/*.test.ts",
+        "packages/ui-router-url-matcher/test/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"

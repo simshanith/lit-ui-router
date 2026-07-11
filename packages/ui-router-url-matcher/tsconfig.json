@@ -1,0 +1,14 @@
+{
+  // Runtime-neutral: no DOM, node, or workers types — the matcher serves the
+  // browser sample apps and the docs worker alike, and the compiler enforces
+  // it (type-only @uirouter/core imports resolve without any runtime types).
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/**/*"]
+}

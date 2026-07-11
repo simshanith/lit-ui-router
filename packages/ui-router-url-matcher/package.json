@@ -1,11 +1,11 @@
 {
-  "name": "sample-app-routes",
+  "name": "ui-router-url-matcher",
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "sideEffects": false,
   "exports": {
-    ".": "./src/routes.ts",
-    "./matchers.js": "./src/matchers.ts"
+    ".": "./src/url-matcher.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{ts,json,md}\"",
@@ -13,9 +13,6 @@
     "lint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
-  },
-  "dependencies": {
-    "ui-router-url-matcher": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",
