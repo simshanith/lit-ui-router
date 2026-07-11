@@ -23,6 +23,12 @@ import {
   type UiOnParamsChanged,
   type UiRouterContextEvent,
 } from 'lit-ui-router';
+import 'lit-ui-router/elements';
+import {
+  TransitionController as PureTransitionController,
+  seekRouter,
+  type UIRouterLit as PureUIRouterLit,
+} from 'lit-ui-router/pure';
 
 interface UserResolves {
   user: { name: string };
@@ -104,4 +110,12 @@ export function elements(root: Element): void {
 
 export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {
   return mergeSrefStatus(a, b);
+}
+
+// Both entries must expose the same declarations.
+TransitionController satisfies typeof PureTransitionController;
+
+export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
+  void new PureTransitionController(host);
+  return seekRouter(host);
 }
