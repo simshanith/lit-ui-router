@@ -12,7 +12,9 @@ export default {
     if (!mount) {
       return env.ASSETS.fetch(request);
     }
-    const shell = await env.ASSETS.fetch(new URL(mount, request.url));
+    const shell = await env.ASSETS.fetch(
+      new Request(new URL(mount, request.url), request),
+    );
     const headers = new Headers(shell.headers);
     headers.set('Link', `<${mount}>; rel="canonical"`);
     return new Response(shell.body, { status: shell.status, headers });
