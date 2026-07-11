@@ -16,24 +16,36 @@
  * literal regexp /json/, which is what an unregistered name means to the
  * parser. Search params parse but never affect path matching; `exec`
  * resolves them to their static defaults.
+ *
+ * The public surface is type-pinned to core's signatures via type-only
+ * imports (zero runtime bytes): accidental drift fails typecheck, and each
+ * deliberate relaxation is a visible local derivation of the core type.
  */
 
-/** The pieces of a ui-router ParamType that path matching exercises. */
-export interface ParamType {
+import type {
+  ParamDeclaration as CoreParamDeclaration,
+  ParamTypeDefinition,
+  RawParams,
+  UrlConfig,
+  UrlMatcherCompileConfig,
+} from '@uirouter/core';
+
+/**
+ * The pieces of a ui-router ParamType that path matching exercises, with
+ * core's member signatures. Relaxation vs core: a plain object suffices
+ * (core wants its ParamType class), `pattern` is required, and `name` is
+ * carried here (the class holds it upstream).
+ */
+export interface ParamType
+  extends
+    Pick<ParamTypeDefinition, 'is' | 'decode' | 'raw'>,
+    Required<Pick<ParamTypeDefinition, 'pattern'>> {
   name: string;
-  /** Matches the value's encoded form; embedded into the compiled RegExp. */
-  pattern: RegExp;
-  /** True to skip percent-decoding of matched values. */
-  raw?: boolean;
-  /** Whether a value is already of this type (already decoded). */
-  is(val: unknown): boolean;
-  /** Converts a matched url substring to the typed value. */
-  decode(val: string): unknown;
 }
 
 const stringBase = {
-  is: (val: unknown) => typeof val === 'string',
-  decode: (val: string) => val,
+  is: (val: unknown): boolean => typeof val === 'string',
+  decode: (val: string): unknown => val,
 };
 
 const decodeInt = (val: string) => parseInt(val, 10);
@@ -48,20 +60,21 @@ const builtinTypes: Record<string, ParamType> = {
     name: 'int',
     pattern: /-?\d+/,
     // Only a number can strict-equal parseInt of its own string form.
-    is: (val) => typeof val === 'number' && decodeInt(val.toString()) === val,
+    is: (val: unknown) =>
+      typeof val === 'number' && decodeInt(val.toString()) === val,
     decode: decodeInt,
   },
   bool: {
     name: 'bool',
     pattern: /0|1/,
-    is: (val) => typeof val === 'boolean',
-    decode: (val) => decodeInt(val) !== 0,
+    is: (val: unknown) => typeof val === 'boolean',
+    decode: (val: string) => decodeInt(val) !== 0,
   },
   date: {
     name: 'date',
     pattern: /[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|3[0-1])/,
-    is: (val) => val instanceof Date && !Number.isNaN(val.valueOf()),
-    decode: (val) => {
+    is: (val: unknown) => val instanceof Date && !Number.isNaN(val.valueOf()),
+    decode: (val: string) => {
       const match = dateCapture.exec(val);
       return match ? new Date(+match[1], +match[2] - 1, +match[3]) : undefined;
     },
@@ -72,24 +85,25 @@ const builtinTypes: Record<string, ParamType> = {
 // or search-value handling; rejected at compile (see the module docblock).
 const unsupportedTypes = new Set(['hash', 'json', 'any']);
 
-/** A per-param configuration: ui-router's ParamDeclaration, matching subset. */
-export interface ParamDeclaration {
-  /** Static default value; makes the param optional. Functions are rejected. */
-  value?: unknown;
+/**
+ * A per-param configuration: core's ParamDeclaration members that matching
+ * honors. Relaxation vs core: `type` also accepts a plain-object
+ * [[ParamType]], and `value` must be static (functions are rejected).
+ */
+export interface ParamDeclaration extends Pick<
+  CoreParamDeclaration,
+  'value' | 'squash'
+> {
   /** Type for params not already typed inline (`{id:int}`) — a built-in name or a [[ParamType]]. */
   type?: string | ParamType;
-  /** When the value equals the default: drop the segment (true), keep it (false), or substitute a placeholder string. */
-  squash?: boolean | string;
 }
 
 // Keys that mark a declaration as longhand (ui-router's isShorthand set);
 // anything else — including objects — is treated as a shorthand default value.
 const declarationKeys = ['value', 'type', 'squash', 'array', 'dynamic'];
 
-interface FullDeclaration extends ParamDeclaration {
-  array?: unknown;
-  replace?: unknown;
-}
+interface FullDeclaration
+  extends ParamDeclaration, Pick<CoreParamDeclaration, 'array' | 'replace'> {}
 
 const unwrapShorthand = (config: unknown): FullDeclaration =>
   config !== null &&
@@ -246,24 +260,22 @@ const quoteRegExp = (segment: string, param?: Param): string => {
   return result + surround[0] + param.type.pattern.source + surround[1];
 };
 
-export interface UrlMatcherCompileOptions {
-  /** Per-parameter configuration, keyed by param name: a [[ParamDeclaration]] or a shorthand static default value. */
+export interface UrlMatcherCompileOptions extends Pick<
+  UrlMatcherCompileConfig,
+  'strict' | 'caseInsensitive'
+> {
+  /** Relaxation vs core: `state.params` flattened to `params` (no StateDeclaration here) — a [[ParamDeclaration]] or a shorthand static default per name. */
   params?: Record<string, unknown>;
-  /** Require an exact trailing-slash match (default true). */
-  strict?: boolean;
-  /** Match case-insensitively (default false). */
-  caseInsensitive?: boolean;
 }
 
-export interface UrlMatcherCompilerConfig {
-  /** Default for [[UrlMatcherCompileOptions.strict]]. */
-  strict?: boolean;
-  /** Default for [[UrlMatcherCompileOptions.caseInsensitive]]. */
-  caseInsensitive?: boolean;
-  /** Percent-decode matched values before typing them (default true). */
-  decodeParams?: boolean;
-  /** Squash policy for defaulted params that don't declare one (default false). */
-  defaultSquashPolicy?: boolean | string;
+export interface UrlMatcherCompilerConfig extends Pick<
+  UrlMatcherCompileConfig,
+  'strict' | 'caseInsensitive' | 'decodeParams'
+> {
+  /** Squash policy for defaulted params that don't declare one (default false); value type pinned to core's UrlConfig.defaultSquashPolicy. */
+  defaultSquashPolicy?: NonNullable<
+    Parameters<UrlConfig['defaultSquashPolicy']>[0]
+  >;
 }
 
 interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
@@ -369,14 +381,14 @@ export class UrlMatcher {
    * or null when it does not. Search params always appear in the result,
    * resolved to their static defaults (undefined when none is declared).
    */
-  exec(path: string): Record<string, unknown> | null {
+  exec(path: string): RawParams | null {
     const match = this.#regexp.exec(path);
     if (!match) return null;
     // A custom inline regexp with its own capture group would misalign values.
     if (match.length - 1 !== this.#pathParams.length)
       throw new Error(`Unbalanced capture group in route '${this.pattern}'`);
 
-    const values: Record<string, unknown> = {};
+    const values: RawParams = {};
     this.#pathParams.forEach((param, index) => {
       let value: unknown = match[index + 1];
       for (const { from, to } of param.replace) {
