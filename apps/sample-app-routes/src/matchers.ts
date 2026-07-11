@@ -1,7 +1,14 @@
-import { UIRouter } from '@uirouter/core';
+import { services, UIRouter } from '@uirouter/core';
 
 // .ts extension: node --test runs this graph directly via type stripping.
 import { routePathPatterns } from './routes.ts';
+
+// Core routes even static param defaults through services.$injector.invoke
+// (params/param.ts); no framework installs one here, so exec() would throw
+// for query-suffixed or defaulted-param patterns without this shim.
+services.$injector = {
+  invoke: (fn: () => unknown) => fn(),
+} as typeof services.$injector;
 
 // The default location services are inert stubs, so compiling matchers this
 // way needs no DOM and is safe in the docs worker.
