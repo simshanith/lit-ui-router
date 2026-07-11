@@ -1,0 +1,13 @@
+// Desired Workers Builds trigger configuration
+// `pnpm check:workers-builds --apply` updates Cloudflare
+{
+  "productionBranch": "main",
+  "production": {
+    "build_command": "npx turbo docs#build",
+    "deploy_command": "pnpm wrangler deploy",
+  },
+  "preview": {
+    "build_command": "npx turbo docs#build",
+    "deploy_command": "pnpm wrangler versions upload",
+  },
+}

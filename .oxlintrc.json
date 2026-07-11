@@ -303,9 +303,20 @@
       }
     },
     {
-      "files": ["scripts/**/*.test.ts"],
+      "files": ["scripts/**/*.test.ts", "tools/workers-builds/**/*.test.ts"],
       "rules": {
         "typescript/no-floating-promises": "off"
+      }
+    },
+    {
+      "files": ["tools/workers-builds/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^CLOUDFLARE_"]
+          }
+        ]
       }
     },
     {

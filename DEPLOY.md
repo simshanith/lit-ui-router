@@ -42,6 +42,15 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 | Production                                                                                              | `npx turbo docs#build` | `pnpm wrangler deploy`          |
 | Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `npx turbo docs#build` | `pnpm wrangler versions upload` |
 
+### Dashboard as Code
+
+The private [`tools/workers-builds`](./tools/workers-builds) package owns
+[`workers-builds-triggers.config.jsonc`](./tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
+the dashboard values above, and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
+(exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
+Requires `CLOUDFLARE_API_TOKEN` (user-scoped, **Workers Builds Configuration: Edit**) and `CLOUDFLARE_ACCOUNT_ID`.
+Manual-only — never part of CI.
+
 ### Build Environment Variables
 
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`

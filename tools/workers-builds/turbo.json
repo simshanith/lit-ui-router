@@ -1,0 +1,17 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "check": {
+      // Live Cloudflare API diff (and --apply writes production config):
+      // never cache, and let the credentials through turbo's env strictness.
+      "cache": false,
+      "passThroughEnv": ["CLOUDFLARE_API_TOKEN", "CLOUDFLARE_ACCOUNT_ID"]
+    },
+    "test": {
+      // The root test task's src/** inputs would stale-cache this src-less
+      // package; over-approximate instead.
+      "inputs": ["$TURBO_DEFAULT$"]
+    }
+  }
+}
