@@ -5,7 +5,7 @@
 // dashboard should match.
 //
 // Usage:
-//   CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm check:workers-builds [--apply]
+//   CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm check:workers-builds [-- --apply]
 //
 // Default is a read-only diff. --apply PATCHes drifted triggers, then re-GETs
 // to confirm. Exit codes: 0 in sync, 1 drifted (or drift remained after

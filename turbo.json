@@ -20,9 +20,6 @@
       "dependsOn": ["^build"],
       "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
     },
-    "workers-builds#test": {
-      "inputs": ["$TURBO_DEFAULT$"]
-    },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
       "inputs": ["src/**/*.ts", "vitest.config.ts"],
