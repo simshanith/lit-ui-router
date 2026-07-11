@@ -85,14 +85,16 @@
       "with": ["//#format:root"],
       "inputs": [
         "**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        ".oxfmtrc.json"
+        ".oxfmtrc.json",
+        "$TURBO_ROOT$/.oxfmtrc.json"
       ]
     },
     "format:check": {
       "with": ["//#format:check:root"],
       "inputs": [
         "**/*.{ts,js,json,jsonc,md,yml,yaml,html,vue}",
-        ".oxfmtrc.json"
+        ".oxfmtrc.json",
+        "$TURBO_ROOT$/.oxfmtrc.json"
       ]
     },
     "//#format:root": {
