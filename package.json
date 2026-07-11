@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "check:catalog": "node scripts/check-catalog.ts",
     "check:pack": "node scripts/check-pack.ts",
-    "check:workers-builds": "turbo run check --filter=workers-builds",
+    "check:workers-builds": "turbo run workers-builds#check",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
     "format": "turbo run format",
