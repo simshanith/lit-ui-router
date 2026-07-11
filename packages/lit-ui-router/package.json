@@ -15,6 +15,7 @@
   "type": "module",
   "sideEffects": [
     "./dist/index.js",
+    "./dist/elements.js",
     "./dist/ui-router.js",
     "./dist/ui-view.js"
   ],
@@ -27,7 +28,15 @@
       "default": "./dist/index.js"
     },
     "./dist/*": "./dist/*",
-    "./package.json": "./package.json"
+    "./elements": {
+      "types": "./dist/elements.d.ts",
+      "default": "./dist/elements.js"
+    },
+    "./package.json": "./package.json",
+    "./pure": {
+      "types": "./dist/pure.d.ts",
+      "default": "./dist/pure.js"
+    }
   },
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
