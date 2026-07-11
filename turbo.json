@@ -60,7 +60,8 @@
         "format:check",
         "codecov:bundle",
         "//#check:catalog",
-        "//#check:pack"
+        "//#check:pack",
+        "check:worker-types"
       ]
     },
     "codecov:bundle": {
@@ -73,6 +74,9 @@
     },
     "//#check:pack": {
       "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
+    },
+    "check:worker-types": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"]
     },
     "//#test:root": {
       "inputs": ["scripts/**"]
