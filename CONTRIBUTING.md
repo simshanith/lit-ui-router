@@ -69,8 +69,10 @@ built from the PR itself:
   write whatever helps reviewers, HTML comments and all.
 
 The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
-title on every PR, and lints the PR's individual commits — the messages that
-become the squash body — with [commitlint](https://commitlint.js.org/) via
+title on every PR. The `Commitlint` workflow
+(`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
+messages that become the squash body — with
+[commitlint](https://commitlint.js.org/) via
 `wagoid/commitlint-github-action`. The rules live in `commitlint.config.mjs`:
 `@commitlint/config-conventional` plus its default ignores (GitHub's
 `Merge branch '…'` wordings, reverts, `fixup!`/`squash!`) and one extra ignore
