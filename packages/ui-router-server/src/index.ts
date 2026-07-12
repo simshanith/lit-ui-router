@@ -54,6 +54,17 @@ export interface MountConfig {
   strategy?: 'matcher' | 'simulate';
   /** Matcher compiler options for 'matcher' mounts (defaults: strict, case-sensitive). */
   config?: UrlMatcherCompilerConfig;
+  /**
+   * Projection of the client's otherwise() rule. `state` references a
+   * declared, url-less state (url-less so the unmatched url stays in the
+   * address bar, like a server 404 — mirroring the real rule's semantics).
+   * When declared, unknown paths under this mount verdict as shell with
+   * status 404: the resource genuinely doesn't exist and the shell IS the
+   * error page (never 200) — the client boots at the retained path and its
+   * own otherwise rule renders the rich notFound state. Redirect rules and
+   * route matches take precedence; undeclared keeps the notFound verdict.
+   */
+  otherwise?: { state: string };
 }
 
 // Discriminate on `kind`. (Consumer note: under oxlint's
@@ -61,15 +72,15 @@ export interface MountConfig {
 // reads cleaner than a switch over this union.)
 export type Verdict =
   /**
-   * Serve the app shell. Status precedence: when `status` is absent (always,
-   * today), serve the shell however you normally would — including 304
-   * conditional responses. When a future data tier sets it (401/403-with-
-   * shell), the verdict's status wins outright — and you must suppress the
-   * conditional path BY STRIPPING the request's validators (If-None-Match,
-   * If-Modified-Since) before the assets fetch, so it returns 200 + full
-   * body to relabel. Never relabel a 304 itself: it has no body (a 401 with
-   * a null body is malformed) and would let an unauthorized probe read
-   * cache freshness.
+   * Serve the app shell. Status precedence: when `status` is absent, serve
+   * the shell however you normally would — including 304 conditional
+   * responses. When it is set (404 via the otherwise projection today;
+   * 401/403-with-shell for a future auth tier), the verdict's status wins
+   * outright — and you must suppress the conditional path BY STRIPPING the
+   * request's validators (If-None-Match, If-Modified-Since) before the
+   * assets fetch, so it returns 200 + full body to relabel. Never relabel a
+   * 304 itself: it has no body (a 404 with a null body is malformed) and
+   * would let a probe read cache freshness for a path that doesn't exist.
    */
   | { kind: 'shell'; mount: string; status?: number }
   /**
@@ -156,22 +167,43 @@ const normalizeBase = (base: string): string => {
   return base !== '/' && base.endsWith('/') ? base.slice(0, -1) : base;
 };
 
-const compileMount = ([base, config]: [string, MountConfig]): Mount => ({
-  base: normalizeBase(base),
-  config,
-  strategy: config.strategy ?? 'matcher',
-  // Simulate mounts accept the same declaration subset, so the
-  // dependency-free compilation doubles as their construction-time
-  // validation (their resolve path never consults it).
-  compiled: {
-    evaluate: compileRedirects({
-      routes: config.routes,
-      rules: config.redirects,
-      config: config.config,
-    }),
-    routes: compileRoutes(config.routes, config.config),
-  },
-});
+// The otherwise target must be a declared, URL-LESS state: a url-full
+// target would move the client's address bar, and the honest projection of
+// that is a redirect, not a shell-404 at the retained path.
+const validateOtherwise = (base: string, config: MountConfig): void => {
+  if (!config.otherwise) return;
+  const state = config.routes.find(
+    (route) => route.name === config.otherwise?.state,
+  );
+  if (!state)
+    throw new Error(
+      `Mount '${base}': otherwise state '${config.otherwise.state}' is not declared`,
+    );
+  if (state.url !== undefined)
+    throw new Error(
+      `Mount '${base}': otherwise state '${config.otherwise.state}' must be url-less (the unmatched url stays in the address bar)`,
+    );
+};
+
+const compileMount = ([base, config]: [string, MountConfig]): Mount => {
+  validateOtherwise(base, config);
+  return {
+    base: normalizeBase(base),
+    config,
+    strategy: config.strategy ?? 'matcher',
+    // Simulate mounts accept the same declaration subset, so the
+    // dependency-free compilation doubles as their construction-time
+    // validation (their resolve path never consults it).
+    compiled: {
+      evaluate: compileRedirects({
+        routes: config.routes,
+        rules: config.redirects,
+        config: config.config,
+      }),
+      routes: compileRoutes(config.routes, config.config),
+    },
+  };
+};
 
 const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
   const mounts = Object.entries(record)
@@ -201,6 +233,12 @@ const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
     ...route,
   }));
   const router = simulate.createHeadlessRouter(states);
+  // The real rule, replayed: otherwise() only fires when no other rule
+  // matches, and the url-less target leaves the memory location unmoved.
+  if (mount.config.otherwise) {
+    const state = mount.config.otherwise.state;
+    router.urlService.rules.otherwise(() => ({ state }));
+  }
   for (const rule of mount.config.redirects ?? []) {
     const to = toTarget(rule.to);
     if (rule.pattern instanceof RegExp) {
@@ -246,13 +284,23 @@ const notFoundVerdict = (mount: Mount): Verdict => ({
   mount: mount.base,
 });
 
+// The otherwise projection: the shell is the error page, at an honest 404 —
+// never 200, the resource genuinely doesn't exist.
+const otherwiseVerdict = (mount: Mount): Verdict => ({
+  kind: 'shell',
+  mount: mount.base,
+  status: 404,
+});
+
 // --- Per-strategy resolution -----------------------------------------------
 
 const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
   const redirected = mount.compiled.evaluate(subpath);
   if (redirected !== null) return redirectVerdict(mount, redirected);
-  return matchRoute(mount.compiled.routes, subpath) !== null
-    ? shellVerdict(mount)
+  if (matchRoute(mount.compiled.routes, subpath) !== null)
+    return shellVerdict(mount);
+  return mount.config.otherwise
+    ? otherwiseVerdict(mount)
     : notFoundVerdict(mount);
 };
 
@@ -271,6 +319,9 @@ const simulateVerdict = async (
     // Failed and timed-out transitions degrade to the shell — the client
     // router re-runs them with its full configuration; never a wrong redirect.
     if (!(await settledWithinTimeout(settled))) return shellVerdict(mount);
+    // A transition that settled on the otherwise state IS the 404 page.
+    if (router.globals.current.name === mount.config.otherwise?.state)
+      return otherwiseVerdict(mount);
     // The memory location only moves when the client's address bar would:
     // core skips the url push for url-sourced transitions.
     const landed = router.urlService.url();

@@ -64,7 +64,7 @@ interface UIRouterElement extends HTMLElement {
 
 /**
  * Drives a client-side URL change through the running app's router, like an
- * in-app link. Direct loads of unmatched URLs get the server 404 instead
+ * in-app link. Direct loads of unmatched URLs get the static server 404
  * (see src/docs/docs_site.cy.js), so the in-router 404 is only reachable this way.
  */
 export function syncUrl(path: string) {
