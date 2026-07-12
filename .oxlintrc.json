@@ -306,7 +306,8 @@
       "files": [
         "scripts/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
-        "packages/ui-router-server/test/**/*.test.ts"
+        "packages/ui-router-server/test/**/*.test.ts",
+        "apps/sample-app-routes/test/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"
