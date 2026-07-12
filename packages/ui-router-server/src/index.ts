@@ -142,6 +142,145 @@ export function mergeSearch(location: string, incoming: string): string {
   return merged ? `${pathname}?${merged}` : pathname;
 }
 
+// --- Mount compilation (construction-time, strategy-independent) ---------
+
+const normalizeBase = (base: string): string => {
+  if (!base.startsWith('/'))
+    throw new Error(`Mount '${base}' must start with '/'`);
+  return base !== '/' && base.endsWith('/') ? base.slice(0, -1) : base;
+};
+
+const compileMount = ([base, config]: [string, MountConfig]): Mount => ({
+  base: normalizeBase(base),
+  config,
+  strategy: config.strategy ?? 'matcher',
+  // Simulate mounts accept the same declaration subset, so the
+  // dependency-free compilation doubles as their construction-time
+  // validation (their resolve path never consults it).
+  compiled: {
+    evaluate: compileRedirects({
+      routes: config.routes,
+      rules: config.redirects,
+      config: config.config,
+    }),
+    routes: compileRoutes(config.routes, config.config),
+  },
+});
+
+const compileMounts = (record: Record<string, MountConfig>): Mount[] => {
+  const mounts = Object.entries(record)
+    .map(compileMount)
+    // The longest matching base owns a pathname outright.
+    .sort((a, b) => b.base.length - a.base.length);
+  if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
+    throw new Error('Mount bases must be unique');
+  return mounts;
+};
+
+// --- The simulate tier, behind its lazy boundary --------------------------
+
+type SimulateModule = typeof import('./simulate.ts');
+
+// The lazy core boundary: the simulate tier enters the module graph only
+// through this dynamic import, so matcher-only configs never load it.
+const makeSimulateLoader = (): (() => Promise<SimulateModule>) => {
+  let loaded: Promise<SimulateModule> | null = null;
+  return () => (loaded ??= import('./simulate.ts'));
+};
+
+const buildHeadlessRouter = (simulate: SimulateModule, mount: Mount) => {
+  // Fresh declarations per call: core mutates registrations, so sharing
+  // them across concurrent resolutions is the hazard the copy prevents.
+  const states: StateDeclaration[] = mount.config.routes.map((route) => ({
+    ...route,
+  }));
+  const router = simulate.createHeadlessRouter(states);
+  for (const rule of mount.config.redirects ?? []) {
+    const to = toTarget(rule.to);
+    if (rule.pattern instanceof RegExp) {
+      router.urlService.rules.when(rule.pattern, () => ({
+        state: to.state,
+        params: to.params,
+      }));
+    } else {
+      router.urlService.rules.when(rule.pattern, (params: RawParams) => ({
+        state: to.state,
+        params: { ...params, ...to.params },
+      }));
+    }
+  }
+  return router;
+};
+
+// Transitions settle in microtasks; the timer is only a degrade-to-shell net.
+const settledWithinTimeout = (settled: Promise<boolean>): Promise<boolean> =>
+  Promise.race([
+    settled,
+    new Promise<false>((expire) =>
+      setTimeout(() => expire(false), SETTLE_TIMEOUT_MS),
+    ),
+  ]);
+
+// --- Verdict construction --------------------------------------------------
+
+const shellVerdict = (mount: Mount): Verdict => ({
+  kind: 'shell',
+  mount: mount.base,
+});
+
+const redirectVerdict = (mount: Mount, path: string): Verdict => ({
+  kind: 'redirect',
+  mount: mount.base,
+  location: join(mount.base, path),
+  status: 302,
+});
+
+const notFoundVerdict = (mount: Mount): Verdict => ({
+  kind: 'notFound',
+  mount: mount.base,
+});
+
+// --- Per-strategy resolution -----------------------------------------------
+
+const matcherVerdict = (mount: Mount, subpath: string): Verdict => {
+  const redirected = mount.compiled.evaluate(subpath);
+  if (redirected !== null) return redirectVerdict(mount, redirected);
+  return matchRoute(mount.compiled.routes, subpath) !== null
+    ? shellVerdict(mount)
+    : notFoundVerdict(mount);
+};
+
+const simulateVerdict = async (
+  simulate: SimulateModule,
+  mount: Mount,
+  subpath: string,
+): Promise<Verdict> => {
+  try {
+    const router = buildHeadlessRouter(simulate, mount);
+    if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
+      return notFoundVerdict(mount);
+    const settled = simulate.onceSettled(router);
+    router.urlService.url(subpath);
+    router.urlService.sync();
+    // Failed and timed-out transitions degrade to the shell — the client
+    // router re-runs them with its full configuration; never a wrong redirect.
+    if (!(await settledWithinTimeout(settled))) return shellVerdict(mount);
+    // The memory location only moves when the client's address bar would:
+    // core skips the url push for url-sourced transitions.
+    const landed = router.urlService.url();
+    return landed === subpath
+      ? shellVerdict(mount)
+      : redirectVerdict(mount, landed);
+  } catch {
+    // Core can throw synchronously (registration, matching, sync); degrade
+    // to the shell — the client router re-runs the url with its full
+    // configuration — never a wrong redirect or a spurious 404.
+    return shellVerdict(mount);
+  }
+};
+
+// --- The public entry ------------------------------------------------------
+
 /**
  * Compiles a mount table into a resolver. Every mount's routes and redirect
  * table compile (and validate) at construction, whatever its strategy; a
@@ -156,115 +295,13 @@ export function mergeSearch(location: string, incoming: string): string {
 export function createServerRouter(config: {
   mounts: Record<string, MountConfig>;
 }): ServerRouter {
-  const mounts: Mount[] = Object.entries(config.mounts)
-    .map(([base, mount]) => {
-      if (!base.startsWith('/'))
-        throw new Error(`Mount '${base}' must start with '/'`);
-      const normalized =
-        base !== '/' && base.endsWith('/') ? base.slice(0, -1) : base;
-      return {
-        base: normalized,
-        config: mount,
-        strategy: mount.strategy ?? 'matcher',
-        // Simulate mounts accept the same declaration subset, so the
-        // dependency-free compilation doubles as their construction-time
-        // validation (their resolve path never consults it).
-        compiled: {
-          evaluate: compileRedirects({
-            routes: mount.routes,
-            rules: mount.redirects,
-            config: mount.config,
-          }),
-          routes: compileRoutes(mount.routes, mount.config),
-        },
-      };
-    })
-    .sort((a, b) => b.base.length - a.base.length);
-  if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
-    throw new Error('Mount bases must be unique');
-
-  // The lazy core boundary: the simulate tier enters the module graph only
-  // through this dynamic import, so matcher-only configs never load it.
-  let simulate: Promise<typeof import('./simulate.ts')> | null = null;
-  const loadSimulate = () => (simulate ??= import('./simulate.ts'));
+  const mounts = compileMounts(config.mounts);
+  const loadSimulate = makeSimulateLoader();
   // Still lazy for matcher-only configs, but paid at construction when a
   // simulate mount exists — not on its first request. The stray rejection is
   // silenced here; resolve() awaits the same cached promise and rethrows.
   if (mounts.some((mount) => mount.strategy === 'simulate'))
     void loadSimulate().catch(() => {});
-
-  const resolveMatcher = (mount: Mount, subpath: string): Verdict => {
-    const redirected = mount.compiled.evaluate(subpath);
-    if (redirected !== null)
-      return {
-        kind: 'redirect',
-        mount: mount.base,
-        location: join(mount.base, redirected),
-        status: 302,
-      };
-    return matchRoute(mount.compiled.routes, subpath) !== null
-      ? { kind: 'shell', mount: mount.base }
-      : { kind: 'notFound', mount: mount.base };
-  };
-
-  const resolveSimulate = async (
-    mount: Mount,
-    subpath: string,
-  ): Promise<Verdict> => {
-    const { createHeadlessRouter, onceSettled } = await loadSimulate();
-    try {
-      // Fresh declarations per call: core mutates registrations, so sharing
-      // them across concurrent resolutions is the hazard the copy prevents.
-      const states: StateDeclaration[] = mount.config.routes.map((route) => ({
-        ...route,
-      }));
-      const router = createHeadlessRouter(states);
-      for (const rule of mount.config.redirects ?? []) {
-        const to = toTarget(rule.to);
-        if (rule.pattern instanceof RegExp) {
-          router.urlService.rules.when(rule.pattern, () => ({
-            state: to.state,
-            params: to.params,
-          }));
-        } else {
-          router.urlService.rules.when(rule.pattern, (params: RawParams) => ({
-            state: to.state,
-            params: { ...params, ...to.params },
-          }));
-        }
-      }
-      if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
-        return { kind: 'notFound', mount: mount.base };
-      const settled = onceSettled(router);
-      router.urlService.url(subpath);
-      router.urlService.sync();
-      const outcome = await Promise.race([
-        settled,
-        new Promise<false>((expire) =>
-          setTimeout(() => expire(false), SETTLE_TIMEOUT_MS),
-        ),
-      ]);
-      // Failed and timed-out transitions degrade to the shell — the client
-      // router re-runs them with its full configuration; never a wrong redirect.
-      if (!outcome) return { kind: 'shell', mount: mount.base };
-      // The memory location only moves when the client's address bar would:
-      // core skips the url push for url-sourced transitions.
-      const landed = router.urlService.url();
-      return landed === subpath
-        ? { kind: 'shell', mount: mount.base }
-        : {
-            kind: 'redirect',
-            mount: mount.base,
-            location: join(mount.base, landed),
-            status: 302,
-          };
-    } catch {
-      // Core can throw synchronously (registration, matching, sync); degrade
-      // to the shell — the client router re-runs the url with its full
-      // configuration — never a wrong redirect or a spurious 404.
-      return { kind: 'shell', mount: mount.base };
-    }
-  };
 
   return {
     async resolve(pathnameOrUrl) {
@@ -272,9 +309,8 @@ export function createServerRouter(config: {
       for (const mount of mounts) {
         const subpath = subpathIn(mount.base, pathname);
         if (subpath === null) continue;
-        return mount.strategy === 'matcher'
-          ? resolveMatcher(mount, subpath)
-          : resolveSimulate(mount, subpath);
+        if (mount.strategy === 'matcher') return matcherVerdict(mount, subpath);
+        return simulateVerdict(await loadSimulate(), mount, subpath);
       }
       return { kind: 'notFound' };
     },
