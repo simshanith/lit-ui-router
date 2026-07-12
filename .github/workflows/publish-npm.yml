@@ -72,7 +72,7 @@ jobs:
           echo "$PACKAGE_DIR"
           echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
       - name: Build
-        run: npm exec -- turbo run ${{ env.PACKAGE_NAME }}#build
+        run: npm exec -- turbo run "$PACKAGE_NAME#build"
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
@@ -87,7 +87,7 @@ jobs:
         # the turbo step above instead.
         run: |
           (cd "$PACKAGE_DIR" && npm pkg delete devDependencies scripts)
-          pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
+          pnpm --filter "$PACKAGE_NAME" pack --pack-destination "$PACKAGE_DIR"
           echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
           # restore the stripped manifest: release-it requires a clean working dir
           git checkout -- "$PACKAGE_DIR/package.json"
@@ -111,7 +111,7 @@ jobs:
           subject-path: '${{ env.PACKAGE_DIR }}/*.tgz'
       - name: Release version
         run: |
-          echo "RELEASE_VERSION=$(pnpm --filter ${{ env.PACKAGE_NAME }} exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$(pnpm --filter "$PACKAGE_NAME" exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
       - name: Publish
         # release-it >= 20.1 handles immutable releases natively when assets
         # are configured: create draft, upload assets, publish — one
@@ -122,4 +122,18 @@ jobs:
         # a bare `npm publish` re-packs from source and ships raw
         # catalog:/workspace: refs npm can't resolve (broke 1.3.0–1.5.0)
         # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
+        # gitRawCommitsOpts.from: release-it's secondLatestTag is computed
+        # without tagMatch (repo-wide `rev-list --tags`), so in this monorepo
+        # the conventional-changelog plugin's commit range can start at ANOTHER
+        # package's newer tag, come up empty after path filtering, and silently
+        # fall back to the flat git-log changelog (#302). Pin the range to this
+        # package's own previous tag, computed by the unit-tested
+        # scripts/release-prev-tag.ts; a first release prints nothing and
+        # skips the override.
+        run: |
+          PREV_TAG=$(node scripts/release-prev-tag.ts "$PACKAGE_NAME" "$RELEASE_VERSION")
+          CHANGELOG_ARGS=()
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG_ARGS+=("--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=$PREV_TAG")
+          fi
+          pnpm --filter "$PACKAGE_NAME" exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" "${CHANGELOG_ARGS[@]}" ${{ inputs.dryRun && '--dry-run' || '' }}
