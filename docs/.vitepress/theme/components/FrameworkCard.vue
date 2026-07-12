@@ -12,8 +12,18 @@ const mark = brandMarks[props.brand];
 <template>
   <article class="framework-card">
     <span class="mark">
-      <img class="mark-light" :src="mark.light" :alt="`${name} logo`" />
-      <img class="mark-dark" :src="mark.dark" :alt="`${name} logo`" />
+      <img
+        class="mark-light"
+        :src="mark.light"
+        :alt="`${name} logo`"
+        :style="{ height: `${mark.height}px` }"
+      />
+      <img
+        class="mark-dark"
+        :src="mark.dark"
+        :alt="`${name} logo`"
+        :style="{ height: `${mark.height}px` }"
+      />
     </span>
     <strong class="name">{{ name }}</strong>
     <p class="blurb"><slot /></p>
@@ -56,13 +66,11 @@ const mark = brandMarks[props.brand];
 .mark {
   display: flex;
   align-items: center;
-  height: 36px;
+  height: 40px;
 }
 
+/* no display on .mark img: it would out-specify the per-theme hiding below */
 .mark img {
-  display: block;
-  max-height: 30px;
-  max-width: 128px;
   width: auto;
 }
 
