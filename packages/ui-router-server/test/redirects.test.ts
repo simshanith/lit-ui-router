@@ -54,6 +54,10 @@ describe('compileRoutes', () => {
       /no ancestor 'a'/,
     );
     assert.throws(
+      () => compileRoutes([{ name: 'a', url: 'a' }]),
+      /must start with '\/' or '\?'/,
+    );
+    assert.throws(
       () =>
         compileRoutes([
           { name: 'a', url: '/a?q' },

@@ -76,6 +76,12 @@ export function compileRoutes(
   for (const route of routes) {
     if (byName.has(route.name))
       throw new Error(`Duplicate route '${route.name}'`);
+    // Naive appending turns '/parent' + 'edit' into '/parentedit'; a url
+    // must contribute a path segment ('/...') or a search part ('?...').
+    if (route.url && !route.url.startsWith('/') && !route.url.startsWith('?'))
+      throw new Error(
+        `Route '${route.name}': url '${route.url}' must start with '/' or '?'`,
+      );
     byName.set(route.name, route);
   }
   const compiled: CompiledRoute[] = [];
@@ -120,7 +126,10 @@ export interface RouteMatch {
  * Match identity, not just truth: which route's pattern the pathname
  * matched, with the extracted params. Among multiple matches the one with
  * the fewest params wins (static segments beat placeholders, as in the
- * router's own rule ordering); ties go to declaration order.
+ * router's own rule ordering); ties go to declaration order. That heuristic
+ * approximates core's segment-by-segment static-specificity sort and can
+ * diverge from it on pathological overlaps (equal param counts, mixed
+ * static/dynamic positions).
  */
 export function matchRoute(
   routes: CompiledRoute[],

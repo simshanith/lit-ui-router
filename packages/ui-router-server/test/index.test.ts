@@ -18,8 +18,12 @@ const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
       // strategies: format() decodes stringly, like the live router.
       redirectTo: { state: 'contacts.detail', params: { contactId: 1 } },
     },
+    { name: 'inbox', url: '/inbox?page' },
   ],
-  redirects: [{ pattern: /^\/?$/, to: 'welcome' }],
+  redirects: [
+    { pattern: /^\/?$/, to: 'welcome' },
+    { pattern: '/old-inbox', to: { state: 'inbox', params: { page: '2' } } },
+  ],
 });
 
 // Every verdict below is asserted for BOTH strategies: the same mount config
@@ -75,12 +79,24 @@ for (const strategy of ['matcher', 'simulate'] as const) {
       });
     });
 
-    it('reports notFound for paths no mount or route owns', async () => {
+    it('reports notFound, carrying the owning mount when there is one', async () => {
       assert.deepEqual(await router.resolve('/app/nope'), {
         kind: 'notFound',
+        mount: '/app',
       });
       assert.deepEqual(await router.resolve('/elsewhere'), {
         kind: 'notFound',
+      });
+    });
+
+    it('may carry the target query string inside location', async () => {
+      // The pin for the query contract: consumers merge params into this,
+      // never concatenate the request's search onto it.
+      assert.deepEqual(await router.resolve('/app/old-inbox'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/inbox?page=2',
+        status: 302,
       });
     });
 
@@ -119,7 +135,10 @@ describe('mount handling', () => {
       mount: '/',
     });
     // The owning mount's verdict never falls through to a shorter base.
-    assert.deepEqual(await router.resolve('/app/nope'), { kind: 'notFound' });
+    assert.deepEqual(await router.resolve('/app/nope'), {
+      kind: 'notFound',
+      mount: '/app',
+    });
   });
 
   it('joins redirect locations onto a root mount cleanly', async () => {
