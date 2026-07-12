@@ -67,7 +67,6 @@
         "typecheck",
         "format:check",
         "codecov:bundle",
-        "//#check:catalog",
         "//#check:pack"
       ]
     },
@@ -75,9 +74,6 @@
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
-    },
-    "//#check:catalog": {
-      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
     },
     "//#check:pack": {
       "inputs": ["$TURBO_DEFAULT$", "**/package.json"]

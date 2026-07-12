@@ -34,7 +34,7 @@ export default defineConfig(
       'pnpm/json-enforce-catalog': [
         'error',
         {
-          // Mirror scripts/check-catalog.core.ts MANAGED_PREFIXES: aliases stay inline.
+          // npm:/portal: aliases and workspace/link/file specs stay inline.
           allowedProtocols: ['workspace', 'link', 'file', 'portal', 'npm'],
           // report catalog-version conflicts instead of auto-creating a new catalog
           conflicts: 'error',

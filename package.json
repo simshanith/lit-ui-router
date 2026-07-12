@@ -6,7 +6,6 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "check:catalog": "node scripts/check-catalog.ts",
     "check:pack": "node scripts/check-pack.ts",
     "check:workers-builds": "turbo run workers-builds#check",
     "ci": "turbo run ci",
