@@ -31,6 +31,74 @@ full-stack system where the same router executes on both sides. Each level
 is defined by what the app asks of its server; find yours, and what moving
 up would buy.
 
+<svg viewBox="0 0 720 414" width="100%" style="max-width: 720px" role="img" aria-label="The server-support spectrum: six levels from memory location (no server story) up to a full-stack shared router, with the live mounts on lit-ui-router.dev" xmlns="http://www.w3.org/2000/svg">
+  <title>The server-support spectrum</title>
+  <defs>
+    <marker id="arr-spectrum" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- legend -->
+    <rect x="404" y="6" width="10" height="10" rx="3" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="420" y="15" font-size="11" fill="var(--vp-c-text-3, #929295)">= live mount on lit-ui-router.dev</text>
+    <!-- axis -->
+    <line x1="24" y1="400" x2="24" y2="34" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-spectrum)" />
+    <text x="-214" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" transform="rotate(-90)">what the app asks of its server</text>
+    <!-- L5 -->
+    <rect x="48" y="28" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="41" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="60" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">5</text>
+    <text x="102" y="49" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; full-stack shared router</text>
+    <text x="102" y="68" font-size="12" fill="var(--vp-c-text-2, #67676c)">a real headless router replays every URL server-side</text>
+    <rect x="559" y="44" width="133" height="20" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <text x="625" y="58" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/simulated-routing</text>
+    <!-- L4 (flagship) -->
+    <rect x="48" y="90" width="656" height="54" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <rect x="60" y="103" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="74" y="122" font-size="13" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">4</text>
+    <text x="102" y="111" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; route-aware server</text>
+    <text x="102" y="130" font-size="12" fill="var(--vp-c-text-2, #67676c)">the server knows the routes: shells, redirects, real 404s</text>
+    <text x="692" y="107" font-size="11" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">&#9733; flagship</text>
+    <rect x="460" y="116" width="40" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="480" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app</text>
+    <rect x="506" y="116" width="74" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="543" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/app-mobx</text>
+    <rect x="586" y="116" width="106" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="639" y="129" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-spa</text>
+    <!-- L3 -->
+    <rect x="48" y="152" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="165" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="184" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">3</text>
+    <text x="102" y="173" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; static error rules</text>
+    <text x="102" y="192" font-size="12" fill="var(--vp-c-text-2, #67676c)">honest 404s, but only for asset misses &#8212; can't judge deep links</text>
+    <text x="692" y="185" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">per-mount 404.html</text>
+    <!-- L2 -->
+    <rect x="48" y="214" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="227" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="246" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">2</text>
+    <text x="102" y="235" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Path &#183; platform-default fallback</text>
+    <text x="102" y="254" font-size="12" fill="var(--vp-c-text-2, #67676c)">every path answers 200 with the shell &#8212; HTTP lies (soft-404s)</text>
+    <rect x="572" y="224" width="120" height="20" rx="6" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <text x="632" y="238" font-size="11" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">/not-found-naive</text>
+    <text x="692" y="260" font-size="11" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="end">200 for everything</text>
+    <!-- L1 -->
+    <rect x="48" y="276" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="289" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="308" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">1</text>
+    <text x="102" y="297" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Hash location</text>
+    <text x="102" y="316" font-size="12" fill="var(--vp-c-text-2, #67676c)">the fragment never leaves the browser &#8212; any static host suffices</text>
+    <text x="692" y="309" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">out of scope &#8212; by design</text>
+    <!-- L0 -->
+    <rect x="48" y="338" width="656" height="54" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="351" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="370" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">0</text>
+    <text x="102" y="359" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Memory location</text>
+    <text x="102" y="378" font-size="12" fill="var(--vp-c-text-2, #67676c)">no URL, no address bar &#8212; tests, embedded widgets, headless tooling</text>
+    <text x="692" y="371" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="end">no server story to need</text>
+  </g>
+</svg>
+
 **Level 0 — memory location: no URL.** `memoryLocationPlugin` runs the
 router with no address bar at all — tests, embedded widgets, headless
 tooling. Nothing can be deep-linked, so there is no server story to need.
@@ -77,6 +145,106 @@ ecosystems like Next.js — and React Router's framework mode, which ships
 server routing its default launch state, with SPA mode as the documented
 opt-out that lands on exactly this level's `/* /index.html 200` rule. Same
 tool, both ends of the spectrum.
+
+<svg viewBox="0 0 720 390" width="100%" style="max-width: 720px" role="img" aria-label="Where the ecosystem lands on the server-support spectrum: hash-mode apps at level 1; Vue Router, React Router SPA mode, Angular guidance and the platform defaults at level 2; this repo's ui-router-server spans levels 3 to 5; SSR-default ecosystems like Next.js and React Router framework mode sit in a side lane - a different strategy for the same honesty - with React Router's SPA mode opting out down to level 2. Same tool, both ends of the spectrum." xmlns="http://www.w3.org/2000/svg">
+  <title>Where the ecosystem lands on the spectrum</title>
+  <defs>
+    <marker id="arr-fwspec" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- legend -->
+    <rect x="330" y="8" width="20" height="12" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="356" y="18" font-size="10" fill="var(--vp-c-text-3, #929295)">ecosystem</text>
+    <rect x="420" y="8" width="20" height="12" rx="4" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="446" y="18" font-size="10" fill="var(--vp-c-text-3, #929295)">this stack</text>
+    <!-- axis -->
+    <line x1="24" y1="374" x2="24" y2="46" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-fwspec)" />
+    <text x="-260" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" transform="rotate(-90)">what the app asks of its server</text>
+    <!-- L5 -->
+    <rect x="48" y="40" width="460" height="44" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="48" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="67" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">5</text>
+    <text x="102" y="67" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Full-stack shared router</text>
+    <rect x="342" y="53" width="154" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="419" y="66" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">ui-router-server/simulate</text>
+    <!-- L4 -->
+    <rect x="48" y="90" width="460" height="44" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <rect x="60" y="98" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="74" y="117" font-size="13" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">4</text>
+    <text x="102" y="117" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Route-aware server</text>
+    <text x="388" y="116" font-size="11" font-weight="600" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">&#9733; flagship</text>
+    <rect x="396" y="103" width="100" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="446" y="116" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">ui-router-server</text>
+    <!-- L3 -->
+    <rect x="48" y="140" width="460" height="44" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="148" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="167" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">3</text>
+    <text x="102" y="167" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Static error rules</text>
+    <rect x="238" y="146" width="166" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="321" y="159" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">nginx error_page &#183; 404.html</text>
+    <text x="496" y="178" font-size="10" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="end">kept by the flagship (3+4)</text>
+    <!-- L2 (tall) -->
+    <rect x="48" y="190" width="460" height="84" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="198" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="217" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">2</text>
+    <text x="102" y="217" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Platform-default fallback</text>
+    <text x="300" y="217" font-size="11" font-style="italic" fill="var(--vp-c-text-2, #67676c)">&#8212; the industry default</text>
+    <rect x="100" y="230" width="132" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="166" y="243" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">Vue Router history mode</text>
+    <rect x="238" y="230" width="50" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="263" y="243" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">Angular</text>
+    <rect x="294" y="230" width="124" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="356" y="243" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">React Router SPA mode</text>
+    <rect x="100" y="254" width="98" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="149" y="267" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">Cloudflare Pages</text>
+    <rect x="204" y="254" width="94" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="251" y="267" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">Netlify /* 200</text>
+    <rect x="304" y="254" width="180" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="394" y="267" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">connect-history-api-fallback</text>
+    <!-- L1 -->
+    <rect x="48" y="280" width="460" height="44" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="288" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="307" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">1</text>
+    <text x="102" y="307" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Hash location</text>
+    <rect x="328" y="293" width="168" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="412" y="306" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">hash-mode apps &#8212; any router</text>
+    <!-- L0 -->
+    <rect x="48" y="330" width="460" height="44" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <rect x="60" y="338" width="28" height="28" rx="14" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="74" y="357" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">0</text>
+    <text x="102" y="357" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Memory location</text>
+    <text x="496" y="357" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">tests, embedded widgets &#8212; no server story</text>
+    <!-- SSR-default side lane (not a rung) -->
+    <rect x="556" y="40" width="156" height="250" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" stroke-dasharray="5 4" />
+    <line x1="512" y1="62" x2="552" y2="62" stroke="var(--vp-c-text-3, #929295)" stroke-dasharray="4 3" />
+    <text x="568" y="61" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">SSR-default</text>
+    <text x="568" y="76" font-size="12" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">ecosystems</text>
+    <text x="568" y="93" font-size="9" fill="var(--vp-c-text-3, #929295)">not a rung &#8212; a</text>
+    <text x="568" y="104" font-size="9" fill="var(--vp-c-text-3, #929295)">different strategy for</text>
+    <text x="568" y="115" font-size="9" fill="var(--vp-c-text-3, #929295)">the same honesty:</text>
+    <text x="568" y="126" font-size="9" fill="var(--vp-c-text-3, #929295)">they own rendering,</text>
+    <text x="568" y="137" font-size="9" fill="var(--vp-c-text-3, #929295)">not just routing</text>
+    <rect x="568" y="146" width="56" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="596" y="159" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">Next.js</text>
+    <rect x="630" y="146" width="68" height="18" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="664" y="159" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">SvelteKit</text>
+    <rect x="568" y="170" width="130" height="30" rx="6" fill="var(--vp-c-bg, #ffffff)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="633" y="182" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">React Router</text>
+    <text x="633" y="194" font-size="9" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">framework mode</text>
+    <text x="568" y="218" font-size="9" fill="var(--vp-c-text-2, #67676c)">ships ssr: true;</text>
+    <text x="568" y="229" font-size="9" fill="var(--vp-c-text-2, #67676c)">SPA mode opts out,</text>
+    <text x="568" y="240" font-size="9" fill="var(--vp-c-text-2, #67676c)">landing on level 2's</text>
+    <text x="568" y="251" font-size="9" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-2, #67676c)">/* &#8594; 200</text>
+    <text x="617" y="251" font-size="9" fill="var(--vp-c-text-2, #67676c)">rule.</text>
+    <text x="568" y="269" font-size="9.5" font-style="italic" fill="var(--vp-c-text-1, #3c3c43)">Same tool, both ends</text>
+    <text x="568" y="281" font-size="9.5" font-style="italic" fill="var(--vp-c-text-1, #3c3c43)">of the spectrum.</text>
+    <!-- opt-out bridge: framework mode -> L2 SPA-mode chip -->
+    <path d="M556 239 L426 239" fill="none" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" stroke-dasharray="4 3" marker-end="url(#arr-fwspec)" />
+    <text x="532" y="232" font-size="9" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">opt-out</text>
+  </g>
+</svg>
 
 **Level 3 — path location, static error rules.** The app needs honest
 errors: a real 404 status with a helpful page. Ordinary hosting has
@@ -188,6 +356,35 @@ min+gzip by its own esbuild probe:
 | `ui-router-server` (root)    | only when a `simulate` mount resolves | 4.1 KiB         | mounts in, verdict out                                                                 |
 | `ui-router-server/simulate`  | yes (optional peer)                   | +27.3 KiB, lazy | what would the real router do                                                          |
 
+<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.7 KiB, redirects 3.4 KiB, root 4.1 KiB - all dependency-free - and simulate, which adds a lazy 27.3 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
+  <title>The package tiers, to scale</title>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- dependency-free group -->
+    <rect x="8" y="10" width="704" height="138" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="700" y="27" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no @uirouter/core needed</text>
+    <text x="700" y="41" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a differential-tested port of core's matching subset</text>
+    <text x="20" y="60" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/matcher</text>
+    <rect x="230" y="50" width="41" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="279" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.7 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
+    <text x="20" y="92" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/redirects</text>
+    <rect x="230" y="82" width="51" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="289" y="95" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">3.4 KiB</tspan> &#183; + declarative redirect evaluation over a route table</text>
+    <text x="20" y="124" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server</text>
+    <rect x="230" y="114" width="62" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="300" y="127" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">4.1 KiB</tspan> &#183; mounts in, verdicts out &#8212; the default</text>
+    <!-- simulate group -->
+    <rect x="8" y="158" width="704" height="74" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="700" y="171" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
+    <text x="20" y="196" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
+    <rect x="230" y="186" width="62" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <rect x="294" y="186" width="408" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
+    <text x="498" y="199" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.3 KiB &#183; lazy chunk &#8212; core, whole</text>
+    <text x="230" y="222" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
+    <!-- scale note -->
+    <text x="712" y="244" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
+  </g>
+</svg>
+
 The tiers' shape is measured, not aesthetic. Deep-importing
 `@uirouter/core` internals carves a matching-only consumer from 43 KiB gzip
 down to 14 — `UrlMatcher` and the param machinery sit near the leaves of
@@ -216,6 +413,74 @@ Picking a tier:
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
 
 ## The projection: routes as data
+
+<svg viewBox="0 0 720 340" width="100%" style="max-width: 720px" role="img" aria-label="The projection: the client app's url-bearing states are projected into a pure-data route table in sample-app-routes, which the edge worker imports; components and conditional routing deliberately stay client-side, and contract tests pin the projection on every CI run" xmlns="http://www.w3.org/2000/svg">
+  <title>Routes as data: the projection</title>
+  <defs>
+    <marker id="arr-proj" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- client panel -->
+    <rect x="16" y="28" width="216" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="32" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Client app</text>
+    <text x="32" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">sample-app &#183; states.ts</text>
+    <!-- projected rows -->
+    <rect x="28" y="80" width="192" height="22" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <text x="36" y="95" font-size="11" fill="var(--vp-c-brand-1, #3451b2)">url-bearing states</text>
+    <rect x="28" y="106" width="192" height="22" rx="5" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" />
+    <text x="36" y="121" font-size="11" fill="var(--vp-c-brand-1, #3451b2)">root redirect &#8212; when(/^\/?$/)</text>
+    <line x1="28" y1="140" x2="220" y2="140" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="220" y="154" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)" text-anchor="end">deliberately stays client-side</text>
+    <text x="36" y="174" font-size="11" fill="var(--vp-c-text-2, #67676c)">components &#8212; register custom</text>
+    <text x="36" y="188" font-size="11" fill="var(--vp-c-text-2, #67676c)">elements at module scope</text>
+    <text x="36" y="208" font-size="11" fill="var(--vp-c-text-2, #67676c)">conditional routing &#8212; DSR</text>
+    <text x="36" y="222" font-size="11" fill="var(--vp-c-text-2, #67676c)">defaults, requiresAuth hook</text>
+    <text x="36" y="242" font-size="11" fill="var(--vp-c-text-2, #67676c)">otherwise() &#8212; a level choice</text>
+    <!-- projection arrow -->
+    <line x1="232" y1="104" x2="284" y2="104" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-proj)" />
+    <text x="258" y="94" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">projected</text>
+    <text x="258" y="118" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">as data</text>
+    <!-- data panel -->
+    <rect x="288" y="28" width="188" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="304" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Pure data</text>
+    <text x="304" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">sample-app-routes</text>
+    <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
+      <text x="304" y="94">routes: [</text>
+      <text x="312" y="110">{ name, url },</text>
+      <text x="312" y="126">&#8230;</text>
+      <text x="304" y="142">]</text>
+      <text x="304" y="166">redirects: [</text>
+      <text x="312" y="182">{ pattern, to },</text>
+      <text x="304" y="198">]</text>
+    </g>
+    <text x="304" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">no imports, no components &#8212;</text>
+    <text x="304" y="240" font-size="10" fill="var(--vp-c-text-3, #929295)">safe in any server runtime</text>
+    <!-- import arrow -->
+    <line x1="476" y1="104" x2="528" y2="104" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-proj)" />
+    <text x="502" y="94" font-size="10" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">imported</text>
+    <!-- worker panel -->
+    <rect x="532" y="28" width="172" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="548" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Edge worker</text>
+    <text x="548" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">docs/worker/index.ts</text>
+    <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
+      <text x="548" y="98">createServerRouter(</text>
+      <text x="556" y="114">{ mounts })</text>
+      <text x="548" y="142">resolve(url)</text>
+      <text x="556" y="158">&#8594; verdict</text>
+    </g>
+    <text x="548" y="186" font-size="11" fill="var(--vp-c-text-2, #67676c)">its one job:</text>
+    <text x="548" y="202" font-size="11" fill="var(--vp-c-text-2, #67676c)">verdict &#8594; HTTP</text>
+    <!-- contract-test seam -->
+    <rect x="16" y="278" width="460" height="46" rx="8" fill="none" stroke="var(--vp-c-green-1, #18794e)" stroke-dasharray="5 4" />
+    <line x1="382" y1="278" x2="382" y2="262" stroke="var(--vp-c-green-1, #18794e)" stroke-dasharray="5 4" />
+    <text x="32" y="298" font-size="11" font-weight="600" fill="var(--vp-c-green-1, #18794e)">contract tests pin the seam &#8212; every CI run</text>
+    <text x="32" y="314" font-size="11" fill="var(--vp-c-text-2, #67676c)">every verdict the worker will serve, resolved through the real package API</text>
+    <text x="548" y="302" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)">drift-resistant through a</text>
+    <text x="548" y="316" font-size="10" font-style="italic" fill="var(--vp-c-text-3, #929295)">test-pinned seam</text>
+  </g>
+</svg>
 
 A server runtime cannot import the client's state definitions — they import
 components, which register custom elements at module scope. Instead, the
@@ -290,6 +555,67 @@ real 404s, and the shell-not-redirect verdicts for the client-conditional
 routes — through the real package API.
 
 ## The verdict
+
+<svg viewBox="0 0 720 292" width="100%" style="max-width: 720px" role="img" aria-label="Verdict flow: an incoming request pathname goes through createServerRouter's resolve, which returns one of three verdicts - shell, redirect, or notFound - and the worker turns each into HTTP: 200, 302, or 404" xmlns="http://www.w3.org/2000/svg">
+  <title>Request to verdict to HTTP</title>
+  <defs>
+    <marker id="arr-verdict" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
+      <path d="M0 0L8 4L0 8z" fill="var(--vp-c-text-3, #929295)" />
+    </marker>
+  </defs>
+  <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
+    <!-- column headings -->
+    <text x="540" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">verdict &#8212; a plain object</text>
+    <text x="660" y="18" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">HTTP</text>
+    <!-- request -->
+    <rect x="16" y="110" width="152" height="64" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="92" y="136" font-size="12" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">incoming request</text>
+    <text x="92" y="156" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">/app/contacts/3</text>
+    <line x1="168" y1="142" x2="214" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <!-- resolve -->
+    <rect x="218" y="102" width="196" height="80" rx="8" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" />
+    <text x="316" y="132" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">createServerRouter(&#8230;)</text>
+    <text x="316" y="150" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-brand-1, #3451b2)" text-anchor="middle">.resolve(url)</text>
+    <text x="316" y="169" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">longest mount base wins</text>
+    <text x="316" y="202" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">no fetch, no Response &#8212;</text>
+    <text x="316" y="217" font-size="11" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">mounts validate at construction</text>
+    <!-- fan-out arrows -->
+    <line x1="414" y1="128" x2="466" y2="58" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <line x1="414" y1="142" x2="466" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <line x1="414" y1="156" x2="466" y2="226" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <!-- verdict: shell -->
+    <rect x="470" y="30" width="140" height="52" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="540" y="52" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">kind: 'shell'</text>
+    <text x="540" y="70" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">mount, status?</text>
+    <!-- verdict: redirect -->
+    <rect x="470" y="116" width="140" height="52" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="540" y="138" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">kind: 'redirect'</text>
+    <text x="540" y="156" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">location, status</text>
+    <!-- verdict: notFound -->
+    <rect x="470" y="200" width="140" height="52" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="540" y="222" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)" text-anchor="middle">kind: 'notFound'</text>
+    <text x="540" y="240" font-size="11" fill="var(--vp-c-text-2, #67676c)" text-anchor="middle">mount?</text>
+    <!-- verdict -> HTTP -->
+    <line x1="610" y1="56" x2="634" y2="56" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <line x1="610" y1="142" x2="634" y2="142" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <line x1="610" y1="226" x2="634" y2="226" stroke="var(--vp-c-text-3, #929295)" stroke-width="1.25" marker-end="url(#arr-verdict)" />
+    <!-- HTTP: 200 -->
+    <rect x="638" y="34" width="44" height="22" rx="11" fill="var(--vp-c-green-soft, rgba(16,185,129,0.14))" />
+    <text x="660" y="49" font-size="12" font-weight="600" fill="var(--vp-c-green-1, #18794e)" text-anchor="middle">200</text>
+    <text x="663" y="72" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">app shell (304s ok);</text>
+    <text x="663" y="84" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">status'd shell: 404</text>
+    <!-- HTTP: 302 -->
+    <rect x="638" y="120" width="44" height="22" rx="11" fill="var(--vp-c-yellow-soft, rgba(234,179,8,0.14))" />
+    <text x="660" y="135" font-size="12" font-weight="600" fill="var(--vp-c-yellow-1, #915930)" text-anchor="middle">302</text>
+    <text x="663" y="158" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">Location: computed</text>
+    <text x="663" y="170" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">by format()</text>
+    <!-- HTTP: 404 -->
+    <rect x="638" y="204" width="44" height="22" rx="11" fill="var(--vp-c-red-soft, rgba(244,63,94,0.14))" />
+    <text x="660" y="219" font-size="12" font-weight="600" fill="var(--vp-c-red-1, #b8272c)" text-anchor="middle">404</text>
+    <text x="663" y="242" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">per-mount 404.html,</text>
+    <text x="663" y="254" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="middle">a real status</text>
+  </g>
+</svg>
 
 `createServerRouter` compiles and validates every mount at construction —
 unknown redirect targets, cycles, and a bad `otherwise` target throw at
