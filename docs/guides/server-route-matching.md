@@ -67,15 +67,29 @@ structural boundary for
 and it serves scanners and typo probes a few bytes instead of an app.
 
 **Level 4 — path location, route-aware server.** The missing piece: a
-server that can tell the app's deep links from garbage. Teach it the routes
-— the package's dependency-free matcher tier, pure data — and every answer
-becomes exact: the shell for real routes, computed redirects, real 404s for
-everything else. This is this site's flagship tier. Whether the 404 body is
-the static page or the app shell rendering its own 404 view is a free
-choice here, and it is **not** an SEO question: Google ignores the body
-content of 4xx responses outright. It is analytics and weight — a
-shell-at-404 boots the whole app for every garbage probe and mixes error
-views into entrance reports unless the error state opts out (real-world,
+server that can tell the app's deep links from garbage. That was always
+possible by hand — ops teams maintain nginx `location` and regex blocks,
+Apache rewrites, or CDN rules that mirror the app's routes, re-synced
+manually on every route change — so this is an old capability with a
+maintenance problem, not a new capability. The shared route table attacks
+the maintenance: it is a data projection of the app's own route
+definitions ([the projection below](#the-projection-routes-as-data)),
+exercised by the app's contract tests on every CI run — versus config in a
+different language, in a different layer of the stack, verified by nobody.
+Drift-resistant through a test-pinned seam, not drift-impossible — and it
+expresses what static server rules cannot: parameterized matching with the
+client's exact semantics, and redirect targets computed by `format()`.
+Teach the server the routes — the package's dependency-free matcher tier,
+pure data — and every answer becomes exact: the shell for real routes,
+computed redirects, real 404s for everything else. This is this site's
+flagship tier.
+
+Whether the 404 body is the static page or the app shell rendering its own
+404 view is a free choice at this level, and it is **not** an SEO question:
+Google ignores the body content of 4xx responses outright. It is analytics
+and weight — a shell-at-404 boots the whole app for every garbage probe and
+mixes error views into entrance reports unless the error state opts out
+(real-world,
 [a 404 page has ranked as a site's second-highest landing page](https://www.searchviu.com/en/404-errors-google-analytics/)).
 This site's flagships keep the static page.
 
