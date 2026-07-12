@@ -44,7 +44,6 @@
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
     "playwright": "catalog:",
-    "pnpm": "catalog:",
     "turbo": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
