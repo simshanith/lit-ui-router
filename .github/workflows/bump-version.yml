@@ -1,6 +1,10 @@
 # Manual workflow to create release PRs with version bumps.
 # Triggered via GitHub Actions UI - select package, increment type, and run.
 # Creates a release branch and PR that, when merged, triggers tagging.
+#
+# YAML here is triggers/permissions/secrets/environment only; the pipeline
+# logic lives in tools/release (mise task release_bump), inputs flow through
+# step env — never `${{ }}` inside run lines.
 name: Bump version
 
 on:
@@ -60,69 +64,35 @@ jobs:
     runs-on: ubuntu-latest
     # Protected environment adds approval gate before version bumps
     environment: bump-version
-    env:
-      PACKAGE: ${{ inputs.package }}
-      INCREMENT: ${{ inputs.increment }}
-      OTHER_INCREMENT: ${{ inputs.other }}
-      PR_BASE: ${{ inputs.prBase }}
-      BRANCH_PREFIX_INPUT: ${{ inputs.branchPrefix }}
-      # PAT required: PRs created with GITHUB_TOKEN don't trigger workflows when merged
-      GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           fetch-tags: true
+          # PAT (not GITHUB_TOKEN): release-it pushes the release branch over
+          # these persisted credentials, and pushes/PRs from the default token
+          # don't trigger downstream workflows. persist-credentials must stay on.
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-      - name: Setup Git user
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Setup mise
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          # task-env handling regressed before in unpinned mise; pin the version
+          version: 2026.6.14
       - name: Install dependencies
         run: mise run setup
-      - name: Set branch prefix
-        # Use input if provided, otherwise derive from package name
-        run: |
-          if [ -n "$BRANCH_PREFIX_INPUT" ]; then
-            echo "BRANCH_PREFIX=$BRANCH_PREFIX_INPUT" >> "$GITHUB_ENV"
-          else
-            echo "BRANCH_PREFIX=release/$PACKAGE/v" >> "$GITHUB_ENV"
-          fi
-      - name: Calculate bumped version
-        # tools/release/release-increment-args.ts maps the increment/other
-        # inputs to release-it args (validating the free-text `other` input
-        # against a strict semver allowlist) and prints them one per line;
-        # `mapfile -t` reads them verbatim — no word-splitting of user input
-        # into argv. release-it then dry-runs to get the new version without
-        # changes.
-        run: |
-          INCREMENT_OUTPUT="$(node tools/release/release-increment-args.ts "$INCREMENT" "$OTHER_INCREMENT")"
-          INCREMENT_ARGS=()
-          if [ -n "$INCREMENT_OUTPUT" ]; then
-            mapfile -t INCREMENT_ARGS <<< "$INCREMENT_OUTPUT"
-          fi
-          echo "BUMPED_VERSION=$(pnpm --filter "$PACKAGE" exec release-it --release-version "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
-      - name: Switch branches
-        # Create release branch: release/{package}/vX.Y.Z
-        if: ${{ !inputs.dryRun }}
-        run: git switch --create "$BRANCH_PREFIX$BUMPED_VERSION"
+      - name: Setup Git user
+        run: mise run release_git_user
       - name: Bump version
-        # Actually bump the version in package.json and commit.
-        # --dry-run makes release-it log every git/github/npm write instead of performing it.
-        run: |
-          pnpm --filter "$PACKAGE" exec \
-            release-it \
-              ${{ inputs.dryRun && '--dry-run' || '' }} \
-              --increment "$BUMPED_VERSION" \
-              --git.commit true \
-              --git.push true \
-              --git.commitMessage "$(pnpm --silent --filter "$PACKAGE" commit:changelog)"
-      - name: Create PR
-        # Create PR with auto-generated title and body from commit messages.
-        # The release label exempts it from the semantic-pr title check.
-        if: ${{ !inputs.dryRun }}
-        run: gh pr create --base "$PR_BASE" --head "$BRANCH_PREFIX$BUMPED_VERSION" --fill-verbose --label release
+        # version calc, release branch, release-it commit+push, gh pr create —
+        # see tools/release/release-bump.ts for the phase-by-phase contract
+        run: mise run release_bump
+        env:
+          PACKAGE: ${{ inputs.package }}
+          INCREMENT: ${{ inputs.increment }}
+          OTHER_INCREMENT: ${{ inputs.other }}
+          PR_BASE: ${{ inputs.prBase }}
+          BRANCH_PREFIX_INPUT: ${{ inputs.branchPrefix }}
+          DRY_RUN: ${{ inputs.dryRun }}
+          # PAT scoped to this step only: gh pr create must trigger workflows on merge
+          GH_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
