@@ -17,10 +17,12 @@
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
-      // Overrides REPLACE root deps, so re-state ^transit: worker/tsconfig
-      // reaches sample-app-routes and ui-router-server sources directly.
       "dependsOn": ["^build", "^docs:api", "^transit"],
-      "with": ["typecheck:vue"]
+      "with": ["typecheck:vue", "typecheck:worker"]
+    },
+    "typecheck:worker": {
+      "dependsOn": ["^build", "^transit"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "docs": {
       "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
