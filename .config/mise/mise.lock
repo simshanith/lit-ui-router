@@ -74,3 +74,7 @@ url = "https://nodejs.org/dist/v24.18.0/node-v24.18.0-win-x64.zip"
 [[tools."npm:corepack"]]
 version = "0.35.0"
 backend = "npm:corepack"
+
+[[tools."npm:npm"]]
+version = "11.18.0"
+backend = "npm:npm"

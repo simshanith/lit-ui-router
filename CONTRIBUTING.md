@@ -8,6 +8,7 @@ This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by c
 | ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
 | node       | mise                                            | [`.nvmrc`](./.nvmrc)                                                     |
 | corepack   | mise                                            | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
+| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
 | pnpm       | corepack                                        | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
 | turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) catalog                   |
 | actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
@@ -15,7 +16,7 @@ This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by c
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
 mise trust
-mise install     # provisions node, corepack, actionlint
+mise install     # provisions node, corepack, npm, actionlint
 mise run setup   # corepack-installs the pinned pnpm, then pnpm install
 turbo build
 ```

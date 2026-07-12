@@ -61,9 +61,6 @@ jobs:
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
       - name: Setup mise
         uses: jdx/mise-action@v4
-      - name: Update npm
-        # npm >= 11.5.1 required for OIDC trusted publishing
-        run: npm install -g npm@latest
       - name: Install dependencies
         run: mise run setup
       - name: Map npm name to directory
