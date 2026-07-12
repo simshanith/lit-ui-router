@@ -1,0 +1,15 @@
+{
+  // Runtime-neutral: no DOM, node, or workers types — the package serves any
+  // server runtime (workerd, node, deno) and the compiler enforces it. The
+  // matcher tier's type-only @uirouter/core imports resolve without any
+  // runtime types; the simulate tier's value imports stay type-erased here.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/**/*"]
+}

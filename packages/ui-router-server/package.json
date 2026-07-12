@@ -1,0 +1,23 @@
+{
+  "name": "ui-router-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    "./matcher": "./src/url-matcher.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "lint": "oxlint .",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "oxfmt": "catalog:",
+    "typescript": "catalog:"
+  }
+}
