@@ -3,23 +3,27 @@
 # (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
 _.path = ["{{config_root}}/node_modules/.bin"]
 
-[hooks]
-# Corepack shims pnpm into node's bin dir and pre-installs the packageManager
-# pin (sha512-verified) from the repo root; fires on every `mise install`
-# (local and mise-action), even no-ops.
-postinstall = "cd {{config_root}} && npx corepack enable && npx corepack install"
-
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
 "aqua:rhysd/actionlint" = "1.7.12"
+# mise-provided corepack: no npx per-invocation resolution, Node-25-proof
+"npm:corepack" = "0.35.0"
+
+[tasks.corepack]
+# Provisioning leg: shims pnpm and materializes the packageManager pin
+# (sha512-verified) into corepack's cache. A task, not a hook: hooks
+# warn-and-continue, task failures are loud; and tool-only bumps skip it.
+description = "Enable corepack and install the packageManager-pinned pnpm"
+run = "corepack enable && corepack install"
 
 [tasks.setup]
 # Bootstrap layer: the one step pnpm scripts can't own (no node_modules yet).
-# Ordering: mise install -> postinstall hook (corepack) -> mise run setup.
+# Flow: mise trust && mise install && mise run setup.
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the corepack-provisioned pnpm"
+depends = ["corepack"]
 run = "pnpm install"

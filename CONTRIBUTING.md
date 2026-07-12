@@ -2,17 +2,17 @@
 
 ## Development
 
-This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm is pinned (with an integrity hash) by `packageManager` in [`package.json`](./package.json) and provisioned by corepack, which a mise `postinstall` hook enables; turbo is the workspace devDependency, resolved from `node_modules/.bin`, which mise puts on `PATH`.
+This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm is pinned (with an integrity hash) by `packageManager` in [`package.json`](./package.json) and provisioned by corepack (itself a mise-pinned tool); turbo is the workspace devDependency, resolved from `node_modules/.bin`, which mise puts on `PATH`.
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
 mise trust
-mise install     # provisions node + corepack-pinned pnpm
-mise run setup   # installs workspace dependencies
+mise install     # provisions node, corepack, actionlint
+mise run setup   # corepack-installs the pinned pnpm, then pnpm install
 turbo build
 ```
 
-`mise install` provisions the pinned Node and runs `corepack enable`, which shims the `packageManager`-pinned pnpm into node's bin dir — no separate `nvm use`, `pnpm add --global`, or global turbo needed. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): it runs `pnpm install`, frozen-lockfile automatically in CI. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
+`mise install` provisions the pinned Node and corepack. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): its `corepack` dependency task enables corepack and installs the `packageManager`-pinned pnpm, then `pnpm install` runs — frozen-lockfile automatically in CI. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
 ## Running Tests
 

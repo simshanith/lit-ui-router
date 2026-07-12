@@ -4,7 +4,7 @@ This monorepo uses [Turborepo](https://turbo.build/) for orchestrating builds, t
 
 ## Installation
 
-Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from `node_modules/.bin`, which [mise](https://mise.jdx.dev) puts on `PATH` (see [`.config/mise/config.toml`](./.config/mise/config.toml) and [CONTRIBUTING.md](./CONTRIBUTING.md#development) for setup). After `mise install` and `pnpm install`, bare `turbo` runs the workspace-pinned version — no separate global install needed.
+Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from `node_modules/.bin`, which [mise](https://mise.jdx.dev) puts on `PATH` (see [`.config/mise/config.toml`](./.config/mise/config.toml) and [CONTRIBUTING.md](./CONTRIBUTING.md#development) for setup). After `mise install` and `mise run setup`, bare `turbo` runs the workspace-pinned version — no separate global install needed.
 
 ## Workspace Structure
 
@@ -148,7 +148,7 @@ turbo build --summarize
 The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the full CI pipeline:
 
 1. **Checkout** - Clone repository
-2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and enables corepack (pnpm pinned by `packageManager`); `pnpm install` installs dependencies
+2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and corepack; `mise run setup` corepack-installs the `packageManager`-pinned pnpm, then installs dependencies
 3. **Install browsers** - Playwright and Cypress for e2e tests
 4. **Build and Test** - `turbo run ci`
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
