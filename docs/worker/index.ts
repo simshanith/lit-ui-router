@@ -1,5 +1,5 @@
 import { mounts } from 'sample-app-routes';
-import { createServerRouter } from 'ui-router-server';
+import { createServerRouter, mergeSearch } from 'ui-router-server';
 
 interface Env {
   ASSETS: Fetcher;
@@ -21,22 +21,17 @@ export default {
       );
       const headers = new Headers(shell.headers);
       headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
+      // Status precedence per the Verdict contract: absent means default
+      // shell handling (304s included); explicit (future data tier) wins.
       return new Response(shell.body, {
         status: verdict.status ?? shell.status,
         headers,
       });
     }
     if (verdict.kind === 'redirect') {
-      // The verdict's location may carry its own query, so the request's
-      // params MERGE into it (the verdict's win); never concatenate.
-      const location = new URL(verdict.location, url);
-      for (const [key, value] of url.searchParams) {
-        if (!location.searchParams.has(key))
-          location.searchParams.append(key, value);
-      }
       return new Response(null, {
         status: verdict.status,
-        headers: { Location: location.pathname + location.search },
+        headers: { Location: mergeSearch(verdict.location, url.search) },
       });
     }
     // notFound: fall through to the assets binding's 404.html handling.
