@@ -3,9 +3,12 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
   "compatibility_date": "2025-07-12",
+  "main": "./docs/worker/index.ts",
   "assets": {
     "directory": "./docs/dist",
-    "not_found_handling": "single-page-application",
-    // "binding": "ASSETS"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // Only sample-app deep links invoke the worker; other misses serve 404.html.
+    "run_worker_first": ["/app/*", "/app-mobx/*"],
   },
 }
