@@ -60,6 +60,9 @@ jobs:
         with:
           # task-env handling regressed before in unpinned mise; pin the version
           version: 2026.6.14
+          # no restored tool cache on the publish path (zizmor cache-poisoning):
+          # tools install fresh, checksum-verified against mise.lock
+          cache: false
       - name: Install dependencies
         run: mise run setup
       - name: Resolve package
