@@ -6,6 +6,7 @@
   "sideEffects": false,
   "exports": {
     "./matcher": "./src/url-matcher.ts",
+    "./redirects": "./src/redirects.ts",
     "./simulate": "./src/simulate.ts"
   },
   "scripts": {
