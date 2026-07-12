@@ -21,6 +21,8 @@ jobs:
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Lint workflows

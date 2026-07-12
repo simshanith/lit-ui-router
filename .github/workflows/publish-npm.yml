@@ -49,6 +49,8 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
+          # release-it git pushes are disabled here; GitHub release/npm publish auth via env token/OIDC
+          persist-credentials: false
       - name: Extract package info from tag
         run: |
           if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
@@ -61,6 +63,9 @@ jobs:
           echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
       - name: Setup mise
         uses: jdx/mise-action@v4
+        with:
+          # publish path: install tools fresh (mise.lock-checksummed) instead of trusting a shared cache
+          cache: false
       - name: Install dependencies
         run: mise run setup
       - name: Map npm name to directory
