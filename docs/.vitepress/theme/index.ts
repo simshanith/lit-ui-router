@@ -3,12 +3,16 @@ import DefaultTheme from 'vitepress/theme';
 import './custom.css';
 import StackBlitzEmbed from './components/StackBlitzEmbed.vue';
 import ExampleEmbed from './components/ExampleEmbed.vue';
+import FrameworkCard from './components/FrameworkCard.vue';
+import FrameworkCards from './components/FrameworkCards.vue';
 
 export default {
   extends: DefaultTheme,
   enhanceApp({ app }) {
     app.component('StackBlitzEmbed', StackBlitzEmbed);
     app.component('ExampleEmbed', ExampleEmbed);
+    app.component('FrameworkCard', FrameworkCard);
+    app.component('FrameworkCards', FrameworkCards);
   },
 } satisfies Theme;
 

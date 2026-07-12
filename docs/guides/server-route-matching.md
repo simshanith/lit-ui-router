@@ -246,6 +246,18 @@ tool, both ends of the spectrum.
   </g>
 </svg>
 
+<FrameworkCards>
+  <FrameworkCard name="React Router" brand="react-router">Framework mode ships <code>ssr: true</code> by default, making full server routing its launch state; the documented SPA mode opts out to this level's <code>/* /index.html 200</code> rule. Same tool, both ends of the spectrum.</FrameworkCard>
+  <FrameworkCard name="Vue Router" brand="vue-router">Its history-mode guide is the canonical level-2 documentation: the fallback that, by its own description, means the server will no longer report 404 errors.</FrameworkCard>
+  <FrameworkCard name="Angular" brand="angular">Documents the same fallback rule for path-location deploys; honest statuses arrive through its SSR package rather than a route-aware edge.</FrameworkCard>
+  <FrameworkCard name="Next.js" brand="nextjs">SSR-default: the framework owns rendering, so every deep link gets an honest status from the start — the spectrum's far end as a launch state.</FrameworkCard>
+  <FrameworkCard name="SvelteKit" brand="svelte">The same SSR-default class; turn SSR off and its adapters document a <code>200.html</code> fallback — the level-2 rule under another name.</FrameworkCard>
+  <FrameworkCard name="Netlify" brand="netlify">The <code>/* /index.html 200</code> redirect: level 2 as a single line of platform config.</FrameworkCard>
+  <FrameworkCard name="Cloudflare" brand="cloudflare">Pages assumes an SPA by default; Workers static assets host this very site, with the worker running only where a routing decision is needed.</FrameworkCard>
+  <FrameworkCard name="nginx" brand="nginx">
+    <code>try_files $uri /index.html;</code> is the level-2 rewrite; hand-maintained <code>error_page</code> and <code>location</code> blocks are the level-3/4 prior art whose maintenance this stack replaces with projected data.</FrameworkCard>
+</FrameworkCards>
+
 **Level 3 — path location, static error rules.** The app needs honest
 errors: a real 404 status with a helpful page. Ordinary hosting has
 conventions for exactly that — nginx `error_page`, a `404.html` at the site
