@@ -42,13 +42,27 @@ machinery applies. Hash-mode apps are
 [deliberately out of scope](#path-location-clients), not at risk.
 
 **Level 2 — path location, platform-default fallback.** The moment routes
-move into the path, every deep link reaches the server, and the hosting
-world's stock answer is a blanket rewrite: nginx
-`try_files $uri /index.html;`, a Netlify `/* /index.html 200` redirect,
-[Cloudflare's single-page-application mode](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/)
-— the platform default, and what this site itself shipped before this
-stack. Users get the right page; HTTP starts lying. This is the level where
-the costs arrive: pages classified as
+move into the path, every deep link reaches the server — and this is where
+most path-location SPAs launch today. Serving the shell at 200 for every
+unknown path is the one fallback every major router's deployment guide
+prescribes
+([Vue Router](https://router.vuejs.org/guide/essentials/history-mode.html)
+says outright that "your server will no longer report 404 errors";
+[React Router](https://reactrouter.com/how-to/spa) notes some hosts do it
+by default; Angular documents the same rule), the out-of-the-box behavior
+on platforms like
+[Cloudflare Pages](https://developers.cloudflare.com/pages/configuration/serving-pages/)
+and
+[Workers' single-page-application mode](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/),
+and a documented one-liner everywhere else: nginx
+`try_files $uri /index.html;`, a Netlify `/* /index.html 200` redirect. The
+pattern even ships as a package —
+[`connect-history-api-fallback`](https://www.npmjs.com/package/connect-history-api-fallback),
+~14 million weekly downloads — and it is what this site itself shipped
+before this stack.
+
+Users get the right page; HTTP starts lying. This is the level where the
+costs arrive: pages classified as
 [soft 404s](https://support.google.com/webmasters/answer/7440203) drop out
 of the index,
 [crawl budget](https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget)
