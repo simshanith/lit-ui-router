@@ -48,7 +48,13 @@
       ]
     },
     "//#lint:workflows": {
-      "inputs": [".github/**", "zizmor.yml", "$TURBO_DEFAULT$"]
+      "inputs": [
+        ".github/**",
+        "zizmor.yml",
+        ".config/mise/config.toml",
+        ".config/mise/mise.lock",
+        "$TURBO_DEFAULT$"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build"],
