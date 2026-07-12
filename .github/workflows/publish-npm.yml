@@ -72,7 +72,7 @@ jobs:
           echo "$PACKAGE_DIR"
           echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
       - name: Build
-        run: npm exec -- turbo run ${{ env.PACKAGE_NAME }}#build
+        run: npm exec -- turbo run "$PACKAGE_NAME#build"
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
@@ -87,7 +87,7 @@ jobs:
         # the turbo step above instead.
         run: |
           (cd "$PACKAGE_DIR" && npm pkg delete devDependencies scripts)
-          pnpm --filter ${{ env.PACKAGE_NAME }} pack --pack-destination ${{ env.PACKAGE_DIR }}
+          pnpm --filter "$PACKAGE_NAME" pack --pack-destination "$PACKAGE_DIR"
           echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
           # restore the stripped manifest: release-it requires a clean working dir
           git checkout -- "$PACKAGE_DIR/package.json"
@@ -111,7 +111,7 @@ jobs:
           subject-path: '${{ env.PACKAGE_DIR }}/*.tgz'
       - name: Release version
         run: |
-          echo "RELEASE_VERSION=$(pnpm --filter ${{ env.PACKAGE_NAME }} exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
+          echo "RELEASE_VERSION=$(pnpm --filter "$PACKAGE_NAME" exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
       - name: Publish
         # release-it >= 20.1 handles immutable releases natively when assets
         # are configured: create draft, upload assets, publish — one
@@ -135,4 +135,4 @@ jobs:
           if [ -n "$PREV_TAG" ]; then
             CHANGELOG_ARGS+=("--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=$PREV_TAG")
           fi
-          pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" "${CHANGELOG_ARGS[@]}" ${{ inputs.dryRun && '--dry-run' || '' }}
+          pnpm --filter "$PACKAGE_NAME" exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" "${CHANGELOG_ARGS[@]}" ${{ inputs.dryRun && '--dry-run' || '' }}
