@@ -78,19 +78,30 @@ describe('docs site', () => {
     }
   });
 
-  it('serves a real 404 for unknown urls under the spa mounts', () => {
-    // Flagship mounts keep static 404 pages (not the shell): 404/200
-    // byte-identical shells read as soft-404s and muddy entrance analytics.
-    for (const url of [
-      '/app/definitely-not-a-route',
-      '/app/contacts/1/edit/extra',
-      '/app-mobx/definitely-not-a-route',
-    ]) {
-      cy.request({ url, failOnStatusCode: false }).then((response) => {
-        expect(response.status, url).to.eq(404);
-        expect(response.body).to.include('<title>404 | Lit UI Router</title>');
-        expect(response.headers, url).to.not.have.property('link');
-      });
+  it('serves the per-app 404 page for unknown urls under the spa mounts', () => {
+    // The flagship rung (not-found-static): a dedicated 404 page, not the
+    // shell — 404/200 byte-identical shells read as soft-404s and muddy
+    // entrance analytics. The page drives the user back into its own app.
+    for (const mount of ['/app', '/app-mobx']) {
+      for (const path of [
+        '/definitely-not-a-route',
+        '/contacts/1/edit/extra',
+      ]) {
+        const url = `${mount}${path}`;
+        cy.request({ url, failOnStatusCode: false }).then((response) => {
+          expect(response.status, url).to.eq(404);
+          // Prefix only: the mobx page's title carries a " (MobX)" suffix.
+          expect(response.body).to.include(
+            '<title>404 | UI-Router Lit sample app',
+          );
+          expect(response.body).to.include(`href="${mount}/welcome"`);
+          expect(response.headers['content-type'], url).to.include('text/html');
+          // Not a route, so no canonical Link header (unlike shell 200s).
+          expect(response.headers, url).to.not.have.property('link');
+          // Flagships stay indexable; only the exhibits carry noindex.
+          expect(response.headers, url).to.not.have.property('x-robots-tag');
+        });
+      }
     }
   });
 
