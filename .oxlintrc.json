@@ -313,6 +313,19 @@
       }
     },
     {
+      "files": ["tools/release/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": [
+              "^(PACKAGE|PACKAGE_NAME|PACKAGE_DIR|PACKAGE_INPUT|TARBALL|DRY_RUN|INCREMENT|OTHER_INCREMENT|PR_BASE|BRANCH_PREFIX_INPUT)$"
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["tools/workers-builds/**/*.ts"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
