@@ -76,14 +76,14 @@ depends = ["lint_actionlint", "lint_zizmor"]
 [tasks.release_git_user]
 # env: none. Refuses outside GITHUB_ACTIONS — writes --global git config.
 description = "Configure the github-actions[bot] git identity (CI only)"
-run = "node tools/release/release-git-user.ts"
+run = "node tools/release/src/steps/release-git-user.ts"
 
 [tasks.release_package_info]
 # env: PACKAGE_INPUT (manual dispatch) | GITHUB_REF (tag push).
 # outputs: package_name, package_dir.
 description = "Resolve the target package name and workspace directory"
 depends = ["setup"]
-run = "node tools/release/release-package-info.ts"
+run = "node tools/release/src/steps/release-package-info.ts"
 
 [tasks.release_build]
 # env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
@@ -95,35 +95,35 @@ run = 'turbo run "${PACKAGE_NAME:?}#build"'
 # env: PACKAGE_NAME, PACKAGE_DIR. outputs: tarball.
 description = "Pack the publish tarball with a dev-stripped manifest"
 depends = ["setup"]
-run = "node tools/release/release-pack.ts"
+run = "node tools/release/src/steps/release-pack.ts"
 
 [tasks.release_check_tarball]
 # env: TARBALL. Gates devDependencies/scripts/catalog:/workspace: leaks.
 description = "Check the packed tarball's manifest before publishing"
 depends = ["setup"]
-run = 'node tools/release/check-packed-manifest.ts "${TARBALL:?}"'
+run = 'node tools/release/src/checks/check-packed-manifest.ts "${TARBALL:?}"'
 
 [tasks.release_tag]
 # env: PACKAGE, DRY_RUN. Tags locally only; release_tag_push pushes the ref.
 description = "Tag the current version of a package (local tag only)"
 depends = ["setup"]
-run = "node tools/release/release-tag.ts"
+run = "node tools/release/src/steps/release-tag.ts"
 
 [tasks.release_tag_push]
 # env: PACKAGE, DRY_RUN. Pushes exactly refs/tags/<package>@<version>.
 description = "Push a package's release tag ref"
 depends = ["setup"]
-run = "node tools/release/release-tag-push.ts"
+run = "node tools/release/src/steps/release-tag-push.ts"
 
 [tasks.release_publish]
 # env: PACKAGE_NAME, TARBALL, DRY_RUN, GITHUB_TOKEN (GitHub release; npm is OIDC).
 description = "Publish the packed tarball to npm and cut the GitHub release"
 depends = ["setup"]
-run = "node tools/release/release-publish.ts"
+run = "node tools/release/src/steps/release-publish.ts"
 
 [tasks.release_bump]
 # env: PACKAGE, INCREMENT, OTHER_INCREMENT, PR_BASE, BRANCH_PREFIX_INPUT,
 # DRY_RUN, GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
 description = "Compute the bumped version, branch, commit, push, and open the release PR"
 depends = ["setup"]
-run = "node tools/release/release-bump.ts"
+run = "node tools/release/src/steps/release-bump.ts"

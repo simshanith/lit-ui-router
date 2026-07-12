@@ -7,14 +7,14 @@
 // It was a CLI the workflow called; the publish driver (release-publish.ts)
 // now imports it directly.
 
-import type { Exec } from './exec.ts';
-import { defaultExec } from './exec.ts';
+import type { Exec } from '../lib/exec.ts';
+import { defaultExec } from '../lib/exec.ts';
 import {
   describeArgs,
   isFirstReleaseError,
   parsePrevTag,
 } from './release-prev-tag.core.ts';
-import { workspaceRoot } from './workspace.ts';
+import { workspaceRoot } from '../lib/workspace.ts';
 
 /**
  * Same tolerance as the inline `… || true` this replaced: a first release

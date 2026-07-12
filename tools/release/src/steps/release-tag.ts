@@ -8,8 +8,8 @@
 // tag fails here and that is fine. argv comes from the engine seam
 // (release-it.core.ts).
 
-import { boolEnv, requireEnv } from './env.core.ts';
-import { group, runMain } from './gha.ts';
+import { boolEnv, requireEnv } from '../lib/env.core.ts';
+import { group, runMain } from '../lib/gha.ts';
 import { tagArgs } from './release-it.core.ts';
 import { releaseItRun } from './release-it.ts';
 

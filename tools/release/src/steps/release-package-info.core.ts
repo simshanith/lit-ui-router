@@ -8,7 +8,7 @@
 // workspace member before anything uses it. The IO (reading env, loading the
 // workspace) lives in release-package-info.ts.
 
-import type { Member } from './workspace.ts';
+import type { Member } from '../lib/workspace.ts';
 
 /**
  * The package name embedded in a release tag ref: everything before the LAST

@@ -11,11 +11,11 @@
 import { readFile, readdir, writeFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { defaultStream } from './exec.ts';
-import { group, runMain, setOutput } from './gha.ts';
-import { requireEnv } from './env.core.ts';
+import { defaultStream } from '../lib/exec.ts';
+import { group, runMain, setOutput } from '../lib/gha.ts';
+import { requireEnv } from '../lib/env.core.ts';
 import { pickTarball, strippedManifestJson } from './release-pack.core.ts';
-import { workspaceRoot } from './workspace.ts';
+import { workspaceRoot } from '../lib/workspace.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE_NAME');

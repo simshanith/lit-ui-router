@@ -11,8 +11,8 @@
 // invocation. Not retried in-tool: the engine's writes are non-idempotent
 // (see retry.ts); a human re-runs the workflow after a partial failure.
 
-import { boolEnv, requireEnv } from './env.core.ts';
-import { group, runMain } from './gha.ts';
+import { boolEnv, requireEnv } from '../lib/env.core.ts';
+import { group, runMain } from '../lib/gha.ts';
 import {
   currentReleaseVersionArgs,
   parseReleaseVersion,

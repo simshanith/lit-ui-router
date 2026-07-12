@@ -6,7 +6,7 @@ import {
   packageFromRef,
   resolvePackageName,
 } from './release-package-info.core.ts';
-import type { Member } from './workspace.ts';
+import type { Member } from '../lib/workspace.ts';
 
 const members: Member[] = [
   { name: 'lit-ui-router-monorepo', dir: '<root>' },

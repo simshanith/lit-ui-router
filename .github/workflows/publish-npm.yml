@@ -101,7 +101,7 @@ jobs:
       - name: Publish
         # release-it publishes the attested tarball and cuts the GitHub
         # release in one invocation; the argv (and the #302 changelog-range
-        # pin) is built by the engine seam — see tools/release/release-publish.ts
+        # pin) is built by the engine seam — see tools/release/src/steps/release-publish.ts
         run: mise run release_publish
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}

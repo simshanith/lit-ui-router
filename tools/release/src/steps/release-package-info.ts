@@ -7,9 +7,9 @@
 // workspace resolver (workspace.ts) — the same enumeration `pnpm --filter`
 // used, without round-tripping tainted strings through a shell.
 
-import { runMain, setOutput } from './gha.ts';
+import { runMain, setOutput } from '../lib/gha.ts';
 import { memberDir, resolvePackageName } from './release-package-info.core.ts';
-import { loadWorkspace, workspaceRoot } from './workspace.ts';
+import { loadWorkspace, workspaceRoot } from '../lib/workspace.ts';
 
 runMain(async () => {
   const name = resolvePackageName({

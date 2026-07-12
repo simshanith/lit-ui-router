@@ -85,7 +85,7 @@ jobs:
         run: mise run release_git_user
       - name: Bump version
         # version calc, release branch, release-it commit+push, gh pr create —
-        # see tools/release/release-bump.ts for the phase-by-phase contract
+        # see tools/release/src/steps/release-bump.ts for the phase-by-phase contract
         run: mise run release_bump
         env:
           PACKAGE: ${{ inputs.package }}

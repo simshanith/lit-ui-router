@@ -8,7 +8,7 @@ import {
   type DepField,
   type PackageManifest,
   type Report,
-} from './types.ts';
+} from '../lib/types.ts';
 
 // Specifier protocols pnpm must substitute at pack time. The npm registry
 // accepts a manifest that still contains them, but consumers then fail with

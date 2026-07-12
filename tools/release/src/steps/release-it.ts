@@ -3,9 +3,9 @@
 // `pnpm --filter <pkg> exec -- release-it …` lines did. Injectable
 // Exec/Stream so tests assert the full pnpm argv.
 
-import type { Exec, Stream } from './exec.ts';
-import { defaultExec, defaultStream } from './exec.ts';
-import { workspaceRoot } from './workspace.ts';
+import type { Exec, Stream } from '../lib/exec.ts';
+import { defaultExec, defaultStream } from '../lib/exec.ts';
+import { workspaceRoot } from '../lib/workspace.ts';
 
 /** Full pnpm argv wrapping a release-it invocation for one package. */
 export function pnpmReleaseItArgs(

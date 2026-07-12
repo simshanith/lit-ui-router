@@ -8,12 +8,12 @@
 // different commit is rejected here, matching the previous tag-exists
 // behavior. Decisions live in ./release-tag-push.core.ts.
 
-import { defaultStream } from './exec.ts';
-import { boolEnv, requireEnv } from './env.core.ts';
-import { runMain } from './gha.ts';
+import { defaultStream } from '../lib/exec.ts';
+import { boolEnv, requireEnv } from '../lib/env.core.ts';
+import { runMain } from '../lib/gha.ts';
 import { memberDir } from './release-package-info.core.ts';
 import { pushTagArgs, releaseTagName } from './release-tag-push.core.ts';
-import { loadWorkspace, workspaceRoot } from './workspace.ts';
+import { loadWorkspace, workspaceRoot } from '../lib/workspace.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');
