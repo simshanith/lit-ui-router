@@ -48,3 +48,17 @@ depends = ["corepack_enable", "corepack_install"]
 description = "Install workspace dependencies with the corepack-provisioned pnpm"
 depends = ["corepack"]
 run = "pnpm install"
+
+[tasks.lint_actionlint]
+description = "Lint GitHub Actions workflows for syntax/type errors"
+run = "actionlint"
+
+[tasks.lint_zizmor]
+# --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
+description = "Audit GitHub Actions workflows for security issues"
+run = "zizmor --offline .github/workflows"
+
+[tasks.lint_workflows]
+# Virtual grouping task; the two legs are independent and run in parallel.
+description = "Lint and audit GitHub Actions workflows"
+depends = ["lint_actionlint", "lint_zizmor"]
