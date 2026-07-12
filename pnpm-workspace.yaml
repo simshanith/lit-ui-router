@@ -52,10 +52,8 @@ catalog:
   typedoc-plugin-markdown: ^4.12.0
   typedoc-vitepress-theme: ^1.1.3
   typescript: ^7.0.2
-  # dts-backtest's consumer-TS matrix: aliased real typescript at each floor
   typescript-5.0: npm:typescript@5.0.4
   typescript-5.9: npm:typescript@^5.9.3
-  typescript-6: npm:typescript@^6.0.3
   typescript-7: npm:typescript@^7.0.2
   vite: ^8.1.3
   vite-plugin-checker: ^0.14.4
@@ -76,9 +74,9 @@ catalogs:
     typedoc: ^0.28.0
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
-  # real typescript 6 for vue-tsc: Volar resolves typescript/lib/tsc as a path the compat alias only re-exports
   typescript6:
     typescript: ^6.0.3
+    typescript-6: npm:typescript@^6.0.3
   vitepress1:
     vite-plugin-static-copy: ^3.4.0
 

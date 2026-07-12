@@ -19,7 +19,7 @@
     "mobx": "catalog:",
     "typescript-5.0": "catalog:",
     "typescript-5.9": "catalog:",
-    "typescript-6": "catalog:",
+    "typescript-6": "catalog:typescript6",
     "typescript-7": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*"
   }
