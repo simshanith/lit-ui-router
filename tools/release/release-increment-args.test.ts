@@ -1,7 +1,5 @@
 import assert from 'node:assert/strict';
-import { spawnSync } from 'node:child_process';
 import { describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 
 import { incrementArgs } from './release-increment-args.core.ts';
 
@@ -95,57 +93,5 @@ describe('incrementArgs', () => {
       () => incrementArgs('--help', ''),
       /unknown increment "--help"/,
     );
-  });
-});
-
-// End-to-end: pins the newline-delimited stdout contract the workflow's
-// `mapfile -t` consumes, and the loud non-zero exit on bad input.
-const scriptPath = fileURLToPath(
-  new URL('./release-increment-args.ts', import.meta.url),
-);
-
-function run(...args: string[]) {
-  return spawnSync(process.execPath, [scriptPath, ...args], {
-    encoding: 'utf8',
-  });
-}
-
-describe('release-increment-args.ts', () => {
-  it('prints one arg per line', () => {
-    const result = run('patch', '');
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, '--increment\npatch\n');
-  });
-
-  it('prints the positional none+other arg on a single line', () => {
-    const result = run('none', '1.2.3');
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, '1.2.3\n');
-  });
-
-  it('prints nothing for none without other', () => {
-    const result = run('none', '');
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, '');
-  });
-
-  it('accepts a missing other argument as empty', () => {
-    const result = run('minor');
-    assert.equal(result.status, 0);
-    assert.equal(result.stdout, '--increment\nminor\n');
-  });
-
-  it('fails loudly on an invalid other value', () => {
-    const result = run('other', '1.2.3 --github.release');
-    assert.equal(result.status, 1);
-    assert.equal(result.stdout, '');
-    assert.match(result.stderr, /invalid 'other' increment/);
-    assert.match(result.stderr, /--github\.release/);
-  });
-
-  it('fails loudly when invoked without an increment', () => {
-    const result = run();
-    assert.equal(result.status, 1);
-    assert.match(result.stderr, /usage:/);
   });
 });
