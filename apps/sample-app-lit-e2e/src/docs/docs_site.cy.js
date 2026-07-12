@@ -127,6 +127,34 @@ describe('docs site', () => {
     }
   });
 
+  it('computes full router verdicts under the simulate exhibit', () => {
+    // The simulated-routing rung: same tables, every verdict computed by a
+    // headless @uirouter/core transition server-side.
+    cy.request({
+      url: '/simulated-routing/?flag=1',
+      followRedirect: false,
+    }).then((response) => {
+      expect(response.status).to.eq(302);
+      expect(response.headers.location).to.eq(
+        '/simulated-routing/welcome?flag=1',
+      );
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+    cy.request('/simulated-routing/welcome').then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body).to.include('<title>UI-Router Lit sample app');
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+    cy.request({
+      url: '/simulated-routing/garbage',
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.eq(404);
+      expect(response.body).to.include('<title>UI-Router Lit sample app');
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+  });
+
   it('boots the in-app 404 state on a direct exhibit load', () => {
     cy.visit('/not-found-spa/definitely-not-a-route', {
       failOnStatusCode: false,

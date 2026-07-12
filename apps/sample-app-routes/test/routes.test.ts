@@ -110,12 +110,44 @@ describe('/not-found-spa verdicts (the not-found-spa exhibit)', () => {
   });
 });
 
+describe('/simulated-routing verdicts (the simulate-strategy exhibit)', () => {
+  it('is configured to compute verdicts by transition simulation', () => {
+    assert.equal(mounts['/simulated-routing'].strategy, 'simulate');
+  });
+
+  it('computes the same table-driven verdicts through a headless router', async () => {
+    // Same tables as the flagships, replayed through @uirouter/core: the
+    // root redirect comes from a real when() rule firing in a transition,
+    // the 404 from a real otherwise() settling on the notFound state.
+    assert.deepEqual(await router.resolve('/simulated-routing/'), {
+      kind: 'redirect',
+      mount: '/simulated-routing',
+      location: '/simulated-routing/welcome',
+      status: 302,
+    });
+    assert.deepEqual(await router.resolve('/simulated-routing/welcome'), {
+      kind: 'shell',
+      mount: '/simulated-routing',
+    });
+    assert.deepEqual(await router.resolve('/simulated-routing/contacts/3'), {
+      kind: 'shell',
+      mount: '/simulated-routing',
+    });
+    assert.deepEqual(await router.resolve('/simulated-routing/garbage'), {
+      kind: 'shell',
+      mount: '/simulated-routing',
+      status: 404,
+    });
+  });
+});
+
 describe('mounts', () => {
-  it('cover both sample apps with the shared route table, plus the exhibit', () => {
+  it('cover both sample apps with the shared route table, plus the exhibits', () => {
     assert.deepEqual(Object.keys(mounts), [
       '/app',
       '/app-mobx',
       '/not-found-spa',
+      '/simulated-routing',
     ]);
     for (const mount of ['/app', '/app-mobx']) {
       assert.equal(mounts[mount].routes, routes);

@@ -8,11 +8,18 @@ const router = createServerRouter({ mounts });
 // The 404-pattern exhibit mounts have no shell asset of their own — they
 // serve the vanilla app's (its asset urls are absolute, so the shell works
 // under any prefix). Mounts without an alias serve the shell at their base.
-const SHELL_PATHS: Record<string, string> = { '/not-found-spa': '/app' };
+const SHELL_PATHS: Record<string, string> = {
+  '/not-found-spa': '/app',
+  '/simulated-routing': '/app',
+};
 
 // Every exhibit response carries noindex: the naive rung deliberately serves
 // soft-404s, and the site must not be penalized by its own teaching material.
-const EXHIBITS = new Set(['/not-found-naive', '/not-found-spa']);
+const EXHIBITS = new Set([
+  '/not-found-naive',
+  '/not-found-spa',
+  '/simulated-routing',
+]);
 const noindexed = (mount: string, headers: Headers): Headers => {
   if (EXHIBITS.has(mount)) headers.set('X-Robots-Tag', 'noindex');
   return headers;

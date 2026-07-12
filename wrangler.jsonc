@@ -18,6 +18,8 @@
       "/not-found-naive/*",
       "/not-found-spa",
       "/not-found-spa/*",
+      "/simulated-routing",
+      "/simulated-routing/*",
     ],
   },
 }

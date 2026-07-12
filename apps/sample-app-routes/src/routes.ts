@@ -24,6 +24,9 @@ export const routes: RouteDeclaration[] = [
   { name: 'mymessages.messagelist', url: '/:folderId' },
   { name: 'mymessages.messagelist.message', url: '/:messageId' },
   { name: 'prefs', url: '/prefs' },
+  // Url-less, as in main/states.ts: structural only — never matched, never a
+  // redirect target — but declarable as an otherwise projection.
+  { name: 'notFound' },
 ];
 
 // Mirrors router.config.ts: the app root has no state url; a when(/^\/?$/)
@@ -53,12 +56,29 @@ const notFoundSpaDemo: MountConfig = {
   otherwise: { state: 'notFound' },
 };
 
+// The simulated-routing exhibit: full router semantics server-side — the
+// same tables, but every verdict computed by replaying the url through a
+// headless @uirouter/core router (redirect rules, otherwise, and one day
+// hooks/resolves all ride). Deep links serve shell-200 here, but the shell's
+// baked <base href="/app/"> means the client renders its in-app notFound
+// under this prefix — the exhibit teaches SERVER semantics; noindex (worker)
+// quarantines it from crawlers.
+const simulatedRoutingDemo: MountConfig = {
+  routes,
+  redirects,
+  strategy: 'simulate',
+  otherwise: { state: 'notFound' },
+};
+
 /**
  * Both sample apps run the same route tree, each under its own mount
- * (not-found-static); the demo mount exhibits the not-found-spa pattern.
+ * (not-found-static); the demo mounts exhibit the not-found-spa and
+ * simulated-routing rungs (not-found-naive lives worker-side — it is the
+ * absence of routing config).
  */
 export const mounts: Record<string, MountConfig> = {
   '/app': app,
   '/app-mobx': app,
   '/not-found-spa': notFoundSpaDemo,
+  '/simulated-routing': simulatedRoutingDemo,
 };
