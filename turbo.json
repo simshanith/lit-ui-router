@@ -73,16 +73,13 @@
         "typecheck",
         "format:check",
         "codecov:bundle",
-        "//#check:pack"
+        "release#check:pack"
       ]
     },
     "codecov:bundle": {
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
-    },
-    "//#check:pack": {
-      "inputs": ["$TURBO_DEFAULT$", "**/package.json", "tools/release/**"]
     },
     "//#test:root": {
       "inputs": ["scripts/**"]

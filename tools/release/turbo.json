@@ -6,6 +6,16 @@
       // The root test task's src/** inputs would stale-cache this src-less
       // package; over-approximate instead.
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "check:pack": {
+      // Purely local (pack + inspect the packed manifest), so caching is
+      // sound: the verdict depends only on the manifests, the catalogs that
+      // substitute into them, and this package's own sources.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
     }
   }
 }
