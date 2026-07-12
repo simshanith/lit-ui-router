@@ -8,7 +8,18 @@
     "directory": "./docs/dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    // Only sample-app deep links invoke the worker; other misses serve 404.html.
-    "run_worker_first": ["/app/*", "/app-mobx/*"],
+    // Sample-app deep links and the 404-pattern exhibits invoke the worker;
+    // other misses serve 404.html. Exhibits include their bare paths — no
+    // asset exists there, and the whole prefix is the demo.
+    "run_worker_first": [
+      "/app/*",
+      "/app-mobx/*",
+      "/not-found-naive",
+      "/not-found-naive/*",
+      "/not-found-spa",
+      "/not-found-spa/*",
+      "/simulated-routing",
+      "/simulated-routing/*",
+    ],
   },
 }

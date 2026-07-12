@@ -28,9 +28,9 @@ describe('404 not found', () => {
     cy.contains('404 Page Not Found').should('not.exist');
   });
 
-  // Direct loads of unmatched URLs now get the server 404 (the worker only
-  // serves the shell for real routes), so client-side navigation is the way
-  // to reach the in-router 404 page.
+  // Direct loads of unmatched URLs get the static server 404 (the worker
+  // only serves the shell for real routes), so client-side navigation is the
+  // way to reach the in-router 404 page here.
   it('shows the 404 page for an unmatched URL', () => {
     visitRootWithFeatures();
     cy.contains('Welcome to the sample app!');

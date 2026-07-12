@@ -69,12 +69,19 @@ describe('docs site', () => {
           expect(response.status, `${mount}${path}`).to.eq(200);
           // Prefix only: the mobx shell's title carries a " (MobX)" suffix.
           expect(response.body).to.include('<title>UI-Router Lit sample app');
+          // Flagships are indexable; only the exhibits carry noindex.
+          expect(response.headers, `${mount}${path}`).to.not.have.property(
+            'x-robots-tag',
+          );
         });
       }
     }
   });
 
   it('serves the per-app 404 page for unknown urls under the spa mounts', () => {
+    // The flagship rung (not-found-static): a dedicated 404 page, not the
+    // shell — 404/200 byte-identical shells read as soft-404s and muddy
+    // entrance analytics. The page drives the user back into its own app.
     for (const mount of ['/app', '/app-mobx']) {
       for (const path of [
         '/definitely-not-a-route',
@@ -87,13 +94,87 @@ describe('docs site', () => {
           expect(response.body).to.include(
             '<title>404 | UI-Router Lit sample app',
           );
-          // The page drives the user back into the app that owns the mount.
           expect(response.body).to.include(`href="${mount}/welcome"`);
           expect(response.headers['content-type'], url).to.include('text/html');
           // Not a route, so no canonical Link header (unlike shell 200s).
           expect(response.headers, url).to.not.have.property('link');
+          // Flagships stay indexable; only the exhibits carry noindex.
+          expect(response.headers, url).to.not.have.property('x-robots-tag');
         });
       }
     }
+  });
+
+  it('serves the shell at 200 for everything under the naive exhibit', () => {
+    // The not-found-naive rung: the classic SPA-host fallback (the soft-404
+    // anti-pattern baseline) — no server routing at all.
+    for (const url of [
+      '/not-found-naive',
+      '/not-found-naive/anything/at/all',
+    ]) {
+      cy.request(url).then((response) => {
+        expect(response.status, url).to.eq(200);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+        // Exhibit responses opt out of indexing: this rung IS the soft-404.
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
+      });
+    }
+  });
+
+  it('serves the app shell at 404 under the shell-404 exhibit mount', () => {
+    // The /not-found-spa exhibit: every path is an honest 404 whose body IS
+    // the app shell — the other 404 pattern, demonstrated side by side.
+    for (const url of [
+      '/not-found-spa',
+      '/not-found-spa/',
+      '/not-found-spa/any/path',
+    ]) {
+      cy.request({ url, failOnStatusCode: false }).then((response) => {
+        expect(response.status, url).to.eq(404);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+        expect(response.headers, url).to.not.have.property('link');
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
+      });
+    }
+  });
+
+  it('computes full router verdicts under the simulate exhibit', () => {
+    // The simulated-routing rung: same tables, every verdict computed by a
+    // headless @uirouter/core transition server-side.
+    cy.request({
+      url: '/simulated-routing/?flag=1',
+      followRedirect: false,
+    }).then((response) => {
+      expect(response.status).to.eq(302);
+      expect(response.headers.location).to.eq(
+        '/simulated-routing/welcome?flag=1',
+      );
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+    cy.request('/simulated-routing/welcome').then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body).to.include('<title>UI-Router Lit sample app');
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+    cy.request({
+      url: '/simulated-routing/garbage',
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.eq(404);
+      expect(response.body).to.include('<title>UI-Router Lit sample app');
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+  });
+
+  it('boots the in-app 404 state on a direct exhibit load', () => {
+    cy.visit('/not-found-spa/definitely-not-a-route', {
+      failOnStatusCode: false,
+    });
+    cy.contains('404 Page Not Found');
+    // The unmatched url stays in the address bar (the 404 state is url-less).
+    cy.location('pathname').should(
+      'eq',
+      '/not-found-spa/definitely-not-a-route',
+    );
   });
 });

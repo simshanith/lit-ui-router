@@ -117,6 +117,107 @@ for (const strategy of ['matcher', 'simulate'] as const) {
   });
 }
 
+// The otherwise projection: the mount declares the client's otherwise()
+// mapping (a url-less notFound state), and unknown paths become shell-404
+// verdicts — the shell is the error page, at the retained path.
+const appMountWith404 = (strategy: MountConfig['strategy']): MountConfig => {
+  const mount = appMount(strategy);
+  return {
+    ...mount,
+    routes: [...mount.routes, { name: 'notFound' }],
+    otherwise: { state: 'notFound' },
+  };
+};
+
+for (const strategy of ['matcher', 'simulate'] as const) {
+  describe(`otherwise projection (${strategy} strategy)`, () => {
+    const router = createServerRouter({
+      mounts: { '/app': appMountWith404(strategy) },
+    });
+
+    it('serves the shell at 404 for unknown paths', async () => {
+      assert.deepEqual(await router.resolve('/app/nope'), {
+        kind: 'shell',
+        mount: '/app',
+        status: 404,
+      });
+      assert.deepEqual(await router.resolve('/app/contacts/3/nope'), {
+        kind: 'shell',
+        mount: '/app',
+        status: 404,
+      });
+    });
+
+    it('never outranks a route match or a redirect rule', async () => {
+      // Precedence, as in the client: rules and matchers first, then 404.
+      assert.deepEqual(await router.resolve('/app/welcome'), {
+        kind: 'shell',
+        mount: '/app',
+      });
+      assert.deepEqual(await router.resolve('/app'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/welcome',
+        status: 302,
+      });
+      assert.deepEqual(await router.resolve('/app/legacy'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/contacts',
+        status: 302,
+      });
+    });
+  });
+}
+
+describe('otherwise configuration', () => {
+  it('is per-mount: an undeclared mount keeps its notFound verdict', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': appMountWith404('matcher'),
+        '/other': appMount('matcher'),
+      },
+    });
+    assert.deepEqual(await router.resolve('/app/nope'), {
+      kind: 'shell',
+      mount: '/app',
+      status: 404,
+    });
+    assert.deepEqual(await router.resolve('/other/nope'), {
+      kind: 'notFound',
+      mount: '/other',
+    });
+    assert.deepEqual(await router.resolve('/elsewhere'), { kind: 'notFound' });
+  });
+
+  it('rejects undeclared and url-full otherwise states at construction', () => {
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: {
+            '/app': {
+              routes: [{ name: 'a', url: '/a' }],
+              otherwise: { state: 'missing' },
+            },
+          },
+        }),
+      /otherwise state 'missing' is not declared/,
+    );
+    assert.throws(
+      () =>
+        createServerRouter({
+          mounts: {
+            '/app': {
+              routes: [{ name: 'a', url: '/a' }],
+              otherwise: { state: 'a' },
+            },
+          },
+        }),
+      /must be url-less/,
+    );
+  });
+});
+
 describe('mount handling', () => {
   it('routes to the longest matching mount base', async () => {
     const router = createServerRouter({
