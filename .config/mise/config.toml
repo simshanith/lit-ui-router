@@ -4,9 +4,10 @@
 _.path = ["{{config_root}}/node_modules/.bin"]
 
 [hooks]
-# Corepack shims pnpm into node's bin dir from package.json's packageManager
-# pin; fires on every `mise install` (local and mise-action), even no-ops.
-postinstall = "npx corepack enable"
+# Corepack shims pnpm into node's bin dir and pre-installs the packageManager
+# pin (sha512-verified) from the repo root; fires on every `mise install`
+# (local and mise-action), even no-ops.
+postinstall = "cd {{config_root}} && npx corepack enable && npx corepack install"
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
