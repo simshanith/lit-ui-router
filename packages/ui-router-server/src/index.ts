@@ -1,0 +1,218 @@
+/**
+ * The verdict API: per-mount routing config in, a routing verdict out.
+ * Runtime-agnostic — a pathname (or URL-shaped input) in, a plain verdict
+ * object out; no fetch/Response, no workers types. The server (worker, node,
+ * anything) stays a thin consumer: verdict → HTTP is the caller's one job.
+ *
+ * Strategy tiers, priced separately: 'matcher' mounts are dependency-free
+ * (pattern matching + data redirects); 'simulate' mounts replay the path
+ * through a headless @uirouter/core router (the optional peer dependency),
+ * loaded lazily on first use — a matcher-only configuration never loads
+ * core, and resolve() is async so that boundary can hold.
+ */
+
+import type { RawParams, StateDeclaration } from '@uirouter/core';
+
+import { compileRedirects, compileRoutes, matchRoute } from './redirects.ts';
+import type {
+  CompiledRoute,
+  RedirectRule,
+  RedirectTarget,
+  RouteDeclaration,
+} from './redirects.ts';
+import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
+
+export type {
+  RedirectRule,
+  RedirectTarget,
+  RouteDeclaration,
+} from './redirects.ts';
+
+// setTimeout exists on every target runtime (worker, node, browser) but not
+// in the DOM-free ES lib this package compiles against.
+declare function setTimeout(handler: () => void, ms: number): unknown;
+
+// Transitions settle in microtasks; the timer is only a degrade-to-shell net.
+const SETTLE_TIMEOUT_MS = 100;
+
+export interface MountConfig {
+  /** The mount's state tree; dotted names nest, urls append (see [[RouteDeclaration]]). */
+  routes: RouteDeclaration[];
+  /** when()-style pattern rules, evaluated before per-state redirectTo entries. */
+  redirects?: RedirectRule[];
+  /**
+   * 'matcher' (default): dependency-free pattern matching plus data
+   * redirects. 'simulate': replay through a headless @uirouter/core router —
+   * for routing that data cannot express (hooks, resolves, redirectTo
+   * functions).
+   */
+  strategy?: 'matcher' | 'simulate';
+  /** Matcher compiler options for 'matcher' mounts (defaults: strict, case-sensitive). */
+  config?: UrlMatcherCompilerConfig;
+}
+
+export type Verdict =
+  | { kind: 'shell'; mount: string }
+  | { kind: 'redirect'; mount: string; location: string; status: number }
+  | { kind: 'notFound' };
+
+export interface ServerRouter {
+  /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
+  resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;
+}
+
+interface Mount {
+  base: string;
+  config: MountConfig;
+  strategy: 'matcher' | 'simulate';
+  compiled: {
+    evaluate: (pathname: string) => string | null;
+    routes: CompiledRoute[];
+  } | null;
+}
+
+const pathnameOf = (input: string | { pathname: string }): string => {
+  if (typeof input !== 'string') return input.pathname;
+  // Accept absolute urls without requiring a URL global (runtime-neutral).
+  const path = input.replace(/^[a-z][a-z0-9+.-]*:\/\/[^/?#]*/i, '');
+  const end = path.search(/[?#]/);
+  return end === -1 ? path : path.substring(0, end);
+};
+
+// The pathname within the mount, or null when the mount doesn't own it.
+const subpathIn = (base: string, pathname: string): string | null => {
+  if (base === '/') return pathname;
+  if (pathname === base) return '';
+  if (pathname.startsWith(`${base}/`)) return pathname.substring(base.length);
+  return null;
+};
+
+const join = (base: string, path: string): string =>
+  base === '/' ? path || '/' : base + path;
+
+const toTarget = (to: string | RedirectTarget): RedirectTarget =>
+  typeof to === 'string' ? { state: to } : to;
+
+/**
+ * Compiles a mount table into a resolver. 'matcher' mounts compile (and
+ * validate) eagerly; the first 'simulate' resolution loads @uirouter/core.
+ * The longest matching mount base owns a pathname outright — a verdict
+ * never falls through to a shorter mount.
+ */
+export function createServerRouter(config: {
+  mounts: Record<string, MountConfig>;
+}): ServerRouter {
+  const mounts: Mount[] = Object.entries(config.mounts)
+    .map(([base, mount]) => {
+      if (!base.startsWith('/'))
+        throw new Error(`Mount '${base}' must start with '/'`);
+      const normalized =
+        base !== '/' && base.endsWith('/') ? base.slice(0, -1) : base;
+      const strategy = mount.strategy ?? 'matcher';
+      return {
+        base: normalized,
+        config: mount,
+        strategy,
+        compiled:
+          strategy === 'matcher'
+            ? {
+                evaluate: compileRedirects({
+                  routes: mount.routes,
+                  rules: mount.redirects,
+                  config: mount.config,
+                }),
+                routes: compileRoutes(mount.routes, mount.config),
+              }
+            : null,
+      };
+    })
+    .sort((a, b) => b.base.length - a.base.length);
+  if (new Set(mounts.map((mount) => mount.base)).size !== mounts.length)
+    throw new Error('Mount bases must be unique');
+
+  // The lazy core boundary: the simulate tier enters the module graph only
+  // through this dynamic import, so matcher-only configs never load it.
+  let simulate: Promise<typeof import('./simulate.ts')> | null = null;
+  const loadSimulate = () => (simulate ??= import('./simulate.ts'));
+
+  const resolveMatcher = (mount: Mount, subpath: string): Verdict => {
+    const compiled = mount.compiled!;
+    const redirected = compiled.evaluate(subpath);
+    if (redirected !== null)
+      return {
+        kind: 'redirect',
+        mount: mount.base,
+        location: join(mount.base, redirected),
+        status: 302,
+      };
+    return matchRoute(compiled.routes, subpath) !== null
+      ? { kind: 'shell', mount: mount.base }
+      : { kind: 'notFound' };
+  };
+
+  const resolveSimulate = async (
+    mount: Mount,
+    subpath: string,
+  ): Promise<Verdict> => {
+    const { createHeadlessRouter, onceSettled } = await loadSimulate();
+    // Fresh declarations per call: core mutates registrations, so sharing
+    // them across concurrent resolutions is the hazard the copy prevents.
+    const states: StateDeclaration[] = mount.config.routes.map((route) => ({
+      ...route,
+    }));
+    const router = createHeadlessRouter(states);
+    for (const rule of mount.config.redirects ?? []) {
+      const to = toTarget(rule.to);
+      if (rule.pattern instanceof RegExp) {
+        router.urlService.rules.when(rule.pattern, () => ({
+          state: to.state,
+          params: to.params,
+        }));
+      } else {
+        router.urlService.rules.when(rule.pattern, (params: RawParams) => ({
+          state: to.state,
+          params: { ...params, ...to.params },
+        }));
+      }
+    }
+    if (!router.urlService.match({ path: subpath, search: {}, hash: '' }))
+      return { kind: 'notFound' };
+    const settled = onceSettled(router);
+    router.urlService.url(subpath);
+    router.urlService.sync();
+    const outcome = await Promise.race([
+      settled,
+      new Promise<false>((expire) =>
+        setTimeout(() => expire(false), SETTLE_TIMEOUT_MS),
+      ),
+    ]);
+    // Failed and timed-out transitions degrade to the shell — the client
+    // router re-runs them with its full configuration; never a wrong redirect.
+    if (!outcome) return { kind: 'shell', mount: mount.base };
+    // The memory location only moves when the client's address bar would:
+    // core skips the url push for url-sourced transitions.
+    const landed = router.urlService.url();
+    return landed === subpath
+      ? { kind: 'shell', mount: mount.base }
+      : {
+          kind: 'redirect',
+          mount: mount.base,
+          location: join(mount.base, landed),
+          status: 302,
+        };
+  };
+
+  return {
+    async resolve(pathnameOrUrl) {
+      const pathname = pathnameOf(pathnameOrUrl);
+      for (const mount of mounts) {
+        const subpath = subpathIn(mount.base, pathname);
+        if (subpath === null) continue;
+        return mount.strategy === 'matcher'
+          ? resolveMatcher(mount, subpath)
+          : resolveSimulate(mount, subpath);
+      }
+      return { kind: 'notFound' };
+    },
+  };
+}
