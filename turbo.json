@@ -46,7 +46,7 @@
       "inputs": [".github/**", "$TURBO_DEFAULT$"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "^transit"],
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "with": ["//#typecheck:root"]
     },
