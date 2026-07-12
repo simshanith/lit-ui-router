@@ -1,4 +1,4 @@
-# Standalone actionlint workflow
+# Standalone workflow lint: actionlint (syntax/types) + zizmor (security audits)
 name: Lint workflows
 
 on:
@@ -25,3 +25,6 @@ jobs:
         uses: jdx/mise-action@v4
       - name: Lint workflows
         run: actionlint
+      - name: Audit workflows
+        # --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
+        run: zizmor --offline .github/workflows

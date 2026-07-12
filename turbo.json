@@ -27,7 +27,12 @@
       "outputs": ["coverage/**"]
     },
     "lint": {
-      "with": ["//#lint:root", "//#lint:package-json", "//#lint:workflows"],
+      "with": [
+        "//#lint:root",
+        "//#lint:package-json",
+        "//#lint:workflows",
+        "//#lint:zizmor"
+      ],
       "dependsOn": ["^build"],
       "inputs": [
         "**/*.ts",
@@ -49,6 +54,9 @@
     },
     "//#lint:workflows": {
       "inputs": [".github/**", "$TURBO_DEFAULT$"]
+    },
+    "//#lint:zizmor": {
+      "inputs": [".github/**", "zizmor.yml", "$TURBO_DEFAULT$"]
     },
     "typecheck": {
       "dependsOn": ["^build"],
