@@ -19,6 +19,11 @@
 // a failing exit (default is an informational report — drift usually means "a
 // release is owed", not "the tree is broken").
 //
+// Registry state arrives through published-versions.json, written by
+// resolve-published.ts just before this runs (the root script chains them) —
+// no npm lookups here, so the turbo task caching this check stays a pure
+// function of its file inputs.
+//
 // This file is the IO shell; verdicts and rendering live in the pure,
 // unit-tested ./check-published-diff.core.ts.
 
@@ -36,23 +41,11 @@ import {
   isCleanDiff,
 } from './check-published-diff.core.ts';
 import { pnpmPack } from './pack.ts';
+import { readPublishedVersions } from './published-versions.ts';
 import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 const run = promisify(execFile);
 const MAX_BUFFER = 64 * 1024 * 1024;
-
-/** The `latest` dist-tag for `name`, or undefined when never published. */
-async function publishedLatest(name: string): Promise<string | undefined> {
-  try {
-    const { stdout } = await run('npm', ['view', name, 'dist-tags.latest']);
-    return stdout.trim() || undefined;
-  } catch (error) {
-    // promisified execFile rejects with the child's captured output attached.
-    const { stderr } = (error ?? {}) as { stderr?: string };
-    if (stderr?.includes('E404')) return undefined;
-    throw error;
-  }
-}
 
 /**
  * Pack `dir` the way the publish workflow does and diff against `spec`.
@@ -88,6 +81,7 @@ async function main() {
   const strict = process.argv.includes('--strict');
   const skipBuild = process.argv.includes('--no-build');
 
+  const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(
     (member) =>
@@ -114,7 +108,12 @@ async function main() {
         version?: string;
       }
     ).version;
-    const latest = await publishedLatest(name);
+    if (!(name in published)) {
+      throw new Error(
+        `${name} missing from published-versions.json — stale manifest; re-run the resolve:published task.`,
+      );
+    }
+    const latest = published[name];
     if (!latest) {
       results.push({ name, dir, localVersion, status: 'unpublished' });
       continue;
