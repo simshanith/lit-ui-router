@@ -1,32 +1,38 @@
 <script setup lang="ts">
-import { brandMarks, type Brand } from './brands';
+import { activeId, markFor, type FrameworkEntry } from './frameworks';
 
-const props = defineProps<{
-  name: string;
-  brand: Brand;
-}>();
+const props = defineProps<{ entry: FrameworkEntry }>();
 
-const mark = brandMarks[props.brand];
+const mark = markFor(props.entry);
 </script>
 
 <template>
-  <article class="framework-card">
+  <article
+    class="framework-card"
+    :class="{
+      active: activeId === entry.id,
+      dimmed: activeId !== null && activeId !== entry.id,
+    }"
+    @mouseenter="activeId = entry.id"
+    @mouseleave="activeId = null"
+  >
     <span class="mark">
       <img
         class="mark-light"
         :src="mark.light"
-        :alt="`${name} logo`"
+        :alt="`${entry.name} logo`"
         :style="{ height: `${mark.height}px` }"
       />
       <img
         class="mark-dark"
         :src="mark.dark"
-        :alt="`${name} logo`"
+        :alt="`${entry.name} logo`"
         :style="{ height: `${mark.height}px` }"
       />
     </span>
-    <strong class="name">{{ name }}</strong>
-    <p class="blurb"><slot /></p>
+    <strong class="name">{{ entry.name }}</strong>
+    <!-- blurbs are authored strings from frameworks.ts, not user input -->
+    <p class="blurb" v-html="entry.blurb"></p>
   </article>
 </template>
 
@@ -42,14 +48,22 @@ const mark = brandMarks[props.brand];
   transition:
     transform 0.15s ease,
     border-color 0.15s ease,
-    box-shadow 0.15s ease;
+    box-shadow 0.15s ease,
+    opacity 0.15s ease;
+}
+
+.framework-card.active {
+  border-color: var(--vp-c-brand-1);
+  box-shadow: var(--vp-shadow-2);
+}
+
+.framework-card.dimmed {
+  opacity: 0.6;
 }
 
 @media (hover: hover) {
   .framework-card:hover {
     transform: translateY(-2px);
-    border-color: var(--vp-c-brand-1);
-    box-shadow: var(--vp-shadow-2);
   }
 }
 

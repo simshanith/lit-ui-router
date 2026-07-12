@@ -1,6 +1,13 @@
+<script setup lang="ts">
+import { frameworks } from './frameworks';
+import FrameworkCard from './FrameworkCard.vue';
+
+const carded = frameworks.filter((f) => f.blurb);
+</script>
+
 <template>
   <div class="framework-cards">
-    <slot />
+    <FrameworkCard v-for="f in carded" :key="f.id" :entry="f" />
   </div>
 </template>
 
