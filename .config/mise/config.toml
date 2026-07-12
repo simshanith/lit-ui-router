@@ -12,12 +12,24 @@ idiomatic_version_file_enable_tools = ["node"]
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
 
+# Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
+# loud; and tool-only bumps (actionlint) skip the corepack ceremony.
+# snake_case names (bazel target convention, where mise monorepo tasks are
+# trending); no colons — mise monorepo task addressing claims `:`.
+[tasks.corepack_enable]
+description = "Shim the corepack-managed package managers onto PATH"
+run = "corepack enable"
+
+[tasks.corepack_install]
+# Materializes the packageManager pin (sha512-verified) in corepack's cache.
+description = "Install the packageManager-pinned pnpm into the corepack cache"
+run = "corepack install"
+
 [tasks.corepack]
-# Provisioning leg: shims pnpm and materializes the packageManager pin
-# (sha512-verified) into corepack's cache. A task, not a hook: hooks
-# warn-and-continue, task failures are loud; and tool-only bumps skip it.
-description = "Enable corepack and install the packageManager-pinned pnpm"
-run = "corepack enable && corepack install"
+# Virtual grouping task; the two legs are order-independent and may run
+# in parallel (enable writes shims, install populates COREPACK_HOME).
+description = "Provision the packageManager-pinned pnpm via corepack"
+depends = ["corepack_enable", "corepack_install"]
 
 [tasks.setup]
 # Bootstrap layer: the one step pnpm scripts can't own (no node_modules yet).
