@@ -1,7 +1,10 @@
-// ESLint is retained solely for package.json linting (eslint-plugin-package-json).
+// ESLint lints manifests only: package.json (eslint-plugin-package-json,
+// eslint-plugin-pnpm) and pnpm-workspace.yaml (eslint-plugin-pnpm).
 // All JS/TS linting lives in oxlint (.oxlintrc.json).
 import { defineConfig, globalIgnores } from 'eslint/config';
+import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
+import pluginPnpm from 'eslint-plugin-pnpm';
 
 export default defineConfig(
   globalIgnores([
@@ -23,4 +26,47 @@ export default defineConfig(
       ],
     },
   },
+  pluginPnpm.configs.json,
+  pluginPnpm.configs.yaml,
+  {
+    files: ['**/package.json'],
+    rules: {
+      'pnpm/json-enforce-catalog': [
+        'error',
+        {
+          // Mirror scripts/check-catalog.core.ts MANAGED_PREFIXES: aliases stay inline.
+          allowedProtocols: ['workspace', 'link', 'file', 'portal', 'npm'],
+          fields: [
+            'dependencies',
+            'devDependencies',
+            'peerDependencies',
+            'optionalDependencies',
+          ],
+          // vue-check pins real TypeScript 6 for the vue-tsc JS API; the catalog is TS 7.
+          ignores: ['typescript'],
+        },
+      ],
+      // autoInsert would fix a missing catalog entry by inventing ^0.0.0.
+      'pnpm/json-valid-catalog': ['error', { autoInsert: false }],
+    },
+  },
+  {
+    // examples/* are standalone `npm ci` projects (StackBlitz): inline versions required.
+    files: ['examples/*/package.json'],
+    rules: {
+      'pnpm/json-enforce-catalog': 'off',
+    },
+  },
+  {
+    files: ['pnpm-workspace.yaml'],
+    rules: {
+      // name-only would flag the intentional publishedPeer/typescript6-compat/vitepress1 pins.
+      'pnpm/yaml-no-duplicate-catalog-item': [
+        'error',
+        { checkDuplicates: 'exact-version' },
+      ],
+    },
+  },
+  // Keep last: disables any rules oxlint already enforces (no-op while eslint lints no JS/TS).
+  oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 );

@@ -40,7 +40,12 @@
       "inputs": ["examples/**/*.{ts,js}", ".oxlintrc.json", "$TURBO_DEFAULT$"]
     },
     "//#lint:package-json": {
-      "inputs": ["**/package.json", "eslint.config.js"]
+      "inputs": [
+        "**/package.json",
+        "eslint.config.js",
+        "pnpm-workspace.yaml",
+        ".oxlintrc.json"
+      ]
     },
     "//#lint:workflows": {
       "inputs": [".github/**", "$TURBO_DEFAULT$"]

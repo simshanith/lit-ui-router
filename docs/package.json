@@ -15,18 +15,18 @@
     "wrangler:dev": "wrangler dev"
   },
   "dependencies": {
-    "@spectrum-web-components/icons-workflow": "^1.12.1",
+    "@spectrum-web-components/icons-workflow": "catalog:",
     "sample-app-lit-mobx": "workspace:*",
     "sample-app-lit-vanilla": "workspace:*",
-    "screenfull": "^6.0.2",
-    "vue": "^3.5.39"
+    "screenfull": "catalog:",
+    "vue": "catalog:"
   },
   "devDependencies": {
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:vitepress1",
-    "vitepress": "^1.6.4",
+    "vitepress": "catalog:",
     "vue-check": "workspace:*",
     "wrangler": "catalog:"
   }
