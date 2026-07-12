@@ -35,11 +35,10 @@ for (const strategy of ['matcher', 'simulate'] as const) {
       mounts: { '/app': appMount(strategy) },
     });
 
-    it('serves the shell for plain routes', async () => {
-      assert.deepEqual(await router.resolve('/app/welcome'), {
-        kind: 'shell',
-        mount: '/app',
-      });
+    it('serves the shell for plain routes, status absent (default handling)', async () => {
+      const verdict = await router.resolve('/app/welcome');
+      assert.deepEqual(verdict, { kind: 'shell', mount: '/app' });
+      assert.ok(!('status' in verdict));
       assert.deepEqual(await router.resolve('/app/contacts/3'), {
         kind: 'shell',
         mount: '/app',

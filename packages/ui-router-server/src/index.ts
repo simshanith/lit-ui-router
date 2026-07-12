@@ -63,8 +63,19 @@ export interface MountConfig {
   config?: UrlMatcherCompilerConfig;
 }
 
+// Discriminate on `kind`. (Consumer note: under oxlint's
+// switch-exhaustiveness-check + consistent-return combination, an if-chain
+// reads cleaner than a switch over this union.)
 export type Verdict =
-  /** Serve the app shell. `status` is absent for a plain 200 today; a future data tier may set 401/403-with-shell. */
+  /**
+   * Serve the app shell. Status precedence: when `status` is absent (always,
+   * today), serve the shell however you normally would — including 304
+   * conditional responses. When a future data tier sets it (401/403-with-
+   * shell), the verdict's status wins outright AND suppresses conditional-
+   * response passthrough: a 304 has no body and would let an unauthorized
+   * probe read cache freshness, so never let an asset-layer 304 clobber an
+   * explicit status.
+   */
   | { kind: 'shell'; mount: string; status?: number }
   /**
    * Redirect to `location`: the mount-joined target path, which MAY carry
