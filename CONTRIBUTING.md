@@ -7,12 +7,12 @@ This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by c
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
 mise trust
-mise install
-pnpm install
+mise install     # provisions node + corepack-pinned pnpm
+mise run setup   # installs workspace dependencies
 turbo build
 ```
 
-`mise install` provisions the pinned Node and runs `corepack enable`, which shims the `packageManager`-pinned pnpm into node's bin dir — no separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
+`mise install` provisions the pinned Node and runs `corepack enable`, which shims the `packageManager`-pinned pnpm into node's bin dir — no separate `nvm use`, `pnpm add --global`, or global turbo needed. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): it runs `pnpm install`, frozen-lockfile automatically in CI. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
 ## Running Tests
 
@@ -82,7 +82,7 @@ for hand-typed `merge <x> into <y>` freshens. To check a message locally:
 echo "feat(scope): my subject" | pnpm exec commitlint
 ```
 
-Commits are also checked at commit time: `pnpm install` installs a
+Commits are also checked at commit time: `mise run setup` (pnpm install) installs a
 [husky](https://typicode.github.io/husky/) `commit-msg` hook (via the root
 `prepare` script) that runs commitlint locally, and CI re-checks the same
 messages via the `lint_pr_commits` job. If the hook is missing — pnpm 11
