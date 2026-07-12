@@ -21,6 +21,7 @@ import {
   formatReport,
   type PackResult,
 } from './check-pack.core.ts';
+import { pnpmPack } from './pack.ts';
 import type { PackageManifest } from './types.ts';
 import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
@@ -29,18 +30,6 @@ const run = promisify(execFile);
 // A package.json is always a JSON object; anything else can't hold dep fields.
 function isPackageManifest(value: unknown): value is PackageManifest {
   return typeof value === 'object' && value !== null;
-}
-
-/** `pnpm pack` in `cwd`; falls back to corepack when pnpm is not on PATH. */
-async function pnpmPack(cwd: string, tarball: string): Promise<void> {
-  const args = ['pack', '--out', tarball];
-  try {
-    await run('pnpm', args, { cwd });
-  } catch (error) {
-    // ENOENT means pnpm is not on PATH; any other failure is pack's own.
-    if ((error as NodeJS.ErrnoException | null)?.code !== 'ENOENT') throw error;
-    await run('corepack', ['pnpm', ...args], { cwd });
-  }
 }
 
 /** Pack one package and return the manifest from inside the tarball. */

@@ -85,11 +85,21 @@ export function formatReport(results: PackResult[]): Report {
 // about to hand release-it. These checks are that gate.
 
 /**
+ * The manifest fields publish-npm.yml's Pack step deletes before `pnpm pack`
+ * (`npm pkg delete ...STRIPPED_MANIFEST_FIELDS`). The single source of truth
+ * for the strip: the packed-manifest gate fails when any of them survive, and
+ * anything reproducing the Pack step (e.g. check-published-diff) should build
+ * its delete args from this list.
+ */
+export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
+
+/**
  * Violations in the manifest npm would publish, as human-readable strings.
  *
  * Semantics match the inline workflow check this replaces:
- * - devDependencies and scripts must be absent — a present-but-empty object
- *   still fails, because the strip step should have deleted the key.
+ * - Every {@link STRIPPED_MANIFEST_FIELDS} field must be absent — a
+ *   present-but-empty object still fails, because the strip step should have
+ *   deleted the key.
  * - No `catalog:`/`workspace:` anywhere in the serialized runtime dependency
  *   fields. Deliberately blunter than {@link findUnsubstitutedRefs}: a
  *   substring test instead of a prefix test, because at publish time ANY
@@ -100,11 +110,10 @@ export function findPackedManifestViolations(
   manifest: PackageManifest,
 ): string[] {
   const violations: string[] = [];
-  if (manifest.devDependencies) {
-    violations.push('devDependencies leaked into packed manifest');
-  }
-  if (manifest.scripts) {
-    violations.push('scripts leaked into packed manifest');
+  for (const field of STRIPPED_MANIFEST_FIELDS) {
+    if (manifest[field]) {
+      violations.push(`${field} leaked into packed manifest`);
+    }
   }
   const runtime = JSON.stringify([
     manifest.dependencies,
