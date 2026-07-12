@@ -4,6 +4,10 @@ import { activeId, markFor, type FrameworkEntry } from './frameworks';
 const props = defineProps<{ entry: FrameworkEntry }>();
 
 const mark = markFor(props.entry);
+
+function toggle() {
+  activeId.value = activeId.value === props.entry.id ? null : props.entry.id;
+}
 </script>
 
 <template>
@@ -13,8 +17,8 @@ const mark = markFor(props.entry);
       active: activeId === entry.id,
       dimmed: activeId !== null && activeId !== entry.id,
     }"
-    @mouseenter="activeId = entry.id"
-    @mouseleave="activeId = null"
+    data-fw-toggle
+    @click="toggle"
   >
     <span class="mark">
       <img
@@ -61,10 +65,15 @@ const mark = markFor(props.entry);
   opacity: 0.6;
 }
 
+/* cosmetic lift only — linked highlighting is click-intent */
 @media (hover: hover) {
   .framework-card:hover {
     transform: translateY(-2px);
   }
+}
+
+.framework-card {
+  cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
