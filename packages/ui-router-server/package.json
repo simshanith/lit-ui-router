@@ -15,7 +15,8 @@
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@types/node": "catalog:",
