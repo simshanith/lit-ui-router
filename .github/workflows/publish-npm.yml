@@ -65,7 +65,7 @@ jobs:
         # npm >= 11.5.1 required for OIDC trusted publishing
         run: npm install -g npm@latest
       - name: Install dependencies
-        run: pnpm install --frozen-lockfile
+        run: mise run setup
       - name: Map npm name to directory
         run: |
           PACKAGE_DIR="$(realpath -s --relative-to="." "$(pnpm list --depth -1 --parseable --filter "$PACKAGE_NAME")")"
