@@ -2,7 +2,7 @@
 
 ## Development
 
-This repo uses [mise](https://mise.jdx.dev) to provision the Node.js, pnpm, and turbo versions used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm and turbo are pinned in [`.config/mise/config.toml`](./.config/mise/config.toml).
+This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm is pinned (with an integrity hash) by `packageManager` in [`package.json`](./package.json) and provisioned by corepack, which a mise `postinstall` hook enables; turbo is the workspace devDependency, resolved from `node_modules/.bin`, which mise puts on `PATH`.
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
@@ -12,7 +12,7 @@ pnpm install
 turbo build
 ```
 
-`mise install` provisions the pinned Node, pnpm, and turbo (as a global tool) and puts them on `PATH` via mise's shims — no separate `nvm use` or `pnpm add --global` needed. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
+`mise install` provisions the pinned Node and runs `corepack enable`, which shims the `packageManager`-pinned pnpm into node's bin dir — no separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
 ## Running Tests
 

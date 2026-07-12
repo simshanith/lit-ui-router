@@ -3,12 +3,14 @@
 # (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
 _.path = ["{{config_root}}/node_modules/.bin"]
 
+[hooks]
+# Corepack shims pnpm into node's bin dir from package.json's packageManager
+# pin; fires on every `mise install` (local and mise-action), even no-ops.
+postinstall = "npx corepack enable"
+
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
-# keep in sync with package.json's packageManager/devDependencies pins
-pnpm = "11.10.0"
-"npm:turbo" = "2.10.4"
 "aqua:rhysd/actionlint" = "1.7.12"
