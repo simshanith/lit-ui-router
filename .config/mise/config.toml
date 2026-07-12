@@ -45,7 +45,7 @@ depends = ["corepack_enable", "corepack_install"]
 # Flow: mise trust && mise install && mise run setup.
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
-description = "Install workspace dependencies with the corepack-provisioned pnpm"
+description = "Install workspace dependencies with the pnpm on PATH"
 depends = ["corepack"]
 run = "pnpm install"
 
