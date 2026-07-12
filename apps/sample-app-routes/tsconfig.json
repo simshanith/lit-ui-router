@@ -9,8 +9,5 @@
     "lib": ["ES2022"],
     "types": []
   },
-  // ui-router-server's sources enter this program through imports only, so
-  // its ambient runtime-neutrality shims (never imported) must be included
-  // explicitly or URLSearchParams/setTimeout are TS2304s here.
-  "include": ["src/**/*", "../../packages/ui-router-server/src/globals.d.ts"]
+  "include": ["src/**/*"]
 }
