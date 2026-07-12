@@ -51,6 +51,23 @@ export default defineConfig(
     },
   },
   {
+    // Root scripts must not execute another workspace package's files: the
+    // owning package exposes a script and the root delegates (turbo run <task>
+    // or pnpm --filter). scripts/** stays runnable — the root owns it.
+    files: ['package.json'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +(?:\\.\\u002F)?(?:tools|packages|apps|docs|examples)\\u002F/]',
+          message:
+            "Cross-package execution: root scripts must not run another package's files with node/tsx. Add a script to the owning package and delegate via `turbo run <task>` (cached) or `pnpm --filter <pkg> run <script>` (uncached).",
+        },
+      ],
+    },
+  },
+  {
     // examples/* are standalone `npm ci` projects (StackBlitz): inline versions required.
     files: ['examples/*/package.json'],
     rules: {
