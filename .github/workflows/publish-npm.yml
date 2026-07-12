@@ -122,4 +122,17 @@ jobs:
         # a bare `npm publish` re-packs from source and ships raw
         # catalog:/workspace: refs npm can't resolve (broke 1.3.0–1.5.0)
         # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
-        run: pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" ${{ inputs.dryRun && '--dry-run' || '' }}
+        # gitRawCommitsOpts.from: release-it's secondLatestTag is computed
+        # without tagMatch (repo-wide `rev-list --tags`), so in this monorepo
+        # the conventional-changelog plugin's commit range can start at ANOTHER
+        # package's newer tag, come up empty after path filtering, and silently
+        # fall back to the flat git-log changelog (#302). Pin the range to this
+        # package's own previous tag; a first release has none and skips the
+        # override.
+        run: |
+          PREV_TAG=$(git describe --tags --match="${PACKAGE_NAME}@*" --exclude="${PACKAGE_NAME}@${RELEASE_VERSION}" --abbrev=0 2>/dev/null || true)
+          CHANGELOG_ARGS=()
+          if [ -n "$PREV_TAG" ]; then
+            CHANGELOG_ARGS+=("--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=$PREV_TAG")
+          fi
+          pnpm --filter ${{ env.PACKAGE_NAME }} exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" "${CHANGELOG_ARGS[@]}" ${{ inputs.dryRun && '--dry-run' || '' }}
