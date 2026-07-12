@@ -19,6 +19,7 @@ export type DependencyMap = Record<string, unknown>;
 export type PackageManifest = {
   name?: string;
   private?: boolean;
+  scripts?: Record<string, unknown>;
   dependencies?: DependencyMap;
   devDependencies?: DependencyMap;
   peerDependencies?: DependencyMap;

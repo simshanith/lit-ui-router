@@ -1,7 +1,13 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { findUnsubstitutedRefs, formatReport } from './check-pack.core.ts';
+import {
+  findPackedManifestViolations,
+  findUnsubstitutedRefs,
+  formatPackedManifestReport,
+  formatReport,
+  STRIPPED_MANIFEST_FIELDS,
+} from './check-pack.core.ts';
 
 describe('findUnsubstitutedRefs', () => {
   it('passes a fully substituted manifest', () => {
@@ -90,5 +96,103 @@ describe('formatReport', () => {
     const { ok, text } = formatReport([]);
     assert.equal(ok, false);
     assert.match(text, /no publishable workspace packages/);
+  });
+});
+
+describe('findPackedManifestViolations', () => {
+  it('passes a clean packed manifest', () => {
+    const manifest = {
+      name: 'lit-ui-router',
+      dependencies: { '@uirouter/core': '^6.0.8' },
+      peerDependencies: { lit: '^3.0.0' },
+    };
+    assert.deepEqual(findPackedManifestViolations(manifest), []);
+  });
+
+  it('flags devDependencies, even when empty (the key should be deleted)', () => {
+    assert.deepEqual(findPackedManifestViolations({ devDependencies: {} }), [
+      'devDependencies leaked into packed manifest',
+    ]);
+  });
+
+  it('flags scripts, even when empty (the key should be deleted)', () => {
+    assert.deepEqual(findPackedManifestViolations({ scripts: {} }), [
+      'scripts leaked into packed manifest',
+    ]);
+  });
+
+  it('flags catalog:/workspace: anywhere in the runtime dependency fields', () => {
+    assert.deepEqual(
+      findPackedManifestViolations({
+        dependencies: { lit: 'catalog:publishedPeer' },
+      }),
+      ['unsubstituted refs in packed manifest'],
+    );
+    assert.deepEqual(
+      findPackedManifestViolations({
+        peerDependencies: { 'lit-ui-router': 'workspace:^' },
+      }),
+      ['unsubstituted refs in packed manifest'],
+    );
+    // Substring semantics, blunter than findUnsubstitutedRefs's prefix test:
+    // an aliased spec embedding the protocol mid-string still fails.
+    assert.deepEqual(
+      findPackedManifestViolations({
+        optionalDependencies: { alias: 'npm:workspace:^1.0.0' },
+      }),
+      ['unsubstituted refs in packed manifest'],
+    );
+  });
+
+  it('does not scan devDependencies for refs — their presence alone fails', () => {
+    assert.deepEqual(
+      findPackedManifestViolations({ devDependencies: { vitest: 'catalog:' } }),
+      ['devDependencies leaked into packed manifest'],
+    );
+  });
+
+  it('reports every violation class at once', () => {
+    const manifest = {
+      scripts: { build: 'turbo run build' },
+      devDependencies: { vitest: '^4.1.9' },
+      dependencies: { lit: 'catalog:publishedPeer' },
+    };
+    assert.deepEqual(findPackedManifestViolations(manifest), [
+      'devDependencies leaked into packed manifest',
+      'scripts leaked into packed manifest',
+      'unsubstituted refs in packed manifest',
+    ]);
+  });
+
+  it('ignores an empty manifest', () => {
+    assert.deepEqual(findPackedManifestViolations({}), []);
+  });
+});
+
+describe('formatPackedManifestReport', () => {
+  it('passes when there are no violations', () => {
+    const { ok, text } = formatPackedManifestReport([]);
+    assert.equal(ok, true);
+    assert.match(text, /packed manifest clean/);
+  });
+
+  it('fails and lists every violation', () => {
+    const { ok, text } = formatPackedManifestReport([
+      'devDependencies leaked into packed manifest',
+      'scripts leaked into packed manifest',
+    ]);
+    assert.equal(ok, false);
+    assert.match(text, /✗ packed manifest check failed/);
+    assert.match(text, /devDependencies leaked/);
+    assert.match(text, /scripts leaked/);
+  });
+});
+
+describe('STRIPPED_MANIFEST_FIELDS', () => {
+  it("matches publish-npm.yml's `npm pkg delete` list", () => {
+    // The Pack step runs `npm pkg delete devDependencies scripts`; consumers
+    // (the packed-manifest gate, check-published-diff) derive from this list,
+    // so a change here must be mirrored in the workflow — and vice versa.
+    assert.deepEqual(STRIPPED_MANIFEST_FIELDS, ['devDependencies', 'scripts']);
   });
 });

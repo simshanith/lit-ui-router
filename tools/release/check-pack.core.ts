@@ -77,3 +77,63 @@ export function formatReport(results: PackResult[]): Report {
   }
   return { ok: false, text: lines.join('\n') };
 }
+
+// ── Packed-manifest gate (publish workflow) ─────────────────────────────────
+// The publish workflow strips devDependencies and scripts before `pnpm pack`
+// (dev-only metadata that leaks private workspace names and monorepo-only
+// commands into the published manifest), then re-checks the tarball it is
+// about to hand release-it. These checks are that gate.
+
+/**
+ * The manifest fields publish-npm.yml's Pack step deletes before `pnpm pack`
+ * (`npm pkg delete ...STRIPPED_MANIFEST_FIELDS`). The single source of truth
+ * for the strip: the packed-manifest gate fails when any of them survive, and
+ * anything reproducing the Pack step (e.g. check-published-diff) should build
+ * its delete args from this list.
+ */
+export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
+
+/**
+ * Violations in the manifest npm would publish, as human-readable strings.
+ *
+ * Semantics match the inline workflow check this replaces:
+ * - Every {@link STRIPPED_MANIFEST_FIELDS} field must be absent — a
+ *   present-but-empty object still fails, because the strip step should have
+ *   deleted the key.
+ * - No `catalog:`/`workspace:` anywhere in the serialized runtime dependency
+ *   fields. Deliberately blunter than {@link findUnsubstitutedRefs}: a
+ *   substring test instead of a prefix test, because at publish time ANY
+ *   trace of those protocols ships a broken release (the 1.3.0–1.5.0 class).
+ *   devDependencies are not scanned — their mere presence already fails.
+ */
+export function findPackedManifestViolations(
+  manifest: PackageManifest,
+): string[] {
+  const violations: string[] = [];
+  for (const field of STRIPPED_MANIFEST_FIELDS) {
+    if (manifest[field]) {
+      violations.push(`${field} leaked into packed manifest`);
+    }
+  }
+  const runtime = JSON.stringify([
+    manifest.dependencies,
+    manifest.peerDependencies,
+    manifest.optionalDependencies,
+  ]);
+  if (/catalog:|workspace:/.test(runtime)) {
+    violations.push('unsubstituted refs in packed manifest');
+  }
+  return violations;
+}
+
+/** Render the packed-manifest report. */
+export function formatPackedManifestReport(violations: string[]): Report {
+  if (violations.length === 0) {
+    return { ok: true, text: '✓ packed manifest clean' };
+  }
+  const lines = [
+    '✗ packed manifest check failed — this tarball must not be published:',
+    ...violations.map((violation) => `  • ${violation}`),
+  ];
+  return { ok: false, text: lines.join('\n') };
+}
