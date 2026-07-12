@@ -53,8 +53,6 @@ jobs:
           # The Install Cypress step below downloads the binary; skipping it
           # here keeps download noise out of the pnpm postinstall output.
           CYPRESS_INSTALL_BINARY: '0'
-      - name: Add workspace binaries to PATH
-        run: echo "${{ github.workspace }}/node_modules/.bin" >> "$GITHUB_PATH"
       - name: Install Playwright Browsers
         run: playwright install --with-deps
       - name: Install Cypress
