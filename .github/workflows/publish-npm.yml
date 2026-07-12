@@ -68,11 +68,11 @@ jobs:
       - name: Resolve package
         # tag → package name (hostile-refname safe) → workspace directory
         id: info
-        run: mise run release_package_info
+        run: mise run //tools/release:package_info
         env:
           PACKAGE_INPUT: ${{ inputs.package }}
       - name: Build
-        run: mise run release_build
+        run: mise run //tools/release:build
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
@@ -82,13 +82,13 @@ jobs:
         # strip devDependencies/scripts → pnpm pack → restore (try/finally);
         # the tarball feeds the attestation, the manifest gate, and the publish
         id: pack
-        run: mise run release_pack
+        run: mise run //tools/release:pack
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           PACKAGE_DIR: ${{ steps.info.outputs.package_dir }}
       - name: Check packed manifest
         # no devDependencies, no scripts, and no unsubstituted catalog:/workspace: refs may ship
-        run: mise run release_check_tarball
+        run: mise run //tools/release:check_tarball
         env:
           TARBALL: ${{ steps.pack.outputs.tarball }}
       - name: Attest build provenance
@@ -102,7 +102,7 @@ jobs:
         # release-it publishes the attested tarball and cuts the GitHub
         # release in one invocation; the argv (and the #302 changelog-range
         # pin) is built by the engine seam — see tools/release/src/steps/release-publish.ts
-        run: mise run release_publish
+        run: mise run //tools/release:publish
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           TARBALL: ${{ steps.pack.outputs.tarball }}

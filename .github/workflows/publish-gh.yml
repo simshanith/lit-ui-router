@@ -3,8 +3,8 @@
 # Uses release-it with --no-increment to tag the current version without bumping.
 #
 # YAML here is triggers/permissions/secrets/environment/concurrency only; the
-# pipeline logic lives in tools/release (mise tasks release_tag and
-# release_tag_push), inputs flow through step env — never `${{ }}` inside run
+# pipeline logic lives in tools/release (mise tasks //tools/release:tag and
+# :tag_push), inputs flow through step env — never `${{ }}` inside run
 # lines.
 name: Tag & push
 
@@ -29,8 +29,8 @@ env:
 # then deletes the tag from the remote.
 # The queue alone is not enough: release-it's own push sends main + tag
 # together, so a main push that lands mid-run rejects the whole push and the
-# rollback deletes the tag. Hence tagging (release_tag, --git.push false) and
-# pushing (release_tag_push, tag ref only) are separate tasks.
+# rollback deletes the tag. Hence tagging (:tag, --git.push false) and
+# pushing (:tag_push, tag ref only) are separate tasks.
 concurrency:
   group: tag-release
 
@@ -56,7 +56,7 @@ jobs:
           fetch-tags: true
           # PAT (not GITHUB_TOKEN): the pushed tag must trigger publish-npm,
           # and the default token can't trigger other workflows. The push in
-          # release_tag_push rides these persisted credentials.
+          # //tools/release:tag_push rides these persisted credentials.
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Setup mise
         uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
@@ -66,9 +66,9 @@ jobs:
       - name: Install dependencies
         run: mise run setup
       - name: Setup Git user
-        run: mise run release_git_user
+        run: mise run //tools/release:git_user
       - name: Tag
-        run: mise run release_tag
+        run: mise run //tools/release:tag
         # continue-on-error: Tagging is idempotent - if tag exists, we succeed anyway
         continue-on-error: true
         env:
@@ -77,7 +77,7 @@ jobs:
           DRY_RUN: ${{ inputs.dryRun }}
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Push tag
-        run: mise run release_tag_push
+        run: mise run //tools/release:tag_push
         # continue-on-error: a tag existing on the remote at a different commit is
         # rejected here, matching the previous tag-exists behavior
         continue-on-error: true

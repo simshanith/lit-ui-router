@@ -1,0 +1,72 @@
+# Release pipeline tasks — one per release-workflow step, addressed as
+# //tools/release:<step> (monorepo task addressing; the root config declares
+# this directory in [monorepo].config_roots). Tasks run from THIS directory,
+# so run lines are src/-relative. The workflows are triggers/permissions/
+# secrets/environments/concurrency plus single-line `mise run` steps. Inputs
+# arrive via step `env:` blocks (never `${{ }}` interpolated into run lines);
+# results flow forward as GITHUB_OUTPUT step outputs written by the tools.
+# Each task's env contract is noted below; secrets stay in workflow step env,
+# NEVER in mise [env] (which would override the step's). Keep this file
+# [tasks]-only: root [env]/_.path and [tools] are inherited, and a tasks-only
+# config stays inert for shells that merely cd in here.
+# `depends = ["//:setup"]` keeps every task runnable from a fresh clone; a
+# warm re-run of setup is a sub-second no-op.
+
+[tasks.git_user]
+# env: none. Refuses outside GITHUB_ACTIONS — writes --global git config.
+description = "Configure the github-actions[bot] git identity (CI only)"
+run = "node src/steps/release-git-user.ts"
+
+[tasks.package_info]
+# env: PACKAGE_INPUT (manual dispatch) | GITHUB_REF (tag push).
+# outputs: package_name, package_dir.
+description = "Resolve the target package name and workspace directory"
+depends = ["//:setup"]
+run = "node src/steps/release-package-info.ts"
+
+[tasks.build]
+# env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
+# dir: workspace root — turbo run from inside a package adds that package to
+# the scope alongside the explicit <pkg>#build spec; pin the cwd instead.
+description = "Build one package and its workspace deps via turbo"
+depends = ["//:setup"]
+dir = "../.."
+run = 'turbo run "${PACKAGE_NAME:?}#build"'
+
+[tasks.pack]
+# env: PACKAGE_NAME, PACKAGE_DIR. outputs: tarball.
+description = "Pack the publish tarball with a dev-stripped manifest"
+depends = ["//:setup"]
+run = "node src/steps/release-pack.ts"
+
+[tasks.check_tarball]
+# env: TARBALL (absolute, from pack's output). Gates devDependencies/
+# scripts/catalog:/workspace: leaks.
+description = "Check the packed tarball's manifest before publishing"
+depends = ["//:setup"]
+run = 'node src/checks/check-packed-manifest.ts "${TARBALL:?}"'
+
+[tasks.tag]
+# env: PACKAGE, DRY_RUN. Tags locally only; tag_push pushes the ref.
+description = "Tag the current version of a package (local tag only)"
+depends = ["//:setup"]
+run = "node src/steps/release-tag.ts"
+
+[tasks.tag_push]
+# env: PACKAGE, DRY_RUN. Pushes exactly refs/tags/<package>@<version>.
+description = "Push a package's release tag ref"
+depends = ["//:setup"]
+run = "node src/steps/release-tag-push.ts"
+
+[tasks.publish]
+# env: PACKAGE_NAME, TARBALL, DRY_RUN, GITHUB_TOKEN (GitHub release; npm is OIDC).
+description = "Publish the packed tarball to npm and cut the GitHub release"
+depends = ["//:setup"]
+run = "node src/steps/release-publish.ts"
+
+[tasks.bump]
+# env: PACKAGE, INCREMENT, OTHER_INCREMENT, PR_BASE, BRANCH_PREFIX_INPUT,
+# DRY_RUN, GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
+description = "Compute the bumped version, branch, commit, push, and open the release PR"
+depends = ["//:setup"]
+run = "node src/steps/release-bump.ts"

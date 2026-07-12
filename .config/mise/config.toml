@@ -1,4 +1,15 @@
 # One version authority per tool — see the toolchain table in CONTRIBUTING.md.
+
+# Monorepo task addressing (`mise run '//tools/release:pack'`): task defs live
+# beside the code they run. Root trust covers every config_root below, so the
+# usual `mise trust` (or mise-action's MISE_TRUSTED_CONFIG_PATHS) is enough.
+monorepo_root = true
+
+[monorepo]
+# Explicit roots — mise deprecated filesystem auto-discovery. A glob only
+# matches directories that actually carry a mise config.
+config_roots = ["tools/*"]
+
 [env]
 # Workspace binaries win over mise tools/globals; absolute via config_root
 # (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
@@ -23,8 +34,8 @@ idiomatic_version_file_enable_tools = ["node"]
 
 # Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
 # loud; and tool-only bumps (actionlint) skip the corepack ceremony.
-# snake_case names (bazel target convention, where mise monorepo tasks are
-# trending); no colons — mise monorepo task addressing claims `:`.
+# snake_case names (bazel target convention); no colons in task names — mise
+# monorepo task addressing owns `:` (see the config_roots above).
 [tasks.corepack_enable]
 description = "Shim the corepack-managed package managers onto PATH"
 run = "corepack enable"
@@ -64,66 +75,6 @@ description = "Lint and audit GitHub Actions workflows"
 depends = ["lint_actionlint", "lint_zizmor"]
 
 # ── Release pipeline ────────────────────────────────────────────────────────
-# One task per release-workflow step; the workflows are triggers/permissions/
-# secrets/environments/concurrency plus single-line `mise run` steps. Inputs
-# arrive via step `env:` blocks (never `${{ }}` interpolated into run lines);
-# results flow forward as GITHUB_OUTPUT step outputs written by the tools.
-# Each task's env contract is noted below; secrets stay in workflow step env,
-# NEVER in [env] here (mise [env] would override the step's).
-# `depends = ["setup"]` keeps every task runnable from a fresh clone; a warm
-# re-run of setup is a sub-second no-op.
-
-[tasks.release_git_user]
-# env: none. Refuses outside GITHUB_ACTIONS — writes --global git config.
-description = "Configure the github-actions[bot] git identity (CI only)"
-run = "node tools/release/src/steps/release-git-user.ts"
-
-[tasks.release_package_info]
-# env: PACKAGE_INPUT (manual dispatch) | GITHUB_REF (tag push).
-# outputs: package_name, package_dir.
-description = "Resolve the target package name and workspace directory"
-depends = ["setup"]
-run = "node tools/release/src/steps/release-package-info.ts"
-
-[tasks.release_build]
-# env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
-description = "Build one package and its workspace deps via turbo"
-depends = ["setup"]
-run = 'turbo run "${PACKAGE_NAME:?}#build"'
-
-[tasks.release_pack]
-# env: PACKAGE_NAME, PACKAGE_DIR. outputs: tarball.
-description = "Pack the publish tarball with a dev-stripped manifest"
-depends = ["setup"]
-run = "node tools/release/src/steps/release-pack.ts"
-
-[tasks.release_check_tarball]
-# env: TARBALL. Gates devDependencies/scripts/catalog:/workspace: leaks.
-description = "Check the packed tarball's manifest before publishing"
-depends = ["setup"]
-run = 'node tools/release/src/checks/check-packed-manifest.ts "${TARBALL:?}"'
-
-[tasks.release_tag]
-# env: PACKAGE, DRY_RUN. Tags locally only; release_tag_push pushes the ref.
-description = "Tag the current version of a package (local tag only)"
-depends = ["setup"]
-run = "node tools/release/src/steps/release-tag.ts"
-
-[tasks.release_tag_push]
-# env: PACKAGE, DRY_RUN. Pushes exactly refs/tags/<package>@<version>.
-description = "Push a package's release tag ref"
-depends = ["setup"]
-run = "node tools/release/src/steps/release-tag-push.ts"
-
-[tasks.release_publish]
-# env: PACKAGE_NAME, TARBALL, DRY_RUN, GITHUB_TOKEN (GitHub release; npm is OIDC).
-description = "Publish the packed tarball to npm and cut the GitHub release"
-depends = ["setup"]
-run = "node tools/release/src/steps/release-publish.ts"
-
-[tasks.release_bump]
-# env: PACKAGE, INCREMENT, OTHER_INCREMENT, PR_BASE, BRANCH_PREFIX_INPUT,
-# DRY_RUN, GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
-description = "Compute the bumped version, branch, commit, push, and open the release PR"
-depends = ["setup"]
-run = "node tools/release/src/steps/release-bump.ts"
+# The nine release-workflow tasks live beside their code in
+# tools/release/mise.toml, addressed as //tools/release:<step>
+# (e.g. `mise run '//tools/release:pack'`). `mise tasks ls --all` lists them.

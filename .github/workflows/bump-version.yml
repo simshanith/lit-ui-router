@@ -3,7 +3,7 @@
 # Creates a release branch and PR that, when merged, triggers tagging.
 #
 # YAML here is triggers/permissions/secrets/environment only; the pipeline
-# logic lives in tools/release (mise task release_bump), inputs flow through
+# logic lives in tools/release (mise task //tools/release:bump), inputs flow through
 # step env — never `${{ }}` inside run lines.
 name: Bump version
 
@@ -82,11 +82,11 @@ jobs:
       - name: Install dependencies
         run: mise run setup
       - name: Setup Git user
-        run: mise run release_git_user
+        run: mise run //tools/release:git_user
       - name: Bump version
         # version calc, release branch, release-it commit+push, gh pr create —
         # see tools/release/src/steps/release-bump.ts for the phase-by-phase contract
-        run: mise run release_bump
+        run: mise run //tools/release:bump
         env:
           PACKAGE: ${{ inputs.package }}
           INCREMENT: ${{ inputs.increment }}
