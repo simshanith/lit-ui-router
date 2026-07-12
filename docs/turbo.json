@@ -19,8 +19,12 @@
     "typecheck": {
       // Overrides REPLACE root deps, so re-state ^transit: worker/tsconfig
       // reaches sample-app-routes and ui-router-server sources directly.
-      "dependsOn": ["^build", "^docs:api", "^transit"],
+      "dependsOn": ["^build", "^docs:api", "^transit", "types:worker"],
       "with": ["typecheck:vue"]
+    },
+    "types:worker": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
+      "outputs": ["worker/worker-configuration.d.ts"]
     },
     "docs": {
       "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
