@@ -12,15 +12,24 @@ export default {
     if (verdict.kind === 'shell') {
       // Constructing the shell request from the original carries the
       // conditional headers along, so deep-link revalidations still 304.
-      const shell = await env.ASSETS.fetch(
-        new Request(new URL(verdict.mount, request.url), request),
+      const shellRequest = new Request(
+        new URL(verdict.mount, request.url),
+        request,
       );
+      // Status precedence per the Verdict contract: absent means default
+      // shell handling, 304s included. An explicit status (404 via the
+      // otherwise projection) wins outright, and the validators must go so
+      // the fetch returns a 200 body to relabel — never a bare 304.
+      if (verdict.status !== undefined) {
+        shellRequest.headers.delete('If-None-Match');
+        shellRequest.headers.delete('If-Modified-Since');
+      }
+      const shell = await env.ASSETS.fetch(shellRequest);
       const headers = new Headers(shell.headers);
-      headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
-      // Status precedence per the Verdict contract: absent (always, today)
-      // means default shell handling, 304s included. When a data tier sets
-      // an explicit status, this fetch must also strip the request's
-      // validators so there is a 200 body to relabel — never a bare 304.
+      // No canonical Link on status'd shells: a 404 is not an alternate
+      // representation of the mount root.
+      if (verdict.status === undefined)
+        headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
       return new Response(shell.body, {
         status: verdict.status ?? shell.status,
         headers,
