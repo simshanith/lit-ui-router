@@ -76,7 +76,6 @@ overrides:
   'undici@7': 7.28.0
   'vitepress>vite': ^6.4.3
 
-# preset 9 must resolve inside the preset loader's own tree, not commitlint's 10 via the hidden hoist (#302)
 packageExtensions:
   conventional-changelog-preset-loader:
     dependencies:
