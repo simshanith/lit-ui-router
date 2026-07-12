@@ -18,6 +18,7 @@ export type DependencyMap = Record<string, unknown>;
 // The slice of a package.json these checks read.
 export type PackageManifest = {
   name?: string;
+  version?: string;
   private?: boolean;
   scripts?: Record<string, unknown>;
   dependencies?: DependencyMap;
