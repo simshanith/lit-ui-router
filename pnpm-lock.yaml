@@ -150,6 +150,8 @@ overrides:
   undici@7: 7.28.0
   vitepress>vite: ^6.4.3
 
+packageExtensionsChecksum: sha256-GeoK+J1KFKE+e2SY5vm8ItXeXnBlw5N6FlT+iEHePoo=
+
 patchedDependencies:
   '@api-viewer/docs': 6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac
   '@uirouter/dsr': 85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761
@@ -7904,7 +7906,9 @@ snapshots:
     dependencies:
       compare-func: 2.0.0
 
-  conventional-changelog-preset-loader@5.0.0: {}
+  conventional-changelog-preset-loader@5.0.0:
+    dependencies:
+      conventional-changelog-conventionalcommits: 9.3.1
 
   conventional-changelog-writer@8.4.0:
     dependencies:

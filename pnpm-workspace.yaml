@@ -76,6 +76,11 @@ overrides:
   'undici@7': 7.28.0
   'vitepress>vite': ^6.4.3
 
+packageExtensions:
+  conventional-changelog-preset-loader:
+    dependencies:
+      conventional-changelog-conventionalcommits: ^9.3.1
+
 verifyDepsBeforeRun: false
 
 patchedDependencies:
