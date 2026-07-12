@@ -32,9 +32,8 @@ export const routes: RouteDeclaration[] = [
 // Mirrors router.config.ts: the app root has no state url; a when(/^\/?$/)
 // rule routes it to welcome. Its otherwise() -> notFound rule is deliberately
 // NOT projected for the flagship mounts: unknown paths stay notFound verdicts
-// (the not-found-static pattern) — 404 and 200 serving byte-identical shell
-// content reads as a soft-404 to crawlers, and an SPA booting on missing
-// pages muddies entrance analytics.
+// (the not-found-static pattern) — 404 views stay out of entrance analytics
+// and scanners get a few bytes; shell-at-404 is the /not-found-spa exhibit.
 export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 
 // 'matcher': the tables above are pure data, so the dependency-free tier
