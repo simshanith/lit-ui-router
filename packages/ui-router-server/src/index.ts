@@ -28,9 +28,18 @@ export type {
   RouteDeclaration,
 } from './redirects.ts';
 
-// setTimeout exists on every target runtime (worker, node, browser) but not
-// in the DOM-free ES lib this package compiles against.
+// setTimeout and URLSearchParams exist on every target runtime (worker,
+// node, browser) but not in the DOM-free ES lib this package compiles
+// against.
 declare function setTimeout(handler: () => void, ms: number): unknown;
+declare class URLSearchParams {
+  constructor(init?: string);
+  has(name: string): boolean;
+  append(name: string, value: string): void;
+  getAll(name: string): string[];
+  forEach(callback: (value: string, key: string) => void): void;
+  toString(): string;
+}
 
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
@@ -54,8 +63,19 @@ export interface MountConfig {
   config?: UrlMatcherCompilerConfig;
 }
 
+// Discriminate on `kind`. (Consumer note: under oxlint's
+// switch-exhaustiveness-check + consistent-return combination, an if-chain
+// reads cleaner than a switch over this union.)
 export type Verdict =
-  /** Serve the app shell. `status` is absent for a plain 200 today; a future data tier may set 401/403-with-shell. */
+  /**
+   * Serve the app shell. Status precedence: when `status` is absent (always,
+   * today), serve the shell however you normally would — including 304
+   * conditional responses. When a future data tier sets it (401/403-with-
+   * shell), the verdict's status wins outright AND suppresses conditional-
+   * response passthrough: a 304 has no body and would let an unauthorized
+   * probe read cache freshness, so never let an asset-layer 304 clobber an
+   * explicit status.
+   */
   | { kind: 'shell'; mount: string; status?: number }
   /**
    * Redirect to `location`: the mount-joined target path, which MAY carry
@@ -105,6 +125,33 @@ const join = (base: string, path: string): string =>
 
 const toTarget = (to: string | RedirectTarget): RedirectTarget =>
   typeof to === 'string' ? { state: to } : to;
+
+/**
+ * Merges a request's search into a redirect `location` — the correct-by-
+ * default replacement for `location + url.search`, which yields `?a=1?b=2`.
+ * Params the redirect target declared win; remaining request params are
+ * appended (all values of multi-value keys). Accepts the incoming search
+ * with or without the leading '?'. Operates on `pathname?search` strings as
+ * produced in redirect verdicts (no fragment handling).
+ */
+export function mergeSearch(location: string, incoming: string): string {
+  const query = incoming.startsWith('?') ? incoming.substring(1) : incoming;
+  if (!query) return location;
+  const cut = location.indexOf('?');
+  const pathname = cut === -1 ? location : location.substring(0, cut);
+  const target = new URLSearchParams(
+    cut === -1 ? '' : location.substring(cut + 1),
+  );
+  const request = new URLSearchParams(query);
+  const keys = new Set<string>();
+  request.forEach((_value, key) => keys.add(key));
+  for (const key of keys) {
+    if (target.has(key)) continue;
+    for (const value of request.getAll(key)) target.append(key, value);
+  }
+  const merged = target.toString();
+  return merged ? `${pathname}?${merged}` : pathname;
+}
 
 /**
  * Compiles a mount table into a resolver. Every mount's routes and redirect

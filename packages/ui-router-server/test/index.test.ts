@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { createServerRouter } from '../src/index.ts';
+import { createServerRouter, mergeSearch } from '../src/index.ts';
 import type { MountConfig } from '../src/index.ts';
 
 const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
@@ -35,11 +35,10 @@ for (const strategy of ['matcher', 'simulate'] as const) {
       mounts: { '/app': appMount(strategy) },
     });
 
-    it('serves the shell for plain routes', async () => {
-      assert.deepEqual(await router.resolve('/app/welcome'), {
-        kind: 'shell',
-        mount: '/app',
-      });
+    it('serves the shell for plain routes, status absent (default handling)', async () => {
+      const verdict = await router.resolve('/app/welcome');
+      assert.deepEqual(verdict, { kind: 'shell', mount: '/app' });
+      assert.ok(!('status' in verdict));
       assert.deepEqual(await router.resolve('/app/contacts/3'), {
         kind: 'shell',
         mount: '/app',
@@ -196,5 +195,53 @@ describe('simulate strategy isolation', () => {
       ),
       ['/app/welcome', 'shell', '/app/contacts', '/app/welcome'],
     );
+  });
+});
+
+describe('mergeSearch', () => {
+  it('appends the request search to a bare location', () => {
+    assert.equal(mergeSearch('/app/contacts', '?q=1'), '/app/contacts?q=1');
+    assert.equal(mergeSearch('/app/contacts', 'q=1'), '/app/contacts?q=1');
+  });
+
+  it('merges into a location that carries its own query', () => {
+    assert.equal(
+      mergeSearch('/app/inbox?page=2', '?q=1'),
+      '/app/inbox?page=2&q=1',
+    );
+  });
+
+  it('lets the redirect target win on colliding keys', () => {
+    assert.equal(
+      mergeSearch('/app/inbox?page=2', '?page=9&q=1'),
+      '/app/inbox?page=2&q=1',
+    );
+  });
+
+  it('keeps all values of multi-value request keys', () => {
+    assert.equal(mergeSearch('/a', 'x=1&x=2'), '/a?x=1&x=2');
+  });
+
+  it('round-trips percent-encoding', () => {
+    assert.equal(mergeSearch('/a', '?q=a%2Fb'), '/a?q=a%2Fb');
+  });
+
+  it('is a no-op for an empty request search', () => {
+    assert.equal(mergeSearch('/app/inbox?page=2', ''), '/app/inbox?page=2');
+    assert.equal(mergeSearch('/app/contacts', '?'), '/app/contacts');
+  });
+
+  it('completes the query contract on a real redirect verdict', async () => {
+    const router = createServerRouter({
+      mounts: { '/app': appMount('matcher') },
+    });
+    const verdict = await router.resolve('/app/old-inbox');
+    assert.equal(verdict.kind, 'redirect');
+    if (verdict.kind === 'redirect') {
+      assert.equal(
+        mergeSearch(verdict.location, '?q=1'),
+        '/app/inbox?page=2&q=1',
+      );
+    }
   });
 });
