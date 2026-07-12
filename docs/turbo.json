@@ -22,6 +22,10 @@
       "dependsOn": ["^build", "^docs:api", "^transit", "types:worker"],
       "with": ["typecheck:vue"]
     },
+    "lint": {
+      // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
+      "dependsOn": ["^build", "types:worker"]
+    },
     "types:worker": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
       "outputs": ["worker/worker-configuration.d.ts"]
