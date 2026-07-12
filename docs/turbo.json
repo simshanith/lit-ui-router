@@ -17,11 +17,11 @@
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "^docs:api", "^transit"],
+      "dependsOn": ["^build", "^docs:api"],
       "with": ["typecheck:vue", "typecheck:worker"]
     },
     "typecheck:worker": {
-      "dependsOn": ["^build", "^transit"],
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "docs": {
