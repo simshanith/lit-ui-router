@@ -23,6 +23,26 @@ not just the destination: the Cloudflare Worker behind lit-ui-router.dev
 serves **every rung of the adoption ladder below, live and side by side**,
 from the anti-pattern to a full headless router per request.
 
+## Path-location clients
+
+This machinery is for **path-location clients** — apps whose routes live in
+the URL path and therefore reach the server on every deep link:
+[`pushStateLocationPlugin`](./location-plugins#html5-pushstate), or its most
+modern shape, this repo's own
+[`ui-router-navigation-location-plugin`](./navigation-plugin) companion
+package, which produces the same clean paths through the Navigation API.
+Path-addressed routes are the ones a server is asked to vouch for; that is
+what earns them routing verdicts.
+
+A [hash-location](./location-plugins#hash-urls) app needs none of this — by
+design. The hash strategy exists to avoid server-side requirements: the
+fragment never leaves the browser, so `/#/contacts/3` asks the server only
+for `/`, and a plain 200 shell is the correct, complete server story. Even
+the naive fallback rung below is a perfectly sound server for a hash-mode
+app — the soft-404 concern is about path-addressed content, and a hash app
+addresses nothing by path. If you route in the fragment, you are
+deliberately out of scope here, not at risk.
+
 ## The 404 ladder
 
 Each rung is a mount on this site — same worker, same `wrangler.jsonc`, the
@@ -412,7 +432,7 @@ Anything that needs **code** to decide — hooks, resolves, `redirectTo`
 functions, injected services — is simulate-tier territory, and the sample
 apps deliberately keep those decisions client-side instead.
 
-Two contracts worth internalizing:
+Contracts worth internalizing:
 
 **Queries merge; they never concatenate.** A redirect target with declared
 search params can format to a location that already carries a query, so
@@ -427,16 +447,14 @@ permanent redirect outlives the config that produced it. Verdicts fix
 `status: 302`; a per-rule 301 for genuinely legacy moves would be a table
 extension.
 
-::: warning Path-mode guidance
-Server redirects assume path-location clients. A
-[hash-location](./location-plugins#hash-urls) app keeps its route state in
-the fragment, which never reaches the server — `/app/#/contacts/3` is just
-the path `/app/` — so a mount-root redirect rule would rewrite the visible
-path on every entry. Hash-location apps should serve the shell at the mount
-root instead. The sample apps switch location strategies at runtime, so
-their hash-mode entry point is the bare `/app` — outside `run_worker_first` —
-precisely to stay clear of the root rule.
-:::
+**Mount-root rules are for path-mode entries.** Server redirects rewrite
+the path, and a hash-location client keeps its route state where the server
+never sees it — so don't declare a mount-root redirect rule for a mount that
+serves hash-mode entries; the shell at the mount root already is hash mode's
+[whole server story](#path-location-clients). The sample apps switch
+location strategies at runtime, so their hash-mode entry point is the bare
+`/app` — outside `run_worker_first` — and the root rule only ever sees
+path-mode entries.
 
 ## Shell-at-404: the `otherwise` projection
 
@@ -538,8 +556,9 @@ site-wide page. Everything the worker needs is already in the verdict.
 
 ## What the server can't see
 
-**The fragment.** Hash URLs never leave the browser, so hash-mode deep links
-are all the mount root server-side — see the path-mode caveat above.
+**The fragment.** The server never sees it — which is exactly why a
+[hash-location app needs no verdicts at all](#path-location-clients). For a
+path-location app the fragment carries no routing state, so nothing is lost.
 
 **Client state.** Auth flags in `sessionStorage`, remembered navigation
 targets, feature flags: none of it exists at the edge. Every routing decision
