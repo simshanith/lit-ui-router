@@ -151,6 +151,49 @@ describe('custom ParamType objects', () => {
   });
 });
 
+describe('format', () => {
+  it('builds a url from param values, percent-encoding them', () => {
+    const matcher = compile('/user/:id?q');
+    assert.equal(
+      matcher.format({ id: 'b ob', q: 'a&b' }),
+      '/user/b%20ob?q=a%26b',
+    );
+    assert.equal(matcher.format({ id: 'bob' }), '/user/bob');
+  });
+
+  it('returns null when a value fails its type', () => {
+    const matcher = compile('/user/{id:int}');
+    assert.equal(matcher.format({ id: 'abc' }), null);
+    assert.equal(matcher.format({}), null);
+    assert.equal(matcher.format({ id: 42 }), '/user/42');
+  });
+
+  it('squashes defaulted params per policy', () => {
+    const params = (squash: boolean | string) => ({
+      params: { id: { value: 'fallback', squash } },
+    });
+    assert.equal(compile('/x/:id', params(true)).format({}), '/x');
+    assert.equal(compile('/x/:id', params(false)).format({}), '/x/fallback');
+    assert.equal(compile('/x/:id', params('~')).format({}), '/x/~');
+    assert.equal(compile('/x/:id', params(true)).format({ id: '7' }), '/x/7');
+  });
+
+  it('omits absent search params and appends a hash fragment', () => {
+    const matcher = compile('/search?q&r');
+    assert.equal(matcher.format({}), '/search');
+    assert.equal(matcher.format({ q: 'a' }), '/search?q=a');
+    assert.equal(matcher.format({ q: 'a', '#': 'frag' }), '/search?q=a#frag');
+  });
+
+  it('round-trips exec', () => {
+    const matcher = compile('/mymessages/:folderId/{messageId:int}');
+    const params = { folderId: 'inbox', messageId: 5 };
+    const url = matcher.format(params);
+    assert.equal(url, '/mymessages/inbox/5');
+    assert.deepEqual(matcher.exec(url as string), params);
+  });
+});
+
 describe('UrlMatcher surface', () => {
   it('exposes the source pattern', () => {
     const matcher = compile('/user/:id');

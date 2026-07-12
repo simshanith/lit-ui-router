@@ -9,8 +9,9 @@
  *
  * In scope: pattern parsing, path/search placeholders, inline regexps, the
  * built-in `string`/`path`/`query`/`int`/`bool`/`date` types, strict and
- * case-insensitive modes, static defaults and squash policies, `exec`.
- * Out of scope (compile errors, never silent divergence): url building,
+ * case-insensitive modes, static defaults and squash policies, `exec`, and
+ * `format` (the inverse: params in, url out, with core's squash/encode
+ * semantics). Out of scope (compile errors, never silent divergence):
  * array params, `replace` configs, function (injected) defaults, and the
  * `json`/`hash`/`any` types — erroring beats compiling `{x:json}` into the
  * literal regexp /json/, which is what an unregistered name means to the
@@ -31,25 +32,50 @@ import type {
 } from '@uirouter/core';
 
 /**
- * The pieces of a ui-router ParamType that path matching exercises, with
- * core's member signatures. Relaxation vs core: a plain object suffices
- * (core wants its ParamType class), `pattern` is required, and `name` is
- * carried here (the class holds it upstream).
+ * The pieces of a ui-router ParamType that path matching and url formatting
+ * exercise, with core's member signatures. Relaxation vs core: a plain
+ * object suffices (core wants its ParamType class), `pattern` is required,
+ * and `name` is carried here (the class holds it upstream). `encode` and
+ * `equals`, when omitted, fall back to core's ParamType class defaults
+ * (identity encode, loose equality).
  */
 export interface ParamType
   extends
     Pick<ParamTypeDefinition, 'is' | 'decode' | 'raw'>,
     Required<Pick<ParamTypeDefinition, 'pattern'>> {
   name: string;
+  /** Relaxation vs core: may return null/undefined, which format() renders as an absent value (core's built-ins do the same at runtime). */
+  encode?: (val: unknown) => string | string[] | null | undefined;
+  /** Relaxation vs core: optional here (core's class always carries one). */
+  equals?: ParamTypeDefinition['equals'];
 }
+
+// Core's makeDefaultType encode: stringly, null/undefined passed through.
+const valToString = (val: unknown): string | null | undefined =>
+  val === null || val === undefined
+    ? val
+    : (val as number | string | boolean).toString();
+
+// Core's ParamType class defaults, for custom types that omit the members.
+const typeEncode = (
+  type: ParamType,
+  val: unknown,
+): string | string[] | null | undefined =>
+  type.encode ? type.encode(val) : (val as string | null | undefined);
+const typeEquals = (type: ParamType, a: unknown, b: unknown): boolean =>
+  // eslint-disable-next-line eqeqeq -- core's default equals coerces (null/undefined/'' and string/number pairs compare loosely)
+  type.equals ? type.equals(a, b) : a == b;
 
 const stringBase = {
   is: (val: unknown): boolean => typeof val === 'string',
   decode: (val: string): unknown => val,
+  encode: valToString,
 };
 
 const decodeInt = (val: string) => parseInt(val, 10);
 const dateCapture = /([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/;
+const isDate = (val: unknown): val is Date =>
+  val instanceof Date && !Number.isNaN(val.valueOf());
 
 /** The ui-router built-in types, minus json/hash/any (rejected at compile). */
 const builtinTypes: Record<string, ParamType> = {
@@ -63,21 +89,37 @@ const builtinTypes: Record<string, ParamType> = {
     is: (val: unknown) =>
       typeof val === 'number' && decodeInt(val.toString()) === val,
     decode: decodeInt,
+    encode: valToString,
   },
   bool: {
     name: 'bool',
     pattern: /0|1/,
     is: (val: unknown) => typeof val === 'boolean',
     decode: (val: string) => decodeInt(val) !== 0,
+    // Truthiness, as upstream ((val && 1) || 0) — undefined encodes to '0'.
+    encode: (val: unknown) => (val ? '1' : '0'),
   },
   date: {
     name: 'date',
     pattern: /[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|3[0-1])/,
-    is: (val: unknown) => val instanceof Date && !Number.isNaN(val.valueOf()),
+    is: isDate,
     decode: (val: string) => {
       const match = dateCapture.exec(val);
       return match ? new Date(+match[1], +match[2] - 1, +match[3]) : undefined;
     },
+    encode: (val: unknown) =>
+      isDate(val)
+        ? [
+            val.getFullYear(),
+            `0${val.getMonth() + 1}`.slice(-2),
+            `0${val.getDate()}`.slice(-2),
+          ].join('-')
+        : undefined,
+    // Calendar-day equality, as upstream: throws on non-dates, core does too.
+    equals: (l: unknown, r: unknown) =>
+      (['getFullYear', 'getMonth', 'getDate'] as const).every(
+        (fn) => (l as Date)[fn]() === (r as Date)[fn](),
+      ),
   },
 };
 
@@ -238,6 +280,30 @@ class Param {
     }
     return this.type.is(input) ? input : this.type.decode(input as string);
   }
+
+  /** True when the typed value equals this param's default (core's Param.isDefaultValue). */
+  isDefaultValue(input: unknown): boolean {
+    if (!this.isOptional) return false;
+    const defaultValue = this.value(undefined);
+    // Search params are auto-array-wrapped upstream, where an absent value
+    // compares as the empty array: equal only to another absent value.
+    if (this.isSearch && (defaultValue === undefined || input === undefined))
+      return defaultValue === undefined && input === undefined;
+    return typeEquals(this.type, defaultValue, input);
+  }
+
+  /** Whether a typed value can appear in a built url (core's Param.validates). */
+  validates(input: unknown): boolean {
+    // No value, but the param is optional.
+    if ((input === undefined || input === null) && this.isOptional) return true;
+    const normalized: unknown = this.type.is(input)
+      ? input
+      : this.type.decode(input as string);
+    if (!this.type.is(normalized)) return false;
+    // Of the right type, but its encoded form escapes the type's pattern.
+    const encoded = typeEncode(this.type, normalized);
+    return !(typeof encoded === 'string' && !this.type.pattern.exec(encoded));
+  }
 }
 
 /** Escapes a static segment; with a param, appends its capture group per squash policy. */
@@ -291,6 +357,8 @@ export class UrlMatcher {
   readonly #pathParams: Param[];
   readonly #searchParams: Param[];
   readonly #decodeParams: boolean;
+  /** The raw static segments between path params (length: path params + 1). */
+  readonly #segments: string[];
 
   constructor(pattern: string, config: ResolvedConfig) {
     this.pattern = pattern;
@@ -307,6 +375,7 @@ export class UrlMatcher {
 
     const params: Param[] = [];
     const compiled: string[] = [];
+    const segments: string[] = [];
 
     const makeParam = (m: RegExpExecArray, isSearch: boolean): Param => {
       const id = m[2] || m[3];
@@ -345,6 +414,7 @@ export class UrlMatcher {
       const param = makeParam(match, false);
       params.push(param);
       compiled.push(quoteRegExp(segment, param));
+      segments.push(segment);
       last = placeholder.lastIndex;
     }
     let segment = pattern.substring(last);
@@ -360,7 +430,9 @@ export class UrlMatcher {
       }
     }
     compiled.push(quoteRegExp(segment));
+    segments.push(segment);
 
+    this.#segments = segments;
     this.#pathParams = params.filter((param) => !param.isSearch);
     this.#searchParams = params.filter((param) => param.isSearch);
     this.#regexp = new RegExp(
@@ -407,6 +479,78 @@ export class UrlMatcher {
       values[param.id] = param.value(undefined);
     }
     return values;
+  }
+
+  /**
+   * Builds a url from this matcher by substituting parameter values — the
+   * inverse of [[exec]], mirroring core's UrlMatcher.format for the
+   * supported subset (no parent-matcher composition: matchers here never
+   * append). Default values honor the squash policy, search params render
+   * as a query string, and `values['#']` appends a hash fragment.
+   *
+   * Returns null when any value fails its param's validation.
+   */
+  format(values: RawParams = {}): string | null {
+    const details = (param: Param) => {
+      const value = param.value(values[param.id]);
+      const isValid = param.validates(value);
+      const isDefaultValue = param.isDefaultValue(value);
+      // Squashing only ever applies to a param sitting at its default.
+      const squash = isDefaultValue ? param.squash : false;
+      // Auto-array wrapping again: an absent search value encodes to
+      // undefined (the empty array unwraps), skipping the scalar encoder.
+      const encoded =
+        param.isSearch && value === undefined
+          ? undefined
+          : typeEncode(param.type, value);
+      return { param, isValid, isDefaultValue, squash, encoded };
+    };
+    const path = this.#pathParams.map(details);
+    const search = this.#searchParams.map(details);
+    if ([...path, ...search].some((d) => !d.isValid)) return null;
+
+    let result = '';
+    this.#segments.forEach((segment, index) => {
+      result += segment;
+      const detail = path[index];
+      if (!detail) return; // the final segment has no param after it
+      const { squash, encoded, param } = detail;
+      if (squash === true) {
+        if (result.endsWith('/')) result = result.slice(0, -1);
+        return;
+      }
+      if (typeof squash === 'string') {
+        result += squash;
+        return;
+      }
+      if (encoded === null || encoded === undefined) return;
+      result += param.type.raw
+        ? String(encoded)
+        : encodeURIComponent(encoded as string);
+    });
+
+    const query = search
+      .map(({ param, squash, encoded, isDefaultValue }) => {
+        if (
+          encoded === null ||
+          encoded === undefined ||
+          (isDefaultValue && squash !== false)
+        )
+          return null;
+        const vals = Array.isArray(encoded) ? encoded : [encoded];
+        if (vals.length === 0) return null;
+        return vals
+          .map(
+            (val) =>
+              `${param.id}=${param.type.raw ? val : encodeURIComponent(val)}`,
+          )
+          .join('&');
+      })
+      .filter((pair) => pair !== null)
+      .join('&');
+
+    const fragment = values['#'] ? `#${String(values['#'])}` : '';
+    return result + (query ? `?${query}` : '') + fragment;
   }
 }
 

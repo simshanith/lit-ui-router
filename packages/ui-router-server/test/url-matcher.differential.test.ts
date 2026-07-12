@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import { services, UIRouter } from '@uirouter/core';
+import type { RawParams } from '@uirouter/core';
 
 import { urlMatcherFactory } from '../src/url-matcher.ts';
 import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
@@ -351,4 +352,164 @@ describe('differential: standalone-only compile rejections (supported upstream)'
       /'replace' is not supported/,
     );
   });
+});
+
+// The same divergence guard for the inverse direction: every pattern/values
+// pair formats through BOTH implementations and the built urls (or null
+// verdicts, when a value fails validation) must be identical.
+interface FormatCase {
+  pattern: string;
+  options?: UrlMatcherCompileOptions;
+  values: RawParams[];
+}
+
+const formatCases: FormatCase[] = [
+  // Static patterns (segments are emitted raw, never re-encoded)
+  { pattern: '/hello', values: [{}] },
+  { pattern: '/hello/', values: [{}] },
+  { pattern: '', values: [{}] },
+  { pattern: '/a b', values: [{}] },
+  { pattern: '/café/:x', values: [{ x: '1' }, { x: 'ü' }] },
+  // Plain path params: encoding, empty and missing values
+  {
+    pattern: '/user/:id',
+    values: [
+      { id: 'bob' },
+      { id: '' },
+      {},
+      { id: 'b ob' },
+      { id: 'a/b' },
+      { id: '日本' },
+      { id: 'b.b-c_d' },
+      { id: 'x%y' },
+    ],
+  },
+  {
+    pattern: '/a/:x/:y',
+    values: [{ x: '1', y: '2' }, { x: '1' }, { x: '', y: '' }],
+  },
+  // Typed params: normalization and validation failures (null verdicts)
+  {
+    pattern: '/user/{id:int}',
+    values: [
+      { id: 42 },
+      { id: '42' },
+      { id: -7 },
+      { id: 4.2 },
+      { id: 'abc' },
+      {},
+    ],
+  },
+  {
+    pattern: '/flag/{on:bool}',
+    values: [{ on: true }, { on: false }, { on: 1 }, { on: '1' }, {}],
+  },
+  {
+    pattern: '/cal/{d:date}',
+    values: [
+      { d: new Date(2014, 10, 12) },
+      { d: '2014-11-12' },
+      { d: 'nope' },
+      {},
+    ],
+  },
+  // Inline regexps validate the encoded form
+  {
+    pattern: '/hex/{id:[0-9a-fA-F]{1,8}}',
+    values: [{ id: 'deadBEEF' }, { id: 'xyz' }, {}],
+  },
+  // Catch-alls are percent-encoded like any other param
+  { pattern: '/files/*path', values: [{ path: 'a/b/c' }, { path: '' }, {}] },
+  { pattern: '/files/{path:.*}', values: [{ path: 'a/b/c' }] },
+  // Defaults and squash policies
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash: true } } },
+    values: [{}, { id: 'fallback' }, { id: '7' }, { id: '' }],
+  },
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash: false } } },
+    values: [{}, { id: 'fallback' }, { id: '7' }],
+  },
+  {
+    pattern: '/x/:id',
+    options: { params: { id: { value: 'fallback', squash: '~' } } },
+    values: [{}, { id: 'fallback' }, { id: '7' }],
+  },
+  {
+    pattern: '/n/{id:int}',
+    options: { params: { id: { value: 42, squash: true } } },
+    values: [{}, { id: 42 }, { id: 7 }, { id: '42' }],
+  },
+  {
+    pattern: '/docs/:section/:page',
+    options: {
+      params: {
+        section: { value: 'intro', squash: true },
+        page: { value: '1', squash: true },
+      },
+    },
+    values: [
+      {},
+      { section: 'setup' },
+      { section: 'setup', page: '2' },
+      { page: '2' },
+    ],
+  },
+  // Search params render as a query string; defaults obey the squash policy
+  {
+    pattern: '/items/:id?sort',
+    values: [
+      { id: '1', sort: 'asc' },
+      { id: '1' },
+      { id: '1', sort: '' },
+      { id: '1', sort: 'a b' },
+    ],
+  },
+  { pattern: '/search?q&r', values: [{ q: 'a', r: 'b' }, { q: 'a' }, {}] },
+  { pattern: '/x?{q:int}', values: [{ q: 5 }, { q: 'nope' }, {}] },
+  { pattern: '/x?{f:bool}', values: [{ f: true }, { f: false }, {}] },
+  {
+    pattern: '/inbox?page',
+    options: { params: { page: { value: '1' } } },
+    values: [{}, { page: '1' }, { page: '2' }],
+  },
+  {
+    pattern: '/inbox?page',
+    options: { params: { page: { value: '1', squash: true } } },
+    values: [{}, { page: '2' }],
+  },
+  // The '#' pseudo-param appends a fragment, unencoded
+  {
+    pattern: '/user/:id?q',
+    values: [
+      { id: 'bob', q: 'yes', '#': 'frag' },
+      { id: 'bob', '#': 'a b' },
+    ],
+  },
+];
+
+const formatComparisons = formatCases.reduce(
+  (sum, c) => sum + c.values.length,
+  0,
+);
+
+describe(`differential: format() vs @uirouter/core (${formatCases.length} patterns, ${formatComparisons} comparisons)`, () => {
+  for (const { pattern, options, values } of formatCases) {
+    const label = options ? `${pattern} ${JSON.stringify(options)}` : pattern;
+    it(label, () => {
+      const expectedMatcher = coreCompile(pattern, options);
+      const actualMatcher = compile(pattern, options);
+      for (const value of values) {
+        const expected: unknown = expectedMatcher.format(value);
+        const actual: unknown = actualMatcher.format(value);
+        assert.deepStrictEqual(
+          actual,
+          expected,
+          `'${pattern}'.format(${JSON.stringify(value)})`,
+        );
+      }
+    });
+  }
 });
