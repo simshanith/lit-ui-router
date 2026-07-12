@@ -28,12 +28,17 @@ export function visitWithFeatures(
   features: Record<string, string> = {},
 ) {
   const { query, isHashMode } = featureQuery(features);
+  // Hash-mode visits target the bare mount (`/app`, not `/app/`): the worker
+  // 302s the mount root to /welcome, which would rewrite the path under the
+  // hash on every visit; the bare mount serves the shell directly, and
+  // consecutive visits differ only by hash, as hash routing intends.
+  const root = (Cypress.config('baseUrl') ?? '').replace(/\/+$/, '');
   const url = query
     ? isHashMode
-      ? `?${query}#${path}`
+      ? `${root}?${query}#${path}`
       : `${path}?${query}`
     : isHashMode
-      ? `#${path}`
+      ? `${root}#${path}`
       : path;
   return cy.visit(url, { onBeforeLoad: seedLocationPlugin });
 }
@@ -49,4 +54,31 @@ export function visitRootWithFeatures(features: Record<string, string> = {}) {
   return cy.visit(query ? `${root}?${query}` : root, {
     onBeforeLoad: seedLocationPlugin,
   });
+}
+
+interface UIRouterElement extends HTMLElement {
+  uiRouter?: {
+    urlService: { url: (newUrl: string, replace?: boolean) => void };
+  };
+}
+
+/**
+ * Drives a client-side URL change through the running app's router, like an
+ * in-app link. Direct loads of unmatched URLs get the server 404 instead
+ * (see src/docs/docs_site.cy.js), so the in-router 404 is only reachable this way.
+ */
+export function syncUrl(path: string) {
+  return cy
+    .get('ui-router')
+    .should(($el) => {
+      const element = $el[0] as UIRouterElement;
+      expect(element.uiRouter, 'ui-router element upgraded').to.be.an('object');
+    })
+    .then(($el) => {
+      const element = $el[0] as UIRouterElement;
+      // replace: false — url()'s default replace goes through replaceState in
+      // the app's replace-aware hash service, which fires no hashchange, so
+      // the router would never sync. A push navigates in every location mode.
+      element.uiRouter!.urlService.url(path, false);
+    });
 }
