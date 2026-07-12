@@ -1,6 +1,6 @@
 ---
 title: Server-Side Routing
-description: Serve routing verdicts at the edge with ui-router-server - the 404-handling ladder from soft-404s to a simulated router, every rung live on this site
+description: Serve routing verdicts at the edge with ui-router-server - the spectrum from zero server requirements to a shared router, every level live on this site
 ---
 
 # Server-Side Routing
@@ -20,8 +20,105 @@ packages that decision as a **routing verdict** — a pathname in, a plain
 object out; no `fetch`, no `Response`, no runtime assumptions — so the server
 itself stays a thin consumer. This site runs the pattern in production, and
 not just the destination: the Cloudflare Worker behind lit-ui-router.dev
-serves **every rung of the adoption ladder below, live and side by side**,
-from the anti-pattern to a full headless router per request.
+serves the whole spectrum below, live and side by side, from the
+platform-default fallback to a full headless router per request.
+
+## The server-support spectrum
+
+How much server does a single-page app need? It is a spectrum, not a
+yes-or-no — running from location strategies that need no server at all to a
+full-stack system where the same router executes on both sides. Each level
+is defined by what the app asks of its server; find yours, and what moving
+up would buy.
+
+**Level 0 — memory location: no URL.** `memoryLocationPlugin` runs the
+router with no address bar at all — tests, embedded widgets, headless
+tooling. Nothing can be deep-linked, so there is no server story to need.
+
+**Level 1 — hash location: any static host.** The URL lives in the
+fragment, which never leaves the browser — by design. Zero server
+requirements: any static file host suffices, and none of this guide's
+machinery applies. Hash-mode apps are
+[deliberately out of scope](#path-location-clients), not at risk.
+
+**Level 2 — path location, platform-default fallback.** The moment routes
+move into the path, every deep link reaches the server, and the hosting
+world's stock answer is a blanket rewrite: nginx
+`try_files $uri /index.html;`, a Netlify `/* /index.html 200` redirect,
+[Cloudflare's single-page-application mode](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/)
+— the platform default, and what this site itself shipped before this
+stack. Users get the right page; HTTP starts lying. This is the level where
+the costs arrive: pages classified as
+[soft 404s](https://support.google.com/webmasters/answer/7440203) drop out
+of the index,
+[crawl budget](https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget)
+burns on garbage URLs, and legitimate pages risk misclassification
+([HTTP status codes and Search](https://developers.google.com/search/docs/crawling-indexing/http-network-errors),
+[John Mueller on soft-404s](https://johnmu.com/soft-404s-your-site/)).
+
+**Level 3 — path location, static error rules.** The app needs honest
+errors: a real 404 status with a helpful page. Ordinary hosting has
+conventions for exactly that — nginx `error_page`, a `404.html` at the site
+root — but a host that doesn't know the app's routes can only apply them to
+asset misses; it cannot tell a deep link from a typo. The static page
+itself stays valuable at every level above this one: it is a free
+structural boundary for
+[segregated 404 tracking](https://plausible.io/docs/error-pages-tracking-404),
+and it serves scanners and typo probes a few bytes instead of an app.
+
+**Level 4 — path location, route-aware server.** The missing piece: a
+server that can tell the app's deep links from garbage. Teach it the routes
+— the package's dependency-free matcher tier, pure data — and every answer
+becomes exact: the shell for real routes, computed redirects, real 404s for
+everything else. This is this site's flagship tier. Whether the 404 body is
+the static page or the app shell rendering its own 404 view is a free
+choice here, and it is **not** an SEO question: Google ignores the body
+content of 4xx responses outright. It is analytics and weight — a
+shell-at-404 boots the whole app for every garbage probe and mixes error
+views into entrance reports unless the error state opts out (real-world,
+[a 404 page has ranked as a site's second-highest landing page](https://www.searchviu.com/en/404-errors-google-analytics/)).
+This site's flagships keep the static page.
+
+**Level 5 — full-stack: the shared router.** The far end: the same router
+executing server-side. The simulate tier replays every URL through a real
+headless `@uirouter/core` router — redirect rules and `otherwise()` actually
+run as rules, not reimplementations — and it is where routing that data
+cannot express (hooks, resolves, auth-aware verdicts) will live.
+
+### Live on this site
+
+Every level from 2 up runs behind lit-ui-router.dev — same worker, same
+`wrangler.jsonc`, the differences are configuration:
+
+| Level | Mount(s)             | Behavior                                                                                                     |
+| ----- | -------------------- | ------------------------------------------------------------------------------------------------------------ |
+| 2     | `/not-found-naive`   | Every path serves the shell at **200**, no route matching — the platform-default fallback, reproduced        |
+| 3+4   | `/app`, `/app-mobx`  | Route-aware verdicts: shell, 302, or a **real 404** with a per-mount static 404 page (the flagship)          |
+| 4     | `/not-found-spa`     | Route-aware, shell-at-404: the `otherwise` projection; the client renders its in-app 404 at the retained URL |
+| 5     | `/simulated-routing` | Every verdict computed by a **real headless router** replaying the URL                                       |
+
+Try them on a URL that matches nothing:
+<a href="/not-found-naive/no-such-page" target="_self">`/not-found-naive/no-such-page`</a>
+answers 200 (the lie),
+<a href="/app/no-such-page" target="_self">`/app/no-such-page`</a> is a real
+404 page,
+<a href="/not-found-spa/no-such-page" target="_self">`/not-found-spa/no-such-page`</a>
+is a 404 whose body is the app itself rendering its 404 state, and
+<a href="/simulated-routing/no-such-page" target="_self">`/simulated-routing/no-such-page`</a>
+is a 404 decided by a real `otherwise()` rule settling inside a headless
+router — while
+<a href="/simulated-routing/" target="_self">`/simulated-routing/`</a> 302s to
+`/simulated-routing/welcome` because a real `when()` rule ran.
+
+Two honesty notes about the exhibits. Every demo-mount response carries
+`X-Robots-Tag: noindex`: the level-2 exhibit deliberately manufactures
+soft-404s, and the site must not be penalized by its own teaching material.
+And the demo mounts alias the vanilla sample app's shell (they have no build
+of their own), which works because the built shell's asset URLs are
+absolute — but the shell also bakes `<base href="/app/">`, so the client
+router cannot match deep links under a foreign prefix. Full client-side
+parity on a demo mount would need a per-prefix shell build; the exhibits
+instead teach **server** semantics and stay quarantined from crawlers.
 
 ## Path-location clients
 
@@ -38,77 +135,10 @@ A [hash-location](./location-plugins#hash-urls) app needs none of this — by
 design. The hash strategy exists to avoid server-side requirements: the
 fragment never leaves the browser, so `/#/contacts/3` asks the server only
 for `/`, and a plain 200 shell is the correct, complete server story. Even
-the naive fallback rung below is a perfectly sound server for a hash-mode
+the level-2 fallback above is a perfectly sound server for a hash-mode
 app — the soft-404 concern is about path-addressed content, and a hash app
 addresses nothing by path. If you route in the fragment, you are
 deliberately out of scope here, not at risk.
-
-## The 404 ladder
-
-Each rung is a mount on this site — same worker, same `wrangler.jsonc`, the
-differences are configuration:
-
-| Rung                  | Mount(s)             | Server behavior                                                                                                                            |
-| --------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| **not-found-naive**   | `/not-found-naive`   | The classic SPA-host fallback: every path serves the shell at **200**, no route matching at all                                            |
-| **not-found-static**  | `/app`, `/app-mobx`  | Route-matched + declarative redirects; unknown paths get a **static 404 page** (this site's flagship)                                      |
-| **not-found-spa**     | `/not-found-spa`     | The `otherwise` projection: unknown paths serve the shell at an **honest 404**; the client renders its in-app 404 view at the retained URL |
-| **simulated-routing** | `/simulated-routing` | `strategy: 'simulate'`: every verdict computed by a **real headless router** replaying the URL                                             |
-| _full-stack_          | _(future)_           | auth-aware verdicts (401/403-with-shell)                                                                                                   |
-
-Try them on a URL that matches nothing:
-<a href="/not-found-naive/no-such-page" target="_self">`/not-found-naive/no-such-page`</a>
-answers 200 (the lie),
-<a href="/app/no-such-page" target="_self">`/app/no-such-page`</a> is a real
-404 page,
-<a href="/not-found-spa/no-such-page" target="_self">`/not-found-spa/no-such-page`</a>
-is a 404 whose body is the app itself rendering its 404 state, and
-<a href="/simulated-routing/no-such-page" target="_self">`/simulated-routing/no-such-page`</a>
-is a 404 decided by a real `otherwise()` rule settling inside a headless
-router — while
-<a href="/simulated-routing/" target="_self">`/simulated-routing/`</a> 302s to
-`/simulated-routing/welcome` because a real `when()` rule ran.
-
-The naive rung is not a straw man: it is
-[Cloudflare's own single-page-application mode](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/)
-— the platform default for SPAs — and it is what this site itself shipped
-before this stack.
-
-Two honesty notes about the exhibits. Every demo-mount response carries
-`X-Robots-Tag: noindex`: the naive rung deliberately manufactures soft-404s,
-and the site must not be penalized by its own teaching material. And the
-demo mounts alias the vanilla sample app's shell (they have no build of
-their own), which works because the built shell's asset URLs are absolute —
-but the shell also bakes `<base href="/app/">`, so the client router cannot
-match deep links under a foreign prefix. Full client-side parity on a demo
-mount would need a per-prefix shell build; the exhibits instead teach
-**server** semantics and stay quarantined from crawlers.
-
-## Choosing a rung: SEO and analytics
-
-Google's soft-404 machinery penalizes exactly one rung — the naive 200+shell
-baseline: pages classified as
-[soft 404s](https://support.google.com/webmasters/answer/7440203) drop out of
-the index,
-[crawl budget](https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget)
-burns on garbage URLs, and legitimate pages risk misclassification
-([HTTP status codes and Search](https://developers.google.com/search/docs/crawling-indexing/http-network-errors),
-[John Mueller on soft-404s](https://johnmu.com/soft-404s-your-site/)).
-
-Between the honest rungs, crawlers cannot tell the difference: Google
-ignores the body content of 4xx responses outright, so a static 404 page and
-a shell-at-404 are equally clean SEO. Static-versus-shell is an analytics
-and weight question instead:
-
-- a static page is a free structural boundary for
-  [segregated 404 tracking](https://plausible.io/docs/error-pages-tracking-404),
-  and serves scanners and typo probes a few bytes instead of an app;
-- a shell-at-404 boots the whole app for every garbage probe and mixes error
-  views into entrance reports unless the error state opts out — real-world,
-  [a 404 page has ranked as a site's second-highest landing page](https://www.searchviu.com/en/404-errors-google-analytics/).
-
-That is why this site's flagship mounts stay on the static rung; SEO alone
-condemns only the naive one.
 
 ## The package tiers
 
@@ -199,10 +229,11 @@ const app: MountConfig = { routes, redirects, strategy: 'matcher' };
 
 Three omissions to copy:
 
-- **The client's `otherwise()` rule is a rung choice.** The flagships don't
+- **The client's `otherwise()` rule is a level choice.** The flagships don't
   project it, so unknown paths stay `notFound` verdicts and misses serve the
-  static 404 page — the analytics case [above](#choosing-a-rung-seo-and-analytics).
-  Projecting it is one line of config, shown on the `/not-found-spa` rung
+  static 404 page — the analytics case from
+  [level 4](#the-server-support-spectrum). Projecting it is one line of
+  config, shown on the `/not-found-spa` exhibit
   [below](#shell-at-404-the-otherwise-projection).
 - **Conditional routing stays client-side.** The client redirects
   `/mymessages` to a remembered folder (a DSR default) and bounces
@@ -360,8 +391,8 @@ export default {
 
 The flagship path through the handler is still just the verdict switch:
 resolve, then shell / redirect / notFound become HTTP. Everything else is
-the ladder living in one worker — the naive rung bypasses `resolve()` on
-purpose (it demonstrates the _absence_ of server routing), `SHELL_PATHS`
+the spectrum living in one worker — the level-2 exhibit bypasses `resolve()`
+on purpose (it demonstrates the _absence_ of server routing), `SHELL_PATHS`
 aliases the vanilla shell under the exhibit prefixes, and `noindexed`
 quarantines the exhibits. The worker's own HTTP contributions: the canonical
 `Link` header keeps crawlers from indexing every deep link as a duplicate of
@@ -458,7 +489,7 @@ path-mode entries.
 
 ## Shell-at-404: the `otherwise` projection
 
-The `/not-found-spa` rung is one config line: `MountConfig.otherwise`
+The `/not-found-spa` exhibit is one config line: `MountConfig.otherwise`
 projects the client's `otherwise()` rule
 ([`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
 
@@ -497,8 +528,8 @@ that doesn't exist — and emit no canonical `Link`.
 
 ## A real router per request
 
-The last shipped rung swaps the evaluation engine while keeping the same
-data, plus the mount table that puts every rung side by side:
+The far end of the spectrum swaps the evaluation engine while keeping the
+same data, plus the mount table that puts every level side by side:
 
 ```ts
 // The simulated-routing exhibit: full router semantics server-side — the
@@ -536,8 +567,8 @@ transition actually runs against a fresh in-memory router per request —
 is a transition that settled on the `notFound` state. The cost is the full
 core chunk plus per-request router construction, and it is small: measured
 under `wrangler dev` (workerd), the first simulate request took 12.4 ms
-total, warm ones ~5–6 ms, against ~3 ms for matcher verdicts. The rung earns
-its keep the day a redirect needs hooks, resolves, or a `redirectTo`
+total, warm ones ~5–6 ms, against ~3 ms for matcher verdicts. The level
+earns its keep the day a redirect needs hooks, resolves, or a `redirectTo`
 function — until then the flagships stay on the matcher tier and the switch
 remains one word of config.
 
@@ -578,6 +609,6 @@ client-side navigation to an unknown URL still renders the in-router
 [404 state](./unmatched-urls) (HTTP 200; no request is made), while a
 _direct load_ of the same URL gets the server's 404 page instead of the
 shell. That is the goal: the app handles bad links gracefully once loaded,
-and the server stops vouching for URLs that don't exist. The `otherwise`
-rung trades that asymmetry away — both paths land in the in-app 404 view,
+and the server stops vouching for URLs that don't exist. The shell-at-404
+level trades that asymmetry away — both paths land in the in-app 404 view,
 and HTTP stays honest either way.
