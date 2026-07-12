@@ -1,3 +1,8 @@
+[env]
+# Workspace binaries win over mise tools/globals; absolute via config_root
+# (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
+_.path = ["{{config_root}}/node_modules/.bin"]
+
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
