@@ -15,11 +15,3 @@ idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
 "aqua:rhysd/actionlint" = "1.7.12"
-
-[tasks.setup]
-# Bootstrap layer: the one step pnpm scripts can't own (no node_modules yet).
-# Ordering: mise install -> postinstall hook (corepack) -> mise run setup.
-# pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
-# so one task serves local (plain) and CI (frozen) alike.
-description = "Install workspace dependencies with the corepack-provisioned pnpm"
-run = "pnpm install"

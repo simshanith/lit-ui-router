@@ -83,7 +83,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
-        run: mise run setup
+        run: pnpm install --frozen-lockfile
       - name: Set branch prefix
         # Use input if provided, otherwise derive from package name
         run: |

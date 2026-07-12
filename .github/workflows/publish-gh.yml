@@ -61,7 +61,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
-        run: mise run setup
+        run: pnpm install --frozen-lockfile
       - name: Tag
         # --no-increment: Don't bump version, tag current version
         # --git.tag true: Create git tag ({package}@X.Y.Z), locally only
