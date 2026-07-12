@@ -35,6 +35,10 @@ function makeSidebar() {
         { text: 'Location Plugins', link: '/guides/location-plugins' },
         { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
         { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
+        {
+          text: 'Server-Side Routing',
+          link: '/guides/server-route-matching',
+        },
         { text: 'Route Guards', link: '/guides/route-guards' },
         {
           text: 'Component Lifecycle Hooks',
