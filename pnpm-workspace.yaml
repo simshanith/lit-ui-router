@@ -71,6 +71,9 @@ catalogs:
     typedoc: ^0.28.0
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
+  # real typescript 6 for vue-tsc: Volar resolves typescript/lib/tsc as a path the compat alias only re-exports
+  typescript6:
+    typescript: ^6.0.3
   vitepress1:
     vite-plugin-static-copy: ^3.4.0
 

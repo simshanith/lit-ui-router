@@ -36,14 +36,14 @@ export default defineConfig(
         {
           // Mirror scripts/check-catalog.core.ts MANAGED_PREFIXES: aliases stay inline.
           allowedProtocols: ['workspace', 'link', 'file', 'portal', 'npm'],
+          // report catalog-version conflicts instead of auto-creating a new catalog
+          conflicts: 'error',
           fields: [
             'dependencies',
             'devDependencies',
             'peerDependencies',
             'optionalDependencies',
           ],
-          // vue-check pins real TypeScript 6 for the vue-tsc JS API; the catalog is TS 7.
-          ignores: ['typescript'],
         },
       ],
       // autoInsert would fix a missing catalog entry by inventing ^0.0.0.
