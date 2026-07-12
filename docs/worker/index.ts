@@ -17,8 +17,10 @@ export default {
       );
       const headers = new Headers(shell.headers);
       headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
-      // Status precedence per the Verdict contract: absent means default
-      // shell handling (304s included); explicit (future data tier) wins.
+      // Status precedence per the Verdict contract: absent (always, today)
+      // means default shell handling, 304s included. When a data tier sets
+      // an explicit status, this fetch must also strip the request's
+      // validators so there is a 200 body to relabel — never a bare 304.
       return new Response(shell.body, {
         status: verdict.status ?? shell.status,
         headers,
