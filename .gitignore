@@ -42,8 +42,6 @@ certs/
 .claude
 
 lit-ui-router-*.tgz
-# resolved registry state, written by tools/release/resolve-published.ts
-tools/release/published-versions.json
 **/specs/__screenshots__
 coverage
 .wrangler

@@ -25,12 +25,14 @@
       // Cached: the verdict is a pure function of the pack surface and the
       // resolved published versions. Sound because npm tarballs are immutable
       // per version (and we practice publisher immutability) — the movable
-      // `latest` pointer is captured in published-versions.json, written by
-      // resolve:published just before this task and hashed as an input.
+      // `latest` pointer is captured in node_modules/.cache/release/
+      // published-versions.json, written by resolve:published just before
+      // this task and hashed as an input (turbo hashes explicitly listed
+      // node_modules inputs; probed on 2.10.4).
       // Escape hatch: `turbo run check:published-diff --force`.
       "inputs": [
         "$TURBO_DEFAULT$",
-        "published-versions.json",
+        "$TURBO_ROOT$/node_modules/.cache/release/published-versions.json",
         "$TURBO_ROOT$/packages/**",
         "$TURBO_ROOT$/**/package.json",
         "$TURBO_ROOT$/pnpm-workspace.yaml",

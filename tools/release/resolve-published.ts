@@ -8,14 +8,10 @@
 // task's inputs, its cache key is sound.
 
 import { execFile } from 'node:child_process';
-import { writeFile } from 'node:fs/promises';
 import { promisify } from 'node:util';
 
-import {
-  renderManifest,
-  type PublishedVersions,
-} from './published-versions.core.ts';
-import { publishedVersionsPath } from './published-versions.ts';
+import type { PublishedVersions } from './published-versions.core.ts';
+import { writePublishedVersions } from './published-versions.ts';
 import { loadWorkspace, workspaceRoot } from './workspace.ts';
 
 const run = promisify(execFile);
@@ -45,7 +41,7 @@ async function main() {
   for (const { name } of publishable) {
     versions[name] = await publishedLatest(name);
   }
-  await writeFile(publishedVersionsPath, renderManifest(versions));
+  await writePublishedVersions(versions);
   const summary = publishable
     .map(({ name }) => `${name}@${versions[name] ?? 'unpublished'}`)
     .join(', ');
