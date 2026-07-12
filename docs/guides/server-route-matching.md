@@ -139,12 +139,12 @@ burns on garbage URLs, and legitimate pages risk misclassification
 ([HTTP status codes and Search](https://developers.google.com/search/docs/crawling-indexing/http-network-errors),
 [John Mueller on soft-404s](https://johnmu.com/soft-404s-your-site/)).
 
-The honest exception class launches at the far end instead: SSR-default
-ecosystems like Next.js — and React Router's framework mode, which ships
+Not every ecosystem starts here. SSR-default ecosystems launch at the far
+end instead: Next.js and React Router's framework mode ship
 [`ssr: true` by default](https://reactrouter.com/how-to/spa), making full
-server routing its default launch state, with SPA mode as the documented
-opt-out that lands on exactly this level's `/* /index.html 200` rule. Same
-tool, both ends of the spectrum.
+server routing the default launch state, with SPA mode as the documented
+opt-out that lands on exactly level 2's `/* /index.html 200` rule. Same
+tools, both ends of the spectrum.
 
 <svg viewBox="0 0 720 390" width="100%" style="max-width: 720px" role="img" aria-label="Where the ecosystem lands on the server-support spectrum: hash-mode apps at level 1; Vue Router, React Router SPA mode, Angular guidance and the platform defaults at level 2; this repo's ui-router-server spans levels 3 to 5; SSR-default ecosystems like Next.js and React Router framework mode sit in a side lane - a different strategy for the same honesty - with React Router's SPA mode opting out down to level 2. Same tool, both ends of the spectrum." xmlns="http://www.w3.org/2000/svg">
   <title>Where the ecosystem lands on the spectrum</title>
@@ -247,10 +247,10 @@ tool, both ends of the spectrum.
 </svg>
 
 <FrameworkCards>
-  <FrameworkCard name="React Router" brand="react-router">Framework mode ships <code>ssr: true</code> by default, making full server routing its launch state; the documented SPA mode opts out to this level's <code>/* /index.html 200</code> rule. Same tool, both ends of the spectrum.</FrameworkCard>
+  <FrameworkCard name="React Router" brand="react-router">Framework mode ships <code>ssr: true</code> by default — full server routing as the launch state — while the documented SPA mode opts out to level 2's <code>/* /index.html 200</code> rule: one tool, both ends of the spectrum.</FrameworkCard>
   <FrameworkCard name="Vue Router" brand="vue-router">Its history-mode guide is the canonical level-2 documentation: the fallback that, by its own description, means the server will no longer report 404 errors.</FrameworkCard>
   <FrameworkCard name="Angular" brand="angular">Documents the same fallback rule for path-location deploys; honest statuses arrive through its SSR package rather than a route-aware edge.</FrameworkCard>
-  <FrameworkCard name="Next.js" brand="nextjs">SSR-default: the framework owns rendering, so every deep link gets an honest status from the start — the spectrum's far end as a launch state.</FrameworkCard>
+  <FrameworkCard name="Next.js" brand="nextjs">SSR-default: the framework owns rendering, and full server routing is the default launch state — launching at the far end of the spectrum.</FrameworkCard>
   <FrameworkCard name="SvelteKit" brand="svelte">The same SSR-default class; turn SSR off and its adapters document a <code>200.html</code> fallback — the level-2 rule under another name.</FrameworkCard>
   <FrameworkCard name="Netlify" brand="netlify">The <code>/* /index.html 200</code> redirect: level 2 as a single line of platform config.</FrameworkCard>
   <FrameworkCard name="Cloudflare" brand="cloudflare">Pages assumes an SPA by default; Workers static assets host this very site, with the worker running only where a routing decision is needed.</FrameworkCard>
