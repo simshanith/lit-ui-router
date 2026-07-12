@@ -42,8 +42,9 @@ machinery applies. Hash-mode apps are
 [deliberately out of scope](#path-location-clients), not at risk.
 
 **Level 2 — path location, platform-default fallback.** The moment routes
-move into the path, every deep link reaches the server — and this is where
-most path-location SPAs launch today. Serving the shell at 200 for every
+move into the path, every deep link reaches the server — and this is the
+industry-default deployment for path-location SPAs. Serving the shell at
+200 for every
 unknown path is the one fallback every major router's deployment guide
 prescribes
 ([Vue Router](https://router.vuejs.org/guide/essentials/history-mode.html)
@@ -69,6 +70,13 @@ of the index,
 burns on garbage URLs, and legitimate pages risk misclassification
 ([HTTP status codes and Search](https://developers.google.com/search/docs/crawling-indexing/http-network-errors),
 [John Mueller on soft-404s](https://johnmu.com/soft-404s-your-site/)).
+
+The honest exception class launches at the far end instead: SSR-default
+ecosystems like Next.js — and React Router's framework mode, which ships
+[`ssr: true` by default](https://reactrouter.com/how-to/spa), making full
+server routing its default launch state, with SPA mode as the documented
+opt-out that lands on exactly this level's `/* /index.html 200` rule. Same
+tool, both ends of the spectrum.
 
 **Level 3 — path location, static error rules.** The app needs honest
 errors: a real 404 status with a helpful page. Ordinary hosting has
