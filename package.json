@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "check:pack": "node scripts/check-pack.ts",
+    "check:pack": "node tools/release/check-pack.ts",
     "check:workers-builds": "turbo run workers-builds#check",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
@@ -29,8 +29,6 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
-    "@pnpm/fs.find-packages": "catalog:",
-    "@pnpm/workspace.read-manifest": "catalog:",
     "@types/node": "catalog:",
     "cypress": "catalog:",
     "eslint": "catalog:",

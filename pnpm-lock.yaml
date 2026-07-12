@@ -232,12 +232,6 @@ importers:
       '@commitlint/types':
         specifier: 'catalog:'
         version: 21.2.0
-      '@pnpm/fs.find-packages':
-        specifier: 'catalog:'
-        version: 1000.0.24(@pnpm/logger@1001.0.1)
-      '@pnpm/workspace.read-manifest':
-        specifier: 'catalog:'
-        version: 1000.3.1
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.2
@@ -694,6 +688,12 @@ importers:
 
   tools/release:
     devDependencies:
+      '@pnpm/fs.find-packages':
+        specifier: 'catalog:'
+        version: 1000.0.24(@pnpm/logger@1001.0.1)
+      '@pnpm/workspace.read-manifest':
+        specifier: 'catalog:'
+        version: 1000.3.1
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.2
