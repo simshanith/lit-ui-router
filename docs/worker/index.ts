@@ -34,6 +34,19 @@ export default {
         headers: { Location: mergeSearch(verdict.location, url.search) },
       });
     }
+    // notFound with a mount: the mount owned the path but nothing matched,
+    // so serve that app's 404 page re-wrapped with a real 404 status — never
+    // a redirect, and no canonical Link header (it's not a route). The fresh
+    // GET drops conditional headers, so the asset can't 304 into an empty
+    // body; anything but the page itself falls through to default handling.
+    if (verdict.mount) {
+      const page = await env.ASSETS.fetch(
+        new URL(`${verdict.mount}/404.html`, request.url),
+      );
+      if (page.status === 200) {
+        return new Response(page.body, { status: 404, headers: page.headers });
+      }
+    }
     // notFound: fall through to the assets binding's 404.html handling.
     return env.ASSETS.fetch(request);
   },

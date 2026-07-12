@@ -74,16 +74,26 @@ describe('docs site', () => {
     }
   });
 
-  it('serves a real 404 for unknown urls under the spa mounts', () => {
-    for (const url of [
-      '/app/definitely-not-a-route',
-      '/app/contacts/1/edit/extra',
-      '/app-mobx/definitely-not-a-route',
-    ]) {
-      cy.request({ url, failOnStatusCode: false }).then((response) => {
-        expect(response.status, url).to.eq(404);
-        expect(response.body).to.include('<title>404 | Lit UI Router</title>');
-      });
+  it('serves the per-app 404 page for unknown urls under the spa mounts', () => {
+    for (const mount of ['/app', '/app-mobx']) {
+      for (const path of [
+        '/definitely-not-a-route',
+        '/contacts/1/edit/extra',
+      ]) {
+        const url = `${mount}${path}`;
+        cy.request({ url, failOnStatusCode: false }).then((response) => {
+          expect(response.status, url).to.eq(404);
+          // Prefix only: the mobx page's title carries a " (MobX)" suffix.
+          expect(response.body).to.include(
+            '<title>404 | UI-Router Lit sample app',
+          );
+          // The page drives the user back into the app that owns the mount.
+          expect(response.body).to.include(`href="${mount}/welcome"`);
+          expect(response.headers['content-type'], url).to.include('text/html');
+          // Not a route, so no canonical Link header (unlike shell 200s).
+          expect(response.headers, url).to.not.have.property('link');
+        });
+      }
     }
   });
 });
