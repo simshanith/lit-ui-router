@@ -2,7 +2,11 @@
 [env]
 # Workspace binaries win over mise tools/globals; absolute via config_root
 # (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
-_.path = ["{{config_root}}/node_modules/.bin"]
+# The cwd entry puts a workspace member's own .bin first when cd'd into it
+# (isolated node_modules: member-only bins like vitest/typedoc/vitepress
+# aren't at root), matching pnpm-script resolution; elsewhere it's a dead
+# entry, and at the repo root a harmless duplicate of the config_root one.
+_.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
