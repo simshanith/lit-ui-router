@@ -60,6 +60,16 @@ export default defineConfig({
           dest: '',
           rename: 'app-mobx.html',
         },
+        // Per-mount 404 pages: the worker (docs/worker/index.ts) serves
+        // <mount>/404.html with status 404 for unmatched paths in a mount.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist/404.html',
+          dest: 'app',
+        },
+        {
+          src: 'node_modules/sample-app-lit-mobx/dist/404.html',
+          dest: 'app-mobx',
+        },
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
         {
