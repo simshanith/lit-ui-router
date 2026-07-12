@@ -2,7 +2,15 @@
 
 ## Development
 
-This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm is pinned (with an integrity hash) by `packageManager` in [`package.json`](./package.json) and provisioned by corepack (itself a mise-pinned tool); turbo is the workspace devDependency, resolved from `node_modules/.bin`, which mise puts on `PATH`.
+This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Each tool has exactly one version authority — one place to bump, no drift between duplicate pins:
+
+| Tool       | Provided by                                     | Pinned in                                                                |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| node       | mise                                            | [`.nvmrc`](./.nvmrc)                                                     |
+| corepack   | mise                                            | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
+| pnpm       | corepack                                        | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
+| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) catalog                   |
+| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html

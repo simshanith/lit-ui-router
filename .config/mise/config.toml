@@ -1,3 +1,4 @@
+# One version authority per tool — see the toolchain table in CONTRIBUTING.md.
 [env]
 # Workspace binaries win over mise tools/globals; absolute via config_root
 # (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
