@@ -28,19 +28,6 @@ export type {
   RouteDeclaration,
 } from './redirects.ts';
 
-// setTimeout and URLSearchParams exist on every target runtime (worker,
-// node, browser) but not in the DOM-free ES lib this package compiles
-// against.
-declare function setTimeout(handler: () => void, ms: number): unknown;
-declare class URLSearchParams {
-  constructor(init?: string);
-  has(name: string): boolean;
-  append(name: string, value: string): void;
-  getAll(name: string): string[];
-  forEach(callback: (value: string, key: string) => void): void;
-  toString(): string;
-}
-
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
 
