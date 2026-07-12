@@ -1,6 +1,6 @@
 ---
 title: Server-Side Routing
-description: Serve routing verdicts at the edge with ui-router-server - the app shell for real routes, real 404s for everything else
+description: Serve routing verdicts at the edge with ui-router-server - the 404-handling ladder from soft-404s to a simulated router, every rung live on this site
 ---
 
 # Server-Side Routing
@@ -18,13 +18,79 @@ redirect, and a real 404.
 [`ui-router-server`](https://github.com/simshanith/lit-ui-router/tree/main/packages/ui-router-server)
 packages that decision as a **routing verdict** — a pathname in, a plain
 object out; no `fetch`, no `Response`, no runtime assumptions — so the server
-itself stays a thin consumer. This site runs the pattern in production: the
-Cloudflare Worker behind lit-ui-router.dev resolves verdicts for the sample
-apps' mounts, so `/app/contacts/3/edit` serves the
-<a href="/app" target="_self">sample app</a>'s shell, `/app/` 302s to
-`/app/welcome`, and `/app/definitely-not` gets a real 404.
+itself stays a thin consumer. This site runs the pattern in production, and
+not just the destination: the Cloudflare Worker behind lit-ui-router.dev
+serves **every rung of the adoption ladder below, live and side by side**,
+from the anti-pattern to a full headless router per request.
 
-## The tier ladder
+## The 404 ladder
+
+Each rung is a mount on this site — same worker, same `wrangler.jsonc`, the
+differences are configuration:
+
+| Rung                  | Mount(s)             | Server behavior                                                                                                                            |
+| --------------------- | -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| **not-found-naive**   | `/not-found-naive`   | The classic SPA-host fallback: every path serves the shell at **200**, no route matching at all                                            |
+| **not-found-static**  | `/app`, `/app-mobx`  | Route-matched + declarative redirects; unknown paths get a **static 404 page** (this site's flagship)                                      |
+| **not-found-spa**     | `/not-found-spa`     | The `otherwise` projection: unknown paths serve the shell at an **honest 404**; the client renders its in-app 404 view at the retained URL |
+| **simulated-routing** | `/simulated-routing` | `strategy: 'simulate'`: every verdict computed by a **real headless router** replaying the URL                                             |
+| _full-stack_          | _(future)_           | auth-aware verdicts (401/403-with-shell)                                                                                                   |
+
+Try them on a URL that matches nothing:
+<a href="/not-found-naive/no-such-page" target="_self">`/not-found-naive/no-such-page`</a>
+answers 200 (the lie),
+<a href="/app/no-such-page" target="_self">`/app/no-such-page`</a> is a real
+404 page,
+<a href="/not-found-spa/no-such-page" target="_self">`/not-found-spa/no-such-page`</a>
+is a 404 whose body is the app itself rendering its 404 state, and
+<a href="/simulated-routing/no-such-page" target="_self">`/simulated-routing/no-such-page`</a>
+is a 404 decided by a real `otherwise()` rule settling inside a headless
+router — while
+<a href="/simulated-routing/" target="_self">`/simulated-routing/`</a> 302s to
+`/simulated-routing/welcome` because a real `when()` rule ran.
+
+The naive rung is not a straw man: it is
+[Cloudflare's own single-page-application mode](https://developers.cloudflare.com/workers/static-assets/routing/single-page-application/)
+— the platform default for SPAs — and it is what this site itself shipped
+before this stack.
+
+Two honesty notes about the exhibits. Every demo-mount response carries
+`X-Robots-Tag: noindex`: the naive rung deliberately manufactures soft-404s,
+and the site must not be penalized by its own teaching material. And the
+demo mounts alias the vanilla sample app's shell (they have no build of
+their own), which works because the built shell's asset URLs are absolute —
+but the shell also bakes `<base href="/app/">`, so the client router cannot
+match deep links under a foreign prefix. Full client-side parity on a demo
+mount would need a per-prefix shell build; the exhibits instead teach
+**server** semantics and stay quarantined from crawlers.
+
+## Choosing a rung: SEO and analytics
+
+Google's soft-404 machinery penalizes exactly one rung — the naive 200+shell
+baseline: pages classified as
+[soft 404s](https://support.google.com/webmasters/answer/7440203) drop out of
+the index,
+[crawl budget](https://developers.google.com/search/docs/crawling-indexing/large-site-managing-crawl-budget)
+burns on garbage URLs, and legitimate pages risk misclassification
+([HTTP status codes and Search](https://developers.google.com/search/docs/crawling-indexing/http-network-errors),
+[John Mueller on soft-404s](https://johnmu.com/soft-404s-your-site/)).
+
+Between the honest rungs, crawlers cannot tell the difference: Google
+ignores the body content of 4xx responses outright, so a static 404 page and
+a shell-at-404 are equally clean SEO. Static-versus-shell is an analytics
+and weight question instead:
+
+- a static page is a free structural boundary for
+  [segregated 404 tracking](https://plausible.io/docs/error-pages-tracking-404),
+  and serves scanners and typo probes a few bytes instead of an app;
+- a shell-at-404 boots the whole app for every garbage probe and mixes error
+  views into entrance reports unless the error state opts out — real-world,
+  [a 404 page has ranked as a site's second-highest landing page](https://www.searchviu.com/en/404-errors-google-analytics/).
+
+That is why this site's flagship mounts stay on the static rung; SEO alone
+condemns only the naive one.
+
+## The package tiers
 
 The package prices its capabilities as separate entry points, measured
 min+gzip by its own esbuild probe:
@@ -36,7 +102,7 @@ min+gzip by its own esbuild probe:
 | `ui-router-server` (root)    | only when a `simulate` mount resolves | 4.1 KiB         | mounts in, verdict out                                                                 |
 | `ui-router-server/simulate`  | yes (optional peer)                   | +27.3 KiB, lazy | what would the real router do                                                          |
 
-The ladder's shape is measured, not aesthetic. Deep-importing
+The tiers' shape is measured, not aesthetic. Deep-importing
 `@uirouter/core` internals carves a matching-only consumer from 43 KiB gzip
 down to 14 — `UrlMatcher` and the param machinery sit near the leaves of
 core's module graph — but it **cannot carve a headless router below the
@@ -56,11 +122,12 @@ Picking a tier:
 - **root** — the default. Mounts in, verdicts out; costs matcher-tier bytes
   until a mount opts into simulation.
 - **`/simulate`** (or `strategy: 'simulate'` on a mount) — replay the URL
-  through a real headless router. Today both strategies consume the same
-  declaration subset and produce identical verdicts (the package tests assert
-  parity), so `strategy` is a pure cost knob; this is the tier where routing
-  that data cannot express — hooks, resolves, `redirectTo` functions — will
-  live as the config widens.
+  through a real headless router: redirect rules and the `otherwise`
+  projection register as real `when()`/`otherwise()` rules and a transition
+  actually runs. Both strategies consume the same declaration subset and
+  produce identical verdicts (the package tests assert parity), so
+  `strategy` stays a pure cost knob until routing that data cannot express —
+  hooks, resolves, `redirectTo` functions — arrives with a wider config.
 
 ## The projection: routes as data
 
@@ -83,17 +150,24 @@ export const routes: RouteDeclaration[] = [
   { name: 'mymessages.messagelist', url: '/:folderId' },
   { name: 'mymessages.messagelist.message', url: '/:messageId' },
   { name: 'prefs', url: '/prefs' },
+  // Url-less, as in main/states.ts: structural only — never matched, never a
+  // redirect target — but declarable as an otherwise projection.
+  { name: 'notFound' },
 ];
 ```
 
 Dotted names nest and urls append, exactly as states do in the router:
 `mymessages.messagelist.message` folds to `/mymessages/:folderId/:messageId`.
-What the projection **leaves out** is as deliberate as what it includes:
+What the flagship config **leaves out** is as deliberate as what it
+includes:
 
 ```ts
 // Mirrors router.config.ts: the app root has no state url; a when(/^\/?$/)
-// rule routes it to welcome. Its otherwise() -> notFound rule is NOT
-// mirrored, so unknown paths stay notFound verdicts (real server 404s).
+// rule routes it to welcome. Its otherwise() -> notFound rule is deliberately
+// NOT projected for the flagship mounts: unknown paths stay notFound verdicts
+// (the not-found-static pattern) — 404 and 200 serving byte-identical shell
+// content reads as a soft-404 to crawlers, and an SPA booting on missing
+// pages muddies entrance analytics.
 export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 
 // 'matcher': the tables above are pure data, so the dependency-free tier
@@ -102,19 +176,15 @@ export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 // winner. If a rule ever needs hooks or resolves, flipping a mount to
 // 'simulate' is config, not code.
 const app: MountConfig = { routes, redirects, strategy: 'matcher' };
-
-/** Both sample apps run the same route tree, each under its own mount. */
-export const mounts: Record<string, MountConfig> = {
-  '/app': app,
-  '/app-mobx': app,
-};
 ```
 
 Three omissions to copy:
 
-- **The client's `otherwise()` rule stays client-side.** Mirroring it would
-  turn every unknown path back into a 200 shell — the exact lie this pattern
-  exists to stop. Unmatched paths stay `notFound` verdicts.
+- **The client's `otherwise()` rule is a rung choice.** The flagships don't
+  project it, so unknown paths stay `notFound` verdicts and misses serve the
+  static 404 page — the analytics case [above](#choosing-a-rung-seo-and-analytics).
+  Projecting it is one line of config, shown on the `/not-found-spa` rung
+  [below](#shell-at-404-the-otherwise-projection).
 - **Conditional routing stays client-side.** The client redirects
   `/mymessages` to a remembered folder (a DSR default) and bounces
   unauthenticated users to login (the
@@ -136,9 +206,10 @@ routes — through the real package API.
 ## The verdict
 
 `createServerRouter` compiles and validates every mount at construction —
-unknown redirect targets and cycles throw at startup, never per-request — and
-the longest matching mount base owns a pathname outright. `resolve()` accepts
-a pathname, an absolute URL string, or anything with a `pathname`:
+unknown redirect targets, cycles, and a bad `otherwise` target throw at
+startup, never per-request — and the longest matching mount base owns a
+pathname outright. `resolve()` accepts a pathname, an absolute URL string,
+or anything with a `pathname`:
 
 ```ts
 type Verdict =
@@ -147,13 +218,15 @@ type Verdict =
   | { kind: 'notFound'; mount?: string };
 ```
 
-`shell.status` is absent today — it is reserved for a future data tier
-(401/403-with-shell), and when set it wins outright over normal shell
-handling. `redirect.location` is the mount-joined target path, and
-`notFound.mount` distinguishes "a mount owned this path but nothing matched"
-from "no mount at all".
+`shell.status` follows a documented precedence: absent means default shell
+handling, conditional 304s included; set — 404 from the `otherwise`
+projection today, 401/403-with-shell for a future auth tier — it wins
+outright, with consumer obligations covered
+[below](#shell-at-404-the-otherwise-projection). `redirect.location` is the
+mount-joined target path, and `notFound.mount` distinguishes "a mount owned
+this path but nothing matched" from "no mount at all".
 
-## The worker: verdict → HTTP
+## The worker: verdicts → HTTP
 
 The whole handler
 ([`docs/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/docs/worker/index.ts)):
@@ -166,31 +239,82 @@ import { createServerRouter, mergeSearch } from 'ui-router-server';
 // is verdict -> HTTP. Module scope: the mount tables compile once per isolate.
 const router = createServerRouter({ mounts });
 
+// The 404-pattern exhibit mounts have no shell asset of their own — they
+// serve the vanilla app's (its asset urls are absolute, so the shell works
+// under any prefix). Mounts without an alias serve the shell at their base.
+const SHELL_PATHS: Record<string, string> = {
+  '/not-found-spa': '/app',
+  '/simulated-routing': '/app',
+};
+
+// Every exhibit response carries noindex: the naive rung deliberately serves
+// soft-404s, and the site must not be penalized by its own teaching material.
+const EXHIBITS = new Set([
+  '/not-found-naive',
+  '/not-found-spa',
+  '/simulated-routing',
+]);
+const noindexed = (mount: string, headers: Headers): Headers => {
+  if (EXHIBITS.has(mount)) headers.set('X-Robots-Tag', 'noindex');
+  return headers;
+};
+
+// The not-found-naive exhibit: the classic SPA-host fallback — every path
+// serves the shell at 200, no route matching at all (the soft-404
+// anti-pattern baseline, and what this site itself shipped before this
+// stack). It bypasses resolve() deliberately: the rung demonstrates the
+// ABSENCE of server routing.
+const NAIVE_MOUNT = '/not-found-naive';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (
+      url.pathname === NAIVE_MOUNT ||
+      url.pathname.startsWith(`${NAIVE_MOUNT}/`)
+    ) {
+      const shell = await env.ASSETS.fetch(
+        new Request(new URL('/app', request.url), request),
+      );
+      return new Response(shell.body, {
+        status: shell.status,
+        headers: noindexed(NAIVE_MOUNT, new Headers(shell.headers)),
+      });
+    }
     const verdict = await router.resolve(url);
     if (verdict.kind === 'shell') {
       // Constructing the shell request from the original carries the
       // conditional headers along, so deep-link revalidations still 304.
-      const shell = await env.ASSETS.fetch(
-        new Request(new URL(verdict.mount, request.url), request),
+      const shellRequest = new Request(
+        new URL(SHELL_PATHS[verdict.mount] ?? verdict.mount, request.url),
+        request,
       );
-      const headers = new Headers(shell.headers);
-      headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
-      // Status precedence per the Verdict contract: absent (always, today)
-      // means default shell handling, 304s included. When a data tier sets
-      // an explicit status, this fetch must also strip the request's
-      // validators so there is a 200 body to relabel — never a bare 304.
+      // Status precedence per the Verdict contract: absent means default
+      // shell handling, 304s included. An explicit status (404 via the
+      // otherwise projection) wins outright, and the validators must go so
+      // the fetch returns a 200 body to relabel — never a bare 304.
+      if (verdict.status !== undefined) {
+        shellRequest.headers.delete('If-None-Match');
+        shellRequest.headers.delete('If-Modified-Since');
+      }
+      const shell = await env.ASSETS.fetch(shellRequest);
+      const headers = noindexed(verdict.mount, new Headers(shell.headers));
+      // No canonical Link on status'd shells: a 404 is not an alternate
+      // representation of the mount root.
+      if (verdict.status === undefined)
+        headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
       return new Response(shell.body, {
         status: verdict.status ?? shell.status,
         headers,
       });
     }
     if (verdict.kind === 'redirect') {
+      const headers = new Headers({
+        Location: mergeSearch(verdict.location, url.search),
+      });
       return new Response(null, {
         status: verdict.status,
-        headers: { Location: mergeSearch(verdict.location, url.search) },
+        headers: noindexed(verdict.mount, headers),
       });
     }
     // notFound: fall through to the assets binding's 404.html handling.
@@ -199,13 +323,18 @@ export default {
 } satisfies ExportedHandler<Env>;
 ```
 
-That is the argument for the library-first shape: one verdict switch, and
-every routing decision — mount ownership, matching, redirect evaluation —
-lives in a package that node scripts, tests, and other servers call the same
-way. The HTTP-specific touches are the worker's whole contribution: the
-canonical `Link` header keeps crawlers from indexing every deep link as a
-duplicate of the shell, and forwarding the original request preserves
-conditional headers so revalidations still 304.
+The flagship path through the handler is still just the verdict switch:
+resolve, then shell / redirect / notFound become HTTP. Everything else is
+the ladder living in one worker — the naive rung bypasses `resolve()` on
+purpose (it demonstrates the _absence_ of server routing), `SHELL_PATHS`
+aliases the vanilla shell under the exhibit prefixes, and `noindexed`
+quarantines the exhibits. The worker's own HTTP contributions: the canonical
+`Link` header keeps crawlers from indexing every deep link as a duplicate of
+the shell (status-less shells only — a 404 is not an alternate
+representation of anything), and forwarding the original request preserves
+conditional headers so revalidations still 304. `Env` is generated by
+`wrangler types` from the config's bindings, so the handler needs no
+hand-written environment interface.
 
 Cloudflare Workers
 [static assets](https://developers.cloudflare.com/workers/static-assets/)
@@ -213,24 +342,40 @@ serve the built site; the worker script runs only where a routing decision is
 needed ([`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/wrangler.jsonc)):
 
 ```jsonc
+// https://developers.cloudflare.com/workers/static-assets/configuration/
 {
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "lit-ui-router",
+  "compatibility_date": "2026-07-01",
   "main": "./docs/worker/index.ts",
   "assets": {
     "directory": "./docs/dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
-    // Only sample-app deep links invoke the worker; other misses serve 404.html.
-    "run_worker_first": ["/app/*", "/app-mobx/*"],
+    // Sample-app deep links and the 404-pattern exhibits invoke the worker;
+    // other misses serve 404.html. Exhibits include their bare paths — no
+    // asset exists there, and the whole prefix is the demo.
+    "run_worker_first": [
+      "/app/*",
+      "/app-mobx/*",
+      "/not-found-naive",
+      "/not-found-naive/*",
+      "/not-found-spa",
+      "/not-found-spa/*",
+      "/simulated-routing",
+      "/simulated-routing/*",
+    ],
   },
 }
 ```
 
-`run_worker_first` sends every request under the SPA mounts through the
-worker — it has to see misses like `/app/definitely-not` to judge them —
-while `not_found_handling: "404-page"` gives unmatched paths `404.html` with
-a real 404 status. The patterns deliberately exclude the bare `/app`: every
-docs link targets it, and routing it through the worker would make each one
-pay the root rule's 302.
+`run_worker_first` sends every request under the mounts through the worker —
+it has to see misses like `/app/definitely-not` to judge them — while
+`not_found_handling: "404-page"` gives unmatched paths `404.html` with a
+real 404 status. The flagship patterns deliberately exclude the bare `/app`:
+every docs link targets it, and routing it through the worker would make
+each one pay the root rule's 302. The exhibits include their bare paths
+because no asset exists there — the whole prefix is the demo.
 
 ## Redirects: data until they need code
 
@@ -278,6 +423,91 @@ their hash-mode entry point is the bare `/app` — outside `run_worker_first` �
 precisely to stay clear of the root rule.
 :::
 
+## Shell-at-404: the `otherwise` projection
+
+The `/not-found-spa` rung is one config line: `MountConfig.otherwise`
+projects the client's `otherwise()` rule
+([`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
+
+```ts
+// The not-found-spa exhibit: the otherwise projection (mirroring the client's
+// otherwise() -> notFound rule) makes every path under this mount serve the
+// app shell at an honest 404 — the client boots at the retained url and
+// renders the rich in-app notFound state. It deliberately carries NO
+// url-bearing routes: the shell bakes <base href="/app/">, so the client
+// router cannot match deep links under this prefix — a shell-200 here would
+// be exactly the soft-404 shape the flagship mounts avoid.
+const notFoundSpaDemo: MountConfig = {
+  routes: [{ name: 'notFound' }],
+  otherwise: { state: 'notFound' },
+};
+```
+
+The semantics mirror the client rule they project. The target must be a
+**declared, url-less** state — enforced at construction — for the same
+reason the client's [404 state declares no `url`](./unmatched-urls#the-404-state):
+the unmatched URL stays in the address bar, like a server-rendered 404 page.
+A url-full target would move the client's address bar, and the honest
+projection of _that_ is a redirect, not a shell-404 at the retained path.
+Redirect rules and route matches take precedence, exactly as `otherwise()`
+only fires after every registered rule has failed; unknown paths then
+verdict as `{ kind: 'shell', status: 404 }` — the shell IS the error page,
+never a 200 — and the client boots at the retained URL, where its own
+`otherwise()` rule renders the rich notFound view.
+
+A status'd shell puts two obligations on the consumer, both visible in the
+worker above: strip the request's validators (`If-None-Match`,
+`If-Modified-Since`) before the assets fetch so it returns a 200 body to
+relabel — never relabel a bare 304, which has no body (a 404 with a null
+body is malformed) and would let a probe read cache freshness for a path
+that doesn't exist — and emit no canonical `Link`.
+
+## A real router per request
+
+The last shipped rung swaps the evaluation engine while keeping the same
+data, plus the mount table that puts every rung side by side:
+
+```ts
+// The simulated-routing exhibit: full router semantics server-side — the
+// same tables, but every verdict computed by replaying the url through a
+// headless @uirouter/core router (redirect rules, otherwise, and one day
+// hooks/resolves all ride). Deep links serve shell-200 here, but the shell's
+// baked <base href="/app/"> means the client renders its in-app notFound
+// under this prefix — the exhibit teaches SERVER semantics; noindex (worker)
+// quarantines it from crawlers.
+const simulatedRoutingDemo: MountConfig = {
+  routes,
+  redirects,
+  strategy: 'simulate',
+  otherwise: { state: 'notFound' },
+};
+
+/**
+ * Both sample apps run the same route tree, each under its own mount
+ * (not-found-static); the demo mounts exhibit the not-found-spa and
+ * simulated-routing rungs (not-found-naive lives worker-side — it is the
+ * absence of routing config).
+ */
+export const mounts: Record<string, MountConfig> = {
+  '/app': app,
+  '/app-mobx': app,
+  '/not-found-spa': notFoundSpaDemo,
+  '/simulated-routing': simulatedRoutingDemo,
+};
+```
+
+On a simulate mount nothing is approximated: the redirect table registers as
+real `when()` rules, `otherwise` as a real `otherwise()` rule, and a
+transition actually runs against a fresh in-memory router per request —
+`/simulated-routing/` 302s because that transition redirected, and the 404
+is a transition that settled on the `notFound` state. The cost is the full
+core chunk plus per-request router construction, and it is small: measured
+under `wrangler dev` (workerd), the first simulate request took 12.4 ms
+total, warm ones ~5–6 ms, against ~3 ms for matcher verdicts. The rung earns
+its keep the day a redirect needs hooks, resolves, or a `redirectTo`
+function — until then the flagships stay on the matcher tier and the switch
+remains one word of config.
+
 ## Real 404s, per mount
 
 A `notFound` verdict falls through to the assets binding, and
@@ -309,9 +539,11 @@ the client would refuse to match it. If your client relaxes
 [`strictMode`](https://ui-router.github.io/core/docs/latest/interfaces/_url_interface_.urlmatcherconfig.html),
 pass the same relaxation as the mount's `config`.
 
-**The 404 UX is asymmetric — by design.** Client-side navigation to an
-unknown URL still renders the in-router [404 state](./unmatched-urls) (HTTP
-200; no request is made), while a _direct load_ of the same URL gets the
-server's 404 page instead of the shell. That is the goal: the app handles bad
-links gracefully once loaded, and the server stops vouching for URLs that
-don't exist.
+**The 404 UX is asymmetric — by design.** With the flagship pattern,
+client-side navigation to an unknown URL still renders the in-router
+[404 state](./unmatched-urls) (HTTP 200; no request is made), while a
+_direct load_ of the same URL gets the server's 404 page instead of the
+shell. That is the goal: the app handles bad links gracefully once loaded,
+and the server stops vouching for URLs that don't exist. The `otherwise`
+rung trades that asymmetry away — both paths land in the in-app 404 view,
+and HTTP stays honest either way.
