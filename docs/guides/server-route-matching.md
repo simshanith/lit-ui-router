@@ -165,17 +165,17 @@ includes:
 // Mirrors router.config.ts: the app root has no state url; a when(/^\/?$/)
 // rule routes it to welcome. Its otherwise() -> notFound rule is deliberately
 // NOT projected for the flagship mounts: unknown paths stay notFound verdicts
-// (the not-found-static pattern) — 404 and 200 serving byte-identical shell
-// content reads as a soft-404 to crawlers, and an SPA booting on missing
-// pages muddies entrance analytics.
-export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
+// (the not-found-static pattern) — 404 views stay out of entrance analytics
+// and scanners get a few bytes; shell-at-404 is the /not-found-spa exhibit.
 
-// 'matcher': the tables above are pure data, so the dependency-free tier
-// suffices. Routing the client decides conditionally (mymessages' DSR
-// default, requiresAuth) is deliberately absent — the server must not pick a
-// winner. If a rule ever needs hooks or resolves, flipping a mount to
-// 'simulate' is config, not code.
-const app: MountConfig = { routes, redirects, strategy: 'matcher' };
+
+
+
+
+
+
+
+
 ```
 
 Three omissions to copy:
@@ -215,7 +215,7 @@ or anything with a `pathname`:
 type Verdict =
   | { kind: 'shell'; mount: string; status?: number }
   | { kind: 'redirect'; mount: string; location: string; status: number }
-  | { kind: 'notFound'; mount?: string };
+  | { kind: 'notFound'; mount?: string 
 ```
 
 `shell.status` follows a documented precedence: absent means default shell
@@ -245,7 +245,7 @@ const router = createServerRouter({ mounts });
 const SHELL_PATHS: Record<string, string> = {
   '/not-found-spa': '/app',
   '/simulated-routing': '/app',
-};
+
 
 // Every exhibit response carries noindex: the naive rung deliberately serves
 // soft-404s, and the site must not be penalized by its own teaching material.
@@ -257,7 +257,7 @@ const EXHIBITS = new Set([
 const noindexed = (mount: string, headers: Headers): Headers => {
   if (EXHIBITS.has(mount)) headers.set('X-Robots-Tag', 'noindex');
   return headers;
-};
+
 
 // The not-found-naive exhibit: the classic SPA-host fallback — every path
 // serves the shell at 200, no route matching at all (the soft-404
@@ -430,17 +430,17 @@ projects the client's `otherwise()` rule
 ([`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
 
 ```ts
-// The not-found-spa exhibit: the otherwise projection (mirroring the client's
-// otherwise() -> notFound rule) makes every path under this mount serve the
-// app shell at an honest 404 — the client boots at the retained url and
-// renders the rich in-app notFound state. It deliberately carries NO
-// url-bearing routes: the shell bakes <base href="/app/">, so the client
-// router cannot match deep links under this prefix — a shell-200 here would
-// be exactly the soft-404 shape the flagship mounts avoid.
-const notFoundSpaDemo: MountConfig = {
-  routes: [{ name: 'notFound' }],
-  otherwise: { state: 'notFound' },
-};
+
+
+
+
+
+
+
+
+
+
+
 ```
 
 The semantics mirror the client rule they project. The target must be a
@@ -468,32 +468,32 @@ The last shipped rung swaps the evaluation engine while keeping the same
 data, plus the mount table that puts every rung side by side:
 
 ```ts
-// The simulated-routing exhibit: full router semantics server-side — the
-// same tables, but every verdict computed by replaying the url through a
-// headless @uirouter/core router (redirect rules, otherwise, and one day
-// hooks/resolves all ride). Deep links serve shell-200 here, but the shell's
-// baked <base href="/app/"> means the client renders its in-app notFound
-// under this prefix — the exhibit teaches SERVER semantics; noindex (worker)
-// quarantines it from crawlers.
-const simulatedRoutingDemo: MountConfig = {
-  routes,
-  redirects,
-  strategy: 'simulate',
-  otherwise: { state: 'notFound' },
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+};
+};
+};
+};
+};
+};
+};
+};
+};
+};
 };
 
-/**
- * Both sample apps run the same route tree, each under its own mount
- * (not-found-static); the demo mounts exhibit the not-found-spa and
- * simulated-routing rungs (not-found-naive lives worker-side — it is the
- * absence of routing config).
- */
-export const mounts: Record<string, MountConfig> = {
-  '/app': app,
-  '/app-mobx': app,
-  '/not-found-spa': notFoundSpaDemo,
-  '/simulated-routing': simulatedRoutingDemo,
-};
 ```
 
 On a simulate mount nothing is approximated: the redirect table registers as
