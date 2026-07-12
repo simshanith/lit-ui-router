@@ -92,27 +92,18 @@ jobs:
           else
             echo "BRANCH_PREFIX=release/$PACKAGE/v" >> "$GITHUB_ENV"
           fi
-      - name: Parse increment inputs
-        # Handle the various increment input combinations:
-        # - major/minor/patch: Standard semver bumps
-        # - other: Custom version string from 'other' input
-        # - none: No bump, use current version. No-op unless `other` provided
-        run: |
-          echo "ACTUAL_INCREMENT=$(
-            if [ "$INCREMENT" != "other" ]; then
-              if [ "$INCREMENT" != "none" ]; then
-                echo "--increment $INCREMENT"
-              else
-                echo "$OTHER_INCREMENT"
-              fi
-            else
-              echo "--increment $OTHER_INCREMENT"
-            fi
-          )" >> "$GITHUB_ENV"
       - name: Calculate bumped version
-        # Dry-run release-it to get the new version without making changes
+        # scripts/release-increment-args.ts maps the increment/other inputs to
+        # release-it args (validating the free-text `other` input against a
+        # strict semver allowlist) and prints them one per line; `mapfile -t`
+        # reads them verbatim — no word-splitting of user input into argv.
+        # release-it then dry-runs to get the new version without changes.
         run: |
-          read -r -a INCREMENT_ARGS <<< "$ACTUAL_INCREMENT"
+          INCREMENT_OUTPUT="$(node scripts/release-increment-args.ts "$INCREMENT" "$OTHER_INCREMENT")"
+          INCREMENT_ARGS=()
+          if [ -n "$INCREMENT_OUTPUT" ]; then
+            mapfile -t INCREMENT_ARGS <<< "$INCREMENT_OUTPUT"
+          fi
           echo "BUMPED_VERSION=$(pnpm --filter "$PACKAGE" exec release-it --release-version "${INCREMENT_ARGS[@]}")" >> "$GITHUB_ENV"
       - name: Switch branches
         # Create release branch: release/{package}/vX.Y.Z
