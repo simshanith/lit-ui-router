@@ -75,6 +75,8 @@ describe('docs site', () => {
   });
 
   it('serves a real 404 for unknown urls under the spa mounts', () => {
+    // Flagship mounts keep static 404 pages (not the shell): 404/200
+    // byte-identical shells read as soft-404s and muddy entrance analytics.
     for (const url of [
       '/app/definitely-not-a-route',
       '/app/contacts/1/edit/extra',
@@ -83,7 +85,50 @@ describe('docs site', () => {
       cy.request({ url, failOnStatusCode: false }).then((response) => {
         expect(response.status, url).to.eq(404);
         expect(response.body).to.include('<title>404 | Lit UI Router</title>');
+        expect(response.headers, url).to.not.have.property('link');
       });
     }
+  });
+
+  it('serves the shell at 200 for everything under the naive exhibit', () => {
+    // The not-found-naive rung: the classic SPA-host fallback (the soft-404
+    // anti-pattern baseline) — no server routing at all.
+    for (const url of [
+      '/not-found-naive',
+      '/not-found-naive/anything/at/all',
+    ]) {
+      cy.request(url).then((response) => {
+        expect(response.status, url).to.eq(200);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+      });
+    }
+  });
+
+  it('serves the app shell at 404 under the shell-404 exhibit mount', () => {
+    // The /not-found-spa exhibit: every path is an honest 404 whose body IS
+    // the app shell — the other 404 pattern, demonstrated side by side.
+    for (const url of [
+      '/not-found-spa',
+      '/not-found-spa/',
+      '/not-found-spa/any/path',
+    ]) {
+      cy.request({ url, failOnStatusCode: false }).then((response) => {
+        expect(response.status, url).to.eq(404);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+        expect(response.headers, url).to.not.have.property('link');
+      });
+    }
+  });
+
+  it('boots the in-app 404 state on a direct exhibit load', () => {
+    cy.visit('/not-found-spa/definitely-not-a-route', {
+      failOnStatusCode: false,
+    });
+    cy.contains('404 Page Not Found');
+    // The unmatched url stays in the address bar (the 404 state is url-less).
+    cy.location('pathname').should(
+      'eq',
+      '/not-found-spa/definitely-not-a-route',
+    );
   });
 });

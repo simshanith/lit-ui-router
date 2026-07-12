@@ -27,8 +27,11 @@ export const routes: RouteDeclaration[] = [
 ];
 
 // Mirrors router.config.ts: the app root has no state url; a when(/^\/?$/)
-// rule routes it to welcome. Its otherwise() -> notFound rule is NOT
-// mirrored, so unknown paths stay notFound verdicts (real server 404s).
+// rule routes it to welcome. Its otherwise() -> notFound rule is deliberately
+// NOT projected for the flagship mounts: unknown paths stay notFound verdicts
+// (the not-found-static pattern) — 404 and 200 serving byte-identical shell
+// content reads as a soft-404 to crawlers, and an SPA booting on missing
+// pages muddies entrance analytics.
 export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 
 // 'matcher': the tables above are pure data, so the dependency-free tier
@@ -38,8 +41,24 @@ export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 // 'simulate' is config, not code.
 const app: MountConfig = { routes, redirects, strategy: 'matcher' };
 
-/** Both sample apps run the same route tree, each under its own mount. */
+// The not-found-spa exhibit: the otherwise projection (mirroring the client's
+// otherwise() -> notFound rule) makes every path under this mount serve the
+// app shell at an honest 404 — the client boots at the retained url and
+// renders the rich in-app notFound state. It deliberately carries NO
+// url-bearing routes: the shell bakes <base href="/app/">, so the client
+// router cannot match deep links under this prefix — a shell-200 here would
+// be exactly the soft-404 shape the flagship mounts avoid.
+const notFoundSpaDemo: MountConfig = {
+  routes: [{ name: 'notFound' }],
+  otherwise: { state: 'notFound' },
+};
+
+/**
+ * Both sample apps run the same route tree, each under its own mount
+ * (not-found-static); the demo mount exhibits the not-found-spa pattern.
+ */
 export const mounts: Record<string, MountConfig> = {
   '/app': app,
   '/app-mobx': app,
+  '/not-found-spa': notFoundSpaDemo,
 };

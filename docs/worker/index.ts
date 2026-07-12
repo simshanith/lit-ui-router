@@ -5,15 +5,38 @@ import { createServerRouter, mergeSearch } from 'ui-router-server';
 // is verdict -> HTTP. Module scope: the mount tables compile once per isolate.
 const router = createServerRouter({ mounts });
 
+// The 404-pattern exhibit mounts have no shell asset of their own — they
+// serve the vanilla app's (its asset urls are absolute, so the shell works
+// under any prefix). Mounts without an alias serve the shell at their base.
+const SHELL_PATHS: Record<string, string> = { '/not-found-spa': '/app' };
+
+// The not-found-naive exhibit: the classic SPA-host fallback — every path
+// serves the shell at 200, no route matching at all (the soft-404
+// anti-pattern baseline, and what this site itself shipped before this
+// stack). It bypasses resolve() deliberately: the rung demonstrates the
+// ABSENCE of server routing.
+const NAIVE_MOUNT = '/not-found-naive';
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
+    if (
+      url.pathname === NAIVE_MOUNT ||
+      url.pathname.startsWith(`${NAIVE_MOUNT}/`)
+    ) {
+      return env.ASSETS.fetch(
+        new Request(
+          new URL(SHELL_PATHS[NAIVE_MOUNT] ?? '/app', request.url),
+          request,
+        ),
+      );
+    }
     const verdict = await router.resolve(url);
     if (verdict.kind === 'shell') {
       // Constructing the shell request from the original carries the
       // conditional headers along, so deep-link revalidations still 304.
       const shellRequest = new Request(
-        new URL(verdict.mount, request.url),
+        new URL(SHELL_PATHS[verdict.mount] ?? verdict.mount, request.url),
         request,
       );
       // Status precedence per the Verdict contract: absent means default
