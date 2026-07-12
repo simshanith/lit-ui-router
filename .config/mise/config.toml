@@ -14,6 +14,8 @@ idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
 "aqua:rhysd/actionlint" = "1.7.12"
+# GitHub Actions security auditor; complements actionlint's syntax checks
+"aqua:zizmorcore/zizmor" = "1.26.1"
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
