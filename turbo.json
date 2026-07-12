@@ -40,7 +40,12 @@
       "inputs": ["examples/**/*.{ts,js}", ".oxlintrc.json", "$TURBO_DEFAULT$"]
     },
     "//#lint:package-json": {
-      "inputs": ["**/package.json", "eslint.config.js"]
+      "inputs": [
+        "**/package.json",
+        "eslint.config.js",
+        "pnpm-workspace.yaml",
+        ".oxlintrc.json"
+      ]
     },
     "//#lint:workflows": {
       "inputs": [".github/**", "$TURBO_DEFAULT$"]
@@ -62,7 +67,6 @@
         "typecheck",
         "format:check",
         "codecov:bundle",
-        "//#check:catalog",
         "//#check:pack"
       ]
     },
@@ -70,9 +74,6 @@
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
-    },
-    "//#check:catalog": {
-      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
     },
     "//#check:pack": {
       "inputs": ["$TURBO_DEFAULT$", "**/package.json"]

@@ -64,7 +64,7 @@
     "lit": "catalog:publishedPeer"
   },
   "devDependencies": {
-    "@custom-elements-manifest/analyzer": "^0.11.0",
+    "@custom-elements-manifest/analyzer": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
