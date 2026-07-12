@@ -69,6 +69,10 @@ describe('docs site', () => {
           expect(response.status, `${mount}${path}`).to.eq(200);
           // Prefix only: the mobx shell's title carries a " (MobX)" suffix.
           expect(response.body).to.include('<title>UI-Router Lit sample app');
+          // Flagships are indexable; only the exhibits carry noindex.
+          expect(response.headers, `${mount}${path}`).to.not.have.property(
+            'x-robots-tag',
+          );
         });
       }
     }
@@ -100,6 +104,8 @@ describe('docs site', () => {
       cy.request(url).then((response) => {
         expect(response.status, url).to.eq(200);
         expect(response.body).to.include('<title>UI-Router Lit sample app');
+        // Exhibit responses opt out of indexing: this rung IS the soft-404.
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
       });
     }
   });
@@ -116,6 +122,7 @@ describe('docs site', () => {
         expect(response.status, url).to.eq(404);
         expect(response.body).to.include('<title>UI-Router Lit sample app');
         expect(response.headers, url).to.not.have.property('link');
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
       });
     }
   });

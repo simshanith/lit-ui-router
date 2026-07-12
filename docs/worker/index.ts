@@ -10,6 +10,14 @@ const router = createServerRouter({ mounts });
 // under any prefix). Mounts without an alias serve the shell at their base.
 const SHELL_PATHS: Record<string, string> = { '/not-found-spa': '/app' };
 
+// Every exhibit response carries noindex: the naive rung deliberately serves
+// soft-404s, and the site must not be penalized by its own teaching material.
+const EXHIBITS = new Set(['/not-found-naive', '/not-found-spa']);
+const noindexed = (mount: string, headers: Headers): Headers => {
+  if (EXHIBITS.has(mount)) headers.set('X-Robots-Tag', 'noindex');
+  return headers;
+};
+
 // The not-found-naive exhibit: the classic SPA-host fallback — every path
 // serves the shell at 200, no route matching at all (the soft-404
 // anti-pattern baseline, and what this site itself shipped before this
@@ -24,12 +32,13 @@ export default {
       url.pathname === NAIVE_MOUNT ||
       url.pathname.startsWith(`${NAIVE_MOUNT}/`)
     ) {
-      return env.ASSETS.fetch(
-        new Request(
-          new URL(SHELL_PATHS[NAIVE_MOUNT] ?? '/app', request.url),
-          request,
-        ),
+      const shell = await env.ASSETS.fetch(
+        new Request(new URL('/app', request.url), request),
       );
+      return new Response(shell.body, {
+        status: shell.status,
+        headers: noindexed(NAIVE_MOUNT, new Headers(shell.headers)),
+      });
     }
     const verdict = await router.resolve(url);
     if (verdict.kind === 'shell') {
@@ -48,7 +57,7 @@ export default {
         shellRequest.headers.delete('If-Modified-Since');
       }
       const shell = await env.ASSETS.fetch(shellRequest);
-      const headers = new Headers(shell.headers);
+      const headers = noindexed(verdict.mount, new Headers(shell.headers));
       // No canonical Link on status'd shells: a 404 is not an alternate
       // representation of the mount root.
       if (verdict.status === undefined)
@@ -59,9 +68,12 @@ export default {
       });
     }
     if (verdict.kind === 'redirect') {
+      const headers = new Headers({
+        Location: mergeSearch(verdict.location, url.search),
+      });
       return new Response(null, {
         status: verdict.status,
-        headers: { Location: mergeSearch(verdict.location, url.search) },
+        headers: noindexed(verdict.mount, headers),
       });
     }
     // notFound: fall through to the assets binding's 404.html handling.
