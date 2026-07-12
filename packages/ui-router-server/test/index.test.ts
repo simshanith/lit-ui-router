@@ -220,6 +220,9 @@ describe('mergeSearch', () => {
 
   it('keeps all values of multi-value request keys', () => {
     assert.equal(mergeSearch('/a', 'x=1&x=2'), '/a?x=1&x=2');
+    // The regression the old hand-rolled worker loop had: has(key) saw the
+    // just-appended first instance and dropped a=2.
+    assert.equal(mergeSearch('/x?p=1', 'a=1&a=2&b=3'), '/x?p=1&a=1&a=2&b=3');
   });
 
   it('round-trips percent-encoding', () => {

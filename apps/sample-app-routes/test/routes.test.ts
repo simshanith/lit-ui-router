@@ -52,6 +52,11 @@ for (const mount of Object.keys(mounts)) {
       }
     });
 
+    // The slashless pin is counterfactual in production: run_worker_first
+    // deliberately excludes bare /app — every docs link uses it, and routing
+    // it through the worker would make each one pay a 302 and rewrite
+    // hash-mode entries. The verdict is pinned so the exclusion stays a
+    // wrangler.jsonc choice, not a package behavior.
     it('redirects the app root to welcome, with and without the slash', async () => {
       for (const path of ['', '/']) {
         assert.deepEqual(

@@ -71,10 +71,12 @@ export type Verdict =
    * Serve the app shell. Status precedence: when `status` is absent (always,
    * today), serve the shell however you normally would — including 304
    * conditional responses. When a future data tier sets it (401/403-with-
-   * shell), the verdict's status wins outright AND suppresses conditional-
-   * response passthrough: a 304 has no body and would let an unauthorized
-   * probe read cache freshness, so never let an asset-layer 304 clobber an
-   * explicit status.
+   * shell), the verdict's status wins outright — and you must suppress the
+   * conditional path BY STRIPPING the request's validators (If-None-Match,
+   * If-Modified-Since) before the assets fetch, so it returns 200 + full
+   * body to relabel. Never relabel a 304 itself: it has no body (a 401 with
+   * a null body is malformed) and would let an unauthorized probe read
+   * cache freshness.
    */
   | { kind: 'shell'; mount: string; status?: number }
   /**

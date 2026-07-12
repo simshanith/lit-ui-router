@@ -41,6 +41,11 @@ export interface RedirectTarget {
  * evaluate before state redirects, in declaration order. A string pattern
  * compiles as a matcher pattern and its extracted params carry into the
  * target (explicit target params win); a RegExp contributes no params.
+ *
+ * Server redirects assume path-location clients. Hash-location apps keep
+ * route state in the fragment the server never sees, so a mount-root rule
+ * would rewrite the visible path on every entry — serve the shell at the
+ * mount root instead.
  */
 export interface RedirectRule {
   pattern: RegExp | string;
