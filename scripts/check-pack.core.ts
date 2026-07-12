@@ -77,3 +77,54 @@ export function formatReport(results: PackResult[]): Report {
   }
   return { ok: false, text: lines.join('\n') };
 }
+
+// ── Packed-manifest gate (publish workflow) ─────────────────────────────────
+// The publish workflow strips devDependencies and scripts before `pnpm pack`
+// (dev-only metadata that leaks private workspace names and monorepo-only
+// commands into the published manifest), then re-checks the tarball it is
+// about to hand release-it. These checks are that gate.
+
+/**
+ * Violations in the manifest npm would publish, as human-readable strings.
+ *
+ * Semantics match the inline workflow check this replaces:
+ * - devDependencies and scripts must be absent — a present-but-empty object
+ *   still fails, because the strip step should have deleted the key.
+ * - No `catalog:`/`workspace:` anywhere in the serialized runtime dependency
+ *   fields. Deliberately blunter than {@link findUnsubstitutedRefs}: a
+ *   substring test instead of a prefix test, because at publish time ANY
+ *   trace of those protocols ships a broken release (the 1.3.0–1.5.0 class).
+ *   devDependencies are not scanned — their mere presence already fails.
+ */
+export function findPackedManifestViolations(
+  manifest: PackageManifest,
+): string[] {
+  const violations: string[] = [];
+  if (manifest.devDependencies) {
+    violations.push('devDependencies leaked into packed manifest');
+  }
+  if (manifest.scripts) {
+    violations.push('scripts leaked into packed manifest');
+  }
+  const runtime = JSON.stringify([
+    manifest.dependencies,
+    manifest.peerDependencies,
+    manifest.optionalDependencies,
+  ]);
+  if (/catalog:|workspace:/.test(runtime)) {
+    violations.push('unsubstituted refs in packed manifest');
+  }
+  return violations;
+}
+
+/** Render the packed-manifest report. */
+export function formatPackedManifestReport(violations: string[]): Report {
+  if (violations.length === 0) {
+    return { ok: true, text: '✓ packed manifest clean' };
+  }
+  const lines = [
+    '✗ packed manifest check failed — this tarball must not be published:',
+    ...violations.map((violation) => `  • ${violation}`),
+  ];
+  return { ok: false, text: lines.join('\n') };
+}

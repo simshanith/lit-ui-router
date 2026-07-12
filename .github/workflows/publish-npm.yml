@@ -93,15 +93,7 @@ jobs:
           git checkout -- "$PACKAGE_DIR/package.json"
       - name: Check packed manifest
         # no devDependencies, no scripts, and no unsubstituted catalog:/workspace: refs may ship
-        run: |
-          tar -xOzf "$TARBALL" package/package.json | node -e '
-            const m = JSON.parse(require("fs").readFileSync(0));
-            if (m.devDependencies) throw new Error("devDependencies leaked into packed manifest");
-            if (m.scripts) throw new Error("scripts leaked into packed manifest");
-            const runtime = JSON.stringify([m.dependencies, m.peerDependencies, m.optionalDependencies]);
-            if (/catalog:|workspace:/.test(runtime)) throw new Error("unsubstituted refs in packed manifest");
-            console.log("packed manifest clean");
-          '
+        run: node scripts/check-packed-manifest.ts "$TARBALL"
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
