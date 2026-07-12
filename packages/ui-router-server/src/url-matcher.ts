@@ -68,7 +68,9 @@ const typeEquals = (type: ParamType, a: unknown, b: unknown): boolean =>
 
 const stringBase = {
   is: (val: unknown): boolean => typeof val === 'string',
-  decode: (val: string): unknown => val,
+  // Stringly, like core's makeDefaultType: format()/validates() normalize
+  // non-string inputs (numbers, booleans) through decode, not just url text.
+  decode: valToString,
   encode: valToString,
 };
 

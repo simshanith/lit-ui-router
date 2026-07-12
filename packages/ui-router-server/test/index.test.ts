@@ -11,6 +11,13 @@ const appMount = (strategy: MountConfig['strategy']): MountConfig => ({
     { name: 'contacts', url: '/contacts' },
     { name: 'contacts.detail', url: '/:contactId' },
     { name: 'legacy', url: '/legacy', redirectTo: 'contacts' },
+    {
+      name: 'first',
+      url: '/first',
+      // Non-string params (RawParams admits them) must survive both
+      // strategies: format() decodes stringly, like the live router.
+      redirectTo: { state: 'contacts.detail', params: { contactId: 1 } },
+    },
   ],
   redirects: [{ pattern: /^\/?$/, to: 'welcome' }],
 });
@@ -55,6 +62,15 @@ for (const strategy of ['matcher', 'simulate'] as const) {
         kind: 'redirect',
         mount: '/app',
         location: '/app/contacts',
+        status: 302,
+      });
+    });
+
+    it('formats non-string target params', async () => {
+      assert.deepEqual(await router.resolve('/app/first'), {
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/contacts/1',
         status: 302,
       });
     });

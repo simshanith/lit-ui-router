@@ -388,6 +388,13 @@ const formatCases: FormatCase[] = [
     pattern: '/a/:x/:y',
     values: [{ x: '1', y: '2' }, { x: '1' }, { x: '', y: '' }],
   },
+  // Non-string values for untyped params: core's default types decode them
+  // stringly (RawParams admits them), never rejecting at validation.
+  {
+    pattern: '/p/:x',
+    values: [{ x: 0 }, { x: 123 }, { x: false }, { x: true }],
+  },
+  { pattern: '/s?flag', values: [{ flag: 0 }, { flag: false }, { flag: 123 }] },
   // Typed params: normalization and validation failures (null verdicts)
   {
     pattern: '/user/{id:int}',
