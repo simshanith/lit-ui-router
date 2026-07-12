@@ -17,10 +17,10 @@
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "mobx": "catalog:",
-    "typescript-5.0": "npm:typescript@5.0.4",
-    "typescript-5.9": "npm:typescript@^5.9.3",
-    "typescript-6": "npm:typescript@^6.0.3",
-    "typescript-7": "npm:typescript@^7.0.2",
+    "typescript-5.0": "catalog:",
+    "typescript-5.9": "catalog:",
+    "typescript-6": "catalog:",
+    "typescript-7": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*"
   }
 }
