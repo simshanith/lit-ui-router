@@ -5,7 +5,8 @@
   "type": "module",
   "sideEffects": false,
   "exports": {
-    "./matcher": "./src/url-matcher.ts"
+    "./matcher": "./src/url-matcher.ts",
+    "./simulate": "./src/simulate.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{ts,json,md}\"",
@@ -19,5 +20,13 @@
     "@uirouter/core": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer"
+  },
+  "peerDependenciesMeta": {
+    "@uirouter/core": {
+      "optional": true
+    }
   }
 }
