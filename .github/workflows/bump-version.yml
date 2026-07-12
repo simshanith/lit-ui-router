@@ -45,6 +45,10 @@ on:
         default: false
         type: boolean
 
+# Load-bearing: the commit-msg hook rejects release-it's "Release X.Y.Z" commit by design.
+env:
+  HUSKY: 0
+
 permissions:
   contents: write
 # pull-requests: write # instead handled by GH_PERSONAL_ACCESS_TOKEN for downstream actions

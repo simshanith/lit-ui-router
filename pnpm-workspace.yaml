@@ -33,6 +33,7 @@ catalog:
   eslint-plugin-package-json: ^1.5.0
   eslint-plugin-pnpm: ^1.6.1
   eslint-plugin-turbo: ^2.10.4
+  husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
   lit-dialog: ^2.0.1
@@ -95,6 +96,11 @@ overrides:
   'undici@6': 6.27.0
   'undici@7': 7.28.0
   'vitepress>vite': ^6.4.3
+
+packageExtensions:
+  conventional-changelog-preset-loader:
+    dependencies:
+      conventional-changelog-conventionalcommits: ^9.3.1
 
 verifyDepsBeforeRun: false
 
