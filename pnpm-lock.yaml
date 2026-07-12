@@ -714,6 +714,10 @@ importers:
         version: '@typescript/typescript6@6.0.2'
 
   tools/vue-check:
+    dependencies:
+      release:
+        specifier: workspace:*
+        version: link:../release
     devDependencies:
       typescript:
         specifier: catalog:typescript6

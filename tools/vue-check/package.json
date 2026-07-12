@@ -12,6 +12,9 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint ."
   },
+  "dependencies": {
+    "release": "workspace:*"
+  },
   "devDependencies": {
     "typescript": "catalog:typescript6",
     "vue-tsc": "catalog:"
