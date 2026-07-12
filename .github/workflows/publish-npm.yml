@@ -130,10 +130,10 @@ jobs:
         # package's newer tag, come up empty after path filtering, and silently
         # fall back to the flat git-log changelog (#302). Pin the range to this
         # package's own previous tag, computed by the unit-tested
-        # scripts/release-prev-tag.ts; a first release prints nothing and
+        # tools/release/release-prev-tag.ts; a first release prints nothing and
         # skips the override.
         run: |
-          PREV_TAG=$(node scripts/release-prev-tag.ts "$PACKAGE_NAME" "$RELEASE_VERSION")
+          PREV_TAG=$(node tools/release/release-prev-tag.ts "$PACKAGE_NAME" "$RELEASE_VERSION")
           CHANGELOG_ARGS=()
           if [ -n "$PREV_TAG" ]; then
             CHANGELOG_ARGS+=("--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=$PREV_TAG")

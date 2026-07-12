@@ -692,6 +692,15 @@ importers:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
 
+  tools/release:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
   tools/typedoc-plugin-lit-ui-router:
     devDependencies:
       '@types/node':

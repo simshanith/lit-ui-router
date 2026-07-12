@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 // Prints the previous release tag of a package — the changelog range start
 // the publish workflow pins release-it to (#302) — or nothing on a first
-// release, so `PREV_TAG=$(node scripts/release-prev-tag.ts <pkg> <version>)`
+// release, so `PREV_TAG=$(node tools/release/release-prev-tag.ts <pkg> <version>)`
 // can never fail the publish just because no earlier tag exists.
 //
 // This file is the IO shell: it runs `git describe` and delegates all
@@ -21,7 +21,7 @@ const run = promisify(execFile);
 const [packageName, releaseVersion, ...extra] = process.argv.slice(2);
 if (!packageName || !releaseVersion || extra.length > 0) {
   console.error(
-    'usage: node scripts/release-prev-tag.ts <package-name> <release-version>',
+    'usage: node tools/release/release-prev-tag.ts <package-name> <release-version>',
   );
   process.exit(1);
 }
