@@ -7,6 +7,7 @@
   "scripts": {
     "build": "turbo run build",
     "check:pack": "turbo run check:pack",
+    "check:published-diff": "turbo run check:published-diff",
     "check:workers-builds": "turbo run workers-builds#check",
     "ci": "turbo run ci",
     "dev": "turbo run dev",

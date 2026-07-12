@@ -16,6 +16,11 @@
         "$TURBO_ROOT$/**/package.json",
         "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
+    },
+    "check:published-diff": {
+      // Diffs against the live npm registry: a cached "clean" against a
+      // registry state that has since changed would be wrong, so never cache.
+      "cache": false
     }
   }
 }
