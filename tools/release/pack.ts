@@ -7,14 +7,7 @@ import { promisify } from 'node:util';
 
 const run = promisify(execFile);
 
-/** `pnpm pack` in `cwd`; falls back to corepack when pnpm is not on PATH. */
+/** `pnpm pack` in `cwd`, trusting the mise-provisioned pnpm on PATH. */
 export async function pnpmPack(cwd: string, tarball: string): Promise<void> {
-  const args = ['pack', '--out', tarball];
-  try {
-    await run('pnpm', args, { cwd });
-  } catch (error) {
-    // ENOENT means pnpm is not on PATH; any other failure is pack's own.
-    if ((error as NodeJS.ErrnoException | null)?.code !== 'ENOENT') throw error;
-    await run('corepack', ['pnpm', ...args], { cwd });
-  }
+  await run('pnpm', ['pack', '--out', tarball], { cwd });
 }
