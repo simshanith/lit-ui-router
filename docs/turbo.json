@@ -17,10 +17,12 @@
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
-      // Overrides REPLACE root deps, so re-state ^transit: worker/tsconfig
-      // reaches sample-app-routes and ui-router-server sources directly.
-      "dependsOn": ["^build", "^docs:api", "^transit", "types:worker"],
-      "with": ["typecheck:vue"]
+      "dependsOn": ["^build", "^docs:api"],
+      "with": ["typecheck:vue", "typecheck:worker"]
+    },
+    "typecheck:worker": {
+      "dependsOn": ["^build", "types:worker"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "lint": {
       // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.

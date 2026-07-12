@@ -10,8 +10,9 @@
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
     "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p worker/tsconfig.json --noEmit",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
+    "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
     "wrangler:dev": "wrangler dev"
   },
