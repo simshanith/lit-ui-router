@@ -1,10 +1,6 @@
 import { mounts } from 'sample-app-routes';
 import { createServerRouter, mergeSearch } from 'ui-router-server';
 
-interface Env {
-  ASSETS: Fetcher;
-}
-
 // All routing intelligence lives in ui-router-server; the worker's one job
 // is verdict -> HTTP. Module scope: the mount tables compile once per isolate.
 const router = createServerRouter({ mounts });
