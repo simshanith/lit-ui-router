@@ -304,7 +304,7 @@
     },
     {
       "files": [
-        "scripts/**/*.test.ts",
+        "tools/build_and_test/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/shared/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts"
@@ -338,7 +338,7 @@
       }
     },
     {
-      "files": ["scripts/start-xvfb.ts"],
+      "files": ["tools/build_and_test/src/start-xvfb.ts"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",

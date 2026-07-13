@@ -220,9 +220,6 @@ importers:
 
   .:
     devDependencies:
-      '@codecov/bundle-analyzer':
-        specifier: 'catalog:'
-        version: 2.0.1
       '@commitlint/cli':
         specifier: 'catalog:'
         version: 21.2.1(@types/node@24.13.2)(conventional-commits-parser@7.1.0)(typescript@7.0.2)
@@ -339,6 +336,9 @@ importers:
       '@types/lodash':
         specifier: 'catalog:'
         version: 4.17.24
+      build_and_test:
+        specifier: workspace:*
+        version: link:../../tools/build_and_test
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
@@ -379,6 +379,9 @@ importers:
       '@types/lodash':
         specifier: 'catalog:'
         version: 4.17.24
+      build_and_test:
+        specifier: workspace:*
+        version: link:../../tools/build_and_test
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
@@ -649,6 +652,21 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@25.0.9)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(vite@8.1.3(@types/node@25.0.9)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
+
+  tools/build_and_test:
+    devDependencies:
+      '@codecov/bundle-analyzer':
+        specifier: 'catalog:'
+        version: 2.0.1
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.1.3(@types/node@24.13.2)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
 
   tools/dts-backtest:
     devDependencies:

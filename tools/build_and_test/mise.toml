@@ -1,0 +1,15 @@
+# Build-test workflow tasks — addressed as //tools/build_and_test:<step>
+# (monorepo task addressing; the root config declares tools/* as
+# config_roots). Tasks run from THIS directory, so run lines are
+# src/-relative. Same contract as tools/release/mise.toml: inputs arrive via
+# step `env:` blocks, secrets stay in workflow step env, and this file stays
+# [tasks]-only so it is inert for shells that merely cd in here.
+# `depends = ["//:setup"]` keeps every task runnable from a fresh clone; a
+# warm re-run of setup is a sub-second no-op.
+
+[tasks.xvfb]
+# env: GITHUB_ENV (DISPLAY export target; prints-only when unset).
+# XVFB_* overrides serve the unit tests and local reproduction.
+description = "Start the shared CI Xvfb display and export DISPLAY"
+depends = ["//:setup"]
+run = "node src/start-xvfb.ts"

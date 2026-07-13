@@ -10,7 +10,6 @@
       "outputs": ["dist/**"]
     },
     "test": {
-      "with": ["//#test:root"],
       "dependsOn": ["^test"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
       "env": ["VITEST_BROWSER_API_PORT", "CI"],
@@ -80,9 +79,6 @@
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
-    },
-    "//#test:root": {
-      "inputs": ["scripts/**"]
     },
     "format": {
       "with": ["//#format:root"],

@@ -21,12 +21,10 @@
     "lint:workflows": "mise run lint_workflows",
     "prepare": "husky",
     "test:coverage": "turbo run test:coverage",
-    "test:root": "node --test \"scripts/**/*.test.ts\"",
     "typecheck": "turbo run typecheck",
     "typecheck:root": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@codecov/bundle-analyzer": "catalog:",
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
