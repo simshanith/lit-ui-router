@@ -3,7 +3,7 @@
 // The IO (enumerating publishable packages, running `pnpm pack`, extracting
 // the packed package.json) lives in check-pack.ts.
 
-import type { PackageManifest } from 'shared/types.ts';
+import type { PackageManifest } from '@tools/shared/types.ts';
 
 import { DEP_FIELDS, type DepField, type Report } from './types.ts';
 

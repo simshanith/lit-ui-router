@@ -1,5 +1,5 @@
 {
-  "name": "release",
+  "name": "@tools/release",
   "version": "0.0.1",
   "private": true,
   "description": "Owns the release-pipeline logic: the tested entries the publish and bump-version workflows invoke",
@@ -15,8 +15,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
-    "shared": "workspace:*",
     "typescript": "catalog:"
   }
 }

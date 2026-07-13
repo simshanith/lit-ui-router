@@ -12,7 +12,7 @@ import { promisify } from 'node:util';
 
 import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
-import { loadWorkspace, workspaceRoot } from 'shared/workspace.ts';
+import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
 

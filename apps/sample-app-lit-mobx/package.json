@@ -21,9 +21,9 @@
     "sample-app-shared": "workspace:*"
   },
   "devDependencies": {
+    "@tools/build_and_test": "workspace:*",
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
-    "build_and_test": "workspace:*",
     "oxfmt": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vite": "catalog:",

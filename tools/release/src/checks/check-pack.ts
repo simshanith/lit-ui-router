@@ -22,8 +22,8 @@ import {
   type PackResult,
 } from './check-pack.core.ts';
 import { pnpmPack } from './pack.ts';
-import type { PackageManifest } from 'shared/types.ts';
-import { loadWorkspace, workspaceRoot } from 'shared/workspace.ts';
+import type { PackageManifest } from '@tools/shared/types.ts';
+import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
 

@@ -5,8 +5,8 @@
 // and a stray local `mise run //tools/release:git_user` must not clobber a
 // developer's identity. argv lives in ./release-git-user.core.ts.
 
-import { defaultExec } from 'shared/exec.ts';
-import { runMain } from 'shared/gha.ts';
+import { defaultExec } from '@tools/shared/exec.ts';
+import { runMain } from '@tools/shared/gha.ts';
 import { gitUserConfigArgs } from './release-git-user.core.ts';
 
 runMain(async () => {

@@ -17,7 +17,7 @@ import { existsSync, statSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, resolve } from 'node:path';
 
-import { workspaceRoot } from 'shared/workspace.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 const require = createRequire(import.meta.url);
 

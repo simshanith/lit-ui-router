@@ -1,5 +1,5 @@
 {
-  "name": "build_and_test",
+  "name": "@tools/build_and_test",
   "version": "0.0.1",
   "private": true,
   "description": "Owns the build-test workflow's step logic: the shared Xvfb display and the Codecov bundle-stats upload",

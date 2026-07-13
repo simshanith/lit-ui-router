@@ -42,7 +42,7 @@ import {
 } from './check-published-diff.core.ts';
 import { pnpmPack } from './pack.ts';
 import { readPublishedVersions } from './published-versions.ts';
-import { loadWorkspace, workspaceRoot } from 'shared/workspace.ts';
+import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
 const MAX_BUFFER = 64 * 1024 * 1024;

@@ -1,5 +1,5 @@
 {
-  "name": "shared",
+  "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
   "description": "Cross-workflow tooling helpers: env contracts, exec/gh seams, GitHub Actions plumbing, retry, and workspace enumeration",

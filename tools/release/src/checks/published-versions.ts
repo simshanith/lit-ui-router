@@ -13,7 +13,7 @@ import {
   renderManifest,
   type PublishedVersions,
 } from './published-versions.core.ts';
-import { workspaceRoot } from 'shared/workspace.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 /** Where resolve-published.ts writes and check-published-diff.ts reads. */
 export const publishedVersionsPath = join(

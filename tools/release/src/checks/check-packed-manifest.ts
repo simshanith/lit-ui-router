@@ -17,7 +17,7 @@ import {
   findPackedManifestViolations,
   formatPackedManifestReport,
 } from './check-pack.core.ts';
-import type { PackageManifest } from 'shared/types.ts';
+import type { PackageManifest } from '@tools/shared/types.ts';
 
 const run = promisify(execFile);
 
