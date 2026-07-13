@@ -9,10 +9,17 @@
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     // Sample-app deep links and the 404-pattern exhibits invoke the worker;
-    // other misses serve 404.html. Exhibits include their bare paths — no
-    // asset exists there, and the whole prefix is the demo.
+    // other misses serve 404.html. EVERY mount lists its bare path too, not
+    // just the `/*` wildcard: a `/*` pattern matches `/app/foo` but NOT the
+    // bare mount root `/app`, and the root is exactly where the redirect
+    // verdict lives (the `/` -> welcome rule). Omit the bare path and
+    // html_handling serves the shell asset (/app.html) at 200 before the
+    // worker runs, silently shadowing the 302. The exhibits also need their
+    // bare paths because no asset exists there — the whole prefix is the demo.
     "run_worker_first": [
+      "/app",
       "/app/*",
+      "/app-mobx",
       "/app-mobx/*",
       "/not-found-naive",
       "/not-found-naive/*",
