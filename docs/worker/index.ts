@@ -1,13 +1,16 @@
 import { mounts } from 'sample-app-routes';
-import { createServerRouter, mergeSearch } from 'ui-router-server';
+import { createServerRouter } from 'ui-router-server';
+import { createFetchHandler } from 'ui-router-server/fetch';
 
-// All routing intelligence lives in ui-router-server; the worker's one job
-// is verdict -> HTTP. Module scope: the mount tables compile once per isolate.
+// All routing intelligence lives in ui-router-server; the ./fetch adapter
+// turns a verdict into an HTTP Response. Module scope: the mount tables
+// compile once per isolate.
 const router = createServerRouter({ mounts });
 
-// The 404-pattern exhibit mounts have no shell asset of their own — they
-// serve the vanilla app's (its asset urls are absolute, so the shell works
-// under any prefix). Mounts without an alias serve the shell at their base.
+// The 404-pattern exhibit mounts have no shell asset of their own — they serve
+// the vanilla app's (its asset urls are absolute, so the shell works under any
+// prefix). Mounts without an alias serve the shell at their own base, which is
+// the adapter's shellPath default.
 const SHELL_PATHS: Record<string, string> = {
   '/not-found-spa': '/app',
   '/simulated-routing': '/app',
@@ -15,22 +18,33 @@ const SHELL_PATHS: Record<string, string> = {
 
 // Every exhibit response carries noindex: the naive rung deliberately serves
 // soft-404s, and the site must not be penalized by its own teaching material.
-const EXHIBITS = new Set([
-  '/not-found-naive',
-  '/not-found-spa',
-  '/simulated-routing',
-]);
-const noindexed = (mount: string, headers: Headers): Headers => {
-  if (EXHIBITS.has(mount)) headers.set('X-Robots-Tag', 'noindex');
-  return headers;
+// The generic adapter owns verdict -> HTTP; SEO policy stays the site's,
+// layered on the adapter's OUTPUT — a redirect Response the adapter builds has
+// no host hook, so noindex rides the request path, not a per-verdict callback.
+const EXHIBITS = ['/not-found-naive', '/not-found-spa', '/simulated-routing'];
+const isExhibit = (pathname: string): boolean =>
+  EXHIBITS.some((m) => pathname === m || pathname.startsWith(`${m}/`));
+
+const withNoindex = (response: Response): Response => {
+  const headers = new Headers(response.headers);
+  headers.set('X-Robots-Tag', 'noindex');
+  return new Response(response.body, { status: response.status, headers });
 };
 
 // The not-found-naive exhibit: the classic SPA-host fallback — every path
-// serves the shell at 200, no route matching at all (the soft-404
-// anti-pattern baseline, and what this site itself shipped before this
-// stack). It bypasses resolve() deliberately: the rung demonstrates the
-// ABSENCE of server routing.
+// serves the shell at 200, no route matching at all (the soft-404 anti-pattern
+// baseline, and what this site shipped before this stack). It has no mounts
+// entry BY DESIGN: the rung demonstrates the ABSENCE of server routing, so it
+// bypasses the router entirely rather than riding a verdict.
 const NAIVE_MOUNT = '/not-found-naive';
+
+// The handler contract, restated against the ambient Request/Response the
+// ./fetch import puts in scope. ExportedHandler<Env> can't front it: importing
+// ./fetch shadows the globals with the adapter's non-generic WinterCG shim
+// (fetch.globals.d.ts), and ExportedHandler's `Request<Cf, Props>` needs the
+// generic workerd one — an arity mismatch skipLibCheck hides from tsc but the
+// type-aware lint surfaces. Env still comes from the generated worker types.
+type FetchExport = { fetch(request: Request, env: Env): Promise<Response> };
 
 export default {
   async fetch(request, env) {
@@ -39,67 +53,57 @@ export default {
       url.pathname === NAIVE_MOUNT ||
       url.pathname.startsWith(`${NAIVE_MOUNT}/`)
     ) {
+      // A string url, not a URL: importing ./fetch pulls its structural
+      // Request shim into global scope, and that shim's constructor takes
+      // `string | Request` (deliberately no URL, see fetch.globals.d.ts) —
+      // shadowing workerd's richer Request here. `.href` sidesteps it; the
+      // original request still rides along so a repeat load can 304.
       const shell = await env.ASSETS.fetch(
-        new Request(new URL('/app', request.url), request),
+        new Request(new URL('/app', request.url).href, request),
       );
-      return new Response(shell.body, {
-        status: shell.status,
-        headers: noindexed(NAIVE_MOUNT, new Headers(shell.headers)),
-      });
+      return withNoindex(shell);
     }
-    const verdict = await router.resolve(url);
-    if (verdict.kind === 'shell') {
-      // Constructing the shell request from the original carries the
-      // conditional headers along, so deep-link revalidations still 304.
-      const shellRequest = new Request(
-        new URL(SHELL_PATHS[verdict.mount] ?? verdict.mount, request.url),
-        request,
-      );
-      // Status precedence per the Verdict contract: absent means default
-      // shell handling, 304s included. An explicit status (404 via the
-      // otherwise projection) wins outright, and the validators must go so
-      // the fetch returns a 200 body to relabel — never a bare 304.
-      if (verdict.status !== undefined) {
-        shellRequest.headers.delete('If-None-Match');
-        shellRequest.headers.delete('If-Modified-Since');
-      }
-      const shell = await env.ASSETS.fetch(shellRequest);
-      const headers = noindexed(verdict.mount, new Headers(shell.headers));
-      // No canonical Link on status'd shells: a 404 is not an alternate
-      // representation of the mount root.
-      if (verdict.status === undefined)
-        headers.set('Link', `<${verdict.mount}>; rel="canonical"`);
-      return new Response(shell.body, {
-        status: verdict.status ?? shell.status,
-        headers,
-      });
-    }
-    if (verdict.kind === 'redirect') {
-      const headers = new Headers({
-        Location: mergeSearch(verdict.location, url.search),
-      });
-      return new Response(null, {
-        status: verdict.status,
-        headers: noindexed(verdict.mount, headers),
-      });
-    }
-    // notFound with a mount: the mount owned the path but nothing matched,
-    // so serve that app's 404 page re-wrapped with a real 404 status — never
-    // a redirect, and no canonical Link header (it's not a route). The fresh
-    // GET drops conditional headers, so the asset can't 304 into an empty
-    // body; anything but the page itself falls through to default handling.
-    if (verdict.mount) {
-      const page = await env.ASSETS.fetch(
-        new URL(`${verdict.mount}/404.html`, request.url),
-      );
-      if (page.status === 200) {
-        return new Response(page.body, {
-          status: 404,
-          headers: noindexed(verdict.mount, new Headers(page.headers)),
-        });
-      }
-    }
-    // notFound: fall through to the assets binding's 404.html handling.
-    return env.ASSETS.fetch(request);
+
+    // The fetch adapter fronts every routed mount: it owns status mapping,
+    // mergeSearch on redirect Locations, validator stripping + status relabel
+    // on status'd shells, and the canonical Link header. The host supplies the
+    // asset IO (env.ASSETS) and the two policies the adapter can't know: shell
+    // aliasing (SHELL_PATHS) and the real 404 page.
+    const handler = createFetchHandler(router, {
+      shellPath: (mount) => SHELL_PATHS[mount] ?? mount,
+      // The adapter hands over a shell Request already rewritten to shellPath
+      // and (for a status'd shell) stripped of validators — the host's job is
+      // the raw asset fetch; the adapter owns the relabel and Link on the way
+      // out. Deep-link revalidations still 304: a non-status'd shell request
+      // carries the conditional headers along from the original.
+      serveShell: (_mount, shellRequest) => env.ASSETS.fetch(shellRequest),
+      // Mount-owned miss: serve that app's 404 page re-wrapped at an honest
+      // 404; anything but the page itself (or an asset with no 404.html) falls
+      // through to the assets binding's own 404.html handling.
+      serveNotFound: async (mount, req) => {
+        const page = await env.ASSETS.fetch(
+          new URL(`${mount}/404.html`, req.url),
+        );
+        return page.status === 200
+          ? new Response(page.body, {
+              status: 404,
+              headers: new Headers(page.headers),
+            })
+          : env.ASSETS.fetch(request);
+      },
+      // The worker runs FIRST for the mount prefixes (wrangler
+      // run_worker_first) and real assets live at /assets, never under a
+      // mount — so it judges every request that reaches it, not just
+      // navigations.
+      shouldHandle: () => true,
+    });
+
+    const response = await handler(request);
+    // null is the adapter's pass-through: a notFound without a mount (the path
+    // isn't this router's), served however the assets binding would.
+    if (response === null) return env.ASSETS.fetch(request);
+    // Quarantine the teaching exhibits from crawlers, layered on the adapter's
+    // output (the redirect Response it builds has no host hook of its own).
+    return isExhibit(url.pathname) ? withNoindex(response) : response;
   },
-} satisfies ExportedHandler<Env>;
+} satisfies FetchExport;
