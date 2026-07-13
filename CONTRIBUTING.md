@@ -53,7 +53,7 @@ type inside a function body emits nothing and is fine).
 This is enforced in CI by [`tools/dts-backtest`](./tools/dts-backtest/README.md),
 which typechecks the built declarations with TypeScript 5.0.4 and the
 current version, in `bundler` and `NodeNext` resolution modes. If
-`dts-backtest#test` fails on your change, keep the newer-TS construct out
+`@tools/dts-backtest#test` fails on your change, keep the newer-TS construct out
 of the public surface — or raise the floor, which is a semver-major
 discussion (see the tool README).
 

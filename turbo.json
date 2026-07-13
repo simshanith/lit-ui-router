@@ -15,7 +15,7 @@
       "env": ["VITEST_BROWSER_API_PORT", "CI"],
       "passThroughEnv": ["WRANGLER_LOG"]
     },
-    "dts-backtest#test": {
+    "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
       "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
     },
@@ -72,7 +72,7 @@
         "typecheck",
         "format:check",
         "codecov:bundle",
-        "release#check:pack"
+        "@tools/release#check:pack"
       ]
     },
     "codecov:bundle": {

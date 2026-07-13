@@ -8,7 +8,7 @@
     "build": "turbo run build",
     "check:pack": "turbo run check:pack",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
-    "check:workers-builds": "turbo run workers-builds#check",
+    "check:workers-builds": "turbo run @tools/workers-builds#check",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
     "format": "turbo run format",
