@@ -28,7 +28,8 @@
     "esbuild": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
-    "typescript": "catalog:"
+    "typescript": "catalog:",
+    "vite": "catalog:"
   },
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
