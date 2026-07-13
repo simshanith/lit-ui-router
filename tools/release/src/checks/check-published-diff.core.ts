@@ -4,7 +4,7 @@
 // the publish workflow's manifest strip, running `npm diff`) lives in
 // check-published-diff.ts.
 
-import type { Report } from '../lib/types.ts';
+import type { Report } from './types.ts';
 
 // `npm diff` exits 0 whether or not the tarballs differ, so the verdict must
 // come from its output: an empty diff is the only "nothing would ship" signal.

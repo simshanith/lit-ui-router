@@ -13,7 +13,7 @@
     "lint": "oxlint ."
   },
   "dependencies": {
-    "release": "workspace:*"
+    "shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:typescript6",

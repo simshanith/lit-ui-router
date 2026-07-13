@@ -12,10 +12,10 @@
 //   4. create the release PR via gh (skipped on dry runs; in-tool retry)
 // Every release-it argv comes from the engine seam (release-it.core.ts).
 
-import { defaultExec, defaultStream } from '../lib/exec.ts';
-import { boolEnv, requireEnv } from '../lib/env.core.ts';
-import { createReleasePr } from '../lib/gh.ts';
-import { group, runMain } from '../lib/gha.ts';
+import { defaultExec, defaultStream } from 'shared/exec.ts';
+import { boolEnv, requireEnv } from 'shared/env.core.ts';
+import { createReleasePr } from 'shared/gh.ts';
+import { group, runMain } from 'shared/gha.ts';
 import { branchPrefix, commitMessageFromScript } from './release-bump.core.ts';
 import { incrementArgs } from './release-increment-args.core.ts';
 import {
@@ -24,7 +24,7 @@ import {
   releaseVersionArgs,
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
-import { workspaceRoot } from '../lib/workspace.ts';
+import { workspaceRoot } from 'shared/workspace.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');

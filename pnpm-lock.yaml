@@ -688,6 +688,18 @@ importers:
 
   tools/release:
     devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.2
+      shared:
+        specifier: workspace:*
+        version: link:../shared
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/shared:
+    devDependencies:
       '@pnpm/fs.find-packages':
         specifier: 'catalog:'
         version: 1000.0.24(@pnpm/logger@1001.0.1)
@@ -715,9 +727,9 @@ importers:
 
   tools/vue-check:
     dependencies:
-      release:
+      shared:
         specifier: workspace:*
-        version: link:../release
+        version: link:../shared
     devDependencies:
       typescript:
         specifier: catalog:typescript6

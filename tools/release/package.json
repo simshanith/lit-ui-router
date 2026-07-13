@@ -4,9 +4,6 @@
   "private": true,
   "description": "Owns the release-pipeline logic: the tested entries the publish and bump-version workflows invoke",
   "type": "module",
-  "exports": {
-    "./workspace.ts": "./src/lib/workspace.ts"
-  },
   "scripts": {
     "check:pack": "node src/checks/check-pack.ts",
     "check:published-diff": "node src/checks/check-published-diff.ts",
@@ -18,9 +15,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@pnpm/fs.find-packages": "catalog:",
-    "@pnpm/workspace.read-manifest": "catalog:",
     "@types/node": "catalog:",
+    "shared": "workspace:*",
     "typescript": "catalog:"
   }
 }

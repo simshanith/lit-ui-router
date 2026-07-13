@@ -306,6 +306,7 @@
       "files": [
         "scripts/**/*.test.ts",
         "tools/release/**/*.test.ts",
+        "tools/shared/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts"
       ],
       "rules": {

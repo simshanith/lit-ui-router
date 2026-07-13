@@ -3,12 +3,9 @@
 // The IO (enumerating publishable packages, running `pnpm pack`, extracting
 // the packed package.json) lives in check-pack.ts.
 
-import {
-  DEP_FIELDS,
-  type DepField,
-  type PackageManifest,
-  type Report,
-} from '../lib/types.ts';
+import type { PackageManifest } from 'shared/types.ts';
+
+import { DEP_FIELDS, type DepField, type Report } from './types.ts';
 
 // Specifier protocols pnpm must substitute at pack time. The npm registry
 // accepts a manifest that still contains them, but consumers then fail with
