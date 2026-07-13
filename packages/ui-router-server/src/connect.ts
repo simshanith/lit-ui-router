@@ -15,12 +15,11 @@
  * where `connect-history-api-fallback` sits. Override [[serveShell]] /
  * [[serveNotFound]] to take asset IO in hand.
  *
- * Self-contained, like the tiers it fronts: the request/response types
- * below declare the minimal structural surface the adapter touches — a
- * hand-written `node:http` subset — so Node, Express, Koa, Fastify and Vite
- * objects all fit and `./connect`'s exported types leak no upstream http
- * types onto consumers (the fetch/timer globals come from @types/node; these
- * host contracts stay structural on purpose — a self-contained public API).
+ * Dependency-free, like the tiers it fronts: the request/response types
+ * below declare the minimal structural surface the adapter touches (the
+ * `globals.d.ts` discipline applied to `node:http`), so Node, Express and
+ * Connect objects all fit without this package needing node types — and
+ * the DOM-free compile keeps enforcing runtime-neutrality everywhere else.
  */
 
 import { mergeSearch } from './index.ts';

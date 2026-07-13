@@ -1,22 +1,15 @@
 {
-  // Host globals (Request/Response/Headers, timers, URLSearchParams) come from
-  // @types/node — a devDep, so zero RUNTIME dependency: the types are erased at
-  // build and the package still ships no runtime deps, serving any server
-  // runtime (workerd, node, deno, bun). We used to hand-declare a minimal shim
-  // and compile against `types: []` so the compiler ENFORCED runtime-neutrality;
-  // that shim leaked its globals into consumers and clashed (workerd's generic
-  // Request), so the surface now comes from upstream. Neutrality is a convention
-  // here — don't reach for node-only APIs (process/Buffer/fs); a
-  // no-restricted-globals lint could restore the guard. lib stays DOM-free.
-  // The matcher tier's type-only @uirouter/core imports resolve without value
-  // deps; the simulate tier's value imports stay type-erased here.
+  // Runtime-neutral: no DOM, node, or workers types — the package serves any
+  // server runtime (workerd, node, deno) and the compiler enforces it. The
+  // matcher tier's type-only @uirouter/core imports resolve without any
+  // runtime types; the simulate tier's value imports stay type-erased here.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "lib": ["ES2022"],
-    "types": ["node"]
+    "types": []
   },
   "include": ["src/**/*"]
 }

@@ -11,6 +11,12 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
 
+// The fetch globals shim (fetch.globals.d.ts) declares only the surface the
+// adapter touches; node's real Response has `.text()` at runtime, so reach it
+// through a cast rather than widening the shim for tests.
+const bodyText = (res: Response): Promise<string> =>
+  (res as unknown as { text(): Promise<string> }).text();
+
 const ORIGIN = 'https://example.test';
 // A GET navigation is the default the middleware engages on.
 const navigation = (path: string, init?: RequestInit): Request =>
@@ -103,7 +109,7 @@ describe('createFetchHandler', () => {
     // The wrapped response carries the canonical Link and the asset's status/body.
     assert.equal(res.headers.get('Link'), '</app>; rel="canonical"');
     assert.equal(res.status, 200);
-    assert.equal(await res.text(), '<html>shell</html>');
+    assert.equal(await bodyText(res), '<html>shell</html>');
   });
 
   it('strips validators and relabels the status for a status’d shell', async () => {
@@ -131,7 +137,7 @@ describe('createFetchHandler', () => {
     // No canonical Link for an error representation; status relabeled to 404.
     assert.equal(res.headers.get('Link'), null);
     assert.equal(res.status, 404);
-    assert.equal(await res.text(), '<html>not found</html>');
+    assert.equal(await bodyText(res), '<html>not found</html>');
   });
 
   it('leaves the incoming request’s validators intact on a plain shell (deep-links still 304)', async () => {
@@ -162,7 +168,7 @@ describe('createFetchHandler', () => {
     const res = await handler(navigation('/app/nope'));
     assert.ok(res);
     assert.equal(res.status, 404);
-    assert.match(await res.text(), /404 Not Found — \/app/);
+    assert.match(await bodyText(res), /404 Not Found — \/app/);
   });
 
   it('sends no 404 body for a HEAD miss', async () => {
@@ -173,7 +179,7 @@ describe('createFetchHandler', () => {
     const res = await handler(navigation('/app/nope', { method: 'HEAD' }));
     assert.ok(res);
     assert.equal(res.status, 404);
-    assert.equal(await res.text(), '');
+    assert.equal(await bodyText(res), '');
   });
 
   it('passes a mountless miss straight through as null', async () => {

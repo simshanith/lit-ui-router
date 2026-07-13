@@ -11,6 +11,12 @@
  * core, and resolve() is async so that boundary can hold.
  */
 
+// Travels with the module through the import graph: a consumer typechecking
+// these sources via a plain import (types: []) never loads unreferenced
+// ambient files, so the globals shims must be referenced, not just included.
+// eslint-disable-next-line typescript/triple-slash-reference -- an ESM import of the ambient file would survive node's type stripping and 404 at runtime; the directive is type-space only
+/// <reference path="./globals.d.ts" />
+
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { compileRedirects, compileRoutes, matchRoute } from './redirects.ts';
