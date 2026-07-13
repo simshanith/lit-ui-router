@@ -2,17 +2,28 @@
 
 ## Development
 
-This repo uses [mise](https://mise.jdx.dev) to provision the Node.js, pnpm, and turbo versions used by contributors and CI. Node comes from [`.nvmrc`](./.nvmrc) (mise reads it automatically); pnpm and turbo are pinned in [`.config/mise/config.toml`](./.config/mise/config.toml).
+This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Each tool has exactly one version authority — one place to bump, no drift between duplicate pins:
+
+| Tool       | Provided by                                     | Pinned in                                                                |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| node       | mise                                            | [`.nvmrc`](./.nvmrc)                                                     |
+| corepack   | mise                                            | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
+| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
+| pnpm       | corepack                                        | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
+| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) catalog                   |
+| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
 mise trust
-mise install
-pnpm install
+mise install     # provisions node, corepack, npm, actionlint
+mise run setup   # corepack-installs the pinned pnpm, then pnpm install
 turbo build
 ```
 
-`mise install` provisions the pinned Node, pnpm, and turbo (as a global tool) and puts them on `PATH` via mise's shims — no separate `nvm use` or `pnpm add --global` needed. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
+`mise install` provisions the pinned Node and corepack. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): its `corepack` dependency task enables corepack and installs the `packageManager`-pinned pnpm, then `pnpm install` runs — frozen-lockfile automatically in CI. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts.
+
+pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vitest`, `typedoc`, `vitepress`, …) live in that member's own `node_modules/.bin`, not the root one. When your shell is cd'd into a member directory, mise also puts that member's `.bin` first on `PATH`, so bare invocations resolve exactly as the member's own pnpm scripts would — including a member-local version shadowing the root one (e.g. `tools/vue-check`'s TypeScript 6 `tsc`). This only applies at the member's root directory, not its subdirectories; `pnpm run` inside the member works everywhere regardless. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
 ## Running Tests
 
@@ -82,7 +93,7 @@ for hand-typed `merge <x> into <y>` freshens. To check a message locally:
 echo "feat(scope): my subject" | pnpm exec commitlint
 ```
 
-Commits are also checked at commit time: `pnpm install` installs a
+Commits are also checked at commit time: `mise run setup` (pnpm install) installs a
 [husky](https://typicode.github.io/husky/) `commit-msg` hook (via the root
 `prepare` script) that runs commitlint locally, and CI re-checks the same
 messages via the `lint_pr_commits` job. If the hook is missing — pnpm 11

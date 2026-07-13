@@ -11,7 +11,9 @@ of `lit-ui-router`, `lit-ui-router-mobx`, and
 `ui-router-navigation-location-plugin` — under a matrix of:
 
 - **TypeScript versions**: the pinned floor (`typescript-5.0` → 5.0.4) and
-  the repo's current catalog version
+  the repo's current catalog version. The 6.x leg rides the shared
+  `typescript6` catalog (also vue-check's, for Volar), so bumping that
+  catalog bumps both consumers deliberately.
 - **module resolution modes**: `bundler` and `NodeNext`
 
 The fixture compiles with `skipLibCheck: false`, so the packages' built
