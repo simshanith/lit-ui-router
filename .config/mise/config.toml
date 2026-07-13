@@ -75,6 +75,6 @@ description = "Lint and audit GitHub Actions workflows"
 depends = ["lint_actionlint", "lint_zizmor"]
 
 # ── Release pipeline ────────────────────────────────────────────────────────
-# The nine release-workflow tasks live beside their code in
+# The release-workflow tasks live beside their code in
 # tools/release/mise.toml, addressed as //tools/release:<step>
 # (e.g. `mise run '//tools/release:pack'`). `mise tasks ls --all` lists them.
