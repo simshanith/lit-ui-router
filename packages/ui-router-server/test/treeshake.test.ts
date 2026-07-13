@@ -66,10 +66,12 @@ describe('tree-shaking probe', () => {
   });
 
   it('keeps the adapter subpaths core-free at the entry (core stays lazy)', async () => {
-    // The Connect and Vite adapters front the root verdict API, so they
-    // inherit its boundary: a matcher-only mount table drives them without
-    // ever loading core, which lives behind the same dynamic simulate import.
-    for (const entry of ['connect.ts', 'vite.ts']) {
+    // Every adapter (Connect, Vite, fetch, Hono) fronts the root verdict API,
+    // so they inherit its boundary: a matcher-only mount table drives them
+    // without ever loading core, which lives behind the same dynamic simulate
+    // import. Hono's type-only import is erased before bundling, so its entry
+    // carries neither core nor hono.
+    for (const entry of ['connect.ts', 'vite.ts', 'fetch.ts', 'hono.ts']) {
       const result = await bundle(entry);
       const name = entry.replace(/\.ts$/, '.js');
       const chunk = result.outputFiles.find((file) =>

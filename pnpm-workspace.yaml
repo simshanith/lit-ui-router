@@ -26,6 +26,7 @@ catalog:
   concurrently: ^10.0.3
   cypress: ^15.18.0
   esbuild: ^0.28.1
+  hono: ^4.12.29
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
@@ -53,6 +54,7 @@ catalogMode: prefer
 catalogs:
   publishedPeer:
     '@uirouter/core': ^6.0.8
+    hono: ^4.0.0
     lit: ^3.0.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
