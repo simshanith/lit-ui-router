@@ -17,9 +17,12 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 [tasks.xvfb]
 # env: GITHUB_ENV (DISPLAY export target; prints-only when unset).
 # XVFB_* overrides serve the unit tests and local reproduction.
+# The `start-xvfb` package.json bin is an executable (shebang + 0755), so it
+# runs directly — pnpm never self-links a package's own bin onto its own
+# PATH, so a bare `start-xvfb` wouldn't resolve here.
 description = "Start the shared CI Xvfb display and export DISPLAY"
 depends = ["//:setup"]
-run = "node src/start-xvfb.ts"
+run = "./src/start-xvfb.ts"
 
 [tasks.playwright]
 # The vitest browser legs need the Playwright browsers + system deps; the

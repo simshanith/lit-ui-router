@@ -4,6 +4,7 @@
   "private": true,
   "description": "Owns the build-test workflow's step logic: the shared Xvfb display and the Codecov bundle-stats upload",
   "bin": {
+    "start-xvfb": "./src/start-xvfb.ts",
     "upload-bundle-stats": "./src/upload-bundle-stats.ts"
   },
   "type": "module",
