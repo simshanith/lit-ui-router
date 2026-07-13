@@ -3,6 +3,10 @@
   "compilerOptions": {
     "module": "es2022",
     "moduleResolution": "bundler",
+    // The vite config consumes ui-router-server/sample-app-routes as source
+    // (workspace exports point at .ts), whose imports carry .ts extensions —
+    // the same allowance docs/worker/tsconfig.json already makes.
+    "allowImportingTsExtensions": true,
     "outDir": "dist",
     "rootDir": ".",
     "noEmit": true,
