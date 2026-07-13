@@ -878,3 +878,14 @@ shell. That is the goal: the app handles bad links gracefully once loaded,
 and the server stops vouching for URLs that don't exist. The shell-at-404
 level trades that asymmetry away — both paths land in the in-app 404 view,
 and HTTP stays honest either way.
+
+**The rendered content.** Everything above is the routing verdict — the
+status, redirect, and 404 a URL earns from the same route table the client
+runs — and deliberately not the page body. A crawler that loads a real route
+gets a correct 200, but what comes back is still the empty client shell. That
+is the line between HTTP-semantics SEO, which this guide delivers, and content
+SEO: a rendered body a crawler can read. Rendering is a second, orthogonal
+axis — client-rendered, build-time pre-rendered, or request-time
+server-rendered, set per route — riding this same routing spine, which returns
+the identical verdict at every setting. Set that dial wherever a route needs
+it; the accurate HTTP status underneath is already there.
