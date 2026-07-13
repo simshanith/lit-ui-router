@@ -314,6 +314,54 @@
       }
     },
     {
+      "files": ["packages/ui-router-server/src/**/*.ts"],
+      "rules": {
+        "no-restricted-globals": [
+          "error",
+          {
+            "name": "process",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG); take host IO through an adapter hook instead."
+          },
+          {
+            "name": "Buffer",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG); use a web-standard API (e.g. TextEncoder) instead."
+          },
+          {
+            "name": "global",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG); use globalThis if a global is truly needed."
+          },
+          {
+            "name": "__dirname",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG); use import.meta.url instead."
+          },
+          {
+            "name": "__filename",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG); use import.meta.url instead."
+          },
+          {
+            "name": "require",
+            "message": "CommonJS global — ui-router-server is ESM and runtime-neutral (WinterCG); use import."
+          },
+          {
+            "name": "module",
+            "message": "CommonJS global — ui-router-server is ESM and runtime-neutral (WinterCG)."
+          },
+          {
+            "name": "exports",
+            "message": "CommonJS global — ui-router-server is ESM and runtime-neutral (WinterCG); use export."
+          },
+          {
+            "name": "setImmediate",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG); use setTimeout(fn, 0) or queueMicrotask."
+          },
+          {
+            "name": "clearImmediate",
+            "message": "node-only global — ui-router-server stays runtime-neutral (WinterCG)."
+          }
+        ]
+      }
+    },
+    {
       "files": ["tools/workers-builds/**/*.ts"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
