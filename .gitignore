@@ -2,6 +2,7 @@
 
 # compiled output
 dist
+dist-hash
 tmp
 
 # dependencies

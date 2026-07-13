@@ -14,7 +14,7 @@
     "test:cypress": "cypress run",
     "test:cypress:all": "node ./scripts/run-cypress-suites.ts",
     "test:cypress:docs": "cypress run --config-file cypress.docs.config.ts",
-    "test:cypress:hash": "cypress run --expose LOCATION_PLUGIN=hash --config videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
+    "test:cypress:hash": "cypress run --expose LOCATION_PLUGIN=hash --config baseUrl=http://localhost:8787/app-hash/,videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
     "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
     "test:cypress:navigation": "cypress run --expose LOCATION_PLUGIN=navigation --config videosFolder=cypress/videos-navigation,screenshotsFolder=cypress/screenshots-navigation",
     "test:hash": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:hash",

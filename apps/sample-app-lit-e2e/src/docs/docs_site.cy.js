@@ -105,6 +105,43 @@ describe('docs site', () => {
     }
   });
 
+  it('302s the flagship mount root — hash mode is not first-class there', () => {
+    // A hash client enters at the bare mount; the browser GETs it with the
+    // route in the (unsent) fragment. The flagship root 302s to /welcome,
+    // moving the browser to a new path — so a flagship mount can't host a hash
+    // app. That limitation is the reason for the dedicated /app-hash mount.
+    for (const mount of ['/app', '/app-mobx']) {
+      cy.request({ url: mount, followRedirect: false }).then((response) => {
+        expect(response.status, mount).to.eq(302);
+        expect(response.headers.location, mount).to.eq(`${mount}/welcome`);
+      });
+    }
+  });
+
+  it('serves the hash-demo shell at 200 at its root, with no redirect', () => {
+    // The dedicated hash mount: the fragment carries the route, so the server
+    // only ever sees the bare mount and must serve the shell there without a
+    // 302 (a redirect would strip the fragment's route on entry). Both the
+    // bare and trailing-slash forms answer 200 with the hash shell; the mount
+    // is a real demo, not an exhibit, so it stays indexable.
+    for (const url of ['/app-hash', '/app-hash/']) {
+      cy.request({ url, followRedirect: false }).then((response) => {
+        expect(response.status, url).to.eq(200);
+        expect(response.body, url).to.include(
+          '<title>UI-Router Lit sample app',
+        );
+        expect(response.headers, url).to.not.have.property('x-robots-tag');
+      });
+    }
+    // A mistyped deep path (never produced by a hash client) is an honest 404.
+    cy.request({
+      url: '/app-hash/no/such/route',
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.eq(404);
+    });
+  });
+
   it('serves the shell at 200 for everything under the naive exhibit', () => {
     // The not-found-naive rung: the classic SPA-host fallback (the soft-404
     // anti-pattern baseline) — no server routing at all.

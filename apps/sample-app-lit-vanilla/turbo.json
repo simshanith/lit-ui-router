@@ -8,7 +8,18 @@
         "VITE_SAMPLE_APP_BASE_URL",
         "VITE_SAMPLE_APP_PUSH_STATE"
       ],
-      "dependsOn": ["^build", "^transit"]
+      "dependsOn": ["^build", "^transit"],
+      "outputs": ["dist/**"],
+      "with": ["build:hash"]
+    },
+    "build:hash": {
+      "env": [
+        "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
+        "VITE_SAMPLE_APP_BASE_URL",
+        "VITE_SAMPLE_APP_PUSH_STATE"
+      ],
+      "dependsOn": ["^build", "^transit"],
+      "outputs": ["dist-hash/**"]
     }
   }
 }

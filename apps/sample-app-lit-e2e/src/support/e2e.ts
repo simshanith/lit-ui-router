@@ -28,10 +28,12 @@ export function visitWithFeatures(
   features: Record<string, string> = {},
 ) {
   const { query, isHashMode } = featureQuery(features);
-  // Hash-mode visits target the bare mount (`/app`, not `/app/`): the worker
-  // 302s the mount root to /welcome, which would rewrite the path under the
-  // hash on every visit; the bare mount serves the shell directly, and
-  // consecutive visits differ only by hash, as hash routing intends.
+  // Hash-mode visits target the bare mount (`/app-hash`, not `/app-hash/`):
+  // the dedicated hash mount serves the shell at 200 there with no redirect
+  // (the flagship mounts 302 their root to /welcome, which would rewrite the
+  // path under the hash on every visit — the reason hash mode gets its own
+  // mount). Consecutive visits then differ only by hash, as hash routing
+  // intends.
   const root = (Cypress.config('baseUrl') ?? '').replace(/\/+$/, '');
   const url = query
     ? isHashMode

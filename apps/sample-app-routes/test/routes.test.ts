@@ -92,6 +92,33 @@ for (const mount of ['/app', '/app-mobx']) {
   });
 }
 
+describe('/app-hash verdicts (the hash-location demo)', () => {
+  it('serves the shell at the mount root, with and without the slash', async () => {
+    // A hash client keeps the whole route in the fragment, so the server only
+    // ever sees the bare mount and must serve the shell there with NO redirect
+    // (a 302 would strip the fragment's route on entry — the reason hash mode
+    // is not first-class at the flagship mounts). strict:false pins the
+    // trailing-slash form to the same shell verdict.
+    for (const path of ['', '/']) {
+      assert.deepEqual(
+        await router.resolve(`/app-hash${path}`),
+        { kind: 'shell', mount: '/app-hash' },
+        `/app-hash${path}`,
+      );
+    }
+  });
+
+  it('reports notFound for deep paths (a hash client never produces them)', async () => {
+    for (const path of ['/welcome', '/contacts/3', '/no/such/route']) {
+      assert.deepEqual(
+        await router.resolve(`/app-hash${path}`),
+        { kind: 'notFound', mount: '/app-hash' },
+        `/app-hash${path}`,
+      );
+    }
+  });
+});
+
 describe('/not-found-spa verdicts (the not-found-spa exhibit)', () => {
   it('serves the shell at 404 for every path under the mount', async () => {
     // The otherwise projection: the shell IS the error page, at an honest
@@ -146,6 +173,7 @@ describe('mounts', () => {
     assert.deepEqual(Object.keys(mounts), [
       '/app',
       '/app-mobx',
+      '/app-hash',
       '/not-found-spa',
       '/simulated-routing',
     ]);

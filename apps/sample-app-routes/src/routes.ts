@@ -69,15 +69,31 @@ const simulatedRoutingDemo: MountConfig = {
   otherwise: { state: 'notFound' },
 };
 
+// The hash-location demo: a hash client keeps the whole route in the fragment,
+// so the server only ever sees the bare mount — and it MUST serve the shell at
+// 200 there. A redirect at the root (the flagship's `/` -> welcome rule) would
+// 302 the mount, and a 302 sends the browser to a new path, stripping the
+// route the hash client entered with; that is exactly why hash mode is not
+// first-class at the flagship mounts. A single url-less-prefix root route
+// (`url: ''`) matches the empty subpath to a shell verdict with no redirect;
+// `strict: false` extends it to the trailing-slash form (`/app-hash/`). Deep
+// paths never occur under a hash client, so they stay honest 404s.
+const hashDemo: MountConfig = {
+  routes: [{ name: 'root', url: '' }],
+  config: { strict: false },
+};
+
 /**
  * Both sample apps run the same route tree, each under its own mount
  * (not-found-static); the demo mounts exhibit the not-found-spa and
  * simulated-routing rungs (not-found-naive lives worker-side — it is the
- * absence of routing config).
+ * absence of routing config), and /app-hash the hash-location shape (shell at
+ * the root, no redirect, so the fragment survives entry).
  */
 export const mounts: Record<string, MountConfig> = {
   '/app': app,
   '/app-mobx': app,
+  '/app-hash': hashDemo,
   '/not-found-spa': notFoundSpaDemo,
   '/simulated-routing': simulatedRoutingDemo,
 };

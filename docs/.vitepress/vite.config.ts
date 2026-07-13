@@ -21,6 +21,9 @@ const TARGET = ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'];
 const SHELL_PATHS: Record<string, string> = {
   '/app': '/app.html',
   '/app-mobx': '/app-mobx.html',
+  // The hash demo has its own shell (base href /app-hash/, hash location baked
+  // at build), not the vanilla one the exhibits borrow.
+  '/app-hash': '/app-hash.html',
   '/not-found-spa': '/app.html',
   '/simulated-routing': '/app.html',
 };
@@ -89,6 +92,19 @@ export default defineConfig({
           dest: '',
           rename: 'app-mobx.html',
         },
+        // The hash-location sibling shell: the vanilla app's second build
+        // (`vite build --mode hash`), hash location + `/app-hash/` base baked
+        // in. Its bundle is content-hashed against different env, so it
+        // coexists with the vanilla one under /assets.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist-hash/assets/*',
+          dest: 'assets',
+        },
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist-hash/index.html',
+          dest: '',
+          rename: 'app-hash.html',
+        },
         // Per-mount 404 pages: the worker (docs/worker/index.ts) serves
         // <mount>/404.html with status 404 for unmatched paths in a mount.
         {
@@ -98,6 +114,12 @@ export default defineConfig({
         {
           src: 'node_modules/sample-app-lit-mobx/dist/404.html',
           dest: 'app-mobx',
+        },
+        // Hash deep paths (`/app-hash/foo`) never happen under a hash client,
+        // but a mistyped one gets the same honest 404 page as the other mounts.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist-hash/404.html',
+          dest: 'app-hash',
         },
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
