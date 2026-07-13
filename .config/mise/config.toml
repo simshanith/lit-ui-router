@@ -87,3 +87,10 @@ depends = ["lint_actionlint", "lint_zizmor"]
 description = "Build one package and its workspace deps via turbo"
 depends = ["setup"]
 run = 'turbo run "${PACKAGE_NAME:?}#build"'
+
+[tasks.ci]
+# env: TURBO_FORCE (build-test deflake input; ""/"false" respect the cache)
+# + TURBO_TOKEN/TURBO_API/TURBO_TEAM, CODECOV_TOKEN, WRANGLER_LOG.
+description = "Run the full CI pipeline via turbo"
+depends = ["setup"]
+run = "turbo run ci --ui=stream --log-order=stream"

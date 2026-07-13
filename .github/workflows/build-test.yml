@@ -56,24 +56,23 @@ jobs:
           # here keeps download noise out of the pnpm postinstall output.
           CYPRESS_INSTALL_BINARY: '0'
       - name: Install Playwright Browsers
-        run: playwright install --with-deps
+        run: mise run //tools/build_and_test:playwright
       - name: Install Cypress
-        # Verify up front so the concurrent vanilla/mobx runs skip the
-        # "first time using Cypress" verification banner.
-        run: |
-          cypress install
-          cypress verify
+        run: mise run //tools/build_and_test:cypress
       - name: Start shared Xvfb display
         # The vanilla and MobX Cypress suites run concurrently. Without a
         # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
         # race ("Fatal server error"); one shared display serves both.
         # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
-        # The script captures Xvfb's stderr (routine xkbcomp keysym noise on
+        # The task captures Xvfb's stderr (routine xkbcomp keysym noise on
         # the runner image) and prints it, filtered, only on startup failure.
-        run: node scripts/start-xvfb.ts
+        run: mise run //tools/build_and_test:xvfb
       - name: Build and Test
-        run: turbo run ci --ui=stream --log-order=stream ${{ inputs.force && '--force' || '' }}
+        # TURBO_FORCE carries the deflake input through env (never `${{ }}`
+        # in run lines); turbo parses ""/"false" as cache-respecting.
+        run: mise run ci
         env:
+          TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}

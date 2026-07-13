@@ -232,9 +232,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.2
-      cypress:
-        specifier: 'catalog:'
-        version: 15.18.0
       eslint:
         specifier: 'catalog:'
         version: 10.6.0(jiti@2.7.0)(supports-color@8.1.1)
@@ -265,9 +262,6 @@ importers:
       oxlint-tsgolint:
         specifier: 'catalog:'
         version: 0.24.0
-      playwright:
-        specifier: 'catalog:'
-        version: 1.61.1
       turbo:
         specifier: 'catalog:'
         version: 2.10.4
@@ -661,6 +655,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.2
+      cypress:
+        specifier: 'catalog:'
+        version: 15.18.0
+      playwright:
+        specifier: 'catalog:'
+        version: 1.61.1
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

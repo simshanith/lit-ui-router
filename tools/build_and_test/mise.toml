@@ -7,9 +7,30 @@
 # `depends = ["//:setup"]` keeps every task runnable from a fresh clone; a
 # warm re-run of setup is a sub-second no-op.
 
+[env]
+# This package's own devDep binaries (playwright, cypress) for the tasks
+# below. Absolute via config_root (this directory); the root config's
+# {{cwd}} entry only covers shells already cd'd in here, not `mise run`
+# from elsewhere. For cd'd shells this is a harmless duplicate.
+_.path = ["{{config_root}}/node_modules/.bin"]
+
 [tasks.xvfb]
 # env: GITHUB_ENV (DISPLAY export target; prints-only when unset).
 # XVFB_* overrides serve the unit tests and local reproduction.
 description = "Start the shared CI Xvfb display and export DISPLAY"
 depends = ["//:setup"]
 run = "node src/start-xvfb.ts"
+
+[tasks.playwright]
+# The vitest browser legs need the Playwright browsers + system deps; the
+# binary comes from this package's own devDependency.
+description = "Install the Playwright browsers with system dependencies"
+depends = ["//:setup"]
+run = "playwright install --with-deps"
+
+[tasks.cypress]
+# Verify up front so the concurrent vanilla/mobx Cypress runs skip the
+# "first time using Cypress" verification banner.
+description = "Install and verify the Cypress binary"
+depends = ["//:setup"]
+run = ["cypress install", "cypress verify"]

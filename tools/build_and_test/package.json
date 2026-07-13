@@ -17,6 +17,8 @@
   "devDependencies": {
     "@codecov/bundle-analyzer": "catalog:",
     "@types/node": "catalog:",
+    "cypress": "catalog:",
+    "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   }
