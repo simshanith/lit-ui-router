@@ -17,20 +17,20 @@
     "wrangler:dev": "wrangler dev"
   },
   "dependencies": {
-    "@spectrum-web-components/icons-workflow": "^1.12.1",
+    "@spectrum-web-components/icons-workflow": "catalog:",
     "sample-app-lit-mobx": "workspace:*",
     "sample-app-lit-vanilla": "workspace:*",
     "sample-app-routes": "workspace:*",
-    "screenfull": "^6.0.2",
+    "screenfull": "catalog:",
     "ui-router-server": "workspace:*",
-    "vue": "^3.5.39"
+    "vue": "catalog:"
   },
   "devDependencies": {
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:vitepress1",
-    "vitepress": "^1.6.4",
+    "vitepress": "catalog:",
     "vue-check": "workspace:*",
     "wrangler": "catalog:"
   }

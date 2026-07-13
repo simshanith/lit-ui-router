@@ -1,9 +1,48 @@
+# One version authority per tool — see the toolchain table in CONTRIBUTING.md.
+[env]
+# Workspace binaries win over mise tools/globals; absolute via config_root
+# (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
+# The cwd entry puts a workspace member's own .bin first when cd'd into it
+# (isolated node_modules: member-only bins like vitest/typedoc/vitepress
+# aren't at root), matching pnpm-script resolution; elsewhere it's a dead
+# entry, and at the repo root a harmless duplicate of the config_root one.
+_.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
+
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
-# keep in sync with package.json's packageManager/devDependencies pins
-pnpm = "11.10.0"
-"npm:turbo" = "2.10.4"
 "aqua:rhysd/actionlint" = "1.7.12"
+# mise-provided corepack: no npx per-invocation resolution, Node-25-proof
+"npm:corepack" = "0.35.0"
+# shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
+"npm:npm" = "11.18.0"
+
+# Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
+# loud; and tool-only bumps (actionlint) skip the corepack ceremony.
+# snake_case names (bazel target convention, where mise monorepo tasks are
+# trending); no colons — mise monorepo task addressing claims `:`.
+[tasks.corepack_enable]
+description = "Shim the corepack-managed package managers onto PATH"
+run = "corepack enable"
+
+[tasks.corepack_install]
+# Materializes the packageManager pin (sha512-verified) in corepack's cache.
+description = "Install the packageManager-pinned pnpm into the corepack cache"
+run = "corepack install"
+
+[tasks.corepack]
+# Virtual grouping task; the two legs are order-independent and may run
+# in parallel (enable writes shims, install populates COREPACK_HOME).
+description = "Provision the packageManager-pinned pnpm via corepack"
+depends = ["corepack_enable", "corepack_install"]
+
+[tasks.setup]
+# Bootstrap layer: the one step pnpm scripts can't own (no node_modules yet).
+# Flow: mise trust && mise install && mise run setup.
+# pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
+# so one task serves local (plain) and CI (frozen) alike.
+description = "Install workspace dependencies with the corepack-provisioned pnpm"
+depends = ["corepack"]
+run = "pnpm install"
