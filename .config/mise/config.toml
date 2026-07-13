@@ -78,3 +78,12 @@ depends = ["lint_actionlint", "lint_zizmor"]
 # The release-workflow tasks live beside their code in
 # tools/release/mise.toml, addressed as //tools/release:<step>
 # (e.g. `mise run '//tools/release:pack'`). `mise tasks ls --all` lists them.
+# Only the build step lives here (//:build): it's a repo-generic turbo
+# invocation, not release logic, and at the root config_root turbo already
+# runs from the workspace root.
+
+[tasks.build]
+# env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
+description = "Build one package and its workspace deps via turbo"
+depends = ["setup"]
+run = 'turbo run "${PACKAGE_NAME:?}#build"'

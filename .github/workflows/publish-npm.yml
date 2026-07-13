@@ -72,7 +72,7 @@ jobs:
         env:
           PACKAGE_INPUT: ${{ inputs.package }}
       - name: Build
-        run: mise run //tools/release:build
+        run: mise run //:build
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

@@ -1,6 +1,8 @@
 # Release pipeline tasks — one per release-workflow step, addressed as
 # //tools/release:<step> (monorepo task addressing; the root config declares
-# this directory in [monorepo].config_roots). Tasks run from THIS directory,
+# this directory in [monorepo].config_roots). The only step not here is the
+# repo-generic turbo build, which lives in the root config as //:build.
+# Tasks run from THIS directory,
 # so run lines are src/-relative. The workflows are triggers/permissions/
 # secrets/environments/concurrency plus single-line `mise run` steps. Inputs
 # arrive via step `env:` blocks (never `${{ }}` interpolated into run lines);
@@ -23,15 +25,6 @@ run = "node src/steps/release-git-user.ts"
 description = "Resolve the target package name and workspace directory"
 depends = ["//:setup"]
 run = "node src/steps/release-package-info.ts"
-
-[tasks.build]
-# env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
-# dir: workspace root — turbo run from inside a package adds that package to
-# the scope alongside the explicit <pkg>#build spec; pin the cwd instead.
-description = "Build one package and its workspace deps via turbo"
-depends = ["//:setup"]
-dir = "../.."
-run = 'turbo run "${PACKAGE_NAME:?}#build"'
 
 [tasks.pack]
 # env: PACKAGE_NAME, PACKAGE_DIR. outputs: tarball.
