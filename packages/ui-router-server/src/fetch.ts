@@ -21,15 +21,20 @@
  * request the host serves however it would have.
  *
  * Dependency-free like the tiers it fronts: the WinterCG surface it touches is
- * declared structurally in `fetch.globals.d.ts` (referenced below), so the
- * DOM-free, runtime-neutral compile holds — no fetch, workers, or node types.
+ * declared structurally in `fetch.globals.d.ts` (compiled into the package via
+ * tsconfig `include`, not referenced from source — see below), so the DOM-free,
+ * runtime-neutral compile holds — no fetch, workers, or node types.
  */
 
-// The fetch globals travel with the module through the import graph, same as
-// index.ts's shims: a consumer typechecking these sources via a plain import
-// (types: []) needs the reference, not just the include.
-// eslint-disable-next-line typescript/triple-slash-reference -- an ESM import of the ambient file would survive node's type stripping and 404 at runtime; the directive is type-space only
-/// <reference path="./fetch.globals.d.ts" />
+// fetch.globals.d.ts is deliberately NOT pulled in with a `/// <reference>`:
+// the package's own tsconfig `include` (src/**/*) already compiles it, and a
+// source-level reference would travel through the import graph and re-declare
+// Request / Response / Headers in every CONSUMER's program, shadowing the
+// runtime's own globals. For Headers/Response that is benign, but the shim's
+// Request is non-generic, so it clashes with a real runtime's generic Request
+// (workerd's `Request<Cf, Props>`) and breaks `ExportedHandler<Env>`-shaped
+// typings — surfaced dogfooding the docs worker. Every fetch host already
+// supplies these globals; none needs the shim leaked in.
 
 import { mergeSearch } from './index.ts';
 import type { ServerRouter } from './index.ts';
