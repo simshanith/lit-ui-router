@@ -88,7 +88,9 @@ description = "Build one package and its workspace deps via turbo"
 run = 'turbo run "${PACKAGE_NAME:?}#build"'
 
 [tasks.ci]
-# env: TURBO_FORCE (build-test deflake input; ""/"false" respect the cache)
-# + TURBO_TOKEN/TURBO_API/TURBO_TEAM, CODECOV_TOKEN, WRANGLER_LOG.
+# env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
+# the env itself (no CLI flags), plus CODECOV_TOKEN and WRANGLER_LOG for the
+# underlying tasks. TURBO_FORCE is the build-test deflake input: a truthy value
+# forces a cache-bypassing rerun, ""/"false" respect the cache.
 description = "Run the full CI pipeline via turbo"
 run = "turbo run ci --ui=stream --log-order=stream"
