@@ -10,11 +10,6 @@ const routerOf = (verdict: Verdict): ServerRouter => ({
   resolve: () => Promise.resolve(verdict),
 });
 
-// The fetch globals shim shadows node's richer Response in the src graph;
-// reach `.text()` through a cast rather than widening the shim for tests.
-const bodyText = (res: Response): Promise<string> =>
-  (res as unknown as { text(): Promise<string> }).text();
-
 // A Hono app with the router middleware mounted before a sentinel fallthrough
 // route, so a passed-through (`null`) verdict is observable as the sentinel.
 const appWith = (verdict: Verdict, options = {}) => {
@@ -56,21 +51,21 @@ describe('serverRouterHono', () => {
     assert.equal(res.status, 200);
     assert.equal(res.headers.get('Link'), '</app>; rel="canonical"');
     // serveShell got a request rewritten to the mount base.
-    assert.equal(await bodyText(res), 'shell:/app');
+    assert.equal(await res.text(), 'shell:/app');
   });
 
   it('answers a mount-owned miss with an honest 404', async () => {
     const app = appWith({ kind: 'notFound', mount: '/app' });
     const res = await navigate(app, '/app/nope');
     assert.equal(res.status, 404);
-    assert.match(await bodyText(res), /404 Not Found — \/app/);
+    assert.match(await res.text(), /404 Not Found — \/app/);
   });
 
   it('passes a mountless miss through to the downstream handler', async () => {
     const app = appWith({ kind: 'notFound' });
     const res = await navigate(app, '/elsewhere');
     assert.equal(res.status, 200);
-    assert.equal(await bodyText(res), 'downstream');
+    assert.equal(await res.text(), 'downstream');
   });
 
   it('passes a non-navigation request through to the downstream handler', async () => {
@@ -78,6 +73,6 @@ describe('serverRouterHono', () => {
     // No text/html Accept: the default heuristic declines, so it falls through.
     const res = await app.request('/app/about', { headers: { accept: '*/*' } });
     assert.equal(res.status, 200);
-    assert.equal(await bodyText(res), 'downstream');
+    assert.equal(await res.text(), 'downstream');
   });
 });
