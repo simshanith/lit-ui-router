@@ -103,10 +103,15 @@ const config = {
     logo: '/images/lit-ui-router.svg',
     nav: [
       { text: 'Home', link: '/' },
-      { text: 'Introduction', link: '/introduction' },
-      { text: 'Tutorial', link: '/tutorial/helloworld' },
-      { text: 'Guides', link: '/guides/' },
-      { text: 'API', link: '/api/' },
+      {
+        text: 'Docs',
+        items: [
+          { text: 'Introduction', link: '/introduction' },
+          { text: 'Tutorial', link: '/tutorial/helloworld' },
+          { text: 'Guides', link: '/guides/' },
+          { text: 'API', link: '/api/' },
+        ],
+      },
       {
         text: 'Sample App',
         items: [
