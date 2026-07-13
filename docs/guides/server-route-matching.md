@@ -886,6 +886,7 @@ gets a correct 200, but what comes back is still the empty client shell. That
 is the line between HTTP-semantics SEO, which this guide delivers, and content
 SEO: a rendered body a crawler can read. Rendering is a second, orthogonal
 axis — client-rendered, build-time pre-rendered, or request-time
-server-rendered, set per route — riding this same routing spine, which returns
-the identical verdict at every setting. Set that dial wherever a route needs
-it; the accurate HTTP status underneath is already there.
+[server-rendered](https://lit.dev/docs/ssr/overview/), set per route — riding
+this same routing spine, which returns the identical verdict at every setting.
+Set that dial wherever a route needs it; the accurate HTTP status underneath is
+already there.
