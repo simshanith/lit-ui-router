@@ -314,7 +314,10 @@
       }
     },
     {
-      "files": ["packages/ui-router-server/src/**/*.ts"],
+      "files": [
+        "packages/ui-router-server/src/**/*.ts",
+        "apps/sample-app-routes/src/**/*.ts"
+      ],
       "rules": {
         "no-restricted-globals": [
           "error",
