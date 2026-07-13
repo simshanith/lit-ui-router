@@ -12,7 +12,7 @@
     "lint": "oxlint .",
     "test": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
     "test:cypress": "cypress run",
-    "test:cypress:all": "concurrently --names vanilla,mobx,docs,hash,navigation --prefix-colors auto \"pnpm run test:cypress\" \"pnpm run test:cypress:mobx\" \"pnpm run test:cypress:docs\" \"pnpm run test:cypress:hash\" \"pnpm run test:cypress:navigation\"",
+    "test:cypress:all": "node ./scripts/run-cypress-suites.ts",
     "test:cypress:docs": "cypress run --config-file cypress.docs.config.ts",
     "test:cypress:hash": "cypress run --expose LOCATION_PLUGIN=hash --config videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
     "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
@@ -25,6 +25,7 @@
   },
   "devDependencies": {
     "@types/lodash": "catalog:",
+    "@types/node": "catalog:",
     "concurrently": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",
