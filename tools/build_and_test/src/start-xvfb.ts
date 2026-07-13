@@ -61,7 +61,7 @@ if (!ready) {
   const kept = filterStderr(captured);
   let next;
   while (!(next = await kept.next()).done) console.error(next.value);
-  console.error(formatFilteredCount(next.value));
+  if (next.value > 0) console.error(formatFilteredCount(next.value));
   process.exit(1);
 }
 

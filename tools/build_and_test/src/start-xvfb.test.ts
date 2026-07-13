@@ -115,6 +115,24 @@ describe('start-xvfb.ts', () => {
     fs.rmSync(dir, { recursive: true, force: true });
   });
 
+  it('omits the filtered-count line when nothing was filtered', () => {
+    const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xvfb-test-'));
+    const bin = writeFakeXvfb(
+      dir,
+      REAL_LINES.map((line) => `console.error(${JSON.stringify(line)});`).join(
+        '\n',
+      ) + '\nprocess.exit(1);\n',
+    );
+    const run = runStartXvfb({
+      XVFB_BIN: bin,
+      XVFB_SOCKET: path.join(dir, 'no-such-socket'),
+    });
+    assert.equal(run.status, 1);
+    assert.match(run.stderr, /Fatal server error/);
+    assert.doesNotMatch(run.stderr, /filtered/);
+    fs.rmSync(dir, { recursive: true, force: true });
+  });
+
   it('exports DISPLAY and stays quiet when the display comes up', () => {
     const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'xvfb-test-'));
     const socket = path.join(dir, 'socket');
