@@ -81,7 +81,7 @@ export default defineConfig(
           selector:
             'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +\\.\\.\\u002F/]',
           message:
-            "Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (workspace:* bin) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.",
+            'Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (workspace:* bin) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.',
         },
       ],
     },
