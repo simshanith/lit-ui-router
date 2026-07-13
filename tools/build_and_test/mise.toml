@@ -1,9 +1,11 @@
 # Build-test workflow tasks — addressed as //tools/build_and_test:<step>
 # (monorepo task addressing; the root config declares tools/* as
 # config_roots). Tasks run from THIS directory, so run lines are
-# src/-relative. Same contract as tools/release/mise.toml: inputs arrive via
-# step `env:` blocks, secrets stay in workflow step env, and this file stays
-# [tasks]-only so it is inert for shells that merely cd in here.
+# src/-relative. Same inputs/secrets contract as tools/release/mise.toml:
+# inputs arrive via step `env:` blocks and secrets stay in workflow step env
+# (never mise [env]). Unlike release, this file carries an [env] block — the
+# _.path below — whose effect on a shell that merely cd's in here is a harmless
+# duplicate (see its note).
 # Tasks assume node_modules exists: build-test.yml runs `mise run setup` as a
 # dedicated first step, so tasks don't re-declare `depends = ["//:setup"]`
 # (which re-ran pnpm install per step). Run `mise run setup` first when
