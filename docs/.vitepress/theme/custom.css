@@ -92,6 +92,10 @@
 }
 
 :root {
+  /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
+     320px, giving the deep API identifiers room to sit on one line. The
+     ≥1440px width formula derives from this variable too. */
+  --vp-sidebar-width: 320px;
   --vp-home-hero-image-background-image: url(/images/lit-flame.svg);
   --vp-home-hero-image-filter-blur: 24px;
   --vp-home-hero-image-filter-hue-rotate: 0;
