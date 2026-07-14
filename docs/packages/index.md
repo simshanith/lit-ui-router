@@ -12,34 +12,12 @@ nothing you don't.
 
 ## Published
 
-### `lit-ui-router-mobx`
+| Package                                                                 | Version                                                                                                                                                 | What it is                                                                                                                                                                                       |
+| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [**lit-ui-router-mobx**](/packages/mobx)                                | [![NPM Version](https://img.shields.io/npm/v/lit-ui-router-mobx)](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based Lit controllers that keep components in sync with router state.                                             |
+| [**ui-router-navigation-location-plugin**](/packages/navigation-plugin) | [![NPM Version](https://img.shields.io/npm/v/ui-router-navigation-location-plugin)](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin that manages URLs with the modern [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) and exposes the router in navigation events. |
 
-[MobX](https://mobx.js.org) bindings: an observable `RouterStore` that mirrors
-the current route, plus reaction-based Lit `ReactiveController`s
-(`RouterReactionController`, `ReactionController`) that keep components in sync
-with router and store state — no manual `requestUpdate()` plumbing.
-
-```bash
-npm install lit-ui-router-mobx
-```
-
-- [**Guide**](/packages/mobx) — observable router state and reaction-based
-  controllers
-- [**API reference**](/api/lit-ui-router-mobx/)
-
-### `ui-router-navigation-location-plugin`
-
-An experimental location plugin that manages URLs with the modern
-[Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
-and exposes the router in navigation events — clean pushState-style paths
-through the platform's newest navigation primitive.
-
-```bash
-npm install ui-router-navigation-location-plugin
-```
-
-- [**Guide**](/packages/navigation-plugin) — clean URLs via the Navigation API
-- [**API reference**](/api/navigation-location-plugin/)
+Each package page has its own install snippet, guide, and API reference.
 
 ## In development
 
