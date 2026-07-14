@@ -8,21 +8,20 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
 
-// The companion references are generated from kind-indexes, which marks every
-// group (Classes, Interfaces, …) collapsed. Expand them so they read like the
-// flagship reference, whose category groups render open.
-function expandGroups(
+// The companion references are small; their kind grouping (Classes,
+// Interfaces, …) adds a sidebar level without earning it. Flatten the groups
+// into a single member list so the API entries sit flat under "API" — the
+// grouped listing still lives on each reference's index page.
+function flattenGroups(
   items: DefaultTheme.SidebarItem[],
 ): DefaultTheme.SidebarItem[] {
-  return items.map((item) =>
-    item.collapsed === true ? { ...item, collapsed: false } : item,
-  );
+  return items.flatMap((item) => (item.items ? item.items : [item]));
 }
 
-const mobxSidebarItems = expandGroups(
+const mobxSidebarItems = flattenGroups(
   mobxSidebarItemsJson as DefaultTheme.SidebarItem[],
 );
-const navigationSidebarItems = expandGroups(
+const navigationSidebarItems = flattenGroups(
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[],
 );
 

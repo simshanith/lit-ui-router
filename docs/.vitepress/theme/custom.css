@@ -52,10 +52,21 @@
   box-shadow: 0px 0px 12px 0px currentColor;
 }
 
-/* Long, space-less API identifiers (e.g. RouterReactionControllerOptions)
-   overflow the deeply-nested companion sidebar; let them wrap instead. */
-.VPSidebar .VPSidebarItem .text {
-  overflow-wrap: anywhere;
+/* Deep sidebar nesting starves long identifiers (NormalizedLitViewDeclaration)
+   of width and clips them; VitePress indents 16px per level. Tighten the
+   nested indent to reclaim the room — the border-left still carries the
+   hierarchy. */
+.VPSidebar .VPSidebarItem .items {
+  padding-left: 8px;
+}
+
+/* Shields badges: pin a legible height so the wide release badge doesn't
+   scale down to fit a table column (it wraps to the next line instead). */
+.vp-doc img[src*="img.shields.io"] {
+  height: 20px;
+  width: auto;
+  max-width: none;
+  vertical-align: middle;
 }
 
 .VPHero  .tagline {
