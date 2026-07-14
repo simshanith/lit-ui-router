@@ -50,19 +50,32 @@ function makeSidebar() {
       text: 'Companion Packages',
       items: [
         { text: 'Overview', link: '/packages/' },
-        { text: 'MobX Bindings', link: '/guides/mobx' },
         {
-          text: 'lit-ui-router-mobx API',
-          link: '/api/lit-ui-router-mobx/',
-          collapsed: true,
-          items: mobxSidebarItems,
+          text: 'lit-ui-router-mobx',
+          items: [
+            { text: 'MobX Bindings', link: '/guides/mobx' },
+            {
+              text: 'API Docs',
+              link: '/api/lit-ui-router-mobx/',
+              collapsed: true,
+              items: mobxSidebarItems,
+            },
+          ],
         },
-        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
         {
-          text: 'ui-router-navigation-location-plugin API',
-          link: '/api/navigation-location-plugin/',
-          collapsed: true,
-          items: navigationSidebarItems,
+          text: 'ui-router-navigation-location-plugin',
+          items: [
+            {
+              text: 'Navigation API Plugin',
+              link: '/guides/navigation-plugin',
+            },
+            {
+              text: 'API Docs',
+              link: '/api/navigation-location-plugin/',
+              collapsed: true,
+              items: navigationSidebarItems,
+            },
+          ],
         },
       ],
     },
