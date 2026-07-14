@@ -53,21 +53,18 @@
 }
 
 /* Deep sidebar nesting starves long identifiers (NormalizedLitViewDeclaration,
-   RouterReactionControllerOptions) of width. Tighten the 16px-per-level indent,
-   and let each nested member list scroll horizontally on its own instead of
-   clipping — the innermost .items becomes the scroll container, so only the
-   overflowing section gets a scrollbar, never the whole sidebar. */
+   RouterReactionControllerOptions) of width. Tighten the 16px-per-level indent
+   to reclaim room — the border-left still carries the hierarchy. */
 .VPSidebar .VPSidebarItem.level-1 .items,
 .VPSidebar .VPSidebarItem.level-2 .items,
 .VPSidebar .VPSidebarItem.level-3 .items,
 .VPSidebar .VPSidebarItem.level-4 .items,
 .VPSidebar .VPSidebarItem.level-5 .items {
   padding-left: 8px;
-  overflow-x: auto;
-  scrollbar-width: thin;
 }
 
-/* Non-wrapping text is what turns overflow into scroll rather than clip. */
+/* Keep identifiers on one line (the widened sidebar gives them room) rather
+   than wrapping hyphenated names like ui-router-navigation-location-plugin. */
 .VPSidebar .VPSidebarItem .text {
   white-space: nowrap;
 }
