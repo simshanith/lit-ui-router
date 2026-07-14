@@ -7,19 +7,12 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
-
-// The companion references are small; their kind grouping (Classes,
-// Interfaces, …) adds a sidebar level without earning it. Flatten the groups
-// into a single member list so the API entries sit flat under "API" — the
-// grouped listing still lives on each reference's index page.
-function flattenGroups(
-  items: DefaultTheme.SidebarItem[],
-): DefaultTheme.SidebarItem[] {
-  return items.flatMap((item) => (item.items ? item.items : [item]));
-}
-
-const mobxSidebarItems = flattenGroups(mobxSidebarItemsJson);
-const navigationSidebarItems = flattenGroups(navigationSidebarItemsJson);
+// The companion references carry their kind categories (Classes, Interfaces,
+// …) collapsed, mirroring how the flagship reference groups members — each
+// category heading links to its generated kind-index page.
+const mobxSidebarItems = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
+const navigationSidebarItems =
+  navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -62,11 +55,11 @@ function makeSidebar() {
         { text: 'Overview', link: '/packages/' },
         {
           text: 'MobX',
+          link: '/packages/mobx',
           collapsed: true,
           items: [
-            { text: 'lit-ui-router-mobx', link: '/packages/mobx' },
             {
-              text: 'API',
+              text: 'lit-ui-router-mobx',
               link: '/api/lit-ui-router-mobx/',
               collapsed: false,
               items: mobxSidebarItems,
@@ -75,14 +68,11 @@ function makeSidebar() {
         },
         {
           text: 'Navigation Location',
+          link: '/packages/navigation-plugin',
           collapsed: true,
           items: [
             {
               text: 'ui-router-navigation-location-plugin',
-              link: '/packages/navigation-plugin',
-            },
-            {
-              text: 'API',
               link: '/api/navigation-location-plugin/',
               collapsed: false,
               items: navigationSidebarItems,
@@ -107,7 +97,7 @@ function makeSidebar() {
         {
           text: 'lit-ui-router',
           link: '/api/reference/',
-          collapsed: false,
+          collapsed: true,
           items: typedocSidebarItems,
         },
       ],

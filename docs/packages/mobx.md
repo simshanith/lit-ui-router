@@ -3,7 +3,7 @@ title: MobX Bindings
 description: Observable router state and reaction-based controllers with lit-ui-router-mobx
 ---
 
-# MobX Bindings (lit-ui-router-mobx)
+# lit-ui-router-mobx
 
 <p class="badges">
 <a href="https://www.npmjs.com/package/lit-ui-router-mobx" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-mobx" /></a>
