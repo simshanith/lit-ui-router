@@ -52,16 +52,24 @@
   box-shadow: 0px 0px 12px 0px currentColor;
 }
 
-/* Deep sidebar nesting starves long identifiers (NormalizedLitViewDeclaration)
-   of width and clips them; VitePress indents 16px per level. Tighten the
-   nested indent to reclaim the room — the border-left still carries the
-   hierarchy. */
+/* Deep sidebar nesting starves long identifiers (NormalizedLitViewDeclaration,
+   RouterReactionControllerOptions) of width. Tighten the 16px-per-level indent,
+   and let each nested member list scroll horizontally on its own instead of
+   clipping — the innermost .items becomes the scroll container, so only the
+   overflowing section gets a scrollbar, never the whole sidebar. */
 .VPSidebar .VPSidebarItem.level-1 .items,
 .VPSidebar .VPSidebarItem.level-2 .items,
 .VPSidebar .VPSidebarItem.level-3 .items,
 .VPSidebar .VPSidebarItem.level-4 .items,
 .VPSidebar .VPSidebarItem.level-5 .items {
   padding-left: 8px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+/* Non-wrapping text is what turns overflow into scroll rather than clip. */
+.VPSidebar .VPSidebarItem .text {
+  white-space: nowrap;
 }
 
 /* Shields badges: pin a legible height so the wide release badge doesn't
