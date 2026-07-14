@@ -1,4 +1,4 @@
-# Standalone actionlint workflow
+# Standalone workflow lint: actionlint (syntax/types) + zizmor (security audits)
 name: Lint workflows
 
 on:
@@ -21,7 +21,10 @@ jobs:
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v7
+        with:
+          persist-credentials: false
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Lint workflows
-        run: actionlint
+        # actionlint + zizmor in parallel via the mise task graph
+        run: mise run lint_workflows

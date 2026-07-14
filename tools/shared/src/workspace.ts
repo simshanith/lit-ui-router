@@ -18,9 +18,11 @@ import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
 
 import type { PackageManifest } from './types.ts';
 
-/** Absolute path to the workspace root. This file lives in <root>/scripts. */
+/** Absolute path to the workspace root. This file lives in <root>/tools/shared/src. */
 export const workspaceRoot = join(
   dirname(fileURLToPath(import.meta.url)),
+  '..',
+  '..',
   '..',
 );
 

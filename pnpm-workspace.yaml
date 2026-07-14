@@ -106,6 +106,10 @@ packageExtensions:
 
 verifyDepsBeforeRun: false
 
+# Link a workspace package whenever a plain range matches its version, not only
+# explicit `workspace:*`. First layer of the @tools npm-block (see .npmrc).
+linkWorkspacePackages: true
+
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   '@vitest/browser': patches/@vitest__browser.patch

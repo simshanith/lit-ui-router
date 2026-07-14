@@ -4,13 +4,13 @@ import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
-import { fileURLToPath } from 'node:url';
 
 import {
   describeArgs,
   isFirstReleaseError,
   parsePrevTag,
 } from './release-prev-tag.core.ts';
+import { prevReleaseTag } from './release-prev-tag.ts';
 
 describe('describeArgs', () => {
   it('anchors the match glob and excludes the tag being released', () => {
@@ -61,10 +61,7 @@ describe('isFirstReleaseError', () => {
 });
 
 // End-to-end against real git: these pin git's own glob and tag-walk
-// semantics the workflow relies on, not our reimplementation of them.
-const scriptPath = fileURLToPath(
-  new URL('./release-prev-tag.ts', import.meta.url),
-);
+// semantics the publish driver relies on, not our reimplementation of them.
 
 const GIT_ENV = {
   ...process.env,
@@ -85,13 +82,10 @@ function commit(cwd: string, message: string, ...tags: string[]): void {
 }
 
 function prevTag(cwd: string, packageName: string, version: string) {
-  return spawnSync(process.execPath, [scriptPath, packageName, version], {
-    cwd,
-    encoding: 'utf8',
-  });
+  return prevReleaseTag(packageName, version, { cwd });
 }
 
-describe('release-prev-tag.ts', () => {
+describe('prevReleaseTag', () => {
   // history: 1.0.0 (+ a mobx tag) → 1.1.0-canary.0 → 1.1.0 at HEAD
   let repo: string;
   // a single commit tagged only for the OTHER package
@@ -119,39 +113,33 @@ describe('release-prev-tag.ts', () => {
     fs.rmSync(mobxOnlyRepo, { recursive: true, force: true });
   });
 
-  it('prints the package’s nearest previous tag', () => {
-    const run = prevTag(repo, 'lit-ui-router', '1.2.0');
-    assert.equal(run.status, 0);
-    assert.equal(run.stdout, 'lit-ui-router@1.1.0\n');
+  it('resolves the package’s nearest previous tag', async () => {
+    assert.equal(
+      await prevTag(repo, 'lit-ui-router', '1.2.0'),
+      'lit-ui-router@1.1.0',
+    );
   });
 
-  it('excludes the tag being released, so publish re-runs still range from before it', () => {
-    const run = prevTag(repo, 'lit-ui-router', '1.1.0');
-    assert.equal(run.status, 0);
+  it('excludes the tag being released, so publish re-runs still range from before it', async () => {
     // also pins that prerelease tags count as the previous release
-    assert.equal(run.stdout, 'lit-ui-router@1.1.0-canary.0\n');
+    assert.equal(
+      await prevTag(repo, 'lit-ui-router', '1.1.0'),
+      'lit-ui-router@1.1.0-canary.0',
+    );
   });
 
-  it('does not let lit-ui-router@* leak across the prefix into lit-ui-router-mobx tags', () => {
-    const run = prevTag(repo, 'lit-ui-router-mobx', '0.4.0');
-    assert.equal(run.status, 0);
+  it('does not let lit-ui-router@* leak across the prefix into lit-ui-router-mobx tags', async () => {
     // nearer lit-ui-router@ tags exist on the walk; none of them may match
-    assert.equal(run.stdout, 'lit-ui-router-mobx@0.3.0\n');
+    assert.equal(
+      await prevTag(repo, 'lit-ui-router-mobx', '0.4.0'),
+      'lit-ui-router-mobx@0.3.0',
+    );
   });
 
-  it('prints nothing and exits 0 on a first release', () => {
-    const run = prevTag(mobxOnlyRepo, 'lit-ui-router', '1.0.0');
-    assert.equal(run.status, 0);
-    assert.equal(run.stdout, '');
-    assert.equal(run.stderr, '');
-  });
-
-  it('fails loudly when invoked without both arguments', () => {
-    const run = spawnSync(process.execPath, [scriptPath, 'lit-ui-router'], {
-      cwd: repo,
-      encoding: 'utf8',
-    });
-    assert.equal(run.status, 1);
-    assert.match(run.stderr, /usage:/);
+  it('resolves undefined on a first release', async () => {
+    assert.equal(
+      await prevTag(mobxOnlyRepo, 'lit-ui-router', '1.0.0'),
+      undefined,
+    );
   });
 });

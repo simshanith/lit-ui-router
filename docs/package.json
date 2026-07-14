@@ -26,12 +26,12 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@tools/vue-check": "workspace:*",
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
     "vite-plugin-static-copy": "catalog:vitepress1",
     "vitepress": "catalog:",
-    "vue-check": "workspace:*",
     "wrangler": "catalog:"
   }
 }

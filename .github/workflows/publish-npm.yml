@@ -2,6 +2,11 @@
 # Uses OIDC trusted publishing (no NPM_TOKEN needed).
 # See: https://docs.npmjs.com/trusted-publishers
 # See: https://github.com/release-it/release-it/blob/19.2.2/docs/npm.md#trusted-publishing-oidc
+#
+# YAML here is triggers/permissions/secrets/environment only; the pipeline
+# logic lives in tools/release (mise tasks), inputs flow through step env —
+# never `${{ }}` inside run lines — and data flows between steps as
+# GITHUB_OUTPUT step outputs the tools write.
 name: Publish to NPM
 
 on:
@@ -41,96 +46,67 @@ jobs:
     runs-on: ubuntu-latest
     # Protected environment adds approval gate before publishing
     environment: publish
-    env:
-      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           fetch-tags: true
-      - name: Extract package info from tag
-        run: |
-          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
-            PACKAGE_NAME="${{ inputs.package }}"
-          else
-            TAG="${GITHUB_REF#refs/tags/}"
-            PACKAGE_NAME="${TAG%@*}"
-          fi
-          echo "$PACKAGE_NAME"
-          echo "PACKAGE_NAME=$PACKAGE_NAME" >> "$GITHUB_ENV"
+          # Nothing in this job pushes: the packages' .release-it.json turns
+          # git commit/tag/push off, so no credentials need to persist.
+          persist-credentials: false
       - name: Setup mise
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          # task-env handling regressed before in unpinned mise; pin the version
+          version: 2026.6.14
+          # no restored tool cache on the publish path (zizmor cache-poisoning):
+          # tools install fresh, checksum-verified against mise.lock
+          cache: false
       - name: Install dependencies
         run: mise run setup
-      - name: Map npm name to directory
-        run: |
-          PACKAGE_DIR="$(realpath -s --relative-to="." "$(pnpm list --depth -1 --parseable --filter "$PACKAGE_NAME")")"
-          echo "$PACKAGE_DIR"
-          echo "PACKAGE_DIR=$PACKAGE_DIR" >> "$GITHUB_ENV"
-      - name: Build
-        run: npm exec -- turbo run "$PACKAGE_NAME#build"
+      - name: Resolve package
+        # tag → package name (hostile-refname safe) → workspace directory
+        id: info
+        run: mise run //tools/release:package_info
         env:
+          PACKAGE_INPUT: ${{ inputs.package }}
+      - name: Build
+        run: mise run //:build
+        env:
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
-        # Create tarball for the GitHub release attachment AND the npm publish.
-        # devDependencies and scripts are stripped first: dev-only metadata that
-        # leaks private workspace names (e.g. typedoc-plugin-lit-ui-router) and
-        # monorepo-only commands into the published manifest. None of our
-        # scripts are lifecycle hooks; stripping happens before `pnpm pack`, so
-        # a future prepack/prepare script would be silently skipped — build via
-        # the turbo step above instead.
-        run: |
-          (cd "$PACKAGE_DIR" && npm pkg delete devDependencies scripts)
-          pnpm --filter "$PACKAGE_NAME" pack --pack-destination "$PACKAGE_DIR"
-          echo "TARBALL=$(realpath "$PACKAGE_DIR"/*.tgz)" >> "$GITHUB_ENV"
-          # restore the stripped manifest: release-it requires a clean working dir
-          git checkout -- "$PACKAGE_DIR/package.json"
+        # strip devDependencies/scripts → pnpm pack → restore (try/finally);
+        # the tarball feeds the attestation, the manifest gate, and the publish
+        id: pack
+        run: mise run //tools/release:pack
+        env:
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
+          PACKAGE_DIR: ${{ steps.info.outputs.package_dir }}
       - name: Check packed manifest
         # no devDependencies, no scripts, and no unsubstituted catalog:/workspace: refs may ship
-        run: |
-          tar -xOzf "$TARBALL" package/package.json | node -e '
-            const m = JSON.parse(require("fs").readFileSync(0));
-            if (m.devDependencies) throw new Error("devDependencies leaked into packed manifest");
-            if (m.scripts) throw new Error("scripts leaked into packed manifest");
-            const runtime = JSON.stringify([m.dependencies, m.peerDependencies, m.optionalDependencies]);
-            if (/catalog:|workspace:/.test(runtime)) throw new Error("unsubstituted refs in packed manifest");
-            console.log("packed manifest clean");
-          '
+        run: mise run //tools/release:check_tarball
+        env:
+          TARBALL: ${{ steps.pack.outputs.tarball }}
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
         if: ${{ !inputs.dryRun }}
-        uses: actions/attest-build-provenance@v4
+        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
         with:
-          subject-path: '${{ env.PACKAGE_DIR }}/*.tgz'
-      - name: Release version
-        run: |
-          echo "RELEASE_VERSION=$(pnpm --filter "$PACKAGE_NAME" exec release-it --release-version --no-increment)" >> "$GITHUB_ENV"
+          subject-path: ${{ steps.pack.outputs.tarball }}
       - name: Publish
-        # release-it >= 20.1 handles immutable releases natively when assets
-        # are configured: create draft, upload assets, publish — one
-        # invocation, release id held in memory (no by-tag lookup, which
-        # can't see drafts and used to create duplicate releases here).
-        # --npm.skipChecks: Skip npm checks since we're using OIDC auth
-        # --npm.publishPath: publish the pnpm-packed (and attested) tarball;
-        # a bare `npm publish` re-packs from source and ships raw
-        # catalog:/workspace: refs npm can't resolve (broke 1.3.0–1.5.0)
-        # inputs.dryRun is only set for manual workflow_dispatch runs; real tag pushes always publish for real.
-        # gitRawCommitsOpts.from: release-it's secondLatestTag is computed
-        # without tagMatch (repo-wide `rev-list --tags`), so in this monorepo
-        # the conventional-changelog plugin's commit range can start at ANOTHER
-        # package's newer tag, come up empty after path filtering, and silently
-        # fall back to the flat git-log changelog (#302). Pin the range to this
-        # package's own previous tag, computed by the unit-tested
-        # scripts/release-prev-tag.ts; a first release prints nothing and
-        # skips the override.
-        run: |
-          PREV_TAG=$(node scripts/release-prev-tag.ts "$PACKAGE_NAME" "$RELEASE_VERSION")
-          CHANGELOG_ARGS=()
-          if [ -n "$PREV_TAG" ]; then
-            CHANGELOG_ARGS+=("--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=$PREV_TAG")
-          fi
-          pnpm --filter "$PACKAGE_NAME" exec -- release-it --no-increment --npm.publish true --npm.skipChecks true --npm.publishPath "$TARBALL" --github.release true --github.assets "*.tgz" --git.tagExclude "\${npm.name}@$RELEASE_VERSION" "${CHANGELOG_ARGS[@]}" ${{ inputs.dryRun && '--dry-run' || '' }}
+        # release-it publishes the attested tarball and cuts the GitHub
+        # release in one invocation; the argv (and the #302 changelog-range
+        # pin) is built by the engine seam — see tools/release/src/steps/release-publish.ts
+        run: mise run //tools/release:publish
+        env:
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          # only set on manual workflow_dispatch runs; real tag pushes always publish for real
+          DRY_RUN: ${{ inputs.dryRun }}
+          # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

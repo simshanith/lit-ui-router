@@ -6,7 +6,7 @@
   "plugin": [
     "typedoc-plugin-markdown",
     "typedoc-vitepress-theme",
-    "typedoc-plugin-lit-ui-router"
+    "@tools/typedoc-plugin-lit-ui-router"
   ],
   "excludeExternals": true,
   "excludeInternal": true,

@@ -1,0 +1,43 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      // The root test task's src/** inputs would stale-cache this src-less
+      // package; over-approximate instead.
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "check:pack": {
+      // Purely local (pack + inspect the packed manifest), so caching is
+      // sound: the verdict depends only on the manifests, the catalogs that
+      // substitute into them, and this package's own sources.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
+    "resolve:published": {
+      // Reads the live registry (the only mutable state here); never cache.
+      "cache": false
+    },
+    "check:published-diff": {
+      // Cached: the verdict is a pure function of the pack surface and the
+      // resolved published versions. Sound because npm tarballs are immutable
+      // per version (and we practice publisher immutability) — the movable
+      // `latest` pointer is captured in node_modules/.cache/release/
+      // published-versions.json, written by resolve:published just before
+      // this task and hashed as an input (turbo hashes explicitly listed
+      // node_modules inputs; probed on 2.10.4).
+      // Escape hatch: `turbo run check:published-diff --force`.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/node_modules/.cache/release/published-versions.json",
+        "$TURBO_ROOT$/packages/**",
+        "$TURBO_ROOT$/**/package.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ]
+    }
+  }
+}

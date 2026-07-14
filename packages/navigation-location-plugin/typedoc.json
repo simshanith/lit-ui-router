@@ -6,7 +6,7 @@
   "plugin": [
     "typedoc-plugin-markdown",
     "typedoc-vitepress-theme",
-    "typedoc-plugin-lit-ui-router/kind-indexes"
+    "@tools/typedoc-plugin-lit-ui-router/kind-indexes"
   ],
   "excludeExternals": true,
   "excludeInternal": true,

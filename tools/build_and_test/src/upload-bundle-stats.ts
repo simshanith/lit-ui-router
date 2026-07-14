@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 // Uploads bundle stats to Codecov from the built dist/ (turbo codecov:bundle,
 // uncached) so the upload runs even when the vite build is a cache replay.
 // Usage: node upload-bundle-stats.ts <bundle-name> [build-dir=dist]

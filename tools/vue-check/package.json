@@ -1,5 +1,5 @@
 {
-  "name": "vue-check",
+  "name": "@tools/vue-check",
   "version": "0.0.1",
   "private": true,
   "description": "Typechecks a workspace package's Vue SFCs with vue-tsc, which embeds the TypeScript 6 API",
@@ -11,6 +11,9 @@
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint ."
+  },
+  "dependencies": {
+    "@tools/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "catalog:typescript6",

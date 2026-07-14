@@ -1,6 +1,11 @@
 # Automatic tagging workflow - runs on every push to main.
 # Creates git tags for releases, which then trigger the NPM publish workflow.
 # Uses release-it with --no-increment to tag the current version without bumping.
+#
+# YAML here is triggers/permissions/secrets/environment/concurrency only; the
+# pipeline logic lives in tools/release (mise tasks //tools/release:tag and
+# :tag_push), inputs flow through step env — never `${{ }}` inside run
+# lines.
 name: Tag & push
 
 on:
@@ -24,8 +29,8 @@ env:
 # then deletes the tag from the remote.
 # The queue alone is not enough: release-it's own push sends main + tag
 # together, so a main push that lands mid-run rejects the whole push and the
-# rollback deletes the tag. Hence tagging and pushing are separate steps below,
-# and only the tag ref is ever pushed.
+# rollback deletes the tag. Hence tagging (:tag, --git.push false) and
+# pushing (:tag_push, tag ref only) are separate tasks.
 concurrency:
   group: tag-release
 
@@ -43,44 +48,39 @@ jobs:
           - lit-ui-router
           - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
-    env:
-      # PAT required to push tags that trigger downstream workflows.
-      # The default GITHUB_TOKEN can't trigger other workflows.
-      GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
     steps:
       - name: 'Checkout code'
-        uses: actions/checkout@v7
+        uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
           fetch-depth: 0
           fetch-tags: true
+          # PAT (not GITHUB_TOKEN): the pushed tag must trigger publish-npm,
+          # and the default token can't trigger other workflows. The push in
+          # //tools/release:tag_push rides these persisted credentials.
           token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
-      - name: Setup Git user
-        run: |
-          git config --global user.name "github-actions[bot]"
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
       - name: Setup mise
-        uses: jdx/mise-action@v4
+        uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
+        with:
+          # task-env handling regressed before in unpinned mise; pin the version
+          version: 2026.6.14
       - name: Install dependencies
         run: mise run setup
+      - name: Setup Git user
+        run: mise run //tools/release:git_user
       - name: Tag
-        # --no-increment: Don't bump version, tag current version
-        # --git.tag true: Create git tag ({package}@X.Y.Z), locally only
-        # --git.push false: pushing main + tag together is release-it's rollback trap
-        # inputs.dryRun is only set for manual workflow_dispatch runs; real pushes to main always tag for real.
-        run: pnpm --filter ${{ matrix.package }} exec release-it --no-increment --git.tag true --git.push false ${{ inputs.dryRun && '--dry-run' || '' }}
+        run: mise run //tools/release:tag
         # continue-on-error: Tagging is idempotent - if tag exists, we succeed anyway
         continue-on-error: true
+        env:
+          PACKAGE: ${{ matrix.package }}
+          # only set on manual workflow_dispatch runs; pushes to main always tag for real
+          DRY_RUN: ${{ inputs.dryRun }}
+          GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Push tag
-        # Push only the tag ref: a stale local main can't reject the push, and an
-        # already-pushed tag is "Everything up-to-date". Triggers publish-npm.
-        run: |
-          version=$(pnpm --filter ${{ matrix.package }} exec node -p "require('./package.json').version")
-          tag="${{ matrix.package }}@${version}"
-          if [ "${{ inputs.dryRun }}" = "true" ]; then
-            echo "dry-run: would push refs/tags/${tag}"
-          else
-            git push origin "refs/tags/${tag}"
-          fi
+        run: mise run //tools/release:tag_push
         # continue-on-error: a tag existing on the remote at a different commit is
         # rejected here, matching the previous tag-exists behavior
         continue-on-error: true
+        env:
+          PACKAGE: ${{ matrix.package }}
+          DRY_RUN: ${{ inputs.dryRun }}
