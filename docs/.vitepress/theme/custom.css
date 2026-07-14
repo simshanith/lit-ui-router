@@ -32,6 +32,35 @@
   box-shadow: 0px 0px 12px 0px currentColor;
 }
 
+/* Version badges on package pages */
+.vp-doc .badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 16px;
+  margin-bottom: 24px;
+}
+
+.vp-doc .badges a.badge>img {
+  display: inline-block;
+  border-radius: 4px;
+  box-shadow: 0px 0px 0px 0px currentColor;
+  transition: box-shadow 0.25s ease-in-out;
+}
+
+.vp-doc .badges a.badge:hover>img {
+  box-shadow: 0px 0px 12px 0px currentColor;
+}
+
+/* Shields badges: pin a legible height so the wide release badge doesn't
+   scale down to fit a table column (it wraps to the next line instead). */
+.vp-doc img[src*="img.shields.io"] {
+  height: 20px;
+  width: auto;
+  max-width: none;
+  vertical-align: middle;
+}
+
 .VPHero  .tagline {
     max-width: 292px;
 }
@@ -43,6 +72,10 @@
 }
 
 :root {
+  /* Widen the desktop sidebar (default 272px) to match the mobile drawer's
+     320px, giving the deep API identifiers room to sit on one line. The
+     ≥1440px width formula derives from this variable too. */
+  --vp-sidebar-width: 320px;
   --vp-home-hero-image-background-image: url(/images/lit-flame.svg);
   --vp-home-hero-image-filter-blur: 24px;
   --vp-home-hero-image-filter-hue-rotate: 0;

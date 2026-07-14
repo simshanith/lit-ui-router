@@ -7,9 +7,19 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
-const mobxSidebarItems = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
-const navigationSidebarItems =
-  navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// The companion references are small; their kind grouping (Classes,
+// Interfaces, …) adds a sidebar level without earning it. Flatten the groups
+// into a single member list so the API entries sit flat under "API" — the
+// grouped listing still lives on each reference's index page.
+function flattenGroups(
+  items: DefaultTheme.SidebarItem[],
+): DefaultTheme.SidebarItem[] {
+  return items.flatMap((item) => (item.items ? item.items : [item]));
+}
+
+const mobxSidebarItems = flattenGroups(mobxSidebarItemsJson);
+const navigationSidebarItems = flattenGroups(navigationSidebarItemsJson);
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -33,7 +43,6 @@ function makeSidebar() {
       items: [
         { text: 'Overview', link: '/guides/' },
         { text: 'Location Plugins', link: '/guides/location-plugins' },
-        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
         { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
         {
           text: 'Server-Side Routing',
@@ -45,7 +54,50 @@ function makeSidebar() {
           link: '/guides/component-lifecycle',
         },
         { text: 'Reactive Components', link: '/guides/reactive-components' },
-        { text: 'MobX Bindings', link: '/guides/mobx' },
+      ],
+    },
+    {
+      text: 'Companion Packages',
+      items: [
+        { text: 'Overview', link: '/packages/' },
+        {
+          text: 'MobX',
+          collapsed: true,
+          items: [
+            { text: 'lit-ui-router-mobx', link: '/packages/mobx' },
+            {
+              text: 'API',
+              link: '/api/lit-ui-router-mobx/',
+              collapsed: false,
+              items: mobxSidebarItems,
+            },
+          ],
+        },
+        {
+          text: 'Navigation Location',
+          collapsed: true,
+          items: [
+            {
+              text: 'ui-router-navigation-location-plugin',
+              link: '/packages/navigation-plugin',
+            },
+            {
+              text: 'API',
+              link: '/api/navigation-location-plugin/',
+              collapsed: false,
+              items: navigationSidebarItems,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      text: 'Sample App',
+      items: [
+        { text: 'Overview', link: '/sample-app' },
+        { text: 'Vanilla', link: '/app', target: '_self' },
+        { text: 'MobX', link: '/app-mobx', target: '_self' },
+        { text: 'Hash', link: '/app-hash', target: '_self' },
       ],
     },
     {
@@ -57,18 +109,6 @@ function makeSidebar() {
           link: '/api/reference/',
           collapsed: false,
           items: typedocSidebarItems,
-        },
-        {
-          text: 'lit-ui-router-mobx',
-          link: '/api/lit-ui-router-mobx/',
-          collapsed: true,
-          items: mobxSidebarItems,
-        },
-        {
-          text: 'navigation-location-plugin',
-          link: '/api/navigation-location-plugin/',
-          collapsed: true,
-          items: navigationSidebarItems,
         },
       ],
     },
@@ -113,14 +153,17 @@ const config = {
           { text: 'Introduction', link: '/introduction' },
           { text: 'Tutorial', link: '/tutorial/helloworld' },
           { text: 'Guides', link: '/guides/' },
+          { text: 'Companion Packages', link: '/packages/' },
           { text: 'API', link: '/api/' },
         ],
       },
       {
         text: 'Sample App',
         items: [
+          { text: 'Overview', link: '/sample-app' },
           { text: 'Vanilla', link: '/app', target: '_self' },
           { text: 'MobX', link: '/app-mobx', target: '_self' },
+          { text: 'Hash', link: '/app-hash', target: '_self' },
         ],
       },
     ],
