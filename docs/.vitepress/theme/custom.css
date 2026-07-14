@@ -52,17 +52,6 @@
   box-shadow: 0px 0px 12px 0px currentColor;
 }
 
-/* Deep sidebar nesting starves long identifiers (NormalizedLitViewDeclaration,
-   RouterReactionControllerOptions) of width. Tighten the 16px-per-level indent
-   to reclaim room — the border-left still carries the hierarchy. */
-.VPSidebar .VPSidebarItem.level-1 .items,
-.VPSidebar .VPSidebarItem.level-2 .items,
-.VPSidebar .VPSidebarItem.level-3 .items,
-.VPSidebar .VPSidebarItem.level-4 .items,
-.VPSidebar .VPSidebarItem.level-5 .items {
-  padding-left: 8px;
-}
-
 /* Shields badges: pin a legible height so the wide release badge doesn't
    scale down to fit a table column (it wraps to the next line instead). */
 .vp-doc img[src*="img.shields.io"] {
