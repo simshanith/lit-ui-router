@@ -7,19 +7,12 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
-
-// The companion references are small; their kind grouping (Classes,
-// Interfaces, …) adds a sidebar level without earning it. Flatten the groups
-// into a single member list so the API entries sit flat under "API" — the
-// grouped listing still lives on each reference's index page.
-function flattenGroups(
-  items: DefaultTheme.SidebarItem[],
-): DefaultTheme.SidebarItem[] {
-  return items.flatMap((item) => (item.items ? item.items : [item]));
-}
-
-const mobxSidebarItems = flattenGroups(mobxSidebarItemsJson);
-const navigationSidebarItems = flattenGroups(navigationSidebarItemsJson);
+// The companion references carry their kind categories (Classes, Interfaces,
+// …) collapsed, mirroring how the flagship reference groups members — each
+// category heading links to its generated kind-index page.
+const mobxSidebarItems = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
+const navigationSidebarItems =
+  navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -107,7 +100,7 @@ function makeSidebar() {
         {
           text: 'lit-ui-router',
           link: '/api/reference/',
-          collapsed: false,
+          collapsed: true,
           items: typedocSidebarItems,
         },
       ],
