@@ -56,7 +56,11 @@
    of width and clips them; VitePress indents 16px per level. Tighten the
    nested indent to reclaim the room — the border-left still carries the
    hierarchy. */
-.VPSidebar .VPSidebarItem .items {
+.VPSidebar .VPSidebarItem.level-1 .items,
+.VPSidebar .VPSidebarItem.level-2 .items,
+.VPSidebar .VPSidebarItem.level-3 .items,
+.VPSidebar .VPSidebarItem.level-4 .items,
+.VPSidebar .VPSidebarItem.level-5 .items {
   padding-left: 8px;
 }
 
