@@ -18,12 +18,8 @@ function flattenGroups(
   return items.flatMap((item) => (item.items ? item.items : [item]));
 }
 
-const mobxSidebarItems = flattenGroups(
-  mobxSidebarItemsJson as DefaultTheme.SidebarItem[],
-);
-const navigationSidebarItems = flattenGroups(
-  navigationSidebarItemsJson as DefaultTheme.SidebarItem[],
-);
+const mobxSidebarItems = flattenGroups(mobxSidebarItemsJson);
+const navigationSidebarItems = flattenGroups(navigationSidebarItemsJson);
 
 const baseUrl = 'https://lit-ui-router.dev';
 
