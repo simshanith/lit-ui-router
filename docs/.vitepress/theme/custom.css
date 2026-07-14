@@ -32,6 +32,26 @@
   box-shadow: 0px 0px 12px 0px currentColor;
 }
 
+/* Version badges on package pages */
+.vp-doc .badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: -8px;
+  margin-bottom: 24px;
+}
+
+.vp-doc .badges a.badge>img {
+  display: inline-block;
+  border-radius: 4px;
+  box-shadow: 0px 0px 0px 0px currentColor;
+  transition: box-shadow 0.25s ease-in-out;
+}
+
+.vp-doc .badges a.badge:hover>img {
+  box-shadow: 0px 0px 12px 0px currentColor;
+}
+
 .VPHero  .tagline {
     max-width: 292px;
 }
