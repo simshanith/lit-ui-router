@@ -60,12 +60,13 @@ correctly:
 
 ## Navigation API
 
-[`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin)
-is an experimental companion package that produces the same clean URLs as
+[`ui-router-navigation-location-plugin`](/packages/) is an experimental
+[companion package](/packages/) that produces the same clean URLs as
 `pushState`, but drives them with the modern
 [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
-and exposes the router inside `navigate` events for interception. Since the
-API is only recently cross-engine, pair it with a fallback:
+and exposes the router inside `navigate` events for interception — see the
+[Navigation API Plugin guide](./navigation-plugin) for the full walkthrough.
+Since the API is only recently cross-engine, pair it with a fallback:
 
 ```ts
 import { pushStateLocationPlugin } from '@uirouter/core';
