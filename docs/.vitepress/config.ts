@@ -18,8 +18,15 @@ function flattenGroups(
   return items.flatMap((item) => (item.items ? item.items : [item]));
 }
 
-const mobxSidebarItems = flattenGroups(mobxSidebarItemsJson);
-const navigationSidebarItems = flattenGroups(navigationSidebarItemsJson);
+// Assert to the sidebar type on a typed binding first — like typedocSidebarItems
+// above, the generated JSON may be absent when lint type-checks this file, which
+// would otherwise leave it `any` and trip no-unsafe-argument through flatten.
+const mobxSidebarItemsRaw =
+  mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
+const navigationSidebarItemsRaw =
+  navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
+const mobxSidebarItems = flattenGroups(mobxSidebarItemsRaw);
+const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
 
 const baseUrl = 'https://lit-ui-router.dev';
 
