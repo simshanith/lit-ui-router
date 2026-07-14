@@ -1,6 +1,6 @@
 # API Overview
 
-This guide provides a quick overview of the `lit-ui-router` API. For detailed type signatures and complete documentation, see the [API Reference](./reference/). Companion packages are documented in their own [references](#companion-packages).
+This guide provides a quick overview of the `lit-ui-router` API. For detailed type signatures and complete documentation, see the [API Reference](./reference/). Companion packages have their own home — see [Companion Packages](/packages/).
 
 ## Installation
 
@@ -160,10 +160,7 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 
 ## Companion Packages
 
-`lit-ui-router` is the core package; optional companion packages layer on extra integrations:
-
-- [**`lit-ui-router-mobx`**](./lit-ui-router-mobx/) - [MobX](https://mobx.js.org) bindings: an observable [`RouterStore`](./lit-ui-router-mobx/classes/RouterStore) mirror of the current route, plus reaction-based ReactiveControllers ([`RouterReactionController`](./lit-ui-router-mobx/classes/RouterReactionController), [`ReactionController`](./lit-ui-router-mobx/classes/ReactionController)) that keep components in sync with router and store state — no manual `requestUpdate()` plumbing. See the [MobX Bindings guide](/guides/mobx).
-- [**`ui-router-navigation-location-plugin`**](./navigation-location-plugin/) - an experimental location plugin that manages URLs with the modern [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) and exposes the router in navigation events. See the [Navigation API Plugin guide](/guides/navigation-plugin).
+`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/guides/mobx) and the [Navigation API location plugin](/guides/navigation-plugin), each independently versioned with its own guide and API reference. See [Companion Packages](/packages/).
 
 ## Further Reading
 

@@ -15,9 +15,6 @@ client deployed across every point on the server-support spectrum.
 - [Location Plugins](./location-plugins) — choosing a URL strategy: hash,
   pushState, or the Navigation API; server rewrites, the `<base>` tag, and
   the `initial` rule
-- [Navigation API Plugin](./navigation-plugin) — the experimental
-  `ui-router-navigation-location-plugin` companion package: clean URLs via
-  the modern Navigation API, with navigation event interception
 - [Unmatched URLs (404)](./unmatched-urls) — route URLs that match no state
   to a deliberate 404 state with `urlService.rules.otherwise`
 - [Server-Side Routing](./server-route-matching) — serve routing verdicts
@@ -40,5 +37,10 @@ client deployed across every point on the server-support spectrum.
 - [Reactive Components](./reactive-components) — keep components outside
   `<ui-view>` in sync with the router using the zero-dependency
   `TransitionController`
-- [MobX Bindings](./mobx) — the `lit-ui-router-mobx` companion package: an
-  observable router store and reaction-based controllers
+
+## Companion Packages
+
+The [MobX bindings](./mobx) and the
+[Navigation API location plugin](./navigation-plugin) are optional
+[companion packages](/packages/) — each independently versioned, with its own
+guide and API reference.

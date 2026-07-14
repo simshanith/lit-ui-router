@@ -33,7 +33,6 @@ function makeSidebar() {
       items: [
         { text: 'Overview', link: '/guides/' },
         { text: 'Location Plugins', link: '/guides/location-plugins' },
-        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
         { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
         {
           text: 'Server-Side Routing',
@@ -45,7 +44,26 @@ function makeSidebar() {
           link: '/guides/component-lifecycle',
         },
         { text: 'Reactive Components', link: '/guides/reactive-components' },
+      ],
+    },
+    {
+      text: 'Companion Packages',
+      items: [
+        { text: 'Overview', link: '/packages/' },
         { text: 'MobX Bindings', link: '/guides/mobx' },
+        {
+          text: 'lit-ui-router-mobx',
+          link: '/api/lit-ui-router-mobx/',
+          collapsed: true,
+          items: mobxSidebarItems,
+        },
+        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
+        {
+          text: 'ui-router-navigation-location-plugin',
+          link: '/api/navigation-location-plugin/',
+          collapsed: true,
+          items: navigationSidebarItems,
+        },
       ],
     },
     {
@@ -66,18 +84,6 @@ function makeSidebar() {
           link: '/api/reference/',
           collapsed: false,
           items: typedocSidebarItems,
-        },
-        {
-          text: 'lit-ui-router-mobx',
-          link: '/api/lit-ui-router-mobx/',
-          collapsed: true,
-          items: mobxSidebarItems,
-        },
-        {
-          text: 'navigation-location-plugin',
-          link: '/api/navigation-location-plugin/',
-          collapsed: true,
-          items: navigationSidebarItems,
         },
       ],
     },
@@ -122,6 +128,7 @@ const config = {
           { text: 'Introduction', link: '/introduction' },
           { text: 'Tutorial', link: '/tutorial/helloworld' },
           { text: 'Guides', link: '/guides/' },
+          { text: 'Companion Packages', link: '/packages/' },
           { text: 'API', link: '/api/' },
         ],
       },
