@@ -65,7 +65,7 @@ correctly:
 `pushState`, but drives them with the modern
 [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
 and exposes the router inside `navigate` events for interception — see the
-[Navigation API Plugin guide](./navigation-plugin) for the full walkthrough.
+[Navigation API Plugin guide](/packages/navigation-plugin) for the full walkthrough.
 Since the API is only recently cross-engine, pair it with a fallback:
 
 ```ts

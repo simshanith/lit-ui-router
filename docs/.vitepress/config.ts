@@ -54,7 +54,7 @@ function makeSidebar() {
           text: 'MobX',
           collapsed: true,
           items: [
-            { text: 'lit-ui-router-mobx', link: '/guides/mobx' },
+            { text: 'lit-ui-router-mobx', link: '/packages/mobx' },
             {
               text: 'API',
               link: '/api/lit-ui-router-mobx/',
@@ -69,7 +69,7 @@ function makeSidebar() {
           items: [
             {
               text: 'ui-router-navigation-location-plugin',
-              link: '/guides/navigation-plugin',
+              link: '/packages/navigation-plugin',
             },
             {
               text: 'API',

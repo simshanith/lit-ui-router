@@ -40,7 +40,7 @@ client deployed across every point on the server-support spectrum.
 
 ## Companion Packages
 
-The [MobX bindings](./mobx) and the
-[Navigation API location plugin](./navigation-plugin) are optional
+The [MobX bindings](/packages/mobx) and the
+[Navigation API location plugin](/packages/navigation-plugin) are optional
 [companion packages](/packages/) — each independently versioned, with its own
 guide and API reference.

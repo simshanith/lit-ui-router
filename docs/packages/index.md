@@ -23,7 +23,7 @@ with router and store state — no manual `requestUpdate()` plumbing.
 npm install lit-ui-router-mobx
 ```
 
-- [**Guide**](/guides/mobx) — observable router state and reaction-based
+- [**Guide**](/packages/mobx) — observable router state and reaction-based
   controllers
 - [**API reference**](/api/lit-ui-router-mobx/)
 
@@ -38,7 +38,7 @@ through the platform's newest navigation primitive.
 npm install ui-router-navigation-location-plugin
 ```
 
-- [**Guide**](/guides/navigation-plugin) — clean URLs via the Navigation API
+- [**Guide**](/packages/navigation-plugin) — clean URLs via the Navigation API
 - [**API reference**](/api/navigation-location-plugin/)
 
 ## In development

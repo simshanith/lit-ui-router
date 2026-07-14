@@ -241,7 +241,7 @@ This machinery is for **path-location clients** — apps whose routes live in
 the URL path and therefore reach the server on every deep link:
 [`pushStateLocationPlugin`](./location-plugins#html5-pushstate), or its most
 modern shape, this repo's own
-[`ui-router-navigation-location-plugin`](./navigation-plugin) companion
+[`ui-router-navigation-location-plugin`](/packages/navigation-plugin) companion
 package, which produces the same clean paths through the Navigation API.
 Path-addressed routes are the ones a server is asked to vouch for; that is
 what earns them routing verdicts.
