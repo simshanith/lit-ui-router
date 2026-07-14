@@ -63,12 +63,6 @@
   padding-left: 8px;
 }
 
-/* Keep identifiers on one line (the widened sidebar gives them room) rather
-   than wrapping hyphenated names like ui-router-navigation-location-plugin. */
-.VPSidebar .VPSidebarItem .text {
-  white-space: nowrap;
-}
-
 /* Shields badges: pin a legible height so the wide release badge doesn't
    scale down to fit a table column (it wraps to the next line instead). */
 .vp-doc img[src*="img.shields.io"] {
