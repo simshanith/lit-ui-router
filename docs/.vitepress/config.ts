@@ -7,9 +7,24 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
-const mobxSidebarItems = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
-const navigationSidebarItems =
-  navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
+
+// The companion references are generated from kind-indexes, which marks every
+// group (Classes, Interfaces, …) collapsed. Expand them so they read like the
+// flagship reference, whose category groups render open.
+function expandGroups(
+  items: DefaultTheme.SidebarItem[],
+): DefaultTheme.SidebarItem[] {
+  return items.map((item) =>
+    item.collapsed === true ? { ...item, collapsed: false } : item,
+  );
+}
+
+const mobxSidebarItems = expandGroups(
+  mobxSidebarItemsJson as DefaultTheme.SidebarItem[],
+);
+const navigationSidebarItems = expandGroups(
+  navigationSidebarItemsJson as DefaultTheme.SidebarItem[],
+);
 
 const baseUrl = 'https://lit-ui-router.dev';
 
