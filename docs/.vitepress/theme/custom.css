@@ -52,6 +52,12 @@
   box-shadow: 0px 0px 12px 0px currentColor;
 }
 
+/* Long, space-less API identifiers (e.g. RouterReactionControllerOptions)
+   overflow the deeply-nested companion sidebar; let them wrap instead. */
+.VPSidebar .VPSidebarItem .text {
+  overflow-wrap: anywhere;
+}
+
 .VPHero  .tagline {
     max-width: 292px;
 }
