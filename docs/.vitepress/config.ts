@@ -49,6 +49,15 @@ function makeSidebar() {
       ],
     },
     {
+      text: 'Sample App',
+      items: [
+        { text: 'Overview', link: '/sample-app' },
+        { text: 'Vanilla', link: '/app', target: '_self' },
+        { text: 'MobX', link: '/app-mobx', target: '_self' },
+        { text: 'Hash', link: '/app-hash', target: '_self' },
+      ],
+    },
+    {
       text: 'API',
       items: [
         { text: 'Overview', link: '/api/' },
@@ -119,8 +128,10 @@ const config = {
       {
         text: 'Sample App',
         items: [
+          { text: 'Overview', link: '/sample-app' },
           { text: 'Vanilla', link: '/app', target: '_self' },
           { text: 'MobX', link: '/app-mobx', target: '_self' },
+          { text: 'Hash', link: '/app-hash', target: '_self' },
         ],
       },
     ],

@@ -7,7 +7,8 @@ description: Task-oriented guides for lit-ui-router, grouped by topic
 
 Task-oriented pages for the concepts real apps hit after the
 [tutorial](/tutorial/helloworld). Each guide is grounded in the
-<a href="/app" target="_self">sample app</a>'s working implementation.
+[sample app](/sample-app)'s working implementation — a webmail + contacts
+client deployed across every point on the server-support spectrum.
 
 ## URLs & Location
 
@@ -21,7 +22,10 @@ Task-oriented pages for the concepts real apps hit after the
   to a deliberate 404 state with `urlService.rules.otherwise`
 - [Server-Side Routing](./server-route-matching) — serve routing verdicts
   at the edge with `ui-router-server`: the app shell for real routes, 302
-  entry redirects, and real 404s for everything else
+  entry redirects, and real 404s for everything else, across the full
+  server-support spectrum (every level [live on the site](/sample-app)).
+  Routing honesty ships today; content rendering — build-time pre-rendering
+  and server-side rendering — is the roadmap next axis on the same spine
 
 ## Transitions & Guards
 
