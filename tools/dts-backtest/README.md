@@ -33,7 +33,7 @@ broken diagnostic filter silently classifying everything as third-party.
 ## Running
 
 ```sh
-turbo run test --filter=dts-backtest   # builds the packages first
+turbo run test --filter=@tools/dts-backtest   # builds the packages first
 ```
 
 ## Authoring rule for the published packages
@@ -42,7 +42,7 @@ The floor constrains only what surfaces in the emitted `dist/*.d.ts` —
 public API signatures and exported types. Implementation code may use any
 feature of the repo's current TypeScript; a newer-TS construct is only a
 problem when it leaks into a declaration (e.g. `NoInfer<T>` in an exported
-signature). When `dts-backtest#test` fails on your change, either keep the
+signature). When `@tools/dts-backtest#test` fails on your change, either keep the
 construct out of the public surface, or you are proposing a floor raise —
 see below.
 

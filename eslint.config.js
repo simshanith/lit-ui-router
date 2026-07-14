@@ -51,6 +51,42 @@ export default defineConfig(
     },
   },
   {
+    // Root scripts must not execute another workspace package's files: the
+    // owning package exposes a script and the root delegates (turbo run <task>
+    // or pnpm --filter). scripts/** stays runnable — the root owns it.
+    files: ['package.json'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +(?:\\.\\u002F)?(?:tools|packages|apps|docs|examples)\\u002F/]',
+          message:
+            "Cross-package execution: root scripts must not run another package's files with node/tsx. Add a script to the owning package and delegate via `turbo run <task>` (cached) or `pnpm --filter <pkg> run <script>` (uncached).",
+        },
+      ],
+    },
+  },
+  {
+    // The same boundary for every other package: scripts must not reach into
+    // a sibling (or the root) by relative parent path. Own files run
+    // directly; another package's entry points come through a workspace:*
+    // dep's bin or a turbo/pnpm delegation.
+    files: ['**/package.json'],
+    ignores: ['package.json'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +\\.\\.\\u002F/]',
+          message:
+            'Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (workspace:* bin) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.',
+        },
+      ],
+    },
+  },
+  {
     // examples/* are standalone `npm ci` projects (StackBlitz): inline versions required.
     files: ['examples/*/package.json'],
     rules: {

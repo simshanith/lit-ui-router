@@ -1,5 +1,5 @@
 {
-  "name": "workers-builds",
+  "name": "@tools/workers-builds",
   "version": "0.0.1",
   "private": true,
   "description": "Diffs the Cloudflare Workers Builds triggers against the repo-owned desired state, and applies it",

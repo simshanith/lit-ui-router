@@ -1,5 +1,5 @@
 {
-  "name": "typedoc-plugin-lit-ui-router",
+  "name": "@tools/typedoc-plugin-lit-ui-router",
   "version": "0.0.1",
   "private": true,
   "type": "module",

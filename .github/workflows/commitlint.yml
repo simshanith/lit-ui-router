@@ -36,6 +36,7 @@ jobs:
         with:
           # Full history so the action can walk the PR's commit range
           fetch-depth: 0
+          persist-credentials: false
       - uses: wagoid/commitlint-github-action@v6
         with:
           configFile: commitlint.config.ts

@@ -10,13 +10,12 @@
       "outputs": ["dist/**"]
     },
     "test": {
-      "with": ["//#test:root"],
       "dependsOn": ["^test"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
       "env": ["VITEST_BROWSER_API_PORT", "CI"],
       "passThroughEnv": ["WRANGLER_LOG"]
     },
-    "dts-backtest#test": {
+    "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
       "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
     },
@@ -48,7 +47,13 @@
       ]
     },
     "//#lint:workflows": {
-      "inputs": [".github/**", "$TURBO_DEFAULT$"]
+      "inputs": [
+        ".github/**",
+        "zizmor.yml",
+        ".config/mise/config.toml",
+        ".config/mise/mise.lock",
+        "$TURBO_DEFAULT$"
+      ]
     },
     "typecheck": {
       "dependsOn": ["^build"],
@@ -67,19 +72,13 @@
         "typecheck",
         "format:check",
         "codecov:bundle",
-        "//#check:pack"
+        "@tools/release#check:pack"
       ]
     },
     "codecov:bundle": {
       "dependsOn": ["build"],
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
-    },
-    "//#check:pack": {
-      "inputs": ["$TURBO_DEFAULT$", "**/package.json"]
-    },
-    "//#test:root": {
-      "inputs": ["scripts/**"]
     },
     "format": {
       "with": ["//#format:root"],

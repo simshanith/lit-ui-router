@@ -51,6 +51,7 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
+    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/browser-playwright": "catalog:",
@@ -60,7 +61,6 @@
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
-    "typedoc-plugin-lit-ui-router": "workspace:*",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",

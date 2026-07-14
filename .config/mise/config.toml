@@ -1,4 +1,15 @@
 # One version authority per tool — see the toolchain table in CONTRIBUTING.md.
+
+# Monorepo task addressing (`mise run '//tools/release:pack'`): task defs live
+# beside the code they run. Root trust covers every config_root below, so the
+# usual `mise trust` (or mise-action's MISE_TRUSTED_CONFIG_PATHS) is enough.
+monorepo_root = true
+
+[monorepo]
+# Explicit roots — mise deprecated filesystem auto-discovery. A glob only
+# matches directories that actually carry a mise config.
+config_roots = ["tools/*"]
+
 [env]
 # Workspace binaries win over mise tools/globals; absolute via config_root
 # (repo root), so bare `turbo` etc. stay spawn-safe in any cwd or worktree.
@@ -14,6 +25,8 @@ idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
 "aqua:rhysd/actionlint" = "1.7.12"
+# GitHub Actions security auditor; complements actionlint's syntax checks
+"aqua:zizmorcore/zizmor" = "1.26.1"
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
@@ -21,8 +34,8 @@ idiomatic_version_file_enable_tools = ["node"]
 
 # Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
 # loud; and tool-only bumps (actionlint) skip the corepack ceremony.
-# snake_case names (bazel target convention, where mise monorepo tasks are
-# trending); no colons — mise monorepo task addressing claims `:`.
+# snake_case names (bazel target convention); no colons in task names — mise
+# monorepo task addressing owns `:` (see the config_roots above).
 [tasks.corepack_enable]
 description = "Shim the corepack-managed package managers onto PATH"
 run = "corepack enable"
@@ -43,6 +56,41 @@ depends = ["corepack_enable", "corepack_install"]
 # Flow: mise trust && mise install && mise run setup.
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
-description = "Install workspace dependencies with the corepack-provisioned pnpm"
+description = "Install workspace dependencies with the pnpm on PATH"
 depends = ["corepack"]
 run = "pnpm install"
+
+[tasks.lint_actionlint]
+description = "Lint GitHub Actions workflows for syntax/type errors"
+run = "actionlint"
+
+[tasks.lint_zizmor]
+# --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
+description = "Audit GitHub Actions workflows for security issues"
+run = "zizmor --offline .github/workflows"
+
+[tasks.lint_workflows]
+# Virtual grouping task; the two legs are independent and run in parallel.
+description = "Lint and audit GitHub Actions workflows"
+depends = ["lint_actionlint", "lint_zizmor"]
+
+# ── Release pipeline ────────────────────────────────────────────────────────
+# The release-workflow tasks live beside their code in
+# tools/release/mise.toml, addressed as //tools/release:<step>
+# (e.g. `mise run '//tools/release:pack'`). `mise tasks ls --all` lists them.
+# Only the build step lives here (//:build): it's a repo-generic turbo
+# invocation, not release logic, and at the root config_root turbo already
+# runs from the workspace root.
+
+[tasks.build]
+# env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
+description = "Build one package and its workspace deps via turbo"
+run = 'turbo run "${PACKAGE_NAME:?}#build"'
+
+[tasks.ci]
+# env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
+# the env itself (no CLI flags), plus CODECOV_TOKEN and WRANGLER_LOG for the
+# underlying tasks. TURBO_FORCE is the build-test deflake input: a truthy value
+# forces a cache-bypassing rerun, ""/"false" respect the cache.
+description = "Run the full CI pipeline via turbo"
+run = "turbo run ci --ui=stream --log-order=stream"

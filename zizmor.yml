@@ -1,0 +1,23 @@
+# zizmor (lint:zizmor) audit config — https://docs.zizmor.sh/configuration/
+rules:
+  dangerous-triggers:
+    ignore:
+      # pull_request_target is deliberate: payload-only title lint, never checks out PR code
+      - semantic-pr.yml
+  artipacked:
+    ignore:
+      # PAT checkout persists by design: release-it pushes the release branch
+      - bump-version.yml
+      # PAT checkout persists by design: pushes release tags to trigger publish-npm
+      - publish-gh.yml
+  unpinned-uses:
+    config:
+      policies:
+        # major-tag pins are deliberate for these creators; dependabot bumps them weekly
+        actions/*: ref-pin
+        jdx/mise-action: ref-pin
+        codecov/codecov-action: ref-pin
+        wagoid/commitlint-github-action: ref-pin
+        amannn/action-semantic-pull-request: ref-pin
+        # anything new must be hash-pinned (or trusted explicitly above)
+        '*': hash-pin

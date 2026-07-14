@@ -303,9 +303,27 @@
       }
     },
     {
-      "files": ["scripts/**/*.test.ts", "tools/workers-builds/**/*.test.ts"],
+      "files": [
+        "tools/build_and_test/**/*.test.ts",
+        "tools/release/**/*.test.ts",
+        "tools/shared/**/*.test.ts",
+        "tools/workers-builds/**/*.test.ts"
+      ],
       "rules": {
         "typescript/no-floating-promises": "off"
+      }
+    },
+    {
+      "files": ["tools/release/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": [
+              "^(PACKAGE|PACKAGE_NAME|PACKAGE_DIR|PACKAGE_INPUT|TARBALL|DRY_RUN|INCREMENT|OTHER_INCREMENT|PR_BASE|BRANCH_PREFIX_INPUT)$"
+            ]
+          }
+        ]
       }
     },
     {
@@ -320,7 +338,7 @@
       }
     },
     {
-      "files": ["scripts/start-xvfb.ts"],
+      "files": ["tools/build_and_test/src/start-xvfb.ts"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",

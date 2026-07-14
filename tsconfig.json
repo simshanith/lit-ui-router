@@ -18,7 +18,6 @@
   },
   "include": [
     "commitlint.config.ts",
-    "scripts/**/*.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"

@@ -1,0 +1,40 @@
+# Build-test workflow tasks — addressed as //tools/build_and_test:<step>
+# (monorepo task addressing; the root config declares tools/* as
+# config_roots). Tasks run from THIS directory, so run lines are
+# src/-relative. Same inputs/secrets contract as tools/release/mise.toml:
+# inputs arrive via step `env:` blocks and secrets stay in workflow step env
+# (never mise [env]). Unlike release, this file carries an [env] block — the
+# _.path below — whose effect on a shell that merely cd's in here is a harmless
+# duplicate (see its note).
+# Tasks assume node_modules exists: build-test.yml runs `mise run setup` as a
+# dedicated first step, so tasks don't re-declare `depends = ["//:setup"]`
+# (which re-ran pnpm install per step). Run `mise run setup` first when
+# invoking a task standalone.
+
+[env]
+# This package's own devDep binaries (playwright, cypress) for the tasks
+# below. Absolute via config_root (this directory); the root config's
+# {{cwd}} entry only covers shells already cd'd in here, not `mise run`
+# from elsewhere. For cd'd shells this is a harmless duplicate.
+_.path = ["{{config_root}}/node_modules/.bin"]
+
+[tasks.xvfb]
+# env: GITHUB_ENV (DISPLAY export target; prints-only when unset).
+# XVFB_* overrides serve the unit tests and local reproduction.
+# The `start-xvfb` package.json bin is an executable (shebang + 0755), so it
+# runs directly — pnpm never self-links a package's own bin onto its own
+# PATH, so a bare `start-xvfb` wouldn't resolve here.
+description = "Start the shared CI Xvfb display and export DISPLAY"
+run = "./src/start-xvfb.ts"
+
+[tasks.playwright]
+# The vitest browser legs need the Playwright browsers + system deps; the
+# binary comes from this package's own devDependency.
+description = "Install the Playwright browsers with system dependencies"
+run = "playwright install --with-deps"
+
+[tasks.cypress]
+# Verify up front so the concurrent vanilla/mobx Cypress runs skip the
+# "first time using Cypress" verification banner.
+description = "Install and verify the Cypress binary"
+run = ["cypress install", "cypress verify"]
