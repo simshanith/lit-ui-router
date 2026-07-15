@@ -43,25 +43,26 @@ export const redirects: RedirectRule[] = [{ pattern: /^\/?$/, to: 'welcome' }];
 // 'simulate' is config, not code.
 const app: MountConfig = { routes, redirects, strategy: 'matcher' };
 
-// The not-found-spa exhibit: the otherwise projection (mirroring the client's
-// otherwise() -> notFound rule) makes every path under this mount serve the
-// app shell at an honest 404 — the client boots at the retained url and
-// renders the rich in-app notFound state. It deliberately carries NO
-// url-bearing routes: the shell bakes <base href="/app/">, so the client
-// router cannot match deep links under this prefix — a shell-200 here would
-// be exactly the soft-404 shape the flagship mounts avoid.
+// The not-found-spa exhibit: an honest-404 SPA. It is the flagship mount plus
+// one difference — the miss. Real routes and the root redirect earn a shell-200
+// (the shell derives its base from location.pathname at boot — see shellMounts
+// and sample-app-shared's configureRouter — so ONE vanilla build matches deep
+// links here), while the `otherwise` projection serves the app shell at an
+// honest 404 for genuine misses; the client boots at the retained url and
+// renders the rich in-app notFound state. The flagship carries no `otherwise`,
+// so its miss is a static 404 page instead (see the fetch adapter's verdict
+// mapping: an `otherwise` state is a status'd shell).
 const notFoundSpaDemo: MountConfig = {
-  routes: [{ name: 'notFound' }],
+  ...app,
   otherwise: { state: 'notFound' },
 };
 
 // The simulated-routing exhibit: full router semantics server-side — the
 // same tables, but every verdict computed by replaying the url through a
 // headless @uirouter/core router (redirect rules, otherwise, and one day
-// hooks/resolves all ride). Deep links serve shell-200 here, but the shell's
-// baked <base href="/app/"> means the client renders its in-app notFound
-// under this prefix — the exhibit teaches SERVER semantics; noindex (worker)
-// quarantines it from crawlers.
+// hooks/resolves all ride). The shell derives its base from location.pathname
+// at boot (see shellMounts), so the same vanilla build renders the very route
+// the server computed; noindex (worker) still quarantines it from crawlers.
 const simulatedRoutingDemo: MountConfig = {
   routes,
   redirects,
@@ -97,3 +98,8 @@ export const mounts: Record<string, MountConfig> = {
   '/not-found-spa': notFoundSpaDemo,
   '/simulated-routing': simulatedRoutingDemo,
 };
+
+// The prefixes the mount-agnostic shell derives its base from live in
+// ./shellMounts.ts (a dependency-free `./shell-mounts` subpath, so the client
+// can import them without this module's ui-router-server types). The routes
+// test pins that list as an exact mirror of these keys plus /not-found-naive.

@@ -7,14 +7,20 @@ import { createFetchHandler } from 'ui-router-server/fetch';
 // compile once per isolate.
 const router = createServerRouter({ mounts });
 
-// The 404-pattern exhibit mounts have no shell asset of their own — they serve
-// the vanilla app's (its asset urls are absolute, so the shell works under any
-// prefix). Mounts without an alias serve the shell at their own base, which is
-// the adapter's shellPath default.
-const SHELL_PATHS: Record<string, string> = {
-  '/not-found-spa': '/app',
-  '/simulated-routing': '/app',
-};
+// Mount-agnostic shell: ONE vanilla build serves every vanilla pushState mount.
+// The shell derives its <base href> from location.pathname at boot (see
+// sample-app-shared's configureRouter + sample-app-routes' shellMounts), so
+// /app.html renders real routes under /not-found-spa and /simulated-routing
+// too — no per-prefix builds, no HTML templating. shellPath points those
+// mounts at the single shell; /app-mobx and /app-hash keep their own builds
+// (different bindings / location mode) and serve their own shells at the
+// default mount -> mount path.
+const VANILLA_SHELL = '/app';
+const VANILLA_SHELL_MOUNTS = new Set([
+  '/app',
+  '/not-found-spa',
+  '/simulated-routing',
+]);
 
 // Every exhibit response carries noindex: the naive rung deliberately serves
 // soft-404s, and the site must not be penalized by its own teaching material.
@@ -46,9 +52,12 @@ export default {
       url.pathname.startsWith(`${NAIVE_MOUNT}/`)
     ) {
       // Construct the shell request from the original so its conditional
-      // headers ride along and a repeat load can still 304.
+      // headers ride along and a repeat load can still 304. The one vanilla
+      // shell renders here too: at /not-found-naive its client derives the
+      // matching base and shows the in-app 404 on the paths the server lied
+      // 200 about — the soft-404 anti-pattern, made visible.
       const shell = await env.ASSETS.fetch(
-        new Request(new URL('/app', request.url), request),
+        new Request(new URL(VANILLA_SHELL, request.url), request),
       );
       return withNoindex(shell);
     }
@@ -56,10 +65,14 @@ export default {
     // The fetch adapter fronts every routed mount: it owns status mapping,
     // mergeSearch on redirect Locations, validator stripping + status relabel
     // on status'd shells, and the canonical Link header. The host supplies the
-    // asset IO (env.ASSETS) and the two policies the adapter can't know: shell
-    // aliasing (SHELL_PATHS) and the real 404 page.
+    // asset IO (env.ASSETS), the one policy the adapter can't know (the real
+    // 404 page), and — for the vanilla pushState family — the shell aliasing:
+    // those mounts share one base-agnostic build, so they all resolve to it.
     const handler = createFetchHandler(router, {
-      shellPath: (mount) => SHELL_PATHS[mount] ?? mount,
+      // Vanilla pushState mounts share the single base-agnostic build; the rest
+      // keep the default mount -> mount (their own shell at <mount>.html).
+      shellPath: (mount) =>
+        VANILLA_SHELL_MOUNTS.has(mount) ? VANILLA_SHELL : mount,
       // The adapter hands over a shell Request already rewritten to shellPath
       // and (for a status'd shell) stripped of validators — the host's job is
       // the raw asset fetch; the adapter owns the relabel and Link on the way

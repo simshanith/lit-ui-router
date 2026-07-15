@@ -23,6 +23,7 @@
     "lit-dialog": "catalog:",
     "lit-ui-router": "workspace:*",
     "lodash": "catalog:",
+    "sample-app-routes": "workspace:*",
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {

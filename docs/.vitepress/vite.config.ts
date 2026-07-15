@@ -9,15 +9,16 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
 // The mount shells as the dev server serves them. Production (docs/worker)
-// serves each at its bare mount via Cloudflare's html_handling; the dev
-// server serves the static-copied files, so the paths carry `.html` and the
-// borrowed exhibits (/not-found-spa, /simulated-routing) point at the vanilla
-// shell — the SHELL_PATHS aliasing the worker does, in the dev host's terms.
+// serves each at its bare mount via Cloudflare's html_handling; the dev server
+// serves the static-copied files, so the paths carry `.html`. The vanilla
+// pushState mounts share ONE base-agnostic build (`/app.html`) — the shell
+// derives its base from location.pathname at boot (see sample-app-shared's
+// configureRouter), so it renders real routes under /not-found-spa and
+// /simulated-routing too, mirroring the worker's shellPath aliasing. /app-mobx
+// and /app-hash keep their own builds (different bindings / location mode).
 const SHELL_PATHS: Record<string, string> = {
   '/app': '/app.html',
   '/app-mobx': '/app-mobx.html',
-  // The hash demo has its own shell (base href /app-hash/, hash location baked
-  // at build), not the vanilla one the exhibits borrow.
   '/app-hash': '/app-hash.html',
   '/not-found-spa': '/app.html',
   '/simulated-routing': '/app.html',
@@ -124,6 +125,14 @@ export default defineConfig({
           dest: 'app-hash',
           rename: { stripBase: true },
         },
+        // The aliased exhibits (/not-found-naive, /not-found-spa,
+        // /simulated-routing) need no shells of their own: they share the one
+        // vanilla build above (app.html + its /assets bundle). The shell
+        // derives its base from location.pathname at boot, so it deep-links
+        // under every exhibit prefix — the worker (and dev SHELL_PATHS) alias
+        // those mounts to /app. No 404.html either: exhibit misses serve a
+        // status'd shell (the `otherwise` projection), not a static page.
+        //
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
         {
