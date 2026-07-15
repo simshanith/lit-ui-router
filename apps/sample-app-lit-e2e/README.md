@@ -14,13 +14,13 @@ That production-like flow builds the docs site (which embeds both apps'
 builds), serves it with wrangler on `:8787`, and runs five Cypress suites
 concurrently (`test:cypress:all`):
 
-| Suite        | Target       | Covers                                       |
-| ------------ | ------------ | -------------------------------------------- |
-| `vanilla`    | `/app/`      | vanilla app, `pushState` routing             |
-| `mobx`       | `/app-mobx/` | MobX app, `pushState` routing                |
-| `docs`       | site pages   | docs-site smoke (`cypress.docs.config.ts`)   |
-| `hash`       | `/app/`      | vanilla app under the `hash` location plugin |
-| `navigation` | `/app/`      | vanilla app under the Navigation API plugin  |
+| Suite        | Target        | Covers                                                                                                              |
+| ------------ | ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `vanilla`    | `/app/`       | vanilla app, `pushState` routing                                                                                    |
+| `mobx`       | `/app-mobx/`  | MobX app, `pushState` routing                                                                                       |
+| `docs`       | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
+| `hash`       | `/app/`       | vanilla app under the `hash` location plugin                                                                        |
+| `navigation` | `/app/`       | vanilla app under the Navigation API plugin                                                                         |
 
 The same run executes in CI via the `ci` turbo task.
 
