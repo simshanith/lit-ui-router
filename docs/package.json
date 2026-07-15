@@ -12,13 +12,17 @@
     "lint": "oxlint .",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
+    "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
+    "types:worker": "wrangler types worker/worker-configuration.d.ts",
     "wrangler:dev": "wrangler dev"
   },
   "dependencies": {
     "@spectrum-web-components/icons-workflow": "catalog:",
     "sample-app-lit-mobx": "workspace:*",
     "sample-app-lit-vanilla": "workspace:*",
+    "sample-app-routes": "workspace:*",
     "screenfull": "catalog:",
+    "ui-router-server": "workspace:*",
     "vue": "catalog:"
   },
   "devDependencies": {

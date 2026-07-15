@@ -1,0 +1,24 @@
+{
+  "name": "sample-app-routes",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/routes.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "lint": "oxlint .",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "ui-router-server": "workspace:*"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "typescript": "catalog:"
+  }
+}

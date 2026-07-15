@@ -7,9 +7,25 @@ import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedo
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
-const mobxSidebarItems = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
-const navigationSidebarItems =
+// The companion references are small, and their kind categories (Classes,
+// Interfaces, …) are generic — unlike the flagship's semantic categories
+// (Core, Components, …). Flatten them into a single member list under the
+// package-name API node; the grouped listing still lives on the reference's
+// index page and the kind-index pages stay reachable by URL.
+function flattenGroups(
+  items: DefaultTheme.SidebarItem[],
+): DefaultTheme.SidebarItem[] {
+  return items.flatMap((item) => (item.items ? item.items : [item]));
+}
+
+// Assert to the sidebar type on a typed binding first — like typedocSidebarItems
+// above, the generated JSON may be absent when lint type-checks this file, which
+// would otherwise leave it `any` and trip no-unsafe-argument through flatten.
+const mobxSidebarItemsRaw = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
+const navigationSidebarItemsRaw =
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
+const mobxSidebarItems = flattenGroups(mobxSidebarItemsRaw);
+const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -33,15 +49,58 @@ function makeSidebar() {
       items: [
         { text: 'Overview', link: '/guides/' },
         { text: 'Location Plugins', link: '/guides/location-plugins' },
-        { text: 'Navigation API Plugin', link: '/guides/navigation-plugin' },
         { text: 'Unmatched URLs (404)', link: '/guides/unmatched-urls' },
+        {
+          text: 'Server-Side Routing',
+          link: '/guides/server-route-matching',
+        },
         { text: 'Route Guards', link: '/guides/route-guards' },
         {
           text: 'Component Lifecycle Hooks',
           link: '/guides/component-lifecycle',
         },
         { text: 'Reactive Components', link: '/guides/reactive-components' },
-        { text: 'MobX Bindings', link: '/guides/mobx' },
+      ],
+    },
+    {
+      text: 'Companion Packages',
+      items: [
+        { text: 'Overview', link: '/packages/' },
+        {
+          text: 'MobX',
+          link: '/packages/mobx',
+          collapsed: true,
+          items: [
+            {
+              text: 'lit-ui-router-mobx API',
+              link: '/api/lit-ui-router-mobx/',
+              collapsed: false,
+              items: mobxSidebarItems,
+            },
+          ],
+        },
+        {
+          text: 'Navigation Location',
+          link: '/packages/navigation-plugin',
+          collapsed: true,
+          items: [
+            {
+              text: 'navigation-location-plugin API',
+              link: '/api/navigation-location-plugin/',
+              collapsed: false,
+              items: navigationSidebarItems,
+            },
+          ],
+        },
+      ],
+    },
+    {
+      text: 'Sample App',
+      items: [
+        { text: 'Overview', link: '/sample-app' },
+        { text: 'Vanilla', link: '/app', target: '_self' },
+        { text: 'MobX', link: '/app-mobx', target: '_self' },
+        { text: 'Hash', link: '/app-hash', target: '_self' },
       ],
     },
     {
@@ -51,20 +110,8 @@ function makeSidebar() {
         {
           text: 'lit-ui-router',
           link: '/api/reference/',
-          collapsed: false,
+          collapsed: true,
           items: typedocSidebarItems,
-        },
-        {
-          text: 'lit-ui-router-mobx',
-          link: '/api/lit-ui-router-mobx/',
-          collapsed: true,
-          items: mobxSidebarItems,
-        },
-        {
-          text: 'navigation-location-plugin',
-          link: '/api/navigation-location-plugin/',
-          collapsed: true,
-          items: navigationSidebarItems,
         },
       ],
     },
@@ -109,14 +156,17 @@ const config = {
           { text: 'Introduction', link: '/introduction' },
           { text: 'Tutorial', link: '/tutorial/helloworld' },
           { text: 'Guides', link: '/guides/' },
+          { text: 'Companion Packages', link: '/packages/' },
           { text: 'API', link: '/api/' },
         ],
       },
       {
         text: 'Sample App',
         items: [
+          { text: 'Overview', link: '/sample-app' },
           { text: 'Vanilla', link: '/app', target: '_self' },
           { text: 'MobX', link: '/app-mobx', target: '_self' },
+          { text: 'Hash', link: '/app-hash', target: '_self' },
         ],
       },
     ],

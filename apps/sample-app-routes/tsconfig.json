@@ -1,0 +1,19 @@
+{
+  // These pure-data tables feed the docs worker and any server runtime, so
+  // this src stays runtime-neutral: `types: []` (no host globals) makes a
+  // node-only API a compile error here, same as ui-router-server's src. We
+  // consume ui-router-server as workspace SOURCE, so tsc compiles its
+  // implementation here too — the setTimeout/URLSearchParams it touches come
+  // from the package's own referenced ambient shim (src/globals.d.ts), not
+  // from us, so we need no host types to compile it. The no-restricted-globals
+  // lint (.oxlintrc.json) backstops the same neutrality with WinterCG messages.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    "types": []
+  },
+  "include": ["src/**/*"]
+}

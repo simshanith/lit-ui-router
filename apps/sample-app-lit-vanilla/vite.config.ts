@@ -43,6 +43,11 @@ export default defineConfig({
           dest: 'images',
           rename: { stripBase },
         },
+        // Per-mount 404 page; the docs worker serves it for unmatched paths.
+        {
+          src: '404.html',
+          dest: '',
+        },
       ],
     }),
   ],

@@ -98,8 +98,8 @@ pattern — its
 nav header, and message compose view each use a `TransitionController`. The
 behaviorally identical <a href="/app-mobx" target="_self">MobX sample app</a>
 solves the same problems with the observable store and reaction controllers
-from
-[`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx) —
-if your app already uses MobX, prefer those bindings; the
+from [`lit-ui-router-mobx`](/packages/), one of the
+[companion packages](/packages/) — if your app already uses MobX, prefer
+[those bindings](/packages/mobx); the
 [two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 compare the idioms file-by-file.

@@ -49,10 +49,173 @@ describe('docs site', () => {
   });
 
   it('serves the embedded example apps same-origin', () => {
-    // Wrangler's SPA fallback answers every path with 200 + the docs
-    // homepage, so only embed-unique content proves the asset deployed.
+    // Only embed-unique content proves the asset deployed, not a fallback.
     cy.request('/examples/helloworld/')
       .its('body')
       .should('include', 'Hello World - lit-ui-router Tutorial');
+  });
+
+  it('serves a real 404 for unknown urls', () => {
+    cy.request({ url: '/definitely-missing', failOnStatusCode: false }).then(
+      (response) => {
+        expect(response.status).to.eq(404);
+        // The title proves the vitepress 404 page rendered, not a null body.
+        expect(response.body).to.include('<title>404 | Lit UI Router</title>');
+      },
+    );
+  });
+
+  it('serves the app shell for real routes under the spa mounts', () => {
+    for (const mount of ['/app', '/app-mobx']) {
+      // The root (hash-mode home) plus a static and a parameterized route.
+      for (const path of ['/', '/welcome', '/contacts/1/edit']) {
+        cy.request(`${mount}${path}`).then((response) => {
+          expect(response.status, `${mount}${path}`).to.eq(200);
+          // Prefix only: the mobx shell's title carries a " (MobX)" suffix.
+          expect(response.body).to.include('<title>UI-Router Lit sample app');
+          // Flagships are indexable; only the exhibits carry noindex.
+          expect(response.headers, `${mount}${path}`).to.not.have.property(
+            'x-robots-tag',
+          );
+        });
+      }
+    }
+  });
+
+  it('serves the per-app 404 page for unknown urls under the spa mounts', () => {
+    // The flagship rung (not-found-static): a dedicated 404 page, not the
+    // shell — 404/200 byte-identical shells read as soft-404s and muddy
+    // entrance analytics. The page drives the user back into its own app.
+    for (const mount of ['/app', '/app-mobx']) {
+      for (const path of [
+        '/definitely-not-a-route',
+        '/contacts/1/edit/extra',
+      ]) {
+        const url = `${mount}${path}`;
+        cy.request({ url, failOnStatusCode: false }).then((response) => {
+          expect(response.status, url).to.eq(404);
+          // Prefix only: the mobx page's title carries a " (MobX)" suffix.
+          expect(response.body).to.include(
+            '<title>404 | UI-Router Lit sample app',
+          );
+          expect(response.body).to.include(`href="${mount}/welcome"`);
+          expect(response.headers['content-type'], url).to.include('text/html');
+          // Not a route, so no canonical Link header (unlike shell 200s).
+          expect(response.headers, url).to.not.have.property('link');
+          // Flagships stay indexable; only the exhibits carry noindex.
+          expect(response.headers, url).to.not.have.property('x-robots-tag');
+        });
+      }
+    }
+  });
+
+  it('302s the flagship mount root — hash mode is not first-class there', () => {
+    // A hash client enters at the bare mount; the browser GETs it with the
+    // route in the (unsent) fragment. The flagship root 302s to /welcome,
+    // moving the browser to a new path — so a flagship mount can't host a hash
+    // app. That limitation is the reason for the dedicated /app-hash mount.
+    for (const mount of ['/app', '/app-mobx']) {
+      cy.request({ url: mount, followRedirect: false }).then((response) => {
+        expect(response.status, mount).to.eq(302);
+        expect(response.headers.location, mount).to.eq(`${mount}/welcome`);
+      });
+    }
+  });
+
+  it('serves the hash-demo shell at 200 at its root, with no redirect', () => {
+    // The dedicated hash mount: the fragment carries the route, so the server
+    // only ever sees the bare mount and must serve the shell there without a
+    // 302 (a redirect would strip the fragment's route on entry). Both the
+    // bare and trailing-slash forms answer 200 with the hash shell; the mount
+    // is a real demo, not an exhibit, so it stays indexable.
+    for (const url of ['/app-hash', '/app-hash/']) {
+      cy.request({ url, followRedirect: false }).then((response) => {
+        expect(response.status, url).to.eq(200);
+        expect(response.body, url).to.include(
+          '<title>UI-Router Lit sample app',
+        );
+        expect(response.headers, url).to.not.have.property('x-robots-tag');
+      });
+    }
+    // A mistyped deep path (never produced by a hash client) is an honest 404.
+    cy.request({
+      url: '/app-hash/no/such/route',
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.eq(404);
+    });
+  });
+
+  it('serves the shell at 200 for everything under the naive exhibit', () => {
+    // The not-found-naive rung: the classic SPA-host fallback (the soft-404
+    // anti-pattern baseline) — no server routing at all.
+    for (const url of [
+      '/not-found-naive',
+      '/not-found-naive/anything/at/all',
+    ]) {
+      cy.request(url).then((response) => {
+        expect(response.status, url).to.eq(200);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+        // Exhibit responses opt out of indexing: this rung IS the soft-404.
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
+      });
+    }
+  });
+
+  it('serves the app shell at 404 under the shell-404 exhibit mount', () => {
+    // The /not-found-spa exhibit: every path is an honest 404 whose body IS
+    // the app shell — the other 404 pattern, demonstrated side by side.
+    for (const url of [
+      '/not-found-spa',
+      '/not-found-spa/',
+      '/not-found-spa/any/path',
+    ]) {
+      cy.request({ url, failOnStatusCode: false }).then((response) => {
+        expect(response.status, url).to.eq(404);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+        expect(response.headers, url).to.not.have.property('link');
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
+      });
+    }
+  });
+
+  it('computes full router verdicts under the simulate exhibit', () => {
+    // The simulated-routing rung: same tables, every verdict computed by a
+    // headless @uirouter/core transition server-side.
+    cy.request({
+      url: '/simulated-routing/?flag=1',
+      followRedirect: false,
+    }).then((response) => {
+      expect(response.status).to.eq(302);
+      expect(response.headers.location).to.eq(
+        '/simulated-routing/welcome?flag=1',
+      );
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+    cy.request('/simulated-routing/welcome').then((response) => {
+      expect(response.status).to.eq(200);
+      expect(response.body).to.include('<title>UI-Router Lit sample app');
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+    cy.request({
+      url: '/simulated-routing/garbage',
+      failOnStatusCode: false,
+    }).then((response) => {
+      expect(response.status).to.eq(404);
+      expect(response.body).to.include('<title>UI-Router Lit sample app');
+      expect(response.headers['x-robots-tag']).to.eq('noindex');
+    });
+  });
+
+  it('boots the in-app 404 state on a direct exhibit load', () => {
+    cy.visit('/not-found-spa/definitely-not-a-route', {
+      failOnStatusCode: false,
+    });
+    cy.contains('404 Page Not Found');
+    // The unmatched url stays in the address bar (the 404 state is url-less).
+    cy.location('pathname').should(
+      'eq',
+      '/not-found-spa/definitely-not-a-route',
+    );
   });
 });

@@ -1,8 +1,11 @@
+import { createServerRouter } from 'ui-router-server';
+import { serverRouterPlugin } from 'ui-router-server/vite';
+import { mounts } from 'sample-app-routes';
 import { defineConfig, Plugin } from 'vite';
 import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // Tutorial examples embedded same-origin at /examples/<name>/; built by
-// `examples#build:embeds` (hash routing, so no _redirects entries needed).
+// `examples#build:embeds` (hash routing, so no SPA fallback needed).
 const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
 // VitePress 1.x / vite 6 default targets list `safari14`, but esbuild >=0.27.7
@@ -10,26 +13,43 @@ const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 // compat-table/compat-table#2008) and has no lowering transform for it.
 const TARGET = ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'];
 
+// The mount shells as the dev server serves them. Production (docs/worker)
+// serves each at its bare mount via Cloudflare's html_handling; the dev
+// server serves the static-copied files, so the paths carry `.html` and the
+// borrowed exhibits (/not-found-spa, /simulated-routing) point at the vanilla
+// shell — the SHELL_PATHS aliasing the worker does, in the dev host's terms.
+const SHELL_PATHS: Record<string, string> = {
+  '/app': '/app.html',
+  '/app-mobx': '/app-mobx.html',
+  // The hash demo has its own shell (base href /app-hash/, hash location baked
+  // at build), not the vanilla one the exhibits borrow.
+  '/app-hash': '/app-hash.html',
+  '/not-found-spa': '/app.html',
+  '/simulated-routing': '/app.html',
+};
+
+// The dev-server twin of the docs worker: the SAME mounts table, resolved by
+// the SAME ui-router-server engine, so `vitepress dev` answers the honest
+// 302s and mount-owned 404s the production worker does — dev/prod routing
+// parity from one config, and the retirement of the always-200 SPA fallback
+// this file used to hand-roll. The plugin installs its middleware in the pre
+// position (before Vite's own HTML fallback); asset/module fetches pass
+// through its navigation gate untouched.
+const router = createServerRouter({ mounts });
+
 /**
- * Vite plugin to handle /app/* and /app-mobx/* deep linking in dev server.
- * Mirrors Cloudflare _redirects: `/app/* /app 200`, `/app-mobx/* /app-mobx 200`
- * Rewrites requests to serve the matching sample-app SPA html.
- * Also resolves /examples/<name>/ directory requests to their index.html
- * (production gets this from Cloudflare's static-asset index resolution).
+ * Directory requests for the embedded tutorial examples resolve to their
+ * built index.html (production gets this from Cloudflare's static-asset index
+ * resolution). Unrelated to routing — the examples use hash routing and carry
+ * no server verdicts — so it stays a plain rewrite beside the router plugin.
  */
-function spaFallbackPlugin(): Plugin {
+function examplesIndexPlugin(): Plugin {
   return {
-    name: 'spa-fallback',
+    name: 'examples-index-fallback',
     configureServer(server) {
       server.middlewares.use((req, _res, next) => {
-        const exampleDir = req.url?.match(/^\/examples\/([\w-]+)\/?$/);
-        if (exampleDir) {
-          req.url = `/examples/${exampleDir[1]}/index.html`;
-        } else if (req.url?.startsWith('/app-mobx')) {
-          req.url = '/app-mobx.html';
-        } else if (req.url?.startsWith('/app')) {
-          req.url = '/app.html';
-        }
+        const dir = req.url?.match(/^\/examples\/([\w-]+)\/?$/);
+        if (dir) req.url = `/examples/${dir[1]}/index.html`;
         next();
       });
     },
@@ -38,7 +58,20 @@ function spaFallbackPlugin(): Plugin {
 
 export default defineConfig({
   plugins: [
-    spaFallbackPlugin(),
+    serverRouterPlugin(router, {
+      shellPath: (mount) => SHELL_PATHS[mount] ?? mount,
+      // Dev parity with the worker's mount-owned 404: serve the mount's
+      // static-copied 404 page relabeled to an honest 404, not the adapter's
+      // text/plain default. The 304 guard mirrors the adapter's own relabel.
+      serveNotFound: (mount, req, res, next) => {
+        req.url = `${mount}/404.html`;
+        const writeHead = res.writeHead.bind(res);
+        res.writeHead = (status: number, ...rest: unknown[]) =>
+          writeHead(status === 304 ? 304 : 404, ...rest);
+        next();
+      },
+    }),
+    examplesIndexPlugin(),
     viteStaticCopy({
       targets: [
         {
@@ -58,6 +91,35 @@ export default defineConfig({
           src: 'node_modules/sample-app-lit-mobx/dist/index.html',
           dest: '',
           rename: 'app-mobx.html',
+        },
+        // The hash-location sibling shell: the vanilla app's second build
+        // (`vite build --mode hash`), hash location + `/app-hash/` base baked
+        // in. Its bundle is content-hashed against different env, so it
+        // coexists with the vanilla one under /assets.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist-hash/assets/*',
+          dest: 'assets',
+        },
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist-hash/index.html',
+          dest: '',
+          rename: 'app-hash.html',
+        },
+        // Per-mount 404 pages: the worker (docs/worker/index.ts) serves
+        // <mount>/404.html with status 404 for unmatched paths in a mount.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist/404.html',
+          dest: 'app',
+        },
+        {
+          src: 'node_modules/sample-app-lit-mobx/dist/404.html',
+          dest: 'app-mobx',
+        },
+        // Hash deep paths (`/app-hash/foo`) never happen under a hash client,
+        // but a mistyped one gets the same honest 404 page as the other mounts.
+        {
+          src: 'node_modules/sample-app-lit-vanilla/dist-hash/404.html',
+          dest: 'app-hash',
         },
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.

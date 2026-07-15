@@ -13,12 +13,29 @@
       "persistent": true
     },
     "build": {
-      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
+      "dependsOn": [
+        "^build",
+        "^docs:api",
+        "examples#build:embeds",
+        "types:worker"
+      ],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
       "dependsOn": ["^build", "^docs:api"],
-      "with": ["typecheck:vue"]
+      "with": ["typecheck:vue", "typecheck:worker"]
+    },
+    "typecheck:worker": {
+      "dependsOn": ["^build", "types:worker"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    "lint": {
+      // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
+      "dependsOn": ["^build", "types:worker"]
+    },
+    "types:worker": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
+      "outputs": ["worker/worker-configuration.d.ts"]
     },
     "docs": {
       "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],

@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vite build",
+    "build:hash": "vite build --mode hash --outDir dist-hash",
     "codecov:bundle": "upload-bundle-stats sample-app-lit-vanilla-esm",
     "dev": "vite",
     "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",

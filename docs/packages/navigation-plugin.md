@@ -3,7 +3,12 @@ title: Navigation API Plugin
 description: Manage URLs with the modern browser Navigation API using ui-router-navigation-location-plugin
 ---
 
-# Navigation API Plugin
+# ui-router-navigation-location-plugin
+
+<p class="badges">
+<a href="https://www.npmjs.com/package/ui-router-navigation-location-plugin" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-navigation-location-plugin" /></a>
+<a href="https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-navigation-location-plugin" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-navigation-location-plugin@*" /></a>
+</p>
 
 [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin)
 is a UI-Router [location plugin](#how-location-plugins-fit-in) that manages

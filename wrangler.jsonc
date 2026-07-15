@@ -2,10 +2,35 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
-  "compatibility_date": "2025-07-12",
+  "compatibility_date": "2026-07-01",
+  "main": "./docs/worker/index.ts",
   "assets": {
     "directory": "./docs/dist",
-    "not_found_handling": "single-page-application",
-    // "binding": "ASSETS"
+    "binding": "ASSETS",
+    "not_found_handling": "404-page",
+    // Sample-app deep links and the 404-pattern exhibits invoke the worker;
+    // other misses serve 404.html. EVERY mount lists its bare path too, not
+    // just the `/*` wildcard: a `/*` pattern matches `/app/foo` but NOT the
+    // bare mount root `/app`, and the root is exactly where the verdict that
+    // differs from the plain asset lives — the flagship's `/` -> welcome 302,
+    // and /app-hash's shell-at-200 (its own `app-hash.html`, not the vanilla
+    // shell html_handling would serve at `/app-hash`). Omit the bare path and
+    // html_handling answers before the worker runs, shadowing that verdict.
+    // The exhibits also need their bare paths because no asset exists there —
+    // the whole prefix is the demo.
+    "run_worker_first": [
+      "/app",
+      "/app/*",
+      "/app-mobx",
+      "/app-mobx/*",
+      "/app-hash",
+      "/app-hash/*",
+      "/not-found-naive",
+      "/not-found-naive/*",
+      "/not-found-spa",
+      "/not-found-spa/*",
+      "/simulated-routing",
+      "/simulated-routing/*",
+    ],
   },
 }

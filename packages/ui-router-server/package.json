@@ -1,0 +1,46 @@
+{
+  "name": "ui-router-server",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "sideEffects": false,
+  "exports": {
+    ".": "./src/index.ts",
+    "./connect": "./src/connect.ts",
+    "./fetch": "./src/fetch.ts",
+    "./hono": "./src/hono.ts",
+    "./matcher": "./src/url-matcher.ts",
+    "./redirects": "./src/redirects.ts",
+    "./simulate": "./src/simulate.ts",
+    "./vite": "./src/vite.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "lint": "oxlint .",
+    "test": "node --test \"test/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "esbuild": "catalog:",
+    "hono": "catalog:",
+    "oxfmt": "catalog:",
+    "typescript": "catalog:",
+    "vite": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer",
+    "hono": "catalog:publishedPeer"
+  },
+  "peerDependenciesMeta": {
+    "@uirouter/core": {
+      "optional": true
+    },
+    "hono": {
+      "optional": true
+    }
+  }
+}
