@@ -169,6 +169,10 @@ targets to two.
 > is the typed, robust path — it's the same DOM `getBaseHref()` ultimately
 > reads, and it keeps `configureRouter`'s existing injection machinery.
 
+The `+ '/'` boundary means the derivation is **gated on known entries** — an
+unmatched prefix yields no base, so the app boots at `/` and 404s honestly
+rather than mis-stripping. The `shellMounts` list *is* that gate.
+
 **Why client-derived, not server-injected.** The alternative is for the worker
 to inject `<base href="${mount}/">` into the shell via `HTMLRewriter` at request
 time — "purest agnostic" (the client carries no mount knowledge, adding a mount
@@ -178,6 +182,21 @@ plus a `transformShell` seam in `ui-router-server`. Both variants collapse the
 builds equally; the client-derived one spends strictly less machinery, at the
 cost of one shared `shellMounts` export the client and worker both read (guard
 drift with a `shellMounts ⊇ Object.keys(mounts)` unit test).
+
+**Why not the server's `Link` header?** The adapter already emits the canonical
+URL (mount + path) as a `Link` **response header** on shell-200s — tempting as a
+base source. But a page has **no API to read the response headers of its own
+document navigation** (`Navigation`/`Resource` Timing expose timing, not
+headers), so the client can't pick the base off the `Link` of the HTML it's
+running in. Making a server value client-readable means either putting it in the
+HTML body (per-request templating — #313's objection, and if you template you'd
+inject `<base>` directly, i.e. server-injection above), an extra boot-time
+`fetch()` to re-read the header (a round-trip for a prefix already in
+`location.pathname`), or a Service Worker (inactive on first load,
+disproportionate). The one readable server channel that avoids templating is a
+**path-scoped cookie** (`Set-Cookie: … ; Path=/mount/`, read via
+`document.cookie`) — it works, but bloats every request and risks cross-mount
+staleness, strictly heavier than the gated pathname match for the same answer.
 
 **Landing order.** (1) export `shellMounts` + its drift test; (2) runtime
 derivation in `router.config.ts`, keeping the env read as a one-commit fallback,
