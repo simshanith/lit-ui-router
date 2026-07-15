@@ -99,52 +99,35 @@ and every published location strategy. See the
 
 ## Mount-agnostic shell
 
-_Implements the "Mount-agnostic shell" thread on
-[#313](https://github.com/simshanith/lit-ui-router/issues/313), collapsing the
-per-mount base-baked builds that [#363](https://github.com/simshanith/lit-ui-router/pull/363)
-introduced. Proven by the docs Cypress matrix (`test:cypress:docs`) — the same
-16 specs pass against the single collapsed build._
+The docs site runs the sample app behind several mounts — `/app`,
+`/not-found-naive`, `/not-found-spa`, `/simulated-routing` — to exhibit points
+on the [server-support spectrum](../docs/guides/server-route-matching.md). All
+four share a **single vanilla build**: the client recovers its base prefix at
+boot rather than having one baked in, so one build deep-links correctly under
+every mount. Assets emit at absolute `/assets/…`, so nothing else varies by
+prefix.
 
-The docs site runs the vanilla app behind several mounts (`/app`,
-`/not-found-naive`, `/not-found-spa`, `/simulated-routing`) to exhibit points on
-the [server-support spectrum](../docs/guides/server-route-matching.md). Today
-each is a **separate build** whose only difference is the baked
-`VITE_SAMPLE_APP_BASE_URL` — the `<base href>` the pushState plugin strips.
-Assets already emit at absolute `/assets/…`, so the JS, CSS, and HTML are
-otherwise byte-identical: four builds exist to write four strings into one
-`<base>` element.
+Two builds stay separate, because they differ in more than a base prefix — but
+they recover their base the same way, so neither bakes one either:
 
-Derive that base **at runtime** and the four collapse to one shell, served
-everywhere. Two builds stay separate for real reasons — `/app-mobx` is a
-different app (MobX bindings), `/app-hash` bakes the _location plugin_ (`hash`),
-which changes behavior, not just a string — but both drop their base bake too,
-leaving a base-free floor of three builds.
+| Build                                | Serves                                                             | Location  |
+| ------------------------------------ | ------------------------------------------------------------------ | --------- |
+| `sample-app-lit-vanilla` `dist`      | `/app`, `/not-found-naive`, `/not-found-spa`, `/simulated-routing` | pushState |
+| `sample-app-lit-mobx` `dist`         | `/app-mobx`                                                        | pushState |
+| `sample-app-lit-vanilla` `dist-hash` | `/app-hash`                                                        | hash      |
 
-| Artifact                       | Per-mount builds    | Mount-agnostic shell |
-| ------------------------------ | ------------------- | -------------------- |
-| Vanilla pushState builds       | 4                   | **1**                |
-| Total vanilla-family builds    | 6 (4 + mobx + hash) | **3**                |
-| Exhibit `.env` files           | 3                   | **0**                |
-| Exhibit `build:*` turbo tasks  | 3                   | **0**                |
-| Vanilla shell HTML in `dist/`  | 4                   | **1** (`app.html`)   |
-| `viteStaticCopy` shell targets | 8                   | **2**                |
-
-**Mechanism.** `@uirouter/core`'s pushState location reads the base from the
-`<base href>` tag at plugin-install time (`browserLocationConfig.getBaseHref()`
-→ `document.getElementsByTagName('base')[0]`). `configureRouter` already
-_creates_ that element — it used to fill it from
-`import.meta.env.VITE_SAMPLE_APP_BASE_URL`. It now derives the value at boot,
-falling back to the baked env only off a known mount (e.g. the dev server at the
-root), so the derivation only ever _adds_ coverage:
+**Recovering the base.** `@uirouter/core`'s pushState location reads its base
+from the `<base href>` tag at plugin-install time
+(`browserLocationConfig.getBaseHref()` → `document.getElementsByTagName('base')`).
+`configureRouter` creates that element at boot, deriving the href from
+`location.pathname` — the longest mount prefix the path sits under — and falling
+back to the build-time `VITE_SAMPLE_APP_BASE_URL` when served off a known mount
+(the dev server at the root):
 
 ```ts
 // router.config.ts
 import { shellMounts } from 'sample-app-routes/shell-mounts';
 
-// Recover the base from where we were served — the longest known mount prefix
-// location.pathname sits under. The `+ '/'` boundary stops `/app` from
-// swallowing `/app-hash` or `/app-mobx`. Falls back to the build-time base off
-// a known mount (dev at the root), so it only adds coverage.
 const path = location.pathname;
 const derived = shellMounts
   .filter((m) => path === m || path.startsWith(`${m}/`))
@@ -158,72 +141,23 @@ if (BASE_URL) {
 }
 ```
 
-This runs before `router.plugin(locationPlugin)`, so the plugin reads the
-correct base exactly as before. `/app/welcome` → base `/app/` → matches
-`/welcome`; `/not-found-naive/x` → base `/not-found-naive/` → `otherwise` →
-in-app 404 (the soft-404 demo still holds); `/app-hash/x` does **not** match
-`/app` (boundary guard). The worker then points every vanilla mount's
-`shellPath` at the one shell, and the docs `viteStaticCopy` fan-out drops from
-eight targets to two.
+The derivation is gated on known entries: an unmatched prefix yields no derived
+base, so the app boots at `/` rather than mis-stripping, and the `+ '/'`
+boundary keeps `/app` from swallowing `/app-hash` or `/app-mobx`. So
+`/app/welcome` → base `/app/` → matches `/welcome`; `/not-found-naive/x` → base
+`/not-found-naive/` → `otherwise` → the in-app 404 (the soft-404 exhibit);
+`/simulated-routing/welcome` → base `/simulated-routing/`. On the serving side
+the docs worker points every vanilla mount at the one shell (`shellPath`), and
+the dev server's `SHELL_PATHS` does the same.
 
-**The `./shell-mounts` boundary (#288).** `shellMounts` lives in its own
-dependency-free module (`sample-app-routes/src/shellMounts.ts`), exposed on a
-`./shell-mounts` subpath, _not_ re-exported from the `routes.ts` barrel. That
-barrel imports `ui-router-server` for its `MountConfig` types, and consuming it
-from the client would drag the server package's **source-only `.ts`** across the
-tsconfig boundary (`allowImportingTsExtensions` is off in the apps). The subpath
-keeps the client apps free of `ui-router-server` — the base list is plain
-strings. The routes test (`sample-app-routes/test`) pins `shellMounts` as an
-exact mirror of the mount keys plus `/not-found-naive`, so a new or renamed
-mount can't silently miss its base.
-
-> **API note for #313.** That thread proposes
-> `router.urlService.config.baseHref(...)` as a programmatic setter. In the
-> installed core (6.1.2) the setter branch is real at the _location-config_
-> layer (`BrowserLocationConfig.baseHref(href)` caches the argument), but the
-> public `UrlConfig` facade types it **getter-only** (`baseHref: () => string`),
-> so calling it as a setter needs a cast. Setting the `<base>` element (above)
-> is the typed, robust path — it's the same DOM `getBaseHref()` ultimately
-> reads, and it keeps `configureRouter`'s existing injection machinery.
-
-The `+ '/'` boundary means the derivation is **gated on known entries** — an
-unmatched prefix yields no base, so the app boots at `/` and 404s honestly
-rather than mis-stripping. The `shellMounts` list _is_ that gate.
-
-**Why client-derived, not server-injected.** The alternative is for the worker
-to inject `<base href="${mount}/">` into the shell via `HTMLRewriter` at request
-time — "purest agnostic" (the client carries no mount knowledge, adding a mount
-touches nothing). But #313 explicitly wants **no HTML templating**, and it costs
-a request-time transform in _two_ runtimes (worker + `vitepress dev` middleware)
-plus a `transformShell` seam in `ui-router-server`. Both variants collapse the
-builds equally; the client-derived one spends strictly less machinery, at the
-cost of the one shared `shellMounts` list the client reads (drift-guarded by the
-routes test).
-
-**Why not the server's `Link` header?** The adapter already emits the canonical
-URL (mount + path) as a `Link` **response header** on shell-200s — tempting as a
-base source. But a page has **no API to read the response headers of its own
-document navigation** (`Navigation`/`Resource` Timing expose timing, not
-headers), so the client can't pick the base off the `Link` of the HTML it's
-running in. Making a server value client-readable means either putting it in the
-HTML body (per-request templating — #313's objection, and if you template you'd
-inject `<base>` directly, i.e. server-injection above), an extra boot-time
-`fetch()` to re-read the header (a round-trip for a prefix already in
-`location.pathname`), or a Service Worker (inactive on first load,
-disproportionate). The one readable server channel that avoids templating is a
-**path-scoped cookie** (`Set-Cookie: … ; Path=/mount/`, read via
-`document.cookie`) — it works, but bloats every request and risks cross-mount
-staleness, strictly heavier than the gated pathname match for the same answer.
-
-**What shipped.** (1) `shellMounts` on the `./shell-mounts` subpath + the routes
-drift test; (2) runtime derivation in `router.config.ts`, keeping the baked env
-as the off-mount fallback (so `/app`, `/app-mobx`, `/app-hash`, and dev-at-root
-stay byte-identical — derivation agrees with the baked base there, only the
-exhibits change source); (3) deleted the exhibit `.env` files, `build:*`
-scripts, and `turbo.json` entries; (4) collapsed the worker `shellPath` + dev
-`SHELL_PATHS` + static-copy targets to the one vanilla shell. The
-[docs Cypress matrix](./sample-app-lit-e2e/README.md) is the proof — its 16
-specs (same behavior contract) pass against the single build, so only the build
-count moved. `.env`/`.env.hash` keep their base as the fallback and (for hash)
-the location-plugin choice; dropping them entirely is a follow-up once dev is
-confirmed to want no base at the root.
+**`shellMounts` lives on its own subpath.** The base-prefix list is a
+dependency-free module (`sample-app-routes/src/shellMounts.ts`) exposed as the
+`sample-app-routes/shell-mounts` subpath, deliberately not re-exported from the
+`routes.ts` barrel. That barrel imports `ui-router-server` for its `MountConfig`
+types; importing it from the client would pull the server package's source-only
+`.ts` across the tsconfig boundary (the apps don't set
+`allowImportingTsExtensions`). The subpath keeps the client free of
+`ui-router-server` — it reads only plain strings. `sample-app-routes/test` pins
+`shellMounts` as an exact mirror of the mount keys plus `/not-found-naive`
+(which has no `MountConfig` — the worker serves it with routing off), so a new
+or renamed mount can't silently miss its base.
