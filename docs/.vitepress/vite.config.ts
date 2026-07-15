@@ -8,11 +8,6 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
-// VitePress 1.x / vite 6 default targets list `safari14`, but esbuild >=0.27.7
-// refuses to emit destructuring for Safari <14.1 (JSC array-rest bug,
-// compat-table/compat-table#2008) and has no lowering transform for it.
-const TARGET = ['chrome87', 'edge88', 'es2020', 'firefox78', 'safari14.1'];
-
 // The mount shells as the dev server serves them. Production (docs/worker)
 // serves each at its bare mount via Cloudflare's html_handling; the dev
 // server serves the static-copied files, so the paths carry `.html` and the
@@ -72,25 +67,29 @@ export default defineConfig({
       },
     }),
     examplesIndexPlugin(),
+    // static-copy v4 matches files only and always preserves source directory
+    // structure; stripBase drops the node_modules/<app>/dist/<dir> prefix.
     viteStaticCopy({
       targets: [
         {
           src: 'node_modules/sample-app-lit-vanilla/dist/assets/*',
           dest: 'assets',
+          rename: { stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-vanilla/dist/index.html',
           dest: '',
-          rename: 'app.html',
+          rename: { name: 'app.html', stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-mobx/dist/assets/*',
           dest: 'assets',
+          rename: { stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-mobx/dist/index.html',
           dest: '',
-          rename: 'app-mobx.html',
+          rename: { name: 'app-mobx.html', stripBase: true },
         },
         // The hash-location sibling shell: the vanilla app's second build
         // (`vite build --mode hash`), hash location + `/app-hash/` base baked
@@ -99,57 +98,53 @@ export default defineConfig({
         {
           src: 'node_modules/sample-app-lit-vanilla/dist-hash/assets/*',
           dest: 'assets',
+          rename: { stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-vanilla/dist-hash/index.html',
           dest: '',
-          rename: 'app-hash.html',
+          rename: { name: 'app-hash.html', stripBase: true },
         },
         // Per-mount 404 pages: the worker (docs/worker/index.ts) serves
         // <mount>/404.html with status 404 for unmatched paths in a mount.
         {
           src: 'node_modules/sample-app-lit-vanilla/dist/404.html',
           dest: 'app',
+          rename: { stripBase: true },
         },
         {
           src: 'node_modules/sample-app-lit-mobx/dist/404.html',
           dest: 'app-mobx',
+          rename: { stripBase: true },
         },
         // Hash deep paths (`/app-hash/foo`) never happen under a hash client,
         // but a mistyped one gets the same honest 404 page as the other mounts.
         {
           src: 'node_modules/sample-app-lit-vanilla/dist-hash/404.html',
           dest: 'app-hash',
+          rename: { stripBase: true },
         },
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/images/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/images/**',
           dest: 'images',
+          rename: { stripBase: 4 },
         },
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/static/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/static/**',
           dest: 'static',
+          rename: { stripBase: 4 },
         },
+        // stripBase ignores the leading ../, so 3 = examples/<name>/dist.
         ...EMBEDDED_EXAMPLES.map((name) => ({
-          src: `../examples/${name}/dist/*`,
+          src: `../examples/${name}/dist/**`,
           dest: `examples/${name}`,
+          rename: { stripBase: 3 },
         })),
       ],
     }),
   ],
-
-  build: {
-    target: TARGET,
-  },
-
-  optimizeDeps: {
-    // the dev dep-optimizer ignores build.target and pre-bundles against
-    // vite's internal ESBUILD_MODULES_TARGET, which still lists safari14
-    esbuildOptions: {
-      target: TARGET,
-    },
-  },
 
   server: {
     open: !Boolean(process.env.CI) && !Boolean(process.env.E2E_TEST),

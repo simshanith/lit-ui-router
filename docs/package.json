@@ -30,7 +30,7 @@
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
-    "vite-plugin-static-copy": "catalog:vitepress1",
+    "vite-plugin-static-copy": "catalog:",
     "vitepress": "catalog:",
     "wrangler": "catalog:"
   }
