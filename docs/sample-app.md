@@ -19,12 +19,13 @@ different server configurations — so each mount is a live point on the
 | <a href="/app-mobx" target="_self">`/app-mobx`</a>                   | 3+4 · flagship | The same app and the same verdicts, with [MobX bindings](./packages/mobx) for state — routing is identical, so this varies the client-state axis, not a routing one.                                                             |
 | <a href="/app-hash" target="_self">`/app-hash`</a>                   | 1 · hash       | [Hash location](./guides/location-plugins#hash-urls) done right: the route lives in the fragment, so the server serves the shell at **200** at the mount root and never redirects it. Needs no routing verdicts — and shows why. |
 | <a href="/not-found-naive" target="_self">`/not-found-naive`</a>     | 2 · exhibit    | The **anti-pattern baseline**: every path answers **200** with the shell, no matching at all — the soft-404 fallback most SPAs ship. `noindex`.                                                                                  |
-| <a href="/not-found-spa" target="_self">`/not-found-spa`</a>         | 4 · exhibit    | **Shell-at-404**: the `otherwise` projection serves the app shell at an honest **404**, and the client renders its in-app 404 view at the retained URL. `noindex`.                                                               |
+| <a href="/not-found-spa" target="_self">`/not-found-spa`</a>         | 4 · exhibit    | **Shell-at-404**: real routes serve the shell at **200**; only a genuine miss serves the app shell at an honest **404**, where the client renders its in-app 404 view at the retained URL. `noindex`.                            |
 | <a href="/simulated-routing" target="_self">`/simulated-routing`</a> | 5 · exhibit    | Every verdict computed by a **real headless `@uirouter/core` router** replaying the URL per request — redirects and `otherwise()` run as real rules. `noindex`.                                                                  |
 
 The three `noindex` **exhibits** exist to teach server semantics side by side;
-they alias the vanilla shell and stay out of the search index. `/app`,
-`/app-mobx`, and `/app-hash` are the real, indexable app.
+each ships its own base-baked build (so the client renders real routes under
+the mount) and stays out of the search index. `/app`, `/app-mobx`, and
+`/app-hash` are the real, indexable app.
 
 ## Two axes, one app
 
