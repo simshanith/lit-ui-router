@@ -7,14 +7,12 @@ import { createFetchHandler } from 'ui-router-server/fetch';
 // compile once per isolate.
 const router = createServerRouter({ mounts });
 
-// The 404-pattern exhibit mounts have no shell asset of their own — they serve
-// the vanilla app's (its asset urls are absolute, so the shell works under any
-// prefix). Mounts without an alias serve the shell at their own base, which is
-// the adapter's shellPath default.
-const SHELL_PATHS: Record<string, string> = {
-  '/not-found-spa': '/app',
-  '/simulated-routing': '/app',
-};
+// Every mount serves its own base-baked shell: each aliased exhibit gets a
+// dedicated vanilla build whose VITE_SAMPLE_APP_BASE_URL matches its prefix, so
+// the client router strips that prefix and renders real routes (not the in-app
+// 404 the /app-based shell fell back to at every foreign prefix). Cloudflare's
+// html_handling maps the bare mount to <mount>.html — the adapter's shellPath
+// default (mount -> mount) — so no aliasing table is needed.
 
 // Every exhibit response carries noindex: the naive rung deliberately serves
 // soft-404s, and the site must not be penalized by its own teaching material.
@@ -48,7 +46,7 @@ export default {
       // Construct the shell request from the original so its conditional
       // headers ride along and a repeat load can still 304.
       const shell = await env.ASSETS.fetch(
-        new Request(new URL('/app', request.url), request),
+        new Request(new URL('/not-found-naive', request.url), request),
       );
       return withNoindex(shell);
     }
@@ -56,10 +54,10 @@ export default {
     // The fetch adapter fronts every routed mount: it owns status mapping,
     // mergeSearch on redirect Locations, validator stripping + status relabel
     // on status'd shells, and the canonical Link header. The host supplies the
-    // asset IO (env.ASSETS) and the two policies the adapter can't know: shell
-    // aliasing (SHELL_PATHS) and the real 404 page.
+    // asset IO (env.ASSETS) and the one policy the adapter can't know: the real
+    // 404 page. Shells need no aliasing — each mount owns its base-baked build,
+    // so the adapter's shellPath default (mount -> mount) is correct.
     const handler = createFetchHandler(router, {
-      shellPath: (mount) => SHELL_PATHS[mount] ?? mount,
       // The adapter hands over a shell Request already rewritten to shellPath
       // and (for a status'd shell) stripped of validators — the host's job is
       // the raw asset fetch; the adapter owns the relabel and Link on the way

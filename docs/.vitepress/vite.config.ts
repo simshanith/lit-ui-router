@@ -2,25 +2,25 @@ import { createServerRouter } from 'ui-router-server';
 import { serverRouterPlugin } from 'ui-router-server/vite';
 import { mounts } from 'sample-app-routes';
 import { defineConfig, Plugin } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
+import { Target, viteStaticCopy } from 'vite-plugin-static-copy';
 
 // Tutorial examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
 const EMBEDDED_EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
 
 // The mount shells as the dev server serves them. Production (docs/worker)
-// serves each at its bare mount via Cloudflare's html_handling; the dev
-// server serves the static-copied files, so the paths carry `.html` and the
-// borrowed exhibits (/not-found-spa, /simulated-routing) point at the vanilla
-// shell — the SHELL_PATHS aliasing the worker does, in the dev host's terms.
+// serves each at its bare mount via Cloudflare's html_handling; the dev server
+// serves the static-copied files, so the paths carry `.html`. Every mount owns
+// its base-baked shell — each exhibit is a dedicated vanilla build whose
+// VITE_SAMPLE_APP_BASE_URL matches its prefix (see the app's .env.<mount>
+// files) — so the client router matches real routes under the exhibit prefixes
+// instead of falling back to the in-app notFound at every foreign prefix.
 const SHELL_PATHS: Record<string, string> = {
   '/app': '/app.html',
   '/app-mobx': '/app-mobx.html',
-  // The hash demo has its own shell (base href /app-hash/, hash location baked
-  // at build), not the vanilla one the exhibits borrow.
   '/app-hash': '/app-hash.html',
-  '/not-found-spa': '/app.html',
-  '/simulated-routing': '/app.html',
+  '/not-found-spa': '/not-found-spa.html',
+  '/simulated-routing': '/simulated-routing.html',
 };
 
 // The dev-server twin of the docs worker: the SAME mounts table, resolved by
@@ -124,6 +124,27 @@ export default defineConfig({
           dest: 'app-hash',
           rename: { stripBase: true },
         },
+        // The aliased-exhibit shells: each is the vanilla app rebuilt with
+        // VITE_SAMPLE_APP_BASE_URL matching its mount prefix (see the app's
+        // .env.<mount> files), so the client routes real paths under that
+        // prefix instead of the in-app notFound. Content-hashed against a
+        // different base string, their bundles coexist with the flagship's
+        // under /assets. No 404.html: misses serve a status'd shell (the
+        // `otherwise` projection), not a static page.
+        ...['not-found-naive', 'not-found-spa', 'simulated-routing'].flatMap(
+          (mount): Target[] => [
+            {
+              src: `node_modules/sample-app-lit-vanilla/dist-${mount}/assets/*`,
+              dest: 'assets',
+              rename: { stripBase: true },
+            },
+            {
+              src: `node_modules/sample-app-lit-vanilla/dist-${mount}/index.html`,
+              dest: '',
+              rename: { name: `${mount}.html`, stripBase: true },
+            },
+          ],
+        ),
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
         {

@@ -162,14 +162,31 @@ describe('docs site', () => {
     }
   });
 
-  it('serves the app shell at 404 under the shell-404 exhibit mount', () => {
-    // The /not-found-spa exhibit: every path is an honest 404 whose body IS
-    // the app shell — the other 404 pattern, demonstrated side by side.
-    for (const url of [
-      '/not-found-spa',
-      '/not-found-spa/',
-      '/not-found-spa/any/path',
-    ]) {
+  it('serves the honest-404 SPA exhibit — 200 for real routes, 404-shell for misses', () => {
+    // The /not-found-spa exhibit is the flagship shape plus one difference: a
+    // miss serves the app shell at an honest 404 (the `otherwise` projection —
+    // a status'd shell) instead of the flagship's static 404 page. Real routes
+    // and the root redirect earn a shell-200, exactly like the flagship.
+    cy.request({ url: '/not-found-spa', followRedirect: false }).then(
+      (response) => {
+        expect(response.status, '/not-found-spa').to.eq(302);
+        expect(response.headers.location).to.eq('/not-found-spa/welcome');
+        expect(response.headers['x-robots-tag']).to.eq('noindex');
+      },
+    );
+    // Real routes (static and parameterized) serve the shell at 200.
+    for (const path of ['/welcome', '/contacts/1/edit']) {
+      const url = `/not-found-spa${path}`;
+      cy.request(url).then((response) => {
+        expect(response.status, url).to.eq(200);
+        expect(response.body).to.include('<title>UI-Router Lit sample app');
+        expect(response.headers['x-robots-tag'], url).to.eq('noindex');
+      });
+    }
+    // A genuine miss serves the shell at an honest 404 — the body IS the app
+    // shell (the other 404 pattern, side by side with the flagship's static
+    // page), and a 404 carries no canonical Link.
+    for (const url of ['/not-found-spa/any/path', '/not-found-spa/nope']) {
       cy.request({ url, failOnStatusCode: false }).then((response) => {
         expect(response.status, url).to.eq(404);
         expect(response.body).to.include('<title>UI-Router Lit sample app');
@@ -207,7 +224,36 @@ describe('docs site', () => {
     });
   });
 
-  it('boots the in-app 404 state on a direct exhibit load', () => {
+  it('renders real routes client-side under every aliased exhibit', () => {
+    // The regression this fix addresses. Each exhibit now ships its own build
+    // whose VITE_SAMPLE_APP_BASE_URL matches its prefix, so the client router
+    // strips that prefix and renders the real route — where the shared /app
+    // shell used to resolve every foreign prefix to the in-app 404 (e.g.
+    // "No state matched the URL /simulated-routing/welcome").
+    for (const mount of [
+      '/not-found-spa',
+      '/simulated-routing',
+      '/not-found-naive',
+    ]) {
+      cy.visit(`${mount}/welcome`);
+      cy.contains('Welcome to the sample app!');
+      cy.location('pathname').should('eq', `${mount}/welcome`);
+    }
+  });
+
+  it('shows the soft-404: naive serves 200, the client renders its 404 view', () => {
+    // The naive rung's whole lesson: the server answers 200 for a path that
+    // does not exist (bad for crawlers), yet the client — now correctly based
+    // at /not-found-naive/ — resolves it to the in-app 404 view. Server and
+    // client disagree; that gap IS the anti-pattern.
+    cy.request('/not-found-naive/definitely-not-a-route')
+      .its('status')
+      .should('eq', 200);
+    cy.visit('/not-found-naive/definitely-not-a-route');
+    cy.contains('404 Page Not Found');
+  });
+
+  it('boots the in-app 404 state on a direct miss under the shell-404 exhibit', () => {
     cy.visit('/not-found-spa/definitely-not-a-route', {
       failOnStatusCode: false,
     });

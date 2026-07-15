@@ -203,7 +203,7 @@ Every level from 1 up runs behind lit-ui-router.dev — same worker, same
 | 1     | `/app-hash`          | Hash routing done right: the mount root serves the shell at **200** with no redirect, so the fragment survives entry; deep paths stay 404 |
 | 2     | `/not-found-naive`   | Every path serves the shell at **200**, no route matching — the platform-default fallback, reproduced                                     |
 | 3+4   | `/app`, `/app-mobx`  | Route-aware verdicts: shell, 302, or a **real 404** with a per-mount static 404 page (the flagship)                                       |
-| 4     | `/not-found-spa`     | Route-aware, shell-at-404: the `otherwise` projection; the client renders its in-app 404 at the retained URL                              |
+| 4     | `/not-found-spa`     | Route-aware, shell-at-404: real routes serve **200**; a miss serves the shell at **404** and the client renders its in-app 404 view       |
 | 5     | `/simulated-routing` | Every verdict computed by a **real headless router** replaying the URL                                                                    |
 
 Try them on a URL that matches nothing:
@@ -226,14 +226,17 @@ Two honesty notes about the exhibits. Every **exhibit** response
 (`/not-found-naive`, `/not-found-spa`, `/simulated-routing`) carries
 `X-Robots-Tag: noindex`: the level-2 exhibit deliberately manufactures
 soft-404s, and the site must not be penalized by its own teaching material.
-And those exhibit mounts alias the vanilla sample app's shell (they have no
-build of their own), which works because the built shell's asset URLs are
-absolute — but the shell also bakes `<base href="/app/">`, so the client
-router cannot match deep links under a foreign prefix; they teach **server**
-semantics and stay quarantined from crawlers. `/app-hash` is the exception
-that proves the rule: it has its own `--mode hash` build with
-`<base href="/app-hash/">` baked in, so it is a fully working, indexable hash
-client, not an exhibit.
+And each exhibit mount ships its **own** build — the vanilla sample app rebuilt
+with `VITE_SAMPLE_APP_BASE_URL` set to the mount's prefix (`/not-found-spa/`,
+`/simulated-routing/`, `/not-found-naive/`), the same per-mount `--mode` build
+`/app-hash` uses — so the client router strips that prefix and renders real
+routes under the mount, exactly like the flagship. What makes them exhibits is
+the **server** verdict each demonstrates (the soft-404 lie, shell-at-404, the
+headless replay), not any client limitation; `noindex` simply keeps the
+teaching material out of the search index. `/app-hash` is the same mechanism
+pointed at hash mode: its `--mode hash` build bakes `<base href="/app-hash/">`
+and the hash location plugin, so it is a fully working, indexable hash client
+rather than an exhibit.
 
 ## Path-location clients
 
@@ -774,20 +777,21 @@ client entered with.
 
 ## Shell-at-404: the `otherwise` projection
 
-The `/not-found-spa` exhibit is one config line: `MountConfig.otherwise`
-projects the client's `otherwise()` rule
+The `/not-found-spa` exhibit is the flagship `app` config plus one field:
+`MountConfig.otherwise` projects the client's `otherwise()` rule
 ([`routes.ts`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-routes/src/routes.ts)):
 
 ```ts
-// The not-found-spa exhibit: the otherwise projection (mirroring the client's
-// otherwise() -> notFound rule) makes every path under this mount serve the
-// app shell at an honest 404 — the client boots at the retained url and
-// renders the rich in-app notFound state. It deliberately carries NO
-// url-bearing routes: the shell bakes <base href="/app/">, so the client
-// router cannot match deep links under this prefix — a shell-200 here would
-// be exactly the soft-404 shape the flagship mounts avoid.
+// The not-found-spa exhibit: an honest-404 SPA. It is the flagship mount plus
+// one difference — the miss. Real routes and the root redirect earn a shell-200
+// (its own base-baked build, VITE_SAMPLE_APP_BASE_URL /not-found-spa/, lets the
+// client match deep links at this prefix), while the `otherwise` projection
+// serves the app shell at an honest 404 for genuine misses; the client boots at
+// the retained url and renders the rich in-app notFound state. The flagship
+// carries no `otherwise`, so its miss is a static 404 page instead (see the
+// fetch adapter's verdict mapping: an `otherwise` state is a status'd shell).
 const notFoundSpaDemo: MountConfig = {
-  routes: [{ name: 'notFound' }],
+  ...app,
   otherwise: { state: 'notFound' },
 };
 ```
@@ -820,10 +824,9 @@ same data, plus the mount table that puts every level side by side:
 // The simulated-routing exhibit: full router semantics server-side — the
 // same tables, but every verdict computed by replaying the url through a
 // headless @uirouter/core router (redirect rules, otherwise, and one day
-// hooks/resolves all ride). Deep links serve shell-200 here, but the shell's
-// baked <base href="/app/"> means the client renders its in-app notFound
-// under this prefix — the exhibit teaches SERVER semantics; noindex (worker)
-// quarantines it from crawlers.
+// hooks/resolves all ride). Its own base-baked build (VITE_SAMPLE_APP_BASE_URL
+// /simulated-routing/) lets the client render the very route the server
+// computed; noindex (worker) still quarantines the exhibit from crawlers.
 const simulatedRoutingDemo: MountConfig = {
   routes,
   redirects,
