@@ -116,7 +116,7 @@ otherwise byte-identical: four builds exist to write four strings into one
 
 Derive that base **at runtime** and the four collapse to one shell, served
 everywhere. Two builds stay separate for real reasons — `/app-mobx` is a
-different app (MobX bindings), `/app-hash` bakes the *location plugin* (`hash`),
+different app (MobX bindings), `/app-hash` bakes the _location plugin_ (`hash`),
 which changes behavior, not just a string — but both drop their base bake too,
 leaving a base-free floor of three builds.
 
@@ -132,10 +132,10 @@ leaving a base-free floor of three builds.
 **Mechanism.** `@uirouter/core`'s pushState location reads the base from the
 `<base href>` tag at plugin-install time (`browserLocationConfig.getBaseHref()`
 → `document.getElementsByTagName('base')[0]`). `configureRouter` already
-*creates* that element — it used to fill it from
+_creates_ that element — it used to fill it from
 `import.meta.env.VITE_SAMPLE_APP_BASE_URL`. It now derives the value at boot,
 falling back to the baked env only off a known mount (e.g. the dev server at the
-root), so the derivation only ever *adds* coverage:
+root), so the derivation only ever _adds_ coverage:
 
 ```ts
 // router.config.ts
@@ -168,7 +168,7 @@ eight targets to two.
 
 **The `./shell-mounts` boundary (#288).** `shellMounts` lives in its own
 dependency-free module (`sample-app-routes/src/shellMounts.ts`), exposed on a
-`./shell-mounts` subpath, *not* re-exported from the `routes.ts` barrel. That
+`./shell-mounts` subpath, _not_ re-exported from the `routes.ts` barrel. That
 barrel imports `ui-router-server` for its `MountConfig` types, and consuming it
 from the client would drag the server package's **source-only `.ts`** across the
 tsconfig boundary (`allowImportingTsExtensions` is off in the apps). The subpath
@@ -179,7 +179,7 @@ mount can't silently miss its base.
 
 > **API note for #313.** That thread proposes
 > `router.urlService.config.baseHref(...)` as a programmatic setter. In the
-> installed core (6.1.2) the setter branch is real at the *location-config*
+> installed core (6.1.2) the setter branch is real at the _location-config_
 > layer (`BrowserLocationConfig.baseHref(href)` caches the argument), but the
 > public `UrlConfig` facade types it **getter-only** (`baseHref: () => string`),
 > so calling it as a setter needs a cast. Setting the `<base>` element (above)
@@ -188,13 +188,13 @@ mount can't silently miss its base.
 
 The `+ '/'` boundary means the derivation is **gated on known entries** — an
 unmatched prefix yields no base, so the app boots at `/` and 404s honestly
-rather than mis-stripping. The `shellMounts` list *is* that gate.
+rather than mis-stripping. The `shellMounts` list _is_ that gate.
 
 **Why client-derived, not server-injected.** The alternative is for the worker
 to inject `<base href="${mount}/">` into the shell via `HTMLRewriter` at request
 time — "purest agnostic" (the client carries no mount knowledge, adding a mount
 touches nothing). But #313 explicitly wants **no HTML templating**, and it costs
-a request-time transform in *two* runtimes (worker + `vitepress dev` middleware)
+a request-time transform in _two_ runtimes (worker + `vitepress dev` middleware)
 plus a `transformShell` seam in `ui-router-server`. Both variants collapse the
 builds equally; the client-derived one spends strictly less machinery, at the
 cost of the one shared `shellMounts` list the client reads (drift-guarded by the
