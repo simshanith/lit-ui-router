@@ -4,9 +4,9 @@
 // release-it tags locally only (--git.push false): pushing main + tag
 // together is release-it's rollback trap, so the tag ref is pushed
 // separately by release-tag-push.ts. The workflow keeps
-// continue-on-error on this step — tagging is idempotent, an existing
-// tag fails here and that is fine. argv comes from the engine seam
-// (release-it.core.ts).
+// continue-on-error on this step — re-tagging an existing version fails
+// here (release-it errors, not a no-op) and that is fine. argv comes from
+// the engine seam (release-it.core.ts).
 
 import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
 import { group, runMain } from '@tools/shared/gha.ts';
