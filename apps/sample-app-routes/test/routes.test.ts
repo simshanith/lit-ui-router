@@ -4,6 +4,7 @@ import { describe, it } from 'node:test';
 import { createServerRouter } from 'ui-router-server';
 
 import { mounts, routes } from '../src/routes.ts';
+import { shellMounts } from '../src/shellMounts.ts';
 
 // The app's contract tests: its own tables, resolved through the package
 // API, produce the verdicts the worker will serve. Matching mechanics are
@@ -120,14 +121,38 @@ describe('/app-hash verdicts (the hash-location demo)', () => {
 });
 
 describe('/not-found-spa verdicts (the not-found-spa exhibit)', () => {
-  it('serves the shell at 404 for every path under the mount', async () => {
-    // The otherwise projection: the shell IS the error page, at an honest
-    // 404 — the client boots at the retained url and renders the in-app
-    // notFound state. Even flagship-valid paths 404 here: the mount carries
-    // no url-bearing routes, because the shell's baked <base href="/app/">
-    // means the client could never match them — a shell-200 would be the
-    // soft-404 shape.
-    for (const path of ['', '/', '/garbage', '/welcome', '/contacts/3']) {
+  // The flagship shape plus one difference — the miss. Real routes and the
+  // root redirect earn a shell-200 (the mount-agnostic shell derives its base
+  // at boot, so the client matches deep links here from the shared build);
+  // only a genuine miss serves the app shell at an honest 404 (the `otherwise`
+  // projection — a status'd shell), where the client renders its in-app 404.
+  it('redirects the mount root to welcome, with and without the slash', async () => {
+    for (const path of ['', '/']) {
+      assert.deepEqual(
+        await router.resolve(`/not-found-spa${path}`),
+        {
+          kind: 'redirect',
+          mount: '/not-found-spa',
+          location: '/not-found-spa/welcome',
+          status: 302,
+        },
+        `/not-found-spa${path}`,
+      );
+    }
+  });
+
+  it('serves the shell at 200 for real routes', async () => {
+    for (const path of ['/welcome', '/contacts/3', '/contacts/3/edit']) {
+      assert.deepEqual(
+        await router.resolve(`/not-found-spa${path}`),
+        { kind: 'shell', mount: '/not-found-spa' },
+        `/not-found-spa${path}`,
+      );
+    }
+  });
+
+  it('serves the shell at an honest 404 for genuine misses', async () => {
+    for (const path of ['/garbage', '/welcome/nope', '/contacts/3/edit/x']) {
       assert.deepEqual(
         await router.resolve(`/not-found-spa${path}`),
         { kind: 'shell', mount: '/not-found-spa', status: 404 },
@@ -193,5 +218,20 @@ describe('mounts', () => {
       kind: 'shell',
       mount: '/app-mobx',
     });
+  });
+});
+
+describe('shellMounts (mount-agnostic shell base derivation)', () => {
+  it('exactly mirrors the routed mounts plus the naive exhibit', () => {
+    // The client derives its <base href> by matching location.pathname against
+    // shellMounts, so it must list every routed mount (a shell served at a
+    // prefix it doesn't know derives no base and 404s every deep link there)
+    // and nothing stale. /not-found-naive has no MountConfig — the worker
+    // serves it with routing OFF — so it is the one entry outside `mounts`.
+    assert.deepEqual(
+      [...shellMounts].sort(),
+      [...Object.keys(mounts), '/not-found-naive'].sort(),
+    );
+    assert.equal(mounts['/not-found-naive'], undefined);
   });
 });

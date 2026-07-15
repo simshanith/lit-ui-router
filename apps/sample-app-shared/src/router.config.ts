@@ -15,6 +15,7 @@ import {
   isUIRouterNavigateEvent,
   navigationLocationPlugin,
 } from 'ui-router-navigation-location-plugin';
+import { shellMounts } from 'sample-app-routes/shell-mounts';
 
 import appStates from './app/main/states.js';
 import reqAuthHook from './app/global/requiresAuth.hook.js';
@@ -49,7 +50,19 @@ const locationPluginConfig = {
 >;
 
 export function configureRouter(router = new UIRouterLit()) {
-  const BASE_URL: string = import.meta.env.VITE_SAMPLE_APP_BASE_URL;
+  // Mount-agnostic shell: recover the base from where we were served — the
+  // longest known mount prefix location.pathname sits under (the `+ '/'`
+  // boundary stops `/app` from swallowing `/app-hash` or `/app-mobx`). One
+  // build per app deep-links under every prefix; the pushState plugin reads
+  // this <base href> exactly as before. Falls back to the build-time base
+  // (VITE_SAMPLE_APP_BASE_URL) when served off a known mount — e.g. the dev
+  // server at the root — so the derivation only ever adds coverage.
+  const path = location.pathname;
+  const derived = shellMounts
+    .filter((m) => path === m || path.startsWith(`${m}/`))
+    .sort((a, b) => b.length - a.length)[0];
+  const BASE_URL: string =
+    (derived && `${derived}/`) || import.meta.env.VITE_SAMPLE_APP_BASE_URL;
   if (BASE_URL) {
     const base = document.createElement('base');
     base.href = BASE_URL;

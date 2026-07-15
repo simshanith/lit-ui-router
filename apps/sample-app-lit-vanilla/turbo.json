@@ -10,12 +10,7 @@
       ],
       "dependsOn": ["^build", "^transit"],
       "outputs": ["dist/**"],
-      "with": [
-        "build:hash",
-        "build:not-found-naive",
-        "build:not-found-spa",
-        "build:simulated-routing"
-      ]
+      "with": ["build:hash"]
     },
     "build:hash": {
       "env": [
@@ -25,33 +20,6 @@
       ],
       "dependsOn": ["^build", "^transit"],
       "outputs": ["dist-hash/**"]
-    },
-    "build:not-found-naive": {
-      "env": [
-        "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
-        "VITE_SAMPLE_APP_BASE_URL",
-        "VITE_SAMPLE_APP_PUSH_STATE"
-      ],
-      "dependsOn": ["^build", "^transit"],
-      "outputs": ["dist-not-found-naive/**"]
-    },
-    "build:not-found-spa": {
-      "env": [
-        "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
-        "VITE_SAMPLE_APP_BASE_URL",
-        "VITE_SAMPLE_APP_PUSH_STATE"
-      ],
-      "dependsOn": ["^build", "^transit"],
-      "outputs": ["dist-not-found-spa/**"]
-    },
-    "build:simulated-routing": {
-      "env": [
-        "VITE_GOOGLE_ANALYTICS_TRACKING_ID",
-        "VITE_SAMPLE_APP_BASE_URL",
-        "VITE_SAMPLE_APP_PUSH_STATE"
-      ],
-      "dependsOn": ["^build", "^transit"],
-      "outputs": ["dist-simulated-routing/**"]
     }
   }
 }

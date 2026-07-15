@@ -6,9 +6,6 @@
   "scripts": {
     "build": "vite build",
     "build:hash": "vite build --mode hash --outDir dist-hash",
-    "build:not-found-naive": "vite build --mode not-found-naive --outDir dist-not-found-naive",
-    "build:not-found-spa": "vite build --mode not-found-spa --outDir dist-not-found-spa",
-    "build:simulated-routing": "vite build --mode simulated-routing --outDir dist-simulated-routing",
     "codecov:bundle": "upload-bundle-stats sample-app-lit-vanilla-esm",
     "dev": "vite",
     "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",

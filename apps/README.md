@@ -97,12 +97,13 @@ pnpm --filter sample-app-lit-vanilla dev --port 5273
 and every published location strategy. See the
 [`sample-app-lit-e2e` README](./sample-app-lit-e2e/README.md).
 
-## Mount-agnostic shell (proposal)
+## Mount-agnostic shell
 
-_Status: sketch. Tracks the "Mount-agnostic shell" thread on
-[#313](https://github.com/simshanith/lit-ui-router/issues/313). The current
-live behavior is per-mount base-baked builds
-([#363](https://github.com/simshanith/lit-ui-router/pull/363))._
+_Implements the "Mount-agnostic shell" thread on
+[#313](https://github.com/simshanith/lit-ui-router/issues/313), collapsing the
+per-mount base-baked builds that [#363](https://github.com/simshanith/lit-ui-router/pull/363)
+introduced. Proven by the docs Cypress matrix (`test:cypress:docs`) — the same
+16 specs pass against the single collapsed build._
 
 The docs site runs the vanilla app behind several mounts (`/app`,
 `/not-found-naive`, `/not-found-spa`, `/simulated-routing`) to exhibit points on
@@ -119,35 +120,40 @@ different app (MobX bindings), `/app-hash` bakes the *location plugin* (`hash`),
 which changes behavior, not just a string — but both drop their base bake too,
 leaving a base-free floor of three builds.
 
-| Artifact                      | Today (per-mount builds)    | Mount-agnostic shell |
-| ----------------------------- | --------------------------- | -------------------- |
-| Vanilla pushState builds      | 4                           | **1**                |
-| Total vanilla-family builds   | 6 (4 + mobx + hash)         | **3**                |
-| Base-carrying `.env` files    | 4 (`.env` + 3 exhibit envs) | **0**                |
-| Exhibit `build:*` turbo tasks | 3                           | **0**                |
-| Shell HTML files in `dist/`   | 6                           | **3**                |
+| Artifact                       | Per-mount builds    | Mount-agnostic shell |
+| ------------------------------ | ------------------- | -------------------- |
+| Vanilla pushState builds       | 4                   | **1**                |
+| Total vanilla-family builds    | 6 (4 + mobx + hash) | **3**                |
+| Exhibit `.env` files           | 3                   | **0**                |
+| Exhibit `build:*` turbo tasks  | 3                   | **0**                |
+| Vanilla shell HTML in `dist/`  | 4                   | **1** (`app.html`)   |
+| `viteStaticCopy` shell targets | 8                   | **2**                |
 
 **Mechanism.** `@uirouter/core`'s pushState location reads the base from the
 `<base href>` tag at plugin-install time (`browserLocationConfig.getBaseHref()`
-→ `document.getElementsByTagName('base')[0]`). Today's `configureRouter` already
-*creates* that element — from `import.meta.env.VITE_SAMPLE_APP_BASE_URL`. Swap
-the source from build-time env to a runtime derivation and nothing downstream
-changes:
+→ `document.getElementsByTagName('base')[0]`). `configureRouter` already
+*creates* that element — it used to fill it from
+`import.meta.env.VITE_SAMPLE_APP_BASE_URL`. It now derives the value at boot,
+falling back to the baked env only off a known mount (e.g. the dev server at the
+root), so the derivation only ever *adds* coverage:
 
 ```ts
-// router.config.ts — replaces the import.meta.env.VITE_SAMPLE_APP_BASE_URL block
-import { shellMounts } from 'sample-app-routes'; // Object.keys(mounts) + '/not-found-naive'
+// router.config.ts
+import { shellMounts } from 'sample-app-routes/shell-mounts';
 
-// One build serves every prefix; recover the base from where we were served —
-// the longest configured mount prefix that location.pathname sits under. The
-// `+ '/'` boundary stops `/app` from swallowing `/app-hash` or `/app-mobx`.
+// Recover the base from where we were served — the longest known mount prefix
+// location.pathname sits under. The `+ '/'` boundary stops `/app` from
+// swallowing `/app-hash` or `/app-mobx`. Falls back to the build-time base off
+// a known mount (dev at the root), so it only adds coverage.
 const path = location.pathname;
-const base = shellMounts
-  .filter((m) => path === m || path.startsWith(m + '/'))
+const derived = shellMounts
+  .filter((m) => path === m || path.startsWith(`${m}/`))
   .sort((a, b) => b.length - a.length)[0];
-if (base) {
+const BASE_URL =
+  (derived && `${derived}/`) || import.meta.env.VITE_SAMPLE_APP_BASE_URL;
+if (BASE_URL) {
   const el = document.createElement('base');
-  el.href = base + '/';
+  el.href = BASE_URL;
   document.head.appendChild(el);
 }
 ```
@@ -157,8 +163,19 @@ correct base exactly as before. `/app/welcome` → base `/app/` → matches
 `/welcome`; `/not-found-naive/x` → base `/not-found-naive/` → `otherwise` →
 in-app 404 (the soft-404 demo still holds); `/app-hash/x` does **not** match
 `/app` (boundary guard). The worker then points every vanilla mount's
-`shellPath` at one file, and the docs `viteStaticCopy` fan-out drops from eight
-targets to two.
+`shellPath` at the one shell, and the docs `viteStaticCopy` fan-out drops from
+eight targets to two.
+
+**The `./shell-mounts` boundary (#288).** `shellMounts` lives in its own
+dependency-free module (`sample-app-routes/src/shellMounts.ts`), exposed on a
+`./shell-mounts` subpath, *not* re-exported from the `routes.ts` barrel. That
+barrel imports `ui-router-server` for its `MountConfig` types, and consuming it
+from the client would drag the server package's **source-only `.ts`** across the
+tsconfig boundary (`allowImportingTsExtensions` is off in the apps). The subpath
+keeps the client apps free of `ui-router-server` — the base list is plain
+strings. The routes test (`sample-app-routes/test`) pins `shellMounts` as an
+exact mirror of the mount keys plus `/not-found-naive`, so a new or renamed
+mount can't silently miss its base.
 
 > **API note for #313.** That thread proposes
 > `router.urlService.config.baseHref(...)` as a programmatic setter. In the
@@ -180,8 +197,8 @@ touches nothing). But #313 explicitly wants **no HTML templating**, and it costs
 a request-time transform in *two* runtimes (worker + `vitepress dev` middleware)
 plus a `transformShell` seam in `ui-router-server`. Both variants collapse the
 builds equally; the client-derived one spends strictly less machinery, at the
-cost of one shared `shellMounts` export the client and worker both read (guard
-drift with a `shellMounts ⊇ Object.keys(mounts)` unit test).
+cost of the one shared `shellMounts` list the client reads (drift-guarded by the
+routes test).
 
 **Why not the server's `Link` header?** The adapter already emits the canonical
 URL (mount + path) as a `Link` **response header** on shell-200s — tempting as a
@@ -198,11 +215,15 @@ disproportionate). The one readable server channel that avoids templating is a
 `document.cookie`) — it works, but bloats every request and risks cross-mount
 staleness, strictly heavier than the gated pathname match for the same answer.
 
-**Landing order.** (1) export `shellMounts` + its drift test; (2) runtime
-derivation in `router.config.ts`, keeping the env read as a one-commit fallback,
-then removing it; (3) delete the exhibit `.env` files, `build:*` scripts, and
-`turbo.json` entries; (4) collapse the worker `shellPath` + dev `SHELL_PATHS` +
-static-copy targets to one vanilla shell, drop base from `.env`/`.env.hash`. The
+**What shipped.** (1) `shellMounts` on the `./shell-mounts` subpath + the routes
+drift test; (2) runtime derivation in `router.config.ts`, keeping the baked env
+as the off-mount fallback (so `/app`, `/app-mobx`, `/app-hash`, and dev-at-root
+stay byte-identical — derivation agrees with the baked base there, only the
+exhibits change source); (3) deleted the exhibit `.env` files, `build:*`
+scripts, and `turbo.json` entries; (4) collapsed the worker `shellPath` + dev
+`SHELL_PATHS` + static-copy targets to the one vanilla shell. The
 [docs Cypress matrix](./sample-app-lit-e2e/README.md) is the proof — its 16
-specs encode the same behavior contract, so if they pass against one shell, only
-the build count moved.
+specs (same behavior contract) pass against the single build, so only the build
+count moved. `.env`/`.env.hash` keep their base as the fallback and (for hash)
+the location-plugin choice; dropping them entirely is a follow-up once dev is
+confirmed to want no base at the root.
