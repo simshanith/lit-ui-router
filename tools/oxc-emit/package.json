@@ -14,6 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@ampproject/remapping": "catalog:",
     "oxc-minify": "catalog:",
     "oxc-transform": "catalog:"
   },

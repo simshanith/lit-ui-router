@@ -10,7 +10,9 @@
     "url": "https://github.com/simshanith/lit-ui-router"
   },
   "files": [
-    "dist/**"
+    "dist/**",
+    "src/*.ts",
+    "!src/*.spec.ts"
   ],
   "type": "module",
   "sideEffects": [

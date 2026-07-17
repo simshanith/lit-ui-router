@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   changedFiles,
+  classifyFiles,
   formatReport,
   isCleanDiff,
 } from './check-published-diff.core.ts';
@@ -50,6 +51,34 @@ describe('changedFiles', () => {
   });
 });
 
+describe('classifyFiles', () => {
+  it('routes src and dist maps to ship-inert, everything else to ship-affecting', () => {
+    assert.deepEqual(
+      classifyFiles([
+        'dist/core.js',
+        'dist/core.js.map',
+        'dist/core.d.ts',
+        'dist/core.d.ts.map',
+        'src/core.ts',
+        'package.json',
+      ]),
+      {
+        shipAffecting: ['dist/core.js', 'dist/core.d.ts', 'package.json'],
+        shipInert: ['dist/core.js.map', 'dist/core.d.ts.map', 'src/core.ts'],
+      },
+    );
+  });
+
+  it('never treats a map-named source file as ship-inert', () => {
+    // A real code change always also changes emitted js/d.ts, so ship-inert
+    // entries alone can't mask ship-affecting drift.
+    assert.deepEqual(classifyFiles(['dist/sourcemap-utils.js']), {
+      shipAffecting: ['dist/sourcemap-utils.js'],
+      shipInert: [],
+    });
+  });
+});
+
 describe('formatReport', () => {
   const clean = {
     name: 'lit-ui-router',
@@ -67,18 +96,53 @@ describe('formatReport', () => {
     files: ['dist/router-store.js', 'package.json'],
   };
 
+  const shipInert = {
+    name: 'lit-ui-router',
+    dir: 'packages/lit-ui-router',
+    latest: '1.7.1',
+    localVersion: '1.7.1',
+    status: 'ship-inert' as const,
+    files: [],
+    shipInertFiles: ['dist/core.js.map', 'src/core.ts'],
+  };
+
   it('passes when every package matches its published tarball', () => {
     const { ok, text } = formatReport([clean]);
     assert.equal(ok, true);
-    assert.match(text, /✓ published-diff check passed — 1 packages match/);
+    assert.match(
+      text,
+      /✓ published-diff check passed — 1 packages, no ship-affecting drift/,
+    );
     assert.match(text, /lit-ui-router: clean vs 1\.7\.0/);
+  });
+
+  it('passes with ship-inert drift only — even strict', () => {
+    const { ok, text } = formatReport([shipInert], { strict: true });
+    assert.equal(ok, true);
+    assert.match(text, /\(1 ship-inert\)/);
+    assert.match(text, /src\/map drift vs 1\.7\.1 — 2 ship-inert file\(s\)/);
+    assert.match(text, /◦ src\/core\.ts/);
+  });
+
+  it('lists ship-inert files under a drifting package without counting them', () => {
+    const { text } = formatReport([
+      { ...drift, shipInertFiles: ['src/router-store.ts'] },
+    ]);
+    assert.match(
+      text,
+      /SHIPS CHANGES vs 0\.3\.2 — 2 ship-affecting file\(s\):/,
+    );
+    assert.match(text, /◦ src\/router-store\.ts \(ship-inert\)/);
   });
 
   it('reports drift without failing by default', () => {
     const { ok, text } = formatReport([clean, drift]);
     assert.equal(ok, true);
     assert.match(text, /1 of 2 packages would ship changes/);
-    assert.match(text, /SHIPS CHANGES vs 0\.3\.2 — 2 file\(s\):/);
+    assert.match(
+      text,
+      /SHIPS CHANGES vs 0\.3\.2 — 2 ship-affecting file\(s\):/,
+    );
     assert.match(text, /• dist\/router-store\.js/);
   });
 

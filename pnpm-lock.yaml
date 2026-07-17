@@ -6,6 +6,9 @@ settings:
 
 catalogs:
   default:
+    '@ampproject/remapping':
+      specifier: ^2.3.0
+      version: 2.3.0
     '@api-viewer/docs':
       specifier: 1.0.0-pre.10
       version: 1.0.0-pre.10
@@ -776,6 +779,9 @@ importers:
 
   tools/oxc-emit:
     dependencies:
+      '@ampproject/remapping':
+        specifier: 'catalog:'
+        version: 2.3.0
       oxc-minify:
         specifier: 'catalog:'
         version: 0.140.0
@@ -876,6 +882,10 @@ packages:
 
   '@altano/repository-tools@2.0.3':
     resolution: {integrity: sha512-cSR/ZYDF6Wp9OeAJMyLYYN1GenAAhV17W+w38ELP+3c5Ltsy9jkkCymi33nz/qnXyef3n6Fbr1h2yt3dvUN5sQ==}
+
+  '@ampproject/remapping@2.3.0':
+    resolution: {integrity: sha512-30iZtAPgz+LTIYoeivqYo853f02jBYSd5uGnGpkFV0M3xOt9aN73erkgYAmZU43x4VfqcnLxW9Kpg3R5LC4YYw==}
+    engines: {node: '>=6.0.0'}
 
   '@api-viewer/common@1.0.0-pre.10':
     resolution: {integrity: sha512-6quixfdtbQ0oF3QIfm20+Fj+ODusYrssjBNQsCiXj3qwFsRmNVGfwdKvBXuH3y022NYgq0dgwADVPOm8SXLj7A==}
@@ -1634,6 +1644,9 @@ packages:
     peerDependenciesMeta:
       '@types/node':
         optional: true
+
+  '@jridgewell/gen-mapping@0.3.13':
+    resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
 
   '@jridgewell/resolve-uri@3.1.2':
     resolution: {integrity: sha512-bRISgCIjP20/tbWSPWMEi54QVPRZExkuD9lJL+UIxUKtwVJA8wW1Trb1jMs1RFXo1CBTNZ/5hpC9QvmKWdopKw==}
@@ -5854,6 +5867,11 @@ snapshots:
 
   '@altano/repository-tools@2.0.3': {}
 
+  '@ampproject/remapping@2.3.0':
+    dependencies:
+      '@jridgewell/gen-mapping': 0.3.13
+      '@jridgewell/trace-mapping': 0.3.31
+
   '@api-viewer/common@1.0.0-pre.10':
     dependencies:
       custom-elements-manifest: 2.1.0
@@ -6639,6 +6657,11 @@ snapshots:
   '@inquirer/type@4.0.7(@types/node@25.0.9)':
     optionalDependencies:
       '@types/node': 25.0.9
+
+  '@jridgewell/gen-mapping@0.3.13':
+    dependencies:
+      '@jridgewell/sourcemap-codec': 1.5.5
+      '@jridgewell/trace-mapping': 0.3.31
 
   '@jridgewell/resolve-uri@3.1.2': {}
 

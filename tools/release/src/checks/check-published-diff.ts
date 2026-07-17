@@ -36,6 +36,7 @@ import { promisify } from 'node:util';
 import { STRIPPED_MANIFEST_FIELDS } from './check-pack.core.ts';
 import {
   changedFiles,
+  classifyFiles,
   type DiffResult,
   formatReport,
   isCleanDiff,
@@ -119,18 +120,20 @@ async function main() {
       continue;
     }
     const diff = await diffAgainstPublished(packageDir, `${name}@${latest}`);
-    results.push(
-      isCleanDiff(diff)
-        ? { name, dir, latest, localVersion, status: 'clean' }
-        : {
-            name,
-            dir,
-            latest,
-            localVersion,
-            status: 'drift',
-            files: changedFiles(diff),
-          },
-    );
+    if (isCleanDiff(diff)) {
+      results.push({ name, dir, latest, localVersion, status: 'clean' });
+      continue;
+    }
+    const { shipAffecting, shipInert } = classifyFiles(changedFiles(diff));
+    results.push({
+      name,
+      dir,
+      latest,
+      localVersion,
+      status: shipAffecting.length > 0 ? 'drift' : 'ship-inert',
+      files: shipAffecting,
+      shipInertFiles: shipInert,
+    });
   }
 
   const { ok, text } = formatReport(results, { strict });

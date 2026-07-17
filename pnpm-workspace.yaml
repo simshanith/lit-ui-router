@@ -6,6 +6,7 @@ packages:
   - examples
 
 catalog:
+  '@ampproject/remapping': ^2.3.0
   '@api-viewer/docs': 1.0.0-pre.10
   '@codecov/bundle-analyzer': ^2.0.1
   '@oxc-project/runtime': 0.140.0

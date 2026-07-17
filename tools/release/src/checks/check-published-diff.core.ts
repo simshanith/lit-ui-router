@@ -31,6 +31,23 @@ export function changedFiles(diffOutput: string): string[] {
   return [...files].sort();
 }
 
+/** Ship-affecting drift owes a release; src/map paths never do — atomic packs make a masking src-only diff impossible. */
+export function isShipAffecting(file: string): boolean {
+  return !(file.startsWith('src/') || /^dist\/.*\.map$/.test(file));
+}
+
+/** Split a diff's file list into ship-affecting and ship-inert. */
+export function classifyFiles(files: string[]): {
+  shipAffecting: string[];
+  shipInert: string[];
+} {
+  const shipAffecting: string[] = [];
+  const shipInert: string[] = [];
+  for (const file of files)
+    (isShipAffecting(file) ? shipAffecting : shipInert).push(file);
+  return { shipAffecting, shipInert };
+}
+
 // One package's comparison against its published `latest`.
 export type DiffResult = {
   name: string;
@@ -39,9 +56,12 @@ export type DiffResult = {
   latest?: string;
   /** Version in the working tree's manifest. */
   localVersion?: string;
-  status: 'clean' | 'drift' | 'unpublished';
-  /** Tarball paths that differ; only meaningful for `drift`. */
+  /** `ship-inert` = only src/maps differ; release not owed. */
+  status: 'clean' | 'drift' | 'ship-inert' | 'unpublished';
+  /** Ship-affecting tarball paths; only meaningful for `drift`. */
   files?: string[];
+  /** Ship-inert paths (src/**, dist maps); listed, never owing. */
+  shipInertFiles?: string[];
 };
 
 export type ReportOptions = {
@@ -64,7 +84,8 @@ export function formatReport(
   const drifted = results.filter((result) => result.status === 'drift');
   const lines: string[] = [];
   for (const result of results) {
-    const { name, latest, localVersion, status, files } = result;
+    const { name, latest, localVersion, status, files, shipInertFiles } =
+      result;
     if (status === 'unpublished') {
       lines.push(`  ${name}: never published — skipped`);
       continue;
@@ -75,20 +96,33 @@ export function formatReport(
         : '';
     if (status === 'clean') {
       lines.push(`  ${name}: clean vs ${latest}${ahead}`);
+    } else if (status === 'ship-inert') {
+      const count = shipInertFiles?.length ?? 0;
+      lines.push(
+        `  ${name}: src/map drift vs ${latest}${ahead} — ${count} ship-inert file(s):`,
+      );
+      for (const file of shipInertFiles ?? []) lines.push(`      ◦ ${file}`);
     } else {
       const count = files?.length ?? 0;
       lines.push(
-        `  ${name}: SHIPS CHANGES vs ${latest}${ahead} — ${count} file(s):`,
+        `  ${name}: SHIPS CHANGES vs ${latest}${ahead} — ${count} ship-affecting file(s):`,
       );
       for (const file of files ?? []) lines.push(`      • ${file}`);
+      for (const file of shipInertFiles ?? [])
+        lines.push(`      ◦ ${file} (ship-inert)`);
     }
   }
 
+  const shipInertOnly = results.filter(
+    (result) => result.status === 'ship-inert',
+  );
   const ok = !options.strict || drifted.length === 0;
+  const shipInertNote =
+    shipInertOnly.length > 0 ? ` (${shipInertOnly.length} ship-inert)` : '';
   const headline = ok
     ? drifted.length === 0
-      ? `✓ published-diff check passed — ${results.length} packages match their published tarballs.`
-      : `published-diff report — ${drifted.length} of ${results.length} packages would ship changes if released:`
-    : `✗ published-diff check failed — ${drifted.length} of ${results.length} packages drift from their published tarballs:`;
+      ? `✓ published-diff check passed — ${results.length} packages, no ship-affecting drift${shipInertNote}.`
+      : `published-diff report — ${drifted.length} of ${results.length} packages would ship changes if released${shipInertNote}:`
+    : `✗ published-diff check failed — ${drifted.length} of ${results.length} packages drift from their published tarballs${shipInertNote}:`;
   return { ok, text: [headline, ...lines].join('\n') };
 }
