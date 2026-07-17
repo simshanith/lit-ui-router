@@ -252,8 +252,10 @@ export class UIRouterLit extends UIRouter {
     if (this.started) {
       throw new Error('start() called multiple times');
     }
-    // eslint-disable-next-line typescript/no-deprecated -- $get() flushes the param-type queue; #279 tracks the @internal replacement
-    this.urlMatcherFactory.$get();
+    // @internal API, acceptable first-party: exactly what the deprecated urlMatcherFactory.$get() did (#279)
+    const { paramTypes } = this.urlService.config;
+    paramTypes.enqueue = false;
+    paramTypes._flushTypeQueue();
     this.urlService.listen();
     this.urlService.sync();
     this.started = true;
