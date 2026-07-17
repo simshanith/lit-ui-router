@@ -548,6 +548,9 @@ importers:
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 11.0.1(conventional-commits-filter@5.0.0)(conventional-commits-parser@6.4.0)(release-it@20.2.1(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1))
+      '@tools/oxc-emit':
+        specifier: workspace:*
+        version: link:../../tools/oxc-emit
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -560,12 +563,6 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10)
-      oxc-minify:
-        specifier: 'catalog:'
-        version: 0.140.0
-      oxc-transform:
-        specifier: 'catalog:'
-        version: 0.140.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.58.0
@@ -776,6 +773,22 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
+
+  tools/oxc-emit:
+    dependencies:
+      oxc-minify:
+        specifier: 'catalog:'
+        version: 0.140.0
+      oxc-transform:
+        specifier: 'catalog:'
+        version: 0.140.0
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/release:
     devDependencies:

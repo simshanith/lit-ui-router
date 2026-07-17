@@ -7,6 +7,7 @@ import {
 } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
+import type { DirectiveResult } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
@@ -101,7 +102,11 @@ export class UiSrefDirective extends AsyncDirective {
     return extend(defaultOpts, opts || {}) as TransitionOptions;
   }
 
-  render(state: string, params?: RawParams, options?: TransitionOptions) {
+  render(
+    state: string,
+    params?: RawParams,
+    options?: TransitionOptions,
+  ): typeof noChange {
     if (!this.element) {
       return noChange;
     }
@@ -135,17 +140,17 @@ export class UiSrefDirective extends AsyncDirective {
   }
 
   /** @internal */
-  seekRouter() {
+  seekRouter(): void {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
   /** @internal */
-  seekParentView() {
+  seekParentView(): void {
     this.parentView = UiView.seekParentView(this.element!);
   }
 
   /** @internal */
-  disconnected() {
+  disconnected(): void {
     this.element?.removeEventListener('click', this.onClick as EventListener);
     this.element = null;
     this.targetState = null;
@@ -153,7 +158,7 @@ export class UiSrefDirective extends AsyncDirective {
     this.unsubscribe?.();
   }
 
-  onClick = (event: MouseEvent) => {
+  onClick = (event: MouseEvent): void => {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
     const $state = router?.stateService;
@@ -187,7 +192,7 @@ export class UiSrefDirective extends AsyncDirective {
       RawParams?,
       TransitionOptions?,
     ],
-  ) {
+  ): typeof noChange {
     this.state = state;
     this.params = params;
     this.options = options;
@@ -203,7 +208,7 @@ export class UiSrefDirective extends AsyncDirective {
     return this.doRender();
   }
 
-  doRender = () => {
+  doRender = (): typeof noChange => {
     return this.render(this.state!, this.params, this.options);
   };
 
@@ -211,7 +216,7 @@ export class UiSrefDirective extends AsyncDirective {
   /**
    * @internal
    */
-  firstUpdated() {
+  firstUpdated(): void {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
@@ -272,4 +277,8 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * @category directives
  */
-export const uiSref = directive(UiSrefDirective);
+export const uiSref: (
+  state: string,
+  params?: RawParams,
+  options?: TransitionOptions,
+) => DirectiveResult<typeof UiSrefDirective> = directive(UiSrefDirective);

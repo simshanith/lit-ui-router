@@ -5,6 +5,9 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
+    // Conformance is a shipped-src concern; specs are exempt (the second
+    // typecheck pass below enforces it via tsconfig.build.json).
+    "isolatedDeclarations": false,
     "types": ["vitest/globals"]
   },
   "include": ["src/**/*", "vitest.config.ts", "vitest.setup.ts"],

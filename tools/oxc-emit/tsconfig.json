@@ -1,7 +1,7 @@
 {
   // Node runs these files directly via type stripping — same constraints as
-  // the tools/* tsconfigs: .ts import extensions, nothing emitted.
-  "extends": "../../../tsconfig.base.json",
+  // the root scripts tsconfig: .ts import extensions, nothing emitted.
+  "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,

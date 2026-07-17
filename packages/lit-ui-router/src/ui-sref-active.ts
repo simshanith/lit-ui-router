@@ -15,6 +15,7 @@ import {
 } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
+import type { DirectiveResult } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
@@ -184,13 +185,13 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   uiRouter: UIRouterLit | undefined;
   /** @internal */
-  seekRouter() {
+  seekRouter(): void {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
   parentView: UiView | null = null;
   /** @internal */
-  seekParentView() {
+  seekParentView(): void {
     this.parentView = UiView.seekParentView(this.element!);
   }
 
@@ -206,8 +207,11 @@ export class UiSrefActiveDirective extends AsyncDirective {
   entering: boolean | undefined;
   exiting: boolean | undefined;
 
-  targetStates = new Set<TargetState>();
-  uiSrefs = new WeakMap<TargetState, UiSrefElement>();
+  targetStates: Set<TargetState> = new Set<TargetState>();
+  uiSrefs: WeakMap<TargetState, UiSrefElement> = new WeakMap<
+    TargetState,
+    UiSrefElement
+  >();
 
   /** @internal */
   _deregisterOnStart: deregisterFn | undefined;
@@ -227,7 +231,10 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /** @internal */
-  render({ activeClasses, exactClasses }: Partial<UiSrefActiveParams>) {
+  render({
+    activeClasses,
+    exactClasses,
+  }: Partial<UiSrefActiveParams>): typeof noChange {
     if (!this._firstUpdated) {
       return noChange;
     }
@@ -330,7 +337,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
         targetStates,
       },
     ]: [UiSrefActiveParams],
-  ) {
+  ): Promise<void> {
     this.activeClasses = activeClasses;
     this.exactClasses = exactClasses;
     this.state = state;
@@ -353,7 +360,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /** @internal */
-  doRender = () => {
+  doRender = (): typeof noChange => {
     return this.render({
       activeClasses: this.activeClasses,
       exactClasses: this.exactClasses,
@@ -363,7 +370,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   _firstUpdated = false;
   /** @internal */
-  firstUpdated({ targetStates }: Partial<UiSrefActiveParams>) {
+  firstUpdated({ targetStates }: Partial<UiSrefActiveParams>): void {
     if (this._firstUpdated || !this.isConnected) {
       return;
     }
@@ -413,7 +420,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /** @internal */
-  disconnected() {
+  disconnected(): void {
     if (!this.element) {
       return;
     }
@@ -434,7 +441,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   createTransitionStateChangeEvent(
     evt: TransitionStateChange,
     trans: Transition,
-  ) {
+  ): CustomEvent<TransEvt> {
     const detail: TransEvt = {
       evt,
       trans,
@@ -448,14 +455,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /** @internal */
-  onUiSrefTargetEvent = (event: UiSrefTargetEvent) => {
+  onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
     this.targetStates.add(targetState);
     this.uiSrefs.set(targetState, event.target);
   };
 
   /** @internal */
-  onTransitionStateChange = (e: Event) => {
+  onTransitionStateChange = (e: Event): void => {
     const event = e as unknown as CustomEvent<TransEvt>;
     const status = this.getStatus(event.detail);
     if (!status) {
@@ -483,7 +490,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /** @internal */
-  onTransitionStart = (trans: Transition) => {
+  onTransitionStart = (trans: Transition): void => {
     this.element!.dispatchEvent(
       this.createTransitionStateChangeEvent(TransitionStateChange.start, trans),
     );
@@ -508,7 +515,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   };
 
   /** @internal */
-  onStatesChanged = () => {
+  onStatesChanged = (): void => {
     const { active, exact } = this.getStatus() || {};
     this.active = active;
     this.exact = exact;
@@ -581,4 +588,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @category directives
  */
-export const uiSrefActive = directive(UiSrefActiveDirective);
+export const uiSrefActive: (
+  params: Partial<UiSrefActiveParams>,
+) => DirectiveResult<typeof UiSrefActiveDirective> = directive(
+  UiSrefActiveDirective,
+);

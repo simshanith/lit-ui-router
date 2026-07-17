@@ -5,7 +5,10 @@
     "moduleResolution": "bundler",
     "outDir": "dist",
     "rootDir": "src",
-    "declaration": true
+    "declaration": true,
+    // Enforce the annotation conformance oxc-emit-dts relies on: the emit
+    // itself never typechecks, so this flag is what keeps it trustworthy.
+    "isolatedDeclarations": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts", "src/specs"]

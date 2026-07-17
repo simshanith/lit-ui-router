@@ -210,7 +210,7 @@ export class TransitionController implements ReactiveController {
   }
 
   /** @internal */
-  hostConnected() {
+  hostConnected(): void {
     this._router ??=
       this.options.router ?? UIRouterLitElement.seekRouter(this.host);
 
@@ -240,7 +240,7 @@ export class TransitionController implements ReactiveController {
   }
 
   /** @internal */
-  hostDisconnected() {
+  hostDisconnected(): void {
     while (this.deregisterFns.length) {
       this.deregisterFns.shift()?.();
     }

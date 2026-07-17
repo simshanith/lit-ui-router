@@ -3,15 +3,13 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["build:custom-elements", "build:types"],
-      "outputs": ["dist/**/*.js"]
+      // Per-key override: dependsOn/outputs inherit from the root umbrella;
+      // cem has no ordering consumers, so co-scheduling suffices.
+      "with": ["build:custom-elements"]
     },
     "build:custom-elements": {
       "inputs": ["src/**/*.ts", "custom-elements-manifest.config.js"],
       "outputs": ["dist/custom-elements.json"]
-    },
-    "build:types": {
-      "outputs": ["dist/**/*.d.ts"]
     },
     "docs:api": {
       "outputs": ["../../docs/api/reference/**"]
