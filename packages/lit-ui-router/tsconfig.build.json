@@ -5,8 +5,7 @@
     "moduleResolution": "bundler",
     "outDir": "dist",
     "rootDir": "src",
-    "declaration": true,
-    "sourceMap": true
+    "declaration": true
   },
   "include": ["src/**/*"],
   "exclude": ["node_modules", "dist", "**/*.spec.ts"]
