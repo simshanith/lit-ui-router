@@ -1,7 +1,11 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { services, UIRouter, UrlMatcher as CoreUrlMatcher } from '@uirouter/core';
+import {
+  services,
+  UIRouter,
+  UrlMatcher as CoreUrlMatcher,
+} from '@uirouter/core';
 import type { RawParams } from '@uirouter/core';
 
 import { UrlMatcher, urlMatcherFactory } from '../src/url-matcher.ts';
