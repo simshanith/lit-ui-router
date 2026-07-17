@@ -26,7 +26,14 @@ const fail = (file: string, errors: { message: string }[]): never => {
 const sources = readdirSync(SRC, { recursive: true, withFileTypes: true })
   .filter((entry) => entry.isFile())
   .map((entry) => join(entry.parentPath, entry.name))
-  .filter((file) => file.endsWith('.ts') && !file.endsWith('.spec.ts'));
+  .filter(
+    (file) =>
+      file.endsWith('.ts') &&
+      !file.endsWith('.spec.ts') &&
+      // Test-only helpers: excluded from the build alongside the specs that
+      // import them (mirrors the tsconfig.build exclude).
+      !file.startsWith(join(SRC, 'specs')),
+  );
 
 for (const file of sources) {
   const transformed = transformSync(file, readFileSync(file, 'utf8'), {
