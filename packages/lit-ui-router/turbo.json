@@ -3,11 +3,18 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["build:custom-elements"]
+      "dependsOn": ["build:custom-elements", "build:js", "build:types"],
+      "outputs": []
     },
     "build:custom-elements": {
       "inputs": ["src/**/*.ts", "custom-elements-manifest.config.js"],
       "outputs": ["dist/custom-elements.json"]
+    },
+    "build:js": {
+      "outputs": ["dist/**/*.js"]
+    },
+    "build:types": {
+      "outputs": ["dist/**/*.d.ts"]
     },
     "docs:api": {
       "outputs": ["../../docs/api/reference/**"]

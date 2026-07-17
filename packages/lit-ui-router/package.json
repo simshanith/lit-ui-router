@@ -47,7 +47,7 @@
     }
   },
   "scripts": {
-    "build": "pnpm run build:types && pnpm run build:js",
+    "build": "true # composed by turbo: build:types, build:js, and build:custom-elements run as parallel task deps",
     "build:custom-elements": "cem analyze --outdir ./dist",
     "build:js": "node scripts/build-js.ts",
     "build:types": "tsc -p tsconfig.build.json --emitDeclarationOnly",
