@@ -521,6 +521,9 @@ const specificityPatterns = [
   '/a',
   '/a/b/:z',
   '/a/:m/c',
+  // Search params carry no path weight: '/users/new?q' ties '/users/new'.
+  '/users/new?q',
+  '/users/:id?sort&page',
 ];
 
 describe(`differential: UrlMatcher.compare vs @uirouter/core (${specificityPatterns.length} patterns, all pairs)`, () => {

@@ -472,11 +472,16 @@ export class UrlMatcher {
     return 0;
   }
 
+  #weights?: number[];
+
   // Path tokens as core's sort weights (UrlMatcher.compare): interleave the
   // static segments with the path params in order, split each static segment
   // on '/' keeping the delimiters, then weight slash → 1, static text → 2,
-  // param → 3. Search params never affect path specificity.
+  // param → 3. Search params never affect path specificity. Memoized, as
+  // core caches on _cache.weights — matchRoute compares the running best
+  // against every later candidate.
   #segmentWeights(): number[] {
+    if (this.#weights) return this.#weights;
     const weights: number[] = [];
     this.#segments.forEach((segment, index) => {
       for (const piece of segment.split(/(\/)/)) {
@@ -485,7 +490,7 @@ export class UrlMatcher {
       }
       if (this.#pathParams[index]) weights.push(3);
     });
-    return weights;
+    return (this.#weights = weights);
   }
 
   /**
