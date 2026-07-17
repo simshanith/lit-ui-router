@@ -10,8 +10,8 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { urlMatcherFactory } from './url-matcher.ts';
-import type { UrlMatcher, UrlMatcherCompilerConfig } from './url-matcher.ts';
+import { UrlMatcher, urlMatcherFactory } from './url-matcher.ts';
+import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
 
 /** A state's contribution to the url-addressable route set. */
 export interface RouteDeclaration {
@@ -129,26 +129,28 @@ export interface RouteMatch {
 
 /**
  * Match identity, not just truth: which route's pattern the pathname
- * matched, with the extracted params. Among multiple matches the one with
- * the fewest params wins (static segments beat placeholders, as in the
- * router's own rule ordering); ties go to declaration order. That heuristic
- * approximates core's segment-by-segment static-specificity sort and can
- * diverge from it on pathological overlaps (equal param counts, mixed
- * static/dynamic positions).
+ * matched, with the extracted params. Among multiple matches the most
+ * specific one wins by core's segment-by-segment static-specificity sort
+ * ([[UrlMatcher.compare]]): static segments beat placeholders position by
+ * position, so `/users/new` outranks `/users/:id` and `/a/:y` outranks
+ * `/:x/b` regardless of equal param counts. Ties (equal specificity) go to
+ * declaration order. This mirrors the client router's own rule ordering, so
+ * a compiled server redirect agrees with what the client would resolve.
  */
 export function matchRoute(
   routes: CompiledRoute[],
   pathname: string,
 ): RouteMatch | null {
   let best: RouteMatch | null = null;
+  let bestMatcher: UrlMatcher | null = null;
   for (const { name, matcher } of routes) {
     const params = matcher.exec(pathname);
-    if (
-      params !== null &&
-      (best === null ||
-        Object.keys(params).length < Object.keys(best.params).length)
-    ) {
+    if (params === null) continue;
+    // Strictly-more-specific replaces; equal specificity keeps the earlier
+    // declaration (compare < 0 only when the new matcher outranks the best).
+    if (bestMatcher === null || UrlMatcher.compare(matcher, bestMatcher) < 0) {
       best = { state: name, params };
+      bestMatcher = matcher;
     }
   }
   return best;

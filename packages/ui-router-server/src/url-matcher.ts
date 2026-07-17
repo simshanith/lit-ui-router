@@ -449,6 +449,46 @@ export class UrlMatcher {
   }
 
   /**
+   * Core's UrlMatcher.compare: sorts two matchers by static specificity so
+   * the more specific pattern wins. Each is flattened to path tokens (slash
+   * literals, static text, path params) and compared position-by-position;
+   * slash (1) sorts before static text (2) before a param (3), and a shorter
+   * pattern (0-padded) sorts before a longer one where they first differ. A
+   * negative result means `a` is more specific (higher priority) than `b`.
+   *
+   * Ported from core so the dep-free redirects tier picks the same route the
+   * client's own router would — not a fewest-params approximation. Single-
+   * matcher only: matchers here never `append`, so there is no parent path
+   * to concatenate.
+   */
+  static compare(a: UrlMatcher, b: UrlMatcher): number {
+    const weightsA = a.#segmentWeights();
+    const weightsB = b.#segmentWeights();
+    const length = Math.max(weightsA.length, weightsB.length);
+    for (let i = 0; i < length; i++) {
+      const cmp = (weightsA[i] ?? 0) - (weightsB[i] ?? 0);
+      if (cmp !== 0) return cmp;
+    }
+    return 0;
+  }
+
+  // Path tokens as core's sort weights (UrlMatcher.compare): interleave the
+  // static segments with the path params in order, split each static segment
+  // on '/' keeping the delimiters, then weight slash → 1, static text → 2,
+  // param → 3. Search params never affect path specificity.
+  #segmentWeights(): number[] {
+    const weights: number[] = [];
+    this.#segments.forEach((segment, index) => {
+      for (const piece of segment.split(/(\/)/)) {
+        if (piece === '') continue;
+        weights.push(piece === '/' ? 1 : 2);
+      }
+      if (this.#pathParams[index]) weights.push(3);
+    });
+    return weights;
+  }
+
+  /**
    * Tests a url path against this matcher.
    *
    * Returns the captured parameter values when the path matches the pattern,

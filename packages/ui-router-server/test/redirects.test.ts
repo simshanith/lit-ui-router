@@ -82,7 +82,7 @@ describe('matchRoute', () => {
     });
   });
 
-  it('prefers the match with the fewest params (static beats placeholder)', () => {
+  it('prefers the more specific match (static beats placeholder)', () => {
     assert.deepEqual(matchRoute(compiled, '/contacts/new'), {
       state: 'contacts.new',
       params: {},
@@ -92,6 +92,29 @@ describe('matchRoute', () => {
   it('returns null when nothing matches', () => {
     assert.equal(matchRoute(compiled, '/nope'), null);
     assert.equal(matchRoute(compiled, ''), null);
+  });
+
+  // Regression for #360: a static segment in an earlier position outranks a
+  // param in that position even when both patterns carry the same number of
+  // params. The old fewest-params heuristic tied here and fell to declaration
+  // order, letting the first-declared '/:x/b' win over the correct '/a/:y'.
+  it('orders by segment specificity, not param count or declaration order', () => {
+    const routes = compileRoutes([
+      { name: 'dynamicFirst', url: '/:x/b' },
+      { name: 'staticFirst', url: '/a/:y' },
+    ]);
+    assert.deepEqual(matchRoute(routes, '/a/b'), {
+      state: 'staticFirst',
+      params: { y: 'b' },
+    });
+  });
+
+  it('keeps declaration order only when specificity is genuinely equal', () => {
+    const routes = compileRoutes([
+      { name: 'first', url: '/:a/:b' },
+      { name: 'second', url: '/:c/:d' },
+    ]);
+    assert.equal(matchRoute(routes, '/x/y')?.state, 'first');
   });
 });
 
@@ -138,6 +161,27 @@ describe('evaluateRedirects', () => {
 
   it('follows redirect chains', () => {
     assert.equal(evaluateRedirects(table, '/chain'), '/home');
+  });
+
+  // #360: with two equal-param routes overlapping on one pathname, only the
+  // more specific one carries a redirectTo. The old fewest-params heuristic
+  // could select the wrong route (declaration order) and emit its redirect;
+  // the specificity sort selects the same route the client would resolve.
+  it('emits the redirect of the segment-specific route, not the first-declared', () => {
+    const overlapping: RedirectTable = {
+      routes: [
+        // Declared first, but less specific at '/legacy/settings'.
+        { name: 'section', url: '/legacy/:page', redirectTo: 'home' },
+        { name: 'home', url: '/home' },
+        // More specific: static 'settings' beats the ':page' placeholder.
+        { name: 'settings', url: '/legacy/settings' },
+      ],
+    };
+    // '/legacy/settings' matches both; the specific 'settings' route has no
+    // redirect, so the path is served as-is (null), not redirected to /home.
+    assert.equal(evaluateRedirects(overlapping, '/legacy/settings'), null);
+    // A non-overlapping page still redirects through 'section'.
+    assert.equal(evaluateRedirects(overlapping, '/legacy/other'), '/home');
   });
 
   it('returns null for plain and unknown paths', () => {
