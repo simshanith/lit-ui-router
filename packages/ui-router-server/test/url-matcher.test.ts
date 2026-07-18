@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { urlMatcherFactory } from '../src/url-matcher.ts';
+import { exec, format, urlMatcherFactory } from '../src/url-matcher.ts';
 
 // Behavior specs for the standalone matcher on its own. Fidelity against
 // @uirouter/core is asserted separately, case by case, by the differential
@@ -11,27 +11,27 @@ const { compile } = urlMatcherFactory();
 describe('factory defaults', () => {
   it('is strict about trailing slashes', () => {
     const matcher = compile('/welcome');
-    assert.deepEqual(matcher.exec('/welcome'), {});
-    assert.equal(matcher.exec('/welcome/'), null);
+    assert.deepEqual(exec(matcher, '/welcome'), {});
+    assert.equal(exec(matcher, '/welcome/'), null);
   });
 
   it('is case-sensitive', () => {
-    assert.equal(compile('/welcome').exec('/Welcome'), null);
+    assert.equal(exec(compile('/welcome'), '/Welcome'), null);
   });
 
   it('does not squash defaulted params', () => {
     const matcher = compile('/x/:id', { params: { id: 'fallback' } });
-    assert.equal(matcher.exec('/x'), null);
-    assert.deepEqual(matcher.exec('/x/'), { id: 'fallback' });
+    assert.equal(exec(matcher, '/x'), null);
+    assert.deepEqual(exec(matcher, '/x/'), { id: 'fallback' });
   });
 
   it('overrides per compile', () => {
     assert.deepEqual(
-      compile('/welcome', { strict: false }).exec('/welcome/'),
+      exec(compile('/welcome', { strict: false }), '/welcome/'),
       {},
     );
     assert.deepEqual(
-      compile('/welcome', { caseInsensitive: true }).exec('/WELCOME'),
+      exec(compile('/welcome', { caseInsensitive: true }), '/WELCOME'),
       {},
     );
   });
@@ -43,26 +43,26 @@ describe('static param defaults without any $injector', () => {
   // when no framework installed one. The extraction applies them directly.
   it('matches query-suffixed patterns without throwing', () => {
     const matcher = compile('/welcome?flag');
-    assert.deepEqual(matcher.exec('/welcome'), { flag: undefined });
-    assert.equal(matcher.exec('/nope'), null);
+    assert.deepEqual(exec(matcher, '/welcome'), { flag: undefined });
+    assert.equal(exec(matcher, '/nope'), null);
   });
 
   it('applies defaulted params without throwing', () => {
     const matcher = compile('/x/:id', {
       params: { id: { value: 'fallback', squash: true } },
     });
-    assert.deepEqual(matcher.exec('/x'), { id: 'fallback' });
-    assert.deepEqual(matcher.exec('/x/'), { id: 'fallback' });
-    assert.deepEqual(matcher.exec('/x/7'), { id: '7' });
-    assert.equal(matcher.exec('/y'), null);
+    assert.deepEqual(exec(matcher, '/x'), { id: 'fallback' });
+    assert.deepEqual(exec(matcher, '/x/'), { id: 'fallback' });
+    assert.deepEqual(exec(matcher, '/x/7'), { id: '7' });
+    assert.equal(exec(matcher, '/y'), null);
   });
 
   it('applies typed defaults', () => {
     const matcher = compile('/page/{num:int}', {
       params: { num: { value: 1, squash: true } },
     });
-    assert.deepEqual(matcher.exec('/page'), { num: 1 });
-    assert.deepEqual(matcher.exec('/page/3'), { num: 3 });
+    assert.deepEqual(exec(matcher, '/page'), { num: 1 });
+    assert.deepEqual(exec(matcher, '/page/3'), { num: 3 });
   });
 });
 
@@ -130,7 +130,7 @@ describe('compile errors shared with upstream', () => {
 
   it('throws on inline regexps containing capture groups', () => {
     assert.throws(
-      () => compile('/u/{id:(a|b)}').exec('/u/a'),
+      () => exec(compile('/u/{id:(a|b)}'), '/u/a'),
       /Unbalanced capture group/,
     );
   });
@@ -146,8 +146,8 @@ describe('custom ParamType objects', () => {
       decode: (val: string) => val.toUpperCase(),
     };
     const matcher = compile('/tag/:tag', { params: { tag: { type: upper } } });
-    assert.deepEqual(matcher.exec('/tag/ABC'), { tag: 'ABC' });
-    assert.equal(matcher.exec('/tag/abc'), null);
+    assert.deepEqual(exec(matcher, '/tag/ABC'), { tag: 'ABC' });
+    assert.equal(exec(matcher, '/tag/abc'), null);
   });
 });
 
@@ -155,49 +155,48 @@ describe('format', () => {
   it('builds a url from param values, percent-encoding them', () => {
     const matcher = compile('/user/:id?q');
     assert.equal(
-      matcher.format({ id: 'b ob', q: 'a&b' }),
+      format(matcher, { id: 'b ob', q: 'a&b' }),
       '/user/b%20ob?q=a%26b',
     );
-    assert.equal(matcher.format({ id: 'bob' }), '/user/bob');
+    assert.equal(format(matcher, { id: 'bob' }), '/user/bob');
   });
 
   it('returns null when a value fails its type', () => {
     const matcher = compile('/user/{id:int}');
-    assert.equal(matcher.format({ id: 'abc' }), null);
-    assert.equal(matcher.format({}), null);
-    assert.equal(matcher.format({ id: 42 }), '/user/42');
+    assert.equal(format(matcher, { id: 'abc' }), null);
+    assert.equal(format(matcher, {}), null);
+    assert.equal(format(matcher, { id: 42 }), '/user/42');
   });
 
   it('squashes defaulted params per policy', () => {
     const params = (squash: boolean | string) => ({
       params: { id: { value: 'fallback', squash } },
     });
-    assert.equal(compile('/x/:id', params(true)).format({}), '/x');
-    assert.equal(compile('/x/:id', params(false)).format({}), '/x/fallback');
-    assert.equal(compile('/x/:id', params('~')).format({}), '/x/~');
-    assert.equal(compile('/x/:id', params(true)).format({ id: '7' }), '/x/7');
+    assert.equal(format(compile('/x/:id', params(true)), {}), '/x');
+    assert.equal(format(compile('/x/:id', params(false)), {}), '/x/fallback');
+    assert.equal(format(compile('/x/:id', params('~')), {}), '/x/~');
+    assert.equal(format(compile('/x/:id', params(true)), { id: '7' }), '/x/7');
   });
 
   it('omits absent search params and appends a hash fragment', () => {
     const matcher = compile('/search?q&r');
-    assert.equal(matcher.format({}), '/search');
-    assert.equal(matcher.format({ q: 'a' }), '/search?q=a');
-    assert.equal(matcher.format({ q: 'a', '#': 'frag' }), '/search?q=a#frag');
+    assert.equal(format(matcher, {}), '/search');
+    assert.equal(format(matcher, { q: 'a' }), '/search?q=a');
+    assert.equal(format(matcher, { q: 'a', '#': 'frag' }), '/search?q=a#frag');
   });
 
   it('round-trips exec', () => {
     const matcher = compile('/mymessages/:folderId/{messageId:int}');
     const params = { folderId: 'inbox', messageId: 5 };
-    const url = matcher.format(params);
+    const url = format(matcher, params);
     assert.equal(url, '/mymessages/inbox/5');
-    assert.deepEqual(matcher.exec(url as string), params);
+    assert.deepEqual(exec(matcher, url as string), params);
   });
 });
 
-describe('UrlMatcher surface', () => {
+describe('compiled matcher surface', () => {
   it('exposes the source pattern', () => {
     const matcher = compile('/user/:id');
     assert.equal(matcher.pattern, '/user/:id');
-    assert.equal(String(matcher), '/user/:id');
   });
 });
