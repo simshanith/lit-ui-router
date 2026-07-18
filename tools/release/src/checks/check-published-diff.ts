@@ -17,7 +17,8 @@
 //
 // Run `turbo run build` first so dist is current; `--strict` turns drift into
 // a failing exit (default is an informational report — drift usually means "a
-// release is owed", not "the tree is broken").
+// release is owed", not "the tree is broken"). `--json <path>` additionally
+// writes the per-package machine verdict (see summarizeResults).
 //
 // Registry state arrives through published-versions.json, written by
 // resolve-published.ts just before this runs (the root script chains them) —
@@ -40,9 +41,12 @@ import {
   type DiffResult,
   formatReport,
   isCleanDiff,
+  renderSummary,
+  summarizeResults,
 } from './check-published-diff.core.ts';
 import { pnpmPack } from './pack.ts';
 import { readPublishedVersions } from './published-versions.ts';
+import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
@@ -81,6 +85,11 @@ async function diffAgainstPublished(
 async function main() {
   const strict = process.argv.includes('--strict');
   const skipBuild = process.argv.includes('--no-build');
+  const jsonFlag = process.argv.indexOf('--json');
+  const jsonPath = jsonFlag === -1 ? undefined : process.argv[jsonFlag + 1];
+  if (jsonFlag !== -1 && (!jsonPath || jsonPath.startsWith('--'))) {
+    throw new Error('--json requires a file path argument');
+  }
 
   const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
@@ -90,6 +99,7 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
+  await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
   if (!skipBuild && publishable.length > 0) {
     // Bare turbo (mise-provisioned), never through pnpm run — pnpm's relative
@@ -135,6 +145,9 @@ async function main() {
       shipInertFiles: shipInert,
     });
   }
+
+  if (jsonPath)
+    await writeFile(jsonPath, renderSummary(summarizeResults(results)));
 
   const { ok, text } = formatReport(results, { strict });
   (ok ? console.log : console.error)(text);

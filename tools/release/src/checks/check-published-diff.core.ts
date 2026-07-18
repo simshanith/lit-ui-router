@@ -64,6 +64,35 @@ export type DiffResult = {
   shipInertFiles?: string[];
 };
 
+/** Per-package machine verdict; `version` is the published latest (null when unpublished). */
+export type PackageSummary = {
+  name: string;
+  dir: string;
+  version: string | null;
+  shipAffecting: number;
+  shipInert: number;
+  clean: boolean;
+};
+
+/** Shape results for the --json output; `clean` = no ship-affecting drift. */
+export function summarizeResults(results: DiffResult[]): PackageSummary[] {
+  return results.map(
+    ({ name, dir, latest, status, files, shipInertFiles }) => ({
+      name,
+      dir,
+      version: latest ?? null,
+      shipAffecting: status === 'drift' ? (files?.length ?? 0) : 0,
+      shipInert: shipInertFiles?.length ?? 0,
+      clean: status !== 'drift',
+    }),
+  );
+}
+
+/** Canonical --json bytes: 2-space indent, trailing newline. */
+export function renderSummary(summaries: PackageSummary[]): string {
+  return `${JSON.stringify(summaries, null, 2)}\n`;
+}
+
 export type ReportOptions = {
   /** When true, drift fails the report instead of merely being listed. */
   strict?: boolean;

@@ -6,6 +6,8 @@ import {
   classifyFiles,
   formatReport,
   isCleanDiff,
+  renderSummary,
+  summarizeResults,
 } from './check-published-diff.core.ts';
 
 // Shape of real `npm diff --diff=<spec> --diff=<tarball>` output: both sides
@@ -180,5 +182,105 @@ describe('formatReport', () => {
     const { ok, text } = formatReport([]);
     assert.equal(ok, false);
     assert.match(text, /no publishable workspace packages/);
+  });
+});
+
+describe('summarizeResults', () => {
+  it('maps every status to counts, published version, and a clean flag', () => {
+    assert.deepEqual(
+      summarizeResults([
+        {
+          name: 'lit-ui-router',
+          dir: 'packages/lit-ui-router',
+          latest: '1.7.0',
+          localVersion: '1.7.0',
+          status: 'clean',
+        },
+        {
+          name: 'lit-ui-router-mobx',
+          dir: 'packages/lit-ui-router-mobx',
+          latest: '0.3.2',
+          localVersion: '0.3.2',
+          status: 'drift',
+          files: ['dist/router-store.js', 'package.json'],
+          shipInertFiles: ['src/router-store.ts'],
+        },
+        {
+          name: 'ui-router-navigation-location-plugin',
+          dir: 'packages/navigation-location-plugin',
+          latest: '0.2.1',
+          localVersion: '0.2.1',
+          status: 'ship-inert',
+          files: [],
+          shipInertFiles: ['dist/core.js.map', 'src/core.ts'],
+        },
+        {
+          name: 'ui-router-server',
+          dir: 'packages/ui-router-server',
+          localVersion: '0.0.0',
+          status: 'unpublished',
+        },
+      ]),
+      [
+        {
+          name: 'lit-ui-router',
+          dir: 'packages/lit-ui-router',
+          version: '1.7.0',
+          shipAffecting: 0,
+          shipInert: 0,
+          clean: true,
+        },
+        {
+          name: 'lit-ui-router-mobx',
+          dir: 'packages/lit-ui-router-mobx',
+          version: '0.3.2',
+          shipAffecting: 2,
+          shipInert: 1,
+          clean: false,
+        },
+        {
+          name: 'ui-router-navigation-location-plugin',
+          dir: 'packages/navigation-location-plugin',
+          version: '0.2.1',
+          shipAffecting: 0,
+          shipInert: 2,
+          clean: true,
+        },
+        {
+          name: 'ui-router-server',
+          dir: 'packages/ui-router-server',
+          version: null,
+          shipAffecting: 0,
+          shipInert: 0,
+          clean: true,
+        },
+      ],
+    );
+  });
+});
+
+describe('renderSummary', () => {
+  it('renders canonical bytes: 2-space indent, trailing newline', () => {
+    const rendered = renderSummary([
+      {
+        name: 'lit-ui-router',
+        dir: 'packages/lit-ui-router',
+        version: '1.7.0',
+        shipAffecting: 0,
+        shipInert: 0,
+        clean: true,
+      },
+    ]);
+    assert.equal(rendered.endsWith('\n'), true);
+    assert.deepEqual(JSON.parse(rendered), [
+      {
+        name: 'lit-ui-router',
+        dir: 'packages/lit-ui-router',
+        version: '1.7.0',
+        shipAffecting: 0,
+        shipInert: 0,
+        clean: true,
+      },
+    ]);
   });
 });
