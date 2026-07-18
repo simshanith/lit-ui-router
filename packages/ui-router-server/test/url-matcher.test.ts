@@ -214,8 +214,7 @@ describe('compiled matcher surface', () => {
   });
 
   it('carries typed compile-time meta on the matcher', () => {
-    const matcher = compile('/user/:id', {}, { routeId: 'users.detail' });
-    // Inferred as CompiledMatcher<{ routeId: string }> — .routeId typechecks.
+    const matcher = compile('/user/:id', { meta: { routeId: 'users.detail' } });
     assert.equal(matcher.meta.routeId, 'users.detail');
     // The reference is frozen in; the meta object stays consumer-owned.
     assert.ok(!Object.isFrozen(matcher.meta));
@@ -223,13 +222,22 @@ describe('compiled matcher surface', () => {
     assert.equal(matcher.meta.routeId, 'renamed');
   });
 
+  it('infers the meta type from the options bag', () => {
+    const matcher = compile('/user/:id', { strict: false, meta: { n: 1 } });
+    // CompiledMatcher<{ n: number }>: .n typechecks, arithmetic proves number.
+    assert.equal(matcher.meta.n + 1, 2);
+    // Sibling options still apply alongside meta.
+    assert.deepEqual(exec(matcher, '/user/7/'), { id: '7' });
+  });
+
   it('defaults meta to undefined when not passed', () => {
     assert.equal(compile('/user/:id').meta, undefined);
+    assert.equal(compile('/user/:id', { strict: true }).meta, undefined);
   });
 
   it('operations ignore meta entirely', () => {
     const plain = compile('/user/:id');
-    const tagged = compile('/user/:id', {}, { routeId: 'x' });
+    const tagged = compile('/user/:id', { meta: { routeId: 'x' } });
     assert.deepEqual(exec(tagged, '/user/7'), exec(plain, '/user/7'));
     assert.equal(format(tagged, { id: '7' }), format(plain, { id: '7' }));
     assert.equal(compare(tagged, plain), 0);

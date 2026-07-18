@@ -356,12 +356,14 @@ const quoteRegExp = (segment: string, param?: CompiledParam): string => {
   return result + surround[0] + param.type.pattern.source + surround[1];
 };
 
-export interface UrlMatcherCompileOptions extends Pick<
+export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
   UrlMatcherCompileConfig,
   'strict' | 'caseInsensitive'
 > {
   /** Relaxation vs core: `state.params` flattened to `params` (no StateDeclaration here) — a [[ParamDeclaration]] or a shorthand static default per name. */
   params?: Record<string, unknown>;
+  /** Passenger field: rides the compiled matcher as [[CompiledMatcher.meta]], untouched by compilation. */
+  meta?: M;
 }
 
 export interface UrlMatcherCompilerConfig extends Pick<
@@ -383,9 +385,9 @@ interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
  * `compile` and consumed by [[exec]], [[format]], and [[compare]].
  * Frozen — treat as immutable: [[compare]] memoizes per object identity,
  * and the functions/regexps inside make it not structuredClone-able.
- * Two data channels: `meta` rides compile-time data on the matcher, and a
- * consumer-owned identity-keyed WeakMap (frozen keys are fine) covers
- * external or mutable association.
+ * Two data channels: compile's `options.meta` rides compile-time data on
+ * the matcher, and a consumer-owned identity-keyed WeakMap (frozen keys
+ * are fine) covers external or mutable association.
  */
 export interface CompiledMatcher<M = undefined> {
   /** The pattern that was compiled. */
@@ -645,8 +647,7 @@ export function format(
 export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
   compile: <M = undefined>(
     pattern: string,
-    options?: UrlMatcherCompileOptions,
-    meta?: M,
+    options?: UrlMatcherCompileOptions<M>,
   ) => CompiledMatcher<M>;
 } {
   const {
@@ -660,8 +661,7 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
   return {
     compile: <M = undefined>(
       pattern: string,
-      options: UrlMatcherCompileOptions = {},
-      meta?: M,
+      options: UrlMatcherCompileOptions<M> = {},
     ) =>
       compileMatcher(
         pattern,
@@ -673,7 +673,7 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
           params: options.params ?? {},
         },
         // Omitted meta is the declared default: `compile(p)` → meta undefined.
-        meta as M,
+        options.meta as M,
       ),
   };
 }
