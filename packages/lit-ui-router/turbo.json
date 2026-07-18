@@ -3,7 +3,6 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      // per-key merge: dependsOn/outputs inherit from the root umbrella
       "with": ["build:custom-elements"]
     },
     "build:custom-elements": {
