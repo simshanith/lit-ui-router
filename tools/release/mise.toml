@@ -4,13 +4,16 @@
 # repo-generic turbo build, which lives in the root config as //:build.
 # Tasks run from THIS directory,
 # so run lines are src/-relative. The workflows are triggers/permissions/
-# secrets/environments/concurrency plus single-line `mise run` steps. Inputs
-# arrive via step `env:` blocks (never `${{ }}` interpolated into run lines);
-# results flow forward as GITHUB_OUTPUT step outputs written by the tools.
-# Each task's env contract is noted below; secrets stay in workflow step env,
-# NEVER in mise [env] (which would override the step's). Keep this file
-# [tasks]-only: root [env]/_.path and [tools] are inherited, and a tasks-only
-# config stays inert for shells that merely cd in here.
+# secrets/environments/concurrency plus single-line `mise run` steps.
+# Inputs are env-backed usage flags (`mise run <task> --help` lists each
+# task's contract): workflow step `env:` blocks satisfy them as-is (never
+# `${{ }}` interpolated into run lines), and the run line forwards the parsed
+# ${usage_*} values back to the env vars the tools read, so CLI flags work
+# too. Results flow forward as GITHUB_OUTPUT step outputs written by the
+# tools; outputs and secrets aren't expressible in usage — secrets stay in
+# workflow step env, NEVER in mise [env] (which would override the step's).
+# Keep this file [tasks]-only: root [env]/_.path and [tools] are inherited,
+# and a tasks-only config stays inert for shells that merely cd in here.
 # Tasks assume node_modules exists: every workflow runs `mise run setup` as a
 # dedicated first step, so tasks don't re-declare `depends = ["//:setup"]`
 # (which re-ran pnpm install per step). Run `mise run setup` first when
@@ -22,39 +25,69 @@ description = "Configure the github-actions[bot] git identity (CI only)"
 run = "node src/steps/release-git-user.ts"
 
 [tasks.package_info]
-# env: PACKAGE_INPUT (manual dispatch) | GITHUB_REF (tag push).
-# outputs: package_name, package_dir.
+# outputs: package_name, package_dir. Either flag is enough; the tool errors
+# loudly when both are blank (usage can't express either-or requiredness).
 description = "Resolve the target package name and workspace directory"
-run = "node src/steps/release-package-info.ts"
+usage = '''
+flag "--package-input <package_input>" help="Package name (manual dispatch; wins when non-empty)" env="PACKAGE_INPUT"
+flag "--ref <ref>" help="Tag ref refs/tags/<package>@<version> (tag-push fallback)" env="GITHUB_REF"
+'''
+run = 'PACKAGE_INPUT="${usage_package_input:-}" GITHUB_REF="${usage_ref:-}" node src/steps/release-package-info.ts'
 
 [tasks.pack]
-# env: PACKAGE_NAME, PACKAGE_DIR. outputs: tarball.
+# outputs: tarball.
 description = "Pack the publish tarball with a dev-stripped manifest"
-run = "node src/steps/release-pack.ts"
+usage = '''
+flag "--package-name <package_name>" help="Package to pack" required=#true env="PACKAGE_NAME"
+flag "--package-dir <package_dir>" help="Workspace-relative package directory" required=#true env="PACKAGE_DIR"
+'''
+run = 'PACKAGE_NAME="${usage_package_name?}" PACKAGE_DIR="${usage_package_dir?}" node src/steps/release-pack.ts'
 
 [tasks.check_tarball]
-# env: TARBALL (absolute, from pack's output). Gates devDependencies/
-# scripts/catalog:/workspace: leaks.
+# Gates devDependencies/scripts/catalog:/workspace: leaks.
 description = "Check the packed tarball's manifest before publishing"
-run = 'node src/checks/check-packed-manifest.ts "${TARBALL:?}"'
+usage = '''
+flag "--tarball <tarball>" help="Absolute path to the packed tarball (pack's output)" required=#true env="TARBALL"
+'''
+run = 'node src/checks/check-packed-manifest.ts "${usage_tarball?}"'
 
 [tasks.tag]
-# env: PACKAGE, DRY_RUN. Tags locally only; tag_push pushes the ref.
-description = "Tag the current version of a package (local tag only)"
-run = "node src/steps/release-tag.ts"
+description = "Tag the current version of a package (local tag only; tag_push pushes the ref)"
+usage = '''
+flag "--package <package>" help="Package to tag" required=#true env="PACKAGE"
+flag "--dry-run" help="release-it --dry-run: show the tag without creating it" env="DRY_RUN"
+'''
+run = 'PACKAGE="${usage_package?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-tag.ts'
 
 [tasks.tag_push]
-# env: PACKAGE, DRY_RUN. Pushes exactly refs/tags/<package>@<version>.
-description = "Push a package's release tag ref"
-run = "node src/steps/release-tag-push.ts"
+description = "Push a package's release tag ref (exactly refs/tags/<package>@<version>)"
+usage = '''
+flag "--package <package>" help="Package whose release tag to push" required=#true env="PACKAGE"
+flag "--dry-run" help="Print the ref that would be pushed, push nothing" env="DRY_RUN"
+'''
+run = 'PACKAGE="${usage_package?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-tag-push.ts'
 
 [tasks.publish]
-# env: PACKAGE_NAME, TARBALL, DRY_RUN, GITHUB_TOKEN (GitHub release; npm is OIDC).
+# env: GITHUB_TOKEN (release-it's GitHub release; npm auth is OIDC).
 description = "Publish the packed tarball to npm and cut the GitHub release"
-run = "node src/steps/release-publish.ts"
+usage = '''
+flag "--package-name <package_name>" help="Package to publish" required=#true env="PACKAGE_NAME"
+flag "--tarball <tarball>" help="Absolute path to the packed tarball (pack's output)" required=#true env="TARBALL"
+flag "--dry-run" help="release-it --dry-run: no npm publish, no GitHub release" env="DRY_RUN"
+'''
+run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-publish.ts'
 
 [tasks.bump]
-# env: PACKAGE, INCREMENT, OTHER_INCREMENT, PR_BASE, BRANCH_PREFIX_INPUT,
-# DRY_RUN, GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
+# env: GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
 description = "Compute the bumped version, branch, commit, push, and open the release PR"
-run = "node src/steps/release-bump.ts"
+usage = '''
+flag "--package <package>" help="Package to bump" required=#true env="PACKAGE"
+flag "--increment <increment>" help="Version increment (other/none pair with --other-increment)" required=#true env="INCREMENT" {
+  choices "major" "minor" "patch" "other" "none"
+}
+flag "--other-increment <other_increment>" help="Custom version for --increment other (e.g. a prerelease)" env="OTHER_INCREMENT"
+flag "--pr-base <pr_base>" help="GitHub PR base branch" required=#true env="PR_BASE"
+flag "--branch-prefix <branch_prefix>" help="Release branch prefix (default: release/<package>/v)" env="BRANCH_PREFIX_INPUT"
+flag "--dry-run" help="Show the computed version/changelog; skip branch push and PR creation" env="DRY_RUN"
+'''
+run = 'PACKAGE="${usage_package?}" INCREMENT="${usage_increment?}" OTHER_INCREMENT="${usage_other_increment:-}" PR_BASE="${usage_pr_base?}" BRANCH_PREFIX_INPUT="${usage_branch_prefix:-}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-bump.ts'
