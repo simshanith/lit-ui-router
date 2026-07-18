@@ -55,7 +55,13 @@ run = "node src/steps/release-publish.ts"
 
 [tasks.published_diff]
 description = "Resolve published versions, then run the published-diff check (two turbo invocations: turbo hashes inputs at run startup, so resolve must write before the check's hash computes)"
-run = ["turbo run resolve:published", "turbo run check:published-diff"]
+usage = '''
+flag "--packages <names>" env="PUBLISHED_DIFF_PACKAGES" help="Comma-separated published package names to scope the check; empty = all"
+'''
+run = [
+  "turbo run resolve:published",
+  'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff',
+]
 
 [tasks.publish_check_runs]
 # env: GH_TOKEN, GITHUB_REPOSITORY. Reads .cache/published-diff-summary.json
