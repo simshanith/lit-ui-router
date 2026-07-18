@@ -35,17 +35,16 @@ on:
 env:
   HUSKY: 0
 
-permissions:
-  id-token: write # Required for OIDC trusted publishing to NPM
-  contents: write # Required for creating GitHub releases
-  attestations: write # Required for build provenance attestation
-  artifact-metadata: write
-
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
     # Protected environment adds approval gate before publishing
     environment: publish
+    permissions:
+      id-token: write # Required for OIDC trusted publishing to NPM
+      contents: write # Required for creating GitHub releases
+      attestations: write # Required for build provenance attestation
+      artifact-metadata: write
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
@@ -110,3 +109,16 @@ jobs:
           DRY_RUN: ${{ inputs.dryRun }}
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  published_diff:
+    # Refresh the per-package published-diff check runs now that `latest` has
+    # moved; deliberately unscoped — a full run avoids badge gaps on the fresh
+    # bump-commit head. A failure here should be visible; workflow_dispatch on
+    # Published Diff is the re-nudge.
+    needs: publish_npm
+    permissions:
+      checks: write
+      contents: read
+    uses: ./.github/workflows/published-diff.yml
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

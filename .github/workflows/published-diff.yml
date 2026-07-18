@@ -8,11 +8,15 @@ on:
   push:
     branches:
       - main
-  # release-it pushes the bump commit before npm `latest` moves, so the
-  # push-triggered run sees stale drift; this re-run flips the badge green.
-  workflow_run:
-    workflows: [Publish to NPM]
-    types: [completed]
+  # Called by publish-npm.yml after a successful publish: release-it pushes
+  # the bump commit before npm `latest` moves, so the push-triggered run sees
+  # stale drift; the post-publish call flips the badge green. Calls always
+  # run the full package set.
+  workflow_call:
+    secrets:
+      TURBO_TOKEN:
+        # Remote turbo cache; absent = local cache only.
+        required: false
   workflow_dispatch:
     inputs:
       packages:
@@ -41,9 +45,9 @@ jobs:
       - name: 'Checkout code'
         uses: actions/checkout@v7
         with:
-          # Always main's head: workflow_run contexts point at the triggering
-          # ref, and the badges query main (filter=latest supersedes stale
-          # same-name runs there).
+          # Always main's head: workflow_call inherits the caller's context
+          # (a tag ref from publish-npm), and the badges query main —
+          # filter=latest supersedes stale same-name runs there.
           ref: main
           persist-credentials: false
       - name: Setup mise
@@ -59,6 +63,7 @@ jobs:
         # declared output, so cache replay materializes it too).
         run: pnpm check:published-diff
         env:
+          # Empty on push and workflow_call runs = full set.
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}

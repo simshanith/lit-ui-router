@@ -4,8 +4,6 @@ rules:
     ignore:
       # pull_request_target is deliberate: payload-only title lint, never checks out PR code
       - semantic-pr.yml
-      # workflow_run is deliberate: post-publish re-check, always checks out main, ignores the triggering payload
-      - published-diff.yml
   artipacked:
     ignore:
       # PAT checkout persists by design: release-it pushes the release branch
