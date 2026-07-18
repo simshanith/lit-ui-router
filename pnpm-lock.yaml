@@ -710,6 +710,9 @@ importers:
 
   packages/ui-router-server:
     devDependencies:
+      '@tools/build_and_test':
+        specifier: workspace:*
+        version: link:../../tools/build_and_test
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

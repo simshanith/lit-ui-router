@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "build": "vitepress build .",
+    "codecov:bundle": "wrangler deploy --dry-run --outdir=dist-worker-stats && upload-bundle-stats docs-worker-esm dist-worker-stats --no-manifest",
     "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
@@ -26,6 +27,7 @@
     "vue": "catalog:"
   },
   "devDependencies": {
+    "@tools/build_and_test": "workspace:*",
     "@tools/vue-check": "workspace:*",
     "oxfmt": "catalog:",
     "typescript": "catalog:",

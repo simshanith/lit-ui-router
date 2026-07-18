@@ -16,6 +16,7 @@
     "./vite": "./src/vite.ts"
   },
   "scripts": {
+    "codecov:bundle": "node test/codecov-bundle.ts",
     "format": "oxfmt \"**/*.{ts,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
@@ -24,6 +25,7 @@
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@tools/build_and_test": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "esbuild": "catalog:",
