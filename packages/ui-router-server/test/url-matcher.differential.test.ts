@@ -1,10 +1,14 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { services, UIRouter } from '@uirouter/core';
+import {
+  services,
+  UIRouter,
+  UrlMatcher as CoreUrlMatcher,
+} from '@uirouter/core';
 import type { RawParams } from '@uirouter/core';
 
-import { urlMatcherFactory } from '../src/url-matcher.ts';
+import { UrlMatcher, urlMatcherFactory } from '../src/url-matcher.ts';
 import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 
 // The divergence guard for the standalone extraction: every pattern/url pair
@@ -496,6 +500,41 @@ const formatCases: FormatCase[] = [
     ],
   },
 ];
+
+// Only signs must match: core and the port build different token arrays.
+const sign = (n: number) => (n < 0 ? -1 : n > 0 ? 1 : 0);
+
+const specificityPatterns = [
+  '/a/:y',
+  '/:x/b',
+  '/users/new',
+  '/users/:id',
+  '/users/:id/edit',
+  '/:a/:b',
+  '/files/:path',
+  '/files/shared',
+  '/',
+  '/a',
+  '/a/b/:z',
+  '/a/:m/c',
+  // Search params carry no path weight: '/users/new?q' ties '/users/new'.
+  '/users/new?q',
+  '/users/:id?sort&page',
+];
+
+describe(`differential: UrlMatcher.compare vs @uirouter/core (${specificityPatterns.length} patterns, all pairs)`, () => {
+  for (const left of specificityPatterns) {
+    for (const right of specificityPatterns) {
+      it(`compare('${left}', '${right}')`, () => {
+        const expected = sign(
+          CoreUrlMatcher.compare(coreCompile(left), coreCompile(right)),
+        );
+        const actual = sign(UrlMatcher.compare(compile(left), compile(right)));
+        assert.equal(actual, expected);
+      });
+    }
+  }
+});
 
 const formatComparisons = formatCases.reduce(
   (sum, c) => sum + c.values.length,

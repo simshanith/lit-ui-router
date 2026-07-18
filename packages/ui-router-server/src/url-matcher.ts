@@ -449,6 +449,40 @@ export class UrlMatcher {
   }
 
   /**
+   * Sorts two matchers by static specificity, as core's UrlMatcher.compare:
+   * path tokens compared position-by-position, slash before static text
+   * before a param. Negative means `a` is more specific than `b`.
+   * Single-matcher only: matchers here never `append`.
+   */
+  static compare(a: UrlMatcher, b: UrlMatcher): number {
+    const weightsA = a.#segmentWeights();
+    const weightsB = b.#segmentWeights();
+    const length = Math.max(weightsA.length, weightsB.length);
+    for (let i = 0; i < length; i++) {
+      const cmp = (weightsA[i] ?? 0) - (weightsB[i] ?? 0);
+      if (cmp !== 0) return cmp;
+    }
+    return 0;
+  }
+
+  #weights?: number[];
+
+  // Core's sort weights: slash → 1, static text → 2, param → 3; search
+  // params carry no weight. Memoized, as in core.
+  #segmentWeights(): number[] {
+    if (this.#weights) return this.#weights;
+    const weights: number[] = [];
+    this.#segments.forEach((segment, index) => {
+      for (const piece of segment.split(/(\/)/)) {
+        if (piece === '') continue;
+        weights.push(piece === '/' ? 1 : 2);
+      }
+      if (this.#pathParams[index]) weights.push(3);
+    });
+    return (this.#weights = weights);
+  }
+
+  /**
    * Tests a url path against this matcher.
    *
    * Returns the captured parameter values when the path matches the pattern,

@@ -10,8 +10,8 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { urlMatcherFactory } from './url-matcher.ts';
-import type { UrlMatcher, UrlMatcherCompilerConfig } from './url-matcher.ts';
+import { UrlMatcher, urlMatcherFactory } from './url-matcher.ts';
+import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
 
 /** A state's contribution to the url-addressable route set. */
 export interface RouteDeclaration {
@@ -128,27 +128,23 @@ export interface RouteMatch {
 }
 
 /**
- * Match identity, not just truth: which route's pattern the pathname
- * matched, with the extracted params. Among multiple matches the one with
- * the fewest params wins (static segments beat placeholders, as in the
- * router's own rule ordering); ties go to declaration order. That heuristic
- * approximates core's segment-by-segment static-specificity sort and can
- * diverge from it on pathological overlaps (equal param counts, mixed
- * static/dynamic positions).
+ * Returns which route's pattern the pathname matched, with the extracted
+ * params. The most specific match wins ([[UrlMatcher.compare]]); ties go
+ * to declaration order.
  */
 export function matchRoute(
   routes: CompiledRoute[],
   pathname: string,
 ): RouteMatch | null {
   let best: RouteMatch | null = null;
+  let bestMatcher: UrlMatcher | null = null;
   for (const { name, matcher } of routes) {
     const params = matcher.exec(pathname);
-    if (
-      params !== null &&
-      (best === null ||
-        Object.keys(params).length < Object.keys(best.params).length)
-    ) {
+    if (params === null) continue;
+    // Strict < keeps the earlier declaration on ties.
+    if (bestMatcher === null || UrlMatcher.compare(matcher, bestMatcher) < 0) {
       best = { state: name, params };
+      bestMatcher = matcher;
     }
   }
   return best;
