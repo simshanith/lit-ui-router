@@ -1,6 +1,6 @@
 {
   // tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit
-  "extends": "./tsconfig.build.json",
+  "extends": "./tsconfig.src.json",
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
