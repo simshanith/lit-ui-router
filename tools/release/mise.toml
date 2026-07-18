@@ -53,6 +53,23 @@ run = "node src/steps/release-tag-push.ts"
 description = "Publish the packed tarball to npm and cut the GitHub release"
 run = "node src/steps/release-publish.ts"
 
+[tasks.published_diff_json]
+# env: PUBLISHED_DIFF_PACKAGES (optional scope), TURBO_TOKEN/TURBO_API/
+# TURBO_TEAM (remote cache). Root two-invocation pattern; the check runs
+# directly (not via its turbo task) so --json always materializes — a turbo
+# cache replay would skip the undeclared side-effect file.
+description = "Resolve published versions and write the per-package published-diff summary JSON"
+run = [
+  "turbo run resolve:published",
+  "node src/checks/check-published-diff.ts --json ../../node_modules/.cache/release/published-diff-summary.json",
+]
+
+[tasks.publish_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY. One check run per summarized package on
+# the current HEAD.
+description = "Create per-package published-diff check runs from the summary JSON"
+run = "node src/checks/publish-check-runs.ts ../../node_modules/.cache/release/published-diff-summary.json"
+
 [tasks.bump]
 # env: PACKAGE, INCREMENT, OTHER_INCREMENT, PR_BASE, BRANCH_PREFIX_INPUT,
 # DRY_RUN, GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
