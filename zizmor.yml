@@ -2,7 +2,8 @@
 rules:
   dangerous-triggers:
     ignore:
-      # pull_request_target is deliberate: payload-only title lint, never checks out PR code
+      # pull_request_target is deliberate: payload-only title lint, never checks out PR code;
+      # hardened per the audit's own guidance (main-only branch filter + repository guard)
       - semantic-pr.yml
   artipacked:
     ignore:
