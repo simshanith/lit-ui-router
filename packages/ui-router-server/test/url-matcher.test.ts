@@ -208,6 +208,18 @@ describe('compiled matcher surface', () => {
     assert.ok(Object.isFrozen(matcher.searchParams));
   });
 
+  it('freezes each compiled param (deep, including replace)', () => {
+    const matcher = compile('/x/:id', { params: { id: 'fallback' } });
+    const param = matcher.pathParams[0];
+    assert.ok(Object.isFrozen(param));
+    assert.ok(Object.isFrozen(param.replace));
+    assert.throws(() => {
+      // @ts-expect-error -- readonly; the throw is the point
+      param.squash = true;
+    }, TypeError);
+    assert.deepEqual(exec(matcher, '/x/'), { id: 'fallback' });
+  });
+
   it('rejects mutation of a builtin param type (shared singleton)', () => {
     const matcher = compile('/page/{num:int}');
     const { type } = matcher.pathParams[0];

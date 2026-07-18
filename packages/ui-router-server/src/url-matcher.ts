@@ -280,15 +280,15 @@ const compileParam = (
     isOptional,
     config.defaultSquashPolicy,
   );
-  return {
+  return freeze<CompiledParam>({
     id,
     type: resolveType(declared.type, urlType, isSearch, id),
     isSearch,
     isOptional,
     squash,
-    replace: getReplace(isOptional, squash),
+    replace: freeze(getReplace(isOptional, squash)),
     defaultValue: declared.value,
-  };
+  });
 };
 
 /** The typed value for a decoded input, or the static default when absent (core's Param.value). */
@@ -383,6 +383,8 @@ interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
  * `compile` and consumed by [[exec]], [[format]], and [[compare]].
  * Frozen — treat as immutable: [[compare]] memoizes per object identity,
  * and the functions/regexps inside make it not structuredClone-able.
+ * To associate data with a matcher, use your own identity-keyed WeakMap
+ * (frozen objects are fine as keys).
  */
 export interface CompiledMatcher {
   /** The pattern that was compiled. */
