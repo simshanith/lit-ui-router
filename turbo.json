@@ -68,9 +68,9 @@
       // ^build drops once every package is pass-split
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root", "typecheck:build"]
+      "with": ["//#typecheck:root", "typecheck:src"]
     },
-    "typecheck:build": {
+    "typecheck:src": {
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },

@@ -4,7 +4,7 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
-    // specs are exempt; typecheck:build enforces conformance
+    // specs are exempt; typecheck:src enforces conformance
     "isolatedDeclarations": false,
     "types": ["vitest/globals"]
   },
