@@ -181,6 +181,25 @@ const resolveType = (
   return named;
 };
 
+// An inline '{name:...}' body: a built-in type name, or a raw regexp that
+// adopts the positional default type's semantics.
+const resolveInlineType = (
+  inline: string,
+  isSearch: boolean,
+  caseInsensitive: boolean,
+): ParamType => {
+  if (unsupportedTypes.has(inline))
+    throw new Error(
+      `Param type '${inline}' is not supported by the standalone matcher`,
+    );
+  return (
+    builtinTypes[inline] ?? {
+      ...builtinTypes[isSearch ? 'query' : 'path'],
+      pattern: new RegExp(inline, caseInsensitive ? 'i' : undefined),
+    }
+  );
+};
+
 /** false, true, or the placeholder string: the param's url squash policy. */
 const getSquashPolicy = (
   declared: unknown,
@@ -228,7 +247,7 @@ export interface CompiledParam {
   readonly defaultValue: unknown;
 }
 
-const makeParam = (
+const compileParam = (
   id: string,
   urlType: ParamType | null,
   isSearch: boolean,
@@ -354,12 +373,9 @@ interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
   params: Record<string, unknown>;
 }
 
-const nameValidator = /^\w+([-.]+\w+)*(?:\[\])?$/;
-
 /**
  * A compiled url pattern: inert data produced by [[urlMatcherFactory]]'s
- * `compile` and consumed by the free functions [[exec]], [[format]], and
- * [[compare]] — import only the operations you use.
+ * `compile` and consumed by [[exec]], [[format]], and [[compare]].
  */
 export interface CompiledMatcher {
   /** The pattern that was compiled. */
@@ -373,6 +389,8 @@ export interface CompiledMatcher {
   /** Whether [[exec]] percent-decodes captured values (the factory's decodeParams). */
   readonly decodeParams: boolean;
 }
+
+const nameValidator = /^\w+([-.]+\w+)*(?:\[\])?$/;
 
 const compileMatcher = (
   pattern: string,
@@ -406,18 +424,10 @@ const compileMatcher = (
       throw new Error(
         `Duplicate parameter name '${id}' in pattern '${pattern}'`,
       );
-    let urlType: ParamType | null = null;
-    if (inline) {
-      if (unsupportedTypes.has(inline))
-        throw new Error(
-          `Param type '${inline}' is not supported by the standalone matcher`,
-        );
-      urlType = builtinTypes[inline] ?? {
-        ...builtinTypes[isSearch ? 'query' : 'path'],
-        pattern: new RegExp(inline, config.caseInsensitive ? 'i' : undefined),
-      };
-    }
-    return makeParam(id, urlType, isSearch, config, pattern);
+    const urlType = inline
+      ? resolveInlineType(inline, isSearch, config.caseInsensitive)
+      : null;
+    return compileParam(id, urlType, isSearch, config, pattern);
   };
 
   // Split the path part into static segments separated by param placeholders.
@@ -461,8 +471,8 @@ const compileMatcher = (
 };
 
 // Core's sort weights: slash → 1, static text → 2, param → 3; search
-// params carry no weight. Memoized as in core, but off the data: a WeakMap
-// keyed on the compiled matcher keeps the cache out of its inert surface.
+// params carry no weight. Memoized as in core; the WeakMap keeps the
+// cache off the matcher's inert data.
 const weightsCache = new WeakMap<CompiledMatcher, number[]>();
 
 const segmentWeights = (matcher: CompiledMatcher): number[] => {
