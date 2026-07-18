@@ -7,6 +7,7 @@ import {
   formatReport,
   isCleanDiff,
   renderSummary,
+  scopePackages,
   summarizeResults,
 } from './check-published-diff.core.ts';
 
@@ -185,6 +186,29 @@ describe('formatReport', () => {
   });
 });
 
+describe('scopePackages', () => {
+  const publishable = ['lit-ui-router', 'lit-ui-router-mobx'];
+
+  it('returns all publishable names when the scope is empty or unset', () => {
+    assert.deepEqual(scopePackages(publishable, undefined), publishable);
+    assert.deepEqual(scopePackages(publishable, ''), publishable);
+    assert.deepEqual(scopePackages(publishable, ' , '), publishable);
+  });
+
+  it('filters to the comma-separated scope, whitespace-tolerant', () => {
+    assert.deepEqual(scopePackages(publishable, ' lit-ui-router-mobx '), [
+      'lit-ui-router-mobx',
+    ]);
+  });
+
+  it('throws loudly on names matching no publishable member', () => {
+    assert.throws(
+      () => scopePackages(publishable, 'lit-ui-router,typo-pkg'),
+      /PUBLISHED_DIFF_PACKAGES names no publishable member: typo-pkg/,
+    );
+  });
+});
+
 describe('summarizeResults', () => {
   it('maps every status to counts, published version, and a clean flag', () => {
     assert.deepEqual(
@@ -229,6 +253,8 @@ describe('summarizeResults', () => {
           shipAffecting: 0,
           shipInert: 0,
           clean: true,
+          shipAffectingFiles: [],
+          shipInertFiles: [],
         },
         {
           name: 'lit-ui-router-mobx',
@@ -237,6 +263,8 @@ describe('summarizeResults', () => {
           shipAffecting: 2,
           shipInert: 1,
           clean: false,
+          shipAffectingFiles: ['dist/router-store.js', 'package.json'],
+          shipInertFiles: ['src/router-store.ts'],
         },
         {
           name: 'ui-router-navigation-location-plugin',
@@ -245,6 +273,8 @@ describe('summarizeResults', () => {
           shipAffecting: 0,
           shipInert: 2,
           clean: true,
+          shipAffectingFiles: [],
+          shipInertFiles: ['dist/core.js.map', 'src/core.ts'],
         },
         {
           name: 'ui-router-server',
@@ -253,6 +283,8 @@ describe('summarizeResults', () => {
           shipAffecting: 0,
           shipInert: 0,
           clean: true,
+          shipAffectingFiles: [],
+          shipInertFiles: [],
         },
       ],
     );
@@ -269,6 +301,8 @@ describe('renderSummary', () => {
         shipAffecting: 0,
         shipInert: 0,
         clean: true,
+        shipAffectingFiles: [],
+        shipInertFiles: [],
       },
     ]);
     assert.equal(rendered.endsWith('\n'), true);
@@ -280,6 +314,8 @@ describe('renderSummary', () => {
         shipAffecting: 0,
         shipInert: 0,
         clean: true,
+        shipAffectingFiles: [],
+        shipInertFiles: [],
       },
     ]);
   });

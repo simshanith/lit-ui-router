@@ -42,6 +42,7 @@ import {
   formatReport,
   isCleanDiff,
   renderSummary,
+  scopePackages,
   summarizeResults,
 } from './check-published-diff.core.ts';
 import { pnpmPack } from './pack.ts';
@@ -101,18 +102,24 @@ async function main() {
   );
   await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
-  if (!skipBuild && publishable.length > 0) {
+  // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; empty/unset = all.
+  const scoped = scopePackages(
+    publishable.map(({ name }) => name),
+    process.env.PUBLISHED_DIFF_PACKAGES,
+  );
+  const targets = publishable.filter(({ name }) => scoped.includes(name));
+
+  if (!skipBuild && targets.length > 0) {
     // Bare turbo (mise-provisioned), never through pnpm run — pnpm's relative
     // .bin PATH breaks turbo's child process spawning.
-    await run(
-      'turbo',
-      ['run', ...publishable.map(({ name }) => `${name}#build`)],
-      { cwd: workspaceRoot, maxBuffer: MAX_BUFFER },
-    );
+    await run('turbo', ['run', ...targets.map(({ name }) => `${name}#build`)], {
+      cwd: workspaceRoot,
+      maxBuffer: MAX_BUFFER,
+    });
   }
 
   const results: DiffResult[] = [];
-  for (const { name, dir } of publishable) {
+  for (const { name, dir } of targets) {
     const packageDir = join(workspaceRoot, dir);
     const localVersion = (
       JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8')) as {

@@ -32,6 +32,9 @@
       // inputs into this hash — the packed packages must be devDependencies
       // here (self-guard in the check enforces it).
       // Escape hatch: `turbo run check:published-diff --force`.
+      // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; declared so scoped
+      // and full runs hash separately.
+      "env": ["PUBLISHED_DIFF_PACKAGES"],
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
