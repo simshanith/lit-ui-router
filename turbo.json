@@ -14,7 +14,7 @@
       "outputs": ["dist/**/*.js", "dist/**/*.js.map"]
     },
     "build:types": {
-      // ^chain is ordering propagation only, not a compile input
+      // self-chain to build types transitively
       "dependsOn": ["^build:types"],
       "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },
