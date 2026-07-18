@@ -12,11 +12,18 @@ export type CheckRunPayload = {
   conclusion: 'success' | 'action_required';
   title: string;
   summary: string;
+  /** Only drifting runs set it; success keeps the default run link. */
+  details_url?: string;
 };
 
 /** The exact run name the README badge nameFilter must match. */
 export function checkRunName(packageName: string): string {
   return `published-diff (${packageName})`;
+}
+
+/** Where a drifting run's Resolve button lands: the release workflow's page. */
+export function releaseWorkflowUrl(repo: string): string {
+  return `https://github.com/${repo}/actions/workflows/bump-version.yml`;
 }
 
 /** Collapsed ship-inert listing appended to either verdict's summary. */
@@ -34,7 +41,10 @@ function inertDetails({ shipInert, shipInertFiles }: PackageSummary): string[] {
 }
 
 /** One package's summary → its Checks API payload. */
-export function toCheckRun(summary: PackageSummary): CheckRunPayload {
+export function toCheckRun(
+  summary: PackageSummary,
+  repo: string,
+): CheckRunPayload {
   const name = checkRunName(summary.name);
   if (summary.version === null) {
     return {
@@ -46,16 +56,21 @@ export function toCheckRun(summary: PackageSummary): CheckRunPayload {
   }
   const spec = `${summary.name}@${summary.version}`;
   if (summary.shipAffecting > 0) {
+    const releaseUrl = releaseWorkflowUrl(repo);
     return {
       name,
       conclusion: 'action_required',
       title: `unreleased changes vs ${summary.version} (${summary.shipAffecting} shipped files differ)`,
       summary: [
+        // workflow_dispatch inputs can't be URL-prefilled; the user picks the package there.
+        `To resolve: [release ${summary.name} via the bump-version workflow](${releaseUrl}) — select the package in its Run workflow menu.`,
+        '',
         `A publish from main would ship ${summary.shipAffecting} file(s) that differ from ${spec}:`,
         '',
         ...summary.shipAffectingFiles.map((file) => `- \`${file}\``),
         ...inertDetails(summary),
       ].join('\n'),
+      details_url: releaseUrl,
     };
   }
   return {
@@ -86,6 +101,9 @@ export function checkRunApiArgs(
     'status=completed',
     '-f',
     `conclusion=${payload.conclusion}`,
+    ...(payload.details_url === undefined
+      ? []
+      : ['-f', `details_url=${payload.details_url}`]),
     '-f',
     `output[title]=${payload.title}`,
     '-f',
