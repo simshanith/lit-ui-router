@@ -54,10 +54,7 @@ description = "Publish the packed tarball to npm and cut the GitHub release"
 run = "node src/steps/release-publish.ts"
 
 [tasks.published_diff]
-# env: PUBLISHED_DIFF_PACKAGES (optional scope), TURBO_TOKEN/TURBO_API/
-# TURBO_TEAM (remote cache). Pure convention wrapper over the root script's
-# two-invocation turbo contract — no extra plumbing.
-description = "Resolve published versions, then run the cached published-diff check"
+description = "Resolve published versions, then run the published-diff check (two turbo invocations: turbo hashes inputs at run startup, so resolve must write before the check's hash computes)"
 run = ["turbo run resolve:published", "turbo run check:published-diff"]
 
 [tasks.publish_check_runs]
