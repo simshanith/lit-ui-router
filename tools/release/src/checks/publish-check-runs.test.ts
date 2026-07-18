@@ -10,8 +10,7 @@ import {
 } from './publish-check-runs.core.ts';
 
 const REPO = 'simshanith/lit-ui-router';
-const RELEASE_URL =
-  'https://github.com/simshanith/lit-ui-router/actions/workflows/bump-version.yml';
+const RELEASE_URL = `https://github.com/${REPO}/actions/workflows/bump-version.yml`;
 
 const clean: PackageSummary = {
   name: 'lit-ui-router-mobx',
