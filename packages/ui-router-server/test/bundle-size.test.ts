@@ -1,16 +1,18 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 import { gzipSync } from 'node:zlib';
 
-import { bundleEntry, bundlers } from './bundle.ts';
-
-// CloudFront Functions rejects functions over 10,240 bytes; the matcher
-// tier's contract is fitting under that ceiling with zero runtime deps.
-const CFF_CEILING = 10_240;
+import type { BundleOptions, Bundler } from '@tools/bundle-probe';
+import { bundleEntry as probe, bundlers } from '@tools/bundle-probe';
 
 // Peers are the consumer's own installs; externalizing them prices only this
 // package's code in the reported entries. The matcher is bundled with NO
-// externals: its budget must hold with nothing supplied from outside.
+// externals: its dependency-free claim must hold with nothing supplied from
+// outside. Size is governed by the codecov bundle_analysis check, so entry
+// sizes are reported as diagnostics, not gated. (History: the matcher once
+// targeted the 10,240 B CloudFront Functions ceiling; that adapter line is
+// abandoned and the number survives only as context in the diagnostics.)
 const PEERS = ['@uirouter/core', 'hono'];
 const REPORTED = [
   'index.ts',
@@ -22,27 +24,28 @@ const REPORTED = [
   'vite.ts',
 ];
 
+const bundleEntry = (
+  entry: string,
+  bundler: Bundler,
+  options: BundleOptions,
+): ReturnType<typeof probe> =>
+  probe(
+    fileURLToPath(new URL(`../src/${entry}`, import.meta.url)),
+    bundler,
+    options,
+  );
+
 const gzipBytes = (code: string): number => gzipSync(code).byteLength;
 
 for (const bundler of bundlers) {
   describe(`bundle size (${bundler})`, () => {
-    it('fits the matcher tier under the CloudFront Functions ceiling', async (t) => {
-      const { entry } = await bundleEntry('url-matcher.ts', bundler, {
+    it('bundles the matcher tier from zero node_modules inputs', async (t) => {
+      const { entry, inputs } = await bundleEntry('url-matcher.ts', bundler, {
         minify: true,
       });
       t.diagnostic(
-        `url-matcher.ts: ${entry.bytes} B minified, ${gzipBytes(entry.code)} B gzip (ceiling ${CFF_CEILING} B)`,
+        `url-matcher.ts: ${entry.bytes} B minified, ${gzipBytes(entry.code)} B gzip`,
       );
-      assert.ok(
-        entry.bytes <= CFF_CEILING,
-        `matcher is ${entry.bytes} B minified; the CloudFront Functions ceiling is ${CFF_CEILING} B`,
-      );
-    });
-
-    it('bundles the matcher tier from zero node_modules inputs', async () => {
-      const { inputs } = await bundleEntry('url-matcher.ts', bundler, {
-        minify: true,
-      });
       const deps = inputs.filter((input) => input.includes('node_modules'));
       assert.deepEqual(deps, [], 'matcher tier pulled in dependencies');
     });

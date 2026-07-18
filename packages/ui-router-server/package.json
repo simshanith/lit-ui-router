@@ -16,7 +16,7 @@
     "./vite": "./src/vite.ts"
   },
   "scripts": {
-    "codecov:bundle": "node test/codecov-bundle.ts",
+    "codecov:bundle": "upload-entry-bundles ui-router-server matcher=src/url-matcher.ts src/index.ts src/redirects.ts src/simulate.ts src/connect.ts src/fetch.ts src/hono.ts src/vite.ts",
     "format": "oxfmt \"**/*.{ts,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
@@ -25,13 +25,11 @@
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/build_and_test": "workspace:*",
+    "@tools/bundle-probe": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
-    "esbuild": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
-    "rolldown": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   },

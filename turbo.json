@@ -91,8 +91,12 @@
         "lint",
         "typecheck",
         "format:check",
+        "check:bundle",
         "codecov:bundle"
       ]
+    },
+    "check:bundle": {
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/bundle-probe/src/**"]
     },
     "codecov:bundle": {
       "dependsOn": ["build"],

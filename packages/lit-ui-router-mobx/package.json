@@ -41,6 +41,8 @@
   "scripts": {
     "build": "tsc -p tsconfig.build.json",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "check-bundle-inputs src/index.ts",
+    "codecov:bundle": "upload-entry-bundles lit-ui-router-mobx src/index.ts",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/lit-ui-router-mobx && typedoc",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
@@ -52,6 +54,7 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
+    "@tools/bundle-probe": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",

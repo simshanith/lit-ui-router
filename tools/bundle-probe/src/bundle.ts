@@ -1,10 +1,8 @@
-import { fileURLToPath } from 'node:url';
-
 import { build } from 'esbuild';
 import { rolldown } from 'rolldown';
 
-// One bundling seam for every probe: both legs normalize to this shape so the
-// treeshake and size suites assert the same contract under both bundlers.
+// One bundling seam for every probe: both legs normalize to this shape so
+// callers assert the same contract under both bundlers' semantics.
 export type Chunk = {
   name: string;
   code: string;
@@ -16,15 +14,24 @@ export type Chunk = {
 
 export type BundleResult = { entry: Chunk; chunks: Chunk[]; inputs: string[] };
 
-export type BundleOptions = { minify?: boolean; external?: string[] };
+// `external` takes bare package names; each leg widens them to subpaths.
+// `annotations: false` ignores sideEffects/@__PURE__ hints while still
+// shaking unused code — package sideEffects globs name dist/*.js, so probing
+// src/*.ts would otherwise drop side-effect modules (and any undeclared
+// import hiding in them).
+export type BundleOptions = {
+  minify?: boolean;
+  external?: string[];
+  annotations?: boolean;
+};
 
 export const bundlers = ['esbuild', 'rolldown'] as const;
 export type Bundler = (typeof bundlers)[number];
 
-const src = (entry: string): string =>
-  fileURLToPath(new URL(`../src/${entry}`, import.meta.url));
-
 const basename = (path: string): string => path.split('/').pop()!;
+
+const escapeRegExp = (text: string): string =>
+  text.replace(/[\\^$.*+?()[\]{}|]/g, '\\$&');
 
 const finish = (
   chunks: Chunk[],
@@ -36,12 +43,15 @@ const finish = (
   return { entry, chunks, inputs };
 };
 
+const entryChunkName = (entryPath: string): string =>
+  basename(entryPath).replace(/\.[^.]+$/, '.js');
+
 const esbuildBundle = async (
-  entry: string,
-  { minify = false, external = [] }: BundleOptions,
+  entryPath: string,
+  { minify = false, external = [], annotations = true }: BundleOptions,
 ): Promise<BundleResult> => {
   const result = await build({
-    entryPoints: [src(entry)],
+    entryPoints: [entryPath],
     bundle: true,
     format: 'esm',
     splitting: true,
@@ -49,7 +59,8 @@ const esbuildBundle = async (
     write: false,
     metafile: true,
     minify,
-    external,
+    external: external.flatMap((name) => [name, `${name}/*`]),
+    ignoreAnnotations: !annotations,
     logLevel: 'silent',
   });
   const outputs = Object.entries(result.metafile.outputs);
@@ -73,17 +84,20 @@ const esbuildBundle = async (
   return finish(
     chunks,
     Object.keys(result.metafile.inputs),
-    entry.replace(/\.ts$/, '.js'),
+    entryChunkName(entryPath),
   );
 };
 
 const rolldownBundle = async (
-  entry: string,
-  { minify = false, external = [] }: BundleOptions,
+  entryPath: string,
+  { minify = false, external = [], annotations = true }: BundleOptions,
 ): Promise<BundleResult> => {
   const bundle = await rolldown({
-    input: src(entry),
-    external,
+    input: entryPath,
+    external: external.map((name) => new RegExp(`^${escapeRegExp(name)}(/|$)`)),
+    // treeshake:false, not a moduleSideEffects override: rolldown 1.2 still
+    // honors the package sideEffects manifest under any treeshake object.
+    treeshake: annotations,
     logLevel: 'silent',
   });
   try {
@@ -108,17 +122,17 @@ const rolldownBundle = async (
         dynamicImports: [...item.dynamicImports],
       });
     }
-    return finish(chunks, [...inputs], entry.replace(/\.ts$/, '.js'));
+    return finish(chunks, [...inputs], entryChunkName(entryPath));
   } finally {
     await bundle.close();
   }
 };
 
 export const bundleEntry = (
-  entry: string,
+  entryPath: string,
   bundler: Bundler,
   options: BundleOptions = {},
 ): Promise<BundleResult> =>
   bundler === 'esbuild'
-    ? esbuildBundle(entry, options)
-    : rolldownBundle(entry, options);
+    ? esbuildBundle(entryPath, options)
+    : rolldownBundle(entryPath, options);

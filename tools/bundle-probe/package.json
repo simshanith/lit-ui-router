@@ -1,0 +1,28 @@
+{
+  "name": "@tools/bundle-probe",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Dual esbuild/rolldown bundling seam for bundle invariants: declared-deps-only entry checks and per-entry codecov bundle stats",
+  "bin": {
+    "check-bundle-inputs": "./src/check-bundle-inputs.ts",
+    "upload-entry-bundles": "./src/upload-entry-bundles.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/bundle.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@tools/build_and_test": "workspace:*",
+    "@types/node": "catalog:",
+    "esbuild": "catalog:",
+    "oxfmt": "catalog:",
+    "rolldown": "catalog:",
+    "typescript": "catalog:"
+  }
+}

@@ -1,8 +1,15 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
 
-import type { Chunk } from './bundle.ts';
-import { bundleEntry, bundlers } from './bundle.ts';
+import type { Chunk } from '@tools/bundle-probe';
+import { bundleEntry as probe, bundlers } from '@tools/bundle-probe';
+
+const bundleEntry = (
+  entry: string,
+  bundler: (typeof bundlers)[number],
+): ReturnType<typeof probe> =>
+  probe(fileURLToPath(new URL(`../src/${entry}`, import.meta.url)), bundler);
 
 // The package's thesis, mechanically enforced under both bundlers' differing
 // tree-shake semantics: importing the root with only matcher-tier mounts must
