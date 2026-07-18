@@ -1,0 +1,66 @@
+# Published-diff check runs on main's head — one per package, named
+# "published-diff (<pkg>)"; the README badges read them via shields'
+# check-runs endpoint. action_required renders orange = a release is owed,
+# never a CI failure, so this job succeeds whether or not drift exists.
+name: Published Diff
+
+on:
+  push:
+    branches:
+      - main
+  # release-it pushes the bump commit before npm `latest` moves, so the
+  # push-triggered run sees stale drift; this re-run flips the badge green.
+  workflow_run:
+    workflows: [Publish to NPM]
+    types: [completed]
+  workflow_dispatch:
+    inputs:
+      packages:
+        description: 'Comma-separated published package names to re-check (re-nudge tool: a scoped run creates check runs only for these, so on a head with no prior full run the other badges show nothing until the next push/full run). Empty = all.'
+        required: false
+        default: ''
+        type: string
+
+# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
+env:
+  HUSKY: 0
+
+# One run at a time, newest wins; every run targets main's current head.
+concurrency:
+  group: ${{ github.workflow }}
+  cancel-in-progress: true
+
+jobs:
+  published_diff:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      checks: write
+      contents: read
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          # Always main's head: workflow_run contexts point at the triggering
+          # ref, and the badges query main (filter=latest supersedes stale
+          # same-name runs there).
+          ref: main
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Install dependencies
+        run: mise run setup
+        env:
+          # Nothing here runs Cypress; skip the binary download.
+          CYPRESS_INSTALL_BINARY: '0'
+      - name: Published diff summary
+        run: mise run //tools/release:published_diff_json
+        env:
+          PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Publish check runs
+        run: mise run //tools/release:publish_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
