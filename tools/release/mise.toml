@@ -77,6 +77,23 @@ flag "--dry-run" help="release-it --dry-run: no npm publish, no GitHub release" 
 '''
 run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-publish.ts'
 
+[tasks.published_diff]
+description = "Resolve published versions, then run the published-diff check (two turbo invocations: turbo hashes inputs at run startup, so resolve must write before the check's hash computes)"
+usage = '''
+flag "--packages <names>" env="PUBLISHED_DIFF_PACKAGES" help="Comma-separated published package names to scope the check; empty = all"
+'''
+run = [
+  "turbo run resolve:published",
+  'PUBLISHED_DIFF_PACKAGES="${usage_packages:-}" turbo run check:published-diff',
+]
+
+[tasks.publish_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY. Reads .cache/published-diff-summary.json
+# (the check:published-diff task's output); one check run per package on the
+# current HEAD.
+description = "Create per-package published-diff check runs from the summary JSON"
+run = "node src/checks/publish-check-runs.ts"
+
 [tasks.bump]
 # env: GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
 description = "Compute the bumped version, branch, commit, push, and open the release PR"

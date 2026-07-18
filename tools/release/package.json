@@ -17,6 +17,9 @@
   "devDependencies": {
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
-    "typescript": "catalog:"
+    "lit-ui-router": "workspace:*",
+    "lit-ui-router-mobx": "workspace:*",
+    "typescript": "catalog:",
+    "ui-router-navigation-location-plugin": "workspace:*"
   }
 }

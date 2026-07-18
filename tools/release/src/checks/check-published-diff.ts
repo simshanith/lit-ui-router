@@ -17,7 +17,10 @@
 //
 // Run `turbo run build` first so dist is current; `--strict` turns drift into
 // a failing exit (default is an informational report — drift usually means "a
-// release is owed", not "the tree is broken").
+// release is owed", not "the tree is broken"). The per-package machine
+// verdict (see summarizeResults) always lands at .cache/
+// published-diff-summary.json — the turbo task's output; `--json <path>`
+// overrides the destination ad hoc.
 //
 // Registry state arrives through published-versions.json, written by
 // resolve-published.ts just before this runs (the root script chains them) —
@@ -28,11 +31,12 @@
 // unit-tested ./check-published-diff.core.ts.
 
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { publishedDiffSummaryPath } from './cache-paths.ts';
 import { STRIPPED_MANIFEST_FIELDS } from './check-pack.core.ts';
 import {
   changedFiles,
@@ -40,9 +44,13 @@ import {
   type DiffResult,
   formatReport,
   isCleanDiff,
+  renderSummary,
+  scopePackages,
+  summarizeResults,
 } from './check-published-diff.core.ts';
 import { pnpmPack } from './pack.ts';
 import { readPublishedVersions } from './published-versions.ts';
+import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
@@ -81,6 +89,14 @@ async function diffAgainstPublished(
 async function main() {
   const strict = process.argv.includes('--strict');
   const skipBuild = process.argv.includes('--no-build');
+  // The summary always lands at the canonical .cache path (the turbo task's
+  // declared output); --json is an ad-hoc override only.
+  const jsonFlag = process.argv.indexOf('--json');
+  const jsonOverride = jsonFlag === -1 ? undefined : process.argv[jsonFlag + 1];
+  if (jsonFlag !== -1 && (!jsonOverride || jsonOverride.startsWith('--'))) {
+    throw new Error('--json requires a file path argument');
+  }
+  const jsonPath = jsonOverride ?? publishedDiffSummaryPath;
 
   const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
@@ -90,19 +106,26 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
+  await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
-  if (!skipBuild && publishable.length > 0) {
+  // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; empty/unset = all.
+  const scoped = scopePackages(
+    publishable.map(({ name }) => name),
+    process.env.PUBLISHED_DIFF_PACKAGES,
+  );
+  const targets = publishable.filter(({ name }) => scoped.includes(name));
+
+  if (!skipBuild && targets.length > 0) {
     // Bare turbo (mise-provisioned), never through pnpm run — pnpm's relative
     // .bin PATH breaks turbo's child process spawning.
-    await run(
-      'turbo',
-      ['run', ...publishable.map(({ name }) => `${name}#build`)],
-      { cwd: workspaceRoot, maxBuffer: MAX_BUFFER },
-    );
+    await run('turbo', ['run', ...targets.map(({ name }) => `${name}#build`)], {
+      cwd: workspaceRoot,
+      maxBuffer: MAX_BUFFER,
+    });
   }
 
   const results: DiffResult[] = [];
-  for (const { name, dir } of publishable) {
+  for (const { name, dir } of targets) {
     const packageDir = join(workspaceRoot, dir);
     const localVersion = (
       JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8')) as {
@@ -135,6 +158,9 @@ async function main() {
       shipInertFiles: shipInert,
     });
   }
+
+  await mkdir(dirname(jsonPath), { recursive: true });
+  await writeFile(jsonPath, renderSummary(summarizeResults(results)));
 
   const { ok, text } = formatReport(results, { strict });
   (ok ? console.log : console.error)(text);

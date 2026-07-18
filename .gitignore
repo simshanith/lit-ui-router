@@ -42,6 +42,9 @@ certs/
 .turbo
 .claude
 
+# package-local resolved-state caches (e.g. tools/release/.cache)
+.cache/
+
 lit-ui-router-*.tgz
 **/specs/__screenshots__
 coverage

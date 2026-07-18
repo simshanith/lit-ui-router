@@ -64,6 +64,60 @@ export type DiffResult = {
   shipInertFiles?: string[];
 };
 
+/** Filter publishable names to a comma-separated scope; empty/unset = all, unknown names throw. */
+export function scopePackages(
+  publishable: string[],
+  scope: string | undefined,
+): string[] {
+  const requested = (scope ?? '')
+    .split(',')
+    .map((name) => name.trim())
+    .filter(Boolean);
+  if (requested.length === 0) return publishable;
+  const unknown = requested.filter((name) => !publishable.includes(name));
+  if (unknown.length > 0) {
+    throw new Error(
+      `PUBLISHED_DIFF_PACKAGES names no publishable member: ${unknown.join(', ')} — publishable: ${publishable.join(', ')}`,
+    );
+  }
+  return publishable.filter((name) => requested.includes(name));
+}
+
+/** Per-package machine verdict; `version` is the published latest (null when unpublished). */
+export type PackageSummary = {
+  name: string;
+  dir: string;
+  version: string | null;
+  shipAffecting: number;
+  shipInert: number;
+  clean: boolean;
+  shipAffectingFiles: string[];
+  shipInertFiles: string[];
+};
+
+/** Shape results for the --json output; `clean` = no ship-affecting drift. */
+export function summarizeResults(results: DiffResult[]): PackageSummary[] {
+  return results.map(({ name, dir, latest, status, files, shipInertFiles }) => {
+    const shipAffectingFiles = status === 'drift' ? (files ?? []) : [];
+    const inert = shipInertFiles ?? [];
+    return {
+      name,
+      dir,
+      version: latest ?? null,
+      shipAffecting: shipAffectingFiles.length,
+      shipInert: inert.length,
+      clean: status !== 'drift',
+      shipAffectingFiles,
+      shipInertFiles: inert,
+    };
+  });
+}
+
+/** Canonical --json bytes: 2-space indent, trailing newline. */
+export function renderSummary(summaries: PackageSummary[]): string {
+  return `${JSON.stringify(summaries, null, 2)}\n`;
+}
+
 export type ReportOptions = {
   /** When true, drift fails the report instead of merely being listed. */
   strict?: boolean;

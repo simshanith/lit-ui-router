@@ -810,9 +810,18 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      lit-ui-router:
+        specifier: workspace:*
+        version: link:../../packages/lit-ui-router
+      lit-ui-router-mobx:
+        specifier: workspace:*
+        version: link:../../packages/lit-ui-router-mobx
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      ui-router-navigation-location-plugin:
+        specifier: workspace:*
+        version: link:../../packages/navigation-location-plugin
 
   tools/shared:
     devDependencies:
