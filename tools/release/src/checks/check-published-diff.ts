@@ -17,8 +17,10 @@
 //
 // Run `turbo run build` first so dist is current; `--strict` turns drift into
 // a failing exit (default is an informational report — drift usually means "a
-// release is owed", not "the tree is broken"). `--json <path>` additionally
-// writes the per-package machine verdict (see summarizeResults).
+// release is owed", not "the tree is broken"). The per-package machine
+// verdict (see summarizeResults) always lands at .cache/
+// published-diff-summary.json — the turbo task's output; `--json <path>`
+// overrides the destination ad hoc.
 //
 // Registry state arrives through published-versions.json, written by
 // resolve-published.ts just before this runs (the root script chains them) —
@@ -29,11 +31,12 @@
 // unit-tested ./check-published-diff.core.ts.
 
 import { execFile } from 'node:child_process';
-import { mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { publishedDiffSummaryPath } from './cache-paths.ts';
 import { STRIPPED_MANIFEST_FIELDS } from './check-pack.core.ts';
 import {
   changedFiles,
@@ -86,11 +89,14 @@ async function diffAgainstPublished(
 async function main() {
   const strict = process.argv.includes('--strict');
   const skipBuild = process.argv.includes('--no-build');
+  // The summary always lands at the canonical .cache path (the turbo task's
+  // declared output); --json is an ad-hoc override only.
   const jsonFlag = process.argv.indexOf('--json');
-  const jsonPath = jsonFlag === -1 ? undefined : process.argv[jsonFlag + 1];
-  if (jsonFlag !== -1 && (!jsonPath || jsonPath.startsWith('--'))) {
+  const jsonOverride = jsonFlag === -1 ? undefined : process.argv[jsonFlag + 1];
+  if (jsonFlag !== -1 && (!jsonOverride || jsonOverride.startsWith('--'))) {
     throw new Error('--json requires a file path argument');
   }
+  const jsonPath = jsonOverride ?? publishedDiffSummaryPath;
 
   const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
@@ -153,8 +159,8 @@ async function main() {
     });
   }
 
-  if (jsonPath)
-    await writeFile(jsonPath, renderSummary(summarizeResults(results)));
+  await mkdir(dirname(jsonPath), { recursive: true });
+  await writeFile(jsonPath, renderSummary(summarizeResults(results)));
 
   const { ok, text } = formatReport(results, { strict });
   (ok ? console.log : console.error)(text);
