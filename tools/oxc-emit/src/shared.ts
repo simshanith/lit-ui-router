@@ -1,6 +1,4 @@
-// Shared walk for the pass bins, from the consuming package's root.
-import { readdirSync } from 'node:fs';
-import { join } from 'node:path';
+import { globSync } from 'node:fs';
 
 export const SRC = 'src';
 export const OUT = 'dist';
@@ -11,15 +9,9 @@ export const fail = (file: string, errors: { message: string }[]): never => {
   );
 };
 
+// From the consuming package's root; excludes mirror its tsconfig.build.
 export function publishableSources(): string[] {
-  return readdirSync(SRC, { recursive: true, withFileTypes: true })
-    .filter((entry) => entry.isFile())
-    .map((entry) => join(entry.parentPath, entry.name))
-    .filter(
-      (file) =>
-        file.endsWith('.ts') &&
-        !file.endsWith('.spec.ts') &&
-        // test-only helpers; mirrors the packages' tsconfig.build excludes
-        !file.startsWith(join(SRC, 'specs')),
-    );
+  return globSync(`${SRC}/**/*.ts`, {
+    exclude: [`${SRC}/**/*.spec.ts`, `${SRC}/specs/**`],
+  });
 }
