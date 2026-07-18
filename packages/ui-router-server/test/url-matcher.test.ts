@@ -199,4 +199,34 @@ describe('compiled matcher surface', () => {
     const matcher = compile('/user/:id');
     assert.equal(matcher.pattern, '/user/:id');
   });
+
+  it('freezes the compiled matcher and its arrays', () => {
+    const matcher = compile('/user/:id?q');
+    assert.ok(Object.isFrozen(matcher));
+    assert.ok(Object.isFrozen(matcher.segments));
+    assert.ok(Object.isFrozen(matcher.pathParams));
+    assert.ok(Object.isFrozen(matcher.searchParams));
+  });
+
+  it('rejects mutation of a builtin param type (shared singleton)', () => {
+    const matcher = compile('/page/{num:int}');
+    const { type } = matcher.pathParams[0];
+    assert.throws(() => {
+      // @ts-expect-error -- readonly; the throw is the point
+      type.decode = () => 'poisoned';
+    }, TypeError);
+  });
+
+  it('cannot poison a matcher compiled after a mutation attempt', () => {
+    const first = compile('/a/{num:int}');
+    try {
+      // @ts-expect-error -- readonly; sloppy-mode callers no-op instead
+      first.pathParams[0].type.decode = () => 'poisoned';
+    } catch {
+      // strict mode: the assignment throws; either way the singleton is intact
+    }
+    const second = compile('/b/{num:int}');
+    assert.deepEqual(exec(second, '/b/7'), { num: 7 });
+    assert.deepEqual(exec(first, '/a/7'), { num: 7 });
+  });
 });

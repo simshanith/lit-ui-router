@@ -41,14 +41,16 @@ import type {
  */
 export interface ParamType
   extends
-    Pick<ParamTypeDefinition, 'is' | 'decode' | 'raw'>,
-    Required<Pick<ParamTypeDefinition, 'pattern'>> {
-  name: string;
+    Readonly<Pick<ParamTypeDefinition, 'is' | 'decode' | 'raw'>>,
+    Readonly<Required<Pick<ParamTypeDefinition, 'pattern'>>> {
+  readonly name: string;
   /** Relaxation vs core: may return null/undefined, which format() renders as an absent value (core's built-ins do the same at runtime). */
-  encode?: (val: unknown) => string | string[] | null | undefined;
+  readonly encode?: (val: unknown) => string | string[] | null | undefined;
   /** Relaxation vs core: optional here (core's class always carries one). */
-  equals?: ParamTypeDefinition['equals'];
+  readonly equals?: ParamTypeDefinition['equals'];
 }
+
+const { freeze } = Object;
 
 // Core's makeDefaultType encode: stringly, null/undefined passed through.
 const valToString = (val: unknown): string | null | undefined =>
@@ -79,12 +81,15 @@ const dateCapture = /([0-9]{4})-(0[1-9]|1[0-2])-(0[1-9]|[1-2][0-9]|3[0-1])/;
 const isDate = (val: unknown): val is Date =>
   val instanceof Date && !Number.isNaN(val.valueOf());
 
-/** The ui-router built-in types, minus json/hash/any (rejected at compile). */
+/**
+ * The ui-router built-in types, minus json/hash/any (rejected at compile).
+ * Frozen: every compiled matcher shares these singletons.
+ */
 const builtinTypes: Record<string, ParamType> = {
-  string: { ...stringBase, name: 'string', pattern: /.*/ },
-  path: { ...stringBase, name: 'path', pattern: /[^/]*/ },
-  query: { ...stringBase, name: 'query', pattern: /.*/ },
-  int: {
+  string: freeze({ ...stringBase, name: 'string', pattern: /.*/ }),
+  path: freeze({ ...stringBase, name: 'path', pattern: /[^/]*/ }),
+  query: freeze({ ...stringBase, name: 'query', pattern: /.*/ }),
+  int: freeze({
     name: 'int',
     pattern: /-?\d+/,
     // Only a number can strict-equal parseInt of its own string form.
@@ -92,16 +97,16 @@ const builtinTypes: Record<string, ParamType> = {
       typeof val === 'number' && decodeInt(val.toString()) === val,
     decode: decodeInt,
     encode: valToString,
-  },
-  bool: {
+  }),
+  bool: freeze({
     name: 'bool',
     pattern: /0|1/,
     is: (val: unknown) => typeof val === 'boolean',
     decode: (val: string) => decodeInt(val) !== 0,
     // Truthiness, as upstream ((val && 1) || 0) — undefined encodes to '0'.
     encode: (val: unknown) => (val ? '1' : '0'),
-  },
-  date: {
+  }),
+  date: freeze({
     name: 'date',
     pattern: /[0-9]{4}-(?:0[1-9]|1[0-2])-(?:0[1-9]|[1-2][0-9]|3[0-1])/,
     is: isDate,
@@ -122,7 +127,7 @@ const builtinTypes: Record<string, ParamType> = {
       (['getFullYear', 'getMonth', 'getDate'] as const).every(
         (fn) => (l as Date)[fn]() === (r as Date)[fn](),
       ),
-  },
+  }),
 };
 
 // Upstream registers these, but they only mean something with url building
@@ -376,6 +381,8 @@ interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
 /**
  * A compiled url pattern: inert data produced by [[urlMatcherFactory]]'s
  * `compile` and consumed by [[exec]], [[format]], and [[compare]].
+ * Frozen — treat as immutable: [[compare]] memoizes per object identity,
+ * and the functions/regexps inside make it not structuredClone-able.
  */
 export interface CompiledMatcher {
   /** The pattern that was compiled. */
@@ -457,17 +464,17 @@ const compileMatcher = (
   compiled.push(quoteRegExp(segment));
   segments.push(segment);
 
-  return {
+  return freeze({
     pattern,
     regexp: new RegExp(
       `^${compiled.join('')}${config.strict ? '' : '/?'}$`,
       config.caseInsensitive ? 'i' : undefined,
     ),
-    segments,
-    pathParams: params.filter((param) => !param.isSearch),
-    searchParams: params.filter((param) => param.isSearch),
+    segments: freeze(segments),
+    pathParams: freeze(params.filter((param) => !param.isSearch)),
+    searchParams: freeze(params.filter((param) => param.isSearch)),
     decodeParams: config.decodeParams,
-  };
+  });
 };
 
 // Core's sort weights: slash → 1, static text → 2, param → 3; search
