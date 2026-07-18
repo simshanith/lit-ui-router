@@ -42,8 +42,8 @@ if (!process.env.CODECOV_TOKEN) {
 // is absent from its own emit list and falls out automatically.
 // `buildDir` is relative to the cwd, but a bare relative import specifier
 // resolves against this module — hence the file URL.
-let emitted: Set<string> | null = null;
-if (!noManifest) {
+const readEmittedAssets = async (): Promise<Set<string> | null> => {
+  if (noManifest) return null;
   const manifestPath = path.resolve(buildDir, '.vite', 'manifest.json');
   let manifest: Manifest;
   try {
@@ -61,13 +61,23 @@ if (!noManifest) {
     );
     process.exit(1);
   }
-  emitted = new Set(['index.html']);
+  const emitted = new Set(['index.html']);
   for (const entry of Object.values(manifest)) {
     emitted.add(entry.file);
     for (const file of entry.css ?? []) emitted.add(file);
     for (const file of entry.assets ?? []) emitted.add(file);
   }
-}
+  return emitted;
+};
+
+const emitted = await readEmittedAssets();
+
+// Manifest membership when a manifest describes the dir; manifest-less mode
+// ships everything but sourcemaps and wrangler's outdir README.
+const isReportable = (name: string): boolean => {
+  if (emitted) return emitted.has(name);
+  return !name.endsWith('.map') && name !== 'README.md';
+};
 
 let uploaded: UploadedAsset[] = [];
 
@@ -89,9 +99,7 @@ try {
       // uploaded payload and the summary cannot drift.
       beforeReportUpload: (report) => {
         report.assets = report.assets?.filter((asset) =>
-          emitted
-            ? emitted.has(asset.name)
-            : !asset.name.endsWith('.map') && asset.name !== 'README.md',
+          isReportable(asset.name),
         );
         uploaded = report.assets ?? [];
         return Promise.resolve(report);

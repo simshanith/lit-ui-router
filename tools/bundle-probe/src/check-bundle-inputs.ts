@@ -27,13 +27,12 @@ for (const { label, file } of entries) {
         !input.startsWith('\0') &&
         !path.resolve(packageDir, input).startsWith(packageDir + path.sep),
     );
-    if (outside.length > 0) {
-      failed = true;
-      console.error(
-        `[bundle-probe] ${name} ${label} (${bundler}): inputs outside the package — undeclared dependency?`,
-      );
-      for (const input of outside) console.error(`  ${input}`);
-    }
+    if (outside.length === 0) continue;
+    failed = true;
+    console.error(
+      `[bundle-probe] ${name} ${label} (${bundler}): inputs outside the package — undeclared dependency?`,
+    );
+    for (const input of outside) console.error(`  ${input}`);
   }
 }
 
