@@ -58,10 +58,7 @@ jobs:
           # Nothing here runs Cypress; skip the binary download.
           CYPRESS_INSTALL_BINARY: '0'
       - name: Published diff
-        # Root two-invocation script; the check always writes its summary to
-        # tools/release/.cache/published-diff-summary.json (the turbo task's
-        # declared output, so cache replay materializes it too).
-        run: pnpm check:published-diff
+        run: mise run //tools/release:published_diff
         env:
           # Empty on push and workflow_call runs = full set.
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
