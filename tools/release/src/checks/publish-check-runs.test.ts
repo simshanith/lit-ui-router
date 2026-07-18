@@ -5,8 +5,13 @@ import type { PackageSummary } from './check-published-diff.core.ts';
 import {
   checkRunApiArgs,
   checkRunName,
+  releaseWorkflowUrl,
   toCheckRun,
 } from './publish-check-runs.core.ts';
+
+const REPO = 'simshanith/lit-ui-router';
+const RELEASE_URL =
+  'https://github.com/simshanith/lit-ui-router/actions/workflows/bump-version.yml';
 
 const clean: PackageSummary = {
   name: 'lit-ui-router-mobx',
@@ -41,24 +46,39 @@ describe('checkRunName', () => {
 
 describe('toCheckRun', () => {
   it('maps a clean package to success with the published baseline named', () => {
-    const payload = toCheckRun(clean);
+    const payload = toCheckRun(clean, REPO);
     assert.equal(payload.conclusion, 'success');
     assert.equal(payload.title, 'up to date with 0.3.3');
     assert.match(payload.summary, /match lit-ui-router-mobx@0\.3\.3/);
     assert.doesNotMatch(payload.summary, /<details>/);
+    assert.equal(payload.details_url, undefined);
   });
 
   it('maps drift to action_required, never failure, with unit and baseline in the title', () => {
-    const payload = toCheckRun(drifting);
+    const payload = toCheckRun(drifting, REPO);
     assert.equal(payload.conclusion, 'action_required');
     assert.equal(
       payload.title,
       'unreleased changes vs 1.7.0 (2 shipped files differ)',
     );
+    assert.equal(payload.details_url, RELEASE_URL);
+  });
+
+  it('opens a drifting summary with the resolve line linking the release workflow', () => {
+    const { summary } = toCheckRun(drifting, REPO);
+    const [first] = summary.split('\n');
+    assert.equal(
+      first,
+      `To resolve: [release lit-ui-router via the bump-version workflow](${RELEASE_URL}) — select the package in its Run workflow menu.`,
+    );
+  });
+
+  it('never puts the resolve line on a clean summary', () => {
+    assert.doesNotMatch(toCheckRun(clean, REPO).summary, /To resolve/);
   });
 
   it('lists ship-affecting files expanded and ship-inert collapsed', () => {
-    const { summary } = toCheckRun(drifting);
+    const { summary } = toCheckRun(drifting, REPO);
     const details = summary.indexOf('<details>');
     assert.notEqual(details, -1);
     assert.equal(summary.indexOf('- `dist/core.js`') < details, true);
@@ -68,9 +88,16 @@ describe('toCheckRun', () => {
   });
 
   it('treats an unpublished package as success with nothing to diff', () => {
-    const payload = toCheckRun({ ...clean, version: null });
+    const payload = toCheckRun({ ...clean, version: null }, REPO);
     assert.equal(payload.conclusion, 'success');
     assert.match(payload.title, /never published/);
+    assert.equal(payload.details_url, undefined);
+  });
+});
+
+describe('releaseWorkflowUrl', () => {
+  it('composes the bump-version workflow page for the repo', () => {
+    assert.equal(releaseWorkflowUrl(REPO), RELEASE_URL);
   });
 });
 
@@ -82,6 +109,7 @@ describe('checkRunApiArgs', () => {
         conclusion: 'action_required',
         title: 'unreleased changes vs 1.7.0 (2 shipped files differ)',
         summary: 'body',
+        details_url: RELEASE_URL,
       }),
       [
         'api',
@@ -95,10 +123,25 @@ describe('checkRunApiArgs', () => {
         '-f',
         'conclusion=action_required',
         '-f',
+        `details_url=${RELEASE_URL}`,
+        '-f',
         'output[title]=unreleased changes vs 1.7.0 (2 shipped files differ)',
         '-f',
         'output[summary]=body',
       ],
+    );
+  });
+
+  it('omits details_url from the argv when the payload has none', () => {
+    const args = checkRunApiArgs(REPO, 'abc123', {
+      name: 'published-diff (lit-ui-router-mobx)',
+      conclusion: 'success',
+      title: 'up to date with 0.3.3',
+      summary: 'body',
+    });
+    assert.equal(
+      args.some((arg) => arg.startsWith('details_url=')),
+      false,
     );
   });
 });

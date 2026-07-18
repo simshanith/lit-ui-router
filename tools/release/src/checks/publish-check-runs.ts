@@ -26,15 +26,15 @@ async function main() {
   }
   const summaries = parsed as PackageSummary[];
 
-  const payloads = summaries.map(toCheckRun);
+  // details_url needs the slug too; dry runs may fall back for URL shaping.
+  const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
+  if (!process.env.GITHUB_REPOSITORY && !dryRun) {
+    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
+  }
+  const payloads = summaries.map((summary) => toCheckRun(summary, repo));
   if (dryRun) {
     console.log(JSON.stringify(payloads, null, 2));
     return;
-  }
-
-  const repo = process.env.GITHUB_REPOSITORY;
-  if (!repo) {
-    throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');
   }
   const { stdout } = await defaultExec('git', ['rev-parse', 'HEAD']);
   const headSha = stdout.trim();
