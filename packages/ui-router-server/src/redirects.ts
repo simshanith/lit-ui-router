@@ -128,14 +128,9 @@ export interface RouteMatch {
 }
 
 /**
- * Match identity, not just truth: which route's pattern the pathname
- * matched, with the extracted params. Among multiple matches the most
- * specific one wins by core's segment-by-segment static-specificity sort
- * ([[UrlMatcher.compare]]): static segments beat placeholders position by
- * position, so `/users/new` outranks `/users/:id` and `/a/:y` outranks
- * `/:x/b` regardless of equal param counts. Ties (equal specificity) go to
- * declaration order. This mirrors the client router's own rule ordering, so
- * a compiled server redirect agrees with what the client would resolve.
+ * Returns which route's pattern the pathname matched, with the extracted
+ * params. The most specific match wins ([[UrlMatcher.compare]]); ties go
+ * to declaration order.
  */
 export function matchRoute(
   routes: CompiledRoute[],
@@ -146,8 +141,7 @@ export function matchRoute(
   for (const { name, matcher } of routes) {
     const params = matcher.exec(pathname);
     if (params === null) continue;
-    // Strictly-more-specific replaces; equal specificity keeps the earlier
-    // declaration (compare < 0 only when the new matcher outranks the best).
+    // Strict < keeps the earlier declaration on ties.
     if (bestMatcher === null || UrlMatcher.compare(matcher, bestMatcher) < 0) {
       best = { state: name, params };
       bestMatcher = matcher;

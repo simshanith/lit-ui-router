@@ -501,11 +501,7 @@ const formatCases: FormatCase[] = [
   },
 ];
 
-// Specificity ordering (#360): the standalone UrlMatcher.compare must agree
-// with core's on every pair of overlapping patterns — the tie-break the
-// redirects tier relies on to pick the same route the client router would.
-// Signs, not magnitudes, must match (core and the port build different
-// internal token arrays); normalize to -1 / 0 / 1.
+// Only signs must match: core and the port build different token arrays.
 const sign = (n: number) => (n < 0 ? -1 : n > 0 ? 1 : 0);
 
 const specificityPatterns = [

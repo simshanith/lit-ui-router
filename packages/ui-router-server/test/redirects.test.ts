@@ -94,10 +94,7 @@ describe('matchRoute', () => {
     assert.equal(matchRoute(compiled, ''), null);
   });
 
-  // Regression for #360: a static segment in an earlier position outranks a
-  // param in that position even when both patterns carry the same number of
-  // params. The old fewest-params heuristic tied here and fell to declaration
-  // order, letting the first-declared '/:x/b' win over the correct '/a/:y'.
+  // Both patterns carry one param; the static-first pattern must win.
   it('orders by segment specificity, not param count or declaration order', () => {
     const routes = compileRoutes([
       { name: 'dynamicFirst', url: '/:x/b' },
@@ -163,10 +160,6 @@ describe('evaluateRedirects', () => {
     assert.equal(evaluateRedirects(table, '/chain'), '/home');
   });
 
-  // #360: with two equal-param routes overlapping on one pathname, only the
-  // more specific one carries a redirectTo. The old fewest-params heuristic
-  // could select the wrong route (declaration order) and emit its redirect;
-  // the specificity sort selects the same route the client would resolve.
   it('emits the redirect of the segment-specific route, not the first-declared', () => {
     const overlapping: RedirectTable = {
       routes: [
@@ -177,8 +170,7 @@ describe('evaluateRedirects', () => {
         { name: 'settings', url: '/legacy/settings' },
       ],
     };
-    // '/legacy/settings' matches both; the specific 'settings' route has no
-    // redirect, so the path is served as-is (null), not redirected to /home.
+    // Both routes match; the specific one has no redirect, so serve as-is.
     assert.equal(evaluateRedirects(overlapping, '/legacy/settings'), null);
     // A non-overlapping page still redirects through 'section'.
     assert.equal(evaluateRedirects(overlapping, '/legacy/other'), '/home');

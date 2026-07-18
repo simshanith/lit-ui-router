@@ -449,17 +449,10 @@ export class UrlMatcher {
   }
 
   /**
-   * Core's UrlMatcher.compare: sorts two matchers by static specificity so
-   * the more specific pattern wins. Each is flattened to path tokens (slash
-   * literals, static text, path params) and compared position-by-position;
-   * slash (1) sorts before static text (2) before a param (3), and a shorter
-   * pattern (0-padded) sorts before a longer one where they first differ. A
-   * negative result means `a` is more specific (higher priority) than `b`.
-   *
-   * Ported from core so the dep-free redirects tier picks the same route the
-   * client's own router would — not a fewest-params approximation. Single-
-   * matcher only: matchers here never `append`, so there is no parent path
-   * to concatenate.
+   * Sorts two matchers by static specificity, as core's UrlMatcher.compare:
+   * path tokens compared position-by-position, slash before static text
+   * before a param. Negative means `a` is more specific than `b`.
+   * Single-matcher only: matchers here never `append`.
    */
   static compare(a: UrlMatcher, b: UrlMatcher): number {
     const weightsA = a.#segmentWeights();
@@ -474,12 +467,8 @@ export class UrlMatcher {
 
   #weights?: number[];
 
-  // Path tokens as core's sort weights (UrlMatcher.compare): interleave the
-  // static segments with the path params in order, split each static segment
-  // on '/' keeping the delimiters, then weight slash → 1, static text → 2,
-  // param → 3. Search params never affect path specificity. Memoized, as
-  // core caches on _cache.weights — matchRoute compares the running best
-  // against every later candidate.
+  // Core's sort weights: slash → 1, static text → 2, param → 3; search
+  // params carry no weight. Memoized, as in core.
   #segmentWeights(): number[] {
     if (this.#weights) return this.#weights;
     const weights: number[] = [];
