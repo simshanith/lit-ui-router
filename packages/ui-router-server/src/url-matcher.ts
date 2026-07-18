@@ -383,10 +383,11 @@ interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
  * `compile` and consumed by [[exec]], [[format]], and [[compare]].
  * Frozen — treat as immutable: [[compare]] memoizes per object identity,
  * and the functions/regexps inside make it not structuredClone-able.
- * To associate data with a matcher, use your own identity-keyed WeakMap
- * (frozen objects are fine as keys).
+ * Two data channels: `meta` rides compile-time data on the matcher, and a
+ * consumer-owned identity-keyed WeakMap (frozen keys are fine) covers
+ * external or mutable association.
  */
-export interface CompiledMatcher {
+export interface CompiledMatcher<M = undefined> {
   /** The pattern that was compiled. */
   readonly pattern: string;
   /** The whole-path regexp the pattern compiled to. */
@@ -397,14 +398,17 @@ export interface CompiledMatcher {
   readonly searchParams: readonly CompiledParam[];
   /** Whether [[exec]] percent-decodes captured values (the factory's decodeParams). */
   readonly decodeParams: boolean;
+  /** Compile-time data riding the matcher (e.g. a build-time route id); the reference is frozen in, the object stays consumer-owned. */
+  readonly meta: M;
 }
 
 const nameValidator = /^\w+([-.]+\w+)*(?:\[\])?$/;
 
-const compileMatcher = (
+const compileMatcher = <M>(
   pattern: string,
   config: ResolvedConfig,
-): CompiledMatcher => {
+  meta: M,
+): CompiledMatcher<M> => {
   // Placeholder syntax (regexps identical to @uirouter/core): ':name',
   // '*name' (catch-all), '{name}', '{name:regexp-or-type}' with balanced or
   // escaped inner braces; search params additionally allow '.' and '-' in
@@ -476,15 +480,16 @@ const compileMatcher = (
     pathParams: freeze(params.filter((param) => !param.isSearch)),
     searchParams: freeze(params.filter((param) => param.isSearch)),
     decodeParams: config.decodeParams,
+    meta,
   });
 };
 
 // Core's sort weights: slash → 1, static text → 2, param → 3; search
 // params carry no weight. Memoized as in core; the WeakMap keeps the
 // cache off the matcher's inert data.
-const weightsCache = new WeakMap<CompiledMatcher, number[]>();
+const weightsCache = new WeakMap<CompiledMatcher<unknown>, number[]>();
 
-const segmentWeights = (matcher: CompiledMatcher): number[] => {
+const segmentWeights = (matcher: CompiledMatcher<unknown>): number[] => {
   const cached = weightsCache.get(matcher);
   if (cached) return cached;
   const weights: number[] = [];
@@ -505,7 +510,10 @@ const segmentWeights = (matcher: CompiledMatcher): number[] => {
  * before static text before a param. Negative means `a` is more specific
  * than `b`. Single-matcher only: matchers here never `append`.
  */
-export function compare(a: CompiledMatcher, b: CompiledMatcher): number {
+export function compare(
+  a: CompiledMatcher<unknown>,
+  b: CompiledMatcher<unknown>,
+): number {
   const weightsA = segmentWeights(a);
   const weightsB = segmentWeights(b);
   const length = Math.max(weightsA.length, weightsB.length);
@@ -523,7 +531,10 @@ export function compare(a: CompiledMatcher, b: CompiledMatcher): number {
  * or null when it does not. Search params always appear in the result,
  * resolved to their static defaults (undefined when none is declared).
  */
-export function exec(matcher: CompiledMatcher, path: string): RawParams | null {
+export function exec(
+  matcher: CompiledMatcher<unknown>,
+  path: string,
+): RawParams | null {
   const match = matcher.regexp.exec(path);
   if (!match) return null;
   // A custom inline regexp with its own capture group would misalign values.
@@ -561,7 +572,7 @@ export function exec(matcher: CompiledMatcher, path: string): RawParams | null {
  * Returns null when any value fails its param's validation.
  */
 export function format(
-  matcher: CompiledMatcher,
+  matcher: CompiledMatcher<unknown>,
   values: RawParams = {},
 ): string | null {
   const details = (param: CompiledParam) => {
@@ -632,10 +643,11 @@ export function format(
  * percent-decoding on, and a default squash policy of false.
  */
 export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
-  compile: (
+  compile: <M = undefined>(
     pattern: string,
     options?: UrlMatcherCompileOptions,
-  ) => CompiledMatcher;
+    meta?: M,
+  ) => CompiledMatcher<M>;
 } {
   const {
     strict = true,
@@ -646,13 +658,22 @@ export function urlMatcherFactory(config: UrlMatcherCompilerConfig = {}): {
   // Same validation as ui-router's UrlConfig.defaultSquashPolicy().
   getSquashPolicy(defaultSquashPolicy, true, false);
   return {
-    compile: (pattern, options = {}) =>
-      compileMatcher(pattern, {
-        strict: options.strict ?? strict,
-        caseInsensitive: options.caseInsensitive ?? caseInsensitive,
-        decodeParams,
-        defaultSquashPolicy,
-        params: options.params ?? {},
-      }),
+    compile: <M = undefined>(
+      pattern: string,
+      options: UrlMatcherCompileOptions = {},
+      meta?: M,
+    ) =>
+      compileMatcher(
+        pattern,
+        {
+          strict: options.strict ?? strict,
+          caseInsensitive: options.caseInsensitive ?? caseInsensitive,
+          decodeParams,
+          defaultSquashPolicy,
+          params: options.params ?? {},
+        },
+        // Omitted meta is the declared default: `compile(p)` → meta undefined.
+        meta as M,
+      ),
   };
 }

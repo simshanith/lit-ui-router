@@ -1,7 +1,12 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { exec, format, urlMatcherFactory } from '../src/url-matcher.ts';
+import {
+  compare,
+  exec,
+  format,
+  urlMatcherFactory,
+} from '../src/url-matcher.ts';
 
 // Behavior specs for the standalone matcher on its own. Fidelity against
 // @uirouter/core is asserted separately, case by case, by the differential
@@ -206,6 +211,30 @@ describe('compiled matcher surface', () => {
     assert.ok(Object.isFrozen(matcher.segments));
     assert.ok(Object.isFrozen(matcher.pathParams));
     assert.ok(Object.isFrozen(matcher.searchParams));
+  });
+
+  it('carries typed compile-time meta on the matcher', () => {
+    const matcher = compile('/user/:id', {}, { routeId: 'users.detail' });
+    // Inferred as CompiledMatcher<{ routeId: string }> — .routeId typechecks.
+    assert.equal(matcher.meta.routeId, 'users.detail');
+    // The reference is frozen in; the meta object stays consumer-owned.
+    assert.ok(!Object.isFrozen(matcher.meta));
+    matcher.meta.routeId = 'renamed';
+    assert.equal(matcher.meta.routeId, 'renamed');
+  });
+
+  it('defaults meta to undefined when not passed', () => {
+    assert.equal(compile('/user/:id').meta, undefined);
+  });
+
+  it('operations ignore meta entirely', () => {
+    const plain = compile('/user/:id');
+    const tagged = compile('/user/:id', {}, { routeId: 'x' });
+    assert.deepEqual(exec(tagged, '/user/7'), exec(plain, '/user/7'));
+    assert.equal(format(tagged, { id: '7' }), format(plain, { id: '7' }));
+    assert.equal(compare(tagged, plain), 0);
+    // Twice: the second compare hits the WeakMap memo, same verdict.
+    assert.equal(compare(tagged, plain), 0);
   });
 
   it('freezes each compiled param (deep, including replace)', () => {
