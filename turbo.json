@@ -73,7 +73,11 @@
       // package is pass-split and the types spine stands alone.
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root"]
+      "with": ["//#typecheck:root", "typecheck:build"]
+    },
+    "typecheck:build": {
+      "dependsOn": ["^build", "^build:types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "//#typecheck:root": {
       "inputs": ["$TURBO_DEFAULT$"]

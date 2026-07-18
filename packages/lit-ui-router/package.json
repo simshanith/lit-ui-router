@@ -58,7 +58,8 @@
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.build.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:build": "tsc -p tsconfig.build.json --noEmit"
   },
   "dependencies": {
     "@oxc-project/runtime": "catalog:",
