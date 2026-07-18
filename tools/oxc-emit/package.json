@@ -1,0 +1,25 @@
+{
+  "name": "@tools/oxc-emit",
+  "version": "0.0.1",
+  "private": true,
+  "bin": {
+    "oxc-emit-dts": "./src/emit-dts.ts",
+    "oxc-emit-js": "./src/emit-js.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@ampproject/remapping": "catalog:",
+    "oxc-minify": "catalog:",
+    "oxc-transform": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "typescript": "catalog:"
+  }
+}

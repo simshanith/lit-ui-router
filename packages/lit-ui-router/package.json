@@ -10,7 +10,9 @@
     "url": "https://github.com/simshanith/lit-ui-router"
   },
   "files": [
-    "dist/**"
+    "dist/**",
+    "src/*.ts",
+    "!src/*.spec.ts"
   ],
   "type": "module",
   "sideEffects": [
@@ -47,8 +49,9 @@
     }
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
     "build:custom-elements": "cem analyze --outdir ./dist",
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/reference && typedoc --defaultCategory other",
@@ -57,16 +60,20 @@
     "lint": "oxlint .",
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --browser=chromium",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "dependencies": {
+    "@oxc-project/runtime": "catalog:",
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
+    "@tools/oxc-emit": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
+    "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "oxfmt": "catalog:",

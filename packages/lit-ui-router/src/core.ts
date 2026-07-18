@@ -57,7 +57,7 @@ export class LitViewConfig implements ViewConfig {
    * Load the view configuration.
    * @returns A promise that resolves to this view config
    */
-  load() {
+  load(): Promise<this> {
     return Promise.resolve(this);
   }
 }
@@ -110,7 +110,7 @@ export function isRoutedLitElement<
  */
 export function litViewsBuilder<
   T extends DefaultResolvesType = DefaultResolvesType,
->(state: StateObject) {
+>(state: StateObject): Record<string, NormalizedLitViewDeclaration<T>> {
   const views: Record<string, NormalizedLitViewDeclaration<T>> = {},
     viewsObject = state.views || {
       $default: pick(state, ['component']),
@@ -248,7 +248,7 @@ export class UIRouterLit extends UIRouter {
    * router.start(); // Begin routing
    * ```
    */
-  start() {
+  start(): void {
     if (this.started) {
       throw new Error('start() called multiple times');
     }

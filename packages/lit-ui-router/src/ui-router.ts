@@ -1,4 +1,5 @@
 import { html, LitElement } from 'lit';
+import type { TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
 import { UIRouterLit } from './core.js';
@@ -72,7 +73,9 @@ export class UIRouterLitElement extends LitElement {
   }
 
   /** @internal */
-  static onUiRouterContextEvent(uiRouter?: UIRouterLit) {
+  static onUiRouterContextEvent(
+    uiRouter?: UIRouterLit,
+  ): (event: UiRouterContextEvent) => void {
     return (event: UiRouterContextEvent) => {
       event.stopPropagation();
       event.detail.uiRouter = uiRouter;
@@ -84,7 +87,7 @@ export class UIRouterLitElement extends LitElement {
   };
 
   /** @internal */
-  connectedCallback() {
+  connectedCallback(): void {
     super.connectedCallback();
     this.uiRouter = this.uiRouter || new UIRouterLit();
 
@@ -97,7 +100,7 @@ export class UIRouterLitElement extends LitElement {
   }
 
   /** @internal */
-  render() {
+  render(): TemplateResult {
     return html`<slot></slot>`;
   }
 }

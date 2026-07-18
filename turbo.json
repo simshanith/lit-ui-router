@@ -6,8 +6,17 @@
       "dependsOn": ["^transit"]
     },
     "build": {
-      "dependsOn": ["^build"],
+      // umbrella over own-package passes; no-ops where scripts are absent
+      "dependsOn": ["^build", "build:js", "build:types"],
       "outputs": ["dist/**"]
+    },
+    "build:js": {
+      "outputs": ["dist/**/*.js", "dist/**/*.js.map"]
+    },
+    "build:types": {
+      // self-chain to build types transitively
+      "dependsOn": ["^build:types"],
+      "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },
     "test": {
       "dependsOn": ["^test"],
@@ -56,9 +65,14 @@
       ]
     },
     "typecheck": {
-      "dependsOn": ["^build"],
+      // ^build drops once every package is pass-split
+      "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root"]
+      "with": ["//#typecheck:root", "typecheck:src"]
+    },
+    "typecheck:src": {
+      "dependsOn": ["^build", "^build:types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "//#typecheck:root": {
       "inputs": ["$TURBO_DEFAULT$"]

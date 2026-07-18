@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "dependsOn": ["build:custom-elements"]
+      "with": ["build:custom-elements"]
     },
     "build:custom-elements": {
       "inputs": ["src/**/*.ts", "custom-elements-manifest.config.js"],

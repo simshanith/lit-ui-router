@@ -1,4 +1,5 @@
 import { LitElement } from 'lit';
+import type { TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
@@ -87,7 +88,7 @@ export class UiView extends LitElement {
   private readonly inner = document.createDocumentFragment();
 
   /** @internal */
-  createRenderRoot() {
+  createRenderRoot(): this {
     return this;
   }
 
@@ -148,7 +149,7 @@ export class UiView extends LitElement {
   };
 
   /** @internal */
-  connectedCallback() {
+  connectedCallback(): void {
     super.connectedCallback();
     this.addEventListener(
       this.constructor.uiViewContextEventName,
@@ -171,7 +172,7 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
-  static seekParentView(candidate: Element) {
+  static seekParentView(candidate: Element): UiView | null {
     const uiViewContextEvent = this.uiViewContextEvent();
     candidate.dispatchEvent(uiViewContextEvent);
     return uiViewContextEvent.detail.parentView;
@@ -242,7 +243,7 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
-  disconnectedCallback() {
+  disconnectedCallback(): void {
     super.disconnectedCallback();
     this.removeEventListener(
       this.constructor.uiViewContextEventName,
@@ -278,7 +279,7 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
-  requestUpdate(...args: Parameters<LitElement['requestUpdate']>) {
+  requestUpdate(...args: Parameters<LitElement['requestUpdate']>): void {
     super.requestUpdate(...args);
     const instance = this.firstElementChild as LitElement;
     if (isFunction(instance?.requestUpdate)) {
@@ -347,17 +348,17 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
-  public get viewContext() {
+  public get viewContext(): ViewContext | undefined {
     return this?._uiViewData?.config?.viewDecl.$context;
   }
 
   /** @internal */
-  public get state() {
+  public get state(): StateDeclaration {
     return (this.viewContext as StateObject).self;
   }
 
   /** @internal */
-  render() {
+  render(): Node | TemplateResult {
     if (!this.component || !this.viewAddress) {
       return this.inner.cloneNode(true);
     }
