@@ -9,7 +9,8 @@
   },
   "type": "module",
   "exports": {
-    ".": "./src/bundle.ts"
+    ".": "./src/bundle.ts",
+    "./entries": "./src/entries.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
