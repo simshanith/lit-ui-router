@@ -6,19 +6,15 @@
       "dependsOn": ["^transit"]
     },
     "build": {
-      // Umbrella over the pass-split convention: build:js/build:types are
-      // own-package deps (transit no-ops where the scripts are absent), so
-      // ^build keeps meaning "everything a dependency ships".
+      // umbrella over own-package passes; no-ops where scripts are absent
       "dependsOn": ["^build", "build:js", "build:types"],
       "outputs": ["dist/**"]
     },
     "build:js": {
-      // oxc emit; needs nothing from dependencies — fully parallel repo-wide.
       "outputs": ["dist/**/*.js", "dist/**/*.js.map"]
     },
     "build:types": {
-      // oxc isolated declarations; the ^chain is ordering propagation for
-      // transitive consumers (through no-op nodes), not a compile input.
+      // ^chain is ordering propagation only, not a compile input
       "dependsOn": ["^build:types"],
       "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },
@@ -69,8 +65,7 @@
       ]
     },
     "typecheck": {
-      // ^build stays while single-pass packages exist; drops once every
-      // package is pass-split and the types spine stands alone.
+      // ^build drops once every package is pass-split
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "with": ["//#typecheck:root", "typecheck:build"]

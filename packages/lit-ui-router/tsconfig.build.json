@@ -6,8 +6,7 @@
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
-    // Enforce the annotation conformance oxc-emit-dts relies on: the emit
-    // itself never typechecks, so this flag is what keeps it trustworthy.
+    // conformance guard for oxc-emit-dts, which never typechecks
     "isolatedDeclarations": true
   },
   "include": ["src/**/*"],

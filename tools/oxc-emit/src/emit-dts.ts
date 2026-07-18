@@ -1,10 +1,6 @@
 #!/usr/bin/env node
-// The types pass of the pass-split build convention: oxc isolated
-// declarations — syntax-derived d.ts with JSDoc intact, no typechecking and
-// no cross-package inputs, so the pass is dependency-free like the JS pass.
-// Conformance (explicit annotations on the public surface) is enforced by
-// the packages' typecheck task via `isolatedDeclarations: true`, keeping
-// this emit trustworthy.
+// Types pass: oxc isolated declarations — syntax-derived d.ts, no typechecking.
+// Conformance is enforced by the packages' isolatedDeclarations typecheck.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 

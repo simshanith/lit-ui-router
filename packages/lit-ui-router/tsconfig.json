@@ -1,12 +1,10 @@
 {
-  // Tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit.
-  // The build emits via tsconfig.build.json.
+  // tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit
   "extends": "./tsconfig.build.json",
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
-    // Conformance is a shipped-src concern; specs are exempt (the second
-    // typecheck pass below enforces it via tsconfig.build.json).
+    // specs are exempt; typecheck:build enforces conformance
     "isolatedDeclarations": false,
     "types": ["vitest/globals"]
   },

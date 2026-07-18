@@ -1,9 +1,6 @@
 #!/usr/bin/env node
-// The JS pass of the pass-split build convention: oxc transform strips types
-// and lowers legacy decorators, then a codegen-only minify pass
-// (compress/mangle off) drops comments — src comments never ship, so editing
-// them can't trip check:published-diff. Dependency-free: runs fully parallel
-// with every other pass in the repo.
+// JS pass: oxc transform (type-strip + legacy decorators) then codegen-only minify.
+// Comments never ship, so editing them can't trip check:published-diff.
 import { mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative } from 'node:path';
 

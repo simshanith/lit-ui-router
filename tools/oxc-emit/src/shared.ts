@@ -1,5 +1,4 @@
-// Shared walk for the pass bins: a package's publishable sources, from the
-// consuming package's root (src/**/*.ts minus specs and test helpers).
+// Shared walk for the pass bins, from the consuming package's root.
 import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 
@@ -20,8 +19,7 @@ export function publishableSources(): string[] {
       (file) =>
         file.endsWith('.ts') &&
         !file.endsWith('.spec.ts') &&
-        // Test-only helpers, excluded alongside the specs that import them
-        // (mirrors the packages' tsconfig.build excludes); inert when absent.
+        // test-only helpers; mirrors the packages' tsconfig.build excludes
         !file.startsWith(join(SRC, 'specs')),
     );
 }

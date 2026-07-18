@@ -3,8 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      // Per-key override: dependsOn/outputs inherit from the root umbrella;
-      // cem has no ordering consumers, so co-scheduling suffices.
+      // per-key merge: dependsOn/outputs inherit from the root umbrella
       "with": ["build:custom-elements"]
     },
     "build:custom-elements": {
