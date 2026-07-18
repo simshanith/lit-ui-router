@@ -83,9 +83,13 @@ depends = ["lint_actionlint", "lint_zizmor"]
 # runs from the workspace root.
 
 [tasks.build]
-# env: PACKAGE_NAME (+ TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache).
+# env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo
+# config, not a flag).
 description = "Build one package and its workspace deps via turbo"
-run = 'turbo run "${PACKAGE_NAME:?}#build"'
+usage = '''
+flag "--package-name <package_name>" help="Package to build (turbo <name>#build)" required=#true env="PACKAGE_NAME"
+'''
+run = 'turbo run "${usage_package_name?}#build"'
 
 [tasks.ci]
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
