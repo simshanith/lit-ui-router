@@ -29,6 +29,7 @@
     "esbuild": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
+    "rolldown": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"
   },
