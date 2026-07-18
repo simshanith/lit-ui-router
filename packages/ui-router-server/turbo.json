@@ -3,7 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/bundle-probe/src/**"]
+      "dependsOn": ["^test", "transit"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "typecheck": {
       "with": ["typecheck:tests"]
