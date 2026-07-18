@@ -9,6 +9,12 @@
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
 
+Published-diff status (orange = unreleased changes on `main`, a release is owed):
+
+[![lit-ui-router published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router%29&label=lit-ui-router)](https://github.com/simshanith/lit-ui-router/commit/main/checks)
+[![lit-ui-router-mobx published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router-mobx%29&label=lit-ui-router-mobx)](https://github.com/simshanith/lit-ui-router/commit/main/checks)
+[![ui-router-navigation-location-plugin published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-navigation-location-plugin%29&label=ui-router-navigation-location-plugin)](https://github.com/simshanith/lit-ui-router/commit/main/checks)
+
 ### lit-ui-router: State based routing for Lit (v2+)
 
 ---
