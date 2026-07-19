@@ -265,12 +265,12 @@ min+gzip by its own esbuild probe:
 
 | import                       | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
 | ---------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`   | no                                    | ~6.6 KiB min / ~2.8 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects` | no                                    | ~8.8 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.6 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
+| `ui-router-server/matcher`   | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects` | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
 | `ui-router-server/simulate`  | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
 
-<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.8 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - and simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - and simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
   <title>The package tiers, to scale</title>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- dependency-free group -->
@@ -278,8 +278,8 @@ min+gzip by its own esbuild probe:
     <text x="700" y="27" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no @uirouter/core needed</text>
     <text x="700" y="41" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a differential-tested port of core's matching subset</text>
     <text x="20" y="60" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/matcher</text>
-    <rect x="230" y="50" width="41" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="279" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.8 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
+    <rect x="230" y="50" width="42" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="280" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.9 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
     <text x="20" y="92" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/redirects</text>
     <rect x="230" y="82" width="52" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
     <text x="290" y="95" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">3.6 KiB</tspan> &#183; + declarative redirect evaluation over a route table</text>
@@ -309,10 +309,14 @@ So the dependency-free tiers are a standalone _port_ of the matching subset
 (type-pinned to core's signatures, differential-tested against core's own
 output), while the simulate tier carries core whole — behind a dynamic import
 that bundles as a lazy chunk, so a matcher-only configuration never loads it.
-That shape gives the matcher tier its contract: dependency-free, and sized
-for the tightest real edge-runtime budget — AWS CloudFront Functions caps a
-function at 10,240 bytes, and the matcher's ~6.6 KiB minified bundle clears
-it with about a third of the ceiling to spare.
+That shape gives the matcher tier its contract: dependency-free, and held
+to a borrowed size discipline — AWS CloudFront Functions' 10,240-byte
+ceiling, the tightest edge-runtime budget around, which the package's
+bundle checks log the matcher against and its ~6.6 KiB minified bundle
+still clears. A discipline, not a deployment target: a working CloudFront
+function already crowds that ceiling and grows with core fidelity, so the
+plausible path there is generating a route-specific function from the same
+route data, not shipping this bundle.
 
 Picking a tier:
 
@@ -735,9 +739,11 @@ no asset exists there, so the whole prefix is the demo.
 
 The routing side stays light in production, too: the deployed worker —
 handler, fetch adapter, both mount tables, and the headless router behind the
-simulate mount — uploads at ~269 KiB (~57 KiB gzip), around 2% of even the
-free plan's Workers size limit. The site itself ships as static assets
-through the binding, outside that budget entirely.
+simulate mount — uploads at ~268 KiB (~56 KiB gzip), around 2% of even the
+free plan's Workers size limit. That figure is the dogfood measuring itself:
+the repo's own cached wrangler dry-run produces it, and CI uploads the same
+bundle to size tracking. The site itself ships as static assets through the
+binding, outside that budget entirely.
 
 ## Redirects: data until they need code
 
