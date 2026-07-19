@@ -42,8 +42,11 @@ describe('UiView', () => {
     uiRouter.uiRouter = router;
 
     const uiView = document.createElement('ui-view');
-    uiRouter.appendChild(uiView);
+    // Connect the parent before the child: browsers upgrade an inserted
+    // subtree in tree order, but happy-dom connects children first, which
+    // would break ui-router-context discovery.
     container.appendChild(uiRouter);
+    uiRouter.appendChild(uiView);
 
     await waitForUpdate(uiRouter);
     await waitForUpdate(uiView);
@@ -103,8 +106,8 @@ describe('UiView', () => {
 
       const uiView = document.createElement('ui-view');
       uiView.setAttribute('name', 'sidebar');
-      uiRouter.appendChild(uiView);
       container.appendChild(uiRouter);
+      uiRouter.appendChild(uiView);
 
       await waitForUpdate(uiRouter);
       await waitForUpdate(uiView);
@@ -290,8 +293,8 @@ describe('UiView', () => {
 
       const uiView = document.createElement('ui-view');
       uiView.innerHTML = '<div class="fallback">Loading...</div>';
-      uiRouter.appendChild(uiView);
       container.appendChild(uiRouter);
+      uiRouter.appendChild(uiView);
 
       await waitForUpdate(uiRouter);
       await waitForUpdate(uiView);
