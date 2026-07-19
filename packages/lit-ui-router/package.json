@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router",
-  "version": "1.7.0",
+  "version": "1.7.1",
   "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
