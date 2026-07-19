@@ -11,6 +11,7 @@
     "format": "oxfmt \"**/*.{js,ts,json,md,css}\"",
     "format:check": "oxfmt --check \"**/*.{js,ts,json,md,css}\"",
     "lint": "oxlint .",
+    "test": "VITEST_BROWSER_API_PORT=63350 vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
@@ -29,8 +30,12 @@
   "devDependencies": {
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
+    "@types/node": "catalog:",
+    "@vitest/browser-playwright": "catalog:",
     "oxfmt": "catalog:",
+    "playwright": "catalog:",
     "typescript": "catalog:",
-    "vite": "catalog:"
+    "vite": "catalog:",
+    "vitest": "catalog:"
   }
 }

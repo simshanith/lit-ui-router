@@ -41,31 +41,9 @@ describe('confirmation dialog', () => {
     cy.get('@dialog').contains('Are you sure?');
   };
 
-  it('renders the shared sample-app dialog design', () => {
-    openDeleteDialog('Rios Sears', 'rsears');
-
-    // white card horizontally centered over a dimmed backdrop
-    cy.get('.dialog#modal').should('have.class', 'in');
-    // dimmed backdrop (sits underneath the modal, so don't use `be.visible`)
-    cy.get('.dialog .backdrop')
-      .should('have.class', 'in')
-      .and(($backdrop) => {
-        expect(getComputedStyle($backdrop[0]).opacity).to.equal('0.5');
-      });
-    cy.get('.dialog .content').then(($content) => {
-      const rect = $content[0].getBoundingClientRect();
-      // Measure against the document's client width to account for scrollbar.
-      const layoutWidth = $content[0].ownerDocument.documentElement.clientWidth;
-      const viewportCenter = layoutWidth / 2;
-      const cardCenter = rect.left + rect.width / 2;
-      expect(cardCenter).to.be.closeTo(viewportCenter, 2);
-      expect(rect.width).to.be.lessThan(layoutWidth / 2);
-    });
-    cy.screenshot('delete-contact-dialog');
-
-    cy.get('.dialog button').contains('No').click();
-    cy.get('#backdrop').should('not.exist');
-  });
+  // Render/design assertions (modal `in` class, backdrop dim, centering,
+  // card width, deny-closes) live in the component spec:
+  // apps/sample-app-shared/src/app/global/Dialog.spec.ts
 
   it('deletes the contact when confirmed', () => {
     openDeleteDialog('Delia Hunter', 'dhunter');
