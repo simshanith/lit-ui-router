@@ -15,12 +15,7 @@
     "**/dist/**",
     "**/coverage/**",
     "**/node_modules/**",
-    "**/.vitepress/cache/**",
-    "**/*.config.ts",
-    "**/*.config.js",
-    "!**/vitest.config.ts",
-    "!**/commitlint.config.ts",
-    "!eslint.config.ts"
+    "**/.vitepress/cache/**"
   ],
   "rules": {
     "constructor-super": "error",

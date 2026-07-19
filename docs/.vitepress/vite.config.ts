@@ -156,6 +156,6 @@ export default defineConfig({
   ],
 
   server: {
-    open: !Boolean(process.env.CI) && !Boolean(process.env.E2E_TEST),
+    open: !process.env.CI && !process.env.E2E_TEST,
   },
 });
