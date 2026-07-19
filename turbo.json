@@ -51,7 +51,7 @@
       ]
     },
     "//#lint:root": {
-      "inputs": ["examples/**/*.{ts,js}", ".oxlintrc.json", "$TURBO_DEFAULT$"]
+      "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
     },
     "//#lint:package-json": {
       "inputs": [
