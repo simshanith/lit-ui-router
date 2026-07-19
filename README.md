@@ -20,10 +20,10 @@
 | `lit-ui-router-mobx`                   | [![npm](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [![lit-ui-router-mobx published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router-mobx%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                     |
 | `ui-router-navigation-location-plugin` | [![npm](https://img.shields.io/npm/v/ui-router-navigation-location-plugin.svg)](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | [![ui-router-navigation-location-plugin published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-navigation-location-plugin%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain) |
 
-| Badge                                                                                   | Color     | Meaning                                                         |
-| --------------------------------------------------------------------------------------- | --------- | --------------------------------------------------------------- |
-| ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen)            | `#44bb00` | The npm release matches `main`                                  |
-| ![action required](https://img.shields.io/badge/published--diff-action_required-orange) | `#ea7233` | Unreleased ship-affecting changes on `main` — a release is owed |
+| Badge                                                                        | Color     | Meaning                                     |
+| ---------------------------------------------------------------------------- | --------- | ------------------------------------------- |
+| ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen) | `#44bb00` | The npm release matches `main`              |
+| ![passing](https://img.shields.io/badge/published--diff-passing-orange)      | `#ea7233` | Unreleased ship-affecting changes on `main` |
 
 ### lit-ui-router: State based routing for Lit (v2+)
 
