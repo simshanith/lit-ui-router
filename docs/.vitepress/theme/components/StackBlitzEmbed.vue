@@ -178,7 +178,8 @@ onUnmounted(() => {
 
 :deep(a img) {
   display: block;
-  height: 32px;
+  /* 36px + the 1px frame = 38px, level with the sibling .btn controls. */
+  height: 36px;
   /* .vp-doc gives content imgs 16px vertical margin — the actual gap culprit. */
   margin: 0;
 }
