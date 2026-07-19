@@ -22,7 +22,7 @@
 | ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen) | The npm release matches `main`              |
 | ![passing](https://img.shields.io/badge/published--diff-passing-orange)      | Unreleased ship-affecting changes on `main` |
 
-### lit-ui-router: State based routing for Lit (v2+)
+## lit-ui-router: State based routing for Lit (v2+)
 
 ---
 
