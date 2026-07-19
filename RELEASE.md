@@ -32,10 +32,14 @@ The release workflows use GitHub protected environments to ensure proper authori
 
 ### Environment Secrets
 
-- **`GH_PERSONAL_ACCESS_TOKEN`** - Used by `bump-version` and `tag-release` environments for:
+- **`GH_PERSONAL_ACCESS_TOKEN`** - Used by the `bump-version` environment for:
   - Creating branches
-  - Pushing tags
-  - Creating PRs that trigger downstream workflows
+  - Creating PRs that trigger downstream workflows (branches/PRs pushed with
+    `GITHUB_TOKEN` would not trigger CI)
+
+  Tagging and publishing no longer use the PAT: tags are pushed with
+  `GITHUB_TOKEN` and publish runs as a `workflow_call` in the same CI chain,
+  so nothing needs to be triggered by the tag event.
 
 This is a [Fine-Grained Personal Access Token](https://docs.github.com/en/authentication/keeping-your-account-and-data-secure/managing-your-personal-access-tokens#fine-grained-personal-access-tokens) with **Read** and **Write** access to [artifact metadata](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-artifact-metadata), [attestations api](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-attestations), [code](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-contents), and [pull requests](https://docs.github.com/en/rest/authentication/permissions-required-for-fine-grained-personal-access-tokens?apiVersion=2022-11-28#repository-permissions-for-pull-requests)
 
@@ -96,19 +100,22 @@ Creates a release PR by:
 
 ### 3. Tag & Push (`publish-gh.yml`)
 
-**Triggers:** Push to `main`
+**Triggers:** `workflow_call` from `build-test.yml` after main CI passes; manual dispatch as a CI-bypass escape hatch
 
-When a release PR merges:
+When a release PR merges (and main CI is green):
 
 1. Uses release-it to create a git tag (`lit-ui-router@X.Y.Z`)
-2. Pushes the tag to origin
-3. Tag push triggers the publish workflow
+2. Pushes the tag to origin with `GITHUB_TOKEN` (the tag triggers nothing)
 
 **Note:** Uses `continue-on-error: true` because tagging is idempotent - if the tag already exists, the workflow succeeds.
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching `lit-ui-router@*`
+**Triggers:** `workflow_call` from `build-test.yml`, once per package whose fresh release tag points at the validated commit (`detect_release`); manual dispatch for dry runs (see the OIDC caveat in the workflow file)
+
+npm trusted publishing binds to the **top-level caller workflow**, so each
+package's npmjs.com trusted publisher names `build-test.yml` with
+environment `publish`.
 
 The final release stage:
 
@@ -165,14 +172,17 @@ For prereleases like `1.2.3-beta.0`:
 ### Tag workflow not running
 
 - Verify the PR was merged (not closed)
-- Check that `GH_PERSONAL_ACCESS_TOKEN` has correct permissions
+- Check that main CI (`build-test.yml`) passed — tagging and publishing run
+  as downstream jobs of the same run
 - Ensure the `tag-release` environment is configured
 
 ### NPM publish failing
 
-- Verify OIDC trusted publishing is configured on npmjs.com
+- Verify OIDC trusted publishing is configured on npmjs.com — workflow file
+  `build-test.yml` (the caller), environment `publish`
 - Check that the `publish` environment exists
-- Ensure tag format matches `lit-ui-router@*`
+- Ensure the release tag `<package>@<version>` points at the merged main
+  head (detect_release selects packages by exactly that)
 
 ### Fork PRs not running CI
 

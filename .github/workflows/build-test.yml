@@ -141,7 +141,7 @@ jobs:
 
   tag_push:
     # Gated tagging: rides the same run as main CI, so a red build_and_test
-    # (Check pack included) means no tag, hence no publish trigger.
+    # (Check pack included) means no tag, hence no publish call below.
     # workflow_dispatch on Tag & push is the documented CI-bypass escape hatch.
     needs: build_and_test
     if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
@@ -150,5 +150,52 @@ jobs:
       # the caller job's grant.
       contents: write
     uses: ./.github/workflows/publish-gh.yml
+
+  detect_release:
+    # The tag-push event used to name the released package in its ref; with
+    # tags pushed by GITHUB_TOKEN (triggering nothing, by design), this job
+    # recovers the signal: which <package>@<version> tags point at the commit
+    # this run validated. Empty on ordinary main pushes — publish_npm skips.
+    needs: tag_push
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+    outputs:
+      packages: ${{ steps.new_tags.outputs.packages }}
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # the tags tag_push just pushed must be present to point at HEAD
+          fetch-depth: 0
+          fetch-tags: true
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Install dependencies
+        run: mise run setup
+      - name: Detect new release tags
+        id: new_tags
+        run: mise run //tools/release:new_tags
+
+  publish_npm:
+    # One publish per freshly tagged package, inside the same green main run.
+    # npm trusted publishing binds to the CALLER workflow file: each
+    # package's npmjs.com trusted publisher names build-test.yml +
+    # environment `publish` (the called job's environment claim).
+    needs: detect_release
+    if: ${{ needs.detect_release.outputs.packages != '[]' }}
+    strategy:
+      matrix:
+        package: ${{ fromJSON(needs.detect_release.outputs.packages) }}
+    permissions:
+      id-token: write # OIDC trusted publishing; ceiling for the called job
+      contents: write # GitHub release
+      attestations: write # build provenance attestation
+      artifact-metadata: write
+    uses: ./.github/workflows/publish-npm.yml
+    with:
+      package: ${{ matrix.package }}
     secrets:
-      GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

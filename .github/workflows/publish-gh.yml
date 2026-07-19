@@ -1,6 +1,8 @@
 # Automatic tagging workflow - called by build-test.yml after main's
 # build_and_test job succeeds.
-# Creates git tags for releases, which then trigger the NPM publish workflow.
+# Creates git tags for releases. The tags trigger nothing: publish-npm is
+# workflow_call'ed by build-test.yml after this job (detect_release names the
+# freshly tagged packages), so the push rides GITHUB_TOKEN — no PAT.
 # Uses release-it with --no-increment to tag the current version without bumping.
 #
 # YAML here is triggers/permissions/secrets/environment/concurrency only; the
@@ -14,11 +16,10 @@ on:
   # only): no tag unless the whole main CI run — build, tests, lint,
   # typecheck, check:pack — is green.
   workflow_call:
-    secrets:
-      GH_PERSONAL_ACCESS_TOKEN:
-        required: true
   # Manual dispatch bypasses the CI gate — hotfix escape hatch; the protected
-  # tag-release environment still gates authorization.
+  # tag-release environment still gates authorization. A dispatched tag
+  # triggers no publish (tags trigger nothing now): follow up with the
+  # publish escape hatch documented in publish-npm.yml.
   workflow_dispatch:
     inputs:
       dryRun:
@@ -65,18 +66,19 @@ jobs:
           # validated; dispatch runs check out the main tip.
           fetch-depth: 0
           fetch-tags: true
-          # PAT (not GITHUB_TOKEN): the pushed tag must trigger publish-npm,
-          # and the default token can't trigger other workflows. The push in
-          # //tools/release:tag_push rides these persisted credentials.
-          token: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          # GITHUB_TOKEN (job-scoped contents:write) persists on purpose: the
+          # push in //tools/release:tag_push rides these credentials. The tag
+          # need not trigger anything, so no PAT — GITHUB_TOKEN-created
+          # events spawning no workflows is now a feature, not a bug.
+          persist-credentials: true
       - name: Setup mise
         uses: jdx/mise-action@e6a8b3978addb5a52f2b4cd9d91eafa7f0ab959d # v4.2.0
         with:
           # task-env handling regressed before in unpinned mise; pin the version
           version: 2026.6.14
           # no restored tool cache (zizmor cache-poisoning): this job checks out
-          # with a persisted PAT, so a poisoned cache would run adjacent to live
-          # push credentials. Tools install fresh, checksum-verified against mise.lock.
+          # with persisted push credentials, so a poisoned cache would run
+          # adjacent to them. Tools install fresh, checksum-verified against mise.lock.
           cache: false
       - name: Install dependencies
         run: mise run setup
@@ -92,7 +94,7 @@ jobs:
           # dryRun is declared for workflow_dispatch only; called runs get an
           # empty value and always tag for real
           DRY_RUN: ${{ inputs.dryRun }}
-          GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Push tag
         run: mise run //tools/release:tag_push
         # continue-on-error: a tag existing on the remote at a different commit is

@@ -1,5 +1,10 @@
-# NPM publish workflow - triggered by release tags.
-# Uses OIDC trusted publishing (no NPM_TOKEN needed).
+# NPM publish workflow - called by build-test.yml after main CI, tagging, and
+# release detection succeed (no tag trigger: the tag is pushed by
+# GITHUB_TOKEN earlier in the same chain and triggers nothing).
+# Uses OIDC trusted publishing (no NPM_TOKEN needed). SPIKE NOTE: npm's
+# trusted publisher validates the TOP-LEVEL (caller) workflow filename, so
+# each package's npmjs.com config must name build-test.yml — see the PR body
+# for the migration steps.
 # See: https://docs.npmjs.com/trusted-publishers
 # See: https://github.com/release-it/release-it/blob/19.2.2/docs/npm.md#trusted-publishing-oidc
 #
@@ -10,15 +15,27 @@
 name: Publish to NPM
 
 on:
-  push:
-    tags:
-      - 'lit-ui-router@*'
-      - 'lit-ui-router-mobx@*'
-      - 'ui-router-navigation-location-plugin@*'
+  # Called by build-test.yml's publish_npm job (needs: detect_release, one
+  # call per freshly tagged package): a publish happens only inside a green
+  # main CI run that just pushed the package's release tag.
+  workflow_call:
+    inputs:
+      package:
+        description: 'Package to publish (from build-test.yml detect_release)'
+        required: true
+        type: string
+    secrets:
+      TURBO_TOKEN:
+        required: false
+  # Escape-hatch dispatch. CAVEAT: npm's trusted publisher is bound to the
+  # caller workflow, which for a dispatch run is THIS file — a real publish
+  # from here fails the OIDC exchange unless the package's npmjs.com trusted
+  # publisher is temporarily repointed at publish-npm.yml. Dry runs never
+  # reach npm auth and always work.
   workflow_dispatch:
     inputs:
       package:
-        description: 'Package to publish (manual/dry-run testing only; real tag pushes derive this from the tag)'
+        description: 'Package to publish (see the OIDC caveat in this file: real publishes need the trusted publisher repointed)'
         required: true
         type: choice
         options:
@@ -38,7 +55,15 @@ env:
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
-    # Protected environment adds approval gate before publishing
+    # Serialize per package across runs (call path and dispatch path share
+    # these groups): a re-run must not race a newer release of the same
+    # package. Job-level: GitHub ignores workflow-level concurrency in called
+    # workflows.
+    concurrency:
+      group: publish-npm-${{ inputs.package }}
+    # Protected environment adds approval gate before publishing. The OIDC
+    # token's environment claim is job-level, so it stays `publish` on the
+    # call path — npm's trusted publisher environment match keeps working.
     environment: publish
     permissions:
       id-token: write # Required for OIDC trusted publishing to NPM
@@ -65,7 +90,8 @@ jobs:
       - name: Install dependencies
         run: mise run setup
       - name: Resolve package
-        # tag → package name (hostile-refname safe) → workspace directory
+        # inputs.package (call and dispatch alike) → workspace directory; the
+        # tag-ref fallback is dead on both paths since `package` is required
         id: info
         run: mise run //tools/release:package_info
         env:
@@ -105,7 +131,8 @@ jobs:
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
-          # only set on manual workflow_dispatch runs; real tag pushes always publish for real
+          # dryRun is declared for workflow_dispatch only; called runs get an
+          # empty value and always publish for real
           DRY_RUN: ${{ inputs.dryRun }}
           # scoped here: only release-it's GitHub release needs it (npm auth is OIDC)
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

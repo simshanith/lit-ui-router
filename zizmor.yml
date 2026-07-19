@@ -9,7 +9,8 @@ rules:
     ignore:
       # PAT checkout persists by design: release-it pushes the release branch
       - bump-version.yml
-      # PAT checkout persists by design: pushes release tags to trigger publish-npm
+      # GITHUB_TOKEN checkout persists by design: pushes release tags
+      # (which trigger nothing; publish-npm is workflow_call'ed instead)
       - publish-gh.yml
   unpinned-uses:
     config:

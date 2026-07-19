@@ -67,6 +67,15 @@ flag "--dry-run" help="Print the ref that would be pushed, push nothing" env="DR
 '''
 run = 'PACKAGE="${usage_package?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-tag-push.ts'
 
+[tasks.new_tags]
+# outputs: packages (JSON array of package names). The workflow_call publish
+# fan-out's package selector — the tag-push event used to carry this in the ref.
+description = "List packages whose release tag points at the given commit"
+usage = '''
+flag "--sha <sha>" help="Commit to inspect (CI: the validated main head)" required=#true env="GITHUB_SHA"
+'''
+run = 'GITHUB_SHA="${usage_sha?}" node src/steps/release-new-tags.ts'
+
 [tasks.publish]
 # env: GITHUB_TOKEN (release-it's GitHub release; npm auth is OIDC).
 description = "Publish the packed tarball to npm and cut the GitHub release"
