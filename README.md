@@ -11,7 +11,9 @@
 
 [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router) [Published packages ⤵](#published-packages)
 
-## lit-ui-router: State based routing for Lit (v2+)
+# lit-ui-router
+
+## State based routing for Lit (v2+)
 
 lit-ui-router is a client-side [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application)
 routing framework for [Lit](https://lit.dev/).
