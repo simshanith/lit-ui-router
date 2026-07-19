@@ -1,6 +1,6 @@
 {
   "name": "ui-router-navigation-location-plugin",
-  "version": "0.2.2",
+  "version": "0.2.3",
   "description": "UI Router Location Plugin for Navigation API",
   "keywords": [
     "location",
