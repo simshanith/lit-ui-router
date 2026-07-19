@@ -8,7 +8,16 @@
     },
     "test": {
       "dependsOn": ["build", "^test"],
-      "cache": false
+      // $TURBO_DEFAULT$: the root task's globs miss the .cy.js specs; served
+      // content invalidates via the build edge to docs#build.
+      // wrangler.jsonc: `wrangler dev` discovers it upward at serve time.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
+      "env": ["CI"],
+      // CYPRESS_* is pass-through, not env: artifact knobs (video) must not
+      // affect cache validity.
+      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*"],
+      // Videos/screenshots stay uncached side effects.
+      "outputs": []
     }
   }
 }
