@@ -18,6 +18,8 @@
   },
   "include": [
     "commitlint.config.ts",
+    "eslint.config.ts",
+    "eslint.repo-rules.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"
