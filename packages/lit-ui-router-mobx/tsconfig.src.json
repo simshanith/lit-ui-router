@@ -6,8 +6,9 @@
     "outDir": "dist",
     "rootDir": "src",
     "declaration": true,
-    "sourceMap": true
+    // conformance guard for oxc-emit-dts, which never typechecks
+    "isolatedDeclarations": true
   },
   "include": ["src/**/*"],
-  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+  "exclude": ["node_modules", "dist", "**/*.spec.ts", "src/specs"]
 }

@@ -1,7 +1,7 @@
 {
   // Typechecks src against the published floor of the lit-ui-router peer range
   // (the lit-ui-router-floor alias), not the linked workspace copy. Never emits.
-  "extends": "./tsconfig.build.json",
+  "extends": "./tsconfig.src.json",
   "compilerOptions": {
     "noEmit": true,
     "paths": {

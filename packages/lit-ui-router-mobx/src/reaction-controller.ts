@@ -49,7 +49,7 @@ export class ReactionController<T> implements ReactiveController {
     host.addController(this);
   }
 
-  hostConnected() {
+  hostConnected(): void {
     this.dispose = reaction(
       this.expression,
       (value) => {
@@ -61,7 +61,7 @@ export class ReactionController<T> implements ReactiveController {
     );
   }
 
-  hostDisconnected() {
+  hostDisconnected(): void {
     this.dispose?.();
     this.dispose = undefined;
   }

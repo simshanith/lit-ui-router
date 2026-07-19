@@ -63,7 +63,7 @@ export class RouterReactionController<T> implements ReactiveController {
     host.addController(this);
   }
 
-  hostConnected() {
+  hostConnected(): void {
     const router =
       this.options.router ?? UIRouterLitElement.seekRouter(this.host);
     if (!router) {
@@ -85,7 +85,7 @@ export class RouterReactionController<T> implements ReactiveController {
     );
   }
 
-  hostDisconnected() {
+  hostDisconnected(): void {
     this.dispose?.();
     this.dispose = undefined;
   }

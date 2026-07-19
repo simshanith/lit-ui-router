@@ -642,6 +642,9 @@ importers:
       '@tools/happy-dom':
         specifier: workspace:*
         version: link:../../tools/happy-dom
+      '@tools/oxc-emit':
+        specifier: workspace:*
+        version: link:../../tools/oxc-emit
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
