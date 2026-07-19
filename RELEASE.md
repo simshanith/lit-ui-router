@@ -9,7 +9,7 @@ The release process is automated through GitHub Actions with protected environme
 1. **Version Bump** - Create a release PR with version changes
 2. **Build & Test** - Validate the PR on CI
 3. **Merge** - Merge the release PR to main
-4. **Tag** - Automatically tag the release
+4. **Tag** - A green main CI run automatically tags the release
 5. **Publish** - Publish to NPM and create GitHub Release
 
 ## Tag and Branch Conventions
@@ -64,15 +64,24 @@ These are consumed by `build-test.yml` and `publish-npm.yml` to enable remote ca
 
 ### 1. Build and Test (`build-test.yml`)
 
-**Triggers:** Pull requests, pushes to `main`
+**Triggers:** Pull requests, branch and `main` pushes, manual dispatch
 
 Runs the CI pipeline including:
 
 - Build verification
 - Unit tests with Vitest
 - E2E tests with Playwright and Cypress
+- Lint, typecheck, format, and bundle checks
 - Coverage reporting to Codecov
 - PR coverage comments (on PRs)
+
+Pushes to `main` run the same graph plus the main-only guards (turbo
+`ci:main`): the Firefox/WebKit vitest engines pass (`test:engines`), the
+pack-surface manifest check (`check:pack`), and the full dts-backtest
+TypeScript matrix. A green main run then calls the Tag & push workflow — a
+red run means no tag, hence no publish. Manual dispatch can run the
+`ci:main` graph on demand via the `mainGraph` input (combine with `force`
+to deflake the full main graph); tagging stays push-only.
 
 **Security:** Only runs on first-party PRs (not forks) to protect secrets.
 
@@ -96,11 +105,11 @@ Creates a release PR by:
 
 ### 3. Tag & Push (`publish-gh.yml`)
 
-**Triggers:** Push to `main`
+**Triggers:** Called by Build and Test after a green `main` run (`workflow_call`); manual dispatch is the CI-bypass escape hatch
 
-When a release PR merges:
+When a release PR merges and main CI is green:
 
-1. Uses release-it to create a git tag (`lit-ui-router@X.Y.Z`)
+1. Uses release-it to create a git tag per package (`<package>@X.Y.Z`)
 2. Pushes the tag to origin
 3. Tag push triggers the publish workflow
 
@@ -108,7 +117,7 @@ When a release PR merges:
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching `lit-ui-router@*`
+**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`); manual dispatch for dry runs
 
 The final release stage:
 
@@ -118,6 +127,16 @@ The final release stage:
 4. Publishes to NPM using OIDC trusted publishing
 5. Creates a draft GitHub Release with the tarball
 6. Marks the GitHub Release as final
+
+### 5. Release signals (`release-signals.yml`)
+
+**Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
+
+Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
+(does the pack surface differ from the published `latest`?) and
+`peer-floor (<pkg>)` (is an adapter's published peer floor stale?). The
+README badges read these check runs; `action_required` renders orange,
+meaning a release or floor bump is owed — never a CI failure.
 
 ## Step-by-Step Release Process
 
@@ -136,7 +155,8 @@ The final release stage:
 
 3. **Merge the release PR:**
    - Merge with squash commit
-   - The merge triggers tagging automatically
+   - The merge runs main CI (including the main-only guards); a green run
+     triggers tagging automatically
 
 4. **Verify the release:**
    - Check Actions for tag-release workflow
@@ -165,6 +185,8 @@ For prereleases like `1.2.3-beta.0`:
 ### Tag workflow not running
 
 - Verify the PR was merged (not closed)
+- Check that the main Build and Test run is green — tagging only fires after
+  green main CI; `workflow_dispatch` on Tag & push is the escape hatch
 - Check that `GH_PERSONAL_ACCESS_TOKEN` has correct permissions
 - Ensure the `tag-release` environment is configured
 

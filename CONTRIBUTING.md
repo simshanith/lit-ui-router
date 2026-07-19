@@ -29,8 +29,13 @@ pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vite
 ## Running Tests
 
 ```bash
-# Run all tests
-pnpm run ci
+# Run the PR CI pipeline (build, tests, coverage, lint, typecheck,
+# format check, bundle checks) — what every PR runs
+mise run ci
+
+# PR pipeline plus the main-only guards (Firefox/WebKit vitest engines pass,
+# pack check, dts-backtest TS matrix) — what a push to main runs
+mise run ci_main
 
 # Run unit tests only
 pnpm --filter lit-ui-router test
@@ -38,6 +43,8 @@ pnpm --filter lit-ui-router test
 # Run E2E tests
 pnpm --filter sample-app-lit-e2e test
 ```
+
+`mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
 
 ## TypeScript authoring
 
@@ -51,8 +58,10 @@ current TypeScript — they only matter if they leak into a declaration
 type inside a function body emits nothing and is fine).
 
 This is enforced in CI by [`tools/dts-backtest`](./tools/dts-backtest/README.md),
-which typechecks the built declarations with TypeScript 5.0.4 and the
-current version, in `bundler` and `NodeNext` resolution modes. If
+which typechecks the built declarations in `bundler` and `NodeNext`
+resolution modes. PRs run the current-TS leg (`@tools/dts-backtest#test`);
+pushes to `main` run the full TypeScript version matrix down to 5.0.4
+(`@tools/dts-backtest#test:matrix`, part of the `ci:main` graph). If
 `@tools/dts-backtest#test` fails on your change, keep the newer-TS construct out
 of the public surface — or raise the floor, which is a semver-major
 discussion (see the tool README).
@@ -125,7 +134,8 @@ Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./REL
 
 1. Maintainer triggers "Bump version" workflow
 2. Release PR is created and reviewed
-3. Merge triggers automatic tagging
+3. Merge runs main CI; a green run tags the release automatically (manual
+   dispatch of "Tag & push" is the escape hatch)
 4. Tag triggers NPM publish and GitHub Release
 
 ## Deployment
