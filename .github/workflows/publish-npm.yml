@@ -119,6 +119,6 @@ jobs:
     permissions:
       checks: write
       contents: read
-    uses: ./.github/workflows/published-diff.yml
+    uses: ./.github/workflows/release-signals.yml
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
