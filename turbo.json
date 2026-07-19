@@ -57,7 +57,8 @@
     },
     "lint": {
       "with": ["//#lint:root", "//#lint:package-json", "//#lint:workflows"],
-      "dependsOn": ["^build"],
+      // type-aware oxlint resolves cross-package imports to dist d.ts only
+      "dependsOn": ["^build:types"],
       "inputs": [
         "**/*.ts",
         "**/*.js",
@@ -86,13 +87,14 @@
       ]
     },
     "typecheck": {
-      // ^build drops once every package is pass-split
-      "dependsOn": ["^build", "^build:types"],
+      // every package is pass-split (#369, #395, #396): types come from
+      // build:types alone, JS emit stays off the typecheck path
+      "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "with": ["//#typecheck:root", "typecheck:src"]
     },
     "typecheck:src": {
-      "dependsOn": ["^build", "^build:types"],
+      "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "typecheck:peer-floor": {
