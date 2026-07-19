@@ -97,12 +97,12 @@ export default defineConfig({
         // in. Its bundle is content-hashed against different env, so it
         // coexists with the vanilla one under /assets.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist-hash/assets/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/hash/assets/*',
           dest: 'assets',
           rename: { stripBase: true },
         },
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist-hash/index.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/hash/index.html',
           dest: '',
           rename: { name: 'app-hash.html', stripBase: true },
         },
@@ -121,7 +121,7 @@ export default defineConfig({
         // Hash deep paths (`/app-hash/foo`) never happen under a hash client,
         // but a mistyped one gets the same honest 404 page as the other mounts.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist-hash/404.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/hash/404.html',
           dest: 'app-hash',
           rename: { stripBase: true },
         },

@@ -12,7 +12,7 @@
     "builtin": true
   },
   "ignorePatterns": [
-    "**/dist/**",
+    "**/dist*/**",
     "**/coverage/**",
     "**/node_modules/**",
     "**/.vitepress/cache/**"

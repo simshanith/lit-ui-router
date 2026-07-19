@@ -81,6 +81,9 @@ docs
 - `with` runs root-level tasks alongside workspace tasks (marked edges above)
 - `outputs` defines cacheable artifacts
 - `inputs` scopes cache invalidation
+- Build outputs live in `dist`-named dirs (`dist/`, nested `dist/<variant>`, or `dist-*` siblings), so every traversal ignore is one `**/dist*/**` glob
+
+Exceptions: `docs/api/**` (generated VitePress content, not a bundle output) and `tools/release/.cache/**` (turbo-hashed input cache).
 
 **Graph notes:**
 
