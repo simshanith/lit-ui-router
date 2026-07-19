@@ -72,6 +72,7 @@
       "inputs": [
         "**/package.json",
         "eslint.config.js",
+        "eslint.repo-rules.js",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
       ]

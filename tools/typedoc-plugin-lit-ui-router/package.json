@@ -17,6 +17,7 @@
   },
   "scripts": {
     "build": "tsc",
+    "build:types": "tsc",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint ."
