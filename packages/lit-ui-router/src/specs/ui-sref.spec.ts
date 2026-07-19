@@ -20,19 +20,26 @@ import {
   routerGo,
   clickElement,
 } from './test-utils.js';
-import { clickLocatedElement } from './browser-test-utils.js';
+import {
+  clickLocatedElement,
+  suppressNativeClickNavigation,
+  NativeClickSuppression,
+} from './browser-test-utils.js';
 
 describe('uiSref directive', () => {
   let container: HTMLElement;
   let router: UIRouterLit | undefined;
+  let suppression: NativeClickSuppression;
 
   beforeEach(async () => {
+    suppression = suppressNativeClickNavigation();
     container = document.createElement('div');
     document.body.appendChild(container);
     await tick();
   });
 
   afterEach(async () => {
+    suppression.restore();
     // Remove DOM first to trigger directive disconnection
     container.remove();
     await tick(10);
@@ -181,6 +188,10 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(preventDefaultSpy).toHaveBeenCalled();
+      // the event reached default-action stage already cancelled by the router
+      expect(suppression.events).toContainEqual(
+        expect.objectContaining({ type: 'click', defaultPrevented: true }),
+      );
     });
 
     it('should pass params to navigation', async () => {
@@ -212,6 +223,9 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
+      // delivery is platform-split (macOS turns ctrl-click into contextmenu);
+      // whatever arrived must still have its default intact
+      expect(suppression.events.filter((e) => e.defaultPrevented)).toEqual([]);
     });
 
     it('should ignore click with meta key', async () => {
@@ -225,6 +239,15 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
+      // positive proof: the click reached default-action stage with its
+      // default intact — the suppression helper was the only preventer
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'click',
+          tag: 'a',
+          defaultPrevented: false,
+        }),
+      ]);
     });
 
     it('should ignore middle button click', async () => {
@@ -238,6 +261,15 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
+      // middle clicks arrive as auxclick (never click); its default — open
+      // in a new tab — must reach us intact
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'auxclick',
+          tag: 'a',
+          defaultPrevented: false,
+        }),
+      ]);
     });
 
     it('should ignore right button click', async () => {
@@ -250,6 +282,9 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
+      // right clicks surface as contextmenu (and browser-dependent auxclick);
+      // whatever arrived must still have its default intact
+      expect(suppression.events.filter((e) => e.defaultPrevented)).toEqual([]);
     });
   });
 
@@ -276,6 +311,15 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
+      // positive proof: the click reached default-action stage with its
+      // default (open the href in a new tab) intact
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'click',
+          tag: 'a',
+          defaultPrevented: false,
+        }),
+      ]);
     });
 
     it('should ignore click with rel="external"', async () => {
@@ -300,6 +344,13 @@ describe('uiSref directive', () => {
       await tick();
 
       expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'click',
+          tag: 'a',
+          defaultPrevented: false,
+        }),
+      ]);
     });
   });
 
