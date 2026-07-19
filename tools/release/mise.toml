@@ -77,6 +77,11 @@ flag "--dry-run" help="release-it --dry-run: no npm publish, no GitHub release" 
 '''
 run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-publish.ts'
 
+[tasks.check_pack]
+# Main-push CI placement (not per-PR); publish's check_tarball is the last-line gate.
+description = "Run the pack-surface manifest check via turbo"
+run = "turbo run check:pack"
+
 [tasks.published_diff]
 description = "Resolve published versions, then run the published-diff check (two turbo invocations: turbo hashes inputs at run startup, so resolve must write before the check's hash computes)"
 usage = '''
