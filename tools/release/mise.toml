@@ -99,6 +99,23 @@ run = [
 description = "Create per-package published-diff check runs from the summary JSON"
 run = "node src/checks/publish-check-runs.ts"
 
+[tasks.peer_floor_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY. Tier-1 peer-floor signal: runs each
+# opted-in package's typecheck:peer-floor via turbo and creates one check run
+# per package on the current HEAD — action_required on a stale floor, never a
+# job failure. Inert while no package defines the script.
+description = "Create per-package peer-floor check runs (merge-time signal, non-gating)"
+run = "node src/checks/peer-floor-check-runs.ts"
+
+[tasks.peer_floor_gate]
+# Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
+# dishonest; no-ops for packages without the typecheck:peer-floor script.
+description = "Fail a bump when the package's published peer floor is stale"
+usage = '''
+flag "--package <package>" help="Package being bumped" required=#true env="PACKAGE"
+'''
+run = 'PACKAGE="${usage_package?}" node src/steps/release-peer-floor-gate.ts'
+
 [tasks.bump]
 # env: GH_TOKEN (gh pr create; the branch push rides checkout's PAT).
 description = "Compute the bumped version, branch, commit, push, and open the release PR"

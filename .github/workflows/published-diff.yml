@@ -71,3 +71,14 @@ jobs:
         run: mise run //tools/release:publish_check_runs
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      # Tier-1 peer-floor signal: "peer-floor (<pkg>)" check runs, one per
+      # package defining typecheck:peer-floor. action_required = the floor
+      # pin is stale (release the peer, then bump the floor); never fails
+      # this job. Reruns here flip green once the floor bump lands on main.
+      - name: Peer floor check runs
+        run: mise run //tools/release:peer_floor_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
