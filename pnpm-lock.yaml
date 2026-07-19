@@ -234,7 +234,6 @@ packageExtensionsChecksum: sha256-GeoK+J1KFKE+e2SY5vm8ItXeXnBlw5N6FlT+iEHePoo=
 
 patchedDependencies:
   '@api-viewer/docs': 6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac
-  '@uirouter/dsr': 85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761
   '@vitest/browser': 5d79da8178f159b23c7475d749ef63f29e9613181535363eb1697e7359f1e63f
   lit-dialog: d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a
 
@@ -446,7 +445,7 @@ importers:
         version: 6.1.2
       '@uirouter/dsr':
         specifier: 'catalog:'
-        version: 1.2.0(patch_hash=85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761)(@uirouter/core@6.1.2)
+        version: 1.2.0(@uirouter/core@6.1.2)
       '@uirouter/sticky-states':
         specifier: 'catalog:'
         version: 1.5.1(@uirouter/core@6.1.2)
@@ -7719,7 +7718,7 @@ snapshots:
 
   '@uirouter/core@6.1.2': {}
 
-  '@uirouter/dsr@1.2.0(patch_hash=85054b266dee7294d59dc8e0c386367422777df9777a26acb607455cb8217761)(@uirouter/core@6.1.2)':
+  '@uirouter/dsr@1.2.0(@uirouter/core@6.1.2)':
     dependencies:
       '@uirouter/core': 6.1.2
 

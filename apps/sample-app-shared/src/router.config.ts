@@ -5,10 +5,8 @@ import {
   LocationPlugin,
   Rejection,
   UIRouter,
-  type UIRouterPlugin,
 } from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
-// @ts-expect-error - @uirouter/dsr lacks proper ESM exports field for nodenext resolution
 import { DSRPlugin } from '@uirouter/dsr';
 
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
@@ -101,8 +99,7 @@ export function configureRouter(router = new UIRouterLit()) {
     );
   }
 
-  // the @ts-expect-error import above leaves DSRPlugin as `any`
-  router.plugin(DSRPlugin as new (router: UIRouter) => UIRouterPlugin);
+  router.plugin(DSRPlugin);
   router.plugin(StickyStatesPlugin);
 
   const { stateService, stateRegistry, urlService } = router;
