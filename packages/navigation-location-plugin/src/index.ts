@@ -97,7 +97,7 @@ export class NavigationLocationService extends BaseLocationServices {
    * @returns The current URL string (e.g., '/path?query=value#hash')
    * @internal
    */
-  protected _get() {
+  protected _get(): string {
     let { pathname, hash, search } = this._location;
     search = splitQuery(search)[1]; // strip ? if found
     hash = splitHash(hash)[1]; // strip # if found
@@ -122,7 +122,12 @@ export class NavigationLocationService extends BaseLocationServices {
    * @param replace - If true, replaces current entry instead of pushing
    * @internal
    */
-  protected _set(state: unknown, title: string, url: string, replace: boolean) {
+  protected _set(
+    state: unknown,
+    title: string,
+    url: string,
+    replace: boolean,
+  ): void {
     const basePrefix = this._getBasePrefix();
     const slash = url && !url.startsWith('/') ? '/' : '';
     const fullUrl =
@@ -144,7 +149,7 @@ export class NavigationLocationService extends BaseLocationServices {
    * Cleans up the location service by removing the navigation event listener.
    * @param router - The UIRouter instance
    */
-  public dispose(router: UIRouter) {
+  public dispose(router: UIRouter): void {
     super.dispose(router);
     globalRoot.navigation.removeEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
@@ -154,11 +159,12 @@ export class NavigationLocationService extends BaseLocationServices {
 }
 
 /** A [UIRouterPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html) that gets/sets the current location using the browser's `location` and `navigation` apis */
-export const navigationLocationPlugin = locationPluginFactory(
-  'vanilla.navigationLocation',
-  true,
-  NavigationLocationService satisfies {
-    new (uiRouter?: UIRouter): LocationServices;
-  },
-  BrowserLocationConfig,
-) satisfies (router: UIRouter) => LocationPlugin;
+export const navigationLocationPlugin: (router: UIRouter) => LocationPlugin =
+  locationPluginFactory(
+    'vanilla.navigationLocation',
+    true,
+    NavigationLocationService satisfies {
+      new (uiRouter?: UIRouter): LocationServices;
+    },
+    BrowserLocationConfig,
+  );
