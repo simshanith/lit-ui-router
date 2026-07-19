@@ -11,6 +11,7 @@ import {
 } from '../src/redirects.ts';
 import type { RedirectTable } from '../src/redirects.ts';
 import { createHeadlessRouter, onceSettled } from '../src/simulate.ts';
+import { exec } from '../src/url-matcher.ts';
 
 describe('compileRoutes', () => {
   it('appends nested urls along dotted names and merges params rootward', () => {
@@ -23,7 +24,7 @@ describe('compileRoutes', () => {
       compiled.map((route) => route.pattern),
       ['/contacts', '/contacts/:contactId', '/contacts/:contactId/edit'],
     );
-    assert.deepEqual(compiled[1].matcher.exec('/contacts/3'), {
+    assert.deepEqual(exec(compiled[1].matcher, '/contacts/3'), {
       contactId: '3',
     });
   });

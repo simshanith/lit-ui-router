@@ -10,8 +10,11 @@
 
 import type { RawParams } from '@uirouter/core';
 
-import { UrlMatcher, urlMatcherFactory } from './url-matcher.ts';
-import type { UrlMatcherCompilerConfig } from './url-matcher.ts';
+import { compare, exec, format, urlMatcherFactory } from './url-matcher.ts';
+import type {
+  CompiledMatcher,
+  UrlMatcherCompilerConfig,
+} from './url-matcher.ts';
 
 /** A state's contribution to the url-addressable route set. */
 export interface RouteDeclaration {
@@ -63,7 +66,7 @@ export interface CompiledRoute {
   name: string;
   /** The full pattern: this state's url appended to its ancestors'. */
   pattern: string;
-  matcher: UrlMatcher;
+  matcher: CompiledMatcher;
   redirectTo?: string | RedirectTarget;
 }
 
@@ -129,20 +132,20 @@ export interface RouteMatch {
 
 /**
  * Returns which route's pattern the pathname matched, with the extracted
- * params. The most specific match wins ([[UrlMatcher.compare]]); ties go
- * to declaration order.
+ * params. The most specific match wins ([[compare]]); ties go to
+ * declaration order.
  */
 export function matchRoute(
   routes: CompiledRoute[],
   pathname: string,
 ): RouteMatch | null {
   let best: RouteMatch | null = null;
-  let bestMatcher: UrlMatcher | null = null;
+  let bestMatcher: CompiledMatcher | null = null;
   for (const { name, matcher } of routes) {
-    const params = matcher.exec(pathname);
+    const params = exec(matcher, pathname);
     if (params === null) continue;
     // Strict < keeps the earlier declaration on ties.
-    if (bestMatcher === null || UrlMatcher.compare(matcher, bestMatcher) < 0) {
+    if (bestMatcher === null || compare(matcher, bestMatcher) < 0) {
       best = { state: name, params };
       bestMatcher = matcher;
     }
@@ -213,7 +216,7 @@ export function compileRedirects(
       carried = next.params ?? carried;
       state = byName.get(next.state)!;
     }
-    const path = state.matcher.format(carried);
+    const path = format(state.matcher, carried);
     // Invalid target params, or a redirect landing where it started: no-op.
     return path === null || path === pathname ? null : path;
   };
@@ -225,7 +228,7 @@ export function compileRedirects(
           return follow(rule.to.state, rule.to.params ?? {}, pathname);
         continue;
       }
-      const params = rule.matcher!.exec(pathname);
+      const params = exec(rule.matcher!, pathname);
       if (params !== null)
         return follow(
           rule.to.state,

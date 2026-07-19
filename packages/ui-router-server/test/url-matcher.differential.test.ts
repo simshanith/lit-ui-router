@@ -8,7 +8,12 @@ import {
 } from '@uirouter/core';
 import type { RawParams } from '@uirouter/core';
 
-import { UrlMatcher, urlMatcherFactory } from '../src/url-matcher.ts';
+import {
+  compare,
+  exec,
+  format,
+  urlMatcherFactory,
+} from '../src/url-matcher.ts';
 import type { UrlMatcherCompileOptions } from '../src/url-matcher.ts';
 
 // The divergence guard for the standalone extraction: every pattern/url pair
@@ -258,7 +263,7 @@ describe(`differential: standalone matcher vs @uirouter/core (${allCases.length}
       const actualMatcher = compile(pattern, options);
       for (const url of urls) {
         const expected: unknown = expectedMatcher.exec(url);
-        const actual: unknown = actualMatcher.exec(url);
+        const actual: unknown = exec(actualMatcher, url);
         assert.deepStrictEqual(actual, expected, `'${pattern}' × '${url}'`);
       }
     });
@@ -309,7 +314,7 @@ describe('differential: rejected by both implementations', () => {
         `core accepted: ${label}`,
       );
       assert.throws(
-        () => compile(pattern, options).exec(url ?? '/'),
+        () => exec(compile(pattern, options), url ?? '/'),
         `standalone accepted: ${label}`,
       );
     });
@@ -522,14 +527,14 @@ const specificityPatterns = [
   '/users/:id?sort&page',
 ];
 
-describe(`differential: UrlMatcher.compare vs @uirouter/core (${specificityPatterns.length} patterns, all pairs)`, () => {
+describe(`differential: compare vs @uirouter/core (${specificityPatterns.length} patterns, all pairs)`, () => {
   for (const left of specificityPatterns) {
     for (const right of specificityPatterns) {
       it(`compare('${left}', '${right}')`, () => {
         const expected = sign(
           CoreUrlMatcher.compare(coreCompile(left), coreCompile(right)),
         );
-        const actual = sign(UrlMatcher.compare(compile(left), compile(right)));
+        const actual = sign(compare(compile(left), compile(right)));
         assert.equal(actual, expected);
       });
     }
@@ -549,7 +554,7 @@ describe(`differential: format() vs @uirouter/core (${formatCases.length} patter
       const actualMatcher = compile(pattern, options);
       for (const value of values) {
         const expected: unknown = expectedMatcher.format(value);
-        const actual: unknown = actualMatcher.format(value);
+        const actual: unknown = format(actualMatcher, value);
         assert.deepStrictEqual(
           actual,
           expected,
