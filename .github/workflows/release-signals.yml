@@ -1,8 +1,9 @@
-# Published-diff check runs on main's head — one per package, named
-# "published-diff (<pkg>)"; the README badges read them via shields'
-# check-runs endpoint. action_required renders orange = a release is owed,
-# never a CI failure, so this job succeeds whether or not drift exists.
-name: Published Diff
+# Non-gating release signals on main's head, reported as per-package check
+# runs: "published-diff (<pkg>)" (README badges read them via shields'
+# check-runs endpoint) and "peer-floor (<pkg>)". action_required renders
+# orange = a release/floor-bump is owed, never a CI failure — this job
+# succeeds whether or not any signal is orange.
+name: Release signals
 
 on:
   push:
@@ -33,7 +34,7 @@ env:
 # Literal group: github.workflow evaluates to the CALLER's name on
 # workflow_call, which would split called refreshes from push refreshes.
 concurrency:
-  group: published-diff
+  group: release-signals
   cancel-in-progress: true
 
 jobs:
