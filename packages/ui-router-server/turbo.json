@@ -10,7 +10,7 @@
       "with": ["typecheck:tests"]
     },
     "typecheck:tests": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     }
   }

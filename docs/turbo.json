@@ -39,7 +39,7 @@
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
-      "dependsOn": ["^build", "^docs:api"],
+      "dependsOn": ["^build:types", "^docs:api"],
       "with": ["typecheck:vue", "typecheck:worker", "typecheck:worker:tests"]
     },
     "test": {
@@ -49,18 +49,18 @@
       "inputs": ["$TURBO_DEFAULT$"]
     },
     "typecheck:worker": {
-      "dependsOn": ["^build", "types:worker"],
+      "dependsOn": ["^build:types", "types:worker"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "typecheck:worker:tests": {
       // The worker module rides into the test graph, so the generated
       // worker-configuration.d.ts must exist here too.
-      "dependsOn": ["^build", "types:worker"],
+      "dependsOn": ["^build:types", "types:worker"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "lint": {
       // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
-      "dependsOn": ["^build", "types:worker"]
+      "dependsOn": ["^build:types", "types:worker"]
     },
     "types:worker": {
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
@@ -74,7 +74,7 @@
       "env": ["E2E_TEST"]
     },
     "typecheck:vue": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build:types"],
       "inputs": [
         ".vitepress/env.d.ts",
         ".vitepress/theme/components/*.vue",
