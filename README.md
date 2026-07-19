@@ -3,11 +3,10 @@
 <img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
-
 [![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
 [![Tag & push (escape hatch)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml/badge.svg?branch=main&event=workflow_dispatch)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml?query=branch%3Amain+event%3Aworkflow_dispatch)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 
 #### Published packages
 
