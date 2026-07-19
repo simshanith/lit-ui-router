@@ -11,7 +11,7 @@
   "dependencies": {
     "@uirouter/core": "^6.1.2",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.7.0"
+    "lit-ui-router": "^1.7.1"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
