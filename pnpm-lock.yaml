@@ -198,6 +198,10 @@ catalogs:
     wrangler:
       specifier: ^4.110.0
       version: 4.110.0
+  peerFloor:
+    lit-ui-router-floor:
+      specifier: npm:lit-ui-router@1.7.0
+      version: 1.7.0
   publishedPeer:
     '@uirouter/core':
       specifier: ^6.0.8
@@ -632,6 +636,9 @@ importers:
       lit-ui-router:
         specifier: workspace:*
         version: link:../lit-ui-router
+      lit-ui-router-floor:
+        specifier: catalog:peerFloor
+        version: lit-ui-router@1.7.0
       mobx:
         specifier: 'catalog:'
         version: 6.16.1
@@ -4638,6 +4645,9 @@ packages:
 
   lit-html@3.3.3:
     resolution: {integrity: sha512-el8M6jK2o3RXBnrSHX3ZKrsN8zEV63pSExTO1wYJz7QndGYZ8353e2a5PPX+qHe2aGayfnchQmkAojaWAREOIA==}
+
+  lit-ui-router@1.7.0:
+    resolution: {integrity: sha512-UK69ySdMwrAILx8aG9TYcNLlg/Q2CCrs1nqwnKumFlQXeNvjf+heH5l1KdfDEyyuBYafrzGxUMOLEZ2esiX3Tw==}
 
   lit@2.8.0:
     resolution: {integrity: sha512-4Sc3OFX9QHOJaHbmTMk28SYgVxLN3ePDjg7hofEft2zWlehFL3LiAuapWc4U/kYwMYJSh2hTCPZ6/LIC7ii0MA==}
@@ -9302,6 +9312,11 @@ snapshots:
   lit-html@3.3.3:
     dependencies:
       '@types/trusted-types': 2.0.7
+
+  lit-ui-router@1.7.0:
+    dependencies:
+      '@uirouter/core': 6.1.2
+      lit: 3.3.3
 
   lit@2.8.0:
     dependencies:

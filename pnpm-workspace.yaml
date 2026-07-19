@@ -74,6 +74,10 @@ catalog:
 catalogMode: prefer
 
 catalogs:
+  # exact published floor of the matching publishedPeer range; peer-floor-guard
+  # fails the typecheck:peer-floor task when the two drift apart
+  peerFloor:
+    lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedPeer:
     '@uirouter/core': ^6.0.8
     hono: ^4.0.0
