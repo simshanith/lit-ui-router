@@ -4,7 +4,7 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
 import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
-import pluginPnpm from 'eslint-plugin-pnpm';
+import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
 import repoRules from './eslint.repo-rules.ts';
 
 export default defineConfig(
@@ -27,8 +27,8 @@ export default defineConfig(
       ],
     },
   },
-  pluginPnpm.configs.json,
-  pluginPnpm.configs.yaml,
+  pnpmConfigs.json,
+  pnpmConfigs.yaml,
   {
     files: ['**/package.json'],
     rules: {

@@ -1,4 +1,4 @@
-// Local rules for manifest linting (see eslint.config.js).
+// Local rules for manifest linting (see eslint.config.ts).
 import type { Rule } from 'eslint';
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
