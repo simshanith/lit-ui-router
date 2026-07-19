@@ -22,7 +22,9 @@
     "directory": "packages/navigation-location-plugin"
   },
   "files": [
-    "dist/**"
+    "dist/**",
+    "src/*.ts",
+    "!src/*.spec.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -38,7 +40,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"ui-router-navigation-location-plugin@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles navigation-location-plugin",
@@ -50,11 +53,13 @@
     "test": "VITEST_BROWSER_API_PORT=63340 vitest run --browser=chromium",
     "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium",
     "test:engines": "VITEST_BROWSER_API_PORT=63341 vitest run --project=firefox --project=safari",
-    "typecheck": "tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
+    "@tools/oxc-emit": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/dom-navigation": "catalog:",
     "@types/node": "catalog:",
