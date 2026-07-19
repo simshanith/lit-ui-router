@@ -2,6 +2,23 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    "bundle:worker": {
+      // --dry-run only bundles worker src (the script stubs an empty dist:
+      // assets ship via the binding, never inside index.js), so docs content
+      // can't affect the artifact; workspace deps ride the transit chain.
+      "dependsOn": ["transit"],
+      "inputs": [
+        "package.json",
+        "worker/**",
+        "$TURBO_ROOT$/wrangler.jsonc",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ],
+      "outputs": ["dist-worker-stats/**"]
+    },
+    "codecov:bundle": {
+      // Upload-only: ships the (possibly cache-replayed) dry-run artifact.
+      "dependsOn": ["bundle:worker"]
+    },
     "docs:preview": {
       "dependsOn": ["^docs:api", "build"],
       "cache": false,

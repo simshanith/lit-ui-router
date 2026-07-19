@@ -91,8 +91,13 @@
         "lint",
         "typecheck",
         "format:check",
+        "check:bundle",
         "codecov:bundle"
       ]
+    },
+    "check:bundle": {
+      "dependsOn": ["transit"],
+      "inputs": ["$TURBO_DEFAULT$"]
     },
     "codecov:bundle": {
       "dependsOn": ["build"],

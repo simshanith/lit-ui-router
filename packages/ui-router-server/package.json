@@ -16,6 +16,7 @@
     "./vite": "./src/vite.ts"
   },
   "scripts": {
+    "codecov:bundle": "upload-entry-bundles",
     "format": "oxfmt \"**/*.{ts,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
@@ -24,9 +25,9 @@
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@tools/bundle-probe": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
-    "esbuild": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:",

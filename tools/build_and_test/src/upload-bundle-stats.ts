@@ -1,9 +1,11 @@
 #!/usr/bin/env node
 // Uploads bundle stats to Codecov from the built dist/ (turbo codecov:bundle,
 // uncached) so the upload runs even when the vite build is a cache replay.
-// Usage: node upload-bundle-stats.ts <bundle-name> [build-dir=dist]
+// Usage: node upload-bundle-stats.ts <bundle-name> [build-dir=dist] [--no-manifest]
 // <bundle-name> must match the former @codecov/vite-plugin's <name>-<format>
 // naming (e.g. sample-app-lit-vanilla-esm) or the codecov size series restarts.
+// --no-manifest: for dirs no vite manifest describes (worker/library bundles);
+// uploads every asset except sourcemaps and wrangler's outdir README.
 import path from 'node:path';
 import { pathToFileURL } from 'node:url';
 
@@ -14,10 +16,16 @@ import type { Manifest } from 'vite';
 // but is re-exported by neither the analyzer nor its bundler-plugin-core.
 type UploadedAsset = { name: string; size: number };
 
-const [bundleName, buildDir = 'dist'] = process.argv.slice(2);
+const args = process.argv.slice(2);
+const noManifest = args.includes('--no-manifest');
+const [bundleName, buildDir = 'dist'] = args.filter(
+  (arg) => arg !== '--no-manifest',
+);
 
 if (!bundleName) {
-  console.error('usage: upload-bundle-stats.ts <bundle-name> [build-dir]');
+  console.error(
+    'usage: upload-bundle-stats.ts <bundle-name> [build-dir] [--no-manifest]',
+  );
   process.exit(1);
 }
 
@@ -34,26 +42,42 @@ if (!process.env.CODECOV_TOKEN) {
 // is absent from its own emit list and falls out automatically.
 // `buildDir` is relative to the cwd, but a bare relative import specifier
 // resolves against this module — hence the file URL.
-const manifestPath = path.resolve(buildDir, '.vite', 'manifest.json');
-let manifest: Manifest;
-try {
-  // vite wrote this file in the same build, so vite's own type describes it.
-  const module = (await import(pathToFileURL(manifestPath).href, {
-    with: { type: 'json' },
-  })) as { default: Manifest };
-  manifest = module.default;
-} catch (error) {
-  // A missing or unparseable manifest means build.manifest regressed in the
-  // vite config; silently uploading an empty report would be worse than failing.
-  console.error(`[codecov] ${bundleName}: cannot read ${manifestPath}:`, error);
-  process.exit(1);
-}
-const emitted = new Set(['index.html']);
-for (const entry of Object.values(manifest)) {
-  emitted.add(entry.file);
-  for (const file of entry.css ?? []) emitted.add(file);
-  for (const file of entry.assets ?? []) emitted.add(file);
-}
+const readEmittedAssets = async (): Promise<Set<string> | null> => {
+  if (noManifest) return null;
+  const manifestPath = path.resolve(buildDir, '.vite', 'manifest.json');
+  let manifest: Manifest;
+  try {
+    // vite wrote this file in the same build, so vite's own type describes it.
+    const module = (await import(pathToFileURL(manifestPath).href, {
+      with: { type: 'json' },
+    })) as { default: Manifest };
+    manifest = module.default;
+  } catch (error) {
+    // A missing or unparseable manifest means build.manifest regressed in the
+    // vite config; silently uploading an empty report would be worse than failing.
+    console.error(
+      `[codecov] ${bundleName}: cannot read ${manifestPath}:`,
+      error,
+    );
+    process.exit(1);
+  }
+  const emitted = new Set(['index.html']);
+  for (const entry of Object.values(manifest)) {
+    emitted.add(entry.file);
+    for (const file of entry.css ?? []) emitted.add(file);
+    for (const file of entry.assets ?? []) emitted.add(file);
+  }
+  return emitted;
+};
+
+const emitted = await readEmittedAssets();
+
+// Manifest membership when a manifest describes the dir; manifest-less mode
+// ships everything but sourcemaps and wrangler's outdir README.
+const isReportable = (name: string): boolean => {
+  if (emitted) return emitted.has(name);
+  return !name.endsWith('.map') && name !== 'README.md';
+};
 
 let uploaded: UploadedAsset[] = [];
 
@@ -75,7 +99,7 @@ try {
       // uploaded payload and the summary cannot drift.
       beforeReportUpload: (report) => {
         report.assets = report.assets?.filter((asset) =>
-          emitted.has(asset.name),
+          isReportable(asset.name),
         );
         uploaded = report.assets ?? [];
         return Promise.resolve(report);

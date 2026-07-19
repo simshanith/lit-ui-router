@@ -11,6 +11,13 @@ coverage:
       default:
         target: auto
 
+# Bundle stats (apps' vite builds, ui-router-server entries, the docs worker).
+# Informational while the new series baseline; the intent is to flip status to
+# true (and require the check) once a few main commits establish the baseline.
+bundle_analysis:
+  warning_threshold: '5%'
+  status: 'informational'
+
 # Component definitions for monorepo packages
 # https://docs.codecov.com/docs/components
 component_management:

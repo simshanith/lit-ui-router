@@ -3,6 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "test": {
+      "dependsOn": ["^test", "transit"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
     "typecheck": {
