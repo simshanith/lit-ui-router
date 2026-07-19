@@ -12,8 +12,6 @@ export type CheckRunPayload = {
   conclusion: 'success' | 'action_required';
   title: string;
   summary: string;
-  /** Only drifting runs set it; success keeps the default run link. */
-  details_url?: string;
 };
 
 /** The exact run name the README badge nameFilter must match. */
@@ -21,7 +19,7 @@ export function checkRunName(packageName: string): string {
   return `published-diff (${packageName})`;
 }
 
-/** Where a drifting run's Resolve button lands: the release workflow's page. */
+/** The release workflow's page, linked from a drifting run's resolve line. */
 export function releaseWorkflowUrl(repo: string): string {
   return `https://github.com/${repo}/actions/workflows/bump-version.yml`;
 }
@@ -70,7 +68,7 @@ export function toCheckRun(
         ...summary.shipAffectingFiles.map((file) => `- \`${file}\``),
         ...inertDetails(summary),
       ].join('\n'),
-      details_url: releaseUrl,
+      // details_url: not settable — GitHub pins GITHUB_TOKEN-created check runs to their own page
     };
   }
   return {
@@ -101,9 +99,6 @@ export function checkRunApiArgs(
     'status=completed',
     '-f',
     `conclusion=${payload.conclusion}`,
-    ...(payload.details_url === undefined
-      ? []
-      : ['-f', `details_url=${payload.details_url}`]),
     '-f',
     `output[title]=${payload.title}`,
     '-f',

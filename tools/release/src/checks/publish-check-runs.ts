@@ -26,7 +26,7 @@ async function main() {
   }
   const summaries = parsed as PackageSummary[];
 
-  // details_url needs the slug too; dry runs may fall back for URL shaping.
+  // The resolve line's URL needs the slug too; dry runs may fall back.
   const repo = process.env.GITHUB_REPOSITORY ?? 'simshanith/lit-ui-router';
   if (!process.env.GITHUB_REPOSITORY && !dryRun) {
     throw new Error('GITHUB_REPOSITORY must be set (or pass --dry-run)');

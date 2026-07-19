@@ -50,7 +50,6 @@ describe('toCheckRun', () => {
     assert.equal(payload.title, 'up to date with 0.3.3');
     assert.match(payload.summary, /match lit-ui-router-mobx@0\.3\.3/);
     assert.doesNotMatch(payload.summary, /<details>/);
-    assert.equal(payload.details_url, undefined);
   });
 
   it('maps drift to action_required, never failure, with unit and baseline in the title', () => {
@@ -60,7 +59,6 @@ describe('toCheckRun', () => {
       payload.title,
       'unreleased changes vs 1.7.0 (2 shipped files differ)',
     );
-    assert.equal(payload.details_url, RELEASE_URL);
   });
 
   it('opens a drifting summary with the resolve line linking the release workflow', () => {
@@ -90,7 +88,6 @@ describe('toCheckRun', () => {
     const payload = toCheckRun({ ...clean, version: null }, REPO);
     assert.equal(payload.conclusion, 'success');
     assert.match(payload.title, /never published/);
-    assert.equal(payload.details_url, undefined);
   });
 });
 
@@ -108,7 +105,6 @@ describe('checkRunApiArgs', () => {
         conclusion: 'action_required',
         title: 'unreleased changes vs 1.7.0 (2 shipped files differ)',
         summary: 'body',
-        details_url: RELEASE_URL,
       }),
       [
         'api',
@@ -122,25 +118,10 @@ describe('checkRunApiArgs', () => {
         '-f',
         'conclusion=action_required',
         '-f',
-        `details_url=${RELEASE_URL}`,
-        '-f',
         'output[title]=unreleased changes vs 1.7.0 (2 shipped files differ)',
         '-f',
         'output[summary]=body',
       ],
-    );
-  });
-
-  it('omits details_url from the argv when the payload has none', () => {
-    const args = checkRunApiArgs(REPO, 'abc123', {
-      name: 'published-diff (lit-ui-router-mobx)',
-      conclusion: 'success',
-      title: 'up to date with 0.3.3',
-      summary: 'body',
-    });
-    assert.equal(
-      args.some((arg) => arg.startsWith('details_url=')),
-      false,
     );
   });
 });
