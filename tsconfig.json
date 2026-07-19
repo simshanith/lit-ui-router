@@ -17,6 +17,7 @@
     "lib": ["ES2022"]
   },
   "include": [
+    "check-patches.ts",
     "commitlint.config.ts",
     "eslint.config.ts",
     "eslint.repo-rules.ts",

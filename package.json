@@ -7,6 +7,7 @@
   "scripts": {
     "build": "turbo run build",
     "check:pack": "turbo run check:pack",
+    "check:patches": "node check-patches.ts",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
     "ci": "turbo run ci",
@@ -28,7 +29,9 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
+    "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
+    "diff": "catalog:",
     "eslint": "catalog:",
     "eslint-formatter-tap": "catalog:",
     "eslint-plugin-oxlint": "catalog:",
