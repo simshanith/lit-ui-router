@@ -177,6 +177,8 @@ onUnmounted(() => {
 :deep(a img) {
   display: block;
   height: 32px;
+  /* .vp-doc gives content imgs 16px vertical margin — the actual gap culprit. */
+  margin: 0;
 }
 
 :deep(a:hover) {
