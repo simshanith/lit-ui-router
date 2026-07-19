@@ -87,6 +87,13 @@ jobs:
         run: mise run setup
       - name: Setup Git user
         run: mise run //tools/release:git_user
+      # Tier-2 peer-floor gate: a package whose published peer floor no
+      # longer typechecks must not bump. Deadlock-free: the remedy (release
+      # the peer) is a bump this gate skips. No-op without the script.
+      - name: Peer floor gate
+        run: mise run //tools/release:peer_floor_gate
+        env:
+          PACKAGE: ${{ inputs.package }}
       - name: Bump version
         # version calc, release branch, release-it commit+push, gh pr create —
         # see tools/release/src/steps/release-bump.ts for the phase-by-phase contract
