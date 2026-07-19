@@ -27,11 +27,28 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 description = "Start the shared CI Xvfb display and export DISPLAY"
 run = "./src/start-xvfb.ts"
 
+[tasks.playwright_version]
+# env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
+# cache step derives its key alone.
+description = "Emit the installed playwright version to GITHUB_OUTPUT"
+run = "node -p \"'playwright=' + require('playwright/package.json').version\" >> \"$GITHUB_OUTPUT\""
+
+[tasks.cypress_version]
+# env: GITHUB_OUTPUT (step-output target).
+description = "Emit the installed cypress version to GITHUB_OUTPUT"
+run = "node -p \"'cypress=' + require('cypress/package.json').version\" >> \"$GITHUB_OUTPUT\""
+
 [tasks.playwright]
 # The vitest browser legs need the Playwright browsers + system deps; the
 # binary comes from this package's own devDependency.
 description = "Install the Playwright browsers with system dependencies"
 run = "playwright install --with-deps"
+
+[tasks.playwright_deps]
+# The cache-hit companion to `playwright`: browsers restored from cache, apt
+# OS deps still needed on a fresh runner.
+description = "Install only the Playwright system dependencies"
+run = "playwright install-deps"
 
 [tasks.cypress]
 # Verify up front so the concurrent vanilla/mobx Cypress runs skip the
