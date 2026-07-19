@@ -86,6 +86,8 @@ jobs:
       - name: Install Cypress
         # `cypress install` is a near-no-op when the binary is cached; verify
         # still runs so the concurrent suites skip the first-use banner.
+        # verify needs the OS libs the playwright dep steps install on both
+        # cache paths — never skip playwright_deps on hits.
         run: mise run //tools/build_and_test:cypress
       - name: Start shared Xvfb display
         # The vanilla and MobX Cypress suites run concurrently. Without a
