@@ -87,6 +87,24 @@ export default defineConfig(
     },
   },
   {
+    // Shipped dep fields of publishable packages must not use workspace: refs:
+    // pnpm's pack-substitution re-appends the substituted entry, breaking the
+    // sorted published manifest. devDependencies is exempt (stripped at pack;
+    // workspace:* is correct there), as are private manifests (never packed).
+    files: ['packages/*/package.json'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'JSONObjectExpression:not(:has(> JSONProperty[key.value="private"][value.value=true])) > JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"]) > JSONObjectExpression > JSONProperty > JSONLiteral[value=/^workspace:/]',
+          message:
+            'workspace: refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
+        },
+      ],
+    },
+  },
+  {
     // examples/* are standalone `npm ci` projects (StackBlitz): inline versions required.
     files: ['examples/*/package.json'],
     rules: {
