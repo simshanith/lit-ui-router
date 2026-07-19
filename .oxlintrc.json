@@ -310,7 +310,8 @@
         "tools/shared/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
-        "apps/sample-app-routes/test/**/*.test.ts"
+        "apps/sample-app-routes/test/**/*.test.ts",
+        "docs/worker/test/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"
