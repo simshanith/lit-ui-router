@@ -1,4 +1,5 @@
-import type { Transition, StateDeclaration } from '@uirouter/core';
+import type { TargetState, Transition, StateDeclaration } from '@uirouter/core';
+import type { DSRFunction } from '@uirouter/dsr/lib/interface.js';
 
 interface DsrStateDeclaration extends StateDeclaration {
   dsr?: {
@@ -10,10 +11,11 @@ interface DsrTransition extends Transition {
   to(): DsrStateDeclaration;
 }
 
-export function dsrRedirectToDefaultFromWithin(
+// upstream's declared DSRFunction return type omits the TargetState its runtime consumes
+export const dsrRedirectToDefaultFromWithin = ((
   transition: DsrTransition,
-  redirect: string,
-) {
+  redirect: TargetState,
+) => {
   const $state = transition.router.stateService;
   const toState = transition.to();
   const dsrDefault = toState.dsr?.default;
@@ -24,6 +26,6 @@ export function dsrRedirectToDefaultFromWithin(
     return $state.target(dsrDefault);
   }
   return redirect;
-}
+}) as DSRFunction;
 
 export default dsrRedirectToDefaultFromWithin;
