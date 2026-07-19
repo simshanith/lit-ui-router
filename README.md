@@ -24,8 +24,6 @@
 
 ## lit-ui-router: State based routing for Lit (v2+)
 
----
-
 lit-ui-router is a client-side [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application)
 routing framework for [Lit](https://lit.dev/).
 
