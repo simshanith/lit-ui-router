@@ -31,7 +31,7 @@ pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vite
 ```bash
 # Run the PR CI pipeline (build, tests, coverage, lint, typecheck,
 # format check, bundle checks) — what every PR runs
-pnpm run ci
+mise run ci
 
 # PR pipeline plus the main-only guards (Firefox/WebKit vitest engines pass,
 # pack check, dts-backtest TS matrix) — what a push to main runs
@@ -43,6 +43,8 @@ pnpm --filter lit-ui-router test
 # Run E2E tests
 pnpm --filter sample-app-lit-e2e test
 ```
+
+`mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
 
 ## TypeScript authoring
 
