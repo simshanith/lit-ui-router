@@ -263,14 +263,14 @@ deliberately out of scope here, not at risk.
 The package prices its capabilities as separate entry points, measured
 min+gzip by its own esbuild probe:
 
-| import                       | needs `@uirouter/core`?               | cost            | what it answers                                                                        |
-| ---------------------------- | ------------------------------------- | --------------- | -------------------------------------------------------------------------------------- |
-| `ui-router-server/matcher`   | no                                    | 2.7 KiB         | does this pathname match this pattern, with which params — and the inverse, `format()` |
-| `ui-router-server/redirects` | no                                    | 3.4 KiB         | given routes and a redirect table, where does this pathname go                         |
-| `ui-router-server` (root)    | only when a `simulate` mount resolves | 4.1 KiB         | mounts in, verdict out                                                                 |
-| `ui-router-server/simulate`  | yes (optional peer)                   | +27.3 KiB, lazy | what would the real router do                                                          |
+| import                       | needs `@uirouter/core`?               | cost                                | what it answers                                                                        |
+| ---------------------------- | ------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------- |
+| `ui-router-server/matcher`   | no                                    | ~6.6 KiB min / ~2.9 KiB gzip        | does this pathname match this pattern, with which params — and the inverse, `format()` |
+| `ui-router-server/redirects` | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
+| `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
+| `ui-router-server/simulate`  | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
 
-<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.7 KiB, redirects 3.4 KiB, root 4.1 KiB - all dependency-free - and simulate, which adds a lazy 27.3 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - and simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
   <title>The package tiers, to scale</title>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- dependency-free group -->
@@ -278,21 +278,21 @@ min+gzip by its own esbuild probe:
     <text x="700" y="27" font-size="11" font-weight="600" fill="var(--vp-c-text-2, #67676c)" text-anchor="end">no @uirouter/core needed</text>
     <text x="700" y="41" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a differential-tested port of core's matching subset</text>
     <text x="20" y="60" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/matcher</text>
-    <rect x="230" y="50" width="41" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="279" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.7 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
+    <rect x="230" y="50" width="42" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="280" y="63" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">2.9 KiB</tspan> &#183; does this path match, with which params &#8212; and format()</text>
     <text x="20" y="92" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/redirects</text>
-    <rect x="230" y="82" width="51" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="289" y="95" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">3.4 KiB</tspan> &#183; + declarative redirect evaluation over a route table</text>
+    <rect x="230" y="82" width="52" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="290" y="95" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">3.6 KiB</tspan> &#183; + declarative redirect evaluation over a route table</text>
     <text x="20" y="124" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server</text>
-    <rect x="230" y="114" width="62" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <text x="300" y="127" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">4.1 KiB</tspan> &#183; mounts in, verdicts out &#8212; the default</text>
+    <rect x="230" y="114" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="306" y="127" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">4.7 KiB</tspan> &#183; mounts in, verdicts out &#8212; the default</text>
     <!-- simulate group -->
     <rect x="8" y="158" width="704" height="74" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="700" y="171" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
     <text x="20" y="196" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
-    <rect x="230" y="186" width="62" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <rect x="294" y="186" width="408" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
-    <text x="498" y="199" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.3 KiB &#183; lazy chunk &#8212; core, whole</text>
+    <rect x="230" y="186" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <rect x="300" y="186" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
+    <text x="498" y="199" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
     <text x="230" y="222" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
     <!-- scale note -->
     <text x="712" y="244" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
@@ -309,6 +309,14 @@ So the dependency-free tiers are a standalone _port_ of the matching subset
 (type-pinned to core's signatures, differential-tested against core's own
 output), while the simulate tier carries core whole — behind a dynamic import
 that bundles as a lazy chunk, so a matcher-only configuration never loads it.
+That shape gives the matcher tier its contract: dependency-free, and held
+to a borrowed size discipline — AWS CloudFront Functions' 10,240-byte
+ceiling, the tightest edge-runtime budget around, which the package's
+bundle checks log the matcher against and its ~6.6 KiB minified bundle
+still clears. A discipline, not a deployment target: a working CloudFront
+function already crowds that ceiling and grows with core fidelity, so the
+plausible path there is generating a route-specific function from the same
+route data, not shipping this bundle.
 
 Picking a tier:
 
@@ -728,6 +736,14 @@ is exactly where a verdict differs from the plain asset — the flagship's
 Cloudflare's `html_handling` answers before the worker runs, shadowing that
 verdict. The exhibits list their bare paths for the same reason plus one more:
 no asset exists there, so the whole prefix is the demo.
+
+The routing side stays light in production, too: the deployed worker —
+handler, fetch adapter, both mount tables, and the headless router behind the
+simulate mount — uploads at ~268 KiB (~56 KiB gzip), around 2% of even the
+free plan's Workers size limit. That figure is the dogfood measuring itself:
+the repo's own cached wrangler dry-run produces it, and CI uploads the same
+bundle to size tracking. The site itself ships as static assets through the
+binding, outside that budget entirely.
 
 ## Redirects: data until they need code
 
