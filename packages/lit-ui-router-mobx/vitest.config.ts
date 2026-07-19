@@ -20,7 +20,10 @@ export default defineConfig({
     environment: 'happy-dom',
     setupFiles: ['./vitest.setup.ts'],
     include: ['src/specs/**/*.spec.ts'],
-    isolate: false,
+    // Per-file isolation for parity with lit-ui-router: the shared
+    // custom-elements registry makes isolate:false a footgun, and the
+    // measured cost is nil.
+    isolate: true,
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
     coverage: {
