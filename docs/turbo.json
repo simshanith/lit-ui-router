@@ -40,7 +40,7 @@
     },
     "typecheck": {
       "dependsOn": ["^build", "^docs:api"],
-      "with": ["typecheck:vue", "typecheck:worker"]
+      "with": ["typecheck:vue", "typecheck:worker", "typecheck:worker:tests"]
     },
     "test": {
       // The worker contract tests run the worker module in node; workspace
@@ -49,6 +49,12 @@
       "inputs": ["$TURBO_DEFAULT$"]
     },
     "typecheck:worker": {
+      "dependsOn": ["^build", "types:worker"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    "typecheck:worker:tests": {
+      // The worker module rides into the test graph, so the generated
+      // worker-configuration.d.ts must exist here too.
       "dependsOn": ["^build", "types:worker"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
