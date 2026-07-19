@@ -1,0 +1,12 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "types": ["node"],
+    "outDir": "./dist",
+    "rootDir": "./src",
+    "declaration": true,
+    // conformance guard for oxc-emit-dts, which never typechecks
+    "isolatedDeclarations": true
+  },
+  "include": ["src/**/*.ts"]
+}
