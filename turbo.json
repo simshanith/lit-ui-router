@@ -85,8 +85,7 @@
         "lint",
         "typecheck",
         "format:check",
-        "codecov:bundle",
-        "@tools/release#check:pack"
+        "codecov:bundle"
       ]
     },
     "codecov:bundle": {

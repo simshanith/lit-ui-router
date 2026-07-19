@@ -1,4 +1,5 @@
-# Automatic tagging workflow - runs on every push to main.
+# Automatic tagging workflow - called by build-test.yml after main's
+# build_and_test job succeeds.
 # Creates git tags for releases, which then trigger the NPM publish workflow.
 # Uses release-it with --no-increment to tag the current version without bumping.
 #
@@ -9,9 +10,15 @@
 name: Tag & push
 
 on:
-  push:
-    branches:
-      - main
+  # Called by build-test.yml's tag_push job (needs: build_and_test, main push
+  # only): no tag unless the whole main CI run — build, tests, lint,
+  # typecheck, check:pack — is green.
+  workflow_call:
+    secrets:
+      GH_PERSONAL_ACCESS_TOKEN:
+        required: true
+  # Manual dispatch bypasses the CI gate — hotfix escape hatch; the protected
+  # tag-release environment still gates authorization.
   workflow_dispatch:
     inputs:
       dryRun:
@@ -24,22 +31,24 @@ on:
 env:
   HUSKY: 0
 
-# Serialize runs: a run that checks out before a sibling run pushes its tag
-# will re-create that tag, get its push rejected, and release-it's rollback
-# then deletes the tag from the remote.
-# The queue alone is not enough: release-it's own push sends main + tag
-# together, so a main push that lands mid-run rejects the whole push and the
-# rollback deletes the tag. Hence tagging (:tag, --git.push false) and
-# pushing (:tag_push, tag ref only) are separate tasks.
-concurrency:
-  group: tag-release
-
-permissions:
-  contents: write
-
 jobs:
   publish_gh:
     runs-on: ubuntu-latest
+    # Serialize per package across runs (call path and dispatch path share
+    # these groups): a run that checks out before a sibling run pushes its tag
+    # will re-create that tag, get its push rejected, and release-it's
+    # rollback then deletes the tag from the remote.
+    # The queue alone is not enough: release-it's own push sends main + tag
+    # together, so a main push that lands mid-run rejects the whole push and
+    # the rollback deletes the tag. Hence tagging (:tag, --git.push false) and
+    # pushing (:tag_push, tag ref only) are separate tasks.
+    # Job-level (not workflow-level): GitHub ignores workflow-level
+    # concurrency in called workflows. Per-package groups: one shared group
+    # would cancel the third matrix leg (max one running + one pending each).
+    concurrency:
+      group: tag-release-${{ matrix.package }}
+    permissions:
+      contents: write
     # Protected environment ensures only authorized pushes create tags
     environment: tag-release
     strategy:
@@ -52,6 +61,8 @@ jobs:
       - name: 'Checkout code'
         uses: actions/checkout@9c091bb21b7c1c1d1991bb908d89e4e9dddfe3e0 # v7.0.0
         with:
+          # Called runs inherit the caller's github.sha — the commit CI
+          # validated; dispatch runs check out the main tip.
           fetch-depth: 0
           fetch-tags: true
           # PAT (not GITHUB_TOKEN): the pushed tag must trigger publish-npm,
@@ -78,7 +89,8 @@ jobs:
         continue-on-error: true
         env:
           PACKAGE: ${{ matrix.package }}
-          # only set on manual workflow_dispatch runs; pushes to main always tag for real
+          # dryRun is declared for workflow_dispatch only; called runs get an
+          # empty value and always tag for real
           DRY_RUN: ${{ inputs.dryRun }}
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Push tag

@@ -109,6 +109,15 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
+      - name: Check pack
+        # Main-push only (demoted from the per-PR ci graph); a failure here
+        # fails build_and_test, so the tag_push call job below never runs.
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: mise run //tools/release:check_pack
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
@@ -119,3 +128,17 @@ jobs:
           plugins: noop
           fail_ci_if_error: false
           token: ${{ secrets.CODECOV_TOKEN }}
+
+  tag_push:
+    # Gated tagging: rides the same run as main CI, so a red build_and_test
+    # (Check pack included) means no tag, hence no publish trigger.
+    # workflow_dispatch on Tag & push is the documented CI-bypass escape hatch.
+    needs: build_and_test
+    if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+    permissions:
+      # The called tagging job pushes tags; called workflows can't exceed
+      # the caller job's grant.
+      contents: write
+    uses: ./.github/workflows/publish-gh.yml
+    secrets:
+      GH_PERSONAL_ACCESS_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
