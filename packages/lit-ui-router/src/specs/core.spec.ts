@@ -496,19 +496,11 @@ describe('litViewsBuilder', () => {
 });
 
 describe('typings regressions (#239)', () => {
-  it('should accept required-props templates and Lit view declaration shapes', () => {
+  it('should recognize required-props templates as view declarations', () => {
+    // The assignability half lives in ./typings-regressions.types.ts,
+    // covered by `typecheck`; only the runtime guard call belongs here.
     const template = (props: UIViewInjectedProps) =>
       html`<div>${props.transition?.from().name}</div>`;
     expect(isLitViewDeclarationTemplate(template)).toBe(true);
-
-    // compiling without @ts-expect-error directives is the assertion
-    const stateDecl: LitStateDeclaration = {
-      name: 'typings-regression',
-      views: {
-        $default: template,
-        header: { component: () => html`<header>Header</header>` },
-      },
-    };
-    expect(Object.keys(stateDecl.views ?? {})).toHaveLength(2);
   });
 });
