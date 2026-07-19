@@ -1,7 +1,7 @@
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
-import { mountElementInRouter as mountElementInRouterGeneric } from '@tools/router-test-utils/mount.ts';
+import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-router.register.js';
@@ -144,8 +144,9 @@ export async function createTestFixture(
 }
 
 /**
- * Mounts an existing element inside a ui-router context via the shared
- * helper — @tools/router-test-utils owns the happy-dom-safe append ordering.
+ * Mounts an existing element inside a ui-router context. Append ordering is
+ * delegated to @tools/happy-dom's appendParentFirst — the sole owner of the
+ * happy-dom child-before-parent workaround.
  */
 export async function mountElementInRouter<E extends Element>(
   element: E,
@@ -157,9 +158,34 @@ export async function mountElementInRouter<E extends Element>(
   container: HTMLElement;
   cleanup: () => void;
 }> {
-  const mounted = await mountElementInRouterGeneric(element, router, container);
-  // createElement('ui-router') upgraded to the registered element class.
-  return { ...mounted, uiRouterEl: mounted.uiRouterEl as UIRouterLitElement };
+  const ownsContainer = !container;
+  const host = container ?? document.createElement('div');
+  if (ownsContainer) {
+    document.body.appendChild(host);
+  }
+
+  const uiRouterEl = document.createElement('ui-router');
+  uiRouterEl.uiRouter = router;
+
+  appendParentFirst(host, uiRouterEl, element);
+
+  await waitForUpdate(uiRouterEl);
+  if (element instanceof LitElement) {
+    await waitForUpdate(element);
+  }
+
+  return {
+    element,
+    uiRouterEl,
+    container: host,
+    cleanup: () => {
+      if (ownsContainer) {
+        host.remove();
+      } else {
+        uiRouterEl.remove();
+      }
+    },
+  };
 }
 
 /**

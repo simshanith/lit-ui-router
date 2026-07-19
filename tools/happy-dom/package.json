@@ -1,0 +1,24 @@
+{
+  "name": "@tools/happy-dom",
+  "version": "0.0.1",
+  "private": true,
+  "description": "happy-dom conformance knowledge: the parent-first append workaround for its child-before-parent connectedCallback ordering, plus the canary spec that expires it",
+  "type": "module",
+  "exports": {
+    "./append.ts": "./src/append.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint": "oxlint .",
+    "test": "vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "happy-dom": "catalog:",
+    "oxfmt": "catalog:",
+    "typescript": "catalog:",
+    "vitest": "catalog:"
+  }
+}

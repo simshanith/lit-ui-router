@@ -56,7 +56,7 @@
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
-    "@tools/router-test-utils": "workspace:*",
+    "@tools/happy-dom": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
