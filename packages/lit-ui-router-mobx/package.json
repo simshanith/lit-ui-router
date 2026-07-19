@@ -73,7 +73,7 @@
   "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
-    "lit-ui-router": "workspace:^",
+    "lit-ui-router": "catalog:publishedPeer",
     "mobx": "catalog:publishedPeer"
   }
 }

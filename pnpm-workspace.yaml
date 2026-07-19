@@ -77,6 +77,7 @@ catalogs:
     '@uirouter/core': ^6.0.8
     hono: ^4.0.0
     lit: ^3.0.0
+    lit-ui-router: ^1.7.0
     mobx: ^6.0.0
     typedoc: ^0.28.0
   typescript6-compat:
