@@ -1,8 +1,9 @@
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
-import { page, UserEventClickOptions } from 'vitest/browser';
+import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import { UIRouterLit } from '../core.js';
+import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-router.register.js';
 import { LitStateDeclaration } from '../interface.js';
 
@@ -61,13 +62,6 @@ export function clickElement(
     ...options,
   });
   element.dispatchEvent(event);
-}
-
-export function clickLocatedElement(
-  element: Element,
-  options: UserEventClickOptions = {},
-) {
-  return page.elementLocator(element).click(options);
 }
 
 /**
@@ -150,6 +144,49 @@ export async function createTestFixture(
 }
 
 /**
+ * Mounts an existing element inside a ui-router context.
+ */
+export async function mountElementInRouter<E extends Element>(
+  element: E,
+  router: UIRouterLit,
+  container?: HTMLElement,
+): Promise<{
+  element: E;
+  uiRouterEl: UIRouterLitElement;
+  container: HTMLElement;
+  cleanup: () => void;
+}> {
+  const ownsContainer = !container;
+  const host = container ?? document.createElement('div');
+  if (ownsContainer) {
+    document.body.appendChild(host);
+  }
+
+  const uiRouterEl = document.createElement('ui-router');
+  uiRouterEl.uiRouter = router;
+
+  appendParentFirst(host, uiRouterEl, element);
+
+  await waitForUpdate(uiRouterEl);
+  if (element instanceof LitElement) {
+    await waitForUpdate(element);
+  }
+
+  return {
+    element,
+    uiRouterEl,
+    container: host,
+    cleanup: () => {
+      if (ownsContainer) {
+        host.remove();
+      } else {
+        uiRouterEl.remove();
+      }
+    },
+  };
+}
+
+/**
  * Mounts an element inside a ui-router context and returns it.
  */
 export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
@@ -161,32 +198,11 @@ export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
   container: HTMLElement;
   cleanup: () => void;
 }> {
-  const container = document.createElement('div');
-  document.body.appendChild(container);
-
-  const uiRouterEl = document.createElement('ui-router');
-  uiRouterEl.uiRouter = router;
-
   const element = document.createElement(tagName);
   Object.entries(attributes).forEach(([key, value]) => {
     element.setAttribute(key, value);
   });
-
-  uiRouterEl.appendChild(element);
-  container.appendChild(uiRouterEl);
-
-  await waitForUpdate(uiRouterEl);
-  if (element instanceof LitElement) {
-    await waitForUpdate(element);
-  }
-
-  return {
-    element,
-    container,
-    cleanup: () => {
-      container.remove();
-    },
-  };
+  return mountElementInRouter(element, router);
 }
 
 /**

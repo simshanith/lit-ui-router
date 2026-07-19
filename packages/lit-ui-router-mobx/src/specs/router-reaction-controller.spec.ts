@@ -5,6 +5,7 @@ import { comparer } from 'mobx';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 
 import { RouterReactionController } from '../router-reaction-controller.js';
+import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
   createTestRouter,
   routerGo,
@@ -45,8 +46,7 @@ async function mountInRouter(
 ): Promise<UIRouterLitElement> {
   const uiRouterEl = document.createElement('ui-router');
   uiRouterEl.uiRouter = router;
-  uiRouterEl.appendChild(host);
-  document.body.appendChild(uiRouterEl);
+  appendParentFirst(document.body, uiRouterEl, host);
   cleanups.push(() => uiRouterEl.remove());
   await waitForUpdate(host);
   return uiRouterEl;

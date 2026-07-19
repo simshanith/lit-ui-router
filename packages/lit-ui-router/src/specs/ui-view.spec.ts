@@ -15,6 +15,7 @@ import {
 } from '../interface.js';
 import {
   createTestRouter,
+  mountElementInRouter,
   tick,
   waitForUpdate,
   routerGo,
@@ -35,21 +36,22 @@ describe('UiView', () => {
 
   async function setupRouter(
     states: LitStateDeclaration[],
+    options: { configure?: (uiView: UiView) => void; start?: boolean } = {},
   ): Promise<{ uiRouter: UIRouterLitElement; uiView: UiView }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router');
-    uiRouter.uiRouter = router;
-
     const uiView = document.createElement('ui-view');
-    uiRouter.appendChild(uiView);
-    container.appendChild(uiRouter);
+    options.configure?.(uiView);
+    const { uiRouterEl: uiRouter } = await mountElementInRouter(
+      uiView,
+      router,
+      container,
+    );
 
-    await waitForUpdate(uiRouter);
-    await waitForUpdate(uiView);
-
-    router.start();
-    await tick();
+    if (options.start !== false) {
+      router.start();
+      await tick();
+    }
 
     return { uiRouter, uiView };
   }
@@ -88,26 +90,21 @@ describe('UiView', () => {
     });
 
     it('should use provided name attribute', async () => {
-      router = createTestRouter([
-        {
-          name: 'home',
-          url: '/home',
-          views: {
-            sidebar: { component: () => html`<div>Sidebar</div>` },
+      const { uiView } = await setupRouter(
+        [
+          {
+            name: 'home',
+            url: '/home',
+            views: {
+              sidebar: { component: () => html`<div>Sidebar</div>` },
+            },
           },
+        ],
+        {
+          configure: (el) => el.setAttribute('name', 'sidebar'),
+          start: false,
         },
-      ]);
-
-      const uiRouter = document.createElement('ui-router');
-      uiRouter.uiRouter = router;
-
-      const uiView = document.createElement('ui-view');
-      uiView.setAttribute('name', 'sidebar');
-      uiRouter.appendChild(uiView);
-      container.appendChild(uiRouter);
-
-      await waitForUpdate(uiRouter);
-      await waitForUpdate(uiView);
+      );
 
       expect(uiView.name).toBe('sidebar');
     });
@@ -283,18 +280,12 @@ describe('UiView', () => {
 
   describe('fallback content', () => {
     it('should render slot content when no component is active', async () => {
-      router = createTestRouter([]);
-
-      const uiRouter = document.createElement('ui-router');
-      uiRouter.uiRouter = router;
-
-      const uiView = document.createElement('ui-view');
-      uiView.innerHTML = '<div class="fallback">Loading...</div>';
-      uiRouter.appendChild(uiView);
-      container.appendChild(uiRouter);
-
-      await waitForUpdate(uiRouter);
-      await waitForUpdate(uiView);
+      const { uiView } = await setupRouter([], {
+        configure: (el) => {
+          el.innerHTML = '<div class="fallback">Loading...</div>';
+        },
+        start: false,
+      });
 
       expect(uiView.innerHTML).toContain('fallback');
     });

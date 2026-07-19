@@ -19,8 +19,8 @@ import {
   waitForUpdate,
   routerGo,
   clickElement,
-  clickLocatedElement,
 } from './test-utils.js';
+import { clickLocatedElement } from './browser-test-utils.js';
 
 describe('uiSref directive', () => {
   let container: HTMLElement;

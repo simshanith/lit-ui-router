@@ -5,6 +5,8 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
+    // Specs import @tools/happy-dom's source-exported .ts files.
+    "allowImportingTsExtensions": true,
     "types": ["node", "vitest/globals"]
   },
   "include": [
