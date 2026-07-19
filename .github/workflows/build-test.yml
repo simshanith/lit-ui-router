@@ -100,6 +100,7 @@ jobs:
       - name: Build and Test
         # TURBO_FORCE carries the deflake input through env (never `${{ }}`
         # in run lines); turbo parses ""/"false" as cache-respecting.
+        if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
         run: mise run ci
         env:
           TURBO_FORCE: ${{ inputs.force }}
@@ -109,25 +110,21 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
-      - name: Check pack
-        # Main-push only (demoted from the per-PR ci graph); a failure here
-        # fails build_and_test, so the tag_push call job below never runs.
+      - name: Build and Test (main)
+        # ci:main = the PR graph plus the main-only guards (check:pack,
+        # dts-backtest full TS matrix) in one parallel turbo invocation; a
+        # failure fails build_and_test, so the tag_push call job never runs.
+        # Future main-only guards join ci:main's dependsOn, not new steps.
         if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: mise run //tools/release:check_pack
+        run: mise run ci_main
         env:
+          TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-      - name: dts-backtest full TS matrix
-        # Old-TS consumer risk only materializes for shipped packages, so the
-        # full version matrix runs on main pushes (still gating any release);
-        # PR runs cover the current-TS leg inside `ci` above.
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
-        run: mise run dts_backtest_matrix
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
+          # Silence per-request [wrangler:info] logging from the e2e dev server.
+          WRANGLER_LOG: warn
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
