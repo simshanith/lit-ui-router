@@ -1,9 +1,11 @@
 import { configDefaults, defineConfig } from 'vitest/config';
 import { playwright } from '@vitest/browser-playwright';
 
+// partition: every spec runs in exactly one project
+const allSpecs = ['src/specs/**/*.spec.ts'];
 // Real user gestures (modifier/middle/right click via page.elementLocator);
 // every other spec uses synthetic events that happy-dom supports.
-const browserSpecs = ['src/specs/ui-sref.spec.ts'];
+const browserOnlySpecs = ['src/specs/ui-sref.spec.ts'];
 
 // Key caches by the API port so the concurrently running `test` and
 // `test:coverage` turbo tasks never share a Vite dep-optimizer dir.
@@ -27,8 +29,8 @@ export default defineConfig({
           globals: true,
           environment: 'happy-dom',
           setupFiles: ['./vitest.setup.ts'],
-          include: ['src/specs/**/*.spec.ts'],
-          exclude: [...configDefaults.exclude, ...browserSpecs],
+          include: allSpecs,
+          exclude: [...configDefaults.exclude, ...browserOnlySpecs],
           // Per-file isolation is required: register*.spec.ts assert about
           // custom-elements registry state (element not yet defined,
           // duplicate-definition guard), which a shared registry breaks.
@@ -42,7 +44,7 @@ export default defineConfig({
           name: 'browser',
           globals: true,
           setupFiles: ['./vitest.setup.ts'],
-          include: browserSpecs,
+          include: browserOnlySpecs,
           browser: {
             enabled: true,
             headless: true,

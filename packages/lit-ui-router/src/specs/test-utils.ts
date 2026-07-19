@@ -164,8 +164,12 @@ export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
     element.setAttribute(key, value);
   });
 
-  uiRouterEl.appendChild(element);
+  // Connect the <ui-router> parent before its children: happy-dom fires
+  // connectedCallback child-before-parent on subtree insertion (real browsers
+  // are parent-first), which would break ui-router-context discovery. See
+  // happy-dom-conformance.spec.ts.
   container.appendChild(uiRouterEl);
+  uiRouterEl.appendChild(element);
 
   await waitForUpdate(uiRouterEl);
   if (element instanceof LitElement) {

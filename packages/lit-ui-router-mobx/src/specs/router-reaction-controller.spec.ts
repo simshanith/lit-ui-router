@@ -45,9 +45,9 @@ async function mountInRouter(
 ): Promise<UIRouterLitElement> {
   const uiRouterEl = document.createElement('ui-router');
   uiRouterEl.uiRouter = router;
-  // Connect the parent before the child: browsers upgrade an inserted
-  // subtree in tree order, but happy-dom connects children first, which
-  // would break ui-router-context discovery.
+  // Parent connects before the child: happy-dom fires connectedCallback
+  // child-before-parent on subtree insertion (see lit-ui-router's
+  // happy-dom-conformance.spec.ts), which would break context discovery.
   document.body.appendChild(uiRouterEl);
   uiRouterEl.appendChild(host);
   cleanups.push(() => uiRouterEl.remove());
