@@ -316,11 +316,24 @@ async function selftestNative() {
   return true;
 }
 
-let ok = await selftest();
+// --versions=current runs only the repo-current (native TS 7) leg; the
+// default full matrix adds the pinned classic legs and their self-test.
+const versionsArg = process.argv
+  .find((arg) => arg.startsWith('--versions='))
+  ?.slice('--versions='.length);
+if (versionsArg !== undefined && !['current', 'full'].includes(versionsArg)) {
+  console.error(`unknown --versions=${versionsArg} (expected current|full)`);
+  process.exit(2);
+}
+const currentOnly = versionsArg === 'current';
+
+let ok = currentOnly ? true : await selftest();
 ok = (await selftestNative()) && ok;
-for (const specifier of API_VERSIONS) {
-  for (const configFile of CONFIGS) {
-    ok = run(specifier, configFile) && ok;
+if (!currentOnly) {
+  for (const specifier of API_VERSIONS) {
+    for (const configFile of CONFIGS) {
+      ok = run(specifier, configFile) && ok;
+    }
   }
 }
 for (const configFile of CONFIGS) {

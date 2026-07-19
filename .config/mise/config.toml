@@ -98,3 +98,8 @@ run = 'turbo run "${usage_package_name?}#build"'
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
 description = "Run the full CI pipeline via turbo"
 run = "turbo run ci --ui=stream --log-order=stream"
+
+[tasks.dts_backtest_matrix]
+# Main-push companion to `ci`: PRs run only the current-TS dts-backtest leg.
+description = "Run the full dts-backtest TypeScript version matrix via turbo"
+run = "turbo run test:matrix --ui=stream --log-order=stream"

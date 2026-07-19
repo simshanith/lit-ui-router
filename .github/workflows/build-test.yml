@@ -118,6 +118,16 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: dts-backtest full TS matrix
+        # Old-TS consumer risk only materializes for shipped packages, so the
+        # full version matrix runs on main pushes (still gating any release);
+        # PR runs cover the current-TS leg inside `ci` above.
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        run: mise run dts_backtest_matrix
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
