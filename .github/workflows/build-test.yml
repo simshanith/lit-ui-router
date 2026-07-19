@@ -23,6 +23,10 @@ on:
         description: 'Run the ci:main superset (main-only guards included); combine with force to deflake the full main graph'
         type: boolean
         default: false
+      cypressVideo:
+        description: 'Record Cypress videos and upload them as a run artifact (e2e debugging)'
+        type: boolean
+        default: false
 
 # Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
 env:
@@ -116,8 +120,9 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
-          # Cypress video off in CI; configs keep video:true for local runs.
-          CYPRESS_video: 'false'
+          # Cypress video off in CI (configs keep video:true for local runs);
+          # the cypressVideo dispatch input re-enables it for debugging.
+          CYPRESS_video: ${{ inputs.cypressVideo == true }}
       - name: Build and Test (main)
         # ci:main = the PR graph plus the main-only guards (check:pack,
         # dts-backtest full TS matrix) in one parallel turbo invocation; a
@@ -134,8 +139,20 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
-          # Cypress video off in CI; configs keep video:true for local runs.
-          CYPRESS_video: 'false'
+          # Cypress video off in CI (configs keep video:true for local runs);
+          # the cypressVideo dispatch input re-enables it for debugging.
+          CYPRESS_video: ${{ inputs.cypressVideo == true }}
+      - name: Upload Cypress videos
+        # Videos exist only when the dispatch input turned recording on;
+        # !cancelled() keeps videos from failed suites — the debugging case.
+        # An early failure before Cypress leaves no files, hence warn.
+        if: ${{ github.event_name == 'workflow_dispatch' && inputs.cypressVideo && !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: cypress-videos
+          path: apps/sample-app-lit-e2e/cypress/videos*/
+          retention-days: 5
+          if-no-files-found: warn
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
