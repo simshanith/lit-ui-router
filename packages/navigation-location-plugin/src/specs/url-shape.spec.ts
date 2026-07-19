@@ -7,10 +7,9 @@ import { navigationLocationPlugin } from '../index.js';
 const hasNavigationAPI =
   typeof window !== 'undefined' && 'navigation' in window;
 
-// URL-shape invariants demoted from the e2e suite's location_plugins.cy.js:
-// the navigation e2e suite variant already boots the whole app under this
-// plugin, so the plugin-level claims live here — the plugin requires
-// window.navigation and drives clean (hash-free) URLs through it.
+// Boot + URL-shape invariants for this plugin: it requires window.navigation
+// and drives clean (hash-free) URLs through navigation.navigate (hash and
+// pushState shapes are asserted in lit-ui-router's location-plugins spec).
 describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin URL shape', () => {
   let navigateSpy: ReturnType<typeof vi.spyOn>;
 

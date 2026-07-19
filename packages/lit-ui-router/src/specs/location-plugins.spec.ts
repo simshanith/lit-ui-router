@@ -5,9 +5,10 @@ import { hashLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 
-// URL-shape invariants per location plugin, demoted from the e2e suite's
-// location_plugins.cy.js: each e2e suite variant already boots the whole app
-// under its plugin, so the per-plugin URL assertions live here at package level.
+// Each location plugin owns a boot + URL-shape assertion at package level:
+// hash routes in location.hash, pushState in a hash-free pathname (navigation
+// rides window.navigation — asserted in ui-router-navigation-location-plugin).
+// New or changed plugins add their URL-shape assertion alongside.
 describe('location plugin URL shape', () => {
   const homeState: LitStateDeclaration = {
     name: 'home',
