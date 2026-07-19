@@ -189,11 +189,15 @@ jobs:
     strategy:
       matrix:
         package: ${{ fromJSON(needs.detect_release.outputs.packages) }}
+    # Ceiling for the WHOLE nested call graph: GitHub validates at parse time
+    # that no nested job requests beyond these (actionlint/zizmor lint files
+    # independently and can't see cross-file ceilings).
     permissions:
-      id-token: write # OIDC trusted publishing; ceiling for the called job
+      id-token: write # OIDC trusted publishing
       contents: write # GitHub release
       attestations: write # build provenance attestation
       artifact-metadata: write
+      checks: write # nested published-diff.yml call creates the badge check runs
     uses: ./.github/workflows/publish-npm.yml
     with:
       package: ${{ matrix.package }}
