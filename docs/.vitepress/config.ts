@@ -37,6 +37,7 @@ function makeSidebar() {
     },
     {
       text: 'Tutorial',
+      collapsed: true,
       items: [
         { text: 'Hello World', link: '/tutorial/helloworld' },
         { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
@@ -46,6 +47,7 @@ function makeSidebar() {
     },
     {
       text: 'Guides',
+      collapsed: true,
       items: [
         { text: 'Overview', link: '/guides/' },
         { text: 'Location Plugins', link: '/guides/location-plugins' },
@@ -96,6 +98,7 @@ function makeSidebar() {
     },
     {
       text: 'Sample App',
+      collapsed: true,
       items: [
         { text: 'Overview', link: '/sample-app' },
         { text: 'Vanilla', link: '/app', target: '_self' },
