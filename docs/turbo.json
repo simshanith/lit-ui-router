@@ -42,6 +42,12 @@
       "dependsOn": ["^build", "^docs:api"],
       "with": ["typecheck:vue", "typecheck:worker"]
     },
+    "test": {
+      // The worker contract tests run the worker module in node; workspace
+      // sources resolve directly (no build), but the root task's src/**
+      // inputs would miss worker/**, so over-approximate.
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
     "typecheck:worker": {
       "dependsOn": ["^build", "types:worker"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
