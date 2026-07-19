@@ -92,11 +92,12 @@ flag "--package-name <package_name>" help="Package to build (turbo <name>#build)
 run = 'turbo run "${usage_package_name?}#build"'
 
 [tasks.ci]
+# turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
 # the env itself (no CLI flags), plus CODECOV_TOKEN and WRANGLER_LOG for the
 # underlying tasks. TURBO_FORCE is the build-test deflake input: a truthy value
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
-description = "Run the full CI pipeline via turbo"
+description = "Run the pull-request CI pipeline via turbo"
 run = "turbo run ci --ui=stream --log-order=stream"
 
 [tasks.ci_main]
@@ -106,6 +107,6 @@ description = "Run the main-push CI pipeline via turbo"
 run = "turbo run ci:main --ui=stream --log-order=stream"
 
 [tasks.dts_backtest_matrix]
-# Main-push companion to `ci`: PRs run only the current-TS dts-backtest leg.
+# Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.
 description = "Run the full dts-backtest TypeScript version matrix via turbo"
 run = "turbo run test:matrix --ui=stream --log-order=stream"

@@ -10,20 +10,15 @@ Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from
 
 Turbo manages these workspaces (defined in `pnpm-workspace.yaml`):
 
-| Directory    | Purpose                                   | In CI |
-| ------------ | ----------------------------------------- | ----- |
-| `packages/*` | Published libraries (lit-ui-router, etc.) | Yes   |
-| `apps/*`     | Sample applications and e2e tests         | Yes   |
-| `tools/*`    | Internal build tools                      | Yes   |
-| `docs`       | Documentation site                        | Yes   |
+| Directory    | Purpose                                     | In CI               |
+| ------------ | ------------------------------------------- | ------------------- |
+| `packages/*` | Published libraries (lit-ui-router, etc.)   | Yes                 |
+| `apps/*`     | Sample applications and e2e tests           | Yes                 |
+| `tools/*`    | Internal build tools                        | Yes                 |
+| `docs`       | Documentation site                          | Yes                 |
+| `examples`   | Standalone tutorial apps (helloworld, etc.) | Only `build:embeds` |
 
-**Excluded from turbo:**
-
-| Directory   | Purpose                                     |
-| ----------- | ------------------------------------------- |
-| `examples/` | Standalone tutorial apps (helloworld, etc.) |
-
-The `examples/` directory contains tutorial applications (helloworld, hellogalaxy, hellosolarsystem) that are intentionally excluded from turbo. These are standalone Vite dev servers meant for learning - they have no turbo.json files and are not part of the CI pipeline. They use npm (not pnpm) for Stackblitz compatibility:
+The apps inside `examples/` (helloworld, hellogalaxy, hellosolarsystem) are intentionally outside the main turbo graph. They are standalone Vite dev servers meant for learning, and they use npm (not pnpm) for Stackblitz compatibility. The one turbo touchpoint is `examples#build:embeds` (see `examples/turbo.json`), which builds them as embeds for the docs site:
 
 ```bash
 cd examples/helloworld
@@ -38,15 +33,26 @@ npm run dev
 The root `turbo.json` defines shared task configurations inherited by all workspaces:
 
 ```
-ci
-├── build       (outputs: dist/**)
-├── test        (inputs: src/**/*.ts, vitest.config.ts, cypress.config.ts)
+ci:pull_request   (every PR and branch push; `ci` is its back-compat alias)
+├── build         (outputs: dist/**)
+├── test          (inputs: src/**/*.ts, vitest.config.ts, cypress.config.ts)
 ├── test:coverage (outputs: coverage/**)
-├── lint        (runs with //#lint:root)
-└── format:check (runs with //#format:check:root)
+├── lint          (runs with //#lint:root, //#lint:package-json, //#lint:workflows)
+├── typecheck     (runs with //#typecheck:root, typecheck:src)
+├── format:check  (runs with //#format:check:root)
+├── check:bundle  (bundle invariants: size budgets, deps-none probes)
+└── codecov:bundle (bundle analysis upload; not cached)
+
+ci:main           (main pushes only: the PR graph plus the main-only guards)
+├── ci:pull_request
+├── @tools/release#check:pack        (pack-surface manifest check)
+└── @tools/dts-backtest#test:matrix  (full dts-backtest TS version matrix;
+                                      PRs run only the current-TS #test leg)
 
 build
-└── ^build      (depends on workspace dependencies' builds)
+├── ^build      (depends on workspace dependencies' builds)
+├── build:js    (own-package JS pass)
+└── build:types (own-package d.ts pass; self-chains via ^build:types)
 
 dev
 └── ^build      (persistent, not cached)
@@ -69,16 +75,27 @@ docs
 - `inputs` scopes cache invalidation
 - `with` runs root-level tasks alongside workspace tasks
 
+**Deliberately outside both ci graphs:** `typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time.
+
 ### Workspace Extensions
 
 Workspaces extend the root configuration using `"extends": ["//"]`:
 
-| Workspace                     | Custom Configuration                                                         |
-| ----------------------------- | ---------------------------------------------------------------------------- |
-| `packages/lit-ui-router`      | Adds `build:custom-elements` before build, configures `docs:api`             |
-| `apps/sample-app-lit-vanilla` | Adds env vars for build (VITE\_\*)                                           |
-| `apps/sample-app-lit-e2e`     | Caches `test` via dependency edges; CYPRESS\_\* passes through un-hashed     |
-| `docs`                        | Adds `docs:preview`, `wrangler:dev` tasks, requires `^docs:api` before build |
+| Workspace                                          | Custom Configuration                                                                                                                       |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
+| `packages/lit-ui-router`                           | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                     |
+| `packages/lit-ui-router-mobx`                      | Configures `docs:api` outputs                                                                                                              |
+| `packages/navigation-location-plugin`              | Configures `docs:api` outputs                                                                                                              |
+| `packages/ui-router-server`                        | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`                                                                 |
+| `apps/sample-app-lit-vanilla`                      | Adds env vars for build (VITE\_\*), runs `build:hash` with build                                                                           |
+| `apps/sample-app-lit-mobx`                         | Adds env vars for build (VITE\_\*)                                                                                                         |
+| `apps/sample-app-lit-e2e`                          | Caches `test` via dependency edges; CYPRESS\_\* passes through un-hashed                                                                   |
+| `apps/sample-app-routes`, `apps/sample-app-shared` | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                               |
+| `docs`                                             | Adds `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `bundle:worker`), requires `^docs:api` before build |
+| `examples`                                         | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                   |
+| `tools/release`                                    | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                    |
+| `tools/workers-builds`                             | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                         |
+| `tools/build_and_test`, `tools/shared`             | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                        |
 
 ## Common Commands
 
@@ -101,8 +118,12 @@ turbo format:check
 # Fix formatting
 turbo format
 
-# Full CI pipeline (build + test + coverage + lint + format:check)
+# PR CI pipeline (build + test + coverage + lint + typecheck + format:check
+# + bundle checks); `ci` is the back-compat alias of `ci:pull_request`
 turbo ci
+
+# PR pipeline plus the main-only guards (check:pack, dts-backtest TS matrix)
+turbo ci:main
 
 # Development server (persistent)
 turbo dev
@@ -145,13 +166,16 @@ turbo build --summarize
 
 ## CI Integration
 
-The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the full CI pipeline:
+The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pipeline:
 
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and corepack; `mise run setup` corepack-installs the `packageManager`-pinned pnpm, then installs dependencies
-3. **Install browsers** - Playwright and Cypress for e2e tests
-4. **Build and Test** - `turbo run ci`
+3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
+4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
+6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
+
+Manual dispatch of the workflow has a `force` input (`TURBO_FORCE`) that bypasses the turbo cache — the deflake-reproduction path. CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
 
 ### CI Environment Variables
 
@@ -163,13 +187,18 @@ TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Team identifier
 
 ### Task-to-CI Mapping
 
-| Turbo Task      | CI Step                                   |
-| --------------- | ----------------------------------------- |
-| `build`         | Part of `ci` task                         |
-| `test`          | Part of `ci` task                         |
-| `test:coverage` | Part of `ci` task, feeds coverage reports |
-| `lint`          | Part of `ci` task                         |
-| `format:check`  | Part of `ci` task                         |
+| Turbo Task                        | CI Placement                                              |
+| --------------------------------- | --------------------------------------------------------- |
+| `build`                           | `ci:pull_request` (every PR and push)                     |
+| `test`                            | `ci:pull_request`                                         |
+| `test:coverage`                   | `ci:pull_request`, feeds coverage reports                 |
+| `lint`                            | `ci:pull_request`                                         |
+| `typecheck`                       | `ci:pull_request`                                         |
+| `format:check`                    | `ci:pull_request`                                         |
+| `check:bundle`, `codecov:bundle`  | `ci:pull_request`                                         |
+| `@tools/release#check:pack`       | `ci:main` only (main pushes)                              |
+| `@tools/dts-backtest#test:matrix` | `ci:main` only; PRs run the current-TS `#test` leg        |
+| `typecheck:peer-floor`            | Neither ci graph — Release signals check runs + bump gate |
 
 ## Remote Caching
 
@@ -244,7 +273,10 @@ Run these separately from cached tasks.
 
 Root tasks use `//#` prefix and require scripts in root `package.json`:
 
-- `//#lint:root` - lints examples directory
+- `//#lint:root` - lints root-level files (workspace directories excluded)
+- `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
+- `//#lint:workflows` - actionlint + zizmor over GitHub Actions workflows
+- `//#typecheck:root` - typechecks root-level scripts
 - `//#format:root` - formats root-level files
 - `//#format:check:root` - checks root-level formatting
 

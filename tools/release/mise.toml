@@ -78,7 +78,8 @@ flag "--dry-run" help="release-it --dry-run: no npm publish, no GitHub release" 
 run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-publish.ts'
 
 [tasks.check_pack]
-# Main-push CI placement (not per-PR); publish's check_tarball is the last-line gate.
+# Ad-hoc alias for @tools/release#check:pack; CI runs it via ci_main.
+# publish's check_tarball is the last-line gate.
 description = "Run the pack-surface manifest check via turbo"
 run = "turbo run check:pack"
 
