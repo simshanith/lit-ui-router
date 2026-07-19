@@ -1,0 +1,10 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      // Dialog.spec.ts asserts styles.css rules; root inputs only track *.ts
+      "inputs": ["src/**", "vitest.config.ts"]
+    }
+  }
+}

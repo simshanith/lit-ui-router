@@ -47,6 +47,9 @@ certs/
 
 lit-ui-router-*.tgz
 **/specs/__screenshots__
+# vitest failure artifacts for colocated specs (apps/sample-app-shared)
+**/src/**/__screenshots__
+.vitest-attachments/
 coverage
 .wrangler
 .dev.vars
