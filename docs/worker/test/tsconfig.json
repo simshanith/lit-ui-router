@@ -1,0 +1,13 @@
+{
+  // The node --test graph; only here do node types exist. The worker module
+  // rides in, so the generated worker-configuration.d.ts must too.
+  "extends": "../../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    "types": ["node"]
+  },
+  "include": ["*.ts", "../index.ts", "../worker-configuration.d.ts"]
+}

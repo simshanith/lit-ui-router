@@ -12,9 +12,11 @@
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
     "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
+    "test": "node --test \"worker/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check docs/tsconfig.vue.json",
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
+    "typecheck:worker:tests": "tsc -p worker/test/tsconfig.json --noEmit",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
     "wrangler:dev": "wrangler dev"
   },
@@ -30,6 +32,7 @@
   "devDependencies": {
     "@tools/build_and_test": "workspace:*",
     "@tools/vue-check": "workspace:*",
+    "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

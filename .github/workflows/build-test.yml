@@ -66,12 +66,12 @@ jobs:
         run: mise run //tools/build_and_test:cypress_version
       - name: Cache Playwright browsers
         id: playwright-cache
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
           key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.playwright }}
       - name: Cache Cypress binary
-        uses: actions/cache@v4
+        uses: actions/cache@v6
         with:
           path: ~/.cache/Cypress
           key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
@@ -110,6 +110,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
+          # Cypress video off in CI; configs keep video:true for local runs.
+          CYPRESS_video: 'false'
       - name: Build and Test (main)
         # ci:main = the PR graph plus the main-only guards (check:pack,
         # dts-backtest full TS matrix) in one parallel turbo invocation; a
@@ -125,6 +127,8 @@ jobs:
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
+          # Cypress video off in CI; configs keep video:true for local runs.
+          CYPRESS_video: 'false'
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
