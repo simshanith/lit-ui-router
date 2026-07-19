@@ -72,7 +72,8 @@
     "//#lint:package-json": {
       "inputs": [
         "**/package.json",
-        "eslint.config.js",
+        "eslint.config.ts",
+        "eslint.repo-rules.ts",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
       ]

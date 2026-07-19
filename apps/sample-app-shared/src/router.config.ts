@@ -5,6 +5,7 @@ import {
   LocationPlugin,
   Rejection,
   UIRouter,
+  type UIRouterPlugin,
 } from '@uirouter/core';
 import { StickyStatesPlugin } from '@uirouter/sticky-states';
 // @ts-expect-error - @uirouter/dsr lacks proper ESM exports field for nodenext resolution
@@ -61,7 +62,7 @@ export function configureRouter(router = new UIRouterLit()) {
   const derived = shellMounts
     .filter((m) => path === m || path.startsWith(`${m}/`))
     .sort((a, b) => b.length - a.length)[0];
-  const BASE_URL: string =
+  const BASE_URL =
     (derived && `${derived}/`) || import.meta.env.VITE_SAMPLE_APP_BASE_URL;
   if (BASE_URL) {
     const base = document.createElement('base');
@@ -83,8 +84,9 @@ export function configureRouter(router = new UIRouterLit()) {
       if (isUIRouterNavigateEvent(event)) {
         const { uiRouter } = event.info;
         event.intercept({
-          async handler() {
+          handler() {
             console.debug('intercepted uiRouter navigation', url, uiRouter);
+            return Promise.resolve();
           },
         });
       } else {
@@ -94,12 +96,13 @@ export function configureRouter(router = new UIRouterLit()) {
   }
 
   if (featureFlags.get('enable-visualizer')) {
-    import('@uirouter/visualizer').then(({ Visualizer }) =>
+    void import('@uirouter/visualizer').then(({ Visualizer }) =>
       router.plugin(Visualizer),
     );
   }
 
-  router.plugin(DSRPlugin);
+  // the @ts-expect-error import above leaves DSRPlugin as `any`
+  router.plugin(DSRPlugin as new (router: UIRouter) => UIRouterPlugin);
   router.plugin(StickyStatesPlugin);
 
   const { stateService, stateRegistry, urlService } = router;
@@ -111,8 +114,9 @@ export function configureRouter(router = new UIRouterLit()) {
     } else if ($error$ instanceof Rejection) {
       // custom downgrade to warning
       console.warn($error$.toString());
-      if ($error$.detail && $error$.detail.stack)
-        console.warn($error$.detail.stack);
+      // Rejection.detail is `any`
+      const detail = $error$.detail as { stack?: string } | undefined;
+      if (detail?.stack) console.warn(detail.stack);
     } else {
       console.error($error$);
     }

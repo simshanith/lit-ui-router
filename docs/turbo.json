@@ -69,7 +69,9 @@
     "docs": {
       "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
       "cache": false,
-      "persistent": true
+      "persistent": true,
+      // dev-server browser open toggle (vite.config.ts server.open)
+      "env": ["E2E_TEST"]
     },
     "typecheck:vue": {
       "dependsOn": ["^build:types"],

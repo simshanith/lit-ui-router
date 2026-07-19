@@ -4,7 +4,8 @@
 import { defineConfig, globalIgnores } from 'eslint/config';
 import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
-import pluginPnpm from 'eslint-plugin-pnpm';
+import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
+import repoRules from './eslint.repo-rules.ts';
 
 export default defineConfig(
   globalIgnores([
@@ -26,8 +27,8 @@ export default defineConfig(
       ],
     },
   },
-  pluginPnpm.configs.json,
-  pluginPnpm.configs.yaml,
+  pnpmConfigs.json,
+  pnpmConfigs.yaml,
   {
     files: ['**/package.json'],
     rules: {
@@ -102,6 +103,23 @@ export default defineConfig(
             'workspace: refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
         },
       ],
+    },
+  },
+  {
+    // Workspace members advertising dist-resolved types must pass-split their
+    // build: turbo typecheck/lint depend on ^build:types only, so a dist-typed
+    // package without one leaves dependents typechecking against a missing dist.
+    // Src-exported types and buildless manifests are exempt by condition.
+    files: [
+      'packages/*/package.json',
+      'apps/*/package.json',
+      'tools/*/package.json',
+      'docs/package.json',
+      'examples/package.json',
+    ],
+    plugins: { repo: repoRules },
+    rules: {
+      'repo/require-build-types': 'error',
     },
   },
   {
