@@ -27,14 +27,16 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 description = "Start the shared CI Xvfb display and export DISPLAY"
 run = "./src/start-xvfb.ts"
 
-[tasks.browser_versions]
-# env: GITHUB_OUTPUT (step-output target). Emits the installed playwright and
-# cypress versions as `playwright=`/`cypress=` outputs for the cache keys.
-description = "Emit installed playwright/cypress versions to GITHUB_OUTPUT"
-run = [
-  "node -p \"'playwright=' + require('playwright/package.json').version\" >> \"$GITHUB_OUTPUT\"",
-  "node -p \"'cypress=' + require('cypress/package.json').version\" >> \"$GITHUB_OUTPUT\"",
-]
+[tasks.playwright_version]
+# env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
+# cache step derives its key alone.
+description = "Emit the installed playwright version to GITHUB_OUTPUT"
+run = "node -p \"'playwright=' + require('playwright/package.json').version\" >> \"$GITHUB_OUTPUT\""
+
+[tasks.cypress_version]
+# env: GITHUB_OUTPUT (step-output target).
+description = "Emit the installed cypress version to GITHUB_OUTPUT"
+run = "node -p \"'cypress=' + require('cypress/package.json').version\" >> \"$GITHUB_OUTPUT\""
 
 [tasks.playwright]
 # The vitest browser legs need the Playwright browsers + system deps; the

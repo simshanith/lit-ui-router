@@ -55,22 +55,26 @@ jobs:
           # The Install Cypress step below downloads the binary; skipping it
           # here keeps download noise out of the pnpm postinstall output.
           CYPRESS_INSTALL_BINARY: '0'
-      - name: Resolve browser binary versions
+      - name: Resolve Playwright version
         # Cache keys derive from the installed packages, so they bust exactly
-        # on a playwright/cypress version bump and nothing else.
-        id: browser-versions
-        run: mise run //tools/build_and_test:browser_versions
+        # on a version bump and nothing else; one step per tool keeps the two
+        # caches independent.
+        id: playwright-version
+        run: mise run //tools/build_and_test:playwright_version
+      - name: Resolve Cypress version
+        id: cypress-version
+        run: mise run //tools/build_and_test:cypress_version
       - name: Cache Playwright browsers
         id: playwright-cache
         uses: actions/cache@v4
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.browser-versions.outputs.playwright }}
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.playwright }}
       - name: Cache Cypress binary
         uses: actions/cache@v4
         with:
           path: ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ steps.browser-versions.outputs.cypress }}
+          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
       - name: Install Playwright Browsers
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: mise run //tools/build_and_test:playwright
