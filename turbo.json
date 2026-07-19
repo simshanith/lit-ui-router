@@ -28,6 +28,12 @@
       "dependsOn": ["^build"],
       "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
     },
+    // Full TS version matrix; distinct task name = distinct cache key from
+    // the current-leg-only #test above. Runs on main push, not the PR graph.
+    "@tools/dts-backtest#test:matrix": {
+      "dependsOn": ["^build"],
+      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
+    },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
       "inputs": ["src/**/*.ts", "vitest.config.ts"],

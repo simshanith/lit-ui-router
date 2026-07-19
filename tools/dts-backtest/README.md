@@ -33,8 +33,15 @@ broken diagnostic filter silently classifying everything as third-party.
 ## Running
 
 ```sh
-turbo run test --filter=@tools/dts-backtest   # builds the packages first
+turbo run test --filter=@tools/dts-backtest          # current-TS leg (PR CI)
+turbo run test:matrix --filter=@tools/dts-backtest   # full version matrix (main-push CI)
 ```
+
+Both build the packages first. `node run.ts` defaults to the full matrix;
+`--versions=current` restricts it to the repo-current (native TS 7) leg.
+The old-TS legs only guard shipped packages, so the full matrix runs on
+main pushes — still ahead of any release — while PRs get fast current-TS
+feedback.
 
 ## Authoring rule for the published packages
 
