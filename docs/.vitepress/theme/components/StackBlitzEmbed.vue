@@ -164,14 +164,16 @@ onUnmounted(() => {
   border-color: var(--vp-c-brand-1);
 }
 
-/* The slotted badge img is a fully-styled button; no frame of our own —
-   hover affordance is a brand ring instead. */
+/* Framed like the sibling .btn controls; border present in both states so
+   hover changes color only, never size. */
 :deep(a) {
   display: inline-flex;
   align-items: center;
   line-height: 0;
+  border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
-  transition: box-shadow 0.2s;
+  overflow: hidden;
+  transition: border-color 0.2s;
 }
 
 :deep(a img) {
@@ -182,6 +184,6 @@ onUnmounted(() => {
 }
 
 :deep(a:hover) {
-  box-shadow: 0 0 0 2px var(--vp-c-brand-1);
+  border-color: var(--vp-c-brand-1);
 }
 </style>
