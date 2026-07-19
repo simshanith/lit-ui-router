@@ -33,49 +33,64 @@ npm run dev
 The root `turbo.json` defines shared task configurations inherited by all workspaces:
 
 ```
-ci:pull_request   (every PR and branch push; `ci` is its back-compat alias)
-├── build         (outputs: dist/**)
-├── test          (inputs: src/**/*.ts, vitest.config.ts, vitest.setup.ts, cypress.config.ts)
-├── test:coverage (outputs: coverage/**)
-├── lint          (runs with //#lint:root, //#lint:package-json, //#lint:workflows)
-├── typecheck     (runs with //#typecheck:root, typecheck:src)
-├── format:check  (runs with //#format:check:root)
-├── check:bundle  (bundle invariants: size budgets, deps-none probes)
-└── codecov:bundle (bundle analysis upload; not cached)
+ci:pull_request
+├── build
+├── test
+├── test:coverage
+├── lint
+│   ├── //#lint:root           (with)
+│   ├── //#lint:package-json   (with)
+│   └── //#lint:workflows      (with)
+├── typecheck
+│   ├── //#typecheck:root      (with)
+│   └── typecheck:src          (with)
+├── format:check
+│   └── //#format:check:root   (with)
+├── check:bundle
+└── codecov:bundle
 
-ci:main           (main pushes only: the PR graph plus the main-only guards)
+ci:main
 ├── ci:pull_request
-├── test:engines                     (Firefox + WebKit full-suite vitest pass;
-                                      PR chromium correctness rides test:coverage)
-├── @tools/release#check:pack        (pack-surface manifest check)
-└── @tools/dts-backtest#test:matrix  (full dts-backtest TS version matrix;
-                                      PRs run only the current-TS #test leg)
+├── test:engines
+├── @tools/release#check:pack
+└── @tools/dts-backtest#test:matrix
 
 build
-├── ^build      (depends on workspace dependencies' builds)
-├── build:js    (own-package JS pass)
-└── build:types (own-package d.ts pass; self-chains via ^build:types)
+├── ^build
+├── build:js
+└── build:types
+    └── ^build:types
 
 dev
-└── ^build      (persistent, not cached)
+└── ^build
 
 e2e
 ├── ^build
 ├── ^docs
-└── ^e2e        (persistent, not cached)
+└── ^e2e
 
 docs
 ├── ^build
-└── ^docs:api   (persistent, not cached)
+└── ^docs:api
 ```
 
 **Key concepts:**
 
 - `^task` means "run this task on dependencies first"
-- `dependsOn` defines execution order
+- `dependsOn` defines execution order (unmarked edges above)
+- `with` runs root-level tasks alongside workspace tasks (marked edges above)
 - `outputs` defines cacheable artifacts
 - `inputs` scopes cache invalidation
-- `with` runs root-level tasks alongside workspace tasks
+
+**Graph notes:**
+
+- `ci:pull_request` is what every PR and branch push runs; `ci` is its back-compat alias. `ci:main` runs on main pushes only, adding the main-only guards.
+- `test:engines` is the Firefox + WebKit full-suite vitest pass (lit-ui-router, navigation-location-plugin); PR chromium correctness rides `test:coverage`.
+- `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
+- `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
+- `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks.
+- Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time.
 
