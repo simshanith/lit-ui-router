@@ -5,7 +5,7 @@ import { defineConfig, globalIgnores } from 'eslint/config';
 import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
 import pluginPnpm from 'eslint-plugin-pnpm';
-import repoRules from './eslint.repo-rules.js';
+import repoRules from './eslint.repo-rules.ts';
 
 export default defineConfig(
   globalIgnores([
