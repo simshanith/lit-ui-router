@@ -1,4 +1,6 @@
-# UI-Router for Lit
+# lit-ui-router
+
+## State based routing for Lit (v2+)
 
 <img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
 
@@ -10,10 +12,6 @@
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
 
 [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router) [Published packages ⤵](#published-packages)
-
-# lit-ui-router
-
-## State based routing for Lit (v2+)
 
 lit-ui-router is a client-side [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application)
 routing framework for [Lit](https://lit.dev/).
