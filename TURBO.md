@@ -77,7 +77,7 @@ Workspaces extend the root configuration using `"extends": ["//"]`:
 | ----------------------------- | ---------------------------------------------------------------------------- |
 | `packages/lit-ui-router`      | Adds `build:custom-elements` before build, configures `docs:api`             |
 | `apps/sample-app-lit-vanilla` | Adds env vars for build (VITE\_\*)                                           |
-| `apps/sample-app-lit-e2e`     | Disables test caching for e2e tests                                          |
+| `apps/sample-app-lit-e2e`     | Caches `test` via dependency edges; CYPRESS\_\* passes through un-hashed     |
 | `docs`                        | Adds `docs:preview`, `wrangler:dev` tasks, requires `^docs:api` before build |
 
 ## Common Commands
