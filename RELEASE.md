@@ -76,9 +76,12 @@ Runs the CI pipeline including:
 - PR coverage comments (on PRs)
 
 Pushes to `main` run the same graph plus the main-only guards (turbo
-`ci:main`): the pack-surface manifest check (`check:pack`) and the full
-dts-backtest TypeScript matrix. A green main run then calls the Tag & push
-workflow — a red run means no tag, hence no publish.
+`ci:main`): the Firefox/WebKit vitest engines pass (`test:engines`), the
+pack-surface manifest check (`check:pack`), and the full dts-backtest
+TypeScript matrix. A green main run then calls the Tag & push workflow — a
+red run means no tag, hence no publish. Manual dispatch can run the
+`ci:main` graph on demand via the `mainGraph` input (combine with `force`
+to deflake the full main graph); tagging stays push-only.
 
 **Security:** Only runs on first-party PRs (not forks) to protect secrets.
 

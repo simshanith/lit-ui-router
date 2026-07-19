@@ -33,8 +33,8 @@ pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vite
 # format check, bundle checks) — what every PR runs
 pnpm run ci
 
-# PR pipeline plus the main-only guards (pack check, dts-backtest TS matrix)
-# — what a push to main runs
+# PR pipeline plus the main-only guards (Firefox/WebKit vitest engines pass,
+# pack check, dts-backtest TS matrix) — what a push to main runs
 mise run ci_main
 
 # Run unit tests only

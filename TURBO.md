@@ -35,7 +35,7 @@ The root `turbo.json` defines shared task configurations inherited by all worksp
 ```
 ci:pull_request   (every PR and branch push; `ci` is its back-compat alias)
 ├── build         (outputs: dist/**)
-├── test          (inputs: src/**/*.ts, vitest.config.ts, cypress.config.ts)
+├── test          (inputs: src/**/*.ts, vitest.config.ts, vitest.setup.ts, cypress.config.ts)
 ├── test:coverage (outputs: coverage/**)
 ├── lint          (runs with //#lint:root, //#lint:package-json, //#lint:workflows)
 ├── typecheck     (runs with //#typecheck:root, typecheck:src)
@@ -45,6 +45,8 @@ ci:pull_request   (every PR and branch push; `ci` is its back-compat alias)
 
 ci:main           (main pushes only: the PR graph plus the main-only guards)
 ├── ci:pull_request
+├── test:engines                     (Firefox + WebKit full-suite vitest pass;
+                                      PR chromium correctness rides test:coverage)
 ├── @tools/release#check:pack        (pack-surface manifest check)
 └── @tools/dts-backtest#test:matrix  (full dts-backtest TS version matrix;
                                       PRs run only the current-TS #test leg)
@@ -81,21 +83,21 @@ docs
 
 Workspaces extend the root configuration using `"extends": ["//"]`:
 
-| Workspace                                          | Custom Configuration                                                                                                                       |
-| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `packages/lit-ui-router`                           | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                     |
-| `packages/lit-ui-router-mobx`                      | Configures `docs:api` outputs                                                                                                              |
-| `packages/navigation-location-plugin`              | Configures `docs:api` outputs                                                                                                              |
-| `packages/ui-router-server`                        | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`                                                                 |
-| `apps/sample-app-lit-vanilla`                      | Adds env vars for build (VITE\_\*), runs `build:hash` with build                                                                           |
-| `apps/sample-app-lit-mobx`                         | Adds env vars for build (VITE\_\*)                                                                                                         |
-| `apps/sample-app-lit-e2e`                          | Caches `test` via dependency edges; CYPRESS\_\* passes through un-hashed                                                                   |
-| `apps/sample-app-routes`, `apps/sample-app-shared` | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                               |
-| `docs`                                             | Adds `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `bundle:worker`), requires `^docs:api` before build |
-| `examples`                                         | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                   |
-| `tools/release`                                    | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                    |
-| `tools/workers-builds`                             | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                         |
-| `tools/build_and_test`, `tools/shared`             | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                        |
+| Workspace                                                 | Custom Configuration                                                                                                                                                                                                |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `packages/lit-ui-router`                                  | Runs `build:custom-elements` with build, configures `docs:api` outputs                                                                                                                                              |
+| `packages/lit-ui-router-mobx`                             | Configures `docs:api` outputs                                                                                                                                                                                       |
+| `packages/navigation-location-plugin`                     | Configures `docs:api` outputs                                                                                                                                                                                       |
+| `packages/ui-router-server`                               | `test` rides the `transit` chain (no build needed); adds `typecheck:tests`                                                                                                                                          |
+| `apps/sample-app-lit-vanilla`                             | Adds env vars for build (VITE\_\*), runs `build:hash` with build                                                                                                                                                    |
+| `apps/sample-app-lit-mobx`                                | Adds env vars for build (VITE\_\*)                                                                                                                                                                                  |
+| `apps/sample-app-lit-e2e`                                 | Caches `test` via dependency edges; CYPRESS\_\* passes through un-hashed                                                                                                                                            |
+| `apps/sample-app-routes`, `apps/sample-app-shared`        | Widens `test` inputs beyond the root's `src/**/*.ts` (non-TS/config surface)                                                                                                                                        |
+| `docs`                                                    | Adds `docs:preview`, `wrangler:dev`, worker tasks (`types:worker`, `typecheck:worker`, `typecheck:worker:tests`, `bundle:worker`); `test` runs the worker contract tests in node; requires `^docs:api` before build |
+| `examples`                                                | Adds `build:embeds` (tutorial apps built as docs embeds)                                                                                                                                                            |
+| `tools/release`                                           | Adds `check:pack`, `resolve:published` (uncached registry read), `check:published-diff`                                                                                                                             |
+| `tools/workers-builds`                                    | Adds `check` (live Cloudflare API diff; uncached); over-approximated `test` inputs                                                                                                                                  |
+| `tools/build_and_test`, `tools/shared`, `tools/happy-dom` | Over-approximated `test` inputs (`$TURBO_DEFAULT$`)                                                                                                                                                                 |
 
 ## Common Commands
 
@@ -122,7 +124,8 @@ turbo format
 # + bundle checks); `ci` is the back-compat alias of `ci:pull_request`
 turbo ci
 
-# PR pipeline plus the main-only guards (check:pack, dts-backtest TS matrix)
+# PR pipeline plus the main-only guards (Firefox/WebKit engines pass,
+# check:pack, dts-backtest TS matrix)
 turbo ci:main
 
 # Development server (persistent)
@@ -175,7 +178,7 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
-Manual dispatch of the workflow has a `force` input (`TURBO_FORCE`) that bypasses the turbo cache — the deflake-reproduction path. CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
+Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
 
 ### CI Environment Variables
 
@@ -187,18 +190,19 @@ TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Team identifier
 
 ### Task-to-CI Mapping
 
-| Turbo Task                        | CI Placement                                              |
-| --------------------------------- | --------------------------------------------------------- |
-| `build`                           | `ci:pull_request` (every PR and push)                     |
-| `test`                            | `ci:pull_request`                                         |
-| `test:coverage`                   | `ci:pull_request`, feeds coverage reports                 |
-| `lint`                            | `ci:pull_request`                                         |
-| `typecheck`                       | `ci:pull_request`                                         |
-| `format:check`                    | `ci:pull_request`                                         |
-| `check:bundle`, `codecov:bundle`  | `ci:pull_request`                                         |
-| `@tools/release#check:pack`       | `ci:main` only (main pushes)                              |
-| `@tools/dts-backtest#test:matrix` | `ci:main` only; PRs run the current-TS `#test` leg        |
-| `typecheck:peer-floor`            | Neither ci graph — Release signals check runs + bump gate |
+| Turbo Task                        | CI Placement                                                                              |
+| --------------------------------- | ----------------------------------------------------------------------------------------- |
+| `build`                           | `ci:pull_request` (every PR and push)                                                     |
+| `test`                            | `ci:pull_request`                                                                         |
+| `test:coverage`                   | `ci:pull_request`, feeds coverage reports                                                 |
+| `lint`                            | `ci:pull_request`                                                                         |
+| `typecheck`                       | `ci:pull_request`                                                                         |
+| `format:check`                    | `ci:pull_request`                                                                         |
+| `check:bundle`, `codecov:bundle`  | `ci:pull_request`                                                                         |
+| `test:engines`                    | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin) |
+| `@tools/release#check:pack`       | `ci:main` only (main pushes)                                                              |
+| `@tools/dts-backtest#test:matrix` | `ci:main` only; PRs run the current-TS `#test` leg                                        |
+| `typecheck:peer-floor`            | Neither ci graph — Release signals check runs + bump gate                                 |
 
 ## Remote Caching
 
