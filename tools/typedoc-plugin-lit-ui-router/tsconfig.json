@@ -1,12 +1,7 @@
 {
-  "extends": "../../tsconfig.base.json",
+  // tooling umbrella (IDE, tsgolint): no emit; typecheck:src enforces conformance
+  "extends": "./tsconfig.src.json",
   "compilerOptions": {
-    "types": ["node"],
-    "outDir": "./dist",
-    "declaration": true,
-    "declarationMap": true,
-    "sourceMap": true,
-    "rootDir": "./src"
-  },
-  "include": ["src/**/*.ts"]
+    "noEmit": true
+  }
 }

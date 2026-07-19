@@ -931,6 +931,9 @@ importers:
 
   tools/typedoc-plugin-lit-ui-router:
     devDependencies:
+      '@tools/oxc-emit':
+        specifier: workspace:*
+        version: link:../oxc-emit
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

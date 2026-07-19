@@ -16,13 +16,16 @@
     }
   },
   "scripts": {
-    "build": "tsc",
-    "build:types": "tsc",
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
-    "lint": "oxlint ."
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "devDependencies": {
+    "@tools/oxc-emit": "workspace:*",
     "@types/node": "catalog:",
     "typedoc": "catalog:",
     "typescript": "catalog:typescript6-compat"
