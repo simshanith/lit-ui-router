@@ -23,7 +23,8 @@
     "directory": "packages/lit-ui-router-mobx"
   },
   "files": [
-    "dist/**"
+    "dist/**",
+    "src/*.ts"
   ],
   "type": "module",
   "sideEffects": false,
@@ -39,7 +40,8 @@
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build": "tsc -p tsconfig.build.json",
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles",
@@ -51,12 +53,14 @@
     "test": "VITEST_BROWSER_API_PORT=63330 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63335 vitest run --coverage",
     "typecheck": "tsc -p tsconfig.json --noEmit",
-    "typecheck:peer-floor": "node peer-floor-guard.ts && tsc -p tsconfig.peer-floor.json --noEmit"
+    "typecheck:peer-floor": "node peer-floor-guard.ts && tsc -p tsconfig.peer-floor.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/happy-dom": "workspace:*",
+    "@tools/oxc-emit": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",

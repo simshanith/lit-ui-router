@@ -1,12 +1,13 @@
 {
-  // Tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit.
-  // The build emits via tsconfig.build.json.
-  "extends": "./tsconfig.build.json",
+  // tooling umbrella (IDE, tsgolint, typedoc): src + specs, no emit
+  "extends": "./tsconfig.src.json",
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
     // Specs import @tools/happy-dom's source-exported .ts files.
     "allowImportingTsExtensions": true,
+    // specs are exempt; typecheck:src enforces conformance
+    "isolatedDeclarations": false,
     "types": ["node", "vitest/globals"]
   },
   "include": [
