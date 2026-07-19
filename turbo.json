@@ -22,7 +22,9 @@
       "dependsOn": ["^test"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
       "env": ["VITEST_BROWSER_API_PORT", "CI"],
-      "passThroughEnv": ["WRANGLER_LOG"]
+      // CYPRESS_video: CI disables Cypress recording (build-test.yml);
+      // strict env mode would scrub the override before it reaches Cypress.
+      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video"]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
