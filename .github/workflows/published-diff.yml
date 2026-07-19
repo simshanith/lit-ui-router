@@ -29,9 +29,11 @@ on:
 env:
   HUSKY: 0
 
-# One run at a time, newest wins; every run targets main's current head.
+# One refresh at a time, newest wins; every run targets main's current head.
+# Literal group: github.workflow evaluates to the CALLER's name on
+# workflow_call, which would split called refreshes from push refreshes.
 concurrency:
-  group: ${{ github.workflow }}
+  group: published-diff
   cancel-in-progress: true
 
 jobs:
