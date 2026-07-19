@@ -68,11 +68,20 @@
       // ^build drops once every package is pass-split
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root", "typecheck:src"]
+      "with": ["//#typecheck:root", "typecheck:src", "typecheck:peer-floor"]
     },
     "typecheck:src": {
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    "typecheck:peer-floor": {
+      // floor comes from the catalog; the aliased package is pinned by the lockfile
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ]
     },
     "//#typecheck:root": {
       "inputs": ["$TURBO_DEFAULT$"]

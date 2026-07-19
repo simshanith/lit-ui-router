@@ -5,8 +5,13 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
-    "types": ["vitest/globals"]
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*", "vitest.config.ts", "vitest.setup.ts"],
+  "include": [
+    "src/**/*",
+    "peer-floor-guard.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

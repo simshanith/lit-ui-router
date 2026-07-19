@@ -1,0 +1,12 @@
+{
+  // Typechecks src against the published floor of the lit-ui-router peer range
+  // (the lit-ui-router-floor alias), not the linked workspace copy. Never emits.
+  "extends": "./tsconfig.build.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "lit-ui-router": ["./node_modules/lit-ui-router-floor/dist/index.d.ts"],
+      "lit-ui-router/*": ["./node_modules/lit-ui-router-floor/*"]
+    }
+  }
+}
