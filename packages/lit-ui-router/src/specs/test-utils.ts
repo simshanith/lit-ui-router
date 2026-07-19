@@ -1,7 +1,9 @@
 import { html, LitElement, TemplateResult } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { memoryLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
+import { mountElementInRouter as mountElementInRouterGeneric } from '@tools/router-test-utils/mount.ts';
 import { UIRouterLit } from '../core.js';
+import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-router.register.js';
 import { LitStateDeclaration } from '../interface.js';
 
@@ -142,6 +144,25 @@ export async function createTestFixture(
 }
 
 /**
+ * Mounts an existing element inside a ui-router context via the shared
+ * helper — @tools/router-test-utils owns the happy-dom-safe append ordering.
+ */
+export async function mountElementInRouter<E extends Element>(
+  element: E,
+  router: UIRouterLit,
+  container?: HTMLElement,
+): Promise<{
+  element: E;
+  uiRouterEl: UIRouterLitElement;
+  container: HTMLElement;
+  cleanup: () => void;
+}> {
+  const mounted = await mountElementInRouterGeneric(element, router, container);
+  // createElement('ui-router') upgraded to the registered element class.
+  return { ...mounted, uiRouterEl: mounted.uiRouterEl as UIRouterLitElement };
+}
+
+/**
  * Mounts an element inside a ui-router context and returns it.
  */
 export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
@@ -153,36 +174,11 @@ export async function mountInRouter<K extends keyof HTMLElementTagNameMap>(
   container: HTMLElement;
   cleanup: () => void;
 }> {
-  const container = document.createElement('div');
-  document.body.appendChild(container);
-
-  const uiRouterEl = document.createElement('ui-router');
-  uiRouterEl.uiRouter = router;
-
   const element = document.createElement(tagName);
   Object.entries(attributes).forEach(([key, value]) => {
     element.setAttribute(key, value);
   });
-
-  // Connect the <ui-router> parent before its children: happy-dom fires
-  // connectedCallback child-before-parent on subtree insertion (real browsers
-  // are parent-first), which would break ui-router-context discovery. See
-  // happy-dom-conformance.spec.ts.
-  container.appendChild(uiRouterEl);
-  uiRouterEl.appendChild(element);
-
-  await waitForUpdate(uiRouterEl);
-  if (element instanceof LitElement) {
-    await waitForUpdate(element);
-  }
-
-  return {
-    element,
-    container,
-    cleanup: () => {
-      container.remove();
-    },
-  };
+  return mountElementInRouter(element, router);
 }
 
 /**

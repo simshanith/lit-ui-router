@@ -1,0 +1,14 @@
+{
+  // Source-exported spec helpers consumed through vitest's vite transform —
+  // .ts import extensions, nothing emitted.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "types": [],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["**/*.ts"]
+}

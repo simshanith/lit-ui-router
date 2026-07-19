@@ -2,9 +2,10 @@ import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { comparer } from 'mobx';
-import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
+import { UIRouterLit } from 'lit-ui-router';
 
 import { RouterReactionController } from '../router-reaction-controller.js';
+import { mountElementInRouter } from '@tools/router-test-utils/mount.ts';
 import {
   createTestRouter,
   routerGo,
@@ -38,20 +39,13 @@ function createHost(): RouterReactionHost {
   return document.createElement('router-reaction-host');
 }
 
-/** Mounts the host inside a <ui-router> providing the given router. */
-async function mountInRouter(
-  host: RouterReactionHost,
-  router: UIRouterLit,
-): Promise<UIRouterLitElement> {
-  const uiRouterEl = document.createElement('ui-router');
-  uiRouterEl.uiRouter = router;
-  // Parent connects before the child: happy-dom fires connectedCallback
-  // child-before-parent on subtree insertion (see lit-ui-router's
-  // happy-dom-conformance.spec.ts), which would break context discovery.
-  document.body.appendChild(uiRouterEl);
-  uiRouterEl.appendChild(host);
-  cleanups.push(() => uiRouterEl.remove());
-  await waitForUpdate(host);
+/**
+ * Mounts the host inside a <ui-router> via the shared helper —
+ * @tools/router-test-utils owns the happy-dom-safe append ordering.
+ */
+async function mountInRouter(host: RouterReactionHost, router: UIRouterLit) {
+  const { uiRouterEl, cleanup } = await mountElementInRouter(host, router);
+  cleanups.push(cleanup);
   return uiRouterEl;
 }
 

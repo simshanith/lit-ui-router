@@ -1,0 +1,20 @@
+{
+  "name": "@tools/router-test-utils",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Shared vitest mount helpers for router specs: happy-dom-safe parent-first <ui-router> mounting",
+  "type": "module",
+  "exports": {
+    "./mount.ts": "./src/mount.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "oxfmt": "catalog:",
+    "typescript": "catalog:"
+  }
+}

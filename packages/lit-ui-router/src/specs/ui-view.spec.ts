@@ -15,6 +15,7 @@ import {
 } from '../interface.js';
 import {
   createTestRouter,
+  mountElementInRouter,
   tick,
   waitForUpdate,
   routerGo,
@@ -39,17 +40,13 @@ describe('UiView', () => {
   ): Promise<{ uiRouter: UIRouterLitElement; uiView: UiView }> {
     router = createTestRouter(states);
 
-    const uiRouter = document.createElement('ui-router');
-    uiRouter.uiRouter = router;
-
     const uiView = document.createElement('ui-view');
     options.configure?.(uiView);
-    // Parent connects before the child (see mountInRouter in test-utils.ts).
-    container.appendChild(uiRouter);
-    uiRouter.appendChild(uiView);
-
-    await waitForUpdate(uiRouter);
-    await waitForUpdate(uiView);
+    const { uiRouterEl: uiRouter } = await mountElementInRouter(
+      uiView,
+      router,
+      container,
+    );
 
     if (options.start !== false) {
       router.start();

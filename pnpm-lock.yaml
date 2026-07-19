@@ -585,6 +585,9 @@ importers:
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
+      '@tools/router-test-utils':
+        specifier: workspace:*
+        version: link:../../tools/router-test-utils
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -636,6 +639,9 @@ importers:
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
+      '@tools/router-test-utils':
+        specifier: workspace:*
+        version: link:../../tools/router-test-utils
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -883,6 +889,15 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
+
+  tools/router-test-utils:
+    devDependencies:
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.58.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/shared:
     devDependencies:

@@ -75,6 +75,7 @@
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/oxc-emit": "workspace:*",
+    "@tools/router-test-utils": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",

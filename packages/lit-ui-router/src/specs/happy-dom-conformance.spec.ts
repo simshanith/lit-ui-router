@@ -1,14 +1,13 @@
 import { describe, it, expect } from 'vitest';
 
 /**
- * Canary for the happy-dom infidelity the mount helpers work around
- * (test-utils.ts mountInRouter, ui-view.spec.ts setupRouter, mobx
- * router-reaction-controller.spec.ts mountInRouter): happy-dom fires
- * connectedCallback child-before-parent when an assembled subtree is
- * inserted; real browsers upgrade in shadow-including tree order, parent
- * first. Runs only in the happy-dom project — real browsers fail it by
- * design. When this spec FAILS, happy-dom fixed the ordering upstream:
- * remove the parent-first ordering in those helpers and delete this canary.
+ * Canary for the happy-dom infidelity worked around in exactly one place —
+ * mountElementInRouter in @tools/router-test-utils: happy-dom fires connectedCallback
+ * child-before-parent when an assembled subtree is inserted; real browsers
+ * upgrade in shadow-including tree order, parent first. Runs only in the
+ * happy-dom project — real browsers fail it by design. When this spec FAILS,
+ * happy-dom fixed the ordering upstream: remove the parent-first ordering in
+ * that helper and delete this canary.
  */
 describe('happy-dom conformance canary', () => {
   it('still connects subtree children before their parent', () => {
