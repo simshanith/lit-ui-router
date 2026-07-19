@@ -119,7 +119,6 @@ linkWorkspacePackages: true
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
-  '@vitest/browser': patches/@vitest__browser.patch
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAgeStrict: true
