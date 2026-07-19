@@ -99,6 +99,12 @@ run = 'turbo run "${usage_package_name?}#build"'
 description = "Run the full CI pipeline via turbo"
 run = "turbo run ci --ui=stream --log-order=stream"
 
+[tasks.ci_main]
+# Superset of `ci` (same env contract): adds the main-only guard tasks
+# (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
+description = "Run the main-push CI pipeline via turbo"
+run = "turbo run ci:main --ui=stream --log-order=stream"
+
 [tasks.dts_backtest_matrix]
 # Main-push companion to `ci`: PRs run only the current-TS dts-backtest leg.
 description = "Run the full dts-backtest TypeScript version matrix via turbo"

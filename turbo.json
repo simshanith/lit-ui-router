@@ -83,7 +83,7 @@
     "//#typecheck:root": {
       "inputs": ["$TURBO_DEFAULT$"]
     },
-    "ci": {
+    "ci:pull_request": {
       "dependsOn": [
         "build",
         "test",
@@ -98,6 +98,20 @@
     "check:bundle": {
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "ci:main": {
+      // PR graph plus the main-only guards, scheduled by one turbo
+      // invocation; future main-only guards join this dependsOn, not new
+      // workflow steps.
+      "dependsOn": [
+        "ci:pull_request",
+        "@tools/release#check:pack",
+        "@tools/dts-backtest#test:matrix"
+      ]
+    },
+    "ci": {
+      // back-compat alias: `mise run ci` / `pnpm run ci` keep working
+      "dependsOn": ["ci:pull_request"]
     },
     "codecov:bundle": {
       "dependsOn": ["build"],
