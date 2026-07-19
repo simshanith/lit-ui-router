@@ -68,13 +68,15 @@
       // ^build drops once every package is pass-split
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root", "typecheck:src", "typecheck:peer-floor"]
+      "with": ["//#typecheck:root", "typecheck:src"]
     },
     "typecheck:src": {
       "dependsOn": ["^build", "^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     },
     "typecheck:peer-floor": {
+      // manual-only: not in ci — the floor pin can only reference published
+      // versions, so gating would break atomic core-API + mobx-adoption PRs
       // floor comes from the catalog; the aliased package is pinned by the lockfile
       "inputs": [
         "$TURBO_DEFAULT$",
