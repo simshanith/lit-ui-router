@@ -47,8 +47,9 @@
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
-    "test": "VITEST_BROWSER_API_PORT=63340 vitest run",
+    "test": "VITEST_BROWSER_API_PORT=63340 vitest run --browser=chromium",
     "test:coverage": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --browser=chromium",
+    "test:engines": "VITEST_BROWSER_API_PORT=63341 vitest run --project=firefox --project=safari",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {

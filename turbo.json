@@ -20,7 +20,12 @@
     },
     "test": {
       "dependsOn": ["^test"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "cypress.config.ts"],
+      "inputs": [
+        "src/**/*.ts",
+        "vitest.config.ts",
+        "vitest.setup.ts",
+        "cypress.config.ts"
+      ],
       "env": ["VITEST_BROWSER_API_PORT", "CI"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
@@ -38,9 +43,17 @@
     },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts"],
+      "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
       "env": ["VITEST_BROWSER_API_PORT", "CI"],
       "outputs": ["coverage/**"]
+    },
+    // Firefox+WebKit full-suite pass for the vitest packages; chromium
+    // correctness rides test:coverage on PRs. Runs on main push, not the
+    // PR graph.
+    "test:engines": {
+      "dependsOn": ["^build"],
+      "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
+      "env": ["VITEST_BROWSER_API_PORT", "CI"]
     },
     "lint": {
       "with": ["//#lint:root", "//#lint:package-json", "//#lint:workflows"],
@@ -118,6 +131,7 @@
       // workflow steps.
       "dependsOn": [
         "ci:pull_request",
+        "test:engines",
         "@tools/release#check:pack",
         "@tools/dts-backtest#test:matrix"
       ]
