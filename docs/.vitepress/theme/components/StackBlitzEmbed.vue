@@ -164,15 +164,24 @@ onUnmounted(() => {
   border-color: var(--vp-c-brand-1);
 }
 
+/* Framed like the sibling .btn controls; border present in both states so
+   hover changes color only, never size. */
 :deep(a) {
   display: inline-flex;
   align-items: center;
+  line-height: 0;
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
+  overflow: hidden;
+  transition: border-color 0.2s;
 }
 
 :deep(a img) {
-  height: 32px;
+  display: block;
+  /* 36px + the 1px frame = 38px, level with the sibling .btn controls. */
+  height: 36px;
+  /* .vp-doc gives content imgs 16px vertical margin — the actual gap culprit. */
+  margin: 0;
 }
 
 :deep(a:hover) {
