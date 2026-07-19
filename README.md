@@ -1,7 +1,5 @@
 # lit-ui-router
 
-## State based routing for Lit (v2+)
-
 <img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
@@ -11,7 +9,22 @@
 [![Tag & push (escape hatch)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml/badge.svg?branch=main&event=workflow_dispatch)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml?query=branch%3Amain+event%3Aworkflow_dispatch)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
 
-[![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router) [Published packages ⤵](#published-packages)
+## Published packages
+
+| Package                                | npm                                                                                                                                                 | GitHub Release                                                                                                                                                                                                                    | Published diff                                                                                                                                                                                                                                                                                                                      |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `lit-ui-router`                        | [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router)                                               | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router)                                               | [![lit-ui-router published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                               |
+| `lit-ui-router-mobx`                   | [![npm](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx)                                     | [![lit-ui-router-mobx published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router-mobx%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                     |
+| `ui-router-navigation-location-plugin` | [![npm](https://img.shields.io/npm/v/ui-router-navigation-location-plugin.svg)](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-navigation-location-plugin@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-navigation-location-plugin) | [![ui-router-navigation-location-plugin published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-navigation-location-plugin%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain) |
+
+| Badge                                                                        | Meaning                                     |
+| ---------------------------------------------------------------------------- | ------------------------------------------- |
+| ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen) | The npm release matches `main`              |
+| ![passing](https://img.shields.io/badge/published--diff-passing-orange)      | Unreleased ship-affecting changes on `main` |
+
+---
+
+## State based routing for Lit (v2+)
 
 lit-ui-router is a client-side [Single Page Application](https://en.wikipedia.org/wiki/Single-page_application)
 routing framework for [Lit](https://lit.dev/).
@@ -98,16 +111,3 @@ For complex components with lifecycle, state, and styles:
 ```ts
 { name: 'dashboard', url: '/dashboard', component: DashboardElement }
 ```
-
-## Published packages
-
-| Package                                | npm                                                                                                                                                 | GitHub Release                                                                                                                                                                                                                    | Published diff                                                                                                                                                                                                                                                                                                                      |
-| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `lit-ui-router`                        | [![npm](https://img.shields.io/npm/v/lit-ui-router.svg)](https://www.npmjs.com/package/lit-ui-router)                                               | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router)                                               | [![lit-ui-router published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                               |
-| `lit-ui-router-mobx`                   | [![npm](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx)                                     | [![lit-ui-router-mobx published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28lit-ui-router-mobx%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)                                     |
-| `ui-router-navigation-location-plugin` | [![npm](https://img.shields.io/npm/v/ui-router-navigation-location-plugin.svg)](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-navigation-location-plugin@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-navigation-location-plugin) | [![ui-router-navigation-location-plugin published diff](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=published-diff%20%28ui-router-navigation-location-plugin%29&label=published-diff)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain) |
-
-| Badge                                                                        | Meaning                                     |
-| ---------------------------------------------------------------------------- | ------------------------------------------- |
-| ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen) | The npm release matches `main`              |
-| ![passing](https://img.shields.io/badge/published--diff-passing-orange)      | Unreleased ship-affecting changes on `main` |
