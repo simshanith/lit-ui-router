@@ -34,7 +34,6 @@ export default defineConfig({
           // Per-file isolation is required: register*.spec.ts assert about
           // custom-elements registry state (element not yet defined,
           // duplicate-definition guard), which a shared registry breaks.
-          // Measured cost vs isolate:false is nil (~3.5s either way).
           isolate: true,
         },
       },

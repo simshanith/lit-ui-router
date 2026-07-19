@@ -39,11 +39,7 @@ function createHost(): RouterReactionHost {
   return document.createElement('router-reaction-host');
 }
 
-/**
- * Mounts the host inside a <ui-router>. Append ordering is delegated to
- * @tools/happy-dom's appendParentFirst — the sole owner of the happy-dom
- * child-before-parent workaround.
- */
+/** Mounts the host inside a <ui-router> providing the given router. */
 async function mountInRouter(
   host: RouterReactionHost,
   router: UIRouterLit,

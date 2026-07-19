@@ -144,9 +144,7 @@ export async function createTestFixture(
 }
 
 /**
- * Mounts an existing element inside a ui-router context. Append ordering is
- * delegated to @tools/happy-dom's appendParentFirst — the sole owner of the
- * happy-dom child-before-parent workaround.
+ * Mounts an existing element inside a ui-router context.
  */
 export async function mountElementInRouter<E extends Element>(
   element: E,
