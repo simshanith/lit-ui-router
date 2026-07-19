@@ -1,16 +1,48 @@
+diff --git a/lib/interface.d.ts b/lib/interface.d.ts
+index 2f37e616844419a94eff501762c3468c11c364b5..652aab1fc1ae31890b50fc214c45aef507b3fcc6 100644
+--- a/lib/interface.d.ts
++++ b/lib/interface.d.ts
+@@ -12,7 +12,7 @@ declare module '@uirouter/core/lib/state/stateObject' {
+ }
+ export declare type ParamPredicate = (param: Param) => boolean;
+ export declare type DSRProp = boolean | string | DSRFunction | DSRConfigObj;
+-export declare type DSRFunction = (...args: any[]) => boolean | DSRTarget;
++export declare type DSRFunction = (...args: any[]) => boolean | DSRTarget | TargetState;
+ export interface DSRTarget {
+     state?: StateOrName;
+     params?: RawParams;
+diff --git a/lib-esm/interface.d.ts b/lib-esm/interface.d.ts
+index 2f37e616844419a94eff501762c3468c11c364b5..652aab1fc1ae31890b50fc214c45aef507b3fcc6 100644
+--- a/lib-esm/interface.d.ts
++++ b/lib-esm/interface.d.ts
+@@ -12,7 +12,7 @@ declare module '@uirouter/core/lib/state/stateObject' {
+ }
+ export declare type ParamPredicate = (param: Param) => boolean;
+ export declare type DSRProp = boolean | string | DSRFunction | DSRConfigObj;
+-export declare type DSRFunction = (...args: any[]) => boolean | DSRTarget;
++export declare type DSRFunction = (...args: any[]) => boolean | DSRTarget | TargetState;
+ export interface DSRTarget {
+     state?: StateOrName;
+     params?: RawParams;
 diff --git a/package.json b/package.json
-index c969ff262b1e699632ebeb0a141a310e5becc706..b2a412673a337e06e7770a2789ea045f24b09658 100644
+index c969ff262b1e699632ebeb0a141a310e5becc706..324d1ce438bff5837105e1cea878b657ee81d5e9 100644
 --- a/package.json
 +++ b/package.json
-@@ -40,8 +40,9 @@
-     "node": ">=4.0.0"
-   },
+@@ -42,6 +42,17 @@
    "jsnext:main": "lib-esm/index.js",
--  "main": "lib/index.js",
--  "typings": "lib/index.d.ts",
-+  "main": "./lib/index.js",
-+  "types": "./lib/index.d.ts",
-+  "type": "module",
+   "main": "lib/index.js",
+   "typings": "lib/index.d.ts",
++  "exports": {
++    ".": {
++      "types": "./lib/index.d.ts",
++      "module": "./lib-esm/index.js",
++      "default": "./lib/index.js"
++    },
++    "./lib/*": "./lib/*",
++    "./lib-esm/*": "./lib-esm/*",
++    "./_bundles/*": "./_bundles/*",
++    "./package.json": "./package.json"
++  },
    "license": "MIT",
    "peerDependencies": {
      "@uirouter/core": ">=5.0.0"
