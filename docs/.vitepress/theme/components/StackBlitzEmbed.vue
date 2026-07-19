@@ -164,11 +164,11 @@ onUnmounted(() => {
   border-color: var(--vp-c-brand-1);
 }
 
+/* The slotted badge img is a fully-styled button; no frame of our own. */
 :deep(a) {
   display: inline-flex;
   align-items: center;
-  border: 1px solid var(--vp-c-divider);
-  border-radius: 6px;
+  line-height: 0;
 }
 
 :deep(a img) {
@@ -176,6 +176,6 @@ onUnmounted(() => {
 }
 
 :deep(a:hover) {
-  border-color: var(--vp-c-brand-1);
+  filter: brightness(1.1);
 }
 </style>
