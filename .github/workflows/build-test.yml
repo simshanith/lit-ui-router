@@ -18,6 +18,11 @@ on:
         description: 'Bypass turbo cache (deflake reproduction: rebuild/retest everything)'
         type: boolean
         default: false
+      # Deflake path for the main-only guards without pushing a commit.
+      mainGraph:
+        description: 'Run the ci:main superset (main-only guards included); combine with force to deflake the full main graph'
+        type: boolean
+        default: false
 
 # Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
 env:
@@ -100,7 +105,8 @@ jobs:
       - name: Build and Test
         # TURBO_FORCE carries the deflake input through env (never `${{ }}`
         # in run lines); turbo parses ""/"false" as cache-respecting.
-        if: ${{ github.event_name != 'push' || github.ref != 'refs/heads/main' }}
+        # Exact complement of the ci_main step below: one of the two runs.
+        if: ${{ !((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
         run: mise run ci
         env:
           TURBO_FORCE: ${{ inputs.force }}
@@ -117,7 +123,8 @@ jobs:
         # dts-backtest full TS matrix) in one parallel turbo invocation; a
         # failure fails build_and_test, so the tag_push call job never runs.
         # Future main-only guards join ci:main's dependsOn, not new steps.
-        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
+        # mainGraph dispatches run this graph too; tag_push stays push-only.
+        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph) }}
         run: mise run ci_main
         env:
           TURBO_FORCE: ${{ inputs.force }}
