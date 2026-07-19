@@ -1,6 +1,4 @@
-import assert from 'node:assert/strict';
 import type { IncomingMessage, ServerResponse } from 'node:http';
-import { describe, it } from 'node:test';
 
 import type { Connect, Plugin, PreviewServer, ViteDevServer } from 'vite';
 
@@ -18,8 +16,9 @@ import type { ServerRouterPlugin, ViteMiddlewareServer } from '../src/vite.ts';
 // structural subset is only correct if it still MATCHES upstream where real
 // objects cross the seam. This file drift-guards that match at typecheck time:
 // `vite` and `@types/node` are dev-only, imported `import type` (erased, so
-// nothing ships and there's no test-runtime dep), and a diverged seam fails
-// `typecheck:tests`. Pure type-level — the runtime array is a plain [true × 6].
+// nothing ships), and a diverged seam fails `typecheck:tests`. Pure type-level
+// — the `.types.ts` name keeps it out of the node --test runtime glob; the
+// compile IS the assertion.
 
 // `true` iff From is assignable to To — tuple-wrapped so unions don't
 // distribute, honoring the same assignability the runtime relies on at a seam.
@@ -27,7 +26,7 @@ type AssignableTo<From, To> = [From] extends [To] ? true : false;
 
 // A diverged seam makes its slot's TYPE `false`, so the `true` initializer at
 // that position fails to compile ("Type 'true' is not assignable to 'false'").
-const seams: [
+export const seams: [
   // ./connect — a Connect stack (Express/Koa/Fastify/Vite, all on node:http)
   // hands the middleware real req/res, so each must satisfy the structural
   // param the middleware declares...
@@ -43,11 +42,3 @@ const seams: [
   AssignableTo<ViteDevServer, ViteMiddlewareServer>,
   AssignableTo<PreviewServer, ViteMiddlewareServer>,
 ] = [true, true, true, true, true, true];
-
-describe('structural host contracts', () => {
-  it('match upstream node:http and vite types at the seams', () => {
-    // The proof is the tuple's element types above (enforced by
-    // typecheck:tests); this only marks the file as exercised.
-    assert.deepEqual(seams, [true, true, true, true, true, true]);
-  });
-});

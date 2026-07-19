@@ -447,7 +447,7 @@ describe('litViewsBuilder', () => {
     expect(typeof views?.$default.component).toBe('function');
   });
 
-  it('should register a bare argless LitElement class and deliver props via property (#244)', async () => {
+  it('should register a bare argless LitElement class and deliver props via property', async () => {
     @customElement('test-element-argless-1')
     class TestElement extends LitElement {}
 
@@ -495,20 +495,11 @@ describe('litViewsBuilder', () => {
   });
 });
 
-describe('typings regressions (#239)', () => {
-  it('should accept required-props templates and Lit view declaration shapes', () => {
+describe('typings regressions', () => {
+  it('should recognize required-props templates as view declarations', () => {
+    // Assignability half lives in ./typings-regressions.types.ts (typecheck).
     const template = (props: UIViewInjectedProps) =>
       html`<div>${props.transition?.from().name}</div>`;
     expect(isLitViewDeclarationTemplate(template)).toBe(true);
-
-    // compiling without @ts-expect-error directives is the assertion
-    const stateDecl: LitStateDeclaration = {
-      name: 'typings-regression',
-      views: {
-        $default: template,
-        header: { component: () => html`<header>Header</header>` },
-      },
-    };
-    expect(Object.keys(stateDecl.views ?? {})).toHaveLength(2);
   });
 });
