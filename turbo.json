@@ -87,8 +87,7 @@
       ]
     },
     "typecheck": {
-      // every package is pass-split (#369, #395, #396): types come from
-      // build:types alone, JS emit stays off the typecheck path
+      // types come from build:types alone; JS emit stays off the typecheck path
       "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       "with": ["//#typecheck:root", "typecheck:src"]
