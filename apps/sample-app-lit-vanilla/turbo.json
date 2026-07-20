@@ -9,7 +9,7 @@
         "VITE_SAMPLE_APP_PUSH_STATE"
       ],
       "dependsOn": ["^build", "^transit"],
-      "outputs": ["dist/**"],
+      "outputs": ["dist/vanilla/**"],
       "with": ["build:hash"]
     },
     "build:hash": {
@@ -19,7 +19,7 @@
         "VITE_SAMPLE_APP_PUSH_STATE"
       ],
       "dependsOn": ["^build", "^transit"],
-      "outputs": ["dist-hash/**"]
+      "outputs": ["dist/hash/**"]
     }
   }
 }

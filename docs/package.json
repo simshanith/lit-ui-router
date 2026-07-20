@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "build": "vitepress build .",
-    "bundle:worker": "mkdir -p dist && wrangler deploy --dry-run --outdir=\"$PWD/dist-worker-stats\"",
-    "codecov:bundle": "upload-bundle-stats docs-worker-esm dist-worker-stats --no-manifest",
+    "bundle:worker": "mkdir -p dist && wrangler deploy --dry-run --outdir=\"$PWD/worker/dist\"",
+    "codecov:bundle": "upload-bundle-stats docs-worker-esm worker/dist --no-manifest",
     "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",

@@ -4,9 +4,9 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "build": "vite build",
-    "build:hash": "vite build --mode hash --outDir dist-hash",
-    "codecov:bundle": "upload-bundle-stats sample-app-lit-vanilla-esm",
+    "build": "vite build --outDir dist/vanilla",
+    "build:hash": "vite build --mode hash --outDir dist/hash",
+    "codecov:bundle": "upload-bundle-stats sample-app-lit-vanilla-esm dist/vanilla",
     "dev": "vite",
     "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",

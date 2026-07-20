@@ -10,10 +10,11 @@
       "inputs": [
         "package.json",
         "worker/**",
+        "!worker/dist/**",
         "$TURBO_ROOT$/wrangler.jsonc",
         "$TURBO_ROOT$/pnpm-lock.yaml"
       ],
-      "outputs": ["dist-worker-stats/**"]
+      "outputs": ["worker/dist/**"]
     },
     "codecov:bundle": {
       // Upload-only: ships the (possibly cache-replayed) dry-run artifact.
