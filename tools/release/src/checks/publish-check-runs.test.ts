@@ -81,7 +81,10 @@ describe('toCheckRun', () => {
     assert.equal(summary.indexOf('- `dist/core.js`') < details, true);
     assert.equal(summary.indexOf('- `package.json`') < details, true);
     assert.equal(summary.indexOf('- `src/core.ts`') > details, true);
-    assert.match(summary, /<summary>1 ship-inert file\(s\)/);
+    assert.match(
+      summary,
+      /<summary>1 ship-inert file\(s\) — src\/maps or manifest-only churn; never owe a release<\/summary>/,
+    );
   });
 
   it('treats an unpublished package as success with nothing to diff', () => {
