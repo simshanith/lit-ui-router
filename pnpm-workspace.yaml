@@ -30,6 +30,7 @@ catalog:
   '@vitest/coverage-v8': ^4.1.10
   concurrently: ^10.0.3
   cypress: ^15.18.1
+  diff: ^9.0.0
   esbuild: ^0.28.1
   eslint: ^10.7.0
   eslint-formatter-tap: ^9.0.1

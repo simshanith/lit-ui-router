@@ -57,3 +57,13 @@ export async function loadWorkspace(root: string): Promise<{
   });
   return { members, workspaceManifest };
 }
+
+/** patchedDependencies from pnpm-workspace.yaml: package name -> patch path. */
+export async function loadPatchedDependencies(
+  root: string,
+): Promise<Record<string, string>> {
+  const { readWorkspaceManifest } =
+    await import('@pnpm/workspace.read-manifest');
+  const workspaceManifest = await readWorkspaceManifest(root);
+  return workspaceManifest?.patchedDependencies ?? {};
+}
