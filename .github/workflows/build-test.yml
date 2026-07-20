@@ -58,6 +58,14 @@ jobs:
           persist-credentials: false
       - name: Setup mise
         uses: jdx/mise-action@v4
+      - name: Cache pnpm store
+        # restore-keys: a stale store still serves most packages (content-
+        # addressed); save happens only on an exact-key miss (lockfile change).
+        uses: actions/cache@v6
+        with:
+          path: ~/.local/share/pnpm/store
+          key: ${{ runner.os }}-pnpm-store-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: ${{ runner.os }}-pnpm-store-
       - name: Install dependencies
         run: mise run setup
         env:
