@@ -21,6 +21,7 @@
     "eslint.config.ts",
     "eslint.repo-rules.ts",
     "examples/build-embeds.ts",
+    "examples/ensure-installs.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"
   ]
