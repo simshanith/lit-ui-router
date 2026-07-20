@@ -81,7 +81,8 @@ docs
 - `with` runs root-level tasks alongside workspace tasks (marked edges above)
 - `outputs` defines cacheable artifacts
 - `inputs` scopes cache invalidation
-- Build outputs live in `dist`-named dirs (`dist/`, nested `dist/<variant>`, or `dist-*` siblings), so every traversal ignore is one `**/dist*/**` glob
+- Every build output lives under a `dist/` dir, so every traversal ignore is one `**/dist/**` glob (no sibling `dist-*` patterns): single-output packages use plain `dist/`; multi-output packages namespace each variant as `dist/<variant>/` (disjoint outputs globs, each vite build empties only its own subdir)
+- Dot-dirs under `dist/` (e.g. `dist/.stats/`, uncached codecov probe output) are machinery, not artifact — packers include dot-dirs under `files: ["dist/**"]`, so shipped packages carry an explicit `!dist/.*/**` negation; `check:published-diff` backstops the boundary
 
 Exceptions: `docs/api/**` (generated VitePress content, not a bundle output) and `tools/release/.cache/**` (turbo-hashed input cache).
 

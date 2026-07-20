@@ -9,7 +9,7 @@
         "VITE_SAMPLE_APP_PUSH_STATE"
       ],
       "dependsOn": ["^build", "^transit"],
-      "outputs": ["dist/**", "!dist/hash/**"],
+      "outputs": ["dist/vanilla/**"],
       "with": ["build:hash"]
     },
     "build:hash": {
@@ -18,8 +18,7 @@
         "VITE_SAMPLE_APP_BASE_URL",
         "VITE_SAMPLE_APP_PUSH_STATE"
       ],
-      // after build: the main vite build empties dist/, dist/hash included
-      "dependsOn": ["^build", "^transit", "build"],
+      "dependsOn": ["^build", "^transit"],
       "outputs": ["dist/hash/**"]
     }
   }

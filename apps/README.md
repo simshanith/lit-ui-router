@@ -110,11 +110,11 @@ prefix.
 Two builds stay separate, because they differ in more than a base prefix — but
 they recover their base the same way, so neither bakes one either:
 
-| Build                                | Serves                                                             | Location  |
-| ------------------------------------ | ------------------------------------------------------------------ | --------- |
-| `sample-app-lit-vanilla` `dist`      | `/app`, `/not-found-naive`, `/not-found-spa`, `/simulated-routing` | pushState |
-| `sample-app-lit-mobx` `dist`         | `/app-mobx`                                                        | pushState |
-| `sample-app-lit-vanilla` `dist/hash` | `/app-hash`                                                        | hash      |
+| Build                                   | Serves                                                             | Location  |
+| --------------------------------------- | ------------------------------------------------------------------ | --------- |
+| `sample-app-lit-vanilla` `dist/vanilla` | `/app`, `/not-found-naive`, `/not-found-spa`, `/simulated-routing` | pushState |
+| `sample-app-lit-mobx` `dist`            | `/app-mobx`                                                        | pushState |
+| `sample-app-lit-vanilla` `dist/hash`    | `/app-hash`                                                        | hash      |
 
 **Recovering the base.** `@uirouter/core`'s pushState location reads its base
 from the `<base href>` tag at plugin-install time

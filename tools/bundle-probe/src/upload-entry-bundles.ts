@@ -1,7 +1,8 @@
 #!/usr/bin/env node
 // Codecov bundle series per exported entry: rolldown (the vite-8-era
 // consumer bundler) emits each entry minified with declared dependencies and
-// peers external into dist-stats/, then the shared uploader ships one
+// peers external into dist/.stats/ (dot-dir: machinery, not artifact — the
+// packages' files negation keeps it out of the tarball), then the shared uploader ships one
 // <prefix>-<label>-esm series per entry. Entries and labels derive from the
 // exports map (see entries.ts); the optional prefix argument overrides the
 // package name (series continuity). CODECOV_TOKEN unset stays the uploader's
@@ -23,7 +24,7 @@ const uploader = fileURLToPath(
   import.meta.resolve('@tools/build_and_test/src/upload-bundle-stats.ts'),
 );
 
-const statsRoot = path.join(packageDir, 'dist-stats');
+const statsRoot = path.join(packageDir, 'dist', '.stats');
 await rm(statsRoot, { recursive: true, force: true });
 
 console.log(
