@@ -32,14 +32,16 @@ describe('uiSref directive', () => {
   let suppression: NativeClickSuppression;
 
   beforeEach(async () => {
+    // acquires the browser-project default (module singleton); clear its
+    // recordings so each test asserts only its own suppressed events
     suppression = suppressNativeClickNavigation();
+    suppression.events.length = 0;
     container = document.createElement('div');
     document.body.appendChild(container);
     await tick();
   });
 
   afterEach(async () => {
-    suppression.restore();
     // Remove DOM first to trigger directive disconnection
     container.remove();
     await tick(10);
