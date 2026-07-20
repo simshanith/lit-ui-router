@@ -11,7 +11,7 @@
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "postinstall": "node ensure-installs.ts --postinstall",
-    "lint": "oxlint .",
+    "lint": "node ensure-installs.ts && oxlint .",
     "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors auto \"pnpm run typecheck:helloworld\" \"pnpm run typecheck:hellosolarsystem\" \"pnpm run typecheck:hellogalaxy\"",
     "typecheck:hellogalaxy": "node ensure-installs.ts hellogalaxy && tsc -p hellogalaxy",
     "typecheck:hellosolarsystem": "node ensure-installs.ts hellosolarsystem && tsc -p hellosolarsystem",
