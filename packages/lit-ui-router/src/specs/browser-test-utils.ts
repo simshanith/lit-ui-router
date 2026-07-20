@@ -22,10 +22,19 @@ export interface NativeClickSuppression {
   restore: () => void;
 }
 
+let active: NativeClickSuppression | undefined;
+
 // Hash hrefs resolve to the tester URL (live sessionId): an uncancelled
 // _blank/modifier/middle click boots a duplicate tester on the channel.
 // Bubble-phase so the router's element-level handler decides first.
+// Module singleton: the browser-project setup registers the default and
+// specs acquire the same handle — a second listener would record the
+// first one's preventDefault. A spec needing real default navigation
+// calls restore() and re-registers when done.
 export function suppressNativeClickNavigation(): NativeClickSuppression {
+  if (active) {
+    return active;
+  }
   const events: SuppressedNativeClick[] = [];
   const listener = (event: Event) => {
     const target = event.target instanceof Element ? event.target : null;
@@ -39,11 +48,13 @@ export function suppressNativeClickNavigation(): NativeClickSuppression {
   };
   window.addEventListener('click', listener);
   window.addEventListener('auxclick', listener);
-  return {
+  active = {
     events,
     restore: () => {
       window.removeEventListener('click', listener);
       window.removeEventListener('auxclick', listener);
+      active = undefined;
     },
   };
+  return active;
 }
