@@ -17,8 +17,10 @@
   "devDependencies": {
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
+    "@types/pacote": "catalog:",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
+    "pacote": "catalog:",
     "typescript": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*"
   }
