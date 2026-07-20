@@ -10,21 +10,12 @@
 // tarball and delegates all decisions to the pure, unit-tested functions in
 // ./check-pack.core.ts.
 
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
-
 import {
   findPackedManifestViolations,
   formatPackedManifestReport,
 } from './check-pack.core.ts';
+import { tarballManifest } from './tarball.ts';
 import type { PackageManifest } from '@tools/shared/types.ts';
-
-const run = promisify(execFile);
-
-// A package.json is always a JSON object; anything else can't hold dep fields.
-function isPackageManifest(value: unknown): value is PackageManifest {
-  return typeof value === 'object' && value !== null;
-}
 
 const [tarball, ...extra] = process.argv.slice(2);
 if (!tarball || extra.length > 0) {
@@ -32,13 +23,9 @@ if (!tarball || extra.length > 0) {
   process.exit(1);
 }
 
-const { stdout } = await run(
-  'tar',
-  ['-xzOf', tarball, 'package/package.json'],
-  { maxBuffer: 16 * 1024 * 1024 },
-);
-const parsed: unknown = JSON.parse(stdout);
-const manifest = isPackageManifest(parsed) ? parsed : {};
+// Malformed manifests reject in tarballManifest — the gate fails loudly,
+// never a silent `{}` that absence-checks would pass.
+const manifest = (await tarballManifest(tarball)) as PackageManifest;
 const { ok, text } = formatPackedManifestReport(
   findPackedManifestViolations(manifest),
 );
