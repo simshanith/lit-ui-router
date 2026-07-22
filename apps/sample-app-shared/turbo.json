@@ -5,6 +5,10 @@
     "test": {
       // Dialog.spec.ts asserts styles.css rules; root inputs only track *.ts
       "inputs": ["src/**", "vitest.config.ts"]
+    },
+    "test:engines": {
+      // same specs as test; same styles.css input widening applies
+      "inputs": ["src/**", "vitest.config.ts"]
     }
   }
 }

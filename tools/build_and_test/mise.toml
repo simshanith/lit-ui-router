@@ -50,6 +50,13 @@ run = "playwright install --with-deps"
 description = "Install only the Playwright system dependencies"
 run = "playwright install-deps"
 
+[tasks.playwright_deps_engines]
+# Scoped hit-path deps: firefox+webkit are the only engines whose apt libs
+# the runner image lacks; chromium and the Cypress Electron binary ride the
+# preinstalled set (proven empirically — see the PR that added this).
+description = "Install the Playwright system dependencies for firefox and webkit"
+run = "playwright install-deps firefox webkit"
+
 [tasks.cypress]
 # Verify up front so the concurrent vanilla/mobx Cypress runs skip the
 # "first time using Cypress" verification banner.

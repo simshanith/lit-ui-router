@@ -87,16 +87,15 @@ jobs:
       - name: Install Playwright Browsers
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: mise run //tools/build_and_test:playwright
-      - name: Install Playwright OS deps
-        # Browsers came from the cache; the fresh runner still needs the apt
-        # OS deps that `--with-deps` would have installed on the miss path.
-        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
-        run: mise run //tools/build_and_test:playwright_deps
+      - name: Install Playwright OS deps (firefox+webkit)
+        # Browsers came from the cache; only test:engines (main graph) needs
+        # the firefox+webkit apt libs — the PR graph is chromium-only, and
+        # chromium and Cypress ride the runner image's preinstalled set.
+        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
+        run: mise run //tools/build_and_test:playwright_deps_engines
       - name: Install Cypress
         # `cypress install` is a near-no-op when the binary is cached; verify
         # still runs so the concurrent suites skip the first-use banner.
-        # verify needs the OS libs the playwright dep steps install on both
-        # cache paths — never skip playwright_deps on hits.
         run: mise run //tools/build_and_test:cypress
       - name: Start shared Xvfb display
         # The vanilla and MobX Cypress suites run concurrently. Without a
