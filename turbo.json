@@ -128,6 +128,9 @@
       "inputs": ["$TURBO_DEFAULT$"]
     },
     "ci:pull_request": {
+      // codecov:bundle is deliberately absent: cache:false deps execute on
+      // every run, which would mask the >>> FULL TURBO signal; the workflow
+      // uploads it as its own step after this graph.
       "dependsOn": [
         "build",
         "test",
@@ -135,8 +138,7 @@
         "lint",
         "typecheck",
         "format:check",
-        "check:bundle",
-        "codecov:bundle"
+        "check:bundle"
       ]
     },
     "check:bundle": {
