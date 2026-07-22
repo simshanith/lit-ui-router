@@ -38,8 +38,8 @@ catalog:
   eslint-plugin-package-json: ^1.6.0
   eslint-plugin-pnpm: ^1.6.1
   eslint-plugin-turbo: ^2.10.5
-  happy-dom: ^20.10.6
-  hono: ^4.12.30
+  happy-dom: ^20.11.0
+  hono: ^4.12.31
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
@@ -48,9 +48,9 @@ catalog:
   mobx: ^6.16.1
   oxc-minify: 0.140.0
   oxc-transform: 0.140.0
-  oxfmt: 0.58.0
-  oxlint: 1.73.0
-  oxlint-tsgolint: 0.24.0
+  oxfmt: 0.59.0
+  oxlint: 1.74.0
+  oxlint-tsgolint: 0.25.0
   pacote: ^22.0.0
   playwright: ^1.61.1
   release-it: ^20.2.1
@@ -71,9 +71,9 @@ catalog:
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.18
   vitest: ^4.1.10
-  vue: ^3.5.39
+  vue: ^3.5.40
   vue-tsc: ^3.3.7
-  wrangler: ^4.110.0
+  wrangler: ^4.112.0
 
 catalogMode: prefer
 
