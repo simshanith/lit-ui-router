@@ -107,8 +107,6 @@ description = "Run the main-push CI pipeline via turbo"
 run = "turbo run ci:main --ui=stream --log-order=stream"
 
 [tasks.codecov_bundle]
-# Separate invocation on purpose: codecov:bundle is cache:false (an upload),
-# so keeping it out of the ci graphs lets them report >>> FULL TURBO.
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
 description = "Upload bundle-analysis stats to Codecov via turbo"
 run = "turbo run codecov:bundle --ui=stream --log-order=stream"

@@ -140,11 +140,6 @@ jobs:
           # the cypressVideo dispatch input re-enables it for debugging.
           CYPRESS_video: ${{ inputs.cypressVideo == true }}
       - name: Upload Codecov bundle stats
-        # Split from the ci graphs: codecov:bundle is cache:false (an upload
-        # runs every time), and as an in-graph dep it masked the >>> FULL
-        # TURBO signal. Its build dep cache-hits from the step above. No
-        # TURBO_FORCE: forcing an upload is meaningless and would only
-        # force-rebuild its deps.
         run: mise run codecov_bundle
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
