@@ -56,10 +56,8 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
+        # The setup task skips the Cypress binary; nothing here runs Cypress.
         run: mise run setup
-        env:
-          # Nothing here runs Cypress; skip the binary download.
-          CYPRESS_INSTALL_BINARY: '0'
       - name: Published diff
         run: mise run //tools/release:published_diff
         env:

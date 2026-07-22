@@ -61,7 +61,15 @@ depends = ["corepack"]
 usage = '''
 flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
 '''
+# --release scopes the install to the @tools/release closure (tag-job).
 run = 'pnpm install ${usage_release:+--filter @tools/release...}'
+
+[tasks.setup.env]
+# The base install never provisions the Cypress binary: the dedicated
+# //tools/build_and_test:cypress task (cache-restored in CI) installs it on
+# demand for the suites that need it, so every install skips the ~280MB
+# download.
+CYPRESS_INSTALL_BINARY = "0"
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"

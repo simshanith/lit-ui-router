@@ -79,6 +79,8 @@ jobs:
           # push credentials. Tools install fresh, checksum-verified against mise.lock.
           cache: false
       - name: Install dependencies
+        # --release scopes to the @tools/release closure; the setup task's env
+        # skips the Cypress binary (the tag path never runs Cypress).
         run: mise run setup --release
       - name: Setup Git user
         run: mise run //tools/release:git_user
