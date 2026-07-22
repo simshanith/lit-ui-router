@@ -79,7 +79,7 @@ jobs:
           # push credentials. Tools install fresh, checksum-verified against mise.lock.
           cache: false
       - name: Install dependencies
-        run: mise run setup
+        run: mise run setup --release
       - name: Setup Git user
         run: mise run //tools/release:git_user
       - name: Tag

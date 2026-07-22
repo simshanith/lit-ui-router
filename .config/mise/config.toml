@@ -58,7 +58,10 @@ depends = ["corepack_enable", "corepack_install"]
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the pnpm on PATH"
 depends = ["corepack"]
-run = "pnpm install"
+usage = '''
+flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
+'''
+run = 'pnpm install ${usage_release:+--filter @tools/release...}'
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"
