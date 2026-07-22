@@ -30,7 +30,7 @@ function inertDetails({ shipInert, shipInertFiles }: PackageSummary): string[] {
   return [
     '',
     '<details>',
-    `<summary>${shipInert} ship-inert file(s) — src/maps, never owe a release</summary>`,
+    `<summary>${shipInert} ship-inert file(s) — src/maps or manifest-only churn; never owe a release</summary>`,
     '',
     ...shipInertFiles.map((file) => `- \`${file}\``),
     '',
