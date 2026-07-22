@@ -11,7 +11,8 @@
     "format": "oxfmt \"**/*.{js,ts,json,md,css}\"",
     "format:check": "oxfmt --check \"**/*.{js,ts,json,md,css}\"",
     "lint": "oxlint .",
-    "test": "VITEST_BROWSER_API_PORT=63350 vitest run",
+    "test": "VITEST_BROWSER_API_PORT=63350 vitest run --project=chrome",
+    "test:engines": "VITEST_BROWSER_API_PORT=63351 vitest run --project=firefox --project=safari",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
