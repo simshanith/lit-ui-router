@@ -79,7 +79,10 @@ jobs:
           # push credentials. Tools install fresh, checksum-verified against mise.lock.
           cache: false
       - name: Install dependencies
-        run: mise run setup
+        # --release scopes to the @tools/release closure: the tag path needs
+        # only release-it (per-package devDep) and the release scripts, so the
+        # full docs/sample-app/e2e install is skipped on this cold-store job.
+        run: mise run setup --release
       - name: Setup Git user
         run: mise run //tools/release:git_user
       - name: Tag

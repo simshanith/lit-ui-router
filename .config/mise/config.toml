@@ -56,9 +56,17 @@ depends = ["corepack_enable", "corepack_install"]
 # Flow: mise trust && mise install && mise run setup.
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
+# --release scopes the install to the @tools/release closure (--filter
+# @tools/release...) for the tag-only publish-gh job: the tag path needs only
+# release-it (a per-package devDep, invoked via `pnpm --filter <pkg> exec`)
+# and the @tools/release scripts, so it skips the docs/sample-app/e2e/server
+# trees the full install fetches — 10 of 22 projects.
 description = "Install workspace dependencies with the pnpm on PATH"
 depends = ["corepack"]
-run = "pnpm install"
+usage = '''
+flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
+'''
+run = 'pnpm install ${usage_release:+--filter @tools/release...}'
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"
