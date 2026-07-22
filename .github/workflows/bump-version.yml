@@ -84,7 +84,7 @@ jobs:
           # push credentials. Tools install fresh, checksum-verified against mise.lock.
           cache: false
       - name: Install dependencies
-        run: mise run setup
+        run: mise run setup --release
       - name: Setup Git user
         run: mise run //tools/release:git_user
       # Tier-2 peer-floor gate: a package whose published peer floor no

@@ -56,7 +56,7 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
-        run: mise run setup
+        run: mise run setup --release
       - name: Published diff
         run: mise run //tools/release:published_diff
         env:
