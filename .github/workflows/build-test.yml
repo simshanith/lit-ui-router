@@ -59,8 +59,6 @@ jobs:
       - name: Setup mise
         uses: jdx/mise-action@v4
       - name: Install dependencies
-        # The setup task skips the Cypress binary (CYPRESS_INSTALL_BINARY=0);
-        # the Install Cypress step below cache-restores it for the e2e suites.
         run: mise run setup
       - name: Resolve Playwright version
         # Cache keys derive from the installed packages, so they bust exactly
