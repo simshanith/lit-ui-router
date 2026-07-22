@@ -135,8 +135,7 @@
         "lint",
         "typecheck",
         "format:check",
-        "check:bundle",
-        "codecov:bundle"
+        "check:bundle"
       ]
     },
     "check:bundle": {
