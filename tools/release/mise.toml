@@ -15,7 +15,7 @@
 # Keep this file [tasks]-only: root [env]/_.path and [tools] are inherited,
 # and a tasks-only config stays inert for shells that merely cd in here.
 # Tasks assume node_modules exists: every workflow runs `mise run setup` first
-# (the tag-only publish-gh job runs `setup --release` — its `--filter
+# (the release workflows run `setup --release` — its `--filter
 # @tools/release...` closure covers every task here), so tasks don't re-declare
 # `depends = ["//:setup"]` (which re-ran pnpm install per step). Run
 # `mise run setup` first when invoking a task standalone.
