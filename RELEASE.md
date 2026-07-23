@@ -87,7 +87,9 @@ to deflake the full main graph); tagging stays push-only.
 
 ### 2. Bump Version (`bump-version.yml`)
 
-**Triggers:** Manual dispatch only — [Actions ▸ Bump version ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/bump-version.yml)
+**Triggers:** Manual dispatch only
+
+[Actions ▸ Bump version ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/bump-version.yml)
 
 Creates a release PR by:
 
