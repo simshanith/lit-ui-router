@@ -190,9 +190,9 @@ describe('formatPackedManifestReport', () => {
 
 describe('STRIPPED_MANIFEST_FIELDS', () => {
   it('matches the Pack step strip list', () => {
-    // Consumers (the packed-manifest gate, //tools/release:pack, and
-    // check-published-diff's `npm pkg delete`) all derive from this list, so
-    // pinning it here is what keeps the strip in lockstep across them.
+    // The gate checks the tarball for exactly what strippedManifest removes.
+    // Pinning both ends here is what catches the two drifting apart — the gate
+    // is the only guard that would still pass if the strip quietly changed.
     assert.deepEqual(STRIPPED_MANIFEST_FIELDS, ['devDependencies', 'scripts']);
   });
 });

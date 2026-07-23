@@ -30,6 +30,12 @@ catalogs:
     '@oxc-project/runtime':
       specifier: 0.140.0
       version: 0.140.0
+    '@pnpm/types':
+      specifier: 1101.4.0
+      version: 1101.4.0
+    '@pnpm/workspace.project-manifest-reader':
+      specifier: 1100.0.15
+      version: 1100.0.15
     '@pnpm/workspace.projects-reader':
       specifier: 1101.0.14
       version: 1101.0.14
@@ -909,6 +915,12 @@ importers:
 
   tools/release:
     devDependencies:
+      '@pnpm/types':
+        specifier: 'catalog:'
+        version: 1101.4.0
+      '@pnpm/workspace.project-manifest-reader':
+        specifier: 'catalog:'
+        version: 1100.0.15(@pnpm/logger@1001.0.1)
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared

@@ -7,11 +7,11 @@
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
 // the registry tarball byte-for-byte): reproduce the publish workflow's Pack
-// step (//tools/release:pack) — drop the STRIPPED_MANIFEST_FIELDS, here via
-// `npm pkg delete`, then `pnpm pack` — and `npm diff` the tarball against the
-// published spec. The strip stays in lockstep with that step because both
-// derive from the same list in check-pack.core.ts, even though the Pack step
-// rewrites the manifest in TS. Comparing anything other than pack output (the source
+// step (//tools/release:pack) by running its own strip — strippedManifest
+// written back through pnpm's project-manifest writer — then `pnpm pack`, and
+// `npm diff` the tarball against the published spec. Sharing the strip itself,
+// rather than a second implementation that agrees with it today, is what keeps
+// the two in lockstep. Comparing anything other than pack output (the source
 // manifest, `npm view` fields) false-positives on catalog:/workspace:
 // substitution and registry-injected fields.
 //
@@ -36,8 +36,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { readProjectManifest } from '@pnpm/workspace.project-manifest-reader';
+
 import { publishedDiffSummaryPath } from './cache-paths.ts';
-import { STRIPPED_MANIFEST_FIELDS } from './check-pack.core.ts';
+import { strippedManifest } from '../steps/release-pack.core.ts';
 import {
   changedFiles,
   classifyFiles,
@@ -78,9 +80,8 @@ async function diffAgainstPublished(
   const destination = await mkdtemp(join(tmpdir(), 'check-published-diff-'));
   const tarball = join(destination, 'package.tgz');
   try {
-    await run('npm', ['pkg', 'delete', ...STRIPPED_MANIFEST_FIELDS], {
-      cwd: dir,
-    });
+    const { manifest, writeProjectManifest } = await readProjectManifest(dir);
+    await writeProjectManifest(strippedManifest(manifest));
     await pnpmPack(dir, tarball);
     const { stdout } = await run(
       'npm',

@@ -1,9 +1,9 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { pickTarball, strippedManifestJson } from './release-pack.core.ts';
+import { pickTarball, strippedManifest } from './release-pack.core.ts';
 
-describe('strippedManifestJson', () => {
+describe('strippedManifest', () => {
   const manifest = {
     name: 'lit-ui-router',
     version: '1.8.0',
@@ -14,10 +14,7 @@ describe('strippedManifestJson', () => {
   };
 
   it('drops exactly devDependencies and scripts, like npm pkg delete did', () => {
-    const stripped: unknown = JSON.parse(
-      strippedManifestJson(JSON.stringify(manifest)),
-    );
-    assert.deepEqual(stripped, {
+    assert.deepEqual(strippedManifest(manifest), {
       name: 'lit-ui-router',
       version: '1.8.0',
       dependencies: { lit: '^3.0.0' },
@@ -26,9 +23,7 @@ describe('strippedManifestJson', () => {
   });
 
   it('preserves key order of the surviving fields', () => {
-    const stripped = strippedManifestJson(JSON.stringify(manifest));
-    const keys = Object.keys(JSON.parse(stripped) as Record<string, unknown>);
-    assert.deepEqual(keys, [
+    assert.deepEqual(Object.keys(strippedManifest(manifest)), [
       'name',
       'version',
       'dependencies',
@@ -38,20 +33,15 @@ describe('strippedManifestJson', () => {
 
   it('is a no-op shape-wise when the fields are already absent', () => {
     const bare = { name: 'x', version: '1.0.0' };
-    assert.deepEqual(
-      JSON.parse(strippedManifestJson(JSON.stringify(bare))),
-      bare,
-    );
+    assert.deepEqual(strippedManifest(bare), bare);
   });
 
-  it('ends with a newline (a manifest is a text file)', () => {
-    assert.ok(strippedManifestJson('{}').endsWith('\n'));
-  });
-
-  it('rejects non-object manifests', () => {
-    assert.throws(() => strippedManifestJson('[]'), /JSON object/);
-    assert.throws(() => strippedManifestJson('"str"'), /JSON object/);
-    assert.throws(() => strippedManifestJson('null'), /JSON object/);
+  it('does not mutate the manifest it was handed', () => {
+    // release-pack restores from the original bytes, but the caller also holds
+    // this object across the pack — stripping must not reach back into it.
+    const source = { ...manifest };
+    strippedManifest(source);
+    assert.deepEqual(source, manifest);
   });
 });
 

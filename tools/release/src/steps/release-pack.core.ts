@@ -1,8 +1,12 @@
 // Pure logic for the publish Pack step: which manifest fields are stripped
 // before packing, and which file in the package directory is THE tarball.
-// The IO (writing the stripped manifest, running pnpm pack, restoring) lives
-// in release-pack.ts, where the mutate→restore invariant the workflow used
-// to encode as bash line order is a try/finally.
+// The IO (reading and writing the manifest through @pnpm/read-project-manifest,
+// running pnpm pack, restoring) lives in release-pack.ts, where the
+// mutate→restore invariant the workflow used to encode as bash line order is a
+// try/finally.
+
+// Type-only, so this file stays runtime-pure.
+import type { ProjectManifest } from '@pnpm/types';
 
 /**
  * The manifest with devDependencies and scripts removed (what `npm pkg
@@ -11,23 +15,16 @@
  * None of our scripts are lifecycle hooks; stripping happens before
  * `pnpm pack`, so a future prepack/prepare script would be silently
  * skipped — build via the turbo step instead.
+ *
+ * Takes and returns the parsed manifest rather than JSON text: the caller
+ * writes it back through pnpm's project-manifest writer, which reproduces the
+ * file's own indentation instead of imposing this function's.
  */
-export function strippedManifestJson(source: string): string {
-  const manifest: unknown = JSON.parse(source);
-  if (
-    typeof manifest !== 'object' ||
-    manifest === null ||
-    Array.isArray(manifest)
-  ) {
-    throw new Error('package.json does not contain a JSON object');
-  }
-  const { devDependencies, scripts, ...rest } = manifest as Record<
-    string,
-    unknown
-  >;
+export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
+  const { devDependencies, scripts, ...rest } = manifest;
   void devDependencies;
   void scripts;
-  return `${JSON.stringify(rest, null, 2)}\n`;
+  return rest;
 }
 
 /**

@@ -83,10 +83,10 @@ export function formatReport(results: PackResult[]): Report {
 
 /**
  * The manifest fields the Pack step (//tools/release:pack) drops before `pnpm
- * pack`. The single source of truth for the strip: the packed-manifest gate
- * fails when any of them survive, and anything reproducing the Pack step (e.g.
- * check-published-diff, which strips via `npm pkg delete`) derives from this
- * list rather than restating the fields.
+ * pack`, named here for the gate that enforces them: it fails when any of them
+ * survive into the tarball. The strip itself lives in release-pack.core.ts and
+ * is shared by everything reproducing the Pack step, so this list is the
+ * gate's statement of intent rather than a second implementation of it.
  */
 export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
 
