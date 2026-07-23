@@ -4,7 +4,7 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
-[![Tag & push (escape hatch)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml/badge.svg?branch=main&event=workflow_dispatch)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml?query=branch%3Amain+event%3Aworkflow_dispatch)
+[![Publish to NPM](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml/badge.svg)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 
