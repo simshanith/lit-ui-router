@@ -7,24 +7,21 @@
 // move is the dist-tag pointer captured here; with this file in the check
 // task's inputs, its cache key is sound.
 
-import { execFile } from 'node:child_process';
-import { promisify } from 'node:util';
+import pacote from 'pacote';
 
 import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
-const run = promisify(execFile);
-
 /** The `latest` dist-tag for `name`, or null when never published. */
 async function publishedLatest(name: string): Promise<string | null> {
   try {
-    const { stdout } = await run('npm', ['view', name, 'dist-tags.latest']);
-    return stdout.trim() || null;
+    const packument = await pacote.packument(name);
+    return packument['dist-tags'].latest ?? null;
   } catch (error) {
-    // promisified execFile rejects with the child's captured output attached.
-    const { stderr } = (error ?? {}) as { stderr?: string };
-    if (stderr?.includes('E404')) return null;
+    // An unpublished package is a real answer here; anything else (network,
+    // 5xx, auth) must throw rather than silently report "unpublished".
+    if ((error as { code?: string }).code === 'E404') return null;
     throw error;
   }
 }
