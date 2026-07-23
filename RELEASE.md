@@ -66,6 +66,8 @@ These are consumed by `build-test.yml` and `publish-npm.yml` to enable remote ca
 
 **Triggers:** Pull requests, branch and `main` pushes, manual dispatch
 
+[Actions ▸ Build and Test ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml)
+
 Runs the CI pipeline including:
 
 - Build verification
@@ -89,6 +91,8 @@ to deflake the full main graph); tagging stays push-only.
 
 **Triggers:** Manual dispatch only
 
+[Actions ▸ Bump version ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/bump-version.yml)
+
 Creates a release PR by:
 
 1. Calculating the new version based on increment type
@@ -107,6 +111,8 @@ Creates a release PR by:
 
 **Triggers:** Called by Build and Test after a green `main` run (`workflow_call`); manual dispatch is the CI-bypass escape hatch
 
+[Actions ▸ Tag & push ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml)
+
 When a release PR merges and main CI is green:
 
 1. Uses release-it to create a git tag per package (`<package>@X.Y.Z`)
@@ -118,6 +124,8 @@ When a release PR merges and main CI is green:
 ### 4. Publish to NPM (`publish-npm.yml`)
 
 **Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`); manual dispatch for dry runs
+
+[Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
 The final release stage:
 
@@ -131,6 +139,8 @@ The final release stage:
 ### 5. Release signals (`release-signals.yml`)
 
 **Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
+
+[Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
 (does the pack surface differ from the published `latest`?) and
