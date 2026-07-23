@@ -23,7 +23,7 @@
   },
   "devDependencies": {
     "@pnpm/fs.find-packages": "catalog:",
-    "@pnpm/workspace.read-manifest": "catalog:",
+    "@pnpm/workspace.workspace-manifest-reader": "catalog:",
     "@types/node": "catalog:",
     "typescript": "catalog:"
   }

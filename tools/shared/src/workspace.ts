@@ -14,7 +14,7 @@
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
+import type { WorkspaceManifest } from '@pnpm/workspace.workspace-manifest-reader';
 
 import type { PackageManifest } from './types.ts';
 
@@ -40,7 +40,7 @@ export async function loadWorkspace(root: string): Promise<{
 }> {
   const [{ findPackages }, { readWorkspaceManifest }] = await Promise.all([
     import('@pnpm/fs.find-packages'),
-    import('@pnpm/workspace.read-manifest'),
+    import('@pnpm/workspace.workspace-manifest-reader'),
   ]);
   const workspaceManifest = await readWorkspaceManifest(root);
   const projects = await findPackages(root, {
@@ -63,7 +63,7 @@ export async function loadPatchedDependencies(
   root: string,
 ): Promise<Record<string, string>> {
   const { readWorkspaceManifest } =
-    await import('@pnpm/workspace.read-manifest');
+    await import('@pnpm/workspace.workspace-manifest-reader');
   const workspaceManifest = await readWorkspaceManifest(root);
   return workspaceManifest?.patchedDependencies ?? {};
 }
