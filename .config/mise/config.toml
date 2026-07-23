@@ -65,6 +65,9 @@ run = 'pnpm install ${usage_release:+--filter @tools/release...}'
 
 [tasks.setup.env]
 CYPRESS_INSTALL_BINARY = "0"
+# npm config for the examples/*
+NPM_CONFIG_AUDIT = "false"
+NPM_CONFIG_FUND = "false"
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"

@@ -5,9 +5,9 @@
   "type": "module",
   "scripts": {
     "build:embeds": "node build-embeds.ts",
-    "example:install:hellogalaxy": "npm ci --no-audit --no-fund --prefix hellogalaxy",
-    "example:install:hellosolarsystem": "npm ci --no-audit --no-fund --prefix hellosolarsystem",
-    "example:install:helloworld": "npm ci --no-audit --no-fund --prefix helloworld",
+    "example:install:hellogalaxy": "npm ci --prefix hellogalaxy",
+    "example:install:hellosolarsystem": "npm ci --prefix hellosolarsystem",
+    "example:install:helloworld": "npm ci --prefix helloworld",
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "postinstall": "concurrently \"npm:example:install:*\"",
