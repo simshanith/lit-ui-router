@@ -5,6 +5,7 @@
   "description": "Owns the release-pipeline logic: the tested entries the publish and bump-version workflows invoke",
   "type": "module",
   "scripts": {
+    "check:exports": "node src/checks/check-exports.ts",
     "check:pack": "node src/checks/check-pack.ts",
     "check:published-diff": "node src/checks/check-published-diff.ts",
     "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
@@ -15,6 +16,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@arethetypeswrong/core": "catalog:",
     "@pnpm/types": "catalog:",
     "@pnpm/workspace.project-manifest-reader": "catalog:",
     "@tools/shared": "workspace:*",
@@ -23,6 +25,7 @@
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "pacote": "catalog:",
+    "publint": "catalog:",
     "typescript": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*"
   }
