@@ -5,6 +5,7 @@
 
 import type { PackageManifest } from '@tools/shared/types.ts';
 
+import { STRIPPED_MANIFEST_FIELDS } from '../steps/release-pack.core.ts';
 import { DEP_FIELDS, type DepField, type Report } from './types.ts';
 
 // Specifier protocols pnpm must substitute at pack time. The npm registry
@@ -76,19 +77,9 @@ export function formatReport(results: PackResult[]): Report {
 }
 
 // ── Packed-manifest gate (publish workflow) ─────────────────────────────────
-// The publish workflow strips devDependencies and scripts before `pnpm pack`
-// (dev-only metadata that leaks private workspace names and monorepo-only
-// commands into the published manifest), then re-checks the tarball it is
-// about to hand release-it. These checks are that gate.
-
-/**
- * The manifest fields publish-npm.yml's Pack step deletes before `pnpm pack`
- * (`npm pkg delete ...STRIPPED_MANIFEST_FIELDS`). The single source of truth
- * for the strip: the packed-manifest gate fails when any of them survive, and
- * anything reproducing the Pack step (e.g. check-published-diff) should build
- * its delete args from this list.
- */
-export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
+// The Pack step strips STRIPPED_MANIFEST_FIELDS before `pnpm pack`, then
+// re-checks the tarball it is about to hand release-it. These checks are that
+// gate.
 
 /**
  * Violations in the manifest npm would publish, as human-readable strings.

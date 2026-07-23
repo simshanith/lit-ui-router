@@ -24,6 +24,7 @@
   },
   "files": [
     "dist/**",
+    "!dist/.*/**",
     "src/*.ts"
   ],
   "type": "module",

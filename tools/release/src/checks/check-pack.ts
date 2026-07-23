@@ -10,11 +10,9 @@
 // a temp dir, extracts the packed package.json, and delegates all decisions to
 // the pure, unit-tested functions in ./check-pack.core.ts.
 
-import { execFile } from 'node:child_process';
 import { mkdtemp, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
-import { promisify } from 'node:util';
 
 import {
   findUnsubstitutedRefs,
@@ -23,15 +21,9 @@ import {
 } from './check-pack.core.ts';
 import { pnpmPack } from './pack.ts';
 import { assertSelfDeclaredDeps } from './self-deps.ts';
+import { tarballManifest } from './tarball.ts';
 import type { PackageManifest } from '@tools/shared/types.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
-
-const run = promisify(execFile);
-
-// A package.json is always a JSON object; anything else can't hold dep fields.
-function isPackageManifest(value: unknown): value is PackageManifest {
-  return typeof value === 'object' && value !== null;
-}
 
 /** Pack one package and return the manifest from inside the tarball. */
 async function packedManifest(packageDir: string): Promise<PackageManifest> {
@@ -39,13 +31,8 @@ async function packedManifest(packageDir: string): Promise<PackageManifest> {
   const tarball = join(destination, 'package.tgz');
   try {
     await pnpmPack(packageDir, tarball);
-    const { stdout } = await run(
-      'tar',
-      ['-xzOf', tarball, 'package/package.json'],
-      { maxBuffer: 16 * 1024 * 1024 },
-    );
-    const parsed: unknown = JSON.parse(stdout);
-    return isPackageManifest(parsed) ? parsed : {};
+    // Malformed manifests reject in tarballManifest — loud, never a silent {}.
+    return await tarballManifest(tarball);
   } finally {
     await rm(destination, { recursive: true, force: true });
   }

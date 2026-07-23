@@ -42,7 +42,7 @@ export default defineConfig({
         test: {
           name: 'browser',
           globals: true,
-          setupFiles: ['./vitest.setup.ts'],
+          setupFiles: ['./vitest.setup.ts', './vitest.setup.browser.ts'],
           include: browserOnlySpecs,
           browser: {
             enabled: true,

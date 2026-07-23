@@ -30,7 +30,7 @@ idiomatic_version_file_enable_tools = ["node"]
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
-"npm:npm" = "11.18.0"
+"npm:npm" = "12.0.1"
 
 # Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
 # loud; and tool-only bumps (actionlint) skip the corepack ceremony.
@@ -58,7 +58,16 @@ depends = ["corepack_enable", "corepack_install"]
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the pnpm on PATH"
 depends = ["corepack"]
-run = "pnpm install"
+usage = '''
+flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
+'''
+run = 'pnpm install ${usage_release:+--filter @tools/release...}'
+
+[tasks.setup.env]
+CYPRESS_INSTALL_BINARY = "0"
+# npm config for the examples/*
+NPM_CONFIG_AUDIT = "false"
+NPM_CONFIG_FUND = "false"
 
 [tasks.lint_actionlint]
 description = "Lint GitHub Actions workflows for syntax/type errors"
@@ -94,8 +103,8 @@ run = 'turbo run "${usage_package_name?}#build"'
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
-# the env itself (no CLI flags), plus CODECOV_TOKEN and WRANGLER_LOG for the
-# underlying tasks. TURBO_FORCE is the build-test deflake input: a truthy value
+# the env itself (no CLI flags), plus WRANGLER_LOG for the underlying
+# tasks. TURBO_FORCE is the build-test deflake input: a truthy value
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
 description = "Run the pull-request CI pipeline via turbo"
 run = "turbo run ci --ui=stream --log-order=stream"
@@ -105,6 +114,11 @@ run = "turbo run ci --ui=stream --log-order=stream"
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
 run = "turbo run ci:main --ui=stream --log-order=stream"
+
+[tasks.codecov_bundle]
+# env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
+description = "Upload bundle-analysis stats to Codecov via turbo"
+run = "turbo run codecov:bundle --ui=stream --log-order=stream"
 
 [tasks.dts_backtest_matrix]
 # Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.

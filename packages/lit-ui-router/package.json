@@ -11,6 +11,7 @@
   },
   "files": [
     "dist/**",
+    "!dist/.*/**",
     "src/*.ts",
     "!src/*.spec.ts"
   ],

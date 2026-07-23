@@ -1,40 +1,33 @@
 // Pure logic for the publish Pack step: which manifest fields are stripped
 // before packing, and which file in the package directory is THE tarball.
-// The IO (writing the stripped manifest, running pnpm pack, restoring) lives
-// in release-pack.ts, where the mutate→restore invariant the workflow used
-// to encode as bash line order is a try/finally.
+// The IO (manifest read/write, pnpm pack, restore) lives in release-pack.ts.
+
+import type { ProjectManifest } from '@pnpm/types';
 
 /**
- * The manifest with devDependencies and scripts removed (what `npm pkg
- * delete devDependencies scripts` did): dev-only metadata that leaks private
- * workspace names and monorepo-only commands into the published manifest.
- * None of our scripts are lifecycle hooks; stripping happens before
- * `pnpm pack`, so a future prepack/prepare script would be silently
- * skipped — build via the turbo step instead.
+ * Dev-only metadata that must not reach the published manifest. Read by both
+ * the strip below and the packed-manifest gate (findPackedManifestViolations).
+ *
+ * The strip runs before `pnpm pack`, so a lifecycle hook added to `scripts`
+ * (prepack/prepare) would be silently skipped — build via the turbo step.
  */
-export function strippedManifestJson(source: string): string {
-  const manifest: unknown = JSON.parse(source);
-  if (
-    typeof manifest !== 'object' ||
-    manifest === null ||
-    Array.isArray(manifest)
-  ) {
-    throw new Error('package.json does not contain a JSON object');
+export const STRIPPED_MANIFEST_FIELDS = [
+  'devDependencies',
+  'scripts',
+] as const satisfies readonly (keyof ProjectManifest)[];
+
+/** A copy of `manifest` without {@link STRIPPED_MANIFEST_FIELDS}. */
+export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
+  const stripped = { ...manifest };
+  for (const field of STRIPPED_MANIFEST_FIELDS) {
+    delete stripped[field];
   }
-  const { devDependencies, scripts, ...rest } = manifest as Record<
-    string,
-    unknown
-  >;
-  void devDependencies;
-  void scripts;
-  return `${JSON.stringify(rest, null, 2)}\n`;
+  return stripped;
 }
 
 /**
- * The single packed tarball among a directory's entries. The old
- * `realpath "$PACKAGE_DIR"/*.tgz` glob silently mangled 0 or 2+ matches
- * into a broken TARBALL value; a CI checkout has exactly one, so anything
- * else is an error worth naming.
+ * The single packed tarball among a directory's entries — anything other than
+ * exactly one is a broken pack worth naming rather than silently mishandling.
  */
 export function pickTarball(entries: readonly string[]): string {
   const tarballs = entries.filter((entry) => entry.endsWith('.tgz'));

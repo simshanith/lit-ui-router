@@ -36,6 +36,54 @@ export function isShipAffecting(file: string): boolean {
   return !(file.startsWith('src/') || /^dist\/.*\.map$/.test(file));
 }
 
+/** Manifest fields whose entire consumer effect is the packed file set. */
+export const MANIFEST_INERT_FIELDS: readonly string[] = ['files'];
+
+/** True when any diff header has a /dev/null side — a file added or removed. */
+export function hasFileSetChange(diffOutput: string): boolean {
+  return diffOutput
+    .split('\n')
+    .some(
+      (line) =>
+        (line.startsWith('+++ ') || line.startsWith('--- ')) &&
+        line.slice(4).trim() === '/dev/null',
+    );
+}
+
+/**
+ * Top-level manifest fields whose values differ between the two sides.
+ * Both arrive as parsed package.json objects read from the compared
+ * tarballs (tarballManifest); read/parse failures never reach here — the
+ * IO fails safe to ship-affecting.
+ */
+export function manifestDriftFields(
+  a: Record<string, unknown>,
+  b: Record<string, unknown>,
+): string[] {
+  const keys = new Set([...Object.keys(a), ...Object.keys(b)]);
+  return [...keys]
+    .filter((key) => JSON.stringify(a[key]) !== JSON.stringify(b[key]))
+    .sort();
+}
+
+/**
+ * package.json drift is ship-inert iff the packed file sets are identical
+ * AND every drifting field's consumer effect is captured by that file-set
+ * comparison (MANIFEST_INERT_FIELDS). A formatting-only diff (no field
+ * drift) is vacuously confined. Any other field, or any file-set change,
+ * stays ship-affecting.
+ */
+export function isManifestDriftInert(options: {
+  fileSetChanged: boolean;
+  driftFields: string[];
+}): boolean {
+  const { fileSetChanged, driftFields } = options;
+  return (
+    !fileSetChanged &&
+    driftFields.every((field) => MANIFEST_INERT_FIELDS.includes(field))
+  );
+}
+
 /** Split a diff's file list into ship-affecting and ship-inert. */
 export function classifyFiles(files: string[]): {
   shipAffecting: string[];
@@ -56,11 +104,11 @@ export type DiffResult = {
   latest?: string;
   /** Version in the working tree's manifest. */
   localVersion?: string;
-  /** `ship-inert` = only src/maps differ; release not owed. */
+  /** `ship-inert` = only src/maps/inert-manifest drift; release not owed. */
   status: 'clean' | 'drift' | 'ship-inert' | 'unpublished';
   /** Ship-affecting tarball paths; only meaningful for `drift`. */
   files?: string[];
-  /** Ship-inert paths (src/**, dist maps); listed, never owing. */
+  /** Ship-inert paths (src/**, dist maps, inert package.json); never owing. */
   shipInertFiles?: string[];
 };
 
@@ -153,7 +201,7 @@ export function formatReport(
     } else if (status === 'ship-inert') {
       const count = shipInertFiles?.length ?? 0;
       lines.push(
-        `  ${name}: src/map drift vs ${latest}${ahead} — ${count} ship-inert file(s):`,
+        `  ${name}: ship-inert drift vs ${latest}${ahead} — ${count} ship-inert file(s):`,
       );
       for (const file of shipInertFiles ?? []) lines.push(`      ◦ ${file}`);
     } else {

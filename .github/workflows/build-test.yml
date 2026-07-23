@@ -60,10 +60,6 @@ jobs:
         uses: jdx/mise-action@v4
       - name: Install dependencies
         run: mise run setup
-        env:
-          # The Install Cypress step below downloads the binary; skipping it
-          # here keeps download noise out of the pnpm postinstall output.
-          CYPRESS_INSTALL_BINARY: '0'
       - name: Resolve Playwright version
         # Cache keys derive from the installed packages, so they bust exactly
         # on a version bump and nothing else; one step per tool keeps the two
@@ -87,16 +83,15 @@ jobs:
       - name: Install Playwright Browsers
         if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
         run: mise run //tools/build_and_test:playwright
-      - name: Install Playwright OS deps
-        # Browsers came from the cache; the fresh runner still needs the apt
-        # OS deps that `--with-deps` would have installed on the miss path.
-        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' }}
-        run: mise run //tools/build_and_test:playwright_deps
+      - name: Install Playwright OS deps (firefox+webkit)
+        # Browsers came from the cache; only test:engines (main graph) needs
+        # the firefox+webkit apt libs — the PR graph is chromium-only, and
+        # chromium and Cypress ride the runner image's preinstalled set.
+        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
+        run: mise run //tools/build_and_test:playwright_deps_engines
       - name: Install Cypress
         # `cypress install` is a near-no-op when the binary is cached; verify
         # still runs so the concurrent suites skip the first-use banner.
-        # verify needs the OS libs the playwright dep steps install on both
-        # cache paths — never skip playwright_deps on hits.
         run: mise run //tools/build_and_test:cypress
       - name: Start shared Xvfb display
         # The vanilla and MobX Cypress suites run concurrently. Without a
@@ -117,7 +112,6 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
           # Cypress video off in CI (configs keep video:true for local runs);
@@ -136,12 +130,18 @@ jobs:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
           # Cypress video off in CI (configs keep video:true for local runs);
           # the cypressVideo dispatch input re-enables it for debugging.
           CYPRESS_video: ${{ inputs.cypressVideo == true }}
+      - name: Upload Codecov bundle stats
+        run: mise run codecov_bundle
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload Cypress videos
         # Videos exist only when the dispatch input turned recording on;
         # !cancelled() keeps videos from failed suites — the debugging case.

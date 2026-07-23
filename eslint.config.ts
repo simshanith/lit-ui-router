@@ -9,11 +9,9 @@ import repoRules from './eslint.repo-rules.ts';
 
 export default defineConfig(
   globalIgnores([
-    // build outputs (per turbo.json outputs): parallel tasks rewrite these
-    // mid-lint, so the **/package.json glob must never traverse them
+    // build outputs (every output lives under a dist/ dir): parallel tasks
+    // rewrite these mid-lint, so the **/package.json glob must never traverse them
     '**/dist/**',
-    '**/dist-hash/**',
-    '**/dist-worker-stats/**',
     'docs/api/**',
     'tools/release/.cache/**',
     '**/coverage/**',

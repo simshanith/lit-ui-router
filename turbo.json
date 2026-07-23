@@ -56,7 +56,12 @@
       "env": ["VITEST_BROWSER_API_PORT", "CI"]
     },
     "lint": {
-      "with": ["//#lint:root", "//#lint:package-json", "//#lint:workflows"],
+      "with": [
+        "//#lint:root",
+        "//#lint:package-json",
+        "//#lint:workflows",
+        "//#check:patches"
+      ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
       "inputs": [
@@ -68,6 +73,17 @@
     },
     "//#lint:root": {
       "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
+    },
+    "//#check:patches": {
+      // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
+      // could rotate a patch target re-runs the check
+      "inputs": [
+        "check-patches.ts",
+        "patches/**",
+        "pnpm-workspace.yaml",
+        "pnpm-lock.yaml",
+        "tools/shared/src/**"
+      ]
     },
     "//#lint:package-json": {
       "inputs": [
@@ -119,8 +135,7 @@
         "lint",
         "typecheck",
         "format:check",
-        "check:bundle",
-        "codecov:bundle"
+        "check:bundle"
       ]
     },
     "check:bundle": {

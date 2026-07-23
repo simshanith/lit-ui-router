@@ -6,12 +6,11 @@
 // "cosmetic" refactor is caught even when the git log looks harmless.
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
-// the registry tarball byte-for-byte): reproduce the Pack step of
-// .github/workflows/publish-npm.yml — `npm pkg delete` the
-// STRIPPED_MANIFEST_FIELDS then `pnpm pack` — and `npm diff` the tarball
-// against the published spec. The strip stays in lockstep with that workflow
-// because both build their delete args from the same list in
-// check-pack.core.ts. Comparing anything other than pack output (the source
+// the registry tarball byte-for-byte): reproduce the Pack step
+// (//tools/release:pack) by running its own strippedManifest, then `pnpm pack`,
+// and `npm diff` the tarball against the published spec. Sharing the strip
+// itself is what keeps the two in lockstep.
+// Comparing anything other than pack output (the source
 // manifest, `npm view` fields) false-positives on catalog:/workspace:
 // substitution and registry-injected fields.
 //
@@ -36,19 +35,25 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { readProjectManifest } from '@pnpm/workspace.project-manifest-reader';
+
 import { publishedDiffSummaryPath } from './cache-paths.ts';
-import { STRIPPED_MANIFEST_FIELDS } from './check-pack.core.ts';
+import { strippedManifest } from '../steps/release-pack.core.ts';
 import {
   changedFiles,
   classifyFiles,
   type DiffResult,
   formatReport,
+  hasFileSetChange,
   isCleanDiff,
+  isManifestDriftInert,
+  manifestDriftFields,
   renderSummary,
   scopePackages,
   summarizeResults,
 } from './check-published-diff.core.ts';
 import { pnpmPack } from './pack.ts';
+import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
 import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
@@ -64,22 +69,43 @@ const MAX_BUFFER = 64 * 1024 * 1024;
 async function diffAgainstPublished(
   dir: string,
   spec: string,
-): Promise<string> {
+): Promise<{
+  diff: string;
+  localManifest?: Record<string, unknown>;
+  publishedManifest?: Record<string, unknown>;
+}> {
   const manifestPath = join(dir, 'package.json');
   const originalManifest = await readFile(manifestPath);
   const destination = await mkdtemp(join(tmpdir(), 'check-published-diff-'));
   const tarball = join(destination, 'package.tgz');
   try {
-    await run('npm', ['pkg', 'delete', ...STRIPPED_MANIFEST_FIELDS], {
-      cwd: dir,
-    });
+    const { manifest, writeProjectManifest } = await readProjectManifest(dir);
+    await writeProjectManifest(strippedManifest(manifest));
     await pnpmPack(dir, tarball);
     const { stdout } = await run(
       'npm',
       ['diff', `--diff=${spec}`, `--diff=${tarball}`],
       { cwd: workspaceRoot, maxBuffer: MAX_BUFFER },
     );
-    return stdout;
+    if (!changedFiles(stdout).includes('package.json')) {
+      return { diff: stdout };
+    }
+    // Both manifests as-shipped, read from the compared tarballs — the
+    // LOCAL side must come from the pack too (pnpm substitutes catalog:/
+    // workspace: refs at pack time; the on-disk manifest would false-drift).
+    // fetchTarball serves from pacote's cacache — npm diff already pulled
+    // the same tarball — so this costs no second download.
+    try {
+      const localManifest = await tarballManifest(tarball);
+      const publishedTarball = join(destination, 'published.tgz');
+      await fetchTarball(spec, publishedTarball);
+      const publishedManifest = await tarballManifest(publishedTarball);
+      return { diff: stdout, localManifest, publishedManifest };
+    } catch {
+      // Failed fetch/parse leaves the manifests undefined — package.json
+      // stays ship-affecting (fail safe).
+      return { diff: stdout };
+    }
   } finally {
     await writeFile(manifestPath, originalManifest);
     await rm(destination, { recursive: true, force: true });
@@ -142,12 +168,32 @@ async function main() {
       results.push({ name, dir, localVersion, status: 'unpublished' });
       continue;
     }
-    const diff = await diffAgainstPublished(packageDir, `${name}@${latest}`);
+    const { diff, localManifest, publishedManifest } =
+      await diffAgainstPublished(packageDir, `${name}@${latest}`);
     if (isCleanDiff(diff)) {
       results.push({ name, dir, latest, localVersion, status: 'clean' });
       continue;
     }
-    const { shipAffecting, shipInert } = classifyFiles(changedFiles(diff));
+    let { shipAffecting, shipInert } = classifyFiles(changedFiles(diff));
+    if (
+      shipAffecting.includes('package.json') &&
+      localManifest !== undefined &&
+      publishedManifest !== undefined
+    ) {
+      let manifestInert = false;
+      try {
+        manifestInert = isManifestDriftInert({
+          fileSetChanged: hasFileSetChange(diff),
+          driftFields: manifestDriftFields(publishedManifest, localManifest),
+        });
+      } catch {
+        // Unparsable manifest bytes stay ship-affecting.
+      }
+      if (manifestInert) {
+        shipAffecting = shipAffecting.filter((file) => file !== 'package.json');
+        shipInert = [...shipInert, 'package.json'].sort();
+      }
+    }
     results.push({
       name,
       dir,

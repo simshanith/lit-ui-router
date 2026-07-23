@@ -14,13 +14,16 @@ catalog:
   '@commitlint/config-conventional': ^21.2.0
   '@commitlint/types': ^21.2.0
   '@custom-elements-manifest/analyzer': ^0.11.0
-  '@pnpm/fs.find-packages': ^1000.0.24
-  '@pnpm/workspace.read-manifest': ^1000.3.1
+  '@pnpm/types': 1101.4.0
+  '@pnpm/workspace.project-manifest-reader': 1100.0.15
+  '@pnpm/workspace.projects-reader': 1101.0.14
+  '@pnpm/workspace.workspace-manifest-reader': 1100.1.0
   '@release-it/conventional-changelog': ^11.0.1
   '@spectrum-web-components/icons-workflow': ^1.12.2
   '@types/dom-navigation': ^1.0.7
   '@types/lodash': ^4.17.24
   '@types/node': ^24.13.3
+  '@types/pacote': ^11.1.8
   '@uirouter/core': ^6.1.2
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
@@ -29,6 +32,7 @@ catalog:
   '@vitest/coverage-v8': ^4.1.10
   concurrently: ^10.0.3
   cypress: ^15.18.1
+  diff: ^9.0.0
   esbuild: ^0.28.1
   eslint: ^10.7.0
   eslint-formatter-tap: ^9.0.1
@@ -36,8 +40,8 @@ catalog:
   eslint-plugin-package-json: ^1.6.0
   eslint-plugin-pnpm: ^1.6.1
   eslint-plugin-turbo: ^2.10.5
-  happy-dom: ^20.10.6
-  hono: ^4.12.30
+  happy-dom: ^20.11.0
+  hono: ^4.12.31
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
@@ -46,9 +50,10 @@ catalog:
   mobx: ^6.16.1
   oxc-minify: 0.140.0
   oxc-transform: 0.140.0
-  oxfmt: 0.58.0
-  oxlint: 1.73.0
-  oxlint-tsgolint: 0.24.0
+  oxfmt: 0.59.0
+  oxlint: 1.74.0
+  oxlint-tsgolint: 0.25.0
+  pacote: ^22.0.0
   playwright: ^1.61.1
   release-it: ^20.2.1
   rimraf: ^6.1.3
@@ -68,9 +73,9 @@ catalog:
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.18
   vitest: ^4.1.10
-  vue: ^3.5.39
+  vue: ^3.5.40
   vue-tsc: ^3.3.7
-  wrangler: ^4.110.0
+  wrangler: ^4.112.0
 
 catalogMode: prefer
 
@@ -102,7 +107,10 @@ allowBuilds:
 
 overrides:
   d3-color: 3.1.0
-  dompurify: 3.4.11
+  dompurify: 3.4.12
+  fast-uri: 3.1.4
+  sharp: 0.35.0
+  shell-quote: 1.9.0
   'undici@6': 6.27.0
   'undici@7': 7.28.0
 

@@ -69,16 +69,16 @@ export default defineConfig({
     }),
     examplesIndexPlugin(),
     // static-copy v4 matches files only and always preserves source directory
-    // structure; stripBase drops the node_modules/<app>/dist/<dir> prefix.
+    // structure; stripBase drops the node_modules/<app>/dist/<variant>/<dir> prefix.
     viteStaticCopy({
       targets: [
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/assets/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/vanilla/assets/*',
           dest: 'assets',
           rename: { stripBase: true },
         },
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/index.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/vanilla/index.html',
           dest: '',
           rename: { name: 'app.html', stripBase: true },
         },
@@ -97,19 +97,19 @@ export default defineConfig({
         // in. Its bundle is content-hashed against different env, so it
         // coexists with the vanilla one under /assets.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist-hash/assets/*',
+          src: 'node_modules/sample-app-lit-vanilla/dist/hash/assets/*',
           dest: 'assets',
           rename: { stripBase: true },
         },
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist-hash/index.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/hash/index.html',
           dest: '',
           rename: { name: 'app-hash.html', stripBase: true },
         },
         // Per-mount 404 pages: the worker (docs/worker/index.ts) serves
         // <mount>/404.html with status 404 for unmatched paths in a mount.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/404.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/vanilla/404.html',
           dest: 'app',
           rename: { stripBase: true },
         },
@@ -121,7 +121,7 @@ export default defineConfig({
         // Hash deep paths (`/app-hash/foo`) never happen under a hash client,
         // but a mistyped one gets the same honest 404 page as the other mounts.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist-hash/404.html',
+          src: 'node_modules/sample-app-lit-vanilla/dist/hash/404.html',
           dest: 'app-hash',
           rename: { stripBase: true },
         },
@@ -136,14 +136,14 @@ export default defineConfig({
         // images/ and static/ come from sample-app-shared and are identical
         // in both apps' dists; copy once so neither can silently clobber.
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/images/**',
+          src: 'node_modules/sample-app-lit-vanilla/dist/vanilla/images/**',
           dest: 'images',
-          rename: { stripBase: 4 },
+          rename: { stripBase: 5 },
         },
         {
-          src: 'node_modules/sample-app-lit-vanilla/dist/static/**',
+          src: 'node_modules/sample-app-lit-vanilla/dist/vanilla/static/**',
           dest: 'static',
-          rename: { stripBase: 4 },
+          rename: { stripBase: 5 },
         },
         // stripBase ignores the leading ../, so 3 = examples/<name>/dist.
         ...EMBEDDED_EXAMPLES.map((name) => ({

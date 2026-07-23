@@ -8,13 +8,13 @@
 // members (the glob is `examples`, not `examples/*`).
 //
 // The SDK is imported lazily so that `workspaceRoot` costs nothing to import:
-// consumers that only need the path don't load ~60ms of pnpm internals, and
+// consumers that only need the path don't load ~100ms of pnpm internals, and
 // don't depend on the root's devDependencies being installed.
 
 import { dirname, join, relative } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import type { WorkspaceManifest } from '@pnpm/workspace.read-manifest';
+import type { WorkspaceManifest } from '@pnpm/workspace.workspace-manifest-reader';
 
 import type { PackageManifest } from './types.ts';
 
@@ -39,8 +39,8 @@ export async function loadWorkspace(root: string): Promise<{
   workspaceManifest: WorkspaceManifest | undefined;
 }> {
   const [{ findPackages }, { readWorkspaceManifest }] = await Promise.all([
-    import('@pnpm/fs.find-packages'),
-    import('@pnpm/workspace.read-manifest'),
+    import('@pnpm/workspace.projects-reader'),
+    import('@pnpm/workspace.workspace-manifest-reader'),
   ]);
   const workspaceManifest = await readWorkspaceManifest(root);
   const projects = await findPackages(root, {
@@ -56,4 +56,14 @@ export async function loadWorkspace(root: string): Promise<{
     };
   });
   return { members, workspaceManifest };
+}
+
+/** patchedDependencies from pnpm-workspace.yaml: package name -> patch path. */
+export async function loadPatchedDependencies(
+  root: string,
+): Promise<Record<string, string>> {
+  const { readWorkspaceManifest } =
+    await import('@pnpm/workspace.workspace-manifest-reader');
+  const workspaceManifest = await readWorkspaceManifest(root);
+  return workspaceManifest?.patchedDependencies ?? {};
 }

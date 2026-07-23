@@ -5,7 +5,10 @@ import {
   changedFiles,
   classifyFiles,
   formatReport,
+  hasFileSetChange,
   isCleanDiff,
+  isManifestDriftInert,
+  manifestDriftFields,
   renderSummary,
   scopePackages,
   summarizeResults,
@@ -82,6 +85,121 @@ describe('classifyFiles', () => {
   });
 });
 
+// Manifests as read from the two compared tarballs (tarballManifest): a
+// files-glob-only edit (dot-dir negation) with an unchanged packed file set.
+const PUBLISHED_MANIFEST = {
+  name: 'lit-ui-router',
+  version: '1.7.1',
+  files: ['dist/**'],
+  exports: './dist/index.js',
+};
+const LOCAL_MANIFEST_417 = {
+  name: 'lit-ui-router',
+  version: '1.7.1',
+  files: ['dist/**', '!dist/.*/**'],
+  exports: './dist/index.js',
+};
+
+// A modification-only diff: package.json changed, both sides present.
+const MANIFEST_ONLY_DIFF = [
+  '--- lit-ui-router@1.7.1/package/package.json',
+  '+++ lit-ui-router-1.7.1.tgz/package/package.json',
+  '@@ -4,1 +4,1 @@',
+  '-  "files": ["dist/**"],',
+  '+  "files": ["dist/**", "!dist/.*/**"],',
+].join('\n');
+
+describe('hasFileSetChange', () => {
+  it('detects additions and deletions via /dev/null headers', () => {
+    assert.equal(hasFileSetChange(DRIFT_DIFF), true); // dist/removed.js → /dev/null
+  });
+
+  it('is false when every changed file exists on both sides', () => {
+    assert.equal(hasFileSetChange(MANIFEST_ONLY_DIFF), false);
+  });
+});
+
+describe('manifestDriftFields', () => {
+  it('lists exactly the top-level fields whose values differ', () => {
+    assert.deepEqual(
+      manifestDriftFields(PUBLISHED_MANIFEST, LOCAL_MANIFEST_417),
+      ['files'],
+    );
+  });
+
+  it('sees no drift across key-order differences', () => {
+    const reordered = {
+      exports: './dist/index.js',
+      version: '1.7.1',
+      name: 'lit-ui-router',
+      files: ['dist/**'],
+    };
+    assert.deepEqual(manifestDriftFields(PUBLISHED_MANIFEST, reordered), []);
+  });
+
+  it('reports fields present on only one side', () => {
+    assert.deepEqual(
+      manifestDriftFields(PUBLISHED_MANIFEST, {
+        ...PUBLISHED_MANIFEST,
+        types: './dist/index.d.ts',
+      }),
+      ['types'],
+    );
+  });
+});
+
+describe('isManifestDriftInert', () => {
+  it('files-only drift with an identical file set is inert', () => {
+    assert.equal(
+      isManifestDriftInert({
+        fileSetChanged: hasFileSetChange(MANIFEST_ONLY_DIFF),
+        driftFields: manifestDriftFields(
+          PUBLISHED_MANIFEST,
+          LOCAL_MANIFEST_417,
+        ),
+      }),
+      true,
+    );
+  });
+
+  it('a files change that alters the file set stays ship-affecting', () => {
+    assert.equal(
+      isManifestDriftInert({ fileSetChanged: true, driftFields: ['files'] }),
+      false,
+    );
+  });
+
+  it('any non-whitelisted field stays ship-affecting even with an identical file set', () => {
+    assert.equal(
+      isManifestDriftInert({
+        fileSetChanged: false,
+        driftFields: ['exports', 'files'],
+      }),
+      false,
+    );
+    assert.equal(
+      isManifestDriftInert({ fileSetChanged: false, driftFields: ['types'] }),
+      false,
+    );
+  });
+
+  it('a formatting-only manifest diff (no field drift) is vacuously inert', () => {
+    assert.equal(
+      isManifestDriftInert({ fileSetChanged: false, driftFields: [] }),
+      true,
+    );
+  });
+});
+
+describe('classifyFiles (manifest rule interplay)', () => {
+  it('without a manifest diff, classification is unchanged: package.json stays ship-affecting', () => {
+    assert.deepEqual(classifyFiles(['package.json', 'src/core.ts']), {
+      shipAffecting: ['package.json'],
+      shipInert: ['src/core.ts'],
+    });
+  });
+});
+
 describe('formatReport', () => {
   const clean = {
     name: 'lit-ui-router',
@@ -123,7 +241,7 @@ describe('formatReport', () => {
     const { ok, text } = formatReport([shipInert], { strict: true });
     assert.equal(ok, true);
     assert.match(text, /\(1 ship-inert\)/);
-    assert.match(text, /src\/map drift vs 1\.7\.1 — 2 ship-inert file\(s\)/);
+    assert.match(text, /ship-inert drift vs 1\.7\.1 — 2 ship-inert file\(s\)/);
     assert.match(text, /◦ src\/core\.ts/);
   });
 
