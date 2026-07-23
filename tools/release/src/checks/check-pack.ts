@@ -6,37 +6,20 @@
 // pnpm the publish workflow uses — keeps main releasable instead of
 // discovering a leak at publish time.
 //
-// This file is the IO shell: it packs each non-private workspace package into
-// a temp dir, extracts the packed package.json, and delegates all decisions to
-// the pure, unit-tested functions in ./check-pack.core.ts.
+// This file is the IO shell: it reads each non-private package's publish-shape
+// tarball (produced once by the `@tools/release#pack` task this depends on),
+// extracts the packed package.json, and delegates all decisions to the pure,
+// unit-tested functions in ./check-pack.core.ts.
 
-import { mkdtemp, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
-
+import { packTarballPath } from './cache-paths.ts';
 import {
   findUnsubstitutedRefs,
   formatReport,
   type PackResult,
 } from './check-pack.core.ts';
-import { pnpmPack } from './pack.ts';
 import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { tarballManifest } from './tarball.ts';
-import type { PackageManifest } from '@tools/shared/types.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
-
-/** Pack one package and return the manifest from inside the tarball. */
-async function packedManifest(packageDir: string): Promise<PackageManifest> {
-  const destination = await mkdtemp(join(tmpdir(), 'check-pack-'));
-  const tarball = join(destination, 'package.tgz');
-  try {
-    await pnpmPack(packageDir, tarball);
-    // Malformed manifests reject in tarballManifest — loud, never a silent {}.
-    return await tarballManifest(tarball);
-  } finally {
-    await rm(destination, { recursive: true, force: true });
-  }
-}
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
@@ -49,7 +32,8 @@ async function main() {
   await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
   const results: PackResult[] = [];
   for (const { name, dir } of publishable) {
-    const manifest = await packedManifest(join(workspaceRoot, dir));
+    // Malformed manifests reject in tarballManifest — loud, never a silent {}.
+    const manifest = await tarballManifest(packTarballPath(name));
     results.push({ name, dir, refs: findUnsubstitutedRefs(manifest) });
   }
   const { ok, text } = formatReport(results);

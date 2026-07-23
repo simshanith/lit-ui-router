@@ -21,3 +21,21 @@ export const publishedDiffSummaryPath = join(
   cacheDir,
   'published-diff-summary.json',
 );
+
+// The `@tools/release#pack` task writes one publish-shape tarball per
+// publishable package here; every check reads them instead of re-packing.
+// Declared as that task's turbo output (`.cache/pack/*.tgz`), so cache replay
+// materializes them for the dependent checks.
+export const packDir = join(cacheDir, 'pack');
+
+/** The stable, version-less tarball path a consumer reads for `name`. */
+export const packTarballPath = (name: string): string =>
+  join(packDir, `${name}.tgz`);
+
+/** Scratch copies live here; kept out of the `*.tgz` output glob. */
+export const packStagingParent = join(packDir, 'staging');
+
+// The publish step re-packs here — NOT under packDir — so it can never read a
+// turbo-cache-restored tarball. No turbo task declares this path as an output.
+export const publishTarballPath = (name: string): string =>
+  join(cacheDir, 'publish', `${name}.tgz`);

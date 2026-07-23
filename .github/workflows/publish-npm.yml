@@ -78,8 +78,10 @@ jobs:
           TURBO_API: ${{ vars.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
-        # strip devDependencies/scripts → pnpm pack → restore (try/finally);
-        # the tarball feeds the attestation, the manifest gate, and the publish
+        # re-pack from source into a staging copy (restore-free, never touches
+        # the source tree); deliberately NOT the @tools/release#pack turbo
+        # cache — that unsigned artifact must stay off the attestation path.
+        # The tarball feeds the attestation, the manifest gate, and the publish.
         id: pack
         run: mise run //tools/release:pack
         env:
