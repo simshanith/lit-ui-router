@@ -6,12 +6,12 @@
 // "cosmetic" refactor is caught even when the git log looks harmless.
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
-// the registry tarball byte-for-byte): reproduce the Pack step of
-// .github/workflows/publish-npm.yml — `npm pkg delete` the
-// STRIPPED_MANIFEST_FIELDS then `pnpm pack` — and `npm diff` the tarball
-// against the published spec. The strip stays in lockstep with that workflow
-// because both build their delete args from the same list in
-// check-pack.core.ts. Comparing anything other than pack output (the source
+// the registry tarball byte-for-byte): reproduce the publish workflow's Pack
+// step (//tools/release:pack) — drop the STRIPPED_MANIFEST_FIELDS, here via
+// `npm pkg delete`, then `pnpm pack` — and `npm diff` the tarball against the
+// published spec. The strip stays in lockstep with that step because both
+// derive from the same list in check-pack.core.ts, even though the Pack step
+// rewrites the manifest in TS. Comparing anything other than pack output (the source
 // manifest, `npm view` fields) false-positives on catalog:/workspace:
 // substitution and registry-injected fields.
 //

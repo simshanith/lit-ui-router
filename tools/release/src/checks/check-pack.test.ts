@@ -189,10 +189,10 @@ describe('formatPackedManifestReport', () => {
 });
 
 describe('STRIPPED_MANIFEST_FIELDS', () => {
-  it("matches publish-npm.yml's `npm pkg delete` list", () => {
-    // The Pack step runs `npm pkg delete devDependencies scripts`; consumers
-    // (the packed-manifest gate, check-published-diff) derive from this list,
-    // so a change here must be mirrored in the workflow — and vice versa.
+  it('matches the Pack step strip list', () => {
+    // Consumers (the packed-manifest gate, //tools/release:pack, and
+    // check-published-diff's `npm pkg delete`) all derive from this list, so
+    // pinning it here is what keeps the strip in lockstep across them.
     assert.deepEqual(STRIPPED_MANIFEST_FIELDS, ['devDependencies', 'scripts']);
   });
 });
