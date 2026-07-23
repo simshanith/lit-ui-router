@@ -49,10 +49,8 @@ async function checkExports(
       createPackageFromTarballData(new Uint8Array(data)),
     );
 
-    // Lint the packed tarball's own file set + manifest (its substituted deps),
-    // never the working dir. pkgDir is omitted on purpose: with `{ tarball }`
-    // publint roots the vfs at the tarball's own package dir, and passing a
-    // real path would override that and miss the manifest.
+    // No pkgDir: `{ tarball }` roots publint at the archive's own dir; a real
+    // path overrides that and throws.
     const { messages, pkg } = await publint({
       pack: {
         tarball: data.buffer.slice(
