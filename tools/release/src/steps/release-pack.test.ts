@@ -13,7 +13,7 @@ describe('strippedManifest', () => {
     peerDependencies: { '@uirouter/core': '^6.0.0' },
   };
 
-  it('drops exactly devDependencies and scripts, like npm pkg delete did', () => {
+  it('drops exactly devDependencies and scripts', () => {
     assert.deepEqual(strippedManifest(manifest), {
       name: 'lit-ui-router',
       version: '1.8.0',
@@ -37,8 +37,7 @@ describe('strippedManifest', () => {
   });
 
   it('does not mutate the manifest it was handed', () => {
-    // release-pack restores from the original bytes, but the caller also holds
-    // this object across the pack — stripping must not reach back into it.
+    // release-pack restores from this same object after the pack.
     const source = { ...manifest };
     strippedManifest(source);
     assert.deepEqual(source, manifest);

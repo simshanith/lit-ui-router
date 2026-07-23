@@ -1,35 +1,19 @@
 // Pure logic for the publish Pack step: which manifest fields are stripped
 // before packing, and which file in the package directory is THE tarball.
-// The IO (reading and writing the manifest through @pnpm/read-project-manifest,
-// running pnpm pack, restoring) lives in release-pack.ts, where the
-// mutate→restore invariant the workflow used to encode as bash line order is a
-// try/finally.
+// The IO (manifest read/write, pnpm pack, restore) lives in release-pack.ts.
 
-// Type-only, so this file stays runtime-pure.
 import type { ProjectManifest } from '@pnpm/types';
 
 /**
- * Dev-only metadata that leaks private workspace names and monorepo-only
- * commands into the published manifest. None of our scripts are lifecycle
- * hooks; stripping happens before `pnpm pack`, so a future prepack/prepare
- * script would be silently skipped — build via the turbo step instead.
+ * Dev-only metadata that must not reach the published manifest. Read by both
+ * the strip below and the packed-manifest gate (findPackedManifestViolations).
  *
- * The strip below removes these, and the packed-manifest gate
- * (findPackedManifestViolations) fails the tarball when any of them survive.
- * Both read this one list, so the guard cannot drift from what it guards.
+ * The strip runs before `pnpm pack`, so a lifecycle hook added to `scripts`
+ * (prepack/prepare) would be silently skipped — build via the turbo step.
  */
 export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
 
-/**
- * The manifest with {@link STRIPPED_MANIFEST_FIELDS} removed (what `npm pkg
- * delete devDependencies scripts` did).
- *
- * Takes and returns the parsed manifest rather than JSON text: the caller
- * writes it back through pnpm's project-manifest writer, which reproduces the
- * file's own indentation instead of imposing this function's. Copies rather
- * than mutating — the caller holds the original across the pack and restores
- * from it.
- */
+/** A copy of `manifest` without {@link STRIPPED_MANIFEST_FIELDS}. */
 export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
   const stripped = { ...manifest };
   for (const field of STRIPPED_MANIFEST_FIELDS) {

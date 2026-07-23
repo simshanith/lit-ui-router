@@ -2,14 +2,9 @@
 // Pack the publish tarball — publish-npm.yml's Pack step as a tool:
 //   env in:  PACKAGE_NAME, PACKAGE_DIR (workspace-relative)
 //   outputs: tarball (absolute path, for the attest + check + publish steps)
-// Strip dev-only manifest fields, `pnpm pack`, restore. Read and write both go
-// through pnpm's own project-manifest reader — the one `pnpm pack` itself reads
-// with — so the stripped file keeps the source manifest's indentation instead
-// of whatever a re-serialize would pick, and the restore is just the manifest
-// the reader handed back. The restore is a try/finally (the workflow restored
-// with `git checkout -- package.json`, which the try/finally is byte-equivalent
-// to on CI's clean checkout — and unlike the bash, it also restores when the
-// pack itself fails). Field decisions live in ./release-pack.core.ts.
+// Strip dev-only manifest fields, `pnpm pack`, restore. Manifest read/write
+// goes through pnpm's own project-manifest reader, so the rewrite preserves the
+// file's formatting. Field decisions live in ./release-pack.core.ts.
 
 import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';

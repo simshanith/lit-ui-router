@@ -77,10 +77,9 @@ export function formatReport(results: PackResult[]): Report {
 }
 
 // ── Packed-manifest gate (publish workflow) ─────────────────────────────────
-// The Pack step strips devDependencies and scripts before `pnpm pack`
-// (dev-only metadata that leaks private workspace names and monorepo-only
-// commands into the published manifest), then re-checks the tarball it is
-// about to hand release-it. These checks are that gate.
+// The Pack step strips STRIPPED_MANIFEST_FIELDS before `pnpm pack`, then
+// re-checks the tarball it is about to hand release-it. These checks are that
+// gate.
 
 /**
  * Violations in the manifest npm would publish, as human-readable strings.

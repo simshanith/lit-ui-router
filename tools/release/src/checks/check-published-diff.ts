@@ -6,12 +6,11 @@
 // "cosmetic" refactor is caught even when the git log looks harmless.
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
-// the registry tarball byte-for-byte): reproduce the publish workflow's Pack
-// step (//tools/release:pack) by running its own strip — strippedManifest
-// written back through pnpm's project-manifest writer — then `pnpm pack`, and
-// `npm diff` the tarball against the published spec. Sharing the strip itself,
-// rather than a second implementation that agrees with it today, is what keeps
-// the two in lockstep. Comparing anything other than pack output (the source
+// the registry tarball byte-for-byte): reproduce the Pack step
+// (//tools/release:pack) by running its own strippedManifest, then `pnpm pack`,
+// and `npm diff` the tarball against the published spec. Sharing the strip
+// itself is what keeps the two in lockstep.
+// Comparing anything other than pack output (the source
 // manifest, `npm view` fields) false-positives on catalog:/workspace:
 // substitution and registry-injected fields.
 //
