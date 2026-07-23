@@ -6,12 +6,11 @@
 // "cosmetic" refactor is caught even when the git log looks harmless.
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
-// the registry tarball byte-for-byte): reproduce the Pack step of
-// .github/workflows/publish-npm.yml — `npm pkg delete` the
-// STRIPPED_MANIFEST_FIELDS then `pnpm pack` — and `npm diff` the tarball
-// against the published spec. The strip stays in lockstep with that workflow
-// because both build their delete args from the same list in
-// check-pack.core.ts. Comparing anything other than pack output (the source
+// the registry tarball byte-for-byte): reproduce the Pack step
+// (//tools/release:pack) by running its own strippedManifest, then `pnpm pack`,
+// and `npm diff` the tarball against the published spec. Sharing the strip
+// itself is what keeps the two in lockstep.
+// Comparing anything other than pack output (the source
 // manifest, `npm view` fields) false-positives on catalog:/workspace:
 // substitution and registry-injected fields.
 //
@@ -36,8 +35,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
 
+import { readProjectManifest } from '@pnpm/workspace.project-manifest-reader';
+
 import { publishedDiffSummaryPath } from './cache-paths.ts';
-import { STRIPPED_MANIFEST_FIELDS } from './check-pack.core.ts';
+import { strippedManifest } from '../steps/release-pack.core.ts';
 import {
   changedFiles,
   classifyFiles,
@@ -78,9 +79,8 @@ async function diffAgainstPublished(
   const destination = await mkdtemp(join(tmpdir(), 'check-published-diff-'));
   const tarball = join(destination, 'package.tgz');
   try {
-    await run('npm', ['pkg', 'delete', ...STRIPPED_MANIFEST_FIELDS], {
-      cwd: dir,
-    });
+    const { manifest, writeProjectManifest } = await readProjectManifest(dir);
+    await writeProjectManifest(strippedManifest(manifest));
     await pnpmPack(dir, tarball);
     const { stdout } = await run(
       'npm',

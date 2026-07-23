@@ -6,7 +6,6 @@ import {
   findUnsubstitutedRefs,
   formatPackedManifestReport,
   formatReport,
-  STRIPPED_MANIFEST_FIELDS,
 } from './check-pack.core.ts';
 
 describe('findUnsubstitutedRefs', () => {
@@ -185,14 +184,5 @@ describe('formatPackedManifestReport', () => {
     assert.match(text, /✗ packed manifest check failed/);
     assert.match(text, /devDependencies leaked/);
     assert.match(text, /scripts leaked/);
-  });
-});
-
-describe('STRIPPED_MANIFEST_FIELDS', () => {
-  it("matches publish-npm.yml's `npm pkg delete` list", () => {
-    // The Pack step runs `npm pkg delete devDependencies scripts`; consumers
-    // (the packed-manifest gate, check-published-diff) derive from this list,
-    // so a change here must be mirrored in the workflow — and vice versa.
-    assert.deepEqual(STRIPPED_MANIFEST_FIELDS, ['devDependencies', 'scripts']);
   });
 });
