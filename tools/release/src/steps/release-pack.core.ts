@@ -26,10 +26,8 @@ export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
 }
 
 /**
- * The single packed tarball among a directory's entries. The old
- * `realpath "$PACKAGE_DIR"/*.tgz` glob silently mangled 0 or 2+ matches
- * into a broken TARBALL value; a CI checkout has exactly one, so anything
- * else is an error worth naming.
+ * The single packed tarball among a directory's entries — anything other than
+ * exactly one is a broken pack worth naming rather than silently mishandling.
  */
 export function pickTarball(entries: readonly string[]): string {
   const tarballs = entries.filter((entry) => entry.endsWith('.tgz'));
