@@ -11,7 +11,10 @@ import type { ProjectManifest } from '@pnpm/types';
  * The strip runs before `pnpm pack`, so a lifecycle hook added to `scripts`
  * (prepack/prepare) would be silently skipped — build via the turbo step.
  */
-export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
+export const STRIPPED_MANIFEST_FIELDS = [
+  'devDependencies',
+  'scripts',
+] as const satisfies readonly (keyof ProjectManifest)[];
 
 /** A copy of `manifest` without {@link STRIPPED_MANIFEST_FIELDS}. */
 export function strippedManifest(manifest: ProjectManifest): ProjectManifest {
