@@ -8,6 +8,7 @@ packages:
 catalog:
   '@ampproject/remapping': ^2.3.0
   '@api-viewer/docs': 1.0.0-pre.10
+  '@arethetypeswrong/core': ^0.18.5
   '@codecov/bundle-analyzer': ^2.0.1
   '@oxc-project/runtime': 0.140.0
   '@commitlint/cli': ^21.2.0
@@ -55,6 +56,7 @@ catalog:
   oxlint-tsgolint: 0.25.0
   pacote: ^22.0.0
   playwright: ^1.61.1
+  publint: ^0.3.21
   release-it: ^20.2.1
   rimraf: ^6.1.3
   rolldown: ^1.2.0
