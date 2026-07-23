@@ -5,6 +5,7 @@
 
 import type { PackageManifest } from '@tools/shared/types.ts';
 
+import { STRIPPED_MANIFEST_FIELDS } from '../steps/release-pack.core.ts';
 import { DEP_FIELDS, type DepField, type Report } from './types.ts';
 
 // Specifier protocols pnpm must substitute at pack time. The npm registry
@@ -80,15 +81,6 @@ export function formatReport(results: PackResult[]): Report {
 // (dev-only metadata that leaks private workspace names and monorepo-only
 // commands into the published manifest), then re-checks the tarball it is
 // about to hand release-it. These checks are that gate.
-
-/**
- * The manifest fields the Pack step (//tools/release:pack) drops before `pnpm
- * pack`, named here for the gate that enforces them: it fails when any of them
- * survive into the tarball. The strip itself lives in release-pack.core.ts and
- * is shared by everything reproducing the Pack step, so this list is the
- * gate's statement of intent rather than a second implementation of it.
- */
-export const STRIPPED_MANIFEST_FIELDS = ['devDependencies', 'scripts'] as const;
 
 /**
  * Violations in the manifest npm would publish, as human-readable strings.

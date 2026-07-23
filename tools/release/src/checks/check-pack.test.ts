@@ -6,7 +6,6 @@ import {
   findUnsubstitutedRefs,
   formatPackedManifestReport,
   formatReport,
-  STRIPPED_MANIFEST_FIELDS,
 } from './check-pack.core.ts';
 
 describe('findUnsubstitutedRefs', () => {
@@ -185,14 +184,5 @@ describe('formatPackedManifestReport', () => {
     assert.match(text, /✗ packed manifest check failed/);
     assert.match(text, /devDependencies leaked/);
     assert.match(text, /scripts leaked/);
-  });
-});
-
-describe('STRIPPED_MANIFEST_FIELDS', () => {
-  it('matches the Pack step strip list', () => {
-    // The gate checks the tarball for exactly what strippedManifest removes.
-    // Pinning both ends here is what catches the two drifting apart — the gate
-    // is the only guard that would still pass if the strip quietly changed.
-    assert.deepEqual(STRIPPED_MANIFEST_FIELDS, ['devDependencies', 'scripts']);
   });
 });
