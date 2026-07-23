@@ -14,7 +14,7 @@ catalog:
   '@commitlint/config-conventional': ^21.2.0
   '@commitlint/types': ^21.2.0
   '@custom-elements-manifest/analyzer': ^0.11.0
-  '@pnpm/fs.find-packages': ^1000.0.24
+  '@pnpm/workspace.projects-reader': 1101.0.14
   '@pnpm/workspace.workspace-manifest-reader': 1100.1.0
   '@release-it/conventional-changelog': ^11.0.1
   '@spectrum-web-components/icons-workflow': ^1.12.2

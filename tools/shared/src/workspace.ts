@@ -8,7 +8,7 @@
 // members (the glob is `examples`, not `examples/*`).
 //
 // The SDK is imported lazily so that `workspaceRoot` costs nothing to import:
-// consumers that only need the path don't load ~60ms of pnpm internals, and
+// consumers that only need the path don't load ~100ms of pnpm internals, and
 // don't depend on the root's devDependencies being installed.
 
 import { dirname, join, relative } from 'node:path';
@@ -39,7 +39,7 @@ export async function loadWorkspace(root: string): Promise<{
   workspaceManifest: WorkspaceManifest | undefined;
 }> {
   const [{ findPackages }, { readWorkspaceManifest }] = await Promise.all([
-    import('@pnpm/fs.find-packages'),
+    import('@pnpm/workspace.projects-reader'),
     import('@pnpm/workspace.workspace-manifest-reader'),
   ]);
   const workspaceManifest = await readWorkspaceManifest(root);
