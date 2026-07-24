@@ -50,13 +50,10 @@ async function sha256File(path: string): Promise<string> {
 type Credit = { sha: string; outcome: CacheOutcome } | { failure: string };
 
 /**
- * Restore CI's pack:all and hash the tarball it left behind. `local:rw` keeps
- * the local reads that let this job's own cold-built `^build` outputs satisfy
- * pack:all's dependencies — without it every build re-runs (or gets pulled
- * from the remote cache, putting unsigned artifacts back in the tree we just
- * baked). pack:all itself has no local entry (nothing earlier in this job runs
- * it), so it still resolves remote-or-execute, and reconcile() only credits a
- * REMOTE source — a local entry could never masquerade as CI's artifact.
+ * Restore CI's pack:all and hash the tarball it left behind. `local:rw` (not
+ * `local:w`) so this job's own cold `^build` outputs satisfy pack:all's
+ * dependencies instead of being re-pulled from the remote cache; pack:all
+ * itself has no local entry, and only a REMOTE source is ever credited.
  */
 async function restoreCredit(
   creditPath: string,

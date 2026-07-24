@@ -38,11 +38,8 @@ env:
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
-    # Ref restriction, not an approval gate: the environment's deployment
-    # branch policy admits only main and the three release tag globs, so a
-    # fork or an arbitrary ref can never reach the publish credentials. The
-    # bump PR merging to main is the human approval; required reviewers stay
-    # available here if the contributor set ever grows.
+    # Ref restriction, not an approval gate: the deployment branch policy
+    # admits only main and the release tag globs.
     environment: publish
     permissions:
       id-token: write # Required for OIDC trusted publishing to NPM
@@ -75,17 +72,14 @@ jobs:
         env:
           PACKAGE_INPUT: ${{ inputs.package }}
       - name: Build
-        # Cold, credential-free build (the DEBIT ledger's source): TURBO_TOKEN
-        # is deliberately withheld so no unsigned remote-cache artifact can
-        # reach the tarball we attest. The CI-verified cache is cross-checked
-        # read-only in Reconcile, never trusted as a build input here.
+        # TURBO_TOKEN withheld: no unsigned cache artifact may reach the
+        # tarball we attest. This cold build is the DEBIT ledger's source.
         run: mise run //:build
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
       - name: Pack
-        # Re-pack from the cold source into a staging copy (restore-free, never
-        # touches the source tree). This is the DEBIT: the bytes we attest and
-        # publish. Reconcile then balances it against CI's CREDIT tarball.
+        # Restore-free staging copy; the source tree is never touched. The
+        # DEBIT: these are the bytes we attest and publish.
         id: pack
         run: mise run //tools/release:pack
         env:
@@ -97,13 +91,8 @@ jobs:
         env:
           TARBALL: ${{ steps.pack.outputs.tarball }}
       - name: Reconcile
-        # Double-entry gate: restore the CI-verified pack:all tarball from the
-        # remote cache (read-only) and require it to match this job's cold bake
-        # byte-for-byte. A drift HALTS the publish — CI verified bytes a clean
-        # rebuild can't reproduce (cache poisoning / non-determinism). The
-        # attested + published bytes stay the cold bake; the cached artifact is
-        # only the witness. Only a proven drift halts: an absent or unreachable
-        # credit warns and proceeds, so a cache outage can't block a release.
+        # Double-entry gate: the cold bake must match CI's verified pack
+        # byte-for-byte. Only a proven drift halts; an absent credit warns.
         run: mise run //tools/release:reconcile
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
