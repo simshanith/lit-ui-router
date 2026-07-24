@@ -81,4 +81,5 @@ jobs:
       mainGraph: ${{ needs.signal_gate.outputs.mainGraph == 'true' }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

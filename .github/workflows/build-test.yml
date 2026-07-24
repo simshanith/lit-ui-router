@@ -55,6 +55,7 @@ jobs:
       cypressVideo: ${{ inputs.cypressVideo || false }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   tag_push:
