@@ -136,21 +136,28 @@ description = "Store remote-cache credentials in .config/mise/config.local.toml 
 # an env-backed flag would silently re-write the old value and make rotation a
 # no-op. Pipe instead: printf '%s\n' "$TURBO_TOKEN" | mise run turbo_login
 usage = '''
-flag "--token <token>" help="Token; omit to read stdin or prompt (keeps it out of shell history)"
+flag "--token <token>" help="Token, or - to read one line from stdin; omit to be prompted"
 flag "--api <api>" help="Cache API endpoint" default="https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
 flag "--team <team>" help="Team identifier" default="team_lit-ui-router"
 '''
 run = '''
 set -eu
 token="${usage_token:-}"
-if [ -z "$token" ]; then
-  if [ -t 0 ]; then
-    printf 'Remote-cache token: ' >&2
-    stty -echo; trap 'stty echo' EXIT INT TERM; IFS= read -r token; stty echo; trap - EXIT INT TERM
-    printf '\n' >&2
-  else
-    IFS= read -r token
-  fi
+if [ "$token" = "-" ]; then
+  # Explicit opt-in only. Reading stdin whenever it is not a tty would steal a
+  # line from whatever stream the caller happened to attach.
+  IFS= read -r token || true
+elif [ -z "$token" ]; then
+  # Prompt on the terminal, not stdin, so `--token -` semantics stay separate.
+  exec 3<>/dev/tty || { echo "turbo_login: no terminal; pass --token - and pipe the value" >&2; exit 1; }
+  printf 'Remote-cache token: ' >&3
+  stty -echo <&3
+  trap 'stty echo <&3' EXIT INT TERM
+  IFS= read -r token <&3
+  stty echo <&3
+  trap - EXIT INT TERM
+  printf '\n' >&3
+  exec 3<&-
 fi
 [ -n "$token" ] || { echo "turbo_login: no token supplied" >&2; exit 1; }
 config="{{config_root}}/.config/mise/config.local.toml"
