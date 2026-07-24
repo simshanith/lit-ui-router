@@ -42,6 +42,15 @@ mechanism to learn — into `.config/mise/config.local.toml` (gitignored,
 `--team` default to the values above. mise shims export the result, so a bare
 `turbo` picks it up.
 
+It also writes `TURBO_CACHE=remote:r,local:rw`, making the local machine
+**read-only** against the shared cache: it pulls CI's warm artifacts but never
+pushes. CI owns provenance — a laptop is a softer target than GitHub's secret
+store, so keeping it out of the write path means a compromised machine cannot
+inject artifacts a later CI run would trust and serve. Because this lives in the
+gitignored local file, CI is unaffected and keeps writing. Pass `--local-writes`
+to opt in to pushing from this machine (rarely wanted; it trades that guarantee
+for warming CI's cache from local builds).
+
 Prefer a `*-file` source over a `--token`/`--signature-key` literal: a literal
 lands in shell history and is visible in `ps` while the command runs. Process
 substitution keeps both secrets off argv in a single command. Stdin is read only
