@@ -41,6 +41,12 @@ certs/
 .turbo
 .claude
 
+# mise local overrides (machine-local env, e.g. TURBO_TOKEN); load after the
+# checked-in config and win, so they stay untracked.
+.config/mise/**/*.local.toml
+mise.local.toml
+mise.*.local.toml
+
 # package-local resolved-state caches (e.g. tools/release/.cache)
 .cache/
 

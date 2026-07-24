@@ -234,12 +234,13 @@ Turborepo remote caching accelerates CI builds by sharing cached artifacts acros
 - Team collaboration on large changes
 
 **Setup:** See [REMOTE_CACHE.md](./REMOTE_CACHE.md) for detailed configuration.
+Optional and maintainer-only — the worker takes one shared token issued out of
+band; without it turbo just uses the local cache.
 
 **Quick start for local development:**
 
-1. Create `.turbo/config.json` with team config
-2. Export `TURBO_TOKEN` in your shell
-3. Run `turbo build` - artifacts upload/download automatically
+1. `mise set --file .config/mise/config.local.toml TURBO_API=… TURBO_TEAM=… TURBO_TOKEN=…` (gitignored)
+2. Run `turbo build` - artifacts upload/download automatically
 
 ## Troubleshooting
 
