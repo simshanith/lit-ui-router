@@ -10,8 +10,7 @@
 # set with no directory walk and no pnpm install (taplo has no gitignore pruning,
 # so a bare walk is ~14s and hits node_modules). Given files win, and explicit
 # paths bypass taplo's walker too, so a single-file editor/pre-commit run is
-# `mise run taplo fmt --check -- path/to/x.toml`. mise runs tasks from config_root,
-# so no cd is needed.
+# `mise run taplo fmt --check -- path/to/x.toml`. mise runs tasks from config_root.
 set -euo pipefail
 
 case "${usage_cmd:?}" in
@@ -24,7 +23,9 @@ set -- "$usage_cmd"
 
 files="${usage_file:-}"
 [ -n "$files" ] || files=$(git ls-files -- '*.toml')
-[ -n "$files" ] || exit 0
+# git ls-files never comes back empty in this repo; warn (don't silently pass) if
+# it ever does, rather than letting taplo fall back to its ~14s node_modules walk.
+[ -n "$files" ] || { echo "taplo: no tracked *.toml files matched; nothing to do" >&2; exit 0; }
 
 # unquoted $files: split the space/newline-joined list into args; TOML paths have no spaces
 exec taplo "$@" $files
