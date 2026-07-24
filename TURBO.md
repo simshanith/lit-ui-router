@@ -40,7 +40,10 @@ ci:pull_request
 ├── lint
 │   ├── //#lint:root           (with)
 │   ├── //#lint:package-json   (with)
-│   └── //#lint:workflows      (with)
+│   ├── //#lint:actions        (with)
+│   ├── //#lint:toml           (with)
+│   ├── //#lint:shellcheck     (with)
+│   └── //#check:patches       (with)
 ├── typecheck
 │   ├── //#typecheck:root      (with)
 │   └── typecheck:src          (with)
@@ -298,7 +301,9 @@ Root tasks use `//#` prefix and require scripts in root `package.json`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
-- `//#lint:workflows` - actionlint + zizmor over GitHub Actions workflows
+- `//#lint:actions` - actionlint + zizmor over GitHub Actions workflows
+- `//#lint:toml` - taplo lint over every tracked `.toml`
+- `//#lint:shellcheck` - shellcheck over the repo shell surface (`*.sh`/`*.bash` + extensionless mise task scripts)
 - `//#typecheck:root` - typechecks root-level scripts
 - `//#format:root` - formats root-level files
 - `//#format:check:root` - checks root-level formatting

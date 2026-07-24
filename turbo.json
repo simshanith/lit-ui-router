@@ -59,7 +59,9 @@
       "with": [
         "//#lint:root",
         "//#lint:package-json",
-        "//#lint:workflows",
+        "//#lint:actions",
+        "//#lint:toml",
+        "//#lint:shellcheck",
         "//#check:patches"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
@@ -94,23 +96,36 @@
         ".oxlintrc.json"
       ]
     },
-    "//#lint:workflows": {
-      // now also runs `taplo lint` over every .toml AND shellcheck over the repo
-      // shell surface, so the key tracks the full TOML set + taplo's scoping
-      // (.config/taplo.toml) + every tracked *.sh + the extensionless mise task
-      // scripts (the taplo and shellcheck tasks) + both tool pins (mise.lock).
-      // .config/mise/config.toml is subsumed by **/*.toml; mise.lock is not
-      // (.lock, not .toml/.sh) so it stays explicit.
+    // Config-plumbing lint: one //# cache group per surface (actions / toml /
+    // shell). The lint_workflows mise umbrella fans out to all three.
+    "//#lint:actions": {
+      // actionlint + zizmor; config.toml holds the task defs, mise.lock the pins.
       "inputs": [
         ".github/**",
         "zizmor.yml",
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:toml": {
+      // taplo lint over every tracked .toml; same input set as //#format:toml.
+      "inputs": [
         "**/*.toml",
-        "**/*.sh",
         "!**/node_modules/**",
         "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:shellcheck": {
+      // shellcheck over *.sh/*.bash + the extensionless mise task scripts it
+      // shebang-scans (vendored sample-app scripts excluded in the task).
+      "inputs": [
+        "**/*.sh",
+        "**/*.bash",
+        "!**/node_modules/**",
         "$TURBO_ROOT$/.config/mise/tasks/**",
-        ".config/mise/mise.lock",
-        "$TURBO_DEFAULT$"
+        "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     "typecheck": {
