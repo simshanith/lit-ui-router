@@ -30,8 +30,7 @@ idiomatic_version_file_enable_tools = ["node"]
 "aqua:rhysd/actionlint" = "1.7.12"
 # GitHub Actions security auditor; complements actionlint's syntax checks
 "aqua:zizmorcore/zizmor" = "1.26.1"
-# Shell-script static analysis; owns the repo's shell surface (mise task
-# scripts, *.sh). Pinned like the other aqua tools.
+# Shell-script static analysis
 "aqua:koalaman/shellcheck" = "0.11.0"
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
@@ -98,7 +97,7 @@ run = "mise run taplo lint"
 
 [tasks.lint_shellcheck]
 # Thin alias; file selection + rationale live in the `shellcheck` file task
-# (.config/mise/tasks/shellcheck), keeping the turbo/lint_workflows names stable.
+# (.config/mise/tasks/shellcheck)
 description = "Static-analyze repo shell scripts (mise tasks, *.sh) with shellcheck"
 run = "mise run shellcheck"
 

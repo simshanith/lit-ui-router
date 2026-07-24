@@ -27,7 +27,7 @@ else
   done < <(git ls-files -- '*' ":!:$VENDORED/*")
 fi
 
-# Tracked set can be empty (main ships only the excluded vendored pair); warn, don't fail.
+# warn on empty set
 if [ "${#files[@]}" -eq 0 ]; then
   echo "shellcheck: no repo-authored shell scripts matched; nothing to do" >&2
   exit 0
