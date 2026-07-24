@@ -169,7 +169,7 @@
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "format": {
-      "with": ["//#format:root"],
+      "with": ["//#format:root", "//#format:toml"],
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
         ".oxfmtrc.json",
@@ -177,7 +177,7 @@
       ]
     },
     "format:check": {
-      "with": ["//#format:check:root"],
+      "with": ["//#format:check:root", "//#format:check:toml"],
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
         ".oxfmtrc.json",
@@ -189,6 +189,14 @@
     },
     "//#format:check:root": {
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // taplo owns .toml; separate root task so its cache key tracks only .toml
+    // (and taplo's pin), disjoint from oxfmt's globs above.
+    "//#format:toml": {
+      "inputs": ["**/*.toml", "$TURBO_ROOT$/.config/mise/mise.lock"]
+    },
+    "//#format:check:toml": {
+      "inputs": ["**/*.toml", "$TURBO_ROOT$/.config/mise/mise.lock"]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],
