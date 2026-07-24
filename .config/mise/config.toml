@@ -86,6 +86,12 @@ run = "actionlint"
 description = "Audit GitHub Actions workflows for security issues"
 run = "zizmor --offline .github/workflows"
 
+[tasks.lint_actions]
+# The GitHub Actions surface (actionlint + zizmor); backs the //#lint:actions
+# turbo cache group and is composed by the lint_workflows umbrella.
+description = "Lint the GitHub Actions surface (actionlint, zizmor)"
+depends = ["lint_actionlint", "lint_zizmor"]
+
 [tasks.lint_toml]
 # `taplo lint` = TOML syntax/structure validation, offline by default (taplo only
 # fetches schema catalogs with --default-schema-catalogs, which the task omits).
@@ -103,9 +109,10 @@ run = "mise run shellcheck"
 
 [tasks.lint_workflows]
 # Virtual grouping task; the legs are independent and run in parallel. Covers
-# CI/config-plumbing health: GH workflows (actionlint, zizmor) + TOML (taplo) + shell (shellcheck).
+# CI/config-plumbing health: GH workflows (actionlint, zizmor) + TOML (taplo) +
+# shell (shellcheck). Drives the standalone lint-workflows.yml job.
 description = "Lint workflows and config plumbing (actionlint, zizmor, taplo, shellcheck)"
-depends = ["lint_actionlint", "lint_zizmor", "lint_toml", "lint_shellcheck"]
+depends = ["lint_actions", "lint_toml", "lint_shellcheck"]
 
 # taplo owns .toml formatting (oxfmt covers everything else). The shared
 # entrypoint (file selection + git ls-files default + <cmd> passthrough / --check
