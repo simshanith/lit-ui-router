@@ -10,7 +10,7 @@ catalog:
   '@api-viewer/docs': 1.0.0-pre.10
   '@arethetypeswrong/core': ^0.18.5
   '@codecov/bundle-analyzer': ^2.0.1
- 
+
   oxc-project-runtime: 'npm:@oxc-project/runtime@0.140.0'
   '@commitlint/cli': ^21.2.0
   '@commitlint/config-conventional': ^21.2.0
