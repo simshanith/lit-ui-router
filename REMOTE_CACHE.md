@@ -8,18 +8,42 @@ Expires after 7 days
 
 ## Local Development Setup
 
-1. Create `.turbo/config.json` (gitignored):
+Optional, and maintainer-only: the cache is a speedup, not a prerequisite.
+Without a token turbo silently uses the local cache and everything still works,
+so contributors need nothing here. The worker authenticates one shared static
+bearer token — there is no per-user issuance and no `turbo login` flow (that
+talks to Vercel), so the token arrives out of band.
 
-```json
-{
-  "teamId": "team_lit-ui-router",
-  "apiUrl": "https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
-}
+1. Write the three values into `.config/mise/config.local.toml` (gitignored;
+   loads after the checked-in `config.toml` and wins):
+
+```sh
+mise set --file .config/mise/config.local.toml TURBO_API=https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev
+mise set --file .config/mise/config.local.toml TURBO_TEAM=team_lit-ui-router
+mise set --file .config/mise/config.local.toml TURBO_TOKEN=<token>
 ```
 
-2. Export `TURBO_TOKEN` in shell
-3. Run `pnpm turbo build --force` to test cache upload
-4. Run `pnpm turbo build` to test cache retrieval
+2. Run `turbo build --force` to test cache upload
+3. Run `turbo build` to test cache retrieval
+
+Same variables as CI, so there is one mechanism to learn. `mise set` creates
+the file; mise shims export it, so a bare `turbo` picks it up.
+
+Never commit a blank placeholder for these: an empty value in a mise config
+wins over an ambient `export`, silently disabling the remote cache for anyone
+who already has a token.
+
+### Rotation
+
+The token lives in four places — rotate all of them together, since a stale
+holder gets 401s on every task rather than cache misses:
+
+| Location                  | Set via                            |
+| ------------------------- | ---------------------------------- |
+| Worker                    | `TURBO_TOKEN` secret on the Worker |
+| GitHub Actions            | repo secret `TURBO_TOKEN`          |
+| Cloudflare Workers Builds | build env var (see below)          |
+| Local                     | `.config/mise/config.local.toml`   |
 
 ## Cloudflare Workers Build Varaiables & Secrets
 
