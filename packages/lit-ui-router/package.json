@@ -71,10 +71,6 @@
   "dependencies": {
     "@oxc-project/runtime": "catalog:"
   },
-  "peerDependencies": {
-    "@uirouter/core": "catalog:publishedPeer",
-    "lit": "catalog:publishedPeer"
-  },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
@@ -97,6 +93,10 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer"
   },
   "customElements": "dist/custom-elements.json"
 }
