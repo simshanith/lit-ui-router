@@ -69,7 +69,9 @@
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "dependencies": {
-    "@oxc-project/runtime": "catalog:",
+    "@oxc-project/runtime": "catalog:"
+  },
+  "peerDependencies": {
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer"
   },
@@ -81,9 +83,11 @@
     "@tools/oxc-emit": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
+    "lit": "catalog:",
     "oxfmt": "catalog:",
     "playwright": "catalog:",
     "release-it": "catalog:",

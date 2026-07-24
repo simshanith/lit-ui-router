@@ -226,13 +226,6 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.7.0
       version: 1.7.0
-  publishedPeer:
-    '@uirouter/core':
-      specifier: ^6.0.8
-      version: 6.1.2
-    lit:
-      specifier: ^3.0.0
-      version: 3.3.3
   typescript6:
     typescript:
       specifier: ^6.0.3
@@ -359,6 +352,9 @@ importers:
 
   apps/sample-app-lit-mobx:
     dependencies:
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -408,6 +404,9 @@ importers:
 
   apps/sample-app-lit-vanilla:
     dependencies:
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -595,12 +594,6 @@ importers:
       '@oxc-project/runtime':
         specifier: 'catalog:'
         version: 0.140.0
-      '@uirouter/core':
-        specifier: catalog:publishedPeer
-        version: 6.1.2
-      lit:
-        specifier: catalog:publishedPeer
-        version: 3.3.3
     devDependencies:
       '@custom-elements-manifest/analyzer':
         specifier: 'catalog:'
@@ -623,6 +616,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
       '@vitest/browser-playwright':
         specifier: 'catalog:'
         version: 4.1.10(playwright@1.61.1)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))(vitest@4.1.10)
@@ -632,6 +628,9 @@ importers:
       happy-dom:
         specifier: 'catalog:'
         version: 20.11.0
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
       oxfmt:
         specifier: 'catalog:'
         version: 0.59.0
