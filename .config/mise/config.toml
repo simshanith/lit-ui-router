@@ -18,6 +18,9 @@ config_roots = ["tools/*"]
 # aren't at root), matching pnpm-script resolution; elsewhere it's a dead
 # entry, and at the repo root a harmless duplicate of the config_root one.
 _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
+# Relocated taplo.toml out of root into `.config/`
+# https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
+TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
@@ -27,10 +30,15 @@ idiomatic_version_file_enable_tools = ["node"]
 "aqua:rhysd/actionlint" = "1.7.12"
 # GitHub Actions security auditor; complements actionlint's syntax checks
 "aqua:zizmorcore/zizmor" = "1.26.1"
+# Shell-script static analysis
+"aqua:koalaman/shellcheck" = "0.11.0"
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
+# TOML formatter; oxfmt handles everything but .toml, so this owns the mise
+# configs and member mise.toml files. Pinned like the other aqua tools.
+"aqua:tamasfe/taplo" = "0.10.0"
 
 # Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
 # loud; and tool-only bumps (actionlint) skip the corepack ceremony.
@@ -78,10 +86,38 @@ run = "actionlint"
 description = "Audit GitHub Actions workflows for security issues"
 run = "zizmor --offline .github/workflows"
 
+[tasks.lint_toml]
+# `taplo lint` = TOML syntax/structure validation, offline by default (taplo only
+# fetches schema catalogs with --default-schema-catalogs, which the task omits).
+# Same tracked-file list as format_check_toml, so the format gate and the lint
+# gate backstop each other's wiring. Schema-aware validation (invalid keys/types)
+# stays opt-in: it needs a vendored schema + [[rule]] mapping to remain hermetic.
+description = "Validate tracked TOML structure (mise configs, member mise.toml) with taplo"
+run = "mise run taplo lint"
+
+[tasks.lint_shellcheck]
+# Thin alias; file selection + rationale live in the `shellcheck` file task
+# (.config/mise/tasks/shellcheck)
+description = "Static-analyze repo shell scripts (mise tasks, *.sh) with shellcheck"
+run = "mise run shellcheck"
+
 [tasks.lint_workflows]
-# Virtual grouping task; the two legs are independent and run in parallel.
-description = "Lint and audit GitHub Actions workflows"
-depends = ["lint_actionlint", "lint_zizmor"]
+# Virtual grouping task; the legs are independent and run in parallel. Covers
+# CI/config-plumbing health: GH workflows (actionlint, zizmor) + TOML (taplo) + shell (shellcheck).
+description = "Lint workflows and config plumbing (actionlint, zizmor, taplo, shellcheck)"
+depends = ["lint_actionlint", "lint_zizmor", "lint_toml", "lint_shellcheck"]
+
+# taplo owns .toml formatting (oxfmt covers everything else). The shared
+# entrypoint (file selection + git ls-files default + <cmd> passthrough / --check
+# flag) lives in the `taplo` file task (.config/mise/tasks/taplo); these are thin
+# aliases so the pnpm/turbo task names stay stable.
+[tasks.format_toml]
+description = "Format tracked TOML files (mise configs, member mise.toml) with taplo"
+run = "mise run taplo fmt"
+
+[tasks.format_check_toml]
+description = "Check tracked TOML formatting with taplo"
+run = "mise run taplo fmt --check"
 
 # ── Release pipeline ────────────────────────────────────────────────────────
 # The release-workflow tasks live beside their code in
