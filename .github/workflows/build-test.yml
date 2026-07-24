@@ -6,8 +6,10 @@ on:
   pull_request:
   push:
     branches:
-      # Branch-head runs: CONFLICTING PRs have no merge ref, so pull_request
-      # runs are skipped entirely; push runs still cover the branch head.
+      # Branch-head runs are the fallback for SHAs no pull_request run covers:
+      # a CONFLICTING PR has no merge ref, and a branch with no PR yet fires
+      # nothing at all. The branch_gate job below decides which pushes those
+      # are; the rest skip as a duplicate of the merge-head run.
       - '**'
       # Dependabot push events get dependabot secrets (no TURBO_TOKEN); its
       # PRs already get merge-head CI.
@@ -38,14 +40,55 @@ concurrency:
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
+  branch_gate:
+    # Branch-head pushes duplicate the merge-head pull_request run whenever the
+    # PR is mergeable — both race for the same turbo cache entries. This job
+    # runs only for those pushes and answers whether pull_request will cover
+    # this SHA at all; its `run` output gates build_and_test below.
+    # Imports nothing from node_modules, so no `mise run setup` step: paying
+    # for an install here would cost more than it saves on the pushes it can't
+    # skip. gh is preinstalled on the runner image.
+    name: build_and_test (branch gate)
+    if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # git merge-tree needs real merge bases; a shallow clone has none.
+          fetch-depth: 0
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Decide whether this push needs its own run
+        id: gate
+        run: mise run //tools/build_and_test:branch_ci_gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
   build_and_test:
+    needs: branch_gate
     # Branch-head (push) runs report under a distinct check name so they can
     # never satisfy the required "build_and_test" merge gate.
     name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'build_and_test (branch)' || 'build_and_test' }}
-    # Security: Only run on first-party PRs (not forks) to protect secrets.
-    # Fork PRs don't have access to secrets, so they would fail anyway.
-    # Maintainers should review fork PRs and run CI manually.
-    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
+    # First clause: branch_gate is 'skipped' on every path it doesn't guard
+    # (pull_request, main pushes, dispatch) and 'failure' if the gate itself
+    # broke — both mean run. Only a successful gate saying `run=false` skips.
+    # `!cancelled()` is required for the `if` to evaluate at all once a `needs`
+    # job can be skipped.
+    # Second clause: only run on first-party PRs (not forks) to protect
+    # secrets. Fork PRs don't have access to secrets, so they would fail
+    # anyway. Maintainers should review fork PRs and run CI manually.
+    if: >-
+      ${{ !cancelled()
+      && (needs.branch_gate.result != 'success' || needs.branch_gate.outputs.run == 'true')
+      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
