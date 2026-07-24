@@ -1,0 +1,69 @@
+#!/usr/bin/env bash
+#MISE description="Store remote-cache credentials in .config/mise/config.local.toml (gitignored)"
+#
+# Writes to config.local.toml, which loads after config.toml and wins. Never
+# check in a placeholder: an empty value there beats an ambient export and
+# silently disables the remote cache.
+#
+# Two secrets, so each takes its own source rather than sharing stdin: a path
+# (process substitution keeps both off argv and out of history), - for stdin,
+# or nothing to be prompted. No env= fallbacks: mise exports both vars from the
+# file this task writes, so an env-backed flag would read back the stored value
+# and make rotation a silent no-op.
+#USAGE flag "--token-file <path>" help="Read the token from a file; - means stdin. Use <(op read ...) to keep it off argv"
+#USAGE flag "--signature-key-file <path>" help="Read the signature key from a file; - means stdin"
+#USAGE flag "--token <token>" help="Token literal (lands in shell history and ps; prefer --token-file)"
+#USAGE flag "--signature-key <key>" help="Signature key literal (same caveat)"
+#USAGE flag "--api <api>" help="Cache API endpoint" default="https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
+#USAGE flag "--team <team>" help="Team identifier" default="team_lit-ui-router"
+#USAGE flag "--local-writes" help="Let this machine push to the shared cache too (default: read-only remote; CI owns provenance)"
+set -eu
+
+token_file="${usage_token_file:-}"
+key_file="${usage_signature_key_file:-}"
+if [ "$token_file" = "-" ] && [ "$key_file" = "-" ]; then
+  echo "turbo_login: only one field may read stdin; give the other a path, e.g. <(op read ...)" >&2
+  exit 1
+fi
+
+# literal > file/stdin > prompt. Prompting delegates to read_secret, which
+# refuses to print to a terminal, so the value only ever crosses a pipe.
+resolve() { # $1=literal $2=source path $3=prompt label
+  if [ -n "$1" ]; then
+    printf '%s' "$1"
+  elif [ "$2" = "-" ]; then
+    IFS= read -r _v || true
+    printf '%s' "$_v"
+  elif [ -n "$2" ]; then
+    [ -r "$2" ] || { echo "turbo_login: cannot read $2" >&2; exit 1; }
+    IFS= read -r _v < "$2" || true
+    printf '%s' "$_v"
+  else
+    mise run read_secret --label "$3"
+  fi
+}
+
+token="$(resolve "${usage_token:-}" "$token_file" 'Remote-cache token')"
+key="$(resolve "${usage_signature_key:-}" "$key_file" 'Remote-cache signature key')"
+[ -n "$token" ] || { echo "turbo_login: no token supplied" >&2; exit 1; }
+[ -n "$key" ] || { echo "turbo_login: no signature key supplied" >&2; exit 1; }
+
+# File-based tasks are raw scripts: mise's {{config_root}} template does NOT
+# render here, so use the env var mise exports to every task.
+config="${MISE_CONFIG_ROOT}/.config/mise/config.local.toml"
+# mise set merges, preserving any other local overrides; it creates 0644, and
+# these are plaintext secrets, so tighten before either one is written.
+mise set --file "$config" TURBO_API="${usage_api}" TURBO_TEAM="${usage_team}"
+chmod 600 "$config"
+mise set --file "$config" TURBO_TOKEN="$token"
+mise set --file "$config" TURBO_REMOTE_CACHE_SIGNATURE_KEY="$key"
+
+# CI owns provenance: local reads the shared cache but never writes to it, so a
+# laptop (softer than GitHub's secret store) cannot inject artifacts CI trusts.
+# config.local.toml is gitignored, so this only ever scopes the local machine.
+# Comma-separated; the CLI help's `remote:r;local:rw` semicolon is shell-only.
+if [ -n "${usage_local_writes:-}" ]; then
+  mise set --file "$config" TURBO_CACHE="remote:rw,local:rw"
+else
+  mise set --file "$config" TURBO_CACHE="remote:r,local:rw"
+fi
