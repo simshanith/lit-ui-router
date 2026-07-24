@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#MISE description="Run taplo over the tracked *.toml set (or given files)"
+#USAGE arg "<cmd>" help="taplo subcommand: fmt | lint | check"
+#USAGE flag "--check" help="fmt only: check formatting without writing"
+#USAGE arg "[file]…" help="TOML files to target; default: every tracked *.toml"
+set -euo pipefail
+
+case "${usage_cmd:?}" in
+  fmt | lint | check) ;;
+  *) echo "taplo: unknown cmd '$usage_cmd' (fmt | lint | check)" >&2; exit 2 ;;
+esac
+
+set -- "$usage_cmd"
+[ "${usage_check:-}" = "true" ] && set -- "$@" --check
+
+if [ -n "${usage_file:-}" ]; then
+  read -ra files <<<"$usage_file" # given files: split the mise-joined arg string
+else
+  mapfile -t files < <(git ls-files -- '*.toml')
+fi
+
+# git ls-files never comes back empty in this repo; warn (don't silently pass) if
+# it ever does, rather than letting taplo fall back to its ~14s node_modules walk.
+if [ "${#files[@]}" -eq 0 ]; then
+  echo "taplo: no tracked *.toml files matched; nothing to do" >&2
+  exit 0
+fi
+
+exec taplo "$@" "${files[@]}"
