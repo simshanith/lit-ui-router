@@ -1,5 +1,0 @@
-# taplo auto-discovers this file. Default include is "all .toml"; taplo's file
-# walk does NOT skip node_modules on its own, so exclude the vendored tree (it
-# has ~200 .toml: workspace symlinks, dependency test stubs). exclude has
-# priority over include. New repo .toml anywhere is picked up automatically.
-exclude = ["**/node_modules/**"]

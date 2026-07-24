@@ -18,6 +18,10 @@ config_roots = ["tools/*"]
 # aren't at root), matching pnpm-script resolution; elsewhere it's a dead
 # entry, and at the repo root a harmless duplicate of the config_root one.
 _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
+# taplo's config lives under .config/ (not the auto-discovered root .taplo.toml),
+# so point every taplo run at it here — ad-hoc `taplo fmt` gets the same
+# node_modules exclusion as the format tasks. Absolute so any cwd resolves it.
+TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here

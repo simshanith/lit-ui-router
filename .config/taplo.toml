@@ -1,0 +1,7 @@
+# Not auto-discovered from this path — mise's [env] TAPLO_CONFIG points taplo
+# here. Default include is "all .toml"; taplo's file walk does NOT skip
+# node_modules on its own, so exclude the vendored tree (~200 .toml: workspace
+# symlinks, dependency test stubs). exclude has priority over include, and its
+# globs resolve against cwd (repo root), not this file's location. New repo
+# .toml anywhere is picked up automatically.
+exclude = ["**/node_modules/**"]

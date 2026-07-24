@@ -195,14 +195,14 @@
     "//#format:toml": {
       "inputs": [
         "**/*.toml",
-        "$TURBO_ROOT$/.taplo.toml",
+        "$TURBO_ROOT$/.config/taplo.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     "//#format:check:toml": {
       "inputs": [
         "**/*.toml",
-        "$TURBO_ROOT$/.taplo.toml",
+        "$TURBO_ROOT$/.config/taplo.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
