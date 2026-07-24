@@ -30,9 +30,6 @@ catalogs:
     '@custom-elements-manifest/analyzer':
       specifier: ^0.11.0
       version: 0.11.0
-    '@oxc-project/runtime':
-      specifier: 0.140.0
-      version: 0.140.0
     '@pnpm/types':
       specifier: 1101.4.0
       version: 1101.4.0
@@ -138,6 +135,9 @@ catalogs:
     oxc-minify:
       specifier: 0.140.0
       version: 0.140.0
+    oxc-project-runtime:
+      specifier: npm:@oxc-project/runtime@0.140.0
+      version: 0.140.0
     oxc-transform:
       specifier: 0.140.0
       version: 0.140.0
@@ -226,6 +226,10 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.7.0
       version: 1.7.0
+  publishedDependencies:
+    '@oxc-project/runtime':
+      specifier: '>=0.50.0'
+      version: 0.140.0
   publishedPeer:
     '@uirouter/core':
       specifier: ^6.0.8
@@ -593,7 +597,7 @@ importers:
   packages/lit-ui-router:
     dependencies:
       '@oxc-project/runtime':
-        specifier: 'catalog:'
+        specifier: catalog:publishedDependencies
         version: 0.140.0
       '@uirouter/core':
         specifier: catalog:publishedPeer
@@ -632,6 +636,9 @@ importers:
       happy-dom:
         specifier: 'catalog:'
         version: 20.11.0
+      oxc-project-runtime:
+        specifier: 'catalog:'
+        version: '@oxc-project/runtime@0.140.0'
       oxfmt:
         specifier: 'catalog:'
         version: 0.59.0

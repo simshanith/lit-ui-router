@@ -10,7 +10,10 @@ catalog:
   '@api-viewer/docs': 1.0.0-pre.10
   '@arethetypeswrong/core': ^0.18.5
   '@codecov/bundle-analyzer': ^2.0.1
-  '@oxc-project/runtime': 0.140.0
+  # exact pin, kept only for dependabot version/security signal; referenced as a
+  # devDep alias (stripped at publish). lit-ui-router SHIPS the wide
+  # catalog:publishedDependencies range instead.
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.140.0'
   '@commitlint/cli': ^21.2.0
   '@commitlint/config-conventional': ^21.2.0
   '@commitlint/types': ^21.2.0
@@ -86,6 +89,12 @@ catalogs:
   # fails the typecheck:peer-floor task when the two drift apart
   peerFloor:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
+  # consumer-facing ranges for shipped hard (non-peer) dependencies. Widened as
+  # far down as the emitted oxc helpers resolve: 0.49.0 is a broken publish
+  # (exports map refs helpers/decorate but ships no file), 0.50.0+ resolve a
+  # stable arity-4 decorate through 0.141.0. Unbounded above by design.
+  publishedDependencies:
+    '@oxc-project/runtime': '>=0.50.0'
   publishedPeer:
     '@uirouter/core': ^6.0.8
     hono: ^4.0.0
