@@ -144,6 +144,7 @@ flag "--token <token>" help="Token literal (lands in shell history and ps; prefe
 flag "--signature-key <key>" help="Signature key literal (same caveat)"
 flag "--api <api>" help="Cache API endpoint" default="https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
 flag "--team <team>" help="Team identifier" default="team_lit-ui-router"
+flag "--local-writes" help="Let this machine push to the shared cache too (default: read-only remote; CI owns provenance)"
 '''
 run = '''
 set -eu
@@ -184,6 +185,16 @@ mise set --file "$config" TURBO_API="${usage_api}" TURBO_TEAM="${usage_team}"
 chmod 600 "$config"
 mise set --file "$config" TURBO_TOKEN="$token"
 mise set --file "$config" TURBO_REMOTE_CACHE_SIGNATURE_KEY="$key"
+
+# CI owns provenance: local reads the shared cache but never writes to it, so a
+# laptop (softer than GitHub's secret store) cannot inject artifacts CI trusts.
+# config.local.toml is gitignored, so this only ever scopes the local machine.
+# Comma-separated; the CLI help's `remote:r;local:rw` semicolon is shell-only.
+if [ -n "${usage_local_writes:-}" ]; then
+  mise set --file "$config" TURBO_CACHE="remote:rw,local:rw"
+else
+  mise set --file "$config" TURBO_CACHE="remote:r,local:rw"
+fi
 '''
 
 [tasks.read_secret]
