@@ -30,6 +30,8 @@ idiomatic_version_file_enable_tools = ["node"]
 "aqua:rhysd/actionlint" = "1.7.12"
 # GitHub Actions security auditor; complements actionlint's syntax checks
 "aqua:zizmorcore/zizmor" = "1.26.1"
+# Shell-script static analysis
+"aqua:koalaman/shellcheck" = "0.11.0"
 # mise-provided corepack: no npx per-invocation resolution, Node-25-proof
 "npm:corepack" = "0.35.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
@@ -93,11 +95,17 @@ run = "zizmor --offline .github/workflows"
 description = "Validate tracked TOML structure (mise configs, member mise.toml) with taplo"
 run = "mise run taplo lint"
 
+[tasks.lint_shellcheck]
+# Thin alias; file selection + rationale live in the `shellcheck` file task
+# (.config/mise/tasks/shellcheck)
+description = "Static-analyze repo shell scripts (mise tasks, *.sh) with shellcheck"
+run = "mise run shellcheck"
+
 [tasks.lint_workflows]
 # Virtual grouping task; the legs are independent and run in parallel. Covers
-# CI/config-plumbing health: GH workflows (actionlint, zizmor) + TOML (taplo).
-description = "Lint workflows and config plumbing (actionlint, zizmor, taplo)"
-depends = ["lint_actionlint", "lint_zizmor", "lint_toml"]
+# CI/config-plumbing health: GH workflows (actionlint, zizmor) + TOML (taplo) + shell (shellcheck).
+description = "Lint workflows and config plumbing (actionlint, zizmor, taplo, shellcheck)"
+depends = ["lint_actionlint", "lint_zizmor", "lint_toml", "lint_shellcheck"]
 
 # taplo owns .toml formatting (oxfmt covers everything else). The shared
 # entrypoint (file selection + git ls-files default + <cmd> passthrough / --check

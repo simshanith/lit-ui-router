@@ -13,11 +13,17 @@ esac
 set -- "$usage_cmd"
 [ "${usage_check:-}" = "true" ] && set -- "$@" --check
 
-files="${usage_file:-}"
-[ -n "$files" ] || files=$(git ls-files -- '*.toml')
+if [ -n "${usage_file:-}" ]; then
+  read -ra files <<<"$usage_file" # given files: split the mise-joined arg string
+else
+  mapfile -t files < <(git ls-files -- '*.toml')
+fi
+
 # git ls-files never comes back empty in this repo; warn (don't silently pass) if
 # it ever does, rather than letting taplo fall back to its ~14s node_modules walk.
-[ -n "$files" ] || { echo "taplo: no tracked *.toml files matched; nothing to do" >&2; exit 0; }
+if [ "${#files[@]}" -eq 0 ]; then
+  echo "taplo: no tracked *.toml files matched; nothing to do" >&2
+  exit 0
+fi
 
-# unquoted $files: split the space/newline-joined list into args; TOML paths have no spaces
-exec taplo "$@" $files
+exec taplo "$@" "${files[@]}"
