@@ -34,6 +34,10 @@ on:
       TURBO_REMOTE_CACHE_SIGNATURE_KEY:
         # required:false keeps fork/dependabot runs (no secrets) building.
         required: false
+      TURBO_API:
+        # A secret (not a var) so the worker domain stays out of public logs;
+        # secrets do not auto-propagate through workflow_call, callers pass it.
+        required: false
       CODECOV_TOKEN:
         required: false
 
@@ -112,7 +116,7 @@ jobs:
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
@@ -132,7 +136,7 @@ jobs:
           TURBO_FORCE: ${{ inputs.force }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           # Silence per-request [wrangler:info] logging from the e2e dev server.
           WRANGLER_LOG: warn
@@ -144,7 +148,7 @@ jobs:
         env:
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
-          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload Cypress videos
