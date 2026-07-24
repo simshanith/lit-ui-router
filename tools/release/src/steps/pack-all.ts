@@ -3,9 +3,10 @@
 // publish-shape, into `.cache/pack/<name>.tgz`. check:pack, check:exports, and
 // check:published-diff all READ these tarballs rather than each re-packing, so
 // the workspace is packed once per graph and every check sees byte-identical
-// publish bytes. The publish workflow deliberately does NOT read this cache
-// (an unsigned remote-cache entry must not sit under the attestation); it
-// re-packs from source with the same packPublishTarball.
+// publish bytes. The publish workflow does NOT trust this cache as a build
+// input (an unsigned remote-cache entry must not sit under the attestation);
+// it re-bakes cold with the same packPublishTarball and cross-checks this
+// tarball read-only as the CREDIT ledger — see release-reconcile.ts.
 
 import { mkdir, readdir, rm, unlink } from 'node:fs/promises';
 import { join } from 'node:path';

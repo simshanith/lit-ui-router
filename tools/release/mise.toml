@@ -45,6 +45,17 @@ flag "--package-dir <package_dir>" help="Workspace-relative package directory" r
 '''
 run = 'PACKAGE_NAME="${usage_package_name?}" PACKAGE_DIR="${usage_package_dir?}" node src/steps/release-pack.ts'
 
+[tasks.reconcile]
+# env: TURBO_TOKEN/TURBO_API/TURBO_TEAM (restore CI's pack:all read-only),
+# PACKAGE_NAME, TARBALL (pack's cold-baked output). Double-entry gate: fails
+# the publish when the cold bake drifts from CI's verified pack.
+description = "Reconcile the cold-baked publish tarball against CI's verified pack"
+usage = '''
+flag "--package-name <package_name>" help="Package being published" required=#true env="PACKAGE_NAME"
+flag "--tarball <tarball>" help="The cold-baked publish tarball (pack's output)" required=#true env="TARBALL"
+'''
+run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" node src/steps/release-reconcile.ts'
+
 [tasks.check_tarball]
 # Gates devDependencies/scripts/catalog:/workspace: leaks.
 description = "Check the packed tarball's manifest before publishing"

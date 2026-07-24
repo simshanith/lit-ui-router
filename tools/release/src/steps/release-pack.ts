@@ -3,12 +3,13 @@
 //   env in:  PACKAGE_NAME, PACKAGE_DIR (workspace-relative)
 //   outputs: tarball (absolute path, for the attest + check + publish steps)
 //
-// Re-packs from freshly-built source with the shared packPublishTarball —
-// deliberately NOT the `@tools/release#pack` turbo cache. That cache is
-// unsigned and writable by any CI run holding TURBO_TOKEN; routing its bytes
-// into the attested publish would widen the supply-chain surface. Same packer,
-// same source → reproducibly identical bytes (check:published-diff proves the
-// determinism), with the cache kept off the attestation path.
+// Re-bakes the DEBIT tarball from cold-built source with the shared
+// packPublishTarball — deliberately NOT the `@tools/release#pack` turbo cache.
+// That cache is unsigned and writable by any CI run holding TURBO_TOKEN, so its
+// bytes are attested only after Reconcile (release-reconcile.ts) balances this
+// cold bake against it. Same packer, same source → reproducibly identical bytes
+// (check:published-diff proves the determinism); this is what gets attested and
+// published, with the cache kept off the build path.
 
 import { join } from 'node:path';
 

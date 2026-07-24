@@ -71,17 +71,17 @@ jobs:
         env:
           PACKAGE_INPUT: ${{ inputs.package }}
       - name: Build
+        # Cold, credential-free build (the DEBIT ledger's source): TURBO_TOKEN
+        # is deliberately withheld so no unsigned remote-cache artifact can
+        # reach the tarball we attest. The CI-verified cache is cross-checked
+        # read-only in Reconcile, never trusted as a build input here.
         run: mise run //:build
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Pack
-        # re-pack from source into a staging copy (restore-free, never touches
-        # the source tree); deliberately NOT the @tools/release#pack turbo
-        # cache — that unsigned artifact must stay off the attestation path.
-        # The tarball feeds the attestation, the manifest gate, and the publish.
+        # Re-pack from the cold source into a staging copy (restore-free, never
+        # touches the source tree). This is the DEBIT: the bytes we attest and
+        # publish. Reconcile then balances it against CI's CREDIT tarball.
         id: pack
         run: mise run //tools/release:pack
         env:
@@ -92,6 +92,20 @@ jobs:
         run: mise run //tools/release:check_tarball
         env:
           TARBALL: ${{ steps.pack.outputs.tarball }}
+      - name: Reconcile
+        # Double-entry gate: restore the CI-verified pack:all tarball from the
+        # remote cache (read-only) and require it to match this job's cold bake
+        # byte-for-byte. A drift HALTS the publish — CI verified bytes a clean
+        # rebuild can't reproduce (cache poisoning / non-determinism). The
+        # attested + published bytes stay the cold bake; the cached artifact is
+        # only the witness. A cold/evicted cache warns and proceeds.
+        run: mise run //tools/release:reconcile
+        env:
+          PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
+          TARBALL: ${{ steps.pack.outputs.tarball }}
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
