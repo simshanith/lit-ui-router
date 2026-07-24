@@ -37,7 +37,7 @@ run = 'PACKAGE_INPUT="${usage_package_input:-}" GITHUB_REF="${usage_ref:-}" node
 
 [tasks.pack]
 # outputs: tarball. Re-packs from source (restore-free staging copy), NOT the
-# @tools/release#pack turbo cache — that artifact stays off the publish path.
+# @tools/release#pack:all turbo cache — that artifact stays off the publish path.
 description = "Pack the publish tarball with a dev-stripped manifest"
 usage = '''
 flag "--package-name <package_name>" help="Package to pack" required=#true env="PACKAGE_NAME"

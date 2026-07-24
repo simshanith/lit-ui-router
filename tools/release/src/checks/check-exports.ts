@@ -6,7 +6,7 @@
 // resolves every entrypoint's types under an esm-only profile.
 //
 // This file is the IO shell: it reads each non-private package's publish-shape
-// tarball (produced once by the `@tools/release#pack` task this depends on)
+// tarball (produced once by the `@tools/release#pack:all` task this depends on)
 // and runs both validators over the bytes, delegating every gating decision to
 // the pure, unit-tested ./check-exports.core.ts. (The strip only removes
 // devDependencies + scripts, neither in attw's nor publint's analysis scope,

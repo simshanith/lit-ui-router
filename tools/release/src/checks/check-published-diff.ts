@@ -7,7 +7,7 @@
 //
 // Method (validated against the 1.7.0 release, whose local rebuild reproduces
 // the registry tarball byte-for-byte): read the publish-shape tarball the
-// `@tools/release#pack` task built (the same packPublishTarball the publish
+// `@tools/release#pack:all` task built (the same packPublishTarball the publish
 // step uses) and `npm diff` it against the published spec. Sharing the one
 // packer is what keeps local and publish bytes in lockstep.
 // Comparing anything other than pack output (the source
@@ -58,7 +58,7 @@ const run = promisify(execFile);
 const MAX_BUFFER = 64 * 1024 * 1024;
 
 /**
- * Diff `name`'s pre-built publish-shape tarball (from the `@tools/release#pack`
+ * Diff `name`'s pre-built publish-shape tarball (from the `@tools/release#pack:all`
  * task) against `spec`. No packing or manifest mutation here — the source tree
  * is never touched.
  */

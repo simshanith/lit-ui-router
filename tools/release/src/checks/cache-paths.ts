@@ -22,7 +22,7 @@ export const publishedDiffSummaryPath = join(
   'published-diff-summary.json',
 );
 
-// The `@tools/release#pack` task writes one publish-shape tarball per
+// The `@tools/release#pack:all` task writes one publish-shape tarball per
 // publishable package here; every check reads them instead of re-packing.
 // Declared as that task's turbo output (`.cache/pack/*.tgz`), so cache replay
 // materializes them for the dependent checks. This is also the CREDIT ledger

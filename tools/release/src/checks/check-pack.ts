@@ -7,7 +7,7 @@
 // discovering a leak at publish time.
 //
 // This file is the IO shell: it reads each non-private package's publish-shape
-// tarball (produced once by the `@tools/release#pack` task this depends on),
+// tarball (produced once by the `@tools/release#pack:all` task this depends on),
 // extracts the packed package.json, and delegates all decisions to the pure,
 // unit-tested functions in ./check-pack.core.ts.
 

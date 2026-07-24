@@ -7,14 +7,20 @@ export interface CacheOutcome {
   source?: string;
 }
 
-/** The pack:all task's cache outcome from a `turbo run --summarize` file. */
+/**
+ * The pack:all task's cache outcome from a `turbo run --summarize` file. Any
+ * shape it can't read yields an empty outcome, which reconcile() treats as
+ * unverifiable — a summary we can't parse must never read as a balance.
+ */
 export function packCacheOutcome(
   summary: unknown,
   taskId: string,
 ): CacheOutcome {
+  if (typeof summary !== 'object' || summary === null) return {};
   const tasks =
     (summary as { tasks?: Array<{ taskId?: string; cache?: CacheOutcome }> })
       .tasks ?? [];
+  if (!Array.isArray(tasks)) return {};
   const task = tasks.find((entry) => entry.taskId === taskId);
   return { status: task?.cache?.status, source: task?.cache?.source };
 }

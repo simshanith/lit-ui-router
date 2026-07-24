@@ -1,5 +1,5 @@
 #!/usr/bin/env node
-// The `@tools/release#pack` turbo task: pack every publishable package once,
+// The `@tools/release#pack:all` turbo task: pack every publishable package once,
 // publish-shape, into `.cache/pack/<name>.tgz`. check:pack, check:exports, and
 // check:published-diff all READ these tarballs rather than each re-packing, so
 // the workspace is packed once per graph and every check sees byte-identical

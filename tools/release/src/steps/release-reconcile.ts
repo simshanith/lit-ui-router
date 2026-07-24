@@ -16,18 +16,25 @@
 // balance byte-for-byte. A mismatch means CI verified bytes a clean rebuild
 // cannot reproduce — remote-cache poisoning or a determinism regression — and
 // HALTS the publish. The attested bytes are always the debit; the credit is a
-// witness, never a trust source. When the credit is not a genuine remote hit
-// (cache cold/evicted) there is nothing to cross-check, so this warns and
-// proceeds on the trusted debit. Verdict logic is in ./release-reconcile.core.ts.
+// witness, never a trust source. Only a proven drift halts: a credit we cannot
+// obtain or trust (cold/evicted cache, unreachable remote, unreadable summary)
+// is unverifiable — warn and proceed on the trusted debit, because failing the
+// publish over a cache outage would trade a supply-chain gate for an
+// availability one. Verdict logic is in ./release-reconcile.core.ts.
 
 import { createHash } from 'node:crypto';
 import { readFile, readdir, rm } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import { packTarballPath } from '../checks/cache-paths.ts';
-import { packCacheOutcome, reconcile } from './release-reconcile.core.ts';
+import {
+  type CacheOutcome,
+  packCacheOutcome,
+  reconcile,
+  type Verdict,
+} from './release-reconcile.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
-import { group, runMain } from '@tools/shared/gha.ts';
+import { group, logWarning, runMain } from '@tools/shared/gha.ts';
 import { requireEnv } from '@tools/shared/env.core.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
@@ -39,6 +46,55 @@ async function sha256File(path: string): Promise<string> {
     .digest('hex');
 }
 
+/** The credit ledger, or why we could not obtain one. */
+type Credit = { sha: string; outcome: CacheOutcome } | { failure: string };
+
+/**
+ * Restore CI's pack:all and hash the tarball it left behind. `local:rw` keeps
+ * the local reads that let this job's own cold-built `^build` outputs satisfy
+ * pack:all's dependencies — without it every build re-runs (or gets pulled
+ * from the remote cache, putting unsigned artifacts back in the tree we just
+ * baked). pack:all itself has no local entry (nothing earlier in this job runs
+ * it), so it still resolves remote-or-execute, and reconcile() only credits a
+ * REMOTE source — a local entry could never masquerade as CI's artifact.
+ */
+async function restoreCredit(
+  creditPath: string,
+  runsDir: string,
+): Promise<Credit> {
+  try {
+    // Bare turbo (mise shim on PATH), never via pnpm (relative .bin PATH
+    // breaks turbo's child spawning). --summarize records the cache outcome.
+    await rm(runsDir, { recursive: true, force: true });
+    await defaultExec(
+      'turbo',
+      ['run', PACK_TASK, '--cache=remote:r,local:rw', '--summarize'],
+      { cwd: workspaceRoot },
+    );
+
+    const runs = (await readdir(runsDir)).filter((file) =>
+      file.endsWith('.json'),
+    );
+    if (runs.length !== 1) {
+      return {
+        failure: `expected exactly one turbo run summary in ${runsDir}, found ${runs.length}`,
+      };
+    }
+    const summary = JSON.parse(
+      await readFile(join(runsDir, runs[0]), 'utf8'),
+    ) as unknown;
+
+    return {
+      sha: await sha256File(creditPath),
+      outcome: packCacheOutcome(summary, PACK_TASK),
+    };
+  } catch (error: unknown) {
+    return {
+      failure: `could not restore the CI-verified pack: ${String(error)}`,
+    };
+  }
+}
+
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE_NAME');
   const debitPath = requireEnv(process.env, 'TARBALL');
@@ -48,34 +104,14 @@ runMain(async () => {
   await group(
     `reconcile ${packageName}: cold bake vs CI-verified pack`,
     async () => {
-      // Restore CI's pack:all from the remote cache only (local:w = never read
-      // a local entry, so only a genuine remote artifact — or a fresh local
-      // exec on a miss — can satisfy it). --summarize records which happened.
-      // Bare turbo (mise shim on PATH), never via pnpm (relative .bin PATH
-      // breaks turbo's child spawning).
-      await rm(runsDir, { recursive: true, force: true });
-      await defaultExec(
-        'turbo',
-        ['run', PACK_TASK, '--cache=remote:r,local:w', '--summarize'],
-        { cwd: workspaceRoot },
-      );
-
-      const runs = (await readdir(runsDir)).filter((file) =>
-        file.endsWith('.json'),
-      );
-      if (runs.length !== 1) {
-        throw new Error(
-          `expected exactly one turbo run summary in ${runsDir}, found ${runs.length}`,
-        );
-      }
-      const summary = JSON.parse(
-        await readFile(join(runsDir, runs[0]), 'utf8'),
-      ) as unknown;
-
-      const outcome = packCacheOutcome(summary, PACK_TASK);
+      // The debit is ours and must always hash — a failure here is a real bug.
       const debitSha = await sha256File(debitPath);
-      const creditSha = await sha256File(creditPath);
-      const verdict = reconcile(debitSha, creditSha, outcome);
+      const credit = await restoreCredit(creditPath, runsDir);
+      const creditSha = 'failure' in credit ? undefined : credit.sha;
+      const verdict: Verdict =
+        'failure' in credit
+          ? { kind: 'unverifiable', reason: credit.failure }
+          : reconcile(debitSha, credit.sha, credit.outcome);
 
       switch (verdict.kind) {
         case 'balanced':
@@ -84,8 +120,8 @@ runMain(async () => {
           );
           return;
         case 'unverifiable':
-          console.warn(
-            `⚠ reconcile skipped for ${packageName}: ${verdict.reason}. Publishing the trusted cold-baked tarball, uncross-checked against CI.`,
+          logWarning(
+            `reconcile skipped for ${packageName}: ${verdict.reason}. Publishing the trusted cold-baked tarball, uncross-checked against CI.`,
           );
           return;
         case 'drift':

@@ -28,6 +28,14 @@ test('packCacheOutcome tolerates a missing task or shape', () => {
     status: undefined,
     source: undefined,
   });
+  // A summary we can't read degrades to unverifiable — never throws (which
+  // would fail the publish) and never reads as a balance.
+  for (const summary of [null, undefined, [], 'nope', 7, { tasks: 'nope' }]) {
+    assert.equal(
+      reconcile('abc', 'abc', packCacheOutcome(summary, 'x')).kind,
+      'unverifiable',
+    );
+  }
 });
 
 test('reconcile balances on a remote hit with matching hashes', () => {

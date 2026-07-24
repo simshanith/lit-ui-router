@@ -4,7 +4,7 @@
 //   outputs: tarball (absolute path, for the attest + check + publish steps)
 //
 // Re-bakes the DEBIT tarball from cold-built source with the shared
-// packPublishTarball — deliberately NOT the `@tools/release#pack` turbo cache.
+// packPublishTarball — deliberately NOT the `@tools/release#pack:all` turbo cache.
 // That cache is unsigned and writable by any CI run holding TURBO_TOKEN, so its
 // bytes are attested only after Reconcile (release-reconcile.ts) balances this
 // cold bake against it. Same packer, same source → reproducibly identical bytes

@@ -98,7 +98,8 @@ jobs:
         # byte-for-byte. A drift HALTS the publish — CI verified bytes a clean
         # rebuild can't reproduce (cache poisoning / non-determinism). The
         # attested + published bytes stay the cold bake; the cached artifact is
-        # only the witness. A cold/evicted cache warns and proceeds.
+        # only the witness. Only a proven drift halts: an absent or unreachable
+        # credit warns and proceeds, so a cache outage can't block a release.
         run: mise run //tools/release:reconcile
         env:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
