@@ -80,7 +80,7 @@ elif ! { [ -f "$env" ] && grep -q '^TURBO_API=' "$env"; }; then
   echo "turbo_login: first setup needs --api <worker-url> (see REMOTE_CACHE.md)" >&2
   exit 1
 fi
-put TURBO_TEAM "$usage_team"
+put TURBO_TEAM "${usage_team:?}"
 put TURBO_TOKEN "$token"
 put TURBO_REMOTE_CACHE_SIGNATURE_KEY "$key"
 
