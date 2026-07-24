@@ -19,8 +19,9 @@ config_roots = ["tools/*"]
 # entry, and at the repo root a harmless duplicate of the config_root one.
 _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # taplo's config lives under .config/ (not the auto-discovered root .taplo.toml),
-# so point every taplo run at it here — ad-hoc `taplo fmt` gets the same
-# node_modules exclusion as the format tasks. Absolute so any cwd resolves it.
+# so point every taplo run at it here — ad-hoc `taplo fmt` gets the same file
+# scoping (include globs, node_modules pruned) as the tasks. Absolute so any cwd
+# resolves it.
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 
 [settings]
@@ -91,7 +92,7 @@ run = "zizmor --offline .github/workflows"
 # omit). An independent re-walk of the config tree beside format_check_toml, so
 # the format gate and the lint gate backstop each other's wiring. Schema-aware
 # validation (invalid keys/types) stays opt-in: it needs a vendored schema +
-# [[rule]] mapping to remain hermetic. Scoped by the same TAPLO_CONFIG exclude.
+# [[rule]] mapping to remain hermetic. Scoped by the same TAPLO_CONFIG includes.
 description = "Validate TOML structure (mise configs, member mise.toml) with taplo"
 run = "taplo lint"
 
@@ -102,8 +103,8 @@ description = "Lint workflows and config plumbing (actionlint, zizmor, taplo)"
 depends = ["lint_actionlint", "lint_zizmor", "lint_toml"]
 
 # taplo owns .toml formatting (oxfmt covers everything else). File scoping lives
-# in .config/taplo.toml (excludes node_modules, which taplo's walk does not skip
-# on its own), reached via [env] TAPLO_CONFIG above, so these stay bare.
+# in .config/taplo.toml (include globs anchored per member root, so taplo's walk
+# prunes node_modules), reached via [env] TAPLO_CONFIG above, so these stay bare.
 [tasks.format_toml]
 description = "Format TOML files (mise configs, member mise.toml) with taplo"
 run = "taplo fmt"
