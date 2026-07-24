@@ -1,0 +1,12 @@
+# Not auto-discovered from this path — mise's [env] TAPLO_CONFIG points taplo
+# here (see .config/mise/config.toml).
+#
+# File selection is NOT done here: the mise tasks pass taplo an explicit file
+# list from `git ls-files -- '*.toml'` (the tracked TOML = the broad "**/*.toml
+# minus node_modules" set, produced with no directory walk and no pnpm install).
+# Explicit paths bypass taplo's walker entirely, so there are no include globs to
+# maintain and nothing to reconcile. This `exclude` is only a safety net for an
+# ad-hoc bare `taplo fmt` (no file args): taplo's walk does NOT skip node_modules
+# on its own, and without this it would reformat ~200 vendored stubs. `taplo
+# config schema` confirms include/exclude are the only keys.
+exclude = ["**/node_modules/**"]
