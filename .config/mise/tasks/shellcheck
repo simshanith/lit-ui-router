@@ -1,0 +1,36 @@
+#!/usr/bin/env bash
+#MISE description="Run shellcheck over the repo's tracked shell scripts (mise tasks + *.sh; vendored upstream excluded)"
+#USAGE arg "[file]…" help="Shell files to check; default: every tracked shell script by first-line shebang scan (*.sh/*.bash + extensionless mise tasks), minus the vendored sample-app scripts"
+set -euo pipefail
+
+# Vendored, verbatim-from-upstream sample-app data scripts — out of scope.
+readonly VENDORED='apps/sample-app-shared/public/static/data'
+
+if [ -n "${usage_file:-}" ]; then
+  read -ra files <<<"$usage_file" # given files: split the mise-joined arg string
+else
+  # Narrow to *.sh/*.bash or extensionless first, so the shebang read skips
+  # every other-extension file (minified .js bundles, binaries).
+  files=()
+  while IFS= read -r f; do
+    case "${f##*/}" in
+    *.sh | *.bash) ;;
+    *.*) continue ;;
+    *) ;;
+    esac
+    IFS= read -r line <"$f" || continue
+    case "$line" in
+    '#!'*/sh | '#!'*/sh\ * | '#!'*/bash | '#!'*/bash\ * | '#!'*env\ sh* | '#!'*env\ bash*)
+      files+=("$f")
+      ;;
+    esac
+  done < <(git ls-files -- '*' ":!:$VENDORED/*")
+fi
+
+# Tracked set can be empty (main ships only the excluded vendored pair); warn, don't fail.
+if [ "${#files[@]}" -eq 0 ]; then
+  echo "shellcheck: no repo-authored shell scripts matched; nothing to do" >&2
+  exit 0
+fi
+
+exec shellcheck -- "${files[@]}"
