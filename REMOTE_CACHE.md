@@ -14,20 +14,21 @@ so contributors need nothing here. The worker authenticates one shared static
 bearer token — there is no per-user issuance and no `turbo login` flow (that
 talks to Vercel), so the token arrives out of band.
 
-1. Write the three values into `.config/mise/config.local.toml` (gitignored;
-   loads after the checked-in `config.toml` and wins):
+1. Store the credentials (`mise run turbo_login --help` for the flags):
 
 ```sh
-mise set --file .config/mise/config.local.toml TURBO_API=https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev
-mise set --file .config/mise/config.local.toml TURBO_TEAM=team_lit-ui-router
-mise set --file .config/mise/config.local.toml TURBO_TOKEN=<token>
+mise run turbo_login --token <token>
 ```
 
 2. Run `turbo build --force` to test cache upload
 3. Run `turbo build` to test cache retrieval
 
-Same variables as CI, so there is one mechanism to learn. `mise set` creates
-the file; mise shims export it, so a bare `turbo` picks it up.
+The task writes `TURBO_API`/`TURBO_TEAM`/`TURBO_TOKEN` — the same variables CI
+sets, so there is one mechanism to learn — into `.config/mise/config.local.toml`
+(gitignored; loads after the checked-in `config.toml` and wins). `--api` and
+`--team` default to the values above; `--token` also reads a `TURBO_TOKEN`
+already in your environment, which migrates an ambient export into the file.
+mise shims export the result, so a bare `turbo` picks it up.
 
 Never commit a blank placeholder for these: an empty value in a mise config
 wins over an ambient `export`, silently disabling the remote cache for anyone
