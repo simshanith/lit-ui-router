@@ -1,9 +1,11 @@
 #!/usr/bin/env bash
-#MISE description="Store remote-cache credentials in .config/mise/config.local.toml (gitignored)"
+#MISE description="Store remote-cache credentials in .config/mise/turbo.local.env (gitignored)"
 #
-# Writes to config.local.toml, which loads after config.toml and wins. Never
-# check in a placeholder: an empty value there beats an ambient export and
-# silently disables the remote cache.
+# Writes a gitignored dotenv that config.toml loads via [env] _.file. A dotenv
+# (not [env] in a .toml) so nothing ever edits TOML, and — the point — no value
+# is handed to a child process: `mise set KEY=$secret` would expose it in that
+# child's /proc/<pid>/cmdline. Here the value only crosses stdin / a file /
+# a proc-sub on the way in and a printf builtin on the way out; never argv.
 #
 # Two secrets, so each takes its own source rather than sharing stdin: a path
 # (process substitution keeps both off argv and out of history), - for stdin,
@@ -14,7 +16,7 @@
 #USAGE flag "--signature-key-file <path>" help="Read the signature key from a file; - means stdin"
 #USAGE flag "--token <token>" help="Token literal (lands in shell history and ps; prefer --token-file)"
 #USAGE flag "--signature-key <key>" help="Signature key literal (same caveat)"
-#USAGE flag "--api <api>" help="Cache API endpoint" default="https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
+#USAGE flag "--api <api>" help="Cache API endpoint (no default: the worker domain is sensitive; supply on first setup, later runs preserve it)"
 #USAGE flag "--team <team>" help="Team identifier" default="team_lit-ui-router"
 #USAGE flag "--local-writes" help="Let this machine push to the shared cache too (default: read-only remote; CI owns provenance)"
 set -eu
@@ -50,20 +52,44 @@ key="$(resolve "${usage_signature_key:-}" "$key_file" 'Remote-cache signature ke
 
 # File-based tasks are raw scripts: mise's {{config_root}} template does NOT
 # render here, so use the env var mise exports to every task.
-config="${MISE_CONFIG_ROOT}/.config/mise/config.local.toml"
-# mise set merges, preserving any other local overrides; it creates 0644, and
-# these are plaintext secrets, so tighten before either one is written.
-mise set --file "$config" TURBO_API="${usage_api}" TURBO_TEAM="${usage_team}"
-chmod 600 "$config"
-mise set --file "$config" TURBO_TOKEN="$token"
-mise set --file "$config" TURBO_REMOTE_CACHE_SIGNATURE_KEY="$key"
+env="${MISE_CONFIG_ROOT}/.config/mise/turbo.local.env"
+
+# Upsert KEY=VALUE into the dotenv with builtins only, so the value never lands
+# on a child process's argv (read/case/printf run in-shell; only mv/chmod get
+# filenames). Plain dotenv => no TOML to parse; base64 tokens and remote:r,
+# local:rw need no quoting. umask so the file is created 600 from the start.
+umask 077
+put() { # $1=key $2=value
+  _t="$env.$$"
+  if [ -f "$env" ]; then
+    while IFS= read -r _l || [ -n "$_l" ]; do
+      case $_l in "$1="*) : ;; *) printf '%s\n' "$_l" ;; esac
+    done < "$env" > "$_t"
+  else
+    : > "$_t"
+  fi
+  printf '%s=%s\n' "$1" "$2" >> "$_t"
+  mv "$_t" "$env"
+}
+
+# --api has no committed default (the worker domain is sensitive), so first setup
+# must supply it; a later run without --api preserves the stored value.
+if [ -n "${usage_api:-}" ]; then
+  put TURBO_API "$usage_api"
+elif ! { [ -f "$env" ] && grep -q '^TURBO_API=' "$env"; }; then
+  echo "turbo_login: first setup needs --api <worker-url> (see REMOTE_CACHE.md)" >&2
+  exit 1
+fi
+put TURBO_TEAM "$usage_team"
+put TURBO_TOKEN "$token"
+put TURBO_REMOTE_CACHE_SIGNATURE_KEY "$key"
 
 # CI owns provenance: local reads the shared cache but never writes to it, so a
 # laptop (softer than GitHub's secret store) cannot inject artifacts CI trusts.
-# config.local.toml is gitignored, so this only ever scopes the local machine.
 # Comma-separated; the CLI help's `remote:r;local:rw` semicolon is shell-only.
 if [ -n "${usage_local_writes:-}" ]; then
-  mise set --file "$config" TURBO_CACHE="remote:rw,local:rw"
+  put TURBO_CACHE "remote:rw,local:rw"
 else
-  mise set --file "$config" TURBO_CACHE="remote:r,local:rw"
+  put TURBO_CACHE "remote:r,local:rw"
 fi
+chmod 600 "$env"

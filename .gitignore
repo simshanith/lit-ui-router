@@ -42,8 +42,10 @@ certs/
 .claude
 
 # mise local overrides (machine-local env, e.g. TURBO_TOKEN); load after the
-# checked-in config and win, so they stay untracked.
+# checked-in config and win, so they stay untracked. *.local.env is the dotenv
+# turbo_login writes (remote-cache creds + the sensitive worker domain).
 .config/mise/**/*.local.toml
+.config/mise/**/*.local.env
 mise.local.toml
 mise.*.local.toml
 

@@ -2,7 +2,9 @@
 
 https://adirishi.github.io/turborepo-remote-cache-cloudflare/
 
-Deployed to https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev
+Deployed to a Cloudflare Worker at a `*.workers.dev` URL. The URL is kept out of
+this public repo (a public endpoint invites free-tier request exhaustion); it
+lives in the `TURBO_API` GitHub **secret** and your password manager.
 
 Expires after 7 days
 
@@ -37,10 +39,13 @@ printf '%s\n' "$TURBO_TOKEN" | mise run turbo_login --token-file - --signature-k
 
 The task writes `TURBO_API`/`TURBO_TEAM`/`TURBO_TOKEN`/
 `TURBO_REMOTE_CACHE_SIGNATURE_KEY` — the same variables CI sets, so there is one
-mechanism to learn — into `.config/mise/config.local.toml` (gitignored,
-`chmod 600`; loads after the checked-in `config.toml` and wins). `--api` and
-`--team` default to the values above. mise shims export the result, so a bare
-`turbo` picks it up.
+mechanism to learn — into `.config/mise/turbo.local.env` (gitignored,
+`chmod 600`), a dotenv the checked-in `config.toml` loads via `[env] _.file`.
+Values are written with shell builtins, never passed to a child process, so no
+secret (or the sensitive worker domain) ever lands in `ps`/`/proc/<pid>/cmdline`.
+`--team` defaults to `team_lit-ui-router`; `--api` has no default (the worker URL
+is sensitive) — supply it on first setup, and later runs preserve the stored
+value. mise shims export the result, so a bare `turbo` picks it up.
 
 It also writes `TURBO_CACHE=remote:r,local:rw`, making the local machine
 **read-only** against the shared cache: it pulls CI's warm artifacts but never
@@ -82,7 +87,7 @@ Both secrets live in the same places — rotate every row together:
 | Worker                    | `TURBO_TOKEN` secret on the Worker | n/a (the worker only round-trips the tag)      |
 | GitHub Actions            | repo secret `TURBO_TOKEN`          | repo secret `TURBO_REMOTE_CACHE_SIGNATURE_KEY` |
 | Cloudflare Workers Builds | build env var (see below)          | build env var (see below)                      |
-| Local                     | `.config/mise/config.local.toml`   | same file, same task                           |
+| Local                     | `.config/mise/turbo.local.env`     | same file, same task                           |
 
 A stale token gets 401s; a stale signature key gets verification failures. Both
 are hard failures rather than cache misses, so partial rotation breaks builds
@@ -95,7 +100,7 @@ Signing and verification are entirely client-side.
 ## Cloudflare Workers Build Varaiables & Secrets
 
 ```sh
-TURBO_API=https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev
+TURBO_API=https://<your-worker>.workers.dev
 TURBO_TEAM=team_lit-ui-router
 TURBO_TOKEN=
 TURBO_REMOTE_CACHE_SIGNATURE_KEY=

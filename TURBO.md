@@ -243,7 +243,7 @@ band; without it turbo just uses the local cache.
 
 **Quick start for local development:**
 
-1. `mise run turbo_login` - prompts for the token and signature key, writes the gitignored `.config/mise/config.local.toml`
+1. `mise run turbo_login` - prompts for the token and signature key, writes the gitignored `.config/mise/turbo.local.env` (values via shell builtins, never on a child process's argv)
 2. Run `turbo build` - artifacts upload/download automatically
 
 ## Troubleshooting
