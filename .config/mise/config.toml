@@ -21,6 +21,14 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
+# Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
+# `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
+# domain never lands in a checked-in file; a missing file is fine (mise loads
+# nothing, no error) since the cache is maintainer-only.
+# NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
+# which clobbers a task reading its own stdin — it silently breaks
+# `printf … | mise run turbo_login --token-file -`. Verified on this mise.
+_.file = "{{config_root}}/.config/mise/turbo.local.env"
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
