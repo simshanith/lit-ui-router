@@ -95,10 +95,17 @@
       ]
     },
     "//#lint:workflows": {
+      // now also runs `taplo lint` over every .toml, so the key tracks the full
+      // TOML set + taplo's scoping (.config/taplo.toml) + its pin (mise.lock).
+      // .config/mise/config.toml is subsumed by **/*.toml; mise.lock is not
+      // (.lock, not .toml) so it stays explicit.
       "inputs": [
         ".github/**",
         "zizmor.yml",
-        ".config/mise/config.toml",
+        "**/*.toml",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
         ".config/mise/mise.lock",
         "$TURBO_DEFAULT$"
       ]
@@ -169,7 +176,7 @@
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "format": {
-      "with": ["//#format:root"],
+      "with": ["//#format:root", "//#format:toml"],
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
         ".oxfmtrc.json",
@@ -177,7 +184,7 @@
       ]
     },
     "format:check": {
-      "with": ["//#format:check:root"],
+      "with": ["//#format:check:root", "//#format:check:toml"],
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
         ".oxfmtrc.json",
@@ -189,6 +196,26 @@
     },
     "//#format:check:root": {
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // taplo owns .toml; separate root task so its cache key tracks only .toml
+    // (plus the .taplo.toml scoping and taplo's pin), disjoint from oxfmt above.
+    "//#format:toml": {
+      "inputs": [
+        "**/*.toml",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#format:check:toml": {
+      "inputs": [
+        "**/*.toml",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],
