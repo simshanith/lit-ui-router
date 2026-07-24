@@ -191,12 +191,20 @@
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // taplo owns .toml; separate root task so its cache key tracks only .toml
-    // (and taplo's pin), disjoint from oxfmt's globs above.
+    // (plus the .taplo.toml scoping and taplo's pin), disjoint from oxfmt above.
     "//#format:toml": {
-      "inputs": ["**/*.toml", "$TURBO_ROOT$/.config/mise/mise.lock"]
+      "inputs": [
+        "**/*.toml",
+        "$TURBO_ROOT$/.taplo.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
     },
     "//#format:check:toml": {
-      "inputs": ["**/*.toml", "$TURBO_ROOT$/.config/mise/mise.lock"]
+      "inputs": [
+        "**/*.toml",
+        "$TURBO_ROOT$/.taplo.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],

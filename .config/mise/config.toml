@@ -86,18 +86,16 @@ run = "zizmor --offline .github/workflows"
 description = "Lint and audit GitHub Actions workflows"
 depends = ["lint_actionlint", "lint_zizmor"]
 
-# taplo owns .toml formatting (oxfmt covers everything else). Explicit globs,
-# not bare `taplo fmt`: taplo's default discovery does NOT skip node_modules, so
-# once deps are installed it would scan ~200 vendored .toml (workspace symlinks,
-# release-it test stubs) and fail. Single-quoted so taplo expands them itself.
-# Mirror the two config-root locations; extend if a new one gains a mise.toml.
+# taplo owns .toml formatting (oxfmt covers everything else). File scoping lives
+# in the auto-discovered .taplo.toml (excludes node_modules, which taplo's walk
+# does not skip on its own), so these stay bare.
 [tasks.format_toml]
 description = "Format TOML files (mise configs, member mise.toml) with taplo"
-run = "taplo fmt '.config/mise/*.toml' 'tools/*/mise.toml'"
+run = "taplo fmt"
 
 [tasks.format_check_toml]
 description = "Check TOML formatting with taplo"
-run = "taplo fmt --check '.config/mise/*.toml' 'tools/*/mise.toml'"
+run = "taplo fmt --check"
 
 # ── Release pipeline ────────────────────────────────────────────────────────
 # The release-workflow tasks live beside their code in
