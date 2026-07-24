@@ -126,7 +126,7 @@ and
 and a documented one-liner everywhere else: nginx
 `try_files $uri /index.html;`, a Netlify `/* /index.html 200` redirect. The
 pattern even ships as a package —
-[`connect-history-api-fallback`](https://www.npmjs.com/package/connect-history-api-fallback),
+[`connect-history-api-fallback`](https://npmx.dev/package/connect-history-api-fallback),
 ~14 million weekly downloads — and it is what this site itself shipped
 before this stack.
 

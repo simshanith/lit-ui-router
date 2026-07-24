@@ -171,7 +171,9 @@ meaning a release or floor bump is owed — never a CI failure.
 4. **Verify the release:**
    - Check Actions for tag-release workflow
    - Check Actions for publish-npm workflow
-   - Verify on [npmjs.com/package/lit-ui-router](https://www.npmjs.com/package/lit-ui-router)
+   - Verify on [npmjs.com](https://www.npmjs.com/package/lit-ui-router) — the
+     registry of record; [npmx.dev](https://npmx.dev/package/lit-ui-router) is
+     the same data with a file browser, and is what docs and badges link to
    - Check GitHub Releases page
 
 ### Prerelease / Custom Version

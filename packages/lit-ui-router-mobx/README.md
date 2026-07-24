@@ -1,6 +1,6 @@
 # lit-ui-router-mobx
 
-[![npm version](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://www.npmjs.com/package/lit-ui-router-mobx)
+[![npm version](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://npmx.dev/package/lit-ui-router-mobx)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-mobx)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-mobx)
