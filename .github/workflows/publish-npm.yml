@@ -38,7 +38,11 @@ env:
 jobs:
   publish_npm:
     runs-on: ubuntu-latest
-    # Protected environment adds approval gate before publishing
+    # Ref restriction, not an approval gate: the environment's deployment
+    # branch policy admits only main and the three release tag globs, so a
+    # fork or an arbitrary ref can never reach the publish credentials. The
+    # bump PR merging to main is the human approval; required reviewers stay
+    # available here if the contributor set ever grows.
     environment: publish
     permissions:
       id-token: write # Required for OIDC trusted publishing to NPM
