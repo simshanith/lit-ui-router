@@ -149,11 +149,6 @@
         "@tools/release#check:exports"
       ]
     },
-    "@tools/release#check:exports": {
-      // packed exports/types resolve; needs shipped dist, re-run on any manifest edit
-      "dependsOn": ["^build"],
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/packages/*/package.json"]
-    },
     "check:bundle": {
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"]

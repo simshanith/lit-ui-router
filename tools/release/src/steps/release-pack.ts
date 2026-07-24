@@ -2,43 +2,40 @@
 // Pack the publish tarball — publish-npm.yml's Pack step as a tool:
 //   env in:  PACKAGE_NAME, PACKAGE_DIR (workspace-relative)
 //   outputs: tarball (absolute path, for the attest + check + publish steps)
-// Strip dev-only manifest fields, `pnpm pack`, restore. Manifest read/write
-// goes through pnpm's own project-manifest reader, so the rewrite preserves the
-// file's formatting. Field decisions live in ./release-pack.core.ts.
+//
+// Re-bakes the DEBIT tarball from cold-built source with the shared
+// packPublishTarball — deliberately NOT the `@tools/release#pack` turbo cache.
+// That cache is unsigned and writable by any CI run holding TURBO_TOKEN, so its
+// bytes are attested only after Reconcile (release-reconcile.ts) balances this
+// cold bake against it. Same packer, same source → reproducibly identical bytes
+// (check:published-diff proves the determinism); this is what gets attested and
+// published, with the cache kept off the build path.
 
-import { readdir } from 'node:fs/promises';
 import { join } from 'node:path';
 
-import { readProjectManifest } from '@pnpm/workspace.project-manifest-reader';
-
-import { defaultStream } from '@tools/shared/exec.ts';
+import {
+  packStagingParent,
+  publishTarballPath,
+} from '../checks/cache-paths.ts';
 import { group, runMain, setOutput } from '@tools/shared/gha.ts';
 import { requireEnv } from '@tools/shared/env.core.ts';
-import { pickTarball, strippedManifest } from './release-pack.core.ts';
+import { packPublishTarball } from './pack-staged.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE_NAME');
   const packageDir = requireEnv(process.env, 'PACKAGE_DIR');
-  const dir = join(workspaceRoot, packageDir);
+  const tarball = publishTarballPath(packageName);
 
-  const { manifest, writeProjectManifest } = await readProjectManifest(dir);
   await group(`pack ${packageName} with stripped manifest`, async () => {
-    try {
-      await writeProjectManifest(strippedManifest(manifest));
-      await defaultStream(
-        'pnpm',
-        ['--filter', packageName, 'pack', '--pack-destination', dir],
-        { cwd: workspaceRoot },
-      );
-    } finally {
-      // release-it later requires a clean working dir — and a failed pack
-      // must not leave a stripped manifest behind either.
-      await writeProjectManifest(manifest);
-    }
+    await packPublishTarball(
+      packageName,
+      join(workspaceRoot, packageDir),
+      tarball,
+      packStagingParent,
+    );
   });
 
-  const tarball = join(dir, pickTarball(await readdir(dir)));
   console.log(tarball);
   await setOutput('tarball', tarball);
 });

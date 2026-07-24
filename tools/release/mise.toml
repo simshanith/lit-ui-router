@@ -36,13 +36,25 @@ flag "--ref <ref>" help="Tag ref refs/tags/<package>@<version> (tag-push fallbac
 run = 'PACKAGE_INPUT="${usage_package_input:-}" GITHUB_REF="${usage_ref:-}" node src/steps/release-package-info.ts'
 
 [tasks.pack]
-# outputs: tarball.
+# outputs: tarball. Re-packs from source (restore-free staging copy), NOT the
+# @tools/release#pack turbo cache — that artifact stays off the publish path.
 description = "Pack the publish tarball with a dev-stripped manifest"
 usage = '''
 flag "--package-name <package_name>" help="Package to pack" required=#true env="PACKAGE_NAME"
 flag "--package-dir <package_dir>" help="Workspace-relative package directory" required=#true env="PACKAGE_DIR"
 '''
 run = 'PACKAGE_NAME="${usage_package_name?}" PACKAGE_DIR="${usage_package_dir?}" node src/steps/release-pack.ts'
+
+[tasks.reconcile]
+# env: TURBO_TOKEN/TURBO_API/TURBO_TEAM (restore CI's pack:all read-only),
+# PACKAGE_NAME, TARBALL (pack's cold-baked output). Double-entry gate: fails
+# the publish when the cold bake drifts from CI's verified pack.
+description = "Reconcile the cold-baked publish tarball against CI's verified pack"
+usage = '''
+flag "--package-name <package_name>" help="Package being published" required=#true env="PACKAGE_NAME"
+flag "--tarball <tarball>" help="The cold-baked publish tarball (pack's output)" required=#true env="TARBALL"
+'''
+run = 'PACKAGE_NAME="${usage_package_name?}" TARBALL="${usage_tarball?}" node src/steps/release-reconcile.ts'
 
 [tasks.check_tarball]
 # Gates devDependencies/scripts/catalog:/workspace: leaks.

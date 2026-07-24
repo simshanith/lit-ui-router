@@ -5,15 +5,14 @@
 // see. publint lints the packed file set + manifest; @arethetypeswrong/core
 // resolves every entrypoint's types under an esm-only profile.
 //
-// This file is the IO shell: it packs each non-private workspace package with a
-// raw `pnpm pack` (the publish strip only removes devDependencies + scripts,
-// neither in attw's nor publint's analysis scope, so the verdicts are identical
-// to the stripped tarball), runs both validators over the bytes, and delegates
-// every gating decision to the pure, unit-tested ./check-exports.core.ts.
+// This file is the IO shell: it reads each non-private package's publish-shape
+// tarball (produced once by the `@tools/release#pack` task this depends on)
+// and runs both validators over the bytes, delegating every gating decision to
+// the pure, unit-tested ./check-exports.core.ts. (The strip only removes
+// devDependencies + scripts, neither in attw's nor publint's analysis scope,
+// so validating the published bytes gives the same verdict a raw pack would.)
 
-import { mkdtemp, readFile, rm } from 'node:fs/promises';
-import { tmpdir } from 'node:os';
-import { join } from 'node:path';
+import { readFile } from 'node:fs/promises';
 
 import {
   checkPackage,
@@ -22,57 +21,49 @@ import {
 import { publint } from 'publint';
 import { formatMessage } from 'publint/utils';
 
+import { packTarballPath } from './cache-paths.ts';
 import {
   attwGatingProblems,
   formatExportsReport,
   type PackageExportsCheck,
   publintGatingMessages,
 } from './check-exports.core.ts';
-import { pnpmPack } from './pack.ts';
 import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
-/** Pack one package raw and run attw + publint over the tarball. */
+/** Run attw + publint over one package's publish-shape tarball. */
 async function checkExports(
   name: string,
   dir: string,
-  packageDir: string,
 ): Promise<PackageExportsCheck> {
-  const destination = await mkdtemp(join(tmpdir(), 'check-exports-'));
-  const tarball = join(destination, 'package.tgz');
-  try {
-    await pnpmPack(packageDir, tarball);
-    const data = await readFile(tarball);
+  const data = await readFile(packTarballPath(name));
 
-    // Offline — resolves the tarball's own types, no registry fetch.
-    const analysis = await checkPackage(
-      createPackageFromTarballData(new Uint8Array(data)),
-    );
+  // Offline — resolves the tarball's own types, no registry fetch.
+  const analysis = await checkPackage(
+    createPackageFromTarballData(new Uint8Array(data)),
+  );
 
-    // No pkgDir: `{ tarball }` roots publint at the archive's own dir; a real
-    // path overrides that and throws.
-    const { messages, pkg } = await publint({
-      pack: {
-        tarball: data.buffer.slice(
-          data.byteOffset,
-          data.byteOffset + data.byteLength,
-        ),
-      },
-      level: 'suggestion',
-    });
-    const gating = publintGatingMessages(messages);
-    const suggestions = messages.filter((m) => m.type === 'suggestion');
+  // No pkgDir: `{ tarball }` roots publint at the archive's own dir; a real
+  // path overrides that and throws.
+  const { messages, pkg } = await publint({
+    pack: {
+      tarball: data.buffer.slice(
+        data.byteOffset,
+        data.byteOffset + data.byteLength,
+      ),
+    },
+    level: 'suggestion',
+  });
+  const gating = publintGatingMessages(messages);
+  const suggestions = messages.filter((m) => m.type === 'suggestion');
 
-    return {
-      name,
-      dir,
-      attw: attwGatingProblems(analysis),
-      publint: gating.map((m) => formatMessage(m, pkg) ?? m.code),
-      suggestions: suggestions.map((m) => formatMessage(m, pkg) ?? m.code),
-    };
-  } finally {
-    await rm(destination, { recursive: true, force: true });
-  }
+  return {
+    name,
+    dir,
+    attw: attwGatingProblems(analysis),
+    publint: gating.map((m) => formatMessage(m, pkg) ?? m.code),
+    suggestions: suggestions.map((m) => formatMessage(m, pkg) ?? m.code),
+  };
 }
 
 async function main() {
@@ -86,7 +77,7 @@ async function main() {
   await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
   const results: PackageExportsCheck[] = [];
   for (const { name, dir } of publishable) {
-    results.push(await checkExports(name, dir, join(workspaceRoot, dir)));
+    results.push(await checkExports(name, dir));
   }
   const { ok, text } = formatExportsReport(results);
   (ok ? console.log : console.error)(text);
