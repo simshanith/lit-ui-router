@@ -6,7 +6,7 @@ description: Observable router state and reaction-based controllers with lit-ui-
 # lit-ui-router-mobx
 
 <p class="badges">
-<a href="https://npmx.dev/package/lit-ui-router-mobx" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-mobx" /></a>
+<a href="https://npmx.dev/package/lit-ui-router-mobx" target="_blank" class="badge"><img alt="NPM Version" src="https://npmx.dev/api/registry/badge/version/lit-ui-router-mobx?label=npmx" /></a>
 <a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*" /></a>
 </p>
 

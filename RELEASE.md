@@ -173,7 +173,15 @@ meaning a release or floor bump is owed — never a CI failure.
    - Check Actions for publish-npm workflow
    - Verify on [npmjs.com](https://www.npmjs.com/package/lit-ui-router) — the
      registry of record; [npmx.dev](https://npmx.dev/package/lit-ui-router) is
-     the same data with a file browser, and is what docs and badges link to
+     the same data with a file browser for eyeballing the shipped tarball
+
+   > **Where each frontend is linked.** Repo-local docs (root `README.md`,
+   > `docs/`) link package pages to npmx.dev and use its version badge
+   > (`npmx.dev/api/registry/badge/version/<pkg>?label=npmx`). The three
+   > published package READMEs stay on npmjs.com with shields.io badges —
+   > those ship inside the tarball and outlive any frontend, so they point
+   > at the registry of record. npm docs and OIDC settings are always
+   > npmjs.com; npmx mirrors package pages only.
    - Check GitHub Releases page
 
 ### Prerelease / Custom Version
