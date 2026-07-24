@@ -127,6 +127,21 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
+[tasks.turbo_login]
+# Writes to config.local.toml, which loads after this file and wins. Never
+# check in a placeholder: an empty value here beats an ambient export and
+# silently disables the remote cache.
+description = "Store remote-cache credentials in .config/mise/config.local.toml (gitignored)"
+usage = '''
+flag "--token <token>" help="Shared remote-cache bearer token (issued out of band)" required=#true env="TURBO_TOKEN"
+flag "--api <api>" help="Cache API endpoint" default="https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
+flag "--team <team>" help="Team identifier" default="team_lit-ui-router"
+'''
+run = '''
+mise set --file "{{config_root}}/.config/mise/config.local.toml" \
+  TURBO_API="${usage_api}" TURBO_TEAM="${usage_team}" TURBO_TOKEN="${usage_token?}"
+'''
+
 [tasks.build]
 # env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo
 # config, not a flag).
