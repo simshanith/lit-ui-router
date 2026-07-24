@@ -17,7 +17,9 @@ talks to Vercel), so the token arrives out of band.
 1. Store the credentials (`mise run turbo_login --help` for the flags):
 
 ```sh
-mise run turbo_login --token <token>
+mise run turbo_login                                    # prompts, echo off
+printf '%s\n' "$TURBO_TOKEN" | mise run turbo_login     # migrate an existing export
+op read 'op://Private/…/credential' | mise run turbo_login
 ```
 
 2. Run `turbo build --force` to test cache upload
@@ -25,10 +27,13 @@ mise run turbo_login --token <token>
 
 The task writes `TURBO_API`/`TURBO_TEAM`/`TURBO_TOKEN` — the same variables CI
 sets, so there is one mechanism to learn — into `.config/mise/config.local.toml`
-(gitignored; loads after the checked-in `config.toml` and wins). `--api` and
-`--team` default to the values above; `--token` also reads a `TURBO_TOKEN`
-already in your environment, which migrates an ambient export into the file.
-mise shims export the result, so a bare `turbo` picks it up.
+(gitignored, `chmod 600`; loads after the checked-in `config.toml` and wins).
+`--api` and `--team` default to the values above. mise shims export the result,
+so a bare `turbo` picks it up.
+
+Prefer the prompt or a pipe over `--token`: a literal token on the command line
+lands in shell history and is visible in `ps` while the command runs. Re-running
+the task rotates the value in place and leaves other local overrides alone.
 
 Never commit a blank placeholder for these: an empty value in a mise config
 wins over an ambient `export`, silently disabling the remote cache for anyone

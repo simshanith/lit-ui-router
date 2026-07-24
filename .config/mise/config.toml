@@ -132,14 +132,33 @@ run = "mise run taplo fmt --check"
 # check in a placeholder: an empty value here beats an ambient export and
 # silently disables the remote cache.
 description = "Store remote-cache credentials in .config/mise/config.local.toml (gitignored)"
+# No env= on --token: once the file exists mise exports TURBO_TOKEN from it, so
+# an env-backed flag would silently re-write the old value and make rotation a
+# no-op. Pipe instead: printf '%s\n' "$TURBO_TOKEN" | mise run turbo_login
 usage = '''
-flag "--token <token>" help="Shared remote-cache bearer token (issued out of band)" required=#true env="TURBO_TOKEN"
+flag "--token <token>" help="Token; omit to read stdin or prompt (keeps it out of shell history)"
 flag "--api <api>" help="Cache API endpoint" default="https://lit-ui-router-turborepo-remote-cache.shane-cf1.workers.dev"
 flag "--team <team>" help="Team identifier" default="team_lit-ui-router"
 '''
 run = '''
-mise set --file "{{config_root}}/.config/mise/config.local.toml" \
-  TURBO_API="${usage_api}" TURBO_TEAM="${usage_team}" TURBO_TOKEN="${usage_token?}"
+set -eu
+token="${usage_token:-}"
+if [ -z "$token" ]; then
+  if [ -t 0 ]; then
+    printf 'Remote-cache token: ' >&2
+    stty -echo; trap 'stty echo' EXIT INT TERM; IFS= read -r token; stty echo; trap - EXIT INT TERM
+    printf '\n' >&2
+  else
+    IFS= read -r token
+  fi
+fi
+[ -n "$token" ] || { echo "turbo_login: no token supplied" >&2; exit 1; }
+config="{{config_root}}/.config/mise/config.local.toml"
+# mise set merges, preserving any other local overrides; it creates 0644, and
+# the token is a plaintext secret, so tighten before writing it.
+mise set --file "$config" TURBO_API="${usage_api}" TURBO_TEAM="${usage_team}"
+chmod 600 "$config"
+mise set --file "$config" TURBO_TOKEN="$token"
 '''
 
 [tasks.build]
