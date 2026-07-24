@@ -140,16 +140,9 @@
         "lint",
         "typecheck",
         "format:check",
-        "//#check:toml-coverage",
         "check:bundle",
         "@tools/release#check:exports"
       ]
-    },
-    "//#check:toml-coverage": {
-      // guards taplo's shallow include globs; no ^build/setup dep — it needs only
-      // git + the mise-provided taplo, never node_modules. Re-runs when the TOML
-      // set or the include config changes.
-      "inputs": ["**/*.toml", "$TURBO_ROOT$/.config/taplo.toml"]
     },
     "@tools/release#check:exports": {
       // packed exports/types resolve; needs shipped dist, re-run on any manifest edit

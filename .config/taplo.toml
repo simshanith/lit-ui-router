@@ -1,24 +1,12 @@
 # Not auto-discovered from this path — mise's [env] TAPLO_CONFIG points taplo
 # here (see .config/mise/config.toml).
 #
-# `include` (not the default "**/*.toml" + an `exclude`): taplo has no
-# gitignore/vcs pruning, so a broad glob WALKS the entire node_modules tree
-# before discarding it — ~14s for the 4 real files. Anchored, shallow per-root
-# globs let taplo's walker prune node_modules (it never descends where the depth
-# can't match), taking it to ~0.07s (a 200x cut on every fmt/lint run, local and
-# CI). Globs resolve against cwd (repo root), not this file's location.
-#
-# Coverage model: every workspace member ROOT plus .config/. Repo TOML is all
-# top-level config plumbing (mise configs, member mise.toml), so shallow globs
-# reach it. A NEW member dir or a new top-level config file is covered; deeply
-# nested TOML (e.g. packages/x/src/*.toml) is not — add its glob here if that
-# ever appears. `taplo config schema` confirms include/exclude are the only keys.
-include = [
-  "*.toml",
-  ".config/**/*.toml",
-  "tools/*/*.toml",
-  "packages/*/*.toml",
-  "apps/*/*.toml",
-  "examples/*/*.toml",
-  "docs/*.toml",
-]
+# File selection is NOT done here: the mise tasks pass taplo an explicit file
+# list from `git ls-files -- '*.toml'` (the tracked TOML = the broad "**/*.toml
+# minus node_modules" set, produced with no directory walk and no pnpm install).
+# Explicit paths bypass taplo's walker entirely, so there are no include globs to
+# maintain and nothing to reconcile. This `exclude` is only a safety net for an
+# ad-hoc bare `taplo fmt` (no file args): taplo's walk does NOT skip node_modules
+# on its own, and without this it would reformat ~200 vendored stubs. `taplo
+# config schema` confirms include/exclude are the only keys.
+exclude = ["**/node_modules/**"]

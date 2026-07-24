@@ -9,7 +9,6 @@
     "check:pack": "turbo run check:pack",
     "check:patches": "node check-patches.ts",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
-    "check:toml-coverage": "mise run check_toml_coverage",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
     "ci": "turbo run ci",
     "dev": "turbo run dev",

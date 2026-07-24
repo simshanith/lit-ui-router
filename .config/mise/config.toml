@@ -19,9 +19,9 @@ config_roots = ["tools/*"]
 # entry, and at the repo root a harmless duplicate of the config_root one.
 _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # taplo's config lives under .config/ (not the auto-discovered root .taplo.toml),
-# so point every taplo run at it here — ad-hoc `taplo fmt` gets the same file
-# scoping (include globs, node_modules pruned) as the tasks. Absolute so any cwd
-# resolves it.
+# so point every taplo run at it here. The tasks scope files via `git ls-files`;
+# this only gives an ad-hoc bare `taplo` its node_modules exclude. Absolute so any
+# cwd resolves it.
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 
 [settings]
@@ -89,12 +89,16 @@ run = "zizmor --offline .github/workflows"
 [tasks.lint_toml]
 # `taplo lint` = TOML syntax/structure validation, run offline (no schema
 # catalogs fetched — taplo only fetches with --default-schema-catalogs, which we
-# omit). An independent re-walk of the config tree beside format_check_toml, so
-# the format gate and the lint gate backstop each other's wiring. Schema-aware
+# omit). An independent check over the same tracked-file list as format_check_toml,
+# so the format gate and the lint gate backstop each other's wiring. Schema-aware
 # validation (invalid keys/types) stays opt-in: it needs a vendored schema +
-# [[rule]] mapping to remain hermetic. Scoped by the same TAPLO_CONFIG includes.
-description = "Validate TOML structure (mise configs, member mise.toml) with taplo"
-run = "taplo lint"
+# [[rule]] mapping to remain hermetic.
+description = "Validate tracked TOML structure (mise configs, member mise.toml) with taplo"
+run = '''
+cd "$(git rev-parse --show-toplevel)"
+files=$(git ls-files -- '*.toml')
+[ -z "$files" ] || taplo lint $files
+'''
 
 [tasks.lint_workflows]
 # Virtual grouping task; the legs are independent and run in parallel. Covers
@@ -102,34 +106,26 @@ run = "taplo lint"
 description = "Lint workflows and config plumbing (actionlint, zizmor, taplo)"
 depends = ["lint_actionlint", "lint_zizmor", "lint_toml"]
 
-# taplo owns .toml formatting (oxfmt covers everything else). File scoping lives
-# in .config/taplo.toml (include globs anchored per member root, so taplo's walk
-# prunes node_modules), reached via [env] TAPLO_CONFIG above, so these stay bare.
+# taplo owns .toml formatting (oxfmt covers everything else). Each task passes an
+# explicit file list from `git ls-files` (tracked TOML, node_modules-free, no
+# walk, no install) — so there are no include globs to maintain and no coverage
+# gap to guard. The empty-list guard stops a bare `taplo` (which would walk and
+# reformat node_modules) when the repo has no TOML. cd to the git toplevel so the
+# list is repo-wide even if a task is invoked from a subdir.
 [tasks.format_toml]
-description = "Format TOML files (mise configs, member mise.toml) with taplo"
-run = "taplo fmt"
+description = "Format tracked TOML files (mise configs, member mise.toml) with taplo"
+run = '''
+cd "$(git rev-parse --show-toplevel)"
+files=$(git ls-files -- '*.toml')
+[ -z "$files" ] || taplo fmt $files
+'''
 
 [tasks.format_check_toml]
-description = "Check TOML formatting with taplo"
-run = "taplo fmt --check"
-
-# Coverage guard for the shallow include globs in .config/taplo.toml (they trade
-# node_modules-walk cost for the risk of silently missing TOML outside the listed
-# roots). The "broad **/*.toml walk minus node_modules" == every git-tracked
-# .toml — and `git ls-files` yields that instantly with no node_modules walk and
-# no `pnpm install`, so this stays cheap enough for the PR graph. Diffs that truth
-# set against taplo's own matched-file list; a tracked .toml the include globs
-# miss fails with the path to add. POSIX sh (mise runs tasks under sh, no
-# process substitution). No node_modules dependency by design.
-[tasks.check_toml_coverage]
-description = "Assert every tracked TOML is covered by taplo's include globs"
+description = "Check tracked TOML formatting with taplo"
 run = '''
-root=$(git rev-parse --show-toplevel); cd "$root"
-tracked=$(git ls-files -- '*.toml' | sort)
-walk=$(taplo fmt --check 2>&1 || true)
-matched=$(printf '%s' "$walk" | grep -oE 'files=\[[^]]*\]' | grep -oE '"[^"]+"' | tr -d '"' | sed "s#^$root/##" | sort -u)
-missing=$(printf '%s\n' "$tracked" | while IFS= read -r f; do [ -n "$f" ] && { printf '%s\n' "$matched" | grep -qxF "$f" || printf '%s\n' "$f"; }; done)
-[ -z "$missing" ] || { printf 'TOML outside taplo include globs in .config/taplo.toml — add a glob:\n%s\n' "$missing" >&2; exit 1; }
+cd "$(git rev-parse --show-toplevel)"
+files=$(git ls-files -- '*.toml')
+[ -z "$files" ] || taplo fmt --check $files
 '''
 
 # ── Release pipeline ────────────────────────────────────────────────────────
