@@ -3,14 +3,6 @@
 #USAGE arg "<cmd>" help="taplo subcommand: fmt | lint | check"
 #USAGE flag "--check" help="fmt only: check formatting without writing"
 #USAGE arg "[file]…" help="TOML files to target; default: every tracked *.toml"
-#
-# Shared taplo entrypoint. <cmd> passes through to taplo verbatim — note `taplo
-# check` is schema validation, NOT `fmt --check` — with --check a fmt-only flag.
-# Default files = `git ls-files -- '*.toml'`: the broad **/*.toml-minus-node_modules
-# set with no directory walk and no pnpm install (taplo has no gitignore pruning,
-# so a bare walk is ~14s and hits node_modules). Given files win, and explicit
-# paths bypass taplo's walker too, so a single-file editor/pre-commit run is
-# `mise run taplo fmt --check -- path/to/x.toml`. mise runs tasks from config_root.
 set -euo pipefail
 
 case "${usage_cmd:?}" in
