@@ -94,23 +94,57 @@
         ".oxlintrc.json"
       ]
     },
+    // Config-plumbing lint: one //# cache group per tool, aggregated by the
+    // virtual //#lint:workflows node (which the lint task pulls in). The
+    // lint_workflows mise umbrella covers the same set for the standalone
+    // lint-workflows.yml job.
     "//#lint:workflows": {
-      // now also runs `taplo lint` over every .toml AND shellcheck over the repo
-      // shell surface, so the key tracks the full TOML set + taplo's scoping
-      // (.config/taplo.toml) + every tracked *.sh + the extensionless mise task
-      // scripts (the taplo and shellcheck tasks) + both tool pins (mise.lock).
-      // .config/mise/config.toml is subsumed by **/*.toml; mise.lock is not
-      // (.lock, not .toml/.sh) so it stays explicit.
+      // Virtual node: no package.json script, so turbo runs nothing for it — it
+      // just fans out (via `with`) to the per-tool tasks, which carry their own
+      // cache keys.
+      "with": [
+        "//#lint:actionlint",
+        "//#lint:zizmor",
+        "//#lint:toml",
+        "//#lint:shellcheck"
+      ]
+    },
+    "//#lint:actionlint": {
+      // config.toml holds the task defs, mise.lock the tool pins.
+      "inputs": [
+        ".github/**",
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:zizmor": {
+      // zizmor also reads its own config (zizmor.yml).
       "inputs": [
         ".github/**",
         "zizmor.yml",
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:toml": {
+      // taplo lint over every tracked .toml; same input set as //#format:toml.
+      "inputs": [
         "**/*.toml",
-        "**/*.sh",
         "!**/node_modules/**",
         "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:shellcheck": {
+      // shellcheck over *.sh/*.bash + the extensionless mise task scripts it
+      // shebang-scans (vendored sample-app scripts excluded in the task).
+      "inputs": [
+        "**/*.sh",
+        "**/*.bash",
+        "!**/node_modules/**",
         "$TURBO_ROOT$/.config/mise/tasks/**",
-        ".config/mise/mise.lock",
-        "$TURBO_DEFAULT$"
+        "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     "typecheck": {
