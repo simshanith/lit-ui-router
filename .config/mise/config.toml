@@ -99,33 +99,10 @@ run = "mise run taplo lint"
 description = "Lint workflows and config plumbing (actionlint, zizmor, taplo)"
 depends = ["lint_actionlint", "lint_zizmor", "lint_toml"]
 
-# taplo owns .toml formatting (oxfmt covers everything else). Shared entrypoint:
-# <cmd> passes through to taplo verbatim (fmt / lint / check — note `taplo check`
-# is schema validation, NOT `fmt --check`), with --check as a fmt-only flag. Runs
-# over the tracked *.toml set: default files = `git ls-files -- '*.toml'` — the
-# broad **/*.toml-minus-node_modules set with no walk and no pnpm install (taplo
-# has no gitignore pruning; a bare walk is ~14s and hits node_modules). Given
-# files win, so a single-file editor/pre-commit run is `mise run taplo fmt --check
-# -- x.toml`. mise runs tasks from config_root (no cd needed); inline => POSIX sh.
-[tasks.taplo]
-description = "Run taplo over the tracked *.toml set (or given files)"
-usage = '''
-arg "<cmd>" help="taplo subcommand: fmt | lint | check"
-flag "--check" help="fmt only: check formatting without writing"
-arg "[file]…" help="TOML files to target; default: every tracked *.toml"
-'''
-run = '''
-cmd=${usage_cmd:?}
-case "$cmd" in fmt|lint|check) ;; *) echo "taplo: unknown cmd '$cmd' (fmt|lint|check)" >&2; exit 2 ;; esac
-set -- "$cmd"
-[ "${usage_check:-}" = "true" ] && set -- "$@" --check
-files=${usage_file:-}
-[ -n "$files" ] || files=$(git ls-files -- '*.toml')
-[ -n "$files" ] || exit 0
-exec taplo "$@" $files
-'''
-
-# Thin aliases so the pnpm/turbo task names stay stable.
+# taplo owns .toml formatting (oxfmt covers everything else). The shared
+# entrypoint (file selection + git ls-files default + <cmd> passthrough / --check
+# flag) lives in the `taplo` file task (.config/mise/tasks/taplo); these are thin
+# aliases so the pnpm/turbo task names stay stable.
 [tasks.format_toml]
 description = "Format tracked TOML files (mise configs, member mise.toml) with taplo"
 run = "mise run taplo fmt"

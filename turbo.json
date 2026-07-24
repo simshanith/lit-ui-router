@@ -104,6 +104,7 @@
         "zizmor.yml",
         "**/*.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
         ".config/mise/mise.lock",
         "$TURBO_DEFAULT$"
       ]
@@ -201,6 +202,7 @@
       "inputs": [
         "**/*.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
@@ -208,6 +210,7 @@
       "inputs": [
         "**/*.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
