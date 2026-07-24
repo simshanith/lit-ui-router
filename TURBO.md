@@ -205,6 +205,7 @@ Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) 
 TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} # Remote cache auth
 TURBO_API: ${{ vars.TURBO_API }} # Cache API endpoint
 TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Team identifier
+TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }} # Artifact signing
 ```
 
 ### Task-to-CI Mapping
@@ -234,12 +235,16 @@ Turborepo remote caching accelerates CI builds by sharing cached artifacts acros
 - Team collaboration on large changes
 
 **Setup:** See [REMOTE_CACHE.md](./REMOTE_CACHE.md) for detailed configuration.
+Artifacts are signed: `remoteCache.signature` in `turbo.json` makes turbo tag
+each upload with an HMAC and verify it on download, so a cache that serves
+tampered or foreign artifacts fails the task instead of poisoning the build.
+Optional and maintainer-only — the worker takes one shared token issued out of
+band; without it turbo just uses the local cache.
 
 **Quick start for local development:**
 
-1. Create `.turbo/config.json` with team config
-2. Export `TURBO_TOKEN` in your shell
-3. Run `turbo build` - artifacts upload/download automatically
+1. `mise run turbo_login` - prompts for the token and signature key, writes the gitignored `.config/mise/turbo.local.env` (values via shell builtins, never on a child process's argv)
+2. Run `turbo build` - artifacts upload/download automatically
 
 ## Troubleshooting
 

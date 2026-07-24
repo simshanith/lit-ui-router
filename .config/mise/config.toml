@@ -21,12 +21,23 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
+# Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
+# `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
+# domain never lands in a checked-in file; a missing file is fine (mise loads
+# nothing, no error) since the cache is maintainer-only.
+# NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
+# which clobbers a task reading its own stdin — it silently breaks
+# `printf … | mise run turbo_login --token-file -`. Verified on this mise.
+_.file = "{{config_root}}/.config/mise/turbo.local.env"
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
 idiomatic_version_file_enable_tools = ["node"]
 
 [tools]
+# mise vendors the usage spec parser, so flags work without this; it's pinned
+# for the `usage` CLI that shell completions of our #USAGE tasks shell out to.
+"aqua:jdx/usage" = "3.5.6"
 "aqua:rhysd/actionlint" = "1.7.12"
 # GitHub Actions security auditor; complements actionlint's syntax checks
 "aqua:zizmorcore/zizmor" = "1.26.1"
@@ -126,6 +137,10 @@ run = "mise run taplo fmt --check"
 # Only the build step lives here (//:build): it's a repo-generic turbo
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
+
+# turbo_login + read_secret are file-based tasks under .config/mise/tasks/ —
+# their shell bodies were too large to sit inline. Every other task here is a
+# one- or two-liner and stays inline.
 
 [tasks.build]
 # env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo
