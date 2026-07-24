@@ -95,10 +95,15 @@
       ]
     },
     "//#lint:workflows": {
+      // now also runs `taplo lint` over every .toml, so the key tracks the full
+      // TOML set + taplo's scoping (.config/taplo.toml) + its pin (mise.lock).
+      // .config/mise/config.toml is subsumed by **/*.toml; mise.lock is not
+      // (.lock, not .toml) so it stays explicit.
       "inputs": [
         ".github/**",
         "zizmor.yml",
-        ".config/mise/config.toml",
+        "**/*.toml",
+        "$TURBO_ROOT$/.config/taplo.toml",
         ".config/mise/mise.lock",
         "$TURBO_DEFAULT$"
       ]
