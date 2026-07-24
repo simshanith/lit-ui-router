@@ -239,7 +239,7 @@ band; without it turbo just uses the local cache.
 
 **Quick start for local development:**
 
-1. `mise run turbo_login --token <token>` - writes the gitignored `.config/mise/config.local.toml`
+1. `mise run turbo_login` - prompts for the token, writes the gitignored `.config/mise/config.local.toml`
 2. Run `turbo build` - artifacts upload/download automatically
 
 ## Troubleshooting
