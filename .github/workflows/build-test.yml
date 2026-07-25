@@ -1,24 +1,19 @@
-# CI pipeline for pull requests and branch/main pushes.
+# CI pipeline for pull requests, main pushes and dispatches.
 # Runs build, tests (Vitest + Playwright + Cypress), and Codecov upload.
 #
-# The body lives in build-test-run.yml; this file is the trigger surface, the
-# branch-head gate, and two caller jobs. Two callers rather than one job with a
-# conditional name: a skipped job renders its `name:` expression source
-# verbatim, and the branch caller's normal outcome is to skip.
+# Branch-head pushes are handled by build-test-branch.yml instead. Splitting by
+# trigger keeps each event from instantiating the other's jobs, and it is what
+# makes the required context `build_and_test / run` trustworthy: no push to a
+# topic branch ever runs this file, so no push can emit that name. GitHub counts
+# a SKIPPED required check as PASSING, so a shared file that merely suppressed
+# this job on branch pushes would not be enough.
 name: Build and Test
 
 on:
   pull_request:
   push:
     branches:
-      # Branch-head runs are the fallback for SHAs no pull_request run covers:
-      # a CONFLICTING PR has no merge ref, and a branch with no PR yet fires
-      # nothing at all. The branch_gate job below decides which pushes those
-      # are; the rest skip as a duplicate of the merge-head run.
-      - '**'
-      # Dependabot push events get dependabot secrets (no TURBO_TOKEN); its
-      # PRs already get merge-head CI.
-      - '!dependabot/**'
+      - main
   workflow_dispatch:
     inputs:
       force:
@@ -35,83 +30,20 @@ on:
         type: boolean
         default: false
 
-# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
-env:
-  HUSKY: 0
-
 # Cancel superseded runs per event per ref; never cancel main runs.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
   cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
 
 jobs:
-  branch_gate:
-    # Branch-head pushes duplicate the merge-head pull_request run whenever the
-    # PR is mergeable — both race for the same turbo cache entries. This job
-    # runs only for those pushes and answers whether pull_request will cover
-    # this SHA at all; its `run` output gates build_and_test_branch below.
-    # Imports nothing from node_modules, so no `mise run setup` step: paying
-    # for an install here would cost more than it saves on the pushes it can't
-    # skip. gh is preinstalled on the runner image.
-    # "signal gate", not "branch gate": it decides whether this push emits a
-    # signal at all, and no longer sits one word from build_and_test (branch).
-    name: build_and_test (signal gate)
-    if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 5
-    permissions:
-      contents: read
-      pull-requests: read
-    outputs:
-      run: ${{ steps.gate.outputs.run }}
-    steps:
-      - name: 'Checkout code'
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-          # git merge-tree needs real merge bases; a shallow clone has none.
-          fetch-depth: 0
-      - name: Setup mise
-        uses: jdx/mise-action@v4
-      - name: Decide whether this push needs its own run
-        id: gate
-        run: mise run //tools/build_and_test:branch_ci_gate
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-
   build_and_test:
-    # Serves pull requests, main pushes and dispatches. Reports the composite
-    # check `build_and_test / run`, which is the required status check for
-    # merging — a name branch-head pushes can never emit, because they run
-    # build_and_test_branch instead. That exclusivity is the whole guard:
-    # GitHub counts a SKIPPED required check as passing, so merely suppressing
-    # a job on push events would not be enough.
+    # Reports the composite `build_and_test / run` — the required status check.
+    # A caller emits its composite name ONLY when it runs; skipping collapses it
+    # to the bare caller name, so the required context cannot be satisfied by a
+    # skip. That also blocks fork PRs, which skip below to protect secrets:
+    # they report a bare `build_and_test` and the required context stays absent.
     name: build_and_test
-    if: >-
-      ${{ (github.event_name != 'push' || github.ref == 'refs/heads/main')
-      && (github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository) }}
-    permissions:
-      contents: read
-    uses: ./.github/workflows/build-test-run.yml
-    with:
-      force: ${{ inputs.force || false }}
-      mainGraph: ${{ inputs.mainGraph || false }}
-      cypressVideo: ${{ inputs.cypressVideo || false }}
-    secrets:
-      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-
-  build_and_test_branch:
-    # The branch-head fallback, running the same body under a distinct check
-    # name. `branch_gate` is 'failure' if the gate itself broke — that means
-    # run, since the gate must never become a way to lose CI. `!cancelled()`
-    # is required for the `if` to evaluate at all once a `needs` job can skip.
-    name: build_and_test (branch)
-    needs: branch_gate
-    if: >-
-      ${{ !cancelled()
-      && github.event_name == 'push' && github.ref != 'refs/heads/main'
-      && (needs.branch_gate.result != 'success' || needs.branch_gate.outputs.run == 'true') }}
+    if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
     permissions:
       contents: read
     uses: ./.github/workflows/build-test-run.yml
