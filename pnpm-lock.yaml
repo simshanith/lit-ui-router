@@ -785,6 +785,9 @@ importers:
 
   packages/ui-router-server:
     devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 11.0.1(conventional-commits-filter@5.0.0)(conventional-commits-parser@6.4.0)(release-it@20.2.1(@types/node@24.13.3)(magicast@0.5.3))
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
@@ -800,6 +803,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.59.0
+      release-it:
+        specifier: 'catalog:'
+        version: 20.2.1(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

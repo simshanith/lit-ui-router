@@ -18,6 +18,7 @@ on:
           - lit-ui-router
           - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
+          - ui-router-server
         default: 'lit-ui-router'
       increment:
         description: 'Increment'
