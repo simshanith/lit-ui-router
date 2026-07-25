@@ -78,6 +78,22 @@ Never commit a blank placeholder for these: an empty value in a mise config
 wins over an ambient `export`, silently disabling the remote cache for anyone
 who already has a token.
 
+### Worktrees
+
+`_.file` is scoped to the config root, and the dotenv is gitignored, so a fresh
+`git worktree add` starts with no credentials — turbo warns
+`Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)` and quietly falls
+back to local-only. `mise run setup` fixes that: the `turbo_link_worktree` leg
+symlinks the worktree's `.config/mise/turbo.local.env` at the owning checkout's
+file, found via `git rev-parse --git-common-dir` (the same absolute path from
+either side).
+
+A symlink and not a copy, so rotating creds in the main checkout reaches every
+worktree at once. The task never overwrites: run `turbo_login` inside a worktree
+and that real file wins, which is how a worktree under test can override
+`TURBO_API` while inheriting the rest. Worktrees created before the main
+checkout had credentials just need `mise run setup` again.
+
 ### Rotation
 
 Both secrets live in the same places — rotate every row together:
