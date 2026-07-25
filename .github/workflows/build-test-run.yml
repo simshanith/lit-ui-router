@@ -38,9 +38,9 @@ env:
   HUSKY: 0
 
 jobs:
-  # Named for the role the check plays, not the steps it runs: the composite
-  # `build_and_test / merge_gate` is the required status check for merging.
-  merge_gate:
+  # Named for what it does, not for the role one of its callers plays: the
+  # UI's own "Required" badge already says which composite gates merging.
+  run:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:

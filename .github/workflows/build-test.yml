@@ -54,7 +54,7 @@ jobs:
     # for an install here would cost more than it saves on the pushes it can't
     # skip. gh is preinstalled on the runner image.
     # "signal gate", not "branch gate": it decides whether this push emits a
-    # signal at all, and reads as a distinct verb next to merge_gate below.
+    # signal at all, and no longer sits one word from build_and_test (branch).
     name: build_and_test (signal gate)
     if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-latest
@@ -81,8 +81,8 @@ jobs:
 
   build_and_test:
     # Serves pull requests, main pushes and dispatches. Reports the composite
-    # check `build_and_test / merge_gate`, which is the required status check
-    # for merging — a name branch-head pushes can never emit, because they run
+    # check `build_and_test / run`, which is the required status check for
+    # merging — a name branch-head pushes can never emit, because they run
     # build_and_test_branch instead. That exclusivity is the whole guard:
     # GitHub counts a SKIPPED required check as passing, so merely suppressing
     # a job on push events would not be enough.
