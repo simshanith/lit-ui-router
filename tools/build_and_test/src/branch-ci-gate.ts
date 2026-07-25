@@ -26,6 +26,7 @@ import { promisify } from 'node:util';
 
 import {
   type BaseVerdict,
+  type GateRun,
   type OpenPr,
   decide,
   distinctBases,
@@ -119,16 +120,17 @@ async function main(): Promise<void> {
     verdicts.push({ ...verdict, prs: numbers });
   }
 
-  await report(branch, head, prs, verdicts, decide(prs, verdicts));
+  await report({
+    branch,
+    sha: head,
+    prs,
+    verdicts,
+    decision: decide(prs, verdicts),
+  });
 }
 
-async function report(
-  branch: string,
-  head: string,
-  prs: readonly OpenPr[],
-  verdicts: readonly BaseVerdict[],
-  decision: ReturnType<typeof decide>,
-): Promise<void> {
+async function report(gate: GateRun): Promise<void> {
+  const { decision } = gate;
   console.log(`${decision.run ? 'RUN' : 'SKIP'}: ${decision.reason}`);
 
   // Both runner files are absent on a local `mise run`; print instead so a dry
@@ -139,7 +141,7 @@ async function report(
   else console.log(line);
 
   const summary = process.env.GITHUB_STEP_SUMMARY;
-  const markdown = summaryMarkdown(branch, head, prs, verdicts, decision);
+  const markdown = summaryMarkdown(gate);
   if (summary) await appendFile(summary, markdown);
   else console.log(`\n${markdown}`);
 }

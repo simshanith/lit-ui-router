@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   type BaseVerdict,
+  type GateRun,
   type OpenPr,
   decide,
   distinctBases,
@@ -162,14 +163,17 @@ describe('decide', () => {
 describe('summaryMarkdown', () => {
   const sha = '0123456789abcdef0123456789abcdef01234567';
 
+  function gateRun(
+    branch: string,
+    prs: readonly OpenPr[],
+    verdicts: readonly BaseVerdict[],
+  ): GateRun {
+    return { branch, sha, prs, verdicts, decision: decide(prs, verdicts) };
+  }
+
   it('explains a skip with the bases it cleared', () => {
-    const verdicts = [verdict('main', 'clean', [1, 2])];
     const markdown = summaryMarkdown(
-      'topic',
-      sha,
-      [PR_ONE, PR_TWO],
-      verdicts,
-      decide([PR_ONE, PR_TWO], verdicts),
+      gateRun('topic', [PR_ONE, PR_TWO], [verdict('main', 'clean', [1, 2])]),
     );
     assert.match(markdown, /skipping/);
     assert.match(markdown, /`topic` @ `0123456789ab`/);
@@ -177,20 +181,15 @@ describe('summaryMarkdown', () => {
   });
 
   it('names the conflicting base on a run', () => {
-    const verdicts = [verdict('main', 'conflict')];
     const markdown = summaryMarkdown(
-      'topic',
-      sha,
-      [PR_ONE],
-      verdicts,
-      decide([PR_ONE], verdicts),
+      gateRun('topic', [PR_ONE], [verdict('main', 'conflict')]),
     );
     assert.match(markdown, /running/);
     assert.match(markdown, /CONFLICTS/);
   });
 
   it('states the no-PR case instead of an empty table', () => {
-    const markdown = summaryMarkdown('topic', sha, [], [], decide([], []));
+    const markdown = summaryMarkdown(gateRun('topic', [], []));
     assert.match(markdown, /No open pull requests/);
     assert.doesNotMatch(markdown, /\| base \|/);
   });

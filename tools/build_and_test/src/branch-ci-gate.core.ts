@@ -133,6 +133,15 @@ export function decide(
   };
 }
 
+/** Everything one gate run concluded — what the summary renders. */
+export type GateRun = {
+  branch: string;
+  sha: string;
+  prs: readonly OpenPr[];
+  verdicts: readonly BaseVerdict[];
+  decision: Decision;
+};
+
 const STATE_MARK: Record<MergeState, string> = {
   clean: 'mergeable',
   conflict: 'CONFLICTS',
@@ -143,13 +152,13 @@ const STATE_MARK: Record<MergeState, string> = {
  * The step summary is the whole debugging story for a gray, skipped run:
  * which PRs were found, which bases they target, and how each probe answered.
  */
-export function summaryMarkdown(
-  branch: string,
-  sha: string,
-  prs: readonly OpenPr[],
-  verdicts: readonly BaseVerdict[],
-  decision: Decision,
-): string {
+export function summaryMarkdown({
+  branch,
+  sha,
+  prs,
+  verdicts,
+  decision,
+}: GateRun): string {
   const lines = [
     `## Branch CI gate — ${decision.run ? 'running' : 'skipping'} \`build_and_test (branch)\``,
     '',
