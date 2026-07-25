@@ -53,7 +53,9 @@ jobs:
     # Imports nothing from node_modules, so no `mise run setup` step: paying
     # for an install here would cost more than it saves on the pushes it can't
     # skip. gh is preinstalled on the runner image.
-    name: build_and_test (branch gate)
+    # "signal gate", not "branch gate": it decides whether this push emits a
+    # signal at all, and reads as a distinct verb next to merge_gate below.
+    name: build_and_test (signal gate)
     if: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 5
