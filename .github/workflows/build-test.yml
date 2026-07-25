@@ -49,7 +49,9 @@ jobs:
     uses: ./.github/workflows/build-test-run.yml
     with:
       force: ${{ inputs.force || false }}
-      mainGraph: ${{ inputs.mainGraph || false }}
+      # Main pushes build the superset; the dispatch input asks for it against
+      # any ref. `inputs` is null on pull_request, so PRs get the PR graph.
+      mainGraph: ${{ inputs.mainGraph || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
       cypressVideo: ${{ inputs.cypressVideo || false }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}

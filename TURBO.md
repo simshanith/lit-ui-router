@@ -193,11 +193,20 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 1. **Checkout** - Clone repository
 2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and corepack; `mise run setup` corepack-installs the `packageManager`-pinned pnpm, then installs dependencies
 3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
-4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
+4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload
 6. **Tag** (main pushes only) - a green run calls the Tag & push workflow, so release tags fire only after green main CI
 
-Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
+Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). Dispatch takes a ref, so this is also how you run the main graph against an arbitrary branch. CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
+
+#### Smoke-testing the main graph before merge
+
+The main-only guards (`test:engines`, `check:pack`, the full `dts-backtest` matrix) run after merge, so a break in them surfaces on main rather than on the PR. Two ways to pull that signal forward:
+
+- **Per run** — dispatch **Build and Test** with `mainGraph: true` and pick the branch as the ref. Nothing needs to be pushed, and the branch needs no PR.
+- **Per branch** — name the branch `ci-main/<topic>`. Every push to it builds `ci:main` instead of the PR graph, and it runs even when the branch merges cleanly (a `pull_request` run would only cover the PR graph). The prefix is the whole opt-in; there is no other flag.
+
+The prefix affects the graph only. Tagging and publishing stay bound to pushes to `main`, so a `ci-main/` branch can never release.
 
 ### CI Environment Variables
 
@@ -219,7 +228,7 @@ TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Team identifier
 | `format:check`                    | `ci:pull_request`                                                                         |
 | `check:bundle`, `codecov:bundle`  | `ci:pull_request`                                                                         |
 | `test:engines`                    | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin) |
-| `@tools/release#check:pack`       | `ci:main` only (main pushes)                                                              |
+| `@tools/release#check:pack`       | `ci:main` only                                                                            |
 | `@tools/dts-backtest#test:matrix` | `ci:main` only; PRs run the current-TS `#test` leg                                        |
 | `typecheck:peer-floor`            | Neither ci graph — Release signals check runs + bump gate                                 |
 
