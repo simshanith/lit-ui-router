@@ -25,6 +25,8 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
 # nothing, no error) since the cache is maintainer-only.
+# config_root-scoped, so a git worktree starts with no creds; `mise run setup`
+# links it at the owning checkout's file (see the turbo_link_worktree task).
 # NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
 # which clobbers a task reading its own stdin — it silently breaks
 # `printf … | mise run turbo_login --token-file -`. Verified on this mise.
@@ -76,7 +78,10 @@ depends = ["corepack_enable", "corepack_install"]
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the pnpm on PATH"
-depends = ["corepack"]
+# turbo_link_worktree is independent of corepack and no-ops everywhere but a
+# fresh worktree; it rides setup because that is the one step every new
+# checkout already runs.
+depends = ["corepack", "turbo_link_worktree"]
 usage = '''
 flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
 '''
@@ -138,9 +143,9 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login + read_secret are file-based tasks under .config/mise/tasks/ —
-# their shell bodies were too large to sit inline. Every other task here is a
-# one- or two-liner and stays inline.
+# turbo_login, read_secret and turbo_link_worktree are file-based tasks under
+# .config/mise/tasks/ — their shell bodies were too large to sit inline. Every
+# other task here is a one- or two-liner and stays inline.
 
 [tasks.build]
 # env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo

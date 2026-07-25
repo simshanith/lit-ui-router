@@ -1,0 +1,39 @@
+#!/usr/bin/env bash
+#MISE description="Point a git worktree's turbo.local.env at the owning checkout's copy (symlink)"
+#
+# The creds dotenv is gitignored, so `git worktree add` produces a checkout with
+# no remote-cache config at all: turbo warns "TURBO_TOKEN set without TURBO_TEAM"
+# and silently falls back to local-only. config.toml's [env] _.file is
+# {{config_root}}-scoped and cannot reach out of the worktree by itself.
+#
+# So link, once, at setup time: `--git-common-dir` resolves to the SAME absolute
+# path from a worktree and from the checkout that owns it, which names that
+# checkout with nothing machine-specific in the committed config. A symlink and
+# not a copy — rotating creds in the main checkout has to reach every worktree.
+#
+# The resolution deliberately does not live in _.file as {{ exec(...) }}: mise
+# runs template exec under `sh -c -o errexit`, so a copy of the tree without a
+# .git would fail template parsing and take the whole config down (rc=1), not
+# just the cache. It is also not a perf measure — either shape costs ~50ms.
+set -eu
+
+# File-based tasks are raw scripts: {{config_root}} does not render here.
+env="${MISE_CONFIG_ROOT}/.config/mise/turbo.local.env"
+
+# -L as well as -e: a dangling link (owning checkout deleted) is not -e, and
+# relinking it would still point nowhere. Leave whatever is there alone; a real
+# file wins, which is how a worktree overrides one key while inheriting the rest.
+if [ -e "$env" ] || [ -L "$env" ]; then
+  exit 0
+fi
+
+# No .git at all (source tarball, vendored copy): nothing to inherit from.
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || exit 0
+owner="$(cd "$common_dir/.." && pwd)"
+
+# The owning checkout writes its own file; only worktrees borrow.
+[ "$owner" != "$MISE_CONFIG_ROOT" ] || exit 0
+[ -f "$owner/.config/mise/turbo.local.env" ] || exit 0
+
+ln -s "$owner/.config/mise/turbo.local.env" "$env"
+echo "turbo_link_worktree: linked remote-cache creds from $owner" >&2
