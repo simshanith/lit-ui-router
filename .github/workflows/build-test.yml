@@ -57,6 +57,12 @@ jobs:
       pull-requests: read
     outputs:
       run: ${{ steps.gate.outputs.run }}
+      # The check-name suffix for the runs this job guards. GitHub evaluates a
+      # job's `name:` only when the job starts and prints the expression source
+      # verbatim when it skips — which is now the common case — so the name is
+      # sourced from here to keep that printed form short and to keep it
+      # starting with the real job name.
+      suffix: ' (branch)'
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v7
@@ -75,8 +81,11 @@ jobs:
   build_and_test:
     needs: branch_gate
     # Branch-head (push) runs report under a distinct check name so they can
-    # never satisfy the required "build_and_test" merge gate.
-    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'build_and_test (branch)' || 'build_and_test' }}
+    # never satisfy the required "build_and_test" merge gate. That gate can only
+    # be trusted if a push run never emits the name at all: GitHub counts a
+    # SKIPPED required check as passing, so suppressing the job is not enough.
+    # branch_gate is skipped on every other path, leaving the suffix empty.
+    name: build_and_test${{ needs.branch_gate.outputs.suffix }}
     # First clause: branch_gate is 'skipped' on every path it doesn't guard
     # (pull_request, main pushes, dispatch) and 'failure' if the gate itself
     # broke — both mean run. Only a successful gate saying `run=false` skips.
