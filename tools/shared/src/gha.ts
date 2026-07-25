@@ -10,6 +10,7 @@ import {
   errorCommand,
   groupCommand,
   outputLine,
+  warningCommand,
 } from './gha.core.ts';
 
 function onActions(): boolean {
@@ -34,6 +35,11 @@ export async function group<T>(
 /** Red run annotation on Actions; plain stderr locally. */
 export function logError(message: string): void {
   console.error(onActions() ? errorCommand(message) : message);
+}
+
+/** Yellow run annotation on Actions; plain stderr locally. */
+export function logWarning(message: string): void {
+  console.warn(onActions() ? warningCommand(message) : message);
 }
 
 /**

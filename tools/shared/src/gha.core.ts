@@ -29,6 +29,11 @@ export function errorCommand(message: string): string {
   return `::error::${escapeData(message)}`;
 }
 
+/** `::warning::<message>` — a yellow annotation; the run still passes. */
+export function warningCommand(message: string): string {
+  return `::warning::${escapeData(message)}`;
+}
+
 // GITHUB_OUTPUT names: the runner accepts more, but our outputs are
 // hand-named identifiers — reject anything else early.
 const OUTPUT_NAME = /^[A-Za-z_][A-Za-z0-9_-]*$/;
