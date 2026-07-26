@@ -3,7 +3,10 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "with": ["build:custom-elements"]
+      "with": ["build:custom-elements"],
+      // `with` is unordered: without the negation, build's archive captures
+      // custom-elements.json only when the manifest task finishes first
+      "outputs": ["dist/**", "!dist/custom-elements.json"]
     },
     "build:custom-elements": {
       "inputs": ["src/**/*.ts", "custom-elements-manifest.config.js"],

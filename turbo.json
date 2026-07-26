@@ -65,9 +65,13 @@
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
+      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
+      // mid-graph (build:js, pack:all staging) and oxlint never reads them
       "inputs": [
         "**/*.ts",
         "**/*.js",
+        "!dist/**",
+        "!.cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
       ]
@@ -210,8 +214,12 @@
     },
     "format": {
       "with": ["//#format:root", "//#format:toml"],
+      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
+      // mid-graph and oxfmt (gitignore-aware) never reads them
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
+        "!dist/**",
+        "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
@@ -220,6 +228,8 @@
       "with": ["//#format:check:root", "//#format:check:toml"],
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
+        "!dist/**",
+        "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
