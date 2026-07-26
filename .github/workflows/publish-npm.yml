@@ -98,7 +98,10 @@ jobs:
           PACKAGE_NAME: ${{ steps.info.outputs.package_name }}
           TARBALL: ${{ steps.pack.outputs.tarball }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
+          # without the key, signature verification turns every credit read
+          # into a MISS and the reconcile gate silently never engages
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
@@ -132,3 +135,5 @@ jobs:
     uses: ./.github/workflows/release-signals.yml
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      TURBO_API: ${{ secrets.TURBO_API }}

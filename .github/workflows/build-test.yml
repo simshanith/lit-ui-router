@@ -55,6 +55,9 @@ jobs:
       cypressVideo: ${{ inputs.cypressVideo || false }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      # A secret (not a var): the worker domain stays out of public run logs.
+      TURBO_API: ${{ secrets.TURBO_API }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   tag_push:
