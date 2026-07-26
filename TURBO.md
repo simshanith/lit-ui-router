@@ -40,7 +40,12 @@ ci:pull_request
 ├── lint
 │   ├── //#lint:root           (with)
 │   ├── //#lint:package-json   (with)
-│   └── //#lint:workflows      (with)
+│   ├── //#lint:workflows      (with)
+│   │   ├── //#lint:actionlint (with)
+│   │   ├── //#lint:zizmor     (with)
+│   │   ├── //#lint:toml       (with)
+│   │   └── //#lint:shellcheck (with)
+│   └── //#check:patches       (with)
 ├── typecheck
 │   ├── //#typecheck:root      (with)
 │   └── typecheck:src          (with)
@@ -294,11 +299,17 @@ Run these separately from cached tasks.
 
 ### Root-Level Tasks Not Running
 
-Root tasks use `//#` prefix and require scripts in root `package.json`:
+Root tasks use `//#` prefix and back onto scripts in root `package.json` —
+except a virtual node with no script, which turbo runs nothing for and just
+fans out via `with`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
-- `//#lint:workflows` - actionlint + zizmor over GitHub Actions workflows
+- `//#lint:workflows` - virtual node (no script); fans out via `with` to the four per-tool tasks below
+- `//#lint:actionlint` - actionlint over GitHub Actions workflows
+- `//#lint:zizmor` - zizmor security audit over GitHub Actions workflows
+- `//#lint:toml` - taplo lint over every tracked `.toml`
+- `//#lint:shellcheck` - shellcheck over the repo shell surface (`*.sh`/`*.bash` + extensionless mise task scripts)
 - `//#typecheck:root` - typechecks root-level scripts
 - `//#format:root` - formats root-level files
 - `//#format:check:root` - checks root-level formatting
