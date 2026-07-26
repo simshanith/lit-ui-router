@@ -69,7 +69,7 @@
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "dependencies": {
-    "@oxc-project/runtime": "catalog:"
+    "@oxc-project/runtime": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
@@ -84,6 +84,7 @@
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
     "lit": "catalog:",
+    "oxc-project-runtime": "catalog:",
     "oxfmt": "catalog:",
     "playwright": "catalog:",
     "release-it": "catalog:",
