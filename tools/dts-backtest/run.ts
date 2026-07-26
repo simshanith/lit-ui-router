@@ -16,8 +16,13 @@
 // `typescript/unstable/sync` — a different, still-unstable surface that 7.1 is
 // expected to replace.
 
-import { randomUUID } from 'node:crypto';
-import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
+import {
+  mkdirSync,
+  mkdtempSync,
+  realpathSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -268,20 +273,17 @@ const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 const NATIVE_PROBE =
   'export type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
 
-// Scratch dir under `here` so ownsPath() owns the probe diagnostics; outside
-// the task's turbo `inputs` (fixtures/**, run.ts, tsconfig.fixture*.json) so
-// its lifecycle never dirties the cache hash. Unique per process — the two
-// concurrent tasks must not share it.
+// Scratch dir under `here` (not os.tmpdir()) so ownsPath() owns the probe
+// diagnostics and the scratch tsconfig's relative paths resolve; outside the
+// task's turbo `inputs` (fixtures/**, run.ts, tsconfig.fixture*.json) so its
+// lifecycle never dirties the cache hash. mkdtemp keeps the two concurrent
+// tasks from sharing it.
 async function withProbeFile<T>(
   probe: string,
   body: (probePath: string, scratchDir: string) => T | Promise<T>,
 ): Promise<T> {
-  const scratchDir = join(
-    here,
-    '.probe-scratch',
-    `${process.pid}-${randomUUID().slice(0, 8)}`,
-  );
-  mkdirSync(scratchDir, { recursive: true });
+  mkdirSync(join(here, '.probe-scratch'), { recursive: true });
+  const scratchDir = mkdtempSync(join(here, '.probe-scratch', 'run-'));
   const probePath = join(scratchDir, 'probe.d.ts');
   writeFileSync(probePath, probe);
   try {
