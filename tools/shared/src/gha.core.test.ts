@@ -6,22 +6,28 @@ import {
   errorCommand,
   groupCommand,
   outputLine,
+  warningCommand,
 } from './gha.core.ts';
 
 describe('workflow commands', () => {
-  it('emits plain group/endgroup/error commands', () => {
+  it('emits plain group/endgroup/error/warning commands', () => {
     assert.equal(
       groupCommand('Publish lit-ui-router'),
       '::group::Publish lit-ui-router',
     );
     assert.equal(endGroupCommand(), '::endgroup::');
     assert.equal(errorCommand('boom'), '::error::boom');
+    assert.equal(warningCommand('skipped'), '::warning::skipped');
   });
 
   it('escapes %, CR, and LF so multi-line data stays one command line', () => {
     assert.equal(
       errorCommand('50% done\r\nnext'),
       '::error::50%25 done%0D%0Anext',
+    );
+    assert.equal(
+      warningCommand('50% done\r\nnext'),
+      '::warning::50%25 done%0D%0Anext',
     );
     assert.equal(groupCommand('a\nb'), '::group::a%0Ab');
   });
