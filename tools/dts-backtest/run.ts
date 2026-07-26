@@ -16,7 +16,8 @@
 // `typescript/unstable/sync` — a different, still-unstable surface that 7.1 is
 // expected to replace.
 
-import { readFileSync, realpathSync, writeFileSync } from 'node:fs';
+import { randomUUID } from 'node:crypto';
+import { mkdirSync, realpathSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { dirname, join, resolve, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -117,11 +118,15 @@ function loadConfig(ts: ClassicApi, configFile: string): TS.ParsedCommandLine {
   return parsed;
 }
 
-function check(specifier: string, configFile: string) {
+function check(
+  specifier: string,
+  configFile: string,
+  extraRootNames: string[] = [],
+) {
   const ts = require(specifier) as ClassicApi;
   const parsed = loadConfig(ts, configFile);
   const program = ts.createProgram({
-    rootNames: parsed.fileNames,
+    rootNames: [...parsed.fileNames, ...extraRootNames],
     options: parsed.options,
   });
 
@@ -162,7 +167,7 @@ async function checkNative(specifier: string, configFile: string) {
   ])) as [NativeSyncModule, NativeModule];
 
   const api = new API({ cwd: here });
-  const configPath = join(here, configFile);
+  const configPath = resolve(here, configFile);
   const snapshot = api.updateSnapshot({ openProjects: [configPath] });
   try {
     const project = snapshot.getProject(configPath);
@@ -245,49 +250,65 @@ function run(specifier: string, configFile: string) {
   return true;
 }
 
-// Self-test: prove the harness can fail. Injects a NoInfer<> probe (TS 5.4+
-// syntax) into a dist .d.ts, then asserts the floor leg rejects it and the
-// current leg accepts it. Guards against a filter/ownership bug that would
-// classify everything as third-party and stay green forever. If the floor is
-// ever raised past 5.4, this fails loudly — pick a newer-syntax probe.
-const PROBE = '\nexport type __dtsBacktestProbe = NoInfer<string>;\n';
+// Self-test: prove the harness can fail. Compiles a probe .d.ts alongside the
+// fixtures, then asserts the floor leg rejects it and the current leg accepts
+// it. Guards against a filter/ownership bug that would classify everything as
+// third-party and stay green forever. If the floor is ever raised past 5.4,
+// this fails loudly — pick a newer-syntax probe.
+//
+// The probe lives in a per-process scratch dir under this package — NEVER in
+// packages/*/dist. The `test` and `test:matrix` tasks run this script
+// concurrently, and pack:all stages copies of the packages in the same graph:
+// any mutation of a shared build output races them (it has corrupted a run
+// and poisoned a remote-cache tarball).
+const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 
 // The native leg has its own ownership filter, so it needs its own proof. An
 // unresolvable name must surface as an owned diagnostic, not a tolerated one.
 const NATIVE_PROBE =
-  '\nexport type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
+  'export type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
 
-// async: the native leg reads the probe after an await, so the restore must not
-// run until the body has fully resolved.
-async function withProbe<T>(
+// Scratch dir under `here` so ownsPath() owns the probe diagnostics; outside
+// the task's turbo `inputs` (fixtures/**, run.ts, tsconfig.fixture*.json) so
+// its lifecycle never dirties the cache hash. Unique per process — the two
+// concurrent tasks must not share it.
+async function withProbeFile<T>(
   probe: string,
-  body: (target: string) => T | Promise<T>,
+  body: (probePath: string, scratchDir: string) => T | Promise<T>,
 ): Promise<T> {
-  const target = join(PACKAGE_DIRS[0], 'index.d.ts');
-  const original = readFileSync(target, 'utf8');
-  writeFileSync(target, original + probe);
+  const scratchDir = join(
+    here,
+    '.probe-scratch',
+    `${process.pid}-${randomUUID().slice(0, 8)}`,
+  );
+  mkdirSync(scratchDir, { recursive: true });
+  const probePath = join(scratchDir, 'probe.d.ts');
+  writeFileSync(probePath, probe);
   try {
-    return await body(target);
+    return await body(probePath, scratchDir);
   } finally {
-    writeFileSync(target, original);
+    rmSync(scratchDir, { recursive: true, force: true });
   }
 }
+
+const probeDiagnostic = (fileName: string | undefined) =>
+  fileName?.endsWith('probe.d.ts') ?? false;
 
 function selftest() {
   const floor = API_VERSIONS[0];
   const current = API_VERSIONS[API_VERSIONS.length - 1];
-  return withProbe(PROBE, (target) => {
-    const floorRun = check(floor, CONFIGS[0]);
+  return withProbeFile(PROBE, (probePath) => {
+    const floorRun = check(floor, CONFIGS[0], [probePath]);
     const probeCaught = floorRun.owned.some((diagnostic) =>
-      diagnostic.file?.fileName.endsWith('index.d.ts'),
+      probeDiagnostic(diagnostic.file?.fileName),
     );
     if (!probeCaught) {
       console.error(
-        `✖ selftest — TS ${floorRun.ts.version} did not reject the NoInfer probe in ${target}`,
+        `✖ selftest — TS ${floorRun.ts.version} did not reject the NoInfer probe in ${probePath}`,
       );
       return false;
     }
-    const currentRun = check(current, CONFIGS[0]);
+    const currentRun = check(current, CONFIGS[0], [probePath]);
     if (currentRun.owned.length > 0) {
       console.error(
         `✖ selftest — TS ${currentRun.ts.version} unexpectedly rejected the NoInfer probe`,
@@ -302,11 +323,25 @@ function selftest() {
 }
 
 async function selftestNative() {
-  const { version, owned } = await withProbe(NATIVE_PROBE, () =>
-    checkNative(NATIVE_VERSION, CONFIGS[0]),
+  // The native API takes only a tsconfig, so the scratch dir gets one that
+  // extends the fixture config and re-includes the fixtures plus the probe.
+  // Relative `include` paths resolve against the config that declares them.
+  const { version, owned } = await withProbeFile(
+    NATIVE_PROBE,
+    (probePath, scratchDir) => {
+      const scratchConfig = join(scratchDir, 'tsconfig.json');
+      writeFileSync(
+        scratchConfig,
+        JSON.stringify({
+          extends: `../../${CONFIGS[0]}`,
+          include: ['../../fixtures/**/*.ts', './probe.d.ts'],
+        }),
+      );
+      return checkNative(NATIVE_VERSION, scratchConfig);
+    },
   );
   const caught = owned.some((diagnostic) =>
-    diagnostic.fileName?.endsWith('index.d.ts'),
+    probeDiagnostic(diagnostic.fileName),
   );
   if (!caught) {
     console.error(`✖ selftest native — TS ${version} did not reject the probe`);
