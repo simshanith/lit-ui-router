@@ -14,6 +14,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@uirouter/core": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
     "lodash": "catalog:",
