@@ -1,17 +1,19 @@
-# CI pipeline for pull requests and branch/main pushes.
+# CI pipeline for pull requests, main pushes and dispatches.
 # Runs build, tests (Vitest + Playwright + Cypress), and Codecov upload.
+#
+# Branch-head pushes are handled by build-test-branch.yml instead. Splitting by
+# trigger keeps each event from instantiating the other's jobs, and it is what
+# makes the required context `build_and_test / run` trustworthy: no push to a
+# topic branch ever runs this file, so no push can emit that name. GitHub counts
+# a SKIPPED required check as PASSING, so a shared file that merely suppressed
+# this job on branch pushes would not be enough.
 name: Build and Test
 
 on:
   pull_request:
   push:
     branches:
-      # Branch-head runs: CONFLICTING PRs have no merge ref, so pull_request
-      # runs are skipped entirely; push runs still cover the branch head.
-      - '**'
-      # Dependabot push events get dependabot secrets (no TURBO_TOKEN); its
-      # PRs already get merge-head CI.
-      - '!dependabot/**'
+      - main
   workflow_dispatch:
     inputs:
       force:
@@ -28,10 +30,6 @@ on:
         type: boolean
         default: false
 
-# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
-env:
-  HUSKY: 0
-
 # Cancel superseded runs per event per ref; never cancel main runs.
 concurrency:
   group: ${{ github.workflow }}-${{ github.event_name }}-${{ github.ref }}
@@ -39,130 +37,28 @@ concurrency:
 
 jobs:
   build_and_test:
-    # Branch-head (push) runs report under a distinct check name so they can
-    # never satisfy the required "build_and_test" merge gate.
-    name: ${{ github.event_name == 'push' && github.ref != 'refs/heads/main' && 'build_and_test (branch)' || 'build_and_test' }}
-    # Security: Only run on first-party PRs (not forks) to protect secrets.
-    # Fork PRs don't have access to secrets, so they would fail anyway.
-    # Maintainers should review fork PRs and run CI manually.
+    # Reports the composite `build_and_test / run` — the required status check.
+    # A caller emits its composite name ONLY when it runs; skipping collapses it
+    # to the bare caller name, so the required context cannot be satisfied by a
+    # skip. That also blocks fork PRs, which skip below to protect secrets:
+    # they report a bare `build_and_test` and the required context stays absent.
+    name: build_and_test
     if: ${{ github.event_name != 'pull_request' || github.event.pull_request.head.repo.full_name == github.repository }}
-    runs-on: ubuntu-latest
-    timeout-minutes: 30
     permissions:
       contents: read
-
-    steps:
-      - name: 'Checkout code'
-        uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - name: Setup mise
-        uses: jdx/mise-action@v4
-      - name: Install dependencies
-        run: mise run setup
-      - name: Resolve Playwright version
-        # Cache keys derive from the installed packages, so they bust exactly
-        # on a version bump and nothing else; one step per tool keeps the two
-        # caches independent.
-        id: playwright-version
-        run: mise run //tools/build_and_test:playwright_version
-      - name: Resolve Cypress version
-        id: cypress-version
-        run: mise run //tools/build_and_test:cypress_version
-      - name: Cache Playwright browsers
-        id: playwright-cache
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.playwright }}
-      - name: Cache Cypress binary
-        uses: actions/cache@v6
-        with:
-          path: ~/.cache/Cypress
-          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
-      - name: Install Playwright Browsers
-        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
-        run: mise run //tools/build_and_test:playwright
-      - name: Install Playwright OS deps (firefox+webkit)
-        # Browsers came from the cache; only test:engines (main graph) needs
-        # the firefox+webkit apt libs — the PR graph is chromium-only, and
-        # chromium and Cypress ride the runner image's preinstalled set.
-        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
-        run: mise run //tools/build_and_test:playwright_deps_engines
-      - name: Install Cypress
-        # `cypress install` is a near-no-op when the binary is cached; verify
-        # still runs so the concurrent suites skip the first-use banner.
-        run: mise run //tools/build_and_test:cypress
-      - name: Start shared Xvfb display
-        # The vanilla and MobX Cypress suites run concurrently. Without a
-        # DISPLAY, each Cypress process spawns its own Xvfb and the spawns
-        # race ("Fatal server error"); one shared display serves both.
-        # https://docs.cypress.io/app/continuous-integration/overview#Xvfb
-        # The task captures Xvfb's stderr (routine xkbcomp keysym noise on
-        # the runner image) and prints it, filtered, only on startup failure.
-        run: mise run //tools/build_and_test:xvfb
-      - name: Build and Test
-        # TURBO_FORCE carries the deflake input through env (never `${{ }}`
-        # in run lines); turbo parses ""/"false" as cache-respecting.
-        # Exact complement of the ci_main step below: one of the two runs.
-        if: ${{ !((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
-        run: mise run ci
-        env:
-          TURBO_FORCE: ${{ inputs.force }}
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          # Silence per-request [wrangler:info] logging from the e2e dev server.
-          WRANGLER_LOG: warn
-          # Cypress video off in CI (configs keep video:true for local runs);
-          # the cypressVideo dispatch input re-enables it for debugging.
-          CYPRESS_video: ${{ inputs.cypressVideo == true }}
-      - name: Build and Test (main)
-        # ci:main = the PR graph plus the main-only guards (check:pack,
-        # dts-backtest full TS matrix) in one parallel turbo invocation; a
-        # failure fails build_and_test, so the tag_push call job never runs.
-        # Future main-only guards join ci:main's dependsOn, not new steps.
-        # mainGraph dispatches run this graph too; tag_push stays push-only.
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph) }}
-        run: mise run ci_main
-        env:
-          TURBO_FORCE: ${{ inputs.force }}
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          # Silence per-request [wrangler:info] logging from the e2e dev server.
-          WRANGLER_LOG: warn
-          # Cypress video off in CI (configs keep video:true for local runs);
-          # the cypressVideo dispatch input re-enables it for debugging.
-          CYPRESS_video: ${{ inputs.cypressVideo == true }}
-      - name: Upload Codecov bundle stats
-        run: mise run codecov_bundle
-        env:
-          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
-          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
-          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
-      - name: Upload Cypress videos
-        # Videos exist only when the dispatch input turned recording on;
-        # !cancelled() keeps videos from failed suites — the debugging case.
-        # An early failure before Cypress leaves no files, hence warn.
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.cypressVideo && !cancelled() }}
-        uses: actions/upload-artifact@v7
-        with:
-          name: cypress-videos
-          path: apps/sample-app-lit-e2e/cypress/videos*/
-          retention-days: 5
-          if-no-files-found: warn
-      - name: Upload to Codecov
-        # Branch-head runs skip upload; merge-head/main covers the same SHA.
-        if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
-        uses: codecov/codecov-action@v7
-        with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json
-          disable_search: true
-          plugins: noop
-          fail_ci_if_error: false
-          token: ${{ secrets.CODECOV_TOKEN }}
+    uses: ./.github/workflows/build-test-run.yml
+    with:
+      force: ${{ inputs.force || false }}
+      # Main pushes build the superset; the dispatch input asks for it against
+      # any ref. `inputs` is null on pull_request, so PRs get the PR graph.
+      mainGraph: ${{ inputs.mainGraph || (github.event_name == 'push' && github.ref == 'refs/heads/main') }}
+      cypressVideo: ${{ inputs.cypressVideo || false }}
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      # A secret (not a var): the worker domain stays out of public run logs.
+      TURBO_API: ${{ secrets.TURBO_API }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
 
   tag_push:
     # Gated tagging: rides the same run as main CI, so a red build_and_test

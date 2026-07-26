@@ -18,6 +18,14 @@ on:
       TURBO_TOKEN:
         # Remote turbo cache; absent = local cache only.
         required: false
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY:
+        # Signs/verifies remote artifacts; absent = local cache only.
+        required: false
+      TURBO_API:
+        # Remote cache endpoint; a secret (not a var) so the worker domain stays
+        # out of public logs. Secrets don't auto-propagate into a called
+        # workflow, so the caller must pass it; absent = local cache only.
+        required: false
   workflow_dispatch:
     inputs:
       packages:
@@ -63,7 +71,8 @@ jobs:
           # Empty on push and workflow_call runs = full set.
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Publish check runs
         run: mise run //tools/release:publish_check_runs
@@ -78,5 +87,6 @@ jobs:
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
-          TURBO_API: ${{ vars.TURBO_API }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}

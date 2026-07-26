@@ -1,0 +1,86 @@
+# Branch-head CI: the fallback for SHAs that no pull_request run covers, and
+# the opt-in path for the main graph — a `ci-main/` branch builds `ci:main` on
+# every push, smoke-testing the main-only guards before merge rather than after.
+#
+# Split from build-test.yml by trigger so neither file instantiates the other's
+# jobs. That is what keeps the required context `build_and_test / run`
+# unforgeable: this workflow never contains a job that could emit it, and a
+# skipped job here can only report the names below.
+#
+# Required-check contexts are workflow-agnostic — the context is the job name
+# (or `caller / inner`), and the workflow name is display only. So these job
+# names share one namespace with build-test.yml's and must stay distinct.
+name: Build and Test (branch)
+
+on:
+  push:
+    branches:
+      # A CONFLICTING PR has no merge ref and a branch with no PR fires nothing
+      # at all; those are the SHAs this workflow exists for. main and PR runs
+      # belong to build-test.yml.
+      - '**'
+      - '!main'
+      # Dependabot push events get dependabot secrets (no TURBO_TOKEN); its
+      # PRs already get merge-head CI.
+      - '!dependabot/**'
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  signal_gate:
+    # Answers whether a pull_request run will cover this SHA at all; its `run`
+    # output gates the job below. Imports nothing from node_modules, so no
+    # `mise run setup` step: paying for an install here would cost more than it
+    # saves on the pushes it can't skip. gh is preinstalled on the runner image.
+    name: build_and_test (signal gate)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      run: ${{ steps.gate.outputs.run }}
+      mainGraph: ${{ steps.gate.outputs.mainGraph }}
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+          # git merge-tree needs real merge bases; a shallow clone has none.
+          fetch-depth: 0
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Decide whether this push needs its own run
+        id: gate
+        run: mise run //tools/build_and_test:branch_ci_gate
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  build_and_test_branch:
+    # `signal_gate` is 'failure' if the gate itself broke — that means run,
+    # since the gate must never become a way to lose CI. `!cancelled()` is
+    # required for the `if` to evaluate at all once a `needs` job can skip.
+    # The dispatch-only debugging inputs are left at their defaults here.
+    #
+    # A `ci-main/` branch needs no extra term here: the gate answers `run=true`
+    # for the opt-in itself, so the prefix lives in exactly one place.
+    name: build_and_test (branch)
+    needs: signal_gate
+    if: >-
+      ${{ !cancelled()
+      && (needs.signal_gate.result != 'success' || needs.signal_gate.outputs.run == 'true') }}
+    permissions:
+      contents: read
+    uses: ./.github/workflows/build-test-run.yml
+    with:
+      # Only a `ci-main/` branch sets this. A job-level failure that never
+      # reached the gate leaves it empty, i.e. the PR graph — the run still
+      # happens, it is just the smaller one.
+      mainGraph: ${{ needs.signal_gate.outputs.mainGraph == 'true' }}
+    secrets:
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+      TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+      TURBO_API: ${{ secrets.TURBO_API }}
+      CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

@@ -49,7 +49,8 @@ jobs:
       group: tag-release-${{ matrix.package }}
     permissions:
       contents: write
-    # Protected environment ensures only authorized pushes create tags
+    # Ref restriction, not an approval gate: keeps the tag-push PAT off any
+    # ref but main and the release tags. Tag rules live in the repo ruleset.
     environment: tag-release
     strategy:
       matrix:
