@@ -261,11 +261,9 @@ function run(specifier: string, configFile: string) {
 // third-party and stay green forever. If the floor is ever raised past 5.4,
 // this fails loudly — pick a newer-syntax probe.
 //
-// The probe lives in a per-process scratch dir under this package — NEVER in
-// packages/*/dist. The `test` and `test:matrix` tasks run this script
-// concurrently, and pack:all stages copies of the packages in the same graph:
-// any mutation of a shared build output races them (it has corrupted a run
-// and poisoned a remote-cache tarball).
+// Probes live in a scratch dir, never in packages/*/dist — concurrent tasks
+// in the same graph (test × test:matrix, pack:all staging) race any mutation
+// of shared build outputs.
 const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 
 // The native leg has its own ownership filter, so it needs its own proof. An
@@ -273,11 +271,9 @@ const PROBE = 'export type __dtsBacktestProbe = NoInfer<string>;\n';
 const NATIVE_PROBE =
   'export type __dtsBacktestNativeProbe = __NoSuchTypeExists__;\n';
 
-// Scratch dir under `here` (not os.tmpdir()) so ownsPath() owns the probe
-// diagnostics and the scratch tsconfig's relative paths resolve; outside the
-// task's turbo `inputs` (fixtures/**, run.ts, tsconfig.fixture*.json) so its
-// lifecycle never dirties the cache hash. mkdtemp keeps the two concurrent
-// tasks from sharing it.
+// Under `here` (not os.tmpdir()) so ownsPath() owns the probe diagnostics and
+// relative tsconfig paths resolve; outside this task's turbo `inputs` so the
+// scratch lifecycle never dirties the cache hash.
 async function withProbeFile<T>(
   probe: string,
   body: (probePath: string, scratchDir: string) => T | Promise<T>,
@@ -325,9 +321,8 @@ function selftest() {
 }
 
 async function selftestNative() {
-  // The native API takes only a tsconfig, so the scratch dir gets one that
-  // extends the fixture config and re-includes the fixtures plus the probe.
-  // Relative `include` paths resolve against the config that declares them.
+  // The native API takes only a tsconfig; relative `include` paths resolve
+  // against the declaring config, so the scratch dir gets its own.
   const { version, owned } = await withProbeFile(
     NATIVE_PROBE,
     (_probePath, scratchDir) => {

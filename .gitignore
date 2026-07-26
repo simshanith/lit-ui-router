@@ -64,5 +64,5 @@ coverage
 # bv (beads viewer) local config and caches
 .bv/
 
-# dts-backtest per-process selftest probes (cleaned in-run; belt for crashes)
+# dts-backtest selftest scratch (cleaned in-run)
 tools/dts-backtest/.probe-scratch/
