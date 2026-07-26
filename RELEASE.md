@@ -64,7 +64,7 @@ These are consumed by `build-test.yml` and `publish-npm.yml` to enable remote ca
 
 ### 1. Build and Test (`build-test.yml`)
 
-**Triggers:** Pull requests, branch and `main` pushes, manual dispatch
+**Triggers:** Pull requests, `main` pushes, manual dispatch
 
 [Actions ▸ Build and Test ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml)
 
@@ -86,6 +86,26 @@ red run means no tag, hence no publish. Manual dispatch can run the
 to deflake the full main graph); tagging stays push-only.
 
 **Security:** Only runs on first-party PRs (not forks) to protect secrets.
+
+#### Companion files
+
+The pipeline is one set of steps split across three files by trigger, so that
+neither event can instantiate the other's jobs:
+
+| File                    | Trigger                      | Reports                                                         |
+| ----------------------- | ---------------------------- | --------------------------------------------------------------- |
+| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` — the required status check              |
+| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run` |
+| `build-test-run.yml`    | `workflow_call` only         | the `run` job both callers share                                |
+
+Branch-head pushes are gated: `build_and_test (signal gate)` asks whether a
+`pull_request` run will cover the SHA anyway, and skips the duplicate when it
+will. It cannot skip when a base conflicts (GitHub builds no merge ref) or when
+no PR is open, which are exactly the SHAs that would otherwise get no CI.
+
+The split is what makes `build_and_test / run` safe to require: a branch push
+never runs `build-test.yml`, so it cannot report that name — and GitHub counts
+a _skipped_ required check as passing.
 
 ### 2. Bump Version (`bump-version.yml`)
 
