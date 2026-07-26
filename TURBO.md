@@ -87,7 +87,7 @@ docs
 - `outputs` defines cacheable artifacts
 - `inputs` scopes cache invalidation
 - Every build output lives under a `dist/` dir, so every traversal ignore is one `**/dist/**` glob (no sibling `dist-*` patterns): single-output packages use plain `dist/`; multi-output packages namespace each variant as `dist/<variant>/` (disjoint outputs globs, each vite build empties only its own subdir)
-- Dot-dirs under `dist/` (e.g. `dist/.stats/`, uncached codecov probe output) are machinery, not artifact — packers include dot-dirs under `files: ["dist/**"]`, so shipped packages carry an explicit `!dist/.*/**` negation; `check:published-diff` backstops the boundary
+- Nothing writes machinery under `dist/` — probe/scratch output lives in gitignored `.cache/` dirs (e.g. `.cache/bundle-stats/`), because anything under a `dist/` can be captured by build caching or pack staging mid-graph; shipped packages keep the `!dist/.*/**` files negation as a backstop, and `check:published-diff` backstops the boundary
 
 Exceptions: `docs/api/**` (generated VitePress content, not a bundle output) and `tools/release/.cache/**` (turbo-hashed input cache).
 
