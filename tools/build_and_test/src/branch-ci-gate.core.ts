@@ -22,7 +22,19 @@ export type BaseVerdict = {
   detail?: string;
 };
 
-export type Decision = { run: boolean; reason: string };
+export type Decision = { run: boolean; reason: string; mainGraph: boolean };
+
+/**
+ * Branch-name prefix that opts a push into the `ci:main` superset — the
+ * main-only guards a pull_request run never covers, smoke-tested before merge
+ * rather than after. Named for the task it selects (`mise run ci_main`).
+ */
+export const MAIN_GRAPH_PREFIX = 'ci-main/';
+
+/** Whether this branch name opts into the main graph. */
+export function wantsMainGraph(branch: string): boolean {
+  return branch.startsWith(MAIN_GRAPH_PREFIX);
+}
 
 /**
  * Validate `gh pr list --json number,baseRefName` output. Throws on any shape
@@ -95,10 +107,22 @@ function listBases(verdicts: readonly BaseVerdict[]): string {
 export function decide(
   prs: readonly OpenPr[],
   verdicts: readonly BaseVerdict[],
+  mainGraph = false,
 ): Decision {
+  // Checked before mergeability, because this is the one case where a branch a
+  // pull_request run *does* cover still needs its own: that run builds the PR
+  // graph, and the main-only guards are exactly what the opt-in asked for.
+  if (mainGraph) {
+    return {
+      run: true,
+      mainGraph,
+      reason: `\`${MAIN_GRAPH_PREFIX}\` branch prefix — running ci:main`,
+    };
+  }
   if (prs.length === 0) {
     return {
       run: true,
+      mainGraph,
       reason:
         'no open PR has this branch as its head — no pull_request run will cover this push',
     };
@@ -106,6 +130,7 @@ export function decide(
   if (verdicts.length === 0) {
     return {
       run: true,
+      mainGraph,
       reason: `${prs.length} open PR(s) but no merge probe ran — running rather than assume coverage`,
     };
   }
@@ -115,6 +140,7 @@ export function decide(
   if (conflicting.length > 0) {
     return {
       run: true,
+      mainGraph,
       reason: `conflicts with ${listBases(conflicting)} — GitHub builds no merge ref, so the pull_request run is skipped`,
     };
   }
@@ -124,11 +150,13 @@ export function decide(
   if (indeterminate.length > 0) {
     return {
       run: true,
+      mainGraph,
       reason: `mergeability with ${listBases(indeterminate)} is indeterminate — running rather than risk dropping the only signal`,
     };
   }
   return {
     run: false,
+    mainGraph,
     reason: `mergeable with ${listBases(verdicts)} — the merge-head pull_request run already covers this SHA`,
   };
 }
@@ -167,6 +195,12 @@ export function summaryMarkdown({
     decision.reason,
     '',
   ];
+  if (decision.run) {
+    lines.push(
+      `Graph: \`${decision.mainGraph ? 'ci:main' : 'ci:pull_request'}\``,
+      '',
+    );
+  }
   if (prs.length === 0) {
     lines.push('No open pull requests have this branch as their head.');
   } else {

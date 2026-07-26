@@ -1,6 +1,7 @@
 #!/usr/bin/env node
-// Decides whether a branch-head push needs its own CI run, exporting
-// `run=true|false` to GITHUB_OUTPUT for build-test.yml's build_and_test `if`.
+// Decides whether a branch-head push needs its own CI run, and which graph it
+// should build. Exports `run` and `mainGraph` to GITHUB_OUTPUT, which
+// build-test-branch.yml reads as its build job's `if` and `mainGraph` input.
 //
 // A mergeable branch with an open PR gets a merge-head pull_request run on the
 // same content, so the push run is a duplicate racing it for the same turbo
@@ -33,6 +34,7 @@ import {
   mergeStateFromExit,
   parseOpenPrs,
   summaryMarkdown,
+  wantsMainGraph,
 } from './branch-ci-gate.core.ts';
 
 const run = promisify(execFile);
@@ -125,7 +127,7 @@ async function main(): Promise<void> {
     sha: head,
     prs,
     verdicts,
-    decision: decide(prs, verdicts),
+    decision: decide(prs, verdicts, wantsMainGraph(branch)),
   });
 }
 
@@ -136,9 +138,9 @@ async function report(gate: GateRun): Promise<void> {
   // Both runner files are absent on a local `mise run`; print instead so a dry
   // local invocation still shows exactly what CI would export.
   const output = process.env.GITHUB_OUTPUT;
-  const line = `run=${decision.run}`;
-  if (output) await appendFile(output, `${line}\n`);
-  else console.log(line);
+  const lines = `run=${decision.run}\nmainGraph=${decision.mainGraph}\n`;
+  if (output) await appendFile(output, lines);
+  else process.stdout.write(lines);
 
   const summary = process.env.GITHUB_STEP_SUMMARY;
   const markdown = summaryMarkdown(gate);
@@ -153,7 +155,11 @@ main().catch(async (error: unknown) => {
   console.log(
     `::warning::branch CI gate failed, running CI anyway: ${message}`,
   );
+  // The opt-in survives here too: it is a string test on the ref name, so it
+  // cannot be what broke, and degrading it would silently run the smaller graph.
+  const mainGraph = wantsMainGraph(process.env.GITHUB_REF_NAME?.trim() ?? '');
   const output = process.env.GITHUB_OUTPUT;
-  if (output) await appendFile(output, 'run=true\n');
-  else console.log('run=true');
+  const lines = `run=true\nmainGraph=${mainGraph}\n`;
+  if (output) await appendFile(output, lines);
+  else process.stdout.write(lines);
 });

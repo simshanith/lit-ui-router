@@ -82,8 +82,11 @@ Pushes to `main` run the same graph plus the main-only guards (turbo
 pack-surface manifest check (`check:pack`), and the full dts-backtest
 TypeScript matrix. A green main run then calls the Tag & push workflow — a
 red run means no tag, hence no publish. Manual dispatch can run the
-`ci:main` graph on demand via the `mainGraph` input (combine with `force`
-to deflake the full main graph); tagging stays push-only.
+`ci:main` graph on demand against any ref via the `mainGraph` input
+(combine with `force` to deflake the full main graph), and a branch named
+`ci-main/<topic>` builds it on every push — so the guards that gate a
+release can be smoke-tested before merge. Tagging stays push-to-`main`
+only, so neither path can release.
 
 **Security:** Only runs on first-party PRs (not forks) to protect secrets.
 
