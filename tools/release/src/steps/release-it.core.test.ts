@@ -104,7 +104,7 @@ describe('publishArgs', () => {
       '--github.release',
       'true',
       '--github.assets',
-      '*.tgz',
+      '/w/packages/lit-ui-router/lit-ui-router-1.8.0.tgz',
       '--git.tagExclude',
       '${npm.name}@1.8.0',
       '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
