@@ -88,7 +88,7 @@ describe('bumpArgs', () => {
 describe('publishArgs', () => {
   const base = {
     releaseVersion: '1.8.0',
-    tarballPath: '/w/packages/lit-ui-router/lit-ui-router-1.8.0.tgz',
+    tarballPath: '/w/tools/release/.cache/publish/lit-ui-router.tgz',
     dryRun: false,
   };
 
@@ -100,11 +100,11 @@ describe('publishArgs', () => {
       '--npm.skipChecks',
       'true',
       '--npm.publishPath',
-      '/w/packages/lit-ui-router/lit-ui-router-1.8.0.tgz',
+      '/w/tools/release/.cache/publish/lit-ui-router.tgz',
       '--github.release',
       'true',
       '--github.assets',
-      '*.tgz',
+      '/w/tools/release/.cache/publish/lit-ui-router.tgz',
       '--git.tagExclude',
       '${npm.name}@1.8.0',
       '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
