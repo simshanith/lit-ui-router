@@ -1,4 +1,6 @@
-# Branch-head CI: the fallback for SHAs that no pull_request run covers.
+# Branch-head CI: the fallback for SHAs that no pull_request run covers, and
+# the opt-in path for the main graph — a `ci-main/` branch builds `ci:main` on
+# every push, smoke-testing the main-only guards before merge rather than after.
 #
 # Split from build-test.yml by trigger so neither file instantiates the other's
 # jobs. That is what keeps the required context `build_and_test / run`
@@ -40,6 +42,7 @@ jobs:
       pull-requests: read
     outputs:
       run: ${{ steps.gate.outputs.run }}
+      mainGraph: ${{ steps.gate.outputs.mainGraph }}
     steps:
       - name: 'Checkout code'
         uses: actions/checkout@v7
@@ -60,6 +63,9 @@ jobs:
     # since the gate must never become a way to lose CI. `!cancelled()` is
     # required for the `if` to evaluate at all once a `needs` job can skip.
     # The dispatch-only debugging inputs are left at their defaults here.
+    #
+    # A `ci-main/` branch needs no extra term here: the gate answers `run=true`
+    # for the opt-in itself, so the prefix lives in exactly one place.
     name: build_and_test (branch)
     needs: signal_gate
     if: >-
@@ -68,6 +74,11 @@ jobs:
     permissions:
       contents: read
     uses: ./.github/workflows/build-test-run.yml
+    with:
+      # Only a `ci-main/` branch sets this. A job-level failure that never
+      # reached the gate leaves it empty, i.e. the PR graph — the run still
+      # happens, it is just the smaller one.
+      mainGraph: ${{ needs.signal_gate.outputs.mainGraph == 'true' }}
     secrets:
       TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
       CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}

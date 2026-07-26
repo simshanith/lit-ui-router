@@ -10,6 +10,7 @@ import {
   mergeStateFromExit,
   parseOpenPrs,
   summaryMarkdown,
+  wantsMainGraph,
 } from './branch-ci-gate.core.ts';
 
 const PR_ONE: OpenPr = { number: 1, baseRefName: 'main' };
@@ -99,6 +100,24 @@ describe('mergeStateFromExit', () => {
   });
 });
 
+describe('wantsMainGraph', () => {
+  it('opts in on the ci-main/ prefix', () => {
+    assert.equal(wantsMainGraph('ci-main/smoke-the-guards'), true);
+    assert.equal(wantsMainGraph('ci-main/nested/topic'), true);
+  });
+
+  it('requires the separator, so ci-main-ish names do not opt in', () => {
+    assert.equal(wantsMainGraph('ci-main'), false);
+    assert.equal(wantsMainGraph('ci-maintenance'), false);
+  });
+
+  it('anchors at the start — the prefix is not a substring match', () => {
+    assert.equal(wantsMainGraph('feat/ci-main/thing'), false);
+    assert.equal(wantsMainGraph('main'), false);
+    assert.equal(wantsMainGraph(''), false);
+  });
+});
+
 describe('decide', () => {
   it('runs when no open PR has this branch as its head', () => {
     const decision = decide([], []);
@@ -158,6 +177,36 @@ describe('decide', () => {
     assert.equal(decision.run, true);
     assert.match(decision.reason, /no merge probe ran/);
   });
+
+  it('reports the PR graph unless the opt-in asked otherwise', () => {
+    assert.equal(decide([], []).mainGraph, false);
+    assert.equal(decide([PR_ONE], [verdict('main', 'clean')]).mainGraph, false);
+  });
+
+  it('runs the main graph on opt-in even when every base is mergeable', () => {
+    // The case the gate would otherwise skip: a pull_request run covers this
+    // SHA, but only with the PR graph, which is not what was asked for.
+    const decision = decide([PR_ONE], [verdict('main', 'clean')], true);
+    assert.equal(decision.run, true);
+    assert.equal(decision.mainGraph, true);
+    assert.match(decision.reason, /ci-main\//);
+    assert.match(decision.reason, /running ci:main/);
+  });
+
+  it('keeps the opt-in graph through every other run reason', () => {
+    for (const verdicts of [
+      [],
+      [verdict('main', 'conflict')],
+      [verdict('main', 'unknown')],
+    ]) {
+      const decision = decide([PR_ONE], verdicts, true);
+      assert.equal(decision.run, true);
+      assert.equal(decision.mainGraph, true);
+    }
+    const noPr = decide([], [], true);
+    assert.equal(noPr.run, true);
+    assert.equal(noPr.mainGraph, true);
+  });
 });
 
 describe('summaryMarkdown', () => {
@@ -167,8 +216,15 @@ describe('summaryMarkdown', () => {
     branch: string,
     prs: readonly OpenPr[],
     verdicts: readonly BaseVerdict[],
+    mainGraph = false,
   ): GateRun {
-    return { branch, sha, prs, verdicts, decision: decide(prs, verdicts) };
+    return {
+      branch,
+      sha,
+      prs,
+      verdicts,
+      decision: decide(prs, verdicts, mainGraph),
+    };
   }
 
   it('explains a skip with the bases it cleared', () => {
@@ -186,6 +242,26 @@ describe('summaryMarkdown', () => {
     );
     assert.match(markdown, /running/);
     assert.match(markdown, /CONFLICTS/);
+  });
+
+  it('names the graph a run will build', () => {
+    assert.match(
+      summaryMarkdown(gateRun('topic', [], [])),
+      /Graph: `ci:pull_request`/,
+    );
+    assert.match(
+      summaryMarkdown(
+        gateRun('ci-main/topic', [PR_ONE], [verdict('main', 'clean')], true),
+      ),
+      /Graph: `ci:main`/,
+    );
+  });
+
+  it('omits the graph on a skip — nothing gets built', () => {
+    assert.doesNotMatch(
+      summaryMarkdown(gateRun('topic', [PR_ONE], [verdict('main', 'clean')])),
+      /Graph:/,
+    );
   });
 
   it('states the no-PR case instead of an empty table', () => {

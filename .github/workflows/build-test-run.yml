@@ -17,8 +17,11 @@ on:
         description: 'Bypass turbo cache (deflake reproduction: rebuild/retest everything)'
         type: boolean
         default: false
+      # Which graph to build. Callers decide: each knows its own event, and a
+      # branch push can opt in too (see build-test-branch.yml), so sniffing the
+      # event here would be answering a question only the caller can.
       mainGraph:
-        description: 'Run the ci:main superset (main-only guards included)'
+        description: 'Run the ci:main superset (main-only guards included) instead of the PR graph'
         type: boolean
         default: false
       cypressVideo:
@@ -82,7 +85,7 @@ jobs:
         # Browsers came from the cache; only test:engines (main graph) needs
         # the firefox+webkit apt libs — the PR graph is chromium-only, and
         # chromium and Cypress ride the runner image's preinstalled set.
-        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' && ((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
+        if: ${{ steps.playwright-cache.outputs.cache-hit == 'true' && inputs.mainGraph }}
         run: mise run //tools/build_and_test:playwright_deps_engines
       - name: Install Cypress
         # `cypress install` is a near-no-op when the binary is cached; verify
@@ -100,7 +103,7 @@ jobs:
         # TURBO_FORCE carries the deflake input through env (never `${{ }}`
         # in run lines); turbo parses ""/"false" as cache-respecting.
         # Exact complement of the ci_main step below: one of the two runs.
-        if: ${{ !((github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph)) }}
+        if: ${{ !inputs.mainGraph }}
         run: mise run ci
         env:
           TURBO_FORCE: ${{ inputs.force }}
@@ -117,8 +120,9 @@ jobs:
         # dts-backtest full TS matrix) in one parallel turbo invocation; a
         # failure fails this job, so the tag_push call job never runs.
         # Future main-only guards join ci:main's dependsOn, not new steps.
-        # mainGraph dispatches run this graph too; tag_push stays push-only.
-        if: ${{ (github.event_name == 'push' && github.ref == 'refs/heads/main') || (github.event_name == 'workflow_dispatch' && inputs.mainGraph) }}
+        # Main pushes, mainGraph dispatches and ci-main/ branches all land here;
+        # tag_push stays push-only, so none of the others can tag.
+        if: ${{ inputs.mainGraph }}
         run: mise run ci_main
         env:
           TURBO_FORCE: ${{ inputs.force }}
@@ -138,10 +142,11 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
           CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
       - name: Upload Cypress videos
-        # Videos exist only when the dispatch input turned recording on;
+        # Videos exist only when the dispatch input turned recording on — no
+        # other caller passes cypressVideo, so the input alone is the condition.
         # !cancelled() keeps videos from failed suites — the debugging case.
         # An early failure before Cypress leaves no files, hence warn.
-        if: ${{ github.event_name == 'workflow_dispatch' && inputs.cypressVideo && !cancelled() }}
+        if: ${{ inputs.cypressVideo && !cancelled() }}
         uses: actions/upload-artifact@v7
         with:
           name: cypress-videos
