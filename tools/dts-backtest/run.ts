@@ -328,7 +328,7 @@ async function selftestNative() {
   // Relative `include` paths resolve against the config that declares them.
   const { version, owned } = await withProbeFile(
     NATIVE_PROBE,
-    (probePath, scratchDir) => {
+    (_probePath, scratchDir) => {
       const scratchConfig = join(scratchDir, 'tsconfig.json');
       writeFileSync(
         scratchConfig,
