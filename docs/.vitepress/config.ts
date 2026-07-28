@@ -94,6 +94,7 @@ function makeSidebar() {
             },
           ],
         },
+        { text: 'Server', link: '/packages/server' },
       ],
     },
     {
