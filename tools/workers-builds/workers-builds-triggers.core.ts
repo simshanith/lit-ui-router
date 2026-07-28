@@ -4,6 +4,7 @@
 // reading wrangler.jsonc) lives in workers-builds-triggers.ts.
 
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
+import * as v from 'valibot';
 
 // What the shell prints and exits on.
 export type Report = { ok: boolean; text: string };
@@ -27,12 +28,25 @@ export const PINNABLE_FIELDS = [
   'root_directory',
 ] as const;
 export type PinnableField = (typeof PINNABLE_FIELDS)[number];
-export type DesiredTrigger = Partial<Record<PinnableField, string>>;
-export type DesiredState = {
-  productionBranch: string;
-  production: DesiredTrigger;
-  preview: DesiredTrigger;
-};
+
+const nonEmptyString = v.pipe(v.string(), v.nonEmpty());
+
+// strictObject: an unknown or typoed key throws rather than silently
+// un-pinning a field, since --apply writes this state to production.
+const DesiredTriggerSchema = v.strictObject({
+  build_command: v.optional(nonEmptyString),
+  deploy_command: v.optional(nonEmptyString),
+  root_directory: v.optional(nonEmptyString),
+} satisfies Record<PinnableField, unknown>);
+
+const DesiredStateSchema = v.strictObject({
+  productionBranch: nonEmptyString,
+  production: DesiredTriggerSchema,
+  preview: DesiredTriggerSchema,
+});
+
+export type DesiredTrigger = v.InferOutput<typeof DesiredTriggerSchema>;
+export type DesiredState = v.InferOutput<typeof DesiredStateSchema>;
 
 export type TriggerKind = 'production' | 'preview';
 
@@ -50,63 +64,30 @@ export function parseJsonc(text: string): unknown {
   return result;
 }
 
-// Strict validation of workers-builds-triggers.config.jsonc: unknown or
-// mistyped keys throw rather than silently un-pinning a field, since --apply
-// writes this state to production.
+// Strict validation of workers-builds-triggers.config.jsonc; every issue is
+// reported, prefixed with its dot path into the config.
 export function desiredStateFromConfig(config: unknown): DesiredState {
-  const record = asRecord(config, 'config');
-  for (const key of Object.keys(record)) {
-    if (!['productionBranch', 'production', 'preview'].includes(key)) {
-      throw new Error(`config has unknown key "${key}"`);
-    }
+  const result = v.safeParse(DesiredStateSchema, config);
+  if (!result.success) {
+    const details = result.issues.map((issue) => {
+      const path = v.getDotPath(issue);
+      return path ? `  ${path}: ${issue.message}` : `  ${issue.message}`;
+    });
+    throw new Error(['invalid config:', ...details].join('\n'));
   }
-  const { productionBranch } = record;
-  if (typeof productionBranch !== 'string' || productionBranch === '') {
-    throw new Error('config "productionBranch" must be a non-empty string');
-  }
-  return {
-    productionBranch,
-    production: desiredTrigger(record.production, 'production'),
-    preview: desiredTrigger(record.preview, 'preview'),
-  };
+  return result.output;
 }
 
-function asRecord(value: unknown, what: string): Record<string, unknown> {
-  if (typeof value !== 'object' || value === null || Array.isArray(value)) {
-    throw new Error(`${what} must be an object`);
-  }
-  return value as Record<string, unknown>;
-}
-
-function desiredTrigger(value: unknown, kind: TriggerKind): DesiredTrigger {
-  const record = asRecord(value, `config "${kind}"`);
-  const desired: DesiredTrigger = {};
-  for (const key of Object.keys(record)) {
-    const field = PINNABLE_FIELDS.find((candidate) => candidate === key);
-    if (!field) {
-      throw new Error(
-        `config ${kind}.${key} is not a pinnable field (expected: ${PINNABLE_FIELDS.join(', ')})`,
-      );
-    }
-    const spec = record[field];
-    if (typeof spec !== 'string' || spec === '') {
-      throw new Error(`config ${kind}.${field} must be a non-empty string`);
-    }
-    desired[field] = spec;
-  }
-  return desired;
-}
+// looseObject: wrangler.jsonc has many fields; only `name` matters here.
+const WranglerNameSchema = v.looseObject({ name: nonEmptyString });
 
 /** The `name` field of a parsed wrangler config, or throw. */
 export function workerNameFromConfig(config: unknown): string {
-  const name =
-    typeof config === 'object' && config !== null
-      ? (config as Record<string, unknown>).name
-      : undefined;
-  if (typeof name !== 'string' || name === '') {
+  const result = v.safeParse(WranglerNameSchema, config);
+  if (!result.success) {
     throw new Error('wrangler.jsonc has no "name" field');
   }
-  return name;
+  return result.output.name;
 }
 
 // A trigger that builds the production branch is the production trigger;
