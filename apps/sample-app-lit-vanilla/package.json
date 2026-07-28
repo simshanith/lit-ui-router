@@ -27,8 +27,6 @@
     "oxfmt": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vite": "catalog:",
-    "vite-plugin-checker": "catalog:",
-    "vite-plugin-static-copy": "catalog:",
     "wrangler": "catalog:"
   }
 }

@@ -5,7 +5,8 @@
   "type": "module",
   "exports": {
     "./*": "./src/*",
-    "./*.js": "./src/*.ts"
+    "./*.js": "./src/*.ts",
+    "./tooling/*.js": "./tooling/*.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{js,ts,json,md,css}\"",
@@ -37,6 +38,8 @@
     "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
+    "vite-plugin-checker": "catalog:",
+    "vite-plugin-static-copy": "catalog:",
     "vitest": "catalog:"
   }
 }

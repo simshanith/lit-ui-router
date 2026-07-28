@@ -20,6 +20,15 @@
       ],
       "dependsOn": ["^build", "^transit"],
       "outputs": ["dist/hash/**"]
+    },
+    "typecheck": {
+      // tsconfig extends + the vite factory live in sample-app-shared/tooling,
+      // outside this package's default inputs; ^build:types doesn't hash it
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/apps/sample-app-shared/tooling/**"
+      ]
     }
   }
 }
