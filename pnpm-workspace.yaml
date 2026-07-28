@@ -54,7 +54,7 @@ catalog:
   oxc-transform: 0.140.0
   oxfmt: 0.59.0
   oxlint: 1.74.0
-  oxlint-tsgolint: 0.25.0
+  oxlint-tsgolint: 7.0.2001
   pacote: ^22.0.0
   playwright: ^1.61.1
   publint: ^0.3.21
