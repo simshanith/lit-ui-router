@@ -910,6 +910,9 @@ importers:
 
   tools/lcov-rebase:
     devDependencies:
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

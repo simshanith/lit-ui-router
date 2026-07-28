@@ -6,7 +6,9 @@
 import fs from 'node:fs';
 import path from 'node:path';
 
-import { findRepoRoot, rebaseLcov } from './rebase.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
+
+import { rebaseLcov } from './rebase.ts';
 
 const files = process.argv.slice(2);
 if (files.length === 0) {
@@ -15,7 +17,7 @@ if (files.length === 0) {
 }
 
 const packageDir = path
-  .relative(findRepoRoot(process.cwd()), process.cwd())
+  .relative(workspaceRoot, process.cwd())
   .split(path.sep)
   .join('/');
 
