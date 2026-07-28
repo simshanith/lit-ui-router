@@ -33,15 +33,22 @@ const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
 // module to its import specifier, and flatten only the kind groups within.
 const serverSidebarItemsRaw =
   serverSidebarItemsJson as DefaultTheme.SidebarItem[];
-const serverSidebarItems = serverSidebarItemsRaw.map((module) => ({
-  ...module,
-  text:
-    module.text === 'index'
-      ? 'ui-router-server'
-      : `ui-router-server/${module.text}`,
-  collapsed: true,
-  items: module.items && flattenGroups(module.items),
-}));
+const serverSidebarItems = serverSidebarItemsRaw
+  .map((module) => ({
+    ...module,
+    text:
+      module.text === 'index'
+        ? 'ui-router-server'
+        : `ui-router-server/${module.text}`,
+    collapsed: true,
+    items: module.items && flattenGroups(module.items),
+  }))
+  // root module first; stable sort keeps the subpaths in typedoc order
+  .sort(
+    (a, b) =>
+      Number(b.text === 'ui-router-server') -
+      Number(a.text === 'ui-router-server'),
+  );
 
 const baseUrl = 'https://lit-ui-router.dev';
 
