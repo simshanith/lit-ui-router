@@ -790,6 +790,9 @@ importers:
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
+      '@tools/lcov-rebase':
+        specifier: workspace:*
+        version: link:../../tools/lcov-rebase
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -904,6 +907,18 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 4.1.10(@types/node@24.13.3)(@vitest/browser-playwright@4.1.10)(@vitest/coverage-v8@4.1.10)(happy-dom@20.11.0)(vite@8.1.3(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0))
+
+  tools/lcov-rebase:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.59.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/oxc-emit:
     dependencies:

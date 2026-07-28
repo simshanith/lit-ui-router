@@ -1,0 +1,25 @@
+{
+  "name": "@tools/lcov-rebase",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Rewrite lcov SF paths to repo-relative form so codecov can disambiguate same-named files across packages",
+  "bin": {
+    "rebase-lcov": "./src/rebase-lcov.ts"
+  },
+  "type": "module",
+  "exports": {
+    ".": "./src/rebase.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "lint": "oxlint .",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "typescript": "catalog:"
+  }
+}
