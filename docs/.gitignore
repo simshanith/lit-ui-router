@@ -3,4 +3,5 @@ dist
 api/reference
 api/lit-ui-router-mobx
 api/navigation-location-plugin
+api/ui-router-server
 worker/worker-configuration.d.ts

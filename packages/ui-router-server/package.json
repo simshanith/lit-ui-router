@@ -17,6 +17,7 @@
   },
   "scripts": {
     "codecov:bundle": "upload-entry-bundles",
+    "docs:api": "rimraf ../../docs/api/ui-router-server && typedoc",
     "format": "oxfmt \"**/*.{ts,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
@@ -26,11 +27,16 @@
   },
   "devDependencies": {
     "@tools/bundle-probe": "workspace:*",
+    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
-    "typescript": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
     "vite": "catalog:"
   },
   "peerDependencies": {

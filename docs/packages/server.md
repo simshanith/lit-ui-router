@@ -316,6 +316,8 @@ as the mount's `config`.
 
 ## Further reading
 
+- [API reference](/api/ui-router-server/) — every entry point, one module
+  per subpath import
 - [Server-Side Routing guide](/guides/server-route-matching) — the spectrum,
   the projection, and the live mounts
 - [Unmatched URLs](/guides/unmatched-urls) — the client-side 404 state this

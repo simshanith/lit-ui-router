@@ -1,3 +1,4 @@
+/** @module matcher */
 // Derived from @uirouter/core (MIT, Copyright (c) 2013-2015 The AngularUI Team, Karsten Sperling) — UrlMatcher/Param/ParamTypes, https://github.com/ui-router/core
 
 /**

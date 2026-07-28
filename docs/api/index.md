@@ -160,7 +160,7 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 
 ## Companion Packages
 
-`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/packages/mobx) and the [Navigation API location plugin](/packages/navigation-plugin), each independently versioned with its own guide and API reference; [`ui-router-server`](/packages/server), server-side routing verdicts at the edge, is in development. See [Companion Packages](/packages/).
+`lit-ui-router` is the core package; optional **companion packages** layer on extra integrations — [MobX bindings](/packages/mobx), the [Navigation API location plugin](/packages/navigation-plugin), and [server-side routing verdicts](/packages/server) with [`ui-router-server`](/api/ui-router-server/) (in development), each independently versioned with its own guide and API reference. See [Companion Packages](/packages/).
 
 ## Further Reading
 

@@ -790,6 +790,9 @@ importers:
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
+      '@tools/typedoc-plugin-lit-ui-router':
+        specifier: workspace:*
+        version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -802,9 +805,21 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.59.0
-      typescript:
+      rimraf:
         specifier: 'catalog:'
-        version: 7.0.2
+        version: 6.1.3
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.20(@typescript/typescript6@6.0.2)
+      typedoc-plugin-markdown:
+        specifier: 'catalog:'
+        version: 4.12.0(typedoc@0.28.20(@typescript/typescript6@6.0.2))
+      typedoc-vitepress-theme:
+        specifier: 'catalog:'
+        version: 1.1.3(typedoc-plugin-markdown@4.12.0(typedoc@0.28.20(@typescript/typescript6@6.0.2)))
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
       vite:
         specifier: 'catalog:'
         version: 8.1.3(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
