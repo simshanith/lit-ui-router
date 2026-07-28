@@ -21,7 +21,7 @@
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
-    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\"",
+    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && sed -e 's|^SF:|SF:packages/ui-router-server/|' coverage/lcov.info > coverage/lcov.tmp && mv coverage/lcov.tmp coverage/lcov.info",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
