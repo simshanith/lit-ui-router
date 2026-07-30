@@ -168,7 +168,7 @@ jobs:
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v7
         with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json
+          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info
           disable_search: true
           plugins: noop
           fail_ci_if_error: false

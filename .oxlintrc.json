@@ -302,6 +302,7 @@
       "files": [
         "scripts/**/*.test.ts",
         "tools/build_and_test/**/*.test.ts",
+        "tools/lcov-rebase/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/shared/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",

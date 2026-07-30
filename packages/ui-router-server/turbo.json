@@ -6,6 +6,12 @@
       "dependsOn": ["^test", "transit"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
+    // root task keys inputs on vitest configs; this suite is node --test
+    "test:coverage": {
+      "dependsOn": ["^test:coverage", "transit"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["coverage/**"]
+    },
     "typecheck": {
       "with": ["typecheck:tests"]
     },
