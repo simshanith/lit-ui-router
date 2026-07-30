@@ -1,10 +1,5 @@
 {
-  "extends": "../../tsconfig.base.json",
-  "compilerOptions": {
-    "allowJs": true,
-    "types": ["vite/client", "dom-navigation"],
-    "noEmit": true
-  },
-  "include": ["src/**/*"],
+  "extends": "./tooling/tsconfig.app.json",
+  "include": ["src/**/*", "tooling/**/*"],
   "exclude": ["node_modules"]
 }

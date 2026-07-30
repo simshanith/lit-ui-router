@@ -27,6 +27,13 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 description = "Start the shared CI Xvfb display and export DISPLAY"
 run = "./src/start-xvfb.ts"
 
+[tasks.branch_ci_gate]
+# env: GITHUB_REF_NAME, GH_TOKEN, GITHUB_OUTPUT, GITHUB_STEP_SUMMARY.
+# The one task here that runs WITHOUT `mise run setup`: its script imports
+# only node builtins, so the gate job needs no pnpm install to answer.
+description = "Decide whether this branch-head push needs its own CI run"
+run = "./src/branch-ci-gate.ts"
+
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
 # cache step derives its key alone.

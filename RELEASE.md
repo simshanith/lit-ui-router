@@ -64,7 +64,9 @@ These are consumed by `build-test.yml` and `publish-npm.yml` to enable remote ca
 
 ### 1. Build and Test (`build-test.yml`)
 
-**Triggers:** Pull requests, branch and `main` pushes, manual dispatch
+**Triggers:** Pull requests, `main` pushes, manual dispatch
+
+[Actions ▸ Build and Test ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml)
 
 Runs the CI pipeline including:
 
@@ -80,14 +82,39 @@ Pushes to `main` run the same graph plus the main-only guards (turbo
 pack-surface manifest check (`check:pack`), and the full dts-backtest
 TypeScript matrix. A green main run then calls the Tag & push workflow — a
 red run means no tag, hence no publish. Manual dispatch can run the
-`ci:main` graph on demand via the `mainGraph` input (combine with `force`
-to deflake the full main graph); tagging stays push-only.
+`ci:main` graph on demand against any ref via the `mainGraph` input
+(combine with `force` to deflake the full main graph), and a branch named
+`ci-main/<topic>` builds it on every push — so the guards that gate a
+release can be smoke-tested before merge. Tagging stays push-to-`main`
+only, so neither path can release.
 
 **Security:** Only runs on first-party PRs (not forks) to protect secrets.
+
+#### Companion files
+
+The pipeline is one set of steps split across three files by trigger, so that
+neither event can instantiate the other's jobs:
+
+| File                    | Trigger                      | Reports                                                         |
+| ----------------------- | ---------------------------- | --------------------------------------------------------------- |
+| `build-test.yml`        | PRs, `main` pushes, dispatch | `build_and_test / run` — the required status check              |
+| `build-test-branch.yml` | pushes to any other branch   | `build_and_test (signal gate)`, `build_and_test (branch) / run` |
+| `build-test-run.yml`    | `workflow_call` only         | the `run` job both callers share                                |
+
+Branch-head pushes are gated: `build_and_test (signal gate)` asks whether a
+`pull_request` run will cover the SHA anyway, and skips the duplicate when it
+will. It cannot skip when a base conflicts (GitHub builds no merge ref) or when
+no PR is open, which are exactly the SHAs that would otherwise get no CI.
+
+The split is what makes `build_and_test / run` safe to require: a branch push
+never runs `build-test.yml`, so it cannot report that name — and GitHub counts
+a _skipped_ required check as passing.
 
 ### 2. Bump Version (`bump-version.yml`)
 
 **Triggers:** Manual dispatch only
+
+[Actions ▸ Bump version ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/bump-version.yml)
 
 Creates a release PR by:
 
@@ -107,6 +134,8 @@ Creates a release PR by:
 
 **Triggers:** Called by Build and Test after a green `main` run (`workflow_call`); manual dispatch is the CI-bypass escape hatch
 
+[Actions ▸ Tag & push ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-gh.yml)
+
 When a release PR merges and main CI is green:
 
 1. Uses release-it to create a git tag per package (`<package>@X.Y.Z`)
@@ -118,6 +147,8 @@ When a release PR merges and main CI is green:
 ### 4. Publish to NPM (`publish-npm.yml`)
 
 **Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`); manual dispatch for dry runs
+
+[Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
 The final release stage:
 
@@ -131,6 +162,8 @@ The final release stage:
 ### 5. Release signals (`release-signals.yml`)
 
 **Triggers:** Pushes to `main`; called by Publish to NPM after a publish; manual dispatch
+
+[Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
 (does the pack surface differ from the published `latest`?) and

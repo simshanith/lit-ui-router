@@ -61,6 +61,8 @@ export function bumpArgs(options: {
  * - `--npm.publishPath`: publish the pnpm-packed (and attested) tarball; a
  *   bare `npm publish` re-packs from source and ships raw catalog:/workspace:
  *   refs npm can't resolve (broke 1.3.0–1.5.0)
+ * - `--github.assets`: the explicit tarball path; release-it globs assets
+ *   relative to the package dir, which stopped holding the tarball in #449
  * - `--git.tagExclude '${npm.name}@<version>'`: literal release-it template,
  *   never shell-expanded here
  * - `gitRawCommitsOpts.from=<prevTag>`: pins the conventional-changelog range
@@ -90,7 +92,7 @@ export function publishArgs(options: {
     '--github.release',
     'true',
     '--github.assets',
-    '*.tgz',
+    tarballPath,
     '--git.tagExclude',
     `\${npm.name}@${releaseVersion}`,
     ...(prevTag !== undefined

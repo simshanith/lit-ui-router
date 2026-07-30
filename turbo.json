@@ -1,6 +1,7 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
+  "remoteCache": { "signature": true },
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]
@@ -64,9 +65,13 @@
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
+      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
+      // mid-graph (build:js, pack:all staging) and oxlint never reads them
       "inputs": [
         "**/*.ts",
         "**/*.js",
+        "!dist/**",
+        "!.cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
       ]
@@ -94,13 +99,57 @@
         ".oxlintrc.json"
       ]
     },
+    // Config-plumbing lint: one //# cache group per tool, aggregated by the
+    // virtual //#lint:workflows node (which the lint task pulls in). The
+    // lint_workflows mise umbrella covers the same set for the standalone
+    // lint-workflows.yml job.
     "//#lint:workflows": {
+      // Virtual node: no package.json script, so turbo runs nothing for it — it
+      // just fans out (via `with`) to the per-tool tasks, which carry their own
+      // cache keys.
+      "with": [
+        "//#lint:actionlint",
+        "//#lint:zizmor",
+        "//#lint:toml",
+        "//#lint:shellcheck"
+      ]
+    },
+    "//#lint:actionlint": {
+      // config.toml holds the task defs, mise.lock the tool pins.
+      "inputs": [
+        ".github/**",
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:zizmor": {
+      // zizmor also reads its own config (zizmor.yml).
       "inputs": [
         ".github/**",
         "zizmor.yml",
-        ".config/mise/config.toml",
-        ".config/mise/mise.lock",
-        "$TURBO_DEFAULT$"
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:toml": {
+      // taplo lint over every tracked .toml; same input set as //#format:toml.
+      "inputs": [
+        "**/*.toml",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#lint:shellcheck": {
+      // shellcheck over *.sh/*.bash + the extensionless mise task scripts it
+      // shebang-scans (vendored sample-app scripts excluded in the task).
+      "inputs": [
+        "**/*.sh",
+        "**/*.bash",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/mise/tasks/**",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     "typecheck": {
@@ -135,7 +184,8 @@
         "lint",
         "typecheck",
         "format:check",
-        "check:bundle"
+        "check:bundle",
+        "@tools/release#check:exports"
       ]
     },
     "check:bundle": {
@@ -163,17 +213,23 @@
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
     "format": {
-      "with": ["//#format:root"],
+      "with": ["//#format:root", "//#format:toml"],
+      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
+      // mid-graph and oxfmt (gitignore-aware) never reads them
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
+        "!dist/**",
+        "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
     },
     "format:check": {
-      "with": ["//#format:check:root"],
+      "with": ["//#format:check:root", "//#format:check:toml"],
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
+        "!dist/**",
+        "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
@@ -183,6 +239,26 @@
     },
     "//#format:check:root": {
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // taplo owns .toml; separate root task so its cache key tracks only .toml
+    // (plus the .taplo.toml scoping and taplo's pin), disjoint from oxfmt above.
+    "//#format:toml": {
+      "inputs": [
+        "**/*.toml",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    "//#format:check:toml": {
+      "inputs": [
+        "**/*.toml",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/taplo.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/taplo",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
     },
     "e2e": {
       "dependsOn": ["^build", "^docs", "^e2e"],
