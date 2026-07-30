@@ -31,6 +31,11 @@
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
   "externalSymbolLinkMappings": {
+    "ui-router-server": {
+      "Request": "https://developer.mozilla.org/en-US/docs/Web/API/Request",
+      "Response": "https://developer.mozilla.org/en-US/docs/Web/API/Response",
+      "Headers": "https://developer.mozilla.org/en-US/docs/Web/API/Headers"
+    },
     "@uirouter/core": {
       "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
       "UrlMatcher": "https://ui-router.github.io/core/docs/latest/classes/_url_urlmatcher_.urlmatcher.html",
