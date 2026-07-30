@@ -63,21 +63,25 @@ describe('desiredStateFromConfig', () => {
   });
 
   it('rejects non-objects and unknown top-level keys', () => {
-    assert.throws(() => desiredStateFromConfig([]), /must be an object/);
+    assert.throws(() => desiredStateFromConfig(null), /Expected Object/);
+    assert.throws(
+      () => desiredStateFromConfig([]),
+      /productionBranch: Invalid key/,
+    );
     assert.throws(
       () => desiredStateFromConfig({ productionBranch: 'main', prod: {} }),
-      /unknown key "prod"/,
+      /prod: Invalid key/,
     );
   });
 
   it('requires a non-empty productionBranch and both trigger specs', () => {
     assert.throws(
       () => desiredStateFromConfig({ production: {}, preview: {} }),
-      /"productionBranch" must be a non-empty string/,
+      /productionBranch: Invalid key: Expected "productionBranch"/,
     );
     assert.throws(
       () => desiredStateFromConfig({ productionBranch: 'main' }),
-      /config "production" must be an object/,
+      /production: Invalid key: Expected "production"/,
     );
   });
 
@@ -89,12 +93,12 @@ describe('desiredStateFromConfig', () => {
           ...base,
           production: { deploy_comand: 'pnpm wrangler deploy' },
         }),
-      /production\.deploy_comand is not a pinnable field/,
+      /production\.deploy_comand: Invalid key/,
     );
     assert.throws(
       () =>
         desiredStateFromConfig({ ...base, production: { build_command: '' } }),
-      /production\.build_command must be a non-empty string/,
+      /production\.build_command: Invalid length/,
     );
   });
 });
