@@ -291,7 +291,7 @@ importers:
         version: 9.0.0
       eslint:
         specifier: 'catalog:'
-        version: 10.8.0(jiti@2.7.0)
+        version: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
       eslint-formatter-tap:
         specifier: 'catalog:'
         version: 9.0.1
@@ -300,13 +300,13 @@ importers:
         version: 1.76.0(oxlint@1.76.0(oxlint-tsgolint@7.0.2001))
       eslint-plugin-package-json:
         specifier: 'catalog:'
-        version: 1.6.2(eslint@10.8.0(jiti@2.7.0))
+        version: 1.6.2(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))
       eslint-plugin-pnpm:
         specifier: 'catalog:'
-        version: 1.7.0(eslint@10.8.0(jiti@2.7.0))
+        version: 1.7.0(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))
       eslint-plugin-turbo:
         specifier: 'catalog:'
-        version: 2.10.7(eslint@10.8.0(jiti@2.7.0))(turbo@2.10.7)
+        version: 2.10.7(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))(turbo@2.10.7)
       husky:
         specifier: 'catalog:'
         version: 9.1.7
@@ -355,7 +355,7 @@ importers:
         version: 0.61.0
       start-server-and-test:
         specifier: 'catalog:'
-        version: 3.0.11
+        version: 3.0.11(supports-color@8.1.1)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
@@ -652,7 +652,7 @@ importers:
         version: 1.62.0
       release-it:
         specifier: 'catalog:'
-        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)
+        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -721,7 +721,7 @@ importers:
         version: 0.61.0
       release-it:
         specifier: 'catalog:'
-        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)
+        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -781,7 +781,7 @@ importers:
         version: 1.62.0
       release-it:
         specifier: 'catalog:'
-        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)
+        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -803,12 +803,18 @@ importers:
 
   packages/ui-router-server:
     devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.0(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.0)(release-it@21.0.0(@types/node@24.13.3)(magicast@0.5.3))
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/lcov-rebase':
         specifier: workspace:*
         version: link:../../tools/lcov-rebase
+      '@tools/release-config':
+        specifier: workspace:*
+        version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -824,6 +830,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.61.0
+      release-it:
+        specifier: 'catalog:'
+        version: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
@@ -1004,7 +1013,7 @@ importers:
         version: link:../../packages/lit-ui-router-mobx
       pacote:
         specifier: 'catalog:'
-        version: 22.0.0
+        version: 22.0.0(supports-color@8.1.1)
       publint:
         specifier: 'catalog:'
         version: 0.3.22
@@ -6924,14 +6933,20 @@ snapshots:
   '@esbuild/win32-x64@0.28.1':
     optional: true
 
+  '@eslint-community/eslint-utils@4.9.1(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))':
+    dependencies:
+      eslint: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
+      eslint-visitor-keys: 3.4.3
+
   '@eslint-community/eslint-utils@4.9.1(eslint@10.8.0(jiti@2.7.0))':
     dependencies:
       eslint: 10.8.0(jiti@2.7.0)
       eslint-visitor-keys: 3.4.3
+    optional: true
 
   '@eslint-community/regexpp@4.12.2': {}
 
-  '@eslint/config-array@0.23.5':
+  '@eslint/config-array@0.23.5(supports-color@8.1.1)':
     dependencies:
       '@eslint/object-schema': 3.0.5
       debug: 4.4.3(supports-color@8.1.1)
@@ -7299,8 +7314,8 @@ snapshots:
   '@npmcli/agent@5.0.2':
     dependencies:
       agent-base: 9.0.0
-      http-proxy-agent: 9.1.0
-      https-proxy-agent: 9.1.0
+      http-proxy-agent: 9.1.0(supports-color@8.1.1)
+      https-proxy-agent: 9.1.0(supports-color@8.1.1)
       lru-cache: 11.5.1
       socks-proxy-agent: 10.1.0
     transitivePeerDependencies:
@@ -7893,7 +7908,7 @@ snapshots:
       conventional-changelog-angular: 9.2.1
       conventional-changelog-conventionalcommits: 10.2.1
       conventional-recommended-bump: 12.1.0
-      release-it: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)
+      release-it: 21.0.0(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1)
       semver: 7.8.5
     transitivePeerDependencies:
       - conventional-commits-filter
@@ -8084,10 +8099,10 @@ snapshots:
       - kerberos
       - supports-color
 
-  '@sigstore/tuf@5.0.0':
+  '@sigstore/tuf@5.0.0(supports-color@8.1.1)':
     dependencies:
       '@sigstore/protobuf-specs': 0.5.1
-      tuf-js: 6.0.0
+      tuf-js: 6.0.0(supports-color@8.1.1)
     transitivePeerDependencies:
       - supports-color
 
@@ -8563,7 +8578,7 @@ snapshots:
       '@vueuse/shared': 14.3.0(vue@3.5.40(typescript@7.0.2))
       vue: 3.5.40(typescript@7.0.2)
     optionalDependencies:
-      axios: 1.18.1(debug@4.4.3)
+      axios: 1.18.1(debug@4.4.3(supports-color@8.1.1))
       change-case: 5.4.4
       focus-trap: 8.2.2
 
@@ -8703,9 +8718,9 @@ snapshots:
 
   aws4@1.13.2: {}
 
-  axios@1.18.1(debug@4.4.3):
+  axios@1.18.1(debug@4.4.3(supports-color@8.1.1)):
     dependencies:
-      follow-redirects: 1.16.0(debug@4.4.3)
+      follow-redirects: 1.16.0(debug@4.4.3(supports-color@8.1.1))
       form-data: 4.0.6
       https-proxy-agent: 5.0.1
       proxy-from-env: 2.1.0
@@ -9246,9 +9261,9 @@ snapshots:
     optionalDependencies:
       source-map: 0.6.1
 
-  eslint-fix-utils@0.4.3(@types/estree@1.0.9)(eslint@10.8.0(jiti@2.7.0)):
+  eslint-fix-utils@0.4.3(@types/estree@1.0.9)(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
     optionalDependencies:
       '@types/estree': 1.0.9
 
@@ -9256,9 +9271,9 @@ snapshots:
     dependencies:
       js-yaml: 4.3.0
 
-  eslint-json-compat-utils@0.2.3(eslint@10.8.0(jiti@2.7.0))(jsonc-eslint-parser@3.1.0):
+  eslint-json-compat-utils@0.2.3(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))(jsonc-eslint-parser@3.1.0):
     dependencies:
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
       esquery: 1.7.0
       jsonc-eslint-parser: 3.1.0
 
@@ -9267,26 +9282,26 @@ snapshots:
       jsonc-parser: 3.3.1
       oxlint: 1.76.0(oxlint-tsgolint@7.0.2001)
 
-  eslint-plugin-package-json@1.6.2(eslint@10.8.0(jiti@2.7.0)):
+  eslint-plugin-package-json@1.6.2(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
       '@altano/repository-tools': 2.0.3
       '@types/estree': 1.0.9
       change-case: 5.4.4
       detect-indent: 7.0.2
       detect-newline: 4.0.1
-      eslint: 10.8.0(jiti@2.7.0)
-      eslint-fix-utils: 0.4.3(@types/estree@1.0.9)(eslint@10.8.0(jiti@2.7.0))
-      eslint-json-compat-utils: 0.2.3(eslint@10.8.0(jiti@2.7.0))(jsonc-eslint-parser@3.1.0)
+      eslint: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
+      eslint-fix-utils: 0.4.3(@types/estree@1.0.9)(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))
+      eslint-json-compat-utils: 0.2.3(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))(jsonc-eslint-parser@3.1.0)
       jsonc-eslint-parser: 3.1.0
       package-json-validator: 1.5.2
       semver: 7.8.5
       sort-object-keys: 2.1.0
       sort-package-json: 4.0.0
 
-  eslint-plugin-pnpm@1.7.0(eslint@10.8.0(jiti@2.7.0)):
+  eslint-plugin-pnpm@1.7.0(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
       empathic: 2.0.1
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
       jsonc-eslint-parser: 3.1.0
       pathe: 2.0.3
       pnpm-workspace-yaml: 1.7.0
@@ -9294,10 +9309,10 @@ snapshots:
       yaml: 2.9.0
       yaml-eslint-parser: 2.1.0
 
-  eslint-plugin-turbo@2.10.7(eslint@10.8.0(jiti@2.7.0))(turbo@2.10.7):
+  eslint-plugin-turbo@2.10.7(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))(turbo@2.10.7):
     dependencies:
       dotenv: 16.0.3
-      eslint: 10.8.0(jiti@2.7.0)
+      eslint: 10.8.0(jiti@2.7.0)(supports-color@8.1.1)
       turbo: 2.10.7
 
   eslint-scope@9.1.2:
@@ -9315,7 +9330,45 @@ snapshots:
     dependencies:
       '@eslint-community/eslint-utils': 4.9.1(eslint@10.8.0(jiti@2.7.0))
       '@eslint-community/regexpp': 4.12.2
-      '@eslint/config-array': 0.23.5
+      '@eslint/config-array': 0.23.5(supports-color@8.1.1)
+      '@eslint/config-helpers': 0.7.0
+      '@eslint/core': 1.2.1
+      '@eslint/plugin-kit': 0.7.2
+      '@humanfs/node': 0.16.8
+      '@humanwhocodes/module-importer': 1.0.1
+      '@humanwhocodes/retry': 0.4.3
+      '@types/estree': 1.0.9
+      ajv: 6.15.0
+      cross-spawn: 7.0.6
+      debug: 4.4.3(supports-color@8.1.1)
+      escape-string-regexp: 4.0.0
+      eslint-scope: 9.1.2
+      eslint-visitor-keys: 5.0.1
+      espree: 11.2.0
+      esquery: 1.7.0
+      esutils: 2.0.3
+      fast-deep-equal: 3.1.3
+      file-entry-cache: 8.0.0
+      find-up: 5.0.0
+      glob-parent: 6.0.2
+      ignore: 5.3.2
+      imurmurhash: 0.1.4
+      is-glob: 4.0.3
+      json-stable-stringify-without-jsonify: 1.0.1
+      minimatch: 10.2.5
+      natural-compare: 1.4.0
+      optionator: 0.9.4
+    optionalDependencies:
+      jiti: 2.7.0
+    transitivePeerDependencies:
+      - supports-color
+    optional: true
+
+  eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1):
+    dependencies:
+      '@eslint-community/eslint-utils': 4.9.1(eslint@10.8.0(jiti@2.7.0)(supports-color@8.1.1))
+      '@eslint-community/regexpp': 4.12.2
+      '@eslint/config-array': 0.23.5(supports-color@8.1.1)
       '@eslint/config-helpers': 0.7.0
       '@eslint/core': 1.2.1
       '@eslint/plugin-kit': 0.7.2
@@ -9509,7 +9562,7 @@ snapshots:
 
   focus-visible@5.2.1: {}
 
-  follow-redirects@1.16.0(debug@4.4.3):
+  follow-redirects@1.16.0(debug@4.4.3(supports-color@8.1.1)):
     optionalDependencies:
       debug: 4.4.3(supports-color@8.1.1)
 
@@ -9575,7 +9628,7 @@ snapshots:
       '@sec-ant/readable-stream': 0.4.1
       is-stream: 4.0.1
 
-  get-uri@8.0.1:
+  get-uri@8.0.1(supports-color@8.1.1):
     dependencies:
       basic-ftp: 5.3.1
       data-uri-to-buffer: 8.0.0
@@ -9701,7 +9754,7 @@ snapshots:
 
   http-cache-semantics@4.2.0: {}
 
-  http-proxy-agent@9.1.0:
+  http-proxy-agent@9.1.0(supports-color@8.1.1):
     dependencies:
       agent-base: 9.0.0
       debug: 4.4.3(supports-color@8.1.1)
@@ -9723,7 +9776,7 @@ snapshots:
     transitivePeerDependencies:
       - supports-color
 
-  https-proxy-agent@9.1.0:
+  https-proxy-agent@9.1.0(supports-color@8.1.1):
     dependencies:
       agent-base: 9.0.0
       debug: 4.4.3(supports-color@8.1.1)
@@ -10565,13 +10618,13 @@ snapshots:
 
   p-map@7.0.5: {}
 
-  pac-proxy-agent@9.1.0:
+  pac-proxy-agent@9.1.0(supports-color@8.1.1):
     dependencies:
       agent-base: 9.0.0
       debug: 4.4.3(supports-color@8.1.1)
-      get-uri: 8.0.1
-      http-proxy-agent: 9.1.0
-      https-proxy-agent: 9.1.0
+      get-uri: 8.0.1(supports-color@8.1.1)
+      http-proxy-agent: 9.1.0(supports-color@8.1.1)
+      https-proxy-agent: 9.1.0(supports-color@8.1.1)
       pac-resolver: 9.0.1(quickjs-wasi@2.2.0)
       quickjs-wasi: 2.2.0
       socks-proxy-agent: 10.1.0
@@ -10596,7 +10649,7 @@ snapshots:
 
   package-manager-detector@1.8.0: {}
 
-  pacote@22.0.0:
+  pacote@22.0.0(supports-color@8.1.1):
     dependencies:
       '@gar/promise-retry': 1.0.3
       '@npmcli/git': 8.0.0
@@ -10612,7 +10665,7 @@ snapshots:
       npm-pick-manifest: 12.0.0
       npm-registry-fetch: 20.0.1
       proc-log: 7.0.0
-      sigstore: 5.0.0
+      sigstore: 5.0.0(supports-color@8.1.1)
       ssri: 14.0.0
       tar: 7.5.22
     transitivePeerDependencies:
@@ -10740,14 +10793,14 @@ snapshots:
 
   proxy-agent-negotiate@1.1.0: {}
 
-  proxy-agent@8.0.2:
+  proxy-agent@8.0.2(supports-color@8.1.1):
     dependencies:
       agent-base: 9.0.0
       debug: 4.4.3(supports-color@8.1.1)
-      http-proxy-agent: 9.1.0
-      https-proxy-agent: 9.1.0
+      http-proxy-agent: 9.1.0(supports-color@8.1.1)
+      https-proxy-agent: 9.1.0(supports-color@8.1.1)
       lru-cache: 7.18.3
-      pac-proxy-agent: 9.1.0
+      pac-proxy-agent: 9.1.0(supports-color@8.1.1)
       proxy-from-env: 2.1.0
       socks-proxy-agent: 10.1.0
     transitivePeerDependencies:
@@ -10815,7 +10868,7 @@ snapshots:
     dependencies:
       regex-utilities: 2.3.0
 
-  release-it@21.0.0(@types/node@24.13.3)(magicast@0.5.3):
+  release-it@21.0.0(@types/node@24.13.3)(magicast@0.5.3)(supports-color@8.1.1):
     dependencies:
       '@inquirer/prompts': 8.5.2(@types/node@24.13.3)
       '@octokit/rest': 22.0.1
@@ -10833,7 +10886,7 @@ snapshots:
       open: 11.0.0
       ora: 9.4.1
       os-name: 7.0.0
-      proxy-agent: 8.0.2
+      proxy-agent: 8.0.2(supports-color@8.1.1)
       semver: 7.8.5
       tinyglobby: 0.2.17
       undici: 7.28.0
@@ -11042,13 +11095,13 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  sigstore@5.0.0:
+  sigstore@5.0.0(supports-color@8.1.1):
     dependencies:
       '@sigstore/bundle': 5.0.0
       '@sigstore/core': 4.0.1
       '@sigstore/protobuf-specs': 0.5.1
       '@sigstore/sign': 5.0.0
-      '@sigstore/tuf': 5.0.0
+      '@sigstore/tuf': 5.0.0(supports-color@8.1.1)
       '@sigstore/verify': 4.1.0
     transitivePeerDependencies:
       - kerberos
@@ -11145,7 +11198,7 @@ snapshots:
 
   stackback@0.0.2: {}
 
-  start-server-and-test@3.0.11:
+  start-server-and-test@3.0.11(supports-color@8.1.1):
     dependencies:
       arg: 5.0.2
       check-more-types: 2.24.0
@@ -11153,7 +11206,7 @@ snapshots:
       execa: 5.1.1
       lazy-ass: 2.0.3
       tree-kill: 1.2.2
-      wait-on: 9.0.10(debug@4.4.3)
+      wait-on: 9.0.10(debug@4.4.3(supports-color@8.1.1))
     transitivePeerDependencies:
       - supports-color
 
@@ -11268,7 +11321,7 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tuf-js@6.0.0:
+  tuf-js@6.0.0(supports-color@8.1.1):
     dependencies:
       '@gar/promise-retry': 1.0.3
       '@tufjs/models': 5.0.0
@@ -11606,9 +11659,9 @@ snapshots:
     optionalDependencies:
       typescript: 7.0.2
 
-  wait-on@9.0.10(debug@4.4.3):
+  wait-on@9.0.10(debug@4.4.3(supports-color@8.1.1)):
     dependencies:
-      axios: 1.18.1(debug@4.4.3)
+      axios: 1.18.1(debug@4.4.3(supports-color@8.1.1))
       joi: 18.2.3
       lodash: 4.18.1
       minimist: 1.2.8
