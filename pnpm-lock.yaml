@@ -228,6 +228,10 @@ catalogs:
     wrangler:
       specifier: 4.113.0
       version: 4.113.0
+  lit2-compat:
+    lit-2:
+      specifier: npm:lit@^2.8.0
+      version: 2.8.0
   peerFloor:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.7.0
@@ -641,6 +645,9 @@ importers:
       lit:
         specifier: 'catalog:'
         version: 3.3.3
+      lit-2:
+        specifier: catalog:lit2-compat
+        version: lit@2.8.0
       oxc-project-runtime:
         specifier: 'catalog:'
         version: '@oxc-project/runtime@0.142.0'
@@ -707,6 +714,9 @@ importers:
       lit:
         specifier: 'catalog:'
         version: 3.3.3
+      lit-2:
+        specifier: catalog:lit2-compat
+        version: lit@2.8.0
       lit-ui-router:
         specifier: workspace:*
         version: link:../lit-ui-router
