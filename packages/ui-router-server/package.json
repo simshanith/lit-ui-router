@@ -1,6 +1,6 @@
 {
   "name": "ui-router-server",
-  "version": "0.0.1-alpha.1",
+  "version": "0.1.0",
   "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
   "homepage": "https://lit-ui-router.dev/packages/server",
   "bugs": {
