@@ -13,6 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
+    "@uirouter/core": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
@@ -27,8 +28,6 @@
     "oxfmt": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vite": "catalog:",
-    "vite-plugin-checker": "catalog:",
-    "vite-plugin-static-copy": "catalog:",
     "wrangler": "catalog:"
   }
 }

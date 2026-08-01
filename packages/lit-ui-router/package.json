@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router",
-  "version": "1.7.2",
+  "version": "1.8.0",
   "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
@@ -69,9 +69,7 @@
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "dependencies": {
-    "@oxc-project/runtime": "catalog:",
-    "@uirouter/core": "catalog:publishedPeer",
-    "lit": "catalog:publishedPeer"
+    "@oxc-project/runtime": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
@@ -81,9 +79,12 @@
     "@tools/oxc-emit": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
+    "lit": "catalog:",
+    "oxc-project-runtime": "catalog:",
     "oxfmt": "catalog:",
     "playwright": "catalog:",
     "release-it": "catalog:",
@@ -93,6 +94,10 @@
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer"
   },
   "customElements": "dist/custom-elements.json"
 }
