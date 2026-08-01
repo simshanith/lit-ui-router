@@ -52,7 +52,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          # Nothing in this job pushes: the packages' .release-it.json turns
+          # Nothing in this job pushes: the packages' .release-it.js turns
           # git commit/tag/push off, so no credentials need to persist.
           persist-credentials: false
       - name: Setup mise
