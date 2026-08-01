@@ -614,6 +614,9 @@ importers:
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: workspace:*
+        version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -680,6 +683,9 @@ importers:
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: workspace:*
+        version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -743,6 +749,9 @@ importers:
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: workspace:*
+        version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -984,6 +993,12 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
+
+  tools/release-config:
+    devDependencies:
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.61.0
 
   tools/shared:
     devDependencies:

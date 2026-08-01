@@ -239,7 +239,8 @@ This is intentional. Fork PRs don't have access to repository secrets for securi
 
 ## Release Configuration
 
-Release behavior is configured via `packages/lit-ui-router/.release-it.js`:
+Release behavior is configured once, in `@tools/release-config`
+(`tools/release-config/src/release-it.js`):
 
 ```js
 export default {
@@ -252,4 +253,15 @@ export default {
 };
 ```
 
+Each publishable package carries a one-line `.release-it.js` re-exporting it, so
+release-it's cwd-based config lookup still resolves when the pipeline (or you)
+runs it inside a package directory:
+
+```js
+export { default } from '@tools/release-config';
+```
+
 The config defaults most options to `false` so workflows can enable them explicitly via CLI flags.
+
+It is plain JS rather than JSON because `conventional-changelog-writer` 9 takes
+template partials as functions.
