@@ -50,8 +50,14 @@ catalog pins 4.113.0). `scripts/measure-deflake.ts` turns "is it still
 happening?" into a number:
 
 ```bash
-node scripts/measure-deflake.ts 7   # crash rate over the last 7 days
+node scripts/measure-deflake.ts 7            # crash rate over the last 7 days
+node scripts/measure-deflake.ts 2 my-branch  # one branch's runs only
 ```
+
+The branch filter is how an upgrade gets trialed without merging anything:
+push a bump branch, force real e2e executions against it
+(`gh workflow run build-test.yml --ref <branch> -f force=true`, repeated —
+cache-hit runs don't count), then compare its rate to main's.
 
 It scans every attempt of the window's `build-test` runs via `gh` (crashed
 runs get rerun, so latest-attempt logs undercount) and reports crashes per

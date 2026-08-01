@@ -6,7 +6,9 @@ import { promisify } from 'node:util';
 // and latest-attempt logs undercount — and reports crashes per e2e execution.
 // Turbo cache-hit replays re-print old logs verbatim, so only "cache
 // miss/bypass" executions count as exposures.
-// Usage: node scripts/measure-deflake.ts [days=7]
+// Usage: node scripts/measure-deflake.ts [days=7] [branch]
+// [branch] isolates one branch's runs — e.g. rate a wrangler-bump trial
+// branch (forced dispatches against its ref) without main's runs diluting it.
 const execFile = promisify(execFileCb);
 const REPO = 'simshanith/lit-ui-router';
 // run logs are tens of MB; execFile's default 1MB maxBuffer would truncate
@@ -25,11 +27,13 @@ if (!Number.isFinite(days) || days <= 0) {
 const since = new Date(Date.now() - days * 86_400_000)
   .toISOString()
   .replace(/\.\d+Z$/, 'Z');
+const branch = process.argv[3];
 
 const runs = JSON.parse(
   await gh([
     ...['run', 'list', '--repo', REPO, '--workflow', 'build-test.yml'],
     ...['--limit', '300', '--created', `>=${since}`],
+    ...(branch === undefined ? [] : ['--branch', branch]),
     ...['--json', 'databaseId', '--jq', '[.[].databaseId]'],
   ]),
 ) as number[];
@@ -90,12 +94,13 @@ for (const id of runs) {
   }
 }
 
+const where = branch === undefined ? '' : ` on ${branch}`;
 console.log('---');
 if (executed === 0) {
-  console.log(`no e2e executions found since ${since}`);
+  console.log(`no e2e executions found since ${since}${where}`);
 } else {
   const pct = Math.round((100 * fired) / executed);
   console.log(
-    `since ${since}: e2e executed ${executed} times, crash fired ${fired} times (${pct}%)`,
+    `since ${since}${where}: e2e executed ${executed} times, crash fired ${fired} times (${pct}%)`,
   );
 }
