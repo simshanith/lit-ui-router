@@ -2,9 +2,10 @@
   "name": "@tools/build_and_test",
   "version": "0.0.1",
   "private": true,
-  "description": "Owns the build-test workflow's step logic: the branch-head CI gate, the shared Xvfb display, and the Codecov bundle-stats upload",
+  "description": "Owns the build-test workflow's step logic: the branch-head CI gate, the shared Xvfb display, the Codecov bundle-stats upload, and the post-merge lit 2 compat lane",
   "bin": {
     "branch-ci-gate": "./src/branch-ci-gate.ts",
+    "lit2-compat": "./src/lit2-compat.ts",
     "start-xvfb": "./src/start-xvfb.ts",
     "upload-bundle-stats": "./src/upload-bundle-stats.ts"
   },

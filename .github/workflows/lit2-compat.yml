@@ -1,0 +1,55 @@
+# Post-merge lit 2 compat lane. The published packages peer on
+# `lit: ^2.0.0 || ^3.0.0` while the workspace develops against lit 3, so no
+# PR run ever exercises the 2.x line. This lane reinstalls the workspace on
+# the lit2-compat catalog pin (one representative 2.x version) and runs the
+# lit packages' unit suites + src typechecks against it. Post-merge only:
+# a red run means main regressed lit 2 support — fix forward or narrow the
+# peer range (the lane fails loudly if the range narrows without removing it).
+name: lit 2 compat
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# Standard husky CI setup: skip the prepare-script git-hook install on CI installs.
+env:
+  HUSKY: 0
+
+# One lane at a time, newest wins; every run answers for main's current head.
+concurrency:
+  group: lit2-compat
+  cancel-in-progress: true
+
+jobs:
+  lit2_compat:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+    steps:
+      - name: 'Checkout code'
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Install dependencies
+        run: mise run setup
+      # The vitest chrome project needs the Playwright chromium binary; same
+      # version-keyed cache as build-test-run.yml.
+      - name: Playwright version
+        id: playwright-version
+        run: mise run //tools/build_and_test:playwright_version
+      - name: Cache Playwright browsers
+        id: playwright-cache
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/ms-playwright
+          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.playwright }}
+      - name: Install Playwright browsers
+        if: ${{ steps.playwright-cache.outputs.cache-hit != 'true' }}
+        run: mise run //tools/build_and_test:playwright
+      - name: Reinstall on lit 2 and run the suites
+        run: mise run //tools/build_and_test:lit2_compat
