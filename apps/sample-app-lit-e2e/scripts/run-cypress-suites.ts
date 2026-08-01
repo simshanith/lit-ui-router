@@ -15,7 +15,7 @@ const suites = [
 
 const passed = (event: CloseEvent) => event.exitCode === 0;
 
-function summarize(events: CloseEvent[]): void {
+function summarize(events: CloseEvent[], retried: Set<string>): void {
   if (events.length === 0) {
     console.error('\n✗ e2e tests failed — no Cypress suites spawned\n');
     process.exitCode = 1;
@@ -41,7 +41,11 @@ function summarize(events: CloseEvent[]): void {
     const mark = passed(event) ? '✓' : '✗';
     const name = event.command.name.padEnd(nameWidth);
     const secs = `${event.timings.durationSeconds.toFixed(1)}s`.padStart(7);
-    const detail = passed(event) ? '' : `  (exit ${event.exitCode})`;
+    const detail = passed(event)
+      ? retried.has(event.command.name)
+        ? '  (passed on retry)'
+        : ''
+      : `  (exit ${event.exitCode})`;
     console.log(`  ${mark} ${name}  ${secs}${detail}`);
   }
 
@@ -57,15 +61,44 @@ function summarize(events: CloseEvent[]): void {
   }
 }
 
-try {
-  summarize(await concurrently(suites, { prefixColors: 'auto' }).result);
-} catch (reason) {
-  // concurrently rejects with the CloseEvent[] on suite failure; anything else
-  // (e.g. a spawn error) is a genuine harness failure.
-  if (Array.isArray(reason)) {
-    summarize(reason as CloseEvent[]);
-  } else {
+async function runSuites(
+  list: typeof suites,
+): Promise<CloseEvent[] | undefined> {
+  try {
+    return await concurrently(list, { prefixColors: 'auto' }).result;
+  } catch (reason) {
+    // concurrently rejects with the CloseEvent[] on suite failure; anything
+    // else (e.g. a spawn error) is a genuine harness failure.
+    if (Array.isArray(reason)) return reason as CloseEvent[];
     console.error('\n✗ e2e tests failed to run:', reason);
     process.exitCode = 1;
+    return undefined;
   }
+}
+
+const first = await runSuites(suites);
+if (first !== undefined) {
+  // Rerun failed suites once: the shared dev server can crash and respawn
+  // mid-run (see serve-docs.ts), stranding whole suites on a dead port. A
+  // real regression fails the rerun too.
+  const failedNames = new Set(
+    first.filter((event) => !passed(event)).map((event) => event.command.name),
+  );
+  let events = first;
+  if (failedNames.size > 0 && first.length > 0) {
+    console.error(
+      `\n[e2e] retrying ${failedNames.size} failed suite(s) once: ${[...failedNames].join(', ')}\n`,
+    );
+    const second = await runSuites(
+      suites.filter((suite) => failedNames.has(suite.name)),
+    );
+    if (second !== undefined) {
+      events = first.map(
+        (event) =>
+          second.find((retry) => retry.command.name === event.command.name) ??
+          event,
+      );
+    }
+  }
+  summarize(events, failedNames);
 }
