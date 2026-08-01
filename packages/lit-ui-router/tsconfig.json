@@ -8,8 +8,14 @@
     "isolatedDeclarations": false,
     // Specs import @tools/happy-dom's source-exported .ts files.
     "allowImportingTsExtensions": true,
-    "types": ["vitest/globals"]
+    // node types serve lit2-compat-guard.ts
+    "types": ["node", "vitest/globals"]
   },
-  "include": ["src/**/*", "vitest.config.ts", "vitest.setup.ts"],
+  "include": [
+    "src/**/*",
+    "lit2-compat-guard.ts",
+    "vitest.config.ts",
+    "vitest.setup.ts"
+  ],
   "exclude": ["node_modules", "dist"]
 }

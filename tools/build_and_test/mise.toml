@@ -34,12 +34,6 @@ run = "./src/start-xvfb.ts"
 description = "Decide whether this branch-head push needs its own CI run"
 run = "./src/branch-ci-gate.ts"
 
-[tasks.lit2_compat]
-# Mutates pnpm-workspace.yaml + the lockfile (throwaway CI checkout); the
-# script restores nothing. Needs `mise run setup` first like the rest.
-description = "Reinstall on the lit2-compat catalog pin and run the lit packages' unit suites"
-run = "./src/lit2-compat.ts"
-
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
 # cache step derives its key alone.

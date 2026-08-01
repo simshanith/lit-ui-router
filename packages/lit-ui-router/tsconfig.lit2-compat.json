@@ -1,0 +1,12 @@
+{
+  // Typechecks src against the lit-2 alias's lit 2 types instead of the
+  // workspace lit 3. Never emits.
+  "extends": "./tsconfig.src.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "paths": {
+      "lit": ["./node_modules/lit-2"],
+      "lit/*": ["./node_modules/lit-2/*"]
+    }
+  }
+}

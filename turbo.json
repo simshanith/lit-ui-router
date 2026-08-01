@@ -27,7 +27,7 @@
         "vitest.setup.ts",
         "cypress.config.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video"]
@@ -45,7 +45,7 @@
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
       "outputs": ["coverage/**"]
     },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
@@ -54,7 +54,16 @@
     "test:engines": {
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+    },
+    // Same unit suites resolved against the lit-2 alias (the 2.x line the
+    // published lit peer range covers). Runs on main push, not the PR graph.
+    // $TURBO_DEFAULT$ covers the extra configs; the workspace yaml feeds
+    // lit2-compat-guard (peer range + alias pin).
+    "test:lit2-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
     },
     "lint": {
       "with": [
@@ -199,6 +208,7 @@
       "dependsOn": [
         "ci:pull_request",
         "test:engines",
+        "test:lit2-compat",
         "@tools/release#check:pack",
         "@tools/dts-backtest#test:matrix"
       ]
