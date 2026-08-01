@@ -38,7 +38,7 @@ export type {
 const SETTLE_TIMEOUT_MS = 100;
 
 export interface MountConfig {
-  /** The mount's state tree; dotted names nest, urls append (see [[RouteDeclaration]]). */
+  /** The mount's state tree; dotted names nest, urls append (see {@link RouteDeclaration}). */
   routes: RouteDeclaration[];
   /** when()-style pattern rules, evaluated before per-state redirectTo entries. */
   redirects?: RedirectRule[];
@@ -47,7 +47,7 @@ export interface MountConfig {
    * redirects. 'simulate': replay through a headless @uirouter/core router —
    * the tier where routing that data cannot express (hooks, resolves,
    * redirectTo functions) will live. Those are NOT yet reachable through
-   * MountConfig: both strategies consume the same [[RouteDeclaration]] data
+   * MountConfig: both strategies consume the same {@link RouteDeclaration} data
    * subset today, deliberately, so strategy stays a pure cost knob; the
    * config widens later (e.g. an auth tier).
    */

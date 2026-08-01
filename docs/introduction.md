@@ -87,6 +87,7 @@ you need to start; the companions are optional layers.
 | [`lit-ui-router`](https://www.npmjs.com/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./api/reference/) |
 | [`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./packages/mobx)            |
 | [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./packages/navigation-plugin)                     |
+| [`ui-router-server`](https://www.npmjs.com/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (in development). [Guide →](./packages/server)            |
 
 Because lit-ui-router is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample
