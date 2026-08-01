@@ -85,9 +85,6 @@ catalog:
 catalogMode: prefer
 
 catalogs:
-  # the one lit 2.x line the main-graph test:lit2-compat tasks alias lit to
-  # (2.0.0 floor verified 2026-08-01); lit2-compat-guard fails the task if
-  # the publishedPeer lit range stops covering major 2
   lit2-compat:
     lit-2: npm:lit@^2.8.0
   # exact published floor of the matching publishedPeer range; peer-floor-guard
