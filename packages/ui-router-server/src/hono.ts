@@ -16,7 +16,7 @@
  * adapter's `null` pass-through assumes: a redirect or mount-owned 404 is
  * answered here, and everything else (`null`) falls through to `next()` and
  * Hono's own asset serving. The host still supplies asset IO through
- * [[FetchAdapterOptions.serveShell]] — `(mount, request) => c.env.ASSETS.fetch(request)`
+ * {@link FetchAdapterOptions.serveShell} — `(mount, request) => c.env.ASSETS.fetch(request)`
  * on Cloudflare, a `serveStatic` fetch elsewhere.
  */
 
@@ -27,7 +27,7 @@ import type { ServerRouter } from './index.ts';
 import type { MiddlewareHandler } from 'hono';
 
 /**
- * Wraps a [[ServerRouter]] as Hono middleware. The returned handler resolves
+ * Wraps a {@link ServerRouter} as Hono middleware. The returned handler resolves
  * the request to a verdict and either answers it (`return`ing the verdict
  * Response) or passes it on (`await next()`), exactly the fetch adapter's
  * `Response | null` contract expressed in Hono's continuation.

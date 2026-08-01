@@ -1,3 +1,4 @@
+/** @module matcher */
 // Derived from @uirouter/core (MIT, Copyright (c) 2013-2015 The AngularUI Team, Karsten Sperling) — UrlMatcher/Param/ParamTypes, https://github.com/ui-router/core
 
 /**
@@ -137,13 +138,13 @@ const unsupportedTypes = new Set(['hash', 'json', 'any']);
 /**
  * A per-param configuration: core's ParamDeclaration members that matching
  * honors. Relaxation vs core: `type` also accepts a plain-object
- * [[ParamType]], and `value` must be static (functions are rejected).
+ * {@link ParamType}, and `value` must be static (functions are rejected).
  */
 export interface ParamDeclaration extends Pick<
   CoreParamDeclaration,
   'value' | 'squash'
 > {
-  /** Type for params not already typed inline (`{id:int}`) — a built-in name or a [[ParamType]]. */
+  /** Type for params not already typed inline (`{id:int}`) — a built-in name or a {@link ParamType}. */
   type?: string | ParamType;
 }
 
@@ -360,9 +361,9 @@ export interface UrlMatcherCompileOptions<M = undefined> extends Pick<
   UrlMatcherCompileConfig,
   'strict' | 'caseInsensitive'
 > {
-  /** Relaxation vs core: `state.params` flattened to `params` (no StateDeclaration here) — a [[ParamDeclaration]] or a shorthand static default per name. */
+  /** Relaxation vs core: `state.params` flattened to `params` (no StateDeclaration here) — a {@link ParamDeclaration} or a shorthand static default per name. */
   params?: Record<string, unknown>;
-  /** Passenger field: rides the compiled matcher as [[CompiledMatcher.meta]], untouched by compilation. */
+  /** Passenger field: rides the compiled matcher as {@link CompiledMatcher.meta}, untouched by compilation. */
   meta?: M;
 }
 
@@ -381,9 +382,9 @@ interface ResolvedConfig extends Required<UrlMatcherCompilerConfig> {
 }
 
 /**
- * A compiled url pattern: inert data produced by [[urlMatcherFactory]]'s
- * `compile` and consumed by [[exec]], [[format]], and [[compare]].
- * Frozen — treat as immutable: [[compare]] memoizes per object identity,
+ * A compiled url pattern: inert data produced by {@link urlMatcherFactory}'s
+ * `compile` and consumed by {@link exec}, {@link format}, and {@link compare}.
+ * Frozen — treat as immutable: {@link compare} memoizes per object identity,
  * and the functions/regexps inside make it not structuredClone-able.
  * Two data channels: compile's `options.meta` rides compile-time data on
  * the matcher, and a consumer-owned identity-keyed WeakMap (frozen keys
@@ -398,7 +399,7 @@ export interface CompiledMatcher<M = undefined> {
   readonly segments: readonly string[];
   readonly pathParams: readonly CompiledParam[];
   readonly searchParams: readonly CompiledParam[];
-  /** Whether [[exec]] percent-decodes captured values (the factory's decodeParams). */
+  /** Whether {@link exec} percent-decodes captured values (the factory's decodeParams). */
   readonly decodeParams: boolean;
   /** Compile-time data riding the matcher (e.g. a build-time route id); the reference is frozen in, the object stays consumer-owned. */
   readonly meta: M;
@@ -566,7 +567,7 @@ export function exec(
 
 /**
  * Builds a url from a compiled matcher by substituting parameter values —
- * the inverse of [[exec]], mirroring core's UrlMatcher.format for the
+ * the inverse of {@link exec}, mirroring core's UrlMatcher.format for the
  * supported subset (no parent-matcher composition: matchers here never
  * append). Default values honor the squash policy, search params render
  * as a query string, and `values['#']` appends a hash fragment.
