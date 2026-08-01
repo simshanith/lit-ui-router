@@ -57,9 +57,10 @@
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
-    // published lit peer range covers). Runs on main push, not the PR graph.
-    // $TURBO_DEFAULT$ covers the extra configs; the workspace yaml feeds
-    // lit2-compat-guard (peer range + alias pin).
+    // published lit peer range covers); cheap enough for the PR graph — no
+    // extra browsers, and the alias tracks published lit, so no peer-floor
+    // atomicity concern. $TURBO_DEFAULT$ covers the extra configs; the
+    // workspace yaml feeds lit2-compat-guard (peer range + alias pin).
     "test:lit2-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
@@ -190,6 +191,7 @@
         "build",
         "test",
         "test:coverage",
+        "test:lit2-compat",
         "lint",
         "typecheck",
         "format:check",
@@ -208,7 +210,6 @@
       "dependsOn": [
         "ci:pull_request",
         "test:engines",
-        "test:lit2-compat",
         "@tools/release#check:pack",
         "@tools/dts-backtest#test:matrix"
       ]
