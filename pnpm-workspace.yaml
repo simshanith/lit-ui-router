@@ -126,7 +126,7 @@ overrides:
 packageExtensions:
   conventional-changelog-preset-loader:
     dependencies:
-      conventional-changelog-conventionalcommits: ^9.3.1
+      conventional-changelog-conventionalcommits: ^10.2.1
 
 verifyDepsBeforeRun: false
 

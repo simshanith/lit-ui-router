@@ -239,17 +239,17 @@ This is intentional. Fork PRs don't have access to repository secrets for securi
 
 ## Release Configuration
 
-Release behavior is configured via `packages/lit-ui-router/.release-it.json`:
+Release behavior is configured via `packages/lit-ui-router/.release-it.js`:
 
-```json
-{
-  "git": {
-    "tagName": "${npm.name}@${version}"
+```js
+export default {
+  git: {
+    tagName: '${npm.name}@${version}',
   },
-  "github": {
-    "releaseName": "Release ${npm.name}@${version}"
-  }
-}
+  github: {
+    releaseName: 'Release ${npm.name}@${version}',
+  },
+};
 ```
 
 The config defaults most options to `false` so workflows can enable them explicitly via CLI flags.
