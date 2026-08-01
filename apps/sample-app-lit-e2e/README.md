@@ -41,6 +41,28 @@ pnpm --filter sample-app-lit-e2e test:hash
 pnpm --filter sample-app-lit-e2e test:navigation
 ```
 
+## Measuring the wrangler crash rate
+
+The CI dev server (`wrangler dev`) has a history of mid-suite crashes on
+Linux runners (cloudflare/workers-sdk#14926 — fatal non-recovery from a
+workerd restart, introduced in wrangler 4.114.0 and the reason the
+catalog pins 4.113.0). `scripts/measure-deflake.ts` turns "is it still
+happening?" into a number:
+
+```bash
+node scripts/measure-deflake.ts 7   # crash rate over the last 7 days
+```
+
+It scans every attempt of the window's `build-test` runs via `gh` (crashed
+runs get rerun, so latest-attempt logs undercount) and reports crashes per
+e2e execution — only attempts whose e2e task shows `cache miss/bypass`
+count, since turbo cache-hit replays re-print old logs verbatim. On the
+pinned wrangler it should read ~0%; a sustained non-zero rate means the
+crash class is back (or was never the only one), and the fallbacks are
+reviving the pm2 supervisor from PR #486 or capping suite concurrency.
+Needs an authenticated `gh`; unavailable logs are reported per attempt,
+and an over-`maxBuffer` log invalidates the stats loudly.
+
 ## Iterating against a dev server
 
 ```bash
