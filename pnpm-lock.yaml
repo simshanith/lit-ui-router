@@ -812,6 +812,9 @@ importers:
       '@tools/lcov-rebase':
         specifier: workspace:*
         version: link:../../tools/lcov-rebase
+      '@tools/oxc-emit':
+        specifier: workspace:*
+        version: link:../../tools/oxc-emit
       '@tools/release-config':
         specifier: workspace:*
         version: link:../../tools/release-config
@@ -1008,6 +1011,9 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
+      ui-router-server:
+        specifier: workspace:*
+        version: link:../../packages/ui-router-server
 
   tools/release-config:
     devDependencies:

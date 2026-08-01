@@ -17,9 +17,12 @@ for (const file of publishableSources()) {
   if (declaration.errors.length) fail(file, declaration.errors);
   const out = join(OUT, relative(SRC, file)).replace(/\.ts$/, '.d.ts');
   mkdirSync(dirname(out), { recursive: true });
-  writeFileSync(
-    out,
-    `${declaration.code}//# sourceMappingURL=${basename(out)}.map\n`,
+  // The JS pass's rewriteImportExtensions has no isolated-declarations
+  // counterpart; same-length .ts → .js keeps the sourcemap columns valid.
+  const code = declaration.code.replace(
+    /((?:from|import\()\s*")(\.[^"]*)\.ts(?=")/g,
+    '$1$2.js',
   );
+  writeFileSync(out, `${code}//# sourceMappingURL=${basename(out)}.map\n`);
   writeFileSync(`${out}.map`, shippedMap(file, out, declaration.map!));
 }

@@ -13,7 +13,7 @@
       "outputs": ["coverage/**"]
     },
     "typecheck": {
-      "with": ["typecheck:tests"]
+      "with": ["typecheck:tests", "typecheck:src"]
     },
     "typecheck:tests": {
       "dependsOn": ["^build:types"],
