@@ -21,8 +21,13 @@ Each package page has its own install snippet, guide, and API reference.
 
 ## In development
 
-`ui-router-server` — server-side routing verdicts at the edge — and its
-roadmap render-axis companions are taking shape on the same model. The
-[Server-Side Routing guide](/guides/server-route-matching) and the
+| Package                                  | Version                                                                                                                                                                                                                                                                                                   | What it is                                                                                                                |
+| ---------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| [**ui-router-server**](/packages/server) | [![NPM Version](https://img.shields.io/npm/v/ui-router-server)](https://www.npmjs.com/package/ui-router-server) [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-server) | Server-side routing verdicts: honest 404/302/200 HTTP for static SPAs, run at the edge with the client's own route table. |
+
+`ui-router-server` — and its roadmap render-axis companions — is taking shape
+on the same model; npm holds only a placeholder seed so far. The
+[package page](/packages/server), the
+[Server-Side Routing guide](/guides/server-route-matching), and the
 [sample app](/sample-app) cover what ships today; content rendering (build-time
 and server-side) is the roadmap next axis.
