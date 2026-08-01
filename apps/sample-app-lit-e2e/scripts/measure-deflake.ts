@@ -58,8 +58,23 @@ for (const id of runs) {
         String(attempt),
         '--log',
       ]);
-    } catch {
-      continue; // expired or still-running attempt
+    } catch (error) {
+      const { code, stderr } = error as {
+        code?: string | number;
+        stderr?: string;
+      };
+      if (code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
+        // a swallowed overflow would silently undercount both sides of the rate
+        console.error(
+          `${id} attempt ${attempt}: log exceeds MAX_LOG_BYTES — stats invalid, raise the cap`,
+        );
+        process.exitCode = 1;
+        continue;
+      }
+      const reason =
+        (stderr ?? '').trim().split('\n')[0] || `exit ${String(code)}`;
+      console.error(`${id} attempt ${attempt}: log unavailable (${reason})`);
+      continue;
     }
     if (!/sample-app-lit-e2e:test: cache (miss|bypass)/.test(log)) continue;
     executed += 1;
