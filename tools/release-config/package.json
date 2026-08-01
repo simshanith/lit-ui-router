@@ -2,7 +2,7 @@
   "name": "@tools/release-config",
   "version": "0.0.1",
   "private": true,
-  "description": "The single release-it config the three publishable packages share, including the function-valued changelog partials writer 9 requires",
+  "description": "The single release-it config the publishable packages share, including the function-valued changelog partials writer 9 requires",
   "type": "module",
   "exports": {
     ".": "./src/release-it.js"

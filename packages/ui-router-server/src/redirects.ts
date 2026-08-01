@@ -22,12 +22,12 @@ export interface RouteDeclaration {
   name: string;
   /** Url segment appended to the ancestors' segments; a url-less state is structural only (never matched, never a redirect target). */
   url?: string;
-  /** Param declarations for this state's own placeholders (shorthand defaults or [[ParamDeclaration]]s). */
+  /** Param declarations for this state's own placeholders (shorthand defaults or {@link matcher!ParamDeclaration | ParamDeclaration}s). */
   params?: Record<string, unknown>;
   /**
    * Data redirect, mirroring ui-router's redirectTo subset: a url landing on
    * this state goes to the target state instead. A string target keeps the
-   * matched params; a [[RedirectTarget]] with `params` replaces them
+   * matched params; a {@link RedirectTarget} with `params` replaces them
    * (core's `result.params || trans.params()`). Chains are followed;
    * cycles are rejected at compile.
    */
@@ -132,7 +132,7 @@ export interface RouteMatch {
 
 /**
  * Returns which route's pattern the pathname matched, with the extracted
- * params. The most specific match wins ([[compare]]); ties go to
+ * params. The most specific match wins ({@link compare}); ties go to
  * declaration order.
  */
 export function matchRoute(
@@ -245,7 +245,7 @@ export function compileRedirects(
   };
 }
 
-/** One-shot convenience over [[compileRedirects]]. */
+/** One-shot convenience over {@link compileRedirects}. */
 export function evaluateRedirects(
   table: RedirectTable,
   pathname: string,

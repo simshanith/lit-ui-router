@@ -30,7 +30,7 @@ export interface ServerRouterPlugin {
 }
 
 /**
- * Wraps a [[ServerRouter]] as a Vite plugin. The middleware installs in the
+ * Wraps a {@link ServerRouter} as a Vite plugin. The middleware installs in the
  * PRE position — synchronously inside `configureServer`, before Vite adds
  * its own middlewares — which is exactly where `connect-history-api-fallback`
  * sits and the only position that beats Vite's always-200 HTML fallback: a
@@ -41,7 +41,7 @@ export interface ServerRouterPlugin {
  *
  * `serveShell` defaults to rewriting `req.url` to the mount base and
  * `next()`ing into Vite's HTML/transform layer (dev) or `sirv` (preview);
- * point [[ConnectAdapterOptions.shellPath]] at the mount's actual HTML entry
+ * point {@link ConnectAdapterOptions.shellPath} at the mount's actual HTML entry
  * when it isn't served at the base.
  */
 export function serverRouterPlugin(

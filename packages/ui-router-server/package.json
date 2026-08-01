@@ -1,38 +1,99 @@
 {
   "name": "ui-router-server",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "description": "Server-side UI-Router state matching for Connect, Vite, Hono, and fetch handlers",
+  "homepage": "https://lit-ui-router.dev/packages/server",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
   "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/ui-router-server"
+  },
+  "files": [
+    "dist/**",
+    "!dist/.*/**",
+    "src/*.ts",
+    "!src/*.spec.ts"
+  ],
   "type": "module",
   "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
   "exports": {
-    ".": "./src/index.ts",
-    "./connect": "./src/connect.ts",
-    "./fetch": "./src/fetch.ts",
-    "./hono": "./src/hono.ts",
-    "./matcher": "./src/url-matcher.ts",
-    "./redirects": "./src/redirects.ts",
-    "./simulate": "./src/simulate.ts",
-    "./vite": "./src/vite.ts"
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./connect": {
+      "types": "./dist/connect.d.ts",
+      "default": "./dist/connect.js"
+    },
+    "./dist/*": "./dist/*",
+    "./fetch": {
+      "types": "./dist/fetch.d.ts",
+      "default": "./dist/fetch.js"
+    },
+    "./hono": {
+      "types": "./dist/hono.d.ts",
+      "default": "./dist/hono.js"
+    },
+    "./matcher": {
+      "types": "./dist/url-matcher.d.ts",
+      "default": "./dist/url-matcher.js"
+    },
+    "./package.json": "./package.json",
+    "./redirects": {
+      "types": "./dist/redirects.d.ts",
+      "default": "./dist/redirects.js"
+    },
+    "./simulate": {
+      "types": "./dist/simulate.d.ts",
+      "default": "./dist/simulate.js"
+    },
+    "./vite": {
+      "types": "./dist/vite.d.ts",
+      "default": "./dist/vite.js"
+    }
   },
   "scripts": {
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"ui-router-server@[0-9]*.[0-9]*.[0-9]*\"",
+    "check:bundle": "check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles",
-    "format": "oxfmt \"**/*.{ts,json,md}\"",
-    "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
+    "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
+    "docs:api": "rimraf ../../docs/api/ui-router-server && typedoc",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
     "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
     "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit",
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/lcov-rebase": "workspace:*",
+    "@tools/oxc-emit": "workspace:*",
+    "@tools/release-config": "workspace:*",
+    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
-    "typescript": "catalog:",
+    "release-it": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
     "vite": "catalog:"
   },
   "peerDependencies": {
@@ -46,5 +107,8 @@
     "hono": {
       "optional": true
     }
+  },
+  "engines": {
+    "node": ">=22.12"
   }
 }
