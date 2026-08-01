@@ -1,0 +1,134 @@
+# On-demand e2e flake sampler: N fresh serial runs of the Cypress suites
+# against a real dev server, reported per attempt. Two opt-ins:
+#   - `deflake` PR label: every push to a labeled PR gets sampled — the sticky
+#     mode for dependency-trial PRs (label a wrangler bump, read the check).
+#   - workflow_dispatch: manual sampling against any ref, with a runs input.
+# Attempts run OUTSIDE turbo: a cached test task would replay the first
+# attempt's logs instead of re-executing (scripts/measure-deflake.ts counts
+# real executions by the same rule). This check is informational, never
+# required — a red run means "the flake fired", not "don't merge anything".
+name: Deflake e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'Number of e2e attempts (1-10)'
+        type: number
+        default: 5
+  pull_request:
+    types: [labeled, synchronize, reopened]
+
+# One sampler per ref; superseded samples are stale, cancel them.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Standard husky CI setup: skip the prepare-script git-hook install.
+env:
+  HUSKY: 0
+
+jobs:
+  attempts:
+    # PR events sample only PRs opted in via the `deflake` label; the
+    # `labeled` type starts sampling the moment the label lands.
+    if: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.pull_request.labels.*.name, 'deflake') }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Install dependencies
+        run: mise run setup
+      - name: Resolve Cypress version
+        id: cypress-version
+        run: mise run //tools/build_and_test:cypress_version
+      - name: Cache Cypress binary
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
+      - name: Install Cypress
+        run: mise run //tools/build_and_test:cypress
+      - name: Start shared Xvfb display
+        run: mise run //tools/build_and_test:xvfb
+      - name: Build the served site
+        # The e2e server serves docs/dist; the filter pulls the app's full
+        # dependency closure. Remote cache makes this a restore when secrets
+        # are present; dependabot/fork PRs (no secrets) build locally.
+        run: turbo run build --filter=sample-app-lit-e2e...
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Run e2e attempts
+        env:
+          # Dispatch chooses; label runs sample the default. Inputs ride env,
+          # never `${{ }}` inside run lines.
+          DEFLAKE_RUNS: ${{ inputs.runs || 5 }}
+          WRANGLER_LOG: warn
+          CYPRESS_video: false
+        run: |
+          runs="$DEFLAKE_RUNS"
+          if [ "$runs" -lt 1 ]; then runs=1; fi
+          if [ "$runs" -gt 10 ]; then runs=10; fi
+          fails=0
+          crashes=0
+          {
+            echo "### Deflake e2e: ${runs} attempts"
+            echo ""
+            echo "| attempt | result | server crash |"
+            echo "| --- | --- | --- |"
+          } >> "$GITHUB_STEP_SUMMARY"
+          for i in $(seq 1 "$runs"); do
+            echo "::group::[deflake] attempt ${i}/${runs}"
+            result=pass
+            corepack pnpm --filter sample-app-lit-e2e test > "attempt-${i}.log" 2>&1 || result=FAIL
+            crash="-"
+            if grep -q "ECONNREFUSED 127.0.0.1:8787" "attempt-${i}.log"; then
+              crash="workers-sdk#14926 class"
+              crashes=$((crashes + 1))
+            fi
+            if [ "$result" = FAIL ]; then
+              fails=$((fails + 1))
+              tail -60 "attempt-${i}.log"
+            fi
+            echo "::endgroup::"
+            echo "[deflake] attempt ${i}/${runs}: ${result} (server crash: ${crash})"
+            echo "| ${i} | ${result} | ${crash} |" >> "$GITHUB_STEP_SUMMARY"
+            # A crashed attempt can orphan workerd on :8787 and poison the
+            # next one (proven locally); sweep between attempts.
+            pkill -f wrangler 2>/dev/null || true
+            pkill -x workerd 2>/dev/null || true
+            sleep 2
+          done
+          {
+            echo ""
+            echo "**${fails}/${runs} attempts failed (${crashes} with the server-crash signature)**"
+          } >> "$GITHUB_STEP_SUMMARY"
+          echo "[deflake] ${fails}/${runs} attempts failed (${crashes} with the server-crash signature)"
+          exit "$fails"
+      - name: Upload attempt logs
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: deflake-attempt-logs
+          path: attempt-*.log
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Upload wrangler logs
+        # The crash log lands only in the runner's ~/.config/.wrangler/logs.
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: deflake-wrangler-logs
+          path: ~/.config/.wrangler/logs/
+          retention-days: 5
+          if-no-files-found: warn
