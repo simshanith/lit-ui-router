@@ -61,6 +61,7 @@
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/oxc-emit": "workspace:*",
+    "@tools/release-config": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/dom-navigation": "catalog:",
     "@types/node": "catalog:",
