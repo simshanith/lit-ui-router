@@ -22,11 +22,13 @@
     "format:check": "oxfmt --check \"**/*.{ts,json,md}\"",
     "lint": "oxlint .",
     "test": "node --test \"test/**/*.test.ts\"",
+    "test:coverage": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:tests": "tsc -p test/tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@tools/bundle-probe": "workspace:*",
+    "@tools/lcov-rebase": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
