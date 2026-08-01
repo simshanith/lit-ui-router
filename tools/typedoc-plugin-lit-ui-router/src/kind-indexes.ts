@@ -41,6 +41,7 @@ export function load(app: Application): void {
     const baseLink = resolveBaseLink(outDir, app);
     generateKindIndexFiles(outDir, baseLink, app);
     linkSidebarGroups(outDir, baseLink, app);
+    retitleRootModule(outDir, app);
   });
 }
 
@@ -100,6 +101,61 @@ ${items}
     fs.writeFileSync(path.join(kindDir, 'index.md'), indexContent);
     app.logger.verbose(`[lit-ui-router] Generated ${folder}/index.md`);
   }
+}
+
+/**
+ * Retitle a multi-entry package's root module from typedoc's filename
+ * default ("index") to the package name and lift it to the top of the
+ * root Modules list. Text-only: URLs keep the `index/` folder, and the
+ * typedoc-sidebar.json entry stays "index" for the site config to map.
+ */
+function retitleRootModule(outDir: string, app: Application): void {
+  const packageName = path.basename(outDir);
+  const moduleDir = path.join(outDir, 'index');
+  const modulePage = path.join(moduleDir, 'index.md');
+  const rootPage = path.join(outDir, 'index.md');
+  // Single-entry packages have no `index/` module folder.
+  if (!fs.existsSync(modulePage) || !fs.existsSync(rootPage)) return;
+
+  const entry = `- [index](index/index.md)\n`;
+  const root = fs.readFileSync(rootPage, 'utf-8');
+  if (root.includes(entry)) {
+    fs.writeFileSync(
+      rootPage,
+      root
+        .replace(entry, '')
+        .replace(
+          '## Modules\n\n',
+          `## Modules\n\n- [${packageName}](index/index.md)\n`,
+        ),
+    );
+  }
+
+  const page = fs.readFileSync(modulePage, 'utf-8');
+  fs.writeFileSync(
+    modulePage,
+    page
+      .replace(/^(\[.+\]\(\.\.\/index\.md\)) \/ index$/m, `$1 / ${packageName}`)
+      .replace(/^# index$/m, `# ${packageName}`),
+  );
+
+  for (const kindFolder of fs.readdirSync(moduleDir)) {
+    const kindDir = path.join(moduleDir, kindFolder);
+    if (!fs.statSync(kindDir).isDirectory()) continue;
+    for (const file of fs.readdirSync(kindDir)) {
+      if (!file.endsWith('.md')) continue;
+      const memberPage = path.join(kindDir, file);
+      const content = fs.readFileSync(memberPage, 'utf-8');
+      fs.writeFileSync(
+        memberPage,
+        content.replace(
+          /^(\[.+\]\(\.\.\/\.\.\/index\.md\)) \/ \[index\]\(\.\.\/index\.md\)/m,
+          `$1 / [${packageName}](../index.md)`,
+        ),
+      );
+    }
+  }
+  app.logger.verbose(`[lit-ui-router] Retitled root module to ${packageName}`);
 }
 
 /**
