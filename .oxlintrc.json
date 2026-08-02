@@ -420,6 +420,17 @@
           }
         ]
       }
+    },
+    {
+      "files": ["apps/sample-app-lit-e2e/scripts/deflake-e2e.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^DEFLAKE_"]
+          }
+        ]
+      }
     }
   ]
 }

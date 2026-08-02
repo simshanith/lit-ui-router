@@ -1,0 +1,107 @@
+# On-demand e2e flake sampler: N fresh serial runs of the Cypress suites
+# against a real dev server, reported per attempt. Two opt-ins:
+#   - `deflake` PR label: every push to a labeled PR gets sampled — the sticky
+#     mode for dependency-trial PRs (label a wrangler bump, read the check).
+#   - workflow_dispatch: manual sampling against any ref, with a runs input.
+# Attempts run OUTSIDE turbo: a cached test task would replay the first
+# attempt's logs instead of re-executing (apps/sample-app-lit-e2e/scripts/
+# measure-deflake.ts, on draft #489, counts real executions by the same rule).
+# This check is informational, never required — a red run means "the flake
+# fired", not "don't merge anything".
+# The sampler loop lives in apps/sample-app-lit-e2e/scripts/deflake-e2e.ts so
+# it sits under the package's oxlint + tsc gates instead of a `run:` block.
+name: Deflake e2e
+
+on:
+  workflow_dispatch:
+    inputs:
+      runs:
+        description: 'Number of e2e attempts (1-10)'
+        type: number
+        default: 5
+  pull_request:
+    types: [opened, labeled, synchronize, reopened]
+
+# One sampler per ref; superseded samples are stale, cancel them.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+# Standard husky CI setup: skip the prepare-script git-hook install.
+env:
+  HUSKY: 0
+
+jobs:
+  attempts:
+    # PR events sample only PRs opted in via the `deflake` label: `labeled`
+    # keys off the label that just landed (so adding any OTHER label to a
+    # sampled PR doesn't re-trigger), every other type reads the PR's current
+    # label set. `${{ }}` in an `if:` is fine — the ban is on `run:` lines.
+    if: >-
+      ${{ github.event_name == 'workflow_dispatch'
+      || (github.event.action == 'labeled' && github.event.label.name == 'deflake')
+      || (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'deflake')) }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Setup mise
+        uses: jdx/mise-action@v4
+      - name: Install dependencies
+        run: mise run setup
+      - name: Resolve Cypress version
+        id: cypress-version
+        run: mise run //tools/build_and_test:cypress_version
+      - name: Cache Cypress binary
+        uses: actions/cache@v6
+        with:
+          path: ~/.cache/Cypress
+          key: ${{ runner.os }}-cypress-${{ steps.cypress-version.outputs.cypress }}
+      - name: Install Cypress
+        run: mise run //tools/build_and_test:cypress
+      - name: Start shared Xvfb display
+        run: mise run //tools/build_and_test:xvfb
+      - name: Build the served site
+        # The e2e server serves docs/dist; the filter pulls the app's full
+        # dependency closure. Remote cache makes this a restore when secrets
+        # are present; dependabot/fork PRs (no secrets) build locally.
+        run: turbo run build --filter=sample-app-lit-e2e...
+        env:
+          TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+          TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
+          TURBO_API: ${{ secrets.TURBO_API }}
+          TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      - name: Run e2e attempts
+        env:
+          # Dispatch chooses; label runs sample the default. Inputs ride env,
+          # never `${{ }}` inside run lines. A non-numeric or 0 value falls
+          # back to the same default inside the script.
+          DEFLAKE_RUNS: ${{ inputs.runs || 5 }}
+          WRANGLER_LOG: warn
+          CYPRESS_video: false
+        run: corepack pnpm --filter sample-app-lit-e2e run deflake
+      - name: Upload attempt logs
+        # Not `failure()`: a green run can still hold near-miss logs (passed
+        # with the crash signature), and those are the interesting ones.
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: deflake-attempt-logs
+          # The script runs with the package as CWD; logs land next to it.
+          path: apps/sample-app-lit-e2e/attempt-*.log
+          retention-days: 5
+          if-no-files-found: warn
+      - name: Upload wrangler logs
+        # The crash log lands only in the runner's ~/.config/.wrangler/logs.
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: deflake-wrangler-logs
+          path: ~/.config/.wrangler/logs/
+          retention-days: 5
+          if-no-files-found: warn
