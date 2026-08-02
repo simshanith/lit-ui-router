@@ -8,8 +8,8 @@
 # measure-deflake.ts, on draft #489, counts real executions by the same rule).
 # This check is informational, never required — a red run means "the flake
 # fired", not "don't merge anything".
-# The sampler loop itself lives in .config/mise/tasks/deflake_e2e so it sits
-# under the repo's shellcheck gate instead of hiding in a `run:` block.
+# The sampler loop lives in apps/sample-app-lit-e2e/scripts/deflake-e2e.ts so
+# it sits under the package's oxlint + tsc gates instead of a `run:` block.
 name: Deflake e2e
 
 on:
@@ -80,11 +80,11 @@ jobs:
         env:
           # Dispatch chooses; label runs sample the default. Inputs ride env,
           # never `${{ }}` inside run lines. A non-numeric or 0 value falls
-          # back to the same default inside the task.
+          # back to the same default inside the script.
           DEFLAKE_RUNS: ${{ inputs.runs || 5 }}
           WRANGLER_LOG: warn
           CYPRESS_video: false
-        run: mise run deflake_e2e
+        run: corepack pnpm --filter sample-app-lit-e2e run deflake
       - name: Upload attempt logs
         # Not `failure()`: a green run can still hold near-miss logs (passed
         # with the crash signature), and those are the interesting ones.
@@ -92,7 +92,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: deflake-attempt-logs
-          path: attempt-*.log
+          # The script runs with the package as CWD; logs land next to it.
+          path: apps/sample-app-lit-e2e/attempt-*.log
           retention-days: 5
           if-no-files-found: warn
       - name: Upload wrangler logs
