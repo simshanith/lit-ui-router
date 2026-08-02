@@ -140,9 +140,14 @@ onUnmounted(() => {
 .stackblitz-embed iframe {
   width: 100%;
   max-width: 100%;
-  height: 400px;
-  /* Cap on short viewports (svh dodges mobile browser toolbars). */
-  height: min(400px, calc(100svh - 120px));
+  /* The editor keeps its own shape regardless of the example's preview
+     height: 16:10 of the container width, floored so narrow screens still
+     get a usable editor, capped on short viewports (svh dodges mobile
+     browser toolbars). */
+  height: auto;
+  aspect-ratio: 16 / 10;
+  min-height: 320px;
+  max-height: calc(100svh - 120px);
   border: 0;
   border-radius: 4px;
   overflow: hidden;

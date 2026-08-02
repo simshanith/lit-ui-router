@@ -85,7 +85,7 @@ onMounted(() => {
     </div>
     <div
       class="live-example-panels"
-      :class="{ collapsed: active === 'stackblitz' && !supported }"
+      :class="{ collapsed: active === 'stackblitz' }"
       :style="{ '--embed-height': previewHeight }"
     >
       <div
@@ -205,13 +205,15 @@ onMounted(() => {
   margin: 0;
 }
 
-/* Reserve the taller (preview) pane's frame height so tab switches don't shift the page. */
+/* Reserve the preview pane's frame height so its iframe loading in doesn't
+   shift the page. */
 .live-example-panels {
   min-height: min(var(--embed-height, 420px), calc(100svh - 120px));
 }
 
-/* Unsupported devices show only the short fallback note on the StackBlitz
-   tab — don't hold the reserved frame height as a blank region. */
+/* The StackBlitz pane sizes itself — the editor keeps its own aspect ratio
+   and the unsupported fallback is a short note — so drop the preview
+   reservation whenever that tab is active. */
 .live-example-panels.collapsed {
   min-height: 0;
 }
