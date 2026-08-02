@@ -28,5 +28,4 @@ export MEASURE_DEFLAKE_WORKFLOW="${usage_workflow:?}"
 export MEASURE_DEFLAKE_MAX_LOG_MB="${usage_max_log_mb:?}"
 export MEASURE_DEFLAKE_RUN_LIMIT="${usage_run_limit:?}"
 
-# 0755 + `#!/usr/bin/env node` shebang: exec'd directly, no `node` prefix.
-exec "$script" "${args[@]}"
+exec node "$script" "${args[@]}"
