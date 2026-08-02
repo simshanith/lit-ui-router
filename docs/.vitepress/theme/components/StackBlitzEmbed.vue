@@ -7,7 +7,6 @@ import { webContainersSupported } from './webcontainers';
 const props = defineProps<{
   src: string;
   title: string;
-  height?: string;
   fallbackSrc?: string;
   fallbackHeight?: string;
 }>();
@@ -106,7 +105,6 @@ onUnmounted(() => {
     <iframe
       :src="src"
       :title="title"
-      :style="{ '--embed-height': props.height }"
       ref="iframe"
       allow="cross-origin-isolated"
       credentialless
@@ -142,9 +140,14 @@ onUnmounted(() => {
 .stackblitz-embed iframe {
   width: 100%;
   max-width: 100%;
-  height: var(--embed-height, 400px);
-  /* Cap on short viewports (svh dodges mobile browser toolbars). */
-  height: min(var(--embed-height, 400px), calc(100svh - 120px));
+  /* The editor keeps its own shape regardless of the example's preview
+     height: 16:10 of the container width, floored so narrow screens still
+     get a usable editor, capped on short viewports (svh dodges mobile
+     browser toolbars). */
+  height: auto;
+  aspect-ratio: 16 / 10;
+  min-height: 320px;
+  max-height: calc(100svh - 120px);
   border: 0;
   border-radius: 4px;
   overflow: hidden;
