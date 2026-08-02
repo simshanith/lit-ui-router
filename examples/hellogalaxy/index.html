@@ -45,6 +45,19 @@
         background-size: cover;
         background-position: center;
       }
+      @media (max-width: 640px) {
+        /* Smaller backdrop download for phones */
+        body::before {
+          background-image:
+            linear-gradient(rgba(9, 10, 15, 0.4), rgba(9, 10, 15, 0.7)),
+            url('https://science.nasa.gov/wp-content/uploads/2023/09/ssc2006-02a-0.jpg?w=1024');
+        }
+        /* The @uirouter/visualizer overlays cover content on phones */
+        #uirStateVisualizer,
+        #uirTransitionVisualizer {
+          display: none !important;
+        }
+      }
     </style>
   </head>
   <body>

@@ -29,10 +29,23 @@
         color: #e6e9f0;
         background: transparent;
       }
+      @media (max-width: 800px) {
+        body {
+          margin: 24px auto;
+        }
+      }
       @media (max-width: 480px) {
         body {
           margin: 16px auto;
           padding: 0 12px;
+        }
+      }
+      /* The visualizer overlay covers content on phones; keep it desktop-only.
+         !important outranks the visualizer's own injected stylesheet. */
+      @media (max-width: 600px) {
+        #uirStateVisualizer,
+        #uirTransitionVisualizer {
+          display: none !important;
         }
       }
     </style>
