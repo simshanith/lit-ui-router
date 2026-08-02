@@ -151,6 +151,7 @@ onMounted(() => {
 <style scoped>
 .live-example {
   margin: 16px 0;
+  container-type: inline-size;
 }
 
 .live-example-bar {
@@ -203,6 +204,14 @@ onMounted(() => {
   border-radius: 6px;
   overflow: hidden;
   transition: border-color 0.2s;
+}
+
+/* Below the tabs+badge intrinsic width the bar wraps the badge onto its own
+   row — align it with the tabs instead of the far edge. */
+@container (max-width: 420px) {
+  .open-badge {
+    margin-left: 0;
+  }
 }
 
 .open-badge:hover {
