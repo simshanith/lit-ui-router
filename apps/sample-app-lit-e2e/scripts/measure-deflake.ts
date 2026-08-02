@@ -7,14 +7,31 @@ import { promisify } from 'node:util';
 // Turbo cache-hit replays re-print old logs verbatim, so only "cache
 // miss/bypass" executions count as exposures.
 // Usage: node scripts/measure-deflake.ts [days=7] [branch]
+//        mise run measure_deflake --days 7 --branch mybranch (flags for the rest)
 // [branch] isolates one branch's runs — e.g. rate a wrangler-bump trial
 // branch (forced dispatches against its ref) without main's runs diluting it.
+// Repo-specific config comes from MEASURE_DEFLAKE_* env vars (the mise task
+// sets them from flags); the defaults below are this repo's.
 const execFile = promisify(execFileCb);
-const REPO = 'simshanith/lit-ui-router';
+
+function positiveEnv(name: string, fallback: number): number {
+  const raw = process.env[name];
+  if (raw === undefined || raw === '') return fallback;
+  const value = Number(raw);
+  if (!Number.isFinite(value) || value <= 0) {
+    console.error(`invalid ${name}: ${raw}`);
+    process.exit(1);
+  }
+  return value;
+}
+
+const REPO = process.env.MEASURE_DEFLAKE_REPO ?? 'simshanith/lit-ui-router';
+const WORKFLOW = process.env.MEASURE_DEFLAKE_WORKFLOW ?? 'build-test.yml';
 // run logs are tens of MB; execFile's default 1MB maxBuffer would truncate
-const MAX_LOG_BYTES = 512 * 1024 * 1024;
+const MAX_LOG_BYTES =
+  positiveEnv('MEASURE_DEFLAKE_MAX_LOG_MB', 512) * 1024 ** 2;
 // gh returns newest-first and caps silently, so a hit clips the window's old end
-const RUN_LIMIT = 1000;
+const RUN_LIMIT = positiveEnv('MEASURE_DEFLAKE_RUN_LIMIT', 1000);
 
 async function gh(args: string[]): Promise<string> {
   const { stdout } = await execFile('gh', args, { maxBuffer: MAX_LOG_BYTES });
@@ -34,7 +51,7 @@ const branch = process.argv[3];
 // completed only: an in-progress run has no fetchable log yet
 const runs = JSON.parse(
   await gh([
-    ...['run', 'list', '--repo', REPO, '--workflow', 'build-test.yml'],
+    ...['run', 'list', '--repo', REPO, '--workflow', WORKFLOW],
     ...['--limit', String(RUN_LIMIT), '--created', `>=${since}`],
     ...['--status', 'completed'],
     ...(branch === undefined ? [] : ['--branch', branch]),
@@ -44,7 +61,7 @@ const runs = JSON.parse(
 
 if (runs.length === RUN_LIMIT) {
   console.error(
-    `run list hit the ${RUN_LIMIT}-run cap — the oldest runs in the ${days}-day window were dropped, so any rate below is over a clipped window; shorten [days] or raise RUN_LIMIT`,
+    `run list hit the ${RUN_LIMIT}-run cap — the oldest runs in the ${days}-day window were dropped, so any rate below is over a clipped window; shorten [days] or raise --run-limit`,
   );
   process.exitCode = 1;
 }
@@ -75,7 +92,7 @@ for (const { attempt: attempts, databaseId: id } of runs) {
       if (code === 'ERR_CHILD_PROCESS_STDIO_MAXBUFFER') {
         // a swallowed overflow would silently undercount both sides of the rate
         console.error(
-          `${id} attempt ${attempt}: log exceeds MAX_LOG_BYTES — stats invalid, raise the cap`,
+          `${id} attempt ${attempt}: log exceeds the ${String(MAX_LOG_BYTES / 1024 ** 2)}MB cap — stats invalid, raise --max-log-mb`,
         );
         process.exitCode = 1;
         continue;

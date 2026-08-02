@@ -50,6 +50,27 @@ catalog pins 4.113.0). `scripts/measure-deflake.ts` turns "is it still
 happening?" into a number:
 
 ```bash
+mise run measure_deflake                            # crash rate over the last 7 days
+mise run measure_deflake --days 2 --branch my-branch  # one branch's runs only
+```
+
+The mise task (`.config/mise/tasks/measure_deflake`) carries the
+repo-specific config as flags with defaults — `mise run measure_deflake
+--help` prints the spec:
+
+| Flag           | Default                    | What it moves                                         |
+| -------------- | -------------------------- | ----------------------------------------------------- |
+| `--days`       | `7`                        | Window size                                           |
+| `--branch`     | _(all branches)_           | Restrict to one branch's runs                         |
+| `--repo`       | `simshanith/lit-ui-router` | `owner/name` to scan                                  |
+| `--workflow`   | `build-test.yml`           | Workflow whose runs carry the e2e task                |
+| `--max-log-mb` | `512`                      | Per-attempt log buffer; an over-cap log aborts loudly |
+| `--run-limit`  | `1000`                     | `gh run list` cap; a hit clips the window's old end   |
+
+The task passes the non-positional config through as `MEASURE_DEFLAKE_*`
+env vars, so the script's own CLI still works unchanged:
+
+```bash
 node scripts/measure-deflake.ts 7            # crash rate over the last 7 days
 node scripts/measure-deflake.ts 2 my-branch  # one branch's runs only
 ```

@@ -1,0 +1,29 @@
+#!/usr/bin/env bash
+#MISE description="Report the CI wrangler-dev crash rate from build-test run logs (needs an authenticated gh)"
+#
+# Thin wrapper over apps/sample-app-lit-e2e/scripts/measure-deflake.ts: the
+# repo-specific knobs live here as usage flags with defaults, the script keeps
+# its positional CLI so `node scripts/measure-deflake.ts 7 mybranch` still works.
+#USAGE flag "--days <days>" help="Window size in days" default="7"
+#USAGE flag "--branch <branch>" help="Only this branch's runs — rate a trial branch without main diluting it"
+#USAGE flag "--repo <slug>" help="owner/name to scan" default="simshanith/lit-ui-router"
+#USAGE flag "--workflow <file>" help="Workflow whose runs carry the e2e task" default="build-test.yml"
+#USAGE flag "--max-log-mb <mb>" help="Per-attempt log buffer; an over-cap log aborts rather than undercounting" default="512"
+#USAGE flag "--run-limit <n>" help="gh run list cap; gh caps silently, so a hit clips the window's old end" default="1000"
+set -euo pipefail
+
+# File-based tasks are raw scripts: mise's {{config_root}} template does NOT
+# render here, so use the env var mise exports to every task.
+script="${MISE_CONFIG_ROOT}/apps/sample-app-lit-e2e/scripts/measure-deflake.ts"
+
+args=("${usage_days:?}")
+if [ -n "${usage_branch:-}" ]; then
+  args+=("$usage_branch")
+fi
+
+export MEASURE_DEFLAKE_REPO="${usage_repo:?}"
+export MEASURE_DEFLAKE_WORKFLOW="${usage_workflow:?}"
+export MEASURE_DEFLAKE_MAX_LOG_MB="${usage_max_log_mb:?}"
+export MEASURE_DEFLAKE_RUN_LIMIT="${usage_run_limit:?}"
+
+exec node "$script" "${args[@]}"
