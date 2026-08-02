@@ -2,6 +2,7 @@
 import { useTemplateRef, ref, computed, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
 import ExampleEmbed from './ExampleEmbed.vue';
+import { webContainersSupported } from './webcontainers';
 
 const props = defineProps<{
   src: string;
@@ -9,16 +10,6 @@ const props = defineProps<{
   fallbackSrc?: string;
   fallbackHeight?: string;
 }>();
-
-// StackBlitz WebContainers never boot on iOS (every iOS browser is WebKit),
-// even though iOS 16.4+ has SharedArrayBuffer — UA is the primary signal.
-function isIOS() {
-  return (
-    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
-    // iPadOS reports itself as macOS; touch support tells it apart.
-    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
-  );
-}
 
 const embedSupported = ref(true);
 
@@ -65,9 +56,7 @@ if (!import.meta.env.SSR) {
 }
 
 onMounted(async () => {
-  // The site is crossOriginIsolated (_headers: COOP + COEP credentialless),
-  // so a missing SharedArrayBuffer means an engine too old for WebContainers.
-  embedSupported.value = !isIOS() && typeof SharedArrayBuffer !== 'undefined';
+  embedSupported.value = webContainersSupported();
   isFullscreenSupported.value = screenfull.isEnabled;
   if (screenfull.isEnabled) {
     screenfull.on('change', handleFullscreenChange);
