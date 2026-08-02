@@ -85,6 +85,8 @@ catalog:
 catalogMode: prefer
 
 catalogs:
+  lit2-compat:
+    lit-2: npm:lit@^2.8.0
   # exact published floor of the matching publishedPeer range; peer-floor-guard
   # fails the typecheck:peer-floor task when the two drift apart
   peerFloor:
@@ -94,7 +96,7 @@ catalogs:
   publishedPeer:
     '@uirouter/core': ^6.0.8
     hono: ^4.0.0
-    lit: ^3.0.0
+    lit: '^2.0.0 || ^3.0.0'
     lit-ui-router: ^1.7.0
     mobx: ^6.0.0
     typedoc: ^0.28.0

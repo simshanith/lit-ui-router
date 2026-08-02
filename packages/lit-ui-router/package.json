@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router",
-  "version": "1.8.0",
+  "version": "1.9.0",
   "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
@@ -65,6 +65,7 @@
     "test": "VITEST_BROWSER_API_PORT=63320 vitest run --project=happy-dom --project=chrome",
     "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --project=happy-dom --project=chrome",
     "test:engines": "VITEST_BROWSER_API_PORT=63321 vitest run --project=firefox --project=safari",
+    "test:lit2-compat": "node lit2-compat-guard.ts && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63322 vitest run --project=happy-dom --project=chrome && tsc -p tsconfig.lit2-compat.json --noEmit",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
@@ -85,6 +86,7 @@
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
     "lit": "catalog:",
+    "lit-2": "catalog:lit2-compat",
     "oxc-project-runtime": "catalog:",
     "oxfmt": "catalog:",
     "playwright": "catalog:",

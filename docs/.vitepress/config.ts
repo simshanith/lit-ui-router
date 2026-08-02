@@ -4,6 +4,7 @@ import { defineConfig, HeadConfig, type DefaultTheme } from 'vitepress';
 import typedocSidebarItemsJson from '../api/reference/typedoc-sidebar.json';
 import mobxSidebarItemsJson from '../api/lit-ui-router-mobx/typedoc-sidebar.json';
 import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedoc-sidebar.json';
+import serverSidebarItemsJson from '../api/ui-router-server/typedoc-sidebar.json';
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
@@ -26,6 +27,28 @@ const navigationSidebarItemsRaw =
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
 const mobxSidebarItems = flattenGroups(mobxSidebarItemsRaw);
 const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
+
+// ui-router-server is multi-entry: typedoc emits one module per subpath
+// export, so the module level is the import surface — keep it, retitle each
+// module to its import specifier, and flatten only the kind groups within.
+const serverSidebarItemsRaw =
+  serverSidebarItemsJson as DefaultTheme.SidebarItem[];
+const serverSidebarItems = serverSidebarItemsRaw
+  .map((module) => ({
+    ...module,
+    text:
+      module.text === 'index'
+        ? 'ui-router-server'
+        : `ui-router-server/${module.text}`,
+    collapsed: true,
+    items: module.items && flattenGroups(module.items),
+  }))
+  // root module first; stable sort keeps the subpaths in typedoc order
+  .sort(
+    (a, b) =>
+      Number(b.text === 'ui-router-server') -
+      Number(a.text === 'ui-router-server'),
+  );
 
 const baseUrl = 'https://lit-ui-router.dev';
 
@@ -91,6 +114,19 @@ function makeSidebar() {
               link: '/api/navigation-location-plugin/',
               collapsed: false,
               items: navigationSidebarItems,
+            },
+          ],
+        },
+        {
+          text: 'Server',
+          link: '/packages/server',
+          collapsed: true,
+          items: [
+            {
+              text: 'ui-router-server API',
+              link: '/api/ui-router-server/',
+              collapsed: false,
+              items: serverSidebarItems,
             },
           ],
         },

@@ -1,0 +1,51 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": [
+    "src/index.ts",
+    "src/url-matcher.ts",
+    "src/redirects.ts",
+    "src/simulate.ts",
+    "src/connect.ts",
+    "src/fetch.ts",
+    "src/hono.ts",
+    "src/vite.ts"
+  ],
+  "out": "../../docs/api/ui-router-server",
+  "docsRoot": "../../docs",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "@tools/typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "ui-router-server": {
+      "Request": "https://developer.mozilla.org/en-US/docs/Web/API/Request",
+      "Response": "https://developer.mozilla.org/en-US/docs/Web/API/Response",
+      "Headers": "https://developer.mozilla.org/en-US/docs/Web/API/Headers"
+    },
+    "@uirouter/core": {
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",
+      "UrlMatcher": "https://ui-router.github.io/core/docs/latest/classes/_url_urlmatcher_.urlmatcher.html",
+      "StateDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html",
+      "RawParams": "https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.rawparams.html",
+      "Transition": "https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html",
+      "TargetState": "https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html"
+    }
+  },
+  "sidebar": {
+    "pretty": true
+  }
+}
