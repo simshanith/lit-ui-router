@@ -66,6 +66,7 @@ repo-specific config as flags with defaults — `mise run measure_deflake
 | `--workflow`   | `build-test.yml`           | Workflow whose runs carry the e2e task                |
 | `--max-log-mb` | `512`                      | Per-attempt log buffer; an over-cap log aborts loudly |
 | `--run-limit`  | `1000`                     | `gh run list` cap; a hit clips the window's old end   |
+| `--port`       | `8787`                     | e2e dev-server port the crash signature keys on       |
 
 That spec is the _only_ place defaults live. The task passes `--days` (and
 `--branch`, when given) as positionals and the rest as `MEASURE_DEFLAKE_*`
@@ -78,6 +79,7 @@ MEASURE_DEFLAKE_REPO=simshanith/lit-ui-router \
   MEASURE_DEFLAKE_WORKFLOW=build-test.yml \
   MEASURE_DEFLAKE_MAX_LOG_MB=512 \
   MEASURE_DEFLAKE_RUN_LIMIT=1000 \
+  MEASURE_DEFLAKE_PORT=8787 \
   ./scripts/measure-deflake.ts 2 my-branch
 ```
 

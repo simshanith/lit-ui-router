@@ -2,6 +2,8 @@
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 
+import { crashSignatureFor } from './deflake-e2e.ts';
+
 // How often the wrangler-dev e2e crash (cloudflare/workers-sdk#14926) fires in
 // CI: scans build-test runs — every attempt, since organic crashes get rerun
 // and latest-attempt logs undercount — and reports crashes per e2e execution.
@@ -10,8 +12,8 @@ import { promisify } from 'node:util';
 // Usage: mise run measure_deflake --days 7 [--branch mybranch] [--repo …]
 // Every default lives in that task's #USAGE spec, so this script requires its
 // full config: the [days] positional plus MEASURE_DEFLAKE_{REPO,WORKFLOW,
-// MAX_LOG_MB,RUN_LIMIT}. Direct exec (./scripts/measure-deflake.ts 7 [branch])
-// works only with those four exported.
+// MAX_LOG_MB,RUN_LIMIT,PORT}. Direct exec (./scripts/measure-deflake.ts 7
+// [branch]) works only with those five exported.
 // [branch] isolates one branch's runs — e.g. rate a wrangler-bump trial
 // branch (forced dispatches against its ref) without main's runs diluting it.
 const execFile = promisify(execFileCb);
@@ -42,6 +44,8 @@ const WORKFLOW = requiredEnv('MEASURE_DEFLAKE_WORKFLOW');
 const MAX_LOG_BYTES = positiveEnv('MEASURE_DEFLAKE_MAX_LOG_MB') * 1024 ** 2;
 // gh returns newest-first and caps silently, so a hit clips the window's old end
 const RUN_LIMIT = positiveEnv('MEASURE_DEFLAKE_RUN_LIMIT');
+// same signature the sampler keys on, so the two can't drift apart
+const CRASH_SIGNATURE = crashSignatureFor(positiveEnv('MEASURE_DEFLAKE_PORT'));
 
 async function gh(args: string[]): Promise<string> {
   const { stdout } = await execFile('gh', args, { maxBuffer: MAX_LOG_BYTES });
@@ -118,7 +122,7 @@ for (const { attempt: attempts, databaseId: id } of runs) {
     executed += 1;
     const hits: string[] = [];
     // pre-deflake signature: the crash strands remaining specs on ECONNREFUSED
-    if (log.includes('ECONNREFUSED 127.0.0.1:8787')) hits.push('crash');
+    if (log.includes(CRASH_SIGNATURE)) hits.push('crash');
     // post-deflake signatures: pm2 respawned wrangler / failed suites rerun
     if ((log.match(/App \[wrangler-dev:0\] online/g) ?? []).length > 1)
       hits.push('respawn');

@@ -197,12 +197,12 @@
       }
     },
     {
-      "files": ["**/scripts/measure-deflake.ts"],
+      "files": ["apps/sample-app-lit-e2e/scripts/**"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
-            "allowList": ["^MEASURE_DEFLAKE_"]
+            "allowList": ["^DEFLAKE_", "^MEASURE_DEFLAKE_"]
           }
         ]
       }
@@ -428,17 +428,6 @@
           "warn",
           {
             "allowList": ["^XVFB_"]
-          }
-        ]
-      }
-    },
-    {
-      "files": ["apps/sample-app-lit-e2e/scripts/deflake-e2e.ts"],
-      "rules": {
-        "turbo/no-undeclared-env-vars": [
-          "warn",
-          {
-            "allowList": ["^DEFLAKE_"]
           }
         ]
       }
