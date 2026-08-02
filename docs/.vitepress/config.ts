@@ -65,7 +65,7 @@ function makeSidebar() {
         { text: 'Hello World', link: '/tutorial/helloworld' },
         { text: 'Hello Solar System', link: '/tutorial/hellosolarsystem' },
         { text: 'Hello Galaxy', link: '/tutorial/hellogalaxy' },
-        { text: 'Live Examples', link: '/tutorial/live-examples' },
+        { text: 'All Examples', link: '/tutorial/live-examples' },
       ],
     },
     {

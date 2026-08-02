@@ -9,11 +9,7 @@ Building on [Hello World](./helloworld), this tutorial introduces data fetching 
 
 ## Live Demo
 
-<StackBlitzEmbed
-src="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem?embed=1&file=src/main.ts&view=preview"
-fallback-src="/examples/hellosolarsystem/"
-fallback-height="800px"
-title="lit-ui-router-hellosolarsystem"><a href="https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem?file=src/main.ts" target="_blank"><img alt="Open in StackBlitz" src="https://developer.stackblitz.com/img/open_in_stackblitz.svg" /></a></StackBlitzEmbed>
+<LiveExample name="hellosolarsystem" />
 
 ## What We're Building
 
