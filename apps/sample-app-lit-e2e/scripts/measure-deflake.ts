@@ -1,3 +1,4 @@
+#!/usr/bin/env node
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 
@@ -6,43 +7,52 @@ import { promisify } from 'node:util';
 // and latest-attempt logs undercount — and reports crashes per e2e execution.
 // Turbo cache-hit replays re-print old logs verbatim, so only "cache
 // miss/bypass" executions count as exposures.
-// Usage: node scripts/measure-deflake.ts [days=7] [branch]
-//        mise run measure_deflake --days 7 --branch mybranch (flags for the rest)
+// Usage: mise run measure_deflake --days 7 [--branch mybranch] [--repo …]
+// Every default lives in that task's #USAGE spec, so this script requires its
+// full config: the [days] positional plus MEASURE_DEFLAKE_{REPO,WORKFLOW,
+// MAX_LOG_MB,RUN_LIMIT}. Direct exec (./scripts/measure-deflake.ts 7 [branch])
+// works only with those four exported.
 // [branch] isolates one branch's runs — e.g. rate a wrangler-bump trial
 // branch (forced dispatches against its ref) without main's runs diluting it.
-// Repo-specific config comes from MEASURE_DEFLAKE_* env vars (the mise task
-// sets them from flags); the defaults below are this repo's.
 const execFile = promisify(execFileCb);
 
-function positiveEnv(name: string, fallback: number): number {
+function fail(what: string): never {
+  console.error(
+    `${what} — run via \`mise run measure_deflake\`, which supplies every default from its usage spec`,
+  );
+  process.exit(1);
+}
+
+function requiredEnv(name: string): string {
   const raw = process.env[name];
-  if (raw === undefined || raw === '') return fallback;
+  if (raw === undefined || raw === '') fail(`missing ${name}`);
+  return raw;
+}
+
+function positiveEnv(name: string): number {
+  const raw = requiredEnv(name);
   const value = Number(raw);
-  if (!Number.isFinite(value) || value <= 0) {
-    console.error(`invalid ${name}: ${raw}`);
-    process.exit(1);
-  }
+  if (!Number.isFinite(value) || value <= 0) fail(`invalid ${name}: ${raw}`);
   return value;
 }
 
-const REPO = process.env.MEASURE_DEFLAKE_REPO ?? 'simshanith/lit-ui-router';
-const WORKFLOW = process.env.MEASURE_DEFLAKE_WORKFLOW ?? 'build-test.yml';
+const REPO = requiredEnv('MEASURE_DEFLAKE_REPO');
+const WORKFLOW = requiredEnv('MEASURE_DEFLAKE_WORKFLOW');
 // run logs are tens of MB; execFile's default 1MB maxBuffer would truncate
-const MAX_LOG_BYTES =
-  positiveEnv('MEASURE_DEFLAKE_MAX_LOG_MB', 512) * 1024 ** 2;
+const MAX_LOG_BYTES = positiveEnv('MEASURE_DEFLAKE_MAX_LOG_MB') * 1024 ** 2;
 // gh returns newest-first and caps silently, so a hit clips the window's old end
-const RUN_LIMIT = positiveEnv('MEASURE_DEFLAKE_RUN_LIMIT', 1000);
+const RUN_LIMIT = positiveEnv('MEASURE_DEFLAKE_RUN_LIMIT');
 
 async function gh(args: string[]): Promise<string> {
   const { stdout } = await execFile('gh', args, { maxBuffer: MAX_LOG_BYTES });
   return stdout;
 }
 
-const days = Number(process.argv[2] ?? 7);
-if (!Number.isFinite(days) || days <= 0) {
-  console.error(`invalid days argument: ${process.argv[2]}`);
-  process.exit(1);
-}
+const daysArg = process.argv[2];
+if (daysArg === undefined) fail('missing [days] argument');
+const days = Number(daysArg);
+if (!Number.isFinite(days) || days <= 0)
+  fail(`invalid days argument: ${daysArg}`);
 const since = new Date(Date.now() - days * 86_400_000)
   .toISOString()
   .replace(/\.\d+Z$/, 'Z');
@@ -61,7 +71,7 @@ const runs = JSON.parse(
 
 if (runs.length === RUN_LIMIT) {
   console.error(
-    `run list hit the ${RUN_LIMIT}-run cap — the oldest runs in the ${days}-day window were dropped, so any rate below is over a clipped window; shorten [days] or raise --run-limit`,
+    `run list hit the ${RUN_LIMIT}-run cap — the oldest runs in the ${days}-day window were dropped, so any rate below is over a clipped window; shorten --days or raise --run-limit`,
   );
   process.exitCode = 1;
 }

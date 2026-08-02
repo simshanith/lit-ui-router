@@ -67,12 +67,18 @@ repo-specific config as flags with defaults — `mise run measure_deflake
 | `--max-log-mb` | `512`                      | Per-attempt log buffer; an over-cap log aborts loudly |
 | `--run-limit`  | `1000`                     | `gh run list` cap; a hit clips the window's old end   |
 
-The task passes the non-positional config through as `MEASURE_DEFLAKE_*`
-env vars, so the script's own CLI still works unchanged:
+That spec is the _only_ place defaults live. The task passes `--days` (and
+`--branch`, when given) as positionals and the rest as `MEASURE_DEFLAKE_*`
+env vars; the script requires all of them and exits pointing back at
+`mise run measure_deflake` if any is missing. Direct exec works — the file
+is `0755` with a `#!/usr/bin/env node` shebang — but you own the contract:
 
 ```bash
-node scripts/measure-deflake.ts 7            # crash rate over the last 7 days
-node scripts/measure-deflake.ts 2 my-branch  # one branch's runs only
+MEASURE_DEFLAKE_REPO=simshanith/lit-ui-router \
+  MEASURE_DEFLAKE_WORKFLOW=build-test.yml \
+  MEASURE_DEFLAKE_MAX_LOG_MB=512 \
+  MEASURE_DEFLAKE_RUN_LIMIT=1000 \
+  ./scripts/measure-deflake.ts 2 my-branch
 ```
 
 The branch filter is how an upgrade gets trialed without merging anything:
