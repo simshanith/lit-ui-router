@@ -196,10 +196,17 @@ class PlanetListComponent extends LitElement {
       color: #8892b8;
       font-size: 0.85em;
     }
-    /* Larger tap targets on touch-sized screens */
+    /* ≥44px tap targets on touch-sized screens */
     @media (max-width: 480px) {
       a {
-        padding: 11px 12px;
+        box-sizing: border-box;
+        min-height: 44px;
+        padding: 8px 12px;
+      }
+      /* Cap the log-scaled dots so the Sun doesn't dwarf the row */
+      .body {
+        max-width: 44px;
+        max-height: 44px;
       }
     }
   `;
@@ -276,6 +283,25 @@ class PlanetDetailComponent extends LitElement {
     .back-link:hover {
       text-decoration: underline;
     }
+    /* Top back link only appears on phones, where the bottom one is below the fold */
+    .back-link.top {
+      display: none;
+      margin: 0;
+    }
+    /* ≥44px tap targets on touch-sized screens */
+    @media (max-width: 480px) {
+      .back-link {
+        padding: 13px 0;
+      }
+      .back-link.top {
+        display: block;
+      }
+      /* Cap the doubled detail dot so facts stay above the fold */
+      .body {
+        max-width: 96px;
+        max-height: 96px;
+      }
+    }
     /* Stack label/value pairs on narrow screens */
     @media (max-width: 420px) {
       dl {
@@ -310,6 +336,9 @@ class PlanetDetailComponent extends LitElement {
     const size = dotSize(this.planet.diameterKm) * 2;
     return html`
       <div>
+        <a class="back-link top" ${uiSref('planets')}
+          >&lsaquo; Back to the solar system</a
+        >
         <h3>${this.planet.name}</h3>
         <span
           class="body"
@@ -358,10 +387,10 @@ export class AppRoot extends LitElement {
       font-weight: bold;
       border-bottom: 2px solid #8ab4f8;
     }
-    /* Larger tap targets on touch-sized screens */
+    /* ≥44px tap targets on touch-sized screens */
     @media (max-width: 480px) {
       nav a {
-        padding: 10px 0;
+        padding: 13px 0;
       }
     }
   `;
