@@ -6,7 +6,7 @@ description: Honest HTTP verdicts for a static SPA with ui-router-server — the
 # ui-router-server
 
 <p class="badges">
-<a href="https://www.npmjs.com/package/ui-router-server" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-server" /></a>
+<a href="https://npmx.dev/package/ui-router-server" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-server" /></a>
 </p>
 
 [`ui-router-server`](https://www.npmjs.com/package/ui-router-server) runs the
