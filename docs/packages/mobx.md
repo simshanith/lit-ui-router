@@ -10,7 +10,7 @@ description: Observable router state and reaction-based controllers with lit-ui-
 <a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*" /></a>
 </p>
 
-[`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)
+[`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)
 provides [MobX](https://mobx.js.org) bindings for lit-ui-router: an observable
 mirror of the router's state and reaction-based
 [ReactiveControllers](https://lit.dev/docs/composition/controllers/) that keep
