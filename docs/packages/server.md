@@ -7,9 +7,10 @@ description: Honest HTTP verdicts for a static SPA with ui-router-server — the
 
 <p class="badges">
 <a href="https://npmx.dev/package/ui-router-server" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/ui-router-server" /></a>
+<a href="https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-server" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-server@*" /></a>
 </p>
 
-[`ui-router-server`](https://www.npmjs.com/package/ui-router-server) runs the
+[`ui-router-server`](https://npmx.dev/package/ui-router-server) runs the
 client's route table on the server, so a static single-page app can answer
 deep links honestly: the app shell for real routes, a computed 302 for
 redirects, and a real 404 for everything else.
@@ -20,15 +21,10 @@ core — and turning that verdict into HTTP is the server's one job. Adapters
 for Connect/Express, Vite, WinterCG `fetch`, and Hono ship that last step for
 you.
 
-::: warning In development
-This package is not yet usable from npm. The name currently holds an empty
-placeholder seed (`0.0.1-alpha.0`, published to stand up the release
-machinery); the code ships from
-[this repository](https://github.com/simshanith/lit-ui-router/tree/main/packages/ui-router-server)
-today, and a real `0.x` alpha is the next step — follow
-[issue #354](https://github.com/simshanith/lit-ui-router/issues/354). The
-APIs below are live and dogfooded, but they can still move before the first
-alpha.
+::: warning Early days
+This package is published and dogfooded — the Worker behind this site runs it
+— but it is still `0.x`. The APIs below are live and covered by tests; they
+can still move in a minor release before `1.0`, so pin what you install.
 :::
 
 ## What problem it solves
@@ -84,6 +80,22 @@ Picking one:
   actual rules. Both strategies consume the same declaration data and produce
   identical verdicts today (the package tests assert parity), so `strategy`
   is a pure cost knob.
+
+## Installation
+
+```bash
+npm install ui-router-server
+# or
+pnpm add ui-router-server
+```
+
+Nothing else is required: `@uirouter/core` (only for
+[`simulate` mounts](#the-tiers)) and `hono` are **optional** peer
+dependencies, and every other adapter targets a host you already have.
+
+`latest` is the stable line (`0.1.0` today). The `alpha` dist-tag is left over
+from the pre-release seeds and points at an older build — install from
+`latest`.
 
 ## Quick start
 
@@ -300,9 +312,8 @@ as the mount's `config`.
 
 ## Status
 
-- **npm**: [`ui-router-server`](https://www.npmjs.com/package/ui-router-server)
-  holds an empty placeholder seed only. There is nothing useful to install
-  yet.
+- **npm**: [`ui-router-server`](https://npmx.dev/package/ui-router-server) —
+  `0.1.0` on `latest`, an early `0.x` line that can still move in a minor.
 - **Source**:
   [`packages/ui-router-server`](https://github.com/simshanith/lit-ui-router/tree/main/packages/ui-router-server)
   — the code, its tests, and the bundle-size probes behind the tier table.
@@ -311,7 +322,8 @@ as the mount's `config`.
   [every level of the spectrum](/guides/server-route-matching#live-on-this-site)
   side by side; the VitePress dev server runs the same mounts through the
   Vite plugin.
-- **Next**: a real `0.x` alpha, tracked in
+- **Next**: content rendering (build-time and server-side) is the roadmap
+  axis; the release itself is tracked in
   [issue #354](https://github.com/simshanith/lit-ui-router/issues/354).
 
 ## Further reading
