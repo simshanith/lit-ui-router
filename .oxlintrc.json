@@ -197,6 +197,17 @@
       }
     },
     {
+      "files": ["**/scripts/measure-deflake.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^MEASURE_DEFLAKE_"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["**/*.ts"],
       "rules": {
         "typescript/no-explicit-any": "warn",

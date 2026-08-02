@@ -41,6 +41,63 @@ pnpm --filter sample-app-lit-e2e test:hash
 pnpm --filter sample-app-lit-e2e test:navigation
 ```
 
+## Measuring the wrangler crash rate
+
+The CI dev server (`wrangler dev`) has a history of mid-suite crashes on
+Linux runners (cloudflare/workers-sdk#14926 — fatal non-recovery from a
+workerd restart, introduced in wrangler 4.114.0 and the reason the
+catalog pins 4.113.0). `scripts/measure-deflake.ts` turns "is it still
+happening?" into a number:
+
+```bash
+mise run measure_deflake                            # crash rate over the last 7 days
+mise run measure_deflake --days 2 --branch my-branch  # one branch's runs only
+```
+
+The mise task (`.config/mise/tasks/measure_deflake`) carries the
+repo-specific config as flags with defaults — `mise run measure_deflake
+--help` prints the spec:
+
+| Flag           | Default                    | What it moves                                         |
+| -------------- | -------------------------- | ----------------------------------------------------- |
+| `--days`       | `7`                        | Window size                                           |
+| `--branch`     | _(all branches)_           | Restrict to one branch's runs                         |
+| `--repo`       | `simshanith/lit-ui-router` | `owner/name` to scan                                  |
+| `--workflow`   | `build-test.yml`           | Workflow whose runs carry the e2e task                |
+| `--max-log-mb` | `512`                      | Per-attempt log buffer; an over-cap log aborts loudly |
+| `--run-limit`  | `1000`                     | `gh run list` cap; a hit clips the window's old end   |
+
+That spec is the _only_ place defaults live. The task passes `--days` (and
+`--branch`, when given) as positionals and the rest as `MEASURE_DEFLAKE_*`
+env vars; the script requires all of them and exits pointing back at
+`mise run measure_deflake` if any is missing. Direct exec works — the file
+is `0755` with a `#!/usr/bin/env node` shebang — but you own the contract:
+
+```bash
+MEASURE_DEFLAKE_REPO=simshanith/lit-ui-router \
+  MEASURE_DEFLAKE_WORKFLOW=build-test.yml \
+  MEASURE_DEFLAKE_MAX_LOG_MB=512 \
+  MEASURE_DEFLAKE_RUN_LIMIT=1000 \
+  ./scripts/measure-deflake.ts 2 my-branch
+```
+
+The branch filter is how an upgrade gets trialed without merging anything:
+push a bump branch, force real e2e executions against it
+(`gh workflow run build-test.yml --ref <branch> -f force=true`, repeated —
+cache-hit runs don't count), then compare its rate to main's.
+
+It scans every attempt of the window's `build-test` runs via `gh` (crashed
+runs get rerun, so latest-attempt logs undercount) and reports crashes per
+e2e execution — only attempts whose e2e task shows `cache miss/bypass`
+count, since turbo cache-hit replays re-print old logs verbatim. On the
+pinned wrangler it should read ~0%; a sustained non-zero rate means the
+crash class is back (or was never the only one), and the fallbacks are
+reviving the pm2 supervisor from PR #486 or capping suite concurrency.
+Needs an authenticated `gh`. Anything that makes the sample incomplete —
+unavailable attempt logs, an over-`maxBuffer` log, or a window large enough
+to hit the run-list cap — is reported loudly and exits non-zero, so a
+printed rate is only trustworthy on a clean exit.
+
 ## Iterating against a dev server
 
 ```bash
