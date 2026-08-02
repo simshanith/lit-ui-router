@@ -11,7 +11,7 @@
     "state-management",
     "ui-router"
   ],
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/lit-ui-router-mobx",
+  "homepage": "https://lit-ui-router.dev/packages/mobx",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
