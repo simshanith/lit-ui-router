@@ -143,6 +143,7 @@ class GalaxyShellComponent extends LitElement {
   static styles = css`
     nav {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 24px;
     }
@@ -181,6 +182,15 @@ class GalaxyShellComponent extends LitElement {
     }
     .backdrop-credit a {
       color: #c9d6ea;
+    }
+    /* Tighter panel, larger tap targets on touch-sized screens */
+    @media (max-width: 480px) {
+      nav a {
+        padding: 10px 16px;
+      }
+      .panel {
+        padding: 14px;
+      }
     }
   `;
 
@@ -286,6 +296,23 @@ class StarsContainerComponent extends LitElement {
       color: #6b7c95;
       font-style: italic;
     }
+    /* Stack the list above the detail pane on narrow screens */
+    @media (max-width: 640px) {
+      .container {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .list {
+        flex: none;
+      }
+      .list a {
+        padding: 10px 12px;
+      }
+      .detail {
+        padding: 16px;
+        min-height: 200px;
+      }
+    }
   `;
 
   @property({ attribute: false })
@@ -366,6 +393,16 @@ class StarDetailComponent extends LitElement {
       border-left: 3px solid #7aa2ff;
       padding-left: 12px;
       margin: 0;
+    }
+    /* Stack label/value pairs on narrow screens */
+    @media (max-width: 420px) {
+      dl {
+        grid-template-columns: 1fr;
+        gap: 2px 0;
+      }
+      dt {
+        margin-top: 8px;
+      }
     }
   `;
 
