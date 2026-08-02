@@ -143,6 +143,7 @@ class GalaxyShellComponent extends LitElement {
   static styles = css`
     nav {
       display: flex;
+      flex-wrap: wrap;
       gap: 8px;
       margin-bottom: 24px;
     }
@@ -181,6 +182,23 @@ class GalaxyShellComponent extends LitElement {
     }
     .backdrop-credit a {
       color: #c9d6ea;
+    }
+    /* Tighter panel, larger tap targets on touch-sized screens */
+    @media (max-width: 480px) {
+      nav a {
+        padding: 10px 16px;
+      }
+      .panel {
+        padding: 14px;
+      }
+    }
+    @media (max-width: 640px) {
+      /* Inflate link tap targets to ~44px without shifting layout */
+      .backdrop-credit a {
+        display: inline-block;
+        padding: 15px 4px;
+        margin: -15px -4px;
+      }
     }
   `;
 
@@ -286,6 +304,23 @@ class StarsContainerComponent extends LitElement {
       color: #6b7c95;
       font-style: italic;
     }
+    /* Stack the list above the detail pane on narrow screens */
+    @media (max-width: 640px) {
+      .container {
+        flex-direction: column;
+        gap: 16px;
+      }
+      .list {
+        flex: none;
+      }
+      .list a {
+        padding: 10px 12px;
+      }
+      .detail {
+        padding: 16px;
+        min-height: 200px;
+      }
+    }
   `;
 
   @property({ attribute: false })
@@ -367,6 +402,16 @@ class StarDetailComponent extends LitElement {
       padding-left: 12px;
       margin: 0;
     }
+    /* Stack label/value pairs on narrow screens */
+    @media (max-width: 420px) {
+      dl {
+        grid-template-columns: 1fr;
+        gap: 2px 0;
+      }
+      dt {
+        margin-top: 8px;
+      }
+    }
   `;
 
   @property({ attribute: false })
@@ -379,6 +424,13 @@ class StarDetailComponent extends LitElement {
 
   get star(): Star | undefined {
     return this._uiViewProps.resolves.star;
+  }
+
+  firstUpdated() {
+    // The stacked (narrow) layout renders this detail below the star list
+    if (window.matchMedia('(max-width: 640px)').matches) {
+      this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
 
   render() {
@@ -431,6 +483,17 @@ class AstronautViewComponent extends LitElement {
     .attribution a {
       color: #9db2ce;
     }
+    @media (max-width: 640px) {
+      model-viewer {
+        height: 320px;
+      }
+      /* Inflate link tap targets to ~44px without shifting layout */
+      .attribution a {
+        display: inline-block;
+        padding: 15px 4px;
+        margin: -15px -4px;
+      }
+    }
   `;
 
   // Injected by <ui-view>; required by the RoutedLitElement contract
@@ -445,12 +508,14 @@ class AstronautViewComponent extends LitElement {
     return html`
       <h3>Someone is exploring out here too</h3>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
+      <!-- touch-action="pan-y" keeps one-finger vertical swipes scrolling the page -->
       <model-viewer
         src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb"
         alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
         camera-controls
         auto-rotate
         ar
+        touch-action="pan-y"
       ></model-viewer>
       <p class="attribution">
         <a
