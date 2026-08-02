@@ -146,7 +146,7 @@ When a release PR merges and main CI is green:
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`); manual dispatch for dry runs
+**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`, `ui-router-server@*`); manual dispatch for dry runs
 
 [Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
