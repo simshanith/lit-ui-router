@@ -10,6 +10,7 @@
 #USAGE flag "--workflow <file>" help="Workflow whose runs carry the e2e task" default="build-test.yml"
 #USAGE flag "--max-log-mb <mb>" help="Per-attempt log buffer; an over-cap log aborts rather than undercounting" default="512"
 #USAGE flag "--run-limit <n>" help="gh run list cap; gh caps silently, so a hit clips the window's old end" default="1000"
+#USAGE flag "--port <n>" help="e2e dev-server port the crash signature keys on" default="8787"
 set -euo pipefail
 
 # File-based tasks are raw scripts: mise's {{config_root}} template does NOT
@@ -27,5 +28,6 @@ export MEASURE_DEFLAKE_REPO="${usage_repo:?}"
 export MEASURE_DEFLAKE_WORKFLOW="${usage_workflow:?}"
 export MEASURE_DEFLAKE_MAX_LOG_MB="${usage_max_log_mb:?}"
 export MEASURE_DEFLAKE_RUN_LIMIT="${usage_run_limit:?}"
+export MEASURE_DEFLAKE_PORT="${usage_port:?}"
 
 exec node "$script" "${args[@]}"
