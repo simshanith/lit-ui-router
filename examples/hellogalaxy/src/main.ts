@@ -192,6 +192,14 @@ class GalaxyShellComponent extends LitElement {
         padding: 14px;
       }
     }
+    @media (max-width: 640px) {
+      /* Inflate link tap targets to ~44px without shifting layout */
+      .backdrop-credit a {
+        display: inline-block;
+        padding: 15px 4px;
+        margin: -15px -4px;
+      }
+    }
   `;
 
   // Injected by <ui-view>; required by the RoutedLitElement contract
@@ -418,6 +426,13 @@ class StarDetailComponent extends LitElement {
     return this._uiViewProps.resolves.star;
   }
 
+  firstUpdated() {
+    // The stacked (narrow) layout renders this detail below the star list
+    if (window.matchMedia('(max-width: 640px)').matches) {
+      this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
+  }
+
   render() {
     if (!this.star) {
       return html`<p>Star not found</p>`;
@@ -468,6 +483,17 @@ class AstronautViewComponent extends LitElement {
     .attribution a {
       color: #9db2ce;
     }
+    @media (max-width: 640px) {
+      model-viewer {
+        height: 320px;
+      }
+      /* Inflate link tap targets to ~44px without shifting layout */
+      .attribution a {
+        display: inline-block;
+        padding: 15px 4px;
+        margin: -15px -4px;
+      }
+    }
   `;
 
   // Injected by <ui-view>; required by the RoutedLitElement contract
@@ -482,12 +508,14 @@ class AstronautViewComponent extends LitElement {
     return html`
       <h3>Someone is exploring out here too</h3>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
+      <!-- touch-action="pan-y" keeps one-finger vertical swipes scrolling the page -->
       <model-viewer
         src="https://modelviewer.dev/shared-assets/models/NeilArmstrong.glb"
         alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
         camera-controls
         auto-rotate
         ar
+        touch-action="pan-y"
       ></model-viewer>
       <p class="attribution">
         <a
