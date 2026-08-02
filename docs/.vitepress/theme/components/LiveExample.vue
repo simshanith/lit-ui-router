@@ -18,9 +18,6 @@ const props = defineProps<{
 }>();
 
 type Mode = 'preview' | 'stackblitz';
-const STORAGE_KEY = 'lit-ui-router:live-example-mode';
-// Site-wide preference; instances read it on mount but never follow later writes.
-const preference = ref<Mode>('preview');
 
 const example = computed(() => EXAMPLES[props.name]);
 const previewSrc = computed(() => staticSrc(props.name));
@@ -34,33 +31,15 @@ const supported = ref(true);
 // First StackBlitz selection boots the iframe; v-show keeps it alive after.
 const stackblitzBooted = ref(false);
 
-function selectTab(mode: Mode, persist = true) {
+// StackBlitz is strictly opt-in: every instance starts on the static preview,
+// and WebContainers only boot on an explicit tab click.
+function selectTab(mode: Mode) {
   active.value = mode;
   if (mode === 'stackblitz' && supported.value) stackblitzBooted.value = true;
-  if (persist) {
-    preference.value = mode;
-    try {
-      localStorage.setItem(STORAGE_KEY, mode);
-    } catch {
-      // Storage unavailable (private mode etc.) — preference just won't persist.
-    }
-  }
 }
 
 onMounted(() => {
   supported.value = webContainersSupported();
-  let stored: string | null = null;
-  try {
-    stored = localStorage.getItem(STORAGE_KEY);
-  } catch {
-    stored = null;
-  }
-  if (stored === 'preview' || stored === 'stackblitz') {
-    preference.value = stored;
-  }
-  if (supported.value && preference.value === 'stackblitz') {
-    selectTab('stackblitz', false);
-  }
 });
 </script>
 
