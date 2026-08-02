@@ -43,4 +43,5 @@ client deployed across every point on the server-support spectrum.
 The [MobX bindings](/packages/mobx) and the
 [Navigation API location plugin](/packages/navigation-plugin) are optional
 [companion packages](/packages/) — each independently versioned, with its own
-guide and API reference.
+guide and API reference. [`ui-router-server`](/packages/server), the
+server-side routing package, is in development on the same model.

@@ -10,7 +10,7 @@
     "spa",
     "ui-router"
   ],
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/navigation-location-plugin",
+  "homepage": "https://lit-ui-router.dev/packages/navigation-plugin",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },

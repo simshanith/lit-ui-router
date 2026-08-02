@@ -16,7 +16,12 @@ for (const file of publishableSources()) {
     // tsconfig.base parity: experimentalDecorators + useDefineForClassFields:false
     decorator: { legacy: true },
     assumptions: { setPublicClassFields: true },
-    typescript: { removeClassFieldsWithoutInitializer: true },
+    typescript: {
+      removeClassFieldsWithoutInitializer: true,
+      // ui-router-server sources import with .ts specifiers so node --test
+      // can type-strip them directly; no-op for extensionless imports
+      rewriteImportExtensions: 'rewrite',
+    },
   });
   if (transformed.errors.length) fail(file, transformed.errors);
   const printed = minifySync(file, transformed.code, {

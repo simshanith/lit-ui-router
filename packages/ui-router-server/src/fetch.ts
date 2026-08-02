@@ -9,12 +9,12 @@
  *
  * The division of labor is the Connect adapter's, adapted to fetch's
  * immutable objects: the adapter owns verdict -> response mechanics (status
- * mapping, [[mergeSearch]] on redirect Locations, validator stripping and
+ * mapping, {@link mergeSearch} on redirect Locations, validator stripping and
  * status relabeling on status'd shells, the canonical Link header), the HOST
- * supplies asset IO through [[serveShell]]. Because a fetch Request is
+ * supplies asset IO through {@link FetchAdapterOptions.serveShell | serveShell}. Because a fetch Request is
  * immutable and served from a DIFFERENT url than the route path, the adapter
- * hands [[serveShell]] a fully-prepared shell Request — url rewritten to the
- * mount's [[shellPath]], conditional validators already stripped on a status'd
+ * hands {@link FetchAdapterOptions.serveShell | serveShell} a fully-prepared shell Request — url rewritten to the
+ * mount's {@link FetchAdapterOptions.shellPath | shellPath}, conditional validators already stripped on a status'd
  * shell — so the host's job is the pure one-liner `(_m, req) => ASSETS.fetch(req)`.
  * The adapter then wraps the raw asset Response with the verdict's status and
  * headers. `null` is the pass-through: a mountless miss or a non-navigation
@@ -52,7 +52,7 @@ export interface FetchAdapterOptions {
   shellPath?: (mount: string) => string;
   /**
    * Serve the mount's shell asset. The adapter hands over a shell Request
-   * already rewritten to [[shellPath]] and, for a status'd shell, already
+   * already rewritten to {@link FetchAdapterOptions.shellPath | shellPath} and, for a status'd shell, already
    * stripped of conditional validators — so the host returns the RAW asset
    * Response (`(mount, request) => env.ASSETS.fetch(request)`) and the adapter
    * owns the status relabel and Link header on the way out. REQUIRED: asset IO
@@ -127,20 +127,20 @@ const defaultServeNotFound = (mount: string, request: Request): Response =>
   );
 
 /**
- * Wraps a [[ServerRouter]] as a WinterCG fetch handler. `resolve()` is always
+ * Wraps a {@link ServerRouter} as a WinterCG fetch handler. `resolve()` is always
  * async (the simulate tier's lazy boundary), which fetch absorbs naturally —
  * with matcher-tier mounts nothing async ever actually runs.
  *
  * - `redirect` -> `Response(null, { status, Location })`, the request's search
- *   MERGED into the location via [[mergeSearch]] (targets that declare their
+ *   MERGED into the location via {@link mergeSearch} (targets that declare their
  *   own query keep it — never `?a=1?b=2`).
- * - `shell` -> [[serveShell]] on a Request rewritten to [[shellPath]], the raw
+ * - `shell` -> {@link FetchAdapterOptions.serveShell | serveShell} on a Request rewritten to {@link FetchAdapterOptions.shellPath | shellPath}, the raw
  *   asset Response wrapped with a `Link: <mount>; rel="canonical"` header (the
  *   shell is the same representation at every route path).
  * - `shell` with status (the otherwise projection) -> validators stripped, the
  *   asset Response's status relabeled to the verdict's, no canonical Link (a
  *   404 is not an alternate representation of the mount root).
- * - `notFound` with a mount -> [[serveNotFound]] (honest 404).
+ * - `notFound` with a mount -> {@link FetchAdapterOptions.serveNotFound | serveNotFound} (honest 404).
  * - `notFound` without a mount, or a non-navigation request -> `null` (the
  *   host serves it however it would have).
  */

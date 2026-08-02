@@ -14,7 +14,7 @@ export const fail = (file: string, errors: { message: string }[]): never => {
 // From the consuming package's root; excludes mirror its tsconfig.src.
 export function publishableSources(): string[] {
   return globSync(`${SRC}/**/*.ts`, {
-    exclude: [`${SRC}/**/*.spec.ts`, `${SRC}/specs/**`],
+    exclude: [`${SRC}/**/*.spec.ts`, `${SRC}/specs/**`, `${SRC}/**/*.d.ts`],
   });
 }
 

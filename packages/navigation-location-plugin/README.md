@@ -1,8 +1,9 @@
 # ui-router-navigation-location-plugin
 
-[![npm version](https://img.shields.io/npm/v/ui-router-navigation-location-plugin.svg)](https://www.npmjs.com/package/ui-router-navigation-location-plugin)
+[![npm version](https://img.shields.io/npm/v/ui-router-navigation-location-plugin.svg)](https://npmx.dev/package/ui-router-navigation-location-plugin)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=ui-router-navigation-location-plugin@*)](https://github.com/simshanith/lit-ui-router/releases/?q=ui-router-navigation-location-plugin)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=navigation-location-plugin)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=navigation-location-plugin)
 [![Can I Use Navigation API](https://img.shields.io/badge/caniuse-Navigation%20API-orange)](https://caniuse.com/mdn-api_navigation)
 
@@ -121,6 +122,8 @@ For older browsers, consider using:
 
 ## Links
 
+- [Docs - Navigation API Plugin](https://lit-ui-router.dev/packages/navigation-plugin)
+- [Docs - Location Plugins guide](https://lit-ui-router.dev/guides/location-plugins)
 - [MDN - Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
 - [@uirouter/core - LocationPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_vanilla_interface_.locationplugin.html)
 - [@uirouter/core - LocationServices](https://ui-router.github.io/core/docs/latest/interfaces/_common_coreservices_.locationservices.html)
