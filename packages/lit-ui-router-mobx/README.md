@@ -3,7 +3,7 @@
 [![npm version](https://img.shields.io/npm/v/lit-ui-router-mobx.svg)](https://npmx.dev/package/lit-ui-router-mobx)
 [![GitHub Release](https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*)](https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx)
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev/packages/mobx)
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=lit-ui-router-mobx)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=lit-ui-router-mobx)
 
 [MobX](https://mobx.js.org) bindings for [lit-ui-router](https://lit-ui-router.dev): an observable router store and reaction-based Lit ReactiveControllers.
@@ -114,7 +114,7 @@ Mixins like [`MobxLitElement`](https://github.com/adobe/lit-mobx) auto-track eve
 
 - [Docs - MobX Bindings](https://lit-ui-router.dev/packages/mobx)
 - [Docs - Reactive Components guide](https://lit-ui-router.dev/guides/reactive-components)
-- [lit-ui-router](https://lit-ui-router.dev)
+- [lit-ui-router](https://lit-ui-router.dev/packages/mobx)
 - [MobX — reactions](https://mobx.js.org/reactions.html)
 - [Lit — Reactive Controllers](https://lit.dev/docs/composition/controllers/)
 - [@uirouter/core — TransitionService hooks](https://ui-router.github.io/core/docs/latest/classes/transition.transitionservice.html)
