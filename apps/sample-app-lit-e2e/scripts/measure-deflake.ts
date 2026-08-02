@@ -13,6 +13,8 @@ const execFile = promisify(execFileCb);
 const REPO = 'simshanith/lit-ui-router';
 // run logs are tens of MB; execFile's default 1MB maxBuffer would truncate
 const MAX_LOG_BYTES = 512 * 1024 * 1024;
+// gh returns newest-first and caps silently, so a hit clips the window's old end
+const RUN_LIMIT = 1000;
 
 async function gh(args: string[]): Promise<string> {
   const { stdout } = await execFile('gh', args, { maxBuffer: MAX_LOG_BYTES });
@@ -29,26 +31,29 @@ const since = new Date(Date.now() - days * 86_400_000)
   .replace(/\.\d+Z$/, 'Z');
 const branch = process.argv[3];
 
+// completed only: an in-progress run has no fetchable log yet
 const runs = JSON.parse(
   await gh([
     ...['run', 'list', '--repo', REPO, '--workflow', 'build-test.yml'],
-    ...['--limit', '300', '--created', `>=${since}`],
+    ...['--limit', String(RUN_LIMIT), '--created', `>=${since}`],
+    ...['--status', 'completed'],
     ...(branch === undefined ? [] : ['--branch', branch]),
-    ...['--json', 'databaseId', '--jq', '[.[].databaseId]'],
+    ...['--json', 'databaseId,attempt'],
   ]),
-) as number[];
+) as { attempt: number; databaseId: number }[];
+
+if (runs.length === RUN_LIMIT) {
+  console.error(
+    `run list hit the ${RUN_LIMIT}-run cap — the oldest runs in the ${days}-day window were dropped, so any rate below is over a clipped window; shorten [days] or raise RUN_LIMIT`,
+  );
+  process.exitCode = 1;
+}
 
 let executed = 0;
 let fired = 0;
-for (const id of runs) {
-  const attempts = Number(
-    await gh([
-      'api',
-      `repos/${REPO}/actions/runs/${id}`,
-      '--jq',
-      '.run_attempt',
-    ]),
-  );
+// soft log-fetch failures would silently shrink the denominator
+let unavailable = 0;
+for (const { attempt: attempts, databaseId: id } of runs) {
   for (let attempt = 1; attempt <= attempts; attempt += 1) {
     let log: string;
     try {
@@ -78,6 +83,8 @@ for (const id of runs) {
       const reason =
         (stderr ?? '').trim().split('\n')[0] || `exit ${String(code)}`;
       console.error(`${id} attempt ${attempt}: log unavailable (${reason})`);
+      unavailable += 1;
+      process.exitCode = 1;
       continue;
     }
     if (!/sample-app-lit-e2e:test: cache (miss|bypass)/.test(log)) continue;
@@ -104,3 +111,7 @@ if (executed === 0) {
     `since ${since}${where}: e2e executed ${executed} times, crash fired ${fired} times (${pct}%)`,
   );
 }
+if (unavailable > 0)
+  console.error(
+    `${unavailable} attempt logs were unavailable — the rate above is over an incomplete sample`,
+  );

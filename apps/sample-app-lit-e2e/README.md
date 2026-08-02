@@ -66,8 +66,10 @@ count, since turbo cache-hit replays re-print old logs verbatim. On the
 pinned wrangler it should read ~0%; a sustained non-zero rate means the
 crash class is back (or was never the only one), and the fallbacks are
 reviving the pm2 supervisor from PR #486 or capping suite concurrency.
-Needs an authenticated `gh`; unavailable logs are reported per attempt,
-and an over-`maxBuffer` log invalidates the stats loudly.
+Needs an authenticated `gh`. Anything that makes the sample incomplete —
+unavailable attempt logs, an over-`maxBuffer` log, or a window large enough
+to hit the run-list cap — is reported loudly and exits non-zero, so a
+printed rate is only trustworthy on a clean exit.
 
 ## Iterating against a dev server
 
