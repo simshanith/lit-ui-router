@@ -11,7 +11,7 @@ const props = defineProps<{
 }>();
 
 // StackBlitz WebContainers never boot on iOS (every iOS browser is WebKit),
-// so swap the embed for the static example / an external link there.
+// even though iOS 16.4+ has SharedArrayBuffer — UA is the primary signal.
 function isIOS() {
   return (
     /iPad|iPhone|iPod/.test(navigator.userAgent) ||
@@ -65,7 +65,9 @@ if (!import.meta.env.SSR) {
 }
 
 onMounted(async () => {
-  embedSupported.value = !isIOS();
+  // The site is crossOriginIsolated (_headers: COOP + COEP credentialless),
+  // so a missing SharedArrayBuffer means an engine too old for WebContainers.
+  embedSupported.value = !isIOS() && typeof SharedArrayBuffer !== 'undefined';
   isFullscreenSupported.value = screenfull.isEnabled;
   if (screenfull.isEnabled) {
     screenfull.on('change', handleFullscreenChange);
