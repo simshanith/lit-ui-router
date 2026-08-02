@@ -71,7 +71,7 @@ onUnmounted(() => {
     <iframe
       :src="src"
       :title="title"
-      :style="{ height: props.height }"
+      :style="{ '--embed-height': props.height }"
       ref="iframe"
       loading="lazy"
     />
@@ -109,6 +109,10 @@ onUnmounted(() => {
 
 .example-embed iframe {
   width: 100%;
+  max-width: 100%;
+  height: var(--embed-height, 420px);
+  /* Cap tall embeds so small viewports keep the page (svh dodges iOS toolbars). */
+  height: min(var(--embed-height, 420px), calc(100svh - 120px));
   border: 1px solid var(--vp-c-divider);
   border-radius: 4px;
   overflow: hidden;
@@ -128,7 +132,7 @@ onUnmounted(() => {
 
 .example-embed:fullscreen iframe,
 .example-embed:-webkit-full-screen iframe {
-  height: calc(100vh - 80px) !important;
+  height: calc(100vh - 80px);
   border-radius: 8px;
   width: 88%;
   transition:

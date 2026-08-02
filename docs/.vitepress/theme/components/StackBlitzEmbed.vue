@@ -1,11 +1,34 @@
 <script setup lang="ts">
-import { useTemplateRef, ref, onMounted, onUnmounted } from 'vue';
+import { useTemplateRef, ref, computed, onMounted, onUnmounted } from 'vue';
 import screenfull from 'screenfull';
+import ExampleEmbed from './ExampleEmbed.vue';
 
-defineProps<{
+const props = defineProps<{
   src: string;
   title: string;
+  fallbackSrc?: string;
+  fallbackHeight?: string;
 }>();
+
+// StackBlitz WebContainers never boot on iOS (every iOS browser is WebKit),
+// so swap the embed for the static example / an external link there.
+function isIOS() {
+  return (
+    /iPad|iPhone|iPod/.test(navigator.userAgent) ||
+    // iPadOS reports itself as macOS; touch support tells it apart.
+    (navigator.platform === 'MacIntel' && navigator.maxTouchPoints > 1)
+  );
+}
+
+const embedSupported = ref(true);
+
+// The embed src minus embed/view params = the full editor workspace URL.
+const openUrl = computed(() => {
+  const url = new URL(props.src);
+  url.searchParams.delete('embed');
+  url.searchParams.delete('view');
+  return url.toString();
+});
 
 const container = useTemplateRef('container');
 const isFullscreenSupported = ref(false);
@@ -42,6 +65,7 @@ if (!import.meta.env.SSR) {
 }
 
 onMounted(async () => {
+  embedSupported.value = !isIOS();
   isFullscreenSupported.value = screenfull.isEnabled;
   if (screenfull.isEnabled) {
     screenfull.on('change', handleFullscreenChange);
@@ -56,7 +80,33 @@ onUnmounted(() => {
 </script>
 
 <template>
+  <div v-if="!embedSupported" class="stackblitz-fallback">
+    <p class="fallback-note">
+      Embedded StackBlitz (WebContainers) isn't supported in this browser.
+      <template v-if="fallbackSrc">
+        Here's the built example instead — open the workspace on a supported
+        device to edit the code.
+      </template>
+      <template v-else
+        >Open the workspace on a supported device instead.</template
+      >
+    </p>
+    <ExampleEmbed
+      v-if="fallbackSrc"
+      :src="fallbackSrc"
+      :title="title"
+      :height="fallbackHeight"
+    >
+      <a :href="openUrl" target="_blank" rel="noopener" class="btn">
+        Open in StackBlitz
+      </a>
+    </ExampleEmbed>
+    <a v-else :href="openUrl" target="_blank" rel="noopener" class="btn">
+      Open in StackBlitz
+    </a>
+  </div>
   <div
+    v-else
     ref="container"
     class="stackblitz-embed"
     :class="{ fullscreen: isFullscreen }"
@@ -98,7 +148,10 @@ onUnmounted(() => {
 
 .stackblitz-embed iframe {
   width: 100%;
+  max-width: 100%;
   height: 400px;
+  /* Cap on short viewports (svh dodges mobile browser toolbars). */
+  height: min(400px, calc(100svh - 120px));
   border: 0;
   border-radius: 4px;
   overflow: hidden;
@@ -138,8 +191,19 @@ onUnmounted(() => {
 .stackblitz-embed-actions {
   display: flex;
   align-items: center;
+  flex-wrap: wrap;
   gap: 12px;
   margin-top: 8px;
+}
+
+.fallback-note {
+  margin: 0 0 8px;
+  padding: 8px 12px;
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  background: var(--vp-c-bg-soft);
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 6px;
 }
 
 .btn {
@@ -150,6 +214,7 @@ onUnmounted(() => {
   font-size: 14px;
   font-weight: 500;
   color: var(--vp-c-text-1);
+  text-decoration: none;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 6px;
@@ -166,7 +231,7 @@ onUnmounted(() => {
 
 /* Framed like the sibling .btn controls; border present in both states so
    hover changes color only, never size. */
-:deep(a) {
+.stackblitz-embed-actions :deep(a) {
   display: inline-flex;
   align-items: center;
   line-height: 0;
@@ -176,7 +241,7 @@ onUnmounted(() => {
   transition: border-color 0.2s;
 }
 
-:deep(a img) {
+.stackblitz-embed-actions :deep(a img) {
   display: block;
   /* 36px + the 1px frame = 38px, level with the sibling .btn controls. */
   height: 36px;
@@ -184,7 +249,7 @@ onUnmounted(() => {
   margin: 0;
 }
 
-:deep(a:hover) {
+.stackblitz-embed-actions :deep(a:hover) {
   border-color: var(--vp-c-brand-1);
 }
 </style>
