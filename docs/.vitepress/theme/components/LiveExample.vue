@@ -132,6 +132,7 @@ onMounted(() => {
             v-if="stackblitzBooted"
             :src="embedSrc"
             :title="`lit-ui-router-${props.name}`"
+            :height="previewHeight"
           />
         </template>
         <div v-else class="fallback-note">

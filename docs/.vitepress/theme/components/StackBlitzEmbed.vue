@@ -7,6 +7,7 @@ import { webContainersSupported } from './webcontainers';
 const props = defineProps<{
   src: string;
   title: string;
+  height?: string;
   fallbackSrc?: string;
   fallbackHeight?: string;
 }>();
@@ -105,6 +106,7 @@ onUnmounted(() => {
     <iframe
       :src="src"
       :title="title"
+      :style="{ '--embed-height': props.height }"
       ref="iframe"
       allow="cross-origin-isolated"
       credentialless
@@ -140,9 +142,9 @@ onUnmounted(() => {
 .stackblitz-embed iframe {
   width: 100%;
   max-width: 100%;
-  height: 400px;
+  height: var(--embed-height, 400px);
   /* Cap on short viewports (svh dodges mobile browser toolbars). */
-  height: min(400px, calc(100svh - 120px));
+  height: min(var(--embed-height, 400px), calc(100svh - 120px));
   border: 0;
   border-radius: 4px;
   overflow: hidden;
