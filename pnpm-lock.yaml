@@ -115,8 +115,8 @@ catalogs:
       specifier: ^20.11.1
       version: 20.11.1
     hono:
-      specifier: ^4.12.32
-      version: 4.12.32
+      specifier: ^4.12.34
+      version: 4.13.0
     husky:
       specifier: ^9.1.7
       version: 9.1.7
@@ -839,7 +839,7 @@ importers:
         version: 6.1.2
       hono:
         specifier: 'catalog:'
-        version: 4.12.32
+        version: 4.13.0
       oxfmt:
         specifier: 'catalog:'
         version: 0.61.0
@@ -4598,8 +4598,8 @@ packages:
   hast-util-whitespace@3.0.0:
     resolution: {integrity: sha512-88JUN06ipLwsnv+dVn+OIYOvAuvBMy/Qoi6O7mQHxdPXpjy+Cd6xRkWwux7DKO+4sYILtLBRIKgsdpS2gQc7qw==}
 
-  hono@4.12.32:
-    resolution: {integrity: sha512-XcuyW9qE2kJn07PkecMOBd5Vq/hMy7mmGw+idz1yblbg9N17ijJODrvPkn7/dwL3Kulj8LcRJ69DLOWf91dRUg==}
+  hono@4.13.0:
+    resolution: {integrity: sha512-jhunvfHWxd7J5EFfSgH4xsYJzSe/lfqbUCxiyyeaQasUsXeEHXtzVid+7EOGByc5JnFa23SSFL3Y2RV/z1T+eQ==}
     engines: {node: '>=16.9.0'}
 
   hookable@5.5.3:
@@ -9734,7 +9734,7 @@ snapshots:
     dependencies:
       '@types/hast': 3.0.4
 
-  hono@4.12.32: {}
+  hono@4.13.0: {}
 
   hookable@5.5.3: {}
 
