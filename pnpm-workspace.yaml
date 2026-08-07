@@ -11,7 +11,7 @@ catalog:
   '@arethetypeswrong/core': ^0.18.5
   '@codecov/bundle-analyzer': ^2.0.1
 
-  oxc-project-runtime: 'npm:@oxc-project/runtime@0.142.0'
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.143.0'
   '@commitlint/cli': ^21.2.0
   '@commitlint/config-conventional': ^21.2.0
   '@commitlint/types': ^21.2.0
@@ -51,8 +51,8 @@ catalog:
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
   mobx: ^6.16.1
-  oxc-minify: 0.142.0
-  oxc-transform: 0.142.0
+  oxc-minify: 0.143.0
+  oxc-transform: 0.143.0
   oxfmt: 0.61.0
   oxlint: 1.76.0
   oxlint-tsgolint: 7.0.2001
