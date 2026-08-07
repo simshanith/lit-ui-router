@@ -80,7 +80,7 @@ catalog:
   vitest: ^4.1.10
   vue: ^3.5.40
   vue-tsc: ^3.3.8
-  wrangler: 4.113.0
+  wrangler: 4.118.0
 
 catalogMode: prefer
 
