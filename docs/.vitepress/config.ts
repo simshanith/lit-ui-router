@@ -187,6 +187,16 @@ const config = {
   },
   themeConfig: {
     logo: '/images/lit-ui-router.svg',
+    search: {
+      // `config` is an un-annotated literal, so without `as const` the provider
+      // widens to `string` and the discriminated union rejects it at defineConfig.
+      provider: 'local' as const,
+      options: {
+        // API pages are reference tables; the excerpt is what makes a hit
+        // readable, so show it rather than the heading alone.
+        detailedView: true,
+      },
+    },
     nav: [
       { text: 'Home', link: '/' },
       {
