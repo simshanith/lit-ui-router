@@ -68,6 +68,15 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
     },
+    // Same unit suites resolved against the mobx-6 alias (the 6.x line the
+    // widened mobx peer range still covers). Mirrors test:lit2-compat: no
+    // extra browsers, alias tracks published mobx, workspace yaml feeds
+    // mobx6-compat-guard (peer range + alias pin).
+    "test:mobx6-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR", "CI"]
+    },
     "lint": {
       "with": [
         "//#lint:root",
@@ -206,6 +215,7 @@
         "test",
         "test:coverage",
         "test:lit2-compat",
+        "test:mobx6-compat",
         "lint",
         "typecheck",
         "format:check",
