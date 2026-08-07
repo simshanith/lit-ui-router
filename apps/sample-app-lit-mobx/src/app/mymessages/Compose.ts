@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
-import { comparer } from 'mobx';
+import { compareStructural } from 'mobx';
 import { isEqual } from 'lodash';
 import { UIViewInjectedProps } from 'lit-ui-router';
 import { RouterReactionController } from 'lit-ui-router-mobx';
@@ -52,7 +52,7 @@ export class Compose extends LitElement {
     this,
     (route) => route.params.message as Partial<Message> | undefined,
     {
-      equals: comparer.structural,
+      equals: compareStructural,
       onChange: (message) => this.resetMessage(message),
     },
   );

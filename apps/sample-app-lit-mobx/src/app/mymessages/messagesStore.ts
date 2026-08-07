@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable, runInAction } from 'mobx';
+import { makeAutoObservable, observableRef, runInAction } from 'mobx';
 
 import { appModulesRegistered } from 'sample-app-shared/app/global/appModules.js';
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
@@ -24,7 +24,7 @@ export class MessagesStore {
     makeAutoObservable(
       this,
       {
-        messages: observable.ref,
+        messages: observableRef,
         // Not an action: reads inside actions are untracked, and this must
         // be trackable from observer renders.
         byFolder: false,

@@ -10,6 +10,10 @@ import { defineConfig } from 'vitest/config';
 // import.meta.env, where vitest.setup.ts asserts the swap took.
 const lit2Compat = process.env.VITE_EXPECT_LIT_MAJOR === '2';
 
+// VITE_EXPECT_MOBX_MAJOR=6 (test:mobx6-compat) resolves mobx to the mobx-6
+// alias devDep, proving the widened `^6.0.0 || ^7.0.0` peer range.
+const mobx6Compat = process.env.VITE_EXPECT_MOBX_MAJOR === '6';
+
 export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   resolve: {
@@ -28,6 +32,7 @@ export default defineConfig({
             { find: /^lit\/(.+)$/, replacement: 'lit-2/$1' },
           ]
         : []),
+      ...(mobx6Compat ? [{ find: /^mobx$/, replacement: 'mobx-6' }] : []),
     ],
   },
   test: {

@@ -29,6 +29,14 @@ yarn add lit-ui-router-mobx mobx
 
 `lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
 
+### MobX 6 and 7
+
+Both majors are supported (`mobx@^6.0.0 || ^7.0.0`) and both are exercised in
+CI. The bindings' own API is identical on either. Note that MobX 7 replaced the
+namespaced comparers with named exports, so the `equals` option in the examples
+below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
+`equals` accepts any `(a, b) => boolean`, so either works.
+
 ## Quick Start
 
 ```typescript
@@ -77,21 +85,21 @@ new RouterReactionController(host, selector, options?)
 - `selector: (store: RouterStore) => T` — the observed expression; the result is exposed as `.value`
 - `options.router` — explicit router instance, skipping context discovery
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
-- `options.equals` — MobX comparer (e.g. `comparer.structural`) for precise, value-based change detection
+- `options.equals` — MobX comparer (e.g. `compareStructural`) for precise, value-based change detection
 
 ### `ReactionController`
 
 The generic primitive behind `RouterReactionController` — the same selector/options contract over any MobX observables:
 
 ```typescript
-import { comparer } from 'mobx';
+import { compareStructural } from 'mobx';
 import { ReactionController } from 'lit-ui-router-mobx';
 
 class NavHeader extends LitElement {
   private auth = new ReactionController(
     this,
     () => ({ user: SessionStore.user, loggedIn: SessionStore.loggedIn }),
-    { equals: comparer.structural },
+    { equals: compareStructural },
   );
 
   render() {
@@ -107,7 +115,7 @@ Mixins like [`MobxLitElement`](https://github.com/adobe/lit-mobx) auto-track eve
 
 - No base class required — controllers attach to any `LitElement` (or any `ReactiveControllerHost`)
 - Dependencies are explicit: the selector names exactly which observables drive the host
-- `equals: comparer.structural` avoids re-renders when a recomputed value is structurally unchanged
+- `equals: compareStructural` avoids re-renders when a recomputed value is structurally unchanged
 - The reaction lifecycle is bound to the host's connection lifecycle automatically
 
 ## Links

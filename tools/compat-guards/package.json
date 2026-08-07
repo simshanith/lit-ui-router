@@ -2,9 +2,10 @@
   "name": "@tools/compat-guards",
   "version": "0.0.1",
   "private": true,
-  "description": "Catalog-vs-installed guards for the compat lanes: the lit-2 alias against the published lit peer range, and the peer-floor alias against its range's floor",
+  "description": "Catalog-vs-installed guards for the compat lanes: the lit-2 and mobx-6 aliases against their published peer ranges, and the peer-floor alias against its range's floor",
   "bin": {
     "lit2-compat-guard": "./src/lit2-compat-guard.ts",
+    "mobx6-compat-guard": "./src/mobx6-compat-guard.ts",
     "peer-floor-guard": "./src/peer-floor-guard.ts"
   },
   "type": "module",

@@ -51,7 +51,7 @@ catalog:
   lit: ^3.3.3
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
-  mobx: ^6.16.1
+  mobx: ^7.0.0
   oxc-minify: 0.143.0
   oxc-transform: 0.143.0
   oxfmt: 0.61.0
@@ -89,6 +89,8 @@ catalogMode: prefer
 catalogs:
   lit2-compat:
     lit-2: npm:lit@^2.8.0
+  mobx6-compat:
+    mobx-6: npm:mobx@^6.16.1
   # exact published floor of the matching publishedPeer range; peer-floor-guard
   # fails the typecheck:peer-floor task when the two drift apart
   peerFloor:
@@ -100,7 +102,7 @@ catalogs:
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
     lit-ui-router: ^1.7.0
-    mobx: ^6.0.0
+    mobx: '^6.0.0 || ^7.0.0'
     typedoc: ^0.28.0
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
