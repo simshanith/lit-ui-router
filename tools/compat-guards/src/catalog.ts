@@ -7,20 +7,13 @@ import { join } from 'node:path';
 
 import { loadCatalogs, workspaceRoot } from '@tools/shared/workspace.ts';
 
-/** A dependency's range in a named catalog; throws when either is absent. */
+/** A dependency's range in a named catalog; undefined when either is absent. */
 export async function catalogRange(
-  guard: string,
   catalog: string,
   dep: string,
-): Promise<string> {
+): Promise<string | undefined> {
   const catalogs = await loadCatalogs(workspaceRoot);
-  const range = catalogs[catalog]?.[dep];
-  if (!range) {
-    throw new Error(
-      `${guard}: no ${catalog} ${dep} range in pnpm-workspace.yaml`,
-    );
-  }
-  return range;
+  return catalogs[catalog]?.[dep];
 }
 
 /** Version of an aliased devDep as installed in the invoking package. */
