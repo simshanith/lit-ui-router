@@ -21,16 +21,19 @@
       "dependsOn": ["bundle:worker"]
     },
     "docs:preview": {
-      "dependsOn": ["^docs:api", "build"],
+      "dependsOn": ["build"],
       "cache": false,
       "persistent": true
     },
     "wrangler:dev": {
-      "dependsOn": ["^docs:api", "build"],
+      "dependsOn": ["build"],
       "cache": false,
       "persistent": true
     },
     "build": {
+      // .vitepress/config.ts statically imports each typedoc-sidebar.json, so
+      // every documented package is a direct devDep of docs — that is what
+      // lets `^docs:api` reach all four (it walks direct deps only).
       "dependsOn": [
         "^build",
         "^docs:api",

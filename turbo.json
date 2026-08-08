@@ -282,12 +282,16 @@
       "persistent": true
     },
     "docs": {
-      "dependsOn": ["^build", "^docs:api"],
+      // no ^docs:api: without the self-chain it reaches direct deps only, so a
+      // consumer names its typedoc producers explicitly (see docs/turbo.json)
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "docs:api": {
-      "dependsOn": ["^build", "^docs:api"],
+      // no self-chain: typedoc runs need only builds, so let them fan out.
+      // docs/turbo.json names the four producers it consumes explicitly.
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"]
     }
   }
