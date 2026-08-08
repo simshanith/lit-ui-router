@@ -71,7 +71,8 @@
         "//#lint:root",
         "//#lint:package-json",
         "//#lint:workflows",
-        "//#check:patches"
+        "//#check:patches",
+        "//#check:docs-api-deps"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
@@ -97,6 +98,15 @@
         "patches/**",
         "pnpm-workspace.yaml",
         "pnpm-lock.yaml",
+        "tools/shared/src/**"
+      ]
+    },
+    "//#check:docs-api-deps": {
+      // any manifest can gain or lose a docs:api script, or docs can lose a dep
+      "inputs": [
+        "check-docs-api-deps.ts",
+        "**/package.json",
+        "pnpm-workspace.yaml",
         "tools/shared/src/**"
       ]
     },
