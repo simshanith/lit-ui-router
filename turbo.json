@@ -282,12 +282,13 @@
       "persistent": true
     },
     "docs": {
-      "dependsOn": ["^build", "^docs:api"],
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "docs:api": {
-      "dependsOn": ["^build", "^docs:api"],
+      // deliberately no self-chain (cf. build:types): it would serialize these
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"]
     }
   }
