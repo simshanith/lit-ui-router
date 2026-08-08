@@ -31,8 +31,8 @@
       "persistent": true
     },
     "build": {
-      // `^` reaches direct deps only, so every docs:api producer is a devDep
-      // of docs — that is what those otherwise-unimported entries are for.
+      // docs devDepends on the docs:api producers purely so this `^` reaches
+      // them (it walks direct deps only): unimported by design, not prunable.
       "dependsOn": [
         "^build",
         "^docs:api",
