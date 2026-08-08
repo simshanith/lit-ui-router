@@ -1081,6 +1081,9 @@ importers:
       '@pnpm/logger':
         specifier: 'catalog:'
         version: 1100.0.0
+      '@pnpm/types':
+        specifier: 'catalog:'
+        version: 1101.8.0
       '@pnpm/workspace.projects-reader':
         specifier: 'catalog:'
         version: 1101.0.21(@pnpm/logger@1100.0.0)

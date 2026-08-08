@@ -1,5 +1,7 @@
 // Generic package-manifest vocabulary shared across the tools packages.
-// Dependency-free on purpose; types only.
+// Dependency-free on purpose; types only. A strict widening of @pnpm/types --
+// see ./types.test-d.ts, which pins that relationship in both directions and
+// records why adopting theirs outright would be a regression.
 
 // Specifiers arrive from parsed package.json, so they stay `unknown` until a
 // guard proves them strings.
