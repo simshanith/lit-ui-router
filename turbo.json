@@ -71,7 +71,9 @@
     // Same unit suites resolved against the mobx-6 alias (the 6.x line the
     // widened mobx peer range still covers). Mirrors test:lit2-compat: no
     // extra browsers, alias tracks published mobx, workspace yaml feeds
-    // mobx6-compat-guard (peer range + alias pin).
+    // mobx6-compat-guard (peer range + alias pin). The mobx-6 types ride the
+    // sibling typecheck:mobx6 task, never chained here: a runtime failure
+    // would mask the typecheck result.
     "test:mobx6-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
@@ -189,7 +191,12 @@
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
       // compat typechecks ride along: `turbo run typecheck` is the one command
       // that answers "do the types hold", and `with` propagates their failure
-      "with": ["//#typecheck:root", "typecheck:src", "typecheck:lit2"]
+      "with": [
+        "//#typecheck:root",
+        "typecheck:src",
+        "typecheck:lit2",
+        "typecheck:mobx6"
+      ]
     },
     "typecheck:src": {
       "dependsOn": ["^build:types"],
@@ -198,6 +205,17 @@
     // src against the lit-2 alias's types; separate from test:lit2-compat so
     // the fast lane reports and caches without waiting on the suites.
     "typecheck:lit2": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
+    // src against the mobx-6 alias's types; separate from test:mobx6-compat so
+    // the fast lane reports and caches without waiting on the suites. Gated,
+    // unlike typecheck:peer-floor: the alias tracks published mobx.
+    "typecheck:mobx6": {
       "dependsOn": ["^build:types"],
       "inputs": [
         "$TURBO_DEFAULT$",

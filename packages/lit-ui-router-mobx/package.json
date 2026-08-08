@@ -57,6 +57,7 @@
     "test:mobx6-compat": "mobx6-compat-guard && VITE_EXPECT_MOBX_MAJOR=6 VITEST_BROWSER_API_PORT=63332 vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
+    "typecheck:mobx6": "mobx6-compat-guard && tsc -p tsconfig.mobx6.json --noEmit",
     "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
