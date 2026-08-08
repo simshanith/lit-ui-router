@@ -13,7 +13,10 @@ const range = await g.range('publishedPeer', 'lit-ui-router');
 
 const floor =
   rangeFloor(range) ??
-  g.fail(`unsupported range shape "${range}"; teach me its floor`);
+  g.fail(
+    `semver cannot name a floor for range "${range}". Fix the publishedPeer ` +
+      'lit-ui-router range in pnpm-workspace.yaml.',
+  );
 
 const installed = g.installed('lit-ui-router-floor', 'lit-ui-router');
 if (installed !== floor) {
