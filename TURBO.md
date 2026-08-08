@@ -37,6 +37,8 @@ ci:pull_request
 ├── build
 ├── test
 ├── test:coverage
+├── test:lit2-compat
+├── typecheck:lit2
 ├── lint
 │   ├── //#lint:root           (with)
 │   ├── //#lint:package-json   (with)
@@ -224,19 +226,20 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 
 ### Task-to-CI Mapping
 
-| Turbo Task                        | CI Placement                                                                              |
-| --------------------------------- | ----------------------------------------------------------------------------------------- |
-| `build`                           | `ci:pull_request` (every PR and push)                                                     |
-| `test`                            | `ci:pull_request`                                                                         |
-| `test:coverage`                   | `ci:pull_request`, feeds coverage reports                                                 |
-| `lint`                            | `ci:pull_request`                                                                         |
-| `typecheck`                       | `ci:pull_request`                                                                         |
-| `format:check`                    | `ci:pull_request`                                                                         |
-| `check:bundle`, `codecov:bundle`  | `ci:pull_request`                                                                         |
-| `test:engines`                    | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin) |
-| `@tools/release#check:pack`       | `ci:main` only                                                                            |
-| `@tools/dts-backtest#test:matrix` | `ci:main` only; PRs run the current-TS `#test` leg                                        |
-| `typecheck:peer-floor`            | Neither ci graph — Release signals check runs + bump gate                                 |
+| Turbo Task                           | CI Placement                                                                                                                     |
+| ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------- |
+| `build`                              | `ci:pull_request` (every PR and push)                                                                                            |
+| `test`                               | `ci:pull_request`                                                                                                                |
+| `test:coverage`                      | `ci:pull_request`, feeds coverage reports                                                                                        |
+| `lint`                               | `ci:pull_request`                                                                                                                |
+| `typecheck`                          | `ci:pull_request`                                                                                                                |
+| `test:lit2-compat`, `typecheck:lit2` | `ci:pull_request` — unit suites and types against the lit-2 alias, separate tasks so a runtime failure never masks the typecheck |
+| `format:check`                       | `ci:pull_request`                                                                                                                |
+| `check:bundle`, `codecov:bundle`     | `ci:pull_request`                                                                                                                |
+| `test:engines`                       | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                        |
+| `@tools/release#check:pack`          | `ci:main` only                                                                                                                   |
+| `@tools/dts-backtest#test:matrix`    | `ci:main` only; PRs run the current-TS `#test` leg                                                                               |
+| `typecheck:peer-floor`               | Neither ci graph — Release signals check runs + bump gate                                                                        |
 
 ## Remote Caching
 
