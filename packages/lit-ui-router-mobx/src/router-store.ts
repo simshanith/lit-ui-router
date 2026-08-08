@@ -1,4 +1,4 @@
-import { makeAutoObservable, observable } from 'mobx';
+import { makeAutoObservable } from 'mobx';
 import {
   RawParams,
   StateDeclaration,
@@ -54,15 +54,16 @@ export class RouterStore {
     makeAutoObservable<RouterStore, 'router'>(
       this,
       {
-        current: observable.ref,
-        params: observable.ref,
-        transition: observable.ref,
         router: false,
         // Not an action: reads inside actions are untracked, and this must
         // be trackable from observer renders.
         includes: false,
       },
-      { autoBind: true },
+      // deep:false gives every observable field reference semantics; it is the
+      // only spelling both mobx majors accept (6's `observable.ref` annotation
+      // became 7's `observableRef` export). Store-wide, so a future field that
+      // wants deep observability needs an explicit annotation here.
+      { autoBind: true, deep: false },
     );
   }
 

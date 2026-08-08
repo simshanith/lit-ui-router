@@ -10,8 +10,9 @@ export interface ReactionControllerOptions<T> {
   onChange?: (value: T) => void;
 
   /**
-   * Comparer deciding whether the selected value changed
-   * (e.g. `comparer.structural`). Defaults to MobX's identity comparer.
+   * Comparer deciding whether the selected value changed (e.g.
+   * `compareStructural` on mobx 7, `comparer.structural` on mobx 6).
+   * Defaults to MobX's identity comparer.
    */
   equals?: IEqualsComparer<T>;
 }
@@ -26,7 +27,7 @@ export interface ReactionControllerOptions<T> {
  *
  * - No base class required — works on any LitElement (or other host).
  * - Dependencies are explicit: the selector names exactly which observables
- *   drive the host, and `equals: comparer.structural` gives precise,
+ *   drive the host, and a structural `equals` comparer gives precise,
  *   value-based change detection.
  * - Lifecycle is automatic: the reaction is created in `hostConnected` and
  *   disposed in `hostDisconnected` — no manual disposer bookkeeping.
