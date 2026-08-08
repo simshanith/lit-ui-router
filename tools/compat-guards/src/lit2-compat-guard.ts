@@ -3,11 +3,12 @@
 // covers, or the lit2-compat lanes test a support claim nobody ships.
 // Usage (from the package dir): lit2-compat-guard
 import { guard } from './guard.ts';
+import { coversMajor2 } from './ranges.ts';
 
 const g = guard('lit2-compat-guard');
 
 const range = await g.range('publishedPeer', 'lit');
-if (!/(^|\|\| )\^2\./.test(range)) {
+if (!coversMajor2(range)) {
   g.fail(
     `publishedPeer lit range "${range}" no longer covers major 2; drop the ` +
       'test:lit2-compat/typecheck:lit2 tasks or re-widen the range',

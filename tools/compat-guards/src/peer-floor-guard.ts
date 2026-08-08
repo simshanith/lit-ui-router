@@ -3,19 +3,17 @@
 // catalog:publishedPeer lit-ui-router range, or the floor typecheck lies.
 // Usage (from the package dir): peer-floor-guard
 import { type Guard, guard } from './guard.ts';
+import { caretFloor } from './ranges.ts';
 
 // annotated: TS only treats `g.fail` as never-returning through a dotted name
-// whose type is explicit, and the floor match below relies on that narrowing
+// whose type is explicit, and the floor fallback below relies on that narrowing
 const g: Guard = guard('peer-floor-guard');
 
 const range = await g.range('publishedPeer', 'lit-ui-router');
 
-// caret floor = the literal version; widen deliberately if the range shape changes
-const floorMatch = /^\^(\d+\.\d+\.\d+)$/.exec(range);
-if (!floorMatch) {
+const floor =
+  caretFloor(range) ??
   g.fail(`unsupported range shape "${range}"; teach me its floor`);
-}
-const floor = floorMatch[1];
 
 const installed = g.installed('lit-ui-router-floor', 'lit-ui-router');
 if (installed !== floor) {
