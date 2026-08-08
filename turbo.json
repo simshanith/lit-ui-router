@@ -168,7 +168,9 @@
       // types come from build:types alone; JS emit stays off the typecheck path
       "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root", "typecheck:src"]
+      // compat typechecks ride along: `turbo run typecheck` is the one command
+      // that answers "do the types hold", and `with` propagates their failure
+      "with": ["//#typecheck:root", "typecheck:src", "typecheck:lit2"]
     },
     "typecheck:src": {
       "dependsOn": ["^build:types"],
@@ -206,7 +208,6 @@
         "test:lit2-compat",
         "lint",
         "typecheck",
-        "typecheck:lit2",
         "format:check",
         "check:bundle",
         "@tools/release#check:exports"
