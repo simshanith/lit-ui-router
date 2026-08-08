@@ -1,61 +1,65 @@
 // Characterization: these examples ARE the documentation of the two range
-// shapes. Changing an expectation here changes what the compat guards accept.
+// questions. Changing an expectation here changes what the compat guards accept.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { caretFloor, coversMajor2 } from './ranges.ts';
+import { coversMajor2, rangeFloor } from './ranges.ts';
 
 describe('coversMajor2', () => {
-  it('accepts a caret-2 comparator leading the range or an alternative', () => {
+  it('accepts any range overlapping 2.x, whatever its spelling', () => {
     for (const range of [
       '^2.0.0',
       '^2.7.0 || ^3.0.0',
       '^1.0.0 || ^2.0.0 || ^3.0.0',
+      '^1.0.0||^2.0.0',
+      '^1.0.0 ||^2.0.0',
+      '^2',
+      '2.x',
+      '>=2.0.0',
     ]) {
       assert.equal(coversMajor2(range), true, range);
     }
   });
 
-  it('rejects ranges without a caret-2 comparator', () => {
-    for (const range of ['^3.0.0', '>=2.0.0', '2.x', '']) {
+  it('rejects ranges that never reach 2.x', () => {
+    for (const range of [
+      '^3.0.0',
+      '^1.0.0',
+      '^12.0.0',
+      '^20.0.0',
+      '^1.0.0 || ^12.0.0',
+    ]) {
       assert.equal(coversMajor2(range), false, range);
     }
   });
 
-  it('rejects a major whose digits merely start with 2', () => {
-    // the caret in `\^2\.` is what excludes wider majors — the leading-boundary
-    // alternation alone would not, since `^12.` never contains `^2.`
-    for (const range of ['^12.0.0', '^20.0.0', '^1.0.0 || ^12.0.0']) {
-      assert.equal(coversMajor2(range), false, range);
-    }
-  });
-
-  it('requires the published `x || y` spelling exactly', () => {
-    // what the leading-boundary alternation actually costs: semver accepts an
-    // unspaced `||`, the guard fails closed on it
-    for (const range of ['^1.0.0||^2.0.0', '^1.0.0 ||^2.0.0', '^2']) {
+  it('fails closed on blank and malformed ranges', () => {
+    for (const range of ['', '   ', 'not a range', '^^2']) {
       assert.equal(coversMajor2(range), false, range);
     }
   });
 });
 
-describe('caretFloor', () => {
-  it('extracts the version from a single caret range', () => {
-    assert.equal(caretFloor('^1.7.0'), '1.7.0');
-    assert.equal(caretFloor('^10.20.30'), '10.20.30');
+describe('rangeFloor', () => {
+  it('names the lowest version a range admits', () => {
+    assert.equal(rangeFloor('^1.7.0'), '1.7.0');
+    assert.equal(rangeFloor('^10.20.30'), '10.20.30');
+    assert.equal(rangeFloor('^1.7'), '1.7.0');
+    assert.equal(rangeFloor('~1.7.0'), '1.7.0');
+    assert.equal(rangeFloor('>=1.7.0'), '1.7.0');
+    assert.equal(rangeFloor('1.7.0'), '1.7.0');
+    assert.equal(rangeFloor('^1.7.0 || ^2.0.0'), '1.7.0');
   });
 
-  it('reports every other shape as unsupported', () => {
-    for (const range of [
-      '^1.7',
-      '~1.7.0',
-      '^1.7.0 || ^2.0.0',
-      '>=1.7.0',
-      '1.7.0',
-      '^1.7.0-rc.1',
-      '',
-    ]) {
-      assert.equal(caretFloor(range), undefined, range);
+  it('keeps a prerelease floor as the floor', () => {
+    // flows on to the guard's `installed !== floor` compare, which the old
+    // caret-only shape used to reject outright
+    assert.equal(rangeFloor('^1.7.0-rc.1'), '1.7.0-rc.1');
+  });
+
+  it('fails closed on blank and malformed ranges', () => {
+    for (const range of ['', '   ', 'not a range', '^^1.7.0']) {
+      assert.equal(rangeFloor(range), undefined, range);
     }
   });
 });

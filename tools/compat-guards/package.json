@@ -18,7 +18,9 @@
   "devDependencies": {
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
+    "@types/semver": "catalog:",
     "oxfmt": "catalog:",
+    "semver": "catalog:",
     "typescript": "catalog:"
   }
 }

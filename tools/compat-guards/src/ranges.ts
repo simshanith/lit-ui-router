@@ -1,22 +1,30 @@
-// The two semver-range shapes the compat guards read out of the published peer
-// ranges. Both are deliberately narrow: they only understand the shapes this
-// repo actually publishes, and say no to everything else so a guard fails loudly
-// rather than passing on a range it misread. See ranges.test.ts for the
-// accepted/rejected examples.
+// The two semver-range questions the compat guards ask of the published peer
+// ranges. Both fail closed: an empty or malformed range is a no, never a yes,
+// so a guard reports its own error rather than passing on a range semver would
+// have read as `*`. See ranges.test.ts for the accepted/rejected examples.
+import semver from 'semver';
 
-// alternation, not a bare /\^2\./: a caret-2 comparator only counts at the start
-// of the range or of a ` || ` alternative, never mid-token
-const COVERS_MAJOR_2 = /(^|\|\| )\^2\./;
-
-// caret floor = the literal version; widen deliberately if the range shape changes
-const CARET_FLOOR = /^\^(\d+\.\d+\.\d+)$/;
-
-/** Whether a peer range admits some lit 2.x, i.e. has a `^2.` comparator. */
-export function coversMajor2(range: string): boolean {
-  return COVERS_MAJOR_2.test(range);
+// semver reads '' as '*'; both predicates would otherwise fail open on it
+function isBlank(range: string): boolean {
+  return range.trim() === '';
 }
 
-/** Floor of a single-caret range; undefined when the shape isn't understood. */
-export function caretFloor(range: string): string | undefined {
-  return CARET_FLOOR.exec(range)?.[1];
+/** Whether a peer range admits some lit 2.x. */
+export function coversMajor2(range: string): boolean {
+  if (isBlank(range)) return false;
+  try {
+    return semver.intersects(range, '^2.0.0');
+  } catch {
+    return false;
+  }
+}
+
+/** Lowest version a range admits; undefined when semver can't name one. */
+export function rangeFloor(range: string): string | undefined {
+  if (isBlank(range)) return undefined;
+  try {
+    return semver.minVersion(range)?.version;
+  } catch {
+    return undefined;
+  }
 }
