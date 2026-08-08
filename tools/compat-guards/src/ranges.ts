@@ -9,6 +9,11 @@ function isBlank(range: string): boolean {
   return range.trim() === '';
 }
 
+/** Whether semver can read the range at all; blank is a no, not `*`. */
+export function isReadableRange(range: string): boolean {
+  return !isBlank(range) && semver.validRange(range) !== null;
+}
+
 /** Whether a peer range admits some lit 2.x. */
 export function coversMajor2(range: string): boolean {
   if (isBlank(range)) return false;

@@ -1,9 +1,14 @@
 // Every message a guard emits is prefixed with its name, so bind the name once
 // rather than threading it through each retrieval call.
 import { catalogRange, installedManifest } from './catalog.ts';
+import { isReadableRange } from './ranges.ts';
 
 export interface Guard {
-  /** Catalog range for a dep; fails when the catalog or the dep is absent. */
+  /**
+   * Catalog range for a dep; fails when the catalog or the dep is absent, or
+   * when the range isn't valid semver. Rejecting it here rather than letting a
+   * predicate read it means a typo can't surface as a confident wrong answer.
+   */
   range(catalog: string, dep: string): Promise<string>;
   /**
    * Installed version of an aliased devDep; fails when it isn't installed, or
@@ -21,10 +26,16 @@ export function guard(name: string): Guard {
   };
   return {
     async range(catalog, dep) {
-      return (
+      const range =
         (await catalogRange(catalog, dep)) ??
-        fail(`no ${catalog} ${dep} range in pnpm-workspace.yaml`)
-      );
+        fail(`no ${catalog} ${dep} range in pnpm-workspace.yaml`);
+      if (!isReadableRange(range)) {
+        fail(
+          `${catalog} ${dep} range "${range}" is not a valid semver range. ` +
+            'Fix it in pnpm-workspace.yaml.',
+        );
+      }
+      return range;
     },
     installed(alias, dep) {
       const manifest =

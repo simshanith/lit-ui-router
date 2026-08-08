@@ -1,9 +1,38 @@
-// Characterization: these examples ARE the documentation of the two range
+// Characterization: these examples ARE the documentation of the three range
 // questions. Changing an expectation here changes what the compat guards accept.
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import { coversMajor2, rangeFloor } from './ranges.ts';
+import { coversMajor2, isReadableRange, rangeFloor } from './ranges.ts';
+
+describe('isReadableRange', () => {
+  it('accepts the range spellings semver parses', () => {
+    for (const range of [
+      '^2.0.0',
+      '~1.7.0',
+      '>=1.7.0',
+      '1.7.0',
+      '*',
+      '^1 || ^2',
+    ]) {
+      assert.equal(isReadableRange(range), true, range);
+    }
+  });
+
+  it('rejects blank, which semver would otherwise read as `*`', () => {
+    for (const range of ['', '   ']) {
+      assert.equal(isReadableRange(range), false, range);
+    }
+  });
+
+  it('rejects unparseable ranges, so a typo cannot read as a real answer', () => {
+    // guard.range() fails on these; without it `^1.7.0 || garbage` would reach
+    // coversMajor2, come back false, and advise dropping the lit2 compat lane
+    for (const range of ['not-a-range', '^1.7.0 || garbage', '^^1.0.0']) {
+      assert.equal(isReadableRange(range), false, range);
+    }
+  });
+});
 
 describe('coversMajor2', () => {
   it('accepts any range overlapping 2.x, whatever its spelling', () => {
