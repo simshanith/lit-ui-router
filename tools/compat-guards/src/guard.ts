@@ -1,6 +1,6 @@
 // Every message a guard emits is prefixed with its name, so bind the name once
 // rather than threading it through each retrieval call.
-import { catalogRange, installedVersion } from './catalog.ts';
+import { catalogRange, installedManifest } from './catalog.ts';
 
 export interface Guard {
   /** Catalog range for a dep; fails when the catalog or the dep is absent. */
@@ -23,12 +23,15 @@ export function guard(name: string): Guard {
       );
     },
     installed(alias) {
-      return (
-        installedVersion(alias) ??
+      const manifest =
+        installedManifest(alias) ??
         fail(
           `no ${alias} installed in ${process.cwd()}; run this guard from the ` +
             'package that declares the alias, and reinstall',
-        )
+        );
+      return (
+        manifest.version ??
+        fail(`${alias} in ${process.cwd()} has no version; reinstall`)
       );
     },
     pass: (message) => {

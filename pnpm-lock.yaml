@@ -903,6 +903,9 @@ importers:
       '@tools/build_and_test':
         specifier: workspace:*
         version: link:../build_and_test
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

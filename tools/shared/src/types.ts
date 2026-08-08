@@ -11,6 +11,8 @@ export type PackageManifest = {
   version?: string;
   private?: boolean;
   scripts?: Record<string, unknown>;
+  // subpath -> string target or a conditions object; shape is caller-checked
+  exports?: Record<string, unknown>;
   dependencies?: DependencyMap;
   devDependencies?: DependencyMap;
   peerDependencies?: DependencyMap;
