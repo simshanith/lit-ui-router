@@ -5,6 +5,7 @@ import { catalogRange, installedVersion } from './catalog.ts';
 export interface Guard {
   /** Catalog range for a dep; fails when the catalog or the dep is absent. */
   range(catalog: string, dep: string): Promise<string>;
+  /** Installed version of an aliased devDep; fails when it isn't installed. */
   installed(alias: string): string;
   pass(message: string): void;
   fail(message: string): never;
@@ -21,7 +22,15 @@ export function guard(name: string): Guard {
         fail(`no ${catalog} ${dep} range in pnpm-workspace.yaml`)
       );
     },
-    installed: installedVersion,
+    installed(alias) {
+      return (
+        installedVersion(alias) ??
+        fail(
+          `no ${alias} installed in ${process.cwd()}; run this guard from the ` +
+            'package that declares the alias, and reinstall',
+        )
+      );
+    },
     pass: (message) => {
       console.log(`${name}: ${message}`);
     },
