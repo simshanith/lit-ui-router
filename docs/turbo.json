@@ -31,9 +31,8 @@
       "persistent": true
     },
     "build": {
-      // .vitepress/config.ts statically imports each typedoc-sidebar.json, so
-      // every documented package is a direct devDep of docs — that is what
-      // lets `^docs:api` reach all four (it walks direct deps only).
+      // `^` reaches direct deps only, so every docs:api producer is a devDep
+      // of docs — that is what those otherwise-unimported entries are for.
       "dependsOn": [
         "^build",
         "^docs:api",
