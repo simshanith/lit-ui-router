@@ -17,7 +17,7 @@ if (!floorMatch) {
 }
 const floor = floorMatch[1];
 
-const installed = g.installed('lit-ui-router-floor');
+const installed = g.installed('lit-ui-router-floor', 'lit-ui-router');
 if (installed !== floor) {
   g.fail(
     `lit-ui-router-floor resolves to ${installed}, but the floor of the ` +
@@ -26,4 +26,6 @@ if (installed !== floor) {
   );
 }
 
-g.pass(`floor pin ${installed} matches range ${range}`);
+g.pass(
+  `lit-ui-router-floor -> lit-ui-router ${installed} matches range ${range} floor`,
+);

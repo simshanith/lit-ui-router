@@ -14,7 +14,7 @@ if (!/(^|\|\| )\^2\./.test(range)) {
   );
 }
 
-const installed = g.installed('lit-2');
+const installed = g.installed('lit-2', 'lit');
 if (!installed.startsWith('2.')) {
   g.fail(
     `lit-2 resolves to ${installed}, not a 2.x build. Repin the lit2-compat ` +
@@ -22,4 +22,4 @@ if (!installed.startsWith('2.')) {
   );
 }
 
-g.pass(`lit-2 ${installed} within peer range ${range}`);
+g.pass(`lit-2 -> lit ${installed} within peer range ${range}`);
