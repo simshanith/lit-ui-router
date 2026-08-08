@@ -17,7 +17,7 @@ import { bundleEntry } from './bundle.ts';
 import { readPackageProbe } from './entries.ts';
 
 const packageDir = process.cwd();
-const { name, declared, entries } = await readPackageProbe(packageDir);
+const { name, declared, entries } = readPackageProbe(packageDir);
 const prefix = process.argv[2] ?? name;
 
 const uploader = fileURLToPath(

@@ -11,7 +11,7 @@ import { bundleEntry, bundlers } from './bundle.ts';
 import { readPackageProbe } from './entries.ts';
 
 const packageDir = process.cwd();
-const { name, declared, entries } = await readPackageProbe(packageDir);
+const { name, declared, entries } = readPackageProbe(packageDir);
 
 let failed = false;
 for (const { label, file } of entries) {

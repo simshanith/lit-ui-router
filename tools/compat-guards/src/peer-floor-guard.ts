@@ -1,0 +1,31 @@
+#!/usr/bin/env node
+// The installed lit-ui-router-floor alias must equal the floor of the
+// catalog:publishedPeer lit-ui-router range, or the floor typecheck lies.
+// Usage (from the package dir): peer-floor-guard
+import { type Guard, guard } from './guard.ts';
+
+// annotated: TS only treats `g.fail` as never-returning through a dotted name
+// whose type is explicit, and the floor match below relies on that narrowing
+const g: Guard = guard('peer-floor-guard');
+
+const range = await g.range('publishedPeer', 'lit-ui-router');
+
+// caret floor = the literal version; widen deliberately if the range shape changes
+const floorMatch = /^\^(\d+\.\d+\.\d+)$/.exec(range);
+if (!floorMatch) {
+  g.fail(`unsupported range shape "${range}"; teach me its floor`);
+}
+const floor = floorMatch[1];
+
+const installed = g.installed('lit-ui-router-floor', 'lit-ui-router');
+if (installed !== floor) {
+  g.fail(
+    `lit-ui-router-floor resolves to ${installed}, but the floor of the ` +
+      `declared peer range ${range} is ${floor}. Repin the peerFloor catalog ` +
+      'in pnpm-workspace.yaml and reinstall.',
+  );
+}
+
+g.pass(
+  `lit-ui-router-floor -> lit-ui-router ${installed} matches range ${range} floor`,
+);

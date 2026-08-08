@@ -58,6 +58,19 @@ export async function loadWorkspace(root: string): Promise<{
   return { members, workspaceManifest };
 }
 
+/** Catalogs from pnpm-workspace.yaml; the unnamed `catalog:` is `default`, per pnpm. */
+export async function loadCatalogs(
+  root: string,
+): Promise<Record<string, Record<string, string>>> {
+  const { readWorkspaceManifest } =
+    await import('@pnpm/workspace.workspace-manifest-reader');
+  const workspaceManifest = await readWorkspaceManifest(root);
+  return {
+    default: workspaceManifest?.catalog ?? {},
+    ...workspaceManifest?.catalogs,
+  };
+}
+
 /** patchedDependencies from pnpm-workspace.yaml: package name -> patch path. */
 export async function loadPatchedDependencies(
   root: string,

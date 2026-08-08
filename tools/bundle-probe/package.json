@@ -20,6 +20,7 @@
   },
   "devDependencies": {
     "@tools/build_and_test": "workspace:*",
+    "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "esbuild": "catalog:",
     "oxfmt": "catalog:",
