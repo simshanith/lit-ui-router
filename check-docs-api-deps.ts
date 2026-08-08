@@ -1,14 +1,7 @@
-// Every docs:api producer writes into docs/api: markdown VitePress routes, and
-// a typedoc-sidebar.json that docs/.vitepress/config.ts imports statically.
-// docs#build orders that generation with `^docs:api`, and `^` walks DIRECT deps
-// only — so a producer that isn't a direct dep of docs never runs, and the site
-// builds against a missing sidebar (clean CI) or a stale one (warm tree).
-//
-// Nothing in docs/package.json can explain why a site that never imports
-// lit-ui-router depends on it — package.json takes no comments — so a
-// dependency prune would read those entries as unused and drop them. This is
-// the failing test for that: name the producer, before the build fails three
-// steps downstream on an unresolved import.
+// docs#build orders API-doc generation with `^docs:api`, and `^` walks direct
+// deps only, so docs devDepends on packages it never imports. package.json
+// takes no comments to say so, and a dependency prune reads those entries as
+// unused. Assert every package with a docs:api script is a direct dep of docs.
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-docs-api-deps';
