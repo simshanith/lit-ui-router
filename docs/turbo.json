@@ -21,40 +21,29 @@
       "dependsOn": ["bundle:worker"]
     },
     "docs:preview": {
-      // typedoc sidebars ride in via build
       "dependsOn": ["build"],
       "cache": false,
       "persistent": true
     },
     "wrangler:dev": {
-      // typedoc sidebars ride in via build
       "dependsOn": ["build"],
       "cache": false,
       "persistent": true
     },
     "build": {
-      // .vitepress/config.ts statically imports each typedoc-sidebar.json;
-      // only ui-router-server is a direct dep, so `^docs:api` can't reach the
-      // rest — name every producer explicitly.
+      // .vitepress/config.ts statically imports each typedoc-sidebar.json, so
+      // every documented package is a direct devDep of docs — that is what
+      // lets `^docs:api` reach all four (it walks direct deps only).
       "dependsOn": [
         "^build",
-        "lit-ui-router#docs:api",
-        "lit-ui-router-mobx#docs:api",
-        "ui-router-navigation-location-plugin#docs:api",
-        "ui-router-server#docs:api",
+        "^docs:api",
         "examples#build:embeds",
         "types:worker"
       ],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
-      "dependsOn": [
-        "^build:types",
-        "lit-ui-router#docs:api",
-        "lit-ui-router-mobx#docs:api",
-        "ui-router-navigation-location-plugin#docs:api",
-        "ui-router-server#docs:api"
-      ],
+      "dependsOn": ["^build:types", "^docs:api"],
       "with": ["typecheck:vue", "typecheck:worker", "typecheck:worker:tests"]
     },
     "test": {
@@ -82,14 +71,7 @@
       "outputs": ["worker/worker-configuration.d.ts"]
     },
     "docs": {
-      "dependsOn": [
-        "^build",
-        "lit-ui-router#docs:api",
-        "lit-ui-router-mobx#docs:api",
-        "ui-router-navigation-location-plugin#docs:api",
-        "ui-router-server#docs:api",
-        "examples#build:embeds"
-      ],
+      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
       "cache": false,
       "persistent": true,
       // dev-server browser open toggle (vite.config.ts server.open)
