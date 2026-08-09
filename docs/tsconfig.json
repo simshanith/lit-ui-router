@@ -1,7 +1,8 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    "module": "es2022",
+    // esnext for the import attributes in config.ts
+    "module": "esnext",
     "moduleResolution": "bundler",
     // The vite config consumes ui-router-server/sample-app-routes as source
     // (workspace exports point at .ts), whose imports carry .ts extensions —

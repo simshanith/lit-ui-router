@@ -1,5 +1,5 @@
 {
   "extends": "./tooling/tsconfig.app.json",
-  "include": ["src/**/*", "tooling/**/*"],
+  "include": ["src/**/*", "tooling/**/*", "vitest.setup.ts"],
   "exclude": ["node_modules"]
 }
