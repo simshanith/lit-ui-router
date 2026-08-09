@@ -40,6 +40,28 @@ export function isUIRouterNavigateEvent(
 }
 
 /**
+ * Composes the absolute URL handed to `navigation.navigate()` from a
+ * router-relative `url` and the document's `baseHref`.
+ *
+ * Pure string math — no DOM, no Navigation API.
+ *
+ * - `''` and `'/'` resolve to `baseHref` itself (so `<base href='/app/'>`
+ *   navigates to `/app/`, not `/app`).
+ * - anything else is prefixed with the base prefix
+ *   ({@link stripLastPathElement} of `baseHref`), inserting the leading slash
+ *   the caller may have omitted.
+ *
+ * @internal
+ */
+export function composeNavigateUrl(url: string, baseHref: string): string {
+  if (url === '' || url === '/') {
+    return baseHref;
+  }
+  const slash = url.startsWith('/') ? '' : '/';
+  return stripLastPathElement(baseHref) + slash + url;
+}
+
+/**
  * Location service implementation using the Navigation API.
  *
  * Uses the browser's Navigation API for URL management instead of the
@@ -65,11 +87,22 @@ export class NavigationLocationService extends BaseLocationServices {
     super(router, false);
     this._router = router;
     this._config = router.urlService.config;
-    globalRoot.navigation.addEventListener(
+    this._navigation().addEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
       false,
     );
+  }
+
+  /**
+   * The Navigation API object this service drives.
+   *
+   * Single seam for every `navigation` touch point, so tests can subclass and
+   * substitute a stub instead of booting a browser to spy on a global.
+   * @internal
+   */
+  protected _navigation(): Navigation {
+    return globalRoot.navigation;
   }
 
   /**
@@ -128,14 +161,9 @@ export class NavigationLocationService extends BaseLocationServices {
     url: string,
     replace: boolean,
   ): void {
-    const basePrefix = this._getBasePrefix();
-    const slash = url && !url.startsWith('/') ? '/' : '';
-    const fullUrl =
-      url === '' || url === '/'
-        ? this._config.baseHref()
-        : basePrefix + slash + url;
+    const fullUrl = composeNavigateUrl(url, this._config.baseHref());
 
-    globalRoot.navigation.navigate(fullUrl, {
+    this._navigation().navigate(fullUrl, {
       state,
       info: {
         uiRouter: this._router,
@@ -151,7 +179,7 @@ export class NavigationLocationService extends BaseLocationServices {
    */
   public dispose(router: UIRouter): void {
     super.dispose(router);
-    globalRoot.navigation.removeEventListener(
+    this._navigation().removeEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
     );
