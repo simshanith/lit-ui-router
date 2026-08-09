@@ -26,7 +26,6 @@ export function findUnsubstitutedRefs(
   const refs: UnsubstitutedRef[] = [];
   for (const field of DEP_FIELDS) {
     for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
-      if (typeof spec !== 'string') continue;
       if (!UNSUBSTITUTED_PREFIXES.some((p) => spec.trim().startsWith(p))) {
         continue;
       }

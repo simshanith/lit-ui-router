@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import type { PackageManifest } from '@tools/shared/types.ts';
+
 import {
   findPackedManifestViolations,
   findUnsubstitutedRefs,
@@ -42,10 +44,18 @@ describe('findUnsubstitutedRefs', () => {
     ]);
   });
 
-  it('ignores missing fields and non-string specifiers', () => {
+  it('ignores missing fields', () => {
     assert.deepEqual(findUnsubstitutedRefs({}), []);
     assert.deepEqual(findUnsubstitutedRefs(undefined), []);
-    assert.deepEqual(findUnsubstitutedRefs({ dependencies: { odd: 42 } }), []);
+  });
+
+  it('throws on a non-string specifier rather than passing it', () => {
+    // a publish gate must not wave through a manifest it cannot read; the
+    // former `typeof spec !== 'string'` skip returned [] and let the publish go
+    const manifest = {
+      dependencies: { odd: 42 },
+    } as unknown as PackageManifest;
+    assert.throws(() => findUnsubstitutedRefs(manifest), TypeError);
   });
 });
 
