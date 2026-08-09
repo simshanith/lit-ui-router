@@ -2,7 +2,14 @@
 const g = globalThis as typeof globalThis & {
   litIssuedWarnings?: Set<unknown>;
 };
-(g.litIssuedWarnings ??= new Set()).add('dev-mode');
+// lit 3 dedupes on the code OR the message; lit 2 only ever checks the
+// message, so the lit2-compat lane stays noisy unless both are seeded.
+(g.litIssuedWarnings ??= new Set())
+  .add('dev-mode')
+  .add(
+    'Lit is in dev mode. Not recommended for production! ' +
+      'See https://lit.dev/msg/dev-mode for more information.',
+  );
 
 // Guards the lit2-compat alias swap in both directions: the dev build pushes
 // its lit-html version (majors track lit's own) onto the global, so a run
