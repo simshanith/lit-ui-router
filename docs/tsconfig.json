@@ -1,8 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
-    // esnext, not es2022: import attributes (the JSON imports in config.ts)
-    // only typecheck under esnext/nodenext/preserve
+    // not es2022: import attributes need esnext/nodenext/preserve
     "module": "esnext",
     "moduleResolution": "bundler",
     // The vite config consumes ui-router-server/sample-app-routes as source
