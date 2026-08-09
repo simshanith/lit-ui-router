@@ -121,7 +121,7 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
+  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
   // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; empty/unset = all.
   const scoped = scopePackages(

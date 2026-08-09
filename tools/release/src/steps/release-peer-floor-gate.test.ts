@@ -16,7 +16,10 @@ const members: Member[] = [
     name: 'lit-ui-router-mobx',
     dir: 'packages/lit-ui-router-mobx',
     manifest: {
-      scripts: { 'typecheck:peer-floor': 'node peer-floor-guard.ts' },
+      scripts: {
+        'typecheck:peer-floor':
+          'peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit',
+      },
     },
   },
 ];

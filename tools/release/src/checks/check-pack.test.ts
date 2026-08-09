@@ -49,13 +49,18 @@ describe('findUnsubstitutedRefs', () => {
     assert.deepEqual(findUnsubstitutedRefs(undefined), []);
   });
 
-  it('throws on a non-string specifier rather than passing it', () => {
-    // a publish gate must not wave through a manifest it cannot read; the
-    // former `typeof spec !== 'string'` skip returned [] and let the publish go
+  it('names the declaration when a specifier is not a string', () => {
+    // The bytes come from a tarball, so the string type is a claim, not a
+    // fact. This check used to `continue`, which returned [] and reported the
+    // package clean. The message is the contract: anyone who "fixes the crash"
+    // by coercing instead of throwing has to delete an assertion to do it.
     const manifest = {
       dependencies: { odd: 42 },
     } as unknown as PackageManifest;
-    assert.throws(() => findUnsubstitutedRefs(manifest), TypeError);
+    assert.throws(() => findUnsubstitutedRefs(manifest), {
+      name: 'TypeError',
+      message: 'dependencies.odd: specifier is number, not a string',
+    });
   });
 });
 

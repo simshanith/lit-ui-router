@@ -29,7 +29,7 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
+  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
   const results: PackResult[] = [];
   for (const { name, dir } of publishable) {
     // Malformed manifests reject in tarballManifest — loud, never a silent {}.
