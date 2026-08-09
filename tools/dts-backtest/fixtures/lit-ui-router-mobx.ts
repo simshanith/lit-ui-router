@@ -1,5 +1,9 @@
 import { html, LitElement, type TemplateResult } from 'lit';
-import { comparer } from 'mobx';
+// The concrete structural comparer is spelled per-major (`comparer.structural`
+// on mobx 6, `compareStructural` on 7), so this consumer fixture — which must
+// hold for the whole `^6.0.0 || ^7.0.0` peer range — asserts against the
+// `IEqualsComparer` type both majors export instead of either spelling.
+import type { IEqualsComparer } from 'mobx';
 import { UIRouterLit } from 'lit-ui-router';
 import {
   ReactionController,
@@ -9,8 +13,11 @@ import {
   type RouterReactionControllerOptions,
 } from 'lit-ui-router-mobx';
 
+const structuralEquals: IEqualsComparer<unknown> = (a, b) =>
+  JSON.stringify(a) === JSON.stringify(b);
+
 const structural: ReactionControllerOptions<string | undefined> = {
-  equals: comparer.structural,
+  equals: structuralEquals,
   onChange: (value) => void value,
 };
 
@@ -27,7 +34,7 @@ export class NavElement extends LitElement {
     this,
     () => this.store.params,
     {
-      equals: comparer.structural,
+      equals: structuralEquals,
     },
   );
 

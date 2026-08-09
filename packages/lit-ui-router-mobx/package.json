@@ -54,8 +54,10 @@
     "test": "VITEST_BROWSER_API_PORT=63330 vitest run",
     "test:coverage": "VITEST_BROWSER_API_PORT=63335 vitest run --coverage",
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63331 vitest run",
+    "test:mobx6-compat": "mobx6-compat-guard && VITE_EXPECT_MOBX_MAJOR=6 VITEST_BROWSER_API_PORT=63332 vitest run",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
+    "typecheck:mobx6": "mobx6-compat-guard && tsc -p tsconfig.mobx6.json --noEmit",
     "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
@@ -76,6 +78,7 @@
     "lit-ui-router": "workspace:*",
     "lit-ui-router-floor": "catalog:peerFloor",
     "mobx": "catalog:",
+    "mobx-6": "catalog:mobx6-compat",
     "oxfmt": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",

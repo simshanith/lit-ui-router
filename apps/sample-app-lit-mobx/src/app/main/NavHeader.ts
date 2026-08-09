@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
-import { comparer } from 'mobx';
+import { compareStructural } from 'mobx';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import { ReactionController } from 'lit-ui-router-mobx';
 
@@ -23,7 +23,7 @@ export class NavHeader extends LitElement {
       isAuthenticated: AuthService.isAuthenticated(),
       emailAddress: AppConfig.emailAddress,
     }),
-    { equals: comparer.structural },
+    { equals: compareStructural },
   );
 
   handleLogout() {

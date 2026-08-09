@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { styleMap } from 'lit/directives/style-map.js';
 import { customElement, property } from 'lit/decorators.js';
-import { comparer } from 'mobx';
+import { compareStructural } from 'mobx';
 import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
 import { RouterReactionController } from 'lit-ui-router-mobx';
@@ -34,7 +34,7 @@ export class App extends LitElement {
       mymessages: route.includes('mymessages.**'),
       contacts: route.includes('contacts.**'),
     }),
-    { equals: comparer.structural },
+    { equals: compareStructural },
   );
 
   get stateService() {

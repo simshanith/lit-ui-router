@@ -1,10 +1,10 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { comparer, observable, runInAction } from 'mobx';
+import { observable, runInAction } from 'mobx';
 
 import { ReactionController } from '../reaction-controller.js';
-import { waitForUpdate } from './test-utils.js';
+import { structural, waitForUpdate } from './test-utils.js';
 
 @customElement('reaction-controller-host')
 class ReactionControllerHost extends LitElement {
@@ -77,12 +77,12 @@ describe('ReactionController', () => {
     expect(onChange).toHaveBeenCalledExactlyOnceWith(1);
   });
 
-  it('suppresses structurally equal values with comparer.structural', async () => {
+  it('suppresses structurally equal values with a structural comparer', async () => {
     const state = observable({ count: 0 });
     const host = await mountHost();
     const onChange = vi.fn();
     new ReactionController(host, () => ({ even: state.count % 2 === 0 }), {
-      equals: comparer.structural,
+      equals: structural,
       onChange,
     });
     await waitForUpdate(host);
