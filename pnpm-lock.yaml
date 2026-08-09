@@ -817,6 +817,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 4.1.10(@vitest/browser@4.1.10)(vitest@4.1.10)
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.11.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.61.0
