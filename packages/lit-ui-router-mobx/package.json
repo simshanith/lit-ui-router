@@ -66,6 +66,7 @@
     "@tools/bundle-probe": "workspace:*",
     "@tools/compat-guards": "workspace:*",
     "@tools/happy-dom": "workspace:*",
+    "@tools/lit-test-env": "workspace:*",
     "@tools/oxc-emit": "workspace:*",
     "@tools/release-config": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",

@@ -30,6 +30,7 @@
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {
+    "@tools/lit-test-env": "workspace:*",
     "@types/dom-navigation": "catalog:",
     "@types/lodash": "catalog:",
     "@types/node": "catalog:",

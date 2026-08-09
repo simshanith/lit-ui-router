@@ -1,5 +1,9 @@
 {
   "extends": "./tooling/tsconfig.app.json",
+  "compilerOptions": {
+    // vitest.setup.ts imports @tools/* source-exported .ts files.
+    "allowImportingTsExtensions": true
+  },
   "include": ["src/**/*", "tooling/**/*", "vitest.setup.ts"],
   "exclude": ["node_modules"]
 }
