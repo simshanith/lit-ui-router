@@ -1,0 +1,15 @@
+{
+  // Source-exported setup helpers consumed through each suite's vite
+  // transform — .ts import extensions, nothing emitted. No lit dependency:
+  // resolving lit is the consumer's job.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "verbatimModuleSyntax": true,
+    "types": [],
+    "lib": ["ES2022", "DOM", "DOM.Iterable"]
+  },
+  "include": ["**/*.ts"]
+}

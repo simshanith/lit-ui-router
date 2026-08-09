@@ -517,6 +517,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
     devDependencies:
+      '@tools/lit-test-env':
+        specifier: workspace:*
+        version: link:../../tools/lit-test-env
       '@types/dom-navigation':
         specifier: 'catalog:'
         version: 1.0.7
@@ -642,6 +645,9 @@ importers:
       '@tools/happy-dom':
         specifier: workspace:*
         version: link:../../tools/happy-dom
+      '@tools/lit-test-env':
+        specifier: workspace:*
+        version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
@@ -717,6 +723,9 @@ importers:
       '@tools/happy-dom':
         specifier: workspace:*
         version: link:../../tools/happy-dom
+      '@tools/lit-test-env':
+        specifier: workspace:*
+        version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
@@ -1020,6 +1029,15 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.61.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/lit-test-env:
+    devDependencies:
       oxfmt:
         specifier: 'catalog:'
         version: 0.61.0
