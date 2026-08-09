@@ -63,6 +63,9 @@ catalogs:
     '@types/pacote':
       specifier: ^11.1.8
       version: 11.1.8
+    '@types/semver':
+      specifier: ^7.8.0
+      version: 7.8.0
     '@uirouter/core':
       specifier: ^6.1.2
       version: 6.1.2
@@ -174,6 +177,9 @@ catalogs:
     screenfull:
       specifier: ^6.0.2
       version: 6.0.2
+    semver:
+      specifier: ^7.8.5
+      version: 7.8.5
     start-server-and-test:
       specifier: ^3.0.12
       version: 3.0.12
@@ -630,6 +636,9 @@ importers:
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: workspace:*
+        version: link:../../tools/compat-guards
       '@tools/happy-dom':
         specifier: workspace:*
         version: link:../../tools/happy-dom
@@ -702,6 +711,9 @@ importers:
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
+      '@tools/compat-guards':
+        specifier: workspace:*
+        version: link:../../tools/compat-guards
       '@tools/happy-dom':
         specifier: workspace:*
         version: link:../../tools/happy-dom
@@ -906,6 +918,9 @@ importers:
       '@tools/build_and_test':
         specifier: workspace:*
         version: link:../build_and_test
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -918,6 +933,27 @@ importers:
       rolldown:
         specifier: 'catalog:'
         version: 1.2.3
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/compat-guards:
+    devDependencies:
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.61.0
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1066,6 +1102,9 @@ importers:
       '@pnpm/logger':
         specifier: 'catalog:'
         version: 1100.0.0
+      '@pnpm/types':
+        specifier: 'catalog:'
+        version: 1101.8.0
       '@pnpm/workspace.projects-reader':
         specifier: 'catalog:'
         version: 1101.0.21(@pnpm/logger@1100.0.0)
@@ -3123,6 +3162,9 @@ packages:
   '@types/parse-path@7.1.0':
     resolution: {integrity: sha512-EULJ8LApcVEPbrfND0cRQqutIOdiIgJ1Mgrhpy755r14xMohPTEpkV/k28SJvuOs9bHRFW8x+KeDAEPiGQPB9Q==}
     deprecated: This is a stub types definition. parse-path provides its own type definitions, so you do not need this installed.
+
+  '@types/semver@7.8.0':
+    resolution: {integrity: sha512-1mAINjtQCXXeLkJ9ehXkwOcBpqtLxiVtKhpUf83DdRNdQKV0iXZpaHYqRr7nj+wvxuJzoAmAwXI+sCNMv1CzLQ==}
 
   '@types/sinonjs__fake-timers@8.1.1':
     resolution: {integrity: sha512-0kSuKjAS0TrGLJ0M/+8MaFkGsQhZpB6pxOmvS3K8FYI72K//YmdfoW9X2qPsAKh1mkwxGD5zib9s1FIFed6E8g==}
@@ -8119,6 +8161,8 @@ snapshots:
   '@types/parse-path@7.1.0':
     dependencies:
       parse-path: 7.1.0
+
+  '@types/semver@7.8.0': {}
 
   '@types/sinonjs__fake-timers@8.1.1': {}
 

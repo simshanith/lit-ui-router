@@ -30,7 +30,7 @@
 // unit-tested ./check-published-diff.core.ts.
 
 import { execFile } from 'node:child_process';
-import { mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
+import { mkdir, mkdtemp, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { promisify } from 'node:util';
@@ -52,6 +52,7 @@ import {
 import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
 import { assertSelfDeclaredDeps } from './self-deps.ts';
+import { requireManifest } from '@tools/shared/manifest.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
@@ -120,7 +121,7 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
+  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
   // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; empty/unset = all.
   const scoped = scopePackages(
@@ -143,11 +144,7 @@ async function main() {
   const results: DiffResult[] = [];
   for (const { name, dir } of targets) {
     const packageDir = join(workspaceRoot, dir);
-    const localVersion = (
-      JSON.parse(await readFile(join(packageDir, 'package.json'), 'utf8')) as {
-        version?: string;
-      }
-    ).version;
+    const localVersion = requireManifest(packageDir).version;
     if (!(name in published)) {
       throw new Error(
         `${name} missing from published-versions.json — stale manifest; re-run the resolve:published task.`,

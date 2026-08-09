@@ -1,6 +1,8 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
+import type { PackageManifest } from '@tools/shared/types.ts';
+
 import {
   findPackedManifestViolations,
   findUnsubstitutedRefs,
@@ -42,10 +44,23 @@ describe('findUnsubstitutedRefs', () => {
     ]);
   });
 
-  it('ignores missing fields and non-string specifiers', () => {
+  it('ignores missing fields', () => {
     assert.deepEqual(findUnsubstitutedRefs({}), []);
     assert.deepEqual(findUnsubstitutedRefs(undefined), []);
-    assert.deepEqual(findUnsubstitutedRefs({ dependencies: { odd: 42 } }), []);
+  });
+
+  it('names the declaration when a specifier is not a string', () => {
+    // The bytes come from a tarball, so the string type is a claim, not a
+    // fact. This check used to `continue`, which returned [] and reported the
+    // package clean. The message is the contract: anyone who "fixes the crash"
+    // by coercing instead of throwing has to delete an assertion to do it.
+    const manifest = {
+      dependencies: { odd: 42 },
+    } as unknown as PackageManifest;
+    assert.throws(() => findUnsubstitutedRefs(manifest), {
+      name: 'TypeError',
+      message: 'dependencies.odd: specifier is number, not a string',
+    });
   });
 });
 

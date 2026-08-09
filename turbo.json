@@ -61,6 +61,8 @@
     // extra browsers, and the alias tracks published lit, so no peer-floor
     // atomicity concern. $TURBO_DEFAULT$ covers the extra configs; the
     // workspace yaml feeds lit2-compat-guard (peer range + alias pin).
+    // The lit-2 types ride the sibling typecheck:lit2 task, never chained
+    // here: a runtime failure would mask the typecheck result.
     "test:lit2-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
@@ -176,11 +178,23 @@
       // types come from build:types alone; JS emit stays off the typecheck path
       "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root", "typecheck:src"]
+      // compat typechecks ride along: `turbo run typecheck` is the one command
+      // that answers "do the types hold", and `with` propagates their failure
+      "with": ["//#typecheck:root", "typecheck:src", "typecheck:lit2"]
     },
     "typecheck:src": {
       "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    // src against the lit-2 alias's types; separate from test:lit2-compat so
+    // the fast lane reports and caches without waiting on the suites.
+    "typecheck:lit2": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
     },
     "typecheck:peer-floor": {
       // manual-only: not in ci — the floor pin can only reference published
