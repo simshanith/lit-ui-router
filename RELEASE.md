@@ -234,6 +234,13 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    expected and is the reason the seed should be a version nobody would want:
    short-lived, obviously prerelease.
 
+   Worked example — `lit-ui-router-mobx` was seeded at `0.1.0-rc.0` with
+   `--tag next`, and `0.1.0` followed twenty minutes later. The seed took
+   `latest` regardless of the flag; `0.1.0` then moved `latest` on and left
+   `next` pinned to the seed for a year. Note the tag name does not match the
+   version's `rc` identifier — a hand-passed `--tag`, not release-it's
+   derivation. `ui-router-server` acquired its `alpha` the same way.
+
 2. **Configure the trusted publisher** on npmjs.com for the new package,
    pointing at `publish-npm.yml`.
 
