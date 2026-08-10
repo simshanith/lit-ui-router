@@ -221,28 +221,29 @@ A package cannot use OIDC trusted publishing until it exists on npm, and it
 cannot be published by the workflow until trusted publishing is configured.
 Break the cycle by hand, once, before adding the package to any workflow list:
 
-1. **Seed the package manually** — publish a throwaway prerelease from a local
-   checkout (e.g. `0.0.1-alpha.0`) with a bare `pnpm publish`, using a real
-   token. It must be `pnpm`, not `npm`: pnpm rewrites `workspace:` and
-   `catalog:` dependency specifiers to real semver on pack, and `npm` ships
-   them verbatim into an uninstallable tarball.
+1. **Seed the package manually** — from a scratch directory containing a
+   **minimal hand-written `package.json`** (name and a throwaway prerelease
+   version such as `0.0.1-alpha.0`, nothing else), run a bare `npm publish`
+   with a real token.
 
-   A package's **first** publish always takes `latest`, whatever `--tag` says;
-   npm requires the tag to exist. Passing `--tag alpha` does not protect
-   `latest` — it points _both_ tags at the seed, and the extra one survives as
-   a fossil after the real release moves `latest` on. Publish the seed bare and
-   there is nothing to clean up.
+   Publishing a stub rather than the real package is deliberate: a minimal
+   manifest has no `workspace:` or `catalog:` specifiers, so none of the
+   pack-time rewriting the pipeline relies on
+   (`publishPath`, `check:pack`) has to be reproduced by hand. The seed only
+   has to make the name exist.
 
-   The seed therefore occupies `latest` until step 4 supersedes it. That is
-   expected and is the reason the seed should be a version nobody would want:
-   short-lived, obviously prerelease.
+   **Do not pass `--tag`.** A package's first publish always takes `latest`
+   regardless — npm requires that tag to exist. `--tag alpha` cannot protect
+   `latest`; it only points a _second_ tag at the seed, and that one strands as
+   a fossil once the real release moves `latest` on. Both fossils this repo
+   accumulated came from exactly that: `lit-ui-router-mobx` seeded at
+   `0.1.0-rc.0` under `next` (superseded by `0.1.0` twenty minutes later, tag
+   stranded for five weeks), and `ui-router-server` at `0.0.1-alpha.1` under
+   `alpha`.
 
-   Worked example — `lit-ui-router-mobx` was seeded at `0.1.0-rc.0` with
-   `--tag next`, and `0.1.0` followed twenty minutes later. The seed took
-   `latest` regardless of the flag; `0.1.0` then moved `latest` on and left
-   `next` pinned to the seed for a year. Note the tag name does not match the
-   version's `rc` identifier — a hand-passed `--tag`, not release-it's
-   derivation. `ui-router-server` acquired its `alpha` the same way.
+   The seed therefore holds `latest` until step 4 supersedes it. That is
+   expected, and is why it should be a version nobody would want: short-lived
+   and obviously prerelease.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
    pointing at `publish-npm.yml`.
