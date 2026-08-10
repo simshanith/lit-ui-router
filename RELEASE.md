@@ -222,7 +222,10 @@ cannot be published by the workflow until trusted publishing is configured.
 Break the cycle by hand, once, before adding the package to any workflow list:
 
 1. **Seed the package manually** — publish a throwaway prerelease from a local
-   checkout (e.g. `0.0.1-alpha.0`) with a plain `npm publish`.
+   checkout (e.g. `0.0.1-alpha.0`) with a bare `pnpm publish`, using a real
+   token. It must be `pnpm`, not `npm`: pnpm rewrites `workspace:` and
+   `catalog:` dependency specifiers to real semver on pack, and `npm` ships
+   them verbatim into an uninstallable tarball.
 
    A package's **first** publish always takes `latest`, whatever `--tag` says;
    npm requires the tag to exist. Passing `--tag alpha` does not protect
