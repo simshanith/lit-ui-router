@@ -1,0 +1,19 @@
+{
+  // Drift guard: the same src graph compiled with the hand-written runtime
+  // shims withdrawn, so a shim that no longer matches a real runtime fails
+  // here while tsconfig.json stays green. Keep both withdrawals config-level:
+  // a `/// <reference>` in src survives `exclude` and turns this guard green.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "allowImportingTsExtensions": true,
+    "erasableSyntaxOnly": true,
+    "lib": ["ES2022"],
+    // node's real globals stand in for the target runtimes'; withdrawing the
+    // wintercg shim is just leaving @tools/wintercg-globals out of this list
+    "types": ["node"]
+  },
+  "include": ["src/**/*.ts"],
+  // the other withdrawal: src/fetch.globals.d.ts
+  "exclude": ["src/**/*.d.ts"]
+}

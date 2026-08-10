@@ -475,6 +475,9 @@ importers:
         specifier: workspace:*
         version: link:../../packages/ui-router-server
     devDependencies:
+      '@tools/wintercg-globals':
+        specifier: workspace:*
+        version: link:../../tools/wintercg-globals
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -877,6 +880,9 @@ importers:
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
+      '@tools/wintercg-globals':
+        specifier: workspace:*
+        version: link:../../tools/wintercg-globals
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -1173,6 +1179,15 @@ importers:
       vue-tsc:
         specifier: 'catalog:'
         version: 3.3.9(typescript@6.0.3)
+
+  tools/wintercg-globals:
+    devDependencies:
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.61.0
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/workers-builds:
     devDependencies:

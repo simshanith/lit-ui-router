@@ -3,13 +3,15 @@
   // server runtime (workerd, node, deno) and the compiler enforces it. The
   // matcher tier's type-only @uirouter/core imports resolve without any
   // runtime types; the simulate tier's value imports stay type-erased here.
+  // The one host surface named is the WinterCG subset every target runtime
+  // has; tsconfig.runtime-globals.json swaps it for node's real globals.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,
     "erasableSyntaxOnly": true,
     "lib": ["ES2022"],
-    "types": []
+    "types": ["@tools/wintercg-globals"]
   },
   "include": ["src/**/*"]
 }

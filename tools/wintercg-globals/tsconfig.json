@@ -1,0 +1,11 @@
+{
+  // A DOM-free lib and no types: these declarations must not be checked
+  // against a host that already provides them.
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    "noEmit": true,
+    "types": [],
+    "lib": ["ES2022"]
+  },
+  "include": ["src/**/*.d.ts"]
+}
