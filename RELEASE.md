@@ -222,8 +222,17 @@ cannot be published by the workflow until trusted publishing is configured.
 Break the cycle by hand, once, before adding the package to any workflow list:
 
 1. **Seed the package manually** — publish a throwaway prerelease from a local
-   checkout (e.g. `0.0.1-alpha.0`) with `npm publish --tag alpha`. The `--tag`
-   is load-bearing: without it the seed takes `latest`.
+   checkout (e.g. `0.0.1-alpha.0`) with a plain `npm publish`.
+
+   A package's **first** publish always takes `latest`, whatever `--tag` says;
+   npm requires the tag to exist. Passing `--tag alpha` does not protect
+   `latest` — it points _both_ tags at the seed, and the extra one survives as
+   a fossil after the real release moves `latest` on. Publish the seed bare and
+   there is nothing to clean up.
+
+   The seed therefore occupies `latest` until step 4 supersedes it. That is
+   expected and is the reason the seed should be a version nobody would want:
+   short-lived, obviously prerelease.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
    pointing at `publish-npm.yml`.
@@ -233,14 +242,14 @@ Break the cycle by hand, once, before adding the package to any workflow list:
 
 4. **Cut the real release** through the standard process.
 
-5. **Retire the seed's dist-tag** once the real release holds `latest`:
+5. **Confirm the tag state** once the real release holds `latest`:
 
    ```bash
-   npm dist-tag rm <package> alpha
+   npm view <package> dist-tags
    ```
 
-   Skipping this leaves a channel tag pointing behind `latest` forever — see
-   [Dist-Tags](#dist-tags).
+   Expect `latest` only. Anything else is a fossil from a `--tag` on the seed
+   or from a prerelease bump; retire it — see [Dist-Tags](#dist-tags).
 
 ### Dist-Tags
 
@@ -249,7 +258,8 @@ target. `next`, `canary`, `alpha`, `beta` are conventions with no registry
 semantics.
 
 **Channel tags are created automatically — you never opt in.** Publishing any
-prerelease version creates one. release-it resolves the dist-tag from the
+prerelease version creates one, except on a package's very first publish, which
+always takes `latest` regardless. release-it resolves the dist-tag from the
 version itself (`lib/plugin/npm/npm.js`, `resolveTag`): a non-prerelease gets
 `latest`, and a prerelease gets its own identifier — `1.8.0-canary.0` publishes
 to `canary`, `0.2.0-beta.1` to `beta`. A prerelease with no identifier falls
