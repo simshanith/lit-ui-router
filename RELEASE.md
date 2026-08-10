@@ -210,7 +210,10 @@ For prereleases like `1.2.3-beta.0`:
 
 2. Follow standard process from step 2
 
-3. Retire the channel dist-tag once the line ships — see [Dist-Tags](#dist-tags)
+   The publish creates a dist-tag named after the prerelease identifier
+   (`1.2.3-beta.0` → `beta`) automatically; `latest` is untouched.
+
+3. Retire that dist-tag once the line ships — see [Dist-Tags](#dist-tags)
 
 ### First Publish (New Package)
 
@@ -244,6 +247,20 @@ Break the cycle by hand, once, before adding the package to any workflow list:
 npm gives built-in meaning to exactly one tag: `latest`, the default install
 target. `next`, `canary`, `alpha`, `beta` are conventions with no registry
 semantics.
+
+**Channel tags are created automatically — you never opt in.** Publishing any
+prerelease version creates one. release-it resolves the dist-tag from the
+version itself (`lib/plugin/npm/npm.js`, `resolveTag`): a non-prerelease gets
+`latest`, and a prerelease gets its own identifier — `1.8.0-canary.0` publishes
+to `canary`, `0.2.0-beta.1` to `beta`. A prerelease with no identifier falls
+back to any existing non-`latest` tag on the package, then to `next`.
+
+Two consequences:
+
+- Every prerelease line manufactures a tag that outlives it. Retiring the tag
+  is a recurring step after each prerelease, not a one-off cleanup.
+- A leftover tag can silently capture a later identifier-less prerelease
+  through that fallback, republishing a channel nobody meant to revive.
 
 **Policy: `latest` only in the steady state.** A channel tag exists solely
 while a prerelease on that channel is live. Retiring it is the closing step of
