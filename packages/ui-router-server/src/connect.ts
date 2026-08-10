@@ -17,7 +17,7 @@
  *
  * Dependency-free, like the tiers it fronts: the request/response types
  * below declare the minimal structural surface the adapter touches (the
- * `globals.d.ts` discipline applied to `node:http`), so Node, Express and
+ * runtime-globals discipline applied to `node:http`), so Node, Express and
  * Connect objects all fit without this package needing node types — and
  * the DOM-free compile keeps enforcing runtime-neutrality everywhere else.
  */

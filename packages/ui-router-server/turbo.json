@@ -16,10 +16,16 @@
       "outputs": ["coverage/**"]
     },
     "typecheck": {
-      "with": ["typecheck:tests", "typecheck:src"]
+      "with": ["typecheck:tests", "typecheck:src", "typecheck:runtime-globals"]
     },
     "typecheck:tests": {
       "dependsOn": ["^build:types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    // transit carries the dep closure's hashes: the shims this withdraws live
+    // in @tools/wintercg-globals, so editing one must invalidate this task
+    "typecheck:runtime-globals": {
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     }
   }

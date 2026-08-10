@@ -26,15 +26,13 @@
  * runtime-neutral compile holds — no fetch, workers, or node types.
  */
 
-// fetch.globals.d.ts is deliberately NOT pulled in with a `/// <reference>`:
-// the package's own tsconfig `include` (src/**/*) already compiles it, and a
-// source-level reference would travel through the import graph and re-declare
-// Request / Response / Headers in every CONSUMER's program, shadowing the
-// runtime's own globals. For Headers/Response that is benign, but the shim's
-// Request is non-generic, so it clashes with a real runtime's generic Request
-// (workerd's `Request<Cf, Props>`) and breaks `ExportedHandler<Env>`-shaped
-// typings — surfaced dogfooding the docs worker. Every fetch host already
-// supplies these globals; none needs the shim leaked in.
+// No shim here is pulled in with a `/// <reference>`: this one rides tsconfig
+// `include`, the wintercg subset rides tsconfig `types`. A source-level
+// reference would re-declare Request / Response / Headers in every CONSUMER's
+// program — the shim's non-generic Request clashes with workerd's
+// `Request<Cf, Props>` and breaks `ExportedHandler<Env>` typings (surfaced
+// dogfooding the docs worker) — and it would survive the drift guard's
+// `exclude`, turning that guard green.
 
 import { mergeSearch } from './index.ts';
 import type { ServerRouter } from './index.ts';
