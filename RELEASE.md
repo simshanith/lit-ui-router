@@ -190,6 +190,9 @@ meaning a release or floor bump is owed — never a CI failure.
    - Merge with squash commit
    - The merge runs main CI (including the main-only guards); a green run
      triggers tagging automatically
+   - Merge it on its own and let its main run reach tagging before merging
+     anything else — a queued main run can be evicted by a later push, which
+     silently skips the tag (see [Tag workflow not running](#tag-workflow-not-running))
 
 4. **Verify the release:**
    - Check Actions for tag-release workflow
@@ -207,6 +210,68 @@ For prereleases like `1.2.3-beta.0`:
 
 2. Follow standard process from step 2
 
+3. Retire the channel dist-tag once the line ships — see [Dist-Tags](#dist-tags)
+
+### First Publish (New Package)
+
+A package cannot use OIDC trusted publishing until it exists on npm, and it
+cannot be published by the workflow until trusted publishing is configured.
+Break the cycle by hand, once, before adding the package to any workflow list:
+
+1. **Seed the package manually** — publish a throwaway prerelease from a local
+   checkout (e.g. `0.0.1-alpha.0`) with `npm publish --tag alpha`. The `--tag`
+   is load-bearing: without it the seed takes `latest`.
+
+2. **Configure the trusted publisher** on npmjs.com for the new package,
+   pointing at `publish-npm.yml`.
+
+3. **Add the package** to the `bump-version.yml`, `publish-gh.yml`, and
+   `publish-npm.yml` package lists, and to the tag ruleset globs.
+
+4. **Cut the real release** through the standard process.
+
+5. **Retire the seed's dist-tag** once the real release holds `latest`:
+
+   ```bash
+   npm dist-tag rm <package> alpha
+   ```
+
+   Skipping this leaves a channel tag pointing behind `latest` forever — see
+   [Dist-Tags](#dist-tags).
+
+### Dist-Tags
+
+npm gives built-in meaning to exactly one tag: `latest`, the default install
+target. `next`, `canary`, `alpha`, `beta` are conventions with no registry
+semantics.
+
+**Policy: `latest` only in the steady state.** A channel tag exists solely
+while a prerelease on that channel is live. Retiring it is the closing step of
+the prerelease, not an optional cleanup.
+
+**A channel tag must never resolve older than `latest`.** `npm i pkg@next`
+pointing at an older version than `npm i pkg` is a silent downgrade for anyone
+who opts into the channel. Prerelease versions don't match caret ranges, so a
+stale tag can't leak into ordinary installs — the blast radius is limited to
+people who explicitly ask for it, which is exactly the audience it misleads.
+
+Retire a tag with:
+
+```bash
+npm dist-tag rm <package> <tag>
+```
+
+This does **not** unpublish. The version stays installable by exact version and
+the tag can be re-added later. Note that dist-tag changes are not covered by
+OIDC trusted publishing — they need a local npm token with write access, so
+this is a manual maintainer step rather than something CI does.
+
+Check the current state of every package with:
+
+```bash
+npm view <package> dist-tags
+```
+
 ## Troubleshooting
 
 ### Build failing on PR
@@ -220,6 +285,14 @@ For prereleases like `1.2.3-beta.0`:
 - Verify the PR was merged (not closed)
 - Check that the main Build and Test run is green — tagging only fires after
   green main CI; `workflow_dispatch` on Tag & push is the escape hatch
+- Check whether the run was **cancelled with zero jobs**. Main pushes share one
+  concurrency group holding at most one running plus one pending run, so a
+  third merge in quick succession evicts the queued one
+  (`Canceling since a higher priority waiting request ... exists`). `tag_push`
+  needs `build_and_test`, so an evicted run skips tagging with nothing marked
+  red. Self-heals on the next green main run, since tagging uses
+  `--no-increment` and tags whatever version main currently carries; force it
+  sooner with `workflow_dispatch` on Tag & push
 - Check that `GH_PERSONAL_ACCESS_TOKEN` has correct permissions
 - Ensure the `tag-release` environment is configured
 
