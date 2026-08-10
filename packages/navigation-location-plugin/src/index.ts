@@ -97,9 +97,18 @@ export class NavigationLocationService extends BaseLocationServices {
   /**
    * The Navigation API object this service drives.
    *
-   * Single seam for every `navigation` touch point, so tests can subclass and
-   * substitute a stub instead of booting a browser to spy on a global.
-   * @internal
+   * Single seam for every `navigation` touch point. Override in a subclass to
+   * substitute a stub — tests get to assert against the calls this service
+   * makes without booting a browser to spy on a global.
+   *
+   * @example
+   * ```ts
+   * class StubbedNavigationLocationService extends NavigationLocationService {
+   *   protected override _navigation(): Navigation {
+   *     return this.stub;
+   *   }
+   * }
+   * ```
    */
   protected _navigation(): Navigation {
     return globalRoot.navigation;

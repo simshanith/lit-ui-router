@@ -67,6 +67,32 @@ router.plugin(navigationLocationPlugin);
 
 The location service class that extends `BaseLocationServices` from `@uirouter/core`. Handles URL reading and writing using the Navigation API.
 
+#### `protected _navigation(): Navigation`
+
+Returns the Navigation API object the service drives — the single seam through
+which every `navigation` touch point goes (`addEventListener` on construct,
+`navigate` on `_set`, `removeEventListener` on `dispose`).
+
+Override it in a subclass to substitute a stub, so tests can assert against the
+calls the service makes without booting a browser to spy on a global:
+
+```typescript
+class StubbedNavigationLocationService extends NavigationLocationService {
+  readonly calls: string[] = [];
+
+  protected override _navigation(): Navigation {
+    return {
+      addEventListener: () => {},
+      removeEventListener: () => {},
+      navigate: (url: string) => {
+        this.calls.push(url);
+        return { committed: Promise.resolve(), finished: Promise.resolve() };
+      },
+    } as unknown as Navigation;
+  }
+}
+```
+
 ### `isUIRouterNavigateEvent(event)`
 
 Type guard function to check if a `NavigateEvent` was triggered by UIRouter.
