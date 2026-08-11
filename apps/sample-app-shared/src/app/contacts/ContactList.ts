@@ -4,11 +4,12 @@ import { repeat } from 'lit/directives/repeat.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 
 import './ContactList.js';
+import { Contact } from './interface.js';
 
 @customElement('sample-contact-list')
 export class ContactList extends LitElement {
   @property({ attribute: false })
-  contacts: { _id: string; name: { first: string; last: string } }[] = [];
+  contacts: Contact[] = [];
 
   createRenderRoot() {
     return this;

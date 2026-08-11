@@ -140,7 +140,7 @@ export class Compose extends LitElement {
             type="text"
             id="to"
             name="to"
-            value=${message.to}
+            value=${message.to ?? ''}
             @change=${this.handleChangeMessage('to')}
           />
         </div>
