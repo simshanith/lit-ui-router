@@ -297,6 +297,9 @@ importers:
       '@commitlint/types':
         specifier: 'catalog:'
         version: 21.2.0
+      '@tools/compat-guards':
+        specifier: workspace:*
+        version: link:tools/compat-guards
       '@tools/lit-template-lint':
         specifier: workspace:*
         version: link:tools/lit-template-lint

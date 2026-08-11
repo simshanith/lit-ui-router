@@ -131,6 +131,8 @@
         // change what the analyzer sees without any src change
         "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
+        "tools/compat-guards/src/**",
+        "tools/shared/src/**",
         // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
         "tsconfig.json",
         "pnpm-workspace.yaml"

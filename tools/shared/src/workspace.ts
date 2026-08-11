@@ -71,6 +71,16 @@ export async function loadCatalogs(
   };
 }
 
+/** packageExtensions from pnpm-workspace.yaml: package name -> injected fields. */
+export async function loadPackageExtensions(
+  root: string,
+): Promise<Record<string, { dependencies?: Record<string, string> }>> {
+  const { readWorkspaceManifest } =
+    await import('@pnpm/workspace.workspace-manifest-reader');
+  const workspaceManifest = await readWorkspaceManifest(root);
+  return workspaceManifest?.packageExtensions ?? {};
+}
+
 /** patchedDependencies from pnpm-workspace.yaml: package name -> patch path. */
 export async function loadPatchedDependencies(
   root: string,
