@@ -110,8 +110,8 @@
     "//#lint:templates": {
       // Cross-package element types come from the published d.ts, not src:
       // with dist absent `<ui-view>` resolves to nothing, so a
-      // type-incompatible binding against it goes unreported and the run still
-      // exits 0 — a silent false negative. Root has
+      // type-incompatible binding against it goes unreported (the run only
+      // fails on unrelated no-missing-import noise). Root has
       // no workspace dep on the packages, so `^build:types` cannot reach
       // them; these are package-qualified for that reason. ADD A LINE HERE
       // whenever a new package ships custom elements consumed by templates in
@@ -122,9 +122,10 @@
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
-        "packages/*/src/**/*.ts",
-        "apps/*/src/**/*.ts",
-        "examples/*/src/**/*.ts",
+        // over-approximate: `**/*.ts` would skip files sitting directly in
+        // `src/`, which is exactly the bug these globs used to have
+        "packages/*/src/**",
+        "apps/*/src/**",
         "tools/lit-template-lint/src/**",
         "tools/shared/src/**",
         // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd

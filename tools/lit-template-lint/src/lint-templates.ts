@@ -1,8 +1,13 @@
 #!/usr/bin/env node
 // One program-wide lit-analyzer pass (strict ruleset) over every tracked
-// `src` .ts in packages/, apps/ and examples/. Single invocation on purpose:
-// lit-analyzer builds one tag registry across the whole run, which is what
-// makes cross-package `<ui-view>`/`<ui-router>` usage resolve at all.
+// `src` .ts in the pnpm workspace's packages/ and apps/. Single invocation on
+// purpose: lit-analyzer builds one tag registry across the whole run, which is
+// what makes cross-package `<ui-view>`/`<ui-router>` usage resolve at all.
+//
+// examples/ is deliberately out of scope: those are standalone npm projects
+// with their own package.json, node_modules and registry deps (including a
+// published lit-ui-router), wired up by a postinstall shim rather than being
+// workspace members, so their type environment is not this repo's.
 // Usage (from anywhere in the workspace): lint-templates
 import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
@@ -18,33 +23,50 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 // fail too.
 const RULESET = ['--maxWarnings', '0'];
 
-// Well under the current 74; only catches a glob/`git ls-files` collapse.
-const MIN_FILES = 40;
+const IN_SCOPE = /^(?:packages|apps)\/[^/]+\/src\//;
+
+// A count floor cannot catch enumeration drift: the pathspec bug this
+// replaced dropped 36 of 110 files (every file sitting directly in `src/`,
+// because a bare `**/` requires an intervening directory) and no plausible
+// floor would have noticed. These are template-bearing files that must be in
+// the set; if one goes missing the enumeration has silently narrowed.
+const ANCHORS = [
+  'packages/lit-ui-router/src/ui-view.ts',
+  'packages/lit-ui-router/src/core.ts',
+  'apps/sample-app-shared/src/main.ts',
+];
+
+// Well under the current 107; only catches a total `git ls-files` collapse.
+const MIN_FILES = 80;
 
 const fail = (message: string): never => {
   console.error(`lint-templates: ${message}`);
   process.exit(1);
 };
 
-const { stdout } = await defaultExec(
-  'git',
-  [
-    'ls-files',
-    '-z',
-    '--',
-    'packages/*/src/**/*.ts',
-    'apps/*/src/**/*.ts',
-    'examples/*/src/**/*.ts',
-  ],
-  { cwd: root },
-);
-const files = stdout.split('\0').filter(Boolean);
+const { stdout } = await defaultExec('git', ['ls-files', '-z', '--', '*.ts'], {
+  cwd: root,
+});
+const files = stdout
+  .split('\0')
+  .filter(Boolean)
+  .filter((file) => IN_SCOPE.test(file));
+
+const missing = ANCHORS.filter((anchor) => !files.includes(anchor));
+if (missing.length > 0) {
+  fail(
+    `these template-bearing files are not in the analyzed set: ${missing.join(
+      ', ',
+    )}. Either they moved (update ANCHORS) or the enumeration has narrowed ` +
+      'and is silently skipping files — fix it rather than dropping the anchor.',
+  );
+}
 
 if (files.length < MIN_FILES) {
   fail(
     `only ${files.length} file(s) matched (expected at least ${MIN_FILES}). ` +
-      'The globs have stopped matching the workspace layout; fix them rather ' +
-      'than letting the gate quietly analyze nothing.',
+      'The enumeration has stopped matching the workspace layout; fix it ' +
+      'rather than letting the gate quietly analyze nothing.',
   );
 }
 
