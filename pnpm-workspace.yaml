@@ -49,6 +49,7 @@ catalog:
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
+  lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
   mobx: ^7.0.0
@@ -134,6 +135,9 @@ packageExtensions:
   conventional-changelog-preset-loader:
     dependencies:
       conventional-changelog-conventionalcommits: ^10.2.1
+  lit-analyzer:
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
 
 verifyDepsBeforeRun: false
 

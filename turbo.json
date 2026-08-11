@@ -84,6 +84,7 @@
         "//#lint:root",
         "//#lint:package-json",
         "//#lint:workflows",
+        "//#lint:templates",
         "//#check:patches",
         "//#check:docs-api-deps"
       ],
@@ -102,6 +103,31 @@
     },
     "//#lint:root": {
       "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
+    },
+    // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
+    // tag registry is global to the run, so cross-package `<ui-view>` usage
+    // only resolves when everything is analyzed together).
+    "//#lint:templates": {
+      // Cross-package element types come from the published d.ts, not src:
+      // with dist absent, a misspelled attribute on `<ui-view>` reports zero
+      // problems at the default ruleset — a silent false negative. Root has
+      // no workspace dep on the packages, so `^build:types` cannot reach
+      // them; these are package-qualified for that reason. ADD A LINE HERE
+      // whenever a new package ships custom elements consumed by templates in
+      // packages/*/src, apps/*/src or examples/*/src.
+      "dependsOn": [
+        "lit-ui-router#build:types",
+        "lit-ui-router-mobx#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "packages/*/src/**/*.ts",
+        "apps/*/src/**/*.ts",
+        "examples/*/src/**/*.ts",
+        "tools/lit-template-lint/src/**",
+        "tools/shared/src/**",
+        "pnpm-workspace.yaml"
+      ]
     },
     "//#check:patches": {
       // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
