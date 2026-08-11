@@ -126,8 +126,11 @@
         // `src/`, which is exactly the bug these globs used to have
         "packages/*/src/**",
         "apps/*/src/**",
+        "examples/*/src/**",
+        // examples resolve a published lit-ui-router, so a lockfile bump can
+        // change what the analyzer sees without any src change
+        "examples/*/package-lock.json",
         "tools/lit-template-lint/src/**",
-        "tools/shared/src/**",
         // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
         "tsconfig.json",
         "pnpm-workspace.yaml"

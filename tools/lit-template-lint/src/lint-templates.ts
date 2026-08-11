@@ -1,11 +1,14 @@
 #!/usr/bin/env node
-// One program-wide lit-analyzer pass over every `src` .ts in the pnpm
-// workspace's packages/ and apps/. Single invocation on purpose: lit-analyzer
-// builds one tag registry across the whole run, which is what makes
-// cross-package `<ui-view>`/`<ui-router>` usage resolve at all.
+// One program-wide lit-analyzer pass over every `src` .ts in packages/, apps/
+// and examples/. Single invocation on purpose: lit-analyzer builds one tag
+// registry across the whole run, which is what makes cross-package
+// `<ui-view>`/`<ui-router>` usage resolve at all.
 //
-// examples/ is out of scope: those are standalone npm projects with their own
-// node_modules and registry deps, wired up by a postinstall shim.
+// examples/ are standalone npm projects that resolve a PUBLISHED lit-ui-router
+// from their own lockfile-pinned node_modules (installed by the examples
+// postinstall), so they are checked against the released surface rather than
+// the workspace one. Verified that this does not shadow the workspace
+// definitions: an injected `<ui-view nmae>` in apps/ is still reported.
 //
 // This wrapper exists only to run lit-analyzer from the repo root with a
 // resolved CLI path; the analyzer expands the glob and owns the exit code.
@@ -24,7 +27,7 @@ const CLI_FLAGS = ['--maxWarnings', '0'];
 // Expanded by lit-analyzer, not the shell and not git: its `**/` matches zero
 // directories, so files sitting directly in `src/` are included. A bare git
 // pathspec drops those, which silently cut the set to 74 of 110 files once.
-const GLOB = '{packages,apps}/*/src/**/*.ts';
+const GLOB = '{packages,apps,examples}/*/src/**/*.ts';
 
 const require = createRequire(import.meta.url);
 const manifest = require('lit-analyzer/package.json') as {
