@@ -34,10 +34,7 @@ render(
     </ui-router>
     ${
       featureFlags.get('enable-api-docs')
-        ? // web-component-analyzer can't extract the definition from @api-viewer/docs
-          html`<!-- @ts-ignore --><api-docs
-              src=${customElementsJsonUrl}
-            ></api-docs>`
+        ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
         : ''
     }`,
   root,
