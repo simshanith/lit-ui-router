@@ -17,6 +17,7 @@ export class App extends LitElement {
 
   static sticky = true;
 
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps;
 

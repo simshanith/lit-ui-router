@@ -10,6 +10,7 @@ import {
 import { ContactsStorage } from '../global/dataSources.js';
 
 import './Contacts.js';
+import { type ContactsResolves } from './Contacts.js';
 import ContactView, { type ContactViewResolves } from './ContactView.js';
 import { type Contact } from './interface.js';
 import EditContact from './EditContact.js';
@@ -40,7 +41,7 @@ const contactsState = {
   },
   sticky: true,
   views: {
-    contacts: ((props: UIViewInjectedProps) => {
+    contacts: ((props: UIViewInjectedProps<ContactsResolves>) => {
       return html`<sample-contacts ._uiViewProps=${props}></sample-contacts>`;
     }) as LitViewDeclarationTemplate,
   },
