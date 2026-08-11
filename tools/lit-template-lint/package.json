@@ -2,7 +2,7 @@
   "name": "@tools/lit-template-lint",
   "version": "0.0.1",
   "private": true,
-  "description": "Runs lit-analyzer's strict ruleset over every tracked src .ts in the workspace, as one program-wide pass",
+  "description": "Runs lit-analyzer's strict ruleset over packages/ and apps/ src as one program-wide pass",
   "bin": {
     "lint-templates": "./src/lint-templates.ts"
   },
@@ -14,7 +14,6 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "lit-analyzer": "catalog:",
     "oxfmt": "catalog:",

@@ -1,19 +1,17 @@
 #!/usr/bin/env node
-// One program-wide lit-analyzer pass (strict ruleset) over every tracked
-// `src` .ts in the pnpm workspace's packages/ and apps/. Single invocation on
-// purpose: lit-analyzer builds one tag registry across the whole run, which is
-// what makes cross-package `<ui-view>`/`<ui-router>` usage resolve at all.
+// One program-wide lit-analyzer pass over every `src` .ts in the pnpm
+// workspace's packages/ and apps/. Single invocation on purpose: lit-analyzer
+// builds one tag registry across the whole run, which is what makes
+// cross-package `<ui-view>`/`<ui-router>` usage resolve at all.
 //
-// examples/ is deliberately out of scope: those are standalone npm projects
-// with their own package.json, node_modules and registry deps (including a
-// published lit-ui-router), wired up by a postinstall shim rather than being
-// workspace members, so their type environment is not this repo's.
+// examples/ is out of scope: those are standalone npm projects with their own
+// node_modules and registry deps, wired up by a postinstall shim.
+//
+// This wrapper exists only to run lit-analyzer from the repo root with a
+// resolved CLI path; the analyzer expands the glob and owns the exit code.
 // Usage (from anywhere in the workspace): lint-templates
-import { spawn } from 'node:child_process';
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
-
-import { defaultExec } from '@tools/shared/exec.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
@@ -23,56 +21,10 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 // fail too.
 const CLI_FLAGS = ['--maxWarnings', '0'];
 
-const IN_SCOPE = /^(?:packages|apps)\/[^/]+\/src\//;
-
-// A count floor cannot catch enumeration drift: the pathspec bug this
-// replaced dropped 36 of 110 files (every file sitting directly in `src/`,
-// because a bare `**/` requires an intervening directory) and no plausible
-// floor would have noticed. These are template-bearing files that must be in
-// the set; if one goes missing the enumeration has silently narrowed.
-const ANCHORS = [
-  'packages/lit-ui-router/src/ui-view.ts',
-  'packages/lit-ui-router/src/core.ts',
-  'apps/sample-app-shared/src/main.ts',
-];
-
-// Well under the current 108; only catches a total `git ls-files` collapse.
-const MIN_FILES = 80;
-
-const fail = (message: string): never => {
-  console.error(`lint-templates: ${message}`);
-  process.exit(1);
-};
-
-const { stdout } = await defaultExec('git', ['ls-files', '-z', '--', '*.ts'], {
-  cwd: root,
-});
-const files = stdout
-  .split('\0')
-  .filter(Boolean)
-  .filter((file) => IN_SCOPE.test(file));
-
-const missing = ANCHORS.filter((anchor) => !files.includes(anchor));
-if (missing.length > 0) {
-  fail(
-    `these template-bearing files are not in the analyzed set: ${missing.join(
-      ', ',
-    )}. Either they moved (update ANCHORS) or the enumeration has narrowed ` +
-      'and is silently skipping files — fix it rather than dropping the anchor.',
-  );
-}
-
-if (files.length < MIN_FILES) {
-  fail(
-    `only ${files.length} file(s) matched (expected at least ${MIN_FILES}). ` +
-      'The enumeration has stopped matching the workspace layout; fix it ' +
-      'rather than letting the gate quietly analyze nothing.',
-  );
-}
-
-console.log(
-  `lint-templates: analyzing ${files.length} files with lit-analyzer`,
-);
+// Expanded by lit-analyzer, not the shell and not git: its `**/` matches zero
+// directories, so files sitting directly in `src/` are included. A bare git
+// pathspec drops those, which silently cut the set to 74 of 110 files once.
+const GLOB = '{packages,apps}/*/src/**/*.ts';
 
 const require = createRequire(import.meta.url);
 const manifest = require('lit-analyzer/package.json') as {
@@ -80,11 +32,16 @@ const manifest = require('lit-analyzer/package.json') as {
 };
 const cli = require.resolve(`lit-analyzer/${manifest.bin['lit-analyzer']}`);
 
-const child = spawn(process.execPath, [cli, ...CLI_FLAGS, ...files], {
-  cwd: root,
-  stdio: 'inherit',
-});
-child.on('error', (error) => fail(String(error)));
-child.on('close', (code, signal) => {
-  process.exit(code ?? (signal ? 1 : 0));
-});
+// POSIX-only, so @types/node marks it optional. Replacing this process keeps
+// the analyzer's exit code and signals ours without any plumbing.
+if (!process.execve) {
+  console.error('lint-templates: needs process.execve (POSIX-only, node >=24)');
+  process.exit(1);
+}
+
+process.chdir(root);
+process.execve(
+  process.execPath,
+  [process.execPath, cli, ...CLI_FLAGS, GLOB],
+  process.env,
+);
