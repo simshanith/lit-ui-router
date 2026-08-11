@@ -21,7 +21,7 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 // entry, which lit-analyzer resolves from cwd. Only this flag stays on the
 // CLI: it is not a rule, and it makes findings the ruleset leaves at `warn`
 // fail too.
-const RULESET = ['--maxWarnings', '0'];
+const CLI_FLAGS = ['--maxWarnings', '0'];
 
 const IN_SCOPE = /^(?:packages|apps)\/[^/]+\/src\//;
 
@@ -36,7 +36,7 @@ const ANCHORS = [
   'apps/sample-app-shared/src/main.ts',
 ];
 
-// Well under the current 107; only catches a total `git ls-files` collapse.
+// Well under the current 108; only catches a total `git ls-files` collapse.
 const MIN_FILES = 80;
 
 const fail = (message: string): never => {
@@ -80,7 +80,7 @@ const manifest = require('lit-analyzer/package.json') as {
 };
 const cli = require.resolve(`lit-analyzer/${manifest.bin['lit-analyzer']}`);
 
-const child = spawn(process.execPath, [cli, ...RULESET, ...files], {
+const child = spawn(process.execPath, [cli, ...CLI_FLAGS, ...files], {
   cwd: root,
   stdio: 'inherit',
 });
