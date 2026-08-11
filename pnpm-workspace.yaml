@@ -92,8 +92,6 @@ catalogs:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
-  # exact published floor of the matching publishedPeer range; peer-floor-guard
-  # fails the typecheck:peer-floor task when the two drift apart
   peerFloor:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
@@ -141,8 +139,6 @@ packageExtensions:
 
 verifyDepsBeforeRun: false
 
-# Link a workspace package whenever a plain range matches its version, not only
-# explicit `workspace:*`. First layer of the @tools npm-block (see .npmrc).
 linkWorkspacePackages: true
 
 patchedDependencies:
