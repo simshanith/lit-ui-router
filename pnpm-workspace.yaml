@@ -17,10 +17,10 @@ catalog:
   '@commitlint/types': ^21.2.0
   '@custom-elements-manifest/analyzer': ^0.11.0
   '@pnpm/logger': 1100.0.0
-  '@pnpm/types': 1101.8.0
-  '@pnpm/workspace.project-manifest-reader': 1100.0.22
-  '@pnpm/workspace.projects-reader': 1101.0.21
-  '@pnpm/workspace.workspace-manifest-reader': 1100.1.4
+  '@pnpm/types': 1101.9.0
+  '@pnpm/workspace.project-manifest-reader': 1100.0.23
+  '@pnpm/workspace.projects-reader': 1101.0.22
+  '@pnpm/workspace.workspace-manifest-reader': 1100.1.5
   '@release-it/conventional-changelog': ^12.0.0
   '@spectrum-web-components/icons-workflow': ^1.12.2
   '@types/dom-navigation': ^1.0.7
@@ -40,7 +40,7 @@ catalog:
   esbuild: ^0.28.2
   eslint: ^10.8.1
   eslint-formatter-tap: ^9.0.1
-  eslint-plugin-oxlint: ^1.76.0
+  eslint-plugin-oxlint: ^1.78.0
   eslint-plugin-package-json: ^1.7.0
   eslint-plugin-pnpm: ^1.7.0
   eslint-plugin-turbo: ^2.10.9
@@ -53,10 +53,10 @@ catalog:
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
   mobx: ^7.0.0
-  oxc-minify: 0.143.0
-  oxc-transform: 0.143.0
-  oxfmt: 0.61.0
-  oxlint: 1.76.0
+  oxc-minify: 0.144.0
+  oxc-transform: 0.144.0
+  oxfmt: 0.63.0
+  oxlint: 1.78.0
   oxlint-tsgolint: 7.0.2001
   pacote: ^22.0.0
   playwright: ^1.62.1
@@ -83,7 +83,7 @@ catalog:
   vitest: ^4.1.10
   vue: ^3.5.41
   vue-tsc: ^3.3.9
-  wrangler: 4.113.0
+  wrangler: 4.120.1
 
 catalogMode: prefer
 
@@ -95,7 +95,7 @@ catalogs:
   peerFloor:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
-    '@oxc-project/runtime': '>=0.50.0'
+    '@oxc-project/runtime': '>=0.144.0'
   publishedPeer:
     '@uirouter/core': ^6.0.8
     hono: ^4.0.0
