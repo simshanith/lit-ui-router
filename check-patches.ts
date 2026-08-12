@@ -13,8 +13,8 @@ import {
   workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
-const patchedDependencies = selectPatchedDependencies(
-  await loadWorkspaceManifest(workspaceRoot),
+const patchedDependencies = await selectPatchedDependencies(
+  loadWorkspaceManifest(workspaceRoot),
 );
 const entries = Object.entries(patchedDependencies);
 if (entries.length === 0) {

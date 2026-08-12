@@ -33,10 +33,20 @@ export type Member = {
   manifest?: PackageManifest;
 };
 
+/** A value, or the pending read of one. */
+export type Awaitable<T> = T | Promise<T>;
+
 /**
- * Parse pnpm-workspace.yaml. The `select*` selectors below take the result
- * rather than a root, so a caller needing several sections parses the file once
- * and passes the manifest around instead of re-reading it per section.
+ * What every `select*` below accepts: a parsed manifest, or the in-flight
+ * `loadWorkspaceManifest` call that produces one. Passing the call means the
+ * unit handed around is the read itself, so feeding it to several selectors
+ * still parses pnpm-workspace.yaml exactly once.
+ */
+export type WorkspaceManifestSource = Awaitable<WorkspaceManifest | undefined>;
+
+/**
+ * Parse pnpm-workspace.yaml. Selectors take the result rather than a root, so a
+ * caller needing several sections reads once and passes that read around.
  */
 export async function loadWorkspaceManifest(
   root: string,
@@ -71,22 +81,23 @@ export async function loadWorkspace(root: string): Promise<{
 }
 
 /** Catalogs from the manifest; the unnamed `catalog:` is `default`, per pnpm. */
-export function selectCatalogs(
-  manifest: WorkspaceManifest | undefined,
-): Record<string, Record<string, string>> {
+export async function selectCatalogs(
+  source: WorkspaceManifestSource,
+): Promise<Record<string, Record<string, string>>> {
+  const manifest = await source;
   return { default: manifest?.catalog ?? {}, ...manifest?.catalogs };
 }
 
 /** packageExtensions from the manifest: package name -> injected fields. */
-export function selectPackageExtensions(
-  manifest: WorkspaceManifest | undefined,
-): Record<string, { dependencies?: Record<string, string> }> {
-  return manifest?.packageExtensions ?? {};
+export async function selectPackageExtensions(
+  source: WorkspaceManifestSource,
+): Promise<Record<string, { dependencies?: Record<string, string> }>> {
+  return (await source)?.packageExtensions ?? {};
 }
 
 /** patchedDependencies from the manifest: package name -> patch path. */
-export function selectPatchedDependencies(
-  manifest: WorkspaceManifest | undefined,
-): Record<string, string> {
-  return manifest?.patchedDependencies ?? {};
+export async function selectPatchedDependencies(
+  source: WorkspaceManifestSource,
+): Promise<Record<string, string>> {
+  return (await source)?.patchedDependencies ?? {};
 }
