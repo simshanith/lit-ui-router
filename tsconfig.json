@@ -19,12 +19,15 @@
     // the nearest tsconfig from cwd (the repo root) and merges this entry.
     // The unknown-* rules ship at `warn` upstream and warnings alone do not
     // fail a run, so gating them means promoting each to `error`.
+    // `no-unknown-event` is the exception: it ships `off` even under `strict`,
+    // so `error` is what turns it on at all.
     "plugins": [
       {
         "name": "ts-lit-plugin",
         "strict": true,
         "rules": {
           "no-unknown-attribute": "error",
+          "no-unknown-event": "error",
           "no-unknown-property": "error",
           "no-unknown-tag-name": "error"
         }
