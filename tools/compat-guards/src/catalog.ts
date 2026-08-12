@@ -6,14 +6,18 @@ import { join } from 'node:path';
 
 import { readManifest } from '@tools/shared/manifest.ts';
 import type { PackageManifest } from '@tools/shared/types.ts';
-import { loadCatalogs, workspaceRoot } from '@tools/shared/workspace.ts';
+import {
+  selectCatalogs,
+  loadWorkspaceManifest,
+  workspaceRoot,
+} from '@tools/shared/workspace.ts';
 
 /** A dependency's range in a named catalog; undefined when either is absent. */
 export async function catalogRange(
   catalog: string,
   dep: string,
 ): Promise<string | undefined> {
-  const catalogs = await loadCatalogs(workspaceRoot);
+  const catalogs = await selectCatalogs(loadWorkspaceManifest(workspaceRoot));
   return catalogs[catalog]?.[dep];
 }
 
