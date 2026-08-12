@@ -160,8 +160,13 @@ export default defineConfig(
     files: ['{packages,apps,examples}/*/src/**/*.ts'],
     extends: [
       litConfigs['flat/recommended'],
-      // best-practice over recommended: it adds require-listener-teardown, the
-      // connect/disconnect rule this router lives on.
+      // best-practice over recommended. Note require-listener-teardown scores
+      // zero coverage here despite being the rule closest to this router's
+      // lifecycle: it only reads addEventListener calls lexically inside
+      // connectedCallback, with a string-literal event name. Every site in
+      // packages/lit-ui-router breaks one of those — the names come from
+      // `this.constructor.*` statics, and seekRouter() adds from a helper. It
+      // is on as a guard against future code written in the shape it can see.
       wcConfigs['flat/best-practice'],
       litA11y.configs.recommended,
     ],
