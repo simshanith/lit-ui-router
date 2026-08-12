@@ -35,17 +35,17 @@ catalog:
   '@vitest/browser-playwright': ^4.1.10
   '@vitest/coverage-v8': ^4.1.10
   concurrently: ^10.0.4
-  cypress: ^15.19.0
+  cypress: ^15.20.1
   diff: ^9.0.0
-  esbuild: ^0.28.1
-  eslint: ^10.8.0
+  esbuild: ^0.28.2
+  eslint: ^10.8.1
   eslint-formatter-tap: ^9.0.1
   eslint-plugin-oxlint: ^1.76.0
-  eslint-plugin-package-json: ^1.6.2
+  eslint-plugin-package-json: ^1.7.0
   eslint-plugin-pnpm: ^1.7.0
-  eslint-plugin-turbo: ^2.10.8
-  happy-dom: ^20.11.1
-  hono: ^4.12.34
+  eslint-plugin-turbo: ^2.10.9
+  happy-dom: ^20.11.2
+  hono: ^4.13.1
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
@@ -60,14 +60,14 @@ catalog:
   oxlint-tsgolint: 7.0.2001
   pacote: ^22.0.0
   playwright: ^1.62.1
-  publint: ^0.3.22
-  release-it: ^21.0.1
+  publint: ^0.3.23
+  release-it: ^21.0.2
   rimraf: ^6.1.3
   rolldown: ^1.2.2
   screenfull: ^6.0.2
   semver: ^7.8.5
   start-server-and-test: ^3.0.12
-  turbo: ^2.10.8
+  turbo: ^2.10.9
   typedoc: ^0.28.20
   typedoc-plugin-markdown: ^4.12.0
   typedoc-vitepress-theme: ^1.1.3
@@ -81,7 +81,7 @@ catalog:
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.19
   vitest: ^4.1.10
-  vue: ^3.5.40
+  vue: ^3.5.41
   vue-tsc: ^3.3.9
   wrangler: 4.113.0
 
