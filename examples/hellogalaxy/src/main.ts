@@ -323,6 +323,7 @@ class StarsContainerComponent extends LitElement {
     }
   `;
 
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps<{ stars: Star[] }>;
 
@@ -414,6 +415,7 @@ class StarDetailComponent extends LitElement {
     }
   `;
 
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps<{ star: Star | undefined }>;
 

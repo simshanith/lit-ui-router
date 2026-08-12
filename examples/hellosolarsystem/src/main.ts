@@ -212,6 +212,7 @@ class PlanetListComponent extends LitElement {
   `;
 
   // The router constructs routed components with injected props.
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps<{ planets: SolarBody[] }>;
 
@@ -314,6 +315,7 @@ class PlanetDetailComponent extends LitElement {
     }
   `;
 
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
   @property({ attribute: false })
   _uiViewProps!: UIViewInjectedProps<{ planet: SolarBody | undefined }>;
 

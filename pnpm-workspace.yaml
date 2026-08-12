@@ -49,6 +49,7 @@ catalog:
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
+  lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
   lodash: ^4.18.1
   mobx: ^7.0.0
@@ -91,8 +92,6 @@ catalogs:
     lit-2: npm:lit@^2.8.0
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
-  # exact published floor of the matching publishedPeer range; peer-floor-guard
-  # fails the typecheck:peer-floor task when the two drift apart
   peerFloor:
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
@@ -134,11 +133,12 @@ packageExtensions:
   conventional-changelog-preset-loader:
     dependencies:
       conventional-changelog-conventionalcommits: ^10.2.1
+  lit-analyzer:
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
 
 verifyDepsBeforeRun: false
 
-# Link a workspace package whenever a plain range matches its version, not only
-# explicit `workspace:*`. First layer of the @tools npm-block (see .npmrc).
 linkWorkspacePackages: true
 
 patchedDependencies:
