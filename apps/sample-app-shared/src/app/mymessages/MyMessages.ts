@@ -30,7 +30,10 @@ export class MyMessages extends LitElement {
           class="folder"
           ${uiSrefActive({ activeClasses: ['selected'] })}
         >
-          <a ${uiSref('.messagelist', { folderId: folder._id })}>
+          <a
+            ${uiSref('.messagelist', { folderId: folder._id })}
+            ${uiSrefActive({})}
+          >
             <i class="fa"></i>${folder._id}
           </a>
         </li>`,

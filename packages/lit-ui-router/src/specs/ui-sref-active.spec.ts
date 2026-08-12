@@ -429,6 +429,208 @@ describe('uiSrefActive directive', () => {
     });
   });
 
+  describe('aria-current', () => {
+    const parentChildStates: LitStateDeclaration[] = [
+      { name: 'parent', url: '/parent' },
+      { name: 'parent.child', url: '/child' },
+    ];
+
+    it('should set aria-current="page" on an anchor when the exact state is active', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should remove aria-current when the state becomes inactive', async () => {
+      const { wrapper } = await setupWithStates([
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ]);
+
+      render(
+        html`<a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
+          >Home</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'home');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+
+      await routerGo(router, 'about');
+      await tick(100);
+
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should not set aria-current on an ancestor link that is active but not exact', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should apply a configured aria-current value', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: 'step',
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('step');
+    });
+
+    it('should leave aria-current untouched when disabled', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: false,
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should not default aria-current on for non-link elements', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      expect(item.classList.contains('active')).toBe(true);
+      expect(item.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should apply an explicit aria-current value to a non-link element', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: 'location',
+          })}
+        >
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      expect(item.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('should combine a wrapper for classes with an inner link for aria-current', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('parent')} ${uiSrefActive({})}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      const anchor = wrapper.querySelector('a')!;
+      expect(item.classList.contains('active')).toBe(true);
+      expect(item.hasAttribute('aria-current')).toBe(false);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should default aria-current on for role="link" elements', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<span role="link" ${uiSref('parent')} ${uiSrefActive({})}
+          >Parent</span
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const span = wrapper.querySelector('span')!;
+      expect(span.getAttribute('aria-current')).toBe('page');
+    });
+  });
+
   describe('cleanup', () => {
     it('should remove event listeners on disconnect', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];

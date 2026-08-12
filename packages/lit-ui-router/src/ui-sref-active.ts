@@ -137,6 +137,35 @@ export function mergeSrefStatus(
 }
 
 /**
+ * Valid `aria-current` token values.
+ *
+ * @see {@link UiSrefActiveParams.ariaCurrentValue}
+ * @see [WAI-ARIA `aria-current`](https://www.w3.org/TR/wai-aria-1.2/#aria-current)
+ *
+ * @category types
+ */
+export type AriaCurrentValue =
+  | 'page'
+  | 'step'
+  | 'location'
+  | 'date'
+  | 'time'
+  | 'true';
+
+/**
+ * `aria-current` defaults on for link elements only; other elements must opt in
+ * explicitly, since `aria-current` on a wrapper (`<li>`, `<tr>`) is rarely intended.
+ *
+ * @internal
+ */
+const isLinkElement = (element: Element): boolean => {
+  const tagName = element.tagName;
+  return (
+    tagName === 'A' || tagName === 'AREA' || element.matches('[role~="link"]')
+  );
+};
+
+/**
  * Parameters for the uiSrefActive directive.
  *
  * @see {@link uiSrefActive}
@@ -148,6 +177,14 @@ export interface UiSrefActiveParams {
   activeClasses: string[];
   /** CSS classes to add only when the exact state is active */
   exactClasses: string[];
+  /**
+   * The `aria-current` value to set when the exact state is active.
+   *
+   * Defaults to `'page'` on link elements (`<a>`, `<area>`, `[role="link"]`).
+   * Pass a value explicitly to apply it to any element; pass `false` to leave
+   * `aria-current` untouched.
+   */
+  ariaCurrentValue?: AriaCurrentValue | false;
   /** The state name to check for active status */
   state: string;
   /** State parameters to match */
@@ -197,6 +234,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   activeClasses: string[] = [];
   exactClasses: string[] = [];
+  /** undefined = default (on for link elements) */
+  ariaCurrentValue: AriaCurrentValue | false | undefined;
 
   state: string | undefined;
   params: RawParams = {};
@@ -234,6 +273,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   render({
     activeClasses,
     exactClasses,
+    ariaCurrentValue,
   }: Partial<UiSrefActiveParams>): typeof noChange {
     if (!this._firstUpdated) {
       return noChange;
@@ -253,6 +293,19 @@ export class UiSrefActiveDirective extends AsyncDirective {
         this.element!.classList.remove(className);
       }
     });
+
+    const ariaCurrent =
+      ariaCurrentValue === undefined
+        ? isLinkElement(this.element!) && 'page'
+        : ariaCurrentValue;
+
+    if (ariaCurrent) {
+      if (this.exact) {
+        this.element!.setAttribute('aria-current', ariaCurrent);
+      } else {
+        this.element!.removeAttribute('aria-current');
+      }
+    }
 
     return noChange;
   }
@@ -331,6 +384,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       {
         activeClasses,
         exactClasses,
+        ariaCurrentValue,
         state,
         params = {},
         options = {},
@@ -340,6 +394,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   ): Promise<void> {
     this.activeClasses = activeClasses;
     this.exactClasses = exactClasses;
+    this.ariaCurrentValue = ariaCurrentValue;
     this.state = state;
     this.params = params;
     this.options = options;
@@ -364,6 +419,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     return this.render({
       activeClasses: this.activeClasses,
       exactClasses: this.exactClasses,
+      ariaCurrentValue: this.ariaCurrentValue,
     });
   };
 
@@ -531,8 +587,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * both "active" classes (applied when the state or any child state is active)
  * and "exact" classes (applied only when the exact state is active).
  *
+ * On link elements (`<a>`, `<area>`, `[role="link"]`) it also sets
+ * `aria-current="page"` while the *exact* state is active, and removes the
+ * attribute otherwise, so assistive technology gets the same "you are here"
+ * signal as the active CSS class. Other elements opt in by passing
+ * `ariaCurrentValue` explicitly.
+ *
  * **Arguments:**
- * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, and optional state/params
+ * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, ariaCurrentValue, and optional state/params
  *
  * @example Basic usage with nested uiSref
  * ```ts
@@ -567,6 +629,28 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *     <a ${uiSref('users.list')}>List</a>
  *     <a ${uiSref('users.create')}>Create</a>
  *   </nav>
+ * `
+ * ```
+ *
+ * @example Customizing or disabling `aria-current`
+ * ```ts
+ * html`
+ *   <!-- a step in a multi-step flow -->
+ *   <a ${uiSref('wizard.payment')}
+ *      ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'step' })}>
+ *     Payment
+ *   </a>
+ *
+ *   <!-- opt a non-link element in -->
+ *   <tr ${uiSref('.message', { messageId })}
+ *       ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'true' })}>
+ *   </tr>
+ *
+ *   <!-- leave aria-current alone -->
+ *   <a ${uiSref('home')}
+ *      ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: false })}>
+ *     Home
+ *   </a>
  * `
  * ```
  *

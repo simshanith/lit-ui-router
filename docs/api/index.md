@@ -73,7 +73,50 @@ router.start();
 ### Directives
 
 - **[`uiSref`](./reference/directives/uiSref)** - Creates navigation links to states
-- **[`uiSrefActive`](./reference/directives/uiSrefActive)** - Adds CSS classes when linked state is active
+- **[`uiSrefActive`](./reference/directives/uiSrefActive)** - Adds CSS classes when linked state is active, and sets `aria-current` on active links
+
+#### Accessible active links
+
+`uiSrefActive` conveys active state to assistive technology as well as to CSS. On a
+link element (`<a>`, `<area>`, or anything with `role="link"`) it sets
+`aria-current="page"` while the **exact** linked state is active, and removes the
+attribute when it is not — so the nav above needs no extra markup:
+
+```html
+<a ${uiSref('users')} ${uiSrefActive({ activeClasses: ['active'] })}>Users</a>
+<!-- while at `users`:            <a href="/users" class="active" aria-current="page"> -->
+<!-- while at `users.detail`:     <a href="/users" class="active"> -->
+```
+
+`aria-current="page"` is applied on exact match only, deliberately: an ancestor
+state being active means the link points at a section containing the current page,
+not at the current page itself, and a nav in which several ancestor links all claim
+`aria-current="page"` is worse for a screen reader user than one with none.
+
+Two knobs, via `ariaCurrentValue`:
+
+- **Another token** — `'page'` (default), `'step'`, `'location'`, `'date'`,
+  `'time'`, or `'true'`. Passing a value explicitly also opts **non-link** elements
+  in, which is otherwise off; `aria-current` on a wrapping `<li>` or `<tr>` is valid
+  ARIA but rarely what an author means, so wrappers stay silent unless asked.
+
+  ```html
+  <li ${uiSrefActive({ activeClasses: ['active'] })}>
+    <!-- classes on the wrapper, aria-current on the link -->
+    <a ${uiSref('users')} ${uiSrefActive({})}>Users</a>
+  </li>
+
+  <!-- an explicit value opts a non-link element in -->
+  <tr ${uiSref('.message', { messageId })}
+      ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'true' })}></tr>
+  ```
+
+- **`false`** — leave `aria-current` alone entirely; the directive will neither set
+  nor remove it.
+
+  ```html
+  <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: false })}>Home</a>
+  ```
 
 ### State Declaration
 
