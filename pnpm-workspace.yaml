@@ -27,6 +27,7 @@ catalog:
   '@types/lodash': ^4.17.25
   '@types/node': ^24.13.3
   '@types/pacote': ^11.1.8
+  '@typescript-eslint/parser': ^8.67.0
   '@types/semver': ^7.8.0
   '@uirouter/core': ^6.1.2
   '@uirouter/dsr': ^1.2.0
@@ -40,10 +41,13 @@ catalog:
   esbuild: ^0.28.2
   eslint: ^10.8.1
   eslint-formatter-tap: ^9.0.1
+  eslint-plugin-lit: ^2.3.1
+  eslint-plugin-lit-a11y: ^5.1.1
   eslint-plugin-oxlint: ^1.78.0
   eslint-plugin-package-json: ^1.7.0
   eslint-plugin-pnpm: ^1.7.0
   eslint-plugin-turbo: ^2.10.9
+  eslint-plugin-wc: ^3.1.0
   happy-dom: ^20.11.2
   hono: ^4.13.1
   husky: ^9.1.7
