@@ -17,6 +17,31 @@ import {
   NormalizedLitViewDeclaration,
 } from '../interface.js';
 
+@customElement('test-element-guard-1')
+class TestElementGuard extends LitElement {}
+
+@customElement('test-element-routed-1')
+class TestElementRouted extends LitElement {}
+
+@customElement('test-element-argless-1')
+class TestElementArgless extends LitElement {}
+
+@customElement('test-routed-element')
+class TestRoutedElement extends LitElement {
+  render() {
+    return html`<div>Routed Element</div>`;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'test-element-guard-1': TestElementGuard;
+    'test-element-routed-1': TestElementRouted;
+    'test-element-argless-1': TestElementArgless;
+    'test-routed-element': TestRoutedElement;
+  }
+}
+
 describe('UIRouterLit', () => {
   let router: UIRouterLit;
 
@@ -179,17 +204,13 @@ describe('isLitViewDeclarationTemplate', () => {
   });
 
   it('should return true for LitElement classes with argless constructors', () => {
-    @customElement('test-element-guard-1')
-    class TestElement extends LitElement {}
-    expect(isLitViewDeclarationTemplate(TestElement)).toBe(true);
+    expect(isLitViewDeclarationTemplate(TestElementGuard)).toBe(true);
   });
 });
 
 describe('isRoutedLitElement', () => {
   it('should return true for LitElement subclass', () => {
-    @customElement('test-element-routed-1')
-    class TestElement extends LitElement {}
-    expect(isRoutedLitElement(TestElement)).toBe(true);
+    expect(isRoutedLitElement(TestElementRouted)).toBe(true);
   });
 
   it('should return false for regular functions', () => {
@@ -407,13 +428,6 @@ describe('litViewsBuilder', () => {
   });
 
   it('should wrap LitElement class component', async () => {
-    @customElement('test-routed-element')
-    class TestRoutedElement extends LitElement {
-      render() {
-        return html`<div>Routed Element</div>`;
-      }
-    }
-
     const stateDecl: LitStateDeclaration = {
       name: 'test',
       url: '/test',
@@ -448,14 +462,11 @@ describe('litViewsBuilder', () => {
   });
 
   it('should register a bare argless LitElement class and deliver props via property', async () => {
-    @customElement('test-element-argless-1')
-    class TestElement extends LitElement {}
-
     const stateDecl: LitStateDeclaration = {
       name: 'argless',
       url: '/argless',
       views: {
-        $default: TestElement,
+        $default: TestElementArgless,
       },
     };
 
@@ -487,10 +498,10 @@ describe('litViewsBuilder', () => {
 
     const props = {} as UIViewInjectedProps;
     const result = views?.$default.component(props);
-    const instance = result?.values[0] as TestElement & {
+    const instance = result?.values[0] as TestElementArgless & {
       _uiViewProps?: UIViewInjectedProps;
     };
-    expect(instance).toBeInstanceOf(TestElement);
+    expect(instance).toBeInstanceOf(TestElementArgless);
     expect(instance._uiViewProps).toBe(props);
   });
 });
