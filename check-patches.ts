@@ -8,11 +8,14 @@ import { join } from 'node:path';
 import { parsePatch } from 'diff';
 
 import {
-  loadPatchedDependencies,
+  loadWorkspaceManifest,
+  selectPatchedDependencies,
   workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
-const patchedDependencies = await loadPatchedDependencies(workspaceRoot);
+const patchedDependencies = selectPatchedDependencies(
+  await loadWorkspaceManifest(workspaceRoot),
+);
 const entries = Object.entries(patchedDependencies);
 if (entries.length === 0) {
   console.error('check-patches: no patchedDependencies declared');

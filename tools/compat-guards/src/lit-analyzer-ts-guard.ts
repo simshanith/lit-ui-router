@@ -11,8 +11,9 @@
 // duplicate, and hence this guard.
 // Usage (from anywhere): lit-analyzer-ts-guard
 import {
-  loadCatalogs,
-  loadPackageExtensions,
+  selectCatalogs,
+  loadWorkspaceManifest,
+  selectPackageExtensions,
   workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
@@ -24,14 +25,15 @@ const DEP = 'typescript';
 
 const g = guard('lit-analyzer-ts-guard');
 
-const catalogs = await loadCatalogs(workspaceRoot);
+// both halves of the comparison come out of the same parse
+const manifest = await loadWorkspaceManifest(workspaceRoot);
+
 const expected =
-  catalogs[CATALOG]?.[DEP] ??
+  selectCatalogs(manifest)[CATALOG]?.[DEP] ??
   g.fail(`no ${CATALOG} ${DEP} entry in pnpm-workspace.yaml`);
 
-const extensions = await loadPackageExtensions(workspaceRoot);
 const actual =
-  extensions[EXTENDED]?.dependencies?.[DEP] ??
+  selectPackageExtensions(manifest)[EXTENDED]?.dependencies?.[DEP] ??
   g.fail(
     `packageExtensions.${EXTENDED} injects no ${DEP}, so lit-analyzer will ` +
       'resolve the root TypeScript and crash. Restore the entry in ' +
