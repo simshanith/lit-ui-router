@@ -188,6 +188,32 @@ const isLinkElement = (element: Element): boolean => {
   );
 };
 
+/** Elements already warned about, so a re-render cannot repeat the message. */
+const warnedAriaCurrentTakeover = new WeakSet<Element>();
+
+/**
+ * Warns the first time the directive takes over an `aria-current` it did not
+ * write. Taking over is deliberate — the alternative, restoring the previous
+ * value when the state goes inactive, would leave an inactive link asserting
+ * `aria-current="page"` — but it is silent and the loss only shows up a
+ * navigation later, so the overwrite is worth naming once.
+ *
+ * @internal
+ */
+const warnAriaCurrentTakeover = (element: Element): void => {
+  const existing = element.getAttribute('aria-current');
+  if (existing === null || warnedAriaCurrentTakeover.has(element)) {
+    return;
+  }
+  warnedAriaCurrentTakeover.add(element);
+  console.warn(
+    `lit-ui-router: uiSrefActive is taking over an existing aria-current="${existing}" that it did not set; ` +
+      'the attribute will be removed when the state goes inactive. ' +
+      'Pass ariaCurrentValue: false to keep the attribute under your own control.',
+    element,
+  );
+};
+
 /**
  * Parameters for the uiSrefActive directive.
  *
@@ -213,7 +239,9 @@ export interface UiSrefActiveParams {
    * the two do not combine the way `activeClasses` and `exactClasses` do.
    *
    * The directive only removes an `aria-current` it set itself, so a value
-   * authored in the template survives.
+   * authored in the template survives until the directive first writes one of
+   * its own — after that it owns the attribute and clears it when inactive,
+   * warning once. Use `false` to keep an authored value for good.
    */
   ariaCurrentValue?: AriaCurrentValue | false | AriaCurrentValues;
   /** The state name to check for active status */
@@ -366,6 +394,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
         : false;
 
     if (resolved) {
+      if (!this.ownsAriaCurrent) {
+        warnAriaCurrentTakeover(this.element!);
+      }
       this.element!.setAttribute('aria-current', resolved);
       this.ownsAriaCurrent = true;
     } else if (this.ownsAriaCurrent) {

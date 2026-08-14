@@ -731,6 +731,104 @@ describe('uiSrefActive directive', () => {
       expect(anchor.getAttribute('aria-current')).toBe('location');
     });
 
+    it('should warn once per element when taking over an authored value', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            aria-current="location"
+            ${uiSref('parent')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        // Nothing written yet, so nothing taken over yet.
+        await routerGo(router, 'parent.child');
+        await tick(100);
+        expect(warn).not.toHaveBeenCalled();
+
+        await routerGo(router, 'parent');
+        await tick(100);
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toContain('aria-current="location"');
+
+        // The destruction it warned about.
+        await routerGo(router, 'parent.child');
+        await tick(100);
+        const anchor = wrapper.querySelector('a')!;
+        expect(anchor.hasAttribute('aria-current')).toBe(false);
+
+        // Re-author the attribute so the directive faces a genuine second
+        // takeover — otherwise the "not written yet" branch would carry this
+        // assertion and the once-per-element guard would never be exercised.
+        anchor.setAttribute('aria-current', 'location');
+        await routerGo(router, 'parent');
+        await tick(100);
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should not warn when there was no authored value to take over', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            ${uiSref('parent')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        await routerGo(router, 'parent');
+        await tick(100);
+
+        const anchor = wrapper.querySelector('a')!;
+        expect(anchor.getAttribute('aria-current')).toBe('page');
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should not warn when aria-current is disabled', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            aria-current="page"
+            ${uiSref('parent')}
+            ${uiSrefActive({
+              activeClasses: ['active'],
+              ariaCurrentValue: false,
+            })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        await routerGo(router, 'parent');
+        await tick(100);
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
     it('should leave a consumer-managed value alone when disabled', async () => {
       const { wrapper } = await setupWithStates(parentChildStates);
 
