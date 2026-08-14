@@ -379,6 +379,14 @@ describe('mergeSearch', () => {
     assert.equal(mergeSearch('/a?p=1#b', '?p=9'), '/a?p=1#b');
   });
 
+  it('emits no stray "?" when the request search parses to no params', () => {
+    // Separators only: non-empty (so no early return) but zero entries, so the
+    // merge yields nothing. The location comes back whole — fragment included,
+    // which is the arm that re-appends it without a query.
+    assert.equal(mergeSearch('/a', '&'), '/a');
+    assert.equal(mergeSearch('/a#b', '&'), '/a#b');
+  });
+
   it('carries a fragment through a real redirect verdict', async () => {
     const router = createServerRouter({
       mounts: {
