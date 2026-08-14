@@ -7,8 +7,9 @@ upgraded without raising the `.d.ts` floor for consumers.
 ## What it checks
 
 `run.ts` typechecks the [consumer fixtures](./fixtures) — real-world usage
-of `lit-ui-router`, `lit-ui-router-mobx`, and
-`ui-router-navigation-location-plugin` — under a matrix of:
+of `lit-ui-router`, `lit-ui-router-mobx`,
+`ui-router-navigation-location-plugin`, and `ui-router-server` — under a
+matrix of:
 
 - **TypeScript versions**: the pinned floor (`typescript-5.0` → 5.0.4) and
   the repo's current catalog version. The 6.x leg rides the shared
@@ -20,7 +21,7 @@ The fixture compiles with `skipLibCheck: false`, so the packages' built
 `dist/*.d.ts` are themselves fully parsed **and** typechecked under each
 version — new declaration-emit syntax that an older TypeScript cannot handle
 fails the run. Diagnostics originating in third-party declarations (lit,
-mobx, `@uirouter/core`, `lib.dom`) are counted but tolerated, matching what
+mobx, `@uirouter/core`, hono, `lib.dom`) are counted but tolerated, matching what
 a consumer running `skipLibCheck: true` would experience while still holding
 our own declarations to the strict bar.
 
