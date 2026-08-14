@@ -677,6 +677,37 @@ describe('uiSrefActive directive', () => {
       expect(anchor.getAttribute('aria-current')).toBe('page');
     });
 
+    it('should keep the ancestor state off when asked for explicitly', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { exact: 'page', active: false },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      // `active` already defaults to false, so this is the same behaviour as
+      // omitting the key. Pinned so that giving `active` a non-false default
+      // later cannot silently start marking ancestors that opted out.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
     it('should not clear an aria-current it did not set', async () => {
       const { wrapper } = await setupWithStates(parentChildStates);
 
