@@ -4,8 +4,8 @@
     "production": {
       "trigger_uuid": "prod-uuid",
       "trigger_name": "Deploy production",
-      "build_command": "npx turbo docs#build",
-      "deploy_command": "pnpm wrangler deploy",
+      "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+      "deploy_command": "npx wrangler deploy",
       "branch_includes": ["main"],
       "branch_excludes": [],
       "environment_variables": {
@@ -20,8 +20,8 @@
     "preview": {
       "trigger_uuid": "preview-uuid",
       "trigger_name": "Preview",
-      "build_command": "npx turbo docs#build",
-      "deploy_command": "pnpm wrangler versions upload",
+      "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+      "deploy_command": "npx wrangler versions upload",
       "branch_includes": ["*"],
       "branch_excludes": ["main"],
       "environment_variables": {
@@ -31,13 +31,13 @@
     }
   },
   "driftScenario": {
-    "driftedDeployCommand": "npx wrangler deploy",
+    "driftedDeployCommand": "pnpm wrangler versions upload",
     "expectedDrifts": [
       {
         "trigger_uuid": "preview-uuid",
         "kind": "preview",
         "patch": {
-          "deploy_command": "pnpm wrangler versions upload"
+          "deploy_command": "npx wrangler versions upload"
         },
         "environmentPatch": {}
       }

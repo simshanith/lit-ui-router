@@ -60,11 +60,25 @@ describe('parseJsonc', () => {
 describe('desiredStateFromConfig', () => {
   it('accepts the real config (loaded above) with the dashboard values', () => {
     assert.equal(desired.productionBranch, 'main');
-    assert.equal(desired.production.deploy_command, 'pnpm wrangler deploy');
+    assert.equal(desired.production.deploy_command, 'npx wrangler deploy');
     assert.equal(
       desired.preview.deploy_command,
-      'pnpm wrangler versions upload',
+      'npx wrangler versions upload',
     );
+  });
+
+  // SKIP_DEPENDENCY_INSTALL=1 is only safe while the build command installs.
+  it('pairs the skipped install with an install in every build command', () => {
+    for (const kind of ['production', 'preview'] as const) {
+      assert.equal(
+        desired[kind].environment_variables?.SKIP_DEPENDENCY_INSTALL,
+        '1',
+      );
+      assert.match(
+        desired[kind].build_command ?? '',
+        /^npx pnpm@\d+\.\d+\.\d+ install --frozen-lockfile &&/,
+      );
+    }
   });
 
   it('rejects non-objects and unknown top-level keys', () => {
@@ -105,15 +119,6 @@ describe('desiredStateFromConfig', () => {
         desiredStateFromConfig({ ...base, production: { build_command: '' } }),
       /production\.build_command: Invalid length/,
     );
-  });
-
-  it('pins SKIP_DEPENDENCY_INSTALL on both triggers', () => {
-    assert.deepEqual(desired.production.environment_variables, {
-      SKIP_DEPENDENCY_INSTALL: '1',
-    });
-    assert.deepEqual(desired.preview.environment_variables, {
-      SKIP_DEPENDENCY_INSTALL: '1',
-    });
   });
 
   it('rejects invalid environment variable keys and values', () => {
@@ -180,7 +185,9 @@ describe('diffTriggers', () => {
     );
     assert.equal(report.ok, false);
     assert.deepEqual(drifts, driftScenario.expectedDrifts);
-    assert.match(report.text, /wanted: pnpm wrangler versions upload/);
+    assert.ok(
+      report.text.includes(`wanted: ${desired.preview.deploy_command}`),
+    );
   });
 
   it('never drifts on unpinned fields like root_directory', () => {
