@@ -1,4 +1,4 @@
-## UI-Router 1.0 Lit Sample Application — MobX variant
+# UI-Router 1.0 Lit Sample Application — MobX variant
 
 This is the [MobX](https://mobx.js.org) variant of the [vanilla sample app](../sample-app-lit-vanilla/): the same
 non-trivial ui-router lit application, with reactivity handled by
@@ -33,7 +33,7 @@ This sample app is intended to demonstrate a non-trivial ui-router lit applicati
 
 ---
 
-### Visualizer
+## Visualizer
 
 We're using the [State and Transition Visualizer](http://github.com/ui-router/visualizer) to visually represent
 the current state tree, as well as the transitions between states. Explore how transitions work by hovering
@@ -43,7 +43,7 @@ Note how states are _entered_ when they were previously not active, _exited_ and
 and how parent states whose parameters did not change are _retained_. Each of these (_exited, entered, retained_)
 correspond to a Transition Hook.
 
-### Structure
+## Structure
 
 The application is written in TypeScript, and utilizes ES6 modules.
 
@@ -61,7 +61,7 @@ There are many ways to structure a ui-router app. We aren't super opinionated on
   - States export themselves
   - The `router.config.ts` imports all states and registers them with the `stateRegistry`
 
-### UI-Router Patterns
+## UI-Router Patterns
 
 - Defining custom, app-specific global behaviors
   - Add metadata to a state, or state tree

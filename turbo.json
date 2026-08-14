@@ -83,6 +83,7 @@
       "with": [
         "//#lint:root",
         "//#lint:package-json",
+        "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
         "//#check:patches",
@@ -165,6 +166,18 @@
         "eslint.repo-rules.ts",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
+      ]
+    },
+    // Content lint (not config plumbing, so deliberately not under
+    // //#lint:workflows): rumdl over every tracked .md. Its own cache group,
+    // disjoint from oxfmt's format group, which owns .md *formatting*.
+    "//#lint:markdown": {
+      "inputs": [
+        "**/*.md",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/rumdl.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/rumdl",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     // Config-plumbing lint: one //# cache group per tool, aggregated by the

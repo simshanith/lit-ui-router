@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#MISE description="Run rumdl over the tracked *.md set (or given files)"
+#USAGE arg "<cmd>" help="rumdl subcommand: check | fmt"
+#USAGE arg "[file]…" help="Markdown files to target; default: every tracked *.md"
+set -euo pipefail
+
+case "${usage_cmd:?}" in
+  check | fmt) ;;
+  *) echo "rumdl: unknown cmd '$usage_cmd' (check | fmt)" >&2; exit 2 ;;
+esac
+
+set -- "$usage_cmd"
+
+if [ -n "${usage_file:-}" ]; then
+  read -ra files <<<"$usage_file" # given files: split the mise-joined arg string
+else
+  mapfile -t files < <(git ls-files -- '*.md')
+fi
+
+# git ls-files never comes back empty in this repo; warn (don't silently pass) if
+# it ever does, rather than letting rumdl fall back to its own walk, which does
+# not skip node_modules.
+if [ "${#files[@]}" -eq 0 ]; then
+  echo "rumdl: no tracked *.md files matched; nothing to do" >&2
+  exit 0
+fi
+
+exec rumdl "$@" "${files[@]}"

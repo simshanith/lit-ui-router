@@ -96,7 +96,7 @@ link is emitted.
 
 ## Symbol File Structure
 
-```
+```text
 src/symbols/
 ├── index.ts      # Combined exports
 ├── ui-router.ts  # UI-Router Core symbols (templated)
