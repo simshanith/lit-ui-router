@@ -38,6 +38,11 @@ const desired = desiredStateFromConfig(
   ),
 );
 
+const withEnvironment = (
+  trigger: Trigger,
+  environment_variables: NonNullable<Trigger['environment_variables']>,
+): Trigger => ({ ...trigger, environment_variables });
+
 describe('parseJsonc', () => {
   it('parses the repo wrangler.jsonc (comments + trailing commas)', async () => {
     const raw = await readFile(
@@ -101,6 +106,35 @@ describe('desiredStateFromConfig', () => {
       /production\.build_command: Invalid length/,
     );
   });
+
+  it('pins SKIP_DEPENDENCY_INSTALL on both triggers', () => {
+    assert.deepEqual(desired.production.environment_variables, {
+      SKIP_DEPENDENCY_INSTALL: '1',
+    });
+    assert.deepEqual(desired.preview.environment_variables, {
+      SKIP_DEPENDENCY_INSTALL: '1',
+    });
+  });
+
+  it('rejects invalid environment variable keys and values', () => {
+    const base = { productionBranch: 'main', preview: {} };
+    assert.throws(
+      () =>
+        desiredStateFromConfig({
+          ...base,
+          production: { environment_variables: { 'not-a-var': '1' } },
+        }),
+      /production\.environment_variables\.not-a-var: Invalid format/,
+    );
+    assert.throws(
+      () =>
+        desiredStateFromConfig({
+          ...base,
+          production: { environment_variables: { OK: 1 } },
+        }),
+      /production\.environment_variables\.OK: Invalid type/,
+    );
+  });
 });
 
 describe('workerNameFromConfig', () => {
@@ -158,6 +192,84 @@ describe('diffTriggers', () => {
     assert.equal(report.ok, true);
     assert.deepEqual(drifts, []);
     assert.match(report.text, /root_directory {5}\/docs \(not pinned\)/);
+  });
+
+  it('drifts on a declared environment variable with the wrong value', () => {
+    const drifted = withEnvironment(triggers.preview, {
+      SKIP_DEPENDENCY_INSTALL: { value: '0', is_secret: false },
+    });
+    const { report, drifts } = diffTriggers(
+      [triggers.production, drifted],
+      desired,
+    );
+    assert.equal(report.ok, false);
+    assert.deepEqual(drifts, [
+      {
+        trigger_uuid: 'preview-uuid',
+        kind: 'preview',
+        patch: {},
+        environmentPatch: {
+          SKIP_DEPENDENCY_INSTALL: { value: '1', is_secret: false },
+        },
+      },
+    ]);
+    assert.match(report.text, /wanted: 1/);
+  });
+
+  it('drifts on a declared environment variable missing from the trigger', () => {
+    const drifted = withEnvironment(triggers.preview, {});
+    const { report, drifts } = diffTriggers(
+      [triggers.production, drifted],
+      desired,
+    );
+    assert.equal(report.ok, false);
+    assert.deepEqual(drifts[0]?.environmentPatch, {
+      SKIP_DEPENDENCY_INSTALL: { value: '1', is_secret: false },
+    });
+    assert.match(report.text, /SKIP_DEPENDENCY_INSTALL {12}\(absent\)/);
+  });
+
+  it('reports undeclared environment variables as unmanaged, never drift', () => {
+    const extra = withEnvironment(triggers.preview, {
+      SKIP_DEPENDENCY_INSTALL: { value: '1', is_secret: false },
+      SOMETHING_ELSE: { value: 'dashboard-only', is_secret: false },
+      TURBO_TOKEN: { is_secret: true },
+    });
+    const { report, drifts } = diffTriggers(
+      [triggers.production, extra],
+      desired,
+    );
+    assert.equal(report.ok, true);
+    assert.deepEqual(drifts, []);
+    assert.match(report.text, /SOMETHING_ELSE +\(unmanaged\)/);
+    assert.match(report.text, /TURBO_TOKEN +\(secret\) \(unmanaged\)/);
+    // Values of unmanaged variables are never echoed.
+    assert.doesNotMatch(report.text, /dashboard-only/);
+  });
+
+  it('never patches unmanaged keys alongside a drifted declared key', () => {
+    const drifted = withEnvironment(triggers.preview, {
+      SOMETHING_ELSE: { value: 'dashboard-only', is_secret: false },
+      TURBO_TOKEN: { is_secret: true },
+    });
+    const { drifts } = diffTriggers([triggers.production, drifted], desired);
+    assert.deepEqual(Object.keys(drifts[0]?.environmentPatch ?? {}), [
+      'SKIP_DEPENDENCY_INSTALL',
+    ]);
+  });
+
+  it('refuses to overwrite a declared key that is live-secret', () => {
+    const conflicted = withEnvironment(triggers.preview, {
+      SKIP_DEPENDENCY_INSTALL: { is_secret: true },
+    });
+    const { report, drifts } = diffTriggers(
+      [triggers.production, conflicted],
+      desired,
+    );
+    assert.equal(report.ok, false);
+    assert.deepEqual(drifts, []);
+    assert.match(report.text, /refusing to overwrite/);
+    assert.match(report.text, /✗ 1 trigger\(s\) drifted/);
   });
 
   it('reports a missing trigger kind as unfixable drift', () => {

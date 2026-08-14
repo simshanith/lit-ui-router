@@ -46,7 +46,8 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 
 The private [`tools/workers-builds`](./tools/workers-builds) package owns
 [`workers-builds-triggers.config.jsonc`](./tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
-the dashboard values above, and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
+the dashboard values above plus the declared [build environment variables](#build-environment-variables),
+and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 (exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
 Requires `CLOUDFLARE_API_TOKEN` (user-scoped, **Workers Builds Configuration: Edit**) and `CLOUDFLARE_ACCOUNT_ID`.
 Manual-only — never part of CI.
@@ -82,8 +83,22 @@ mise-managed copy would shadow the system one and lose its desktop-app integrati
 
 ### Build Environment Variables
 
+Managed per key, not per map: `check:workers-builds` diffs only the keys declared in
+[`workers-builds-triggers.config.jsonc`](./tools/workers-builds/workers-builds-triggers.config.jsonc)
+and leaves every other variable on the trigger untouched.
+
+**Declared** (plaintext, committed, `--apply` writes them):
+
+- `SKIP_DEPENDENCY_INSTALL=1` — the build installs its own dependencies; deleting it breaks every deploy
+
+**Unmanaged** (dashboard-only; listed in the diff output as `(unmanaged)`, never diffed or patched):
+
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
 - `TURBO_`-prefixed [Remote Cache](./REMOTE_CACHE.md) variables and secrets
+
+Drift semantics for a declared key: a wrong or absent live value is drift and is patched; a key
+the dashboard has marked secret is reported and **not** overwritten, since the config holds
+plaintext only. Secrets therefore can never be committed here nor clobbered by `--apply`.
 
 ### Local Development
 

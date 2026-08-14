@@ -99,15 +99,30 @@ async function workerTag(
   return script.tag;
 }
 
+// Build environment variables live on a sub-resource; the trigger list may or
+// may not inline them, so fetch only when it doesn't.
 async function getTriggers(
   token: string,
   accountId: string,
   tag: string,
 ): Promise<Trigger[]> {
-  return (await cf(
+  const triggers = (await cf(
     token,
     `/${accountId}/builds/workers/${tag}/triggers`,
   )) as Trigger[];
+  return Promise.all(
+    triggers.map(async (trigger) =>
+      trigger.environment_variables
+        ? trigger
+        : {
+            ...trigger,
+            environment_variables: (await cf(
+              token,
+              `/${accountId}/builds/triggers/${trigger.trigger_uuid}/environment_variables`,
+            )) as Trigger['environment_variables'],
+          },
+    ),
+  );
 }
 
 async function main() {
@@ -149,13 +164,26 @@ async function main() {
   }
 
   for (const drift of drifts) {
-    console.log(
-      `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
-    );
-    await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
-      method: 'PATCH',
-      body: drift.patch,
-    });
+    if (Object.keys(drift.patch).length > 0) {
+      console.log(
+        `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
+      );
+      await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
+        method: 'PATCH',
+        body: drift.patch,
+      });
+    }
+    // Declared keys only — undeclared live vars are never in this body.
+    if (Object.keys(drift.environmentPatch).length > 0) {
+      console.log(
+        `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
+      );
+      await cf(
+        token,
+        `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
+        { method: 'PATCH', body: drift.environmentPatch },
+      );
+    }
   }
 
   // Re-read so the confirmation reflects what the API stored, not what we sent.
