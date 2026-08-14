@@ -310,17 +310,15 @@
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
+    // WRITER. Rewrites its own inputs in place and declares no outputs, so a
+    // cache hit restores nothing and silently leaves the tree unformatted;
+    // uncacheable is the only correct setting. Not in any ci:* graph — the
+    // gate is format:check. Run it ALONE: oxfmt truncates in place, so any
+    // reader co-scheduled with it (lint:templates, test, format:check) can
+    // observe a 0-byte source file.
     "format": {
       "with": ["//#format:root", "//#format:toml"],
-      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
-      // mid-graph and oxfmt (gitignore-aware) never reads them
-      "inputs": [
-        "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
-        "!dist/**",
-        "!.cache/**",
-        ".oxfmtrc.json",
-        "$TURBO_ROOT$/.oxfmtrc.json"
-      ]
+      "cache": false
     },
     "format:check": {
       "with": ["//#format:check:root", "//#format:check:toml"],
@@ -332,22 +330,18 @@
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
     },
+    // WRITER, uncacheable for the same reason as `format` above.
     "//#format:root": {
-      "inputs": ["$TURBO_DEFAULT$"]
+      "cache": false
     },
     "//#format:check:root": {
       "inputs": ["$TURBO_DEFAULT$"]
     },
-    // taplo owns .toml; separate root task so its cache key tracks only .toml
-    // (plus the .taplo.toml scoping and taplo's pin), disjoint from oxfmt above.
+    // taplo owns .toml, disjoint from the oxfmt writers above. WRITER,
+    // uncacheable for the same reason as `format`. //#format:check:toml keeps
+    // the .toml-scoped cache key.
     "//#format:toml": {
-      "inputs": [
-        "**/*.toml",
-        "!**/node_modules/**",
-        "$TURBO_ROOT$/.config/taplo.toml",
-        "$TURBO_ROOT$/.config/mise/tasks/taplo",
-        "$TURBO_ROOT$/.config/mise/mise.lock"
-      ]
+      "cache": false
     },
     "//#format:check:toml": {
       "inputs": [
