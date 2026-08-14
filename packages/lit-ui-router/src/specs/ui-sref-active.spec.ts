@@ -629,6 +629,103 @@ describe('uiSrefActive directive', () => {
       const span = wrapper.querySelector('span')!;
       expect(span.getAttribute('aria-current')).toBe('page');
     });
+
+    it('should mark an ancestor when given a per-state value', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { exact: 'page', active: 'location' },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('should take the exact value, not the active one, when exactly active', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { exact: 'page', active: 'location' },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      // exact is a branch, not an addition: `active` is not consulted here.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should not clear an aria-current it did not set', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          aria-current="location"
+          ${uiSref('parent')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      // Active but not exact, so the directive has nothing to write — and must
+      // not treat the template's own value as its to remove.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('should leave a consumer-managed value alone when disabled', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          aria-current="page"
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: false,
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      // `false` is the full opt-out: the directive neither writes nor clears,
+      // even in the state where it would otherwise be authoritative.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
   });
 
   describe('cleanup', () => {

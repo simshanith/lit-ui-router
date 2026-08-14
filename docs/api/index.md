@@ -93,7 +93,7 @@ state being active means the link points at a section containing the current pag
 not at the current page itself, and a nav in which several ancestor links all claim
 `aria-current="page"` is worse for a screen reader user than one with none.
 
-Two knobs, via `ariaCurrentValue`:
+Three knobs, via `ariaCurrentValue`:
 
 - **Another token** — `'page'` (default), `'step'`, `'location'`, `'date'`,
   `'time'`, or `'true'`. Passing a value explicitly also opts **non-link** elements
@@ -112,11 +112,38 @@ Two knobs, via `ariaCurrentValue`:
   ```
 
 - **`false`** — leave `aria-current` alone entirely; the directive will neither set
-  nor remove it.
+  nor remove it. This is the opt-out to reach for when the application manages
+  `aria-current` itself: a value written in the template survives untouched, in
+  every routing state.
 
   ```html
   <a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: false })}>Home</a>
   ```
+
+- **`{ exact, active }`** — mark ancestors too, which is otherwise off. `active`
+  applies while a child state is active and this one is not the exact match;
+  `'location'` is the ARIA token meant for exactly that.
+
+  ```html
+  <a ${uiSref('users')}
+     ${uiSrefActive({
+       activeClasses: ['active'],
+       ariaCurrentValue: { exact: 'page', active: 'location' },
+     })}>Users</a>
+  <!-- while at `users`:        aria-current="page"     -->
+  <!-- while at `users.detail`: aria-current="location" -->
+  ```
+
+  Note this pair does **not** combine the way `activeClasses` and `exactClasses`
+  do. Both class sets land in `class` on an exactly-active link, because an exact
+  match is also an active one. `aria-current` is a single attribute with a single
+  value, so the two are branches of one decision: an exactly-active element takes
+  `exact` and never falls through to `active`. Each key keeps its own default when
+  omitted, so `{ active: 'location' }` alone still defaults `exact` to `'page'` on
+  links — write `{ exact: false, active: 'location' }` to mark only ancestors.
+
+Whatever the setting, the directive only removes an `aria-current` it wrote itself,
+so it will not clear one that came from the template.
 
 ### State Declaration
 

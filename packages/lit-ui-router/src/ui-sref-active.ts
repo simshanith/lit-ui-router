@@ -153,6 +153,29 @@ export type AriaCurrentValue =
   | 'true';
 
 /**
+ * Per-state `aria-current` values, for the rare nav that wants to mark an
+ * ancestor as well as the current page.
+ *
+ * Unlike `activeClasses` and `exactClasses` — which both land in `class` when a
+ * link is exactly active — `aria-current` is one attribute with one value, so
+ * these do not combine: on an exactly-active element `exact` wins and `active`
+ * is not consulted. Each key falls back to its own default when omitted.
+ *
+ * @see {@link UiSrefActiveParams.ariaCurrentValue}
+ *
+ * @category types
+ */
+export interface AriaCurrentValues {
+  /** Applied when the exact state is active. Defaults to `'page'` on links. */
+  exact?: AriaCurrentValue | false;
+  /**
+   * Applied when a child state is active but this one is not the exact match —
+   * `'location'` is the token meant for this. Defaults to `false`.
+   */
+  active?: AriaCurrentValue | false;
+}
+
+/**
  * `aria-current` defaults on for link elements only; other elements must opt in
  * explicitly, since `aria-current` on a wrapper (`<li>`, `<tr>`) is rarely intended.
  *
@@ -178,13 +201,21 @@ export interface UiSrefActiveParams {
   /** CSS classes to add only when the exact state is active */
   exactClasses: string[];
   /**
-   * The `aria-current` value to set when the exact state is active.
+   * The `aria-current` value to set when the **exact** state is active — the
+   * same binding Vue Router's `ariaCurrentValue` uses.
    *
    * Defaults to `'page'` on link elements (`<a>`, `<area>`, `[role="link"]`).
    * Pass a value explicitly to apply it to any element; pass `false` to leave
    * `aria-current` untouched.
+   *
+   * Pass an object to also mark ancestors, which is otherwise off:
+   * `{ exact: 'page', active: 'location' }`. See {@link AriaCurrentValues} —
+   * the two do not combine the way `activeClasses` and `exactClasses` do.
+   *
+   * The directive only removes an `aria-current` it set itself, so a value
+   * authored in the template survives.
    */
-  ariaCurrentValue?: AriaCurrentValue | false;
+  ariaCurrentValue?: AriaCurrentValue | false | AriaCurrentValues;
   /** The state name to check for active status */
   state: string;
   /** State parameters to match */
@@ -235,7 +266,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
   activeClasses: string[] = [];
   exactClasses: string[] = [];
   /** undefined = default (on for link elements) */
-  ariaCurrentValue: AriaCurrentValue | false | undefined;
+  ariaCurrentValue: AriaCurrentValue | false | AriaCurrentValues | undefined;
+  /**
+   * Whether the `aria-current` currently on the element was written by this
+   * directive. Guards against clearing one authored in the template.
+   *
+   * @internal
+   */
+  private ownsAriaCurrent = false;
 
   state: string | undefined;
   params: RawParams = {};
@@ -294,20 +332,46 @@ export class UiSrefActiveDirective extends AsyncDirective {
       }
     });
 
-    const ariaCurrent =
-      ariaCurrentValue === undefined
-        ? isLinkElement(this.element!) && 'page'
-        : ariaCurrentValue;
-
-    if (ariaCurrent) {
-      if (this.exact) {
-        this.element!.setAttribute('aria-current', ariaCurrent);
-      } else {
-        this.element!.removeAttribute('aria-current');
-      }
-    }
+    this.applyAriaCurrent(ariaCurrentValue);
 
     return noChange;
+  }
+
+  /**
+   * Resolves one `aria-current` value for the element's current state, then
+   * applies it.
+   *
+   * `exact` and `active` are branches of a single decision here, not the union
+   * `classList` gets: an exactly-active element takes the `exact` value and
+   * never falls through to `active`. Resolving to a single value first is what
+   * keeps "no opinion", "explicitly off" and "not applicable" from each needing
+   * their own branch at the apply step.
+   *
+   * @internal
+   */
+  private applyAriaCurrent(
+    ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
+  ): void {
+    const values: AriaCurrentValues =
+      ariaCurrentValue === undefined || typeof ariaCurrentValue === 'string'
+        ? { exact: ariaCurrentValue }
+        : ariaCurrentValue === false
+          ? { exact: false }
+          : ariaCurrentValue;
+
+    const resolved = this.exact
+      ? (values.exact ?? (isLinkElement(this.element!) && 'page'))
+      : this.active
+        ? (values.active ?? false)
+        : false;
+
+    if (resolved) {
+      this.element!.setAttribute('aria-current', resolved);
+      this.ownsAriaCurrent = true;
+    } else if (this.ownsAriaCurrent) {
+      this.element!.removeAttribute('aria-current');
+      this.ownsAriaCurrent = false;
+    }
   }
 
   /** @internal */
@@ -646,10 +710,21 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *       ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'true' })}>
  *   </tr>
  *
- *   <!-- leave aria-current alone -->
+ *   <!-- leave aria-current alone: the app manages it, and a value written
+ *        here survives in every routing state -->
  *   <a ${uiSref('home')}
+ *      aria-current="page"
  *      ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: false })}>
  *     Home
+ *   </a>
+ *
+ *   <!-- mark the ancestor section as well as the current page -->
+ *   <a ${uiSref('users')}
+ *      ${uiSrefActive({
+ *        activeClasses: ['active'],
+ *        ariaCurrentValue: { exact: 'page', active: 'location' },
+ *      })}>
+ *     Users
  *   </a>
  * `
  * ```
