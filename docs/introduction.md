@@ -52,7 +52,7 @@ This inversion pays off as applications grow:
   fetch data during the transition, so components render with their data
   already available — no loading-state plumbing in every view.
 - **Hierarchy is first-class.** Child states render inside parent states via
-  nested [`<ui-view>`](./tutorial/hellogalaxy#nested-ui-view) viewports, and
+  nested [`<ui-view>`](./tutorial/hellogalaxy#nested-ui-view-with-fallback-content) viewports, and
   inherit their parents' parameters and resolved data.
 - **Navigation is interceptable.** Transition hooks implement cross-cutting
   concerns like authentication guards, analytics, and redirects in one place.
