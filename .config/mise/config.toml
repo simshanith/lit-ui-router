@@ -52,6 +52,9 @@ idiomatic_version_file_enable_tools = ["node"]
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.
 "aqua:tamasfe/taplo" = "0.10.0"
+# Markdown linter (markdownlint's rule set, in Rust). Check-only: oxfmt formats
+# .md, rumdl lints it. Pre-1.0, so the pin is load-bearing.
+"aqua:rvben/rumdl" = "0.2.55"
 
 # Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
 # loud; and tool-only bumps (actionlint) skip the corepack ceremony.
@@ -116,6 +119,13 @@ run = "mise run taplo lint"
 # (.config/mise/tasks/shellcheck)
 description = "Static-analyze repo shell scripts (mise tasks, *.sh) with shellcheck"
 run = "mise run shellcheck"
+
+[tasks.lint_markdown]
+# Thin alias; file selection + rationale live in the `rumdl` file task
+# (.config/mise/tasks/rumdl). Deliberately NOT in lint_workflows: that umbrella
+# is CI/config plumbing, and markdown is content.
+description = "Lint tracked Markdown (README, docs, examples) with rumdl"
+run = "mise run rumdl check"
 
 [tasks.lint_workflows]
 # Virtual grouping task; the legs are independent and run in parallel. Covers

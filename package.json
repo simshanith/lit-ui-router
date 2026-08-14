@@ -21,6 +21,7 @@
     "format:toml": "mise run format_toml",
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
+    "lint:markdown": "mise run lint_markdown",
     "lint:package-json": "eslint --format tap \"**/package.json\" pnpm-workspace.yaml",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
     "lint:shellcheck": "mise run lint_shellcheck",

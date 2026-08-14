@@ -6,7 +6,7 @@ This folder contains standalone example projects demonstrating lit-ui-router usa
 
 Each example is a self-contained Vite + TypeScript project designed to run directly on [StackBlitz](https://stackblitz.com/). You can open any example in StackBlitz using the GitHub integration:
 
-```
+```text
 https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/<example-name>
 ```
 
@@ -72,7 +72,7 @@ pnpm --filter examples example:install:<example-name>
 
 Each example follows the same structure:
 
-```
+```text
 <example-name>/
 ├── index.html          # Entry HTML file
 ├── package.json        # Dependencies and scripts

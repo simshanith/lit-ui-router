@@ -32,7 +32,7 @@ npm run dev
 
 The root `turbo.json` defines shared task configurations inherited by all workspaces:
 
-```
+```text
 ci:pull_request
 ├── build
 ├── test
@@ -208,7 +208,7 @@ The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pip
 
 Manual dispatch of the workflow has two deflake inputs: `force` (`TURBO_FORCE`) bypasses the turbo cache, and `mainGraph` runs the `ci:main` superset on demand — combine them to deflake the full main graph without pushing a commit (tagging stays push-only). Dispatch takes a ref, so this is also how you run the main graph against an arbitrary branch. CI also sets `CYPRESS_video: 'false'` (passed through un-hashed, so it never affects cache validity); local runs keep video recording.
 
-#### Smoke-testing the main graph before merge
+### Smoke-testing the main graph before merge
 
 The main-only guards (`test:engines`, `check:pack`, the full `dts-backtest` matrix) run after merge, so a break in them surfaces on main rather than on the PR. Two ways to pull that signal forward:
 
