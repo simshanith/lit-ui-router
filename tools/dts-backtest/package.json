@@ -14,6 +14,7 @@
   "devDependencies": {
     "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
+    "hono": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
@@ -22,6 +23,7 @@
     "typescript-5.9": "catalog:",
     "typescript-6": "catalog:typescript6",
     "typescript-7": "catalog:",
-    "ui-router-navigation-location-plugin": "workspace:*"
+    "ui-router-navigation-location-plugin": "workspace:*",
+    "ui-router-server": "workspace:*"
   }
 }

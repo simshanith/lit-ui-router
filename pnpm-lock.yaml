@@ -1000,6 +1000,9 @@ importers:
       '@uirouter/core':
         specifier: 'catalog:'
         version: 6.1.2
+      hono:
+        specifier: 'catalog:'
+        version: 4.13.1
       lit:
         specifier: 'catalog:'
         version: 3.3.3
@@ -1027,6 +1030,9 @@ importers:
       ui-router-navigation-location-plugin:
         specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
+      ui-router-server:
+        specifier: workspace:*
+        version: link:../../packages/ui-router-server
 
   tools/happy-dom:
     devDependencies:
