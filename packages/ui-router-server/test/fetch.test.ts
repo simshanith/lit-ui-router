@@ -90,6 +90,25 @@ describe('createFetchHandler', () => {
     assert.equal(res.headers.get('Location'), '/app/home?ref=email');
   });
 
+  // The other direction: the fragment belongs to the TARGET, not the request.
+  // Merging past it emitted `/app/home#section?ref=email`, where the agent
+  // reads `section?ref=email` as the fragment and the params never come back.
+  it('keeps the merged search ahead of a fragment the target declares', async () => {
+    const handler = createFetchHandler(
+      routerOf({
+        kind: 'redirect',
+        mount: '/app',
+        location: '/app/home#section',
+        status: 302,
+      }),
+      { serveShell: noShell },
+    );
+    const res = await handler(navigation('/app/old?ref=email'));
+    assert.ok(res);
+    assert.equal(res.status, 302);
+    assert.equal(res.headers.get('Location'), '/app/home?ref=email#section');
+  });
+
   it('serves a plain shell with a canonical Link, from a request rewritten to the shell path', async () => {
     const asset = new Response('<html>shell</html>', {
       status: 200,
