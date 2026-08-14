@@ -12,22 +12,23 @@ const browserOnlySpecs = ['src/specs/ui-sref.spec.ts'];
 const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 
 // VITE_EXPECT_LIT_MAJOR=2 (test:lit2-compat) resolves every lit import —
-// root and subpath — to the lit-2 alias devDep. Applied per project: inline
-// projects do NOT inherit a root-level resolve.alias. The VITE_ prefix
-// carries the same variable into import.meta.env everywhere (browser
-// included), where vitest.setup.ts asserts the swap took.
+// root and subpath — to the lit-2 alias devDep. Declared once at the root:
+// since vitest 5 inline projects inherit the declaring config unless they
+// opt out with `extends: false`. The VITE_ prefix carries the same variable
+// into import.meta.env everywhere (browser included), where vitest.setup.ts
+// asserts the swap took — so a lit2-compat run is the teeth on that
+// inheritance, not an assumption about it.
 const lit2Compat = process.env.VITE_EXPECT_LIT_MAJOR === '2';
-const litResolve = {
-  alias: lit2Compat
-    ? [
-        { find: /^lit$/, replacement: 'lit-2' },
-        { find: /^lit\/(.+)$/, replacement: 'lit-2/$1' },
-      ]
-    : [],
-};
+const litAlias = lit2Compat
+  ? [
+      { find: /^lit$/, replacement: 'lit-2' },
+      { find: /^lit\/(.+)$/, replacement: 'lit-2/$1' },
+    ]
+  : [];
 
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
+  resolve: { alias: litAlias },
   test: {
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
@@ -39,7 +40,6 @@ export default defineConfig({
     projects: [
       {
         cacheDir: `node_modules/.vite-${cacheKey}-happy-dom`,
-        resolve: litResolve,
         test: {
           name: 'happy-dom',
           globals: true,
@@ -55,7 +55,6 @@ export default defineConfig({
       },
       {
         cacheDir: `node_modules/.vite-${cacheKey}-browser`,
-        resolve: litResolve,
         test: {
           name: 'browser',
           globals: true,
