@@ -239,7 +239,8 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    accumulated came from exactly that: `lit-ui-router-mobx` seeded at
    `0.1.0-rc.0` under `next` (superseded by `0.1.0` twenty minutes later, tag
    stranded for five weeks), and `ui-router-server` at `0.0.1-alpha.1` under
-   `alpha`.
+   `alpha`. Both have since been retired — every package now carries `latest`
+   only, which is the steady state [Dist-Tags](#dist-tags) describes.
 
    The seed therefore holds `latest` until step 4 supersedes it. That is
    expected, and is why it should be a version nobody would want: short-lived

@@ -93,9 +93,8 @@ Nothing else is required: `@uirouter/core` (only for
 [`simulate` mounts](#the-tiers)) and `hono` are **optional** peer
 dependencies, and every other adapter targets a host you already have.
 
-`latest` is the stable line (`0.1.0` today). The `alpha` dist-tag is left over
-from the pre-release seeds and points at an older build — install from
-`latest`.
+`latest` is the stable line (`0.1.0` today), and the only dist-tag — the
+pre-release seed tags have been retired.
 
 ## Quick start
 
