@@ -188,32 +188,6 @@ const isLinkElement = (element: Element): boolean => {
   );
 };
 
-/** Elements already warned about, so a re-render cannot repeat the message. */
-const warnedAriaCurrentTakeover = new WeakSet<Element>();
-
-/**
- * Warns the first time the directive takes over an `aria-current` it did not
- * write. Taking over is deliberate — the alternative, restoring the previous
- * value when the state goes inactive, would leave an inactive link asserting
- * `aria-current="page"` — but it is silent and the loss only shows up a
- * navigation later, so the overwrite is worth naming once.
- *
- * @internal
- */
-const warnAriaCurrentTakeover = (element: Element): void => {
-  const existing = element.getAttribute('aria-current');
-  if (existing === null || warnedAriaCurrentTakeover.has(element)) {
-    return;
-  }
-  warnedAriaCurrentTakeover.add(element);
-  console.warn(
-    `lit-ui-router: uiSrefActive is taking over an existing aria-current="${existing}" that it did not set; ` +
-      'the attribute will be removed when the state goes inactive. ' +
-      'Pass ariaCurrentValue: false to keep the attribute under your own control.',
-    element,
-  );
-};
-
 /**
  * Parameters for the uiSrefActive directive.
  *
@@ -302,6 +276,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
    * @internal
    */
   private ownsAriaCurrent = false;
+  /**
+   * Whether the takeover warning has already been emitted. Instance state
+   * rather than a module-level element registry: the directive instance already
+   * lives as long as its part, so this costs nothing extra and pins nothing.
+   *
+   * @internal
+   */
+  private warnedAriaCurrentTakeover = false;
 
   state: string | undefined;
   params: RawParams = {};
@@ -395,7 +377,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
     if (resolved) {
       if (!this.ownsAriaCurrent) {
-        warnAriaCurrentTakeover(this.element!);
+        this.warnAriaCurrentTakeover();
       }
       this.element!.setAttribute('aria-current', resolved);
       this.ownsAriaCurrent = true;
@@ -403,6 +385,29 @@ export class UiSrefActiveDirective extends AsyncDirective {
       this.element!.removeAttribute('aria-current');
       this.ownsAriaCurrent = false;
     }
+  }
+
+  /**
+   * Warns the first time this directive takes over an `aria-current` it did not
+   * write. Taking over is deliberate — restoring the previous value when the
+   * state goes inactive would leave an inactive link asserting
+   * `aria-current="page"` — but it is silent, and the loss only surfaces a
+   * navigation later, so it is worth naming once.
+   *
+   * @internal
+   */
+  private warnAriaCurrentTakeover(): void {
+    const existing = this.element!.getAttribute('aria-current');
+    if (existing === null || this.warnedAriaCurrentTakeover) {
+      return;
+    }
+    this.warnedAriaCurrentTakeover = true;
+    console.warn(
+      `lit-ui-router: uiSrefActive is taking over an existing aria-current="${existing}" that it did not set; ` +
+        'the attribute will be removed when the state goes inactive. ' +
+        'Pass ariaCurrentValue: false to keep the attribute under your own control.',
+      this.element,
+    );
   }
 
   /** @internal */
