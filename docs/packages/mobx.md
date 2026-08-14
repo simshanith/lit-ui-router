@@ -6,11 +6,11 @@ description: Observable router state and reaction-based controllers with lit-ui-
 # lit-ui-router-mobx
 
 <p class="badges">
-<a href="https://www.npmjs.com/package/lit-ui-router-mobx" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-mobx" /></a>
+<a href="https://npmx.dev/package/lit-ui-router-mobx" target="_blank" class="badge"><img alt="NPM Version" src="https://img.shields.io/npm/v/lit-ui-router-mobx" /></a>
 <a href="https://github.com/simshanith/lit-ui-router/releases/?q=lit-ui-router-mobx" target="_blank" class="badge"><img alt="GitHub Release" src="https://img.shields.io/github/v/release/simshanith/lit-ui-router?filter=lit-ui-router-mobx@*" /></a>
 </p>
 
-[`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)
+[`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)
 provides [MobX](https://mobx.js.org) bindings for lit-ui-router: an observable
 mirror of the router's state and reaction-based
 [ReactiveControllers](https://lit.dev/docs/composition/controllers/) that keep
@@ -38,6 +38,14 @@ pnpm add lit-ui-router-mobx mobx
 ```
 
 `lit-ui-router`, `lit`, `mobx`, and `@uirouter/core` are peer dependencies.
+
+### MobX 6 and 7
+
+Both majors are supported (`mobx@^6.0.0 || ^7.0.0`) and both are exercised in
+CI. The bindings' own API is identical on either. Note that MobX 7 replaced the
+namespaced comparers with named exports, so the `equals` option in the examples
+below is spelled `compareStructural` on 7 and `comparer.structural` on 6 —
+`equals` accepts any `(a, b) => boolean`, so either works.
 
 ## Quick start
 
@@ -95,7 +103,7 @@ new RouterReactionController(host, selector, options?)
 - `options.onChange` — effect invoked when the selected value changes (and
   once on every (re)connect); useful for resetting component state from route
   params
-- `options.equals` — MobX comparer (e.g. `comparer.structural`) for precise,
+- `options.equals` — MobX comparer (e.g. `compareStructural`) for precise,
   value-based change detection
 
 ### ReactionController
@@ -105,14 +113,14 @@ the generic primitive behind `RouterReactionController` — the same
 selector/options contract over **any** MobX observables, not just the router:
 
 ```ts
-import { comparer } from 'mobx';
+import { compareStructural } from 'mobx';
 import { ReactionController } from 'lit-ui-router-mobx';
 
 class NavHeader extends LitElement {
   private auth = new ReactionController(
     this,
     () => ({ user: SessionStore.user, loggedIn: SessionStore.loggedIn }),
-    { equals: comparer.structural },
+    { equals: compareStructural },
   );
 
   render() {
@@ -141,7 +149,7 @@ composition-friendly alternative:
   `ReactiveControllerHost`)
 - Dependencies are explicit: the selector names exactly which observables
   drive the host
-- `equals: comparer.structural` avoids re-renders when a recomputed value is
+- `equals: compareStructural` avoids re-renders when a recomputed value is
   structurally unchanged
 - The reaction lifecycle is bound to the host's connection lifecycle
   automatically

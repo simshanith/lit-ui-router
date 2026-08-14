@@ -2,7 +2,7 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: env contracts, exec/gh seams, GitHub Actions plumbing, retry, and workspace enumeration",
+  "description": "Cross-workflow tooling helpers: env contracts, exec/gh seams, GitHub Actions plumbing, retry, local manifest reads, and workspace enumeration",
   "type": "module",
   "exports": {
     "./env.core.ts": "./src/env.core.ts",
@@ -10,6 +10,7 @@
     "./gh.ts": "./src/gh.ts",
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
+    "./manifest.ts": "./src/manifest.ts",
     "./retry.ts": "./src/retry.ts",
     "./types.ts": "./src/types.ts",
     "./workspace.ts": "./src/workspace.ts"
@@ -22,6 +23,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
+    "@pnpm/logger": "catalog:",
+    "@pnpm/types": "catalog:",
     "@pnpm/workspace.projects-reader": "catalog:",
     "@pnpm/workspace.workspace-manifest-reader": "catalog:",
     "@types/node": "catalog:",

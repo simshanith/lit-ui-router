@@ -2,15 +2,30 @@
   "$schema": "https://turborepo.com/schema.json",
   "extends": ["//"],
   "tasks": {
+    "docs:api": {
+      "outputs": ["../../docs/api/ui-router-server/**"]
+    },
     "test": {
       "dependsOn": ["^test", "transit"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
+    // root task keys inputs on vitest configs; this suite is node --test
+    "test:coverage": {
+      "dependsOn": ["^test:coverage", "transit"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["coverage/**"]
+    },
     "typecheck": {
-      "with": ["typecheck:tests"]
+      "with": ["typecheck:tests", "typecheck:src", "typecheck:runtime-globals"]
     },
     "typecheck:tests": {
       "dependsOn": ["^build:types"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    // transit carries the dep closure's hashes: the shims this withdraws live
+    // in @tools/wintercg-globals, so editing one must invalidate this task
+    "typecheck:runtime-globals": {
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
     }
   }

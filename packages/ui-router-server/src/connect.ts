@@ -7,17 +7,17 @@
  * mount-owned misses answer 404, and only real routes reach the shell.
  *
  * The adapter owns verdict → response mechanics (status mapping,
- * [[mergeSearch]] on redirect Locations, validator stripping and status
+ * {@link mergeSearch} on redirect Locations, validator stripping and status
  * relabeling on status'd shells); the HOST supplies asset IO. The default
  * host is the downstream stack itself: shells rewrite `req.url` to the
  * mount's shell path and `next()` into `express.static`/`sirv`/Vite —
  * which is why this middleware mounts BEFORE the static layer, exactly
- * where `connect-history-api-fallback` sits. Override [[serveShell]] /
- * [[serveNotFound]] to take asset IO in hand.
+ * where `connect-history-api-fallback` sits. Override {@link ConnectAdapterOptions.serveShell | serveShell} /
+ * {@link ConnectAdapterOptions.serveNotFound | serveNotFound} to take asset IO in hand.
  *
  * Dependency-free, like the tiers it fronts: the request/response types
  * below declare the minimal structural surface the adapter touches (the
- * `globals.d.ts` discipline applied to `node:http`), so Node, Express and
+ * runtime-globals discipline applied to `node:http`), so Node, Express and
  * Connect objects all fit without this package needing node types — and
  * the DOM-free compile keeps enforcing runtime-neutrality everywhere else.
  */
@@ -54,14 +54,14 @@ export type ConnectMiddleware = (
 
 export interface ConnectAdapterOptions {
   /**
-   * Maps a shell verdict's mount to the path the default [[serveShell]]
+   * Maps a shell verdict's mount to the path the default {@link ConnectAdapterOptions.serveShell | serveShell}
    * rewrites `req.url` to (default: the mount base itself). The hook for
    * aliased mounts whose shell lives under another prefix.
    */
   shellPath?: (mount: string) => string;
   /**
    * Serve the mount's shell. The default rewrites `req.url` to
-   * [[shellPath]] and `next()`s into the downstream static layer. By the
+   * {@link ConnectAdapterOptions.shellPath | shellPath} and `next()`s into the downstream static layer. By the
    * time this runs the adapter has already done the status'd-shell
    * mechanics: request validators stripped and the response relabeled to
    * the verdict's status — a host override only owns the asset IO.
@@ -134,21 +134,21 @@ const defaultServeNotFound = (
 };
 
 /**
- * Wraps a [[ServerRouter]] as Connect middleware. Mount it BEFORE the
+ * Wraps a {@link ServerRouter} as Connect middleware. Mount it BEFORE the
  * static layer; the default host serves shells by rewriting `req.url` and
  * `next()`ing into it. `resolve()` is always async (the simulate tier's
  * lazy boundary), which Connect absorbs naturally — with matcher-tier
  * mounts nothing async ever actually runs.
  *
  * - `redirect` → `writeHead(302, { Location })`, the request's search
- *   MERGED into the verdict's location via [[mergeSearch]] (targets that
+ *   MERGED into the verdict's location via {@link mergeSearch} (targets that
  *   declare their own query keep it — never `?a=1?b=2`).
  * - `shell` → `Link: <mount>; rel="canonical"` (the shell is the same
- *   representation at every route path), then [[serveShell]].
+ *   representation at every route path), then {@link ConnectAdapterOptions.serveShell | serveShell}.
  * - `shell` with status (the otherwise projection) → validators stripped,
  *   downstream status relabeled, no canonical Link (a 404 is not an
- *   alternate representation of the mount root), then [[serveShell]].
- * - `notFound` with a mount → [[serveNotFound]] (honest 404).
+ *   alternate representation of the mount root), then {@link ConnectAdapterOptions.serveShell | serveShell}.
+ * - `notFound` with a mount → {@link ConnectAdapterOptions.serveNotFound | serveNotFound} (honest 404).
  * - `notFound` without a mount, or a non-navigation request → `next()`.
  */
 export function createConnectMiddleware(

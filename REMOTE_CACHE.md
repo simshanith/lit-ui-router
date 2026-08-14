@@ -1,6 +1,6 @@
 # Turborepo Remote Cache
 
-https://adirishi.github.io/turborepo-remote-cache-cloudflare/
+<https://adirishi.github.io/turborepo-remote-cache-cloudflare/>
 
 Deployed to a Cloudflare Worker at a `*.workers.dev` URL. The URL is kept out of
 this public repo (a public endpoint invites free-tier request exhaustion); it

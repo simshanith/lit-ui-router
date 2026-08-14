@@ -33,16 +33,38 @@ export type Member = {
   manifest?: PackageManifest;
 };
 
+/** A value, or the pending read of one. */
+export type Awaitable<T> = T | Promise<T>;
+
+/**
+ * What every `select*` below accepts: a parsed manifest, or the in-flight
+ * `loadWorkspaceManifest` call that produces one. Passing the call means the
+ * unit handed around is the read itself, so feeding it to several selectors
+ * still parses pnpm-workspace.yaml exactly once.
+ */
+export type WorkspaceManifestSource = Awaitable<WorkspaceManifest | undefined>;
+
+/**
+ * Parse pnpm-workspace.yaml. Selectors take the result rather than a root, so a
+ * caller needing several sections reads once and passes that read around.
+ */
+export async function loadWorkspaceManifest(
+  root: string,
+): Promise<WorkspaceManifest | undefined> {
+  const { readWorkspaceManifest } =
+    await import('@pnpm/workspace.workspace-manifest-reader');
+  return readWorkspaceManifest(root);
+}
+
 /** Enumerate workspace members (incl. root) and the parsed workspace manifest. */
 export async function loadWorkspace(root: string): Promise<{
   members: Member[];
   workspaceManifest: WorkspaceManifest | undefined;
 }> {
-  const [{ findPackages }, { readWorkspaceManifest }] = await Promise.all([
+  const [{ findPackages }, workspaceManifest] = await Promise.all([
     import('@pnpm/workspace.projects-reader'),
-    import('@pnpm/workspace.workspace-manifest-reader'),
+    loadWorkspaceManifest(root),
   ]);
-  const workspaceManifest = await readWorkspaceManifest(root);
   const projects = await findPackages(root, {
     patterns: workspaceManifest?.packages,
     includeRoot: true,
@@ -58,12 +80,24 @@ export async function loadWorkspace(root: string): Promise<{
   return { members, workspaceManifest };
 }
 
-/** patchedDependencies from pnpm-workspace.yaml: package name -> patch path. */
-export async function loadPatchedDependencies(
-  root: string,
+/** Catalogs from the manifest; the unnamed `catalog:` is `default`, per pnpm. */
+export async function selectCatalogs(
+  source: WorkspaceManifestSource,
+): Promise<Record<string, Record<string, string>>> {
+  const manifest = await source;
+  return { default: manifest?.catalog ?? {}, ...manifest?.catalogs };
+}
+
+/** packageExtensions from the manifest: package name -> injected fields. */
+export async function selectPackageExtensions(
+  source: WorkspaceManifestSource,
+): Promise<Record<string, { dependencies?: Record<string, string> }>> {
+  return (await source)?.packageExtensions ?? {};
+}
+
+/** patchedDependencies from the manifest: package name -> patch path. */
+export async function selectPatchedDependencies(
+  source: WorkspaceManifestSource,
 ): Promise<Record<string, string>> {
-  const { readWorkspaceManifest } =
-    await import('@pnpm/workspace.workspace-manifest-reader');
-  const workspaceManifest = await readWorkspaceManifest(root);
-  return workspaceManifest?.patchedDependencies ?? {};
+  return (await source)?.patchedDependencies ?? {};
 }

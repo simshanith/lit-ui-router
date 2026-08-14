@@ -27,7 +27,7 @@
         "vitest.setup.ts",
         "cypress.config.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
       "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video"]
@@ -45,7 +45,7 @@
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
       "outputs": ["coverage/**"]
     },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
@@ -54,14 +54,40 @@
     "test:engines": {
       "dependsOn": ["^build"],
       "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
-      "env": ["VITEST_BROWSER_API_PORT", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+    },
+    // Same unit suites resolved against the lit-2 alias (the 2.x line the
+    // published lit peer range covers); cheap enough for the PR graph — no
+    // extra browsers, and the alias tracks published lit, so no peer-floor
+    // atomicity concern. $TURBO_DEFAULT$ covers the extra configs; the
+    // workspace yaml feeds lit2-compat-guard (peer range + alias pin).
+    // The lit-2 types ride the sibling typecheck:lit2 task, never chained
+    // here: a runtime failure would mask the typecheck result.
+    "test:lit2-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+    },
+    // Same unit suites resolved against the mobx-6 alias (the 6.x line the
+    // widened mobx peer range still covers). Mirrors test:lit2-compat: no
+    // extra browsers, alias tracks published mobx, workspace yaml feeds
+    // mobx6-compat-guard (peer range + alias pin). The mobx-6 types ride the
+    // sibling typecheck:mobx6 task, never chained here: a runtime failure
+    // would mask the typecheck result.
+    "test:mobx6-compat": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR", "CI"]
     },
     "lint": {
       "with": [
         "//#lint:root",
         "//#lint:package-json",
+        "//#lint:markdown",
         "//#lint:workflows",
-        "//#check:patches"
+        "//#lint:templates",
+        "//#check:patches",
+        "//#check:docs-api-deps"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
@@ -79,6 +105,40 @@
     "//#lint:root": {
       "inputs": [".oxlintrc.json", "$TURBO_DEFAULT$"]
     },
+    // lit-analyzer over every tracked src .ts, as ONE program-wide pass (the
+    // tag registry is global to the run, so cross-package `<ui-view>` usage
+    // only resolves when everything is analyzed together).
+    "//#lint:templates": {
+      // Cross-package element types come from the published d.ts, not src:
+      // with dist absent `<ui-view>` resolves to nothing, so a
+      // type-incompatible binding against it goes unreported (the run only
+      // fails on unrelated no-missing-import noise). Root has
+      // no workspace dep on the packages, so `^build:types` cannot reach
+      // them; these are package-qualified for that reason. ADD A LINE HERE
+      // whenever a new package ships custom elements consumed by templates in
+      // packages/*/src, apps/*/src or examples/*/src.
+      "dependsOn": [
+        "lit-ui-router#build:types",
+        "lit-ui-router-mobx#build:types"
+      ],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        // over-approximate: `**/*.ts` would skip files sitting directly in
+        // `src/`, which is exactly the bug these globs used to have
+        "packages/*/src/**",
+        "apps/*/src/**",
+        "examples/*/src/**",
+        // examples resolve a published lit-ui-router, so a lockfile bump can
+        // change what the analyzer sees without any src change
+        "examples/*/package-lock.json",
+        "tools/lit-template-lint/src/**",
+        "tools/compat-guards/src/**",
+        "tools/shared/src/**",
+        // carries the `ts-lit-plugin` ruleset lit-analyzer reads from cwd
+        "tsconfig.json",
+        "pnpm-workspace.yaml"
+      ]
+    },
     "//#check:patches": {
       // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
       // could rotate a patch target re-runs the check
@@ -90,6 +150,15 @@
         "tools/shared/src/**"
       ]
     },
+    "//#check:docs-api-deps": {
+      // any manifest can gain or lose a docs:api script, or docs can lose a dep
+      "inputs": [
+        "check-docs-api-deps.ts",
+        "**/package.json",
+        "pnpm-workspace.yaml",
+        "tools/shared/src/**"
+      ]
+    },
     "//#lint:package-json": {
       "inputs": [
         "**/package.json",
@@ -97,6 +166,18 @@
         "eslint.repo-rules.ts",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
+      ]
+    },
+    // Content lint (not config plumbing, so deliberately not under
+    // //#lint:workflows): rumdl over every tracked .md. Its own cache group,
+    // disjoint from oxfmt's format group, which owns .md *formatting*.
+    "//#lint:markdown": {
+      "inputs": [
+        "**/*.md",
+        "!**/node_modules/**",
+        "$TURBO_ROOT$/.config/rumdl.toml",
+        "$TURBO_ROOT$/.config/mise/tasks/rumdl",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     // Config-plumbing lint: one //# cache group per tool, aggregated by the
@@ -156,11 +237,39 @@
       // types come from build:types alone; JS emit stays off the typecheck path
       "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"],
-      "with": ["//#typecheck:root", "typecheck:src"]
+      // compat typechecks ride along: `turbo run typecheck` is the one command
+      // that answers "do the types hold", and `with` propagates their failure
+      "with": [
+        "//#typecheck:root",
+        "typecheck:src",
+        "typecheck:lit2",
+        "typecheck:mobx6"
+      ]
     },
     "typecheck:src": {
       "dependsOn": ["^build:types"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    // src against the lit-2 alias's types; separate from test:lit2-compat so
+    // the fast lane reports and caches without waiting on the suites.
+    "typecheck:lit2": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
+    // src against the mobx-6 alias's types; separate from test:mobx6-compat so
+    // the fast lane reports and caches without waiting on the suites. Gated,
+    // unlike typecheck:peer-floor: the alias tracks published mobx.
+    "typecheck:mobx6": {
+      "dependsOn": ["^build:types"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/tsconfig.base.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
     },
     "typecheck:peer-floor": {
       // manual-only: not in ci — the floor pin can only reference published
@@ -181,6 +290,8 @@
         "build",
         "test",
         "test:coverage",
+        "test:lit2-compat",
+        "test:mobx6-compat",
         "lint",
         "typecheck",
         "format:check",
@@ -212,17 +323,15 @@
       "cache": false,
       "passThroughEnv": ["CODECOV_TOKEN", "CI", "GITHUB_*"]
     },
+    // WRITER. Rewrites its own inputs in place and declares no outputs, so a
+    // cache hit restores nothing and silently leaves the tree unformatted;
+    // uncacheable is the only correct setting. Not in any ci:* graph — the
+    // gate is format:check. Run it ALONE: oxfmt truncates in place, so any
+    // reader co-scheduled with it (lint:templates, test, format:check) can
+    // observe a 0-byte source file.
     "format": {
       "with": ["//#format:root", "//#format:toml"],
-      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
-      // mid-graph and oxfmt (gitignore-aware) never reads them
-      "inputs": [
-        "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
-        "!dist/**",
-        "!.cache/**",
-        ".oxfmtrc.json",
-        "$TURBO_ROOT$/.oxfmtrc.json"
-      ]
+      "cache": false
     },
     "format:check": {
       "with": ["//#format:check:root", "//#format:check:toml"],
@@ -234,22 +343,18 @@
         "$TURBO_ROOT$/.oxfmtrc.json"
       ]
     },
+    // WRITER, uncacheable for the same reason as `format` above.
     "//#format:root": {
-      "inputs": ["$TURBO_DEFAULT$"]
+      "cache": false
     },
     "//#format:check:root": {
       "inputs": ["$TURBO_DEFAULT$"]
     },
-    // taplo owns .toml; separate root task so its cache key tracks only .toml
-    // (plus the .taplo.toml scoping and taplo's pin), disjoint from oxfmt above.
+    // taplo owns .toml, disjoint from the oxfmt writers above. WRITER,
+    // uncacheable for the same reason as `format`. //#format:check:toml keeps
+    // the .toml-scoped cache key.
     "//#format:toml": {
-      "inputs": [
-        "**/*.toml",
-        "!**/node_modules/**",
-        "$TURBO_ROOT$/.config/taplo.toml",
-        "$TURBO_ROOT$/.config/mise/tasks/taplo",
-        "$TURBO_ROOT$/.config/mise/mise.lock"
-      ]
+      "cache": false
     },
     "//#format:check:toml": {
       "inputs": [
@@ -271,12 +376,13 @@
       "persistent": true
     },
     "docs": {
-      "dependsOn": ["^build", "^docs:api"],
+      "dependsOn": ["^build"],
       "cache": false,
       "persistent": true
     },
     "docs:api": {
-      "dependsOn": ["^build", "^docs:api"],
+      // deliberately no self-chain (cf. build:types): it would serialize these
+      "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$"]
     }
   }

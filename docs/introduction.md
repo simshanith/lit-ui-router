@@ -52,7 +52,7 @@ This inversion pays off as applications grow:
   fetch data during the transition, so components render with their data
   already available — no loading-state plumbing in every view.
 - **Hierarchy is first-class.** Child states render inside parent states via
-  nested [`<ui-view>`](./tutorial/hellogalaxy#nested-ui-view) viewports, and
+  nested [`<ui-view>`](./tutorial/hellogalaxy#nested-ui-view-with-fallback-content) viewports, and
   inherit their parents' parameters and resolved data.
 - **Navigation is interceptable.** Transition hooks implement cross-cutting
   concerns like authentication guards, analytics, and redirects in one place.
@@ -82,11 +82,12 @@ resolves. `lit-ui-router` layers the Lit integration on top:
 This repository publishes a small family of packages. The core router is all
 you need to start; the companions are optional layers.
 
-| Package                                                                                                      | What it is                                                                                                                              |
-| ------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------- |
-| [`lit-ui-router`](https://www.npmjs.com/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./api/reference/) |
-| [`lit-ui-router-mobx`](https://www.npmjs.com/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./packages/mobx)            |
-| [`ui-router-navigation-location-plugin`](https://www.npmjs.com/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./packages/navigation-plugin)                     |
+| Package                                                                                                 | What it is                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| [`lit-ui-router`](https://npmx.dev/package/lit-ui-router)                                               | The router: state machine, `<ui-router>`/`<ui-view>` elements, navigation directives, `TransitionController`. [API →](./api/reference/) |
+| [`lit-ui-router-mobx`](https://npmx.dev/package/lit-ui-router-mobx)                                     | [MobX](https://mobx.js.org) bindings: an observable `RouterStore` and reaction-based controllers. [Guide →](./packages/mobx)            |
+| [`ui-router-navigation-location-plugin`](https://npmx.dev/package/ui-router-navigation-location-plugin) | An experimental location plugin built on the modern browser Navigation API. [Guide →](./packages/navigation-plugin)                     |
+| [`ui-router-server`](https://npmx.dev/package/ui-router-server)                                         | Server-side routing verdicts at the edge — honest 404/302/200 for static SPAs (in development). [Guide →](./packages/server)            |
 
 Because lit-ui-router is a `@uirouter/core` implementation, the wider
 UI-Router plugin ecosystem works too. The <a href="/app" target="_self">sample

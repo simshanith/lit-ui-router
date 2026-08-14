@@ -11,12 +11,6 @@
  * core, and resolve() is async so that boundary can hold.
  */
 
-// Travels with the module through the import graph: a consumer typechecking
-// these sources via a plain import (types: []) never loads unreferenced
-// ambient files, so the globals shims must be referenced, not just included.
-// eslint-disable-next-line typescript/triple-slash-reference -- an ESM import of the ambient file would survive node's type stripping and 404 at runtime; the directive is type-space only
-/// <reference path="./globals.d.ts" />
-
 import type { RawParams, StateDeclaration } from '@uirouter/core';
 
 import { compileRedirects, compileRoutes, matchRoute } from './redirects.ts';
@@ -38,7 +32,7 @@ export type {
 const SETTLE_TIMEOUT_MS = 100;
 
 export interface MountConfig {
-  /** The mount's state tree; dotted names nest, urls append (see [[RouteDeclaration]]). */
+  /** The mount's state tree; dotted names nest, urls append (see {@link RouteDeclaration}). */
   routes: RouteDeclaration[];
   /** when()-style pattern rules, evaluated before per-state redirectTo entries. */
   redirects?: RedirectRule[];
@@ -47,7 +41,7 @@ export interface MountConfig {
    * redirects. 'simulate': replay through a headless @uirouter/core router —
    * the tier where routing that data cannot express (hooks, resolves,
    * redirectTo functions) will live. Those are NOT yet reachable through
-   * MountConfig: both strategies consume the same [[RouteDeclaration]] data
+   * MountConfig: both strategies consume the same {@link RouteDeclaration} data
    * subset today, deliberately, so strategy stays a pure cost knob; the
    * config widens later (e.g. an auth tier).
    */
@@ -137,17 +131,24 @@ const toTarget = (to: string | RedirectTarget): RedirectTarget =>
  * default replacement for `location + url.search`, which yields `?a=1?b=2`.
  * Params the redirect target declared win; remaining request params are
  * appended (all values of multi-value keys). Accepts the incoming search
- * with or without the leading '?'. Operates on `pathname?search` strings as
- * produced in redirect verdicts (no fragment handling).
+ * with or without the leading '?'. Operates on `pathname?search#fragment`
+ * strings as produced in redirect verdicts: a fragment (which
+ * {@link matcher!format | format} emits for a `'#'` param value) is detached
+ * before the merge and re-appended after it, so the query keeps its place
+ * ahead of the fragment.
  */
 export function mergeSearch(location: string, incoming: string): string {
   const query = incoming.startsWith('?') ? incoming.substring(1) : incoming;
   if (!query) return location;
-  const cut = location.indexOf('?');
-  const pathname = cut === -1 ? location : location.substring(0, cut);
-  const target = new URLSearchParams(
-    cut === -1 ? '' : location.substring(cut + 1),
-  );
+  // Split the fragment off FIRST. It terminates the url, so a '?' after it is
+  // fragment text rather than a query — and merging into `pathname#frag` would
+  // otherwise append `?a=1` past the '#', where no agent will ever read it.
+  const hash = location.indexOf('#');
+  const fragment = hash === -1 ? '' : location.substring(hash);
+  const base = hash === -1 ? location : location.substring(0, hash);
+  const cut = base.indexOf('?');
+  const pathname = cut === -1 ? base : base.substring(0, cut);
+  const target = new URLSearchParams(cut === -1 ? '' : base.substring(cut + 1));
   const request = new URLSearchParams(query);
   const keys = new Set<string>();
   request.forEach((_value, key) => keys.add(key));
@@ -156,7 +157,7 @@ export function mergeSearch(location: string, incoming: string): string {
     for (const value of request.getAll(key)) target.append(key, value);
   }
   const merged = target.toString();
-  return merged ? `${pathname}?${merged}` : pathname;
+  return merged ? `${pathname}?${merged}${fragment}` : `${pathname}${fragment}`;
 }
 
 // --- Mount compilation (construction-time, strategy-independent) ---------

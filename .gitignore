@@ -42,8 +42,10 @@ certs/
 .claude
 
 # mise local overrides (machine-local env, e.g. TURBO_TOKEN); load after the
-# checked-in config and win, so they stay untracked. *.local.env is the dotenv
-# turbo_login writes (remote-cache creds + the sensitive worker domain).
+# checked-in config and win, so they stay untracked. *.local.env covers the
+# config.toml `_.file` dotenvs: turbo.local.env (written by turbo_login —
+# remote-cache creds + the sensitive worker domain) and the hand-created
+# cloudflare.local.env (Workers Builds API token + account id).
 .config/mise/**/*.local.toml
 .config/mise/**/*.local.env
 mise.local.toml
@@ -51,6 +53,9 @@ mise.*.local.toml
 
 # package-local resolved-state caches (e.g. tools/release/.cache)
 .cache/
+
+# rumdl ships a self-ignoring .rumdl_cache/.gitignore; belt-and-braces for a pre-1.0 tool
+.rumdl_cache/
 
 lit-ui-router-*.tgz
 **/specs/__screenshots__

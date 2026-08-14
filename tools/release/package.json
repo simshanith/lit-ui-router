@@ -18,6 +18,7 @@
   },
   "devDependencies": {
     "@arethetypeswrong/core": "catalog:",
+    "@pnpm/logger": "catalog:",
     "@pnpm/types": "catalog:",
     "@pnpm/workspace.project-manifest-reader": "catalog:",
     "@tools/shared": "workspace:*",
@@ -28,6 +29,7 @@
     "pacote": "catalog:",
     "publint": "catalog:",
     "typescript": "catalog:",
-    "ui-router-navigation-location-plugin": "workspace:*"
+    "ui-router-navigation-location-plugin": "workspace:*",
+    "ui-router-server": "workspace:*"
   }
 }

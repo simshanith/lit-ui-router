@@ -1,11 +1,11 @@
 import { LitElement, html } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, property } from 'lit/decorators.js';
 import { UIViewInjectedProps } from 'lit-ui-router';
 
 import './ContactList.js';
 import { Contact } from './interface.js';
 
-interface ContactsResolves {
+export interface ContactsResolves {
   contacts: Contact[];
 }
 
@@ -15,12 +15,17 @@ export class Contacts extends LitElement {
     return this;
   }
 
-  constructor(public _uiViewProps: UIViewInjectedProps<ContactsResolves>) {
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
+  @property({ attribute: false })
+  _uiViewProps!: UIViewInjectedProps<ContactsResolves>;
+
+  constructor(_uiViewProps: UIViewInjectedProps<ContactsResolves>) {
     super();
+    this._uiViewProps = _uiViewProps;
   }
 
   get contacts() {
-    return [...(this._uiViewProps.resolves?.contacts ?? [])];
+    return [...(this._uiViewProps?.resolves?.contacts ?? [])];
   }
 
   render() {

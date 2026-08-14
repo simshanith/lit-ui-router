@@ -21,6 +21,66 @@ import {
   routerGo,
 } from './test-utils.js';
 
+// Module-scope fixtures delegate to these handles, reassigned per test so each
+// test keeps its own spy/state.
+let canExit: UiOnExit['uiCanExit'];
+let paramsChanged: UiOnParamsChanged['uiOnParamsChanged'];
+let receiveParams: UiOnParamsChanged['uiOnParamsChanged'];
+
+@customElement('test-exit-component')
+class TestExitComponent extends LitElement implements UiOnExit {
+  uiCanExit = (trans?: Transition) => canExit(trans);
+  render() {
+    return html`<div>Exit Component</div>`;
+  }
+}
+
+@customElement('test-block-exit-component')
+class TestBlockExitComponent extends LitElement implements UiOnExit {
+  uiCanExit() {
+    return false;
+  }
+  render() {
+    return html`<div>Block Exit</div>`;
+  }
+}
+
+@customElement('test-params-component')
+class TestParamsComponent extends LitElement implements UiOnParamsChanged {
+  uiOnParamsChanged(
+    ...args: Parameters<UiOnParamsChanged['uiOnParamsChanged']>
+  ) {
+    paramsChanged(...args);
+  }
+  render() {
+    return html`<div>Params Component</div>`;
+  }
+}
+
+@customElement('test-params-receive-component')
+class TestParamsReceiveComponent
+  extends LitElement
+  implements UiOnParamsChanged
+{
+  uiOnParamsChanged(
+    ...args: Parameters<UiOnParamsChanged['uiOnParamsChanged']>
+  ) {
+    receiveParams(...args);
+  }
+  render() {
+    return html`<div>Params Component</div>`;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'test-exit-component': TestExitComponent;
+    'test-block-exit-component': TestBlockExitComponent;
+    'test-params-component': TestParamsComponent;
+    'test-params-receive-component': TestParamsReceiveComponent;
+  }
+}
+
 describe('UiView', () => {
   let container: HTMLElement;
   let router: UIRouterLit;
@@ -28,6 +88,10 @@ describe('UiView', () => {
   beforeEach(() => {
     container = document.createElement('div');
     document.body.appendChild(container);
+    // Fresh, inert defaults so no handle leaks between tests.
+    canExit = () => true;
+    paramsChanged = () => {};
+    receiveParams = () => {};
   });
 
   afterEach(() => {
@@ -294,14 +358,7 @@ describe('UiView', () => {
   describe('uiCanExit hook', () => {
     it('should call uiCanExit on component before exiting', async () => {
       const uiCanExitSpy = vi.fn().mockReturnValue(true);
-
-      @customElement('test-exit-component')
-      class TestExitComponent extends LitElement implements UiOnExit {
-        uiCanExit = uiCanExitSpy;
-        render() {
-          return html`<div>Exit Component</div>`;
-        }
-      }
+      canExit = uiCanExitSpy;
 
       const states: LitStateDeclaration[] = [
         {
@@ -328,16 +385,6 @@ describe('UiView', () => {
     });
 
     it('should prevent navigation when uiCanExit returns false', async () => {
-      @customElement('test-block-exit-component')
-      class TestBlockExitComponent extends LitElement implements UiOnExit {
-        uiCanExit() {
-          return false;
-        }
-        render() {
-          return html`<div>Block Exit</div>`;
-        }
-      }
-
       const states: LitStateDeclaration[] = [
         {
           name: 'home',
@@ -371,17 +418,7 @@ describe('UiView', () => {
   describe('uiOnParamsChanged hook', () => {
     it('should call uiOnParamsChanged when params change', async () => {
       const onParamsChangedSpy = vi.fn();
-
-      @customElement('test-params-component')
-      class TestParamsComponent
-        extends LitElement
-        implements UiOnParamsChanged
-      {
-        uiOnParamsChanged = onParamsChangedSpy;
-        render() {
-          return html`<div>Params Component</div>`;
-        }
-      }
+      paramsChanged = onParamsChangedSpy;
 
       const states: LitStateDeclaration[] = [
         {
@@ -407,19 +444,9 @@ describe('UiView', () => {
 
     it('should pass changed params to uiOnParamsChanged', async () => {
       let receivedParams: Record<string, unknown> | undefined;
-
-      @customElement('test-params-receive-component')
-      class TestParamsReceiveComponent
-        extends LitElement
-        implements UiOnParamsChanged
-      {
-        uiOnParamsChanged(newParams: Record<string, unknown>) {
-          receivedParams = newParams;
-        }
-        render() {
-          return html`<div>Params Component</div>`;
-        }
-      }
+      receiveParams = (newParams) => {
+        receivedParams = newParams;
+      };
 
       const states: LitStateDeclaration[] = [
         {

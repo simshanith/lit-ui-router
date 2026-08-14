@@ -18,7 +18,8 @@ redirect, and a real 404.
 [`ui-router-server`](https://github.com/simshanith/lit-ui-router/tree/main/packages/ui-router-server)
 packages that decision as a **routing verdict** — a pathname in, a plain
 object out; no `fetch`, no `Response`, no runtime assumptions — so the server
-itself stays a thin consumer. This site runs the pattern in production, and
+itself stays a thin consumer (the [package page](/packages/server) covers the
+tiers, adapters, and status). This site runs the pattern in production, and
 not just the destination: the Cloudflare Worker behind lit-ui-router.dev
 serves the whole spectrum below, live and side by side, from the
 platform-default fallback to a full headless router per request.
@@ -126,7 +127,7 @@ and
 and a documented one-liner everywhere else: nginx
 `try_files $uri /index.html;`, a Netlify `/* /index.html 200` redirect. The
 pattern even ships as a package —
-[`connect-history-api-fallback`](https://www.npmjs.com/package/connect-history-api-fallback),
+[`connect-history-api-fallback`](https://npmx.dev/package/connect-history-api-fallback),
 ~14 million weekly downloads — and it is what this site itself shipped
 before this stack.
 

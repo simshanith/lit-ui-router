@@ -13,6 +13,7 @@ import {
   Context,
   DeclarationReflection,
   Reflection,
+  ReflectionKind,
   Comment,
   CommentTag,
   RendererEvent,
@@ -175,6 +176,28 @@ function buildExternalSymbolMappings(
   }
 
   return mappings;
+}
+
+/**
+ * Flatten an `externalSymbolLinkMappings` map to `symbolName -> url`.
+ *
+ * Two shapes land in that option: TypeDoc's own `{ package: { symbol: url } }`
+ * (what `typedoc.json` declares) and this plugin's `{ symbol: { '': url } }`.
+ * Both feed `[[SymbolName]]` resolution, which is keyed by symbol alone.
+ */
+function flattenExternalSymbolMappings(
+  mappings: Record<string, Record<string, string>>,
+): Record<string, string> {
+  const flat: Record<string, string> = {};
+
+  for (const [outer, entries] of Object.entries(mappings)) {
+    for (const [inner, url] of Object.entries(entries)) {
+      if (!url || inner === '*') continue;
+      flat[inner === '' ? outer : inner] = url;
+    }
+  }
+
+  return flat;
 }
 
 /**
@@ -524,36 +547,21 @@ function linkReflectionTypes(
 function handleSymbolLinks(context: Context, app: Application): void {
   const customMappings =
     app.options.getValue('externalSymbolLinkMappings') || {};
-  const symbolMap: Record<string, string> = { ...EXTERNAL_SYMBOLS };
-
-  for (const key in customMappings) {
-    symbolMap[key] = customMappings[key][''] || '';
-  }
-
-  const visitReflection = (reflection: Reflection): void => {
-    if (reflection instanceof DeclarationReflection && reflection.signatures) {
-      for (const sig of reflection.signatures) {
-        if (sig.comment) {
-          processComment(sig.comment, symbolMap);
-        }
-      }
-    }
-
-    if (reflection instanceof DeclarationReflection && reflection.comment) {
-      processComment(reflection.comment, symbolMap);
-    }
-
-    if ('children' in reflection) {
-      const withChildren = reflection as { children?: Reflection[] };
-      if (withChildren.children) {
-        for (const child of withChildren.children) {
-          visitReflection(child);
-        }
-      }
-    }
+  const symbolMap: Record<string, string> = {
+    ...EXTERNAL_SYMBOLS,
+    ...flattenExternalSymbolMappings(customMappings),
   };
 
-  visitReflection(context.project);
+  // The project registry holds every reflection, including the ones a
+  // children-only walk misses: accessor get/set signatures, parameters, and
+  // the signatures hanging off a function type alias's declaration.
+  for (const reflection of context.project.getReflectionsByKind(
+    ReflectionKind.All,
+  )) {
+    if (reflection.comment) {
+      processComment(reflection.comment, symbolMap);
+    }
+  }
 }
 
 /**

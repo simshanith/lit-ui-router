@@ -69,22 +69,21 @@ Add custom symbol mappings in your `typedoc.json`:
 ```json
 {
   "externalSymbolLinkMappings": {
-    "CustomType": {
-      "": "https://example.com/docs/customtype.html"
+    "@uirouter/core": {
+      "CustomType": "https://example.com/docs/customtype.html"
     }
   }
 }
 ```
 
+TypeDoc's own `{ package: { symbol: url } }` shape and the legacy
+`{ symbol: { "": url } }` shape both feed `[[SymbolName]]` resolution.
+
 ## Unknown Symbols
 
-Symbols not in the predefined map or custom mappings are logged as warnings and linked to local anchors:
-
-```bash
-[typedoc-plugin-lit-ui-router] Unknown symbol: [[MyCustomType]]
-```
-
-This generates: `{@link #mycustomtype | MyCustomType}`
+A symbol in neither the predefined map, the custom mappings, nor the local
+symbol pages renders as bare text — the `[[…]]` brackets are stripped but no
+link is emitted.
 
 ## URL Templates
 
@@ -97,7 +96,7 @@ This generates: `{@link #mycustomtype | MyCustomType}`
 
 ## Symbol File Structure
 
-```
+```text
 src/symbols/
 ├── index.ts      # Combined exports
 ├── ui-router.ts  # UI-Router Core symbols (templated)

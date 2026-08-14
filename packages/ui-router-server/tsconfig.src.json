@@ -1,0 +1,9 @@
+{
+  // Same runtime-neutral graph as tsconfig.json, plus the conformance guard
+  // for oxc-emit-dts, which never typechecks.
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "declaration": true,
+    "isolatedDeclarations": true
+  }
+}

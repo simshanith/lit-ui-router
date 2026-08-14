@@ -348,4 +348,68 @@ describe('mergeSearch', () => {
       );
     }
   });
+
+  // A fragment reaches a location whenever the redirect target declares a '#'
+  // param, which format() documents and RedirectTarget.params accepts. The
+  // query has to land BEFORE it: '#' terminates the url, so anything appended
+  // past it is fragment text the server never gets back.
+  it('keeps the query ahead of a fragment', () => {
+    assert.equal(
+      mergeSearch('/app/new#section', '?a=1'),
+      '/app/new?a=1#section',
+    );
+  });
+
+  it('merges into a location carrying both a query and a fragment', () => {
+    // Regression: splitting on '?' alone parsed 'tab=x#section' as one value,
+    // so toString() percent-encoded the '#' into the query (tab=x%23section)
+    // and destroyed the fragment outright.
+    assert.equal(
+      mergeSearch('/app/new?tab=x#section', '?a=1'),
+      '/app/new?tab=x&a=1#section',
+    );
+  });
+
+  it('preserves a fragment that itself contains a question mark', () => {
+    assert.equal(mergeSearch('/a#b?c', 'q=1'), '/a?q=1#b?c');
+  });
+
+  it('leaves a fragment alone when there is nothing to merge', () => {
+    assert.equal(mergeSearch('/a#b', ''), '/a#b');
+    assert.equal(mergeSearch('/a?p=1#b', '?p=9'), '/a?p=1#b');
+  });
+
+  it('emits no stray "?" when the request search parses to no params', () => {
+    // Separators only: non-empty (so no early return) but zero entries, so the
+    // merge yields nothing. The location comes back whole — fragment included,
+    // which is the arm that re-appends it without a query.
+    assert.equal(mergeSearch('/a', '&'), '/a');
+    assert.equal(mergeSearch('/a#b', '&'), '/a#b');
+  });
+
+  it('carries a fragment through a real redirect verdict', async () => {
+    const router = createServerRouter({
+      mounts: {
+        '/app': {
+          routes: [
+            { name: 'new', url: '/new' },
+            {
+              name: 'old',
+              url: '/old',
+              redirectTo: { state: 'new', params: { '#': 'section' } },
+            },
+          ],
+        },
+      },
+    });
+    const verdict = await router.resolve('/app/old');
+    assert.equal(verdict.kind, 'redirect');
+    if (verdict.kind === 'redirect') {
+      assert.equal(verdict.location, '/app/new#section');
+      assert.equal(
+        mergeSearch(verdict.location, '?a=1'),
+        '/app/new?a=1#section',
+      );
+    }
+  });
 });

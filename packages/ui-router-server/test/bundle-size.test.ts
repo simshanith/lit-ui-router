@@ -15,7 +15,7 @@ import { readPackageProbe } from '@tools/bundle-probe/entries';
 // gated. (History: the matcher once targeted the 10,240 B CloudFront
 // Functions ceiling; that adapter line is abandoned and the number survives
 // only as context in the diagnostics.)
-const { declared, entries } = await readPackageProbe(
+const { declared, entries } = readPackageProbe(
   fileURLToPath(new URL('..', import.meta.url)),
 );
 const matcher = entries.find((entry) => entry.label === 'matcher');

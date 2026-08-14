@@ -21,16 +21,18 @@
       "dependsOn": ["bundle:worker"]
     },
     "docs:preview": {
-      "dependsOn": ["^docs:api", "build"],
+      "dependsOn": ["build"],
       "cache": false,
       "persistent": true
     },
     "wrangler:dev": {
-      "dependsOn": ["^docs:api", "build"],
+      "dependsOn": ["build"],
       "cache": false,
       "persistent": true
     },
     "build": {
+      // docs devDepends on the docs:api producers purely so this `^` reaches
+      // them (it walks direct deps only): unimported by design, not prunable.
       "dependsOn": [
         "^build",
         "^docs:api",

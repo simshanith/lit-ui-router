@@ -6,13 +6,31 @@ import {
   canUseNavigationAPI,
 } from '../util/featureDetection.js';
 
-interface FlagConfig {
-  key: keyof FeatureFlagDefinitions;
+/** Flag keys whose declared value type is assignable to `T`. */
+type FlagKeysOfType<T> = {
+  [K in keyof FeatureFlagDefinitions]: FeatureFlagDefinitions[K] extends T
+    ? K
+    : never;
+}[keyof FeatureFlagDefinitions];
+
+interface FlagConfigBase {
   label: string;
   description: string;
-  type: 'boolean' | 'select';
-  options?: { value: string | undefined; label: string }[];
 }
+
+interface BooleanFlagConfig extends FlagConfigBase {
+  key: FlagKeysOfType<boolean>;
+  type: 'boolean';
+}
+
+interface SelectFlagConfig extends FlagConfigBase {
+  key: FlagKeysOfType<string | undefined>;
+  type: 'select';
+  options: { value: string | undefined; label: string }[];
+}
+
+// Discriminated so `type` correlates the control with the flag's value type.
+type FlagConfig = BooleanFlagConfig | SelectFlagConfig;
 
 const navigationApiLabel = canUseNavigationAPI()
   ? 'Navigation API (Available)'
@@ -148,10 +166,10 @@ export class FeatureFlagsPanel extends LitElement {
   }
 
   private _renderFlagControl(config: FlagConfig): TemplateResult {
-    const value = this._flags[config.key];
     const isOverridden = featureFlags.isUrlOverridden(config.key);
 
     if (config.type === 'boolean') {
+      const value = this._flags[config.key];
       return html`
         <input
           type="checkbox"
@@ -162,24 +180,21 @@ export class FeatureFlagsPanel extends LitElement {
       `;
     }
 
-    if (config.type === 'select' && config.options) {
-      return html`
-        <select
-          ?disabled=${isOverridden}
-          @change=${(e: Event) => this._handleSelectChange(config.key, e)}
-        >
-          ${config.options.map(
-            (opt) => html`
-              <option value=${opt.value ?? ''} ?selected=${value === opt.value}>
-                ${opt.label}
-              </option>
-            `,
-          )}
-        </select>
-      `;
-    }
-
-    return html``;
+    const value = this._flags[config.key];
+    return html`
+      <select
+        ?disabled=${isOverridden}
+        @change=${(e: Event) => this._handleSelectChange(config.key, e)}
+      >
+        ${config.options.map(
+          (opt) => html`
+            <option value=${opt.value ?? ''} ?selected=${value === opt.value}>
+              ${opt.label}
+            </option>
+          `,
+        )}
+      </select>
+    `;
   }
 
   render() {
@@ -192,9 +207,11 @@ export class FeatureFlagsPanel extends LitElement {
             <div class="flag-info">
               <div class="flag-label">
                 ${config.label}
-                ${featureFlags.isUrlOverridden(config.key)
-                  ? html`<span class="url-override">(URL override)</span>`
-                  : ''}
+                ${
+                  featureFlags.isUrlOverridden(config.key)
+                    ? html`<span class="url-override">(URL override)</span>`
+                    : ''
+                }
               </div>
               <div class="flag-description">${config.description}</div>
             </div>

@@ -1,0 +1,26 @@
+# Auto-discovered from this path (`rumdl config file` confirms it) — unlike
+# .config/taplo.toml, no mise [env] pointer is needed.
+#
+# File selection is NOT done here: the mise task passes rumdl an explicit list
+# from `git ls-files -- '*.md'` (rumdl's own walker does not skip node_modules).
+
+[global]
+# MD013 (line length 80): oxfmt does not hard-wrap markdown prose, so the rule
+# fights the formatter. MD033 (inline HTML): docs/ is VitePress, where inline
+# HTML is legitimate. MD057 (relative link targets exist): docs/api/* links
+# point into docs/api/reference, typedoc output that is gitignored and absent at
+# lint time; VitePress's own ignoreDeadLinks-gated build already checks these.
+# MD036 (emphasis as heading): the hits are labels on sibling code samples, and
+# only the labels without a trailing parenthetical trip it — promoting them
+# would inject partial entries into the VitePress outline and sidebar.
+disable = ["MD013", "MD033", "MD036", "MD057"]
+
+# rumdl counts a VitePress frontmatter `title:` as an H1, so any page with both
+# `title:` and an `#` heading reads as a duplicate/missing H1. Empty = don't
+# treat frontmatter as the title. Without it the autofix demotes the whole
+# heading tree, breaking the rendered page title and every anchor.
+[MD025]
+front_matter_title = ""
+
+[MD041]
+front_matter_title = ""

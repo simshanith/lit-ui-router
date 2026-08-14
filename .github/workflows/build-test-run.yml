@@ -163,12 +163,24 @@ jobs:
           path: apps/sample-app-lit-e2e/cypress/videos*/
           retention-days: 5
           if-no-files-found: warn
+      - name: Upload wrangler logs
+        # The e2e dev server (wrangler dev) intermittently crashes mid-suite
+        # with an empty error; its crash log lands only in the runner's
+        # ~/.config/.wrangler/logs, so keep it when the job fails. A failure
+        # before the e2e server starts leaves no files, hence warn.
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: wrangler-logs
+          path: ~/.config/.wrangler/logs/
+          retention-days: 5
+          if-no-files-found: warn
       - name: Upload to Codecov
         # Branch-head runs skip upload; merge-head/main covers the same SHA.
         if: ${{ github.event_name != 'push' || github.ref == 'refs/heads/main' }}
         uses: codecov/codecov-action@v7
         with:
-          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json
+          files: packages/lit-ui-router/coverage/lcov.info,packages/lit-ui-router/coverage/coverage-final.json,packages/lit-ui-router-mobx/coverage/lcov.info,packages/lit-ui-router-mobx/coverage/coverage-final.json,packages/navigation-location-plugin/coverage/lcov.info,packages/navigation-location-plugin/coverage/coverage-final.json,packages/ui-router-server/coverage/lcov.info
           disable_search: true
           plugins: noop
           fail_ci_if_error: false

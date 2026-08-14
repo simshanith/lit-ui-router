@@ -4,17 +4,12 @@
   "compilerOptions": {
     "rootDir": ".",
     "noEmit": true,
-    // Specs import @tools/happy-dom's source-exported .ts files.
+    // Specs and vitest.setup.ts import @tools/* source-exported .ts files.
     "allowImportingTsExtensions": true,
     // specs are exempt; typecheck:src enforces conformance
     "isolatedDeclarations": false,
     "types": ["node", "vitest/globals"]
   },
-  "include": [
-    "src/**/*",
-    "peer-floor-guard.ts",
-    "vitest.config.ts",
-    "vitest.setup.ts"
-  ],
+  "include": ["src/**/*", "vitest.config.ts", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"]
 }

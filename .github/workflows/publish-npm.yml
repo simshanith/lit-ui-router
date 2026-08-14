@@ -15,6 +15,7 @@ on:
       - 'lit-ui-router@*'
       - 'lit-ui-router-mobx@*'
       - 'ui-router-navigation-location-plugin@*'
+      - 'ui-router-server@*'
   workflow_dispatch:
     inputs:
       package:
@@ -25,6 +26,7 @@ on:
           - lit-ui-router
           - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
+          - ui-router-server
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false
@@ -52,7 +54,7 @@ jobs:
         with:
           fetch-depth: 0
           fetch-tags: true
-          # Nothing in this job pushes: the packages' .release-it.json turns
+          # Nothing in this job pushes: the packages' .release-it.js turns
           # git commit/tag/push off, so no credentials need to persist.
           persist-credentials: false
       - name: Setup mise
@@ -105,9 +107,10 @@ jobs:
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
       - name: Attest build provenance
         # Generate SLSA provenance attestation for supply chain security.
+        # subject-path alone (no predicate/sbom input) selects attest's provenance mode.
         # Skipped on manual dry runs: this hits Sigstore/rekor for real and isn't part of release-it's --dry-run.
         if: ${{ !inputs.dryRun }}
-        uses: actions/attest-build-provenance@0f67c3f4856b2e3261c31976d6725780e5e4c373 # v4.1.1
+        uses: actions/attest@1e69f48acb82d1966a394da916b4c1698aa569d6 # v4.2.2
         with:
           subject-path: ${{ steps.pack.outputs.tarball }}
       - name: Publish

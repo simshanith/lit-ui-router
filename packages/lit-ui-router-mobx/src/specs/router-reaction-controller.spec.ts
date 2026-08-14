@@ -1,7 +1,6 @@
 import { describe, it, expect, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement } from 'lit/decorators.js';
-import { comparer } from 'mobx';
 import { UIRouterLit, UIRouterLitElement } from 'lit-ui-router';
 
 import { RouterReactionController } from '../router-reaction-controller.js';
@@ -9,6 +8,7 @@ import { appendParentFirst } from '@tools/happy-dom/append.ts';
 import {
   createTestRouter,
   routerGo,
+  structural,
   testStates,
   waitForUpdate,
 } from './test-utils.js';
@@ -147,7 +147,7 @@ describe('RouterReactionController', () => {
     const host = createHost();
     const onChange = vi.fn();
     new RouterReactionController(host, (route) => ({ id: route.params.id }), {
-      equals: comparer.structural,
+      equals: structural,
       onChange,
     });
     await mountInRouter(host, router);

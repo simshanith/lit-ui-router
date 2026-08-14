@@ -38,3 +38,7 @@ component_management:
       name: lit-ui-router-mobx
       paths:
         - packages/lit-ui-router-mobx/src/**
+    - component_id: ui-router-server
+      name: ui-router-server
+      paths:
+        - packages/ui-router-server/src/**

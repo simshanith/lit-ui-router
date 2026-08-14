@@ -6,6 +6,7 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
+    "check:docs-api-deps": "node check-docs-api-deps.ts",
     "check:pack": "turbo run check:pack",
     "check:patches": "node check-patches.ts",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
@@ -20,9 +21,11 @@
     "format:toml": "mise run format_toml",
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
+    "lint:markdown": "mise run lint_markdown",
     "lint:package-json": "eslint --format tap \"**/package.json\" pnpm-workspace.yaml",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
     "lint:shellcheck": "mise run lint_shellcheck",
+    "lint:templates": "lit-analyzer-ts-guard && lint-templates",
     "lint:toml": "mise run lint_toml",
     "lint:zizmor": "mise run lint_zizmor",
     "prepare": "husky",
@@ -34,6 +37,8 @@
     "@commitlint/cli": "catalog:",
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
+    "@tools/compat-guards": "workspace:*",
+    "@tools/lit-template-lint": "workspace:*",
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "diff": "catalog:",
@@ -55,5 +60,5 @@
   "engines": {
     "node": ">=24.18.0"
   },
-  "packageManager": "pnpm@11.10.0+sha512.0b7f8b98060031904c017e3a41eb187a16d40eeb829b95c4f8cb03681761fc4ab53dd219115b9b447f4dce1a05a214764461e7d3703392a9f32f9511ce8c86c8"
+  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1"
 }

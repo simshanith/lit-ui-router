@@ -30,7 +30,19 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
 # which clobbers a task reading its own stdin — it silently breaks
 # `printf … | mise run turbo_login --token-file -`. Verified on this mise.
-_.file = "{{config_root}}/.config/mise/turbo.local.env"
+# Cloudflare Workers Builds config (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+# for `pnpm check:workers-builds`) lives in a second dotenv, same shape and the
+# same redact trap. Separate from turbo's, not appended to it: `turbo_login`
+# *writes* turbo.local.env and would clobber anything else in it, and the two
+# have different lifecycles (the turbo bearer is shared and static, the CF token
+# is user-scoped and revocable). No task writes this one — hand-create it. It is
+# also NOT linked into git worktrees (see the turbo_link_worktree task, which is
+# turbo-only): `check:workers-builds` is manual-only and never part of CI, so
+# run it from the owning checkout.
+_.file = [
+  "{{config_root}}/.config/mise/turbo.local.env",
+  "{{config_root}}/.config/mise/cloudflare.local.env",
+]
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
@@ -52,6 +64,9 @@ idiomatic_version_file_enable_tools = ["node"]
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.
 "aqua:tamasfe/taplo" = "0.10.0"
+# Markdown linter (markdownlint's rule set, in Rust). Check-only: oxfmt formats
+# .md, rumdl lints it. Pre-1.0, so the pin is load-bearing.
+"aqua:rvben/rumdl" = "0.2.55"
 
 # Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
 # loud; and tool-only bumps (actionlint) skip the corepack ceremony.
@@ -116,6 +131,13 @@ run = "mise run taplo lint"
 # (.config/mise/tasks/shellcheck)
 description = "Static-analyze repo shell scripts (mise tasks, *.sh) with shellcheck"
 run = "mise run shellcheck"
+
+[tasks.lint_markdown]
+# Thin alias; file selection + rationale live in the `rumdl` file task
+# (.config/mise/tasks/rumdl). Deliberately NOT in lint_workflows: that umbrella
+# is CI/config plumbing, and markdown is content.
+description = "Lint tracked Markdown (README, docs, examples) with rumdl"
+run = "mise run rumdl check"
 
 [tasks.lint_workflows]
 # Virtual grouping task; the legs are independent and run in parallel. Covers

@@ -6,9 +6,9 @@
     "noEmit": true,
     // specs are exempt; typecheck:src enforces conformance
     "isolatedDeclarations": false,
-    // Specs import @tools/happy-dom's source-exported .ts files.
+    // Specs and vitest.setup.ts import @tools/* source-exported .ts files.
     "allowImportingTsExtensions": true,
-    "types": ["vitest/globals"]
+    "types": ["node", "vitest/globals"]
   },
   "include": ["src/**/*", "vitest.config.ts", "vitest.setup.ts"],
   "exclude": ["node_modules", "dist"]

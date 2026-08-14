@@ -89,6 +89,7 @@ const PACKAGE_DIRS = [
   'lit-ui-router',
   'lit-ui-router-mobx',
   'navigation-location-plugin',
+  'ui-router-server',
 ].map((dir) => resolve(here, '..', '..', 'packages', dir, 'dist') + sep);
 
 // A file we cannot resolve is treated as ours: it means the compiler reported

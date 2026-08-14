@@ -26,7 +26,13 @@ export function findUnsubstitutedRefs(
   const refs: UnsubstitutedRef[] = [];
   for (const field of DEP_FIELDS) {
     for (const [dep, spec] of Object.entries(manifest?.[field] ?? {})) {
-      if (typeof spec !== 'string') continue;
+      // The type says string; the bytes come from a tarball, so say which
+      // declaration disagreed rather than dying inside String.prototype.trim.
+      if (typeof spec !== 'string') {
+        throw new TypeError(
+          `${field}.${dep}: specifier is ${typeof spec}, not a string`,
+        );
+      }
       if (!UNSUBSTITUTED_PREFIXES.some((p) => spec.trim().startsWith(p))) {
         continue;
       }

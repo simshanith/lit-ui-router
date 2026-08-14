@@ -19,8 +19,9 @@ const formInputs = [
 
 @customElement('sample-contact-form')
 export class ContactForm extends LitElement {
+  // Undefined while creating a new contact (`contacts.new` resolves nothing).
   @property({ attribute: false })
-  contact!: Contact;
+  contact?: Contact;
 
   handleChangeFor(path: string) {
     const { contact } = this;

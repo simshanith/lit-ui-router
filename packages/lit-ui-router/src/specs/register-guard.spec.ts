@@ -1,8 +1,18 @@
 // No static register import: the stubs must be defined before the modules evaluate.
+
+// One helper for both stubs; the tag is a parameter so each `it` reads the
+// same. (This also keeps the stub out of lit-analyzer's tag registry, which
+// only matches `customElements.define('<literal>', X)` — incidental now that
+// the analyzer sees ui-view.ts/ui-router.ts, whose real definitions win.)
+function defineStub(tag: string): CustomElementConstructor {
+  class Stub extends HTMLElement {}
+  customElements.define(tag, Stub);
+  return Stub;
+}
+
 describe('duplicate registration guard', () => {
   it('warns and keeps the first ui-view definition', async () => {
-    class Stub extends HTMLElement {}
-    customElements.define('ui-view', Stub);
+    const Stub = defineStub('ui-view');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await import('../ui-view.register.js');
@@ -15,8 +25,7 @@ describe('duplicate registration guard', () => {
   });
 
   it('warns and keeps the first ui-router definition', async () => {
-    class Stub extends HTMLElement {}
-    customElements.define('ui-router', Stub);
+    const Stub = defineStub('ui-router');
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
 
     await import('../ui-router.register.js');

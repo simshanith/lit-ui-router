@@ -18,6 +18,7 @@
     "ui-router-server": "workspace:*"
   },
   "devDependencies": {
+    "@tools/wintercg-globals": "workspace:*",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "typescript": "catalog:"

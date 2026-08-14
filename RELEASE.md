@@ -146,7 +146,7 @@ When a release PR merges and main CI is green:
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`); manual dispatch for dry runs
+**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`, `ui-router-server@*`); manual dispatch for dry runs
 
 [Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
@@ -190,6 +190,9 @@ meaning a release or floor bump is owed — never a CI failure.
    - Merge with squash commit
    - The merge runs main CI (including the main-only guards); a green run
      triggers tagging automatically
+   - Merge it on its own and let its main run reach tagging before merging
+     anything else — a queued main run can be evicted by a later push, which
+     silently skips the tag (see [Tag workflow not running](#tag-workflow-not-running))
 
 4. **Verify the release:**
    - Check Actions for tag-release workflow
@@ -207,6 +210,107 @@ For prereleases like `1.2.3-beta.0`:
 
 2. Follow standard process from step 2
 
+   The publish creates a dist-tag named after the prerelease identifier
+   (`1.2.3-beta.0` → `beta`) automatically; `latest` is untouched.
+
+3. Retire that dist-tag once the line ships — see [Dist-Tags](#dist-tags)
+
+### First Publish (New Package)
+
+A package cannot use OIDC trusted publishing until it exists on npm, and it
+cannot be published by the workflow until trusted publishing is configured.
+Break the cycle by hand, once, before adding the package to any workflow list:
+
+1. **Seed the package manually** — from a scratch directory containing a
+   **minimal hand-written `package.json`** (name and a throwaway prerelease
+   version such as `0.0.1-alpha.0`, nothing else), run a bare `npm publish`
+   with a real token.
+
+   Publishing a stub rather than the real package is deliberate: a minimal
+   manifest has no `workspace:` or `catalog:` specifiers, so none of the
+   pack-time rewriting the pipeline relies on
+   (`publishPath`, `check:pack`) has to be reproduced by hand. The seed only
+   has to make the name exist.
+
+   **Do not pass `--tag`.** A package's first publish always takes `latest`
+   regardless — npm requires that tag to exist. `--tag alpha` cannot protect
+   `latest`; it only points a _second_ tag at the seed, and that one strands as
+   a fossil once the real release moves `latest` on. Both fossils this repo
+   accumulated came from exactly that: `lit-ui-router-mobx` seeded at
+   `0.1.0-rc.0` under `next` (superseded by `0.1.0` twenty minutes later, tag
+   stranded for five weeks), and `ui-router-server` at `0.0.1-alpha.1` under
+   `alpha`. Both have since been retired — every package now carries `latest`
+   only, which is the steady state [Dist-Tags](#dist-tags) describes.
+
+   The seed therefore holds `latest` until step 4 supersedes it. That is
+   expected, and is why it should be a version nobody would want: short-lived
+   and obviously prerelease.
+
+2. **Configure the trusted publisher** on npmjs.com for the new package,
+   pointing at `publish-npm.yml`.
+
+3. **Add the package** to the `bump-version.yml`, `publish-gh.yml`, and
+   `publish-npm.yml` package lists, and to the tag ruleset globs.
+
+4. **Cut the real release** through the standard process.
+
+5. **Confirm the tag state** once the real release holds `latest`:
+
+   ```bash
+   npm view <package> dist-tags
+   ```
+
+   Expect `latest` only. Anything else is a fossil from a `--tag` on the seed
+   or from a prerelease bump; retire it — see [Dist-Tags](#dist-tags).
+
+### Dist-Tags
+
+npm gives built-in meaning to exactly one tag: `latest`, the default install
+target. `next`, `canary`, `alpha`, `beta` are conventions with no registry
+semantics.
+
+**Channel tags are created automatically — you never opt in.** Publishing any
+prerelease version creates one, except on a package's very first publish, which
+always takes `latest` regardless. release-it resolves the dist-tag from the
+version itself (`lib/plugin/npm/npm.js`, `resolveTag`): a non-prerelease gets
+`latest`, and a prerelease gets its own identifier — `1.8.0-canary.0` publishes
+to `canary`, `0.2.0-beta.1` to `beta`. A prerelease with no identifier falls
+back to any existing non-`latest` tag on the package, then to `next`.
+
+Two consequences:
+
+- Every prerelease line manufactures a tag that outlives it. Retiring the tag
+  is a recurring step after each prerelease, not a one-off cleanup.
+- A leftover tag can silently capture a later identifier-less prerelease
+  through that fallback, republishing a channel nobody meant to revive.
+
+**Policy: `latest` only in the steady state.** A channel tag exists solely
+while a prerelease on that channel is live. Retiring it is the closing step of
+the prerelease, not an optional cleanup.
+
+**A channel tag must never resolve older than `latest`.** `npm i pkg@next`
+pointing at an older version than `npm i pkg` is a silent downgrade for anyone
+who opts into the channel. Prerelease versions don't match caret ranges, so a
+stale tag can't leak into ordinary installs — the blast radius is limited to
+people who explicitly ask for it, which is exactly the audience it misleads.
+
+Retire a tag with:
+
+```bash
+npm dist-tag rm <package> <tag>
+```
+
+This does **not** unpublish. The version stays installable by exact version and
+the tag can be re-added later. Note that dist-tag changes are not covered by
+OIDC trusted publishing — they need a local npm token with write access, so
+this is a manual maintainer step rather than something CI does.
+
+Check the current state of every package with:
+
+```bash
+npm view <package> dist-tags
+```
+
 ## Troubleshooting
 
 ### Build failing on PR
@@ -220,6 +324,14 @@ For prereleases like `1.2.3-beta.0`:
 - Verify the PR was merged (not closed)
 - Check that the main Build and Test run is green — tagging only fires after
   green main CI; `workflow_dispatch` on Tag & push is the escape hatch
+- Check whether the run was **cancelled with zero jobs**. Main pushes share one
+  concurrency group holding at most one running plus one pending run, so a
+  third merge in quick succession evicts the queued one
+  (`Canceling since a higher priority waiting request ... exists`). `tag_push`
+  needs `build_and_test`, so an evicted run skips tagging with nothing marked
+  red. Self-heals on the next green main run, since tagging uses
+  `--no-increment` and tags whatever version main currently carries; force it
+  sooner with `workflow_dispatch` on Tag & push
 - Check that `GH_PERSONAL_ACCESS_TOKEN` has correct permissions
 - Ensure the `tag-release` environment is configured
 
@@ -239,17 +351,29 @@ This is intentional. Fork PRs don't have access to repository secrets for securi
 
 ## Release Configuration
 
-Release behavior is configured via `packages/lit-ui-router/.release-it.json`:
+Release behavior is configured once, in `@tools/release-config`
+(`tools/release-config/src/release-it.js`):
 
-```json
-{
-  "git": {
-    "tagName": "${npm.name}@${version}"
+```js
+export default {
+  git: {
+    tagName: '${npm.name}@${version}',
   },
-  "github": {
-    "releaseName": "Release ${npm.name}@${version}"
-  }
-}
+  github: {
+    releaseName: 'Release ${npm.name}@${version}',
+  },
+};
+```
+
+Each publishable package carries a one-line `.release-it.js` re-exporting it, so
+release-it's cwd-based config lookup still resolves when the pipeline (or you)
+runs it inside a package directory:
+
+```js
+export { default } from '@tools/release-config';
 ```
 
 The config defaults most options to `false` so workflows can enable them explicitly via CLI flags.
+
+It is plain JS rather than JSON because `conventional-changelog-writer` 9 takes
+template partials as functions.

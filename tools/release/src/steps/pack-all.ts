@@ -29,7 +29,7 @@ async function main() {
       member.manifest.private !== true,
   );
   // The same invariant every check relies on: `^build` covers each package.
-  await assertSelfDeclaredDeps(publishable.map(({ name }) => name));
+  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
   // Clear stale tarballs so a removed package leaves no ghost output.
   await mkdir(packDir, { recursive: true });

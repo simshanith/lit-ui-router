@@ -1,0 +1,28 @@
+{
+  "name": "@tools/compat-guards",
+  "version": "0.0.1",
+  "private": true,
+  "description": "Guards for specs pnpm can't keep in sync itself: the lit-2, mobx-6 and peer-floor aliases against their published peer ranges, and lit-analyzer's packageExtensions TypeScript against the typescript6-compat catalog",
+  "bin": {
+    "lit-analyzer-ts-guard": "./src/lit-analyzer-ts-guard.ts",
+    "lit2-compat-guard": "./src/lit2-compat-guard.ts",
+    "mobx6-compat-guard": "./src/mobx6-compat-guard.ts",
+    "peer-floor-guard": "./src/peer-floor-guard.ts"
+  },
+  "type": "module",
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint": "oxlint .",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "devDependencies": {
+    "@tools/shared": "workspace:*",
+    "@types/node": "catalog:",
+    "@types/semver": "catalog:",
+    "oxfmt": "catalog:",
+    "semver": "catalog:",
+    "typescript": "catalog:"
+  }
+}
