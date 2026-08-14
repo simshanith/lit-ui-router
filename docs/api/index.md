@@ -142,8 +142,11 @@ Three knobs, via `ariaCurrentValue`:
   omitted, so `{ active: 'location' }` alone still defaults `exact` to `'page'` on
   links — write `{ exact: false, active: 'location' }` to mark only ancestors.
 
-Whatever the setting, the directive only removes an `aria-current` it wrote itself,
-so it will not clear one that came from the template.
+The directive only removes an `aria-current` it wrote itself. A value authored in the
+template is therefore left alone — but only until the directive first writes one of its
+own, after which it owns the attribute and will clear it on the next inactive render.
+`ariaCurrentValue: false` is the way to keep a template-authored value for good, since
+the directive then never writes and never takes ownership.
 
 ### State Declaration
 

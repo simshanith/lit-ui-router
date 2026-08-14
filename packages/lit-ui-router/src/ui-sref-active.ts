@@ -718,7 +718,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *     Home
  *   </a>
  *
- *   <!-- mark the ancestor section as well as the current page -->
+ *   <!-- mark the ancestor section as well as the current page:
+ *        at `users` -> aria-current="page", at `users.detail` -> "location" -->
  *   <a ${uiSref('users')}
  *      ${uiSrefActive({
  *        activeClasses: ['active'],
@@ -726,8 +727,23 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *      })}>
  *     Users
  *   </a>
+ *
+ *   <!-- ...or mark only the ancestor, never the page itself -->
+ *   <a ${uiSref('users')}
+ *      ${uiSrefActive({
+ *        activeClasses: ['active'],
+ *        ariaCurrentValue: { exact: false, active: 'location' },
+ *      })}>
+ *     Users
+ *   </a>
  * `
  * ```
+ *
+ * Only an `aria-current` this directive wrote is removed again. A template-authored
+ * value therefore survives right up until the directive first writes one of its own —
+ * from that point the directive owns the attribute and will clear it on the next
+ * inactive render. Pair a template-authored value with `ariaCurrentValue: false` to
+ * keep it for good.
  *
  * @example Explicit state (without nested uiSref)
  * ```ts
