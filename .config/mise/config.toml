@@ -30,7 +30,19 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
 # which clobbers a task reading its own stdin — it silently breaks
 # `printf … | mise run turbo_login --token-file -`. Verified on this mise.
-_.file = "{{config_root}}/.config/mise/turbo.local.env"
+# Cloudflare Workers Builds config (CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID
+# for `pnpm check:workers-builds`) lives in a second dotenv, same shape and the
+# same redact trap. Separate from turbo's, not appended to it: `turbo_login`
+# *writes* turbo.local.env and would clobber anything else in it, and the two
+# have different lifecycles (the turbo bearer is shared and static, the CF token
+# is user-scoped and revocable). No task writes this one — hand-create it. It is
+# also NOT linked into git worktrees (see the turbo_link_worktree task, which is
+# turbo-only): `check:workers-builds` is manual-only and never part of CI, so
+# run it from the owning checkout.
+_.file = [
+  "{{config_root}}/.config/mise/turbo.local.env",
+  "{{config_root}}/.config/mise/cloudflare.local.env",
+]
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here

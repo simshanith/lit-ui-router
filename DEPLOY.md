@@ -51,6 +51,12 @@ the dashboard values above, and diffs it against the live triggers: `pnpm check:
 Requires `CLOUDFLARE_API_TOKEN` (user-scoped, **Workers Builds Configuration: Edit**) and `CLOUDFLARE_ACCOUNT_ID`.
 Manual-only — never part of CI.
 
+Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the checked-in
+`.config/mise/config.toml` loads via `[env] _.file` (the same mechanism as the
+[Remote Cache](./REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
+that one). Hand-create it; no task writes it, and it is deliberately not symlinked into git worktrees,
+so run `check:workers-builds` from the owning checkout.
+
 ### Build Environment Variables
 
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
