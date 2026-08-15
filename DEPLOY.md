@@ -80,12 +80,19 @@ the owning checkout.
 
 From 1Password, two mise tasks wrap `op` over gitignored files that hold `op://` references instead
 of values (no secrets, but the vault layout they encode is personal rather than repo config, so they
-stay untracked). Create whichever the chosen task needs:
+stay untracked). A third task creates both files and the item they point at:
 
-| Task                                      | Reads                                    | Reference form | Token at rest    |
-| ----------------------------------------- | ---------------------------------------- | -------------- | ---------------- |
-| `mise run cloudflare_login`               | `.config/mise/cloudflare.local.env.tmpl` | `{{ op://… }}` | yes, `chmod 600` |
-| `mise run check_workers_builds [--apply]` | `.config/mise/cloudflare.op.env`         | bare `op://…`  | no               |
+| Task                                      | Reads / writes                                                                     | Reference form | Token at rest    |
+| ----------------------------------------- | ---------------------------------------------------------------------------------- | -------------- | ---------------- |
+| `mise run cloudflare_item_create`         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env` | both           | no               |
+| `mise run cloudflare_login`               | reads `.config/mise/cloudflare.local.env.tmpl`                                     | `{{ op://… }}` | yes, `chmod 600` |
+| `mise run check_workers_builds [--apply]` | reads `.config/mise/cloudflare.op.env`                                             | bare `op://…`  | no               |
+
+`cloudflare_item_create` is the one-time bootstrap: it creates a Secure Note (`--vault Private`,
+`--title lit-ui-router-workers-builds`) whose two fields are named after the variables and left
+**empty**, then writes both reference files pointed at it. Fill the fields in 1Password afterwards —
+the task never writes a credential. It is idempotent on the item: an existing one is left untouched,
+and the two files are only rewritten with `--force`.
 
 `cloudflare_login` regenerates the dotenv above with `op inject`, so edit the template and re-run
 rather than editing the dotenv. `check_workers_builds` skips the dotenv entirely and runs the diff
@@ -97,9 +104,9 @@ One file per task, because the two syntaxes are mutually exclusive: `op inject` 
 yields a dotenv of literal reference strings, surfacing as an auth failure from Cloudflare rather
 than as an error from `op`.
 
-Neither task is required — both only supply the two variables, so `pnpm check:workers-builds` with
-them already in the environment works the same. `op` is deliberately not a pinned `[tools]` entry: a
-mise-managed copy would shadow the system one and lose its desktop-app integration.
+None of the three is required — they only supply the two variables, so `pnpm check:workers-builds`
+with them already in the environment works the same. `op` is deliberately not a pinned `[tools]`
+entry: a mise-managed copy would shadow the system one and lose its desktop-app integration.
 
 #### CD-pipeline verification signal
 
