@@ -81,12 +81,14 @@
     "mobx": "catalog:",
     "mobx-6": "catalog:mobx6-compat",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

@@ -19,6 +19,8 @@
   },
   "devDependencies": {
     "concurrently": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:"
   }
 }

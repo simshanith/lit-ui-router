@@ -99,11 +99,9 @@ let inflight: ChildProcess | undefined;
 
 async function runAttempt(logFile: string): Promise<number> {
   const log = createWriteStream(logFile);
-  const child = spawn(
-    'corepack',
-    ['pnpm', '--filter', 'sample-app-lit-e2e', 'test'],
-    { stdio: ['ignore', 'pipe', 'pipe'] },
-  );
+  const child = spawn('pnpm', ['--filter', 'sample-app-lit-e2e', 'test'], {
+    stdio: ['ignore', 'pipe', 'pipe'],
+  });
   inflight = child;
   child.stdout.pipe(log);
   child.stderr.pipe(log);

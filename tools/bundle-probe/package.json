@@ -24,6 +24,7 @@
     "@types/node": "catalog:",
     "esbuild": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "rolldown": "catalog:",
     "typescript": "catalog:"
   }

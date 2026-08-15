@@ -17,6 +17,7 @@
     "@types/node": "catalog:",
     "lit-analyzer": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:"
   }
 }

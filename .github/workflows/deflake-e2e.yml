@@ -84,7 +84,7 @@ jobs:
           DEFLAKE_RUNS: ${{ inputs.runs || 5 }}
           WRANGLER_LOG: warn
           CYPRESS_video: false
-        run: corepack pnpm --filter sample-app-lit-e2e run deflake
+        run: pnpm --filter sample-app-lit-e2e run deflake
       - name: Upload attempt logs
         # Not `failure()`: a green run can still hold near-miss logs (passed
         # with the crash signature), and those are the interesting ones.

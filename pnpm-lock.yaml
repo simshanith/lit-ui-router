@@ -378,12 +378,18 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       start-server-and-test:
         specifier: 'catalog:'
         version: 3.0.12(supports-color@8.1.1)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -427,9 +433,15 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -470,9 +482,15 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -495,6 +513,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -556,6 +577,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -617,6 +641,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -641,6 +668,12 @@ importers:
       concurrently:
         specifier: 'catalog:'
         version: 10.0.4
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -708,6 +741,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -729,6 +765,9 @@ importers:
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.0.0-rc.1(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0-rc.1)(@vitest/coverage-v8@5.0.0-rc.1)(@vitest/ui@5.0.0-rc.1)(happy-dom@20.11.2)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
@@ -792,6 +831,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       release-it:
         specifier: 'catalog:'
         version: 21.0.2(@types/node@24.13.3)(magicast@0.5.4)(supports-color@10.2.2)
@@ -810,6 +852,9 @@ importers:
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.0.0-rc.1(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0-rc.1)(@vitest/coverage-v8@5.0.0-rc.1)(@vitest/ui@5.0.0-rc.1)(happy-dom@20.11.2)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
@@ -855,6 +900,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -876,6 +924,9 @@ importers:
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vitest:
         specifier: 'catalog:'
         version: 5.0.0-rc.1(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0-rc.1)(@vitest/coverage-v8@5.0.0-rc.1)(@vitest/ui@5.0.0-rc.1)(happy-dom@20.11.2)(vite@8.2.1(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
@@ -915,6 +966,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       release-it:
         specifier: 'catalog:'
         version: 21.0.2(@types/node@24.13.3)(magicast@0.5.4)(supports-color@10.2.2)
@@ -933,6 +987,9 @@ importers:
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
       vite:
         specifier: 'catalog:'
         version: 8.2.1(@types/node@24.13.3)(esbuild@0.28.1)(jiti@2.7.0)(yaml@2.9.0)
@@ -948,6 +1005,12 @@ importers:
       cypress:
         specifier: 'catalog:'
         version: 15.20.1
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -975,6 +1038,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       rolldown:
         specifier: 'catalog:'
         version: 1.2.3
@@ -996,6 +1062,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -1026,6 +1095,12 @@ importers:
       mobx:
         specifier: 'catalog:'
         version: 7.0.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript-5.0:
         specifier: 'catalog:'
         version: typescript@5.0.4
@@ -1056,6 +1131,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1074,6 +1152,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1089,6 +1170,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1098,6 +1182,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1117,6 +1204,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1138,6 +1231,9 @@ importers:
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared
+      '@tools/workers-builds':
+        specifier: workspace:*
+        version: link:../workers-builds
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -1150,6 +1246,12 @@ importers:
       lit-ui-router-mobx:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router-mobx
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       pacote:
         specifier: 'catalog:'
         version: 22.0.0(supports-color@10.2.2)
@@ -1171,6 +1273,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
 
   tools/shared:
     devDependencies:
@@ -1189,6 +1294,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1201,12 +1312,21 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typedoc:
         specifier: 'catalog:'
         version: 0.28.20(@typescript/typescript6@6.0.2)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
 
   tools/vue-check:
     dependencies:
@@ -1214,6 +1334,12 @@ importers:
         specifier: workspace:*
         version: link:../shared
     devDependencies:
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: catalog:typescript6
         version: 6.0.3
@@ -1226,6 +1352,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1238,6 +1367,12 @@ importers:
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -4674,6 +4809,9 @@ packages:
   flat-cache@4.0.1:
     resolution: {integrity: sha512-f7ccFPK3SXFHpx15UIGyRJ/FJQctuKZ0zVuN3frBo4HnK3cay9VEW0R6yPYFHC0AgqhukPzKjq22t5DmAyqGyw==}
     engines: {node: '>=16'}
+
+  flatted@3.4.2:
+    resolution: {integrity: sha512-PjDse7RzhcPkIJwy5t7KPWQSZ9cAbzQXcafsetQoD7sOJRQlGikNbx7yZp2OotDnJyrDcbyRq3Ttb18iYOqkxA==}
 
   flatted@3.4.4:
     resolution: {integrity: sha512-5+ybhBZANEJxaH3X5evAFatUxLfEHSr7n6kYJ+1Qd0mUqr4eu9gIf6GDbWHf8RJijHrjjO8G+la14SlL2SeS1Q==}
@@ -9993,8 +10131,10 @@ snapshots:
 
   flat-cache@4.0.1:
     dependencies:
-      flatted: 3.4.4
+      flatted: 3.4.2
       keyv: 4.5.4
+
+  flatted@3.4.2: {}
 
   flatted@3.4.4: {}
 
@@ -10143,7 +10283,7 @@ snapshots:
       buffer-image-size: 0.6.4
       entities: 7.0.1
       whatwg-mimetype: 3.0.0
-      ws: 8.21.3
+      ws: 8.21.0
     transitivePeerDependencies:
       - bufferutil
       - utf-8-validate

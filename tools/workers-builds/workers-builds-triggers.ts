@@ -9,9 +9,15 @@
 //
 // Default is a read-only diff. --apply PATCHes drifted triggers, then re-GETs
 // to confirm. Exit codes: 0 in sync, 1 drifted (or drift remained after
-// --apply), 2 usage/API error. Token needs "Workers Builds Configuration:
-// Edit" (user-scoped). Never wire this into CI's task graph — it reads (and
-// with --apply, writes) production deploy configuration.
+// --apply), 2 usage/API error. Token must be USER-scoped (account-owned
+// tokens don't cover the Builds API): "Workers Builds Configuration: Read"
+// suffices for the diff, Edit is only for --apply.
+//
+// Never make this a turbo task-graph dependency: it hits the live API, so no
+// build/test/typecheck task may reach it. Running the default read-only diff
+// from CI is fine and intended — release-signals.yml reports it as a
+// non-gating check run (#280 Phase 1) using a read-scoped token; --apply,
+// which writes production deploy configuration, stays manual.
 //
 // This file is the IO shell: env, wrangler.jsonc, and the Cloudflare API
 // (https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/).
@@ -99,15 +105,30 @@ async function workerTag(
   return script.tag;
 }
 
+// Build environment variables live on a sub-resource; the trigger list may or
+// may not inline them, so fetch only when it doesn't.
 async function getTriggers(
   token: string,
   accountId: string,
   tag: string,
 ): Promise<Trigger[]> {
-  return (await cf(
+  const triggers = (await cf(
     token,
     `/${accountId}/builds/workers/${tag}/triggers`,
   )) as Trigger[];
+  return Promise.all(
+    triggers.map(async (trigger) =>
+      trigger.environment_variables
+        ? trigger
+        : {
+            ...trigger,
+            environment_variables: (await cf(
+              token,
+              `/${accountId}/builds/triggers/${trigger.trigger_uuid}/environment_variables`,
+            )) as Trigger['environment_variables'],
+          },
+    ),
+  );
 }
 
 async function main() {
@@ -118,7 +139,8 @@ async function main() {
   if (!token || !accountId) {
     console.error(
       'Missing required env: set CLOUDFLARE_API_TOKEN (user token with ' +
-        '"Workers Builds Configuration: Edit") and CLOUDFLARE_ACCOUNT_ID.',
+        '"Workers Builds Configuration: Read", Edit for --apply) and ' +
+        'CLOUDFLARE_ACCOUNT_ID.',
     );
     process.exitCode = 2;
     return;
@@ -149,13 +171,26 @@ async function main() {
   }
 
   for (const drift of drifts) {
-    console.log(
-      `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
-    );
-    await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
-      method: 'PATCH',
-      body: drift.patch,
-    });
+    if (Object.keys(drift.patch).length > 0) {
+      console.log(
+        `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
+      );
+      await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
+        method: 'PATCH',
+        body: drift.patch,
+      });
+    }
+    // Declared keys only — undeclared live vars are never in this body.
+    if (Object.keys(drift.environmentPatch).length > 0) {
+      console.log(
+        `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
+      );
+      await cf(
+        token,
+        `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
+        { method: 'PATCH', body: drift.environmentPatch },
+      );
+    }
   }
 
   // Re-read so the confirmation reflects what the API stored, not what we sent.

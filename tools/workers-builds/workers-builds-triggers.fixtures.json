@@ -1,32 +1,49 @@
 {
-  "$comment": "Fixtures for workers-builds-triggers.test.ts. `triggers` documents the shape GET /builds/workers/{tag}/triggers returns (matching the desired state in workers-builds-triggers.config.jsonc); `driftScenario` is one drifted preview trigger and the exact PATCH body the diff must emit for it.",
+  "$comment": "Fixtures for workers-builds-triggers.test.ts. `triggers` documents the shape GET /builds/workers/{tag}/triggers returns (matching the desired state in workers-builds-triggers.config.jsonc), including the environment_variables map with both declared and unmanaged keys and a redacted secret; `driftScenario` is one drifted preview trigger and the exact PATCH bodies the diff must emit for it.",
   "triggers": {
     "production": {
       "trigger_uuid": "prod-uuid",
       "trigger_name": "Deploy production",
-      "build_command": "npx turbo docs#build",
-      "deploy_command": "pnpm wrangler deploy",
+      "build_command": "./tools/workers-builds/cloudflare-build.sh",
+      "deploy_command": "npx wrangler deploy",
       "branch_includes": ["main"],
-      "branch_excludes": []
+      "branch_excludes": [],
+      "environment_variables": {
+        "SKIP_DEPENDENCY_INSTALL": { "value": "1", "is_secret": false },
+        "CYPRESS_INSTALL_BINARY": { "value": "0", "is_secret": false },
+        "HUSKY": { "value": "0", "is_secret": false },
+        "VITE_GOOGLE_ANALYTICS_TRACKING_ID": {
+          "value": "G-XXXXXXXXXX",
+          "is_secret": false
+        },
+        "TURBO_TOKEN": { "is_secret": true }
+      }
     },
     "preview": {
       "trigger_uuid": "preview-uuid",
       "trigger_name": "Preview",
-      "build_command": "npx turbo docs#build",
-      "deploy_command": "pnpm wrangler versions upload",
+      "build_command": "./tools/workers-builds/cloudflare-build.sh",
+      "deploy_command": "npx wrangler versions upload",
       "branch_includes": ["*"],
-      "branch_excludes": ["main"]
+      "branch_excludes": ["main"],
+      "environment_variables": {
+        "SKIP_DEPENDENCY_INSTALL": { "value": "1", "is_secret": false },
+        "CYPRESS_INSTALL_BINARY": { "value": "0", "is_secret": false },
+        "HUSKY": { "value": "0", "is_secret": false },
+        "TURBO_TOKEN": { "is_secret": true }
+      }
     }
   },
   "driftScenario": {
-    "driftedDeployCommand": "npx wrangler deploy",
+    "driftedDeployCommand": "pnpm wrangler versions upload",
     "expectedDrifts": [
       {
         "trigger_uuid": "preview-uuid",
         "kind": "preview",
         "patch": {
-          "deploy_command": "pnpm wrangler versions upload"
-        }
+          "deploy_command": "npx wrangler versions upload"
+        },
+        "environmentPatch": {}
       }
     ]
   }

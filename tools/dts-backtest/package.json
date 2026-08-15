@@ -19,6 +19,8 @@
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "mobx": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript-5.0": "catalog:",
     "typescript-5.9": "catalog:",
     "typescript-6": "catalog:typescript6",

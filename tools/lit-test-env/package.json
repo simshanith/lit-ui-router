@@ -15,6 +15,7 @@
   },
   "devDependencies": {
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:"
   }
 }

@@ -93,6 +93,7 @@
     "lit-2": "catalog:lit2-compat",
     "oxc-project-runtime": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "playwright": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
@@ -100,6 +101,7 @@
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
     "vitest": "catalog:"
   },
   "peerDependencies": {

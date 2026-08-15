@@ -57,8 +57,12 @@ idiomatic_version_file_enable_tools = ["node"]
 "aqua:zizmorcore/zizmor" = "1.26.1"
 # Shell-script static analysis
 "aqua:koalaman/shellcheck" = "0.11.0"
-# mise-provided corepack: no npx per-invocation resolution, Node-25-proof
-"npm:corepack" = "0.35.0"
+# Bootstrap pnpm, not the version that runs: `packageManager` is the authority
+# and pnpm >=11.10 self-swaps to it. Must be the aqua backend — the npm `pnpm`
+# package is a placeholder whose `preinstall` hardlinks the real binary from an
+# optional platform dep, which neither corepack nor mise's aube installer runs.
+# Keep at or above 11.20.0: below that a pnpm-12 lockfile reads as outdated.
+"aqua:pnpm/pnpm" = "11.21.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
@@ -68,24 +72,8 @@ idiomatic_version_file_enable_tools = ["node"]
 # .md, rumdl lints it. Pre-1.0, so the pin is load-bearing.
 "aqua:rvben/rumdl" = "0.2.55"
 
-# Provisioning tasks, not hooks: hooks warn-and-continue, task failures are
-# loud; and tool-only bumps (actionlint) skip the corepack ceremony.
 # snake_case names (bazel target convention); no colons in task names — mise
 # monorepo task addressing owns `:` (see the config_roots above).
-[tasks.corepack_enable]
-description = "Shim the corepack-managed package managers onto PATH"
-run = "corepack enable"
-
-[tasks.corepack_install]
-# Materializes the packageManager pin (sha512-verified) in corepack's cache.
-description = "Install the packageManager-pinned pnpm into the corepack cache"
-run = "corepack install"
-
-[tasks.corepack]
-# Virtual grouping task; the two legs are order-independent and may run
-# in parallel (enable writes shims, install populates COREPACK_HOME).
-description = "Provision the packageManager-pinned pnpm via corepack"
-depends = ["corepack_enable", "corepack_install"]
 
 [tasks.setup]
 # Bootstrap layer: the one step pnpm scripts can't own (no node_modules yet).
@@ -93,10 +81,10 @@ depends = ["corepack_enable", "corepack_install"]
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the pnpm on PATH"
-# turbo_link_worktree is independent of corepack and no-ops everywhere but a
-# fresh worktree; it rides setup because that is the one step every new
-# checkout already runs.
-depends = ["corepack", "turbo_link_worktree"]
+# turbo_link_worktree no-ops everywhere but a fresh worktree; it rides setup
+# because that is the one step every new checkout already runs. No provisioning
+# leg: `mise install` puts the bootstrap pnpm on PATH by itself.
+depends = ["turbo_link_worktree"]
 usage = '''
 flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
 '''
@@ -165,9 +153,26 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login, read_secret and turbo_link_worktree are file-based tasks under
-# .config/mise/tasks/ — their shell bodies were too large to sit inline. Every
-# other task here is a one- or two-liner and stays inline.
+# turbo_login, read_secret, turbo_link_worktree, cloudflare_item_create and
+# check_workers_builds are file-based tasks under .config/mise/tasks/ — their
+# shell bodies were too large to sit inline. Every other task here is a one- or
+# two-liner and stays inline.
+
+# The Cloudflare tasks wrap `op` over gitignored files whose paths are the only
+# thing worth memorizing; none is required, since the check reads plain env.
+# cloudflare_item_create bootstraps those files and the item they point at, and
+# check_workers_builds picks its credential source from which one exists.
+# `op` is intentionally not in [tools]: a pinned copy would shadow the system
+# one and lose its desktop-app/biometric integration.
+
+[tasks.cloudflare_login]
+# op inject, not a prompt like turbo_login: these creds have a canonical
+# 1Password home, so regenerate the dotenv rather than re-type it.
+description = "Regenerate .config/mise/cloudflare.local.env from 1Password"
+run = '''
+op inject -i "{{config_root}}/.config/mise/cloudflare.local.env.tmpl" -o "{{config_root}}/.config/mise/cloudflare.local.env"
+chmod 600 "{{config_root}}/.config/mise/cloudflare.local.env"
+'''
 
 [tasks.build]
 # env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo

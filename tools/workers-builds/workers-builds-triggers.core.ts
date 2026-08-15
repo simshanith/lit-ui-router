@@ -9,6 +9,13 @@ import * as v from 'valibot';
 // What the shell prints and exits on.
 export type Report = { ok: boolean; text: string };
 
+// One entry of a trigger's build environment-variable map. Cloudflare may
+// redact `value` when `is_secret` is true, so an absent value is not "empty".
+export type TriggerEnvironmentVariable = {
+  value?: string;
+  is_secret?: boolean;
+};
+
 // The trigger fields this check reads/writes; the API returns more, PATCH
 // accepts exactly these (https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/).
 export type Trigger = {
@@ -19,9 +26,12 @@ export type Trigger = {
   root_directory?: string;
   branch_includes?: string[];
   branch_excludes?: string[];
+  environment_variables?: Record<string, TriggerEnvironmentVariable>;
 };
 
-// Fields a desired spec may pin; unpinned fields are shown but never drift.
+// Scalar fields a desired spec may pin; unpinned fields are shown but never
+// drift. environment_variables is pinned per key, not whole-field — see
+// describeEnvironment.
 export const PINNABLE_FIELDS = [
   'build_command',
   'deploy_command',
@@ -31,13 +41,18 @@ export type PinnableField = (typeof PINNABLE_FIELDS)[number];
 
 const nonEmptyString = v.pipe(v.string(), v.nonEmpty());
 
+// Shell-legal variable names only, so a typoed key is a config error too.
+const environmentKey = v.pipe(v.string(), v.regex(/^[A-Za-z_][A-Za-z0-9_]*$/));
+
 // strictObject: an unknown or typoed key throws rather than silently
 // un-pinning a field, since --apply writes this state to production.
 const DesiredTriggerSchema = v.strictObject({
   build_command: v.optional(nonEmptyString),
   deploy_command: v.optional(nonEmptyString),
   root_directory: v.optional(nonEmptyString),
-} satisfies Record<PinnableField, unknown>);
+  // Declared keys are plaintext by construction; secrets stay dashboard-only.
+  environment_variables: v.optional(v.record(environmentKey, nonEmptyString)),
+} satisfies Record<PinnableField | 'environment_variables', unknown>);
 
 const DesiredStateSchema = v.strictObject({
   productionBranch: nonEmptyString,
@@ -104,20 +119,77 @@ export function classifyTrigger(
     : 'preview';
 }
 
+// Body for PATCH /builds/triggers/{uuid}/environment_variables. Only declared
+// keys ever appear, so undeclared live vars survive whatever the API's merge
+// semantics are.
+export type EnvironmentPatch = Record<
+  string,
+  { value: string; is_secret: false }
+>;
+
 export type Drift = {
   trigger_uuid: string;
   kind: TriggerKind;
   // Exactly the body to PATCH /builds/triggers/{uuid} with.
   patch: Partial<Record<PinnableField, string>>;
+  environmentPatch: EnvironmentPatch;
 };
 
 export type DiffResult = { report: Report; drifts: Drift[] };
+
+const ENV_PAD = 34;
+
+// Per-key management: a declared key drifts on a wrong or absent live value; an
+// undeclared live key is listed as unmanaged and never diffed or patched. A
+// declared key that is live-secret is a conflict — reported, never overwritten.
+function describeEnvironment(
+  live: Record<string, TriggerEnvironmentVariable>,
+  declared: Record<string, string>,
+): { lines: string[]; patch: EnvironmentPatch; conflicts: string[] } {
+  const patch: EnvironmentPatch = {};
+  const conflicts: string[] = [];
+  const lines: string[] = [];
+  const liveKeys = Object.keys(live).sort();
+  if (liveKeys.length === 0 && Object.keys(declared).length === 0) {
+    return { lines, patch, conflicts };
+  }
+  lines.push('    environment_variables');
+  for (const [key, wanted] of Object.entries(declared)) {
+    const current = live[key];
+    if (current?.is_secret) {
+      conflicts.push(key);
+      lines.push(
+        `  ✗   ${key.padEnd(ENV_PAD)} (secret) — declared in config; refusing to overwrite`,
+      );
+    } else if (current?.value === wanted) {
+      lines.push(`  ✓   ${key.padEnd(ENV_PAD)} ${wanted}`);
+    } else {
+      patch[key] = { value: wanted, is_secret: false };
+      lines.push(
+        `  ✗   ${key.padEnd(ENV_PAD)} ${current?.value ?? '(absent)'}`,
+        `      ${' '.repeat(ENV_PAD)} wanted: ${wanted}`,
+      );
+    }
+  }
+  // Values omitted: an unmanaged var may hold a credential this tool prints.
+  for (const key of liveKeys.filter((key) => !(key in declared))) {
+    lines.push(
+      `      ${key.padEnd(ENV_PAD)} ${live[key]?.is_secret ? '(secret) ' : ''}(unmanaged)`,
+    );
+  }
+  return { lines, patch, conflicts };
+}
 
 function describeTrigger(
   trigger: Trigger,
   kind: TriggerKind,
   desired: DesiredTrigger,
-): { lines: string[]; patch: Drift['patch'] } {
+): {
+  lines: string[];
+  patch: Drift['patch'];
+  environmentPatch: EnvironmentPatch;
+  drift: boolean;
+} {
   const patch: Drift['patch'] = {};
   const lines = [
     `${kind} trigger ${trigger.trigger_uuid}` +
@@ -139,7 +211,20 @@ function describeTrigger(
       lines.push(`    ${' '.repeat(18)} wanted: ${wanted}`);
     }
   }
-  return { lines, patch };
+  const environment = describeEnvironment(
+    trigger.environment_variables ?? {},
+    desired.environment_variables ?? {},
+  );
+  lines.push(...environment.lines);
+  return {
+    lines,
+    patch,
+    environmentPatch: environment.patch,
+    drift:
+      Object.keys(patch).length > 0 ||
+      Object.keys(environment.patch).length > 0 ||
+      environment.conflicts.length > 0,
+  };
 }
 
 /** Diff live triggers against the desired state. */
@@ -150,18 +235,31 @@ export function diffTriggers(
   const drifts: Drift[] = [];
   const lines: string[] = [];
   const seen: Record<TriggerKind, number> = { production: 0, preview: 0 };
+  // A conflicted trigger fails the check without being patchable, so it counts
+  // here rather than in drifts.
+  let drifted = 0;
 
   for (const trigger of triggers) {
     const kind = classifyTrigger(trigger, desired.productionBranch);
     seen[kind] += 1;
-    const { lines: triggerLines, patch } = describeTrigger(
-      trigger,
-      kind,
-      desired[kind],
-    );
+    const {
+      lines: triggerLines,
+      patch,
+      environmentPatch,
+      drift,
+    } = describeTrigger(trigger, kind, desired[kind]);
     lines.push(...triggerLines, '');
-    if (Object.keys(patch).length > 0) {
-      drifts.push({ trigger_uuid: trigger.trigger_uuid, kind, patch });
+    if (drift) drifted += 1;
+    if (
+      Object.keys(patch).length > 0 ||
+      Object.keys(environmentPatch).length > 0
+    ) {
+      drifts.push({
+        trigger_uuid: trigger.trigger_uuid,
+        kind,
+        patch,
+        environmentPatch,
+      });
     }
   }
 
@@ -173,11 +271,11 @@ export function diffTriggers(
     lines.push(`  ✗ no ${kind} trigger found (create it in the dashboard)`, '');
   }
 
-  const ok = drifts.length === 0 && missing.length === 0;
+  const ok = drifted === 0 && missing.length === 0;
   lines.push(
     ok
       ? '✓ Workers Builds triggers match the desired state.'
-      : `✗ ${drifts.length + missing.length} trigger(s) drifted from the desired state.`,
+      : `✗ ${drifted + missing.length} trigger(s) drifted from the desired state.`,
   );
   return { report: { ok, text: lines.join('\n') }, drifts };
 }
