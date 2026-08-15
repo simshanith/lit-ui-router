@@ -1,0 +1,87 @@
+#!/usr/bin/env bash
+#MISE description="Create the empty 1Password item behind the Workers Builds creds, plus its two op:// reference files"
+#
+# Bootstrap for cloudflare_login / check_workers_builds: both read a gitignored
+# reference file this task writes, pointed at an item it creates with EMPTY
+# fields. It never writes a value — the maintainer fills the two fields in
+# 1Password afterwards, so no credential crosses argv, history or this repo.
+#USAGE flag "--vault <vault>" help="1Password vault to create the item in" default="Private"
+#USAGE flag "--title <title>" help="Item title; it is also an op:// path segment, so keep it space-free" default="lit-ui-router-workers-builds"
+#USAGE flag "--force" help="Rewrite the two reference files if they already exist (never touches the item)"
+set -euo pipefail
+
+vault="${usage_vault:?}"
+title="${usage_title:?}"
+
+# File-based tasks are raw scripts: mise's {{config_root}} template does NOT
+# render here, so use the env var mise exports to every task.
+dir="${MISE_CONFIG_ROOT}/.config/mise"
+tmpl="$dir/cloudflare.local.env.tmpl"
+openv="$dir/cloudflare.op.env"
+
+command -v op >/dev/null 2>&1 || {
+  echo "cloudflare_item_create: no 'op' on PATH; install the 1Password CLI (deliberately not a pinned [tools] entry)" >&2
+  exit 1
+}
+
+# --force guards the files only; a pre-existing item is always left untouched,
+# because its fields may already hold a real token.
+if [ -z "${usage_force:-}" ]; then
+  for f in "$tmpl" "$openv"; do
+    if [ -e "$f" ]; then
+      echo "cloudflare_item_create: $f exists; re-run with --force to rewrite it" >&2
+      exit 1
+    fi
+  done
+fi
+
+if op item get "$title" --vault "$vault" >/dev/null 2>&1; then
+  echo "cloudflare_item_create: '$title' already exists in vault '$vault' — leaving the item untouched"
+else
+  # Secure Note: the one category with no built-in credential fields, so both
+  # names below are custom fields and the op:// path stays op://vault/item/NAME.
+  created="$(op item create \
+    --category "Secure Note" \
+    --vault "$vault" \
+    --title "$title" \
+    --format json \
+    'CLOUDFLARE_API_TOKEN[password]=' \
+    'CLOUDFLARE_ACCOUNT_ID[text]=')" || {
+    echo "cloudflare_item_create: 'op item create' failed; nothing was written. Empty field values may have been rejected — create '$title' by hand with the two empty fields, then re-run to get the reference files" >&2
+    exit 1
+  }
+  # Empty values are documented for built-in fields, not custom ones; if op
+  # dropped either field, stop before writing references that resolve to nothing.
+  for f in CLOUDFLARE_API_TOKEN CLOUDFLARE_ACCOUNT_ID; do
+    case "$created" in
+    *"\"$f\""*) ;;
+    *)
+      echo "cloudflare_item_create: created '$title' but it has no $f field — op dropped the empty value. Add it by hand (or delete the item and retry), then re-run" >&2
+      exit 1
+      ;;
+    esac
+  done
+  echo "cloudflare_item_create: created '$title' in vault '$vault' with two empty fields"
+fi
+
+# Two files, two syntaxes: op inject wants {{ op://… }}, op run --env-file wants
+# a bare reference. See DEPLOY.md — crossing them fails as a Cloudflare 401.
+ref="op://$vault/$title"
+cat >"$tmpl" <<EOF
+CLOUDFLARE_API_TOKEN={{ $ref/CLOUDFLARE_API_TOKEN }}
+CLOUDFLARE_ACCOUNT_ID={{ $ref/CLOUDFLARE_ACCOUNT_ID }}
+EOF
+cat >"$openv" <<EOF
+CLOUDFLARE_API_TOKEN=$ref/CLOUDFLARE_API_TOKEN
+CLOUDFLARE_ACCOUNT_ID=$ref/CLOUDFLARE_ACCOUNT_ID
+EOF
+echo "cloudflare_item_create: wrote $tmpl and $openv"
+
+cat <<EOF
+
+Next, by hand — this task never writes a credential:
+  1. Open '$title' in vault '$vault' and fill both fields:
+     CLOUDFLARE_API_TOKEN   user-scoped, needs Workers Builds Configuration: Edit
+     CLOUDFLARE_ACCOUNT_ID
+  2. mise run cloudflare_login        # or: mise run check_workers_builds
+EOF
