@@ -37,25 +37,34 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 
 ### Build & Deploy Commands
 
-| Environment                                                                                             | Build                                                                | Deploy                         |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------- | ------------------------------ |
-| Production                                                                                              | `npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build` | `npx wrangler deploy`          |
-| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build` | `npx wrangler versions upload` |
+| Environment                                                                                             | Build                                        | Deploy                         |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------ |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler deploy`          |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler versions upload` |
 
-The build command owns the dependency install because Workers Builds provisions pnpm with
+The build command is a **repo script, not the steps themselves**
+([`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh)). A trigger holds one
+build command for every branch it matches, so inlining the steps means a branch cannot
+change them — and a package-manager change is exactly a branch that needs to. Pinning the
+path instead lets the script differ per branch while the declared value stays constant, so
+divergence never reads as drift and never needs an `--apply` to test.
+
+The script owns the dependency install because Workers Builds provisions pnpm with
 corepack, which cannot install a pnpm-12 `packageManager` pin at all — the npm package is
 a wrapper whose real binary is materialized by a `preinstall` hook out of an optional
 platform dependency, and corepack runs neither lifecycle scripts nor optional
 dependencies. So `SKIP_DEPENDENCY_INSTALL=1` turns off Cloudflare's install step and npx
 bootstraps the last pnpm 11 instead — no preinstall hook, so npx handles it — which then
-reads `packageManager` and self-swaps to whatever the branch pins. Every later command
-goes through npx as well, because the unusable corepack `pnpm` shim stays first on `PATH`.
+reads `packageManager` and self-swaps to whatever the branch pins. `npx pnpm@11.21.0` is a
+**bootstrap floor**, not the version that runs: it needs to be at or above 11.20.0 to read
+a pnpm-12 lockfile, and `packageManager` decides the rest.
 
-`npx pnpm@11.21.0` is a **bootstrap floor**, not the version that runs: it needs to be at
-or above 11.20.0 to read a pnpm-12 lockfile, and `packageManager` decides the rest.
+npx covers only the commands the script names. Anything turbo spawns resolves `pnpm` from
+`PATH`, where the unusable corepack shim still sits — which is why a pnpm-12 branch fails
+in turbo even with the install fixed, and why that branch needs its own bootstrap here.
 
-These three move together — the commands and the variable are one state. Apply and verify
-preview before production.
+`build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
+before production.
 
 ### Dashboard as Code
 
@@ -145,8 +154,8 @@ and leaves every other variable on the trigger untouched.
 
 **Declared** (plaintext, committed, `--apply` writes them):
 
-- `SKIP_DEPENDENCY_INSTALL=1` — **required.** Hands the dependency install to the build
-  command, per [Build & Deploy Commands](#build--deploy-commands). Without it Cloudflare
+- `SKIP_DEPENDENCY_INSTALL=1` — **required.** Hands the dependency install to
+  `cloudflare-build.sh`, per [Build & Deploy Commands](#build--deploy-commands). Without it Cloudflare
   runs its own corepack-provisioned `pnpm install` first and the build fails there;
   deleting it in the dashboard breaks every deploy.
 - `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs

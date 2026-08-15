@@ -4,7 +4,7 @@
     "production": {
       "trigger_uuid": "prod-uuid",
       "trigger_name": "Deploy production",
-      "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+      "build_command": "./tools/workers-builds/cloudflare-build.sh",
       "deploy_command": "npx wrangler deploy",
       "branch_includes": ["main"],
       "branch_excludes": [],
@@ -22,7 +22,7 @@
     "preview": {
       "trigger_uuid": "preview-uuid",
       "trigger_name": "Preview",
-      "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+      "build_command": "./tools/workers-builds/cloudflare-build.sh",
       "deploy_command": "npx wrangler versions upload",
       "branch_includes": ["*"],
       "branch_excludes": ["main"],
