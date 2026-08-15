@@ -1,5 +1,12 @@
 # Deploy Guide
 
+[![workers-builds trigger drift](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=workers-builds%20%28triggers%29&label=workers-builds)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
+
+Live state of the pipeline this guide describes: whether the Cloudflare dashboard still matches the
+repo config, and whether the site it deploys is up. See
+[CD-pipeline verification signal](#cd-pipeline-verification-signal) for what each colour means.
+
 ---
 
 <p align="center">
@@ -132,7 +139,7 @@ entry: a mise-managed copy would shadow the system one and lose its desktop-app 
 non-gating: green in sync, orange (`action_required`) on drift, grey (`neutral`) when the check could not run.
 It never applies; resolving drift is still a local `--apply`.
 
-The README carries the badge for it. It diffs the live Cloudflare Workers Builds triggers that ship
+The badge for it sits at the top of this file and in the README header. It diffs the live Cloudflare Workers Builds triggers that ship
 [lit-ui-router.dev](https://lit-ui-router.dev) against the repo-owned
 [desired state](./tools/workers-builds/workers-builds-triggers.config.jsonc):
 
