@@ -54,32 +54,31 @@ Manual-only — never part of CI.
 Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the checked-in
 `.config/mise/config.toml` loads via `[env] _.file` (the same mechanism as the
 [Remote Cache](./REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
-that one). Hand-create it; no task writes it, and it is deliberately not symlinked into git worktrees,
-so run `check:workers-builds` from the owning checkout.
+that one). It is deliberately not symlinked into git worktrees, so run `check:workers-builds` from
+the owning checkout.
 
-From 1Password, keep a `cloudflare.local.env.tmpl` beside it holding `op://` references instead of
-values, and regenerate the dotenv rather than editing it:
+From 1Password, two mise tasks wrap `op` over gitignored files that hold `op://` references instead
+of values (no secrets, but the vault layout they encode is personal rather than repo config, so they
+stay untracked). Create whichever the chosen task needs:
 
-```sh
-op inject -i .config/mise/cloudflare.local.env.tmpl -o .config/mise/cloudflare.local.env
-chmod 600 .config/mise/cloudflare.local.env
-```
+| Task                                      | Reads                                    | Reference form | Token at rest    |
+| ----------------------------------------- | ---------------------------------------- | -------------- | ---------------- |
+| `mise run cloudflare_login`               | `.config/mise/cloudflare.local.env.tmpl` | `{{ op://… }}` | yes, `chmod 600` |
+| `mise run check_workers_builds [--apply]` | `.config/mise/cloudflare.op.env`         | bare `op://…`  | no               |
 
-The template is gitignored alongside the dotenv — it carries no secrets, but the vault layout it
-encodes is personal rather than repo config.
+`cloudflare_login` regenerates the dotenv above with `op inject`, so edit the template and re-run
+rather than editing the dotenv. `check_workers_builds` skips the dotenv entirely and runs the diff
+under `op run`, which injects into that process only — the path to prefer for `--apply`, whose
+**Edit**-scoped token is the one worth never writing to disk.
 
-To avoid an Edit-scoped token at rest entirely, skip the dotenv and run the check under `op run`,
-which injects into the child process only. It takes its own file, `.config/mise/cloudflare.op.env`
-(also gitignored), holding the same references _without_ the `{{ }}`:
-
-```sh
-op run --env-file .config/mise/cloudflare.op.env -- pnpm check:workers-builds
-```
-
-One path per method, because the two syntaxes are mutually exclusive: `op inject` substitutes
+One file per task, because the two syntaxes are mutually exclusive: `op inject` substitutes
 `{{ op://… }}` and passes a bare `op://…` through untouched, so pointing it at the `op run` file
 yields a dotenv of literal reference strings, surfacing as an auth failure from Cloudflare rather
 than as an error from `op`.
+
+Neither task is required — both only supply the two variables, so `pnpm check:workers-builds` with
+them already in the environment works the same. `op` is deliberately not a pinned `[tools]` entry: a
+mise-managed copy would shadow the system one and lose its desktop-app integration.
 
 ### Build Environment Variables
 
