@@ -27,6 +27,7 @@
     "@types/lodash": "catalog:",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vite": "catalog:",
     "wrangler": "catalog:"

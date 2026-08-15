@@ -92,6 +92,7 @@
     "lit-2": "catalog:lit2-compat",
     "oxc-project-runtime": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "playwright": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",

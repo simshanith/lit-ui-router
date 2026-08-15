@@ -28,6 +28,8 @@
     "@pnpm/workspace.projects-reader": "catalog:",
     "@pnpm/workspace.workspace-manifest-reader": "catalog:",
     "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:"
   }
 }

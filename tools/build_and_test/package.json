@@ -20,6 +20,8 @@
     "@codecov/bundle-analyzer": "catalog:",
     "@types/node": "catalog:",
     "cypress": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:"

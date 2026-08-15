@@ -30,6 +30,7 @@
     "concurrently": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "start-server-and-test": "catalog:",
     "typescript": "catalog:typescript6-compat",
     "vite": "catalog:"

@@ -36,6 +36,7 @@
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*",
     "vite": "catalog:",

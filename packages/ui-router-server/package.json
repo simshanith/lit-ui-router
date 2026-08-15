@@ -90,6 +90,7 @@
     "@uirouter/core": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",

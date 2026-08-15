@@ -70,6 +70,7 @@
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "playwright": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",

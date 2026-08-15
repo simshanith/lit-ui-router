@@ -376,6 +376,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       start-server-and-test:
         specifier: 'catalog:'
         version: 3.0.12(supports-color@8.1.1)
@@ -425,6 +428,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
@@ -468,6 +474,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: catalog:typescript6-compat
         version: '@typescript/typescript6@6.0.2'
@@ -493,6 +502,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -551,6 +563,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -612,6 +627,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -636,6 +654,12 @@ importers:
       concurrently:
         specifier: 'catalog:'
         version: 10.0.4
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -700,6 +724,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -784,6 +811,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       release-it:
         specifier: 'catalog:'
         version: 21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2)
@@ -844,6 +874,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -904,6 +937,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       release-it:
         specifier: 'catalog:'
         version: 21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2)
@@ -937,6 +973,12 @@ importers:
       cypress:
         specifier: 'catalog:'
         version: 15.20.1
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       playwright:
         specifier: 'catalog:'
         version: 1.62.1
@@ -964,6 +1006,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       rolldown:
         specifier: 'catalog:'
         version: 1.2.3
@@ -985,6 +1030,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       semver:
         specifier: 'catalog:'
         version: 7.8.5
@@ -1015,6 +1063,12 @@ importers:
       mobx:
         specifier: 'catalog:'
         version: 7.0.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript-5.0:
         specifier: 'catalog:'
         version: typescript@5.0.4
@@ -1045,6 +1099,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1063,6 +1120,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1078,6 +1138,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1087,6 +1150,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1106,6 +1172,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1142,6 +1214,12 @@ importers:
       lit-ui-router-mobx:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router-mobx
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       pacote:
         specifier: 'catalog:'
         version: 22.0.0(supports-color@10.2.2)
@@ -1163,6 +1241,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
 
   tools/shared:
     devDependencies:
@@ -1181,6 +1262,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1193,6 +1280,12 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typedoc:
         specifier: 'catalog:'
         version: 0.28.20(@typescript/typescript6@6.0.2)
@@ -1206,6 +1299,12 @@ importers:
         specifier: workspace:*
         version: link:../shared
     devDependencies:
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: catalog:typescript6
         version: 6.0.3
@@ -1218,6 +1317,9 @@ importers:
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1230,6 +1332,12 @@ importers:
       jsonc-parser:
         specifier: 'catalog:'
         version: 3.3.1
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.63.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.78.0(oxlint-tsgolint@7.0.2001)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2

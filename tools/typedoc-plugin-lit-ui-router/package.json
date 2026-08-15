@@ -27,6 +27,8 @@
   "devDependencies": {
     "@tools/oxc-emit": "workspace:*",
     "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typedoc": "catalog:",
     "typescript": "catalog:typescript6-compat"
   },
