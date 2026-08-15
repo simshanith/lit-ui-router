@@ -30,7 +30,8 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typedoc": "catalog:",
-    "typescript": "catalog:typescript6-compat"
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:"
   },
   "peerDependencies": {
     "typedoc": "catalog:publishedPeer"

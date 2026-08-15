@@ -97,6 +97,7 @@
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

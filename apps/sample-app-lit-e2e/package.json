@@ -33,6 +33,7 @@
     "oxlint": "catalog:",
     "start-server-and-test": "catalog:",
     "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
     "vite": "catalog:"
   }
 }
