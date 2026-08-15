@@ -48,8 +48,12 @@ The private [`tools/workers-builds`](./tools/workers-builds) package owns
 [`workers-builds-triggers.config.jsonc`](./tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
 the dashboard values above, and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 (exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
-Requires `CLOUDFLARE_API_TOKEN` (user-scoped, **Workers Builds Configuration: Edit**) and `CLOUDFLARE_ACCOUNT_ID`.
-Manual-only — never part of CI.
+Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
+tokens do not cover the Workers Builds API — with **Workers Builds Configuration: Read** for the diff and
+**Edit** only for `--apply`.
+
+Applying is manual-only: `--apply` writes production deploy configuration, and no automation holds an
+Edit-scoped token.
 
 Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the checked-in
 `.config/mise/config.toml` loads via `[env] _.file` (the same mechanism as the
@@ -79,6 +83,28 @@ than as an error from `op`.
 Neither task is required — both only supply the two variables, so `pnpm check:workers-builds` with
 them already in the environment works the same. `op` is deliberately not a pinned `[tools]` entry: a
 mise-managed copy would shadow the system one and lose its desktop-app integration.
+
+#### CD-pipeline verification signal
+
+[`release-signals.yml`](./.github/workflows/release-signals.yml) runs the same read-only diff on every push to
+`main` — the push that Workers Builds deploys from — plus a weekly sweep, and reports it as the
+`workers-builds (triggers)` check run alongside its `published-diff` and `peer-floor` siblings. It is
+non-gating: green in sync, orange (`action_required`) on drift, grey (`neutral`) when the check could not run.
+It never applies; resolving drift is still a local `--apply`.
+
+Two repository secrets drive it. Both are optional — absent, the signal reports grey rather than failing:
+
+| Secret                  | Value                                                                                                       |
+| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
+| `CLOUDFLARE_API_TOKEN`  | A **user-scoped** API token with **Workers Builds Configuration: Read**. CI must never hold the Edit scope. |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID. A secret rather than a variable so it stays out of public logs.                  |
+
+Rotation is manual: mint a replacement in the Cloudflare dashboard under **My Profile → API Tokens** (user
+tokens, not **Manage Account → API Tokens**), update the repository secret, and revoke the old one. A stale
+token shows up as the grey `workers-builds (triggers)` badge, not a red run.
+
+`publish-npm.yml` forwards both into its post-publish `workflow_call`; secrets do not auto-propagate, and
+without that the badge would go grey after every release.
 
 ### Build Environment Variables
 

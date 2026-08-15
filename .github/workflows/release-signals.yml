@@ -1,14 +1,28 @@
-# Non-gating release signals on main's head, reported as per-package check
-# runs: "published-diff (<pkg>)" (README badges read them via shields'
-# check-runs endpoint) and "peer-floor (<pkg>)". action_required renders
-# orange = a release/floor-bump is owed, never a CI failure — this job
-# succeeds whether or not any signal is orange.
+# Non-gating release signals on main's head, reported as check runs: the
+# per-package "published-diff (<pkg>)" and "peer-floor (<pkg>)", plus the
+# single "workers-builds (triggers)" (README badges read them all via shields'
+# check-runs endpoint). All three answer "does the outside world still match
+# main?" — npm artifacts, peer ranges, and the Cloudflare deploy pipeline that
+# ships lit-ui-router.dev. action_required renders orange = a release, a
+# floor-bump, or a dashboard apply is owed; neutral renders grey = the check
+# could not reach a verdict. Never a CI failure — this job succeeds whatever
+# the signals say.
 name: Release signals
 
 on:
   push:
+    # A merge to main IS the CD event: Cloudflare Workers Builds deploys
+    # lit-ui-router.dev on this same push, so the workers-builds signal
+    # verifies the trigger config at the moment it gets used. Unfiltered by
+    # paths — two API GETs, seconds.
     branches:
       - main
+  # Secondary sweep: catches dashboard-side edits and npm-side changes (a
+  # deprecate, an unpublish) during quiet periods, which no push would ever
+  # surface. Off-peak and off the hour — the top of the hour is GitHub's most
+  # congested cron slot.
+  schedule:
+    - cron: '17 7 * * 0'
   # Called by publish-npm.yml after a successful publish: release-it pushes
   # the bump commit before npm `latest` moves, so the push-triggered run sees
   # stale drift; the post-publish call flips the badge green. Calls always
@@ -25,6 +39,14 @@ on:
         # Remote cache endpoint; a secret (not a var) so the worker domain stays
         # out of public logs. Secrets don't auto-propagate into a called
         # workflow, so the caller must pass it; absent = local cache only.
+        required: false
+      CLOUDFLARE_API_TOKEN:
+        # Read-scoped ("Workers Builds Configuration: Read"), USER-scoped —
+        # account-owned tokens don't cover the Builds triggers API. Absent =
+        # the workers-builds signal reports neutral (grey), never a failure.
+        required: false
+      CLOUDFLARE_ACCOUNT_ID:
+        # A secret, not a var, so it stays out of public logs.
         required: false
   workflow_dispatch:
     inputs:
@@ -43,7 +65,13 @@ env:
 # workflow_call, which would split called refreshes from push refreshes.
 concurrency:
   group: release-signals
-  cancel-in-progress: true
+  # The scheduled sweep is the one run that must never cancel: a cron firing
+  # mid-publish would kill the post-publish workflow_call whose whole job is
+  # flipping the badges green. cancel-in-progress is read off the INCOMING
+  # run, so a sweep queues behind whatever holds the group (and re-checks with
+  # fresh data when it starts), while any later push/call run still cancels
+  # the queued sweep and does the same work.
+  cancel-in-progress: ${{ github.event_name != 'schedule' }}
 
 jobs:
   published_diff:
@@ -68,7 +96,9 @@ jobs:
       - name: Published diff
         run: mise run //tools/release:published_diff
         env:
-          # Empty on push and workflow_call runs = full set.
+          # Empty on push, schedule, and workflow_call runs = full set (the
+          # inputs context is null off workflow_dispatch, so this renders as
+          # the empty string the tool already treats as "all").
           PUBLISHED_DIFF_PACKAGES: ${{ inputs.packages }}
           TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
@@ -90,3 +120,19 @@ jobs:
           TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }}
           TURBO_API: ${{ secrets.TURBO_API }}
           TURBO_TEAM: ${{ vars.TURBO_TEAM }}
+      # CD-pipeline signal (#280 Phase 1): the "workers-builds (triggers)"
+      # check run. Read-only diff of the live Cloudflare Workers Builds
+      # triggers against the repo-owned desired state — on a push to main it
+      # verifies the deploy config against the very build that push kicked
+      # off. Conclusions: success in sync, action_required on drift (the
+      # dashboard owes a manual --apply), neutral when the check itself could
+      # not run — a missing/expired token or a Cloudflare outage is an
+      # observer failure, not evidence of drift, and must not share a colour
+      # with it. Read scope only: CI never gets Edit, so #280's apply-on-merge
+      # phase stays unimplemented. Exits 0 on every path.
+      - name: Workers Builds trigger check run
+        run: mise run //tools/release:workers_builds_check_runs
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}

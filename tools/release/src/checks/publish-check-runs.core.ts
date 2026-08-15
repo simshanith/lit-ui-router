@@ -9,7 +9,10 @@ import type { PackageSummary } from './check-published-diff.core.ts';
 
 export type CheckRunPayload = {
   name: string;
-  conclusion: 'success' | 'action_required';
+  // Shared by every release signal. `neutral` (grey) is the observer-failed
+  // verdict — see workers-builds-check-runs.core.ts; `failure` stays unused
+  // because these signals never fail CI.
+  conclusion: 'success' | 'action_required' | 'neutral';
   title: string;
   summary: string;
 };

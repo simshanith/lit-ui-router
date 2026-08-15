@@ -9,9 +9,15 @@
 //
 // Default is a read-only diff. --apply PATCHes drifted triggers, then re-GETs
 // to confirm. Exit codes: 0 in sync, 1 drifted (or drift remained after
-// --apply), 2 usage/API error. Token needs "Workers Builds Configuration:
-// Edit" (user-scoped). Never wire this into CI's task graph — it reads (and
-// with --apply, writes) production deploy configuration.
+// --apply), 2 usage/API error. Token must be USER-scoped (account-owned
+// tokens don't cover the Builds API): "Workers Builds Configuration: Read"
+// suffices for the diff, Edit is only for --apply.
+//
+// Never make this a turbo task-graph dependency: it hits the live API, so no
+// build/test/typecheck task may reach it. Running the default read-only diff
+// from CI is fine and intended — release-signals.yml reports it as a
+// non-gating check run (#280 Phase 1) using a read-scoped token; --apply,
+// which writes production deploy configuration, stays manual.
 //
 // This file is the IO shell: env, wrangler.jsonc, and the Cloudflare API
 // (https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/).
@@ -118,7 +124,8 @@ async function main() {
   if (!token || !accountId) {
     console.error(
       'Missing required env: set CLOUDFLARE_API_TOKEN (user token with ' +
-        '"Workers Builds Configuration: Edit") and CLOUDFLARE_ACCOUNT_ID.',
+        '"Workers Builds Configuration: Read", Edit for --apply) and ' +
+        'CLOUDFLARE_ACCOUNT_ID.',
     );
     process.exitCode = 2;
     return;

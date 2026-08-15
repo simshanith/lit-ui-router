@@ -7,6 +7,7 @@
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/branch/main/graph/badge.svg)](https://codecov.io/gh/simshanith/lit-ui-router)
 [![Publish Pipeline](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml/badge.svg?event=push)](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
+[![workers-builds trigger drift](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=workers-builds%20%28triggers%29&label=workers-builds)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)
 
 ## Published packages
 
@@ -23,6 +24,17 @@
 | ---------------------------------------------------------------------------- | ------------------------------------------- |
 | ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen) | The npm release matches `main`              |
 | ![passing](https://img.shields.io/badge/published--diff-passing-orange)      | Unreleased ship-affecting changes on `main` |
+
+The `workers-builds` badge above is the same kind of signal for the deploy pipeline: it diffs the live
+Cloudflare Workers Builds triggers that ship [lit-ui-router.dev](https://lit-ui-router.dev) against the
+repo-owned [desired state](./tools/workers-builds/workers-builds-triggers.config.jsonc). See
+[DEPLOY.md](./DEPLOY.md#cd-pipeline-verification-signal).
+
+| Badge                                                                        | Meaning                                                                   |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![passing](https://img.shields.io/badge/workers--builds-passing-brightgreen) | The dashboard triggers match the repo config                              |
+| ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
+| ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
 
 ---
 
