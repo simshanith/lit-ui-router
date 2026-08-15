@@ -159,6 +159,32 @@ describe('uiSref directive', () => {
       const href = anchor.getAttribute('href');
       expect(href === null || href === '').toBe(true);
     });
+
+    it('should remove href when the target loses its url', async () => {
+      router = createTestRouter([
+        { name: 'home', url: '/home' },
+        { name: 'abstract', abstract: true },
+      ]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      // one literal, so the part and the directive instance are reused
+      const link = (state: string) => html`<a ${uiSref(state)}>Link</a>`;
+
+      render(link('home'), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('a')!.hasAttribute('href')).toBe(true);
+
+      render(link('abstract'), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('a')!.hasAttribute('href')).toBe(false);
+    });
   });
 
   describe('click navigation', () => {
