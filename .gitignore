@@ -46,8 +46,11 @@ certs/
 # config.toml `_.file` dotenvs: turbo.local.env (written by turbo_login —
 # remote-cache creds + the sensitive worker domain) and the hand-created
 # cloudflare.local.env (Workers Builds API token + account id).
+# The .tmpl siblings hold `op://` secret references rather than secrets, but stay
+# untracked too: the vault layout they encode is per-maintainer, not repo config.
 .config/mise/**/*.local.toml
 .config/mise/**/*.local.env
+.config/mise/**/*.local.env.tmpl
 mise.local.toml
 mise.*.local.toml
 
