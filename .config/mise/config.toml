@@ -165,12 +165,13 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login, read_secret and turbo_link_worktree are file-based tasks under
-# .config/mise/tasks/ — their shell bodies were too large to sit inline. Every
-# other task here is a one- or two-liner and stays inline.
+# turbo_login, read_secret, turbo_link_worktree and cloudflare_item_create are
+# file-based tasks under .config/mise/tasks/ — their shell bodies were too large
+# to sit inline. Every other task here is a one- or two-liner and stays inline.
 
-# Both Cloudflare tasks wrap `op` over a gitignored file whose path is the only
-# thing worth memorizing; neither is required, since the check reads plain env.
+# The Cloudflare tasks wrap `op` over gitignored files whose paths are the only
+# thing worth memorizing; none is required, since the check reads plain env.
+# cloudflare_item_create bootstraps those files and the item they point at.
 # `op` is intentionally not in [tools]: a pinned copy would shadow the system
 # one and lose its desktop-app/biometric integration.
 
