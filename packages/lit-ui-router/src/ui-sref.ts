@@ -1,4 +1,5 @@
 import {
+  equals,
   extend,
   RawParams,
   TransitionOptions,
@@ -54,6 +55,17 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
     composed: true,
     detail: { targetState },
   }) as UiSrefTargetEvent;
+}
+
+/**
+ * Whether two target states name the same state with the same params.
+ * `$state.target()` returns a fresh object every render, so identity is useless.
+ * @internal
+ */
+function sameTarget(a: TargetState | null, b: TargetState): boolean {
+  // core ships `equals` as `any`
+  const paramsEqual = equals as (x: RawParams, y: RawParams) => boolean;
+  return !!a && a.name() === b.name() && paramsEqual(a.params(), b.params());
 }
 
 /**
@@ -117,25 +129,26 @@ export class UiSrefDirective extends AsyncDirective {
       return noChange;
     }
 
-    this.element.targetState = this.targetState = $state.target(
-      state,
-      params,
-      this.getOptions(options),
-    );
+    const targetState = $state.target(state, params, this.getOptions(options));
+    const targetChanged = !sameTarget(this.targetState, targetState);
+    this.element.targetState = this.targetState = targetState;
 
+    // core returns null from href() for a state whose navigable has no url
     this.href = $state.href(state, params, this.getOptions(options));
 
-    if (this.href === this.element.getAttribute('href')) {
-      return noChange;
+    if (this.href !== this.element.getAttribute('href')) {
+      if (this.href) {
+        this.element.setAttribute('href', this.href);
+      } else {
+        this.element.removeAttribute('href');
+      }
     }
 
-    if (this.href) {
-      this.element.setAttribute('href', this.href);
-    } else {
-      this.element.removeAttribute('href');
+    // the href is not the target: a url-less state has none, and non-url
+    // params change the target without changing it
+    if (targetChanged) {
+      this.element.dispatchEvent(uiSrefTargetEvent(this.targetState));
     }
-
-    this.element.dispatchEvent(uiSrefTargetEvent(this.targetState));
     return noChange;
   }
 

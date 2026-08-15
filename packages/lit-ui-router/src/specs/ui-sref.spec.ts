@@ -413,6 +413,98 @@ describe('uiSref directive', () => {
       expect(receivedTargetState).toBeDefined();
       expect(receivedTargetState?.name()).toBe('home');
     });
+
+    it('should dispatch for a state whose navigable has no url', async () => {
+      router = createTestRouter([{ name: 'abstract', abstract: true }]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      let receivedTargetState: TargetState | undefined;
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
+        event: UiSrefTargetEvent,
+      ) => {
+        receivedTargetState = event.detail.targetState;
+      }) as EventListener);
+
+      // core returns null from href(): the old guard compared that to the
+      // absent attribute, matched, and returned before dispatching
+      render(html`<a ${uiSref('abstract')}>Link</a>`, wrapper);
+      await tick(50);
+
+      expect(receivedTargetState?.name()).toBe('abstract');
+    });
+
+    it('should dispatch when only a non-url param changes', async () => {
+      router = createTestRouter([
+        {
+          name: 'compose',
+          url: '/compose',
+          params: { message: { value: null, dynamic: true } },
+        },
+      ]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      // one template literal, so lit reuses the part and the directive
+      // instance; two literals would be two templates and a fresh element
+      const link = (message: string) =>
+        html`<a ${uiSref('compose', { message })}>Link</a>`;
+
+      render(link('a'), wrapper);
+      await tick(50);
+
+      const hrefBefore = wrapper.querySelector('a')!.getAttribute('href');
+
+      const eventSpy = vi.fn();
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
+
+      render(link('b'), wrapper);
+      await tick(50);
+
+      // the param never reaches the url, so the old href-change guard held
+      expect(wrapper.querySelector('a')!.getAttribute('href')).toBe(hrefBefore);
+      expect(eventSpy).toHaveBeenCalled();
+      const { targetState } = (eventSpy.mock.calls[0][0] as UiSrefTargetEvent)
+        .detail;
+      expect(targetState.params().message).toBe('b');
+    });
+
+    it('should not re-dispatch when the target is unchanged', async () => {
+      router = createTestRouter([{ name: 'home', url: '/home' }]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      const link = () => html`<a ${uiSref('home')}>Link</a>`;
+
+      render(link(), wrapper);
+      await tick(50);
+
+      const eventSpy = vi.fn();
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
+
+      render(link(), wrapper);
+      await tick(50);
+
+      expect(eventSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('uiSrefTargetEvent factory', () => {
