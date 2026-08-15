@@ -200,7 +200,7 @@ turbo build --summarize
 The GitHub Actions workflow (`.github/workflows/build-test.yml`) runs the CI pipeline:
 
 1. **Checkout** - Clone repository
-2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and corepack; `mise run setup` corepack-installs the `packageManager`-pinned pnpm, then installs dependencies
+2. **Setup** - mise installs Node.js (version pinned in `.nvmrc`) and a bootstrap pnpm that self-swaps to the `packageManager` pin; `mise run setup` installs dependencies
 3. **Install browsers** - Playwright and Cypress for e2e tests, restored from `actions/cache` keyed on the installed package versions
 4. **Build and Test** - PRs and branch pushes run `mise run ci` (turbo `ci:pull_request`); main pushes, `mainGraph` dispatches and `ci-main/` branches run `mise run ci_main` (turbo `ci:main`, adding the main-only guards)
 5. **Coverage reports** - Vitest coverage for PR comments, Codecov upload

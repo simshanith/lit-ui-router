@@ -7,9 +7,8 @@ This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by c
 | Tool       | Provided by                                     | Pinned in                                                                |
 | ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
 | node       | mise                                            | [`.nvmrc`](./.nvmrc)                                                     |
-| corepack   | mise                                            | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
 | npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
-| pnpm       | corepack                                        | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
+| pnpm       | mise bootstraps, `packageManager` decides       | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
 | turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) catalog                   |
 | actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
 | zizmor     | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
@@ -17,12 +16,14 @@ This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by c
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
 mise trust
-mise install     # provisions node, corepack, npm, actionlint, zizmor
-mise run setup   # corepack-installs the pinned pnpm, then pnpm install
+mise install     # provisions node, pnpm, npm, actionlint, zizmor
+mise run setup   # pnpm install
 turbo build
 ```
 
-`mise install` provisions the pinned Node and corepack. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): its `corepack` dependency task enables corepack and installs the `packageManager`-pinned pnpm, then `pnpm install` runs — frozen-lockfile automatically in CI. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. mise-owned binaries (actionlint, zizmor) are invoked via mise tasks; package.json scripts delegate with `mise run`, never `mise exec`.
+`mise install` provisions the pinned Node and a bootstrap pnpm. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): `pnpm install` runs — frozen-lockfile automatically in CI.
+
+The mise pin is a **bootstrap floor, not the version that runs**: pnpm ≥ 11.10 reads `packageManager` and swaps itself to it, so that field stays the single version authority for contributors, CI, and [Cloudflare Workers Builds](./DEPLOY.md) alike. corepack used to fill this role and no longer can — pnpm 12 ships as a native binary whose npm package is a placeholder, materialized by a `preinstall` hook that corepack does not run. The aqua backend fetches the release binary directly and records a checksum per platform in `mise.lock`, which is strictly more integrity than corepack's single `+sha512`. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. mise-owned binaries (actionlint, zizmor) are invoked via mise tasks; package.json scripts delegate with `mise run`, never `mise exec`.
 
 pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vitest`, `typedoc`, `vitepress`, …) live in that member's own `node_modules/.bin`, not the root one. When your shell is cd'd into a member directory, mise also puts that member's `.bin` first on `PATH`, so bare invocations resolve exactly as the member's own pnpm scripts would — including a member-local version shadowing the root one (e.g. `tools/vue-check`'s TypeScript 6 `tsc`). This only applies at the member's root directory, not its subdirectories; `pnpm run` inside the member works everywhere regardless. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
