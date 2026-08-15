@@ -165,13 +165,15 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login, read_secret, turbo_link_worktree and cloudflare_item_create are
-# file-based tasks under .config/mise/tasks/ — their shell bodies were too large
-# to sit inline. Every other task here is a one- or two-liner and stays inline.
+# turbo_login, read_secret, turbo_link_worktree, cloudflare_item_create and
+# check_workers_builds are file-based tasks under .config/mise/tasks/ — their
+# shell bodies were too large to sit inline. Every other task here is a one- or
+# two-liner and stays inline.
 
 # The Cloudflare tasks wrap `op` over gitignored files whose paths are the only
 # thing worth memorizing; none is required, since the check reads plain env.
-# cloudflare_item_create bootstraps those files and the item they point at.
+# cloudflare_item_create bootstraps those files and the item they point at, and
+# check_workers_builds picks its credential source from which one exists.
 # `op` is intentionally not in [tools]: a pinned copy would shadow the system
 # one and lose its desktop-app/biometric integration.
 
@@ -183,16 +185,6 @@ run = '''
 op inject -i "{{config_root}}/.config/mise/cloudflare.local.env.tmpl" -o "{{config_root}}/.config/mise/cloudflare.local.env"
 chmod 600 "{{config_root}}/.config/mise/cloudflare.local.env"
 '''
-
-[tasks.check_workers_builds]
-# The no-secrets-at-rest path: op run injects into this process only, so the
-# Edit-scoped token --apply needs never lands in a file. Skip it and run
-# `pnpm check:workers-builds` directly when cloudflare_login's dotenv is enough.
-description = "Diff the Workers Builds triggers, credentials injected by 1Password"
-usage = '''
-flag "--apply" help="PATCH drifted triggers — writes production deploy config, needs the Edit scope"
-'''
-run = 'op run --env-file "{{config_root}}/.config/mise/cloudflare.op.env" -- pnpm check:workers-builds ${usage_apply:+-- --apply}'
 
 [tasks.build]
 # env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo

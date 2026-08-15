@@ -1,0 +1,37 @@
+#!/usr/bin/env bash
+#MISE description="Diff the Workers Builds triggers, credentials injected by 1Password"
+#
+# Two ways to hold the Cloudflare credentials, and this task picks whichever is
+# already in place rather than making the caller remember:
+#   cloudflare.local.env exists -> mise's [env] _.file already loaded it into
+#     this task's environment, so run the check directly. Wrapping it in op run
+#     would re-resolve the same two variables and prompt for authorization on
+#     every invocation, for values the process already has.
+#   otherwise -> op run --env-file, which injects into this process only. The
+#     no-secrets-at-rest path, and the one to prefer for --apply.
+# Deleting cloudflare.local.env is what switches back; the warning below says so.
+#USAGE flag "--apply" help="PATCH drifted triggers — writes production deploy config, needs the Edit scope"
+set -euo pipefail
+
+dir="${MISE_CONFIG_ROOT}/.config/mise"
+dotenv="$dir/cloudflare.local.env"
+openv="$dir/cloudflare.op.env"
+
+# Built as one array so the empty-flag case never expands an empty array.
+cmd=(pnpm check:workers-builds)
+if [ -n "${usage_apply:-}" ]; then
+  cmd+=(-- --apply)
+fi
+
+if [ -e "$dotenv" ]; then
+  echo "check_workers_builds: $dotenv exists, so mise has already put CLOUDFLARE_API_TOKEN and CLOUDFLARE_ACCOUNT_ID in this task's environment — skipping op run (it would prompt for authorization to resolve values this process already holds)." >&2
+  echo "check_workers_builds: the token in that file is the one being used. Delete it to run under 'op run' instead, which keeps no token at rest." >&2
+  exec "${cmd[@]}"
+fi
+
+if ! [ -e "$openv" ]; then
+  echo "check_workers_builds: neither $dotenv nor $openv exists; run 'mise run cloudflare_item_create' to bootstrap them" >&2
+  exit 1
+fi
+
+exec op run --env-file "$openv" -- "${cmd[@]}"
