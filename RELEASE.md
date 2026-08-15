@@ -12,6 +12,10 @@ The release process is automated through GitHub Actions with protected environme
 4. **Tag** - A green main CI run automatically tags the release
 5. **Publish** - Publish to NPM and create GitHub Release
 
+Every stage runs in GitHub Actions. Publishing from a workstation is a
+break-glass fallback for when the pipeline itself is unavailable — see
+[Emergency Local Publish](#emergency-local-publish-break-glass).
+
 ## Tag and Branch Conventions
 
 | Pattern                        | Purpose                    | Example                        |
@@ -262,6 +266,103 @@ Break the cycle by hand, once, before adding the package to any workflow list:
 
    Expect `latest` only. Anything else is a fossil from a `--tag` on the seed
    or from a prerelease bump; retire it — see [Dist-Tags](#dist-tags).
+
+### Emergency Local Publish (break glass)
+
+**CI is the blessed path. Publish from a workstation only when the pipeline
+itself is unavailable** — a GitHub Actions outage, a broken runner image, an
+expired trusted-publisher config — and the release cannot wait for it.
+
+This is written down so the fallback is ready to roll, not to make it routine.
+A local publish forfeits four guarantees the pipeline provides, and every one
+of them has to be replaced by hand:
+
+| CI provides                                         | Locally you must                                               |
+| --------------------------------------------------- | -------------------------------------------------------------- |
+| A fresh checkout — `dist` starts empty              | Clean `dist` yourself (see below); nothing else prunes it      |
+| OIDC trusted publishing — no long-lived token       | Use a real npm token, then revoke it afterwards                |
+| Build provenance attestation                        | Accept its absence — the release ships unattested              |
+| Cold-bake reconciliation against CI's verified pack | Accept a single unwitnessed ledger; there is no second opinion |
+
+The first row is the one that bites, because it fails silently. Every
+publishable package declares `files: ["dist/**", ...]`, and **no build task
+cleans `dist` first** — the emit tasks write over whatever is already there,
+and a Turbo cache restore extracts over the directory rather than pruning it.
+So any file the build once emitted and no longer does sits in `dist`
+indefinitely and packs into the tarball. A long-lived workspace accumulates
+these; CI never sees one.
+
+Observed 2026-08-15: `lit-ui-router-mobx` carried a month-old
+`dist/specs/test-utils.*` from before `tsconfig.src.json` excluded `src/specs`.
+It would have shipped.
+
+**Procedure:**
+
+1. **Start from a clean tree at the tag** — `git status` empty, the release tag
+   checked out. A scratch clone is strictly better than your working copy, and
+   removes the need for step 2.
+
+2. **Purge every `dist`** (gitignored, so this is always safe):
+
+   ```bash
+   git clean -xdf packages/*/dist
+   ```
+
+3. **Rebuild, then run the verification pack and the outbound gates.** These
+   read `@tools/release#pack:all`'s tarballs under `.cache/pack/` — the same
+   artifact CI's checks validate:
+
+   ```bash
+   turbo run build
+   turbo run @tools/release#pack:all --force
+   pnpm check:pack
+   turbo run check:exports
+   pnpm check:published-diff
+   ```
+
+   `--force` matters: `pack:all`'s cache key covers its file inputs, not the
+   package manager version or anything else about the local environment, so an
+   unforced run can hand back a tarball baked elsewhere.
+
+   In `check:published-diff`, anything reported as ship-affecting that you did
+   not intend to change is a stale artifact until proven otherwise — check
+   mtimes in `dist` before believing it.
+
+4. **Bake the publish tarball.** This is a _different_ artifact: a cold re-pack
+   from source through a restore-free staging copy, deliberately kept off the
+   turbo cache so no cached bytes can reach the registry. Never publish
+   `.cache/pack/`'s tarball, and never a bare `pnpm pack` — that skips the
+   publish-shape manifest strip.
+
+   ```bash
+   mise run //tools/release:pack --package-name <package> --package-dir <dir>
+   ```
+
+   Output: `tools/release/.cache/publish/<package>.tgz`.
+
+5. **Gate the manifest**, which catches `devDependencies`, `scripts`, and
+   unsubstituted `catalog:`/`workspace:` leaks:
+
+   ```bash
+   mise run //tools/release:check_tarball --tarball tools/release/.cache/publish/<package>.tgz
+   ```
+
+   If CI did manage to produce a verified pack for this commit, also run
+   `//tools/release:reconcile` — it balances this cold bake against that
+   remote-cached witness and is the one guarantee you can still get back. In a
+   full outage there is no witness, and you proceed on the bake alone.
+
+6. **Publish the cold-baked tarball**, not the directory:
+
+   ```bash
+   npm publish tools/release/.cache/publish/<package>.tgz
+   ```
+
+7. **Afterwards:** revoke the token, push the tag if it is not already on
+   origin, and re-run
+   [Release signals](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
+   so the badges reflect the new `latest`. The GitHub Release is not created
+   for you — cut it by hand and attach the same tarball.
 
 ### Dist-Tags
 
