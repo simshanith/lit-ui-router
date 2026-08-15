@@ -58,13 +58,19 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
 }
 
 /**
+ * `@uirouter/core` types `equals` as `any` because it resolves to
+ * `angular.equals || _equals` at load time. The implementation is a deep
+ * structural compare (arrays, Date by `getTime`, RegExp by source, NaN).
+ * @internal
+ */
+const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
+
+/**
  * Whether two target states name the same state with the same params.
  * `$state.target()` returns a fresh object every render, so identity is useless.
  * @internal
  */
 function sameTarget(a: TargetState | null, b: TargetState): boolean {
-  // core ships `equals` as `any`
-  const paramsEqual = equals as (x: RawParams, y: RawParams) => boolean;
   return !!a && a.name() === b.name() && paramsEqual(a.params(), b.params());
 }
 
