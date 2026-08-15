@@ -8,12 +8,22 @@
 #
 # Runs from the repo root under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own
 # install step is off, so installing is this script's job (see DEPLOY.md).
+#
+# This branch's copy diverges from main's, which is what the indirection is
+# for. npx covers only the commands named here; turbo spawns every package
+# script through the `pnpm` on PATH, which in the build image is corepack's
+# shim, and corepack cannot materialize a pnpm-12 pin. So the shim has to be
+# replaced rather than bypassed.
 set -euo pipefail
 
-# Bootstrap floor, not the version that runs: >=11.20.0 to read a pnpm-12
-# lockfile, then `packageManager` self-swaps. Via npx because the corepack
-# `pnpm` on PATH cannot materialize a pnpm-12 pin.
-npx pnpm@11.21.0 install --frozen-lockfile
+# npm's global bin is the same node bin dir the corepack shim sits in, so this
+# overwrites it. --allow-scripts is what makes it a pnpm 12 rather than the
+# wrapper's placeholder bin: the real binary is unpacked by a preinstall hook,
+# which npm 12 blocks by default. npm 11 ignores the unknown flag and runs the
+# hook anyway, so one command covers both.
+npm install --global --allow-scripts=pnpm pnpm@12.0.0-rc.5
 
-# npx again: turbo is a workspace devDependency, not on PATH before the install.
+pnpm install --frozen-lockfile
+
+# turbo is a workspace devDependency, not on PATH.
 npx turbo docs#build

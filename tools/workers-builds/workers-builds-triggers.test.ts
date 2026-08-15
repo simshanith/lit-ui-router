@@ -93,10 +93,10 @@ describe('desiredStateFromConfig', () => {
         join(import.meta.dirname, '..', '..', command),
         'utf8',
       );
-      assert.match(
-        script,
-        /^npx pnpm@\d+\.\d+\.\d+ install --frozen-lockfile$/m,
-      );
+      // Command-agnostic on purpose: the bootstrap in front of the install is
+      // exactly what a branch is allowed to change. What must hold is that a
+      // frozen install happens at all.
+      assert.match(script, /^[^#\n]*\binstall --frozen-lockfile$/m);
     }
   });
 
