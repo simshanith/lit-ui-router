@@ -43,6 +43,16 @@ const withEnvironment = (
   environment_variables: NonNullable<Trigger['environment_variables']>,
 ): Trigger => ({ ...trigger, environment_variables });
 
+// Every declared preview key as the API would return it in sync. Derived from
+// the config rather than spelled out, so declaring another variable doesn't
+// turn each single-key scenario below into unrelated drift.
+const declaredPreviewLive: NonNullable<Trigger['environment_variables']> =
+  Object.fromEntries(
+    Object.entries(desired.preview.environment_variables ?? {}).map(
+      ([key, value]) => [key, { value, is_secret: false }],
+    ),
+  );
+
 describe('parseJsonc', () => {
   it('parses the repo wrangler.jsonc (comments + trailing commas)', async () => {
     const raw = await readFile(
@@ -203,6 +213,7 @@ describe('diffTriggers', () => {
 
   it('drifts on a declared environment variable with the wrong value', () => {
     const drifted = withEnvironment(triggers.preview, {
+      ...declaredPreviewLive,
       SKIP_DEPENDENCY_INSTALL: { value: '0', is_secret: false },
     });
     const { report, drifts } = diffTriggers(
@@ -230,15 +241,14 @@ describe('diffTriggers', () => {
       desired,
     );
     assert.equal(report.ok, false);
-    assert.deepEqual(drifts[0]?.environmentPatch, {
-      SKIP_DEPENDENCY_INSTALL: { value: '1', is_secret: false },
-    });
+    // Every declared key is absent, so every one is patched.
+    assert.deepEqual(drifts[0]?.environmentPatch, declaredPreviewLive);
     assert.match(report.text, /SKIP_DEPENDENCY_INSTALL {12}\(absent\)/);
   });
 
   it('reports undeclared environment variables as unmanaged, never drift', () => {
     const extra = withEnvironment(triggers.preview, {
-      SKIP_DEPENDENCY_INSTALL: { value: '1', is_secret: false },
+      ...declaredPreviewLive,
       SOMETHING_ELSE: { value: 'dashboard-only', is_secret: false },
       TURBO_TOKEN: { is_secret: true },
     });
@@ -260,13 +270,15 @@ describe('diffTriggers', () => {
       TURBO_TOKEN: { is_secret: true },
     });
     const { drifts } = diffTriggers([triggers.production, drifted], desired);
-    assert.deepEqual(Object.keys(drifts[0]?.environmentPatch ?? {}), [
-      'SKIP_DEPENDENCY_INSTALL',
-    ]);
+    assert.deepEqual(
+      Object.keys(drifts[0]?.environmentPatch ?? {}),
+      Object.keys(declaredPreviewLive),
+    );
   });
 
   it('refuses to overwrite a declared key that is live-secret', () => {
     const conflicted = withEnvironment(triggers.preview, {
+      ...declaredPreviewLive,
       SKIP_DEPENDENCY_INSTALL: { is_secret: true },
     });
     const { report, drifts } = diffTriggers(
