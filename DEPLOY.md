@@ -49,8 +49,9 @@ The private [`tools/workers-builds`](./tools/workers-builds) package owns
 the dashboard values above, and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 (exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
-tokens do not cover the Workers Builds API — with **Workers Builds Configuration: Read** for the diff and
-**Edit** only for `--apply`.
+tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
+resolves the worker name to the tag the triggers endpoint is keyed by, and **Workers Builds Configuration:
+Read** for the diff itself, raised to **Edit** only for `--apply`.
 
 Applying is manual-only: `--apply` writes production deploy configuration, and no automation holds an
 Edit-scoped token.
@@ -94,10 +95,10 @@ It never applies; resolving drift is still a local `--apply`.
 
 Two repository secrets drive it. Both are optional — absent, the signal reports grey rather than failing:
 
-| Secret                  | Value                                                                                                       |
-| ----------------------- | ----------------------------------------------------------------------------------------------------------- |
-| `CLOUDFLARE_API_TOKEN`  | A **user-scoped** API token with **Workers Builds Configuration: Read**. CI must never hold the Edit scope. |
-| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID. A secret rather than a variable so it stays out of public logs.                  |
+| Secret                  | Value                                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`  | A **user-scoped** API token with **Workers Scripts: Read** and **Workers Builds Configuration: Read** — both, or the run 403s on the tag lookup before it reaches the triggers. CI must never hold the Edit scope. |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID. A secret rather than a variable so it stays out of public logs.                                                                                                                         |
 
 Rotation is manual: mint a replacement in the Cloudflare dashboard under **My Profile → API Tokens** (user
 tokens, not **Manage Account → API Tokens**), update the repository secret, and revoke the old one. A stale

@@ -41,7 +41,8 @@ on:
         # workflow, so the caller must pass it; absent = local cache only.
         required: false
       CLOUDFLARE_API_TOKEN:
-        # Read-scoped ("Workers Builds Configuration: Read"), USER-scoped —
+        # Read-scoped ("Workers Scripts: Read" for the name -> tag lookup plus
+        # "Workers Builds Configuration: Read"), USER-scoped —
         # account-owned tokens don't cover the Builds triggers API. Absent =
         # the workers-builds signal reports neutral (grey), never a failure.
         required: false
