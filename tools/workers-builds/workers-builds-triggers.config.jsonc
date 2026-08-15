@@ -11,11 +11,17 @@
   // runs neither). npx bootstraps the last pnpm 11 instead, which reads
   // `packageManager` and self-swaps. Every command uses npx because the unusable
   // corepack `pnpm` shim stays first on PATH.
+  // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
+  // uses: the Cypress binary (download + unzip, ~15s) belongs to the e2e suite,
+  // and the husky git hooks to a developer checkout. Both mirror what
+  // `mise run setup` and the CI workflows already set.
   "production": {
     "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
     "deploy_command": "npx wrangler deploy",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
+      "CYPRESS_INSTALL_BINARY": "0",
+      "HUSKY": "0",
     },
   },
   "preview": {
@@ -23,6 +29,8 @@
     "deploy_command": "npx wrangler versions upload",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
+      "CYPRESS_INSTALL_BINARY": "0",
+      "HUSKY": "0",
     },
   },
 }

@@ -149,6 +149,11 @@ and leaves every other variable on the trigger untouched.
   command, per [Build & Deploy Commands](#build--deploy-commands). Without it Cloudflare
   runs its own corepack-provisioned `pnpm install` first and the build fails there;
   deleting it in the dashboard breaks every deploy.
+- `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs
+  deploy never runs. Without it the install downloads and unzips it every build (~15s).
+  `mise run setup` sets the same thing locally.
+- `HUSKY=0` — the root `prepare` script installs git hooks, which mean nothing in a build
+  container. Matches the `env: HUSKY: 0` every CI workflow sets.
 
 **Unmanaged** (dashboard-only; listed in the diff output as `(unmanaged)`, never diffed or patched):
 
