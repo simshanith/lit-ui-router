@@ -78,15 +78,24 @@ describe('desiredStateFromConfig', () => {
   });
 
   // SKIP_DEPENDENCY_INSTALL=1 is only safe while the build command installs.
-  it('pairs the skipped install with an install in every build command', () => {
+  // The command is a repo script now, so follow the path and read the steps —
+  // otherwise the indirection would hide a build command that stopped
+  // installing, which is the one failure this pairing exists to catch.
+  it('pairs the skipped install with an install in every build command', async () => {
     for (const kind of ['production', 'preview'] as const) {
       assert.equal(
         desired[kind].environment_variables?.SKIP_DEPENDENCY_INSTALL,
         '1',
       );
+      const command = desired[kind].build_command ?? '';
+      assert.match(command, /^\.\/tools\/workers-builds\/[\w-]+\.sh$/);
+      const script = await readFile(
+        join(import.meta.dirname, '..', '..', command),
+        'utf8',
+      );
       assert.match(
-        desired[kind].build_command ?? '',
-        /^npx pnpm@\d+\.\d+\.\d+ install --frozen-lockfile &&/,
+        script,
+        /^npx pnpm@\d+\.\d+\.\d+ install --frozen-lockfile$/m,
       );
     }
   });

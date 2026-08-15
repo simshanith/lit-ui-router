@@ -4,19 +4,19 @@
 // vars (TURBO_* cache config and secrets, VITE_*) stay dashboard-managed
 {
   "productionBranch": "main",
-  // The build command owns the install, so SKIP_DEPENDENCY_INSTALL=1 is required:
-  // Workers Builds provisions pnpm with corepack, which cannot install a pnpm-12
-  // `packageManager` pin at all (the npm package is a wrapper whose real binary a
-  // `preinstall` hook materializes from an optional platform dependency, and corepack
-  // runs neither). npx bootstraps the last pnpm 11 instead, which reads
-  // `packageManager` and self-swaps. Every command uses npx because the unusable
-  // corepack `pnpm` shim stays first on PATH.
+  // The build command is a repo script, not the steps themselves: the dashboard
+  // holds one value for every branch, and a package-manager change needs a
+  // different bootstrap on its branch than main has. Pinning the path lets a
+  // branch diverge without that reading as drift. The steps and why the install
+  // moved out of Cloudflare's hands live in cloudflare-build.sh.
+  // SKIP_DEPENDENCY_INSTALL=1 is what hands the install to that script; without
+  // it Cloudflare runs its own corepack-provisioned `pnpm install` first.
   // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
   // uses: the Cypress binary (download + unzip, ~15s) belongs to the e2e suite,
   // and the husky git hooks to a developer checkout. Both mirror what
   // `mise run setup` and the CI workflows already set.
   "production": {
-    "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+    "build_command": "./tools/workers-builds/cloudflare-build.sh",
     "deploy_command": "npx wrangler deploy",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
@@ -25,7 +25,7 @@
     },
   },
   "preview": {
-    "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+    "build_command": "./tools/workers-builds/cloudflare-build.sh",
     "deploy_command": "npx wrangler versions upload",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
