@@ -18,9 +18,11 @@ set -euo pipefail
 
 # npm's global bin is the same node bin dir the corepack shims sit in, and npm
 # refuses to overwrite a file it does not own (EEXIST), so clear them first
-# rather than reaching for --force.
-node_bin="$(dirname "$(command -v node)")"
-rm -f "$node_bin/pnpm" "$node_bin/pnpx"
+# rather than reaching for --force. Ask npm where it will write: asdf puts its
+# own shims on PATH, so `command -v node` resolves to ~/.asdf/shims, not the
+# installs/nodejs/<version>/bin the shims and the global install both land in.
+npm_bin="$(npm prefix -g)/bin"
+rm -f "$npm_bin/pnpm" "$npm_bin/pnpx"
 
 # --allow-scripts is what makes this a pnpm 12 rather than the wrapper's
 # placeholder bin: the real binary is unpacked by a preinstall hook, which npm
