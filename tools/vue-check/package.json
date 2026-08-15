@@ -16,6 +16,8 @@
     "@tools/shared": "workspace:*"
   },
   "devDependencies": {
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:typescript6",
     "vue-tsc": "catalog:"
   }

@@ -36,6 +36,7 @@
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "playwright": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

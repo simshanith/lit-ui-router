@@ -90,12 +90,14 @@
     "@uirouter/core": "catalog:",
     "hono": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-markdown": "catalog:",
     "typedoc-vitepress-theme": "catalog:",
     "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
     "vite": "catalog:"
   },
   "peerDependencies": {

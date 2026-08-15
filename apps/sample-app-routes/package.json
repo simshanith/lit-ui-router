@@ -21,6 +21,7 @@
     "@tools/wintercg-globals": "workspace:*",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:"
   }
 }

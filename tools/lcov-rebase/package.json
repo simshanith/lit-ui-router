@@ -21,6 +21,7 @@
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:"
   }
 }

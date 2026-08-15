@@ -27,6 +27,8 @@
     "@types/pacote": "catalog:",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "pacote": "catalog:",
     "publint": "catalog:",
     "typescript": "catalog:",

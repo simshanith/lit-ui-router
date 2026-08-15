@@ -18,6 +18,7 @@
     "@types/node": "catalog:",
     "happy-dom": "catalog:",
     "oxfmt": "catalog:",
+    "oxlint": "catalog:",
     "typescript": "catalog:",
     "vitest": "catalog:"
   }
