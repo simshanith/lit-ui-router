@@ -66,15 +66,20 @@ chmod 600 .config/mise/cloudflare.local.env
 ```
 
 The template is gitignored alongside the dotenv — it carries no secrets, but the vault layout it
-encodes is personal rather than repo config. To avoid an Edit-scoped token at rest entirely, drop
-the `{{ }}` around each reference and run the check under `op run` instead, which injects into the
-child process only:
+encodes is personal rather than repo config.
+
+To avoid an Edit-scoped token at rest entirely, skip the dotenv and run the check under `op run`,
+which injects into the child process only. It takes its own file, `.config/mise/cloudflare.op.env`
+(also gitignored), holding the same references _without_ the `{{ }}`:
 
 ```sh
-op run --env-file .config/mise/cloudflare.local.env.tmpl -- pnpm check:workers-builds
+op run --env-file .config/mise/cloudflare.op.env -- pnpm check:workers-builds
 ```
 
-The two syntaxes are mutually exclusive, so pick one per file.
+One path per method, because the two syntaxes are mutually exclusive: `op inject` substitutes
+`{{ op://… }}` and passes a bare `op://…` through untouched, so pointing it at the `op run` file
+yields a dotenv of literal reference strings, surfacing as an auth failure from Cloudflare rather
+than as an error from `op`.
 
 ### Build Environment Variables
 
