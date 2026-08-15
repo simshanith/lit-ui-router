@@ -24,6 +24,17 @@ import {
 } from './interface.js';
 
 /**
+ * `@uirouter/core` types `forEach` as `any` because it resolves to
+ * `angular.forEach || _forEach` at load time. Narrowed to the object-iteration
+ * form used here, where the callback receives `(value, key)`.
+ * @internal
+ */
+const forEachValue = forEach as <V>(
+  obj: Record<string, V>,
+  cb: (value: V, key: string) => void,
+) => void;
+
+/**
  * Internal counter for generating unique view config IDs.
  * @internal
  */
@@ -116,45 +127,43 @@ export function litViewsBuilder<
       $default: pick(state, ['component']),
     };
 
-  (
-    forEach as (
-      obj: object,
-      cb: (config: LitViewDeclaration<T>, name: string) => void,
-    ) => void
-  )(viewsObject, function (config: LitViewDeclaration<T>, name: string) {
-    let normalizedConfig: NormalizedLitViewDeclaration<T>;
-    name = name || '$default'; // Account for views: { "": { template... } }
-    if (isLitViewDeclarationTemplate<T>(config)) {
-      normalizedConfig = { component: config as LitViewDeclarationTemplate };
-    } else {
-      normalizedConfig = config as NormalizedLitViewDeclaration<T>;
-    }
-    if (Object.keys(normalizedConfig || {}).length === 0) return;
+  forEachValue(
+    viewsObject as Record<string, LitViewDeclaration<T>>,
+    function (config: LitViewDeclaration<T>, name: string) {
+      let normalizedConfig: NormalizedLitViewDeclaration<T>;
+      name = name || '$default'; // Account for views: { "": { template... } }
+      if (isLitViewDeclarationTemplate<T>(config)) {
+        normalizedConfig = { component: config as LitViewDeclarationTemplate };
+      } else {
+        normalizedConfig = config as NormalizedLitViewDeclaration<T>;
+      }
+      if (Object.keys(normalizedConfig || {}).length === 0) return;
 
-    normalizedConfig.$type = 'lit';
-    normalizedConfig.$context = state;
-    normalizedConfig.$name = name;
+      normalizedConfig.$type = 'lit';
+      normalizedConfig.$context = state;
+      normalizedConfig.$name = name;
 
-    const normalizedTarget = ViewService.normalizeUIViewTarget(
-      normalizedConfig.$context,
-      normalizedConfig.$name,
-    );
-    normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
-    normalizedConfig.$uiViewContextAnchor =
-      normalizedTarget.uiViewContextAnchor;
+      const normalizedTarget = ViewService.normalizeUIViewTarget(
+        normalizedConfig.$context,
+        normalizedConfig.$name,
+      );
+      normalizedConfig.$uiViewName = normalizedTarget.uiViewName;
+      normalizedConfig.$uiViewContextAnchor =
+        normalizedTarget.uiViewContextAnchor;
 
-    if (isRoutedLitElement<T>(normalizedConfig.component)) {
-      const Component = normalizedConfig.component;
-      let component: InstanceType<RoutedLitElement<T>>;
-      normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
-        component = (Component.sticky && component) || new Component(props);
-        component._uiViewProps = props;
-        return html`${component}`;
-      };
-    }
+      if (isRoutedLitElement<T>(normalizedConfig.component)) {
+        const Component = normalizedConfig.component;
+        let component: InstanceType<RoutedLitElement<T>>;
+        normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
+          component = (Component.sticky && component) || new Component(props);
+          component._uiViewProps = props;
+          return html`${component}`;
+        };
+      }
 
-    views[name] = viewsObject[name] = normalizedConfig;
-  });
+      views[name] = viewsObject[name] = normalizedConfig;
+    },
+  );
   return views;
 }
 
