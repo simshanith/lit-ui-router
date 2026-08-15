@@ -1,13 +1,28 @@
 // Desired Workers Builds trigger configuration
 // `pnpm check:workers-builds --apply` updates Cloudflare
+// environment_variables: declared keys only, plaintext only — undeclared live
+// vars (TURBO_* cache config and secrets, VITE_*) stay dashboard-managed
 {
   "productionBranch": "main",
+  // The build command owns the install, so SKIP_DEPENDENCY_INSTALL=1 is required:
+  // Workers Builds provisions pnpm with corepack, which cannot install a pnpm-12
+  // `packageManager` pin at all (the npm package is a wrapper whose real binary a
+  // `preinstall` hook materializes from an optional platform dependency, and corepack
+  // runs neither). npx bootstraps the last pnpm 11 instead, which reads
+  // `packageManager` and self-swaps. Every command uses npx because the unusable
+  // corepack `pnpm` shim stays first on PATH.
   "production": {
-    "build_command": "npx turbo docs#build",
-    "deploy_command": "pnpm wrangler deploy",
+    "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+    "deploy_command": "npx wrangler deploy",
+    "environment_variables": {
+      "SKIP_DEPENDENCY_INSTALL": "1",
+    },
   },
   "preview": {
-    "build_command": "npx turbo docs#build",
-    "deploy_command": "pnpm wrangler versions upload",
+    "build_command": "npx pnpm@11.21.0 install --frozen-lockfile && npx turbo docs#build",
+    "deploy_command": "npx wrangler versions upload",
+    "environment_variables": {
+      "SKIP_DEPENDENCY_INSTALL": "1",
+    },
   },
 }
