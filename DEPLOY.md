@@ -57,6 +57,25 @@ Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the
 that one). Hand-create it; no task writes it, and it is deliberately not symlinked into git worktrees,
 so run `check:workers-builds` from the owning checkout.
 
+From 1Password, keep a `cloudflare.local.env.tmpl` beside it holding `op://` references instead of
+values, and regenerate the dotenv rather than editing it:
+
+```sh
+op inject -i .config/mise/cloudflare.local.env.tmpl -o .config/mise/cloudflare.local.env
+chmod 600 .config/mise/cloudflare.local.env
+```
+
+The template is gitignored alongside the dotenv — it carries no secrets, but the vault layout it
+encodes is personal rather than repo config. To avoid an Edit-scoped token at rest entirely, drop
+the `{{ }}` around each reference and run the check under `op run` instead, which injects into the
+child process only:
+
+```sh
+op run --env-file .config/mise/cloudflare.local.env.tmpl -- pnpm check:workers-builds
+```
+
+The two syntaxes are mutually exclusive, so pick one per file.
+
 ### Build Environment Variables
 
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
