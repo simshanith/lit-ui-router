@@ -82,11 +82,11 @@ From 1Password, two mise tasks wrap `op` over gitignored files that hold `op://`
 of values (no secrets, but the vault layout they encode is personal rather than repo config, so they
 stay untracked). A third task creates both files and the item they point at:
 
-| Task                                      | Reads / writes                                                                     | Reference form | Token at rest    |
-| ----------------------------------------- | ---------------------------------------------------------------------------------- | -------------- | ---------------- |
-| `mise run cloudflare_item_create`         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env` | both           | no               |
-| `mise run cloudflare_login`               | reads `.config/mise/cloudflare.local.env.tmpl`                                     | `{{ op://… }}` | yes, `chmod 600` |
-| `mise run check_workers_builds [--apply]` | reads `.config/mise/cloudflare.op.env`                                             | bare `op://…`  | no               |
+| Task                                      | Reads / writes                                                                      | Reference form | Token at rest               |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | --------------------------- |
+| `mise run cloudflare_item_create`         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env`  | both           | no                          |
+| `mise run cloudflare_login`               | reads `.config/mise/cloudflare.local.env.tmpl`                                      | `{{ op://… }}` | yes, `chmod 600`            |
+| `mise run check_workers_builds [--apply]` | reads whichever exists: the dotenv (via mise) else `.config/mise/cloudflare.op.env` | bare `op://…`  | only if it found the dotenv |
 
 `cloudflare_item_create` is the one-time bootstrap: it creates a Secure Note (`--vault Private`,
 `--title lit-ui-router-workers-builds`) whose two fields are named after the variables and left
@@ -95,9 +95,16 @@ the task never writes a credential. It is idempotent on the item: an existing on
 and the two files are only rewritten with `--force`.
 
 `cloudflare_login` regenerates the dotenv above with `op inject`, so edit the template and re-run
-rather than editing the dotenv. `check_workers_builds` skips the dotenv entirely and runs the diff
-under `op run`, which injects into that process only — the path to prefer for `--apply`, whose
-**Edit**-scoped token is the one worth never writing to disk.
+rather than editing the dotenv.
+
+`check_workers_builds` picks its credential source rather than asking you to remember which one is
+set up. If `cloudflare.local.env` exists, mise's `[env] _.file` has already put both variables in the
+task's environment, so it runs the diff directly and warns that it did — wrapping that in `op run`
+would prompt for authorization on every invocation to re-resolve values the process already holds.
+With no dotenv it runs under `op run --env-file`, which injects into that process only: the
+no-secrets-at-rest path, and the one to prefer for `--apply`, whose **Edit**-scoped token is the one
+worth never writing to disk. Deleting the dotenv is what switches back — after an `--apply`, that is
+worth doing, since the file outlives the write it was created for.
 
 One file per task, because the two syntaxes are mutually exclusive: `op inject` substitutes
 `{{ op://… }}` and passes a bare `op://…` through untouched, so pointing it at the `op run` file
