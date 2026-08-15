@@ -132,6 +132,28 @@ entry: a mise-managed copy would shadow the system one and lose its desktop-app 
 non-gating: green in sync, orange (`action_required`) on drift, grey (`neutral`) when the check could not run.
 It never applies; resolving drift is still a local `--apply`.
 
+The README carries the badge for it. It diffs the live Cloudflare Workers Builds triggers that ship
+[lit-ui-router.dev](https://lit-ui-router.dev) against the repo-owned
+[desired state](./tools/workers-builds/workers-builds-triggers.config.jsonc):
+
+| Badge                                                                        | Meaning                                                                   |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![passing](https://img.shields.io/badge/workers--builds-passing-brightgreen) | The dashboard triggers match the repo config                              |
+| ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
+| ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
+
+One ordering trap. When the value being applied names a file in the repo — as `build_command` does,
+pointing at [`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh) — the apply has to
+_follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
+But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
+dashboard: the badge goes orange on a dashboard that is about to become correct, and nothing
+re-triggers it afterwards. Finish the `--apply` with a re-dispatch, or it stays orange against a
+converged dashboard:
+
+```sh
+gh workflow run release-signals.yml --ref main
+```
+
 Two repository secrets drive it. Both are optional — absent, the signal reports grey rather than failing:
 
 | Secret                  | Value                                                                                                                                                                                                              |
