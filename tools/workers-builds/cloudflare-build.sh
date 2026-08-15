@@ -16,11 +16,16 @@
 # replaced rather than bypassed.
 set -euo pipefail
 
-# npm's global bin is the same node bin dir the corepack shim sits in, so this
-# overwrites it. --allow-scripts is what makes it a pnpm 12 rather than the
-# wrapper's placeholder bin: the real binary is unpacked by a preinstall hook,
-# which npm 12 blocks by default. npm 11 ignores the unknown flag and runs the
-# hook anyway, so one command covers both.
+# npm's global bin is the same node bin dir the corepack shims sit in, and npm
+# refuses to overwrite a file it does not own (EEXIST), so clear them first
+# rather than reaching for --force.
+node_bin="$(dirname "$(command -v node)")"
+rm -f "$node_bin/pnpm" "$node_bin/pnpx"
+
+# --allow-scripts is what makes this a pnpm 12 rather than the wrapper's
+# placeholder bin: the real binary is unpacked by a preinstall hook, which npm
+# 12 blocks by default. npm 11 ignores the unknown flag and runs the hook
+# anyway, so one command covers both.
 npm install --global --allow-scripts=pnpm pnpm@12.0.0-rc.5
 
 pnpm install --frozen-lockfile
