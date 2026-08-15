@@ -60,7 +60,6 @@ export default defineConfig({
           name: 'browser',
           globals: true,
           include: browserOnlySpecs,
-          // vitest 5 moved the browser server port to test.api
           api: process.env.VITEST_BROWSER_API_PORT
             ? { port: Number(process.env.VITEST_BROWSER_API_PORT) }
             : undefined,

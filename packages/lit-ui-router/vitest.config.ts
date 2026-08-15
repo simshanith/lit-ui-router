@@ -16,8 +16,7 @@ const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 // since vitest 5 inline projects inherit the declaring config unless they
 // opt out with `extends: false`. The VITE_ prefix carries the same variable
 // into import.meta.env everywhere (browser included), where vitest.setup.ts
-// asserts the swap took — so a lit2-compat run is the teeth on that
-// inheritance, not an assumption about it.
+// asserts the swap
 const lit2Compat = process.env.VITE_EXPECT_LIT_MAJOR === '2';
 const litAlias = lit2Compat
   ? [
@@ -60,7 +59,6 @@ export default defineConfig({
           globals: true,
           setupFiles: ['./vitest.setup.ts', './vitest.setup.browser.ts'],
           include: browserOnlySpecs,
-          // vitest 5 moved the browser server port to test.api
           api: process.env.VITEST_BROWSER_API_PORT
             ? { port: Number(process.env.VITEST_BROWSER_API_PORT) }
             : undefined,

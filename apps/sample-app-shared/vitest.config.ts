@@ -8,7 +8,6 @@ export default defineConfig({
     setupFiles: ['./vitest.setup.ts'],
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
-    // vitest 5 moved the browser server port to test.api
     api: process.env.VITEST_BROWSER_API_PORT
       ? { port: Number(process.env.VITEST_BROWSER_API_PORT) }
       : undefined,
