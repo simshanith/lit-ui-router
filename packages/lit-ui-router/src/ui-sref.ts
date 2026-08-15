@@ -75,6 +75,41 @@ function sameTarget(a: TargetState | null, b: TargetState): boolean {
 }
 
 /**
+ * Whether the element navigates on its own. `localName` is lowercase for HTML
+ * and SVG alike, so SVG `<a>` needs no namespace check.
+ * @internal
+ */
+function isNativeLink(element: Element): boolean {
+  const tag = element.localName;
+  return tag === 'a' || tag === 'area';
+}
+
+/**
+ * Whether the click asked the browser for something other than a plain
+ * in-place navigation: a new tab/window, a download, or a non-primary button.
+ * @internal
+ */
+function isModifiedClick(event: MouseEvent): boolean {
+  const { button, ctrlKey, metaKey, shiftKey, altKey } = event;
+  return (
+    !isNumber(button) || !!button || ctrlKey || metaKey || shiftKey || altKey
+  );
+}
+
+/**
+ * Whether the element declares that its href leaves the app: `target="_blank"`
+ * or a `rel` token list containing `external`.
+ * @internal
+ */
+function opensOffApp(element: Element): boolean {
+  if (element.getAttribute('target') === '_blank') {
+    return true;
+  }
+  // rel is a token list: `rel="external noopener"` is still external
+  return (element.getAttribute('rel') ?? '').split(/\s+/).includes('external');
+}
+
+/**
  * Directive class that creates state-based navigation links.
  *
  * This directive is used internally by the {@link uiSref} directive function.
@@ -181,24 +216,26 @@ export class UiSrefDirective extends AsyncDirective {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
     const $state = router?.stateService;
-    if (!$state || !this.element?.isConnected) {
+    if (!$state || !this.element?.isConnected || !state) {
       return;
     }
-    const { button, ctrlKey, metaKey, target } = event;
-    const openInNewTab =
-      (target as Element).getAttribute('target') === '_blank';
-    const isExternal = (target as Element).getAttribute('rel') === 'external';
+
+    const element = event.currentTarget as Element;
+
+    // author signals, so unscoped: they apply whatever the element is
+    if (event.defaultPrevented || element.hasAttribute('download')) {
+      return;
+    }
+
+    // scoped to links: these guards hand the click back to the browser, and a
+    // non-link has nothing to hand it back to
     if (
-      openInNewTab ||
-      isExternal ||
-      button ||
-      !isNumber(button) ||
-      ctrlKey ||
-      metaKey ||
-      !state
+      isNativeLink(element) &&
+      (isModifiedClick(event) || opensOffApp(element))
     ) {
       return;
     }
+
     // fire-and-forget: @uirouter/core handles transition promise rejections
     void $state.go(state, params, options);
     event.preventDefault();
