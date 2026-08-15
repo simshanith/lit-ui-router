@@ -121,6 +121,16 @@ run = "node src/checks/publish-check-runs.ts"
 description = "Create per-package peer-floor check runs (merge-time signal, non-gating)"
 run = "node src/checks/peer-floor-check-runs.ts"
 
+[tasks.workers_builds_check_runs]
+# env: GH_TOKEN, GITHUB_REPOSITORY, CLOUDFLARE_API_TOKEN, CLOUDFLARE_ACCOUNT_ID.
+# CD-pipeline signal (#280 Phase 1): read-only diff of the live Cloudflare
+# Workers Builds triggers against the repo-owned desired state, reported as
+# one check run on the current HEAD. action_required on drift, neutral when
+# the credential/API failed — never a job failure. Read scope only; --apply
+# stays manual.
+description = "Create the workers-builds trigger-drift check run (CD signal, non-gating)"
+run = "node src/checks/workers-builds-check-runs.ts"
+
 [tasks.peer_floor_gate]
 # Tier-2 peer-floor gate: fails the bump of a package whose floor claim is
 # dishonest; no-ops for packages without the typecheck:peer-floor script.

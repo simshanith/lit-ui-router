@@ -22,6 +22,7 @@
     "@pnpm/types": "catalog:",
     "@pnpm/workspace.project-manifest-reader": "catalog:",
     "@tools/shared": "workspace:*",
+    "@tools/workers-builds": "workspace:*",
     "@types/node": "catalog:",
     "@types/pacote": "catalog:",
     "lit-ui-router": "workspace:*",
