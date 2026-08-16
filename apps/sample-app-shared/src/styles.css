@@ -31,7 +31,9 @@ api-docs {
   width: 100%;
 }
 
-button.btn i + span {
+/* navigation controls are anchors, plain actions are buttons; bootstrap styles
+   .btn on both, but these local rules were written element-qualified */
+:is(a, button).btn i + span {
   margin-left: 0.75em;
 }
 
@@ -65,7 +67,7 @@ button.btn i + span {
   height: 45%;
 }
 
-.home.buttons button {
+.home.buttons :is(a, button) {
   padding: 2em;
   margin: 0;
   border: 3px solid black;
@@ -73,7 +75,7 @@ button.btn i + span {
   text-shadow: 0.1em 0.1em 0.1em black;
 }
 
-.home.buttons button i {
+.home.buttons :is(a, button) i {
   padding: 0;
   margin: 0;
   text-shadow: 0.1em 0.1em 0.1em black;
@@ -85,6 +87,16 @@ button.btn i + span {
 
 .navheader .navbar-right {
   margin-right: 0;
+}
+
+/* bootstrap's `.nav > li > a` (display:block, tab padding) and the tab
+   border-radius below both claim any anchor in the tab list. these two are
+   button-shaped navigation sitting in it, not tabs — they were buttons, which
+   `li > a` never matched */
+.navheader .nav-tabs > li.navbar-right > a.btn {
+  display: inline-block;
+  padding: 6px 12px;
+  border-radius: 4px;
 }
 
 .navheader .nav-tabs li.active a:focus {
@@ -132,7 +144,15 @@ button.btn i + span {
   padding: 1.5em 0;
   background-color: #ddd;
 }
-.selectlist a {
+/* the button-shaped anchor keeps the row links' horizontal inset, which it
+   used to inherit as the padding of the anchor that wrapped it */
+.selectlist a.btn {
+  margin: 0 1.5em;
+}
+
+/* :not(.btn) because this list now holds a button-shaped anchor (New Contact)
+   as well as its plain row links, and this rule outranks bootstrap's .btn */
+.selectlist a:not(.btn) {
   display: block;
   color: black;
   padding: 0.15em 1.5em;
