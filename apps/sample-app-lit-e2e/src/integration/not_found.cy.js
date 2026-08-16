@@ -46,7 +46,7 @@ describe('404 not found', () => {
     cy.contains('Welcome to the sample app!');
     syncUrl('/no/such/page');
     cy.contains('404 Page Not Found');
-    cy.get('button').contains('Return to Welcome').click();
+    cy.get('a.btn').contains('Return to Welcome').click();
     cy.url().should('include', '/welcome');
     cy.contains('Welcome to the sample app!');
   });
