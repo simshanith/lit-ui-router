@@ -20,13 +20,22 @@ export default () =>
       "password")
     </p>
     <div>
-      <button ${uiSref('mymessages')} class="btn btn-primary">
+      <button
+        ${uiSref('mymessages', {}, { assignHref: 'auto' })}
+        class="btn btn-primary"
+      >
         <i class="fa fa-envelope"></i><span>Messages</span>
       </button>
-      <button ${uiSref('contacts')} class="btn btn-primary">
+      <button
+        ${uiSref('contacts', {}, { assignHref: 'auto' })}
+        class="btn btn-primary"
+      >
         <i class="fa fa-users"></i><span>Contacts</span>
       </button>
-      <button ${uiSref('prefs')} class="btn btn-primary">
+      <button
+        ${uiSref('prefs', {}, { assignHref: 'auto' })}
+        class="btn btn-primary"
+      >
         <i class="fa fa-cogs"></i><span>Preferences</span>
       </button>
     </div>

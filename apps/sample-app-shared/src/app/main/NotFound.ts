@@ -17,7 +17,10 @@ export default (props: UIViewInjectedProps<NotFoundResolves>) =>
     <p>
       No state matched the URL <code>${props.resolves.attemptedPath}</code>.
     </p>
-    <button ${uiSref('welcome')} class="btn btn-primary">
+    <button
+      ${uiSref('welcome', {}, { assignHref: 'auto' })}
+      class="btn btn-primary"
+    >
       <i class="fa fa-home"></i><span>Return to Welcome</span>
     </button>
   </div>`;

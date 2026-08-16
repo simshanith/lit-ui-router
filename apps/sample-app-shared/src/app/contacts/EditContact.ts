@@ -98,7 +98,10 @@ export class EditContact extends LitElement {
       ></sample-contact-form>
       <hr />
       <div>
-        <button ${uiSref('^')} class="btn btn-primary">
+        <button
+          ${uiSref('^', {}, { assignHref: 'auto' })}
+          class="btn btn-primary"
+        >
           <i class="fa fa-close"></i><span>Cancel</span>
         </button>
         <button class="btn btn-primary" @click=${this.saveContact}>

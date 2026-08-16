@@ -84,9 +84,11 @@ export class MessageTable extends LitElement {
       [...messages].sort(orderBy(sort)),
       ({ _id }) => _id,
       (message) =>
+        // a <tr> is neither a link by tag nor by role, so it takes no href
+        // under 'auto' and no aria-current by default — only the row class
         html`<tr
           ${uiSrefActive({ activeClasses: ['active'] })}
-          ${uiSref('.message', { messageId: message._id })}
+          ${uiSref('.message', { messageId: message._id }, { assignHref: 'auto' })}
         >
           ${visibleColumns.map(
             (column) =>

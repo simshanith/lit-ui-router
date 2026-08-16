@@ -27,13 +27,17 @@ export class ContactView extends LitElement {
     const { contact } = this;
     const composeButton = html`<button
       class="btn btn-primary"
-      ${uiSref('mymessages.compose', { message: { to: contact.email } })}
+      ${uiSref(
+        'mymessages.compose',
+        { message: { to: contact.email } },
+        { assignHref: 'auto' },
+      )}
     >
       <i class="fa fa-envelope"></i><span>Message</span>
     </button>`;
     const editContactButton = html`<button
       class="btn btn-primary"
-      ${uiSref('.edit')}
+      ${uiSref('.edit', {}, { assignHref: 'auto' })}
     >
       <i class="fa fa-pencil"></i><span>Edit Contact</span>
     </button>`;
