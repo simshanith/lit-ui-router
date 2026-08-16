@@ -12,8 +12,10 @@
 # This branch's copy diverges from main's, which is what the indirection is
 # for. npx covers only the commands named here; turbo spawns every package
 # script through the `pnpm` on PATH, which in the build image is corepack's
-# shim, and corepack cannot materialize a pnpm-12 pin. So the shim has to be
-# replaced rather than bypassed.
+# shim, and corepack could not materialize a pnpm-12 pin through rc.5. So the
+# shim is replaced rather than bypassed. rc.6 restored the bin entry points
+# corepack looks for, which may make this unnecessary — untested, and this path
+# is verified, so it stays until something forces the question.
 set -euo pipefail
 
 # npm's global bin is the same node bin dir the corepack shims sit in, and npm
@@ -28,7 +30,7 @@ rm -f "$npm_bin/pnpm" "$npm_bin/pnpx"
 # placeholder bin: the real binary is unpacked by a preinstall hook, which npm
 # 12 blocks by default. npm 11 ignores the unknown flag and runs the hook
 # anyway, so one command covers both.
-npm install --global --allow-scripts=pnpm pnpm@12.0.0-rc.5
+npm install --global --allow-scripts=pnpm pnpm@12.0.0-rc.6
 
 pnpm install --frozen-lockfile
 

@@ -60,9 +60,9 @@ idiomatic_version_file_enable_tools = ["node"]
 # Bootstrap pnpm, not the version that runs: `packageManager` is the authority
 # and pnpm >=11.10 self-swaps to it. Must be the aqua backend — the npm `pnpm`
 # package is a placeholder whose `preinstall` hardlinks the real binary from an
-# optional platform dep, which neither corepack nor mise's aube installer runs.
+# optional platform dep, which mise's aube installer does not run.
 # Held equal to `packageManager` during the pnpm 12 RC eval, so nothing swaps.
-"aqua:pnpm/pnpm" = "12.0.0-rc.5"
+"aqua:pnpm/pnpm" = "12.0.0-rc.6"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
