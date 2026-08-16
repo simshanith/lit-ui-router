@@ -18,8 +18,9 @@ reviews:
 
   auto_review:
     enabled: true
-    # Nearly all work here lands through long-lived draft PRs.
-    drafts: true
+    # Work here sits in draft for a long time. Review on "ready for review",
+    # not on every WIP push; `@coderabbitai review` pulls one in early.
+    drafts: false
     base_branches:
       - main
 
