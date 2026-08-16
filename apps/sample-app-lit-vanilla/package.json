@@ -17,13 +17,13 @@
     "@uirouter/core": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
-    "lodash": "catalog:",
+    "lodash-es": "catalog:",
     "sample-app-shared": "workspace:*"
   },
   "devDependencies": {
     "@tools/build_and_test": "workspace:*",
     "@types/dom-navigation": "catalog:",
-    "@types/lodash": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

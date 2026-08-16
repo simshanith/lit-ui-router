@@ -25,14 +25,14 @@
     "lit": "catalog:",
     "lit-dialog": "catalog:",
     "lit-ui-router": "workspace:*",
-    "lodash": "catalog:",
+    "lodash-es": "catalog:",
     "sample-app-routes": "workspace:*",
     "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {
     "@tools/lit-test-env": "workspace:*",
     "@types/dom-navigation": "catalog:",
-    "@types/lodash": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "oxfmt": "catalog:",

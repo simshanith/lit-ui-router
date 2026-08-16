@@ -1,6 +1,6 @@
 import { LitElement, html } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
-import { get, set } from 'lodash';
+import { get, set } from 'lodash-es';
 import { Contact } from './interface.js';
 
 const formInputs = [
