@@ -57,12 +57,12 @@ export class NavHeader extends LitElement {
         </li>
         <li class="navbar-right">
           <button
-            ${uiSref('home')}
+            ${uiSref('home', {}, { assignHref: 'auto' })}
             style="margin-right: 5px"
             class="btn btn-primary fa fa-home"
           ></button>
           <button
-            ${uiSref('mymessages.compose')}
+            ${uiSref('mymessages.compose', {}, { assignHref: 'auto' })}
             style="margin-right: 15px"
             class="btn btn-primary"
           >
