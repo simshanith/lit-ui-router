@@ -114,6 +114,18 @@ export type UiSrefTransitionOptions = TransitionOptions & UiSrefOptions;
 const warnedAssignHref = new WeakSet<Element>();
 
 /**
+ * Whether lit resolved to its development build. `enableWarning` is inherited
+ * from `ReactiveElement`, which declares it optional precisely because it
+ * exists only in development — lit's own docs prescribe guarding on it. Same
+ * shape in lit 2 and 3, and typed optional in both builds' `.d.ts`, so this
+ * needs no cast. Read per call, so import order cannot matter.
+ * @internal
+ */
+function inLitDevMode(): boolean {
+  return typeof UIRouterLitElement.enableWarning === 'function';
+}
+
+/**
  * Whether the element navigates on its own. `localName` is lowercase for HTML
  * and SVG alike, so SVG `<a>` needs no namespace check.
  * @internal
@@ -247,8 +259,8 @@ export class UiSrefDirective extends AsyncDirective {
   }
 
   /**
-   * Whether this render writes the `href`, warning once per element when the
-   * 1.x default puts one on something that cannot use it.
+   * Whether this render writes the `href`, warning once per element under lit's
+   * dev build when the 1.x default puts one on something that cannot use it.
    * @internal
    */
   shouldAssignHref(): boolean {
@@ -263,6 +275,7 @@ export class UiSrefDirective extends AsyncDirective {
     }
 
     if (
+      inLitDevMode() &&
       this.href !== null &&
       !isNativeLink(element) &&
       !warnedAssignHref.has(element)

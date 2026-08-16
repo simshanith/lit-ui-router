@@ -521,6 +521,36 @@ describe('uiSref directive', () => {
       warn.mockRestore();
     });
 
+    it('should stay silent outside lit dev mode, but still write href', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const wrapper = await setupWithTemplate(
+          home,
+          html`<button ${uiSref('home')}>Go</button>`,
+        );
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated; the 1.x default still assigns
+        expect(wrapper.querySelector('button')!.getAttribute('href')).toContain(
+          '/home',
+        );
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
     it('should not write href to a non-link under auto', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const wrapper = await setupWithTemplate(
