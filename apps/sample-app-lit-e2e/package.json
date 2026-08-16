@@ -25,7 +25,7 @@
     "docs": "workspace:*"
   },
   "devDependencies": {
-    "@types/lodash": "catalog:",
+    "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "concurrently": "catalog:",
     "cypress": "catalog:",

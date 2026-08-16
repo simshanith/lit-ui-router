@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
-import { isEqual, cloneDeep } from 'lodash';
+import { isEqual, cloneDeep } from 'lodash-es';
 
 import './ContactList.js';
 import './ContactForm.js';

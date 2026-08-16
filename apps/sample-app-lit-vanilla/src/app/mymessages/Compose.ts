@@ -1,6 +1,6 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { TransitionController, UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';

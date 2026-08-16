@@ -32,7 +32,7 @@ describe('confirmation dialog', () => {
     visitWithFeatures('/contacts');
     cy.contains(name).click();
     cy.url().should('contain', id);
-    cy.get('button').contains('Edit Contact').click();
+    cy.get('a.btn').contains('Edit Contact').click();
     cy.url().should('contain', 'edit');
     cy.get('button').contains('Delete').click();
 
