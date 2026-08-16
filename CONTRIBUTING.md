@@ -73,6 +73,23 @@ discussion (see the tool README).
 - A maintainer will review and run CI on your behalf
 - Ensure your changes pass local tests before submitting
 
+### Automated review
+
+[CodeRabbit](https://docs.coderabbit.ai) reviews every PR, including drafts. It
+is advisory — it posts no required status check, and nothing it says blocks a
+merge. `mise run ci` remains the gate.
+
+Its behaviour lives in [`.coderabbit.yaml`](./.coderabbit.yaml), read from the
+PR's own branch, so a PR may adjust its own review. The static analysers this
+repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
+yamllint) are switched off there to avoid a second, weaker copy of CI; secret
+scanning is left on because nothing else covers it.
+
+Useful comment commands: `@coderabbitai review` for an incremental pass,
+`@coderabbitai full review` to re-review from scratch, `@coderabbitai pause` and
+`resume`, and `@coderabbitai configuration` to print the resolved settings.
+Replying to a review comment in plain English teaches it a durable convention.
+
 ## Commit conventions
 
 Every change lands on `main` as a **squash merge**, and the squash commit is
