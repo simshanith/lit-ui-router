@@ -24,7 +24,7 @@ catalog:
   '@release-it/conventional-changelog': ^12.0.0
   '@spectrum-web-components/icons-workflow': ^1.12.2
   '@types/dom-navigation': ^1.0.7
-  '@types/lodash': ^4.17.25
+  '@types/lodash-es': ^4.17.12
   '@types/node': ^24.13.3
   '@types/pacote': ^11.1.8
   '@typescript-eslint/parser': ^8.67.0
@@ -55,7 +55,7 @@ catalog:
   lit: ^3.3.3
   lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
-  lodash: ^4.18.1
+  lodash-es: ^4.18.1
   mobx: ^7.0.0
   oxc-minify: 0.144.0
   oxc-transform: 0.144.0
