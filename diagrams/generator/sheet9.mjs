@@ -1,0 +1,144 @@
+import { defs } from './chrome.mjs';
+import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+
+const P = 's9';
+const OX = 480, OY = 205;
+
+// docs/dist fresh build, measured 2026-08-16: 572 files, 14,795,183 raw bytes,
+// 4,078,233 gzipped (level 9) — the wire proxy. Reachability BFS marks orphans.
+// [name, files, gzBytes, ghost?]
+const DATA = [
+  ['demo corpora', 15, 899000],
+  ['inter fonts', 16, 866700],
+  ['html pages', 128, 800254],
+  ['examples', 9, 451396],
+  ['page chunks', 244, 266745],
+  ['vp framework', 10, 167983],
+  ['orphans', 12, 141190, true],
+  ['images', 99, 127404],
+  ['app: vanilla', 14, 119445],
+  ['app: mobx', 9, 102592],
+  ['static data', 7, 51884],
+  ['app: hash', 4, 41976],
+  ['site css', 5, 41664],
+];
+
+const SIDE = (f) => Math.max(18, 10 * Math.sqrt(f));
+const HT = (gz) => Math.max(8, gz / 4300);
+
+// Manual plan, grouped by role, tall districts in back. [name → x, y]
+const PLAN = {
+  'demo corpora': [60, 10],
+  'examples': [150, 30],
+  'images': [30, 120],
+  'static data': [175, 140],
+  'inter fonts': [330, 10],
+  'html pages': [430, 20],
+  'vp framework': [600, 30],
+  'page chunks': [330, 160],
+  'site css': [545, 200],
+  'app: vanilla': [560, 300],
+  'app: hash': [550, 390],
+  'app: mobx': [655, 345],
+  'orphans': [120, 330, true],
+};
+
+const all = DATA.map((it, i) => {
+  const [name, f, gz, ghost] = it;
+  const [x, y] = PLAN[name];
+  return { it, name, f, gz, ghost, x, y, s: SIDE(f), h: HT(gz), n: i + 1 };
+});
+
+const bodies = all
+  .slice()
+  .sort((a, b) => (a.x + a.y + a.s) - (b.x + b.y + b.s))
+  .map(({ name, x, y, s, h, ghost, n }) => {
+    const app = name.startsWith('app:');
+    const blk = ghost
+      ? isoBlock(P, OX, OY, x, y, s, s, h, { edge: 'skf', capCls: 'fnone', sideFill: `url(#${P}-hd)` })
+      : isoBlock(P, OX, OY, x, y, s, s, h, { capCls: app ? 'fa' : 'fp' });
+    const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
+    return `${blk}
+<circle cx="${bx.toFixed(1)}" cy="${(by - 14).toFixed(1)}" r="9" class="${app ? 'ska fp' : 'sk fp'}"/>
+${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
+  })
+  .join('\n');
+
+function groupOutline(x1, y1, x2, y2, label, lx, ly, anchor = 'start') {
+  const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
+    .map(([px, py]) => isoPt(OX, OY, px, py).map((v) => v.toFixed(1)).join(','))
+    .join(' ');
+  return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>
+${txt(lx, ly, label, 'lblf', anchor)}`;
+}
+
+const KB = (gz) => `${(gz / 1024).toFixed(gz < 100000 ? 1 : 0)} KB`;
+const TOPS = {
+  'demo corpora': 'two-cities.txt.gz 294 KB',
+  'inter fonts': 'italic-latin-ext.woff2 137 KB',
+  'html pages': 'server-route-matching 34 KB',
+  'examples': 'model-viewer chunk 275 KB',
+  'page chunks': 'visualizer.esm 24 KB',
+  'vp framework': 'localSearchIndex 60 KB',
+  'orphans': 'main-*.js ×3, 35 KB each',
+  'images': 'lit-ui-router.png 67 KB',
+  'app: vanilla': 'main 34 KB · lodash 25 KB',
+  'app: mobx': 'main 34 KB',
+  'static data': 'messages.json 47 KB',
+  'app: hash': 'main 34 KB',
+  'site css': 'style.css 20 KB',
+};
+const half = Math.ceil(all.length / 2);
+const SY = 790;
+const schedule = `<g>
+<rect x="40" y="${SY}" width="1080" height="${52 + half * 17}" class="sk fp"/>
+${txt(56, SY + 22, 'STRUCTURE SCHEDULE — files · gzipped wire bytes · largest tenant', 'lbls')}
+<line x1="40" y1="${SY + 32}" x2="1120" y2="${SY + 32}" class="skf"/>
+${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, `${r.n} ${r.name} — ${r.f}f ${KB(r.gz)} · ${TOPS[r.name]}`, 'lbls')).join('\n')}
+${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, `${r.n} ${r.name} — ${r.f}f ${KB(r.gz)} · ${TOPS[r.name]}`, 'lbls')).join('\n')}
+</g>`;
+
+const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of thirteen districts: footprint area from file counts, height from gzipped bytes on the wire. The tallest towers are the demo text corpora and the Inter font files, not code; the three routed sample apps are small accent buildings; a hatched ghost district holds twelve orphan files shipped but unreachable. A structure schedule lists every district with exact counts.">
+${defs(P)}
+
+${groupOutline(20, 0, 230, 200, 'demo payload — corpora · media · data', 40, 150)}
+${groupOutline(320, 0, 700, 260, 'the documentation site', 866, 200)}
+${groupOutline(540, 290, 720, 450, 'the routed apps', 540, 700, 'end')}
+
+${bodies}
+
+${txt(150, 60, 'A Tale of Two Cities alone: 294 KB —', 'lbla')}
+${txt(150, 72, 'the tallest tenant on the skyline is Dickens', 'lbla')}
+${txt(890, 96, '867 KB of Inter — the lettering', 'lbla')}
+${txt(890, 108, 'outweighs every script on the site', 'lbla')}
+${txt(980, 640, 'all three apps: 258 KB —', 'lbla', 'end')}
+${txt(980, 652, '6.5% of their own docs site', 'lbla', 'end')}
+${txt(110, 570, 'shipped, referenced by nothing:', 'lbla')}
+${txt(110, 582, '12 stale-hash files · 138 KB', 'lbla')}
+
+${txt(1120, 26, 'SCALE — footprint area ∝ files · 1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
+
+${schedule}
+</svg>`;
+
+export const sheet9 = {
+  num: 9, id: 'shipped',
+  title: 'THE SHIPPED CITY',
+  sub: 'ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · measured 2026-08-16',
+  scale: 'ONE DEPLOY',
+  form: 'SHIPPED CITY',
+  svg,
+  caption: 'The production docs deploy surveyed on the wire: 572 files, 3.9 MB gzipped, drawn as thirteen districts — and the tallest towers are sample novels and font files, with the routed apps themselves standing as small accent buildings in their own city.',
+  notes: `
+<p><strong>Method:</strong> a fresh <code>docs/dist</code> build measured file by file; height is gzip level 9 of each file — the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk (every HTML shell and hashed chunk, following static asset references) sorts the assets into districts; whatever nothing references lands in the hatched orphan block. This closes the survey trilogy: sheet 7 measured what we wrote, sheet 8 what npm delivered, this sheet what one deploy actually ships — 572 files, 14.8 MB on disk, 3.9 MB on the wire.</p>
+<p><strong>The tallest building is Dickens.</strong> The demo corpora — novels, Beowulf, an RFC, pre-gzipped <code>.txt.gz</code> so compression can't help further — are the city's tallest district at 899 KB, with Inter's sixteen <code>woff2</code> faces one notch behind at 867 KB. Code doesn't crack the top two: on the wire, this documentation site is mostly sample text and typography.</p>
+<p><strong>The product is a guest in its own city.</strong> The three routed sample apps — the thing the site exists to demonstrate — total 258 KB gzipped, 6.5% of the deploy. Inside the vanilla app, the lodash chunk is 25 KB of that: sheet 8's 45,205-line giant, tree-shaken down to what four imports actually cost the wire — still the third-largest block in the app bundle.</p>
+<p><strong>Twelve files ship to no one.</strong> The hatched district holds content-hashed assets — three near-identical 106 KB <code>main-*.js</code> among them — that no page references: parallel app builds emitting into the shared <code>assets/</code> pool, the shells keeping only one hash each. 138 KB of dead weight in every deploy; harmless to visitors, invisible without a reachability walk.</p>
+<p><strong>One example outweighs the router.</strong> The hellogalaxy demo's <code>model-viewer</code> chunk is 275 KB gzipped on its own — heavier than all three sample apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
+  key: [
+    keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'site district — height = gzipped bytes'),
+    keyRow('<rect x="8" y="3" width="18" height="12" class="sk fa"/>', 'a routed sample app'),
+    keyRow('<rect x="8" y="3" width="18" height="12" class="skf fnone"/><rect x="8" y="3" width="18" height="12" fill="url(#s9-hd)"/>', 'orphans — shipped, unreachable'),
+    keyRow('<rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/>', 'group (role in the deploy)'),
+  ].join('\n'),
+};
