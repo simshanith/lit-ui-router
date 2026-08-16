@@ -2,7 +2,7 @@ import { defs } from './chrome.mjs';
 import { txt, lines, box, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 
 const P = 's1';
-const OX = 300, OY = 118;
+const OX = 300, OY = 120;
 
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const ga = (a, b, mk = 'ai', cls = 'sk2', dash = '') => {
@@ -11,69 +11,60 @@ const ga = (a, b, mk = 'ai', cls = 'sk2', dash = '') => {
   return arrow(P, `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`, mk, cls, dash);
 };
 
-// Scene blocks, painter-ordered back to front.
+// Scene blocks, painter-ordered back to front. Spread wide — labels get their own air.
 const scene = [
   // LOCATION gatehouse
-  isoBlock(P, OX, OY, 40, 40, 90, 60, 28),
+  isoBlock(P, OX, OY, 20, 60, 90, 60, 28),
   // CORE plant (tallest — the machine)
-  isoBlock(P, OX, OY, 205, 15, 115, 80, 56),
-  // THE DOCUMENT floor
-  isoBlock(P, OX, OY, 60, 205, 400, 140, 6),
+  isoBlock(P, OX, OY, 260, 0, 115, 80, 56),
   // uiSrefActive watchtower (elevated overlay)
-  isoBlock(P, OX, OY, 30, 235, 55, 40, 18, { z0: 46 }),
-  // <a> kiosk on the floor
-  isoBlock(P, OX, OY, 105, 245, 85, 45, 16, { z0: 6 }),
-  // ghost content on the floor (scenery)
-  isoBlock(P, OX, OY, 240, 245, 60, 40, 10, { z0: 6, edge: 'skf' }),
-  isoBlock(P, OX, OY, 320, 300, 70, 40, 8, { z0: 6, edge: 'skf' }),
+  isoBlock(P, OX, OY, 10, 240, 55, 40, 18, { z0: 50 }),
   // TransitionController skybridge (elevated instrument)
-  isoBlock(P, OX, OY, 430, -25, 65, 38, 16, { z0: 54 }),
+  isoBlock(P, OX, OY, 470, -45, 65, 38, 16, { z0: 60 }),
   // TRANSITION hall with three bays
-  isoBlock(P, OX, OY, 385, 30, 150, 60, 34),
+  isoBlock(P, OX, OY, 460, 40, 150, 60, 34),
+  // THE DOCUMENT floor
+  isoBlock(P, OX, OY, 80, 240, 340, 140, 6),
+  // <a> kiosk on the floor
+  isoBlock(P, OX, OY, 150, 260, 85, 45, 16, { z0: 6 }),
+  // ghost content on the floor (scenery)
+  isoBlock(P, OX, OY, 350, 290, 55, 35, 10, { z0: 6, edge: 'skf' }),
+  isoBlock(P, OX, OY, 320, 355, 60, 35, 8, { z0: 6, edge: 'skf' }),
   // ui-view parent + child stacked on its roof (containment)
-  isoBlock(P, OX, OY, 600, 60, 95, 70, 30),
-  isoBlock(P, OX, OY, 618, 78, 48, 36, 22, { z0: 30 }),
+  isoBlock(P, OX, OY, 700, 120, 95, 70, 30),
+  isoBlock(P, OX, OY, 718, 138, 48, 36, 22, { z0: 30 }),
   // LIT RENDER
-  isoBlock(P, OX, OY, 585, 215, 105, 60, 26),
+  isoBlock(P, OX, OY, 640, 300, 105, 60, 26),
 ].join('\n');
 
 // Hall bay ridges on the roof
 const ridges = [50, 100].map((o) => {
-  const [x1, y1] = pt(385 + o, 30, 34);
-  const [x2, y2] = pt(385 + o, 90, 34);
+  const [x1, y1] = pt(460 + o, 40, 34);
+  const [x2, y2] = pt(460 + o, 100, 34);
   return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="skf"/>`;
 }).join('\n');
 
 // Loop legs (ground)
 const legs = [
-  ga([132, 72], [202, 60]),
-  ga([322, 58], [383, 60]),
-  ga([537, 62], [598, 82]),
-  ga([652, 132], [640, 212]),
-  ga([583, 250], [464, 254]),
+  ga([115, 90], [255, 45]),
+  ga([380, 60], [455, 60]),
+  ga([615, 105], [695, 125]),
+  ga([745, 195], [710, 290]),
+  ga([635, 335], [400, 320]),
 ];
 
-// Click return: an elevated accent arc from the link back to location
-const [kx, ky] = pt(148, 268, 22);
-const [lx2, ly2] = pt(88, 74, 28);
-const clickArc = arrow(P, `M${kx.toFixed(1)},${ky.toFixed(1)} C 120,236 140,166 ${lx2.toFixed(1)},${(ly2 + 6).toFixed(1)}`, 'aa', 'ska');
+// Click return: an elevated accent arc from the kiosk's right corner back into location's flank
+const [kx, ky] = pt(235, 260, 22);
+const clickArc = arrow(P, `M${kx.toFixed(1)},${(ky - 4).toFixed(1)} C 335,325 350,240 312,206`, 'aa', 'ska');
 
-// Bubbling: uiSrefTarget rises from the link to the watchtower
-const [bx, by] = pt(170, 250, 22);
-const [tx2, ty2] = pt(70, 262, 64);
-const bubbleArc = arrow(P, `M${bx.toFixed(1)},${(by - 4).toFixed(1)} C ${bx - 20},${by - 52} ${tx2 + 40},${ty2 - 26} ${(tx2 + 8).toFixed(1)},${(ty2 + 2).toFixed(1)}`, 'as', 'sks', '4 3');
+// Bubbling: uiSrefTarget rises from the link to the watchtower roof
+const [bx, by] = pt(150, 260, 22);
+const bubbleArc = arrow(P, `M${bx.toFixed(1)},${(by - 4).toFixed(1)} C 170,260 130,235 112,210`, 'as', 'sks', '4 3');
 
-// Skybridge tap into the hall roof
-const [sbx, sby] = pt(455, 8, 54);
-const [hx2, hy2] = pt(465, 48, 34);
-const tap = arrow(P, `M${sbx.toFixed(1)},${sby.toFixed(1)} L${hx2.toFixed(1)},${hy2.toFixed(1)}`, 'as', 'sks', '4 3');
+// Skybridge tap into a hall bay
+const tap = arrow(P, `M762,320 L722,388`, 'as', 'sks', '4 3');
 
-const lbl = (x, y, z, s, cls = 'lblb', anchor = 'middle', dy = -8) => {
-  const [sx, sy] = pt(x, y, z);
-  return txt(sx.toFixed(1), (sy + dy).toFixed(1), s, cls, anchor);
-};
-
-const svg = `<svg viewBox="0 0 1150 660" role="img" aria-label="The lit-ui-router render loop drawn as an isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with three hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits down onto the document floor — where a click on a uiSref link flies back to location as an elevated arc. A watchtower catches rising uiSrefTarget events, and a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+const svg = `<svg viewBox="0 0 1150 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits down onto the document floor — where a click on a uiSref link flies back to location as an elevated arc. A watchtower catches rising uiSrefTarget events, and a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 ${defs(P)}
 
 ${legs.join('\n')}
@@ -83,42 +74,46 @@ ${clickArc}
 ${bubbleArc}
 ${tap}
 
-<!-- station lettering -->
-${lbl(85, 40, 28, 'LOCATION')}
-${lbl(85, 40, 28, 'history · hash · Navigation API', 'lblf', 'middle', 6)}
-${lbl(262, 15, 56, '@uirouter/core')}
-${lbl(262, 15, 56, 'state registry · match · go()', 'lblf', 'middle', 6)}
-${lbl(460, 30, 34, 'TRANSITION HALL')}
-${lbl(460, 30, 34, 'onBefore | onStart · resolve | onSuccess', 'lblf', 'middle', 6)}
-${lbl(647, 60, 30, '<ui-view>')}
-${lbl(642, 78, 52, `<ui-view name='detail'>`, 'lbls', 'middle', -6)}
-${lbl(637, 215, 26, 'LIT RENDER')}
-${lbl(637, 215, 26, 'RoutedLitTemplate · html``', 'lblf', 'middle', 6)}
-${lbl(147, 245, 22, '<a href=/people/32>', 'lbl', 'middle', -6)}
-${lbl(147, 245, 22, 'uiSref(…) element part', 'lbla', 'middle', 6)}
-${lbl(57, 235, 64, 'uiSrefActive', 'lblb', 'middle', -6)}
-${lbl(57, 235, 64, 'perch — toggles .active below', 'lblf', 'middle', 6)}
-${lbl(462, -25, 70, 'TransitionController', 'lblb', 'middle', -6)}
-${lbl(462, -25, 70, 'ReactiveController skybridge', 'lblf', 'middle', 6)}
-${lbl(290, 345, 0, 'THE DOCUMENT — the only stage this circuit needs', 'lbls', 'middle', 16)}
-${lbl(270, 245, 16, 'rendered content', 'lblf', 'middle', 24)}
+<!-- station lettering: every label in its own pocket of air -->
+${txt(278, 110, 'LOCATION', 'lblb', 'middle')}
+${txt(278, 123, 'history · hash · Navigation API', 'lblf', 'middle')}
+${txt(525, 158, '@uirouter/core', 'lblb', 'middle')}
+${txt(525, 171, 'state registry · match · go()', 'lblf', 'middle')}
+${txt(605, 474, 'TRANSITION HALL', 'lblb', 'middle')}
+${txt(605, 488, 'onBefore | onStart · resolve | onSuccess', 'lblf', 'middle')}
+${txt(760, 236, 'TransitionController', 'lblb', 'middle')}
+${txt(760, 249, 'ReactiveController skybridge', 'lblf', 'middle')}
+${txt(786, 358, 'registers hooks', 'lblf', 'start')}
+${txt(806, 424, `<ui-view name='detail'>`, 'lbls', 'start')}
+${txt(896, 552, '<ui-view>', 'lblb', 'start')}
+${txt(633, 690, 'LIT RENDER', 'lblb', 'middle')}
+${txt(633, 703, 'RoutedLitTemplate · html\`\`', 'lblf', 'middle')}
+${txt(107, 156, 'uiSrefActive', 'lblb', 'middle')}
+${txt(107, 168, 'perch — toggles .active below', 'lblf', 'middle')}
+${txt(185, 262, 'uiSrefTarget', 'lblf', 'start')}
+${txt(185, 273, 'bubbles up', 'lblf', 'start')}
+${txt(290, 428, 'rendered content', 'lblf', 'middle')}
+${txt(170, 538, 'THE DOCUMENT — the only stage this circuit needs', 'lbls', 'middle')}
 
 <!-- leg lettering -->
-${lbl(165, 40, 0, 'popstate / navigate', 'lbls', 'middle', -4)}
-${lbl(352, 36, 0, 'match → run', 'lbls', 'middle', -4)}
-${lbl(575, 46, 0, 'viewconfigs activate', 'lbls', 'middle', -12)}
-${lbl(668, 175, 0, 'state.component / template', 'lbls', 'start', 0)}
-${lbl(520, 262, 0, 'directives commit', 'lbls', 'middle', 14)}
-${txt(96, 210, 'click →', 'lbla')}
-${txt(96, 223, 'stateService.go()', 'lbla')}
-${txt(96, 236, '→ pushState', 'lbla')}
-${txt(214, 236, 'uiSrefTarget', 'lblf')}
-${txt(214, 247, 'bubbles up', 'lblf')}
-${txt(716, 200, 'registers hooks', 'lblf')}
+${txt(392, 300, 'popstate / navigate', 'lbls', 'middle')}
+${txt(560, 398, 'match → run', 'lbls', 'middle')}
+${txt(735, 522, 'viewconfigs activate', 'lbls', 'end')}
+${txt(802, 626, 'state.component / template', 'lbls', 'start')}
+${txt(470, 562, 'directives commit', 'lbls', 'middle')}
+
+<!-- the link + click note, off the floor with a leader to the kiosk -->
+<rect x="24" y="393" width="180" height="82" class="fp"/>
+${txt(30, 404, '<a href=/people/32>', 'lbl', 'start')}
+${txt(30, 417, 'uiSref(…) element part', 'lbla', 'start')}
+${txt(30, 438, 'click →', 'lbla', 'start')}
+${txt(30, 451, 'stateService.go()', 'lbla', 'start')}
+${txt(30, 464, '→ pushState', 'lbla', 'start')}
+<line x1="198" y1="410" x2="232" y2="392" class="skf"/>
 
 <!-- five doors -->
-<line x1="40" y1="576" x2="1110" y2="576" class="skf"/>
-${txt(40, 594, 'FIVE DOORS INTO THE SAME MACHINE', 'lbls')}
+<line x1="40" y1="720" x2="1110" y2="720" class="skf"/>
+${txt(40, 738, 'FIVE DOORS INTO THE SAME MACHINE', 'lbls')}
 ${[
   ['.', 'registers everything', true],
   ['./pure', 'no side effects', false],
@@ -127,9 +122,9 @@ ${[
   ['./ui-view.register', 'one element', true],
 ].map(([name, sub, se], i) => {
   const x = 330 + i * 152;
-  return `${box(x, 582, 144, 30, se ? 'sk fp2' : 'ska fp')}
-${txt(x + 8, 595, name, se ? 'lbls' : 'lbla')}
-${txt(x + 8, 607, sub, 'lblf')}`;
+  return `${box(x, 726, 144, 30, se ? 'sk fp2' : 'ska fp')}
+${txt(x + 8, 739, name, se ? 'lbls' : 'lbla')}
+${txt(x + 8, 751, sub, 'lblf')}`;
 }).join('\n')}
 </svg>`;
 
