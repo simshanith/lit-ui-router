@@ -1,0 +1,495 @@
+<title>THE INSTRUMENT YARD — Sheet 3 of 6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Height is gate severity — a tall tower stops the line.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0D2344;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #5F7899;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    --red: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0D2344;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #5F7899;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+:root {
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+}
+
+.sheet {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 26px;
+  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--mono);
+}
+.sheet-head .proj {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--mono);
+  font-size: clamp(17px, 2.6vw, 23px);
+  letter-spacing: 0.10em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.sheet-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
+.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 10px auto 0;
+  font-style: italic;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
+  gap: 22px;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.notes p {
+  font-size: 15px;
+  max-width: 62ch;
+  margin-bottom: 9px;
+}
+.notes p strong { font-weight: 600; }
+.notes p code, .gal-body code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<section class="sheet" id="sheet-3" aria-label="Sheet 3: THE INSTRUMENT YARD">
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 3 / 6</span></div>
+  <h2 class="sheet-title">THE INSTRUMENT YARD</h2>
+  <p class="sheet-sub">ALTITUDE 3 — 4 publishable packages · 16 tools · ~38 turbo tasks · one packer, many readers</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1160 720" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site: a build conveyor running from source through a single pack step to the npm registry, an instrument yard of numbered measurement towers whose heights encode gate severity, and a proving ground of apps and docs. A structure schedule names all eighteen numbered structures. The tallest, red-capped tower is published-diff, which halts publishing and pulls the live tarball back from npm, closing the loop.">
+<defs>
+  <marker id="s3-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s3-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s3-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s3-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s3-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s3-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s3-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s3-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<rect x="40" y="26" width="560" height="42" class="skf fnone"/>
+<text x="52" y="43" class="lbls" text-anchor="start" >TWO TASK MANAGERS, ONE SITE</text>
+<text x="52" y="58" class="lblf" text-anchor="start" >mise — node-free standalone umbrella · turbo — cached fan-out (remote R2)</text>
+
+<!-- districts -->
+<polygon points="356.1,186.5 862.7,479.0 757.0,540.0 250.4,247.5" class="skf fnone" stroke-dasharray="5 4"/>
+<polygon points="189.8,282.5 575.2,505.0 402.0,605.0 16.6,382.5" class="skf fnone" stroke-dasharray="5 4"/>
+<polygon points="562.2,527.5 683.4,597.5 540.5,680.0 419.3,610.0" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="150" y="160" class="lblf" text-anchor="start" >packages/ — the conveyor</text>
+<text x="116" y="522" class="lblf" text-anchor="start" >tools/ — the instrument yard</text>
+<text x="560" y="700" class="lblf" text-anchor="middle" >apps/ + docs/ — proving ground &amp; shopfront</text>
+
+<!-- registry boundary -->
+<line x1="878.3" y1="480.0" x2="774.3" y2="540.0" class="sks" stroke-dasharray="9 5"/>
+<text x="750.3399999999999" y="576" class="lblf" text-anchor="middle" >the registry boundary — beyond here, releases are immutable</text>
+
+<path d="M403.7,276.0 L431.4,288.0" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M474.7,303.0 L506.7,307.5" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M462.6,310.0 L461.7,333.5" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M574.3,342.5 L582.1,361.0" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M520.6,373.5 L563.0,372.0" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M647.9,407.0 L668.7,421.0" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M711.1,445.5 L737.1,454.5" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M810.7,496.0 L846.2,511.5" class="sks" stroke-dasharray="6 4" marker-end="url(#s3-ai)"/>
+<path d="M654.8,439.0 L324.0,400.0" class="sks" stroke-dasharray="4 3" marker-end="url(#s3-as)"/>
+<g>
+<polygon points="289.4,228.0 376.0,278.0 376.0,290.0 289.4,240.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="436.6,243.0 376.0,278.0 376.0,290.0 436.6,255.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="350.0,193.0 436.6,243.0 376.0,278.0 289.4,228.0" class="sk fp"/>
+</g>
+<circle cx="393.3" cy="202.0" r="9.5" class="sk fp"/>
+<text x="393.3" y="205.6" class="lbl" text-anchor="middle" >1</text>
+<g>
+<polygon points="417.5,290.0 448.7,308.0 448.7,316.0 417.5,298.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="479.9,290.0 448.7,308.0 448.7,316.0 479.9,298.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="448.7,272.0 479.9,290.0 448.7,308.0 417.5,290.0" class="sk fp"/>
+</g>
+<circle cx="464.3" cy="265.0" r="9.5" class="sk fp"/>
+<text x="464.3" y="268.6" class="lbl" text-anchor="middle" >2</text>
+<g>
+<polygon points="146.5,222.5 189.8,247.5 189.8,347.5 146.5,322.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="233.1,222.5 189.8,247.5 189.8,347.5 233.1,322.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="189.8,197.5 233.1,222.5 189.8,247.5 146.5,222.5" class="sk fr"/>
+</g>
+<circle cx="211.4" cy="194.0" r="9.5" class="skr fp"/>
+<text x="211.4" y="197.6" class="lbl" text-anchor="middle" >9</text>
+<g>
+<polygon points="496.4,303.5 557.0,338.5 557.0,350.5 496.4,315.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="589.9,319.5 557.0,338.5 557.0,350.5 589.9,331.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="529.3,284.5 589.9,319.5 557.0,338.5 496.4,303.5" class="sk fp"/>
+</g>
+<circle cx="559.6" cy="286.0" r="9.5" class="sk fp"/>
+<text x="559.6" y="289.6" class="lbl" text-anchor="middle" >3</text>
+<g>
+<polygon points="442.7,334.5 503.3,369.5 503.3,381.5 442.7,346.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="536.2,350.5 503.3,369.5 503.3,381.5 536.2,362.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="475.6,315.5 536.2,350.5 503.3,369.5 442.7,334.5" class="sk fp"/>
+</g>
+<circle cx="505.9" cy="317.0" r="9.5" class="sk fp"/>
+<text x="505.9" y="320.6" class="lbl" text-anchor="middle" >4</text>
+<g>
+<polygon points="246.1,314.0 289.4,339.0 289.4,405.0 246.1,380.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="332.7,314.0 289.4,339.0 289.4,405.0 332.7,380.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="289.4,289.0 332.7,314.0 289.4,339.0 246.1,314.0" class="sk fp"/>
+</g>
+<circle cx="311.0" cy="285.5" r="9.5" class="sk fp"/>
+<text x="311.0" y="289.1" class="lbl" text-anchor="middle" >10</text>
+<g>
+<polygon points="38.2,319.0 81.5,344.0 81.5,410.0 38.2,385.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="124.8,319.0 81.5,344.0 81.5,410.0 124.8,385.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="81.5,294.0 124.8,319.0 81.5,344.0 38.2,319.0" class="sk fp"/>
+</g>
+<circle cx="103.2" cy="290.5" r="9.5" class="sk fp"/>
+<text x="103.2" y="294.1" class="lbl" text-anchor="middle" >12</text>
+<g>
+<polygon points="553.5,361.5 622.8,401.5 622.8,419.5 553.5,379.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="670.4,374.0 622.8,401.5 622.8,419.5 670.4,392.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="601.1,334.0 670.4,374.0 622.8,401.5 553.5,361.5" class="sk fp"/>
+</g>
+<circle cx="635.8" cy="338.0" r="9.5" class="sk fp"/>
+<text x="635.8" y="341.6" class="lbl" text-anchor="middle" >5</text>
+<g>
+<polygon points="650.5,403.5 689.5,426.0 689.5,456.0 650.5,433.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="728.4,403.5 689.5,426.0 689.5,456.0 728.4,433.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="689.5,381.0 728.4,403.5 689.5,426.0 650.5,403.5" class="sk fa"/>
+</g>
+<circle cx="709.0" cy="376.3" r="9.5" class="ska fp"/>
+<text x="709.0" y="379.9" class="lbl" text-anchor="middle" >6</text>
+<g>
+<polygon points="345.7,371.5 389.0,396.5 389.0,462.5 345.7,437.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="432.3,371.5 389.0,396.5 389.0,462.5 432.3,437.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="389.0,346.5 432.3,371.5 389.0,396.5 345.7,371.5" class="sk fp"/>
+</g>
+<circle cx="410.6" cy="343.0" r="9.5" class="sk fp"/>
+<text x="410.6" y="346.6" class="lbl" text-anchor="middle" >11</text>
+<g>
+<polygon points="153.4,416.5 181.1,432.5 181.1,454.5 153.4,438.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="208.8,416.5 181.1,432.5 181.1,454.5 208.8,438.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="181.1,400.5 208.8,416.5 181.1,432.5 153.4,416.5" class="sk fp"/>
+</g>
+<circle cx="195.0" cy="392.5" r="9.5" class="sk fp"/>
+<text x="195.0" y="396.1" class="lbl" text-anchor="middle" >13</text>
+<g>
+<polygon points="195.9,398.0 227.0,416.0 227.0,482.0 195.9,464.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="258.2,398.0 227.0,416.0 227.0,482.0 258.2,464.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="227.0,380.0 258.2,398.0 227.0,416.0 195.9,398.0" class="sk fp"/>
+</g>
+<circle cx="242.6" cy="373.0" r="9.5" class="sk fp"/>
+<text x="242.6" y="376.6" class="lbl" text-anchor="middle" >14</text>
+<g>
+<polygon points="718.0,455.5 787.3,495.5 787.3,507.5 718.0,467.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="830.6,470.5 787.3,495.5 787.3,507.5 830.6,482.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="761.4,430.5 830.6,470.5 787.3,495.5 718.0,455.5" class="sk fp"/>
+</g>
+<circle cx="796.0" cy="434.5" r="9.5" class="sk fp"/>
+<text x="796.0" y="438.1" class="lbl" text-anchor="middle" >7</text>
+<g>
+<polygon points="248.7,437.5 312.8,474.5 312.8,540.5 248.7,503.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="357.8,448.5 312.8,474.5 312.8,540.5 357.8,514.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="293.7,411.5 357.8,448.5 312.8,474.5 248.7,437.5" class="sk fp"/>
+</g>
+<circle cx="325.8" cy="414.0" r="9.5" class="sk fp"/>
+<text x="325.8" y="417.6" class="lbl" text-anchor="middle" >15</text>
+<g>
+<polygon points="826.3,481.0 886.9,516.0 886.9,560.0 826.3,525.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="930.2,491.0 886.9,516.0 886.9,560.0 930.2,535.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="869.6,456.0 930.2,491.0 886.9,516.0 826.3,481.0" class="sk fp"/>
+</g>
+<circle cx="899.9" cy="457.5" r="9.5" class="sk fp"/>
+<text x="899.9" y="461.1" class="lbl" text-anchor="middle" >8</text>
+<g>
+<polygon points="343.9,527.5 421.9,572.5 421.9,588.5 343.9,543.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="484.2,536.5 421.9,572.5 421.9,588.5 484.2,552.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="406.3,491.5 484.2,536.5 421.9,572.5 343.9,527.5" class="sk fp"/>
+</g>
+<circle cx="445.3" cy="498.0" r="9.5" class="sk fp"/>
+<text x="445.3" y="501.6" class="lbl" text-anchor="middle" >16</text>
+<g>
+<polygon points="514.5,504.0 583.8,544.0 583.8,610.0 514.5,570.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="635.8,514.0 583.8,544.0 583.8,610.0 635.8,580.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="566.5,474.0 635.8,514.0 583.8,544.0 514.5,504.0" class="sk fp"/>
+</g>
+<circle cx="601.1" cy="478.0" r="9.5" class="sk fp"/>
+<text x="601.1" y="481.6" class="lbl" text-anchor="middle" >17</text>
+<g>
+<polygon points="465.2,593.5 534.5,633.5 534.5,663.5 465.2,623.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="579.5,607.5 534.5,633.5 534.5,663.5 579.5,637.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="510.2,567.5 579.5,607.5 534.5,633.5 465.2,593.5" class="sk fp"/>
+</g>
+<circle cx="544.9" cy="571.5" r="9.5" class="sk fp"/>
+<text x="544.9" y="575.1" class="lbl" text-anchor="middle" >18</text>
+<path d="M878.3,478.0 C 820,210 430,120 225.8,220.5" class="ska" stroke-dasharray="7 4" marker-end="url(#s3-aa)"/>
+<text x="470" y="148" class="lbla" text-anchor="middle" >published-diff pulls the LIVE tarball back — the loop closes</text>
+<g>
+<rect x="878" y="58" width="268" height="392" class="sk fp"/>
+<text x="892" y="78" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE</text>
+<line x1="878" y1="88" x2="1146" y2="88" class="skf"/>
+<text x="892" y="106" class="lblb" text-anchor="start" >1</text>
+<text x="914" y="106" class="lbls" text-anchor="start" >src — packages/* sources</text>
+<text x="892" y="125" class="lblb" text-anchor="start" >2</text>
+<text x="914" y="125" class="lbls" text-anchor="start" >transit — stages src between passes</text>
+<text x="892" y="144" class="lblb" text-anchor="start" >3</text>
+<text x="914" y="144" class="lbls" text-anchor="start" >build:js — oxc-emit, JS pass</text>
+<text x="892" y="163" class="lblb" text-anchor="start" >4</text>
+<text x="914" y="163" class="lbls" text-anchor="start" >build:types — oxc-emit, d.ts pass</text>
+<text x="892" y="182" class="lblb" text-anchor="start" >5</text>
+<text x="914" y="182" class="lbls" text-anchor="start" >pack — packPublishTarball, cached</text>
+<text x="892" y="201" class="lbla" text-anchor="start" >6</text>
+<text x="914" y="201" class="lbls" text-anchor="start" >THE TARBALL — the one artifact</text>
+<text x="892" y="220" class="lblb" text-anchor="start" >7</text>
+<text x="914" y="220" class="lbls" text-anchor="start" >publish — release-it</text>
+<text x="892" y="239" class="lblb" text-anchor="start" >8</text>
+<text x="914" y="239" class="lbls" text-anchor="start" >npm registry — immutable once crossed</text>
+<text x="892" y="258" class="lblr" text-anchor="start" >9</text>
+<text x="914" y="258" class="lbls" text-anchor="start" >published-diff — vs live npm · HALTS</text>
+<text x="892" y="277" class="lblb" text-anchor="start" >10</text>
+<text x="914" y="277" class="lbls" text-anchor="start" >check:exports — publint + attw · gates</text>
+<text x="892" y="296" class="lblb" text-anchor="start" >11</text>
+<text x="914" y="296" class="lbls" text-anchor="start" >dts-backtest — TS 5.0 dts floor · gates</text>
+<text x="892" y="315" class="lblb" text-anchor="start" >12</text>
+<text x="914" y="315" class="lbls" text-anchor="start" >compat-guards — the lit 2 lane · gates</text>
+<text x="892" y="334" class="lblb" text-anchor="start" >13</text>
+<text x="914" y="334" class="lbls" text-anchor="start" >peer-floor tier-1 — reports, never gates</text>
+<text x="892" y="353" class="lblb" text-anchor="start" >14</text>
+<text x="914" y="353" class="lbls" text-anchor="start" >peer-floor tier-2 — gates version bumps</text>
+<text x="892" y="372" class="lblb" text-anchor="start" >15</text>
+<text x="914" y="372" class="lbls" text-anchor="start" >tests — vitest, 4 real browsers · gates</text>
+<text x="892" y="391" class="lblb" text-anchor="start" >16</text>
+<text x="914" y="391" class="lbls" text-anchor="start" >lint &amp; probe fleet ×10 — mixed</text>
+<text x="892" y="410" class="lblb" text-anchor="start" >17</text>
+<text x="914" y="410" class="lbls" text-anchor="start" >e2e — cypress, sample apps · gates</text>
+<text x="892" y="429" class="lblb" text-anchor="start" >18</text>
+<text x="914" y="429" class="lbls" text-anchor="start" >docs site — ships to lit-ui-router.dev</text>
+</g>
+</svg></div>
+    <figcaption>The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Height is gate severity — a tall tower stops the line.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>The reference's thesis is truest at this altitude.</strong> "Nearly every hard problem turned out to be a measurement problem" describes this repo exactly: four publishable packages, sixteen <code>tools/*</code> instruments. The city is mostly instruments; the product is one crate (structure 6).</p>
+<p><strong>One packer, many readers (#449).</strong> Every check reads the same cached <code>packPublishTarball</code> output — <code>check:exports</code> (publint + attw), <code>dts-backtest</code>, bundle probes, <code>published-diff</code>. No check re-packs, so a drift verdict is always about the artifact that would actually ship.</p>
+<p><strong>Height = what halts.</strong> Low slabs report (peer-floor tier-1 never gates a PR). Mid towers gate merges. The one red-capped tower, <code>published-diff</code> (9), halts publishing itself — and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination.</p>
+<p><strong>Two gantries, one site.</strong> mise runs the site node-free from a standalone umbrella; turbo fans the same tasks out with remote caching. Known failure mode, drawn nowhere but written here as a real condition: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="14" y="10" width="20" height="6" class="sk fp"/></svg></td><td>reports only (never gates)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="14" y="4" width="20" height="12" class="sk fp"/></svg></td><td>gates a merge</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="14" y="1" width="20" height="15" class="sk fp"/><rect x="14" y="1" width="20" height="4" class="fr"/></svg></td><td>halts a publish</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="14" y="4" width="16" height="11" class="sk fa"/></svg></td><td>the artifact (one tarball)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="44" y2="9" class="ska" stroke-dasharray="6 4"/></svg></td><td>feedback from the registry</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="44" y2="9" class="sks" stroke-dasharray="4 3"/></svg></td><td>checks reading the tarball</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>ROUTING AT SIX ALTITUDES</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE INSTRUMENT YARD</div>
+  <div><span class="fld">SCALE</span>THE MONOREPO</div>
+  <div><span class="fld">FORM</span>ISOMETRIC CITY</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-08-16 · A</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>3 OF 6</div>
+</div>
+    </div>
+  </div>
+</section>

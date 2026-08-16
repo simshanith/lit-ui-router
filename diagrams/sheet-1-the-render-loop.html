@@ -1,0 +1,401 @@
+<title>THE RENDER LOOP — Sheet 1 of 6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="One full revolution: a URL change is matched by @uirouter/core, run as a guarded transition, activated into the <ui-view> tree, rendered by Lit, and committed to the DOM — where a uiSref click starts the next revolution.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0D2344;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #5F7899;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    --red: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0D2344;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #5F7899;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+:root {
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+}
+
+.sheet {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 26px;
+  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--mono);
+}
+.sheet-head .proj {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--mono);
+  font-size: clamp(17px, 2.6vw, 23px);
+  letter-spacing: 0.10em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.sheet-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
+.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 10px auto 0;
+  font-style: italic;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
+  gap: 22px;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.notes p {
+  font-size: 15px;
+  max-width: 62ch;
+  margin-bottom: 9px;
+}
+.notes p strong { font-weight: 600; }
+.notes p code, .gal-body code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<section class="sheet" id="sheet-1" aria-label="Sheet 1: THE RENDER LOOP">
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 1 / 6</span></div>
+  <h2 class="sheet-title">THE RENDER LOOP</h2>
+  <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.9.0 · 10 shipped modules · peers: lit + @uirouter/core</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1000 660" role="img" aria-label="The lit-ui-router render loop: location to core to transition to ui-view to lit templates to DOM, and back to location through uiSref clicks. The uiSref-to-DOM segment is marked as absent under server-side rendering.">
+<defs>
+  <marker id="s1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s1-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s1-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s1-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s1-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s1-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s1-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s1-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<!-- loop stations -->
+<rect x="40" y="60" width="190" height="78" rx="0" class="sk fp"/>
+<text x="52" y="82" class="lblb" text-anchor="start" >LOCATION</text>
+<text x="52" y="100" class="lbls" text-anchor="start" >history · hash ·</text>
+<text x="52" y="113" class="lbls" text-anchor="start" >Navigation API</text>
+<text x="52" y="130" class="lblf" text-anchor="start" >url: /people/32</text>
+
+<rect x="330" y="40" width="230" height="98" rx="0" class="sk fp"/>
+<text x="342" y="62" class="lblb" text-anchor="start" >@uirouter/core</text>
+<text x="342" y="80" class="lbls" text-anchor="start" >state registry · url rules</text>
+<text x="342" y="93" class="lbls" text-anchor="start" >transitionService</text>
+<text x="342" y="106" class="lbls" text-anchor="start" >stateService · globals</text>
+
+<rect x="680" y="60" width="220" height="108" rx="0" class="sk fp"/>
+<text x="692" y="82" class="lblb" text-anchor="start" >TRANSITION</text>
+<text x="692" y="100" class="lbls" text-anchor="start" >onBefore → onStart →</text>
+<text x="692" y="113" class="lbls" text-anchor="start" >resolve · onEnter →</text>
+<text x="692" y="126" class="lbls" text-anchor="start" >onSuccess / onError</text>
+
+<!-- nested ui-view tree -->
+<rect x="690" y="300" width="230" height="140" rx="0" class="sk fp"/>
+<text x="702" y="322" class="lblb" text-anchor="start" >&lt;ui-view&gt;</text>
+<text x="702" y="338" class="lbls" text-anchor="start" >custom element</text>
+<rect x="706" y="350" width="198" height="76" rx="0" class="sks fp2"/>
+<text x="716" y="370" class="lbl" text-anchor="start" >&lt;ui-view name='detail'&gt;</text>
+<text x="716" y="388" class="lbls" text-anchor="start" >parent found via composed</text>
+<text x="716" y="401" class="lbls" text-anchor="start" >context CustomEvent</text>
+
+<rect x="420" y="480" width="230" height="84" rx="0" class="sk fp"/>
+<text x="432" y="502" class="lblb" text-anchor="start" >LIT RENDER</text>
+<text x="432" y="520" class="lbls" text-anchor="start" >RoutedLitTemplate · html``</text>
+<text x="432" y="533" class="lbls" text-anchor="start" >directives commit to parts</text>
+
+<rect x="70" y="460" width="240" height="118" rx="0" class="sk fp"/>
+<text x="82" y="482" class="lblb" text-anchor="start" >DOM</text>
+<rect x="86" y="494" width="208" height="44" rx="0" class="sks fp2"/>
+<text x="96" y="512" class="lbl" text-anchor="start" >&lt;a href=/people/32&gt;</text>
+<text x="96" y="528" class="lbla" text-anchor="start" >uiSref(…) element part</text>
+<text x="82" y="566" class="lbls" text-anchor="start" >href + targetState set on host</text>
+
+<!-- loop edges, clockwise -->
+<path d="M230,99 H322" class="sk2"  marker-end="url(#s1-ai)"/>
+<text x="276" y="90" class="lbls" text-anchor="middle" >popstate / navigate</text>
+<path d="M560,89 H672" class="sk2"  marker-end="url(#s1-ai)"/>
+<text x="616" y="80" class="lbls" text-anchor="middle" >match → run</text>
+<path d="M790,168 V292" class="sk2"  marker-end="url(#s1-ai)"/>
+<text x="800" y="216" class="lbls" text-anchor="start" >resolves done,</text>
+<text x="800" y="229" class="lbls" text-anchor="start" >viewconfigs</text>
+<text x="800" y="242" class="lbls" text-anchor="start" >activate</text>
+<path d="M690,420 L658,478" class="sk2"  marker-end="url(#s1-ai)"/>
+<text x="560" y="444" class="lbls" text-anchor="start" >state.component /</text>
+<text x="560" y="457" class="lbls" text-anchor="start" >template</text>
+<path d="M420,522 H318" class="sk2"  marker-end="url(#s1-ai)"/>
+<text x="368" y="512" class="lbls" text-anchor="middle" >commit</text>
+<path d="M120,460 C110,300 116,220 130,146" class="ska"  marker-end="url(#s1-aa)"/>
+<text x="30" y="290" class="lbls" text-anchor="start" >click →</text>
+<text x="30" y="303" class="lbls" text-anchor="start" >stateService</text>
+<text x="30" y="316" class="lbls" text-anchor="start" >.go() →</text>
+<text x="30" y="329" class="lbls" text-anchor="start" >pushState</text>
+
+<!-- sidecar: TransitionController -->
+<rect x="430" y="200" width="190" height="62" rx="0" class="sks fp"/>
+<text x="442" y="220" class="lblb" text-anchor="start" >TransitionController</text>
+<text x="442" y="236" class="lbls" text-anchor="start" >ReactiveController over</text>
+<text x="442" y="249" class="lbls" text-anchor="start" >the hook registry</text>
+<path d="M620,228 C650,224 660,200 676,172" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+<text x="648" y="200" class="lblf" text-anchor="start" >registers hooks</text>
+
+<!-- sidecar: uiSrefActive -->
+<rect x="150" y="330" width="200" height="62" rx="0" class="sks fp"/>
+<text x="162" y="350" class="lblb" text-anchor="start" >uiSrefActive</text>
+<text x="162" y="366" class="lbls" text-anchor="start" >toggles class when a linked</text>
+<text x="162" y="379" class="lbls" text-anchor="start" >state is active</text>
+<path d="M210,460 V394" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+<text x="220" y="430" class="lblf" text-anchor="start" >uiSrefTarget bubbles ↑</text>
+<path d="M350,352 C420,340 480,300 520,146" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+<text x="452" y="290" class="lblf" text-anchor="start" >observes globals.current</text>
+
+<!-- SSR-dead seam -->
+<rect x="60" y="448" width="600" height="128" rx="6" class="skr fnone" stroke-dasharray="7 4"/>
+<rect x="60" y="448" width="600" height="128" rx="6" fill="url(#s1-hr)" opacity="0.35"/>
+<text x="80" y="600" class="lblr" text-anchor="start" >DIES ON THE SERVER — @lit-labs/ssr skips element parts: uiSref renders no href in SSR output (#564)</text>
+
+<!-- five doors -->
+<line x1="40" y1="616" x2="960" y2="616" class="skf"/>
+<text x="40" y="634" class="lbls" text-anchor="start" >FIVE DOORS INTO THE SAME MACHINE</text>
+<rect x="290" y="622" width="134" height="30" rx="0" class="sk fp2"/>
+<text x="298" y="635" class="lbls" text-anchor="start" >.</text>
+<text x="298" y="647" class="lblf" text-anchor="start" >registers everything</text>
+<rect x="432" y="622" width="134" height="30" rx="0" class="ska fp"/>
+<text x="440" y="635" class="lbla" text-anchor="start" >./pure</text>
+<text x="440" y="647" class="lblf" text-anchor="start" >no side effects</text>
+<rect x="574" y="622" width="134" height="30" rx="0" class="sk fp2"/>
+<text x="582" y="635" class="lbls" text-anchor="start" >./register</text>
+<text x="582" y="647" class="lblf" text-anchor="start" >all elements</text>
+<rect x="716" y="622" width="134" height="30" rx="0" class="sk fp2"/>
+<text x="724" y="635" class="lbls" text-anchor="start" >./ui-router.register</text>
+<text x="724" y="647" class="lblf" text-anchor="start" >one element</text>
+<rect x="858" y="622" width="134" height="30" rx="0" class="sk fp2"/>
+<text x="866" y="635" class="lbls" text-anchor="start" >./ui-view.register</text>
+<text x="866" y="647" class="lblf" text-anchor="start" >one element</text>
+</svg></div>
+    <figcaption>One full revolution: a URL change is matched by @uirouter/core, run as a guarded transition, activated into the <ui-view> tree, rendered by Lit, and committed to the DOM — where a uiSref click starts the next revolution.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>The package is a circuit, not a component library.</strong> Every arrow on the main ring is mandatory; remove one and navigation stops. The two sidecars — <code>TransitionController</code> and <code>uiSrefActive</code> — tap the ring without being on it.</p>
+<p><strong>Service discovery is DOM events.</strong> There is no registry: a nested <code>&lt;ui-view&gt;</code> finds its parent with a composed context CustomEvent, and <code>uiSrefActive</code> learns which links exist because every <code>uiSref</code> announces its <code>targetState</code> in a bubbling <code>uiSrefTarget</code> event. The document tree is the dependency graph.</p>
+<p><strong>The five doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with the registration torn off, for consumers who own their tag names. <code>sideEffects</code> in the manifest names exactly the four register files — the bundler sees the same seam the reader does.</p>
+<p><strong>The red region is the honest defect.</strong> Under <code>@lit-labs/ssr</code>, element-part directives never run, so server output has links without <code>href</code>s until hydration (#564). The loop closes only in a browser.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sk2" marker-end=""/></svg></td><td>the render loop (data flow)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="ska"/></svg></td><td>user navigation (uiSref click)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sks" stroke-dasharray="4 3"/></svg></td><td>event listening / hook taps</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" class="skr fnone" stroke-dasharray="4 3"/></svg></td><td>absent under SSR</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" class="sk fp2"/></svg></td><td>side-effectful entry</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>ROUTING AT SIX ALTITUDES</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE RENDER LOOP</div>
+  <div><span class="fld">SCALE</span>ONE PACKAGE</div>
+  <div><span class="fld">FORM</span>CLOSED LOOP</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-08-16 · A</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>1 OF 6</div>
+</div>
+    </div>
+  </div>
+</section>

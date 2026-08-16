@@ -1,0 +1,355 @@
+<title>THE ROUTING STRATA — Sheet 6 of 6</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="At the widest altitude the only shared structure is a definition, so the drawing shrinks to a core sample and the writing does the work: five strata, one invariant triple.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0D2344;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #5F7899;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    --red: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0D2344;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #5F7899;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+:root {
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+}
+
+.sheet {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 26px;
+  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--mono);
+}
+.sheet-head .proj {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--mono);
+  font-size: clamp(17px, 2.6vw, 23px);
+  letter-spacing: 0.10em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.sheet-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
+.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 10px auto 0;
+  font-style: italic;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
+  gap: 22px;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.notes p {
+  font-size: 15px;
+  max-width: 62ch;
+  margin-bottom: 9px;
+}
+.notes p strong { font-weight: 600; }
+.notes p code, .gal-body code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<section class="sheet" id="sheet-6" aria-label="Sheet 6: THE ROUTING STRATA">
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 6 / 6</span></div>
+  <h2 class="sheet-title">THE ROUTING STRATA</h2>
+  <p class="sheet-sub">ALTITUDE 6 — routing in general · the altitude where prose outranks pictures</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1000 660" role="img" aria-label="Routing in general drawn as a geological column of five strata, from IP routing at the bedrock up through HTTP servers, edge networks, and client-side routers to application state routing at the surface. Three columns annotate each stratum with its address space, matching function, and transition semantics — the invariant triple every routing plane shares.">
+<defs>
+  <marker id="s6-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s6-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s6-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s6-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s6-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s6-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s6-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s6-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<!-- column headers -->
+<text x="300" y="60" class="lbls" text-anchor="start" >ADDRESS SPACE</text>
+<text x="510" y="60" class="lbls" text-anchor="start" >MATCHING FUNCTION</text>
+<text x="700" y="60" class="lbls" text-anchor="start" >TRANSITION SEMANTICS</text>
+<text x="70" y="60" class="lbls" text-anchor="start" >STRATUM</text>
+<line x1="70" y1="68" x2="960" y2="68" class="sk"/>
+
+<rect x="70" y="100" width="170" height="88" class="ska fnone" stroke-width="2"/>
+<rect x="70" y="100" width="170" height="88" fill="url(#s6-ha)" opacity="0.9"/>
+<text x="155" y="140" class="lbla" text-anchor="middle" >APPLICATION</text>
+<text x="155" y="156" class="lblf" text-anchor="middle" >state routers · ui-router</text>
+<text x="300" y="142" class="lbl" text-anchor="start" >named state tree</text>
+<text x="510" y="142" class="lbl" text-anchor="start" >hierarchy + params</text>
+<text x="700" y="136" class="lbl" text-anchor="start" >guarded, async, cancellable — with</text>
+<text x="700" y="150" class="lbl" text-anchor="start" >resolve and memory</text>
+<line x1="260" y1="188" x2="960" y2="188" class="skf"/>
+<rect x="70" y="188" width="170" height="88" class="sk fnone" />
+<rect x="70" y="188" width="170" height="88" fill="url(#s6-hx)" opacity="0.5"/>
+<text x="155" y="228" class="lblb" text-anchor="middle" >CLIENT</text>
+<text x="155" y="244" class="lblf" text-anchor="middle" >SPA routers · Nav API</text>
+<text x="300" y="230" class="lbl" text-anchor="start" >document URL</text>
+<text x="510" y="230" class="lbl" text-anchor="start" >route table</text>
+<text x="700" y="224" class="lbl" text-anchor="start" >navigation lifecycle —</text>
+<text x="700" y="238" class="lbl" text-anchor="start" >interceptable, stateful session</text>
+<line x1="260" y1="276" x2="960" y2="276" class="skf"/>
+<rect x="70" y="276" width="170" height="88" class="sk fnone" />
+<rect x="70" y="276" width="170" height="88" fill="url(#s6-hd)" opacity="0.5"/>
+<text x="155" y="316" class="lblb" text-anchor="middle" >EDGE</text>
+<text x="155" y="332" class="lblf" text-anchor="middle" >CDNs · workers</text>
+<text x="300" y="318" class="lbl" text-anchor="start" >host + path + geo</text>
+<text x="510" y="318" class="lbl" text-anchor="start" >ruleset, first match</text>
+<text x="700" y="312" class="lbl" text-anchor="start" >rewrite / proxy / spawn an isolate</text>
+<line x1="260" y1="364" x2="960" y2="364" class="skf"/>
+<rect x="70" y="364" width="170" height="88" class="sk fnone" />
+<rect x="70" y="364" width="170" height="88" fill="url(#s6-hx)" opacity="0.5"/>
+<text x="155" y="404" class="lblb" text-anchor="middle" >SERVER</text>
+<text x="155" y="420" class="lblf" text-anchor="middle" >HTTP frameworks</text>
+<text x="300" y="406" class="lbl" text-anchor="start" >method + path pattern</text>
+<text x="510" y="406" class="lbl" text-anchor="start" >trie / first match</text>
+<text x="700" y="400" class="lbl" text-anchor="start" >request → response, stateless</text>
+<line x1="260" y1="452" x2="960" y2="452" class="skf"/>
+<rect x="70" y="452" width="170" height="88" class="sk fnone" />
+<rect x="70" y="452" width="170" height="88" fill="url(#s6-hd)" opacity="0.5"/>
+<text x="155" y="492" class="lblb" text-anchor="middle" >INTER-NETWORK</text>
+<text x="155" y="508" class="lblf" text-anchor="middle" >IP · BGP</text>
+<text x="300" y="494" class="lbl" text-anchor="start" >address prefixes</text>
+<text x="510" y="494" class="lbl" text-anchor="start" >longest prefix wins</text>
+<text x="700" y="488" class="lbl" text-anchor="start" >next hop — best-effort, no memory</text>
+<text x="700" y="502" class="lbl" text-anchor="start" >at all</text>
+
+
+<!-- surface + bedrock captions -->
+<text x="70" y="90" class="lbla" text-anchor="start" >surface — sheets 1–3 of this set live here</text>
+<text x="70" y="558" class="lblf" text-anchor="start" >bedrock</text>
+
+<!-- ascent annotation -->
+<path d="M962,528 V112" class="ska" marker-end="url(#s6-aa)"/>
+<text x="962" y="566" class="lbla" text-anchor="end" >ascending, transitions gain memory, cancellation, and meaning</text>
+</svg></div>
+    <figcaption>At the widest altitude the only shared structure is a definition, so the drawing shrinks to a core sample and the writing does the work: five strata, one invariant triple.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>The definition that survives every stratum:</strong> a router is an address space, a matching function, and transition semantics. BGP matches prefixes and forwards with no memory; an HTTP framework matches path patterns into a stateless response; an edge ruleset rewrites and proxies; a SPA router matches a URL into a view tree through a cancellable lifecycle; a state router matches into a named hierarchy through guarded, resolving transitions.</p>
+<p><strong>What changes with ascent is the transition.</strong> At the bedrock a transition is a forwarding decision that forgets itself immediately. Each stratum upward, transitions acquire more: statefulness, interceptability, cancellation, resolved data, meaning. By the surface a transition is a first-class object with a lifecycle — which is precisely the layer sheet 1 drew.</p>
+<p><strong>Why this sheet is mostly writing:</strong> no mechanism spans these strata — an IP hop and a <code>ui-view</code> activation share a definition, not a wire. Drawing more than a core sample here would be decoration, and the reference's own rule applies: the drawing earns exactly as much ink as the mechanism deserves.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" fill="url(#s6-ha)"/></svg></td><td>the stratum this repo inhabits</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" fill="url(#s6-hx)"/></svg></td><td>strata below (shared definition only)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="22" y1="16" x2="22" y2="2" class="ska"/></svg></td><td>ascent: transitions gain semantics</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>ROUTING AT SIX ALTITUDES</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE ROUTING STRATA</div>
+  <div><span class="fld">SCALE</span>EVERYTHING</div>
+  <div><span class="fld">FORM</span>CORE SAMPLE</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-08-16 · A</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>6 OF 6</div>
+</div>
+    </div>
+  </div>
+</section>
