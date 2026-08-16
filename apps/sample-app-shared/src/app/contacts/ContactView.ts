@@ -35,12 +35,12 @@ export class ContactView extends LitElement {
     >
       <i class="fa fa-envelope"></i><span>Message</span>
     </button>`;
-    const editContactButton = html`<button
+    const editContactButton = html`<a
       class="btn btn-primary"
-      ${uiSref('.edit', {}, { assignHref: 'auto' })}
+      ${uiSref('.edit')}
     >
       <i class="fa fa-pencil"></i><span>Edit Contact</span>
-    </button>`;
+    </a>`;
     return html`<div class="contact">
       <sample-contact-detail .contact=${contact}></sample-contact-detail>
       ${composeButton} ${editContactButton}

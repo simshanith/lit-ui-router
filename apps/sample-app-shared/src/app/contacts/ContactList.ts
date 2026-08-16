@@ -16,11 +16,11 @@ export class ContactList extends LitElement {
   }
 
   render() {
+    // one control, not an <a> wrapping a <button>: nesting them gave two tab
+    // stops, and <a>'s content model forbids interactive content
     const newContact = html`
-      <a ${uiSref('.new')}>
-        <button class="btn btn-primary">
-          <i class="fa fa-pencil"></i><span>New Contact</span>
-        </button>
+      <a ${uiSref('.new')} class="btn btn-primary">
+        <i class="fa fa-pencil"></i><span>New Contact</span>
       </a>
     `;
     const contacts = repeat(
