@@ -1,6 +1,6 @@
-<title>THE RENDER LOOP — Sheet 1 of 6</title>
+<title>THE RENDER LOOP — Sheet 1 of 7</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="One full revolution: a URL change is matched by @uirouter/core, run as a guarded transition, activated into the <ui-view> tree, rendered by Lit, and committed to the DOM — where a uiSref click starts the next revolution.">
+<meta name="description" content="Rev B stages the same loop as a scene: a URL enters the gatehouse, the core matches, the hall runs its hook bays, views stack, Lit commits onto the document floor — and a click flies back to location to start the next revolution.">
 <style>
 :root {
   --ground: #E6E6DA;
@@ -234,11 +234,11 @@ a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <section class="sheet" id="sheet-1" aria-label="Sheet 1: THE RENDER LOOP">
-  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 1 / 6</span></div>
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 1 / 7</span></div>
   <h2 class="sheet-title">THE RENDER LOOP</h2>
-  <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.9.0 · 10 shipped modules · peers: lit + @uirouter/core</p>
+  <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV B: drawn isometric, browser-only</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1000 660" role="img" aria-label="The lit-ui-router render loop: location to core to transition to ui-view to lit templates to DOM, and back to location through uiSref clicks. The uiSref-to-DOM segment is marked as absent under server-side rendering.">
+    <div class="figure-wrap"><svg viewBox="0 0 1150 660" role="img" aria-label="The lit-ui-router render loop drawn as an isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with three hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits down onto the document floor — where a click on a uiSref link flies back to location as an elevated arc. A watchtower catches rising uiSrefTarget events, and a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 <defs>
   <marker id="s1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -266,135 +266,156 @@ a { color: var(--accent); }
   </pattern>
 </defs>
 
-<!-- loop stations -->
-<rect x="40" y="60" width="190" height="78" rx="0" class="sk fp"/>
-<text x="52" y="82" class="lblb" text-anchor="start" >LOCATION</text>
-<text x="52" y="100" class="lbls" text-anchor="start" >history · hash ·</text>
-<text x="52" y="113" class="lbls" text-anchor="start" >Navigation API</text>
-<text x="52" y="130" class="lblf" text-anchor="start" >url: /people/32</text>
+<path d="M352.0,220.0 L423.0,249.0" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M528.6,308.0 L579.7,339.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M711.4,417.5 L746.9,458.0" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M750.3,510.0 L670.6,544.0" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M588.4,534.5 L481.9,477.0" class="sk2"  marker-end="url(#s1-ai)"/>
+<g>
+<polygon points="248.0,160.0 326.0,205.0 326.0,233.0 248.0,188.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="377.9,175.0 326.0,205.0 326.0,233.0 377.9,203.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="300.0,130.0 377.9,175.0 326.0,205.0 248.0,160.0" class="sk fp"/>
+</g>
+<g>
+<polygon points="395.3,212.0 494.9,269.5 494.9,325.5 395.3,268.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="564.1,229.5 494.9,269.5 494.9,325.5 564.1,285.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="464.5,172.0 564.1,229.5 494.9,269.5 395.3,212.0" class="sk fp"/>
+</g>
+<g>
+<polygon points="53.2,314.5 399.6,514.5 399.6,520.5 53.2,320.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="520.8,444.5 399.6,514.5 399.6,520.5 520.8,450.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="174.4,244.5 520.8,444.5 399.6,514.5 53.2,314.5" class="sk fp"/>
+</g>
+<g><line x1="135.5" y1="252.0" x2="135.5" y2="298.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="87.8,206.5 135.5,234.0 135.5,252.0 87.8,224.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="170.1,214.0 135.5,234.0 135.5,252.0 170.1,232.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="122.5,186.5 170.1,214.0 135.5,234.0 87.8,206.5" class="sk fp"/>
+</g>
+<g><line x1="213.4" y1="352.0" x2="213.4" y2="358.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="139.8,293.5 213.4,336.0 213.4,352.0 139.8,309.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="252.4,313.5 213.4,336.0 213.4,352.0 252.4,329.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="178.8,271.0 252.4,313.5 213.4,336.0 139.8,293.5" class="sk fp"/>
+</g>
+<g><line x1="313.0" y1="404.5" x2="313.0" y2="410.5" class="sks" stroke-dasharray="2 3"/>
+<polygon points="261.0,364.5 313.0,394.5 313.0,404.5 261.0,374.5" class="skf" fill="var(--paper-2)"/>
+<polygon points="347.6,374.5 313.0,394.5 313.0,404.5 347.6,384.5" class="skf" fill="url(#s1-hx)"/>
+<polygon points="295.7,344.5 347.6,374.5 313.0,394.5 261.0,364.5" class="skf fp"/>
+</g>
+<g><line x1="343.3" y1="477.0" x2="343.3" y2="483.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="282.7,434.0 343.3,469.0 343.3,477.0 282.7,442.0" class="skf" fill="var(--paper-2)"/>
+<polygon points="377.9,449.0 343.3,469.0 343.3,477.0 377.9,457.0" class="skf" fill="url(#s1-hx)"/>
+<polygon points="317.3,414.0 377.9,449.0 343.3,469.0 282.7,434.0" class="skf fp"/>
+</g>
+<g><line x1="717.4" y1="318.0" x2="717.4" y2="372.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="661.1,269.5 717.4,302.0 717.4,318.0 661.1,285.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="750.3,283.0 717.4,302.0 717.4,318.0 750.3,299.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="694.0,250.5 750.3,283.0 717.4,302.0 661.1,269.5" class="sk fp"/>
+</g>
+<g>
+<polygon points="555.5,321.5 685.4,396.5 685.4,430.5 555.5,355.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="737.3,366.5 685.4,396.5 685.4,430.5 737.3,400.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="607.4,291.5 737.3,366.5 685.4,396.5 555.5,321.5" class="sk fp"/>
+</g>
+<g>
+<polygon points="707.0,453.0 789.3,500.5 789.3,530.5 707.0,483.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="849.9,465.5 789.3,500.5 789.3,530.5 849.9,495.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="767.6,418.0 849.9,465.5 789.3,500.5 707.0,453.0" class="sk fp"/>
+</g>
+<g><line x1="778.0" y1="478.0" x2="778.0" y2="508.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="736.5,432.0 778.0,456.0 778.0,478.0 736.5,454.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="809.2,438.0 778.0,456.0 778.0,478.0 809.2,460.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="767.6,414.0 809.2,438.0 778.0,456.0 736.5,432.0" class="sk fp"/>
+</g>
+<g>
+<polygon points="568.5,522.0 659.4,574.5 659.4,600.5 568.5,548.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="711.4,544.5 659.4,574.5 659.4,600.5 711.4,570.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="620.4,492.0 711.4,544.5 659.4,574.5 568.5,522.0" class="sk fp"/>
+</g>
+<line x1="650.7" y1="316.5" x2="598.8" y2="346.5" class="skf"/>
+<line x1="694.0" y1="341.5" x2="642.1" y2="371.5" class="skf"/>
+<path d="M196.1,304.0 C 120,236 140,166 312.1,177.0" class="ska"  marker-end="url(#s1-aa)"/>
+<path d="M230.7,302.0 C 210.72,254 173.728,194 141.7,222.0" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+<path d="M687.1,295.5 L661.1,340.5" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
 
-<rect x="330" y="40" width="230" height="98" rx="0" class="sk fp"/>
-<text x="342" y="62" class="lblb" text-anchor="start" >@uirouter/core</text>
-<text x="342" y="80" class="lbls" text-anchor="start" >state registry · url rules</text>
-<text x="342" y="93" class="lbls" text-anchor="start" >transitionService</text>
-<text x="342" y="106" class="lbls" text-anchor="start" >stateService · globals</text>
+<!-- station lettering -->
+<text x="339.0" y="144.5" class="lblb" text-anchor="middle" >LOCATION</text>
+<text x="339.0" y="158.5" class="lblf" text-anchor="middle" >history · hash · Navigation API</text>
+<text x="513.9" y="192.5" class="lblb" text-anchor="middle" >@uirouter/core</text>
+<text x="513.9" y="206.5" class="lblf" text-anchor="middle" >state registry · match · go()</text>
+<text x="672.4" y="321.0" class="lblb" text-anchor="middle" >TRANSITION HALL</text>
+<text x="672.4" y="335.0" class="lblf" text-anchor="middle" >onBefore | onStart · resolve | onSuccess</text>
+<text x="808.3" y="433.5" class="lblb" text-anchor="middle" >&lt;ui-view&gt;</text>
+<text x="788.4" y="420.0" class="lbls" text-anchor="middle" >&lt;ui-view name='detail'&gt;</text>
+<text x="665.5" y="510.0" class="lblb" text-anchor="middle" >LIT RENDER</text>
+<text x="665.5" y="524.0" class="lblf" text-anchor="middle" >RoutedLitTemplate · html``</text>
+<text x="215.1" y="286.0" class="lbl" text-anchor="middle" >&lt;a href=/people/32&gt;</text>
+<text x="215.1" y="298.0" class="lbla" text-anchor="middle" >uiSref(…) element part</text>
+<text x="145.9" y="194.0" class="lblb" text-anchor="middle" >uiSrefActive</text>
+<text x="145.9" y="206.0" class="lblf" text-anchor="middle" >perch — toggles .active below</text>
+<text x="721.7" y="260.5" class="lblb" text-anchor="middle" >TransitionController</text>
+<text x="721.7" y="272.5" class="lblf" text-anchor="middle" >ReactiveController skybridge</text>
+<text x="252.4" y="451.5" class="lbls" text-anchor="middle" >THE DOCUMENT — the only stage this circuit needs</text>
+<text x="321.6" y="383.5" class="lblf" text-anchor="middle" >rendered content</text>
 
-<rect x="680" y="60" width="220" height="108" rx="0" class="sk fp"/>
-<text x="692" y="82" class="lblb" text-anchor="start" >TRANSITION</text>
-<text x="692" y="100" class="lbls" text-anchor="start" >onBefore → onStart →</text>
-<text x="692" y="113" class="lbls" text-anchor="start" >resolve · onEnter →</text>
-<text x="692" y="126" class="lbls" text-anchor="start" >onSuccess / onError</text>
-
-<!-- nested ui-view tree -->
-<rect x="690" y="300" width="230" height="140" rx="0" class="sk fp"/>
-<text x="702" y="322" class="lblb" text-anchor="start" >&lt;ui-view&gt;</text>
-<text x="702" y="338" class="lbls" text-anchor="start" >custom element</text>
-<rect x="706" y="350" width="198" height="76" rx="0" class="sks fp2"/>
-<text x="716" y="370" class="lbl" text-anchor="start" >&lt;ui-view name='detail'&gt;</text>
-<text x="716" y="388" class="lbls" text-anchor="start" >parent found via composed</text>
-<text x="716" y="401" class="lbls" text-anchor="start" >context CustomEvent</text>
-
-<rect x="420" y="480" width="230" height="84" rx="0" class="sk fp"/>
-<text x="432" y="502" class="lblb" text-anchor="start" >LIT RENDER</text>
-<text x="432" y="520" class="lbls" text-anchor="start" >RoutedLitTemplate · html``</text>
-<text x="432" y="533" class="lbls" text-anchor="start" >directives commit to parts</text>
-
-<rect x="70" y="460" width="240" height="118" rx="0" class="sk fp"/>
-<text x="82" y="482" class="lblb" text-anchor="start" >DOM</text>
-<rect x="86" y="494" width="208" height="44" rx="0" class="sks fp2"/>
-<text x="96" y="512" class="lbl" text-anchor="start" >&lt;a href=/people/32&gt;</text>
-<text x="96" y="528" class="lbla" text-anchor="start" >uiSref(…) element part</text>
-<text x="82" y="566" class="lbls" text-anchor="start" >href + targetState set on host</text>
-
-<!-- loop edges, clockwise -->
-<path d="M230,99 H322" class="sk2"  marker-end="url(#s1-ai)"/>
-<text x="276" y="90" class="lbls" text-anchor="middle" >popstate / navigate</text>
-<path d="M560,89 H672" class="sk2"  marker-end="url(#s1-ai)"/>
-<text x="616" y="80" class="lbls" text-anchor="middle" >match → run</text>
-<path d="M790,168 V292" class="sk2"  marker-end="url(#s1-ai)"/>
-<text x="800" y="216" class="lbls" text-anchor="start" >resolves done,</text>
-<text x="800" y="229" class="lbls" text-anchor="start" >viewconfigs</text>
-<text x="800" y="242" class="lbls" text-anchor="start" >activate</text>
-<path d="M690,420 L658,478" class="sk2"  marker-end="url(#s1-ai)"/>
-<text x="560" y="444" class="lbls" text-anchor="start" >state.component /</text>
-<text x="560" y="457" class="lbls" text-anchor="start" >template</text>
-<path d="M420,522 H318" class="sk2"  marker-end="url(#s1-ai)"/>
-<text x="368" y="512" class="lbls" text-anchor="middle" >commit</text>
-<path d="M120,460 C110,300 116,220 130,146" class="ska"  marker-end="url(#s1-aa)"/>
-<text x="30" y="290" class="lbls" text-anchor="start" >click →</text>
-<text x="30" y="303" class="lbls" text-anchor="start" >stateService</text>
-<text x="30" y="316" class="lbls" text-anchor="start" >.go() →</text>
-<text x="30" y="329" class="lbls" text-anchor="start" >pushState</text>
-
-<!-- sidecar: TransitionController -->
-<rect x="430" y="200" width="190" height="62" rx="0" class="sks fp"/>
-<text x="442" y="220" class="lblb" text-anchor="start" >TransitionController</text>
-<text x="442" y="236" class="lbls" text-anchor="start" >ReactiveController over</text>
-<text x="442" y="249" class="lbls" text-anchor="start" >the hook registry</text>
-<path d="M620,228 C650,224 660,200 676,172" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
-<text x="648" y="200" class="lblf" text-anchor="start" >registers hooks</text>
-
-<!-- sidecar: uiSrefActive -->
-<rect x="150" y="330" width="200" height="62" rx="0" class="sks fp"/>
-<text x="162" y="350" class="lblb" text-anchor="start" >uiSrefActive</text>
-<text x="162" y="366" class="lbls" text-anchor="start" >toggles class when a linked</text>
-<text x="162" y="379" class="lbls" text-anchor="start" >state is active</text>
-<path d="M210,460 V394" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
-<text x="220" y="430" class="lblf" text-anchor="start" >uiSrefTarget bubbles ↑</text>
-<path d="M350,352 C420,340 480,300 520,146" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
-<text x="452" y="290" class="lblf" text-anchor="start" >observes globals.current</text>
-
-<!-- SSR-dead seam -->
-<rect x="60" y="448" width="600" height="128" rx="6" class="skr fnone" stroke-dasharray="7 4"/>
-<rect x="60" y="448" width="600" height="128" rx="6" fill="url(#s1-hr)" opacity="0.35"/>
-<text x="80" y="600" class="lblr" text-anchor="start" >DIES ON THE SERVER — @lit-labs/ssr skips element parts: uiSref renders no href in SSR output (#564)</text>
+<!-- leg lettering -->
+<text x="408.3" y="216.5" class="lbls" text-anchor="middle" >popstate / navigate</text>
+<text x="573.7" y="308.0" class="lbls" text-anchor="middle" >match → run</text>
+<text x="758.1" y="416.5" class="lbls" text-anchor="middle" >viewconfigs activate</text>
+<text x="726.9" y="539.5" class="lbls" text-anchor="start" >state.component / template</text>
+<text x="523.4" y="523.0" class="lbls" text-anchor="middle" >directives commit</text>
+<text x="96" y="210" class="lbla" text-anchor="start" >click →</text>
+<text x="96" y="223" class="lbla" text-anchor="start" >stateService.go()</text>
+<text x="96" y="236" class="lbla" text-anchor="start" >→ pushState</text>
+<text x="214" y="236" class="lblf" text-anchor="start" >uiSrefTarget</text>
+<text x="214" y="247" class="lblf" text-anchor="start" >bubbles up</text>
+<text x="716" y="200" class="lblf" text-anchor="start" >registers hooks</text>
 
 <!-- five doors -->
-<line x1="40" y1="616" x2="960" y2="616" class="skf"/>
-<text x="40" y="634" class="lbls" text-anchor="start" >FIVE DOORS INTO THE SAME MACHINE</text>
-<rect x="290" y="622" width="134" height="30" rx="0" class="sk fp2"/>
-<text x="298" y="635" class="lbls" text-anchor="start" >.</text>
-<text x="298" y="647" class="lblf" text-anchor="start" >registers everything</text>
-<rect x="432" y="622" width="134" height="30" rx="0" class="ska fp"/>
-<text x="440" y="635" class="lbla" text-anchor="start" >./pure</text>
-<text x="440" y="647" class="lblf" text-anchor="start" >no side effects</text>
-<rect x="574" y="622" width="134" height="30" rx="0" class="sk fp2"/>
-<text x="582" y="635" class="lbls" text-anchor="start" >./register</text>
-<text x="582" y="647" class="lblf" text-anchor="start" >all elements</text>
-<rect x="716" y="622" width="134" height="30" rx="0" class="sk fp2"/>
-<text x="724" y="635" class="lbls" text-anchor="start" >./ui-router.register</text>
-<text x="724" y="647" class="lblf" text-anchor="start" >one element</text>
-<rect x="858" y="622" width="134" height="30" rx="0" class="sk fp2"/>
-<text x="866" y="635" class="lbls" text-anchor="start" >./ui-view.register</text>
-<text x="866" y="647" class="lblf" text-anchor="start" >one element</text>
+<line x1="40" y1="576" x2="1110" y2="576" class="skf"/>
+<text x="40" y="594" class="lbls" text-anchor="start" >FIVE DOORS INTO THE SAME MACHINE</text>
+<rect x="330" y="582" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="338" y="595" class="lbls" text-anchor="start" >.</text>
+<text x="338" y="607" class="lblf" text-anchor="start" >registers everything</text>
+<rect x="482" y="582" width="144" height="30" rx="0" class="ska fp"/>
+<text x="490" y="595" class="lbla" text-anchor="start" >./pure</text>
+<text x="490" y="607" class="lblf" text-anchor="start" >no side effects</text>
+<rect x="634" y="582" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="642" y="595" class="lbls" text-anchor="start" >./register</text>
+<text x="642" y="607" class="lblf" text-anchor="start" >all elements</text>
+<rect x="786" y="582" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="794" y="595" class="lbls" text-anchor="start" >./ui-router.register</text>
+<text x="794" y="607" class="lblf" text-anchor="start" >one element</text>
+<rect x="938" y="582" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="946" y="595" class="lbls" text-anchor="start" >./ui-view.register</text>
+<text x="946" y="607" class="lblf" text-anchor="start" >one element</text>
 </svg></div>
-    <figcaption>One full revolution: a URL change is matched by @uirouter/core, run as a guarded transition, activated into the <ui-view> tree, rendered by Lit, and committed to the DOM — where a uiSref click starts the next revolution.</figcaption>
+    <figcaption>Rev B stages the same loop as a scene: a URL enters the gatehouse, the core matches, the hall runs its hook bays, views stack, Lit commits onto the document floor — and a click flies back to location to start the next revolution.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>The package is a circuit, not a component library.</strong> Every arrow on the main ring is mandatory; remove one and navigation stops. The two sidecars — <code>TransitionController</code> and <code>uiSrefActive</code> — tap the ring without being on it.</p>
-<p><strong>Service discovery is DOM events.</strong> There is no registry: a nested <code>&lt;ui-view&gt;</code> finds its parent with a composed context CustomEvent, and <code>uiSrefActive</code> learns which links exist because every <code>uiSref</code> announces its <code>targetState</code> in a bubbling <code>uiSrefTarget</code> event. The document tree is the dependency graph.</p>
-<p><strong>The five doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with the registration torn off, for consumers who own their tag names. <code>sideEffects</code> in the manifest names exactly the four register files — the bundler sees the same seam the reader does.</p>
-<p><strong>The red region is the honest defect.</strong> Under <code>@lit-labs/ssr</code>, element-part directives never run, so server output has links without <code>href</code>s until hydration (#564). The loop closes only in a browser.</p>
+<p><strong>Why redraw a 2D loop in 3D:</strong> the cycle itself is flat, but the third axis is free to carry the relations flat arrows kept fumbling. Containment: the child <code>&lt;ui-view&gt;</code> literally stands on its parent's roof — nesting is stacking, not a box-in-a-box. Propagation: <code>uiSrefTarget</code> events <em>rise</em> off the document floor to the <code>uiSrefActive</code> perch, which is how link tracking works — no registry, just bubbling. Instrumentation: <code>TransitionController</code> is a skybridge that taps the hall without standing on the route.</p>
+<p><strong>Client-only by charter.</strong> Rev A carried a red server-side caveat; Rev B drops it. This circuit's stage is the document, full stop — the server story belongs to <code>ui-router-server</code> on sheet 2, where the same state tree answers requests with no floor at all.</p>
+<p><strong>Service discovery is still DOM events.</strong> A nested view finds its parent with a composed context CustomEvent; every <code>uiSref</code> announces its <code>targetState</code> upward. The document tree is the dependency graph — which is exactly why the drawing can stand everything on one floor.</p>
+<p><strong>The five doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with registration torn off. <code>sideEffects</code> in the manifest names exactly the four register files.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
-      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sk2" marker-end=""/></svg></td><td>the render loop (data flow)</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="ska"/></svg></td><td>user navigation (uiSref click)</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sks" stroke-dasharray="4 3"/></svg></td><td>event listening / hook taps</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" class="skr fnone" stroke-dasharray="4 3"/></svg></td><td>absent under SSR</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" class="sk fp2"/></svg></td><td>side-effectful entry</td></tr></table>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sk2"/></svg></td><td>the render loop (ground legs)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="14" x2="40" y2="4" class="ska"/></svg></td><td>the click flying back to location</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="14" x2="40" y2="4" class="sks" stroke-dasharray="4 3"/></svg></td><td>events rising / hook taps</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="10" y="2" width="24" height="8" class="sk fp"/><line x1="34" y1="10" x2="34" y2="16" class="sks" stroke-dasharray="2 3"/></svg></td><td>elevated = overlay, not on the route</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="10" y="5" width="24" height="10" class="skf fnone"/></svg></td><td>ghost = scenery (your app)</td></tr></table>
       <div class="titleblock" aria-label="title block">
   <div class="span2"><span class="fld">PROJECT</span>ROUTING AT SIX ALTITUDES</div>
   <div class="span2"><span class="fld">SHEET TITLE</span>THE RENDER LOOP</div>
   <div><span class="fld">SCALE</span>ONE PACKAGE</div>
-  <div><span class="fld">FORM</span>CLOSED LOOP</div>
+  <div><span class="fld">FORM</span>ISO CIRCUIT</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-08-16 · A</div>
+  <div><span class="fld">DATE / REV</span>2026-08-16 · B</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
-  <div><span class="fld">SHEET</span>1 OF 6</div>
+  <div><span class="fld">SHEET</span>1 OF 7</div>
 </div>
     </div>
   </div>

@@ -7,17 +7,18 @@ import { sheet3 } from './sheet3.mjs';
 import { sheet4 } from './sheet4.mjs';
 import { sheet5 } from './sheet5.mjs';
 import { sheet6 } from './sheet6.mjs';
+import { sheet7 } from './sheet7.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet3, sheet4, sheet5, sheet6];
+const sheets = [sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7];
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
 for (const s of sheets) {
-  writeFileSync(join(OUT, fname(s)), page(`${s.title} — Sheet ${s.num} of 6`, sheetSection(s), { desc: s.caption }));
+  writeFileSync(join(OUT, fname(s)), page(`${s.title} — Sheet ${s.num} of ${sheets.length}`, sheetSection(s), { desc: s.caption }));
 }
 
 // --- megacanvas ---
@@ -52,6 +53,7 @@ const verdicts = [
   ['4', 'FAMILY', 'SPINE + RIBS', 'a city would fake adjacency; liveness is the real ink'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
+  ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census — files as footprint, lines as height, tests as annexes'],
 ];
 const galCss = `
 .cover { max-width: 1180px; margin: 0 auto 34px; background: var(--paper); border: 1.5px solid var(--ink);
@@ -87,11 +89,12 @@ const cover = `<header class="cover">
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">4</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">16</span></div>
     <div><span class="k">LATEST SHIPPED</span><span class="v">1.9.0 · 2026-08-01</span></div>
-    <div><span class="k">SHEETS</span><span class="v">6 · drawn 2026-08-16</span></div>
+    <div><span class="k">SHEETS</span><span class="v">7 · drawn 2026-08-16</span></div>
   </div>
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), liveness where the facts are temporal (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
+    <p>Two revisions followed the first printing. Sheet 1 is now REV B — the client asked for the loop staged isometric, and the vertical axis turned out to carry what flat arrows fumbled: containment as stacking, event bubbling as rising arcs, controllers as skybridges. Sheet 7 is new: the same city as sheet 3, surveyed by mass — footprint area from file counts, height from lines, test code drawn as annexes on the buildings it guards.</p>
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>

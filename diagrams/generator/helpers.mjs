@@ -25,17 +25,23 @@ export const iso = (x, y, z = 0) => [(x - y) * C, (x + y) * S - z];
 
 // Isometric block at plan (x,y), footprint w×d, height h; ox/oy = screen origin offset.
 // faces: top (paper), left (paper-2), right (hatch pattern). capCls fills the top instead.
-export function isoBlock(p, ox, oy, x, y, w, d, h, { capCls = 'fp', edge = 'sk' } = {}) {
+// z0 raises the block off the ground (a mast drops from the near corner to the ground).
+// sideFill overrides the right-face hatch (e.g. a red hatch for spec annexes).
+export function isoBlock(p, ox, oy, x, y, w, d, h, { capCls = 'fp', edge = 'sk', z0 = 0, sideFill } = {}) {
   const pt = (px, py, pz) => {
     const [sx, sy] = iso(px, py, pz);
     return `${(ox + sx).toFixed(1)},${(oy + sy).toFixed(1)}`;
   };
-  const top = [pt(x, y, h), pt(x + w, y, h), pt(x + w, y + d, h), pt(x, y + d, h)].join(' ');
-  const left = [pt(x, y + d, h), pt(x + w, y + d, h), pt(x + w, y + d, 0), pt(x, y + d, 0)].join(' ');
-  const right = [pt(x + w, y, h), pt(x + w, y + d, h), pt(x + w, y + d, 0), pt(x + w, y, 0)].join(' ');
-  return `<g>
+  const t = z0 + h;
+  const top = [pt(x, y, t), pt(x + w, y, t), pt(x + w, y + d, t), pt(x, y + d, t)].join(' ');
+  const left = [pt(x, y + d, t), pt(x + w, y + d, t), pt(x + w, y + d, z0), pt(x, y + d, z0)].join(' ');
+  const right = [pt(x + w, y, t), pt(x + w, y + d, t), pt(x + w, y + d, z0), pt(x + w, y, z0)].join(' ');
+  const mast = z0 > 0
+    ? `<line x1="${pt(x + w, y + d, z0).split(',')[0]}" y1="${pt(x + w, y + d, z0).split(',')[1]}" x2="${pt(x + w, y + d, 0).split(',')[0]}" y2="${pt(x + w, y + d, 0).split(',')[1]}" class="sks" stroke-dasharray="2 3"/>`
+    : '';
+  return `<g>${mast}
 <polygon points="${left}" class="${edge}" fill="var(--paper-2)"/>
-<polygon points="${right}" class="${edge}" fill="url(#${p}-hx)"/>
+<polygon points="${right}" class="${edge}" fill="${sideFill ?? `url(#${p}-hx)`}"/>
 <polygon points="${top}" class="${edge} ${capCls}"/>
 </g>`;
 }

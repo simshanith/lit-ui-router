@@ -4,6 +4,7 @@
 export const DATE = '2026-08-16';
 export const PROJECT = 'ROUTING AT SIX ALTITUDES';
 export const CLIENT = 'lit-ui-router · simshanith';
+export const TOTAL = 7;
 
 export const CSS = `
 :root {
@@ -275,15 +276,15 @@ export function titleBlock(sheet) {
   <div><span class="fld">SCALE</span>${sheet.scale}</div>
   <div><span class="fld">FORM</span>${sheet.form}</div>
   <div><span class="fld">CLIENT</span>${CLIENT}</div>
-  <div><span class="fld">DATE / REV</span>${DATE} · A</div>
+  <div><span class="fld">DATE / REV</span>${DATE} · ${sheet.rev ?? 'A'}</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
-  <div><span class="fld">SHEET</span>${sheet.num} OF 6</div>
+  <div><span class="fld">SHEET</span>${sheet.num} OF ${TOTAL}</div>
 </div>`;
 }
 
 export function sheetSection(sheet, { headline = true } = {}) {
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="Sheet ${sheet.num}: ${sheet.title}">
-  <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">SHEET ${sheet.num} / 6</span></div>
+  <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">SHEET ${sheet.num} / ${TOTAL}</span></div>
   ${headline ? `<h2 class="sheet-title">${sheet.title}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
     <div class="figure-wrap">${sheet.svg}</div>
