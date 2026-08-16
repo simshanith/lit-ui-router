@@ -85,6 +85,11 @@ repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
 yamllint) are switched off there to avoid a second, weaker copy of CI; secret
 scanning is left on because nothing else covers it.
 
+Because the config is read from the PR branch, a PR can also disable its own
+review — including the `gitleaks` secret scan. Treat CodeRabbit as defence in
+depth, never as the secret-scanning floor: that belongs to GitHub's own secret
+scanning and push protection, which no PR can reach.
+
 Useful comment commands: `@coderabbitai review` for an incremental pass,
 `@coderabbitai full review` to re-review from scratch, `@coderabbitai pause` and
 `resume`, and `@coderabbitai configuration` to print the resolved settings.
