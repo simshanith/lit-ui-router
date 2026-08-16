@@ -1,7 +1,7 @@
 import { html, LitElement } from 'lit';
 import { customElement, state, property } from 'lit/decorators.js';
 import { compareStructural } from 'mobx';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 import { UIViewInjectedProps } from 'lit-ui-router';
 import { RouterReactionController } from 'lit-ui-router-mobx';
 
