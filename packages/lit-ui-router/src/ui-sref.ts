@@ -97,12 +97,16 @@ function isModifiedClick(event: MouseEvent): boolean {
 }
 
 /**
- * Whether the element declares that its href leaves the app: `target="_blank"`
- * or a `rel` token list containing `external`.
+ * Whether the element declares that its href leaves this browsing context: a
+ * `target` other than `_self`, or a `rel` token list containing `external`.
  * @internal
  */
 function opensOffApp(element: Element): boolean {
-  if (element.getAttribute('target') === '_blank') {
+  const target = element.getAttribute('target');
+  // browsing-context keywords are ASCII case-insensitive; a name we do not
+  // recognise is a frame, which is equally not ours. untrimmed on purpose —
+  // the browser does not trim either, so `" _blank"` really is a frame name
+  if (target && target.toLowerCase() !== '_self') {
     return true;
   }
   // rel is a token list: `rel="external noopener"` is still external
