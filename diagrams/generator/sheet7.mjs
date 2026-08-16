@@ -87,9 +87,11 @@ const bodies = all
       ? isoBlock(P, OX, OY, x + s + 8, y + Math.max(0, (s - sa) / 2), sa, sa, HT(sl), { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })
       : '';
     const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
+    // these four badges land on a roof edge at 14; lift them into clear air
+    const lift = [1, 11, 13, 19].includes(n) ? 20 : 14;
     return `${src}${annex}
-<circle cx="${bx.toFixed(1)}" cy="${(by - 14).toFixed(1)}" r="9" class="${name === 'lit-ui-router' ? 'ska fp' : 'sk fp'}"/>
-${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
+<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${name === 'lit-ui-router' ? 'ska fp' : 'sk fp'}"/>
+${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), 'lbls', 'middle')}`;
   })
   .join('\n');
 

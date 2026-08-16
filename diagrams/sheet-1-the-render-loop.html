@@ -1,4 +1,4 @@
-<title>THE RENDER LOOP — Sheet 1 of 9</title>
+<title>THE RENDER LOOP — Sheet 1 of 10</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Rev C keeps the city but breaks the metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.">
 <style>
@@ -234,11 +234,11 @@ a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <section class="sheet" id="sheet-1" aria-label="Sheet 1: THE RENDER LOOP">
-  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 1 / 9</span></div>
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 1 / 10</span></div>
   <h2 class="sheet-title">THE RENDER LOOP</h2>
   <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV C: the document drawn as a DOM layer stack</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1150 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+    <div class="figure-wrap"><svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 <defs>
   <marker id="s1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -352,9 +352,8 @@ a { color: var(--accent); }
 <text x="896" y="552" class="lblb" text-anchor="start" >&lt;ui-view&gt;</text>
 <text x="633" y="690" class="lblb" text-anchor="middle" >LIT RENDER</text>
 <text x="633" y="703" class="lblf" text-anchor="middle" >RoutedLitTemplate · html``</text>
-<rect x="22" y="119" width="146" height="25" class="fp"/>
-<text x="95" y="128" class="lblb" text-anchor="middle" >uiSrefActive</text>
-<text x="95" y="140" class="lblf" text-anchor="middle" >perch — toggles .active below</text>
+<text x="95" y="100" class="lblb" text-anchor="middle" >uiSrefActive</text>
+<text x="95" y="112" class="lblf" text-anchor="middle" >perch — toggles .active below</text>
 <text x="26" y="290" class="lblf" text-anchor="start" >uiSrefTarget</text>
 <text x="26" y="301" class="lblf" text-anchor="start" >bubbles up</text>
 <text x="334" y="322" class="lblf" text-anchor="start" >scenery — your content</text>
@@ -363,14 +362,14 @@ a { color: var(--accent); }
 <text x="170" y="552" class="lblf" text-anchor="middle" >its DOM rising in plates: body → shell → &lt;ui-view&gt; → &lt;a&gt;</text>
 
 <!-- WINDOW DETAIL inset — the flat window the plates explode out of -->
-<line x1="205" y1="578" x2="240" y2="548" class="skf"/>
-<rect x="60" y="580" width="204" height="80" class="sk fp"/>
-<rect x="60" y="580" width="204" height="17" class="sk fp2"/>
-<circle cx="71" cy="588.5" r="2.4" class="fis"/>
-<circle cx="80" cy="588.5" r="2.4" class="fis"/>
-<circle cx="89" cy="588.5" r="2.4" class="fis"/>
-<rect x="98" y="583" width="158" height="11" class="skf fp"/>
-<text x="104" y="591.5" class="lblf" text-anchor="start" >lit-ui-router.dev/people/32</text>
+<line x1="205" y1="574" x2="240" y2="560" class="skf"/>
+<rect x="60" y="576" width="220" height="86" class="sk fp"/>
+<rect x="60" y="576" width="220" height="22" class="sk fp2"/>
+<circle cx="71" cy="587" r="2.4" class="fis"/>
+<circle cx="80" cy="587" r="2.4" class="fis"/>
+<circle cx="89" cy="587" r="2.4" class="fis"/>
+<rect x="98" y="579" width="176" height="16" class="skf fp"/>
+<text x="104" y="590.5" class="lblf" text-anchor="start" >lit-ui-router.dev/people/32</text>
 <line x1="72" y1="612" x2="252" y2="612" class="skf"/>
 <line x1="72" y1="626" x2="196" y2="626" class="skf"/>
 <rect x="72" y="637" width="64" height="12" class="ska fnone"/>
@@ -382,35 +381,34 @@ a { color: var(--accent); }
 <text x="560" y="398" class="lbls" text-anchor="middle" >match → run</text>
 <text x="735" y="522" class="lbls" text-anchor="end" >viewconfigs activate</text>
 <text x="802" y="626" class="lbls" text-anchor="start" >state.component / template</text>
-<text x="508" y="578" class="lbls" text-anchor="middle" >directives commit</text>
+<text x="430" y="566" class="lbls" text-anchor="middle" >directives commit</text>
 
 <!-- the link + click note, off the stack with a leader to the link plate -->
-<rect x="24" y="393" width="180" height="82" class="fp"/>
-<text x="30" y="404" class="lbl" text-anchor="start" >&lt;a href=/people/32&gt;</text>
-<text x="30" y="417" class="lbla" text-anchor="start" >uiSref(…) element part</text>
-<text x="30" y="438" class="lbla" text-anchor="start" >click →</text>
-<text x="30" y="451" class="lbla" text-anchor="start" >stateService.go()</text>
-<text x="30" y="464" class="lbla" text-anchor="start" >→ pushState</text>
-<line x1="160" y1="391" x2="169" y2="292" class="skf"/>
+<text x="-140" y="404" class="lbl" text-anchor="start" >&lt;a href=/people/32&gt;</text>
+<text x="-140" y="417" class="lbla" text-anchor="start" >uiSref(…) element part</text>
+<text x="-140" y="438" class="lbla" text-anchor="start" >click →</text>
+<text x="-140" y="451" class="lbla" text-anchor="start" >stateService.go()</text>
+<text x="-140" y="464" class="lbla" text-anchor="start" >→ pushState</text>
+<line x1="-4" y1="396" x2="169" y2="292" class="skf"/>
 
 <!-- five doors -->
-<line x1="40" y1="720" x2="1110" y2="720" class="skf"/>
-<text x="40" y="738" class="lbls" text-anchor="start" >FIVE DOORS INTO THE SAME MACHINE</text>
-<rect x="330" y="726" width="144" height="30" rx="0" class="sk fp2"/>
-<text x="338" y="739" class="lbls" text-anchor="start" >.</text>
-<text x="338" y="751" class="lblf" text-anchor="start" >registers everything</text>
-<rect x="482" y="726" width="144" height="30" rx="0" class="ska fp"/>
-<text x="490" y="739" class="lbla" text-anchor="start" >./pure</text>
-<text x="490" y="751" class="lblf" text-anchor="start" >no side effects</text>
-<rect x="634" y="726" width="144" height="30" rx="0" class="sk fp2"/>
-<text x="642" y="739" class="lbls" text-anchor="start" >./register</text>
-<text x="642" y="751" class="lblf" text-anchor="start" >all elements</text>
-<rect x="786" y="726" width="144" height="30" rx="0" class="sk fp2"/>
-<text x="794" y="739" class="lbls" text-anchor="start" >./ui-router.register</text>
-<text x="794" y="751" class="lblf" text-anchor="start" >one element</text>
-<rect x="938" y="726" width="144" height="30" rx="0" class="sk fp2"/>
-<text x="946" y="739" class="lbls" text-anchor="start" >./ui-view.register</text>
-<text x="946" y="751" class="lblf" text-anchor="start" >one element</text>
+<line x1="-140" y1="720" x2="1140" y2="720" class="skf"/>
+<text x="-140" y="738" class="lbls" text-anchor="start" >FIVE DOORS INTO THE SAME MACHINE</text>
+<rect x="190" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="198" y="739" class="lbls" text-anchor="start" >.</text>
+<text x="198" y="751" class="lblf" text-anchor="start" >registers everything</text>
+<rect x="342" y="726" width="144" height="30" rx="0" class="ska fp"/>
+<text x="350" y="739" class="lbla" text-anchor="start" >./pure</text>
+<text x="350" y="751" class="lblf" text-anchor="start" >no side effects</text>
+<rect x="494" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="502" y="739" class="lbls" text-anchor="start" >./register</text>
+<text x="502" y="751" class="lblf" text-anchor="start" >all elements</text>
+<rect x="646" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="654" y="739" class="lbls" text-anchor="start" >./ui-router.register</text>
+<text x="654" y="751" class="lblf" text-anchor="start" >one element</text>
+<rect x="798" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="806" y="739" class="lbls" text-anchor="start" >./ui-view.register</text>
+<text x="806" y="751" class="lblf" text-anchor="start" >one element</text>
 </svg></div>
     <figcaption>Rev C keeps the city but breaks the metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.</figcaption>
   </figure>
@@ -439,7 +437,7 @@ a { color: var(--accent); }
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
   <div><span class="fld">DATE / REV</span>2026-08-16 · C</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
-  <div><span class="fld">SHEET</span>1 OF 9</div>
+  <div><span class="fld">SHEET</span>1 OF 10</div>
 </div>
     </div>
   </div>

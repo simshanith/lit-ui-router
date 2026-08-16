@@ -1,4 +1,4 @@
-<title>THE DESIGN SPACE — Sheet 5 of 9</title>
+<title>THE DESIGN SPACE — Sheet 5 of 10</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.">
 <style>
@@ -234,11 +234,11 @@ a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <section class="sheet" id="sheet-5" aria-label="Sheet 5: THE DESIGN SPACE">
-  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 5 / 9</span></div>
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 5 / 10</span></div>
   <h2 class="sheet-title">THE DESIGN SPACE</h2>
   <p class="sheet-sub">ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1000 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
+    <div class="figure-wrap"><svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
 <defs>
   <marker id="s5-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -267,53 +267,53 @@ a { color: var(--accent); }
 </defs>
 
 <!-- frame + column bands -->
-<rect x="130" y="70" width="790" height="440" rx="0" class="sk fnone"/>
-<line x1="393.3333333333333" y1="70" x2="393.3333333333333" y2="510" class="skf" stroke-dasharray="4 4"/>
-<line x1="656.6666666666666" y1="70" x2="656.6666666666666" y2="510" class="skf" stroke-dasharray="4 4"/>
-<text x="261.66666666666663" y="58" class="lbls" text-anchor="middle" >AT BUILD TIME</text>
-<text x="525" y="58" class="lbls" text-anchor="middle" >AT SERVER RUNTIME</text>
-<text x="788.3333333333334" y="58" class="lbls" text-anchor="middle" >AT CLIENT RUNTIME</text>
-<text x="525" y="36" class="lblb" text-anchor="middle" >WHERE ROUTES ARE MATCHED →</text>
+<rect x="130" y="70" width="870" height="440" rx="0" class="sk fnone"/>
+<line x1="420" y1="70" x2="420" y2="510" class="skf" stroke-dasharray="4 4"/>
+<line x1="710" y1="70" x2="710" y2="510" class="skf" stroke-dasharray="4 4"/>
+<text x="275" y="58" class="lbls" text-anchor="middle" >AT BUILD TIME</text>
+<text x="565" y="58" class="lbls" text-anchor="middle" >AT SERVER RUNTIME</text>
+<text x="855" y="58" class="lbls" text-anchor="middle" >AT CLIENT RUNTIME</text>
+<text x="565" y="36" class="lblb" text-anchor="middle" >WHERE ROUTES ARE MATCHED →</text>
 
 <!-- ownership bands -->
 
 <text x="118" y="147.33333333333331" class="lbls" text-anchor="end" >LIBRARY</text>
-<line x1="130" y1="216.66666666666666" x2="920" y2="216.66666666666666" class="skf"/>
+<line x1="130" y1="216.66666666666666" x2="1000" y2="216.66666666666666" class="skf"/>
 <text x="118" y="294" class="lbls" text-anchor="end" >FRAMEWORK</text>
-<line x1="130" y1="363.3333333333333" x2="920" y2="363.3333333333333" class="skf"/>
+<line x1="130" y1="363.3333333333333" x2="1000" y2="363.3333333333333" class="skf"/>
 <text x="118" y="440.66666666666663" class="lbls" text-anchor="end" >PLATFORM</text>
 <text x="22" y="290" class="lblb" text-anchor="middle" transform="rotate(-90 22 290)">WHO OWNS NAVIGATION ↑</text>
 
-<g><title>SvelteKit — filesystem routes, compiled</title><circle cx="209" cy="264" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="223" y="263" class="lblb" text-anchor="start" >SvelteKit</text>
-<text x="223" y="276" class="lblf" text-anchor="start" >filesystem routes, compiled</text></g>
-<g><title>Next App Router — fs routes · server-first</title><circle cx="288" cy="316" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="302" y="315" class="lblb" text-anchor="start" >Next App Router</text>
-<text x="302" y="328" class="lblf" text-anchor="start" >fs routes · server-first</text></g>
-<g><title>React Router v7 — framework mode — Remix folded in</title><circle cx="493.40000000000003" cy="290" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="507.40000000000003" y="289" class="lblb" text-anchor="start" >React Router v7</text>
-<text x="507.40000000000003" y="302" class="lblf" text-anchor="start" >framework mode — Remix folded in</text></g>
-<g><title>Angular Router — config tree in the injector</title><circle cx="762" cy="264" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="748" y="263" class="lblb" text-anchor="end" >Angular Router</text>
-<text x="748" y="276" class="lblf" text-anchor="end" >config tree in the injector</text></g>
-<g><title>Vue Router — official, but installable</title><circle cx="825.2" cy="320" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="811.2" y="319" class="lblb" text-anchor="end" >Vue Router</text>
-<text x="811.2" y="332" class="lblf" text-anchor="end" >official, but installable</text></g>
-<g><title>TanStack Router — typed at build, matched in the client</title><circle cx="651.4" cy="106" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="665.4" y="105" class="lblb" text-anchor="start" >TanStack Router</text>
-<text x="665.4" y="118" class="lblf" text-anchor="start" >typed at build, matched in the client</text></g>
-<g><title>wouter — minimal hook</title><circle cx="856.8000000000001" cy="144" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="842.8000000000001" y="143" class="lblb" text-anchor="end" >wouter</text>
-<text x="842.8000000000001" y="156" class="lblf" text-anchor="end" >minimal hook</text></g>
-<g><title>Hono / Express — server-only: match, no navigation</title><circle cx="477.6" cy="162" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="491.6" y="161" class="lblb" text-anchor="start" >Hono / Express</text>
-<text x="491.6" y="174" class="lblf" text-anchor="start" >server-only: match, no navigation</text></g>
-<g><title>ui-router / lit-ui-router — named state tree — URL is a projection</title><rect x="739.2" y="189" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="733.2" y="183" width="26" height="26" rx="4" class="fhalo"/>
-<text x="732.2" y="195" class="lbla" text-anchor="end" >ui-router / lit-ui-router</text>
-<text x="732.2" y="208" class="lblf" text-anchor="end" >named state tree — URL is a projection</text></g>
-<g><title>Navigation API — the primitive the client column builds on</title><circle cx="793.6" cy="440" r="6" class="sk fp" stroke-width="1.6"/>
-<text x="779.6" y="439" class="lblb" text-anchor="end" >Navigation API</text>
-<text x="779.6" y="452" class="lblf" text-anchor="end" >the primitive the client column builds on</text></g>
+<g><title>SvelteKit — filesystem routes, compiled</title><circle cx="217" cy="264" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="231" y="263" class="lblb" text-anchor="start" >SvelteKit</text>
+<text x="231" y="276" class="lblf" text-anchor="start" >filesystem routes, compiled</text></g>
+<g><title>Next App Router — fs routes · server-first</title><circle cx="251.8" cy="316" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="265.8" y="315" class="lblb" text-anchor="start" >Next App Router</text>
+<text x="265.8" y="328" class="lblf" text-anchor="start" >fs routes · server-first</text></g>
+<g><title>React Router v7 — framework mode — Remix folded in</title><circle cx="469.3" cy="290" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="483.3" y="289" class="lblb" text-anchor="start" >React Router v7</text>
+<text x="483.3" y="302" class="lblf" text-anchor="start" >framework mode — Remix folded in</text></g>
+<g><title>Angular Router — config tree in the injector</title><circle cx="756.4" cy="264" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="770.4" y="263" class="lblb" text-anchor="start" >Angular Router</text>
+<text x="770.4" y="276" class="lblf" text-anchor="start" >config tree in the injector</text></g>
+<g><title>Vue Router — official, but installable</title><circle cx="895.6" cy="320" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="881.6" y="319" class="lblb" text-anchor="end" >Vue Router</text>
+<text x="881.6" y="332" class="lblf" text-anchor="end" >official, but installable</text></g>
+<g><title>TanStack Router — typed at build, matched in the client</title><circle cx="739" cy="106" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="753" y="105" class="lblb" text-anchor="start" >TanStack Router</text>
+<text x="753" y="118" class="lblf" text-anchor="start" >typed at build, matched in the client</text></g>
+<g><title>wouter — minimal hook</title><circle cx="930.4000000000001" cy="144" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="916.4000000000001" y="143" class="lblb" text-anchor="end" >wouter</text>
+<text x="916.4000000000001" y="156" class="lblf" text-anchor="end" >minimal hook</text></g>
+<g><title>Hono / Express — server-only: match, no navigation</title><circle cx="460.6" cy="180" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="474.6" y="179" class="lblb" text-anchor="start" >Hono / Express</text>
+<text x="474.6" y="192" class="lblf" text-anchor="start" >server-only: match, no navigation</text></g>
+<g><title>ui-router / lit-ui-router — named state tree — URL is a projection</title><rect x="740.6999999999999" y="189" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="734.6999999999999" y="183" width="26" height="26" rx="4" class="fhalo"/>
+<text x="767.6999999999999" y="195" class="lbla" text-anchor="start" >ui-router / lit-ui-router</text>
+<text x="767.6999999999999" y="208" class="lblf" text-anchor="start" >named state tree — URL is a projection</text></g>
+<g><title>Navigation API — the primitive the client column builds on</title><circle cx="730.3" cy="440" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="744.3" y="439" class="lblb" text-anchor="start" >Navigation API</text>
+<text x="744.3" y="452" class="lblf" text-anchor="start" >the primitive the client column builds on</text></g>
 
 <!-- the thesis callout -->
 <rect x="146" y="84" width="330" height="86" class="skr fnone" stroke-dasharray="6 4"/>
@@ -353,7 +353,7 @@ a { color: var(--accent); }
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
   <div><span class="fld">DATE / REV</span>2026-08-16 · A</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
-  <div><span class="fld">SHEET</span>5 OF 9</div>
+  <div><span class="fld">SHEET</span>5 OF 10</div>
 </div>
     </div>
   </div>

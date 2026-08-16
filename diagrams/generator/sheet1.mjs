@@ -80,7 +80,7 @@ const bubbleArc = arrow(P, `M${bx.toFixed(1)},${(by - 3).toFixed(1)} C 146,240 1
 // Skybridge tap into a hall bay
 const tap = arrow(P, `M762,320 L722,388`, 'as', 'sks', '4 3');
 
-const svg = `<svg viewBox="0 0 1150 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+const svg = `<svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 ${defs(P)}
 
 ${legs.join('\n')}
@@ -104,9 +104,8 @@ ${txt(806, 424, `<ui-view name='detail'>`, 'lbls', 'start')}
 ${txt(896, 552, '<ui-view>', 'lblb', 'start')}
 ${txt(633, 690, 'LIT RENDER', 'lblb', 'middle')}
 ${txt(633, 703, 'RoutedLitTemplate · html\`\`', 'lblf', 'middle')}
-<rect x="22" y="119" width="146" height="25" class="fp"/>
-${txt(95, 128, 'uiSrefActive', 'lblb', 'middle')}
-${txt(95, 140, 'perch — toggles .active below', 'lblf', 'middle')}
+${txt(95, 100, 'uiSrefActive', 'lblb', 'middle')}
+${txt(95, 112, 'perch — toggles .active below', 'lblf', 'middle')}
 ${txt(26, 290, 'uiSrefTarget', 'lblf', 'start')}
 ${txt(26, 301, 'bubbles up', 'lblf', 'start')}
 ${txt(334, 322, 'scenery — your content', 'lblf', 'start')}
@@ -115,14 +114,14 @@ ${txt(170, 538, 'THE DOCUMENT — a browser window at /people', 'lbls', 'middle'
 ${txt(170, 552, 'its DOM rising in plates: body → shell → <ui-view> → <a>', 'lblf', 'middle')}
 
 <!-- WINDOW DETAIL inset — the flat window the plates explode out of -->
-<line x1="205" y1="578" x2="240" y2="548" class="skf"/>
-<rect x="60" y="580" width="204" height="80" class="sk fp"/>
-<rect x="60" y="580" width="204" height="17" class="sk fp2"/>
-<circle cx="71" cy="588.5" r="2.4" class="fis"/>
-<circle cx="80" cy="588.5" r="2.4" class="fis"/>
-<circle cx="89" cy="588.5" r="2.4" class="fis"/>
-<rect x="98" y="583" width="158" height="11" class="skf fp"/>
-${txt(104, 591.5, 'lit-ui-router.dev/people/32', 'lblf', 'start')}
+<line x1="205" y1="574" x2="240" y2="560" class="skf"/>
+<rect x="60" y="576" width="220" height="86" class="sk fp"/>
+<rect x="60" y="576" width="220" height="22" class="sk fp2"/>
+<circle cx="71" cy="587" r="2.4" class="fis"/>
+<circle cx="80" cy="587" r="2.4" class="fis"/>
+<circle cx="89" cy="587" r="2.4" class="fis"/>
+<rect x="98" y="579" width="176" height="16" class="skf fp"/>
+${txt(104, 590.5, 'lit-ui-router.dev/people/32', 'lblf', 'start')}
 <line x1="72" y1="612" x2="252" y2="612" class="skf"/>
 <line x1="72" y1="626" x2="196" y2="626" class="skf"/>
 <rect x="72" y="637" width="64" height="12" class="ska fnone"/>
@@ -134,20 +133,19 @@ ${txt(392, 300, 'popstate / navigate', 'lbls', 'middle')}
 ${txt(560, 398, 'match → run', 'lbls', 'middle')}
 ${txt(735, 522, 'viewconfigs activate', 'lbls', 'end')}
 ${txt(802, 626, 'state.component / template', 'lbls', 'start')}
-${txt(508, 578, 'directives commit', 'lbls', 'middle')}
+${txt(430, 566, 'directives commit', 'lbls', 'middle')}
 
 <!-- the link + click note, off the stack with a leader to the link plate -->
-<rect x="24" y="393" width="180" height="82" class="fp"/>
-${txt(30, 404, '<a href=/people/32>', 'lbl', 'start')}
-${txt(30, 417, 'uiSref(…) element part', 'lbla', 'start')}
-${txt(30, 438, 'click →', 'lbla', 'start')}
-${txt(30, 451, 'stateService.go()', 'lbla', 'start')}
-${txt(30, 464, '→ pushState', 'lbla', 'start')}
-<line x1="160" y1="391" x2="169" y2="292" class="skf"/>
+${txt(-140, 404, '<a href=/people/32>', 'lbl', 'start')}
+${txt(-140, 417, 'uiSref(…) element part', 'lbla', 'start')}
+${txt(-140, 438, 'click →', 'lbla', 'start')}
+${txt(-140, 451, 'stateService.go()', 'lbla', 'start')}
+${txt(-140, 464, '→ pushState', 'lbla', 'start')}
+<line x1="-4" y1="396" x2="169" y2="292" class="skf"/>
 
 <!-- five doors -->
-<line x1="40" y1="720" x2="1110" y2="720" class="skf"/>
-${txt(40, 738, 'FIVE DOORS INTO THE SAME MACHINE', 'lbls')}
+<line x1="-140" y1="720" x2="1140" y2="720" class="skf"/>
+${txt(-140, 738, 'FIVE DOORS INTO THE SAME MACHINE', 'lbls')}
 ${[
   ['.', 'registers everything', true],
   ['./pure', 'no side effects', false],
@@ -155,7 +153,7 @@ ${[
   ['./ui-router.register', 'one element', true],
   ['./ui-view.register', 'one element', true],
 ].map(([name, sub, se], i) => {
-  const x = 330 + i * 152;
+  const x = 190 + i * 152;
   return `${box(x, 726, 144, 30, se ? 'sk fp2' : 'ska fp')}
 ${txt(x + 8, 739, name, se ? 'lbls' : 'lbla')}
 ${txt(x + 8, 751, sub, 'lblf')}`;

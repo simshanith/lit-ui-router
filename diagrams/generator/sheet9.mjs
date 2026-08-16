@@ -112,8 +112,9 @@ ${txt(150, 60, 'A Tale of Two Cities alone: 294 KB —', 'lbla')}
 ${txt(150, 72, 'the tallest tenant on the skyline is Dickens', 'lbla')}
 ${txt(890, 96, '867 KB of Inter — the lettering', 'lbla')}
 ${txt(890, 108, 'outweighs every script on the site', 'lbla')}
-${txt(980, 640, 'all three apps: 249 KB —', 'lbla', 'end')}
-${txt(980, 652, '6.3% of their own docs site', 'lbla', 'end')}
+${txt(1120, 715, 'all three apps: 249 KB —', 'lbla', 'end')}
+${txt(1120, 727, '6.3% of their own docs site', 'lbla', 'end')}
+<line x1="937" y1="711" x2="878" y2="689" class="skf"/>
 ${txt(110, 570, 'rev A drew 138 KB of orphans here —', 'lbla')}
 ${txt(110, 582, 'a clean build ships one file, 1.7 KB', 'lbla')}
 
@@ -131,7 +132,7 @@ export const sheet9 = {
   svg,
   caption: 'The production docs deploy surveyed on the wire: 566 files, 3.8 MB gzipped, drawn as thirteen districts — and the tallest towers are sample novels and font files, with the routed apps themselves standing as small accent buildings in their own city.',
   notes: `
-<p><strong>Method:</strong> a fresh <code>docs/dist</code> build measured file by file; height is gzip level 9 of each file — the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk (every HTML shell and hashed chunk, following static asset references) sorts the assets into districts. This closes the survey trilogy: sheet 7 measured what we wrote, sheet 8 what npm delivered, this sheet what one deploy actually ships — 566 files, 14.5 MB on disk, 3.8 MB on the wire. REV B is a clean-checkout remeasure after the lodash-es swap (PR #604) merged.</p>
+<p><strong>Method:</strong> a fresh <code>docs/dist</code> build measured file by file; height is gzip level 9 of each file — the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk (every HTML shell and hashed chunk, following static asset references) sorts the assets into districts. This sheet extends the survey a step further: sheet 7 measured what we wrote, sheet 8 what npm delivered, this sheet what one deploy actually ships — 566 files, 14.5 MB on disk, 3.8 MB on the wire. Sheet 10 goes one level in again and opens the bundle itself. REV B is a clean-checkout remeasure after the lodash-es swap (PR #604) merged.</p>
 <p><strong>The tallest building is Dickens.</strong> The demo corpora — novels, Beowulf, an RFC, pre-gzipped <code>.txt.gz</code> so compression can't help further — are the city's tallest district at 899 KB, with Inter's sixteen <code>woff2</code> faces one notch behind at 867 KB. Code doesn't crack the top two: on the wire, this documentation site is mostly sample text and typography.</p>
 <p><strong>The product is a guest in its own city.</strong> The three routed sample apps — the thing the site exists to demonstrate — total 249 KB gzipped, 6.3% of the deploy. The lodash story closed between printings: rev A drew a 25 KB lodash chunk inside the vanilla app, sheet 8's giant tree-shaken to what four imports cost the wire; the swap to lodash-es collapsed it to a 4 KB <code>isEqual</code> chunk — −84% — and the whole district dropped 15%.</p>
 <p><strong>The ghost district was scaffolding dust.</strong> Rev A reported twelve orphan files, 138 KB of dead weight in every deploy — but that survey read an accumulated local <code>dist/</code>, where parallel app builds pile up stale hashes. A clean-checkout rebuild, the shape the CDN actually deploys, ships exactly one unreferenced file: a 1.7 KB custom-elements manifest. The tiny hatched slab stays as the correction, and as a caution about the instrument: survey the dist you actually ship.</p>

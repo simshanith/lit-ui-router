@@ -99,9 +99,13 @@ const bodies = all
       ? isoBlock(P, OX, OY, x + s + 8, y + Math.max(0, (s - sa) / 2), sa, sa, HT(dl), { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })
       : '';
     const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
+    // badges that otherwise land on a roof edge or the district outline
+    const lift = [3, 6, 25, 31, 33, 34, 35, 36].includes(n) ? 20 : 14;
+    // 3 stands against a later neighbour's wall; slide it clear
+    const shift = n === 3 ? -16 : 0;
     return `${src}${annex}
-<circle cx="${bx.toFixed(1)}" cy="${(by - 14).toFixed(1)}" r="9" class="${accent || consumer ? 'ska fp' : 'sk fp'}"/>
-${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
+<circle cx="${(bx + shift).toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${accent || consumer ? 'ska fp' : 'sk fp'}"/>
+${txt((bx + shift).toFixed(1), (by - lift + 3.4).toFixed(1), String(n), 'lbls', 'middle')}`;
   })
   .join('\n');
 
@@ -146,11 +150,12 @@ ${districtOutline(545, 520, 690, 640, 'the consumer', 700, 762)}
 
 ${bodies}
 
-${txt(cx2 + 14, cy2 - 6, 'the entire application: 11 files, 597 lines', 'lbla')}
-${txt(40, 150, 'delivered for four imports:', 'lbla')}
-${txt(40, 162, 'isEqual · cloneDeep · get · set', 'lbla')}
-${txt(40, 176, 'rev A: 45,205 lines · rev B: 22,193', 'lbls')}
-<line x1="262" y1="158" x2="${(lx2 - 6).toFixed(1)}" y2="${ly2.toFixed(1)}" class="skf" stroke-dasharray="3 3"/>
+${txt(cx2 + 140, cy2 + 80, 'the entire application: 11 files, 597 lines', 'lbla')}
+<line x1="${(cx2 + 134).toFixed(1)}" y1="${(cy2 + 76).toFixed(1)}" x2="${cx2.toFixed(1)}" y2="${cy2.toFixed(1)}" class="skf"/>
+${txt(40, 200, 'delivered for four imports:', 'lbla')}
+${txt(40, 212, 'isEqual · cloneDeep · get · set', 'lbla')}
+${txt(40, 226, 'rev A: 45,205 lines · rev B: 22,193', 'lbls')}
+<line x1="272" y1="230" x2="${(lx2 - 6).toFixed(1)}" y2="${ly2.toFixed(1)}" class="skf" stroke-dasharray="3 3"/>
 
 ${txt(1120, 26, 'SCALE — footprint area ∝ delivered files · 1 px of height ≈ 250 lines (sheet 7: ≈ 34)', 'lbls', 'end')}
 

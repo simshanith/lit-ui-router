@@ -4,39 +4,41 @@ import { txt, lines, box, keyRow } from './helpers.mjs';
 const P = 's5';
 
 // Plot area
-const PX = 130, PW = 790, PY = 70, PH = 440;
+const PX = 130, PW = 870, PY = 70, PH = 440;
 const bandY = { library: PY + 70, framework: PY + 220, platform: PY + 370 };
 const cx = (f) => PX + f * PW;
 
-// [xFrac, band, dy, name, note, shape] — square = state-first, circle = URL-first
+// [xFrac, band, dy, name, note, shape, side?] — square = state-first, circle = URL-first.
+// side pins the label to one flank when the default would straddle a column line.
 const points = [
   [0.10, 'framework', -26, 'SvelteKit', 'filesystem routes, compiled', 'c'],
-  [0.20, 'framework', 26, 'Next App Router', 'fs routes · server-first', 'c'],
-  [0.46, 'framework', 0, 'React Router v7', 'framework mode — Remix folded in', 'c'],
-  [0.80, 'framework', -26, 'Angular Router', 'config tree in the injector', 'c'],
+  [0.14, 'framework', 26, 'Next App Router', 'fs routes · server-first', 'c'],
+  [0.39, 'framework', 0, 'React Router v7', 'framework mode — Remix folded in', 'c'],
+  [0.72, 'framework', -26, 'Angular Router', 'config tree in the injector', 'c', 'r'],
   [0.88, 'framework', 30, 'Vue Router', 'official, but installable', 'c'],
-  [0.66, 'library', -34, 'TanStack Router', 'typed at build, matched in the client', 'c'],
+  [0.70, 'library', -34, 'TanStack Router', 'typed at build, matched in the client', 'c', 'r'],
   [0.92, 'library', 4, 'wouter', 'minimal hook', 'c'],
-  [0.44, 'library', 22, 'Hono / Express', 'server-only: match, no navigation', 'c'],
-  [0.78, 'library', 56, 'ui-router / lit-ui-router', 'named state tree — URL is a projection', 's'],
-  [0.84, 'platform', 0, 'Navigation API', 'the primitive the client column builds on', 'c'],
+  [0.38, 'library', 40, 'Hono / Express', 'server-only: match, no navigation', 'c'],
+  [0.71, 'library', 56, 'ui-router / lit-ui-router', 'named state tree — URL is a projection', 's', 'r'],
+  [0.69, 'platform', 0, 'Navigation API', 'the primitive the client column builds on', 'c', 'r'],
 ];
 
-const marks = points.map(([xf, band, dy, name, note, shape]) => {
+const marks = points.map(([xf, band, dy, name, note, shape, side]) => {
   const x = cx(xf), y = bandY[band] + dy;
   const isUs = shape === 's';
   const mark = isUs
     ? `<rect x="${x - 7}" y="${y - 7}" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="${x - 13}" y="${y - 13}" width="26" height="26" rx="4" class="fhalo"/>`
     : `<circle cx="${x}" cy="${y}" r="6" class="sk fp" stroke-width="1.6"/>`;
-  const right = xf < 0.70;
-  const lx = right ? x + 14 : x - 14;
+  const right = side ? side === 'r' : xf < 0.70;
+  const gap = isUs ? 20 : 14;
+  const lx = right ? x + gap : x - gap;
   const anchor = right ? 'start' : 'end';
   return `<g><title>${name} — ${note}</title>${mark}
 ${txt(lx, y - 1, name, isUs ? 'lbla' : 'lblb', anchor)}
 ${txt(lx, y + 12, note, 'lblf', anchor)}</g>`;
 }).join('\n');
 
-const svg = `<svg viewBox="0 0 1000 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
+const svg = `<svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
 ${defs(P)}
 
 <!-- frame + column bands -->

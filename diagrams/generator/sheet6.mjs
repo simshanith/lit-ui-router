@@ -39,29 +39,29 @@ const rows = strata.map((s, i) => {
   const mid = y + CH / 2;
   return `<rect x="${CX}" y="${y}" width="${CW}" height="${CH}" class="${s.us ? 'ska' : 'sk'} fnone" ${s.us ? 'stroke-width="2"' : ''}/>
 <rect x="${CX}" y="${y}" width="${CW}" height="${CH}" fill="${s.fill}" opacity="${s.us ? 0.9 : 0.5}"/>
-${txt(CX + CW / 2, mid - 4, s.name, s.us ? 'lbla' : 'lblb', 'middle')}
-${txt(CX + CW / 2, mid + 12, s.ex, 'lblf', 'middle')}
+${txt(CX - 14, mid - 4, s.name, s.us ? 'lbla' : 'lblb', 'end')}
+${txt(CX - 14, mid + 12, s.ex, 'lblf', 'end')}
 ${txt(300, mid - 2, s.addr, 'lbl')}
 ${txt(510, mid - 2, s.match, 'lbl')}
 ${lines(700, mid - 8, s.trans.length > 34 ? [s.trans.slice(0, s.trans.lastIndexOf(' ', 34)), s.trans.slice(s.trans.lastIndexOf(' ', 34) + 1)] : [s.trans], 'lbl', 'start', 14)}
 ${i < strata.length - 1 ? `<line x1="260" y1="${y + CH}" x2="960" y2="${y + CH}" class="skf"/>` : ''}`;
 }).join('\n');
 
-const svg = `<svg viewBox="0 0 1000 660" role="img" aria-label="Routing in general drawn as a geological column of five strata, from IP routing at the bedrock up through HTTP servers, edge networks, and client-side routers to application state routing at the surface. Three columns annotate each stratum with its address space, matching function, and transition semantics — the invariant triple every routing plane shares.">
+const svg = `<svg viewBox="-120 0 1120 660" role="img" aria-label="Routing in general drawn as a geological column of five strata, from IP routing at the bedrock up through HTTP servers, edge networks, and client-side routers to application state routing at the surface. Three columns annotate each stratum with its address space, matching function, and transition semantics — the invariant triple every routing plane shares.">
 ${defs(P)}
 
 <!-- column headers -->
 ${txt(300, 60, 'ADDRESS SPACE', 'lbls')}
 ${txt(510, 60, 'MATCHING FUNCTION', 'lbls')}
 ${txt(700, 60, 'TRANSITION SEMANTICS', 'lbls')}
-${txt(CX, 60, 'STRATUM', 'lbls')}
-<line x1="${CX}" y1="68" x2="960" y2="68" class="sk"/>
+${txt(CX - 14, 60, 'STRATUM', 'lbls', 'end')}
+<line x1="-110" y1="68" x2="960" y2="68" class="sk"/>
 
 ${rows}
 
 <!-- surface + bedrock captions -->
-${txt(CX, CY - 10, 'surface — sheets 1–3 of this set live here', 'lbla')}
-${txt(CX, CY + 5 * CH + 18, 'bedrock', 'lblf')}
+${txt(-110, CY - 10, 'surface — sheets 1–3 of this set live here', 'lbla')}
+${txt(-110, CY + 5 * CH + 18, 'bedrock', 'lblf')}
 
 <!-- ascent annotation -->
 <path d="M962,${CY + 5 * CH - 12} V${CY + 12}" class="ska" marker-end="url(#${P}-aa)"/>

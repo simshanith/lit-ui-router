@@ -62,9 +62,11 @@ const bodies = blocks
     const body = isoBlock(P, OX, OY, x, y, w, d, h, { capCls: cap ?? 'fp' });
     const [bx, by] = isoPt(OX, OY, x + w / 2, y, h);
     const ballCls = cap === 'fr' ? 'skr fp' : cap === 'fa' ? 'ska fp' : 'sk fp';
+    // 13 sits where a later-painted neighbour's roof would clip it
+    const lift = n === 13 ? 26 : 16;
     return `${body}
-<circle cx="${bx.toFixed(1)}" cy="${(by - 16).toFixed(1)}" r="9.5" class="${ballCls}"/>
-${txt(bx.toFixed(1), (by - 12.4).toFixed(1), String(n), 'lbl', 'middle')}`;
+<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9.5" class="${ballCls}"/>
+${txt(bx.toFixed(1), (by - lift + 3.6).toFixed(1), String(n), 'lbl', 'middle')}`;
   })
   .join('\n');
 
@@ -75,9 +77,9 @@ const feedback = `${arrow(P, `M${nx.toFixed(1)},${(ny - 8).toFixed(1)} C 820,210
 ${txt(470, 148, 'published-diff pulls the LIVE tarball back — the loop closes', 'lbla', 'middle')}`;
 
 const schedule = `<g>
-<rect x="878" y="58" width="268" height="392" class="sk fp"/>
+<rect x="878" y="58" width="330" height="392" class="sk fp"/>
 ${txt(892, 78, 'STRUCTURE SCHEDULE', 'lbls')}
-<line x1="878" y1="88" x2="1146" y2="88" class="skf"/>
+<line x1="878" y1="88" x2="1208" y2="88" class="skf"/>
 ${blocks.map(([n, , , , , , cap, sched], i) => {
   const y = 106 + i * 19;
   const numCls = cap === 'fr' ? 'lblr' : cap === 'fa' ? 'lbla' : 'lblb';
@@ -86,7 +88,7 @@ ${txt(914, y, sched, 'lbls')}`;
 }).join('\n')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1160 720" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site: a build conveyor running from source through a single pack step to the npm registry, an instrument yard of numbered measurement towers whose heights encode gate severity, and a proving ground of apps and docs. A structure schedule names all eighteen numbered structures. The tallest, red-capped tower is published-diff, which halts publishing and pulls the live tarball back from npm, closing the loop.">
+const svg = `<svg viewBox="0 0 1220 720" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site: a build conveyor running from source through a single pack step to the npm registry, an instrument yard of numbered measurement towers whose heights encode gate severity, and a proving ground of apps and docs. A structure schedule names all eighteen numbered structures. The tallest, red-capped tower is published-diff, which halts publishing and pulls the live tarball back from npm, closing the loop.">
 ${defs(P)}
 
 <rect x="40" y="26" width="560" height="42" class="skf fnone"/>
@@ -98,7 +100,7 @@ ${districtPath(15, 8, 600, 130)}
 ${districtPath(15, 200, 460, 400)}
 ${districtPath(475, 230, 615, 395)}
 ${txt(150, 160, 'packages/ — the conveyor', 'lblf')}
-${txt(116, 522, 'tools/ — the instrument yard', 'lblf')}
+${txt(30, 645, 'tools/ — the instrument yard', 'lblf')}
 ${txt(560, 700, 'apps/ + docs/ — proving ground & shopfront', 'lblf', 'middle')}
 
 <!-- registry boundary -->
@@ -106,7 +108,7 @@ ${(() => {
   const [x1, y1] = isoPt(OX, OY, 610, 0);
   const [x2, y2] = isoPt(OX, OY, 610, 120);
   return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="sks" stroke-dasharray="9 5"/>
-${txt(x2 - 24, y2 + 36, 'the registry boundary — beyond here, releases are immutable', 'lblf', 'middle')}`;
+${txt(x2 + 40, y2 + 110, 'the registry boundary — beyond here, releases are immutable', 'lblf', 'middle')}`;
 })()}
 
 ${roads}

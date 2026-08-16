@@ -28,7 +28,7 @@ function rib(x, yBox, up, [_, name, ver, date, status]) {
   const nameCls = status === 'dormant' ? 'lbls' : status === 'this' ? 'lbla' : 'lblb';
   const stem = up
     ? `<line x1="${x}" y1="${yBox + 62}" x2="${x}" y2="300" class="${status === 'this' ? 'ska' : status === 'dormant' ? 'skf' : 'sk'}" ${status === 'dormant' ? 'stroke-dasharray="5 4"' : ''}/>`
-    : `<line x1="${x}" y1="336" x2="${x}" y2="${yBox}" class="skf" stroke-dasharray="5 4"/>`;
+    : `<line x1="${x}" y1="372" x2="${x}" y2="${yBox}" class="skf" stroke-dasharray="5 4"/>`;
   return `${stem}
 ${status === 'this' ? `<rect x="${x - 96}" y="${yBox - 8}" width="192" height="78" rx="8" class="fhalo"/>` : ''}
 <rect x="${x - 88}" y="${yBox}" width="176" height="62" class="${boxCls}" ${dash}/>
@@ -42,11 +42,11 @@ ${defs(P)}
 
 <!-- bands -->
 ${txt(52, 96, 'ADAPTERS — one per renderer', 'lbls')}
-${txt(52, 420, 'PLUGINS & INSTRUMENTS', 'lbls')}
+${txt(52, 362, 'PLUGINS & INSTRUMENTS', 'lbls')}
 
 <!-- spine -->
 <rect x="105" y="300" width="790" height="36" class="sk2 fp2"/>
-<rect x="105" y="300" width="790" height="36" fill="url(#${P}-hx)" opacity="0.5"/>
+<rect x="105" y="300" width="790" height="36" fill="url(#${P}-hx)" opacity="0.25"/>
 ${txt(500, 322, '@uirouter/core 6.1.2 — the framework-agnostic state machine', 'lblb', 'middle')}
 ${txt(500, 352, 'states · registry · transitions · url rules — every limb shares this one spine', 'lblf', 'middle')}
 

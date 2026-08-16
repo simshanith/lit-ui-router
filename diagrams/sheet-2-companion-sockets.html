@@ -1,4 +1,4 @@
-<title>COMPANION SOCKETS — Sheet 2 of 9</title>
+<title>COMPANION SOCKETS — Sheet 2 of 10</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="description" content="Too small to be cities: each companion is one block with one socket. The location plugin swaps a slot, the MobX store taps a wire read-only, and the server adapter re-hosts the same state tree where there is no DOM at all.">
 <style>
@@ -234,11 +234,11 @@ a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <section class="sheet" id="sheet-2" aria-label="Sheet 2: COMPANION SOCKETS">
-  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 2 / 9</span></div>
+  <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 2 / 10</span></div>
   <h2 class="sheet-title">COMPANION SOCKETS</h2>
   <p class="sheet-sub">ALTITUDE 2 — three packages, 17 shipped modules between them, one rule each</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1000 660" role="img" aria-label="Three companion packages plugged into the lit-ui-router client stack and a parallel server lane: the Navigation API location plugin swaps into the location slot, the MobX package observes core state read-only, and ui-router-server runs the same core state tree against requests with no renderer.">
+    <div class="figure-wrap"><svg viewBox="-60 0 1060 660" role="img" aria-label="Three companion packages plugged into the lit-ui-router client stack and a parallel server lane: the Navigation API location plugin swaps into the location slot, the MobX package observes core state read-only, and ui-router-server runs the same core state tree against requests with no renderer.">
 <defs>
   <marker id="s2-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -280,11 +280,11 @@ a { color: var(--accent); }
 <text x="92" y="152" class="lblb" text-anchor="start" >LOCATION SERVICES</text>
 <text x="92" y="176" class="lbls" text-anchor="start" >socket — default: pushState services</text>
 
-<rect x="80" y="210" width="250" height="56" rx="0" class="sk fp"/>
+<rect x="80" y="210" width="250" height="60" rx="0" class="sk fp"/>
 
-<rect x="88" y="240" width="234" height="18" fill="url(#s2-ha)"/>
+<rect x="88" y="248" width="234" height="18" fill="url(#s2-ha)"/>
 <text x="92" y="228" class="lblb" text-anchor="start" >@uirouter/core</text>
-<text x="92" y="246" class="lbls" text-anchor="start" >the state tree</text>
+<text x="92" y="242" class="lbls" text-anchor="start" >the state tree</text>
 
 <rect x="80" y="286" width="250" height="56" rx="0" class="sk fp"/>
 
@@ -299,7 +299,7 @@ a { color: var(--accent); }
 
 <path d="M205,114 V132" class="sk"  marker-end="url(#s2-ai)"/>
 <path d="M205,190 V208" class="sk"  marker-end="url(#s2-ai)"/>
-<path d="M205,266 V284" class="sk"  marker-end="url(#s2-ai)"/>
+<path d="M205,270 V288" class="sk"  marker-end="url(#s2-ai)"/>
 <path d="M205,342 V360" class="sk"  marker-end="url(#s2-ai)"/>
 
 <!-- socket notches on the stack edge -->
@@ -319,19 +319,20 @@ a { color: var(--accent); }
 <text x="408" y="156" class="lbla" text-anchor="middle" >plugs in</text>
 
 <!-- companion: lit-ui-router-mobx -->
-<rect x="470" y="250" width="300" height="150" rx="0" class="sk fp"/>
+<rect x="470" y="250" width="300" height="166" rx="0" class="sk fp"/>
 <text x="482" y="270" class="lblb" text-anchor="start" >lit-ui-router-mobx</text>
 <text x="482" y="284" class="lbls" text-anchor="start" >0.5.0</text>
 <text x="482" y="306" class="lbls" text-anchor="start" >WHAT  an observable RouterStore over</text>
 <text x="482" y="319" class="lbls" text-anchor="start" >      router state, for MobX apps</text>
 <text x="482" y="332" class="lbls" text-anchor="start" >HOW   reaction-based ReactiveControllers:</text>
 <text x="482" y="345" class="lbls" text-anchor="start" >      store change → requestUpdate()</text>
-<text x="482" y="366" class="lblr" text-anchor="start" >CONDITION  pre-1.0; peer floor ^1.7.0 held by hand</text>
-<text x="482" y="388" class="lblf" text-anchor="start" >OBSERVES — NEVER OWNS</text>
+<text x="482" y="360" class="lblr" text-anchor="start" >CONDITION  pre-1.0; peer floor ^1.7.0</text>
+<text x="482" y="373" class="lblr" text-anchor="start" >held by hand</text>
+<text x="482" y="404" class="lblf" text-anchor="start" >OBSERVES — NEVER OWNS</text>
 <path d="M470,300 C420,296 380,270 344,244" class="sks" stroke-dasharray="4 3" marker-end="url(#s2-as)"/>
 <text x="388" y="262" class="lblf" text-anchor="start" >reads globals</text>
 <path d="M470,340 C420,336 380,326 344,316" class="ska"  marker-end="url(#s2-aa)"/>
-<text x="390" y="348" class="lbla" text-anchor="start" >wakes hosts</text>
+<text x="462" y="358" class="lbla" text-anchor="end" >wakes hosts</text>
 
 <!-- server lane -->
 <line x1="60" y1="446" x2="940" y2="446" class="skf" stroke-dasharray="8 5"/>
@@ -341,21 +342,21 @@ a { color: var(--accent); }
 <text x="92" y="528" class="lblb" text-anchor="start" >REQUEST</text>
 <text x="92" y="544" class="lbls" text-anchor="start" >GET /people/32</text>
 <path d="M230,534 H300" class="sk2"  marker-end="url(#s2-ai)"/>
-<rect x="300" y="496" width="330" height="96" rx="0" class="sk fp"/>
+<rect x="300" y="496" width="330" height="112" rx="0" class="sk fp"/>
 <text x="312" y="516" class="lblb" text-anchor="start" >ui-router-server</text>
 <text x="618" y="516" class="lbls" text-anchor="end" >0.1.1</text>
 <text x="312" y="534" class="lbls" text-anchor="start" >adapters: connect · fetch · hono · vite</text>
 <text x="312" y="547" class="lbls" text-anchor="start" >redirects · simulate · url-matcher</text>
-<rect x="312" y="562" width="200" height="20" fill="url(#s2-ha)"/>
-<text x="318" y="576" class="lbl" text-anchor="start" >same core state tree</text>
+<text x="318" y="574" class="lbl" text-anchor="start" >same core state tree</text>
+<rect x="312" y="580" width="200" height="20" fill="url(#s2-ha)"/>
 <path d="M630,534 H700" class="sk2"  marker-end="url(#s2-ai)"/>
 <rect x="700" y="508" width="220" height="52" rx="0" class="sk fp"/>
 <text x="712" y="528" class="lblb" text-anchor="start" >DECISION</text>
 <text x="712" y="544" class="lbls" text-anchor="start" >302 redirect · render · pass</text>
-<text x="80" y="618" class="lblr" text-anchor="start" >CONDITION  0.1.1 — the 1.0 gate is short: land #565, flip the version</text>
+<text x="80" y="632" class="lblr" text-anchor="start" >CONDITION  0.1.1 — the 1.0 gate is short: land #565, flip the version</text>
 
 <!-- equivalence tie -->
-<path d="M312,576 C150,610 20,430 78,250" class="sks" stroke-dasharray="4 3" marker-end="url(#s2-as)"/>
+<path d="M312,590 C240,596 120,600 60,560 C10,500 0,360 76,252" class="sks" stroke-dasharray="4 3" marker-end="url(#s2-as)"/>
 <text x="206" y="470" class="lblf" text-anchor="start" >same registry above &amp; below — one renders, one decides</text>
 </svg></div>
     <figcaption>Too small to be cities: each companion is one block with one socket. The location plugin swaps a slot, the MobX store taps a wire read-only, and the server adapter re-hosts the same state tree where there is no DOM at all.</figcaption>
@@ -382,7 +383,7 @@ a { color: var(--accent); }
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
   <div><span class="fld">DATE / REV</span>2026-08-16 · A</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
-  <div><span class="fld">SHEET</span>2 OF 9</div>
+  <div><span class="fld">SHEET</span>2 OF 10</div>
 </div>
     </div>
   </div>

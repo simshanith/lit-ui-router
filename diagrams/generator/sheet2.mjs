@@ -7,22 +7,22 @@ const P = 's2';
 const stack = [
   ['BROWSER URL / HISTORY', null, 70, 44],
   ['LOCATION SERVICES', 'socket — default: pushState services', 134, 56],
-  ['@uirouter/core', 'the state tree', 210, 56],
+  ['@uirouter/core', 'the state tree', 210, 60],
   ['LIT LAYER', '<ui-router> · <ui-view> · uiSref', 286, 56],
   ['DOM', null, 362, 44],
 ];
 
-const svg = `<svg viewBox="0 0 1000 660" role="img" aria-label="Three companion packages plugged into the lit-ui-router client stack and a parallel server lane: the Navigation API location plugin swaps into the location slot, the MobX package observes core state read-only, and ui-router-server runs the same core state tree against requests with no renderer.">
+const svg = `<svg viewBox="-60 0 1060 660" role="img" aria-label="Three companion packages plugged into the lit-ui-router client stack and a parallel server lane: the Navigation API location plugin swaps into the location slot, the MobX package observes core state read-only, and ui-router-server runs the same core state tree against requests with no renderer.">
 ${defs(P)}
 
 ${txt(80, 52, 'CLIENT', 'lblt')}
 ${stack.map(([name, sub, y, h]) => `
 ${box(80, y, 250, h, name === 'LOCATION SERVICES' || name === '@uirouter/core' ? 'sk fp' : 'sk fp')}
 ${name === 'LOCATION SERVICES' ? `<rect x="88" y="${y + 26}" width="234" height="22" class="sks fnone" stroke-dasharray="4 3"/>` : ''}
-${name === '@uirouter/core' ? `<rect x="88" y="${y + 30}" width="234" height="18" fill="url(#${P}-ha)"/>` : ''}
+${name === '@uirouter/core' ? `<rect x="88" y="${y + 38}" width="234" height="18" fill="url(#${P}-ha)"/>` : ''}
 ${txt(92, y + 18, name, 'lblb')}
-${sub ? txt(92, y + (name === 'LOCATION SERVICES' ? 42 : 36), sub, 'lbls') : ''}`).join('\n')}
-${[114, 190, 266, 342].map((y) => arrow(P, `M205,${y} V${y + 18}`, 'ai', 'sk')).join('\n')}
+${sub ? txt(92, y + (name === 'LOCATION SERVICES' ? 42 : (name === '@uirouter/core' ? 32 : 36)), sub, 'lbls') : ''}`).join('\n')}
+${[114, 190, 270, 342].map((y) => arrow(P, `M205,${y} V${y + 18}`, 'ai', 'sk')).join('\n')}
 
 <!-- socket notches on the stack edge -->
 <path d="M330,150 h10 v24 h-10" class="sk fnone"/>
@@ -43,7 +43,7 @@ ${arrow(P, 'M470,166 H344', 'aa', 'ska')}
 ${txt(408, 156, 'plugs in', 'lbla', 'middle')}
 
 <!-- companion: lit-ui-router-mobx -->
-${box(470, 250, 300, 150, 'sk fp')}
+${box(470, 250, 300, 166, 'sk fp')}
 ${txt(482, 270, 'lit-ui-router-mobx', 'lblb')}
 ${txt(482, 284, '0.5.0', 'lbls')}
 ${lines(482, 306, [
@@ -52,12 +52,12 @@ ${lines(482, 306, [
   'HOW   reaction-based ReactiveControllers:',
   '      store change → requestUpdate()',
 ], 'lbls', 'start', 13)}
-${txt(482, 366, 'CONDITION  pre-1.0; peer floor ^1.7.0 held by hand', 'lblr')}
-${txt(482, 388, 'OBSERVES — NEVER OWNS', 'lblf')}
+${lines(482, 360, ['CONDITION  pre-1.0; peer floor ^1.7.0', 'held by hand'], 'lblr')}
+${txt(482, 404, 'OBSERVES — NEVER OWNS', 'lblf')}
 ${arrow(P, 'M470,300 C420,296 380,270 344,244', 'as', 'sks', '4 3')}
 ${txt(388, 262, 'reads globals', 'lblf')}
 ${arrow(P, 'M470,340 C420,336 380,326 344,316', 'aa', 'ska')}
-${txt(390, 348, 'wakes hosts', 'lbla')}
+${txt(462, 358, 'wakes hosts', 'lbla', 'end')}
 
 <!-- server lane -->
 <line x1="60" y1="446" x2="940" y2="446" class="skf" stroke-dasharray="8 5"/>
@@ -67,20 +67,20 @@ ${box(80, 508, 150, 52)}
 ${txt(92, 528, 'REQUEST', 'lblb')}
 ${txt(92, 544, 'GET /people/32', 'lbls')}
 ${arrow(P, 'M230,534 H300', 'ai', 'sk2')}
-${box(300, 496, 330, 96, 'sk fp')}
+${box(300, 496, 330, 112, 'sk fp')}
 ${txt(312, 516, 'ui-router-server', 'lblb')}
 ${txt(618, 516, '0.1.1', 'lbls', 'end')}
 ${lines(312, 534, ['adapters: connect · fetch · hono · vite', 'redirects · simulate · url-matcher'], 'lbls')}
-<rect x="312" y="562" width="200" height="20" fill="url(#${P}-ha)"/>
-${txt(318, 576, 'same core state tree', 'lbl')}
+${txt(318, 574, 'same core state tree', 'lbl')}
+<rect x="312" y="580" width="200" height="20" fill="url(#${P}-ha)"/>
 ${arrow(P, 'M630,534 H700', 'ai', 'sk2')}
 ${box(700, 508, 220, 52, 'sk fp')}
 ${txt(712, 528, 'DECISION', 'lblb')}
 ${txt(712, 544, '302 redirect · render · pass', 'lbls')}
-${txt(80, 618, 'CONDITION  0.1.1 — the 1.0 gate is short: land #565, flip the version', 'lblr')}
+${txt(80, 632, 'CONDITION  0.1.1 — the 1.0 gate is short: land #565, flip the version', 'lblr')}
 
 <!-- equivalence tie -->
-${arrow(P, 'M312,576 C150,610 20,430 78,250', 'as', 'sks', '4 3')}
+${arrow(P, 'M312,590 C240,596 120,600 60,560 C10,500 0,360 76,252', 'as', 'sks', '4 3')}
 ${txt(206, 470, 'same registry above & below — one renders, one decides', 'lblf')}
 </svg>`;
 
