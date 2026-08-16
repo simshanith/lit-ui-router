@@ -21,6 +21,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { UIRouterLit } from './core.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
+  isNativeLink,
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
@@ -179,14 +180,15 @@ export interface AriaCurrentValues {
  * `aria-current` defaults on for link elements only; other elements must opt in
  * explicitly, since `aria-current` on a wrapper (`<li>`, `<tr>`) is rarely intended.
  *
+ * This is `uiSref`'s tag check widened by role. `aria-current` is a property of
+ * the role, so `<div role="link">` takes it; `href` is a property of the tag,
+ * so the same element must never take one. Sharing the tag half keeps the
+ * overlap exact — see {@link isNativeLink} for the other side.
+ *
  * @internal
  */
-const isLinkElement = (element: Element): boolean => {
-  const tagName = element.tagName;
-  return (
-    tagName === 'A' || tagName === 'AREA' || element.matches('[role~="link"]')
-  );
-};
+const isLinkElement = (element: Element): boolean =>
+  isNativeLink(element) || element.matches('[role~="link"]');
 
 /**
  * Parameters for the uiSrefActive directive.

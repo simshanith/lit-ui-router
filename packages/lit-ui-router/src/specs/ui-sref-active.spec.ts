@@ -630,6 +630,30 @@ describe('uiSrefActive directive', () => {
       expect(span.getAttribute('aria-current')).toBe('page');
     });
 
+    it('should default aria-current on for an SVG anchor', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      // `tagName` is 'a' for SVG and 'A' for HTML, so a tag check written
+      // against `tagName` silently skips this one; `isNativeLink` reads
+      // `localName`, which is lowercase for both
+      render(
+        html`<svg>
+          <a ${uiSref('parent')} ${uiSrefActive({})}>
+            <text>Parent</text>
+          </a>
+        </svg>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('svg a')!;
+      expect(anchor.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
     it('should mark an ancestor when given a per-state value', async () => {
       const { wrapper } = await setupWithStates(parentChildStates);
 
