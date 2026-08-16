@@ -4,23 +4,24 @@ import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
 const P = 's9';
 const OX = 480, OY = 205;
 
-// docs/dist fresh build, measured 2026-08-16: 572 files, 14,795,183 raw bytes,
-// 4,078,233 gzipped (level 9) — the wire proxy. Reachability BFS marks orphans.
+// docs/dist clean-checkout build, remeasured 2026-08-16 after the lodash-es swap
+// (PR #604): 566 files, 14,526,419 raw bytes, 3,940,287 gzipped (level 9) — the
+// wire proxy. Reachability BFS marks orphans; a clean tree has exactly one.
 // [name, files, gzBytes, ghost?]
 const DATA = [
   ['demo corpora', 15, 899000],
   ['inter fonts', 16, 866700],
-  ['html pages', 128, 800254],
+  ['html pages', 130, 814176],
   ['examples', 9, 451396],
-  ['page chunks', 244, 266745],
-  ['vp framework', 10, 167983],
-  ['orphans', 12, 141190, true],
-  ['images', 99, 127404],
-  ['app: vanilla', 14, 119445],
-  ['app: mobx', 9, 102592],
+  ['page chunks', 248, 269214],
+  ['vp framework', 10, 168660],
+  ['images', 98, 127073],
+  ['app: mobx', 9, 105723],
+  ['app: vanilla', 14, 101099],
   ['static data', 7, 51884],
-  ['app: hash', 4, 41976],
-  ['site css', 5, 41664],
+  ['app: hash', 4, 41970],
+  ['site css', 5, 41686],
+  ['orphans', 1, 1706, true],
 ];
 
 const SIDE = (f) => Math.max(18, 10 * Math.sqrt(f));
@@ -80,9 +81,9 @@ const TOPS = {
   'examples': 'model-viewer chunk 275 KB',
   'page chunks': 'visualizer.esm 24 KB',
   'vp framework': 'localSearchIndex 60 KB',
-  'orphans': 'main-*.js ×3, 35 KB each',
+  'orphans': 'custom-elements manifest 1.7 KB',
   'images': 'lit-ui-router.png 67 KB',
-  'app: vanilla': 'main 34 KB · lodash 25 KB',
+  'app: vanilla': 'directive 35 KB · isEqual 4 KB',
   'app: mobx': 'main 34 KB',
   'static data': 'messages.json 47 KB',
   'app: hash': 'main 34 KB',
@@ -98,7 +99,7 @@ ${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, `${r.n} ${r.name} �
 ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, `${r.n} ${r.name} — ${r.f}f ${KB(r.gz)} · ${TOPS[r.name]}`, 'lbls')).join('\n')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of thirteen districts: footprint area from file counts, height from gzipped bytes on the wire. The tallest towers are the demo text corpora and the Inter font files, not code; the three routed sample apps are small accent buildings; a hatched ghost district holds twelve orphan files shipped but unreachable. A structure schedule lists every district with exact counts.">
+const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of thirteen districts: footprint area from file counts, height from gzipped bytes on the wire. The tallest towers are the demo text corpora and the Inter font files, not code; the three routed sample apps are small accent buildings; a tiny hatched ghost block marks the single unreferenced file a clean deploy ships. A structure schedule lists every district with exact counts.">
 ${defs(P)}
 
 ${groupOutline(20, 0, 230, 200, 'demo payload — corpora · media · data', 40, 150)}
@@ -111,10 +112,10 @@ ${txt(150, 60, 'A Tale of Two Cities alone: 294 KB —', 'lbla')}
 ${txt(150, 72, 'the tallest tenant on the skyline is Dickens', 'lbla')}
 ${txt(890, 96, '867 KB of Inter — the lettering', 'lbla')}
 ${txt(890, 108, 'outweighs every script on the site', 'lbla')}
-${txt(980, 640, 'all three apps: 258 KB —', 'lbla', 'end')}
-${txt(980, 652, '6.5% of their own docs site', 'lbla', 'end')}
-${txt(110, 570, 'shipped, referenced by nothing:', 'lbla')}
-${txt(110, 582, '12 stale-hash files · 138 KB', 'lbla')}
+${txt(980, 640, 'all three apps: 249 KB —', 'lbla', 'end')}
+${txt(980, 652, '6.3% of their own docs site', 'lbla', 'end')}
+${txt(110, 570, 'rev A drew 138 KB of orphans here —', 'lbla')}
+${txt(110, 582, 'a clean build ships one file, 1.7 KB', 'lbla')}
 
 ${txt(1120, 26, 'SCALE — footprint area ∝ files · 1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
 
@@ -122,23 +123,23 @@ ${schedule}
 </svg>`;
 
 export const sheet9 = {
-  num: 9, id: 'shipped',
+  num: 9, id: 'shipped', rev: 'B',
   title: 'THE SHIPPED CITY',
-  sub: 'ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · measured 2026-08-16',
+  sub: 'ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · REV B: remeasured after the lodash-es swap · 2026-08-16',
   scale: 'ONE DEPLOY',
   form: 'SHIPPED CITY',
   svg,
-  caption: 'The production docs deploy surveyed on the wire: 572 files, 3.9 MB gzipped, drawn as thirteen districts — and the tallest towers are sample novels and font files, with the routed apps themselves standing as small accent buildings in their own city.',
+  caption: 'The production docs deploy surveyed on the wire: 566 files, 3.8 MB gzipped, drawn as thirteen districts — and the tallest towers are sample novels and font files, with the routed apps themselves standing as small accent buildings in their own city.',
   notes: `
-<p><strong>Method:</strong> a fresh <code>docs/dist</code> build measured file by file; height is gzip level 9 of each file — the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk (every HTML shell and hashed chunk, following static asset references) sorts the assets into districts; whatever nothing references lands in the hatched orphan block. This closes the survey trilogy: sheet 7 measured what we wrote, sheet 8 what npm delivered, this sheet what one deploy actually ships — 572 files, 14.8 MB on disk, 3.9 MB on the wire.</p>
+<p><strong>Method:</strong> a fresh <code>docs/dist</code> build measured file by file; height is gzip level 9 of each file — the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk (every HTML shell and hashed chunk, following static asset references) sorts the assets into districts. This closes the survey trilogy: sheet 7 measured what we wrote, sheet 8 what npm delivered, this sheet what one deploy actually ships — 566 files, 14.5 MB on disk, 3.8 MB on the wire. REV B is a clean-checkout remeasure after the lodash-es swap (PR #604) merged.</p>
 <p><strong>The tallest building is Dickens.</strong> The demo corpora — novels, Beowulf, an RFC, pre-gzipped <code>.txt.gz</code> so compression can't help further — are the city's tallest district at 899 KB, with Inter's sixteen <code>woff2</code> faces one notch behind at 867 KB. Code doesn't crack the top two: on the wire, this documentation site is mostly sample text and typography.</p>
-<p><strong>The product is a guest in its own city.</strong> The three routed sample apps — the thing the site exists to demonstrate — total 258 KB gzipped, 6.5% of the deploy. Inside the vanilla app, the lodash chunk is 25 KB of that: sheet 8's 45,205-line giant, tree-shaken down to what four imports actually cost the wire — still the third-largest block in the app bundle.</p>
-<p><strong>Twelve files ship to no one.</strong> The hatched district holds content-hashed assets — three near-identical 106 KB <code>main-*.js</code> among them — that no page references: parallel app builds emitting into the shared <code>assets/</code> pool, the shells keeping only one hash each. 138 KB of dead weight in every deploy; harmless to visitors, invisible without a reachability walk.</p>
+<p><strong>The product is a guest in its own city.</strong> The three routed sample apps — the thing the site exists to demonstrate — total 249 KB gzipped, 6.3% of the deploy. The lodash story closed between printings: rev A drew a 25 KB lodash chunk inside the vanilla app, sheet 8's giant tree-shaken to what four imports cost the wire; the swap to lodash-es collapsed it to a 4 KB <code>isEqual</code> chunk — −84% — and the whole district dropped 15%.</p>
+<p><strong>The ghost district was scaffolding dust.</strong> Rev A reported twelve orphan files, 138 KB of dead weight in every deploy — but that survey read an accumulated local <code>dist/</code>, where parallel app builds pile up stale hashes. A clean-checkout rebuild, the shape the CDN actually deploys, ships exactly one unreferenced file: a 1.7 KB custom-elements manifest. The tiny hatched slab stays as the correction, and as a caution about the instrument: survey the dist you actually ship.</p>
 <p><strong>One example outweighs the router.</strong> The hellogalaxy demo's <code>model-viewer</code> chunk is 275 KB gzipped on its own — heavier than all three sample apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'site district — height = gzipped bytes'),
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fa"/>', 'a routed sample app'),
-    keyRow('<rect x="8" y="3" width="18" height="12" class="skf fnone"/><rect x="8" y="3" width="18" height="12" fill="url(#s9-hd)"/>', 'orphans — shipped, unreachable'),
+    keyRow('<rect x="8" y="3" width="18" height="12" class="skf fnone"/><rect x="8" y="3" width="18" height="12" fill="url(#s9-hd)"/>', 'orphan — shipped, unreachable'),
     keyRow('<rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/>', 'group (role in the deploy)'),
   ].join('\n'),
 };

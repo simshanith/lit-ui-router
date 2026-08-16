@@ -56,7 +56,7 @@ const verdicts = [
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
   ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census — files as footprint, lines as height, tests as annexes'],
-  ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 357× the app it serves'],
+  ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 318× the app, after the swap it argued for'],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
 ];
 const galCss = `
@@ -98,7 +98,7 @@ const cover = `<header class="cover">
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), liveness where the facts are temporal (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–9 are a survey trilogy: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 357× the app it serves), and what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code).</p>
+    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–9 are a survey trilogy: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 318× the app it serves), and what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code). The set has already changed its own subject once: sheet 8's rev A drew lodash as the tallest building in the delivered city, that drawing became a merged <code>lodash-es</code> swap, and sheets 8–9 now stand at REV B — remeasured after the merge, with the building halved and the wire chunk cut 84%.</p>
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
