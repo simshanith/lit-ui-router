@@ -21,7 +21,7 @@
     "format:toml": "mise run format_toml",
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
-    "lint:elements": "eslint --cache --cache-location .cache/eslint-elements --cache-strategy content --format tap \"{packages,apps,examples}/*/src/**/*.ts\"",
+    "lint:elements": "eslint --cache --cache-location .cache/eslint-elements --cache-strategy content \"{packages,apps,examples}/*/src/**/*.ts\"",
     "lint:markdown": "mise run lint_markdown",
     "lint:package-json": "eslint --format tap \"**/package.json\" pnpm-workspace.yaml",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
