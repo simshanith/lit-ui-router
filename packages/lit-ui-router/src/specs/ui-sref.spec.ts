@@ -476,6 +476,65 @@ describe('uiSref directive', () => {
         expect.objectContaining({ type: 'click', defaultPrevented: false }),
       ]);
     });
+
+    // any target but _self leaves this browsing context, so it is the
+    // browser's click, not ours
+    it.each([
+      ['_top', 'escapes an enclosing frame'],
+      ['_parent', 'escapes one level of framing'],
+      ['results', 'names a frame, or opens a window when none matches'],
+      ['_BLANK', 'browsing-context keywords are ASCII case-insensitive'],
+      [' _blank', 'untrimmed, so this is a frame named " _blank"'],
+    ])('should ignore click with target="%s" (%s)', async (target) => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')} target=${target}>Link</a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: false }),
+      ]);
+    });
+
+    // guards the regression the widening could introduce: _self is this
+    // context, so it stays ours
+    it.each(['_self', '_SELF'])(
+      'should navigate on click with target="%s"',
+      async (target) => {
+        const wrapper = await setupWithTemplate(
+          [{ name: 'home', url: '/home' }],
+          html`<a ${uiSref('home')} target=${target}>Link</a>`,
+        );
+
+        const goSpy = vi.spyOn(router!.stateService, 'go');
+        await clickLocatedElement(wrapper.querySelector('a')!);
+        await tick();
+
+        expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+      },
+    );
+
+    it('should navigate on a button carrying target="_top"', async () => {
+      // target means nothing on a button, so it must not suppress the click.
+      // set imperatively: it is invalid markup, which lit-analyzer rejects
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<button ${uiSref('home')}>Go</button>`,
+      );
+      const button = wrapper.querySelector('button')!;
+      button.setAttribute('target', '_top');
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(button);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
   });
 
   describe('descendant clicks (currentTarget)', () => {
