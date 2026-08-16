@@ -110,11 +110,11 @@ const schedRow = ({ it, n, district }) => {
 };
 const colA = all.slice(0, 14), colB = all.slice(14);
 const schedule = `<g>
-<rect x="40" y="700" width="1080" height="286" class="sk fp"/>
-${txt(56, 722, 'STRUCTURE SCHEDULE — files (f) · lines of tracked source · spec mass', 'lbls')}
-<line x1="40" y1="732" x2="1120" y2="732" class="skf"/>
-${colA.map((r, i) => txt(56, 752 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${colB.map((r, i) => txt(590, 752 + i * 17, schedRow(r), 'lbls')).join('\n')}
+<rect x="40" y="830" width="1080" height="286" class="sk fp"/>
+${txt(56, 852, 'STRUCTURE SCHEDULE — files (f) · lines of tracked source · spec mass', 'lbls')}
+<line x1="40" y1="862" x2="1120" y2="862" class="skf"/>
+${colA.map((r, i) => txt(56, 882 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${colB.map((r, i) => txt(590, 882 + i * 17, schedRow(r), 'lbls')).join('\n')}
 </g>`;
 
 // Headline callouts
@@ -123,7 +123,7 @@ const [rx, ry] = isoPt(OX, OY, relBlock.x + relBlock.s / 2, relBlock.y + relBloc
 const luBlock = all.find((a) => a.it[0] === 'lit-ui-router');
 const [ax, ay] = isoPt(OX, OY, luBlock.x + luBlock.s + 8 + SIDE(luBlock.it[3]), luBlock.y, HT(luBlock.it[4]));
 
-const svg = `<svg viewBox="0 0 1160 1000" role="img" aria-label="A measured isometric city of the whole lit-ui-router workspace: every workspace member drawn as a building whose footprint area is its tracked source file count and whose height is its lines of source, with hatched annexes for test mass. The tallest structure in the packages district is lit-ui-router's own test annex; the largest building on site is the release tooling. A structure schedule lists all 27 members with exact counts.">
+const svg = `<svg viewBox="0 0 1160 1160" role="img" aria-label="A measured isometric city of the whole lit-ui-router workspace: every workspace member drawn as a building whose footprint area is its tracked source file count and whose height is its lines of source, with hatched annexes for test mass. The tallest structure in the packages district is lit-ui-router's own test annex; the largest building on site is the release tooling. A structure schedule lists all 27 members with exact counts.">
 ${defs(P)}
 
 ${districtOutline(15, 10, 495, 165, 'packages/ — the product', 96, 108)}
@@ -135,10 +135,12 @@ ${bodies}
 
 ${txt(ax + 14, ay - 26, 'the tallest thing the product district', 'lbla')}
 ${txt(ax + 14, ay - 14, 'ever built is a test annex', 'lbla')}
-${txt(rx + 130, ry + 40, 'largest building on site:', 'lbla')}
-${txt(rx + 130, ry + 52, 'the release machinery', 'lbla')}
+${txt(100, 135, 'largest building on site:', 'lbla')}
+${txt(100, 147, 'the release machinery', 'lbla')}
 
-${txt(580, 60, 'SCALE — footprint area ∝ tracked files · 1 px of height ≈ 34 lines', 'lbls')}
+${txt(1120, 46, 'SCALE — footprint area ∝ tracked files · 1 px of height ≈ 34 lines', 'lbls', 'end')}
+
+${schedule}
 </svg>`;
 
 export const sheet7 = {
