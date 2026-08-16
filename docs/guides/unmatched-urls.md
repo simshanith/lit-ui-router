@@ -144,11 +144,19 @@ export default (props: UIViewInjectedProps<NotFoundResolves>) =>
     <p>
       No state matched the URL <code>${props.resolves.attemptedPath}</code>.
     </p>
-    <button ${uiSref('welcome')} class="btn btn-primary">
+    <button
+      ${uiSref('welcome', {}, { assignHref: 'auto' })}
+      class="btn btn-primary"
+    >
       Return to Welcome
     </button>
   </div>`;
 ```
+
+`<button>` has no `href` in HTML, so `assignHref: 'auto'` keeps the attribute
+off it. Clicking still navigates — the option governs the attribute only, never
+the click handler. The 1.x default is `true` (write it anywhere, with a console
+warning on a non-link); `'auto'` becomes the default in 2.0.
 
 ## Caveat: lazy-loaded future states
 
