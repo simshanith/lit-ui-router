@@ -266,11 +266,13 @@ catalogs:
       version: 6.0.2
 
 overrides:
+  '@api-viewer/common>lit': ^3.3.3
+  '@api-viewer/docs>lit': ^3.3.3
   brace-expansion@5: 5.0.9
   d3-color: 3.1.0
   dompurify: 3.4.13
   fast-uri: 3.1.5
-  lit@^2.0.0: ^3.3.3
+  lit-dialog>lit: ^3.3.3
   postcss: 8.5.26
   sharp: 0.35.0
   shell-quote: 1.9.0
