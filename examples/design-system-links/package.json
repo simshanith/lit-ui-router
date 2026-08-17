@@ -1,5 +1,5 @@
 {
-  "name": "lit-ui-router-tutorial-hellosolarsystem",
+  "name": "lit-ui-router-example-design-system-links",
   "version": "0.0.0",
   "private": true,
   "type": "module",
@@ -9,17 +9,15 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@spectrum-web-components/link": "^1.12.2",
+    "@spectrum-web-components/theme": "^1.12.2",
     "@uirouter/core": "^6.1.2",
-    "@uirouter/visualizer": "^7.2.1",
     "lit": "^3.3.3",
     "lit-ui-router": "^1.10.0"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
     "vite": "^8.2.1"
-  },
-  "overrides": {
-    "d3-color": "3.1.0"
   },
   "devEngines": {
     "packageManager": {

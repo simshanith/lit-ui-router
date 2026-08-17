@@ -9,7 +9,12 @@ import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 const root = dirname(fileURLToPath(import.meta.url));
-const EXAMPLES = ['helloworld', 'hellosolarsystem', 'hellogalaxy'];
+const EXAMPLES = [
+  'helloworld',
+  'hellosolarsystem',
+  'hellogalaxy',
+  'design-system-links',
+];
 
 for (const name of EXAMPLES) {
   const cwd = join(root, name);
