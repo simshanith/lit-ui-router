@@ -34,6 +34,16 @@ run = "./src/start-xvfb.ts"
 description = "Decide whether this branch-head push needs its own CI run"
 run = "./src/branch-ci-gate.ts"
 
+[tasks.error_summary]
+# env: GITHUB_STEP_SUMMARY (runner file; prints when unset), TURBO_RUNS_DIR.
+# Reads the newest `.turbo/runs/*.json` — so `ci`/`ci_main` must pass
+# `--summarize` — and republishes only the tasks that really failed.
+# Runs from the repo root, not this directory: the summary's `logFile` paths
+# are repo-root-relative. Same direct-exec reason as `xvfb` above.
+description = "Report the failing tasks of a red turbo run to the step summary and stdout"
+dir = "{{config_root}}/../.."
+run = "./tools/build_and_test/src/error-summary.ts"
+
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
 # cache step derives its key alone.
