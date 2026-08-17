@@ -10,6 +10,7 @@ import { sheet4 } from './sheet4.mjs';
 import { sheet5 } from './sheet5.mjs';
 import { sheet6 } from './sheet6.mjs';
 import { sheet7 } from './sheet7.mjs';
+import { sheet7a } from './sheet7a.mjs';
 import { sheet8 } from './sheet8.mjs';
 import { sheet9 } from './sheet9.mjs';
 import { sheet10 } from './sheet10.mjs';
@@ -21,7 +22,7 @@ const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13];
+const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13];
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
@@ -64,6 +65,7 @@ const verdicts = [
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
   ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR'],
+  ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', 'the shadow survey — where a suite reaches it is near-black (98% of 5,539 metered lines); the sun holds 2,608 sloc of instruments and 1,375 of CLI wrappers'],
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 295× the app, two swaps it argued for'],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 23%, the router 4.0% — one lit'],
