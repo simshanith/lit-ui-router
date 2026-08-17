@@ -21,6 +21,8 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { UIRouterLit } from './core.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
+  inLitDevMode,
+  isNativeLink,
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
@@ -137,6 +139,72 @@ export function mergeSrefStatus(
 }
 
 /**
+ * Valid `aria-current` token values.
+ *
+ * @see {@link UiSrefActiveParams.ariaCurrentValue}
+ * @see [WAI-ARIA `aria-current`](https://www.w3.org/TR/wai-aria-1.2/#aria-current)
+ *
+ * @category types
+ */
+export type AriaCurrentValue =
+  | 'page'
+  | 'step'
+  | 'location'
+  | 'date'
+  | 'time'
+  | 'true';
+
+/**
+ * Per-state `aria-current` values, for the rare nav that wants to mark an
+ * ancestor as well as the current page.
+ *
+ * Unlike `activeClasses` and `exactClasses` — which both land in `class` when a
+ * link is exactly active — `aria-current` is one attribute with one value, so
+ * these do not combine: on an exactly-active element `exact` wins and `active`
+ * is not consulted. Each key falls back to its own default when omitted.
+ *
+ * @see {@link UiSrefActiveParams.ariaCurrentValue}
+ *
+ * @category types
+ */
+export interface AriaCurrentValues {
+  /** Applied when the exact state is active. Defaults to `'page'` on links. */
+  exact?: AriaCurrentValue | false;
+  /**
+   * Applied when a child state is active but this one is not the exact match —
+   * `'location'` is the token meant for this. Defaults to `false`.
+   */
+  active?: AriaCurrentValue | false;
+}
+
+/**
+ * `aria-current` defaults on for link elements only; other elements must opt in
+ * explicitly, since `aria-current` on a wrapper (`<li>`, `<tr>`) is rarely intended.
+ *
+ * This is `uiSref`'s tag check widened by role. `aria-current` is a property of
+ * the role, so `<div role="link">` takes it; `href` is a property of the tag,
+ * so the same element must never take one. Sharing the tag half keeps the
+ * overlap exact — see {@link isNativeLink} for the other side.
+ *
+ * @internal
+ */
+const isLinkElement = (element: Element): boolean =>
+  isNativeLink(element) || element.matches('[role~="link"]');
+
+/**
+ * Widens the shorthand forms to the per-state shape. A token, `false`, or
+ * nothing at all is an `exact` value; only the object form sets `active`.
+ *
+ * @internal
+ */
+const toAriaCurrentValues = (
+  ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
+): AriaCurrentValues =>
+  typeof ariaCurrentValue === 'object'
+    ? ariaCurrentValue
+    : { exact: ariaCurrentValue };
+
+/**
  * Parameters for the uiSrefActive directive.
  *
  * @see {@link uiSrefActive}
@@ -148,6 +216,24 @@ export interface UiSrefActiveParams {
   activeClasses: string[];
   /** CSS classes to add only when the exact state is active */
   exactClasses: string[];
+  /**
+   * The `aria-current` value to set when the **exact** state is active — the
+   * same binding Vue Router's `ariaCurrentValue` uses.
+   *
+   * Defaults to `'page'` on link elements (`<a>`, `<area>`, `[role="link"]`).
+   * Pass a value explicitly to apply it to any element; pass `false` to leave
+   * `aria-current` untouched.
+   *
+   * Pass an object to also mark ancestors, which is otherwise off:
+   * `{ exact: 'page', active: 'location' }`. See {@link AriaCurrentValues} —
+   * the two do not combine the way `activeClasses` and `exactClasses` do.
+   *
+   * The directive only removes an `aria-current` it set itself, so a value
+   * authored in the template survives until the directive first writes one of
+   * its own — after that it owns the attribute and clears it when inactive,
+   * warning once. Use `false` to keep an authored value for good.
+   */
+  ariaCurrentValue?: AriaCurrentValue | false | AriaCurrentValues;
   /** The state name to check for active status */
   state: string;
   /** State parameters to match */
@@ -197,6 +283,23 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   activeClasses: string[] = [];
   exactClasses: string[] = [];
+  /** undefined = default (on for link elements) */
+  ariaCurrentValue: AriaCurrentValue | false | AriaCurrentValues | undefined;
+  /**
+   * Whether the `aria-current` currently on the element was written by this
+   * directive. Guards against clearing one authored in the template.
+   *
+   * @internal
+   */
+  private ownsAriaCurrent = false;
+  /**
+   * Whether the takeover warning has already been emitted. Instance state
+   * rather than a module-level element registry: the directive instance already
+   * lives as long as its part, so this costs nothing extra and pins nothing.
+   *
+   * @internal
+   */
+  private warnedAriaCurrentTakeover = false;
 
   state: string | undefined;
   params: RawParams = {};
@@ -234,6 +337,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   render({
     activeClasses,
     exactClasses,
+    ariaCurrentValue,
   }: Partial<UiSrefActiveParams>): typeof noChange {
     if (!this._firstUpdated) {
       return noChange;
@@ -254,7 +358,87 @@ export class UiSrefActiveDirective extends AsyncDirective {
       }
     });
 
+    this.applyAriaCurrent(ariaCurrentValue);
+
     return noChange;
+  }
+
+  /**
+   * Resolves one `aria-current` value for the element's current state, or
+   * `false` for none.
+   *
+   * `exact` and `active` are branches of a single decision here, not the union
+   * `classList` gets: an exactly-active element takes the `exact` value and
+   * never falls through to `active`.
+   *
+   * @internal
+   */
+  private resolveAriaCurrent(
+    values: AriaCurrentValues,
+  ): AriaCurrentValue | false {
+    if (this.exact) {
+      return values.exact ?? (isLinkElement(this.element!) && 'page');
+    }
+    if (this.active) {
+      return values.active ?? false;
+    }
+    return false;
+  }
+
+  /**
+   * Writes, rewrites, or clears `aria-current`.
+   *
+   * Resolving to a single value first is what keeps "no opinion", "explicitly
+   * off" and "not applicable" from each needing their own branch here.
+   *
+   * @internal
+   */
+  private applyAriaCurrent(
+    ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
+  ): void {
+    const resolved = this.resolveAriaCurrent(
+      toAriaCurrentValues(ariaCurrentValue),
+    );
+
+    if (resolved) {
+      if (!this.ownsAriaCurrent) {
+        this.warnAriaCurrentTakeover();
+      }
+      this.element!.setAttribute('aria-current', resolved);
+      this.ownsAriaCurrent = true;
+    } else if (this.ownsAriaCurrent) {
+      this.element!.removeAttribute('aria-current');
+      this.ownsAriaCurrent = false;
+    }
+  }
+
+  /**
+   * Warns the first time this directive takes over an `aria-current` it did not
+   * write. Taking over is deliberate — restoring the previous value when the
+   * state goes inactive would leave an inactive link asserting
+   * `aria-current="page"` — but it is silent, and the loss only surfaces a
+   * navigation later, so it is worth naming once.
+   *
+   * Development builds only, like `uiSref`'s `assignHref` warning.
+   *
+   * @internal
+   */
+  private warnAriaCurrentTakeover(): void {
+    const existing = this.element!.getAttribute('aria-current');
+    if (
+      !inLitDevMode() ||
+      existing === null ||
+      this.warnedAriaCurrentTakeover
+    ) {
+      return;
+    }
+    this.warnedAriaCurrentTakeover = true;
+    console.warn(
+      `lit-ui-router: uiSrefActive is taking over an existing aria-current="${existing}" that it did not set; ` +
+        'the attribute will be removed when the state goes inactive. ' +
+        'Pass ariaCurrentValue: false to keep the attribute under your own control.',
+      this.element,
+    );
   }
 
   /** @internal */
@@ -331,6 +515,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
       {
         activeClasses,
         exactClasses,
+        ariaCurrentValue,
         state,
         params = {},
         options = {},
@@ -340,6 +525,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   ): Promise<void> {
     this.activeClasses = activeClasses;
     this.exactClasses = exactClasses;
+    this.ariaCurrentValue = ariaCurrentValue;
     this.state = state;
     this.params = params;
     this.options = options;
@@ -364,6 +550,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     return this.render({
       activeClasses: this.activeClasses,
       exactClasses: this.exactClasses,
+      ariaCurrentValue: this.ariaCurrentValue,
     });
   };
 
@@ -531,8 +718,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * both "active" classes (applied when the state or any child state is active)
  * and "exact" classes (applied only when the exact state is active).
  *
+ * On link elements (`<a>`, `<area>`, `[role="link"]`) it also sets
+ * `aria-current="page"` while the *exact* state is active, and removes the
+ * attribute otherwise, so assistive technology gets the same "you are here"
+ * signal as the active CSS class. Other elements opt in by passing
+ * `ariaCurrentValue` explicitly.
+ *
  * **Arguments:**
- * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, and optional state/params
+ * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, ariaCurrentValue, and optional state/params
  *
  * @example Basic usage with nested uiSref
  * ```ts
@@ -569,6 +762,55 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *   </nav>
  * `
  * ```
+ *
+ * @example Customizing or disabling `aria-current`
+ * ```ts
+ * html`
+ *   <!-- a step in a multi-step flow -->
+ *   <a ${uiSref('wizard.payment')}
+ *      ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'step' })}>
+ *     Payment
+ *   </a>
+ *
+ *   <!-- opt a non-link element in; 'auto' keeps href off it -->
+ *   <tr ${uiSref('.message', { messageId }, { assignHref: 'auto' })}
+ *       ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'true' })}>
+ *   </tr>
+ *
+ *   <!-- leave aria-current alone: the app manages it, and a value written
+ *        here survives in every routing state -->
+ *   <a ${uiSref('home')}
+ *      aria-current="page"
+ *      ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: false })}>
+ *     Home
+ *   </a>
+ *
+ *   <!-- mark the ancestor section as well as the current page:
+ *        at `users` -> aria-current="page", at `users.detail` -> "location" -->
+ *   <a ${uiSref('users')}
+ *      ${uiSrefActive({
+ *        activeClasses: ['active'],
+ *        ariaCurrentValue: { exact: 'page', active: 'location' },
+ *      })}>
+ *     Users
+ *   </a>
+ *
+ *   <!-- ...or mark only the ancestor, never the page itself -->
+ *   <a ${uiSref('users')}
+ *      ${uiSrefActive({
+ *        activeClasses: ['active'],
+ *        ariaCurrentValue: { exact: false, active: 'location' },
+ *      })}>
+ *     Users
+ *   </a>
+ * `
+ * ```
+ *
+ * Only an `aria-current` this directive wrote is removed again. A template-authored
+ * value therefore survives right up until the directive first writes one of its own —
+ * from that point the directive owns the attribute and will clear it on the next
+ * inactive render. Pair a template-authored value with `ariaCurrentValue: false` to
+ * keep it for good.
  *
  * @example Explicit state (without nested uiSref)
  * ```ts
