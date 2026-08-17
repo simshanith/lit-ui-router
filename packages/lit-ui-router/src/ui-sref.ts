@@ -121,16 +121,24 @@ const warnedAssignHref = new WeakSet<Element>();
  * needs no cast. Read per call, so import order cannot matter.
  * @internal
  */
-function inLitDevMode(): boolean {
+export function inLitDevMode(): boolean {
   return typeof UIRouterLitElement.enableWarning === 'function';
 }
 
 /**
  * Whether the element navigates on its own. `localName` is lowercase for HTML
  * and SVG alike, so SVG `<a>` needs no namespace check.
+ *
+ * **Tag-based on purpose.** This decides where an `href` may be written, and
+ * `href` is a property of the tag, not of the role: `<div role="link" href="…">`
+ * is inert noise. `uiSrefActive`'s `isLinkElement` asks the neighbouring
+ * *role*-based question for `aria-current`, which `<div role="link">`
+ * legitimately takes. The two overlap on `<a>`/`<area>` and nowhere else — do
+ * not unify them.
+ *
  * @internal
  */
-function isNativeLink(element: Element): boolean {
+export function isNativeLink(element: Element): boolean {
   const tag = element.localName;
   return tag === 'a' || tag === 'area';
 }

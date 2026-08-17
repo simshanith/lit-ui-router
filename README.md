@@ -50,7 +50,7 @@ application states in a transaction-like manner.
 - **Flexible Component Definitions** - Use template functions, LitElement classes, or both
 - **State-based Routing** - Hierarchical states with nested views
 - **Data Resolution** - Fetch data before rendering with built-in resolve system
-- **Navigation Directives** - `uiSref` and `uiSrefActive` for declarative navigation
+- **Navigation Directives** - `uiSref` and `uiSrefActive` for declarative navigation, with `aria-current` on active links out of the box
 
 ## Get Started
 

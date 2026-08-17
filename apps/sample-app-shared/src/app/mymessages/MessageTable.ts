@@ -84,10 +84,15 @@ export class MessageTable extends LitElement {
       [...messages].sort(orderBy(sort)),
       ({ _id }) => _id,
       (message) =>
-        // a <tr> is neither a link by tag nor by role, so it takes no href
-        // under 'auto' and no aria-current by default — only the row class
+        // 'auto' keeps href off a <tr>, which is no anchor; aria-current is off
+        // by default on the same shape (isLinkElement, ui-sref-active.ts) and is
+        // opted into here because a selected row is the current item in a set —
+        // 'true', not the 'location' that marks a step in a flow
         html`<tr
-          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: 'true',
+          })}
           ${uiSref('.message', { messageId: message._id }, { assignHref: 'auto' })}
         >
           ${visibleColumns.map(

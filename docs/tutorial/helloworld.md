@@ -180,7 +180,7 @@ class AppRoot extends LitElement {
 ```
 
 - **`uiSref('hello')`**: Creates a link to the `hello` state. The directive sets the `href` attribute and handles click events.
-- **`uiSrefActive({ activeClasses: ['active'] })`**: Adds the `active` class when the linked state is currently active.
+- **`uiSrefActive({ activeClasses: ['active'] })`**: Adds the `active` class when the linked state is currently active. On a link it also sets `aria-current="page"` when that exact state is active, so screen reader users get the same "you are here" cue as the highlight.
 - **`<ui-view>`**: The viewport where routed components are rendered.
 
 ::: tip What is `sref`?
