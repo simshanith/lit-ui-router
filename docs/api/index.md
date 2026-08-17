@@ -106,8 +106,8 @@ Three knobs, via `ariaCurrentValue`:
     <a ${uiSref('users')} ${uiSrefActive({})}>Users</a>
   </li>
 
-  <!-- an explicit value opts a non-link element in -->
-  <tr ${uiSref('.message', { messageId })}
+  <!-- an explicit value opts a non-link element in; 'auto' keeps href off it -->
+  <tr ${uiSref('.message', { messageId }, { assignHref: 'auto' })}
       ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'true' })}></tr>
   ```
 

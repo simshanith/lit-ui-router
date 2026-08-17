@@ -191,6 +191,19 @@ const isLinkElement = (element: Element): boolean =>
   isNativeLink(element) || element.matches('[role~="link"]');
 
 /**
+ * Widens the shorthand forms to the per-state shape. A token, `false`, or
+ * nothing at all is an `exact` value; only the object form sets `active`.
+ *
+ * @internal
+ */
+const toAriaCurrentValues = (
+  ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
+): AriaCurrentValues =>
+  typeof ariaCurrentValue === 'object'
+    ? ariaCurrentValue
+    : { exact: ariaCurrentValue };
+
+/**
  * Parameters for the uiSrefActive directive.
  *
  * @see {@link uiSrefActive}
@@ -350,32 +363,41 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /**
-   * Resolves one `aria-current` value for the element's current state, then
-   * applies it.
+   * Resolves one `aria-current` value for the element's current state, or
+   * `false` for none.
    *
    * `exact` and `active` are branches of a single decision here, not the union
    * `classList` gets: an exactly-active element takes the `exact` value and
-   * never falls through to `active`. Resolving to a single value first is what
-   * keeps "no opinion", "explicitly off" and "not applicable" from each needing
-   * their own branch at the apply step.
+   * never falls through to `active`.
+   *
+   * @internal
+   */
+  private resolveAriaCurrent(
+    values: AriaCurrentValues,
+  ): AriaCurrentValue | false {
+    if (this.exact) {
+      return values.exact ?? (isLinkElement(this.element!) && 'page');
+    }
+    if (this.active) {
+      return values.active ?? false;
+    }
+    return false;
+  }
+
+  /**
+   * Writes, rewrites, or clears `aria-current`.
+   *
+   * Resolving to a single value first is what keeps "no opinion", "explicitly
+   * off" and "not applicable" from each needing their own branch here.
    *
    * @internal
    */
   private applyAriaCurrent(
     ariaCurrentValue: UiSrefActiveParams['ariaCurrentValue'],
   ): void {
-    const values: AriaCurrentValues =
-      ariaCurrentValue === undefined || typeof ariaCurrentValue === 'string'
-        ? { exact: ariaCurrentValue }
-        : ariaCurrentValue === false
-          ? { exact: false }
-          : ariaCurrentValue;
-
-    const resolved = this.exact
-      ? (values.exact ?? (isLinkElement(this.element!) && 'page'))
-      : this.active
-        ? (values.active ?? false)
-        : false;
+    const resolved = this.resolveAriaCurrent(
+      toAriaCurrentValues(ariaCurrentValue),
+    );
 
     if (resolved) {
       if (!this.ownsAriaCurrent) {
@@ -743,8 +765,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *     Payment
  *   </a>
  *
- *   <!-- opt a non-link element in -->
- *   <tr ${uiSref('.message', { messageId })}
+ *   <!-- opt a non-link element in; 'auto' keeps href off it -->
+ *   <tr ${uiSref('.message', { messageId }, { assignHref: 'auto' })}
  *       ${uiSrefActive({ activeClasses: ['active'], ariaCurrentValue: 'true' })}>
  *   </tr>
  *
