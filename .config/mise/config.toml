@@ -189,14 +189,16 @@ run = 'turbo run "${usage_package_name?}#build"'
 # the env itself (no CLI flags), plus WRANGLER_LOG for the underlying
 # tasks. TURBO_FORCE is the build-test deflake input: a truthy value
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
+# --summarize writes .turbo/runs/<id>.json (gitignored), which the
+# error_summary task reads on failure. It changes nothing about what runs.
 description = "Run the pull-request CI pipeline via turbo"
-run = "turbo run ci --ui=stream --log-order=stream"
+run = "turbo run ci --ui=stream --log-order=stream --summarize"
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
-run = "turbo run ci:main --ui=stream --log-order=stream"
+run = "turbo run ci:main --ui=stream --log-order=stream --summarize"
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
