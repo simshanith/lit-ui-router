@@ -53,7 +53,7 @@ ${sheets.map((s) => sheetSection(s)).join('\n')}`,
 // --- gallery / artifact ---
 const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
-  ['2', 'COMPANIONS', 'SOCKETS + PANELS', 'form breaks at 3–9 modules; keep the panel, socket the blocks'],
+  ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line'],
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],

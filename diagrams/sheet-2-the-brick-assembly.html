@@ -1,0 +1,710 @@
+<title>THE BRICK ASSEMBLY — Sheet 2 of 12</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0D2344;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #5F7899;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    --red: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0D2344;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #5F7899;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+:root {
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+}
+
+.sheet {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 26px;
+  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--mono);
+}
+.sheet-head .proj {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--mono);
+  font-size: clamp(17px, 2.6vw, 23px);
+  letter-spacing: 0.10em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.sheet-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
+.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 10px auto 0;
+  font-style: italic;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
+  gap: 22px;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.notes p {
+  font-size: 15px;
+  max-width: 62ch;
+  margin-bottom: 9px;
+}
+.notes p strong { font-weight: 600; }
+.notes p code, .gal-body code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<section class="sheet" id="sheet-2" aria-label="Sheet 2: THE BRICK ASSEMBLY">
+  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 2 / 12</span></div>
+  <h2 class="sheet-title">THE BRICK ASSEMBLY</h2>
+  <p class="sheet-sub">ALTITUDE 2 — one baseplate, four bricks, 25 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted 2026-08-16</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1400 1130" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four four courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-one two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
+<defs>
+  <marker id="s2-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s2-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s2-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s2-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s2-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s2-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s2-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s2-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<text x="1370" y="16" class="lbls" text-anchor="end" >SCALE — plan = whole studs (1 stud per 150 sloc, rounded up to the next standard brick shape) · height = one course per 3 authored files · the baseplate is not massed</text>
+<text x="1370" y="30" class="lblf" text-anchor="end" >COUPLING IS THE SUBJECT — accent marks a published extension point; the bricks themselves are drawn plain</text>
+
+<rect x="30" y="34" width="286" height="244" class="skf fnone"/>
+<text x="44" y="56" class="lbls" text-anchor="start" >PARTS — 4 BRICKS, 1 PLATE</text>
+<line x1="30" y1="64" x2="316" y2="64" class="skf"/>
+<polygon points="57.4,92.0 74.7,102.0 74.7,130.0 57.4,120.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="109.3,82.0 74.7,102.0 74.7,130.0 109.3,110.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="92.0,72.0 109.3,82.0 74.7,102.0 57.4,92.0" class="sk fp"/>
+<path d="M88.3,74.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="92.0" cy="74.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M79.6,79.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="83.3" cy="79.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M71.0,84.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="74.7" cy="84.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M62.3,89.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="66.0" cy="89.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M97.0,79.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="100.7" cy="79.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M88.3,84.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="92.0" cy="84.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M79.6,89.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="83.3" cy="89.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M71.0,94.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="74.7" cy="94.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<circle cx="48" cy="96" r="9.5" class="sk fp"/><text x="48" y="99.6" class="lbl" text-anchor="middle" >1</text>
+<text x="120" y="94" class="lbl" text-anchor="start" >lit-ui-router</text>
+<text x="120" y="106" class="lblf" text-anchor="start" >x1 · 2×4 · 4 courses</text>
+<polygon points="83.3,150.0 92.0,155.0 92.0,162.0 83.3,157.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="100.7,150.0 92.0,155.0 92.0,162.0 100.7,157.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="92.0,145.0 100.7,150.0 92.0,155.0 83.3,150.0" class="sk fp"/>
+<path d="M88.3,147.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="92.0" cy="147.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<circle cx="48" cy="148" r="9.5" class="sk fp"/><text x="48" y="151.6" class="lbl" text-anchor="middle" >2</text>
+<text x="120" y="146" class="lbl" text-anchor="start" >navigation-location-plugin</text>
+<text x="120" y="158" class="lblf" text-anchor="start" >x1 · 1×1 · 1 course</text>
+<polygon points="83.3,181.0 92.0,186.0 92.0,200.0 83.3,195.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="100.7,181.0 92.0,186.0 92.0,200.0 100.7,195.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="92.0,176.0 100.7,181.0 92.0,186.0 83.3,181.0" class="sk fp"/>
+<path d="M88.3,178.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="92.0" cy="178.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<circle cx="48" cy="186" r="9.5" class="sk fp"/><text x="48" y="189.6" class="lbl" text-anchor="middle" >3</text>
+<text x="120" y="184" class="lbl" text-anchor="start" >lit-ui-router-mobx</text>
+<text x="120" y="196" class="lblf" text-anchor="start" >x1 · 1×1 · 2 courses</text>
+<polygon points="57.4,235.0 74.7,245.0 74.7,266.0 57.4,256.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="109.3,225.0 74.7,245.0 74.7,266.0 109.3,246.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="92.0,215.0 109.3,225.0 74.7,245.0 57.4,235.0" class="sk fp"/>
+<path d="M88.3,217.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="92.0" cy="217.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M79.6,222.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="83.3" cy="222.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M71.0,227.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="74.7" cy="227.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M62.3,232.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="66.0" cy="232.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M97.0,222.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="100.7" cy="222.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M88.3,227.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="92.0" cy="227.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M79.6,232.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="83.3" cy="232.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<path d="M71.0,237.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
+<ellipse cx="74.7" cy="237.6" rx="3.7" ry="2.1" class="sk fp2"/>
+<circle cx="48" cy="232" r="9.5" class="sk fp"/><text x="48" y="235.6" class="lbl" text-anchor="middle" >4</text>
+<text x="120" y="230" class="lbl" text-anchor="start" >ui-router-server</text>
+<text x="120" y="242" class="lblf" text-anchor="start" >x1 · 2×4 · 3 courses</text>
+<rect x="30" y="460" width="286" height="142" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="44" y="482" class="lbls" text-anchor="start" >SPARE PARTS — STUD A, NOT IN THIS SET</text>
+<polygon points="61.3,510.0 70.0,515.0 70.0,522.0 61.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
+<polygon points="78.7,510.0 70.0,515.0 70.0,522.0 78.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="70.0,505.0 78.7,510.0 70.0,515.0 61.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
+<path d="M66.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
+<ellipse cx="70.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
+<polygon points="121.3,510.0 130.0,515.0 130.0,522.0 121.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
+<polygon points="138.7,510.0 130.0,515.0 130.0,522.0 138.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="130.0,505.0 138.7,510.0 130.0,515.0 121.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
+<path d="M126.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
+<ellipse cx="130.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
+<polygon points="181.3,510.0 190.0,515.0 190.0,522.0 181.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
+<polygon points="198.7,510.0 190.0,515.0 190.0,522.0 198.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="190.0,505.0 198.7,510.0 190.0,515.0 181.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
+<path d="M186.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
+<ellipse cx="190.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
+<polygon points="241.3,510.0 250.0,515.0 250.0,522.0 241.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
+<polygon points="258.7,510.0 250.0,515.0 250.0,522.0 258.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="250.0,505.0 258.7,510.0 250.0,515.0 241.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
+<path d="M246.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
+<ellipse cx="250.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
+<text x="44" y="542" class="lblf" text-anchor="start" >@uirouter/visualizer 7.2.1</text>
+<text x="44" y="554" class="lblf" text-anchor="start" >@uirouter/sticky-states 1.5.1</text>
+<text x="44" y="566" class="lblf" text-anchor="start" >@uirouter/dsr 1.2.0</text>
+<text x="44" y="578" class="lblf" text-anchor="start" >@uirouter/rx 1.0.0</text>
+<text x="44" y="594" class="lblf" text-anchor="start" >all four queue on stud A — sheet 4</text>
+<rect x="880" y="44" width="490" height="238" class="skf fnone"/>
+<text x="894" y="66" class="lbls" text-anchor="start" >STUD SCHEDULE — @uirouter/core’s published surface</text>
+<line x1="880" y1="74" x2="1370" y2="74" class="skf"/>
+<text x="894" y="92" class="lbla" text-anchor="start" >A</text><text x="912" y="92" class="lbl" text-anchor="start" >router.plugin(factory)</text>
+<text x="912" y="106" class="lblf" text-anchor="start" >the whole back rail — one method, eight seats, two taken here</text>
+<text x="912" y="120" class="lblf" text-anchor="start" >brick 1 registers servicesPlugin; brick 2 takes the LOCATION SEAT</text>
+<text x="912" y="134" class="lblf" text-anchor="start" >the red ring: a router holds exactly ONE location plugin, so brick 2</text>
+<text x="912" y="148" class="lblf" text-anchor="start" >SWAPS core’s pushStateLocation rather than adding to it</text>
+<text x="894" y="162" class="lbla" text-anchor="start" >B</text><text x="912" y="162" class="lbl" text-anchor="start" >stateRegistry.decorator(…)</text>
+<text x="912" y="176" class="lblf" text-anchor="start" >brick 1 — decorator(‘views’, litViewsBuilder) is the whole Lit graft</text>
+<text x="894" y="190" class="lbla" text-anchor="start" >C</text><text x="912" y="190" class="lbl" text-anchor="start" >transitionService.onSuccess()</text>
+<text x="912" y="204" class="lblf" text-anchor="start" >brick 3 — one hook per router, via RouterStore.attach()</text>
+<text x="894" y="218" class="lbla" text-anchor="start" >D</text><text x="912" y="218" class="lbl" text-anchor="start" >urlService.listen() / .sync() / .rules</text>
+<text x="912" y="232" class="lblf" text-anchor="start" >brick 1 starts the client; brick 4 replays rules on its own plate</text>
+<text x="894" y="246" class="lbla" text-anchor="start" >E</text><text x="912" y="246" class="lbl" text-anchor="start" >globals.current / .params</text>
+<text x="912" y="260" class="lblf" text-anchor="start" >brick 3 reads them into observables — it never writes router state</text>
+
+<polygon points="262.2,428 539.3,588 539.3,600 262.2,440" class="sk" fill="var(--paper-2)"/>
+<polygon points="747.1,468 539.3,588 539.3,600 747.1,480" fill="var(--paper)" stroke="none"/>
+<polygon points="747.1,468 539.3,588 539.3,600 747.1,480" class="sk" fill="url(#s2-hx)"/>
+<polygon points="470,308 747.1,468 539.3,588 262.2,428" class="sk fp"/>
+<path d="M455.3,321 L455.3,328 A14.7,8.49 0 0 0 484.7,328 L484.7,321 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="321" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="470" cy="321" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M489.90000000000003,341 L489.90000000000003,348 A14.7,8.49 0 0 0 519.3000000000001,348 L519.3000000000001,341 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="341" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="504.6" cy="341" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M524.5999999999999,361 L524.5999999999999,368 A14.7,8.49 0 0 0 554,368 L554,361 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="539.3" cy="361" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="539.3" cy="361" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M559.1999999999999,381 L559.1999999999999,388 A14.7,8.49 0 0 0 588.6,388 L588.6,381 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="573.9" cy="381" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="573.9" cy="381" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M593.9,401 L593.9,408 A14.7,8.49 0 0 0 623.3000000000001,408 L623.3000000000001,401 Z" class="skr" fill="var(--paper-2)"/>
+<ellipse cx="608.6" cy="401" rx="14.7" ry="8.49" class="skr fp"/><ellipse cx="608.6" cy="401" rx="20.2" ry="11.7" class="skr fnone"/>
+<path d="M628.5,421 L628.5,428 A14.7,8.49 0 0 0 657.9000000000001,428 L657.9000000000001,421 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="643.2" cy="421" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="643.2" cy="421" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M663.0999999999999,441 L663.0999999999999,448 A14.7,8.49 0 0 0 692.5,448 L692.5,441 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="677.8" cy="441" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="677.8" cy="441" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M697.8,461 L697.8,468 A14.7,8.49 0 0 0 727.2,468 L727.2,461 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="712.5" cy="461" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="712.5" cy="461" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M420.7,341 L420.7,348 A14.7,8.49 0 0 0 450.09999999999997,348 L450.09999999999997,341 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="341" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M455.3,361 L455.3,368 A14.7,8.49 0 0 0 484.7,368 L484.7,361 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="361" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M489.90000000000003,381 L489.90000000000003,388 A14.7,8.49 0 0 0 519.3000000000001,388 L519.3000000000001,381 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="381" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M524.5999999999999,401 L524.5999999999999,408 A14.7,8.49 0 0 0 554,408 L554,401 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="539.3" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M559.1999999999999,421 L559.1999999999999,428 A14.7,8.49 0 0 0 588.6,428 L588.6,421 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="573.9" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M593.9,441 L593.9,448 A14.7,8.49 0 0 0 623.3000000000001,448 L623.3000000000001,441 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="608.6" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M628.5,461 L628.5,468 A14.7,8.49 0 0 0 657.9000000000001,468 L657.9000000000001,461 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="643.2" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M663.0999999999999,481 L663.0999999999999,488 A14.7,8.49 0 0 0 692.5,488 L692.5,481 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="677.8" cy="481" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="677.8" cy="481" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M386,361 L386,368 A14.7,8.49 0 0 0 415.4,368 L415.4,361 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="400.7" cy="361" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M420.7,381 L420.7,388 A14.7,8.49 0 0 0 450.09999999999997,388 L450.09999999999997,381 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="381" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M455.3,401 L455.3,408 A14.7,8.49 0 0 0 484.7,408 L484.7,401 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M489.90000000000003,421 L489.90000000000003,428 A14.7,8.49 0 0 0 519.3000000000001,428 L519.3000000000001,421 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M524.5999999999999,441 L524.5999999999999,448 A14.7,8.49 0 0 0 554,448 L554,441 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="539.3" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M559.1999999999999,461 L559.1999999999999,468 A14.7,8.49 0 0 0 588.6,468 L588.6,461 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="573.9" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M593.9,481 L593.9,488 A14.7,8.49 0 0 0 623.3000000000001,488 L623.3000000000001,481 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="608.6" cy="481" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M628.5,501 L628.5,508 A14.7,8.49 0 0 0 657.9000000000001,508 L657.9000000000001,501 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="643.2" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M351.40000000000003,381 L351.40000000000003,388 A14.7,8.49 0 0 0 380.8,388 L380.8,381 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="366.1" cy="381" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M386,401 L386,408 A14.7,8.49 0 0 0 415.4,408 L415.4,401 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="400.7" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M420.7,421 L420.7,428 A14.7,8.49 0 0 0 450.09999999999997,428 L450.09999999999997,421 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M455.3,441 L455.3,448 A14.7,8.49 0 0 0 484.7,448 L484.7,441 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M489.90000000000003,461 L489.90000000000003,468 A14.7,8.49 0 0 0 519.3000000000001,468 L519.3000000000001,461 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M524.5999999999999,481 L524.5999999999999,488 A14.7,8.49 0 0 0 554,488 L554,481 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="539.3" cy="481" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M559.1999999999999,501 L559.1999999999999,508 A14.7,8.49 0 0 0 588.6,508 L588.6,501 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="573.9" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M593.9,521 L593.9,528 A14.7,8.49 0 0 0 623.3000000000001,528 L623.3000000000001,521 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="608.6" cy="521" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="608.6" cy="521" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M316.7,401 L316.7,408 A14.7,8.49 0 0 0 346.09999999999997,408 L346.09999999999997,401 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="331.4" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M351.40000000000003,421 L351.40000000000003,428 A14.7,8.49 0 0 0 380.8,428 L380.8,421 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="366.1" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M386,441 L386,448 A14.7,8.49 0 0 0 415.4,448 L415.4,441 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="400.7" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M420.7,461 L420.7,468 A14.7,8.49 0 0 0 450.09999999999997,468 L450.09999999999997,461 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M455.3,481 L455.3,488 A14.7,8.49 0 0 0 484.7,488 L484.7,481 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="481" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M489.90000000000003,501 L489.90000000000003,508 A14.7,8.49 0 0 0 519.3000000000001,508 L519.3000000000001,501 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M524.5999999999999,521 L524.5999999999999,528 A14.7,8.49 0 0 0 554,528 L554,521 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="539.3" cy="521" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M559.1999999999999,541 L559.1999999999999,548 A14.7,8.49 0 0 0 588.6,548 L588.6,541 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="573.9" cy="541" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M282.1,421 L282.1,428 A14.7,8.49 0 0 0 311.5,428 L311.5,421 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="296.8" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M316.7,441 L316.7,448 A14.7,8.49 0 0 0 346.09999999999997,448 L346.09999999999997,441 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="331.4" cy="441" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="331.4" cy="441" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M351.40000000000003,461 L351.40000000000003,468 A14.7,8.49 0 0 0 380.8,468 L380.8,461 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="366.1" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M386,481 L386,488 A14.7,8.49 0 0 0 415.4,488 L415.4,481 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="400.7" cy="481" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="400.7" cy="481" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M420.7,501 L420.7,508 A14.7,8.49 0 0 0 450.09999999999997,508 L450.09999999999997,501 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M455.3,521 L455.3,528 A14.7,8.49 0 0 0 484.7,528 L484.7,521 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="521" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M489.90000000000003,541 L489.90000000000003,548 A14.7,8.49 0 0 0 519.3000000000001,548 L519.3000000000001,541 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="541" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M524.5999999999999,561 L524.5999999999999,568 A14.7,8.49 0 0 0 554,568 L554,561 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="539.3" cy="561" rx="14.7" ry="8.49" class="sks fp2"/>
+<line x1="504.6" y1="264" x2="504.6" y2="331.5" class="ska" stroke-dasharray="6 4"/>
+<circle cx="504.6" cy="331.5" r="2.2" class="fa"/>
+<line x1="608.6" y1="280" x2="608.6" y2="391.5" class="ska" stroke-dasharray="6 4"/>
+<circle cx="608.6" cy="391.5" r="2.2" class="fa"/>
+<line x1="366.1" y1="148" x2="366.1" y2="191.5" class="ska" stroke-dasharray="6 4"/>
+<circle cx="366.1" cy="191.5" r="2.2" class="fa"/>
+<polygon points="331.4,208 400.7,248 400.7,344 331.4,304" class="sk" fill="var(--paper-2)"/>
+<polygon points="539.3,168 400.7,248 400.7,344 539.3,264" fill="var(--paper)" stroke="none"/>
+<polygon points="539.3,168 400.7,248 400.7,344 539.3,264" class="sk" fill="url(#s2-hx)"/>
+<polygon points="470,128 539.3,168 400.7,248 331.4,208" class="sk fp"/>
+<path d="M331.4,280 L400.7,320 L539.3,240" class="skf fnone"/>
+<path d="M331.4,256 L400.7,296 L539.3,216" class="skf fnone"/>
+<path d="M331.4,232 L400.7,272 L539.3,192" class="skf fnone"/>
+<path d="M455.3,141 L455.3,148 A14.7,8.49 0 0 0 484.7,148 L484.7,141 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="141" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M420.7,161 L420.7,168 A14.7,8.49 0 0 0 450.09999999999997,168 L450.09999999999997,161 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="161" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M386,181 L386,188 A14.7,8.49 0 0 0 415.4,188 L415.4,181 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="400.7" cy="181" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M351.40000000000003,201 L351.40000000000003,208 A14.7,8.49 0 0 0 380.8,208 L380.8,201 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="366.1" cy="201" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="366.1" cy="201" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M489.90000000000003,161 L489.90000000000003,168 A14.7,8.49 0 0 0 519.3000000000001,168 L519.3000000000001,161 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="504.6" cy="161" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M455.3,181 L455.3,188 A14.7,8.49 0 0 0 484.7,188 L484.7,181 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="470" cy="181" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M420.7,201 L420.7,208 A14.7,8.49 0 0 0 450.09999999999997,208 L450.09999999999997,201 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="435.4" cy="201" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M386,221 L386,228 A14.7,8.49 0 0 0 415.4,228 L415.4,221 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="400.7" cy="221" rx="14.7" ry="8.49" class="sk fp2"/>
+<polygon points="331.4,100 366.1,120 366.1,168 331.4,148" class="sk" fill="var(--paper-2)"/>
+<polygon points="400.7,100 366.1,120 366.1,168 400.7,148" fill="var(--paper)" stroke="none"/>
+<polygon points="400.7,100 366.1,120 366.1,168 400.7,148" class="sk" fill="url(#s2-hx)"/>
+<polygon points="366.1,80 400.7,100 366.1,120 331.4,100" class="sk fp"/>
+<path d="M331.4,124 L366.1,144 L400.7,124" class="skf fnone"/>
+<path d="M351.40000000000003,93 L351.40000000000003,100 A14.7,8.49 0 0 0 380.8,100 L380.8,93 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="366.1" cy="93" rx="14.7" ry="8.49" class="sk fp2"/>
+<polygon points="573.9,256 608.6,276 608.6,300 573.9,280" class="sk" fill="var(--paper-2)"/>
+<polygon points="643.2,256 608.6,276 608.6,300 643.2,280" fill="var(--paper)" stroke="none"/>
+<polygon points="643.2,256 608.6,276 608.6,300 643.2,280" class="sk" fill="url(#s2-hx)"/>
+<polygon points="608.6,236 643.2,256 608.6,276 573.9,256" class="sk fp"/>
+
+<path d="M593.9,249 L593.9,256 A14.7,8.49 0 0 0 623.3000000000001,256 L623.3000000000001,249 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="608.6" cy="249" rx="14.7" ry="8.49" class="sk fp2"/>
+
+<polygon points="991.4,558 1130,638 1130,650 991.4,570" class="sks" stroke-dasharray="6 4" fill="var(--paper-2)"/>
+<polygon points="1268.6,558 1130,638 1130,650 1268.6,570" fill="var(--paper)" stroke="none"/>
+<polygon points="1268.6,558 1130,638 1130,650 1268.6,570" class="sks" stroke-dasharray="6 4" fill="url(#s2-hx)"/>
+<polygon points="1130,478 1268.6,558 1130,638 991.4,558" class="sks fp" stroke-dasharray="6 4"/>
+<path d="M1115.3,491 L1115.3,498 A14.7,8.49 0 0 0 1144.7,498 L1144.7,491 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1130" cy="491" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1149.8999999999999,511 L1149.8999999999999,518 A14.7,8.49 0 0 0 1179.3,518 L1179.3,511 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="1164.6" cy="511" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="1164.6" cy="511" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M1184.6,531 L1184.6,538 A14.7,8.49 0 0 0 1214,538 L1214,531 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1199.3" cy="531" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1219.2,551 L1219.2,558 A14.7,8.49 0 0 0 1248.6000000000001,558 L1248.6000000000001,551 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1233.9" cy="551" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1080.7,511 L1080.7,518 A14.7,8.49 0 0 0 1110.1000000000001,518 L1110.1000000000001,511 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1095.4" cy="511" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1115.3,531 L1115.3,538 A14.7,8.49 0 0 0 1144.7,538 L1144.7,531 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1130" cy="531" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1149.8999999999999,551 L1149.8999999999999,558 A14.7,8.49 0 0 0 1179.3,558 L1179.3,551 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1164.6" cy="551" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1184.6,571 L1184.6,578 A14.7,8.49 0 0 0 1214,578 L1214,571 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1199.3" cy="571" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1046,531 L1046,538 A14.7,8.49 0 0 0 1075.4,538 L1075.4,531 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1060.7" cy="531" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1080.7,551 L1080.7,558 A14.7,8.49 0 0 0 1110.1000000000001,558 L1110.1000000000001,551 Z" class="ska" fill="var(--paper-2)"/>
+<ellipse cx="1095.4" cy="551" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="1095.4" cy="551" rx="20.2" ry="11.7" class="ska fnone"/>
+<path d="M1115.3,571 L1115.3,578 A14.7,8.49 0 0 0 1144.7,578 L1144.7,571 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1130" cy="571" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1149.8999999999999,591 L1149.8999999999999,598 A14.7,8.49 0 0 0 1179.3,598 L1179.3,591 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1164.6" cy="591" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1011.3999999999999,551 L1011.3999999999999,558 A14.7,8.49 0 0 0 1040.8,558 L1040.8,551 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1026.1" cy="551" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1046,571 L1046,578 A14.7,8.49 0 0 0 1075.4,578 L1075.4,571 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1060.7" cy="571" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1080.7,591 L1080.7,598 A14.7,8.49 0 0 0 1110.1000000000001,598 L1110.1000000000001,591 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1095.4" cy="591" rx="14.7" ry="8.49" class="sks fp2"/>
+<path d="M1115.3,611 L1115.3,618 A14.7,8.49 0 0 0 1144.7,618 L1144.7,611 Z" class="sks" fill="var(--paper-2)"/>
+<ellipse cx="1130" cy="611" rx="14.7" ry="8.49" class="sks fp2"/>
+<line x1="1164.6" y1="420" x2="1164.6" y2="501.5" class="ska" stroke-dasharray="6 4"/>
+<circle cx="1164.6" cy="501.5" r="2.2" class="fa"/>
+<line x1="1095.4" y1="460" x2="1095.4" y2="541.5" class="ska" stroke-dasharray="6 4"/>
+<circle cx="1095.4" cy="541.5" r="2.2" class="fa"/>
+<polygon points="1026.1,408 1095.4,448 1095.4,520 1026.1,480" class="sk" fill="var(--paper-2)"/>
+<polygon points="1233.9,368 1095.4,448 1095.4,520 1233.9,440" fill="var(--paper)" stroke="none"/>
+<polygon points="1233.9,368 1095.4,448 1095.4,520 1233.9,440" class="sk" fill="url(#s2-hx)"/>
+<polygon points="1164.6,328 1233.9,368 1095.4,448 1026.1,408" class="sk fp"/>
+<path d="M1026.1,456 L1095.4,496 L1233.9,416" class="skf fnone"/>
+<path d="M1026.1,432 L1095.4,472 L1233.9,392" class="skf fnone"/>
+<path d="M1149.8999999999999,341 L1149.8999999999999,348 A14.7,8.49 0 0 0 1179.3,348 L1179.3,341 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1164.6" cy="341" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1115.3,361 L1115.3,368 A14.7,8.49 0 0 0 1144.7,368 L1144.7,361 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1130" cy="361" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1080.7,381 L1080.7,388 A14.7,8.49 0 0 0 1110.1000000000001,388 L1110.1000000000001,381 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1095.4" cy="381" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1046,401 L1046,408 A14.7,8.49 0 0 0 1075.4,408 L1075.4,401 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1060.7" cy="401" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1184.6,361 L1184.6,368 A14.7,8.49 0 0 0 1214,368 L1214,361 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1199.3" cy="361" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1149.8999999999999,381 L1149.8999999999999,388 A14.7,8.49 0 0 0 1179.3,388 L1179.3,381 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1164.6" cy="381" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1115.3,401 L1115.3,408 A14.7,8.49 0 0 0 1144.7,408 L1144.7,401 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1130" cy="401" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1080.7,421 L1080.7,428 A14.7,8.49 0 0 0 1110.1000000000001,428 L1110.1000000000001,421 Z" class="sk" fill="var(--paper-2)"/>
+<ellipse cx="1095.4" cy="421" rx="14.7" ry="8.49" class="sk fp2"/>
+
+<circle cx="470" cy="108" r="9.5" class="ska fp"/><text x="470" y="111.6" class="lbla" text-anchor="middle" >1</text>
+<text x="492" y="102" class="lblb" text-anchor="start" >lit-ui-router 1.9.0</text>
+<text x="492" y="114" class="lblf" text-anchor="start" >12f · 1,189 sloc · 2×4 · 4 courses</text>
+<text x="492" y="126" class="lbla" text-anchor="start" >STUDS  A · B · D — and it extends UIRouter</text>
+
+<circle cx="608.6" cy="216" r="9.5" class="ska fp"/><text x="608.6" y="219.6" class="lbla" text-anchor="middle" >2</text>
+<text x="660" y="190" class="lblb" text-anchor="start" >ui-router-navigation-</text>
+<text x="660" y="202" class="lblb" text-anchor="start" >location-plugin 0.3.0</text>
+<text x="660" y="214" class="lblf" text-anchor="start" >1f · 105 sloc · 1×1 · 1 course</text>
+<text x="660" y="226" class="lblr" text-anchor="start" >STUD  A — the LOCATION SEAT</text>
+<text x="660" y="238" class="lblr" text-anchor="start" >a swap, never an addition</text>
+
+<circle cx="366.1" cy="60" r="9.5" class="ska fp"/><text x="366.1" y="63.6" class="lbla" text-anchor="middle" >3</text>
+<text x="388" y="42" class="lblb" text-anchor="start" >lit-ui-router-mobx 0.5.0</text>
+<text x="388" y="54" class="lblf" text-anchor="start" >4f · 133 sloc · 1×1 · 2 courses</text>
+<text x="388" y="66" class="lbla" text-anchor="start" >SEATS ON BRICK 1 — seekRouter()</text>
+<text x="388" y="78" class="lbla" text-anchor="start" >STUDS  C · E on the plate below</text>
+
+<circle cx="1164.6" cy="308" r="9.5" class="ska fp"/><text x="1164.6" y="311.6" class="lbla" text-anchor="middle" >4</text>
+<text x="1140" y="302" class="lblb" text-anchor="end" >ui-router-server 0.1.1</text>
+<text x="1140" y="314" class="lblf" text-anchor="end" >8f · 1,141 sloc · 2×4 · 3 courses</text>
+<text x="1140" y="326" class="lbla" text-anchor="end" >STUDS  A′ · D′ — on a plate of its own</text>
+
+<!-- the plate itself -->
+<text x="40" y="320" class="lblb" text-anchor="start" >@uirouter/core 6.1.2 — THE BASEPLATE</text>
+<text x="40" y="332" class="lblf" text-anchor="start" >80 files · 5,272 sloc · not massed</text>
+<text x="40" y="344" class="lblf" text-anchor="start" >a plate is ground: every brick peers it,</text>
+<text x="40" y="356" class="lblf" text-anchor="start" >and no brick may replace it</text>
+<line x1="278" y1="338" x2="348" y2="412" class="skf"/>
+
+<!-- named studs, labelled off the plate -->
+<text x="60" y="640" class="lbla" text-anchor="start" >D   urlService</text>
+<text x="60" y="652" class="lblf" text-anchor="start" >.listen() · .sync() · .rules — brick 1</text>
+<text x="60" y="664" class="lblf" text-anchor="start" >starts and syncs the client router</text>
+<line x1="315" y1="636" x2="334" y2="452" class="skf"/>
+
+<text x="60" y="692" class="lbla" text-anchor="start" >C   transitionService</text>
+<text x="60" y="704" class="lblf" text-anchor="start" >.onSuccess({}, update) — one hook per</text>
+<text x="60" y="716" class="lblf" text-anchor="start" >router, memoised by RouterStore.for()</text>
+<line x1="315" y1="688" x2="403" y2="492" class="skf"/>
+
+<text x="760" y="452" class="lbla" text-anchor="start" >B   stateRegistry</text>
+<text x="760" y="464" class="lblf" text-anchor="start" >.decorator(‘views’, litViewsBuilder)</text>
+<text x="760" y="476" class="lblf" text-anchor="start" >the one graft that renders Lit</text>
+<line x1="755" y1="462" x2="697" y2="477" class="skf"/>
+
+<text x="760" y="570" class="lbla" text-anchor="start" >E   globals</text>
+<text x="760" y="582" class="lblf" text-anchor="start" >.current · .params · the last transition</text>
+<text x="760" y="594" class="lblf" text-anchor="start" >brick 3 mirrors them, never writes</text>
+<line x1="755" y1="580" x2="626" y2="527" class="skf"/>
+
+<text x="760" y="352" class="lbla" text-anchor="start" >A   router.plugin(factory)</text>
+<text x="760" y="364" class="lblf" text-anchor="start" >the rail is one method, not eight slots:</text>
+<text x="760" y="376" class="lblf" text-anchor="start" >bricks queue on it, never on each other</text>
+<line x1="756" y1="367" x2="695" y2="430" class="skf"/>
+
+<!-- the absent coupling -->
+<line x1="729.8" y1="468" x2="991.4" y2="558" class="skf" stroke-dasharray="5 4"/>
+<circle cx="860.6" cy="513" r="9" class="skr fp"/>
+<line x1="854.2" y1="519.4" x2="867" y2="506.6" class="skr"/>
+<text x="860" y="626" class="lblr" text-anchor="middle" >ui-router-server takes NO stud on this plate —</text>
+<text x="860" y="638" class="lblr" text-anchor="middle" >@uirouter/core is an OPTIONAL peer for it</text>
+
+<text x="968" y="668" class="lbls" text-anchor="start" >THE SECOND PLATE — the same core, headless</text>
+<text x="968" y="680" class="lblf" text-anchor="start" >peerDependenciesMeta marks core optional; simulate.ts does</text>
+<text x="968" y="692" class="lblf" text-anchor="start" >new UIRouter() + plugin(servicesPlugin) + plugin(memoryLocationPlugin),</text>
+<text x="968" y="704" class="lblf" text-anchor="start" >reached only through a lazy import — so the default ‘matcher’</text>
+<text x="968" y="716" class="lblf" text-anchor="start" >tier ships with no plate at all, and never loads one</text>
+
+<text x="700" y="752" class="lbla" text-anchor="middle" >no brick touches another brick — except 3, and even that seats on a published seam</text>
+
+<rect x="40" y="782" width="1320" height="312" class="sk fp"/>
+<text x="58" y="804" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — one row per brick · quantized plan · courses · the exact coupling, with its source</text>
+<line x1="40" y1="814" x2="1360" y2="814" class="skf"/>
+<text x="58" y="834" class="lbls" text-anchor="start" > 0  @uirouter/core 6.1.2 — THE BASEPLATE · 80f · 5,272 sloc · NOT MASSED (a plate is ground) · studs A–E are its published API</text>
+<text x="58" y="851" class="lbls" text-anchor="start" >    every brick on this sheet declares it as a peerDependency; none of them declares another brick, except 3 → 1</text>
+<text x="58" y="868" class="lbls" text-anchor="start" > 1  lit-ui-router 1.9.0 · 12f · 1,189 sloc · 2×4 · 4 courses · studs A · B · D</text>
+<text x="58" y="885" class="lbls" text-anchor="start" >    class UIRouterLit extends UIRouter — moulded, not snapped; everything lit-specific enters through published seams:</text>
+<text x="58" y="902" class="lbls" text-anchor="start" >    this.plugin(servicesPlugin) · this.stateRegistry.decorator(‘views’, litViewsBuilder) · urlService.listen()/sync()   [src/core.ts]</text>
+<text x="58" y="919" class="lbls" text-anchor="start" > 2  ui-router-navigation-location-plugin 0.3.0 · 1f · 105 sloc · 1×1 · 1 course · stud A (LOCATION SEAT)</text>
+<text x="58" y="936" class="lbls" text-anchor="start" >    navigationLocationPlugin = locationPluginFactory(‘vanilla.navigationLocation’, true, NavigationLocationService, BrowserLocationConfig)</text>
+<text x="58" y="953" class="lbls" text-anchor="start" >    a router holds exactly one location plugin, so this brick SWAPS core’s pushStateLocation; it peers core only — it has never heard of Lit   [src/index.ts]</text>
+<text x="58" y="970" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx 0.5.0 · 4f · 133 sloc · 1×1 · 2 courses · seats on brick 1 · studs C · E</text>
+<text x="58" y="987" class="lbls" text-anchor="start" >    RouterStore.attach() → router.transitionService.onSuccess({}, update); update() reads globals.current/.params/.successfulTransitions</text>
+<text x="58" y="1004" class="lbls" text-anchor="start" >    RouterReactionController → UIRouterLitElement.seekRouter(host), the ui-router-context event — the one brick-to-brick coupling in the set   [src/router-store.ts, src/router-reaction-controller.ts]</text>
+<text x="58" y="1021" class="lbls" text-anchor="start" > 4  ui-router-server 0.1.1 · 8f · 1,141 sloc · 2×4 · 3 courses · NO STUD on this plate</text>
+<text x="58" y="1038" class="lbls" text-anchor="start" >    peerDependenciesMeta: { ‘@uirouter/core’: { optional: true } } — the ‘matcher’ tier is dependency-free pattern matching</text>
+<text x="58" y="1055" class="lbls" text-anchor="start" >    the ‘simulate’ tier reaches a plate of its own behind a lazy import(): new UIRouter() + plugin(servicesPlugin) + plugin(memoryLocationPlugin)   [src/index.ts, src/simulate.ts]</text>
+<text x="58" y="1080" class="lbls" text-anchor="start" >TOTAL — 4 bricks · 25 authored files · 2,568 sloc, standing on one 80-file, 5,272-line baseplate · counted 2026-08-16, same basis as sheets 3 and 4</text>
+</svg></div>
+    <figcaption>Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Why bricks.</strong> Rev A drew these packages as sockets and panels and conceded the form broke. The mechanism they actually share is a <em>standardised coupling</em>: each companion attaches to <code>@uirouter/core</code> through a published extension point, none of them attaches to another, and any one can be left in the box without disturbing the rest. That is a stud, and a stud is worth drawing. So this is an exploded isometric — the LEGO instruction manual's own idiom — with a numbered part per package, a drop line onto the exact stud it takes, and a parts callout. Nothing is drawn seated, because a seated assembly hides the undersides, and the undersides are the argument.</p>
+<p><strong>The plate is core, not this package.</strong> Sheet 4's finding decides it: every limb in the family declares <code>@uirouter/core</code> as a peer and touches nothing else. <code>lit-ui-router</code> is therefore brick 1, not the ground — and the drawing is honest about the one place the metaphor strains: <code>class UIRouterLit extends UIRouter</code> is moulded onto the plate, not snapped to it. What the drawing then shows is that the graft is thin anyway. Everything Lit-specific arrives through two published seams — <code>this.plugin(servicesPlugin)</code> and <code>this.stateRegistry.decorator('views', litViewsBuilder)</code> — plus <code>urlService.listen()/sync()</code> to start the thing. Three calls. That is the whole renderer coupling.</p>
+<p><strong>One stud is a seat, not a socket.</strong> <code>router.plugin()</code> is the back rail: a single method that anything may queue on, which is why the spare-parts box is drawn at all — <code>@uirouter/visualizer</code>, <code>sticky-states</code>, <code>dsr</code> and <code>rx</code> all register through it and none of them knows this repo exists. One seat on that rail is ringed red, because it behaves differently: a router holds <em>exactly one</em> location plugin, so <code>ui-router-navigation-location-plugin</code> is a <em>swap</em> for core's <code>pushStateLocation</code>, never an addition. That package peers <code>@uirouter/core</code> and nothing else — it has never heard of Lit, and would work identically under the React or Angular adapters.</p>
+<p><strong>Brick 3 is the only brick-to-brick coupling in the set, and it is a small one.</strong> <code>lit-ui-router-mobx</code> seats on brick 1 through <code>UIRouterLitElement.seekRouter(host)</code> — a bubbling <code>ui-router-context</code> event, published precisely as the dependency-injection primitive for external reactivity systems — and then reaches the plate directly: one <code>transitionService.onSuccess({}, update)</code> hook, memoised one-per-router by <code>RouterStore.for()</code>, whose <code>update()</code> reads <code>globals.current</code>, <code>globals.params</code> and the last successful transition into MobX observables. It observes; it never writes router state. 133 lines, one stud on the brick above and two on the plate below.</p>
+<p><strong>The fourth brick has no stud here at all, and that is the design.</strong> <code>ui-router-server</code> declares <code>@uirouter/core</code> as an <em>optional</em> peer (<code>peerDependenciesMeta</code>); its default <code>'matcher'</code> tier is dependency-free pattern matching and never loads core, and its <code>'simulate'</code> tier reaches a plate of its own behind a lazy <code>import()</code> — <code>new UIRouter()</code> with <code>servicesPlugin</code> and <code>memoryLocationPlugin</code>, built fresh per resolution because core mutates registrations. Drawing it over a dashed second plate is the only truthful placement: it is the same mould, a different assembly, and the tie back to the client plate is crossed out.</p>
+<p><strong>Massing, quantized.</strong> Continuous mass would have made these bricks unbuildable shapes, so the census is rounded to LEGO: <em>plan</em> is one stud per 150 sloc rounded up to the next standard shape (1×1, 1×2, 2×2, 2×3, 2×4), <em>height</em> is one course per three authored files. The result is legible and it is a finding — the two bricks that carry a renderer and a server are 2×4s; the two that plug the router into something are 1×1 tiles, 105 and 133 lines. A companion that needed to be a 2×4 would be <code>lit-ui-router</code>'s problem to absorb, not a package. The baseplate is deliberately <em>not</em> massed: 80 files and 5,272 lines of core is ground, and ground has no height.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="4,12 16,5 30,12 30,16 16,9 4,16" class="sk fp"/><ellipse cx="10" cy="8" rx="4" ry="2.3" class="sk fp2"/><ellipse cx="24" cy="8" rx="4" ry="2.3" class="sk fp2"/></svg></td><td>a published package — plan ∝ quantized sloc, courses ∝ files</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/></svg></td><td>a stud — a published extension point on @uirouter/core</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><ellipse cx="24" cy="9" rx="6" ry="3.5" class="skr fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="skr fnone"/></svg></td><td>the location seat — exactly one per router, so it swaps</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="24" y1="2" x2="24" y2="16" class="ska" stroke-dasharray="6 4"/><circle cx="24" cy="16" r="2.2" class="fa"/></svg></td><td>drop line — the brick falls onto that stud</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="4" width="40" height="11" class="sks fnone" stroke-dasharray="6 4"/></svg></td><td>a second plate — optional peer, reached by lazy import</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="44" y2="9" class="skf" stroke-dasharray="5 4"/><circle cx="23" cy="9" r="6" class="skr fp"/><line x1="19" y1="13" x2="27" y2="5" class="skr"/></svg></td><td>no coupling — the server takes no stud on this plate</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="8,12 16,7 26,12 26,15 16,10 8,15" class="sks fp" stroke-dasharray="3 2"/></svg></td><td>spare part — same stud, not in this set (sheet 4)</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>THE ALTITUDE ATLAS</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE BRICK ASSEMBLY</div>
+  <div><span class="fld">SCALE</span>FOUR PACKAGES</div>
+  <div><span class="fld">FORM</span>BRICK ASSEMBLY</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-08-16 · B</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>2 OF 12</div>
+</div>
+    </div>
+  </div>
+</section>
