@@ -2,8 +2,10 @@
 # (monorepo task addressing; the root config declares tools/* as
 # config_roots). Tasks run from THIS directory, so run lines are
 # src/-relative. Same inputs/secrets contract as tools/release/mise.toml:
-# inputs arrive via step `env:` blocks and secrets stay in workflow step env
-# (never mise [env]). Unlike release, this file carries an [env] block — the
+# a task's inputs are env-backed usage flags (`mise run <task> --help` is the
+# contract) that workflow step `env:` blocks satisfy as-is, and secrets stay in
+# workflow step env (never mise [env]). Runner output targets — GITHUB_OUTPUT,
+# GITHUB_STEP_SUMMARY — aren't expressible in usage and stay per-task comments. Unlike release, this file carries an [env] block — the
 # _.path below — whose effect on a shell that merely cd's in here is a harmless
 # duplicate (see its note).
 # Tasks assume node_modules exists: build-test.yml runs `mise run setup` as a
@@ -35,14 +37,17 @@ description = "Decide whether this branch-head push needs its own CI run"
 run = "./src/branch-ci-gate.ts"
 
 [tasks.error_summary]
-# env: GITHUB_STEP_SUMMARY (runner file; prints when unset), TURBO_RUNS_DIR.
-# Reads the newest `.turbo/runs/*.json` — so `ci`/`ci_main` must pass
-# `--summarize` — and republishes only the tasks that really failed.
-# Runs from the repo root, not this directory: the summary's `logFile` paths
-# are repo-root-relative. Same direct-exec reason as `xvfb` above.
+# env: GITHUB_STEP_SUMMARY (runner output file; prints to stdout when unset) —
+# an output target, so it stays a comment like the GITHUB_OUTPUT tasks below.
+# Republishes only the tasks that really failed. Runs from the repo root, not
+# this directory: the summary's `logFile` paths are repo-root-relative, and so
+# is the --runs-dir default. Same direct-exec reason as `xvfb` above.
 description = "Report the failing tasks of a red turbo run to the step summary and stdout"
 dir = "{{config_root}}/../.."
-run = "./tools/build_and_test/src/error-summary.ts"
+usage = '''
+flag "--runs-dir <runs_dir>" help="Where `turbo --summarize` writes run summaries; the newest one is this report's input" default=".turbo/runs" env="TURBO_RUNS_DIR"
+'''
+run = 'TURBO_RUNS_DIR="${usage_runs_dir?}" ./tools/build_and_test/src/error-summary.ts'
 
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
