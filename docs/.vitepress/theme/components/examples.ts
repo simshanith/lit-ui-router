@@ -11,6 +11,11 @@ export const EXAMPLES = {
     height: '920px',
     file: 'src/main.ts',
   },
+  'design-system-links': {
+    title: 'Design System Links',
+    height: '520px',
+    file: 'src/main.ts',
+  },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;
