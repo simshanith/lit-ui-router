@@ -325,6 +325,7 @@ fans out via `with`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
+- `//#lint:elements` - eslint (lit, wc, lit-a11y) over `{packages,apps,examples}/*/src/**/*.ts`
 - `//#lint:workflows` - virtual node (no script); fans out via `with` to the four per-tool tasks below
 - `//#lint:actionlint` - actionlint over GitHub Actions workflows
 - `//#lint:zizmor` - zizmor security audit over GitHub Actions workflows
@@ -335,3 +336,24 @@ fans out via `with`:
 - `//#format:check:root` - checks root-level formatting
 
 These run alongside workspace tasks via `with` configuration.
+
+### Choosing an ESLint Formatter
+
+The two eslint-backed root tasks pick opposite defaults, because the per-file
+list is worth different things to each:
+
+- `lint:package-json` keeps `--format tap` — the list _is_ the output, naming
+  every package it linted.
+- `lint:elements` takes eslint's default `stylish`, which prints findings only.
+  TAP over 100+ element sources is noise on every CI run.
+
+Any flag appended to the script reaches eslint, and the **last** `--format`
+wins, so reach for TAP when a glob looks wrong or a parser throws a fatal:
+
+```bash
+pnpm lint:elements --format tap
+```
+
+Append it directly — **not** `pnpm lint:elements -- --format tap`. pnpm
+forwards the `--` itself, and eslint reads everything after it as a file
+pattern (`No files matching the pattern "--format"`).

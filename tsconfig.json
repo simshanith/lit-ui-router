@@ -39,6 +39,8 @@
     "check-patches.ts",
     "commitlint.config.ts",
     "eslint.config.ts",
+    "eslint.oxlint-directives.ts",
+    "eslint.plugin-types.d.ts",
     "eslint.repo-rules.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
