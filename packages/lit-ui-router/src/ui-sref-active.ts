@@ -21,6 +21,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { UIRouterLit } from './core.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
+  inLitDevMode,
   isNativeLink,
   UiSrefElement,
   UiSrefTargetEvent,
@@ -418,11 +419,17 @@ export class UiSrefActiveDirective extends AsyncDirective {
    * `aria-current="page"` — but it is silent, and the loss only surfaces a
    * navigation later, so it is worth naming once.
    *
+   * Development builds only, like `uiSref`'s `assignHref` warning.
+   *
    * @internal
    */
   private warnAriaCurrentTakeover(): void {
     const existing = this.element!.getAttribute('aria-current');
-    if (existing === null || this.warnedAriaCurrentTakeover) {
+    if (
+      !inLitDevMode() ||
+      existing === null ||
+      this.warnedAriaCurrentTakeover
+    ) {
       return;
     }
     this.warnedAriaCurrentTakeover = true;

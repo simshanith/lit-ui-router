@@ -121,7 +121,7 @@ const warnedAssignHref = new WeakSet<Element>();
  * needs no cast. Read per call, so import order cannot matter.
  * @internal
  */
-function inLitDevMode(): boolean {
+export function inLitDevMode(): boolean {
   return typeof UIRouterLitElement.enableWarning === 'function';
 }
 

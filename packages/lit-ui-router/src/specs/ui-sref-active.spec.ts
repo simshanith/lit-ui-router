@@ -799,6 +799,46 @@ describe('uiSrefActive directive', () => {
       }
     });
 
+    it('should stay silent outside lit dev mode, but still take over', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            aria-current="location"
+            ${uiSref('parent')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        await routerGo(router, 'parent');
+        await tick(100);
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated; the takeover itself still happens
+        const anchor = wrapper.querySelector('a')!;
+        expect(anchor.getAttribute('aria-current')).toBe('page');
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
     it('should not warn when there was no authored value to take over', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
