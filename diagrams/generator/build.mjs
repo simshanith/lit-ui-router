@@ -11,12 +11,13 @@ import { sheet7 } from './sheet7.mjs';
 import { sheet8 } from './sheet8.mjs';
 import { sheet9 } from './sheet9.mjs';
 import { sheet10 } from './sheet10.mjs';
+import { sheet11 } from './sheet11.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9, sheet10];
+const sheets = [sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9, sheet10, sheet11];
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
@@ -39,14 +40,14 @@ const megaCss = `
 .alt-rail a:hover { background: var(--paper-2); }
 .alt-rail .alt-n { color: var(--accent); font-weight: 600; }
 .sheet { scroll-margin-top: 64px; }`;
-writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — Six Altitudes, Ten Sheets', `<style>${megaCss}</style>
+writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — Six Altitudes, Eleven Sheets', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
-  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking. Six altitudes, ten sheets; the form changes at every altitude because the truth does.</p>
+  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone. Six altitudes, eleven sheets; the form changes at every altitude because the truth does.</p>
 </header>
 ${rail}
 ${sheets.map((s) => sheetSection(s)).join('\n')}`,
-{ desc: 'All ten sheets of the lit-ui-router drawing set on one page.' }));
+{ desc: 'All eleven sheets of the lit-ui-router drawing set on one page.' }));
 
 // --- gallery / artifact ---
 const verdicts = [
@@ -60,6 +61,7 @@ const verdicts = [
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 318× the app, after the swap it argued for'],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 26%, the router 3.7%'],
+  ['11', 'FOUR PACKAGES', 'ENTRY QUARTERS', 'the split view — fifteen doors priced alone'],
 ];
 const galCss = `
 .cover { max-width: 1180px; margin: 0 auto 34px; background: var(--paper); border: 1.5px solid var(--ink);
@@ -95,12 +97,12 @@ const cover = `<header class="cover">
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">4</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">16</span></div>
     <div><span class="k">LATEST SHIPPED</span><span class="v">1.9.0 · 2026-08-01</span></div>
-    <div><span class="k">SHEETS</span><span class="v">10 · drawn 2026-08-16</span></div>
+    <div><span class="k">SHEETS</span><span class="v">11 · drawn 2026-08-16</span></div>
   </div>
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), liveness where the facts are temporal (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 318× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 26% of the wire; the router itself, 3.7%). The set has already changed its own subject once: sheet 8's rev A drew lodash as the tallest building in the delivered city, that drawing became a merged <code>lodash-es</code> swap, and sheets 8–9 now stand at REV B — remeasured after the merge, with the building halved and the wire chunk cut 84%; sheet 10 audits what the swap left behind.</p>
+    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 318× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 26% of the wire; the router itself, 3.7%). The set has already changed its own subject once: sheet 8's rev A drew lodash as the tallest building in the delivered city, that drawing became a merged <code>lodash-es</code> swap, and sheets 8–9 now stand at REV B — remeasured after the merge, with the building halved and the wire chunk cut 84%; sheet 10 audits what the swap left behind, and sheet 11 cuts the same wire the other way — four package quarters, fifteen doors, each priced alone.</p>
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
@@ -112,21 +114,22 @@ writeFileSync(join(OUT, 'gallery.html'), page('Six Altitudes', `<style>${galCss}
 ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
 <p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
-{ desc: 'A ten-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
+{ desc: 'An eleven-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
 writeFileSync(join(OUT, 'README.md'), `# diagrams/ — Six Altitudes
 
-A drawing set: six altitudes over the same subject, ten sheets (sheets 7–10 are a survey
+A drawing set: six altitudes over the same subject, eleven sheets (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
-wire, and the inside of one bundle), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
+wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
+every published entry alone), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
 notes on each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
 ${sheets.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
 
-- \`megacanvas.html\` — all ten sheets on one page, ascent order.
+- \`megacanvas.html\` — all eleven sheets on one page, ascent order.
 - \`gallery.html\` — cover, index, and the full set (also published as an Artifact).
 
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.

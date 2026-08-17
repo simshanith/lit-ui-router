@@ -1,8 +1,9 @@
 # diagrams/ — Six Altitudes
 
-A drawing set: six altitudes over the same subject, ten sheets (sheets 7–10 are a survey
+A drawing set: six altitudes over the same subject, eleven sheets (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
-wire, and the inside of one bundle), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
+wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
+every published entry alone), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
 notes on each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
@@ -17,8 +18,9 @@ notes on each sheet argue where that form fits and where it lies.
 | [8](sheet-8-the-delivered-city.html) | ONE CONSUMER | DELIVERED CITY |
 | [9](sheet-9-the-shipped-city.html) | ONE DEPLOY | SHIPPED CITY |
 | [10](sheet-10-the-bundled-city.html) | ONE BUNDLE | BUNDLED CITY |
+| [11](sheet-11-the-entry-quarters.html) | FOUR PACKAGES | ENTRY QUARTERS |
 
-- `megacanvas.html` — all ten sheets on one page, ascent order.
+- `megacanvas.html` — all eleven sheets on one page, ascent order.
 - `gallery.html` — cover, index, and the full set (also published as an Artifact).
 
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.
