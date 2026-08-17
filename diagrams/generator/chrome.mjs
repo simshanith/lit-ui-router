@@ -2,7 +2,7 @@
 // Light = graphite on vellum; dark = cyanotype. Three-state theming per artifact rules.
 
 export const DATE = '2026-08-16';
-export const PROJECT = 'ROUTING AT SIX ALTITUDES';
+export const PROJECT = 'THE ALTITUDE ATLAS';
 export const CLIENT = 'lit-ui-router · simshanith';
 export const TOTAL = 11;
 

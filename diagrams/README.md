@@ -1,6 +1,6 @@
-# diagrams/ — Six Altitudes
+# diagrams/ — The Altitude Atlas
 
-A drawing set: six altitudes over the same subject, eleven sheets (sheets 7–10 are a survey
+A drawing set: one subject surveyed at every altitude, eleven sheets (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
 wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
 every published entry alone), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the

@@ -40,10 +40,10 @@ const megaCss = `
 .alt-rail a:hover { background: var(--paper-2); }
 .alt-rail .alt-n { color: var(--accent); font-weight: 600; }
 .sheet { scroll-margin-top: 64px; }`;
-writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — Six Altitudes, Eleven Sheets', `<style>${megaCss}</style>
+writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
-  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone. Six altitudes, eleven sheets; the form changes at every altitude because the truth does.</p>
+  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone. Eleven sheets in ascent; the form changes at every altitude because the truth does.</p>
 </header>
 ${rail}
 ${sheets.map((s) => sheetSection(s)).join('\n')}`,
@@ -89,8 +89,8 @@ const galCss = `
 .sheet { scroll-margin-top: 16px; }`;
 
 const cover = `<header class="cover">
-  <span class="kicker">A DRAWING SET · AFTER A FORM SEEN IN THE WILD · ${PROJECT}</span>
-  <h1>SIX ALTITUDES</h1>
+  <span class="kicker">A DRAWING SET · AFTER A FORM SEEN IN THE WILD · lit-ui-router</span>
+  <h1>THE ALTITUDE ATLAS</h1>
   <span class="set">SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES</span>
   <div class="stat-bar" role="group" aria-label="set statistics">
     <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
@@ -110,16 +110,16 @@ const cover = `<header class="cover">
   </table>
 </header>`;
 
-writeFileSync(join(OUT, 'gallery.html'), page('Six Altitudes', `<style>${galCss}</style>
+writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${galCss}</style>
 ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
 <p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
 { desc: 'An eleven-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
-writeFileSync(join(OUT, 'README.md'), `# diagrams/ — Six Altitudes
+writeFileSync(join(OUT, 'README.md'), `# diagrams/ — The Altitude Atlas
 
-A drawing set: six altitudes over the same subject, eleven sheets (sheets 7–10 are a survey
+A drawing set: one subject surveyed at every altitude, eleven sheets (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
 wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
 every published entry alone), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
