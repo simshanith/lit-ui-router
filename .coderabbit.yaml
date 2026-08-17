@@ -21,6 +21,13 @@ reviews:
     # Work here sits in draft for a long time. Review on "ready for review",
     # not on every WIP push; `@coderabbitai review` pulls one in early.
     drafts: false
+    # Release PRs from bump-version.yml are a version bump plus a generated
+    # changelog — nothing to review. `gh pr create --label release` applies the
+    # label in the same call that opens the PR, so one is never briefly
+    # unlabeled. A negative-only filter excludes; it does not opt everything
+    # else out.
+    labels:
+      - '!release'
     base_branches:
       - main
 

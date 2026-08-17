@@ -77,9 +77,10 @@ discussion (see the tool README).
 
 [CodeRabbit](https://docs.coderabbit.ai) reviews a PR once it leaves draft, and
 re-reviews each push after that. Drafts are skipped on purpose — comment
-`@coderabbitai review` to pull one in early. It is advisory either way: no
-required status check, nothing it says blocks a merge. `mise run ci` remains the
-gate.
+`@coderabbitai review` to pull one in early. Release PRs are skipped too — the
+`release` label excludes them, since a version bump plus a generated changelog
+has nothing to review. It is advisory either way: no required status check,
+nothing it says blocks a merge. `mise run ci` remains the gate.
 
 Its behaviour lives in [`.coderabbit.yaml`](./.coderabbit.yaml), read from the
 PR's own branch, so a PR may adjust its own review. The static analysers this
