@@ -1,6 +1,7 @@
 import './styles.css';
 import { html, render } from 'lit';
-import '@api-viewer/docs';
+// type-only: keeps <api-docs> known to lit-analyzer, emits no runtime import
+import type {} from '@api-viewer/docs';
 import { UIRouterLit } from 'lit-ui-router';
 import customElementsJsonUrl from 'lit-ui-router/dist/custom-elements.json?url';
 
@@ -26,6 +27,10 @@ const handleUiRouterContext = {
 
 const root = document.getElementById('root')!;
 
+const apiDocsEnabled = featureFlags.get('enable-api-docs');
+// <api-docs> upgrades in place when the definition lands, so the tag renders now
+if (apiDocsEnabled) void import('@api-viewer/docs');
+
 render(
   html` <ui-router @ui-router-context=${handleUiRouterContext}>
       <div>
@@ -33,7 +38,7 @@ render(
       </div>
     </ui-router>
     ${
-      featureFlags.get('enable-api-docs')
+      apiDocsEnabled
         ? html`<api-docs src=${customElementsJsonUrl}></api-docs>`
         : ''
     }`,

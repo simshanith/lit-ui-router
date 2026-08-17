@@ -278,10 +278,13 @@ catalogs:
       version: 6.0.2
 
 overrides:
+  '@api-viewer/common>lit': ^3.3.3
+  '@api-viewer/docs>lit': ^3.3.3
   brace-expansion@5: 5.0.9
   d3-color: 3.1.0
   dompurify: 3.4.13
   fast-uri: 3.1.5
+  lit-dialog>lit: ^3.3.3
   postcss: 8.5.26
   sharp: 0.35.0
   shell-quote: 1.9.0
@@ -7163,7 +7166,7 @@ snapshots:
   '@api-viewer/common@1.0.0-pre.10':
     dependencies:
       custom-elements-manifest: 2.1.0
-      lit: 2.8.0
+      lit: 3.3.3
       tslib: 2.8.1
 
   '@api-viewer/docs@1.0.0-pre.10(patch_hash=6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac)':
@@ -7173,7 +7176,7 @@ snapshots:
       '@types/dompurify': 2.4.0
       '@types/marked': 4.3.2
       dompurify: 3.4.13
-      lit: 2.8.0
+      lit: 3.3.3
       marked: 4.3.0
       tslib: 2.8.1
 
@@ -10974,7 +10977,7 @@ snapshots:
 
   lit-dialog@2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a):
     dependencies:
-      lit: 2.8.0
+      lit: 3.3.3
 
   lit-element@3.3.3:
     dependencies:
