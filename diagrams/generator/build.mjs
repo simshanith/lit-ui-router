@@ -65,7 +65,7 @@ const verdicts = [
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
   ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR'],
-  ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', 'the shadow survey — where a suite reaches it is near-black (98% of 5,539 metered lines); the sun holds 2,608 sloc of instruments and 1,375 of CLI wrappers'],
+  ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', 'the shadow survey — the tests are the light: where a suite reaches it burns near-full (98% of 5,539 metered lines); 2,608 sloc of instruments and 1,375 of CLI wrappers never see light'],
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 295× the app, two swaps it argued for'],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 23%, the router 4.0% — one lit'],

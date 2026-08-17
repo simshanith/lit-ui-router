@@ -1,6 +1,6 @@
 <title>THE SHADOW SURVEY — Sheet 7A of 13</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test shadow. Every member’s own suite was run under a coverage meter, and its shadow drawn to two rules: reach is how much of the member’s source the suite actually loaded, darkness is the line coverage of what it loaded. The finding is a repo-wide habit visible from the air — shadows are short more often than they are pale. Where a suite reaches, it is near-black; what it never imports simply stands in the sun.">
+<meta name="description" content="Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite was run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.">
 <style>
 :root {
   --ground: #E6E6DA;
@@ -236,9 +236,9 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-7A" aria-label="Sheet 7A: THE SHADOW SURVEY">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 7A / 13</span></div>
   <h2 class="sheet-title">THE SHADOW SURVEY</h2>
-  <p class="sheet-sub">ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same 27 members, same footprints · shadows metered 2026-08-17 at worktree HEAD 3557c29</p>
+  <p class="sheet-sub">ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same 27 members, same footprints · metered 2026-08-17 at worktree HEAD 3557c29 · REV B: polarity corrected — the tests are the light, shadow is the untested</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1560 1241" role="img" aria-label="A plan view of sheet 7's census city — the same twenty-seven workspace members in the same four dashed districts, seen from straight above — with a test shadow cast south-west of every building whose own suite was run under a coverage meter. Shadow reach is how much of the member's source the suite actually loaded; shadow darkness is the line coverage of what it loaded. The packages district is almost entirely in near-black shadow: all four published packages meter between 98 and 100 percent line coverage over 97 to 100 percent of their source. In the instrument yard the shadows are dark but short: release, build_and_test, workers-builds and lcov-rebase all shade their .core.ts files near-black and leave their command-line wrapper files — one thousand three hundred seventy-five lines in all — standing in full sun. Nine members cast no shadow at all, marked with red badges: examples, the typedoc plugin, and seven other instruments. The two sample-app demos and the Cypress host are hatched in accent blue — lit only by the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a suite and still casts nothing: its canary spec tests happy-dom itself, never its own eight lines. A shadow schedule below gives exact per-member figures.">
+    <div class="figure-wrap"><svg viewBox="0 0 1560 1241" role="img" aria-label="A plan view of sheet 7's census city — the same twenty-seven workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. The packages district glows wall to wall: all four published packages meter between 98 and 100 percent line coverage over 97 to 100 percent of their source. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files — one thousand three hundred seventy-five lines in all — in shadow. Nine members are entirely dark, marked with red badges: examples, the typedoc plugin, and seven other instruments have no suite at all. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a lit lamp and still stands dark: its canary spec lights happy-dom itself, never its own eight lines. A shadow schedule below gives exact per-member figures.">
 <defs>
   <marker id="s7a-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -266,19 +266,22 @@ a { color: var(--accent); }
   </pattern>
 </defs>
 <defs>
-  <pattern id="s7a-s1" width="2.6" height="2.6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <rect width="2.6" height="2.6" fill="var(--ink)" opacity="0.34"/>
-    <line x1="0" y1="0" x2="0" y2="2.6" stroke="var(--ink)" stroke-width="1.2"/>
+  <!-- shadow must darken in BOTH themes: a black wash (never ink, which is light
+       in cyanotype) carrying a faint ink hatch for texture -->
+  <pattern id="s7a-sh" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="4" height="4" fill="rgba(0,0,0,0.38)"/>
+    <line x1="0" y1="0" x2="0" y2="4" stroke="var(--ink)" stroke-width="1" opacity="0.30"/>
   </pattern>
-  <pattern id="s7a-s2" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <line x1="0" y1="0" x2="0" y2="4" stroke="var(--ink)" stroke-width="1.1"/>
+  <pattern id="s7a-g2" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5" height="5" fill="var(--halo)"/>
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--accent)" stroke-width="1" opacity="0.45"/>
   </pattern>
-  <pattern id="s7a-s3" width="5.5" height="5.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <rect width="5.5" height="5.5" fill="var(--red)" opacity="0.10"/>
-    <line x1="0" y1="0" x2="0" y2="5.5" stroke="var(--red)" stroke-width="1.1"/>
+  <pattern id="s7a-g3" width="5.5" height="5.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <rect width="5.5" height="5.5" fill="var(--halo)"/>
+    <line x1="0" y1="0" x2="0" y2="5.5" stroke="var(--red)" stroke-width="1.1" opacity="0.7"/>
   </pattern>
-  <pattern id="s7a-s4" width="8" height="8" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
-    <line x1="0" y1="0" x2="0" y2="8" stroke="var(--red)" stroke-width="1"/>
+  <pattern id="s7a-g4" width="3.5" height="3.5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="3.5" stroke="var(--red)" stroke-width="1"/>
   </pattern>
   <pattern id="s7a-se" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.55"/>
@@ -286,207 +289,210 @@ a { color: var(--accent); }
 </defs>
 
 <rect x="40" y="26" width="560" height="42" class="skf fnone"/>
-<text x="52" y="43" class="lbls" text-anchor="start" >THE SHADOW SURVEY — WHO STANDS IN TEST SHADOW, AND HOW DARK</text>
-<text x="52" y="58" class="lblf" text-anchor="start" >sheet 7’s city from straight above · sun from the NE · every shadow metered from the member’s own suite</text>
+<text x="52" y="43" class="lbls" text-anchor="start" >THE SHADOW SURVEY — WHO STANDS IN TEST LIGHT, AND WHAT STAYS DARK</text>
+<text x="52" y="58" class="lblf" text-anchor="start" >sheet 7’s city from straight above · every lamp is a spec annex · REV B: the light falls FROM the tests</text>
 
-<text x="1520" y="34" class="lbls" text-anchor="end" >SHADOW RULE — reach = 0.55 · side · (sloc the suite loaded ÷ src sloc) · darkness = line coverage of what it loaded</text>
-<text x="1520" y="48" class="lblf" text-anchor="end" >footprints and annexes are sheet 7’s census, unchanged · a file the suite never imports casts nothing — absence is data</text>
-<text x="1520" y="62" class="lblf" text-anchor="end" >e2e light (cypress) is drawn, not metered — no lcov leaves the rig · unmetered shadows at nominal full reach</text>
+<text x="1520" y="34" class="lbls" text-anchor="end" >LIGHT RULE — lit strip = side · (sloc the suite loads ÷ src sloc), from the lamp side · brightness = line coverage of what it loads</text>
+<text x="1520" y="48" class="lblf" text-anchor="end" >footprints and annexes are sheet 7’s census, unchanged · a file the suite never imports stays in shadow — darkness is data</text>
+<text x="1520" y="62" class="lblf" text-anchor="end" >e2e light (cypress) is drawn, not metered — no lcov leaves the rig · REV B flips rev A’s polarity: tests are the light</text>
 
-<!-- darkness ladder -->
-<rect x="1128" y="96" width="392" height="196" class="skf fnone"/>
-<text x="1144" y="118" class="lbls" text-anchor="start" >DARKNESS — LINE COVERAGE OF WHAT THE SUITE LOADED</text>
-<rect x="1144" y="142" width="34" height="14" fill="url(#s7a-s1)"/><rect x="1144" y="142" width="34" height="14" class="sk fnone" />
-<text x="1192" y="153" class="lbls" text-anchor="start" >≥ 95% — near-black · №1 2 3 4 8 10 12 15 17 19 25</text>
-<rect x="1144" y="166" width="34" height="14" fill="url(#s7a-s2)"/><rect x="1144" y="166" width="34" height="14" class="sk fnone" />
-<text x="1192" y="177" class="lbls" text-anchor="start" >85–95% — dark (none this survey)</text>
-<rect x="1144" y="190" width="34" height="14" fill="url(#s7a-s3)"/><rect x="1144" y="190" width="34" height="14" class="skr fnone" />
-<text x="1192" y="201" class="lblr" text-anchor="start" >70–85% — pale · №16 only</text>
-<rect x="1144" y="214" width="34" height="14" fill="url(#s7a-s4)"/><rect x="1144" y="214" width="34" height="14" class="skr fnone" />
-<text x="1192" y="225" class="lblr" text-anchor="start" >below 70% — palest (none this survey)</text>
-<rect x="1144" y="238" width="34" height="14" fill="url(#s7a-se)"/><rect x="1144" y="238" width="34" height="14" class="ska fnone" stroke-dasharray="5 4"/>
-<text x="1192" y="249" class="lbla" text-anchor="start" >e2e light only — cypress, unmetered · №6 7 9</text>
-<rect x="1144" y="262" width="34" height="14" fill="none"/><rect x="1144" y="262" width="34" height="14" class="sks fnone" stroke-dasharray="2 4"/>
-<text x="1192" y="273" class="lbls" text-anchor="start" >tests run, meter cannot attach · №5</text>
+<!-- brightness ladder -->
+<rect x="1128" y="96" width="392" height="214" class="skf fnone"/>
+<text x="1144" y="118" class="lbls" text-anchor="start" >BRIGHTNESS — LINE COVERAGE OF WHAT THE SUITE LIGHTS</text>
+<rect x="1144" y="138" width="34" height="14" fill="var(--halo)"/><rect x="1144" y="138" width="34" height="14" class="sk fnone" />
+<text x="1192" y="149" class="lbls" text-anchor="start" >≥ 95% — full bright · №1 2 3 4 8 10 12 15 17 19 25</text>
+<rect x="1144" y="160" width="34" height="14" fill="url(#s7a-g2)"/><rect x="1144" y="160" width="34" height="14" class="sk fnone" />
+<text x="1192" y="171" class="lbls" text-anchor="start" >85–95% — bright (none this survey)</text>
+<rect x="1144" y="182" width="34" height="14" fill="url(#s7a-g3)"/><rect x="1144" y="182" width="34" height="14" class="skr fnone" />
+<text x="1192" y="193" class="lblr" text-anchor="start" >70–85% — pale · №16 only</text>
+<rect x="1144" y="204" width="34" height="14" fill="url(#s7a-g4)"/><rect x="1144" y="204" width="34" height="14" class="skr fnone" />
+<text x="1192" y="215" class="lblr" text-anchor="start" >below 70% — guttering (none this survey)</text>
+<rect x="1144" y="226" width="34" height="14" fill="url(#s7a-se)"/><rect x="1144" y="226" width="34" height="14" class="ska fnone" stroke-dasharray="5 4"/>
+<text x="1192" y="237" class="lbla" text-anchor="start" >e2e light — real, unmetered · №6 7 9</text>
+<rect x="1144" y="248" width="34" height="14" fill="none"/><rect x="1144" y="248" width="34" height="14" class="sks fnone" stroke-dasharray="2 4"/>
+<text x="1192" y="259" class="lbls" text-anchor="start" >tests run, no meter attaches · №5</text>
+<rect x="1144" y="270" width="34" height="14" fill="url(#s7a-sh)"/><rect x="1144" y="270" width="34" height="14" class="sk fnone" />
+<text x="1192" y="281" class="lbls" text-anchor="start" >SHADOW — source no suite ever loads</text>
 
 <rect x="104.4" y="105.8" width="444.6" height="227.9" class="skf fnone" stroke-dasharray="5 4"/>
 <rect x="759.9" y="111.9" width="266.3" height="240.3" class="skf fnone" stroke-dasharray="5 4"/>
 <rect x="863.4" y="491.4" width="139.3" height="220.2" class="skf fnone" stroke-dasharray="5 4"/>
 <rect x="111.3" y="500.6" width="566.9" height="325.4" class="skf fnone" stroke-dasharray="5 4"/>
-<polygon points="132.0,151.0 99.2,183.8 99.2,247.2 162.6,247.2 195.4,214.4 132.0,214.4" fill="url(#s7a-s1)"/>
-<polygon points="362.0,151.0 327.8,185.2 327.8,247.3 390.0,247.3 424.2,213.2 362.0,213.2" fill="url(#s7a-s1)"/>
-<polygon points="327.5,277.5 316.1,288.9 316.1,310.1 337.3,310.1 348.7,298.7 327.5,298.7" fill="url(#s7a-s1)"/>
-<polygon points="431.0,277.5 420.6,287.9 420.6,306.7 439.5,306.7 449.9,296.4 431.0,296.4" fill="url(#s7a-s1)"/>
-<polygon points="787.5,139.5 741.1,185.9 741.1,270.3 825.5,270.3 871.9,223.9 787.5,223.9" class="sks fnone" stroke-dasharray="2 4"/>
-<polygon points="960.0,139.5 939.7,159.8 939.7,196.6 976.6,196.6 996.8,176.3 960.0,176.3" fill="url(#s7a-se)"/>
-<polygon points="960.0,139.5 939.7,159.8 939.7,196.6 976.6,196.6 996.8,176.3 960.0,176.3" class="ska fnone" stroke-dasharray="5 4"/>
-<polygon points="960.0,231.5 938.8,252.7 938.8,291.3 977.4,291.3 998.6,270.1 960.0,270.1" fill="url(#s7a-se)"/>
-<polygon points="960.0,231.5 938.8,252.7 938.8,291.3 977.4,291.3 998.6,270.1 960.0,270.1" class="ska fnone" stroke-dasharray="5 4"/>
-<polygon points="937.0,300.5 929.4,308.1 929.4,321.9 943.2,321.9 950.8,314.3 937.0,314.3" fill="url(#s7a-s1)"/>
-<polygon points="799.0,300.5 791.4,308.1 791.4,322.0 805.3,322.0 812.9,314.4 799.0,314.4" fill="url(#s7a-se)"/>
-<polygon points="799.0,300.5 791.4,308.1 791.4,322.0 805.3,322.0 812.9,314.4 799.0,314.4" class="ska fnone" stroke-dasharray="5 4"/>
-<polygon points="891.0,519.0 886.4,523.6 886.4,571.5 934.3,571.5 938.9,566.9 891.0,566.9" fill="url(#s7a-s1)"/>
-
-<polygon points="155.0,622.5 131.3,646.2 131.3,725.8 210.9,725.8 234.6,702.1 155.0,702.1" fill="url(#s7a-s1)"/>
-
-
-<polygon points="511.5,622.5 498.7,635.3 498.7,673.4 536.7,673.4 549.5,660.5 511.5,660.5" fill="url(#s7a-s1)"/>
-<polygon points="155.0,760.5 140.5,775.0 140.5,806.9 172.4,806.9 186.9,792.4 155.0,792.4" fill="url(#s7a-s3)"/>
-<polygon points="385.0,760.5 373.6,771.9 373.6,807.6 409.2,807.6 420.6,796.1 385.0,796.1" fill="url(#s7a-s1)"/>
-
-<polygon points="281.5,760.5 276.9,765.1 276.9,790.4 302.2,790.4 306.8,785.8 281.5,785.8" fill="url(#s7a-s1)"/>
-
-
-
-
-
-<polygon points="609.3,530.5 604.6,535.1 604.6,548.9 618.5,548.9 623.0,544.3 609.3,544.3" fill="url(#s7a-s1)"/>
-
-
-<rect x="132.0" y="151.0" width="63.4" height="63.4" class="sk fp"/><rect x="206.9" y="133.4" width="98.7" height="98.7" class="sks fnone" stroke-dasharray="3 3"/>
+<polygon points="206.9,133.4 195.4,151.0 195.4,214.4 206.9,232.1" class="fhalo"/><rect x="132.0" y="151.0" width="63.4" height="63.4" class="sk fp"/><rect x="135.8" y="151.0" width="59.6" height="63.4" fill="var(--halo)"/><rect x="132.0" y="151.0" width="3.8" height="63.4" fill="url(#s7a-sh)"/><line x1="135.8" y1="151.0" x2="135.8" y2="214.4" class="skf"/><rect x="132.0" y="151.0" width="63.4" height="63.4" class="sk fnone"/>
+<polygon points="435.7,139.2 424.2,151.0 424.2,213.2 435.7,225.0" class="fhalo"/><rect x="362.0" y="151.0" width="62.2" height="62.2" class="sk fp"/><rect x="362.0" y="151.0" width="62.2" height="62.2" fill="var(--halo)"/><rect x="362.0" y="151.0" width="62.2" height="62.2" class="sk fnone"/>
+<polygon points="360.2,270.2 348.7,277.5 348.7,298.7 360.2,306.0" class="fhalo"/><rect x="327.5" y="277.5" width="21.2" height="21.2" class="sk fp"/><rect x="328.0" y="277.5" width="20.7" height="21.2" fill="var(--halo)"/><rect x="327.5" y="277.5" width="0.5" height="21.2" fill="url(#s7a-sh)"/><line x1="328.0" y1="277.5" x2="328.0" y2="298.7" class="skf"/><rect x="327.5" y="277.5" width="21.2" height="21.2" class="sk fnone"/>
+<polygon points="461.4,268.3 449.9,277.5 449.9,296.4 461.4,305.6" class="fhalo"/><rect x="431.0" y="277.5" width="18.9" height="18.9" class="sk fp"/><rect x="431.0" y="277.5" width="18.9" height="18.9" fill="var(--halo)"/><rect x="431.0" y="277.5" width="18.9" height="18.9" class="sk fnone"/>
+<line x1="883.4" y1="165.5" x2="871.9" y2="139.5" class="sks" stroke-dasharray="2 4"/>
+<line x1="883.4" y1="197.9" x2="871.9" y2="223.9" class="sks" stroke-dasharray="2 4"/><rect x="787.5" y="139.5" width="84.4" height="84.4" class="sk fp"/>
+<rect x="960.0" y="139.5" width="36.8" height="36.8" class="sk fp"/><rect x="960.0" y="139.5" width="36.8" height="36.8" fill="url(#s7a-se)"/>
+<rect x="960.0" y="139.5" width="36.8" height="36.8" class="ska fnone" stroke-dasharray="5 4"/>
+<rect x="960.0" y="231.5" width="38.6" height="38.6" class="sk fp"/><rect x="960.0" y="231.5" width="38.6" height="38.6" fill="url(#s7a-se)"/>
+<rect x="960.0" y="231.5" width="38.6" height="38.6" class="ska fnone" stroke-dasharray="5 4"/>
+<polygon points="962.3,294.9 950.8,300.5 950.8,314.3 962.3,319.9" class="fhalo"/><rect x="937.0" y="300.5" width="13.8" height="13.8" class="sk fp"/><rect x="937.0" y="300.5" width="13.8" height="13.8" fill="var(--halo)"/><rect x="937.0" y="300.5" width="13.8" height="13.8" class="sk fnone"/>
+<polygon points="824.4,290.3 812.9,300.5 812.9,314.4 824.4,324.6" class="fhalo"/><rect x="799.0" y="300.5" width="13.9" height="13.9" class="sk fp"/><rect x="799.0" y="300.5" width="13.9" height="13.9" fill="url(#s7a-se)"/>
+<rect x="799.0" y="300.5" width="13.9" height="13.9" class="ska fnone" stroke-dasharray="5 4"/>
+<polygon points="950.4,530.6 938.9,519.0 938.9,566.9 950.4,555.3" class="fhalo"/><rect x="891.0" y="519.0" width="47.9" height="47.9" class="sk fp"/><rect x="935.1" y="519.0" width="3.7" height="47.9" fill="var(--halo)"/><rect x="891.0" y="519.0" width="44.1" height="47.9" fill="url(#s7a-sh)"/><line x1="935.1" y1="519.0" x2="935.1" y2="566.9" class="skf"/><rect x="891.0" y="519.0" width="47.9" height="47.9" class="sk fnone"/>
+<rect x="891.0" y="622.5" width="61.5" height="61.5" class="sk fp"/><rect x="891.0" y="622.5" width="61.5" height="61.5" fill="url(#s7a-sh)"/><rect x="891.0" y="622.5" width="61.5" height="61.5" class="sk fnone"/>
+<polygon points="246.1,622.2 234.6,622.5 234.6,702.1 246.1,702.4" class="fhalo"/><rect x="155.0" y="622.5" width="79.6" height="79.6" class="sk fp"/><rect x="191.5" y="622.5" width="43.1" height="79.6" fill="var(--halo)"/><rect x="155.0" y="622.5" width="36.5" height="79.6" fill="url(#s7a-sh)"/><line x1="191.5" y1="622.5" x2="191.5" y2="702.1" class="skf"/><rect x="155.0" y="622.5" width="79.6" height="79.6" class="sk fnone"/>
+<rect x="396.5" y="622.5" width="50.6" height="50.6" class="sk fp"/><rect x="396.5" y="622.5" width="50.6" height="50.6" fill="url(#s7a-sh)"/><rect x="396.5" y="622.5" width="50.6" height="50.6" class="sk fnone"/>
+<rect x="141.2" y="530.5" width="31.4" height="31.4" class="sk fp"/><rect x="141.2" y="530.5" width="31.4" height="31.4" fill="url(#s7a-sh)"/><rect x="141.2" y="530.5" width="31.4" height="31.4" class="sk fnone"/>
+<polygon points="561.0,623.6 549.5,622.5 549.5,660.5 561.0,659.4" class="fhalo"/><rect x="511.5" y="622.5" width="38.0" height="38.0" class="sk fp"/><rect x="526.2" y="622.5" width="23.3" height="38.0" fill="var(--halo)"/><rect x="511.5" y="622.5" width="14.7" height="38.0" fill="url(#s7a-sh)"/><line x1="526.2" y1="622.5" x2="526.2" y2="660.5" class="skf"/><rect x="511.5" y="622.5" width="38.0" height="38.0" class="sk fnone"/>
+<polygon points="198.4,761.2 186.9,760.5 186.9,792.4 198.4,791.7" class="fhalo"/><rect x="155.0" y="760.5" width="31.9" height="31.9" class="sk fp"/><rect x="160.5" y="760.5" width="26.4" height="31.9" fill="url(#s7a-g3)"/><rect x="155.0" y="760.5" width="5.5" height="31.9" fill="url(#s7a-sh)"/><line x1="160.5" y1="760.5" x2="160.5" y2="792.4" class="skf"/><rect x="155.0" y="760.5" width="31.9" height="31.9" class="sk fnone"/>
+<polygon points="432.1,763.3 420.6,760.5 420.6,796.1 432.1,793.3" class="fhalo"/><rect x="385.0" y="760.5" width="35.6" height="35.6" class="sk fp"/><rect x="399.8" y="760.5" width="20.8" height="35.6" fill="var(--halo)"/><rect x="385.0" y="760.5" width="14.8" height="35.6" fill="url(#s7a-sh)"/><line x1="399.8" y1="760.5" x2="399.8" y2="796.1" class="skf"/><rect x="385.0" y="760.5" width="35.6" height="35.6" class="sk fnone"/>
+<rect x="511.5" y="760.5" width="28.3" height="28.3" class="sk fp"/><rect x="511.5" y="760.5" width="28.3" height="28.3" fill="url(#s7a-sh)"/><rect x="511.5" y="760.5" width="28.3" height="28.3" class="sk fnone"/>
+<polygon points="318.3,763.4 306.8,760.5 306.8,785.8 318.3,782.9" class="fhalo"/><rect x="281.5" y="760.5" width="25.3" height="25.3" class="sk fp"/><rect x="303.7" y="760.5" width="3.1" height="25.3" fill="var(--halo)"/><rect x="281.5" y="760.5" width="22.2" height="25.3" fill="url(#s7a-sh)"/><line x1="303.7" y1="760.5" x2="303.7" y2="785.8" class="skf"/><rect x="281.5" y="760.5" width="25.3" height="25.3" class="sk fnone"/>
+<rect x="396.5" y="530.5" width="18.4" height="18.4" class="sk fp"/><rect x="396.5" y="530.5" width="18.4" height="18.4" fill="url(#s7a-sh)"/><rect x="396.5" y="530.5" width="18.4" height="18.4" class="sk fnone"/>
+<rect x="454.0" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="454.0" y="530.5" width="13.8" height="13.8" fill="url(#s7a-sh)"/><rect x="454.0" y="530.5" width="13.8" height="13.8" class="sk fnone"/>
+<rect x="505.7" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="505.7" y="530.5" width="13.8" height="13.8" fill="url(#s7a-sh)"/><rect x="505.7" y="530.5" width="13.8" height="13.8" class="sk fnone"/>
+<rect x="229.8" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="229.8" y="530.5" width="13.8" height="13.8" fill="url(#s7a-sh)"/><rect x="229.8" y="530.5" width="13.8" height="13.8" class="sk fnone"/>
+<rect x="557.5" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="557.5" y="530.5" width="13.8" height="13.8" fill="url(#s7a-sh)"/><rect x="557.5" y="530.5" width="13.8" height="13.8" class="sk fnone"/>
+<polygon points="634.5,530.5 623.0,530.5 623.0,544.3 634.5,544.3" class="fhalo"/><rect x="609.3" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="619.4" y="530.5" width="3.6" height="13.8" fill="var(--halo)"/><rect x="609.3" y="530.5" width="10.2" height="13.8" fill="url(#s7a-sh)"/><line x1="619.4" y1="530.5" x2="619.4" y2="544.3" class="skf"/><rect x="609.3" y="530.5" width="13.8" height="13.8" class="sk fnone"/>
+<rect x="275.8" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="275.8" y="530.5" width="13.8" height="13.8" fill="url(#s7a-sh)"/><rect x="275.8" y="530.5" width="13.8" height="13.8" class="sk fnone"/>
+<rect x="344.8" y="530.5" width="13.8" height="13.8" class="sks fnone" stroke-dasharray="2 3"/>
+<rect x="206.9" y="133.4" width="98.7" height="98.7" class="sks fhalo"/>
 <circle cx="163.7" cy="140.0" r="8.5" class="sk fp"/>
 <text x="163.7" y="143.2" class="lbl" text-anchor="middle" >1</text>
-<rect x="362.0" y="151.0" width="62.2" height="62.2" class="sk fp"/><rect x="435.7" y="139.2" width="85.8" height="85.8" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="435.7" y="139.2" width="85.8" height="85.8" class="sks fhalo"/>
 <circle cx="393.1" cy="140.0" r="8.5" class="sk fp"/>
 <text x="393.1" y="143.2" class="lbl" text-anchor="middle" >2</text>
-<rect x="327.5" y="277.5" width="21.2" height="21.2" class="sk fp"/><rect x="360.2" y="270.2" width="35.9" height="35.9" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="360.2" y="270.2" width="35.9" height="35.9" class="sks fhalo"/>
 <circle cx="338.1" cy="266.5" r="8.5" class="sk fp"/>
 <text x="338.1" y="269.7" class="lbl" text-anchor="middle" >3</text>
-<rect x="431.0" y="277.5" width="18.9" height="18.9" class="sk fp"/><rect x="461.4" y="268.3" width="37.3" height="37.3" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="461.4" y="268.3" width="37.3" height="37.3" class="sks fhalo"/>
 <circle cx="440.4" cy="266.5" r="8.5" class="sk fp"/>
 <text x="440.4" y="269.7" class="lbl" text-anchor="middle" >4</text>
-<rect x="787.5" y="139.5" width="84.4" height="84.4" class="sk fp"/><rect x="883.4" y="165.5" width="32.3" height="32.3" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="883.4" y="165.5" width="32.3" height="32.3" class="sks fhalo"/>
 <circle cx="829.7" cy="128.5" r="8.5" class="sks fp"/>
 <text x="829.7" y="131.7" class="lbls" text-anchor="middle" >5</text>
-<rect x="960.0" y="139.5" width="36.8" height="36.8" class="sk fp"/>
+
 <circle cx="978.4" cy="128.5" r="8.5" class="ska fp"/>
 <text x="978.4" y="131.7" class="lbla" text-anchor="middle" >6</text>
-<rect x="960.0" y="231.5" width="38.6" height="38.6" class="sk fp"/>
+
 <circle cx="979.3" cy="220.5" r="8.5" class="ska fp"/>
 <text x="979.3" y="223.7" class="lbla" text-anchor="middle" >7</text>
-<rect x="937.0" y="300.5" width="13.8" height="13.8" class="sk fp"/><rect x="962.3" y="294.9" width="25.0" height="25.0" class="sks fnone" stroke-dasharray="3 3"/>
-<circle cx="924.3" cy="289.5" r="8.5" class="sk fp"/>
-<text x="924.3" y="292.7" class="lbl" text-anchor="middle" >8</text>
-<rect x="799.0" y="300.5" width="13.9" height="13.9" class="sk fp"/><rect x="824.4" y="290.3" width="34.3" height="34.3" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="962.3" y="294.9" width="25.0" height="25.0" class="sks fhalo"/>
+<circle cx="943.9" cy="289.5" r="8.5" class="sk fp"/>
+<text x="943.9" y="292.7" class="lbl" text-anchor="middle" >8</text>
+<rect x="824.4" y="290.3" width="34.3" height="34.3" class="sks fhalo"/>
 <circle cx="805.9" cy="289.5" r="8.5" class="ska fp"/>
 <text x="805.9" y="292.7" class="lbla" text-anchor="middle" >9</text>
-<rect x="891.0" y="519.0" width="47.9" height="47.9" class="sk fp"/><rect x="950.4" y="530.6" width="24.8" height="24.8" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="950.4" y="530.6" width="24.8" height="24.8" class="sks fhalo"/>
 <circle cx="914.9" cy="508.0" r="8.5" class="sk fp"/>
 <text x="914.9" y="511.2" class="lbl" text-anchor="middle" >10</text>
-<rect x="891.0" y="622.5" width="61.5" height="61.5" class="sk fp"/>
+
 <circle cx="921.7" cy="611.5" r="8.5" class="skr fp"/>
 <text x="921.7" y="614.7" class="lblr" text-anchor="middle" >11</text>
-<rect x="155.0" y="622.5" width="79.6" height="79.6" class="sk fp"/><rect x="246.1" y="622.2" width="80.1" height="80.1" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="246.1" y="622.2" width="80.1" height="80.1" class="sks fhalo"/>
 <circle cx="194.8" cy="611.5" r="8.5" class="sk fp"/>
 <text x="194.8" y="614.7" class="lbl" text-anchor="middle" >12</text>
-<rect x="396.5" y="622.5" width="50.6" height="50.6" class="sk fp"/>
+
 <circle cx="421.8" cy="611.5" r="8.5" class="skr fp"/>
 <text x="421.8" y="614.7" class="lblr" text-anchor="middle" >13</text>
-<rect x="141.2" y="530.5" width="31.4" height="31.4" class="sk fp"/>
+
 <circle cx="156.9" cy="519.5" r="8.5" class="skr fp"/>
 <text x="156.9" y="522.7" class="lblr" text-anchor="middle" >14</text>
-<rect x="511.5" y="622.5" width="38.0" height="38.0" class="sk fp"/><rect x="561.0" y="623.6" width="35.8" height="35.8" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="561.0" y="623.6" width="35.8" height="35.8" class="sks fhalo"/>
 <circle cx="530.5" cy="611.5" r="8.5" class="sk fp"/>
 <text x="530.5" y="614.7" class="lbl" text-anchor="middle" >15</text>
-<rect x="155.0" y="760.5" width="31.9" height="31.9" class="sk fp"/><rect x="198.4" y="761.2" width="30.6" height="30.6" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="198.4" y="761.2" width="30.6" height="30.6" class="sks fhalo"/>
 <circle cx="170.9" cy="749.5" r="8.5" class="sk fp"/>
 <text x="170.9" y="752.7" class="lbl" text-anchor="middle" >16</text>
-<rect x="385.0" y="760.5" width="35.6" height="35.6" class="sk fp"/><rect x="432.1" y="763.3" width="30.0" height="30.0" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="432.1" y="763.3" width="30.0" height="30.0" class="sks fhalo"/>
 <circle cx="402.8" cy="749.5" r="8.5" class="sk fp"/>
 <text x="402.8" y="752.7" class="lbl" text-anchor="middle" >17</text>
-<rect x="511.5" y="760.5" width="28.3" height="28.3" class="sk fp"/>
+
 <circle cx="525.6" cy="749.5" r="8.5" class="skr fp"/>
 <text x="525.6" y="752.7" class="lblr" text-anchor="middle" >18</text>
-<rect x="281.5" y="760.5" width="25.3" height="25.3" class="sk fp"/><rect x="318.3" y="763.4" width="19.5" height="19.5" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="318.3" y="763.4" width="19.5" height="19.5" class="sks fhalo"/>
 <circle cx="294.1" cy="749.5" r="8.5" class="sk fp"/>
 <text x="294.1" y="752.7" class="lbl" text-anchor="middle" >19</text>
-<rect x="396.5" y="530.5" width="18.4" height="18.4" class="sk fp"/>
+
 <circle cx="405.7" cy="519.5" r="8.5" class="skr fp"/>
 <text x="405.7" y="522.7" class="lblr" text-anchor="middle" >20</text>
-<rect x="454.0" y="530.5" width="13.8" height="13.8" class="sk fp"/>
+
 <circle cx="460.9" cy="519.5" r="8.5" class="skr fp"/>
 <text x="460.9" y="522.7" class="lblr" text-anchor="middle" >21</text>
-<rect x="505.7" y="530.5" width="13.8" height="13.8" class="sk fp"/>
+
 <circle cx="512.6" cy="519.5" r="8.5" class="skr fp"/>
 <text x="512.6" y="522.7" class="lblr" text-anchor="middle" >22</text>
-<rect x="229.8" y="530.5" width="13.8" height="13.8" class="sk fp"/>
+
 <circle cx="236.6" cy="519.5" r="8.5" class="skr fp"/>
 <text x="236.6" y="522.7" class="lblr" text-anchor="middle" >23</text>
-<rect x="557.5" y="530.5" width="13.8" height="13.8" class="sk fp"/>
+
 <circle cx="564.4" cy="519.5" r="8.5" class="skr fp"/>
 <text x="564.4" y="522.7" class="lblr" text-anchor="middle" >24</text>
-<rect x="609.3" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="634.5" y="530.5" width="13.8" height="13.8" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="634.5" y="530.5" width="13.8" height="13.8" class="sks fhalo"/>
 <circle cx="616.1" cy="519.5" r="8.5" class="sk fp"/>
 <text x="616.1" y="522.7" class="lbl" text-anchor="middle" >25</text>
-<rect x="275.8" y="530.5" width="13.8" height="13.8" class="sk fp"/><rect x="301.0" y="530.5" width="13.8" height="13.8" class="sks fnone" stroke-dasharray="3 3"/>
+<rect x="301.0" y="530.5" width="13.8" height="13.8" class="sks fhalo"/>
 <circle cx="282.6" cy="519.5" r="8.5" class="sk fp"/>
 <text x="282.6" y="522.7" class="lbl" text-anchor="middle" >26</text>
-<rect x="344.8" y="530.5" width="13.8" height="13.8" class="sks fnone" stroke-dasharray="2 3"/>
+
 <circle cx="351.6" cy="519.5" r="8.5" class="sks fp2"/>
 <text x="351.6" y="522.7" class="lbls" text-anchor="middle" >27</text>
 
 <!-- district lettering + aggregates -->
 <text x="140" y="348" class="lblb" text-anchor="start" >packages/ — THE PRODUCT</text>
-<text x="140" y="360" class="lblf" text-anchor="start" >96.9% of district sloc in shadow · 99.3% of 2,397 metered lines lit</text>
-<text x="140" y="372" class="lblf" text-anchor="start" >branches 94.7% · near-black wall to wall</text>
+<text x="140" y="360" class="lblf" text-anchor="start" >lit wall to wall — 96.9% of district sloc · 99.3% of 2,397 metered lines</text>
+<text x="140" y="372" class="lblf" text-anchor="start" >branches 94.7% · the annexes sheet 7 drew at 1.9–3.9× bought this glow</text>
 <line x1="150" y1="339" x2="160" y2="330" class="skf"/>
 
 <text x="1096" y="336" class="lblb" text-anchor="end" >apps/ — THE PROVING GROUND</text>
-<text x="1096" y="349" class="lblf" text-anchor="end" >one metered member (№8, 100%) · two demos + the rig</text>
+<text x="1096" y="349" class="lblf" text-anchor="end" >one metered member (№8, fully lit) · two demos + the rig</text>
 <text x="1096" y="361" class="lblf" text-anchor="end" >live on e2e light alone · №5 tests pass with no meter</text>
 
 <text x="1146" y="560" class="lblb" text-anchor="start" >docs/ + examples/ — THE SHOPFRONT</text>
-<text x="1146" y="573" class="lblf" text-anchor="start" >the worker: 100% metered — a 53-sloc sliver of 677</text>
-<text x="1146" y="585" class="lblf" text-anchor="start" >examples: 1,117 sloc, never a shadow</text>
+<text x="1146" y="573" class="lblf" text-anchor="start" >the worker: fully lit — a 53-sloc sliver of 677</text>
+<text x="1146" y="585" class="lblf" text-anchor="start" >examples: 1,117 sloc, never lit</text>
 <line x1="1140" y1="569" x2="1064" y2="560" class="skf"/>
 
 <text x="96" y="852" class="lblb" text-anchor="start" >tools/ — THE INSTRUMENT YARD</text>
-<text x="96" y="865" class="lblf" text-anchor="start" >seven metered members: 96.7% of 2,906 lines lit — but only 56% of yard sloc is ever loaded</text>
-<text x="96" y="877" class="lblf" text-anchor="start" >the habit, visible from the air: every .core.ts in shadow, every CLI wrapper in the sun</text>
+<text x="96" y="865" class="lblf" text-anchor="start" >seven metered members: 96.7% of 2,906 lines lit — but the light reaches only 56% of yard sloc</text>
+<text x="96" y="877" class="lblf" text-anchor="start" >the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow</text>
 <line x1="140" y1="843" x2="152" y2="828" class="skf"/>
 
 <!-- callouts -->
-<text x="620" y="88" class="lbla" text-anchor="start" >№1 lit-ui-router — 94% reach, 98.1% dark</text>
-<text x="620" y="100" class="lblf" text-anchor="start" >unlit: index · pure · register · interface.ts —</text>
-<text x="620" y="112" class="lblf" text-anchor="start" >69 of its 80 sunlit sloc are type declarations</text>
+<text x="620" y="88" class="lbla" text-anchor="start" >№1 lit-ui-router — 94% of the footprint lit, 98.1% bright</text>
+<text x="620" y="100" class="lblf" text-anchor="start" >in shadow: index · pure · register · interface.ts —</text>
+<text x="620" y="112" class="lblf" text-anchor="start" >69 of those 80 sloc are type declarations</text>
 <line x1="612" y1="119" x2="305" y2="136" class="skf"/>
 
-<text x="1144" y="312" class="lbls" text-anchor="start" >№5 sample-app-shared — the outline shadow:</text>
-<text x="1144" y="325" class="lblf" text-anchor="start" >43 unit tests pass, but browser-mode vitest cannot</text>
-<text x="1144" y="337" class="lblf" text-anchor="start" >load a meter the repo never installed</text>
-<line x1="1138" y1="320" x2="1032" y2="270" class="skf"/>
+<text x="1144" y="322" class="lbls" text-anchor="start" >№5 sample-app-shared — an outline of light:</text>
+<text x="1144" y="335" class="lblf" text-anchor="start" >43 unit tests pass, but browser-mode vitest cannot</text>
+<text x="1144" y="347" class="lblf" text-anchor="start" >load a meter the repo never installed</text>
+<line x1="1138" y1="330" x2="1032" y2="270" class="skf"/>
 
-<text x="30" y="430" class="lblr" text-anchor="start" >№26 happy-dom — a suite, and NO shadow:</text>
-<text x="30" y="442" class="lblf" text-anchor="start" >its canary spec tests happy-dom’s ordering</text>
+<text x="30" y="430" class="lblr" text-anchor="start" >№26 happy-dom — a lamp, and NO light on itself:</text>
+<text x="30" y="442" class="lblf" text-anchor="start" >its canary spec lights happy-dom’s ordering</text>
 <text x="30" y="454" class="lblf" text-anchor="start" >bug, never its own append.ts — 0 of 8 sloc;</text>
-<text x="30" y="466" class="lblf" text-anchor="start" >those 8 lines are lit inside №1’s annex</text>
+<text x="30" y="466" class="lblf" text-anchor="start" >those 8 lines are lit from №1’s lamp instead</text>
 <line x1="250" y1="474" x2="272" y2="522" class="skf"/>
 
 <text x="863" y="724" class="lblr" text-anchor="start" >№12 @tools/release — the yard in one building:</text>
-<text x="863" y="737" class="lblf" text-anchor="start" >23 .core.ts files at 98.4% dark; 21 CLI wrappers, 858 sloc,</text>
-<text x="863" y="749" class="lblf" text-anchor="start" >in full sun — the publish halt is tested at its core</text>
-<text x="863" y="761" class="lblf" text-anchor="start" >and bare at its process edge</text>
+<text x="863" y="737" class="lblf" text-anchor="start" >23 .core.ts files at 98.4% bright; 21 CLI wrappers, 858 sloc,</text>
+<text x="863" y="749" class="lblf" text-anchor="start" >in shadow — the publish halt is lit at its core</text>
+<text x="863" y="761" class="lblf" text-anchor="start" >and dark at its process edge</text>
 <line x1="857" y1="742" x2="240" y2="700" class="skf"/>
 
-<text x="700" y="852" class="lblr" text-anchor="start" >№16 @tools/shared — the palest shadow drawn: 83.1% line, 62.5% function</text>
+<text x="700" y="852" class="lblr" text-anchor="start" >№16 @tools/shared — the palest light thrown: 83.1% line, 62.5% function</text>
 <text x="700" y="865" class="lblf" text-anchor="start" >exec.ts 35/55 lines · workspace.ts 63/103 — the worst-lit thing that is lit at all</text>
 <line x1="694" y1="850" x2="166" y2="772" class="skf"/>
 
 <!-- verdict -->
 <rect x="1128" y="382" width="392" height="118" class="sk fp"/>
 <text x="1144" y="404" class="lblb" text-anchor="start" >VERDICT</text>
-<text x="1144" y="424" class="lbls" text-anchor="start" >Where a shadow falls, it is near-black:</text>
+<text x="1144" y="424" class="lbls" text-anchor="start" >The light reaches wall to wall in packages/:</text>
 <text x="1144" y="438" class="lbls" text-anchor="start" >98.0% of 5,539 metered lines lit, and the</text>
-<text x="1144" y="452" class="lbls" text-anchor="start" >product district is dark wall to wall.</text>
-<text x="1144" y="466" class="lbls" text-anchor="start" >The sun never touches the packages; it sits</text>
-<text x="1144" y="480" class="lbls" text-anchor="start" >on 2,608 sloc of instruments and 1,375 of wrappers.</text>
+<text x="1144" y="452" class="lbls" text-anchor="start" >product district has no dark corner.</text>
+<text x="1144" y="466" class="lbls" text-anchor="start" >What never sees light: 2,608 sloc of untested</text>
+<text x="1144" y="480" class="lbls" text-anchor="start" >instruments and 1,375 sloc of CLI wrappers.</text>
 
 <rect x="40" y="882" width="1480" height="329" class="sk fp"/>
-<text x="58" y="904" class="lbls" text-anchor="start" >SHADOW SCHEDULE — per member: files and sloc the suite loaded / authored · L line · B branch · F function coverage of the loaded files</text>
+<text x="58" y="904" class="lbls" text-anchor="start" >SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files</text>
 <line x1="40" y1="914" x2="1520" y2="914" class="skf"/>
-<text x="58" y="934" class="lbls" text-anchor="start" > 1  lit-ui-router — 8/12f · 1,245/1,325† (94%) · L 98.1% B 92.4% F 97.4% · unlit: barrels + interface.ts (type decls)</text>
-<text x="58" y="951" class="lbls" text-anchor="start" > 2  ui-router-server — 8/8f · 1,141/1,141 (100%) · L 99.6% B 95.6% F 98.3% · whole footprint near-black</text>
-<text x="58" y="968" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 3/4f · 130/133 (97.7%) · L 100% B 91.7% F 100% · unlit: the 3-sloc index barrel</text>
+<text x="58" y="934" class="lbls" text-anchor="start" > 1  lit-ui-router — 8/12f · 1,245/1,325† (94%) · L 98.1% B 92.4% F 97.4% · in shadow: barrels + interface.ts (type decls)</text>
+<text x="58" y="951" class="lbls" text-anchor="start" > 2  ui-router-server — 8/8f · 1,141/1,141 (100%) · L 99.6% B 95.6% F 98.3% · whole footprint fully lit</text>
+<text x="58" y="968" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 3/4f · 130/133 (97.7%) · L 100% B 91.7% F 100% · in shadow: the 3-sloc index barrel</text>
 <text x="58" y="985" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 1/1f · 105/105 (100%) · L 100% B 100% F 100% · all three meters read 100</text>
 <text x="58" y="1002" class="lbls" text-anchor="start" > 5  sample-app-shared — tests run, no meter · 43 tests pass · no coverage provider in browser mode · e2e-lit</text>
 <text x="58" y="1019" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — e2e light only · lit only by the cypress rig</text>
@@ -494,54 +500,56 @@ a { color: var(--accent); }
 <text x="58" y="1053" class="lbls" text-anchor="start" > 8  sample-app-routes — 2/2f · 51/51 (100%) · L 100% B 100% F — · route table fully lit (no functions to meter)</text>
 <text x="58" y="1070" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — e2e light only · the rig itself — its 57 sloc are the support code</text>
 <text x="58" y="1087" class="lbls" text-anchor="start" >10  docs — 1/8f · 53/677 (7.8%) · L 100% B 100% F 100% · worker lit · the site (624 sloc) sees only e2e light</text>
-<text x="58" y="1104" class="lbls" text-anchor="start" >11  examples — FULL SUN — no suite · stackblitz copies — never tested</text>
-<text x="58" y="1121" class="lbls" text-anchor="start" >12  @tools/release — 23/44f · 1,013/1,871 (54.1%) · L 98.4% B 96.3% F 96.8% · 21 CLI wrappers (858 sloc) in the sun</text>
-<text x="58" y="1138" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — FULL SUN — no suite · builds the API pages, tests nothing</text>
-<text x="58" y="1155" class="lbls" text-anchor="start" >14  @tools/dts-backtest — FULL SUN — no suite · no self-suite — it IS the packages’ d.ts test</text>
-<text x="800" y="934" class="lbls" text-anchor="start" >15  @tools/build_and_test — 4/7f · 464/756† (61.4%) · L 99.8% B 93.5% F 97.3% · 3 CLI wrappers in the sun</text>
+<text x="58" y="1104" class="lbls" text-anchor="start" >11  examples — FULL SHADOW — no suite · stackblitz copies — never lit</text>
+<text x="58" y="1121" class="lbls" text-anchor="start" >12  @tools/release — 23/44f · 1,013/1,871 (54.1%) · L 98.4% B 96.3% F 96.8% · 21 CLI wrappers (858 sloc) in shadow</text>
+<text x="58" y="1138" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — FULL SHADOW — no suite · builds the API pages, tests nothing</text>
+<text x="58" y="1155" class="lbls" text-anchor="start" >14  @tools/dts-backtest — FULL SHADOW — no suite · no self-suite — it IS the packages’ d.ts test</text>
+<text x="800" y="934" class="lbls" text-anchor="start" >15  @tools/build_and_test — 4/7f · 464/756† (61.4%) · L 99.8% B 93.5% F 97.3% · 3 CLI wrappers in shadow</text>
 <text x="800" y="951" class="lbls" text-anchor="start" >16  @tools/shared — 7/9f · 248/300 (82.7%) · L 83.1% B 98% F 62.5% · palest: exec 35/55 · workspace 63/103</text>
-<text x="800" y="968" class="lbls" text-anchor="start" >17  @tools/workers-builds — 1/2f · 219/375 (58.4%) · L 99.3% B 88.5% F 100% · trigger wrapper in the sun</text>
-<text x="800" y="985" class="lbls" text-anchor="start" >18  @tools/bundle-probe — FULL SUN — no suite · size probe, advisory, untested</text>
+<text x="800" y="968" class="lbls" text-anchor="start" >17  @tools/workers-builds — 1/2f · 219/375 (58.4%) · L 99.3% B 88.5% F 100% · trigger wrapper in shadow</text>
+<text x="800" y="985" class="lbls" text-anchor="start" >18  @tools/bundle-probe — FULL SHADOW — no suite · size probe, advisory, unlit</text>
 <text x="800" y="1002" class="lbls" text-anchor="start" >19  @tools/compat-guards — 1/7f · 23/189 (12.2%) · L 100% B 100% F 100% · six CI lanes never metered</text>
-<text x="800" y="1019" class="lbls" text-anchor="start" >20  @tools/oxc-emit — FULL SUN — no suite · both build passes ride it — untested</text>
-<text x="800" y="1036" class="lbls" text-anchor="start" >21  @tools/release-config — FULL SUN — no suite · config only</text>
-<text x="800" y="1053" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — FULL SUN — no suite · wrapper only</text>
-<text x="800" y="1070" class="lbls" text-anchor="start" >23  @tools/lit-test-env — FULL SUN — no suite · harness for every vitest suite — borrowed light</text>
-<text x="800" y="1087" class="lbls" text-anchor="start" >24  @tools/vue-check — FULL SUN — no suite · wrapper only</text>
-<text x="800" y="1104" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 1/2f · 6/23 (26.1%) · L 100% B 100% F 100% · rebase.ts lit · CLI wrapper in the sun</text>
+<text x="800" y="1019" class="lbls" text-anchor="start" >20  @tools/oxc-emit — FULL SHADOW — no suite · both build passes ride it — unlit</text>
+<text x="800" y="1036" class="lbls" text-anchor="start" >21  @tools/release-config — FULL SHADOW — no suite · config only</text>
+<text x="800" y="1053" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — FULL SHADOW — no suite · wrapper only</text>
+<text x="800" y="1070" class="lbls" text-anchor="start" >23  @tools/lit-test-env — FULL SHADOW — no suite · harness for every vitest suite — borrowed light</text>
+<text x="800" y="1087" class="lbls" text-anchor="start" >24  @tools/vue-check — FULL SHADOW — no suite · wrapper only</text>
+<text x="800" y="1104" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 1/2f · 6/23 (26.1%) · L 100% B 100% F 100% · rebase.ts lit · CLI wrapper in shadow</text>
 <text x="800" y="1121" class="lbls" text-anchor="start" >26  @tools/happy-dom — 0/1f · 0/8 (0%) · L — B — F — · canary lights happy-dom, not append.ts</text>
-<text x="800" y="1138" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no mass · ambient types — nothing to shade</text>
-<text x="58" y="1176" class="lbls" text-anchor="start" >TOTAL — 13 members metered: 5,427 of 5,539 metered lines lit (98.0%) · branches 1,283/1,351 (95.0%) · functions 419/437 (95.9%) · extent 4,698/6,954 sloc (67.6%) · metered 2026-08-17</text>
-<text x="58" y="1192" class="lblf" text-anchor="start" >† source moved between the census (2026-08-16, sheet 7) and the metering (worktree HEAD 3557c29): №1 1,189→1,325 sloc, №15 5f/427→7f/756 — footprints stay on the census, extents follow the meter</text>
+<text x="800" y="1138" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no mass · ambient types — nothing to light</text>
+<text x="58" y="1176" class="lbls" text-anchor="start" >TOTAL — 13 members metered: 5,427 of 5,539 metered lines lit (98.0%) · branches 1,283/1,351 (95.0%) · functions 419/437 (95.9%) · lit extent 4,698/6,954 sloc (67.6%) · metered 2026-08-17</text>
+<text x="58" y="1192" class="lblf" text-anchor="start" >† source moved between the census (2026-08-16, sheet 7) and the metering (worktree HEAD 3557c29): №1 1,189→1,325 sloc, №15 5f/427→7f/756 — footprints stay on the census, lit extents follow the meter</text>
 </svg></div>
-    <figcaption>Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test shadow. Every member’s own suite was run under a coverage meter, and its shadow drawn to two rules: reach is how much of the member’s source the suite actually loaded, darkness is the line coverage of what it loaded. The finding is a repo-wide habit visible from the air — shadows are short more often than they are pale. Where a suite reaches, it is near-black; what it never imports simply stands in the sun.</figcaption>
+    <figcaption>Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite was run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>Method — one meter per member, nothing installed, nothing left behind.</strong> Footprints, annexes and districts are sheet 7 rev B's census, unchanged, so the two plates overlay. Shadows were metered on 2026-08-17 at worktree HEAD <code>3557c29</code>: the four packages by the repo's own <code>turbo run test:coverage</code> tasks (vitest v8 for three, <code>node --test --experimental-test-coverage</code> + <code>rebase-lcov</code> for <code>ui-router-server</code>); the eight <code>node:test</code> members by the same node flags passed on the command line; <code>@tools/happy-dom</code> by <code>vitest run --coverage.enabled --coverage.provider=v8</code>. No repo file was edited. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so darkness percentages are per-meter and never summed across meters in the drawing — only the schedule's grand total does, and says so. Extent uses the atlas sloc rule over the code the meter actually saw; two members' source moved between the census and the metering and are daggered in the schedule.</p>
-<p><strong>The product is dark wall to wall — the budget lands where the house says.</strong> All four published packages meter 98.1–100% line, 91.7–100% branch, over 94–100% of their source. What little stands in the sun is entry barrels and <code>interface.ts</code> — 69 of <code>lit-ui-router</code>'s 80 unlit sloc are type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at 1.9–3.9× their buildings turn out to buy near-total shadow.</p>
-<p><strong>The yard's habit: cores in shadow, wrappers in the sun.</strong> Four instruments repeat one pattern — <code>@tools/release</code> (23 <code>.core.ts</code> files at 98.4%, 21 CLI wrappers unlit), <code>build_and_test</code> (3 wrappers unlit), <code>workers-builds</code> (the 156-sloc trigger wrapper), <code>lcov-rebase</code> (the 17-sloc bin). 1,375 sloc of process-edge code is never loaded by any suite, while the logic behind it meters 96.7%. <code>compat-guards</code> is the pattern at its extreme: only <code>ranges.ts</code> is unit-lit; its six guard lanes run for real in CI, where no meter follows. And <code>@tools/happy-dom</code> is the survey's one genuine surprise, re-verified before inking: it has a suite and casts no shadow at all, because its spec is a conformance canary pointed at happy-dom upstream — its own <code>append.ts</code> is lit only inside <code>lit-ui-router</code>'s annex, as borrowed light.</p>
-<p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the Cypress host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so their shadows are drawn at nominal reach and labelled unmetered. <code>sample-app-shared</code> runs 43 unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed (<code>@vitest/coverage-v8</code> is no devDependency of it); its shadow is an outline. Nine members — <code>examples</code>, the typedoc plugin, and seven instruments — cast nothing because nothing tests them; two of those (<code>dts-backtest</code>, <code>lit-test-env</code>) spend their working lives inside other members' suites and are red-badged with that caveat in the schedule.</p>
+<p><strong>REV B — the polarity is corrected, not the data.</strong> This plate's first printing drew coverage as cast shadow, so the best-tested district read gloomiest — the metaphor upside down, as the client noted: the tests are the light, and shadow should mean what shadow means. Every number below is rev A's, unchanged; only the optics flipped. The spec annex is now the lamp, covered source glows, and the nine members with no suite at all are finally the dark buildings they always were.</p>
+<p><strong>Method — one meter per member, nothing installed, nothing left behind.</strong> Footprints, annexes and districts are sheet 7 rev B's census, unchanged, so the two plates overlay. Light was metered on 2026-08-17 at worktree HEAD <code>3557c29</code>: the four packages by the repo's own <code>turbo run test:coverage</code> tasks (vitest v8 for three, <code>node --test --experimental-test-coverage</code> + <code>rebase-lcov</code> for <code>ui-router-server</code>); the eight <code>node:test</code> members by the same node flags passed on the command line; <code>@tools/happy-dom</code> by <code>vitest run --coverage.enabled --coverage.provider=v8</code>. No repo file was edited. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and never summed across meters in the drawing — only the schedule's grand total does, and says so. Lit extent uses the atlas sloc rule over the code the meter actually saw; two members' source moved between the census and the metering and are daggered in the schedule.</p>
+<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> All four published packages meter 98.1–100% line, 91.7–100% branch, over 94–100% of their source. What little stays dark is entry barrels and <code>interface.ts</code> — 69 of <code>lit-ui-router</code>'s 80 shadowed sloc are type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at 1.9–3.9× their buildings turn out to buy near-total light.</p>
+<p><strong>The yard's habit: bright cores, dark wrappers.</strong> Four instruments repeat one pattern — <code>@tools/release</code> (23 <code>.core.ts</code> files at 98.4%, 21 CLI wrappers dark), <code>build_and_test</code> (3 wrappers dark), <code>workers-builds</code> (the 156-sloc trigger wrapper), <code>lcov-rebase</code> (the 17-sloc bin). 1,375 sloc of process-edge code is never loaded by any suite, while the logic behind it meters 96.7%. <code>compat-guards</code> is the pattern at its extreme: only <code>ranges.ts</code> is unit-lit; its six guard lanes run for real in CI, where no meter follows. And <code>@tools/happy-dom</code> is the survey's one genuine surprise, re-verified before inking: it owns a lit lamp and still stands dark, because its spec is a conformance canary pointed at happy-dom upstream — its own <code>append.ts</code> is lit only from <code>lit-ui-router</code>'s lamp, as borrowed light.</p>
+<p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the Cypress host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. <code>sample-app-shared</code> runs 43 unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed (<code>@vitest/coverage-v8</code> is no devDependency of it); its light is an outline. Nine members — <code>examples</code>, the typedoc plugin, and seven instruments — are dark because nothing tests them; two of those (<code>dts-backtest</code>, <code>lit-test-env</code>) spend their working lives inside other members' suites and are red-badged with that caveat in the schedule.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
       <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="sk fp"/></svg></td><td>a member’s footprint — sheet 7’s census, plan view</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="14" y="3" width="18" height="12" class="sks fnone" stroke-dasharray="3 3"/></svg></td><td>its spec annex, ghosted — the thing that throws the shadow</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s7a-s1)"/></svg></td><td>shadow ≥95% line — near-black</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s7a-s3)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/></svg></td><td>shadow 70–85% — pale, red hatch</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s7a-se)"/><rect x="6" y="3" width="36" height="12" class="ska fnone" stroke-dasharray="5 4"/></svg></td><td>e2e light only — cypress, no meter reads it</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="sks fnone" stroke-dasharray="2 4"/></svg></td><td>tests run, meter cannot attach</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><circle cx="24" cy="9" r="7" class="skr fp"/><text x="24" y="12" class="lblr" text-anchor="middle" font-size="9">n</text></svg></td><td>no shadow, red badge — no suite at all</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="20" height="12" class="sk fp"/><polygon points="6,3 2,7 2,19 22,19 26,15 6,15" fill="url(#s7a-s1)"/></svg></td><td>reach = share of source the suite loads · sun from NE</td></tr></table>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="14" y="3" width="18" height="12" class="sks fhalo"/></svg></td><td>its spec annex — the LAMP: the light falls from the tests</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="var(--halo)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/></svg></td><td>lit ≥95% line — full bright</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s7a-g3)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/></svg></td><td>lit 70–85% — pale, red hatch</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s7a-se)"/><rect x="6" y="3" width="36" height="12" class="ska fnone" stroke-dasharray="5 4"/></svg></td><td>e2e light — real, no meter reads it</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="4" x2="44" y2="4" class="sks" stroke-dasharray="2 4"/><line x1="4" y1="14" x2="44" y2="14" class="sks" stroke-dasharray="2 4"/></svg></td><td>an outline of light — tests run, no meter attaches</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s7a-sh)"/><rect x="6" y="3" width="36" height="12" class="sk fnone"/></svg></td><td>SHADOW — source no suite ever loads</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><circle cx="24" cy="9" r="7" class="skr fp"/><text x="24" y="12" class="lblr" text-anchor="middle" font-size="9">n</text></svg></td><td>fully dark, red badge — no suite at all</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="24" height="12" class="sk fp"/><rect x="18" y="3" width="10" height="12" fill="var(--halo)"/><rect x="4" y="3" width="14" height="12" fill="url(#s7a-sh)"/><rect x="32" y="5" width="9" height="8" class="sks fhalo"/></svg></td><td>lit strip = share of source the suite loads · light from the lamp side</td></tr></table>
       <div class="titleblock" aria-label="title block">
   <div class="span2"><span class="fld">PROJECT</span>THE ALTITUDE ATLAS</div>
   <div class="span2"><span class="fld">SHEET TITLE</span>THE SHADOW SURVEY</div>
   <div><span class="fld">SCALE</span>WHOLE WORKSPACE</div>
   <div><span class="fld">FORM</span>SHADOW PLAN</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-08-17 · A</div>
+  <div><span class="fld">DATE / REV</span>2026-08-17 · B</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
   <div><span class="fld">SHEET</span>7A OF 13</div>
 </div>
