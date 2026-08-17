@@ -1,0 +1,31 @@
+{
+  "name": "lit-ui-router-example-design-system-links",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@spectrum-web-components/link": "^1.12.2",
+    "@spectrum-web-components/theme": "^1.12.2",
+    "@uirouter/core": "^6.1.2",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.10.0"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn"
+    }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}
