@@ -223,6 +223,33 @@ export function headline(
   return `${reports.length} failing task${reports.length === 1 ? '' : 's'}: ${what} — ${success} succeeded, ${cached} cached, ${attempted} attempted`;
 }
 
+/**
+ * A fence longer than the longest backtick run in `text`, so an excerpt that
+ * itself contains ``` cannot close the block and inject markdown into the
+ * summary. Log text is untrusted: a PR's own test output ends up in here.
+ */
+export function fenceFor(text: string): string {
+  let longest = 0;
+  for (const run of text.match(/`+/g) ?? [])
+    longest = Math.max(longest, run.length);
+  return '`'.repeat(Math.max(3, longest + 1));
+}
+
+/**
+ * Wraps stdout chunks in a `::stop-commands::` pair so the runner reads the
+ * republished logs as plain text. Same untrusted-text problem as `fenceFor`,
+ * different parser: on Actions a log line starting with `::` IS a workflow
+ * command, so an excerpt could forge annotations or stop command processing
+ * for the rest of the job. The token must be unguessable — a log that could
+ * predict it could emit the resume line itself and escape the guard.
+ *
+ * No token (running locally) leaves the chunks alone; nothing parses them.
+ */
+export function guardCommands(chunks: string[], token?: string): string[] {
+  if (token === undefined || token === '') return chunks;
+  return [`::stop-commands::${token}`, ...chunks, `::${token}::`];
+}
+
 /** The `$GITHUB_STEP_SUMMARY` lane: rendered markdown on the run page. */
 export function summaryMarkdown(
   summary: RunSummary,
@@ -274,7 +301,8 @@ export function summaryMarkdown(
         '',
       );
     }
-    out.push('```text', excerpt.text, '```', '');
+    const fence = fenceFor(excerpt.text);
+    out.push(`${fence}text`, excerpt.text, fence, '');
     if (excerpt.omittedLines > 0) out.push('</details>', '');
   }
   return `${out.join('\n')}\n`;

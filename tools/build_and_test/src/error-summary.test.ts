@@ -8,6 +8,8 @@ import {
   directReproduction,
   excerptLog,
   failedTasks,
+  fenceFor,
+  guardCommands,
   headline,
   parseRunSummary,
   stdoutReport,
@@ -322,5 +324,66 @@ describe('stdoutReport', () => {
     assert.match(text, /exact: cd packages\/lit-ui-router/);
     assert.match(text, /error TS2322/);
     assert.match(lines.at(-1) ?? '', /^1 failing task:/);
+  });
+});
+
+// Log text is untrusted — it is whatever a PR's own build printed. Both output
+// lanes embed it in a format with its own escape syntax.
+describe('untrusted log text', () => {
+  const hostile = [
+    '::error file=evil.ts,line=1::forged annotation',
+    '::stop-commands::attacker',
+    '```',
+    '</details><script>alert(1)</script>',
+  ].join('\n');
+
+  function hostileRun() {
+    const run = summary([task()]);
+    return {
+      run,
+      reports: buildReports(
+        run,
+        new Map([['lit-ui-router#typecheck:src', hostile]]),
+      ),
+    };
+  }
+
+  it('guardCommands leaves chunks alone with no token', () => {
+    assert.deepEqual(guardCommands(['a', 'b']), ['a', 'b']);
+    assert.deepEqual(guardCommands(['a'], ''), ['a']);
+  });
+
+  it('guardCommands brackets the chunks with a stop/resume pair', () => {
+    const out = guardCommands(['a', 'b'], 'tok');
+    assert.deepEqual(out, ['::stop-commands::tok', 'a', 'b', '::tok::']);
+  });
+
+  it('a `::` log line lands inside the guard, not before it', () => {
+    const { run, reports } = hostileRun();
+    const out = guardCommands(stdoutReport(run, reports), 'tok');
+    const forged = out.findIndex((chunk) =>
+      chunk.includes('forged annotation'),
+    );
+    assert.ok(forged > 0, 'the excerpt is emitted');
+    assert.equal(out.indexOf('::stop-commands::tok'), 0);
+    assert.equal(out.at(-1), '::tok::');
+    assert.ok(forged < out.length - 1, 'and lands before the resume line');
+  });
+
+  it('fenceFor outgrows the longest backtick run in the text', () => {
+    assert.equal(fenceFor('no backticks'), '```');
+    assert.equal(fenceFor('a ``` b'), '````');
+    assert.equal(fenceFor('a ````` b'), '``````');
+  });
+
+  it('summaryMarkdown fences an excerpt that contains a fence', () => {
+    const { run, reports } = hostileRun();
+    const markdown = summaryMarkdown(run, reports);
+    // The excerpt's own ``` must not be able to close the block we opened.
+    assert.match(markdown, /````text\n/);
+    assert.ok(
+      markdown.includes('</details><script>'),
+      'the excerpt is still reported verbatim',
+    );
   });
 });

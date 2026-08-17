@@ -16,6 +16,7 @@
 // env: GITHUB_STEP_SUMMARY (runner file; printed when unset),
 //      TURBO_RUNS_DIR (override for tests and local reproduction).
 
+import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
@@ -23,6 +24,7 @@ import {
   type FailureReport,
   type RunSummary,
   buildReports,
+  guardCommands,
   headline,
   parseRunSummary,
   stdoutReport,
@@ -33,6 +35,11 @@ const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
 
 function onActions(): boolean {
   return process.env.GITHUB_ACTIONS === 'true';
+}
+
+/** Fresh per run: a log that could guess the token could escape the guard. */
+function commandToken(): string | undefined {
+  return onActions() ? randomUUID() : undefined;
 }
 
 function warn(message: string): void {
@@ -84,20 +91,22 @@ async function publish(
   reports: FailureReport[],
 ): Promise<void> {
   const line = headline(summary, reports);
+  const markdown = summaryMarkdown(summary, reports);
+  const file = process.env.GITHUB_STEP_SUMMARY;
+  const toFile = file !== undefined && file !== '';
 
   // The stdout lane, ungrouped: an agent reading `gh run view --log-failed`
   // gets the excerpts inline, and a human scanning the step sees the headline
   // without expanding anything. Grouping is deliberately NOT used — a
   // collapsed group is exactly the problem this step exists to solve.
-  for (const chunk of stdoutReport(summary, reports)) console.log(chunk);
+  const chunks = stdoutReport(summary, reports);
+  // The fallback prints the same untrusted excerpts, so it goes inside the guard.
+  if (!toFile) chunks.push(`\n${markdown}`);
+  for (const chunk of guardCommands(chunks, commandToken())) console.log(chunk);
 
-  const markdown = summaryMarkdown(summary, reports);
-  const file = process.env.GITHUB_STEP_SUMMARY;
-  if (file !== undefined && file !== '') {
-    await appendFile(file, markdown);
-  } else {
-    console.log(`\n${markdown}`);
-  }
+  // After the guard resumed: our own annotation has to be parsed. The step
+  // summary file is markdown, never scanned for commands, so it needs none.
+  if (toFile) await appendFile(file, markdown);
 
   // The annotation is the top-of-page pointer; the summary is the detail.
   if (onActions() && reports.length > 0) {
