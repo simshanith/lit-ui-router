@@ -14,7 +14,7 @@ notes on each sheet argue where that form fits and where it lies.
 | [4](sheet-4-the-family-spine.html) | UI-ROUTER ECOSYSTEM | MASSED SPINE |
 | [5](sheet-5-the-design-space.html) | JS ECOSYSTEM | POSITIONED CHART |
 | [6](sheet-6-the-routing-strata.html) | EVERYTHING | CORE SAMPLE |
-| [7](sheet-7-the-census.html) | WHOLE WORKSPACE | MEASURED CITY |
+| [7](sheet-7-the-measured-city.html) | WHOLE WORKSPACE | MEASURED CITY |
 | [8](sheet-8-the-delivered-city.html) | ONE CONSUMER | DELIVERED CITY |
 | [9](sheet-9-the-shipped-city.html) | ONE DEPLOY | SHIPPED CITY |
 | [10](sheet-10-the-bundled-city.html) | ONE BUNDLE | BUNDLED CITY |

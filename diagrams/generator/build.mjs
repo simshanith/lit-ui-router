@@ -58,7 +58,7 @@ const verdicts = [
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
-  ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census — files as footprint, lines as height, tests as annexes'],
+  ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR'],
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 318× the app, after the swap it argued for'],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 26%, the router 3.7%'],
