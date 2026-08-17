@@ -732,6 +732,35 @@ describe('uiSrefActive directive', () => {
       expect(anchor.getAttribute('aria-current')).toBe('page');
     });
 
+    it('should keep the exact default when only the active value is given', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { active: 'location' },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('location');
+
+      // The keys default independently: supplying `active` must not cost the
+      // link its `exact` default, which the object form otherwise passes
+      // through untouched.
+      await routerGo(router, 'parent');
+      await tick(100);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
     it('should not clear an aria-current it did not set', async () => {
       const { wrapper } = await setupWithStates(parentChildStates);
 
