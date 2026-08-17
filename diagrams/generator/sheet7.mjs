@@ -15,7 +15,7 @@ const OX = 600, OY = 96;
 
 // ---- scale rule ----------------------------------------------------------------
 const KS = 1.6;   // footprint SIDE = 1.6 · √sloc  (plan area ∝ sloc)
-const KH = 1.5;   // block HEIGHT   = 1.5 px per authored file
+const KH = 3.0;   // block HEIGHT   = 3.0 px per authored file
 const MIN = 12;   // footprint floor, so the smallest instruments stay visible
 const S = (sloc) => Math.max(MIN, KS * Math.sqrt(sloc));
 const H = (files) => Math.max(4, KH * files);
@@ -55,7 +55,7 @@ const M = [
   // --- tools/ — the instrument yard --------------------------------------------
   [12, '@tools/release',           'tool', 'halt',    20, 430, 44, 1871, 19, 1896, 'hosts published-diff — the one publish halt'],
   [13, '@tools/typedoc-plugin',    'tool', 'report', 230, 430,  5,  755,  0,    0, 'builds the API pages, gates nothing'],
-  [14, '@tools/dts-backtest',      'tool', 'pr',      20, 350,  1,  291,  0,    0, 'one 291-line run.ts holds the TS 5.0 floor'],
+  [14, '@tools/dts-backtest',      'tool', 'pr',       8, 350,  1,  291,  0,    0, 'one 291-line run.ts holds the TS 5.0 floor'],
   [15, '@tools/build_and_test',    'tool', 'report', 330, 430,  5,  427,  2,  378, 'the CI graph helper'],
   [16, '@tools/shared',            'tool', 'report',  20, 550,  9,  300,  5,  276, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tool', 'late',   220, 550,  2,  375,  1,  266, 'the docs deploy watch'],
@@ -103,7 +103,7 @@ function member(n) {
 ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 // badges that would land on a neighbouring roof edge get lifted into clear air
-const BADGE_LIFT = { 6: 35, 10: 28, 20: 26, 21: 34, 23: 34, 27: 34 };
+const BADGE_LIFT = { 1: 20, 2: 30, 6: 35, 10: 28, 16: 30, 20: 26, 21: 34, 23: 34, 27: 34 };
 
 // ---- roads ----------------------------------------------------------------------
 // Routed on the iso grid and trimmed in SCREEN space at both ends.  A block's roof
@@ -197,27 +197,27 @@ ${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls'))
 ${M.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 58 + half * 17, `TOTAL — 27 members, 26 massed · ${TOT_SF} authored files · ${fmt(TOT_SL)} sloc · plus ${TOT_PF} spec files · ${fmt(TOT_PL)} sloc of annex · counted 2026-08-16`, 'lbls')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height one and a half pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards. To the right is the apps district, where sample-app-shared is the broadest source block on the sheet at thirty-six files and 2,103 lines. Below it sits the shopfront of docs and examples, and lower left the instrument yard of sixteen tools, dominated by the tall red release block — forty-four files and 1,871 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all twenty-seven members with exact file and line counts, their annex, and their gate tier.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards. To the right is the apps district, where sample-app-shared is the broadest source block on the sheet at thirty-six files and 2,103 lines. Below it sits the shopfront of docs and examples, and lower left the instrument yard of sixteen tools, dominated by the tall red release block — forty-four files and 1,871 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all twenty-seven members with exact file and line counts, their annex, and their gate tier.">
 ${defs(P)}
 
-<rect x="40" y="26" width="600" height="42" class="skf fnone"/>
+<rect x="40" y="26" width="520" height="42" class="skf fnone"/>
 ${txt(52, 43, 'THE CENSUS CITY — WHO IS ACTUALLY HERE', 'lbls')}
 ${txt(52, 58, '27 workspace members · 4 districts · every road below is a real edge in the repo', 'lblf')}
 
-${txt(1520, 34, 'SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 1.5 px per authored file · mass = sloc × files', 'lbls', 'end')}
+${txt(1520, 34, 'SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 3 px per authored file · mass = sloc × files', 'lbls', 'end')}
 ${txt(1520, 48, 'footprint floored at 12 plan units so the smallest instruments stay visible · annexes massed on the same rule from spec files', 'lblf', 'end')}
 ${txt(1520, 62, 'GATE SEVERITY IS COLOUR, NOT HEIGHT — tiers match sheet 3 · the tallest block on the sheet is also the only publish halt', 'lblf', 'end')}
 
 <!-- severity ladder -->
-<rect x="1090" y="120" width="430" height="146" class="skf fnone"/>
-${txt(1106, 142, 'GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT', 'lbls')}
+<rect x="1090" y="104" width="430" height="146" class="skf fnone"/>
+${txt(1106, 126, 'GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT', 'lbls')}
 ${[
   ['skr', 'fr', null, 'halts a publish — 12', 'lblr'],
   ['skr', 'fp', 'hr', 'stops the PR line — 9 · 14 · 19 · 23 · 26', 'lblr'],
   ['ska', 'fp', 'ha', 'gates a later stage — 17', 'lbla'],
   ['skf', 'fp2', null, 'never gates — 13 · 15 · 16 · 18 · 22 · 24 · 25', 'lbls'],
 ].map(([edge, fill, hatch, label, cls], i) => {
-  const y = 166 + i * 24;
+  const y = 150 + i * 24;
   return `<rect x="1106" y="${y}" width="34" height="14" class="${fill}"/>${hatch ? `<rect x="1106" y="${y}" width="34" height="14" fill="url(#${P}-${hatch})"/>` : ''}<rect x="1106" y="${y}" width="34" height="14" class="${edge} fnone"/>
 ${txt(1154, y + 11, label, cls)}`;
 }).join('\n')}
@@ -227,19 +227,19 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the ROAD REGISTER below -->
-${[['A', 978, 336], ['B', 566, 366], ['C', 462, 214], ['D', 522, 250], ['E', 902, 540], ['F', 879, 498], ['G', 62, 330]]
+${[['A', 884, 302], ['B', 566, 366], ['C', 462, 214], ['D', 522, 250], ['E', 902, 540], ['F', 879, 498], ['G', 62, 330]]
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
 ${txt(772, 110, 'packages/ — THE PRODUCT', 'lblb')}
 ${txt(772, 123, '4 published packages · 25 files · 2,568 sloc', 'lblf')}
 ${txt(772, 135, 'every one carries a bigger annex than itself', 'lblf')}
-<line x1="766" y1="126" x2="714" y2="156" class="skf"/>
+<line x1="766" y1="126" x2="742" y2="168" class="skf"/>
 
 ${txt(1540, 300, 'sample-app-shared — 36f · 2,103 sloc', 'lblb', 'end')}
 ${txt(1540, 313, 'the broadest source block on the sheet —', 'lblf', 'end')}
 ${txt(1540, 325, 'outbuilt only by lit-ui-router’s spec annex', 'lblf', 'end')}
-<line x1="1258" y1="318" x2="1162" y2="360" class="skf"/>
+<line x1="1258" y1="318" x2="1132" y2="340" class="skf"/>
 
 ${txt(1540, 380, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 393, '5 members · 55 files · 3,052 sloc', 'lblf', 'end')}
@@ -256,16 +256,16 @@ ${txt(60, 585, 'nine of them sit on this drawing’s minimum footprint', 'lblf')
 <line x1="300" y1="552" x2="330" y2="522" class="skf"/>
 
 <!-- callouts -->
-${txt(60, 172, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
-${txt(60, 186, '12 authored files · 1,189 sloc', 'lblf')}
-${txt(60, 198, 'its annex — 14 files · 2,879 sloc, 2.4× the source', 'lblf')}
-${txt(60, 210, 'the biggest thing this district ever built is a test', 'lblf')}
-<line x1="410" y1="178" x2="534" y2="146" class="skf"/>
+${txt(60, 118, 'lit-ui-router — THE PACKAGE THIS SET IS ABOUT', 'lbla')}
+${txt(60, 132, '12 authored files · 1,189 sloc', 'lblf')}
+${txt(60, 144, 'its annex — 14 files · 2,879 sloc, 2.4× the source', 'lblf')}
+${txt(60, 156, 'the biggest thing this district ever built is a test', 'lblf')}
+<line x1="346" y1="126" x2="526" y2="132" class="skf"/>
 
 ${txt(20, 502, '@tools/release — 44f · 1,871 sloc', 'lblr')}
 ${txt(20, 515, 'the tallest block on the sheet,', 'lblf')}
 ${txt(20, 527, 'and the only publish halt', 'lblf')}
-<line x1="160" y1="496" x2="238" y2="398" class="skf"/>
+<line x1="160" y1="496" x2="215" y2="362" class="skf"/>
 
 <!-- road register: every road on this sheet, and the edge in the repo it stands for -->
 <rect x="40" y="646" width="700" height="162" class="skf fnone"/>
