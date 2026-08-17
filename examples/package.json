@@ -13,7 +13,7 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "postinstall": "concurrently \"npm:example:install:*\"",
     "lint": "oxlint .",
-    "typecheck": "concurrently --names helloworld,hellosolarsystem,hellogalaxy,design-system-links --prefix-colors auto \"pnpm run typecheck:helloworld\" \"pnpm run typecheck:hellosolarsystem\" \"pnpm run typecheck:hellogalaxy\" \"pnpm run typecheck:design-system-links\"",
+    "typecheck": "concurrently --prefix-colors auto \"npm:typecheck:*\"",
     "typecheck:design-system-links": "tsc -p design-system-links",
     "typecheck:hellogalaxy": "tsc -p hellogalaxy",
     "typecheck:hellosolarsystem": "tsc -p hellosolarsystem",
