@@ -5,10 +5,19 @@ const P = 's1';
 const OX = 300, OY = 120;
 
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
-const ga = (a, b, mk = 'ai', cls = 'sk2', dash = '') => {
-  const [x1, y1] = pt(a[0], a[1], a[2] ?? 0);
-  const [x2, y2] = pt(b[0], b[1], b[2] ?? 0);
-  return arrow(P, `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`, mk, cls, dash);
+// A loop leg routed as a road on the iso grid: plan-space waypoints along the
+// two iso axes, projected, then trimmed in screen space so both ends float
+// free of the walls they connect.
+const road = (wps, mk = 'ai', cls = 'sk2', dash = '', t0 = 7, t1 = 9) => {
+  const pts = wps.map(([x, y, z = 0]) => pt(x, y, z));
+  const trim = (a, b, d) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    return [a[0] + (dx / L) * d, a[1] + (dy / L) * d];
+  };
+  pts[0] = trim(pts[0], pts[1], t0);
+  pts[pts.length - 1] = trim(pts[pts.length - 1], pts[pts.length - 2], t1);
+  const d = 'M' + pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' L');
+  return arrow(P, d, mk, cls, dash);
 };
 
 // Thin floating plate (Tilt-style DOM layer): no mast, unlike isoBlock.
@@ -60,27 +69,29 @@ const ridges = [50, 100].map((o) => {
   return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="skf"/>`;
 }).join('\n');
 
-// Loop legs (ground); the last one lands on the <ui-view> content layer, not the ground
+// Loop legs, routed as roads on the iso grid: every turn is along an iso axis.
+// End trims are measured against the SILHOUETTE (roofs overhang their walls in
+// projection, and roads draw under the scene), not the plan face they aim at.
 const legs = [
-  ga([115, 90], [255, 45]),
-  ga([380, 60], [455, 60]),
-  ga([615, 105], [695, 125]),
-  ga([745, 195], [710, 290]),
-  ga([635, 335], [372, 320, 69]),
+  road([[110, 70], [260, 70]], 'ai', 'sk2', '', 7, 21),
+  road([[375, 60], [460, 60]], 'ai', 'sk2', '', 7, 45),
+  road([[600, 100], [600, 148], [700, 148]], 'ai', 'sk2', '', 7, 41),
+  road([[722, 190], [722, 300]], 'ai', 'sk2', '', 7, 35),
+  road([[640, 332], [420, 332]], 'ai', 'sk2', '', 7, 18),
 ];
 
 // Click return: an elevated accent arc from the link plate back into location's flank
-const [kx, ky] = pt(234, 304, 92);
-const clickArc = arrow(P, `M${kx.toFixed(1)},${(ky - 3).toFixed(1)} C 305,285 340,235 312,206`, 'aa', 'ska');
+// flares right of the plate stack and the leg-1 road, then settles onto LOCATION's roof
+const clickArc = arrow(P, 'M239.4,294 C 330,270 325,165 300,180', 'aa', 'ska');
 
 // Bubbling: uiSrefTarget rises from the link plate to the watchtower above the stack
 const [bx, by] = pt(170, 330, 92);
 const bubbleArc = arrow(P, `M${bx.toFixed(1)},${(by - 3).toFixed(1)} C 146,240 130,212 118,194`, 'as', 'sks', '4 3');
 
 // Skybridge tap into a hall bay
-const tap = arrow(P, `M762,320 L722,388`, 'as', 'sks', '4 3');
+const tap = arrow(P, `M758,326 L735,366`, 'as', 'sks', '4 3');
 
-const svg = `<svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+const svg = `<svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 ${defs(P)}
 
 ${legs.join('\n')}
@@ -95,8 +106,8 @@ ${txt(278, 110, 'LOCATION', 'lblb', 'middle')}
 ${txt(278, 123, 'history · hash · Navigation API', 'lblf', 'middle')}
 ${txt(525, 158, '@uirouter/core', 'lblb', 'middle')}
 ${txt(525, 171, 'state registry · match · go()', 'lblf', 'middle')}
-${txt(605, 474, 'TRANSITION HALL', 'lblb', 'middle')}
-${txt(605, 488, 'onBefore | onStart · resolve | onSuccess', 'lblf', 'middle')}
+${txt(555, 474, 'TRANSITION HALL', 'lblb', 'middle')}
+${txt(555, 488, 'onBefore | onStart · resolve | onSuccess', 'lblf', 'middle')}
 ${txt(760, 236, 'TransitionController', 'lblb', 'middle')}
 ${txt(760, 249, 'ReactiveController skybridge', 'lblf', 'middle')}
 ${txt(786, 358, 'registers hooks', 'lblf', 'start')}
@@ -128,12 +139,16 @@ ${txt(104, 590.5, 'lit-ui-router.dev/people/32', 'lblf', 'start')}
 ${txt(142, 646.5, '← the link, in situ', 'lblf', 'start')}
 ${txt(60, 674, 'DETAIL — the same window, flat', 'lbls', 'start')}
 
-<!-- leg lettering -->
-${txt(392, 300, 'popstate / navigate', 'lbls', 'middle')}
+<!-- leg lettering: horizontal, in open pockets, leaders where the gap is wide -->
+${txt(355, 272, 'popstate / navigate', 'lbls', 'middle')}
 ${txt(560, 398, 'match → run', 'lbls', 'middle')}
-${txt(735, 522, 'viewconfigs activate', 'lbls', 'end')}
-${txt(802, 626, 'state.component / template', 'lbls', 'start')}
-${txt(430, 566, 'directives commit', 'lbls', 'middle')}
+<line x1="575" y1="390" x2="596" y2="360" class="skf"/>
+${txt(700, 540, 'viewconfigs activate', 'lbls', 'end')}
+<line x1="704" y1="536" x2="722" y2="513" class="skf"/>
+${txt(652, 551, 'state.component / template', 'lbls', 'end')}
+<line x1="658" y1="556" x2="713" y2="596" class="skf"/>
+${txt(452, 592, 'directives commit', 'lbls', 'middle')}
+<line x1="492" y1="585" x2="510" y2="572" class="skf"/>
 
 <!-- the link + click note, off the stack with a leader to the link plate -->
 ${txt(-140, 404, '<a href=/people/32>', 'lbl', 'start')}
@@ -161,20 +176,20 @@ ${txt(x + 8, 751, sub, 'lblf')}`;
 </svg>`;
 
 export const sheet1 = {
-  num: 1, id: 'package', rev: 'C',
+  num: 1, id: 'package', rev: 'D',
   title: 'THE RENDER LOOP',
-  sub: 'ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV C: the document drawn as a DOM layer stack',
+  sub: 'ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV D: the loop routed on the iso grid',
   scale: 'ONE PACKAGE',
   form: 'ISO CIRCUIT',
   svg,
-  caption: 'Rev C keeps the city but breaks the metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.',
+  caption: 'Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.',
   notes: `
 <p><strong>Why redraw a 2D loop in 3D:</strong> the cycle itself is flat, but the third axis is free to carry the relations flat arrows kept fumbling. Containment: the child <code>&lt;ui-view&gt;</code> literally stands on its parent's roof — nesting is stacking, not a box-in-a-box. Propagation: <code>uiSrefTarget</code> events <em>rise</em> past the document's plates to the <code>uiSrefActive</code> perch, which is how link tracking works — no registry, just bubbling. Instrumentation: <code>TransitionController</code> is a skybridge that taps the hall without standing on the route.</p>
 <p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old Tilt inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment.</p>
 <p><strong>Service discovery is still DOM events.</strong> A nested view finds its parent with a composed context CustomEvent; every <code>uiSref</code> announces its <code>targetState</code> upward. The document tree is the dependency graph — which is exactly why the drawing can stand everything in one window.</p>
 <p><strong>The five doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with registration torn off. <code>sideEffects</code> in the manifest names exactly the four register files.</p>`,
   key: [
-    keyRow('<line x1="2" y1="9" x2="40" y2="9" class="sk2"/>', 'the render loop (ground legs)'),
+    keyRow('<line x1="2" y1="9" x2="40" y2="9" class="sk2"/>', 'the render loop (roads on the iso grid)'),
     keyRow('<line x1="2" y1="14" x2="40" y2="4" class="ska"/>', 'the click flying back to location'),
     keyRow('<line x1="2" y1="14" x2="40" y2="4" class="sks" stroke-dasharray="4 3"/>', 'events rising / hook taps'),
     keyRow('<polygon points="8,13 22,8 36,13 22,18" class="sk fp"/><polygon points="8,7 22,2 36,7 22,12" class="sk fp2"/>', 'plates = DOM depth (window → link)'),

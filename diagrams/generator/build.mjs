@@ -54,7 +54,7 @@ const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['2', 'COMPANIONS', 'SOCKETS + PANELS', 'form breaks at 3–9 modules; keep the panel, socket the blocks'],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the flagship — a yard of instruments around one crate'],
-  ['4', 'FAMILY', 'SPINE + RIBS', 'a city would fake adjacency; liveness is the real ink'],
+  ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
   ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census — files as footprint, lines as height, tests as annexes'],
@@ -101,7 +101,7 @@ const cover = `<header class="cover">
   </div>
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
-    <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), liveness where the facts are temporal (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
+    <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
     <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 318× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 26% of the wire; the router itself, 3.7%). The set has already changed its own subject once: sheet 8's rev A drew lodash as the tallest building in the delivered city, that drawing became a merged <code>lodash-es</code> swap, and sheets 8–9 now stand at REV B — remeasured after the merge, with the building halved and the wire chunk cut 84%; sheet 10 audits what the swap left behind, and sheet 11 cuts the same wire the other way — four package quarters, fifteen doors, each priced alone.</p>
   </div>
   <table class="idx">

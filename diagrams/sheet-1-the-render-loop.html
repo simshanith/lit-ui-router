@@ -1,6 +1,6 @@
 <title>THE RENDER LOOP — Sheet 1 of 11</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Rev C keeps the city but breaks the metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.">
+<meta name="description" content="Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.">
 <style>
 :root {
   --ground: #E6E6DA;
@@ -236,9 +236,9 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-1" aria-label="Sheet 1: THE RENDER LOOP">
   <div class="sheet-head"><span class="proj">ROUTING AT SIX ALTITUDES — DRAWING SET</span><span class="shno">SHEET 1 / 11</span></div>
   <h2 class="sheet-title">THE RENDER LOOP</h2>
-  <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV C: the document drawn as a DOM layer stack</p>
+  <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV D: the loop routed on the iso grid</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+    <div class="figure-wrap"><svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 <defs>
   <marker id="s1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -266,11 +266,11 @@ a { color: var(--accent); }
   </pattern>
 </defs>
 
-<path d="M321.6,222.5 L481.9,270.0" class="sk2"  marker-end="url(#s1-ai)"/>
-<path d="M577.1,340.0 L642.1,377.5" class="sk2"  marker-end="url(#s1-ai)"/>
-<path d="M741.7,480.0 L793.6,530.0" class="sk2"  marker-end="url(#s1-ai)"/>
-<path d="M776.3,590.0 L663.7,620.0" class="sk2"  marker-end="url(#s1-ai)"/>
-<path d="M559.8,605.0 L345.0,397.0" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M340.7,213.5 L446.4,274.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M578.9,341.0 L607.4,357.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M726.9,473.5 L691.4,494.0 L742.5,523.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M754.6,579.5 L695.8,613.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M560.7,602.5 L391.8,505.0" class="sk2"  marker-end="url(#s1-ai)"/>
 <g>
 <polygon points="213.4,162.0 291.3,207.0 291.3,235.0 213.4,190.0" class="sk" fill="var(--paper-2)"/>
 <polygon points="343.3,177.0 291.3,207.0 291.3,235.0 343.3,205.0" class="sk" fill="url(#s1-hx)"/>
@@ -334,17 +334,17 @@ a { color: var(--accent); }
 </g>
 <line x1="707.0" y1="361.0" x2="655.1" y2="391.0" class="skf"/>
 <line x1="750.3" y1="386.0" x2="698.4" y2="416.0" class="skf"/>
-<path d="M239.4,294.0 C 305,285 340,235 312,206" class="ska"  marker-end="url(#s1-aa)"/>
+<path d="M239.4,294 C 330,270 325,165 300,180" class="ska"  marker-end="url(#s1-aa)"/>
 <path d="M161.4,275.0 C 146,240 130,212 118,194" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
-<path d="M762,320 L722,388" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+<path d="M758,326 L735,366" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
 
 <!-- station lettering: every label in its own pocket of air -->
 <text x="278" y="110" class="lblb" text-anchor="middle" >LOCATION</text>
 <text x="278" y="123" class="lblf" text-anchor="middle" >history · hash · Navigation API</text>
 <text x="525" y="158" class="lblb" text-anchor="middle" >@uirouter/core</text>
 <text x="525" y="171" class="lblf" text-anchor="middle" >state registry · match · go()</text>
-<text x="605" y="474" class="lblb" text-anchor="middle" >TRANSITION HALL</text>
-<text x="605" y="488" class="lblf" text-anchor="middle" >onBefore | onStart · resolve | onSuccess</text>
+<text x="555" y="474" class="lblb" text-anchor="middle" >TRANSITION HALL</text>
+<text x="555" y="488" class="lblf" text-anchor="middle" >onBefore | onStart · resolve | onSuccess</text>
 <text x="760" y="236" class="lblb" text-anchor="middle" >TransitionController</text>
 <text x="760" y="249" class="lblf" text-anchor="middle" >ReactiveController skybridge</text>
 <text x="786" y="358" class="lblf" text-anchor="start" >registers hooks</text>
@@ -376,12 +376,16 @@ a { color: var(--accent); }
 <text x="142" y="646.5" class="lblf" text-anchor="start" >← the link, in situ</text>
 <text x="60" y="674" class="lbls" text-anchor="start" >DETAIL — the same window, flat</text>
 
-<!-- leg lettering -->
-<text x="392" y="300" class="lbls" text-anchor="middle" >popstate / navigate</text>
+<!-- leg lettering: horizontal, in open pockets, leaders where the gap is wide -->
+<text x="355" y="272" class="lbls" text-anchor="middle" >popstate / navigate</text>
 <text x="560" y="398" class="lbls" text-anchor="middle" >match → run</text>
-<text x="735" y="522" class="lbls" text-anchor="end" >viewconfigs activate</text>
-<text x="802" y="626" class="lbls" text-anchor="start" >state.component / template</text>
-<text x="430" y="566" class="lbls" text-anchor="middle" >directives commit</text>
+<line x1="575" y1="390" x2="596" y2="360" class="skf"/>
+<text x="700" y="540" class="lbls" text-anchor="end" >viewconfigs activate</text>
+<line x1="704" y1="536" x2="722" y2="513" class="skf"/>
+<text x="652" y="551" class="lbls" text-anchor="end" >state.component / template</text>
+<line x1="658" y1="556" x2="713" y2="596" class="skf"/>
+<text x="452" y="592" class="lbls" text-anchor="middle" >directives commit</text>
+<line x1="492" y1="585" x2="510" y2="572" class="skf"/>
 
 <!-- the link + click note, off the stack with a leader to the link plate -->
 <text x="-140" y="404" class="lbl" text-anchor="start" >&lt;a href=/people/32&gt;</text>
@@ -410,7 +414,7 @@ a { color: var(--accent); }
 <text x="806" y="739" class="lbls" text-anchor="start" >./ui-view.register</text>
 <text x="806" y="751" class="lblf" text-anchor="start" >one element</text>
 </svg></div>
-    <figcaption>Rev C keeps the city but breaks the metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.</figcaption>
+    <figcaption>Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -423,7 +427,7 @@ a { color: var(--accent); }
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
-      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sk2"/></svg></td><td>the render loop (ground legs)</td></tr>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sk2"/></svg></td><td>the render loop (roads on the iso grid)</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="14" x2="40" y2="4" class="ska"/></svg></td><td>the click flying back to location</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="14" x2="40" y2="4" class="sks" stroke-dasharray="4 3"/></svg></td><td>events rising / hook taps</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="8,13 22,8 36,13 22,18" class="sk fp"/><polygon points="8,7 22,2 36,7 22,12" class="sk fp2"/></svg></td><td>plates = DOM depth (window → link)</td></tr>
@@ -435,7 +439,7 @@ a { color: var(--accent); }
   <div><span class="fld">SCALE</span>ONE PACKAGE</div>
   <div><span class="fld">FORM</span>ISO CIRCUIT</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-08-16 · C</div>
+  <div><span class="fld">DATE / REV</span>2026-08-16 · D</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
   <div><span class="fld">SHEET</span>1 OF 11</div>
 </div>
