@@ -10,6 +10,7 @@ notes on each sheet argue where that form fits and where it lies.
 | --- | --- | --- |
 | [1](sheet-1-the-render-loop.html) | ONE PACKAGE | ISO CIRCUIT |
 | [2](sheet-2-the-brick-assembly.html) | FOUR PACKAGES | BRICK ASSEMBLY |
+| [2A](sheet-2A-the-coupling-plan.html) | FOUR PACKAGES | COUPLING PLAN |
 | [3](sheet-3-the-instrument-yard.html) | THE MONOREPO | ISOMETRIC CITY |
 | [4](sheet-4-the-family-spine.html) | UI-ROUTER ECOSYSTEM | MASSED SPINE |
 | [5](sheet-5-the-design-space.html) | JS ECOSYSTEM | POSITIONED CHART |

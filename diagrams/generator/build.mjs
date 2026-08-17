@@ -1,8 +1,9 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { page, sheetSection, CSS, PROJECT } from './chrome.mjs';
+import { page, sheetSection, CSS, PROJECT, TOTAL } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { sheet2 } from './sheet2.mjs';
+import { sheet2a } from './sheet2a.mjs';
 import { sheet3 } from './sheet3.mjs';
 import { sheet4 } from './sheet4.mjs';
 import { sheet5 } from './sheet5.mjs';
@@ -18,12 +19,12 @@ const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9, sheet10, sheet11, sheet12];
+const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet4, sheet5, sheet6, sheet7, sheet8, sheet9, sheet10, sheet11, sheet12];
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
 for (const s of sheets) {
-  writeFileSync(join(OUT, fname(s)), page(`${s.title} — Sheet ${s.num} of ${sheets.length}`, sheetSection(s), { desc: s.caption }));
+  writeFileSync(join(OUT, fname(s)), page(`${s.title} — Sheet ${s.num} of ${TOTAL}`, sheetSection(s), { desc: s.caption }));
 }
 
 // --- megacanvas ---
@@ -54,6 +55,7 @@ ${sheets.map((s) => sheetSection(s)).join('\n')}`,
 const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
+  ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line'],
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
