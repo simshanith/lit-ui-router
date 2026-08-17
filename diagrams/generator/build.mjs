@@ -53,7 +53,7 @@ ${sheets.map((s) => sheetSection(s)).join('\n')}`,
 const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['2', 'COMPANIONS', 'SOCKETS + PANELS', 'form breaks at 3–9 modules; keep the panel, socket the blocks'],
-  ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the flagship — a yard of instruments around one crate'],
+  ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line'],
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],

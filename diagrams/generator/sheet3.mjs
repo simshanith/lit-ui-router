@@ -2,140 +2,270 @@ import { defs } from './chrome.mjs';
 import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 
 const P = 's3';
-const OX = 350, OY = 175;
+const OX = 360, OY = 200;
 
-// Heights encode gate severity: 16 reporter · 66 merge gate · 100 publish halt.
-const H = { rep: 22, gate: 66, halt: 100, slab: 12, crate: 30 };
+// ---- census: authored source in this repo at HEAD, counted 2026-08-16 ----------
+// Same basis as sheet 4 rev B: .ts/.tsx/.js/.mjs under each member's source dir,
+// excluding *.d.ts, *.test-d.ts, *.{spec,test}.*, specs/ __tests__/ fixtures/.
+// sloc = lines neither blank nor comment-only.  @tools/release hosts several
+// instruments, so it is attributed by module prefix (see tmp/atlas/census-yard.mjs).
 
-// [n, plan x, y, w, d, h, cap?, schedule text]
-const blocks = [
-  [1, 30, 30, 100, 70, H.slab, null, 'src — packages/* sources'],
-  [2, 162, 48, 36, 36, 8, null, 'transit — stages src between passes'],
-  [3, 225, 18, 70, 38, H.slab, null, 'build:js — oxc-emit, JS pass'],
-  [4, 225, 80, 70, 38, H.slab, null, 'build:types — oxc-emit, d.ts pass'],
-  [5, 322, 32, 80, 55, 18, null, 'pack — packPublishTarball, cached'],
-  [6, 432, 40, 45, 45, H.crate, 'fa', 'THE TARBALL — the one artifact'],
-  [7, 505, 30, 80, 50, H.slab, null, 'publish — release-it'],
-  [8, 625, 25, 70, 50, 44, null, 'npm registry — immutable once crossed'],
-  [9, 30, 215, 50, 50, H.halt, 'fr', 'published-diff — vs live npm · HALTS'],
-  [10, 145, 215, 50, 50, H.gate, null, 'check:exports — publint + attw · gates'],
-  [11, 260, 215, 50, 50, H.gate, null, 'dts-backtest — TS 5.0 dts floor · gates'],
-  [12, 30, 340, 50, 50, H.gate, null, 'compat-guards — the lit 2 lane · gates'],
-  [13, 150, 345, 32, 32, H.rep, null, 'peer-floor tier-1 — reports, never gates'],
-  [14, 200, 342, 36, 36, H.gate, null, 'peer-floor tier-2 — gates version bumps'],
-  [15, 270, 335, 74, 52, H.gate, null, 'tests — vitest, 4 real browsers · gates'],
-  [16, 365, 300, 90, 72, 16, null, 'lint & probe fleet ×10 — mixed'],
-  [17, 490, 240, 80, 60, H.gate, null, 'e2e — cypress, sample apps · gates'],
-  [18, 515, 330, 80, 52, H.crate, null, 'docs site — ships to lit-ui-router.dev'],
+// ---- scale rule ---------------------------------------------------------------
+const KS = 1.6;   // iso footprint SIDE = 1.6 · √sloc  (plan units — plan area ∝ sloc)
+const KH = 1.5;   // block HEIGHT       = 1.5 px per authored file
+const S = (sloc) => KS * Math.sqrt(sloc);
+const H = (files) => Math.max(4, KH * files);
+const fmt = (v) => v.toLocaleString('en-US');
+
+// ---- gate severity lives in COLOUR, never in height -----------------------------
+const TIER = {
+  halt:   { edge: 'skr', cap: 'fr',  hatch: null, side: `url(#${P}-hr)`, badge: 'skr fp', num: 'lblr' },
+  pr:     { edge: 'skr', cap: 'fp',  hatch: 'hr', side: `url(#${P}-hr)`, badge: 'skr fp', num: 'lblr' },
+  late:   { edge: 'ska', cap: 'fp',  hatch: 'ha', side: `url(#${P}-ha)`, badge: 'ska fp', num: 'lbla' },
+  report: { edge: 'skf', cap: 'fp2', hatch: null, side: `url(#${P}-hx)`, badge: 'skf fp', num: 'lbls' },
+  line:   { edge: 'sk',  cap: 'fp',  hatch: null, side: `url(#${P}-hx)`, badge: 'sk fp',  num: 'lbl' },
+  art:    { edge: 'skg', cap: 'fg',  hatch: null, side: `url(#${P}-hx)`, badge: 'skg fp', num: 'lbl' },
+  off:    { edge: 'sks', cap: 'fp2', hatch: null, side: `url(#${P}-hd)`, badge: 'sks fp', num: 'lbls' },
+};
+const TIER_TEXT = {
+  halt: 'HALTS A PUBLISH', pr: 'STOPS THE PR LINE', late: 'gates a later stage',
+  report: 'never gates', line: 'the line itself', art: 'the artifact', off: 'not massed',
+};
+
+// [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
+const M = [
+  // --- the conveyor (packages/), one straight lane at y = 71 --------------------
+  [1,  'src — packages/*/src',      'line',    20,    30.45, 25, 2568, null, null, 'four published packages — the material'],
+  [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,     3,  100, null, null, 'JS pass + d.ts pass, one emitter'],
+  [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  11,  356, null, null, 'the one packer (#449), cached'],
+  [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
+  [5,  'publish — release-it',      'line',   578.3,  49.6,  21,  717, null, null, 'bump · tag · push · publish steps'],
+  [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
+  // --- instrument yard, row A: the checks that stop a pull request --------------
+  [7,  'tests — vitest harness',    'pr',      20,   215,     2,   32, null, null, 'lit-test-env + happy-dom · 4 real browsers'],
+  [8,  'compat-guards',             'pr',      62,   215,     6,  160, null, null, 'the lit 2 / mobx 6 / analyzer lanes'],
+  [9,  'dts-backtest',              'pr',     120,   215,     1,  291, null, null, 'one 291-line run.ts holds the TS 5.0 floor'],
+  [10, 'check:exports',             'pr',     200,   215,     2,  149, null, null, 'publint + attw over the raw pack'],
+  [11, 'published-diff',            'halt',   313.9, 215,     5,  405, null, null, 'vs the LIVE npm tarball · halts publishing'],
+  // --- instrument yard, row B: the gates that fire later, and the reporters -----
+  [12, 'peer-floor tier-2',         'late',    40,   320,     3,   73, null, null, 'gates version bumps, never a PR'],
+  [13, 'peer-floor tier-1',         'report',  90,   320,     2,  106, null, null, 'reports check runs, never gates'],
+  [14, 'lint & probe fleet',        'report', 175,   320,    13,  732, null, null, 'oxlint · bundle-probe · vue-check · lcov · CI gate'],
+  [15, '@tools/shared',             'report', 262,   320,     9,  300, null, null, 'the library under every instrument'],
+  [16, 'typedoc plugin',            'report', 380,   320,     5,  755, null, null, 'builds the API pages, gates nothing'],
+  // --- proving ground & shopfront (apps/ + docs/) -------------------------------
+  [17, 'e2e — cypress',             'pr',     377.8, 420,     5,  405, null, null, 'drives the sample apps · stops the PR line'],
+  [18, 'sample apps',               'line',   560,   390,    54, 2995, null, null, 'shared routes + vanilla + mobx + e2e fixtures'],
+  [19, 'docs deploy watch',         'late',   680,   400,     4,  508, null, null, 'workers-builds triggers · gates the deploy'],
 ];
 
-function districtPath(x1, y1, x2, y2) {
-  const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
-    .map(([px, py]) => isoPt(OX, OY, px, py).map((v) => v.toFixed(1)).join(','))
-    .join(' ');
-  return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>`;
+const geom = new Map(
+  M.map(([n, , tier, x, y, files, sloc, fw, fh]) => {
+    const side = fw ?? S(sloc);
+    const h = fh ?? H(files);
+    return [n, { n, tier, x, y, side, h, cx: x + side / 2, cy: y + side / 2 }];
+  }),
+);
+const g = (n) => geom.get(n);
+
+const BADGE_LEFT = new Set([9, 10, 11]);
+const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
+const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
+
+// A block massed by its own census: footprint side ∝ √sloc, height ∝ authored
+// files.  The gate tier paints the cap and the flank; it never touches the height.
+function massBlock(n) {
+  const { tier, x, y, side, h } = g(n);
+  const t = TIER[tier];
+  const body = isoBlock(P, OX, OY, x, y, side, side, h, { capCls: t.cap, edge: t.edge, sideFill: t.side });
+  const top = [p2(x, y, h), p2(x + side, y, h), p2(x + side, y + side, h), p2(x, y + side, h)].join(' ');
+  const wash = t.hatch ? `<polygon points="${top}" fill="url(#${P}-${t.hatch})"/>
+<polygon points="${top}" class="${t.edge} fnone"/>` : '';
+  // Readers take a stub down their centre line, so their badge moves off it.
+  const [bx, by] = BADGE_LEFT.has(n) ? pt(x, y, h) : pt(x + side / 2, y, h);
+  return `${body}${wash}
+<circle cx="${bx.toFixed(1)}" cy="${(by - 17).toFixed(1)}" r="9.5" class="${t.badge}"/>
+${txt(bx.toFixed(1), (by - 13.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 
-function groundArrow(a, b, mk = 'ai', cls = 'sk2', dash = '') {
-  const [x1, y1] = isoPt(OX, OY, a[0], a[1]);
-  const [x2, y2] = isoPt(OX, OY, b[0], b[1]);
-  return arrow(P, `M${x1.toFixed(1)},${y1.toFixed(1)} L${x2.toFixed(1)},${y2.toFixed(1)}`, mk, cls, dash);
+// A leg routed on the iso grid and trimmed in SCREEN space at both ends.  A block's
+// roof floats exactly h px above the ground point a leg aims at, so clearing the
+// silhouette costs h + 1.15·gap — computed from the census, never guessed.
+const clearance = (n, gap) => (n == null ? gap : g(n).h + 1.15 * gap);
+function leg(wps, { from = null, to = null, t0 = null, t1 = null, mk = 'ai', cls = 'sk2', dash = '' } = {}) {
+  const pts = wps.map(([x, y, z = 0]) => pt(x, y, z));
+  const trim = (a, b, d) => {
+    const dx = b[0] - a[0], dy = b[1] - a[1], L = Math.hypot(dx, dy);
+    return [a[0] + (dx / L) * d, a[1] + (dy / L) * d];
+  };
+  const d0 = t0 ?? clearance(from, 9);
+  const d1 = t1 ?? clearance(to, 11.5);
+  if (d0) pts[0] = trim(pts[0], pts[1], d0);
+  if (d1) pts[pts.length - 1] = trim(pts[pts.length - 1], pts[pts.length - 2], d1);
+  const d = 'M' + pts.map((p) => p.map((v) => v.toFixed(1)).join(',')).join(' L');
+  return mk ? arrow(P, d, mk, cls, dash) : `<path d="${d}" class="${cls}" ${dash ? `stroke-dasharray="${dash}"` : ''} fill="none"/>`;
 }
 
-// Ground layer first (roads under buildings), then blocks back-to-front, then balloons.
-const roads = [
-  groundArrow([132, 70], [160, 66]),
-  groundArrow([200, 56], [223, 42]),
-  groundArrow([200, 70], [223, 94]),
-  groundArrow([297, 38], [320, 52]),
-  groundArrow([297, 100], [320, 74]),
-  groundArrow([404, 60], [430, 62]),
-  groundArrow([479, 62], [503, 56]),
-  groundArrow([587, 55], [623, 50], 'ai', 'sks', '6 4'),
-  groundArrow([440, 88], [210, 240], 'as', 'sks', '4 3'),
-].join('\n');
+// ---- the conveyor: one straight run along the y = 71 lane -----------------------
+const LANE = 71;
+const runLeg = (a, b) => leg([[g(a).x + g(a).side, LANE], [g(b).x, LANE]], { from: a, to: b });
+const conveyor = [runLeg(1, 2), runLeg(2, 3), runLeg(3, 4), runLeg(4, 5), runLeg(5, 6)].join('\n');
 
-const bodies = blocks
-  .slice()
-  .sort((a, b) => (a[1] + a[2] + (a[3] + a[4]) / 2) - (b[1] + b[2] + (b[3] + b[4]) / 2))
-  .map(([n, x, y, w, d, h, cap]) => {
-    const body = isoBlock(P, OX, OY, x, y, w, d, h, { capCls: cap ?? 'fp' });
-    const [bx, by] = isoPt(OX, OY, x + w / 2, y, h);
-    const ballCls = cap === 'fr' ? 'skr fp' : cap === 'fa' ? 'ska fp' : 'sk fp';
-    // 13 sits where a later-painted neighbour's roof would clip it
-    const lift = n === 13 ? 26 : 16;
-    return `${body}
-<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9.5" class="${ballCls}"/>
-${txt(bx.toFixed(1), (by - lift + 3.6).toFixed(1), String(n), 'lbl', 'middle')}`;
-  })
+// ---- the tarball bus: one cached pack, three readers ----------------------------
+const BUS = 145;
+const READERS = [11, 10, 9];
+const busTrunk = leg(
+  [[g(4).cx, g(4).y + g(4).side], [g(4).cx, BUS], [g(READERS.at(-1)).cx, BUS]],
+  { from: 4, mk: null, cls: 'sks', dash: '5 4', t1: 0 },
+);
+const busStubs = READERS
+  .map((n) => leg([[g(n).cx, BUS], [g(n).cx, g(n).y]], { to: n, t0: 0, mk: 'as', cls: 'sks', dash: '5 4' }))
   .join('\n');
 
-// Feedback arc: published-diff pulls the live tarball back from npm.
-const [nx, ny] = isoPt(OX, OY, 660, 50, 44);
-const [dx2, dy2] = isoPt(OX, OY, 55, 240, H.halt);
-const feedback = `${arrow(P, `M${nx.toFixed(1)},${(ny - 8).toFixed(1)} C 820,210 430,120 ${(dx2 + 36).toFixed(1)},${(dy2 - 2).toFixed(1)}`, 'aa', 'ska', '7 4')}
-${txt(470, 148, 'published-diff pulls the LIVE tarball back — the loop closes', 'lbla', 'middle')}`;
+// ---- the return: published-diff reads the LIVE tarball back out of the registry --
+const RET = 545;
+const ret = leg(
+  [[g(6).cx, g(6).y + g(6).side], [g(6).cx, RET], [g(11).cx, RET], [g(11).cx, g(11).y + g(11).side]],
+  { from: 6, mk: 'aa', cls: 'ska', dash: '7 4', t1: 11 },
+);
 
-const schedule = `<g>
-<rect x="878" y="58" width="330" height="392" class="sk fp"/>
-${txt(892, 78, 'STRUCTURE SCHEDULE', 'lbls')}
-<line x1="878" y1="88" x2="1208" y2="88" class="skf"/>
-${blocks.map(([n, , , , , , cap, sched], i) => {
-  const y = 106 + i * 19;
-  const numCls = cap === 'fr' ? 'lblr' : cap === 'fa' ? 'lbla' : 'lblb';
-  return `${txt(892, y, String(n), numCls)}
-${txt(914, y, sched, 'lbls')}`;
-}).join('\n')}
-</g>`;
+// ---- e2e drives the sample apps ---------------------------------------------------
+const DRIVE = 515;
+const drive = leg(
+  [[g(17).cx, g(17).y + g(17).side], [g(17).cx, DRIVE], [g(18).cx, DRIVE], [g(18).cx, g(18).y + g(18).side]],
+  { t0: 9, t1: 11, mk: 'ai', cls: 'sks', dash: '4 3' },
+);
 
-const svg = `<svg viewBox="0 0 1220 720" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site: a build conveyor running from source through a single pack step to the npm registry, an instrument yard of numbered measurement towers whose heights encode gate severity, and a proving ground of apps and docs. A structure schedule names all eighteen numbered structures. The tallest, red-capped tower is published-diff, which halts publishing and pulls the live tarball back from npm, closing the loop.">
+// ---- districts --------------------------------------------------------------------
+const district = (x1, y1, x2, y2) =>
+  `<polygon points="${[[x1, y1], [x2, y1], [x2, y2], [x1, y2]].map(([px, py]) => p2(px, py)).join(' ')}" class="skf fnone" stroke-dasharray="5 4"/>`;
+
+// ---- registry boundary --------------------------------------------------------------
+const [bx1, by1] = pt(680, -40), [bx2, by2] = pt(680, 150);
+const boundary = `<line x1="${bx1.toFixed(1)}" y1="${by1.toFixed(1)}" x2="${bx2.toFixed(1)}" y2="${by2.toFixed(1)}" class="sks" stroke-dasharray="9 5"/>`;
+
+// ---- bodies, painted back to front --------------------------------------------------
+const bodies = M.map(([n]) => n)
+  .sort((a, b) => (g(a).cx + g(a).cy) - (g(b).cx + g(b).cy))
+  .map(massBlock)
+  .join('\n');
+
+// ---- schedule -----------------------------------------------------------------------
+const ART_H = 930;
+const massed = M.filter((r) => r[6] > 0);
+const TOT_F = massed.reduce((a, r) => a + r[5], 0);
+const TOT_L = massed.reduce((a, r) => a + r[6], 0);
+const schedRow = ([n, name, tier, , , files, sloc, , , note]) =>
+  `${String(n).padStart(2, ' ')}  ${name} — ${sloc > 0 ? `${files}f · ${fmt(sloc)} sloc` : 'not massed'} · ${TIER_TEXT[tier]} · ${note}`;
+const half = Math.ceil(M.length / 2);
+const SY = ART_H + 14;
+const schedule = `<rect x="40" y="${SY}" width="1320" height="${72 + half * 17}" class="sk fp"/>
+${txt(58, SY + 22, 'STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier', 'lbls')}
+<line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
+${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(half).map((r, i) => txt(710, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${txt(58, SY + 58 + half * 17, `TOTAL — 17 massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · counted 2026-08-16 · gate tiers unchanged from rev A`, 'lbls')}`;
+
+const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at fifty-four files and 2,995 lines, and the source slab at twenty-five files and 2,568 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all nineteen structures with exact file and line counts and their gate tier.">
 ${defs(P)}
 
 <rect x="40" y="26" width="560" height="42" class="skf fnone"/>
 ${txt(52, 43, 'TWO TASK MANAGERS, ONE SITE', 'lbls')}
 ${txt(52, 58, 'mise — node-free standalone umbrella · turbo — cached fan-out (remote R2)', 'lblf')}
 
+${txt(1360, 34, 'SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 1.5 px per authored file · mass = sloc × files', 'lbls', 'end')}
+${txt(1360, 48, 'GATE SEVERITY IS COLOUR, NOT HEIGHT — red stops the line, accent gates a later stage, faint never gates', 'lblf', 'end')}
+${txt(1360, 62, 'the tarball, the registry and the boundary are diagrammatic, not to scale', 'lblf', 'end')}
+
+<!-- severity ladder: the encoding, on the drawing -->
+<rect x="950" y="130" width="410" height="146" class="skf fnone"/>
+${txt(966, 152, 'GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT', 'lbls')}
+${[
+  ['skr', 'fr', null, 'halts a publish — published-diff (11)', 'lblr'],
+  ['skr', 'fp', 'hr', 'stops the PR line — 7 · 8 · 9 · 10 · 17', 'lblr'],
+  ['ska', 'fp', 'ha', 'gates a later stage — 12 · 19', 'lbla'],
+  ['skf', 'fp2', null, 'never gates — 13 · 14 · 15 · 16', 'lbls'],
+].map(([edge, fill, hatch, label, cls], i) => {
+  const y = 176 + i * 24;
+  return `<rect x="966" y="${y}" width="34" height="14" class="${fill}"/>${hatch ? `<rect x="966" y="${y}" width="34" height="14" fill="url(#${P}-${hatch})"/>` : ''}<rect x="966" y="${y}" width="34" height="14" class="${edge} fnone"/>
+${txt(1014, y + 11, label, cls)}`;
+}).join('\n')}
+
 <!-- districts -->
-${districtPath(15, 8, 600, 130)}
-${districtPath(15, 200, 460, 400)}
-${districtPath(475, 230, 615, 395)}
-${txt(150, 160, 'packages/ — the conveyor', 'lblf')}
-${txt(30, 645, 'tools/ — the instrument yard', 'lblf')}
-${txt(560, 700, 'apps/ + docs/ — proving ground & shopfront', 'lblf', 'middle')}
+${district(10, 175, 445, 385)}
 
-<!-- registry boundary -->
-${(() => {
-  const [x1, y1] = isoPt(OX, OY, 610, 0);
-  const [x2, y2] = isoPt(OX, OY, 610, 120);
-  return `<line x1="${x1.toFixed(1)}" y1="${y1.toFixed(1)}" x2="${x2.toFixed(1)}" y2="${y2.toFixed(1)}" class="sks" stroke-dasharray="9 5"/>
-${txt(x2 + 40, y2 + 110, 'the registry boundary — beyond here, releases are immutable', 'lblf', 'middle')}`;
-})()}
-
-${roads}
+${boundary}
+${conveyor}
+${busTrunk}
+${busStubs}
+${ret}
+${drive}
 ${bodies}
-${feedback}
+
+<!-- lettering: every label in its own pocket, leaders where the gap is wide -->
+${txt(55, 175, 'PACKAGES/* — THE MATERIAL', 'lblb')}
+${txt(55, 188, '25 authored files · 2,568 sloc', 'lblf')}
+${txt(55, 200, 'four published packages enter here', 'lblf')}
+<line x1="250" y1="185" x2="278" y2="225" class="skf"/>
+
+${txt(742, 398, 'THE TARBALL', 'lblb')}
+${txt(742, 411, 'one packer · many readers · never re-packed', 'lblf')}
+<line x1="736" y1="404" x2="712" y2="424" class="skf"/>
+
+${txt(1060, 600, 'NPM REGISTRY', 'lblb')}
+${txt(1060, 613, 'beyond the boundary a release is immutable', 'lblf')}
+${txt(1060, 625, 'and only published-diff still reads it', 'lblf')}
+<line x1="1054" y1="596" x2="1037" y2="593" class="skf"/>
+
+${txt(560, 535, 'published-diff — the only halt', 'lblr')}
+${txt(560, 548, '5 files, 405 sloc', 'lblf')}
+<line x1="554" y1="532" x2="455" y2="499" class="skf"/>
+
+${txt(470, 795, 'docs deploy — gates the site', 'lbls')}
+<line x1="560" y1="789" x2="578" y2="768" class="skf"/>
+
+${txt(600, 645, 'SAMPLE APPS — 54f · 2,995 sloc', 'lblb')}
+${txt(600, 658, 'the heaviest mass on the sheet', 'lblf')}
+${txt(600, 670, 'gates nothing at all', 'lblf')}
+<line x1="594" y1="652" x2="582" y2="712" class="skf"/>
+
+${txt(90, 555, 'e2e — cypress · stops the line', 'lblr')}
+${txt(90, 568, 'and drives the apps beside it', 'lblf')}
+<line x1="278" y1="559" x2="300" y2="588" class="skf"/>
+
+${txt(620, 900, 'the return: published-diff reads the LIVE npm tarball — the registry is inside the circuit, not at the end of it', 'lbla', 'middle')}
+
+<!-- district lettering -->
+${txt(700, 300, 'packages/ — the conveyor: source in, one tarball out', 'lblf')}
+${txt(40, 520, 'tools/ — the instrument yard', 'lblf')}
+${txt(40, 532, 'sixteen packages, mostly measurement', 'lblf')}
+${txt(700, 830, 'apps/ + docs/ — proving ground & shopfront', 'lblf')}
+
 ${schedule}
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo',
+  num: 3, id: 'monorepo', rev: 'B',
   title: 'THE INSTRUMENT YARD',
-  sub: 'ALTITUDE 3 — 4 publishable packages · 16 tools · ~38 turbo tasks · one packer, many readers',
+  sub: 'ALTITUDE 3 — 4 publishable packages · 16 tools · ~38 turbo tasks · one packer, many readers · REV B: the yard re-massed from sloc × files, gate severity moved into colour, authored source counted 2026-08-16',
   scale: 'THE MONOREPO',
   form: 'ISOMETRIC CITY',
   svg,
-  caption: 'The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Height is gate severity — a tall tower stops the line.',
+  caption: 'The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.',
   notes: `
-<p><strong>The reference's thesis is truest at this altitude.</strong> "Nearly every hard problem turned out to be a measurement problem" describes this repo exactly: four publishable packages, sixteen <code>tools/*</code> instruments. The city is mostly instruments; the product is one crate (structure 6).</p>
-<p><strong>One packer, many readers (#449).</strong> Every check reads the same cached <code>packPublishTarball</code> output — <code>check:exports</code> (publint + attw), <code>dts-backtest</code>, bundle probes, <code>published-diff</code>. No check re-packs, so a drift verdict is always about the artifact that would actually ship.</p>
-<p><strong>Height = what halts.</strong> Low slabs report (peer-floor tier-1 never gates a PR). Mid towers gate merges. The one red-capped tower, <code>published-diff</code> (9), halts publishing itself — and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination.</p>
-<p><strong>Two gantries, one site.</strong> mise runs the site node-free from a standalone umbrella; turbo fans the same tasks out with remote caching. Known failure mode, drawn nowhere but written here as a real condition: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>`,
+<p><strong>Method — one basis, shared with sheet 4.</strong> Every massed structure was counted from this repo's authored source at HEAD on 2026-08-16: <code>.ts/.tsx/.js/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, <code>*.spec.*</code> and <code>*.test.*</code>, <code>specs/</code>, <code>__tests__/</code> and fixtures. <em>sloc</em> is lines that are neither blank nor comment-only. <code>@tools/release</code> hosts several instruments at once, so it is attributed by module prefix — <code>check-published-diff*</code> to structure 11, <code>check-exports*</code> to 10, the pack modules to 3, the release steps to 5 — with every file landing in exactly one structure and none counted twice. Nineteen structures, seventeen of them massed: 171 authored files, 10,652 lines. The tarball, the registry and the boundary are diagrammatic.</p>
+<p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The two heaviest masses on the sheet are <em>material</em>: the sample apps (54 files, 2,995 lines) and <code>packages/*/src</code> (25 files, 2,568 lines). The five structures that can stop a pull request total sixteen files between them, and one of them — <code>dts-backtest</code> — is a single 291-line <code>run.ts</code>. Rev A encoded severity as height and so implied the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
+<p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the vitest harness (7), <code>compat-guards</code> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and Cypress <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <code>@tools/shared</code> and the typedoc plugin are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
+<p><strong>One packer, many readers (#449).</strong> The dashed trunk leaving the green crate is literal: <code>check:exports</code> (publint + attw), <code>dts-backtest</code> and <code>published-diff</code> all read the same cached <code>packPublishTarball</code> output. No check re-packs, so a drift verdict is always about the artifact that would actually ship. Known failure mode, drawn nowhere but real: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
+<p><strong>Two gantries, one site.</strong> mise runs the site node-free from a standalone umbrella; turbo fans the same tasks out with remote caching. Both drive every structure here; neither is drawn as a building, because a task manager is not a place.</p>`,
   key: [
-    keyRow('<rect x="14" y="10" width="20" height="6" class="sk fp"/>', 'reports only (never gates)'),
-    keyRow('<rect x="14" y="4" width="20" height="12" class="sk fp"/>', 'gates a merge'),
-    keyRow('<rect x="14" y="1" width="20" height="15" class="sk fp"/><rect x="14" y="1" width="20" height="4" class="fr"/>', 'halts a publish'),
-    keyRow('<rect x="14" y="4" width="16" height="11" class="sk fa"/>', 'the artifact (one tarball)'),
-    keyRow('<line x1="2" y1="9" x2="44" y2="9" class="ska" stroke-dasharray="6 4"/>', 'feedback from the registry'),
-    keyRow('<line x1="2" y1="9" x2="44" y2="9" class="sks" stroke-dasharray="4 3"/>', 'checks reading the tarball'),
+    keyRow('<rect x="6" y="3" width="36" height="12" class="fr"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'halts a publish (published-diff alone)'),
+    keyRow('<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3-hr)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'stops the PR line'),
+    keyRow('<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3-ha)"/><rect x="6" y="3" width="36" height="12" class="ska fnone"/>', 'gates a later stage (bump · release · deploy)'),
+    keyRow('<rect x="6" y="3" width="36" height="12" class="skf fp2"/>', 'never gates — reporters and libraries'),
+    keyRow('<polygon points="6,10 24,2 42,10 24,18" class="sk fp"/>', 'mass — footprint ∝ √sloc, height ∝ files'),
+    keyRow('<rect x="10" y="4" width="28" height="11" class="skg fg"/>', 'the artifact (one tarball)'),
+    keyRow('<line x1="2" y1="9" x2="44" y2="9" class="sks" stroke-dasharray="5 4"/>', 'checks reading the cached tarball'),
+    keyRow('<line x1="2" y1="9" x2="44" y2="9" class="ska" stroke-dasharray="7 4"/>', 'the return from the live registry'),
   ].join('\n'),
 };
