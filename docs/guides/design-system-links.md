@@ -220,5 +220,13 @@ Chrome around the components reads its colors from Spectrum's own tokens —
 `var(--spectrum-gray-800)` for text, `var(--spectrum-gray-300)` for rules —
 which inherit through the shadow boundary and re-resolve with the theme.
 
+Reading the preference instead of exposing a theme control of its own buys one
+thing worth knowing about: the live example above follows _this page's_
+appearance toggle, not just your OS setting. A page that sets `color-scheme`
+propagates it to a same-origin `<iframe>`, so the embedded document's
+`prefers-color-scheme` flips with the docs theme and the controller re-renders
+on the spot — the dark fragment arriving on the first flip. An app with its own
+bespoke toggle would have needed the embedding page to plumb the scheme in.
+
 Nothing about the pairing is Spectrum-specific: any link-shaped custom element
 takes the same option.
