@@ -1,5 +1,5 @@
 import { defs } from './chrome.mjs';
-import { txt, lines, box, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, box, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 
 const P = 's1';
 const OX = 300, OY = 120;
@@ -114,7 +114,7 @@ ${txt(786, 358, 'registers hooks', 'lblf', 'start')}
 ${txt(806, 424, `<ui-view name='detail'>`, 'lbls', 'start')}
 ${txt(896, 552, '<ui-view>', 'lblb', 'start')}
 ${txt(633, 690, 'LIT RENDER', 'lblb', 'middle')}
-${txt(633, 703, 'RoutedLitTemplate · html\`\`', 'lblf', 'middle')}
+${txt(633, 703, 'RoutedLitTemplate · html``', 'lblf', 'middle')}
 ${txt(95, 100, 'uiSrefActive', 'lblb', 'middle')}
 ${txt(95, 112, 'perch — toggles .active below', 'lblf', 'middle')}
 ${txt(26, 290, 'uiSrefTarget', 'lblf', 'start')}

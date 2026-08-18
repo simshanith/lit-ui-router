@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync } from 'node:fs';
 import { join } from 'node:path';
-import { page, sheetSection, CSS, PROJECT, TOTAL } from './chrome.mjs';
+import { page, sheetSection, TOTAL } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { sheet2 } from './sheet2.mjs';
 import { sheet2a } from './sheet2a.mjs';
@@ -120,7 +120,7 @@ const cover = `<header class="cover">
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
-    <tbody>${verdicts.map(([n, a, f, v], i) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}</tbody>
+    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}</tbody>
   </table>
 </header>`;
 

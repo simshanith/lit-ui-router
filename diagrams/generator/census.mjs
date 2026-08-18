@@ -14,7 +14,7 @@ for (const f of files) {
   const spec = /(\.spec\.|\.test\.|\/tests?\/|\/specs?\/|cypress|\.cy\.)/.test(f);
   const g = (groups[key] ??= { files: 0, loc: 0, specFiles: 0, specLoc: 0 });
   let loc = 0;
-  try { loc = readFileSync(`${cwd}/${f}`, 'utf8').split('\n').length; } catch {}
+  try { loc = readFileSync(`${cwd}/${f}`, 'utf8').split('\n').length; } catch { /* unreadable file: keep the 0 */ }
   if (spec) { g.specFiles++; g.specLoc += loc; } else { g.files++; g.loc += loc; }
 }
 const rows = Object.entries(groups).sort((a, b) => b[1].loc - a[1].loc);

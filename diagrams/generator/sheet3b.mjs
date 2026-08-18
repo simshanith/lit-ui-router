@@ -134,7 +134,6 @@ const bodies = M.map(([n]) => n)
   .join('\n');
 
 // ---- structure schedule ---------------------------------------------------------
-const TOT_T = M.reduce((a, r) => a + r[6], 0);
 const TOT_I = M.reduce((a, r) => a + r[4], 0);
 const TOT_M = M.reduce((a, r) => a + r[5], 0);
 const schedRow = ([n, name, , , inputs, mass, tasks, note]) =>

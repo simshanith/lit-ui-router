@@ -1,5 +1,5 @@
 import { defs } from './chrome.mjs';
-import { txt, lines, box, keyRow } from './helpers.mjs';
+import { txt, lines, keyRow } from './helpers.mjs';
 
 const P = 's12';
 

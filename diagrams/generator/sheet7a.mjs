@@ -23,7 +23,6 @@ const P = 's7a';
 const KS = 1.6, MIN = 12;
 const S = (sloc) => Math.max(MIN, KS * Math.sqrt(sloc));
 const AG = 10;
-const fmt = (v) => v.toLocaleString('en-US');
 
 // ---- plan → screen (plan view: the same city seen from straight above) ----------
 const K = 1.15, MX = 132, MY = 128;

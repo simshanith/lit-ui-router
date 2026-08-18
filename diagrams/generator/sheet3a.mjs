@@ -65,7 +65,7 @@ ${clines(296, 362, [
   ['SEAM A', 'lbla'], ['WORKFLOW → MISE', 'lbls'],
   ['37 call sites', 'lblf'], ['28 distinct targets', 'lblf'],
   ['args cross as env —', 'lblf'], ['step env: satisfies', 'lblf'],
-  ['$usage_* flags; no', 'lblf'], ['\${{ }} in run lines', 'lblf'],
+  ['$usage_* flags; no', 'lblf'], ['${{ }} in run lines', 'lblf'],
   ['buys: pinned tools +', 'lblf'], ['node-free bootstrap', 'lblf'],
 ])}`;
 
@@ -218,7 +218,7 @@ ${lf(1090, 638, [
 
 // ---- seam schedule --------------------------------------------------------------
 const SCHED = [
-  'A   workflow → mise — 37 call sites · 28 targets · crossing: env, never argv (no \${{ }} in run lines) · buys: pinned tools + node-free bootstrap · 8 workflow files',
+  'A   workflow → mise — 37 call sites · 28 targets · crossing: env, never argv (no ${{ }} in run lines) · buys: pinned tools + node-free bootstrap · 8 workflow files',
   'B   mise → turbo — 7 tasks · 8 invocations · crossing: TURBO_* ambient env · buys: remote cache + --summarize · config.toml:184-211 · tools/release/mise.toml:97,104-107',
   'C   turbo → mise — 7 root scripts (6 in ci) · crossing: script body `mise run …` · buys: TURBO CACHES MISE — inputs hash the task files + mise.lock · turbo.json:220-254',
   'D   mise → pnpm → turbo — 1 (check_workers_builds, manual) · turbo leg is cache:false, so the crossing buys only env passthrough + addressing · tasks file :21',

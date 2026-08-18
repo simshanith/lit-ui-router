@@ -86,7 +86,7 @@ const bodies = all
   .slice()
   .sort((a, b) => (a.x + a.y + a.s) - (b.x + b.y + b.s))
   .map(({ it, x, y, s, sa, n, district }) => {
-    const [name, f, l, df, dl] = it;
+    const [name, , l, , dl] = it;
     const h = HT(l);
     const accent = name === 'lit-ui-router';
     const consumer = district === 'consumer';
@@ -116,7 +116,7 @@ ${txt(lx, ly, label, 'lblf')}`;
 
 const fmt = (v) => v.toLocaleString('en-US');
 const schedRow = ({ it, n, district }) => {
-  const [name, f, l, df, dl] = it;
+  const [name, f, l, , dl] = it;
   const ws = district === 'workspace' ? ' (ws)' : district === 'consumer' ? ' (the app, src)' : '';
   const dts = dl ? ` · dts ${fmt(dl)}` : '';
   return `${n} ${name}${ws} — ${f}f ${fmt(l)}${dts}`;
