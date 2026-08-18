@@ -196,16 +196,16 @@ const TOUCH = {
 };
 const TLX = 232, TLW = 88, TLY = 1148, ROWH = 44;
 const ROWS = [
-  ['commits', 'ALL COMMITS', 0.17, 'fa', null],
-  ['pkg', 'packages/', 0.19, 'fis', null],
-  ['app', 'apps/', 0.19, 'fis', null],
-  ['site', 'docs+examples', 0.19, 'fis', null],
-  ['tool', 'tools/', 0.19, 'fis', null],
+  ['commits', 'ALL COMMITS', 0.17],
+  ['pkg', 'packages/', 0.19],
+  ['app', 'apps/', 0.19],
+  ['site', 'docs+examples', 0.19],
+  ['tool', 'tools/', 0.19],
 ];
 const timeline = `
 ${txt(60, TLY - 18, 'THE FOUR SEASONS — activity by month · a bar is source-file touches in that district; the top row is every commit', 'lbls')}
 ${txt(60, TLY - 4, 'ten of fourteen months are silent — the city is built in campaigns, not tended daily', 'lblf')}
-${ROWS.map(([key, label, sc, fill], ri) => {
+${ROWS.map(([key, label, sc], ri) => {
   const by = TLY + ri * ROWH + ROWH - 8; // baseline
   const src = key === 'commits' ? COMMITS : TOUCH[key];
   const bars = MONTHS.map((mo, i) => {

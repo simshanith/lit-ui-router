@@ -70,7 +70,10 @@ for (const [m, dirs, district] of MEMBERS) {
 // confirm all are tracked
 const tracked = new Set(execFileSync('git', ['-C', ROOT, 'ls-files'], { maxBuffer: 1 << 26 }).toString().split('\n'));
 const untracked = [...fileMeta.keys()].filter((f) => !tracked.has(f));
-if (untracked.length) console.error('UNTRACKED (excluded):', untracked), untracked.forEach((f) => fileMeta.delete(f));
+if (untracked.length) {
+  console.error('UNTRACKED (excluded):', untracked);
+  untracked.forEach((f) => fileMeta.delete(f));
+}
 
 // one history pass
 const log = execFileSync('git', ['-C', ROOT, 'log', '-M', '--name-status', '--format=@%H|%as'], { maxBuffer: 1 << 28 }).toString();
