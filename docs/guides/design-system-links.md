@@ -105,52 +105,101 @@ import '@spectrum-web-components/link/sp-link.js';
 
 Spectrum's components need a theme ancestor, so the router lives inside one.
 `sp-theme` takes a literal color stop — `lightest`, `light`, `dark`, or
-`darkest`, with no `auto` — so honouring the reader's OS preference means
-driving the attribute from the media query and re-rendering on change.
+`darkest`, with no `auto` — so following the reader's OS preference is the
+app's job.
 
 Each stop is a separate theme fragment, and importing it is what registers it
-with `sp-theme`. Import them statically and every reader downloads both; load
-them on demand and only the stop actually in use ships, with the other
-arriving on its own chunk if the preference ever flips:
+with `sp-theme`. Import both statically and every reader downloads a stop they
+will never see; load them on demand and only the one in use ships, with the
+other arriving on its own chunk if the preference ever flips. A reactive
+controller owns both halves — the media query and the fragment:
 
 ```ts
-const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-const root = document.getElementById('root')!;
+import type { ReactiveController, ReactiveControllerHost } from 'lit';
 
 const themeFragments = {
   light: () => import('@spectrum-web-components/theme/theme-light.js'),
   dark: () => import('@spectrum-web-components/theme/theme-dark.js'),
 } satisfies Record<string, () => Promise<unknown>>;
 
-type ThemeColor = keyof typeof themeFragments;
+export type ThemeColor = keyof typeof themeFragments;
 
-/** a slower fragment landing after a newer flip must not win the render */
-let renderToken = 0;
+export class ColorSchemeController implements ReactiveController {
+  #host: ReactiveControllerHost;
+  #query = window.matchMedia('(prefers-color-scheme: dark)');
+  #loaded = new Set<ThemeColor>();
+  #applied?: ThemeColor;
 
-async function renderApp() {
-  const color: ThemeColor = darkScheme.matches ? 'dark' : 'light';
-  const token = ++renderToken;
-  // render only once the stop is registered, or sp-theme has nothing to adopt
-  await themeFragments[color]();
-  if (token !== renderToken) return;
-  render(
-    html`
+  constructor(host: ReactiveControllerHost) {
+    this.#host = host;
+    host.addController(this);
+  }
+
+  /** the preferred stop, once its fragment is registered */
+  get color(): ThemeColor | undefined {
+    return this.#applied;
+  }
+
+  get #preferred(): ThemeColor {
+    return this.#query.matches ? 'dark' : 'light';
+  }
+
+  hostConnected(): void {
+    this.#query.addEventListener('change', this.#onChange);
+    void this.#adopt();
+  }
+
+  hostDisconnected(): void {
+    this.#query.removeEventListener('change', this.#onChange);
+  }
+
+  #onChange = () => void this.#adopt();
+
+  async #adopt(): Promise<void> {
+    const wanted = this.#preferred;
+    if (!this.#loaded.has(wanted)) {
+      await themeFragments[wanted]();
+      this.#loaded.add(wanted);
+    }
+    // re-read the query: whatever it says now is what should be on screen
+    const preferred = this.#preferred;
+    if (this.#loaded.has(preferred)) this.#applied = preferred;
+    this.#host.requestUpdate();
+  }
+}
+```
+
+The re-read is what keeps this honest. A fragment that finishes loading applies
+the preference as it stands _then_, not the one it was asked for, so overlapping
+flips converge on the current scheme without anyone tracking which load started
+last — and the stop already on screen stays put while an unloaded one is still
+in flight.
+
+The host is an ordinary element that holds the router and waits for a
+registered stop, mounted straight from the HTML:
+
+```ts
+@customElement('app-shell')
+export class AppShell extends LitElement {
+  private readonly scheme = new ColorSchemeController(this);
+
+  private readonly router = createRouter();
+
+  render() {
+    const { color } = this.scheme;
+    // hold the first paint until a stop is registered — sp-theme adopts the
+    // one it is told to, and an unregistered stop leaves it nothing to adopt
+    if (!color) return nothing;
+    return html`
       <sp-theme system="spectrum" color=${color} scale="medium">
-        <ui-router .uiRouter=${router}>
+        <ui-router .uiRouter=${this.router}>
           <app-root></app-root>
         </ui-router>
       </sp-theme>
-    `,
-    root,
-  );
+    `;
+  }
 }
-
-darkScheme.addEventListener('change', () => void renderApp());
-void renderApp();
 ```
-
-Awaiting the fragment before the first render matters: `sp-theme` adopts the
-stop it is told to, and an unregistered one leaves it with nothing to adopt.
 
 Chrome around the components reads its colors from Spectrum's own tokens —
 `var(--spectrum-gray-800)` for text, `var(--spectrum-gray-300)` for rules —

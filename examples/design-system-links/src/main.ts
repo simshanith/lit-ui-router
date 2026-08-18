@@ -1,4 +1,4 @@
-import { html, LitElement, css, render } from 'lit';
+import { html, LitElement, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { createRef, ref, Ref } from 'lit/directives/ref.js';
 import { hashLocationPlugin } from '@uirouter/core';
@@ -8,6 +8,7 @@ import {
   uiSrefActive,
   LitStateDeclaration,
 } from 'lit-ui-router';
+import { ColorSchemeController } from './color-scheme.js';
 import '@spectrum-web-components/theme/sp-theme.js';
 import '@spectrum-web-components/theme/scale-medium.js';
 import '@spectrum-web-components/link/sp-link.js';
@@ -179,49 +180,41 @@ const tokensState: LitStateDeclaration = {
       </p>`,
 };
 
-const router = new UIRouterLit();
-router.plugin(hashLocationPlugin);
-router.stateRegistry.register(componentsState);
-router.stateRegistry.register(tokensState);
-router.urlService.rules.initial({ state: 'components' });
-router.start();
+function createRouter(): UIRouterLit {
+  const router = new UIRouterLit();
+  router.plugin(hashLocationPlugin);
+  router.stateRegistry.register(componentsState);
+  router.stateRegistry.register(tokensState);
+  router.urlService.rules.initial({ state: 'components' });
+  router.start();
+  return router;
+}
 
-// sp-theme takes a literal color stop — no `auto`, so detection is ours to drive
-const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
-const root = document.getElementById('root')!;
+/** owns the router and the theme stop; mounted straight from index.html */
+@customElement('app-shell')
+export class AppShell extends LitElement {
+  private readonly scheme = new ColorSchemeController(this);
 
-/**
- * Each color stop is its own theme fragment, and the import is what registers
- * it — so only the stop in use has to ship, and the other arrives on its own
- * chunk if the preference ever flips.
- */
-const themeFragments = {
-  light: () => import('@spectrum-web-components/theme/theme-light.js'),
-  dark: () => import('@spectrum-web-components/theme/theme-dark.js'),
-} satisfies Record<string, () => Promise<unknown>>;
+  private readonly router = createRouter();
 
-type ThemeColor = keyof typeof themeFragments;
-
-/** a slower fragment landing after a newer flip must not win the render */
-let renderToken = 0;
-
-async function renderApp() {
-  const color: ThemeColor = darkScheme.matches ? 'dark' : 'light';
-  const token = ++renderToken;
-  // render only once the stop is registered, or sp-theme has nothing to adopt
-  await themeFragments[color]();
-  if (token !== renderToken) return;
-  render(
-    html`
+  render() {
+    const { color } = this.scheme;
+    // hold the first paint until a stop is registered — sp-theme adopts the
+    // one it is told to, and an unregistered stop leaves it nothing to adopt
+    if (!color) return nothing;
+    return html`
       <sp-theme system="spectrum" color=${color} scale="medium">
-        <ui-router .uiRouter=${router}>
+        <ui-router .uiRouter=${this.router}>
           <app-root></app-root>
         </ui-router>
       </sp-theme>
-    `,
-    root,
-  );
+    `;
+  }
 }
 
-darkScheme.addEventListener('change', () => void renderApp());
-void renderApp();
+declare global {
+  interface HTMLElementTagNameMap {
+    'app-shell': AppShell;
+    'app-root': AppRoot;
+  }
+}
