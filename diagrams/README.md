@@ -13,6 +13,7 @@ notes on each sheet argue where that form fits and where it lies.
 | [2A](sheet-2A-the-coupling-plan.html) | FOUR PACKAGES | COUPLING PLAN |
 | [3](sheet-3-the-instrument-yard.html) | THE MONOREPO | ISOMETRIC CITY |
 | [3A](sheet-3A-the-handoff-works.html) | TWO TASK MANAGERS | COUPLING SCHEMATIC |
+| [3B](sheet-3B-the-watched-city.html) | THE CI TASK GRAPH | ISOMETRIC GRAPH CITY |
 | [4](sheet-4-the-family-spine.html) | UI-ROUTER ECOSYSTEM | MASSED SPINE |
 | [5](sheet-5-the-design-space.html) | JS ECOSYSTEM | POSITIONED CHART |
 | [6](sheet-6-the-routing-strata.html) | EVERYTHING | CORE SAMPLE |

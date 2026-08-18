@@ -1,0 +1,1779 @@
+[
+ {
+  "id": "//#check:docs-api-deps",
+  "pkg": "//",
+  "task": "check:docs-api-deps",
+  "dir": "",
+  "inputs": 1355,
+  "mass": 39,
+  "cites": [
+   "script line",
+   "check-docs-api-deps.ts (38)"
+  ]
+ },
+ {
+  "id": "//#check:patches",
+  "pkg": "//",
+  "task": "check:patches",
+  "dir": "",
+  "inputs": 23,
+  "mass": 71,
+  "cites": [
+   "script line",
+   "check-patches.ts (70)"
+  ]
+ },
+ {
+  "id": "//#format:check:root",
+  "pkg": "//",
+  "task": "format:check:root",
+  "dir": "",
+  "inputs": 612,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#format:check:toml",
+  "pkg": "//",
+  "task": "format:check:toml",
+  "dir": "",
+  "inputs": 9,
+  "mass": 18,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/taplo (16)"
+  ]
+ },
+ {
+  "id": "//#lint:actionlint",
+  "pkg": "//",
+  "task": "lint:actionlint",
+  "dir": "",
+  "inputs": 16,
+  "mass": 2,
+  "cites": [
+   "script line",
+   "config.toml run line"
+  ]
+ },
+ {
+  "id": "//#lint:elements",
+  "pkg": "//",
+  "task": "lint:elements",
+  "dir": "",
+  "inputs": 612,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#lint:markdown",
+  "pkg": "//",
+  "task": "lint:markdown",
+  "dir": "",
+  "inputs": 154,
+  "mass": 17,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/rumdl (15)"
+  ]
+ },
+ {
+  "id": "//#lint:package-json",
+  "pkg": "//",
+  "task": "lint:package-json",
+  "dir": "",
+  "inputs": 1342,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#lint:root",
+  "pkg": "//",
+  "task": "lint:root",
+  "dir": "",
+  "inputs": 612,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#lint:shellcheck",
+  "pkg": "//",
+  "task": "lint:shellcheck",
+  "dir": "",
+  "inputs": 24,
+  "mass": 24,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/shellcheck (22)"
+  ]
+ },
+ {
+  "id": "//#lint:templates",
+  "pkg": "//",
+  "task": "lint:templates",
+  "dir": "",
+  "inputs": 612,
+  "mass": 51,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit-analyzer-ts-guard.ts (30)",
+   "tools/lit-template-lint/src/lint-templates.ts (20)"
+  ]
+ },
+ {
+  "id": "//#lint:toml",
+  "pkg": "//",
+  "task": "lint:toml",
+  "dir": "",
+  "inputs": 9,
+  "mass": 18,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/taplo (16)"
+  ]
+ },
+ {
+  "id": "//#lint:zizmor",
+  "pkg": "//",
+  "task": "lint:zizmor",
+  "dir": "",
+  "inputs": 17,
+  "mass": 2,
+  "cites": [
+   "script line",
+   "config.toml run line"
+  ]
+ },
+ {
+  "id": "//#typecheck:root",
+  "pkg": "//",
+  "task": "typecheck:root",
+  "dir": "",
+  "inputs": 612,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/build_and_test#format:check",
+  "pkg": "@tools/build_and_test",
+  "task": "format:check",
+  "dir": "tools/build_and_test",
+  "inputs": 14,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/build_and_test#lint",
+  "pkg": "@tools/build_and_test",
+  "task": "lint",
+  "dir": "tools/build_and_test",
+  "inputs": 15,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/build_and_test#test",
+  "pkg": "@tools/build_and_test",
+  "task": "test",
+  "dir": "tools/build_and_test",
+  "inputs": 14,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/build_and_test#typecheck",
+  "pkg": "@tools/build_and_test",
+  "task": "typecheck",
+  "dir": "tools/build_and_test",
+  "inputs": 15,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/bundle-probe#format:check",
+  "pkg": "@tools/bundle-probe",
+  "task": "format:check",
+  "dir": "tools/bundle-probe",
+  "inputs": 7,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/bundle-probe#lint",
+  "pkg": "@tools/bundle-probe",
+  "task": "lint",
+  "dir": "tools/bundle-probe",
+  "inputs": 7,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/bundle-probe#typecheck",
+  "pkg": "@tools/bundle-probe",
+  "task": "typecheck",
+  "dir": "tools/bundle-probe",
+  "inputs": 7,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/compat-guards#format:check",
+  "pkg": "@tools/compat-guards",
+  "task": "format:check",
+  "dir": "tools/compat-guards",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/compat-guards#lint",
+  "pkg": "@tools/compat-guards",
+  "task": "lint",
+  "dir": "tools/compat-guards",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/compat-guards#test",
+  "pkg": "@tools/compat-guards",
+  "task": "test",
+  "dir": "tools/compat-guards",
+  "inputs": 9,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/compat-guards#typecheck",
+  "pkg": "@tools/compat-guards",
+  "task": "typecheck",
+  "dir": "tools/compat-guards",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/dts-backtest#format:check",
+  "pkg": "@tools/dts-backtest",
+  "task": "format:check",
+  "dir": "tools/dts-backtest",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/dts-backtest#lint",
+  "pkg": "@tools/dts-backtest",
+  "task": "lint",
+  "dir": "tools/dts-backtest",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/dts-backtest#test",
+  "pkg": "@tools/dts-backtest",
+  "task": "test",
+  "dir": "tools/dts-backtest",
+  "inputs": 8,
+  "mass": 291,
+  "cites": [
+   "script line",
+   "tools/dts-backtest/run.ts (290)"
+  ]
+ },
+ {
+  "id": "@tools/eslint-ts-parser#format:check",
+  "pkg": "@tools/eslint-ts-parser",
+  "task": "format:check",
+  "dir": "tools/eslint-ts-parser",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/eslint-ts-parser#lint",
+  "pkg": "@tools/eslint-ts-parser",
+  "task": "lint",
+  "dir": "tools/eslint-ts-parser",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/eslint-ts-parser#typecheck",
+  "pkg": "@tools/eslint-ts-parser",
+  "task": "typecheck",
+  "dir": "tools/eslint-ts-parser",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/happy-dom#format:check",
+  "pkg": "@tools/happy-dom",
+  "task": "format:check",
+  "dir": "tools/happy-dom",
+  "inputs": 8,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/happy-dom#lint",
+  "pkg": "@tools/happy-dom",
+  "task": "lint",
+  "dir": "tools/happy-dom",
+  "inputs": 7,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/happy-dom#test",
+  "pkg": "@tools/happy-dom",
+  "task": "test",
+  "dir": "tools/happy-dom",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/happy-dom#typecheck",
+  "pkg": "@tools/happy-dom",
+  "task": "typecheck",
+  "dir": "tools/happy-dom",
+  "inputs": 7,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lcov-rebase#format:check",
+  "pkg": "@tools/lcov-rebase",
+  "task": "format:check",
+  "dir": "tools/lcov-rebase",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lcov-rebase#lint",
+  "pkg": "@tools/lcov-rebase",
+  "task": "lint",
+  "dir": "tools/lcov-rebase",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lcov-rebase#test",
+  "pkg": "@tools/lcov-rebase",
+  "task": "test",
+  "dir": "tools/lcov-rebase",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lcov-rebase#typecheck",
+  "pkg": "@tools/lcov-rebase",
+  "task": "typecheck",
+  "dir": "tools/lcov-rebase",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lit-template-lint#format:check",
+  "pkg": "@tools/lit-template-lint",
+  "task": "format:check",
+  "dir": "tools/lit-template-lint",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lit-template-lint#lint",
+  "pkg": "@tools/lit-template-lint",
+  "task": "lint",
+  "dir": "tools/lit-template-lint",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lit-template-lint#typecheck",
+  "pkg": "@tools/lit-template-lint",
+  "task": "typecheck",
+  "dir": "tools/lit-template-lint",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lit-test-env#format:check",
+  "pkg": "@tools/lit-test-env",
+  "task": "format:check",
+  "dir": "tools/lit-test-env",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lit-test-env#lint",
+  "pkg": "@tools/lit-test-env",
+  "task": "lint",
+  "dir": "tools/lit-test-env",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lit-test-env#typecheck",
+  "pkg": "@tools/lit-test-env",
+  "task": "typecheck",
+  "dir": "tools/lit-test-env",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/oxc-emit#format:check",
+  "pkg": "@tools/oxc-emit",
+  "task": "format:check",
+  "dir": "tools/oxc-emit",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/oxc-emit#lint",
+  "pkg": "@tools/oxc-emit",
+  "task": "lint",
+  "dir": "tools/oxc-emit",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/oxc-emit#typecheck",
+  "pkg": "@tools/oxc-emit",
+  "task": "typecheck",
+  "dir": "tools/oxc-emit",
+  "inputs": 6,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release#check:exports",
+  "pkg": "@tools/release",
+  "task": "check:exports",
+  "dir": "tools/release",
+  "inputs": 67,
+  "mass": 65,
+  "cites": [
+   "script line",
+   "tools/release/src/checks/check-exports.ts (64)"
+  ]
+ },
+ {
+  "id": "@tools/release#format:check",
+  "pkg": "@tools/release",
+  "task": "format:check",
+  "dir": "tools/release",
+  "inputs": 67,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release#lint",
+  "pkg": "@tools/release",
+  "task": "lint",
+  "dir": "tools/release",
+  "inputs": 68,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release#pack:all",
+  "pkg": "@tools/release",
+  "task": "pack:all",
+  "dir": "tools/release",
+  "inputs": 68,
+  "mass": 39,
+  "cites": [
+   "script line",
+   "tools/release/src/steps/pack-all.ts (38)"
+  ]
+ },
+ {
+  "id": "@tools/release#test",
+  "pkg": "@tools/release",
+  "task": "test",
+  "dir": "tools/release",
+  "inputs": 67,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release#typecheck",
+  "pkg": "@tools/release",
+  "task": "typecheck",
+  "dir": "tools/release",
+  "inputs": 68,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release-config#format:check",
+  "pkg": "@tools/release-config",
+  "task": "format:check",
+  "dir": "tools/release-config",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release-config#lint",
+  "pkg": "@tools/release-config",
+  "task": "lint",
+  "dir": "tools/release-config",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/shared#format:check",
+  "pkg": "@tools/shared",
+  "task": "format:check",
+  "dir": "tools/shared",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/shared#lint",
+  "pkg": "@tools/shared",
+  "task": "lint",
+  "dir": "tools/shared",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/shared#test",
+  "pkg": "@tools/shared",
+  "task": "test",
+  "dir": "tools/shared",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/shared#typecheck",
+  "pkg": "@tools/shared",
+  "task": "typecheck",
+  "dir": "tools/shared",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/typedoc-plugin-lit-ui-router#build:js",
+  "pkg": "@tools/typedoc-plugin-lit-ui-router",
+  "task": "build:js",
+  "dir": "tools/typedoc-plugin-lit-ui-router",
+  "inputs": 9,
+  "mass": 36,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-js.ts (35)"
+  ]
+ },
+ {
+  "id": "@tools/typedoc-plugin-lit-ui-router#build:types",
+  "pkg": "@tools/typedoc-plugin-lit-ui-router",
+  "task": "build:types",
+  "dir": "tools/typedoc-plugin-lit-ui-router",
+  "inputs": 9,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-dts.ts (20)"
+  ]
+ },
+ {
+  "id": "@tools/typedoc-plugin-lit-ui-router#format:check",
+  "pkg": "@tools/typedoc-plugin-lit-ui-router",
+  "task": "format:check",
+  "dir": "tools/typedoc-plugin-lit-ui-router",
+  "inputs": 10,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/typedoc-plugin-lit-ui-router#lint",
+  "pkg": "@tools/typedoc-plugin-lit-ui-router",
+  "task": "lint",
+  "dir": "tools/typedoc-plugin-lit-ui-router",
+  "inputs": 10,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/typedoc-plugin-lit-ui-router#typecheck",
+  "pkg": "@tools/typedoc-plugin-lit-ui-router",
+  "task": "typecheck",
+  "dir": "tools/typedoc-plugin-lit-ui-router",
+  "inputs": 10,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/typedoc-plugin-lit-ui-router#typecheck:src",
+  "pkg": "@tools/typedoc-plugin-lit-ui-router",
+  "task": "typecheck:src",
+  "dir": "tools/typedoc-plugin-lit-ui-router",
+  "inputs": 10,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/vue-check#format:check",
+  "pkg": "@tools/vue-check",
+  "task": "format:check",
+  "dir": "tools/vue-check",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/vue-check#lint",
+  "pkg": "@tools/vue-check",
+  "task": "lint",
+  "dir": "tools/vue-check",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/wintercg-globals#format:check",
+  "pkg": "@tools/wintercg-globals",
+  "task": "format:check",
+  "dir": "tools/wintercg-globals",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/wintercg-globals#lint",
+  "pkg": "@tools/wintercg-globals",
+  "task": "lint",
+  "dir": "tools/wintercg-globals",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/wintercg-globals#typecheck",
+  "pkg": "@tools/wintercg-globals",
+  "task": "typecheck",
+  "dir": "tools/wintercg-globals",
+  "inputs": 4,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/workers-builds#format:check",
+  "pkg": "@tools/workers-builds",
+  "task": "format:check",
+  "dir": "tools/workers-builds",
+  "inputs": 9,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/workers-builds#lint",
+  "pkg": "@tools/workers-builds",
+  "task": "lint",
+  "dir": "tools/workers-builds",
+  "inputs": 10,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/workers-builds#test",
+  "pkg": "@tools/workers-builds",
+  "task": "test",
+  "dir": "tools/workers-builds",
+  "inputs": 9,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/workers-builds#typecheck",
+  "pkg": "@tools/workers-builds",
+  "task": "typecheck",
+  "dir": "tools/workers-builds",
+  "inputs": 10,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#build",
+  "pkg": "docs",
+  "task": "build",
+  "dir": "docs",
+  "inputs": 64,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#format:check",
+  "pkg": "docs",
+  "task": "format:check",
+  "dir": "docs",
+  "inputs": 154,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#lint",
+  "pkg": "docs",
+  "task": "lint",
+  "dir": "docs",
+  "inputs": 66,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#test",
+  "pkg": "docs",
+  "task": "test",
+  "dir": "docs",
+  "inputs": 64,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#typecheck",
+  "pkg": "docs",
+  "task": "typecheck",
+  "dir": "docs",
+  "inputs": 65,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#typecheck:vue",
+  "pkg": "docs",
+  "task": "typecheck:vue",
+  "dir": "docs",
+  "inputs": 11,
+  "mass": 25,
+  "cites": [
+   "script line",
+   "tools/vue-check/bin.ts (24)"
+  ]
+ },
+ {
+  "id": "docs#typecheck:worker",
+  "pkg": "docs",
+  "task": "typecheck:worker",
+  "dir": "docs",
+  "inputs": 65,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#typecheck:worker:tests",
+  "pkg": "docs",
+  "task": "typecheck:worker:tests",
+  "dir": "docs",
+  "inputs": 65,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "docs#types:worker",
+  "pkg": "docs",
+  "task": "types:worker",
+  "dir": "docs",
+  "inputs": 65,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "examples#build:embeds",
+  "pkg": "examples",
+  "task": "build:embeds",
+  "dir": "examples",
+  "inputs": 22,
+  "mass": 14,
+  "cites": [
+   "script line",
+   "examples/build-embeds.ts (13)"
+  ]
+ },
+ {
+  "id": "examples#format:check",
+  "pkg": "examples",
+  "task": "format:check",
+  "dir": "examples",
+  "inputs": 6926,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "examples#lint",
+  "pkg": "examples",
+  "task": "lint",
+  "dir": "examples",
+  "inputs": 6471,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "examples#typecheck",
+  "pkg": "examples",
+  "task": "typecheck",
+  "dir": "examples",
+  "inputs": 24,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#build:custom-elements",
+  "pkg": "lit-ui-router",
+  "task": "build:custom-elements",
+  "dir": "packages/lit-ui-router",
+  "inputs": 30,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#build:js",
+  "pkg": "lit-ui-router",
+  "task": "build:js",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 36,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-js.ts (35)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#build:types",
+  "pkg": "lit-ui-router",
+  "task": "build:types",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-dts.ts (20)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#check:bundle",
+  "pkg": "lit-ui-router",
+  "task": "check:bundle",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 32,
+  "cites": [
+   "script line",
+   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#docs:api",
+  "pkg": "lit-ui-router",
+  "task": "docs:api",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#format:check",
+  "pkg": "lit-ui-router",
+  "task": "format:check",
+  "dir": "packages/lit-ui-router",
+  "inputs": 116,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#lint",
+  "pkg": "lit-ui-router",
+  "task": "lint",
+  "dir": "packages/lit-ui-router",
+  "inputs": 83,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#test",
+  "pkg": "lit-ui-router",
+  "task": "test",
+  "dir": "packages/lit-ui-router",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#test:coverage",
+  "pkg": "lit-ui-router",
+  "task": "test:coverage",
+  "dir": "packages/lit-ui-router",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#test:lit2-compat",
+  "pkg": "lit-ui-router",
+  "task": "test:lit2-compat",
+  "dir": "packages/lit-ui-router",
+  "inputs": 42,
+  "mass": 20,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#typecheck",
+  "pkg": "lit-ui-router",
+  "task": "typecheck",
+  "dir": "packages/lit-ui-router",
+  "inputs": 42,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#typecheck:lit2",
+  "pkg": "lit-ui-router",
+  "task": "typecheck:lit2",
+  "dir": "packages/lit-ui-router",
+  "inputs": 43,
+  "mass": 20,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#typecheck:src",
+  "pkg": "lit-ui-router",
+  "task": "typecheck:src",
+  "dir": "packages/lit-ui-router",
+  "inputs": 42,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#build:js",
+  "pkg": "lit-ui-router-mobx",
+  "task": "build:js",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 21,
+  "mass": 36,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-js.ts (35)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#build:types",
+  "pkg": "lit-ui-router-mobx",
+  "task": "build:types",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 21,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-dts.ts (20)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#check:bundle",
+  "pkg": "lit-ui-router-mobx",
+  "task": "check:bundle",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 21,
+  "mass": 32,
+  "cites": [
+   "script line",
+   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#docs:api",
+  "pkg": "lit-ui-router-mobx",
+  "task": "docs:api",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 21,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#format:check",
+  "pkg": "lit-ui-router-mobx",
+  "task": "format:check",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 32,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#lint",
+  "pkg": "lit-ui-router-mobx",
+  "task": "lint",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 25,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#test",
+  "pkg": "lit-ui-router-mobx",
+  "task": "test",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 12,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#test:coverage",
+  "pkg": "lit-ui-router-mobx",
+  "task": "test:coverage",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 12,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#test:lit2-compat",
+  "pkg": "lit-ui-router-mobx",
+  "task": "test:lit2-compat",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 22,
+  "mass": 20,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#test:mobx6-compat",
+  "pkg": "lit-ui-router-mobx",
+  "task": "test:mobx6-compat",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 22,
+  "mass": 18,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/mobx6-compat-guard.ts (17)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#typecheck",
+  "pkg": "lit-ui-router-mobx",
+  "task": "typecheck",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 22,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#typecheck:lit2",
+  "pkg": "lit-ui-router-mobx",
+  "task": "typecheck:lit2",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 23,
+  "mass": 20,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#typecheck:mobx6",
+  "pkg": "lit-ui-router-mobx",
+  "task": "typecheck:mobx6",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 23,
+  "mass": 18,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/mobx6-compat-guard.ts (17)"
+  ]
+ },
+ {
+  "id": "lit-ui-router-mobx#typecheck:src",
+  "pkg": "lit-ui-router-mobx",
+  "task": "typecheck:src",
+  "dir": "packages/lit-ui-router-mobx",
+  "inputs": 22,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-e2e#build",
+  "pkg": "sample-app-lit-e2e",
+  "task": "build",
+  "dir": "apps/sample-app-lit-e2e",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-e2e#format:check",
+  "pkg": "sample-app-lit-e2e",
+  "task": "format:check",
+  "dir": "apps/sample-app-lit-e2e",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-e2e#lint",
+  "pkg": "sample-app-lit-e2e",
+  "task": "lint",
+  "dir": "apps/sample-app-lit-e2e",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-e2e#test",
+  "pkg": "sample-app-lit-e2e",
+  "task": "test",
+  "dir": "apps/sample-app-lit-e2e",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-mobx#build",
+  "pkg": "sample-app-lit-mobx",
+  "task": "build",
+  "dir": "apps/sample-app-lit-mobx",
+  "inputs": 17,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-mobx#format:check",
+  "pkg": "sample-app-lit-mobx",
+  "task": "format:check",
+  "dir": "apps/sample-app-lit-mobx",
+  "inputs": 16,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-mobx#lint",
+  "pkg": "sample-app-lit-mobx",
+  "task": "lint",
+  "dir": "apps/sample-app-lit-mobx",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-mobx#typecheck",
+  "pkg": "sample-app-lit-mobx",
+  "task": "typecheck",
+  "dir": "apps/sample-app-lit-mobx",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-vanilla#build",
+  "pkg": "sample-app-lit-vanilla",
+  "task": "build",
+  "dir": "apps/sample-app-lit-vanilla",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-vanilla#build:hash",
+  "pkg": "sample-app-lit-vanilla",
+  "task": "build:hash",
+  "dir": "apps/sample-app-lit-vanilla",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-vanilla#format:check",
+  "pkg": "sample-app-lit-vanilla",
+  "task": "format:check",
+  "dir": "apps/sample-app-lit-vanilla",
+  "inputs": 16,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-vanilla#lint",
+  "pkg": "sample-app-lit-vanilla",
+  "task": "lint",
+  "dir": "apps/sample-app-lit-vanilla",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-lit-vanilla#typecheck",
+  "pkg": "sample-app-lit-vanilla",
+  "task": "typecheck",
+  "dir": "apps/sample-app-lit-vanilla",
+  "inputs": 19,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-routes#format:check",
+  "pkg": "sample-app-routes",
+  "task": "format:check",
+  "dir": "apps/sample-app-routes",
+  "inputs": 8,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-routes#lint",
+  "pkg": "sample-app-routes",
+  "task": "lint",
+  "dir": "apps/sample-app-routes",
+  "inputs": 8,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-routes#test",
+  "pkg": "sample-app-routes",
+  "task": "test",
+  "dir": "apps/sample-app-routes",
+  "inputs": 7,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-routes#typecheck",
+  "pkg": "sample-app-routes",
+  "task": "typecheck",
+  "dir": "apps/sample-app-routes",
+  "inputs": 8,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-shared#format:check",
+  "pkg": "sample-app-shared",
+  "task": "format:check",
+  "dir": "apps/sample-app-shared",
+  "inputs": 77,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-shared#lint",
+  "pkg": "sample-app-shared",
+  "task": "lint",
+  "dir": "apps/sample-app-shared",
+  "inputs": 90,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-shared#test",
+  "pkg": "sample-app-shared",
+  "task": "test",
+  "dir": "apps/sample-app-shared",
+  "inputs": 45,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "sample-app-shared#typecheck",
+  "pkg": "sample-app-shared",
+  "task": "typecheck",
+  "dir": "apps/sample-app-shared",
+  "inputs": 74,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#build:js",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "build:js",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 17,
+  "mass": 36,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-js.ts (35)"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#build:types",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "build:types",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 17,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-dts.ts (20)"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#check:bundle",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "check:bundle",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 17,
+  "mass": 32,
+  "cites": [
+   "script line",
+   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#docs:api",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "docs:api",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 17,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#format:check",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "format:check",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 39,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#lint",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "lint",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#test",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "test",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#test:coverage",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "test:coverage",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 11,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#typecheck",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "typecheck",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-navigation-location-plugin#typecheck:src",
+  "pkg": "ui-router-navigation-location-plugin",
+  "task": "typecheck:src",
+  "dir": "packages/navigation-location-plugin",
+  "inputs": 18,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#build:js",
+  "pkg": "ui-router-server",
+  "task": "build:js",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 36,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-js.ts (35)"
+  ]
+ },
+ {
+  "id": "ui-router-server#build:types",
+  "pkg": "ui-router-server",
+  "task": "build:types",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-dts.ts (20)"
+  ]
+ },
+ {
+  "id": "ui-router-server#check:bundle",
+  "pkg": "ui-router-server",
+  "task": "check:bundle",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 32,
+  "cites": [
+   "script line",
+   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+  ]
+ },
+ {
+  "id": "ui-router-server#docs:api",
+  "pkg": "ui-router-server",
+  "task": "docs:api",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#format:check",
+  "pkg": "ui-router-server",
+  "task": "format:check",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#lint",
+  "pkg": "ui-router-server",
+  "task": "lint",
+  "dir": "packages/ui-router-server",
+  "inputs": 32,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#test",
+  "pkg": "ui-router-server",
+  "task": "test",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#test:coverage",
+  "pkg": "ui-router-server",
+  "task": "test:coverage",
+  "dir": "packages/ui-router-server",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#typecheck",
+  "pkg": "ui-router-server",
+  "task": "typecheck",
+  "dir": "packages/ui-router-server",
+  "inputs": 32,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#typecheck:runtime-globals",
+  "pkg": "ui-router-server",
+  "task": "typecheck:runtime-globals",
+  "dir": "packages/ui-router-server",
+  "inputs": 32,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#typecheck:src",
+  "pkg": "ui-router-server",
+  "task": "typecheck:src",
+  "dir": "packages/ui-router-server",
+  "inputs": 32,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "ui-router-server#typecheck:tests",
+  "pkg": "ui-router-server",
+  "task": "typecheck:tests",
+  "dir": "packages/ui-router-server",
+  "inputs": 32,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ }
+]
