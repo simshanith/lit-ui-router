@@ -99,25 +99,126 @@ npm install @spectrum-web-components/link @spectrum-web-components/theme
 
 ```ts
 import '@spectrum-web-components/theme/sp-theme.js';
-import '@spectrum-web-components/theme/theme-light.js';
 import '@spectrum-web-components/theme/scale-medium.js';
 import '@spectrum-web-components/link/sp-link.js';
 ```
 
-Spectrum's components need a theme ancestor, so the router lives inside one:
+Spectrum's components need a theme ancestor, so the router lives inside one.
+`sp-theme` takes a literal color stop — `lightest`, `light`, `dark`, or
+`darkest`, with no `auto` — so following the reader's OS preference is the
+app's job.
+
+Each stop is a separate theme fragment, and importing it is what registers it
+with `sp-theme`. Import both statically and every reader downloads a stop they
+will never see; load them on demand and only the one in use ships, with the
+other arriving on its own chunk if the preference ever flips. A reactive
+controller owns both halves — the media query and the fragment:
 
 ```ts
-render(
-  html`
-    <sp-theme system="spectrum" color="light" scale="medium">
-      <ui-router .uiRouter=${router}>
-        <app-root></app-root>
-      </ui-router>
-    </sp-theme>
-  `,
-  document.getElementById('root')!,
-);
+import type { ReactiveController, ReactiveControllerHost } from 'lit';
+
+const themeFragments = {
+  light: () => import('@spectrum-web-components/theme/theme-light.js'),
+  dark: () => import('@spectrum-web-components/theme/theme-dark.js'),
+} satisfies Record<string, () => Promise<unknown>>;
+
+export type ThemeColor = keyof typeof themeFragments;
+
+export class ColorSchemeController implements ReactiveController {
+  readonly #host: ReactiveControllerHost;
+  readonly #query = window.matchMedia('(prefers-color-scheme: dark)');
+  readonly #loaded = new Set<ThemeColor>();
+  #applied?: ThemeColor;
+
+  constructor(host: ReactiveControllerHost) {
+    this.#host = host;
+    host.addController(this);
+  }
+
+  /** the preferred stop, once its fragment is registered */
+  get color(): ThemeColor | undefined {
+    return this.#applied;
+  }
+
+  get #preferred(): ThemeColor {
+    return this.#query.matches ? 'dark' : 'light';
+  }
+
+  hostConnected(): void {
+    this.#query.addEventListener('change', this.#onChange);
+    void this.#adopt();
+  }
+
+  hostDisconnected(): void {
+    this.#query.removeEventListener('change', this.#onChange);
+  }
+
+  readonly #onChange = () => void this.#adopt();
+
+  async #adopt(): Promise<void> {
+    const wanted = this.#preferred;
+    if (!this.#loaded.has(wanted)) {
+      try {
+        await themeFragments[wanted]();
+        this.#loaded.add(wanted);
+      } catch (error) {
+        // a fragment that never arrives must not blank the app: keep the stop
+        // already on screen, or adopt this one unthemed if there is none yet
+        console.error(`could not load the ${wanted} theme fragment`, error);
+        this.#applied ??= wanted;
+        this.#host.requestUpdate();
+        return;
+      }
+    }
+    // re-read the query: whatever it says now is what should be on screen
+    const preferred = this.#preferred;
+    if (this.#loaded.has(preferred)) this.#applied = preferred;
+    this.#host.requestUpdate();
+  }
+}
 ```
+
+A fragment can also fail to arrive — a stale chunk after a deploy, a flaky
+network — and an example that renders nothing until one loads would go blank.
+The catch keeps the stop already on screen, or adopts the wanted one unthemed
+when there is nothing to fall back to: unstyled chrome beats a blank page, and
+a later flip retries the import.
+
+The re-read is what keeps this honest. A fragment that finishes loading applies
+the preference as it stands _then_, not the one it was asked for, so overlapping
+flips converge on the current scheme without anyone tracking which load started
+last — and the stop already on screen stays put while an unloaded one is still
+in flight.
+
+The host is an ordinary element that holds the router and waits for a
+registered stop, mounted straight from the HTML:
+
+```ts
+@customElement('app-shell')
+export class AppShell extends LitElement {
+  private readonly scheme = new ColorSchemeController(this);
+
+  private readonly router = createRouter();
+
+  render() {
+    const { color } = this.scheme;
+    // hold the first paint until a stop is registered — sp-theme adopts the
+    // one it is told to, and an unregistered stop leaves it nothing to adopt
+    if (!color) return nothing;
+    return html`
+      <sp-theme system="spectrum" color=${color} scale="medium">
+        <ui-router .uiRouter=${this.router}>
+          <app-root></app-root>
+        </ui-router>
+      </sp-theme>
+    `;
+  }
+}
+```
+
+Chrome around the components reads its colors from Spectrum's own tokens —
+`var(--spectrum-gray-800)` for text, `var(--spectrum-gray-300)` for rules —
+which inherit through the shadow boundary and re-resolve with the theme.
 
 Nothing about the pairing is Spectrum-specific: any link-shaped custom element
 takes the same option.

@@ -1,4 +1,4 @@
-import { html, LitElement, css, render } from 'lit';
+import { html, LitElement, css, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { createRef, ref, Ref } from 'lit/directives/ref.js';
 import { hashLocationPlugin } from '@uirouter/core';
@@ -8,8 +8,8 @@ import {
   uiSrefActive,
   LitStateDeclaration,
 } from 'lit-ui-router';
+import { ColorSchemeController } from './color-scheme.js';
 import '@spectrum-web-components/theme/sp-theme.js';
-import '@spectrum-web-components/theme/theme-light.js';
 import '@spectrum-web-components/theme/scale-medium.js';
 import '@spectrum-web-components/link/sp-link.js';
 
@@ -21,13 +21,14 @@ export class AppRoot extends LitElement {
   static styles = css`
     :host {
       display: block;
+      color: var(--spectrum-gray-800);
     }
     h3 {
       margin: 0 0 4px;
     }
     p {
       margin: 0 0 16px;
-      color: #4b4b4b;
+      color: var(--spectrum-gray-700);
     }
     .row {
       display: grid;
@@ -35,22 +36,22 @@ export class AppRoot extends LitElement {
       align-items: baseline;
       gap: 8px 16px;
       padding: 10px 0;
-      border-top: 1px solid #e4e4e4;
+      border-top: 1px solid var(--spectrum-gray-300);
     }
     .row:last-of-type {
-      border-bottom: 1px solid #e4e4e4;
+      border-bottom: 1px solid var(--spectrum-gray-300);
     }
     .opt {
       font-family: ui-monospace, monospace;
       font-size: 13px;
-      color: #6b6b6b;
+      color: var(--spectrum-gray-600);
     }
     .href {
       font-family: ui-monospace, monospace;
       font-size: 13px;
     }
     .href.none {
-      color: #9a3b3b;
+      color: var(--spectrum-red-900);
     }
     sp-link.active {
       font-weight: 700;
@@ -179,20 +180,41 @@ const tokensState: LitStateDeclaration = {
       </p>`,
 };
 
-const router = new UIRouterLit();
-router.plugin(hashLocationPlugin);
-router.stateRegistry.register(componentsState);
-router.stateRegistry.register(tokensState);
-router.urlService.rules.initial({ state: 'components' });
-router.start();
+function createRouter(): UIRouterLit {
+  const router = new UIRouterLit();
+  router.plugin(hashLocationPlugin);
+  router.stateRegistry.register(componentsState);
+  router.stateRegistry.register(tokensState);
+  router.urlService.rules.initial({ state: 'components' });
+  router.start();
+  return router;
+}
 
-render(
-  html`
-    <sp-theme system="spectrum" color="light" scale="medium">
-      <ui-router .uiRouter=${router}>
-        <app-root></app-root>
-      </ui-router>
-    </sp-theme>
-  `,
-  document.getElementById('root')!,
-);
+/** owns the router and the theme stop; mounted straight from index.html */
+@customElement('app-shell')
+export class AppShell extends LitElement {
+  private readonly scheme = new ColorSchemeController(this);
+
+  private readonly router = createRouter();
+
+  render() {
+    const { color } = this.scheme;
+    // hold the first paint until a stop is registered — sp-theme adopts the
+    // one it is told to, and an unregistered stop leaves it nothing to adopt
+    if (!color) return nothing;
+    return html`
+      <sp-theme system="spectrum" color=${color} scale="medium">
+        <ui-router .uiRouter=${this.router}>
+          <app-root></app-root>
+        </ui-router>
+      </sp-theme>
+    `;
+  }
+}
+
+declare global {
+  interface HTMLElementTagNameMap {
+    'app-shell': AppShell;
+    'app-root': AppRoot;
+  }
+}

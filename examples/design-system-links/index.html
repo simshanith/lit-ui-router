@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Design System Links - lit-ui-router</title>
     <style>
+      :root {
+        color-scheme: light dark;
+      }
       body {
         font-family:
           system-ui,
@@ -13,8 +16,8 @@
         max-width: 800px;
         margin: 32px auto;
         padding: 0 20px;
-        color: #222;
-        background: #fff;
+        color: light-dark(#222, #e6e6e6);
+        background: light-dark(#fff, #1d1d1d);
       }
       @media (max-width: 480px) {
         body {
@@ -25,7 +28,7 @@
     </style>
   </head>
   <body>
-    <div id="root"></div>
+    <app-shell></app-shell>
     <script type="module" src="/src/main.ts"></script>
   </body>
 </html>
