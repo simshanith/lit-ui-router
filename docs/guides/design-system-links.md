@@ -99,8 +99,6 @@ npm install @spectrum-web-components/link @spectrum-web-components/theme
 
 ```ts
 import '@spectrum-web-components/theme/sp-theme.js';
-import '@spectrum-web-components/theme/theme-light.js';
-import '@spectrum-web-components/theme/theme-dark.js';
 import '@spectrum-web-components/theme/scale-medium.js';
 import '@spectrum-web-components/link/sp-link.js';
 ```
@@ -108,20 +106,36 @@ import '@spectrum-web-components/link/sp-link.js';
 Spectrum's components need a theme ancestor, so the router lives inside one.
 `sp-theme` takes a literal color stop — `lightest`, `light`, `dark`, or
 `darkest`, with no `auto` — so honouring the reader's OS preference means
-driving the attribute from the media query and re-rendering on change:
+driving the attribute from the media query and re-rendering on change.
+
+Each stop is a separate theme fragment, and importing it is what registers it
+with `sp-theme`. Import them statically and every reader downloads both; load
+them on demand and only the stop actually in use ships, with the other
+arriving on its own chunk if the preference ever flips:
 
 ```ts
 const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
 const root = document.getElementById('root')!;
 
-function renderApp() {
+const themeFragments = {
+  light: () => import('@spectrum-web-components/theme/theme-light.js'),
+  dark: () => import('@spectrum-web-components/theme/theme-dark.js'),
+} satisfies Record<string, () => Promise<unknown>>;
+
+type ThemeColor = keyof typeof themeFragments;
+
+/** a slower fragment landing after a newer flip must not win the render */
+let renderToken = 0;
+
+async function renderApp() {
+  const color: ThemeColor = darkScheme.matches ? 'dark' : 'light';
+  const token = ++renderToken;
+  // render only once the stop is registered, or sp-theme has nothing to adopt
+  await themeFragments[color]();
+  if (token !== renderToken) return;
   render(
     html`
-      <sp-theme
-        system="spectrum"
-        color=${darkScheme.matches ? 'dark' : 'light'}
-        scale="medium"
-      >
+      <sp-theme system="spectrum" color=${color} scale="medium">
         <ui-router .uiRouter=${router}>
           <app-root></app-root>
         </ui-router>
@@ -131,12 +145,14 @@ function renderApp() {
   );
 }
 
-darkScheme.addEventListener('change', renderApp);
-renderApp();
+darkScheme.addEventListener('change', () => void renderApp());
+void renderApp();
 ```
 
-Both theme fragments have to be imported for the swap to have anything to swap
-to. Chrome around the components reads its colors from Spectrum's own tokens —
+Awaiting the fragment before the first render matters: `sp-theme` adopts the
+stop it is told to, and an unregistered one leaves it with nothing to adopt.
+
+Chrome around the components reads its colors from Spectrum's own tokens —
 `var(--spectrum-gray-800)` for text, `var(--spectrum-gray-300)` for rules —
 which inherit through the shadow boundary and re-resolve with the theme.
 
