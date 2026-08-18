@@ -24,9 +24,9 @@ export type ThemeColor = keyof typeof themeFragments;
  * anyone tracking which load started last.
  */
 export class ColorSchemeController implements ReactiveController {
-  #host: ReactiveControllerHost;
-  #query = window.matchMedia('(prefers-color-scheme: dark)');
-  #loaded = new Set<ThemeColor>();
+  readonly #host: ReactiveControllerHost;
+  readonly #query = window.matchMedia('(prefers-color-scheme: dark)');
+  readonly #loaded = new Set<ThemeColor>();
   #applied?: ThemeColor;
 
   constructor(host: ReactiveControllerHost) {
@@ -52,7 +52,7 @@ export class ColorSchemeController implements ReactiveController {
     this.#query.removeEventListener('change', this.#onChange);
   }
 
-  #onChange = () => void this.#adopt();
+  readonly #onChange = () => void this.#adopt();
 
   async #adopt(): Promise<void> {
     const wanted = this.#preferred;
