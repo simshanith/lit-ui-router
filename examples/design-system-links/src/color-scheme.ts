@@ -57,8 +57,17 @@ export class ColorSchemeController implements ReactiveController {
   async #adopt(): Promise<void> {
     const wanted = this.#preferred;
     if (!this.#loaded.has(wanted)) {
-      await themeFragments[wanted]();
-      this.#loaded.add(wanted);
+      try {
+        await themeFragments[wanted]();
+        this.#loaded.add(wanted);
+      } catch (error) {
+        // a fragment that never arrives must not blank the app: keep the stop
+        // already on screen, or adopt this one unthemed if there is none yet
+        console.error(`could not load the ${wanted} theme fragment`, error);
+        this.#applied ??= wanted;
+        this.#host.requestUpdate();
+        return;
+      }
     }
     // re-read the query: whatever it says now is what should be on screen, and
     // the previous stop stays applied while an unloaded one is still in flight
