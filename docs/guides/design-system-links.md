@@ -100,24 +100,45 @@ npm install @spectrum-web-components/link @spectrum-web-components/theme
 ```ts
 import '@spectrum-web-components/theme/sp-theme.js';
 import '@spectrum-web-components/theme/theme-light.js';
+import '@spectrum-web-components/theme/theme-dark.js';
 import '@spectrum-web-components/theme/scale-medium.js';
 import '@spectrum-web-components/link/sp-link.js';
 ```
 
-Spectrum's components need a theme ancestor, so the router lives inside one:
+Spectrum's components need a theme ancestor, so the router lives inside one.
+`sp-theme` takes a literal color stop — `lightest`, `light`, `dark`, or
+`darkest`, with no `auto` — so honouring the reader's OS preference means
+driving the attribute from the media query and re-rendering on change:
 
 ```ts
-render(
-  html`
-    <sp-theme system="spectrum" color="light" scale="medium">
-      <ui-router .uiRouter=${router}>
-        <app-root></app-root>
-      </ui-router>
-    </sp-theme>
-  `,
-  document.getElementById('root')!,
-);
+const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+const root = document.getElementById('root')!;
+
+function renderApp() {
+  render(
+    html`
+      <sp-theme
+        system="spectrum"
+        color=${darkScheme.matches ? 'dark' : 'light'}
+        scale="medium"
+      >
+        <ui-router .uiRouter=${router}>
+          <app-root></app-root>
+        </ui-router>
+      </sp-theme>
+    `,
+    root,
+  );
+}
+
+darkScheme.addEventListener('change', renderApp);
+renderApp();
 ```
+
+Both theme fragments have to be imported for the swap to have anything to swap
+to. Chrome around the components reads its colors from Spectrum's own tokens —
+`var(--spectrum-gray-800)` for text, `var(--spectrum-gray-300)` for rules —
+which inherit through the shadow boundary and re-resolve with the theme.
 
 Nothing about the pairing is Spectrum-specific: any link-shaped custom element
 takes the same option.

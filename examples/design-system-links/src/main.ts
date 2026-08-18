@@ -10,6 +10,7 @@ import {
 } from 'lit-ui-router';
 import '@spectrum-web-components/theme/sp-theme.js';
 import '@spectrum-web-components/theme/theme-light.js';
+import '@spectrum-web-components/theme/theme-dark.js';
 import '@spectrum-web-components/theme/scale-medium.js';
 import '@spectrum-web-components/link/sp-link.js';
 
@@ -21,13 +22,14 @@ export class AppRoot extends LitElement {
   static styles = css`
     :host {
       display: block;
+      color: var(--spectrum-gray-800);
     }
     h3 {
       margin: 0 0 4px;
     }
     p {
       margin: 0 0 16px;
-      color: #4b4b4b;
+      color: var(--spectrum-gray-700);
     }
     .row {
       display: grid;
@@ -35,22 +37,22 @@ export class AppRoot extends LitElement {
       align-items: baseline;
       gap: 8px 16px;
       padding: 10px 0;
-      border-top: 1px solid #e4e4e4;
+      border-top: 1px solid var(--spectrum-gray-300);
     }
     .row:last-of-type {
-      border-bottom: 1px solid #e4e4e4;
+      border-bottom: 1px solid var(--spectrum-gray-300);
     }
     .opt {
       font-family: ui-monospace, monospace;
       font-size: 13px;
-      color: #6b6b6b;
+      color: var(--spectrum-gray-600);
     }
     .href {
       font-family: ui-monospace, monospace;
       font-size: 13px;
     }
     .href.none {
-      color: #9a3b3b;
+      color: var(--spectrum-red-900);
     }
     sp-link.active {
       font-weight: 700;
@@ -186,13 +188,26 @@ router.stateRegistry.register(tokensState);
 router.urlService.rules.initial({ state: 'components' });
 router.start();
 
-render(
-  html`
-    <sp-theme system="spectrum" color="light" scale="medium">
-      <ui-router .uiRouter=${router}>
-        <app-root></app-root>
-      </ui-router>
-    </sp-theme>
-  `,
-  document.getElementById('root')!,
-);
+// sp-theme takes a literal color stop — no `auto`, so detection is ours to drive
+const darkScheme = window.matchMedia('(prefers-color-scheme: dark)');
+const root = document.getElementById('root')!;
+
+function renderApp() {
+  render(
+    html`
+      <sp-theme
+        system="spectrum"
+        color=${darkScheme.matches ? 'dark' : 'light'}
+        scale="medium"
+      >
+        <ui-router .uiRouter=${router}>
+          <app-root></app-root>
+        </ui-router>
+      </sp-theme>
+    `,
+    root,
+  );
+}
+
+darkScheme.addEventListener('change', renderApp);
+renderApp();
