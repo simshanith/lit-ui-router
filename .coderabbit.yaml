@@ -26,8 +26,12 @@ reviews:
     # label in the same call that opens the PR, so one is never briefly
     # unlabeled. A negative-only filter excludes; it does not opt everything
     # else out.
+    # `no-coderabbit` is the manual escape hatch: label a PR to spend the
+    # review budget elsewhere. `@coderabbitai review` still works on a labelled
+    # PR when you change your mind.
     labels:
       - '!release'
+      - '!no-coderabbit'
     base_branches:
       - main
 
