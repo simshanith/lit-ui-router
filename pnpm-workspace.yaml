@@ -64,10 +64,10 @@ catalog:
   oxlint-tsgolint: 7.0.2001
   pacote: ^22.0.0
   playwright: ^1.62.1
-  publint: ^0.3.23
+  publint: ^0.3.24
   release-it: ^21.0.2
   rimraf: ^6.1.3
-  rolldown: ^1.2.2
+  rolldown: ^1.2.4
   screenfull: ^6.0.2
   semver: ^7.8.5
   start-server-and-test: ^3.0.12
@@ -80,7 +80,7 @@ catalog:
   typescript-5.9: npm:typescript@^5.9.3
   typescript-7: npm:typescript@^7.0.2
   valibot: ^1.4.2
-  vite: ^8.2.1
+  vite: ^8.2.2
   vite-plugin-checker: ^0.14.5
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.19
@@ -152,5 +152,8 @@ patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   '@vitest/browser': patches/@vitest__browser.patch
   lit-dialog: patches/lit-dialog.patch
+
+minimumReleaseAgeExclude:
+  - vite@8.2.2
 
 minimumReleaseAgeStrict: true
