@@ -154,8 +154,6 @@ patchedDependencies:
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAgeExclude:
-  - '@publint/pack@0.1.7'
-  - publint@0.3.24
   - vite@8.2.2
 
 minimumReleaseAgeStrict: true
