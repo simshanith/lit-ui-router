@@ -16,6 +16,7 @@ import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import { UiView } from './ui-view.js';
 
+// re-export: `inLitDevMode` ships in the public d.ts (#541)
 export { inLitDevMode };
 
 /**
