@@ -2,7 +2,7 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: env contracts, exec/gh seams, GitHub Actions plumbing, retry, local manifest reads, and workspace enumeration",
+  "description": "Cross-workflow tooling helpers: env contracts, exec/gh seams, GitHub Actions plumbing, retry, local manifest reads, workspace enumeration, and the warn-only-lane ratchet",
   "type": "module",
   "exports": {
     "./env.core.ts": "./src/env.core.ts",
@@ -13,6 +13,7 @@
     "./manifest.ts": "./src/manifest.ts",
     "./retry.ts": "./src/retry.ts",
     "./types.ts": "./src/types.ts",
+    "./warn-lanes.core.ts": "./src/warn-lanes.core.ts",
     "./workspace.ts": "./src/workspace.ts"
   },
   "scripts": {

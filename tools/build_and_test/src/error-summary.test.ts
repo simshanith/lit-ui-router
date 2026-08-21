@@ -16,6 +16,7 @@ import {
   stripAnsi,
   summaryMarkdown,
   turboReproduction,
+  warnLaneEntries,
 } from './error-summary.core.ts';
 
 // The escape byte, spelled rather than embedded, so this file stays printable.
@@ -385,5 +386,65 @@ describe('untrusted log text', () => {
       markdown.includes('</details><script>'),
       'the excerpt is still reported verbatim',
     );
+  });
+});
+
+describe('warn-only lanes', () => {
+  const marker =
+    'warn-lane: {"task":"//#lint:elements","total":36,"floor":36,"status":"at-floor","regressions":0,"rules":{"lit-a11y/anchor-is-valid":32}}';
+
+  it('reads the lane state out of a green task log', () => {
+    const entries = warnLaneEntries(
+      new Map([['//#lint:elements', `some lint output\n${marker}\n`]]),
+    );
+    assert.deepEqual(
+      entries.map((entry) => entry.task),
+      ['//#lint:elements'],
+    );
+    assert.equal(entries[0]?.state?.total, 36);
+  });
+
+  it('strips ANSI before parsing — task logs are coloured', () => {
+    const entries = warnLaneEntries(
+      new Map([['//#lint:elements', `${ESC}[2m${marker}${ESC}[22m\n`]]),
+    );
+    assert.equal(entries[0]?.state?.status, 'at-floor');
+  });
+
+  it('still emits a line for a watched lane that left no log', () => {
+    const entries = warnLaneEntries(new Map());
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0]?.state, undefined);
+    assert.match(
+      stdoutReport(summary([]), [], entries).join('\n'),
+      /warn-lane: \/\/#lint:elements — warn-only lane, no state in this run/,
+    );
+  });
+
+  it('names the lane in both output lanes of a red run', () => {
+    const run = summary([task()]);
+    const reports = buildReports(
+      run,
+      new Map([['lit-ui-router#typecheck:src', 'error TS2322']]),
+    );
+    const entries = warnLaneEntries(new Map([['//#lint:elements', marker]]));
+    assert.match(
+      summaryMarkdown(run, reports, entries),
+      /### Warn-only lanes\n\n- \/\/#lint:elements — 36 warnings, at the snapshot floor/,
+    );
+    assert.match(
+      stdoutReport(run, reports, entries).join('\n'),
+      /warn-lane: \/\/#lint:elements — 36 warnings, at the snapshot floor/,
+    );
+  });
+
+  it('names the lane even when the run died outside any task', () => {
+    const entries = warnLaneEntries(new Map([['//#lint:elements', marker]]));
+    assert.match(summaryMarkdown(summary([]), [], entries), /Warn-only lanes/);
+  });
+
+  it('is absent entirely when no warn lane was passed in', () => {
+    const run = summary([task()]);
+    assert.doesNotMatch(summaryMarkdown(run, []), /Warn-only lanes/);
   });
 });

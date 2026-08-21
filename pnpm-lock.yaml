@@ -1015,6 +1015,9 @@ importers:
       '@codecov/bundle-analyzer':
         specifier: 'catalog:'
         version: 2.0.1
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

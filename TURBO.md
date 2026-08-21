@@ -325,7 +325,7 @@ fans out via `with`:
 
 - `//#lint:root` - lints root-level files (workspace directories excluded)
 - `//#lint:package-json` - lints every `package.json` and `pnpm-workspace.yaml`
-- `//#lint:elements` - eslint (lit, wc, lit-a11y) over `{packages,apps,examples}/*/src/**/*.ts`
+- `//#lint:elements` - eslint (lit, wc, lit-a11y) over `{packages,apps,examples}/*/src/**/*.ts`, plus the warning ratchet (see below)
 - `//#lint:workflows` - virtual node (no script); fans out via `with` to the four per-tool tasks below
 - `//#lint:actionlint` - actionlint over GitHub Actions workflows
 - `//#lint:zizmor` - zizmor security audit over GitHub Actions workflows
@@ -339,21 +339,53 @@ These run alongside workspace tasks via `with` configuration.
 
 ### Choosing an ESLint Formatter
 
-The two eslint-backed root tasks pick opposite defaults, because the per-file
-list is worth different things to each:
+The two eslint-backed root tasks read eslint's report differently, because the
+per-file list is worth different things to each:
 
 - `lint:package-json` keeps `--format tap` — the list _is_ the output, naming
-  every package it linted.
-- `lint:elements` takes eslint's default `stylish`, which prints findings only.
-  TAP over 100+ element sources is noise on every CI run.
+  every package it linted. Any flag appended to the script reaches eslint, and
+  the **last** `--format` wins, so reach for another one directly:
 
-Any flag appended to the script reaches eslint, and the **last** `--format`
-wins, so reach for TAP when a glob looks wrong or a parser throws a fatal:
+  ```bash
+  pnpm lint:package-json --format stylish
+  ```
 
-```bash
-pnpm lint:elements --format tap
-```
+  Append it directly — **not** `pnpm lint:package-json -- --format stylish`.
+  pnpm forwards the `--` itself, and eslint reads everything after it as a file
+  pattern (`No files matching the pattern "--format"`).
 
-Append it directly — **not** `pnpm lint:elements -- --format tap`. pnpm
-forwards the `--` itself, and eslint reads everything after it as a file
-pattern (`No files matching the pattern "--format"`).
+- `lint:elements` runs eslint under `lint-elements.ts` with `--format json` and
+  prints its own findings-only report — the machine-readable report is what the
+  warning ratchet below compares. The script takes one flag, `--update`; to
+  experiment with a formatter, call eslint directly:
+
+  ```bash
+  pnpm exec eslint --format tap "{packages,apps,examples}/*/src/**/*.ts"
+  ```
+
+### Warn-Only Lanes
+
+A task that exits 0 while emitting warnings is invisible to the rest of CI: the
+error-summary step filters on a non-zero exit code, and turbo's run summary
+carries only `startTime`/`endTime`/`exitCode` per task — a task with 36 warnings
+and one with zero are byte-identical in that JSON. So warn-only-ness cannot be
+derived; the watched lanes are an explicit list in
+`tools/shared/src/warn-lanes.core.ts`, and each one asserts its own state by
+printing a `warn-lane:` marker line into its task log (which turbo replays
+verbatim on a cache hit). The error summary reads those markers back out and
+names every watched lane, so a warn lane is never silently green.
+
+`//#lint:elements` is the first such lane. Its floor is
+`eslint.elements-warnings.json`, a snapshot of which warnings exist, keyed per
+file per rule:
+
+- a warning entry that is **not in the snapshot** fails the lane — including one
+  that keeps the total flat by replacing an entry that was fixed, which a scalar
+  `--max-warnings N` budget cannot see;
+- **fewer** warnings than the snapshot passes, loudly: fixing a warning should
+  never be blocked on bookkeeping. Regenerate with `pnpm lint:elements:snapshot`
+  and commit the smaller snapshot in the same change.
+
+The snapshot is a holding measure and a worklist, not an end state: each entry
+is one warning awaiting a fix, a suppression, or a rule re-evaluation. When it
+empties, the rules move to `error` and the ratchet goes away.
