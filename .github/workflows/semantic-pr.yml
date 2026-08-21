@@ -10,14 +10,16 @@ on:
     # main-targeting PRs only: a stale branch's old workflow file never runs
     branches:
       - main
+    # Only the events that can change a PR TITLE. A push cannot, and the
+    # release-label exemption arrives with the PR: tools/shared/src/gh.ts
+    # opens release PRs with `--label release`, so `opened` already sees it.
+    # Both cost runs — GitHub delivers TWO `labeled` webhooks per label, so
+    # every labelled PR was spawning four cancelled runs of this check.
+    # Label an open PR after the fact and re-run the job; it gates nothing.
     types:
       - opened
       - edited
-      - synchronize
       - reopened
-      # labeled/unlabeled: the release-label exemption must re-run the check
-      - labeled
-      - unlabeled
 
 permissions:
   pull-requests: read

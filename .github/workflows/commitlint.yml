@@ -9,13 +9,16 @@ on:
   # pull_request runs the PR-branch workflow file with no secrets, so
   # checking out and reading the PR's own commits is safe.
   pull_request:
+    # Only the events that can change the PR's COMMITS. The release-label
+    # exemption arrives with the PR (tools/shared/src/gh.ts opens release PRs
+    # with `--label release`), and GitHub delivers TWO `labeled` webhooks per
+    # label, so keeping those types cost four cancelled runs per labelled PR
+    # to cover a case the `opened` payload already carries. Label an open PR
+    # after the fact and re-run the job; it gates nothing.
     types:
       - opened
       - synchronize
       - reopened
-      # labeled/unlabeled: the release-label exemption must re-run the check
-      - labeled
-      - unlabeled
 
 # Re-validate only the latest commits per PR
 concurrency:
