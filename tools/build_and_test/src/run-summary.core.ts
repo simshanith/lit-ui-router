@@ -460,6 +460,42 @@ function overviewHeadline(summary: RunSummary): string {
   return `${inlineCode(command)} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, in ${humanDuration(endTime - startTime)}.`;
 }
 
+/**
+ * What the renderers need from the environment. An options object rather than
+ * more positional parameters: `onActions` and `artifactUrl` are unrelated, and
+ * a call site reading `(summary, true, url)` says nothing about either.
+ */
+export interface OverviewContext {
+  /** `GITHUB_ACTIONS`; gates the notes that only mean something on a runner. */
+  onActions?: boolean;
+  /** The uploaded `--summarize` JSON — the uncapped copy of this report. */
+  artifactUrl?: string;
+  /** Which file in that artifact this report read. */
+  fileName?: string;
+}
+
+/**
+ * Link to the uploaded summary JSON. Every list above is capped, so the
+ * artifact is where the tail lives; the caps stay honest instead of silently
+ * standing in for the whole run. Angle-bracket destination, and https only —
+ * the URL arrives from the runner, but nothing here needs to trust it.
+ */
+export function artifactLink(
+  context: OverviewContext,
+): { markdown: string; line: string } | undefined {
+  const { artifactUrl, fileName } = context;
+  if (artifactUrl === undefined || !artifactUrl.startsWith('https://')) {
+    return undefined;
+  }
+  if (/[\s<>]/.test(artifactUrl)) return undefined;
+  const which =
+    fileName === undefined ? '' : ` (${inlineCode(cell(fileName))})`;
+  return {
+    markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — the untruncated run, downloadable from this run's artifacts.`,
+    line: `   full json: ${artifactUrl}`,
+  };
+}
+
 /** The overview lane's notes: things that are wrong but not red. */
 function overviewNotes(
   summary: RunSummary,
@@ -485,8 +521,9 @@ function overviewNotes(
  */
 export function overviewMarkdown(
   summary: RunSummary,
-  onActions = false,
+  context: OverviewContext = {},
 ): string {
+  const onActions = context.onActions ?? false;
   const tally = cacheTally(summary);
   const out: string[] = [
     '## Turbo run summary',
@@ -545,6 +582,9 @@ export function overviewMarkdown(
     out.push('', '</details>', '');
   }
 
+  const link = artifactLink(context);
+  if (link !== undefined) out.push(link.markdown, '');
+
   return `${out.join('\n')}\n`;
 }
 
@@ -552,8 +592,9 @@ export function overviewMarkdown(
  *  green run nobody is reading this, and it should not cost them a scroll. */
 export function overviewLines(
   summary: RunSummary,
-  onActions = false,
+  context: OverviewContext = {},
 ): string[] {
+  const onActions = context.onActions ?? false;
   const tally = cacheTally(summary);
   const { attempted, cached, success, failed, startTime, endTime } =
     summary.execution;
@@ -578,6 +619,9 @@ export function overviewLines(
 
   for (const note of overviewNotes(summary, tally, onActions))
     lines.push(`   note: ${note}`);
+
+  const link = artifactLink(context);
+  if (link !== undefined) lines.push(link.line);
   return lines;
 }
 

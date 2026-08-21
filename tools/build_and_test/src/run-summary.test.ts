@@ -6,6 +6,7 @@ import {
   type SummaryTask,
   MISS_LIST_LIMIT,
   SLOWEST_LIMIT,
+  artifactLink,
   buildReports,
   cacheTally,
   cell,
@@ -672,5 +673,64 @@ describe('overviewLines', () => {
   it('carries the same notes as the markdown lane', () => {
     const run = summary([ran('a', 10)], 1, { attempted: 4 });
     assert.ok(overviewLines(run).some((l) => l.includes('3 tasks cancelled')));
+  });
+});
+
+describe('artifactLink', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/2';
+
+  it('names the file so a reader can find it inside the zip', () => {
+    const link = artifactLink({ artifactUrl: URL, fileName: 'abc.json' });
+    assert.ok(link?.markdown.includes(`(<${URL}>)`));
+    assert.ok(link?.markdown.includes('`abc.json`'));
+    assert.equal(link?.line, `   full json: ${URL}`);
+  });
+
+  it('drops the file clause when the name is unknown', () => {
+    const link = artifactLink({ artifactUrl: URL });
+    assert.ok(link !== undefined);
+    assert.ok(!link.markdown.includes('()'));
+  });
+
+  it('stays absent locally, where the file is already on disk', () => {
+    assert.equal(artifactLink({}), undefined);
+    assert.equal(artifactLink({ artifactUrl: '' }), undefined);
+  });
+
+  it('refuses anything but a plain https URL', () => {
+    // The URL comes from the runner, but a markdown destination is a place
+    // where trusting the input has never paid off.
+    assert.equal(
+      artifactLink({ artifactUrl: 'javascript:alert(1)' }),
+      undefined,
+    );
+    assert.equal(artifactLink({ artifactUrl: 'https://x/a>b' }), undefined);
+    assert.equal(artifactLink({ artifactUrl: 'https://x/a b' }), undefined);
+  });
+});
+
+describe('the artifact link in the overview', () => {
+  const URL = 'https://github.com/o/r/actions/runs/1/artifacts/2';
+  const run = () => summary([hit(), ran('a', 100)], 0, { attempted: 2 });
+
+  it('closes the markdown overview, after the capped lists it backs', () => {
+    const md = overviewMarkdown(run(), {
+      artifactUrl: URL,
+      fileName: 'abc.json',
+    });
+    assert.ok(md.includes(URL));
+    assert.ok(md.trimEnd().endsWith('artifacts.'));
+  });
+
+  it('adds exactly one line to the stdout lane', () => {
+    assert.equal(
+      overviewLines(run(), { artifactUrl: URL }).length,
+      overviewLines(run()).length + 1,
+    );
+  });
+
+  it('is absent from both lanes without a URL', () => {
+    assert.ok(!overviewMarkdown(run()).includes('--summarize'));
+    assert.ok(!overviewLines(run()).some((l) => l.includes('full json')));
   });
 });

@@ -48,8 +48,9 @@ description = "Report a turbo run — cache, timings, and any failing tasks — 
 dir = "{{config_root}}/../.."
 usage = '''
 flag "--runs-dir <runs_dir>" help="Where `turbo --summarize` writes run summaries; the newest one is this report's input" default=".turbo/runs" env="TURBO_RUNS_DIR"
+flag "--artifact-url <artifact_url>" help="Uploaded copy of that JSON, linked from the report as the uncapped view; the workflow passes the upload step's artifact-url" env="TURBO_SUMMARY_ARTIFACT_URL"
 '''
-run = 'TURBO_RUNS_DIR="${usage_runs_dir?}" ./tools/build_and_test/src/run-summary.ts'
+run = 'TURBO_RUNS_DIR="${usage_runs_dir?}" TURBO_SUMMARY_ARTIFACT_URL="${usage_artifact_url:-}" ./tools/build_and_test/src/run-summary.ts'
 
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each

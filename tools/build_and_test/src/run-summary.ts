@@ -18,14 +18,17 @@
 // Every failure path warns and exits 0.
 //
 // env: GITHUB_STEP_SUMMARY (runner file; printed when unset),
-//      TURBO_RUNS_DIR (override for tests and local reproduction).
+//      TURBO_RUNS_DIR (override for tests and local reproduction),
+//      TURBO_SUMMARY_ARTIFACT_URL (the uploaded `--summarize` JSON, linked as
+//      the uncapped copy of the capped lists this prints).
 
 import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
-import { join } from 'node:path';
+import { basename, join } from 'node:path';
 
 import {
   type FailureReport,
+  type OverviewContext,
   type RunSummary,
   buildReports,
   guardCommands,
@@ -95,6 +98,7 @@ async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
 async function publish(
   summary: RunSummary,
   reports: FailureReport[],
+  context: OverviewContext,
 ): Promise<void> {
   const line = headline(summary, reports);
   // The run's own verdict, not `reports.length`: a red run whose tasks all
@@ -103,7 +107,7 @@ async function publish(
   const failed = summary.execution.exitCode !== 0 || reports.length > 0;
   // The overview leads on both lanes: the counts are the context for whichever
   // task broke, and on a green run they are the whole report.
-  const overview = overviewMarkdown(summary, onActions());
+  const overview = overviewMarkdown(summary, context);
   const markdown = failed
     ? `${overview}\n${summaryMarkdown(summary, reports)}`
     : overview;
@@ -114,7 +118,7 @@ async function publish(
   // gets the excerpts inline, and a human scanning the step sees the headline
   // without expanding anything. Grouping is deliberately NOT used — a
   // collapsed group is exactly the problem this step exists to solve.
-  const chunks = [...overviewLines(summary, onActions()), ''];
+  const chunks = [...overviewLines(summary, context), ''];
   if (failed) chunks.push(...stdoutReport(summary, reports));
   // The fallback prints the same untrusted excerpts, so it goes inside the guard.
   if (!toFile) chunks.push(`\n${markdown}`);
@@ -145,7 +149,13 @@ async function main(): Promise<void> {
   // case summaryMarkdown reports rather than one to bail on.
   const summary = parseRunSummary(JSON.parse(await readFile(path, 'utf8')));
   const reports = buildReports(summary, await readLogs(summary));
-  await publish(summary, reports);
+  await publish(summary, reports, {
+    onActions: onActions(),
+    // Set by the workflow from the upload step's `artifact-url` output; absent
+    // locally, where the file this read is already on disk.
+    artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
+    fileName: basename(path),
+  });
 }
 
 main().catch((error: unknown) => {

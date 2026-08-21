@@ -143,6 +143,21 @@ jobs:
           # Cypress video off in CI (configs keep video:true for local runs);
           # the cypressVideo dispatch input re-enables it for debugging.
           CYPRESS_video: ${{ inputs.cypressVideo == true }}
+      - name: Upload turbo run summaries
+        # Uploaded BEFORE the report so the report can link it: the report caps
+        # every list it prints, and this is the uncapped copy to download when
+        # the tail is the interesting part. Tiny JSON, so a longer retention
+        # than the video/log artifacts costs nothing and outlives the logs.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: turbo-run-summaries
+          path: .turbo/runs/
+          retention-days: 30
+          # Fail open, like the report itself: a run that died before turbo
+          # wrote a summary must not gain a red step here.
+          if-no-files-found: warn
       - name: Turbo run summary
         # Reads the `--summarize` artifact the ci/ci_main step just wrote and
         # reports it: cache split, slowest tasks and longest dependency chain
@@ -158,6 +173,9 @@ jobs:
         # warns, never adds a red step of its own.
         if: ${{ !cancelled() }}
         run: mise run //tools/build_and_test:turbo_summary
+        env:
+          # Empty when the upload found nothing; the report then omits the link.
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
       - name: Upload Codecov bundle stats
         run: mise run codecov_bundle
         env:
