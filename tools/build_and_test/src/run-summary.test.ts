@@ -30,6 +30,7 @@ import {
   stripAnsi,
   summaryMarkdown,
   turboReproduction,
+  warnLaneEntries,
 } from './run-summary.core.ts';
 
 // The escape byte, spelled rather than embedded, so this file stays printable.
@@ -787,5 +788,65 @@ describe('savedClause', () => {
       overviewMarkdown(run),
       /\*\*Cache\*\* — 1 hit \(1 remote, 0 local\), 0 miss\./,
     );
+  });
+});
+
+describe('warn-only lanes', () => {
+  const marker =
+    'warn-lane: {"task":"//#lint:elements","total":36,"floor":36,"status":"at-floor","regressions":0,"rules":{"lit-a11y/anchor-is-valid":32}}';
+
+  it('reads the lane state out of a green task log', () => {
+    const entries = warnLaneEntries(
+      new Map([['//#lint:elements', `some lint output\n${marker}\n`]]),
+    );
+    assert.deepEqual(
+      entries.map((entry) => entry.task),
+      ['//#lint:elements'],
+    );
+    assert.equal(entries[0]?.state?.total, 36);
+  });
+
+  it('strips ANSI before parsing — task logs are coloured', () => {
+    const entries = warnLaneEntries(
+      new Map([['//#lint:elements', `${ESC}[2m${marker}${ESC}[22m\n`]]),
+    );
+    assert.equal(entries[0]?.state?.status, 'at-floor');
+  });
+
+  it('still emits a line for a watched lane that left no log', () => {
+    const entries = warnLaneEntries(new Map());
+    assert.equal(entries.length, 1);
+    assert.equal(entries[0]?.state, undefined);
+    assert.match(
+      overviewLines(summary([]), { warnLanes: entries }).join('\n'),
+      /warn-lane: \/\/#lint:elements — warn-only lane, no state in this run/,
+    );
+  });
+
+  it('names the lane in both overview lanes', () => {
+    const run = summary([task()]);
+    const warnLanes = warnLaneEntries(new Map([['//#lint:elements', marker]]));
+    assert.match(
+      overviewMarkdown(run, { warnLanes }),
+      /\*\*Warn-only lanes\*\* — green by design[\s\S]*- \/\/#lint:elements — 36 warnings, at the snapshot floor/,
+    );
+    assert.match(
+      overviewLines(run, { warnLanes }).join('\n'),
+      /warn-lane: \/\/#lint:elements — 36 warnings, at the snapshot floor/,
+    );
+  });
+
+  // The overview runs on green runs too, which is the whole point: a warn lane
+  // that never fails would otherwise only ever be reported when something else broke.
+  it('reports on a green run, where no failure section renders at all', () => {
+    const warnLanes = warnLaneEntries(new Map([['//#lint:elements', marker]]));
+    assert.match(
+      overviewMarkdown(summary([task()], 0), { warnLanes }),
+      /Warn-only lanes/,
+    );
+  });
+
+  it('is absent entirely when no warn lane was passed in', () => {
+    assert.ok(!overviewMarkdown(summary([task()])).includes('Warn-only lanes'));
   });
 });
