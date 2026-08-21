@@ -143,17 +143,21 @@ jobs:
           # Cypress video off in CI (configs keep video:true for local runs);
           # the cypressVideo dispatch input re-enables it for debugging.
           CYPRESS_video: ${{ inputs.cypressVideo == true }}
-      - name: Error summary
-        # Skip-to-the-good-parts for a red run: reads the `--summarize`
-        # artifact the ci/ci_main step just wrote, and republishes only the
-        # tasks that really failed — turbo's stream also prints ELIFECYCLE for
-        # every task it CANCELLED, which the run summary omits entirely.
+      - name: Turbo run summary
+        # Reads the `--summarize` artifact the ci/ci_main step just wrote and
+        # reports it: cache split, slowest tasks and longest dependency chain
+        # every run, plus the failing tasks when the run was red. On a red run
+        # it republishes only the tasks that really failed — turbo's stream
+        # also prints ELIFECYCLE for every task it CANCELLED, which the run
+        # summary omits entirely.
         #
-        # Placed before codecov_bundle so no later `turbo run` can be the
+        # `!cancelled()` rather than `always()`: a cancelled job is exactly
+        # when the artifact lies, since the tasks turbo killed are missing from
+        # it. Placed before codecov_bundle so no later `turbo run` can be the
         # newest summary in .turbo/runs, and it fails open: a broken reporter
-        # warns, never adds a second red step over the real failure.
-        if: ${{ failure() }}
-        run: mise run //tools/build_and_test:error_summary
+        # warns, never adds a red step of its own.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:turbo_summary
       - name: Upload Codecov bundle stats
         run: mise run codecov_bundle
         env:

@@ -4,19 +4,31 @@ import { describe, it } from 'node:test';
 import {
   type RunSummary,
   type SummaryTask,
+  MISS_LIST_LIMIT,
+  SLOWEST_LIMIT,
   buildReports,
+  cacheTally,
+  cell,
+  criticalPath,
   directReproduction,
   excerptLog,
   failedTasks,
   fenceFor,
   guardCommands,
   headline,
+  humanDuration,
+  inlineCode,
+  omittedTaskCount,
+  overviewLines,
+  overviewMarkdown,
   parseRunSummary,
+  remoteCacheAnomaly,
+  slowestTasks,
   stdoutReport,
   stripAnsi,
   summaryMarkdown,
   turboReproduction,
-} from './error-summary.core.ts';
+} from './run-summary.core.ts';
 
 // The escape byte, spelled rather than embedded, so this file stays printable.
 const ESC = '\u001B';
@@ -35,7 +47,11 @@ function task(over: Partial<SummaryTask> = {}): SummaryTask {
   };
 }
 
-function summary(tasks: SummaryTask[], exitCode = 1): RunSummary {
+function summary(
+  tasks: SummaryTask[],
+  exitCode = 1,
+  execOver: Partial<RunSummary['execution']> = {},
+): RunSummary {
   return {
     id: 'run-id',
     turboVersion: '2.10.9',
@@ -48,9 +64,29 @@ function summary(tasks: SummaryTask[], exitCode = 1): RunSummary {
       startTime: 0,
       endTime: 9_000,
       exitCode,
+      ...execOver,
     },
     tasks,
   };
+}
+
+/** A cache hit: turbo records no elapsed time and a source for these. */
+function hit(over: Partial<SummaryTask> = {}): SummaryTask {
+  return task({
+    cache: { status: 'HIT', source: 'REMOTE', timeSaved: 2_000 },
+    execution: { startTime: 5_000, endTime: 5_000, exitCode: 0 },
+    ...over,
+  });
+}
+
+/** A task that ran and passed, taking `ms`. */
+function ran(taskId: string, ms: number, over: Partial<SummaryTask> = {}) {
+  return task({
+    taskId,
+    cache: { status: 'MISS', timeSaved: 0 },
+    execution: { startTime: 0, endTime: ms, exitCode: 0 },
+    ...over,
+  });
 }
 
 describe('parseRunSummary', () => {
@@ -385,5 +421,256 @@ describe('untrusted log text', () => {
       markdown.includes('</details><script>'),
       'the excerpt is still reported verbatim',
     );
+  });
+
+  it('inlineCode outgrows a backtick inside the span', () => {
+    assert.equal(inlineCode('plain'), '`plain`');
+    assert.equal(inlineCode('a ` b'), '``a ` b``');
+    // Leading/trailing backticks need the padding CommonMark strips back off.
+    assert.equal(inlineCode('`lead'), '`` `lead ``');
+  });
+
+  it('cell neutralises what would end the cell or the row', () => {
+    assert.equal(cell('a | b'), 'a \\| b');
+    assert.equal(cell('a\nb'), 'a b');
+  });
+});
+
+describe('cacheTally', () => {
+  it('splits hits by source and sums the time saved', () => {
+    const run = summary([
+      hit({
+        taskId: 'a',
+        cache: { status: 'HIT', source: 'REMOTE', timeSaved: 1_500 },
+      }),
+      hit({
+        taskId: 'b',
+        cache: { status: 'HIT', source: 'LOCAL', timeSaved: 500 },
+      }),
+      ran('c', 3_000),
+    ]);
+    assert.deepEqual(cacheTally(run), {
+      hit: 2,
+      local: 1,
+      remote: 1,
+      miss: 1,
+      savedMs: 2_000,
+    });
+  });
+
+  it('counts a task with no cache record as a miss', () => {
+    const run = summary([task({ cache: undefined })]);
+    assert.equal(cacheTally(run).miss, 1);
+  });
+});
+
+describe('remoteCacheAnomaly', () => {
+  const localOnly = () =>
+    cacheTally(
+      summary([
+        hit({
+          taskId: 'a',
+          cache: { status: 'HIT', source: 'LOCAL', timeSaved: 1 },
+        }),
+      ]),
+    );
+
+  it('fires when everything hit but nothing came from the remote', () => {
+    assert.match(
+      remoteCacheAnomaly(localOnly(), true) ?? '',
+      /none from the remote/,
+    );
+  });
+
+  it('stays quiet off Actions, where local hits are the whole point', () => {
+    assert.equal(remoteCacheAnomaly(localOnly(), false), undefined);
+  });
+
+  it('stays quiet when a hit came from the remote', () => {
+    assert.equal(
+      remoteCacheAnomaly(cacheTally(summary([hit()])), true),
+      undefined,
+    );
+  });
+
+  it('stays quiet when nothing hit — a full invalidation is not a fault', () => {
+    const run = summary([ran('a', 10), ran('b', 20)]);
+    assert.equal(remoteCacheAnomaly(cacheTally(run), true), undefined);
+  });
+});
+
+describe('slowestTasks', () => {
+  it('ranks by execution time and excludes cache hits', () => {
+    const run = summary([
+      ran('slow', 9_000),
+      hit({ taskId: 'cached' }),
+      ran('quick', 100),
+      ran('middling', 2_000),
+    ]);
+    assert.deepEqual(
+      slowestTasks(run, 10).map((t) => t.taskId),
+      ['slow', 'middling', 'quick'],
+    );
+  });
+
+  it('honours the limit', () => {
+    const run = summary([ran('a', 3), ran('b', 2), ran('c', 1)]);
+    assert.equal(slowestTasks(run, 2).length, 2);
+  });
+});
+
+describe('omittedTaskCount', () => {
+  it('is the gap between what turbo attempted and what it recorded', () => {
+    const run = summary([task(), task({ taskId: 'other' })], 1, {
+      attempted: 5,
+    });
+    assert.equal(omittedTaskCount(run), 3);
+  });
+
+  it('never goes negative when the counts disagree the other way', () => {
+    const run = summary([task()], 0, { attempted: 0 });
+    assert.equal(omittedTaskCount(run), 0);
+  });
+});
+
+describe('criticalPath', () => {
+  it('follows the slowest chain, not the longest one', () => {
+    // short: a(1000) → b(1000) = 2000. long: c(500) → d(4000) = 4500.
+    const run = summary([
+      ran('a', 1_000),
+      ran('b', 1_000, { dependencies: ['a'] }),
+      ran('c', 500),
+      ran('d', 4_000, { dependencies: ['c'] }),
+    ]);
+    assert.deepEqual(criticalPath(run), {
+      taskIds: ['c', 'd'],
+      totalMs: 4_500,
+    });
+  });
+
+  it('ignores a dependency that is not in the summary', () => {
+    const run = summary([
+      ran('a', 1_000, { dependencies: ['cancelled#task'] }),
+    ]);
+    assert.deepEqual(criticalPath(run), { taskIds: ['a'], totalMs: 1_000 });
+  });
+
+  it('keeps a cached ancestor in the chain, though it costs nothing', () => {
+    // The 7s floor really is build → typecheck; dropping the 0ms build would
+    // report the same number but hide where it came from.
+    const run = summary([
+      hit({ taskId: 'build' }),
+      ran('typecheck', 7_000, { dependencies: ['build'] }),
+    ]);
+    assert.deepEqual(criticalPath(run), {
+      taskIds: ['build', 'typecheck'],
+      totalMs: 7_000,
+    });
+  });
+
+  it('terminates on a cycle turbo should never emit', () => {
+    const run = summary([
+      ran('a', 1_000, { dependencies: ['b'] }),
+      ran('b', 1_000, { dependencies: ['a'] }),
+    ]);
+    assert.ok(criticalPath(run).totalMs > 0);
+  });
+});
+
+describe('humanDuration', () => {
+  it('stays in seconds below a minute', () => {
+    assert.equal(humanDuration(26_400), '26.4s');
+  });
+
+  it('switches to minutes where seconds stop meaning anything', () => {
+    assert.equal(humanDuration(480_827), '8m 1s');
+  });
+});
+
+describe('overviewMarkdown', () => {
+  const green = () =>
+    summary([hit({ taskId: 'cached' }), ran('lit-ui-router#build', 4_000)], 0, {
+      success: 1,
+      failed: 0,
+      cached: 1,
+      attempted: 2,
+    });
+
+  it('leads with the counts, which is what makes the timings comparable', () => {
+    const md = overviewMarkdown(green());
+    const counts = md.indexOf('2 attempted, 1 cached');
+    const timing = md.indexOf('Slowest tasks');
+    assert.ok(counts > 0 && counts < timing, 'counts precede every duration');
+  });
+
+  it('reports the cache split and the time saved', () => {
+    assert.match(
+      overviewMarkdown(green()),
+      /\*\*Cache\*\* — 1 hit \(1 remote, 0 local\), 1 miss, 2\.0s of task time saved\./,
+    );
+  });
+
+  it('lists the misses and omits the hits from the slowest table', () => {
+    const md = overviewMarkdown(green());
+    assert.match(md, /1 cache miss<\/summary>/);
+    assert.ok(!md.includes('| `cached` |'), 'a hit is never a slow task');
+  });
+
+  it('caps the miss list rather than scaling with the task count', () => {
+    const many = Array.from({ length: MISS_LIST_LIMIT + 5 }, (_, i) =>
+      ran(`pkg-${i}#build`, i),
+    );
+    const md = overviewMarkdown(summary(many, 0, { attempted: many.length }));
+    assert.match(md, /… 5 more/);
+  });
+
+  it('caps the slowest table at SLOWEST_LIMIT rows', () => {
+    const many = Array.from({ length: SLOWEST_LIMIT + 3 }, (_, i) =>
+      ran(`pkg-${i}#build`, i * 100),
+    );
+    const run = summary(many, 0, { attempted: many.length });
+    const rows = overviewMarkdown(run)
+      .split('\n')
+      .filter((l) => l.startsWith('| `'));
+    assert.equal(rows.length, SLOWEST_LIMIT);
+  });
+
+  it('warns about cancelled tasks the artifact left out', () => {
+    const run = summary([ran('a', 10)], 1, { attempted: 4 });
+    assert.match(overviewMarkdown(run), /> \[!WARNING\]\n> 3 tasks cancelled/);
+  });
+
+  it('says nothing about cancellation when the counts agree', () => {
+    const md = overviewMarkdown(green());
+    assert.ok(!md.includes('cancelled'));
+  });
+
+  it('names the longest dependency chain', () => {
+    const run = summary(
+      [ran('a', 1_000), ran('b', 2_000, { dependencies: ['a'] })],
+      0,
+      { attempted: 2 },
+    );
+    assert.match(overviewMarkdown(run), /3\.0s across 2 tasks/);
+    assert.match(overviewMarkdown(run), /`a` → `b`/);
+  });
+
+  it('skips the chain when no task depends on another', () => {
+    assert.ok(!overviewMarkdown(green()).includes('Longest dependency chain'));
+  });
+});
+
+describe('overviewLines', () => {
+  it('stays short enough that a green run costs no scroll', () => {
+    const run = summary([hit(), ran('a', 100)], 0, { attempted: 2 });
+    assert.ok(
+      overviewLines(run).length <= 4,
+      'a clean run is a handful of lines',
+    );
+  });
+
+  it('carries the same notes as the markdown lane', () => {
+    const run = summary([ran('a', 10)], 1, { attempted: 4 });
+    assert.ok(overviewLines(run).some((l) => l.includes('3 tasks cancelled')));
   });
 });
