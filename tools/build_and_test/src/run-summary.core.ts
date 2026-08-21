@@ -259,6 +259,16 @@ export interface CacheTally {
   savedMs: number;
 }
 
+/**
+ * The saved-time clause, dropped when turbo reports nothing. It fills in
+ * `timeSaved` for local hits but leaves it 0 for remote ones, so on CI — where
+ * every hit is remote — "73 hit, 0.0s saved" reads as a contradiction of the
+ * count beside it. Silence is the honest rendering of an unpopulated field.
+ */
+export function savedClause(tally: CacheTally, suffix: string): string {
+  return tally.savedMs > 0 ? `, ${humanDuration(tally.savedMs)}${suffix}` : '';
+}
+
 export function cacheTally(summary: RunSummary): CacheTally {
   const tally: CacheTally = {
     hit: 0,
@@ -537,7 +547,7 @@ export function overviewMarkdown(
   }
 
   out.push(
-    `**Cache** — ${tally.hit} hit (${tally.remote} remote, ${tally.local} local), ${tally.miss} miss, ${humanDuration(tally.savedMs)} of task time saved.`,
+    `**Cache** — ${tally.hit} hit (${tally.remote} remote, ${tally.local} local), ${tally.miss} miss${savedClause(tally, ' of task time saved')}.`,
     '',
   );
 
@@ -600,7 +610,7 @@ export function overviewLines(
     summary.execution;
   const lines = [
     `── ${summary.execution.command} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, ${humanDuration(endTime - startTime)}`,
-    `   cache: ${tally.hit} hit (${tally.remote} remote, ${tally.local} local), ${tally.miss} miss, ${humanDuration(tally.savedMs)} saved`,
+    `   cache: ${tally.hit} hit (${tally.remote} remote, ${tally.local} local), ${tally.miss} miss${savedClause(tally, ' saved')}`,
   ];
 
   const slowest = slowestTasks(summary, SLOWEST_LIMIT);

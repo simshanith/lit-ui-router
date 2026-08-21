@@ -24,6 +24,7 @@ import {
   overviewMarkdown,
   parseRunSummary,
   remoteCacheAnomaly,
+  savedClause,
   slowestTasks,
   stdoutReport,
   stripAnsi,
@@ -732,5 +733,40 @@ describe('the artifact link in the overview', () => {
   it('is absent from both lanes without a URL', () => {
     assert.ok(!overviewMarkdown(run()).includes('--summarize'));
     assert.ok(!overviewLines(run()).some((l) => l.includes('full json')));
+  });
+});
+
+describe('savedClause', () => {
+  const tally = (savedMs: number) => ({
+    hit: 1,
+    local: 0,
+    remote: 1,
+    miss: 0,
+    savedMs,
+  });
+
+  it('reports the time when turbo populated it', () => {
+    assert.equal(savedClause(tally(2_000), ' saved'), ', 2.0s saved');
+  });
+
+  it('says nothing rather than "0.0s saved" beside a hit count', () => {
+    // Remote hits leave timeSaved at 0, so on CI the clause would contradict
+    // the count next to it.
+    assert.equal(savedClause(tally(0), ' saved'), '');
+  });
+
+  it('keeps the cache line coherent when every hit was remote', () => {
+    const run = summary(
+      [hit({ cache: { status: 'HIT', source: 'REMOTE' } })],
+      0,
+      {
+        attempted: 1,
+        cached: 1,
+      },
+    );
+    assert.match(
+      overviewMarkdown(run),
+      /\*\*Cache\*\* — 1 hit \(1 remote, 0 local\), 0 miss\./,
+    );
   });
 });
