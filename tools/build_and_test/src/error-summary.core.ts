@@ -8,6 +8,13 @@
 // actually failed, and the run summary omits them from `tasks[]` entirely. The
 // triage the stream cannot do, the summary has already done.
 
+import {
+  type WarnLaneState,
+  WARN_WATCHED_LANES,
+  findWarnLaneState,
+  warnLaneLine,
+} from '@tools/shared/warn-lanes.core.ts';
+
 /** Per-task execution record. turbo 2.10 carries no `status` — exitCode is it. */
 export interface TaskExecution {
   startTime: number;
@@ -250,12 +257,55 @@ export function guardCommands(chunks: string[], token?: string): string[] {
   return [`::stop-commands::${token}`, ...chunks, `::${token}::`];
 }
 
+/**
+ * A warn-only lane and whatever it asserted about itself this run. Warn lanes
+ * exit 0, so nothing in the run summary distinguishes one carrying 36 warnings
+ * from a clean one — the state comes from a marker the lane prints into its own
+ * task log, and `undefined` means the lane did not run (or ran before the
+ * marker existed), which is itself worth saying out loud.
+ */
+export interface WarnLaneEntry {
+  task: string;
+  state?: WarnLaneState;
+}
+
+/**
+ * The watched lanes, in list order — not in the order turbo happened to run
+ * them, and never derived from the summary: a lane that did not run must still
+ * get a line, or its absence reads as "fine".
+ */
+export function warnLaneEntries(logs: Map<string, string>): WarnLaneEntry[] {
+  return WARN_WATCHED_LANES.map((task) => ({
+    task,
+    state: findWarnLaneState(stripAnsi(logs.get(task) ?? '')),
+  }));
+}
+
+export function warnLaneReport(entries: readonly WarnLaneEntry[]): string[] {
+  return entries.map(({ task, state }) => warnLaneLine(task, state));
+}
+
+/** The same lines as a markdown block; empty when no lane is watched. */
+export function warnLaneMarkdown(lines: readonly string[]): string[] {
+  if (lines.length === 0) return [];
+  return [
+    '### Warn-only lanes',
+    '',
+    ...lines.map((line) => `- ${line}`),
+    '',
+    'These lanes exit 0 by design; the floor is `eslint.elements-warnings.json`.',
+    '',
+  ];
+}
+
 /** The `$GITHUB_STEP_SUMMARY` lane: rendered markdown on the run page. */
 export function summaryMarkdown(
   summary: RunSummary,
   reports: FailureReport[],
+  warnLanes: readonly WarnLaneEntry[] = [],
 ): string {
   const out: string[] = ['## CI failure summary', ''];
+  const warnLines = warnLaneReport(warnLanes);
 
   if (reports.length === 0) {
     out.push(
@@ -264,6 +314,7 @@ export function summaryMarkdown(
       'That means the run died outside a task — a turbo-level error, a runner',
       'timeout, or a cancellation. The full step log is the only source.',
       '',
+      ...warnLaneMarkdown(warnLines),
     );
     return `${out.join('\n')}\n`;
   }
@@ -305,6 +356,7 @@ export function summaryMarkdown(
     out.push(`${fence}text`, excerpt.text, fence, '');
     if (excerpt.omittedLines > 0) out.push('</details>', '');
   }
+  out.push(...warnLaneMarkdown(warnLines));
   return `${out.join('\n')}\n`;
 }
 
@@ -317,6 +369,7 @@ export function summaryMarkdown(
 export function stdoutReport(
   summary: RunSummary,
   reports: FailureReport[],
+  warnLanes: readonly WarnLaneEntry[] = [],
 ): string[] {
   const lines: string[] = [];
   for (const { task, excerpt } of reports) {
@@ -329,6 +382,8 @@ export function stdoutReport(
       '',
     );
   }
+  for (const line of warnLaneReport(warnLanes))
+    lines.push(`warn-lane: ${line}`);
   lines.push(headline(summary, reports));
   return lines;
 }

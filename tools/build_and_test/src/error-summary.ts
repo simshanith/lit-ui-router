@@ -20,15 +20,19 @@ import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 
+import { WARN_WATCHED_LANES } from '@tools/shared/warn-lanes.core.ts';
+
 import {
   type FailureReport,
   type RunSummary,
+  type WarnLaneEntry,
   buildReports,
   guardCommands,
   headline,
   parseRunSummary,
   stdoutReport,
   summaryMarkdown,
+  warnLaneEntries,
 } from './error-summary.core.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
@@ -72,11 +76,17 @@ async function newestSummary(): Promise<string | undefined> {
   return newest?.path;
 }
 
+/**
+ * Logs for the tasks the report reads: every failing task, plus every
+ * warn-watched lane whatever its exit code — those pass by design, and their
+ * state lives only in the log they printed (which turbo replays on a cache hit).
+ */
 async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
   const logs = new Map<string, string>();
   for (const task of summary.tasks) {
     const code = task.execution?.exitCode;
-    if (typeof code !== 'number' || code === 0) continue;
+    const watched = WARN_WATCHED_LANES.includes(task.taskId);
+    if (!watched && (typeof code !== 'number' || code === 0)) continue;
     try {
       logs.set(task.taskId, await readFile(task.logFile, 'utf8'));
     } catch {
@@ -89,9 +99,10 @@ async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
 async function publish(
   summary: RunSummary,
   reports: FailureReport[],
+  warnLanes: WarnLaneEntry[],
 ): Promise<void> {
   const line = headline(summary, reports);
-  const markdown = summaryMarkdown(summary, reports);
+  const markdown = summaryMarkdown(summary, reports, warnLanes);
   const file = process.env.GITHUB_STEP_SUMMARY;
   const toFile = file !== undefined && file !== '';
 
@@ -99,7 +110,7 @@ async function publish(
   // gets the excerpts inline, and a human scanning the step sees the headline
   // without expanding anything. Grouping is deliberately NOT used — a
   // collapsed group is exactly the problem this step exists to solve.
-  const chunks = stdoutReport(summary, reports);
+  const chunks = stdoutReport(summary, reports, warnLanes);
   // The fallback prints the same untrusted excerpts, so it goes inside the guard.
   if (!toFile) chunks.push(`\n${markdown}`);
   for (const chunk of guardCommands(chunks, commandToken())) console.log(chunk);
@@ -131,8 +142,9 @@ async function main(): Promise<void> {
     return;
   }
 
-  const reports = buildReports(summary, await readLogs(summary));
-  await publish(summary, reports);
+  const logs = await readLogs(summary);
+  const reports = buildReports(summary, logs);
+  await publish(summary, reports, warnLaneEntries(logs));
 }
 
 main().catch((error: unknown) => {

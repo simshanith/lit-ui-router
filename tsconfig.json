@@ -42,6 +42,7 @@
     "eslint.oxlint-directives.ts",
     "eslint.plugin-types.d.ts",
     "eslint.repo-rules.ts",
+    "lint-elements.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"
