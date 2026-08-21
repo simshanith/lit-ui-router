@@ -12,8 +12,12 @@ import type { DirectiveResult } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
+import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import { UiView } from './ui-view.js';
+
+// re-export: `inLitDevMode` ships in the public d.ts (#541)
+export { inLitDevMode };
 
 /**
  * Event name dispatched when a uiSref target state changes.
@@ -114,18 +118,6 @@ export type UiSrefTransitionOptions = TransitionOptions & UiSrefOptions;
 const warnedAssignHref = new WeakSet<Element>();
 
 /**
- * Whether lit resolved to its development build. `enableWarning` is inherited
- * from `ReactiveElement`, which declares it optional precisely because it
- * exists only in development — lit's own docs prescribe guarding on it. Same
- * shape in lit 2 and 3, and typed optional in both builds' `.d.ts`, so this
- * needs no cast. Read per call, so import order cannot matter.
- * @internal
- */
-export function inLitDevMode(): boolean {
-  return typeof UIRouterLitElement.enableWarning === 'function';
-}
-
-/**
  * Whether the element navigates on its own. `localName` is lowercase for HTML
  * and SVG alike, so SVG `<a>` needs no namespace check.
  *
@@ -204,6 +196,16 @@ export class UiSrefDirective extends AsyncDirective {
   /** whether the href currently on the element was written by us */
   private _ownsHref = false;
 
+  /**
+   * Whether {@link seekRouter} has run. The seek is deferred a task past the
+   * first render, so `uiRouter` being empty before it means "not looked yet",
+   * not "not there" — only after it may a bail be reported as a missing
+   * provider.
+   *
+   * @internal
+   */
+  private _seekedRouter = false;
+
   /** @internal */
   unsubscribe: (() => void) | undefined;
 
@@ -236,6 +238,9 @@ export class UiSrefDirective extends AsyncDirective {
     const { uiRouter: router } = this;
     const $state = router?.stateService;
     if (!$state) {
+      if (this._seekedRouter) {
+        this.warnMissingRouter(state);
+      }
       return noChange;
     }
 
@@ -304,6 +309,23 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   seekRouter(): void {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
+    this._seekedRouter = true;
+  }
+
+  /**
+   * Names this sref in the missing-provider warning. Shared by the two sites
+   * that observe the no-op — the render that writes no `href` and the click
+   * that navigates nowhere — so an element that does both still warns once.
+   *
+   * @internal
+   */
+  private warnMissingRouter(state: string): void {
+    const element = this.element!;
+    warnMissingRouter(
+      element,
+      `<${element.localName} uiSref="${state}">`,
+      'will not navigate',
+    );
   }
 
   /** @internal */
@@ -326,6 +348,9 @@ export class UiSrefDirective extends AsyncDirective {
     const options = this.getOptions();
     const $state = router?.stateService;
     if (!$state || !this.element?.isConnected || !state) {
+      if (!$state && state && this.element?.isConnected) {
+        this.warnMissingRouter(state);
+      }
       return;
     }
 
@@ -392,9 +417,13 @@ export class UiSrefDirective extends AsyncDirective {
     this.seekRouter();
     this.seekParentView();
     this.element!.addEventListener('click', this.onClick as EventListener);
-    this.unsubscribe = this.uiRouter!.stateRegistry.onStatesChanged(
-      this.doRender,
-    );
+    // no router: the subscription is the only step that needs one, and
+    // `doRender` still has to run for the no-op to report itself
+    if (this.uiRouter) {
+      this.unsubscribe = this.uiRouter.stateRegistry.onStatesChanged(
+        this.doRender,
+      );
+    }
     this.doRender();
     this._firstUpdated = true;
   }
