@@ -153,7 +153,4 @@ patchedDependencies:
   '@vitest/browser': patches/@vitest__browser.patch
   lit-dialog: patches/lit-dialog.patch
 
-minimumReleaseAgeExclude:
-  - vite@8.2.2
-
 minimumReleaseAgeStrict: true
