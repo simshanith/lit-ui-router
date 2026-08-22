@@ -336,10 +336,11 @@ export class UiSrefDirective extends AsyncDirective {
       return;
     }
 
-    // scoped to links: these guards hand the click back to the browser, and a
-    // non-link has nothing to hand it back to
+    // scoped to links with an href: these guards hand the click back to the
+    // browser, and without one it has nothing to act on
     if (
       isNativeLink(element) &&
+      element.hasAttribute('href') &&
       (isModifiedClick(event) || opensOffApp(element))
     ) {
       return;
