@@ -13,11 +13,7 @@ on:
     types:
       - opened
       - edited
-      - synchronize
       - reopened
-      # labeled/unlabeled: the release-label exemption must re-run the check
-      - labeled
-      - unlabeled
 
 permissions:
   pull-requests: read
