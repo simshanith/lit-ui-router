@@ -56,7 +56,7 @@ catalog:
   lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
   lodash-es: ^4.18.1
-  mobx: ^7.0.0
+  mobx: ^7.0.3
   oxc-minify: 0.144.0
   oxc-transform: 0.144.0
   oxfmt: 0.63.0
