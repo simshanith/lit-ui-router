@@ -190,7 +190,7 @@ run = 'turbo run "${usage_package_name?}#build"'
 # tasks. TURBO_FORCE is the build-test deflake input: a truthy value
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
-# error_summary task reads on failure. It changes nothing about what runs.
+# turbo_summary task reports on every run. It changes nothing about what runs.
 description = "Run the pull-request CI pipeline via turbo"
 run = "turbo run ci --ui=stream --log-order=stream --summarize"
 
