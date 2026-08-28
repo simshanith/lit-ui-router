@@ -135,17 +135,17 @@ catalogs:
       specifier: 1100.0.0
       version: 1100.0.0
     '@pnpm/types':
-      specifier: 1101.9.0
-      version: 1101.9.0
+      specifier: 1102.0.0
+      version: 1102.0.0
     '@pnpm/workspace.project-manifest-reader':
-      specifier: 1100.0.24
-      version: 1100.0.24
+      specifier: 1100.0.25
+      version: 1100.0.25
     '@pnpm/workspace.projects-reader':
-      specifier: 1101.0.23
-      version: 1101.0.23
+      specifier: 1101.0.24
+      version: 1101.0.24
     '@pnpm/workspace.workspace-manifest-reader':
-      specifier: 1100.1.6
-      version: 1100.1.6
+      specifier: 1100.1.7
+      version: 1100.1.7
     '@release-it/conventional-changelog':
       specifier: ^12.0.0
       version: 12.0.0
@@ -1362,10 +1362,10 @@ importers:
         version: 1100.0.0
       '@pnpm/types':
         specifier: 'catalog:'
-        version: 1101.9.0
+        version: 1102.0.0
       '@pnpm/workspace.project-manifest-reader':
         specifier: 'catalog:'
-        version: 1100.0.24(@pnpm/logger@1100.0.0)
+        version: 1100.0.25(@pnpm/logger@1100.0.0)
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1422,13 +1422,13 @@ importers:
         version: 1100.0.0
       '@pnpm/types':
         specifier: 'catalog:'
-        version: 1101.9.0
+        version: 1102.0.0
       '@pnpm/workspace.projects-reader':
         specifier: 'catalog:'
-        version: 1101.0.23(@pnpm/logger@1100.0.0)
+        version: 1101.0.24(@pnpm/logger@1100.0.0)
       '@pnpm/workspace.workspace-manifest-reader':
         specifier: 'catalog:'
-        version: 1100.1.6
+        version: 1100.1.7
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -3241,28 +3241,28 @@ packages:
     resolution: {integrity: sha512-oeQJs1aa8Ghke8JIK9yuq/+KjMiaYeDZ38jx7MhkXncXlUKjqQ3wEm2X3qCKyjo+ZZofZj+WsEEiqkTtRuE2xQ==}
     engines: {node: ^20.9.0 || >=22.0.0, npm: '>=10.8.2'}
 
-  '@pnpm/cli.meta@1100.0.14':
-    resolution: {integrity: sha512-XUtk4jElgzD/WnnxqPaPTxRjCE2xC7iyvYwR1eldFgKz9rq1ku3NOHWQ93y6UUXc2wJUTi0s5Qnuvnge7GCzOg==}
+  '@pnpm/cli.meta@1100.0.15':
+    resolution: {integrity: sha512-hrjfVLbsUNmDuVSE8r6LL1IHrIyIrcMx9ZhBQSBfPkWHJV8qdza7UNxU5fCARzOP5gh8mVgkvu4bQPlus/ko6g==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/cli.utils@1101.0.23':
-    resolution: {integrity: sha512-9LCHYZiE78aMkkK5lkYOVuEr/HjQt1pmEqRCWm4gUg0F3VA2H/zS38l9ZQUhtlqQ87HNRjyXrvIQmhwBbIky7A==}
-    engines: {node: '>=22.13'}
-    peerDependencies:
-      '@pnpm/logger': ^1100.0.0
-
-  '@pnpm/config.package-is-installable@1100.1.3':
-    resolution: {integrity: sha512-nZglvZun7ifvT+6aHlfcQSTe57KTC0xGOgvRlTZDfhYqz9FFmo+65r+6myXivJmKCnwt2BgcovDW9gLzrf0w1Q==}
+  '@pnpm/cli.utils@1101.0.24':
+    resolution: {integrity: sha512-DJMxSBPgqFSVwPl0gPv/m0MC3+vdGtWcScdK0r1QhwMM472qoJNvrYUns2aGqFwRpSO5za9pB0kt2I1JX782bw==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
 
-  '@pnpm/constants@1101.0.0':
-    resolution: {integrity: sha512-jJQU6y8lhic2at0+W246+tMDdEqhbS1WSRlTjmIXeXrrWU2rAbhixi11loE+lI3f/E1Ci1+3i5N6ewOumeNJdg==}
+  '@pnpm/config.package-is-installable@1100.1.4':
+    resolution: {integrity: sha512-4VqJMkGziGpiT4AAxBC3nO8fKFgIQoWi71hSWsEWyzhju+idKBD87L8rvgVtqG2cA6Ifg7ZeQNnCX4HUbeEIcQ==}
+    engines: {node: '>=22.13'}
+    peerDependencies:
+      '@pnpm/logger': ^1100.0.0
+
+  '@pnpm/constants@1102.0.0':
+    resolution: {integrity: sha512-HIDFQTclaw7oxZjVUxDP+1dsNtBK8PRXj3qanALtK7iLi/FlVnwFQs9ISBocEX6Kivytn/YCT+UEStoFPBWQeQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/core-loggers@1100.3.2':
-    resolution: {integrity: sha512-dsxDByU2KFLxTzVdXZCMjsv0rIxMmFMhWWjo6e1Sq8+TqdoPXSAGcFMN0psVJHRj5+xxXqZen4+NfFhHHsRQMg==}
+  '@pnpm/core-loggers@1100.3.3':
+    resolution: {integrity: sha512-EgW8JpzLzukyYtKqsvBFgwAvzZlcaemdfKHhOHKAovhzV1x2l1MRtbcW1npOu4EvS6ETX4uhXYmGZ+NZrey+Jg==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
@@ -3271,12 +3271,12 @@ packages:
     resolution: {integrity: sha512-G3J83gBJ5XCKhoJ7XbnF0uVJw7D5FC2X1T+txoGtEV1e1dFLT98b05zlBjgaMonkbxFCIUCuwHxttyEyKJvXow==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/engine.runtime.system-version@1100.0.9':
-    resolution: {integrity: sha512-ywydCrV79h1rrWzINY/yiho0SMIkRMYYrsvsG17KghOSoWiQcq30qGgfRnr+0keed+oxsCNmqlzYO+rz+MI6qg==}
+  '@pnpm/engine.runtime.system-version@1100.0.10':
+    resolution: {integrity: sha512-KkXClZYNY9dXE51j74dZaXhUZGpOWzvnXONe3l+Zxa5hzzgnpMJiE9fffrw27HL95BUSgjtrVr+ylwaZLv1ERA==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/error@1100.1.2':
-    resolution: {integrity: sha512-HzeZOy38srT5glZqrlBcdfHd13tec3wrLiVRB5vQnj+ScOswQ2DzZzMJpqMh39gss6zhiTl/MskqKzoY/qT9ew==}
+  '@pnpm/error@1100.1.3':
+    resolution: {integrity: sha512-YwnVAPxkVCzKksIqnMn+EmiM186KWPAnVwqp+ro5Y2N4b4nhvdzYSfbO6OM4Is9z/EC1qOA6rF63QQ+z4DVjgw==}
     engines: {node: '>=22.13'}
 
   '@pnpm/fs.graceful-fs@1100.1.1':
@@ -3287,8 +3287,8 @@ packages:
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/pkg-manifest.utils@1100.4.0':
-    resolution: {integrity: sha512-yghZAbJUesFCHs80Gqh9KTHirM8/7Aj2agp1vMQ6j8ZQbG24x9uPxDIy/vzrq97rEOtTHbxk+UNILvMuMq0oEw==}
+  '@pnpm/pkg-manifest.utils@1100.4.1':
+    resolution: {integrity: sha512-/laRcRgFXHSGSfGHh1mbHE0s9zU6/QpQvKdpoMufyeRVAUfrvYRt0vRw6oS/WB2nCmLGcgq/aazajyD7qLiYVw==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
@@ -3301,28 +3301,28 @@ packages:
     resolution: {integrity: sha512-1mtSzx973BzS4c0QGW8NMweIG3PXq8LFRjff+JMpXDYyqZEn+1u6brAnaWDH8mgx7pgiUyjTmXNJa+MrSVjXCA==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/types@1101.9.0':
-    resolution: {integrity: sha512-lB2aSB2h950UX1GX3JW4AZ86xjXD92YJbV92IBSQqHXXZdiemoVKADLA2cDQ4/wKeS7djY8fkITM6X+6iYF62A==}
+  '@pnpm/types@1102.0.0':
+    resolution: {integrity: sha512-mgR291P+TGABUzGifQyZyU+EE0lBSTGJ87C5J95Ez2XRFlfcH/9GIN5n2saIgzXQAiyoeFSlEVEiXeEIJy+B3A==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/workspace.project-manifest-reader@1100.0.24':
-    resolution: {integrity: sha512-RqDb4GI/DxFrpcCtmcKkj1OVEnz9LErYzGMfgXPMh8lJKUBaFfhU9Ys8wjoJCDzhlzn1sEjLWvicxC+hdfoNxg==}
-    engines: {node: '>=22.13'}
-    peerDependencies:
-      '@pnpm/logger': ^1100.0.0
-
-  '@pnpm/workspace.project-manifest-writer@1100.0.14':
-    resolution: {integrity: sha512-1s+T0xtNHbfQ73LdyE5mEZ8+cXKPQRT0N8qUXp+AZio9Mbgu2R9Qsz2n68vh4tiBrNSndaDc6PlyIb1N/tAEUA==}
-    engines: {node: '>=22.13'}
-
-  '@pnpm/workspace.projects-reader@1101.0.23':
-    resolution: {integrity: sha512-iKzsrj9DRKsj9uBtgfON6ZJW3Por3IFYqofZ2KjIlzO59mu/iMrwMr7CDqoBR6RyRBvpIZKRB92PqYsBJX8+zg==}
+  '@pnpm/workspace.project-manifest-reader@1100.0.25':
+    resolution: {integrity: sha512-OHgnoIS4OthZPGJyNtImadS2hv6M/cc2Bj65xdV/CtD4aT39nl77Tf9qK+uB2TYM84t+fbQsPa5xUsWOQdOQhw==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
 
-  '@pnpm/workspace.workspace-manifest-reader@1100.1.6':
-    resolution: {integrity: sha512-AEz7/8tF9RS8fih3vOoq15mjmnY/QUVVUTv5SYXVan0j8zd87XFmM/lLZm/9czzJV286rlLs9siXwa9s20GtIw==}
+  '@pnpm/workspace.project-manifest-writer@1100.0.15':
+    resolution: {integrity: sha512-+cChFI4PAocbxXC7HOeV4+iBEl7FPR1ZHJh3dZRxxSx68cwKRJIKavEv749ir1uJDrdVtLiBCgoZXE1ObwZvcw==}
+    engines: {node: '>=22.13'}
+
+  '@pnpm/workspace.projects-reader@1101.0.24':
+    resolution: {integrity: sha512-LKtv9CUttKge5F4/PqKNhcsWL4FeScRkIUsTQuaN33OEdihf1Ixgd1jD5/4Pel0n/R9P2Bj62OXwnBo6j/VQiw==}
+    engines: {node: '>=22.13'}
+    peerDependencies:
+      '@pnpm/logger': ^1100.0.0
+
+  '@pnpm/workspace.workspace-manifest-reader@1100.1.7':
+    resolution: {integrity: sha512-It0U4qLIi4+cP6+fyiImW0F4xXE0ljfkID0QqPcUwTwjRqRShLDfF2QPBGBpWZ2tbimq8INmVWMdvWDFy08jrg==}
     engines: {node: '>=22.13'}
 
   '@polka/url@1.0.0-next.29':
@@ -8539,57 +8539,57 @@ snapshots:
 
   '@phun-ky/typeof@2.0.3': {}
 
-  '@pnpm/cli.meta@1100.0.14':
+  '@pnpm/cli.meta@1100.0.15':
     dependencies:
-      '@pnpm/types': 1101.9.0
+      '@pnpm/types': 1102.0.0
       load-json-file: 7.0.1
 
-  '@pnpm/cli.utils@1101.0.23(@pnpm/logger@1100.0.0)':
+  '@pnpm/cli.utils@1101.0.24(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/cli.meta': 1100.0.14
-      '@pnpm/config.package-is-installable': 1100.1.3(@pnpm/logger@1100.0.0)
-      '@pnpm/error': 1100.1.2
+      '@pnpm/cli.meta': 1100.0.15
+      '@pnpm/config.package-is-installable': 1100.1.4(@pnpm/logger@1100.0.0)
+      '@pnpm/error': 1100.1.3
       '@pnpm/logger': 1100.0.0
-      '@pnpm/pkg-manifest.utils': 1100.4.0(@pnpm/logger@1100.0.0)
-      '@pnpm/types': 1101.9.0
-      '@pnpm/workspace.project-manifest-reader': 1100.0.24(@pnpm/logger@1100.0.0)
+      '@pnpm/pkg-manifest.utils': 1100.4.1(@pnpm/logger@1100.0.0)
+      '@pnpm/types': 1102.0.0
+      '@pnpm/workspace.project-manifest-reader': 1100.0.25(@pnpm/logger@1100.0.0)
       chalk: 6.0.0
       load-json-file: 7.0.1
 
-  '@pnpm/config.package-is-installable@1100.1.3(@pnpm/logger@1100.0.0)':
+  '@pnpm/config.package-is-installable@1100.1.4(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/cli.meta': 1100.0.14
-      '@pnpm/core-loggers': 1100.3.2(@pnpm/logger@1100.0.0)
-      '@pnpm/engine.runtime.system-version': 1100.0.9
-      '@pnpm/error': 1100.1.2
+      '@pnpm/cli.meta': 1100.0.15
+      '@pnpm/core-loggers': 1100.3.3(@pnpm/logger@1100.0.0)
+      '@pnpm/engine.runtime.system-version': 1100.0.10
+      '@pnpm/error': 1100.1.3
       '@pnpm/logger': 1100.0.0
-      '@pnpm/types': 1101.9.0
+      '@pnpm/types': 1102.0.0
       detect-libc: 2.1.2
       execa: safe-execa@0.3.0
       memoize: 11.0.0
       semver: 7.8.5
 
-  '@pnpm/constants@1101.0.0': {}
+  '@pnpm/constants@1102.0.0': {}
 
-  '@pnpm/core-loggers@1100.3.2(@pnpm/logger@1100.0.0)':
+  '@pnpm/core-loggers@1100.3.3(@pnpm/logger@1100.0.0)':
     dependencies:
       '@pnpm/logger': 1100.0.0
-      '@pnpm/types': 1101.9.0
+      '@pnpm/types': 1102.0.0
 
   '@pnpm/deps.peer-range@1100.1.1':
     dependencies:
       semver: 7.8.5
 
-  '@pnpm/engine.runtime.system-version@1100.0.9':
+  '@pnpm/engine.runtime.system-version@1100.0.10':
     dependencies:
-      '@pnpm/cli.meta': 1100.0.14
-      '@pnpm/types': 1101.9.0
+      '@pnpm/cli.meta': 1100.0.15
+      '@pnpm/types': 1102.0.0
       execa: safe-execa@0.3.0
       memoize: 11.0.0
 
-  '@pnpm/error@1100.1.2':
+  '@pnpm/error@1100.1.3':
     dependencies:
-      '@pnpm/constants': 1101.0.0
+      '@pnpm/constants': 1102.0.0
 
   '@pnpm/fs.graceful-fs@1100.1.1':
     dependencies:
@@ -8600,13 +8600,13 @@ snapshots:
       bole: 5.0.29
       split2: 4.2.0
 
-  '@pnpm/pkg-manifest.utils@1100.4.0(@pnpm/logger@1100.0.0)':
+  '@pnpm/pkg-manifest.utils@1100.4.1(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/core-loggers': 1100.3.2(@pnpm/logger@1100.0.0)
+      '@pnpm/core-loggers': 1100.3.3(@pnpm/logger@1100.0.0)
       '@pnpm/deps.peer-range': 1100.1.1
-      '@pnpm/error': 1100.1.2
+      '@pnpm/error': 1100.1.3
       '@pnpm/logger': 1100.0.0
-      '@pnpm/types': 1101.9.0
+      '@pnpm/types': 1102.0.0
       semver: 7.8.5
       semver-utils: 1.1.4
 
@@ -8616,17 +8616,17 @@ snapshots:
 
   '@pnpm/text.ordinal-comparator@1100.0.0': {}
 
-  '@pnpm/types@1101.9.0': {}
+  '@pnpm/types@1102.0.0': {}
 
-  '@pnpm/workspace.project-manifest-reader@1100.0.24(@pnpm/logger@1100.0.0)':
+  '@pnpm/workspace.project-manifest-reader@1100.0.25(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/error': 1100.1.2
+      '@pnpm/error': 1100.1.3
       '@pnpm/fs.graceful-fs': 1100.1.1
       '@pnpm/logger': 1100.0.0
-      '@pnpm/pkg-manifest.utils': 1100.4.0(@pnpm/logger@1100.0.0)
+      '@pnpm/pkg-manifest.utils': 1100.4.1(@pnpm/logger@1100.0.0)
       '@pnpm/text.comments-parser': 1100.0.1
-      '@pnpm/types': 1101.9.0
-      '@pnpm/workspace.project-manifest-writer': 1100.0.14
+      '@pnpm/types': 1102.0.0
+      '@pnpm/workspace.project-manifest-writer': 1100.0.15
       detect-indent: 7.0.2
       fast-deep-equal: 3.1.3
       is-windows: 1.0.2
@@ -8636,30 +8636,30 @@ snapshots:
       read-yaml-file: 3.0.0
       strip-bom: 5.0.0
 
-  '@pnpm/workspace.project-manifest-writer@1100.0.14':
+  '@pnpm/workspace.project-manifest-writer@1100.0.15':
     dependencies:
       '@pnpm/text.comments-parser': 1100.0.1
-      '@pnpm/types': 1101.9.0
+      '@pnpm/types': 1102.0.0
       json5: 2.2.3
       write-file-atomic: 7.0.1
       write-yaml-file: 6.0.0
 
-  '@pnpm/workspace.projects-reader@1101.0.23(@pnpm/logger@1100.0.0)':
+  '@pnpm/workspace.projects-reader@1101.0.24(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/cli.utils': 1101.0.23(@pnpm/logger@1100.0.0)
-      '@pnpm/constants': 1101.0.0
+      '@pnpm/cli.utils': 1101.0.24(@pnpm/logger@1100.0.0)
+      '@pnpm/constants': 1102.0.0
       '@pnpm/logger': 1100.0.0
       '@pnpm/text.ordinal-comparator': 1100.0.0
-      '@pnpm/types': 1101.9.0
-      '@pnpm/workspace.project-manifest-reader': 1100.0.24(@pnpm/logger@1100.0.0)
+      '@pnpm/types': 1102.0.0
+      '@pnpm/workspace.project-manifest-reader': 1100.0.25(@pnpm/logger@1100.0.0)
       p-filter: 4.1.0
       tinyglobby: 0.2.17
 
-  '@pnpm/workspace.workspace-manifest-reader@1100.1.6':
+  '@pnpm/workspace.workspace-manifest-reader@1100.1.7':
     dependencies:
-      '@pnpm/constants': 1101.0.0
-      '@pnpm/error': 1100.1.2
-      '@pnpm/types': 1101.9.0
+      '@pnpm/constants': 1102.0.0
+      '@pnpm/error': 1100.1.3
+      '@pnpm/types': 1102.0.0
       read-yaml-file: 3.0.0
 
   '@polka/url@1.0.0-next.29': {}
@@ -8823,10 +8823,10 @@ snapshots:
       - kerberos
       - supports-color
 
-  '@sigstore/tuf@5.0.0(supports-color@8.1.1)':
+  '@sigstore/tuf@5.0.0(supports-color@10.2.2)':
     dependencies:
       '@sigstore/protobuf-specs': 0.5.1
-      tuf-js: 6.0.0(supports-color@8.1.1)
+      tuf-js: 6.0.0(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -10578,11 +10578,11 @@ snapshots:
       '@sec-ant/readable-stream': 0.4.1
       is-stream: 4.0.1
 
-  get-uri@8.0.1(supports-color@8.1.1):
+  get-uri@8.0.1(supports-color@10.2.2):
     dependencies:
       basic-ftp: 5.3.1
       data-uri-to-buffer: 8.0.0
-      debug: 4.4.3(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
@@ -10715,15 +10715,6 @@ snapshots:
       - kerberos
       - supports-color
 
-  http-proxy-agent@9.1.0(supports-color@8.1.1):
-    dependencies:
-      agent-base: 9.0.0
-      debug: 4.4.3(supports-color@8.1.1)
-      proxy-agent-negotiate: 1.1.0
-    transitivePeerDependencies:
-      - kerberos
-      - supports-color
-
   http-signature@1.4.0:
     dependencies:
       assert-plus: 1.0.0
@@ -10749,15 +10740,6 @@ snapshots:
     dependencies:
       agent-base: 9.0.0
       debug: 4.4.3(supports-color@10.2.2)
-      proxy-agent-negotiate: 1.1.0
-    transitivePeerDependencies:
-      - kerberos
-      - supports-color
-
-  https-proxy-agent@9.1.0(supports-color@8.1.1):
-    dependencies:
-      agent-base: 9.0.0
-      debug: 4.4.3(supports-color@8.1.1)
       proxy-agent-negotiate: 1.1.0
     transitivePeerDependencies:
       - kerberos
@@ -11638,8 +11620,8 @@ snapshots:
   pac-proxy-agent@9.1.0(supports-color@10.2.2):
     dependencies:
       agent-base: 9.0.0
-      debug: 4.4.3(supports-color@8.1.1)
-      get-uri: 8.0.1(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.2.2)
+      get-uri: 8.0.1(supports-color@10.2.2)
       http-proxy-agent: 9.1.0(supports-color@10.2.2)
       https-proxy-agent: 9.1.0(supports-color@10.2.2)
       pac-resolver: 9.0.1(quickjs-wasi@2.2.0)
@@ -11682,7 +11664,7 @@ snapshots:
       npm-pick-manifest: 12.0.0
       npm-registry-fetch: 20.0.1(supports-color@10.2.2)
       proc-log: 7.0.0
-      sigstore: 5.0.0(supports-color@8.1.1)
+      sigstore: 5.0.0(supports-color@10.2.2)
       ssri: 14.0.0
       tar: 7.5.22
     transitivePeerDependencies:
@@ -11836,9 +11818,9 @@ snapshots:
   proxy-agent@8.0.2(supports-color@10.2.2):
     dependencies:
       agent-base: 9.0.0
-      debug: 4.4.3(supports-color@8.1.1)
-      http-proxy-agent: 9.1.0(supports-color@8.1.1)
-      https-proxy-agent: 9.1.0(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.2.2)
+      http-proxy-agent: 9.1.0(supports-color@10.2.2)
+      https-proxy-agent: 9.1.0(supports-color@10.2.2)
       lru-cache: 7.18.3
       pac-proxy-agent: 9.1.0(supports-color@10.2.2)
       proxy-from-env: 2.1.0
@@ -12115,13 +12097,13 @@ snapshots:
 
   signal-exit@4.1.0: {}
 
-  sigstore@5.0.0(supports-color@8.1.1):
+  sigstore@5.0.0(supports-color@10.2.2):
     dependencies:
       '@sigstore/bundle': 5.0.0
       '@sigstore/core': 4.0.1
       '@sigstore/protobuf-specs': 0.5.1
       '@sigstore/sign': 5.0.0(supports-color@10.2.2)
-      '@sigstore/tuf': 5.0.0(supports-color@8.1.1)
+      '@sigstore/tuf': 5.0.0(supports-color@10.2.2)
       '@sigstore/verify': 4.1.0
     transitivePeerDependencies:
       - kerberos
@@ -12351,11 +12333,11 @@ snapshots:
 
   tslib@2.8.1: {}
 
-  tuf-js@6.0.0(supports-color@8.1.1):
+  tuf-js@6.0.0(supports-color@10.2.2):
     dependencies:
       '@gar/promise-retry': 1.0.3
       '@tufjs/models': 5.0.0
-      debug: 4.4.3(supports-color@8.1.1)
+      debug: 4.4.3(supports-color@10.2.2)
     transitivePeerDependencies:
       - supports-color
 
