@@ -159,6 +159,9 @@ jobs:
         continue-on-error: true
         with:
           name: turbo-run-summaries
+          # No `include-hidden-files` despite the dot: the hidden check runs on
+          # each traversed basename from the search root down, and `.turbo` is
+          # above the root here. Verified — the artifact holds the JSON.
           path: .turbo/runs/
           retention-days: 30
           if-no-files-found: warn
