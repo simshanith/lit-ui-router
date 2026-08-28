@@ -252,8 +252,8 @@ catalogs:
       specifier: ^4.18.1
       version: 4.18.1
     mobx:
-      specifier: ^7.0.0
-      version: 7.0.0
+      specifier: ^7.0.3
+      version: 7.0.3
     oxc-minify:
       specifier: 0.144.0
       version: 0.144.0
@@ -539,7 +539,7 @@ importers:
         version: 4.18.1
       mobx:
         specifier: 'catalog:'
-        version: 7.0.0
+        version: 7.0.3
       sample-app-shared:
         specifier: workspace:*
         version: link:../sample-app-shared
@@ -944,7 +944,7 @@ importers:
         version: lit-ui-router@1.7.0
       mobx:
         specifier: 'catalog:'
-        version: 7.0.0
+        version: 7.0.3
       mobx-6:
         specifier: catalog:mobx6-compat
         version: mobx@6.16.1
@@ -1211,7 +1211,7 @@ importers:
         version: link:../../packages/lit-ui-router-mobx
       mobx:
         specifier: 'catalog:'
-        version: 7.0.0
+        version: 7.0.3
       oxfmt:
         specifier: 'catalog:'
         version: 0.63.0
@@ -5866,8 +5866,8 @@ packages:
   mobx@6.16.1:
     resolution: {integrity: sha512-syNcDdX3KT+Jq3je6eGjBhuc24Z68td2VG0zNFqRswaE433D9SNH5VRy/xrGbJsUixfppLLccXhAW9JSf6n+SQ==}
 
-  mobx@7.0.0:
-    resolution: {integrity: sha512-J+hR/wq6RdBnB4QXQRqGrWL9vOOLKaYhXh0ooxLAW4AE72av10Y5+xiaxohUYmPZiUswfpxMjQooYqpWkv+Fxg==}
+  mobx@7.0.3:
+    resolution: {integrity: sha512-KopyyzqZ8xT1fqxFNl8ItKKMpGifRe2ySaNAHs80/cx0mL1bpJtJ46S+FSyzXKRjW0TODWj5zwq/Y9hUdJUy4w==}
 
   mri@1.2.0:
     resolution: {integrity: sha512-tzzskb3bG8LvYGFF/mDTpq3jpI6Q9wc3LEmBaghu+DdCssd1FakN7Bc0hVNmEyGq1bq3RgfkCb3cmQLpNPOroA==}
@@ -11312,7 +11312,7 @@ snapshots:
 
   mobx@6.16.1: {}
 
-  mobx@7.0.0: {}
+  mobx@7.0.3: {}
 
   mri@1.2.0: {}
 
