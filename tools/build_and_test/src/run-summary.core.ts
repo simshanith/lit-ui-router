@@ -668,16 +668,23 @@ export function summaryMarkdown(
   out.push('');
 
   for (const { task, excerpt } of reports) {
+    // Fenced with `fenceFor`, like the excerpt below it: the repro carries
+    // `task.command`, so a backtick run in it would otherwise close the block
+    // early and let the rest render as markdown.
+    const reproduction = [
+      turboReproduction(task),
+      '# or, exactly as CI ran it:',
+      directReproduction(task),
+    ].join('\n');
+    const fence = fenceFor(reproduction);
     out.push(
       `### \`${task.taskId}\``,
       '',
       'Reproduce:',
       '',
-      '```sh',
-      turboReproduction(task),
-      '# or, exactly as CI ran it:',
-      directReproduction(task),
-      '```',
+      `${fence}sh`,
+      reproduction,
+      fence,
       '',
     );
     if (excerpt.omittedLines > 0) {
@@ -686,8 +693,8 @@ export function summaryMarkdown(
         '',
       );
     }
-    const fence = fenceFor(excerpt.text);
-    out.push(`${fence}text`, excerpt.text, fence, '');
+    const excerptFence = fenceFor(excerpt.text);
+    out.push(`${excerptFence}text`, excerpt.text, excerptFence, '');
     if (excerpt.omittedLines > 0) out.push('</details>', '');
   }
   return `${out.join('\n')}\n`;

@@ -425,6 +425,25 @@ describe('untrusted log text', () => {
     );
   });
 
+  it('summaryMarkdown fences a repro whose command carries a fence', () => {
+    // turbo echoes the command back from the run summary; a newline plus ```
+    // in it would close a fixed fence and forge markdown after the block.
+    const escape = 'tsc --noEmit\n```\n</details><script>alert(1)</script>';
+    const run = summary([task({ command: escape })]);
+    const markdown = summaryMarkdown(
+      run,
+      buildReports(run, new Map([['lit-ui-router#typecheck:src', 'boom']])),
+    );
+    assert.match(markdown, /````sh\n/);
+    assert.ok(
+      markdown.includes(escape),
+      'the command is still reported verbatim',
+    );
+    // The forged tail stays inside the block: the excerpt after it still
+    // opens its own fence, so nothing between them escaped.
+    assert.match(markdown, /```text\nboom/);
+  });
+
   it('inlineCode outgrows a backtick inside the span', () => {
     assert.equal(inlineCode('plain'), '`plain`');
     assert.equal(inlineCode('a ` b'), '``a ` b``');
