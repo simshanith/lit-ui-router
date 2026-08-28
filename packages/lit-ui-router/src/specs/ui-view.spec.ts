@@ -571,7 +571,8 @@ describe('UiView', () => {
         // the no-op is unchanged: still a UiView, still no throw
         expect(uiView).toBeInstanceOf(UiView);
 
-        // and a further update does not repeat itself
+        // and a further update does not repeat itself: `firstUpdated` runs
+        // once, and the shared WeakSet backstops it
         uiView.requestUpdate();
         await waitForUpdate(uiView);
         expect(warn).toHaveBeenCalledTimes(1);

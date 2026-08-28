@@ -368,8 +368,8 @@ export class UiView extends LitElement {
    *
    * @internal
    */
-  protected updated(changed: PropertyValues): void {
-    super.updated(changed);
+  protected firstUpdated(changed: PropertyValues): void {
+    super.firstUpdated(changed);
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
