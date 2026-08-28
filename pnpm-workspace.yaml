@@ -36,10 +36,10 @@ catalog:
   '@vitest/browser-playwright': ^4.1.11
   '@vitest/coverage-v8': ^4.1.11
   concurrently: ^10.0.5
-  cypress: ^15.20.1
+  cypress: ^15.21.0
   diff: ^9.0.0
   esbuild: ^0.28.2
-  eslint: ^10.8.1
+  eslint: ^10.9.0
   eslint-formatter-tap: ^9.0.1
   eslint-plugin-lit: ^2.3.1
   eslint-plugin-lit-a11y: ^5.1.1
@@ -48,8 +48,8 @@ catalog:
   eslint-plugin-pnpm: ^1.8.0
   eslint-plugin-turbo: ^2.10.11
   eslint-plugin-wc: ^3.1.0
-  happy-dom: ^20.11.2
-  hono: ^4.13.3
+  happy-dom: ^20.11.8
+  hono: ^4.13.4
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
   lit: ^3.3.3
@@ -86,7 +86,7 @@ catalog:
   vitepress: ^2.0.0-alpha.19
   vitest: ^4.1.11
   vue: ^3.5.41
-  vue-tsc: ^3.3.10
+  vue-tsc: ^3.3.11
   wrangler: 4.113.0
 
 catalogMode: prefer
