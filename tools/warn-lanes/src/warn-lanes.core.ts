@@ -253,6 +253,13 @@ export function findWarnLaneState(log: string): WarnLaneState | undefined {
   return undefined;
 }
 
+/** Whether the line carries the per-rule breakdown after its verdict. */
+export interface WarnLaneLineOptions {
+  /** Default true. Off for a one-row terminal line, where the verdict is what
+   *  has to survive and the breakdown has a step summary to live in. */
+  rules?: boolean;
+}
+
 /**
  * The one line a warn lane contributes to the CI failure report. A lane that
  * ran green still gets a line: "silently green" is the condition this whole
@@ -261,14 +268,17 @@ export function findWarnLaneState(log: string): WarnLaneState | undefined {
 export function warnLaneLine(
   task: string,
   state: WarnLaneState | undefined,
+  { rules = true }: WarnLaneLineOptions = {},
 ): string {
   if (state === undefined) {
     return `${task} — warn-only lane, no state in this run (task did not run, or predates the marker)`;
   }
-  const top = Object.entries(state.rules)
-    .slice(0, 3)
-    .map(([rule, count]) => `${rule} ${count}`)
-    .join(', ');
+  const top = rules
+    ? Object.entries(state.rules)
+        .slice(0, 3)
+        .map(([rule, count]) => `${rule} ${count}`)
+        .join(', ')
+    : '';
   const detail = top === '' ? '' : ` — ${top}`;
   if ((state.regressions ?? 0) > 0) {
     const count = state.regressions;

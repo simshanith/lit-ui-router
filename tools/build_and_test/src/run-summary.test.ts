@@ -704,7 +704,7 @@ describe('artifactLink', () => {
     const link = artifactLink({ artifactUrl: URL, fileName: 'abc.json' });
     assert.ok(link?.markdown.includes(`(<${URL}>)`));
     assert.ok(link?.markdown.includes('`abc.json`'));
-    assert.equal(link?.line, `   full json: ${URL}`);
+    assert.equal(link?.line, `   run summary json: ${URL}`);
   });
 
   it('drops the file clause when the name is unknown', () => {
@@ -743,16 +743,19 @@ describe('the artifact link in the overview', () => {
     assert.ok(md.trimEnd().endsWith('artifacts.'));
   });
 
-  it('adds exactly one line to the stdout lane', () => {
-    assert.equal(
-      overviewLines(run(), { artifactUrl: URL }).length,
-      overviewLines(run()).length + 1,
-    );
+  it('trails the stdout lane behind a blank line, as a footer', () => {
+    const lines = overviewLines(run(), { artifactUrl: URL });
+    assert.equal(lines.length, overviewLines(run()).length + 2);
+    // Flush against the facts, the link reads as a continuation of whichever
+    // one happened to run last — most confusingly the warn-lane line, whose
+    // own marker is JSON.
+    assert.equal(lines.at(-2), '');
+    assert.equal(lines.at(-1), `   run summary json: ${URL}`);
   });
 
   it('is absent from both lanes without a URL', () => {
     assert.ok(!overviewMarkdown(run()).includes('--summarize'));
-    assert.ok(!overviewLines(run()).some((l) => l.includes('full json')));
+    assert.ok(!overviewLines(run()).some((l) => l.includes('summary json')));
   });
 });
 
@@ -833,6 +836,23 @@ describe('warn-only lanes', () => {
     assert.match(
       overviewLines(run, { warnLanes }).join('\n'),
       /warn-lane: \/\/#lint:elements — 36 warnings, at the snapshot floor/,
+    );
+  });
+
+  it('keeps the rule breakdown to the markdown lane', () => {
+    const run = summary([task()]);
+    const warnLanes = warnLaneEntries(new Map([['//#lint:elements', marker]]));
+    // One terminal row: the verdict is what has to survive, and the markdown
+    // twin has the room the breakdown wants.
+    const line = overviewLines(run, { warnLanes }).join('\n');
+    assert.match(
+      line,
+      /warn-lane: \/\/#lint:elements — 36 warnings, at the snapshot floor$/m,
+    );
+    assert.ok(!line.includes('anchor-is-valid'));
+    assert.match(
+      overviewMarkdown(run, { warnLanes }),
+      /at the snapshot floor — lit-a11y\/anchor-is-valid 32/,
     );
   });
 

@@ -261,6 +261,27 @@ describe('warnLaneLine', () => {
     );
   });
 
+  it('drops the breakdown, and only the breakdown, with rules off', () => {
+    const state = {
+      task: '//#lint:elements',
+      total: 36,
+      floor: 36,
+      status: 'at-floor' as const,
+      regressions: 0,
+      rules: { 'lit-a11y/anchor-is-valid': 32 },
+    };
+    assert.equal(
+      warnLaneLine('//#lint:elements', state, { rules: false }),
+      '//#lint:elements — 36 warnings, at the snapshot floor',
+    );
+    // The verdict is the half that has to survive the trim.
+    assert.ok(
+      warnLaneLine('//#lint:elements', state).startsWith(
+        warnLaneLine('//#lint:elements', state, { rules: false }),
+      ),
+    );
+  });
+
   it('says so when a watched lane left no state', () => {
     assert.match(
       warnLaneLine('//#lint:elements', undefined),

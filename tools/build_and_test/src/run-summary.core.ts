@@ -15,6 +15,7 @@
 // so nothing prompts anyone to look.
 
 import {
+  type WarnLaneLineOptions,
   type WarnLaneState,
   WARN_WATCHED_LANES,
   findWarnLaneState,
@@ -501,8 +502,11 @@ export function warnLaneEntries(logs: Map<string, string>): WarnLaneEntry[] {
   }));
 }
 
-export function warnLaneReport(entries: readonly WarnLaneEntry[]): string[] {
-  return entries.map(({ task, state }) => warnLaneLine(task, state));
+export function warnLaneReport(
+  entries: readonly WarnLaneEntry[],
+  options: WarnLaneLineOptions = {},
+): string[] {
+  return entries.map(({ task, state }) => warnLaneLine(task, state, options));
 }
 
 /**
@@ -543,7 +547,7 @@ export function artifactLink(
     fileName === undefined ? '' : ` (${inlineCode(cell(fileName))})`;
   return {
     markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — the untruncated run, downloadable from this run's artifacts.`,
-    line: `   full json: ${artifactUrl}`,
+    line: `   run summary json: ${artifactUrl}`,
   };
 }
 
@@ -678,14 +682,18 @@ export function overviewLines(
     );
   }
 
-  for (const line of warnLaneReport(context.warnLanes ?? []))
+  // Verdict only: the breakdown is a markdown-twin luxury, and here it competes
+  // for one terminal row with the thing a reader actually needs off this line.
+  for (const line of warnLaneReport(context.warnLanes ?? [], { rules: false }))
     lines.push(`   warn-lane: ${line}`);
 
   for (const note of overviewNotes(summary, tally, onActions))
     lines.push(`   note: ${note}`);
 
+  // Blank line first: the link is a footer for the whole block, and set flush
+  // against the facts it reads as a continuation of whichever one ran last.
   const link = artifactLink(context);
-  if (link !== undefined) lines.push(link.line);
+  if (link !== undefined) lines.push('', link.line);
   return lines;
 }
 
