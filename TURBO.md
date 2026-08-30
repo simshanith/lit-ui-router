@@ -355,9 +355,8 @@ per-file list is worth different things to each:
   pattern (`No files matching the pattern "--format"`).
 
 - `lint:elements` runs eslint under `@tools/lint-elements` with `--format json`
-  and
-  prints its own findings-only report — the machine-readable report is what the
-  warning ratchet below compares. The script takes one flag, `--update`; to
+  and prints its own findings-only report — the machine-readable report is what
+  the warning ratchet below compares. The script takes one flag, `--update`; to
   experiment with a formatter, call eslint directly:
 
   ```bash
@@ -367,11 +366,11 @@ per-file list is worth different things to each:
 ### Warn-Only Lanes
 
 A task that exits 0 while emitting warnings is invisible to the rest of CI.
-`turbo_summary` reports every run since #636, but its input carries only
+`turbo_summary` reports every run, but its input carries only
 `startTime`/`endTime`/`exitCode` per task — a task with 36 warnings and one with
 zero are byte-identical in that JSON. So warn-only-ness cannot be derived; the
-watched lanes are an explicit list in `@tools/warn-lanes`, and
-each one asserts its own state by printing a `warn-lane:` marker line into its
+watched lanes are an explicit list in `@tools/warn-lanes`, and each one asserts
+its own state by printing a `warn-lane:` marker line into its
 task log (which turbo replays verbatim on a cache hit). The run summary reads
 those markers back out in its **overview** — the always-on half, so a warn lane
 is named on a green run and not only when something else broke.

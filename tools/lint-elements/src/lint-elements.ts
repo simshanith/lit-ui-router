@@ -2,16 +2,16 @@
 // The `//#lint:elements` lane: eslint-plugin-lit / -wc / -lit-a11y over src,
 // plus the warning ratchet that keeps the lane's noise floor from rising.
 //
-// eslint exits 0 with warnings, so #557's 36 lit-a11y warnings land green and
+// eslint exits 0 with warnings, so the lane's lit-a11y warnings land green and
 // nothing downstream can see them (turbo's run summary carries only an exit
-// code per task). This shell runs the same lint with `--format json`, diffs the
-// warnings it finds against the committed snapshot, and fails when an entry
-// appears that the snapshot does not already carry.
+// code per task). This shell lints with `--format json`, diffs the warnings it
+// finds against the committed snapshot, and fails when an entry appears that
+// the snapshot does not already carry.
 //
 // The snapshot is a HOLDING MEASURE and a worklist, not an end state: each
 // entry is one warning awaiting a fix, a suppression, or a rule
 // re-evaluation (#606). When it empties, the rules move to `error` and this
-// lane goes back to a bare `eslint` call.
+// lane reduces to a bare `eslint` call.
 //
 // Regenerate after fixing warnings: `pnpm lint:elements:snapshot`.
 //
@@ -52,9 +52,9 @@ const SNAPSHOT_PATH = relative(ROOT, fileURLToPath(SNAPSHOT_FILE)).replaceAll(
   '/',
 );
 
-// The lint invocation itself, moved here verbatim from the package.json script.
-// `--cache-strategy content` because a checkout's mtimes say nothing; the cache
-// still replays warnings on a hit, so the ratchet cannot go stale-blind.
+// The lint invocation. `--cache-strategy content` because a checkout's mtimes
+// say nothing; the cache still replays warnings on a hit, so the ratchet cannot
+// go stale-blind.
 const ESLINT_ARGS = [
   '--cache',
   '--cache-location',
@@ -153,7 +153,7 @@ function writeSnapshot(snapshot: WarnSnapshot): void {
   writeFileSync(SNAPSHOT_FILE, `${JSON.stringify(snapshot, null, 2)}\n`);
 }
 
-/** Every message, grouped by file — what the stylish formatter used to print. */
+/** Every message, grouped by file — the lane's findings-only report. */
 function printMessages(messages: readonly WarnMessage[]): void {
   let current = '';
   for (const message of messages) {
@@ -184,7 +184,7 @@ function main(): void {
     console.log(
       `${SNAPSHOT_PATH} updated: ${snapshot.total} warnings over ${Object.keys(snapshot.files).length} files.`,
     );
-    // Errors are not snapshottable — the lane gates them as it always did.
+    // Errors are not snapshottable — they fail the lane even under --update.
     if (errors.length > 0) process.exit(1);
     return;
   }
