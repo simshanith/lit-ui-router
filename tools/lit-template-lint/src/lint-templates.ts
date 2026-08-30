@@ -16,6 +16,8 @@
 import { createRequire } from 'node:module';
 import { fileURLToPath } from 'node:url';
 
+import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
+
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
 // Strictness and rule severities live in the root tsconfig's `ts-lit-plugin`
@@ -23,11 +25,6 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 // CLI: it is not a rule, and it makes findings the ruleset leaves at `warn`
 // fail too.
 const CLI_FLAGS = ['--maxWarnings', '0'];
-
-// Expanded by lit-analyzer, not the shell and not git: its `**/` matches zero
-// directories, so files sitting directly in `src/` are included. A bare git
-// pathspec drops those, which silently cut the set to 74 of 110 files once.
-const GLOB = '{packages,apps,examples}/*/src/**/*.ts';
 
 const require = createRequire(import.meta.url);
 const manifest = require('lit-analyzer/package.json') as {
@@ -43,8 +40,9 @@ if (!process.execve) {
 }
 
 process.chdir(root);
+// execve passes argv straight through, so lit-analyzer expands the glob itself.
 process.execve(
   process.execPath,
-  [process.execPath, cli, ...CLI_FLAGS, GLOB],
+  [process.execPath, cli, ...CLI_FLAGS, WORKSPACE_SRC_GLOB],
   process.env,
 );
