@@ -170,6 +170,11 @@ export default defineConfig(
       // is on as a guard against future code written in the shape it can see.
       wcConfigs['flat/best-practice'],
       litA11y.configs.recommended,
+      // Replaces lit-a11y/anchor-is-valid with lit-ui-router/anchor-is-valid,
+      // the same rule wrapped so a uiSref element part counts as the href it
+      // assigns at runtime (#659). Must extend after lit-a11y's config: the
+      // plugin doesn't register lit-a11y itself (peer — the host's instance).
+      ...litUiRouter.configs.recommended,
     ],
     languageOptions: {
       parser: tsParser,
@@ -177,7 +182,7 @@ export default defineConfig(
       // service and no type information — that keeps the lane seconds, not minutes.
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
-    plugins: { ...oxlintDirectiveStubs, 'lit-ui-router': litUiRouter },
+    plugins: { ...oxlintDirectiveStubs },
     linterOptions: {
       // oxlint owns the inline directives in these files, so ESLint cannot
       // judge whether one is unused.
@@ -209,10 +214,6 @@ export default defineConfig(
       // Deliberately not adopted (it ships outside best-practice): file
       // organisation, not element semantics — ~20 hits, no defect behind any.
       'wc/no-exports-with-element': 'off',
-      // Replaced by lit-ui-router/anchor-is-valid, the same rule wrapped so a
-      // uiSref element part counts as the href it assigns at runtime (#659).
-      'lit-a11y/anchor-is-valid': 'off',
-      'lit-ui-router/anchor-is-valid': 'error',
     },
   },
   {

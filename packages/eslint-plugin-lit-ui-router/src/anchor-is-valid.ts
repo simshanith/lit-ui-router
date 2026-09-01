@@ -233,7 +233,7 @@ const NO_HREF_MESSAGES = new Set([
  * an anchor with neither an href nor a directive still reports, and so does
  * `assignHref: false`, where the rule is right for the right reason (#602).
  */
-const anchorIsValid: Rule.RuleModule = ruleExtender(
+const extended: Rule.RuleModule = ruleExtender(
   litA11y.rules['anchor-is-valid'],
   {
     reportOverrides: (descriptor, context) => {
@@ -249,5 +249,21 @@ const anchorIsValid: Rule.RuleModule = ruleExtender(
     },
   },
 );
+
+// The extender passes the base rule's meta through wholesale, docs.url
+// included — without this override the rule advertises lit-a11y's docs.
+// `schema` stays the base rule's: options are deliberately passed through.
+const anchorIsValid: Rule.RuleModule = {
+  ...extended,
+  meta: {
+    ...extended.meta,
+    docs: {
+      ...extended.meta?.docs,
+      description:
+        "lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+      url: 'https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router',
+    },
+  },
+};
 
 export { anchorIsValid };

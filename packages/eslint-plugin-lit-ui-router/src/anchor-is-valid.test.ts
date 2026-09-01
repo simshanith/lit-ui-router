@@ -44,6 +44,11 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
       code: `import { html as h } from 'lit';\nimport { uiSref } from 'lit-ui-router';\nh\`<a \${uiSref('home')}>Home</a>\`;`,
     },
     {
+      name: "options pass through the wrap: aspects without 'noHref' quiets a dead anchor",
+      code: `${IMPORTS}html\`<a>Home</a>\`;`,
+      options: [{ aspects: ['invalidHref'] }],
+    },
+    {
       name: 'namespace imports still count',
       code: `import * as lit from 'lit';\nimport * as lur from 'lit-ui-router';\nlit.html\`<a \${lur.uiSref('home')}>Home</a>\`;`,
     },
@@ -62,6 +67,12 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
     {
       name: 'assignHref: false leaves the anchor dead — the base rule is right',
       code: `${IMPORTS}html\`<a \${uiSref('home', undefined, { assignHref: false })}>Home</a>\`;`,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: "options pass through the wrap: an explicit 'noHref' aspect still reports",
+      code: `${IMPORTS}html\`<a>Home</a>\`;`,
+      options: [{ aspects: ['noHref'] }],
       errors: [{ messageId: 'noHrefErrorMessage' }],
     },
     {
