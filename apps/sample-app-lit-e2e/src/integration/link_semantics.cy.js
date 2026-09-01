@@ -83,9 +83,21 @@ describe('link semantics', () => {
   it('renders one New Contact control, an anchor with an href', () => {
     visitWithFeatures('/contacts');
     // the nested <a><button> gave two tab stops; there is one control now
-    cy.contains('a.btn', 'New Contact').should('have.attr', 'href');
+    cy.contains('.selectlist a', 'New Contact').should('have.attr', 'href');
     cy.get('button').contains('New Contact').should('not.exist');
     cy.screenshot('contact-list');
+  });
+
+  it('navigates from the row margin beside the New Contact glyph', () => {
+    visitWithFeatures('/contacts');
+    // the button skin is a <span>; the anchor is the whole row, padding included
+    cy.contains('.selectlist a', 'New Contact').then(($row) => {
+      expect($row.outerWidth()).to.be.greaterThan(
+        $row.find('span.btn').outerWidth(),
+      );
+    });
+    cy.contains('.selectlist a', 'New Contact').click('right');
+    cy.url().should('include', '/contacts/new');
   });
 
   it('keeps Edit Contact an anchor and Message a button', () => {

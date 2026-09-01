@@ -31,9 +31,10 @@ api-docs {
   width: 100%;
 }
 
-/* navigation controls are anchors, plain actions are buttons; bootstrap styles
-   .btn on both, but these local rules were written element-qualified */
-:is(a, button).btn i + span {
+/* navigation controls are anchors, plain actions are buttons, and one button
+   skin rides a <span>; bootstrap styles .btn on all three, but these local
+   rules were written element-qualified */
+:is(a, button, span).btn i + span {
   margin-left: 0.75em;
 }
 
@@ -169,15 +170,9 @@ api-docs {
   padding: 1.5em 0;
   background-color: #ddd;
 }
-/* the button-shaped anchor keeps the row links' horizontal inset, which it
-   used to inherit as the padding of the anchor that wrapped it */
-.selectlist a.btn {
-  margin: 0 1.5em;
-}
-
-/* :not(.btn) because this list now holds a button-shaped anchor (New Contact)
-   as well as its plain row links, and this rule outranks bootstrap's .btn */
-.selectlist a:not(.btn) {
+/* every row is a bare anchor again, New Contact included: block + this padding
+   is what makes the whole row the hit target */
+.selectlist a {
   display: block;
   color: black;
   padding: 0.15em 1.5em;
