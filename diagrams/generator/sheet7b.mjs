@@ -1,5 +1,6 @@
 import { defs } from './chrome.mjs';
 import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's7b';
 const OX = 600, OY = 96;
@@ -94,16 +95,12 @@ function plant(n) {
   const b = g(n);
   const t = TIER[b.tier];
   if (!b.sf) { // wintercg-globals: ambient types — an empty pad, no machine
-    return `${isoBlock(P, OX, OY, b.x, b.y, b.s, b.s, b.h, { capCls: t.cap, edge: t.edge, sideFill: t.side })}
-${badge(n)}`;
+    return solidFaces(isoBlock(P, OX, OY, b.x, b.y, b.s, b.s, b.h, { capCls: t.cap, edge: t.edge, sideFill: t.side }));
   }
-  const src = isoBlock(P, OX, OY, b.x, b.y, b.s, b.s, b.h, { capCls: t.cap, edge: t.edge, sideFill: t.side });
+  const src = solidFaces(isoBlock(P, OX, OY, b.x, b.y, b.s, b.s, b.h, { capCls: t.cap, edge: t.edge, sideFill: t.side }));
   const top = [p2(b.x, b.y, b.h), p2(b.x + b.s, b.y, b.h), p2(b.x + b.s, b.y + b.s, b.h), p2(b.x, b.y + b.s, b.h)].join(' ');
   const wash = t.hatch
     ? `<polygon points="${top}" fill="url(#${P}-${t.hatch})"/>\n<polygon points="${top}" class="${t.edge} fnone"/>`
-    : '';
-  const annex = b.sa
-    ? isoBlock(P, OX, OY, b.ax, b.ay, b.sa, b.sa, b.ha, { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })
     : '';
   // RUST — speckle at partial opacity, flanks only, never the cap (design guard)
   const rustO = RUST_O[b.rust];
@@ -121,7 +118,7 @@ ${badge(n)}`;
   const puffs = PUFFS(b.steam);
   const vs = Math.min(8, b.s * 0.3);
   const vent = b.s >= 20
-    ? isoBlock(P, OX, OY, b.x + b.s * 0.14, b.y + b.s * 0.14, vs, vs, 5, { edge: 'sks', capCls: 'fp2', z0: b.h })
+    ? solidFaces(isoBlock(P, OX, OY, b.x + b.s * 0.14, b.y + b.s * 0.14, vs, vs, 5, { edge: 'sks', capCls: 'fp2', z0: b.h }))
     : '';
   const [vx, vy] = b.s >= 20 ? pt(b.x + b.s * 0.14 + vs / 2, b.y + b.s * 0.14 + vs / 2, b.h + 5) : pt(b.x + b.s / 2, b.y + b.s / 2, b.h);
   const plume = Array.from({ length: puffs }, (_, k) =>
@@ -139,15 +136,21 @@ ${badge(n)}`;
   // PIPES — connected (build green at HEAD, 22/22): solid elbow to ground + flange
   const pz = Math.min(9, Math.max(2.5, b.h * 0.5));
   const pys = b.s < 20 ? [0.5] : [0.3, 0.62];
+  // the elbow lands inside the annex gap (AG) — a pipe never runs into the annex wall
+  const preach = AG * 0.7;
   const pipes = pys.map((f) => {
     const py = b.y + b.s * f;
-    const a = p2(b.x + b.s, py, pz), c = p2(b.x + b.s + 12, py, pz), d = p2(b.x + b.s + 12, py, 0);
+    const a = p2(b.x + b.s, py, pz), c = p2(b.x + b.s + preach, py, pz), d = p2(b.x + b.s + preach, py, 0);
     return `<path d="M${a} L${c} L${d}" class="sks" fill="none"/>
 <circle cx="${a.split(',')[0]}" cy="${a.split(',')[1]}" r="1.9" class="sks fp2"/>`;
   }).join('');
-  return `${src}${wash}${rustSvg}${cracks}${annex}${vent}${plume}${lampSvg}${pipes}
-${badge(n)}`;
+  return `${src}${wash}${rustSvg}${cracks}${vent}${plume}${lampSvg}${pipes}`;
 }
+
+const annexOf = (n) => {
+  const b = g(n);
+  return solidFaces(isoBlock(P, OX, OY, b.ax, b.ay, b.sa, b.sa, b.ha, { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` }));
+};
 
 function badge(n) {
   const b = g(n), t = TIER[b.tier];
@@ -173,21 +176,26 @@ const districts = DIST.map(([d, pad]) => {
   return `<polygon points="${pts}" class="skf fnone" stroke-dasharray="5 4"/>`;
 }).join('\n');
 
-const bodies = M.map(([n]) => n)
-  .sort((a, b) => (g(a).x + g(a).y1 + g(a).s) - (g(b).x + g(b).y1 + g(b).s))
-  .map(plant)
-  .join('\n');
+// Plants and annexes are separate masses, painted back to front; badges ride last.
+const bodies = depthSort(M.flatMap(([n]) => {
+  const b = g(n);
+  const out = [{ x: b.x, y: b.y, w: b.s, d: b.s, svg: plant(n) }];
+  if (b.sa) out.push({ x: b.ax, y: b.ay, w: b.sa, d: b.sa, svg: annexOf(n) });
+  return out;
+})).map((m) => m.svg).join('\n')
+  + '\n' + M.map(([n]) => badge(n)).join('\n');
 
 // ---- telemetry (reading) box ------------------------------------------------------
+// the longest reading (LAMPS) sets the inset — it must clear the box wall, not touch it
 const TB = `
 <rect x="1090" y="96" width="430" height="122" class="sk fp"/>
-${txt(1106, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
+${txt(1098, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
 <line x1="1090" y1="124" x2="1520" y2="124" class="skf"/>
-${txt(1106, 142, 'RUST (speckle) — idle: 0 ≤8d · R1 ≤29 · R2 ≤34 · R3 ≤41 · R4 >180', 'lbls')}
-${txt(1106, 160, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 4–8 · 2: 9–15 · 3: ≥21', 'lbls')}
-${txt(1106, 178, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
-${txt(1106, 196, 'PIPES — turbo run build at HEAD, 22/22 green: all connected', 'lbls')}
-${txt(1106, 211, 'thresholds cut at the distributions’ own gaps — see the schedule', 'lblf')}`;
+${txt(1098, 142, 'RUST (speckle) — idle: 0 ≤8d · R1 ≤29 · R2 ≤34 · R3 ≤41 · R4 >180', 'lbls')}
+${txt(1098, 160, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 4–8 · 2: 9–15 · 3: ≥21', 'lbls')}
+${txt(1098, 178, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
+${txt(1098, 196, 'PIPES — turbo run build at HEAD, 22/22 green: all connected', 'lbls')}
+${txt(1098, 211, 'thresholds cut at the distributions’ own gaps — see the schedule', 'lblf')}`;
 
 // ---- alert register ---------------------------------------------------------------
 const AR = `
@@ -268,23 +276,23 @@ ${txt(60, 118, 'lit-ui-router — THE FLAGSHIP PLANT', 'lbla')}
 ${txt(60, 132, '3 puffs (29 commits/90d) · 3 lamps (92% lit) · rust R2', 'lblf')}
 ${txt(60, 144, 'the port’s masonry, at full steam with every lamp lit —', 'lblf')}
 ${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
-<line x1="346" y1="126" x2="526" y2="132" class="skf"/>
+<line x1="388" y1="127" x2="526" y2="132" class="skf"/>
 
 ${txt(440, 650, '@tools/typedoc-plugin — R4 + cracks, 1 puff:', 'lblr')}
 ${txt(440, 662, '3 of 5 files sealed 220d, index.ts still live', 'lblf')}
-<line x1="448" y1="642" x2="440" y2="492" class="skf"/>
+<line x1="448" y1="636" x2="440" y2="492" class="skf"/>
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex, and 0 lamps:', 'lblr')}
 ${txt(20, 633, 'its canary lights happy-dom upstream, never its own 8 lines', 'lblf')}
-<line x1="120" y1="608" x2="146" y2="418" class="skf"/>
+<line x1="20" y1="606" x2="146" y2="418" class="skf"/>
 
 ${schedule}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'A',
+  num: '7B', id: 'working', rev: 'B',
   title: 'THE WORKING CITY',
-  sub: 'ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · surveyed 2026-08-17',
+  sub: 'ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · surveyed 2026-08-17 · REV B 2026-08-31: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap',
   scale: 'WHOLE WORKSPACE',
   form: 'WORKING CITY',
   svg,

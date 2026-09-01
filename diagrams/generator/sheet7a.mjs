@@ -241,7 +241,7 @@ ${defs(P)}
   </pattern>
 </defs>
 
-<rect x="40" y="26" width="560" height="42" class="skf fnone"/>
+<rect x="40" y="26" width="628" height="42" class="skf fnone"/>
 ${txt(52, 43, 'THE SHADOW SURVEY — WHO STANDS IN TEST LIGHT, AND WHAT STAYS DARK', 'lbls')}
 ${txt(52, 58, 'sheet 7’s city from straight above · every lamp is a spec annex · REV B: the light falls FROM the tests', 'lblf')}
 
@@ -274,11 +274,11 @@ ${furn}
 ${txt(140, 348, 'packages/ — THE PRODUCT', 'lblb')}
 ${txt(140, 360, 'lit wall to wall — 96.9% of district sloc · 99.3% of 2,397 metered lines', 'lblf')}
 ${txt(140, 372, 'branches 94.7% · the annexes sheet 7 drew at 1.9–3.9× bought this glow', 'lblf')}
-<line x1="150" y1="339" x2="160" y2="330" class="skf"/>
+<line x1="150" y1="336" x2="160" y2="326" class="skf"/>
 
-${txt(1096, 336, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
-${txt(1096, 349, 'one metered member (№8, fully lit) · two demos + the rig', 'lblf', 'end')}
-${txt(1096, 361, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
+${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
+${txt(1096, 385, 'one metered member (№8, fully lit) · two demos + the rig', 'lblf', 'end')}
+${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
 ${txt(1146, 560, 'docs/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1146, 573, 'the worker: fully lit — a 53-sloc sliver of 677', 'lblf')}
@@ -288,13 +288,13 @@ ${txt(1146, 585, 'examples: 1,117 sloc, never lit', 'lblf')}
 ${txt(96, 852, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
 ${txt(96, 865, 'seven metered members: 96.7% of 2,906 lines lit — but the light reaches only 56% of yard sloc', 'lblf')}
 ${txt(96, 877, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
-<line x1="140" y1="843" x2="152" y2="828" class="skf"/>
+<line x1="140" y1="840" x2="152" y2="826" class="skf"/>
 
 <!-- callouts -->
-${txt(620, 88, '№1 lit-ui-router — 94% of the footprint lit, 98.1% bright', 'lbla')}
-${txt(620, 100, 'in shadow: index · pure · register · interface.ts —', 'lblf')}
-${txt(620, 112, '69 of those 80 sloc are type declarations', 'lblf')}
-<line x1="612" y1="119" x2="305" y2="136" class="skf"/>
+${txt(620, 82, '№1 lit-ui-router — 94% of the footprint lit, 98.1% bright', 'lbla')}
+${txt(620, 94, 'in shadow: index · pure · register · interface.ts —', 'lblf')}
+${txt(620, 106, '69 of those 80 sloc are type declarations', 'lblf')}
+<line x1="612" y1="110" x2="305" y2="136" class="skf"/>
 
 ${txt(1144, 322, '№5 sample-app-shared — an outline of light:', 'lbls')}
 ${txt(1144, 335, '43 unit tests pass, but browser-mode vitest cannot', 'lblf')}
@@ -330,9 +330,9 @@ ${schedule}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'B',
+  num: '7A', id: 'shadow', rev: 'C',
   title: 'THE SHADOW SURVEY',
-  sub: 'ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same 27 members, same footprints · metered 2026-08-17 at worktree HEAD 3557c29 · REV B: polarity corrected — the tests are the light, shadow is the untested',
+  sub: 'ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same 27 members, same footprints · metered 2026-08-17 at worktree HEAD 3557c29 · REV B: polarity corrected — the tests are the light, shadow is the untested · REV C 2026-08-31: lettering pass — no district boundary is drawn through a caption',
   scale: 'WHOLE WORKSPACE',
   form: 'SHADOW PLAN',
   svg,

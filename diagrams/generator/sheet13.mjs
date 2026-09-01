@@ -194,7 +194,8 @@ const TOUCH = {
   site: { '2025-07': 10, '2026-01': 29, '2026-07': 40, '2026-08': 11 },
   tool: { '2025-07': 0, '2026-01': 5, '2026-07': 177, '2026-08': 50 },
 };
-const TLX = 232, TLW = 88, TLY = 1148, ROWH = 44;
+// ROWH clears the tallest bar plus its value label — no bar climbs into the row above
+const TLX = 232, TLW = 88, TLY = 1148, ROWH = 56;
 const ROWS = [
   ['commits', 'ALL COMMITS', 0.17],
   ['pkg', 'packages/', 0.19],
@@ -276,10 +277,10 @@ ${txt(60, 1078, '@tools/release — 63 walls, every one summer-built', 'lbl')}
 ${txt(60, 1092, 'the yard’s largest building did not exist six weeks ago', 'lblf')}
 <line x1="130" y1="1064" x2="146" y2="1044" class="skf"/>
 
-${txt(196, 270, 'navigation-location-plugin — ×10.0/f', 'lblr')}
-${txt(196, 284, 'one January wall, chiselled ten times:', 'lblf')}
-${txt(196, 296, 'the highest churn intensity on the map', 'lblf')}
-<line x1="412" y1="300" x2="456" y2="314" class="skf"/>`;
+${txt(196, 265, 'navigation-location-plugin — ×10.0/f', 'lblr')}
+${txt(196, 279, 'one January wall, chiselled ten times:', 'lblf')}
+${txt(196, 291, 'the highest churn intensity on the map', 'lblf')}
+<line x1="428" y1="294" x2="456" y2="314" class="skf"/>`;
 
 // ---- assemble --------------------------------------------------------------------
 const H = SY + 104 + half * 17;
@@ -325,9 +326,9 @@ ${schedule}
 </svg>`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'A',
+  num: 13, id: 'weathering', rev: 'B',
   title: 'THE WEATHERING MAP',
-  sub: 'ALTITUDE t — the same city as sheet 7, surveyed in time · 264 files dated from 483 commits · three construction seasons, ten silent months · dated 2026-08-17',
+  sub: 'ALTITUDE t — the same city as sheet 7, surveyed in time · 264 files dated from 483 commits · three construction seasons, ten silent months · dated 2026-08-17 · REV B 2026-08-31: drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption',
   scale: 'WORKSPACE × TIME',
   form: 'WEATHERING MAP',
   svg,

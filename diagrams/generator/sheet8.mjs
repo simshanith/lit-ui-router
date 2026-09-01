@@ -1,5 +1,6 @@
 import { defs } from './chrome.mjs';
 import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's8';
 const OX = 500, OY = 130;
@@ -82,29 +83,34 @@ for (const [district, x0, y0, maxW] of [
   }
 }
 
-const bodies = all
-  .slice()
-  .sort((a, b) => (a.x + a.y + a.s) - (b.x + b.y + b.s))
-  .map(({ it, x, y, s, sa, n, district }) => {
-    const [name, , l, , dl] = it;
-    const h = HT(l);
-    const accent = name === 'lit-ui-router';
-    const consumer = district === 'consumer';
-    const src = isoBlock(P, OX, OY, x, y, s, s, h, { capCls: accent ? 'fa' : consumer ? 'fa' : 'fp' });
-    const annex = sa
-      ? isoBlock(P, OX, OY, x + s + 8, y + Math.max(0, (s - sa) / 2), sa, sa, HT(dl), { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })
-      : '';
-    const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
-    // badges that otherwise land on a roof edge or the district outline
-    // 14 (dompurify's slender tower) floats high to clear hono's wall edges behind it
-    const lift = n === 14 ? 84 : [12, 33].includes(n) ? 26 : [23, 29, 30, 31, 32].includes(n) ? 20 : 14;
-    // 3, 5, 6 stand against a neighbour's wall; slide them clear
-    const shift = n === 3 ? -16 : n === 5 ? -16 : n === 6 ? 18 : 0;
-    return `${src}${annex}
-<circle cx="${(bx + shift).toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${accent || consumer ? 'ska fp' : 'sk fp'}"/>
+// Every block and every d.ts annex is its own mass: a package's annex is not always
+// nearer the eye than the package, and only a back-to-front pass hides rear walls.
+const masses = all.flatMap(({ it, x, y, s, sa, district }) => {
+  const [name, , l, , dl] = it;
+  const accent = name === 'lit-ui-router' || district === 'consumer';
+  const out = [{ x, y, w: s, d: s,
+    svg: solidFaces(isoBlock(P, OX, OY, x, y, s, s, HT(l), { capCls: accent ? 'fa' : 'fp' })) }];
+  if (sa) {
+    const ax = x + s + 8, ay = y + Math.max(0, (s - sa) / 2);
+    out.push({ x: ax, y: ay, w: sa, d: sa,
+      svg: solidFaces(isoBlock(P, OX, OY, ax, ay, sa, sa, HT(dl), { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })) });
+  }
+  return out;
+});
+// Badges ride above the roofline; painted after the city so no wall crosses them.
+const badges = all.map(({ it, x, y, s, n, district }) => {
+  const accent = it[0] === 'lit-ui-router' || district === 'consumer';
+  const [bx, by] = isoPt(OX, OY, x + s / 2, y, HT(it[2]));
+  // badges that otherwise land on a roof edge or the district outline
+  // 14 (dompurify's slender tower) floats high to clear hono's wall edges behind it
+  const lift = n === 14 ? 84 : [12, 33].includes(n) ? 26 : [23, 29, 30, 31, 32].includes(n) ? 20 : 14;
+  // 3, 5, 6 stand against a neighbour's wall; slide them clear
+  const shift = n === 3 ? -16 : n === 5 ? -16 : n === 6 ? 18 : 0;
+  return `<circle cx="${(bx + shift).toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${accent ? 'ska fp' : 'sk fp'}"/>
 ${txt((bx + shift).toFixed(1), (by - lift + 3.4).toFixed(1), String(n), 'lbls', 'middle')}`;
-  })
-  .join('\n');
+}).join('\n');
+
+const bodies = depthSort(masses).map((m) => m.svg).join('\n') + '\n' + badges;
 
 function districtOutline(x1, y1, x2, y2, label, lx, ly) {
   const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
@@ -143,7 +149,7 @@ ${defs(P)}
 
 ${districtOutline(160, 0, 760, 490, 'registry-delivered — 27 packages', 30, 90)}
 ${districtOutline(0, 485, 460, 575, 'workspace-linked — built dist/', 60, 620)}
-${districtOutline(545, 520, 690, 640, 'the consumer', 700, 762)}
+${districtOutline(545, 520, 690, 640, 'the consumer', 638, 764)}
 
 ${bodies}
 
@@ -166,8 +172,8 @@ ${schedule}
 export const sheet8 = {
   num: 8, id: 'delivered',
   title: 'THE DELIVERED CITY',
-  sub: 'ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · REV C: recounted after the lit de-duplication · 2026-08-17',
-  rev: 'C',
+  sub: 'ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · REV C: recounted after the lit de-duplication · 2026-08-17 · REV D 2026-08-31: hidden-line pass — opaque faces, masses painted back to front, no rear wall through a front one',
+  rev: 'D',
   scale: 'ONE CONSUMER',
   form: 'DELIVERED CITY',
   svg,

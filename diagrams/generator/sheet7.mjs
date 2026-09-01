@@ -1,5 +1,6 @@
 import { defs } from './chrome.mjs';
 import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's7';
 const OX = 600, OY = 96;
@@ -85,21 +86,29 @@ const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 
 // A member: src block massed by its own census, plus the spec annex it carries.
 // Tier paints the src cap and flank; annexes are always the same test-mass material.
-function member(n) {
+// Each is its own mass — the annex is not always in front of the block it belongs to.
+function srcMass(n) {
   const b = g(n);
   const t = TIER[b.tier];
-  const src = isoBlock(P, OX, OY, b.x, b.y, b.s, b.s, b.h, { capCls: t.cap, edge: t.edge, sideFill: t.side });
+  const src = solidFaces(isoBlock(P, OX, OY, b.x, b.y, b.s, b.s, b.h, { capCls: t.cap, edge: t.edge, sideFill: t.side }));
   const top = [p2(b.x, b.y, b.h), p2(b.x + b.s, b.y, b.h), p2(b.x + b.s, b.y + b.s, b.h), p2(b.x, b.y + b.s, b.h)].join(' ');
   const wash = t.hatch
     ? `<polygon points="${top}" fill="url(#${P}-${t.hatch})"/>\n<polygon points="${top}" class="${t.edge} fnone"/>`
     : '';
-  const annex = b.sa
-    ? isoBlock(P, OX, OY, b.ax, b.ay, b.sa, b.sa, b.ha, { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })
-    : '';
+  return { x: b.x, y: b.y, w: b.s, d: b.s, svg: `${src}${wash}` };
+}
+const annexMass = (n) => {
+  const b = g(n);
+  return { x: b.ax, y: b.ay, w: b.sa, d: b.sa,
+    svg: solidFaces(isoBlock(P, OX, OY, b.ax, b.ay, b.sa, b.sa, b.ha, { edge: 'sks', capCls: 'fp2', sideFill: `url(#${P}-hd)` })) };
+};
+// Badges ride above the roofline in clear air, so they are painted after the city.
+function badge(n) {
+  const b = g(n);
+  const t = TIER[b.tier];
   const [bx, by] = pt(b.x + b.s / 2, b.y, b.h);
   const lift = BADGE_LIFT[n] ?? 15;
-  return `${src}${wash}${annex}
-<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${t.badge}"/>
+  return `<circle cx="${bx.toFixed(1)}" cy="${(by - lift).toFixed(1)}" r="9" class="${t.badge}"/>
 ${txt(bx.toFixed(1), (by - lift + 3.4).toFixed(1), String(n), t.num, 'middle')}`;
 }
 // badges that would land on a neighbouring roof edge get lifted into clear air
@@ -176,10 +185,11 @@ const districts = DIST.map(([d, pad]) => {
 }).join('\n');
 
 // ---- bodies, painted back to front ------------------------------------------------
-const bodies = M.map(([n]) => n)
-  .sort((a, b) => (g(a).x + g(a).y1 + g(a).s) - (g(b).x + g(b).y1 + g(b).s))
-  .map(member)
-  .join('\n');
+// Order is topological on the plan-axis separation, not a distance guess: with the
+// faces now opaque, a front mass hides the rear edges of everything behind it.
+const bodies = depthSort(M.flatMap(([n]) => (g(n).sa ? [srcMass(n), annexMass(n)] : [srcMass(n)])))
+  .map((m) => m.svg).join('\n')
+  + '\n' + M.map(([n]) => badge(n)).join('\n');
 
 // ---- schedule -----------------------------------------------------------------------
 const ART_H = 812;
@@ -227,7 +237,7 @@ ${roads.join('\n')}
 ${bodies}
 
 <!-- road tags: each keys a row of the ROAD REGISTER below -->
-${[['A', 884, 302], ['B', 566, 366], ['C', 462, 214], ['D', 522, 250], ['E', 902, 540], ['F', 879, 498], ['G', 62, 330]]
+${[['A', 900, 300], ['B', 566, 366], ['C', 470, 195], ['D', 522, 262], ['E', 902, 540], ['F', 879, 498], ['G', 62, 330]]
   .map(([k, x, y]) => txt(x, y, k, 'lbl')).join('\n')}
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
@@ -289,9 +299,9 @@ ${schedule}
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'B',
+  num: 7, id: 'census', rev: 'C',
   title: 'THE MEASURED CITY',
-  sub: 'ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 27 members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16',
+  sub: 'ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 27 members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall',
   scale: 'WHOLE WORKSPACE',
   form: 'MEASURED CITY',
   svg,

@@ -1,5 +1,6 @@
 import { defs } from './chrome.mjs';
 import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's9';
 const OX = 480, OY = 205;
@@ -53,20 +54,21 @@ const all = DATA.map((it, i) => {
   return { it, name, f, gz, ghost, x, y, s: SIDE(f), h: HT(gz), n: i + 1 };
 });
 
-const bodies = all
-  .slice()
-  .sort((a, b) => (a.x + a.y + a.s) - (b.x + b.y + b.s))
-  .map(({ name, x, y, s, h, ghost, n }) => {
-    const app = name.startsWith('app:');
-    const blk = ghost
-      ? isoBlock(P, OX, OY, x, y, s, s, h, { edge: 'skf', capCls: 'fnone', sideFill: `url(#${P}-hd)` })
-      : isoBlock(P, OX, OY, x, y, s, s, h, { capCls: app ? 'fa' : 'fp' });
-    const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
-    return `${blk}
-<circle cx="${bx.toFixed(1)}" cy="${(by - 14).toFixed(1)}" r="9" class="${app ? 'ska fp' : 'sk fp'}"/>
+// Back to front, with solid walls: a tenant behind a taller one is hidden, not traced.
+// The orphan block stays a ghost — its transparency is the datum, not an oversight.
+const masses = all.map(({ name, x, y, s, h, ghost }) => ({ x, y, w: s, d: s,
+  svg: ghost
+    ? isoBlock(P, OX, OY, x, y, s, s, h, { edge: 'skf', capCls: 'fnone', sideFill: `url(#${P}-hd)` })
+    : solidFaces(isoBlock(P, OX, OY, x, y, s, s, h, { capCls: name.startsWith('app:') ? 'fa' : 'fp' })) }));
+
+const badges = all.map(({ name, x, y, s, h, n }) => {
+  const app = name.startsWith('app:');
+  const [bx, by] = isoPt(OX, OY, x + s / 2, y, h);
+  return `<circle cx="${bx.toFixed(1)}" cy="${(by - 14).toFixed(1)}" r="9" class="${app ? 'ska fp' : 'sk fp'}"/>
 ${txt(bx.toFixed(1), (by - 10.6).toFixed(1), String(n), 'lbls', 'middle')}`;
-  })
-  .join('\n');
+}).join('\n');
+
+const bodies = depthSort(masses).map((m) => m.svg).join('\n') + '\n' + badges;
 
 function groupOutline(x1, y1, x2, y2, label, lx, ly, anchor = 'start') {
   const pts = [[x1, y1], [x2, y1], [x2, y2], [x1, y2]]
@@ -131,9 +133,9 @@ ${schedule}
 </svg>`;
 
 export const sheet9 = {
-  num: 9, id: 'shipped', rev: 'C',
+  num: 9, id: 'shipped', rev: 'D',
   title: 'THE SHIPPED CITY',
-  sub: 'ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · REV C: remeasured after the single-lit + lazy api-viewer merge · 2026-08-17',
+  sub: 'ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · REV C: remeasured after the single-lit + lazy api-viewer merge · 2026-08-17 · REV D 2026-08-31: hidden-line pass — opaque tenant walls painted back to front; the orphan block stays a ghost by design',
   scale: 'ONE DEPLOY',
   form: 'SHIPPED CITY',
   svg,

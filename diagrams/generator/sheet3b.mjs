@@ -1,5 +1,6 @@
 import { defs } from './chrome.mjs';
 import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's3b';
 const OX = 400, OY = 170;
@@ -64,10 +65,15 @@ const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 // red-hatch vocabulary), so severity is uniform by construction — the finding.
 function massBlock(n) {
   const { x, y, side, h } = g(n);
-  const body = isoBlock(P, OX, OY, x, y, side, side, h, { capCls: 'fp', edge: 'skr', sideFill: `url(#${P}-hr)` });
+  const body = solidFaces(isoBlock(P, OX, OY, x, y, side, side, h, { capCls: 'fp', edge: 'skr', sideFill: `url(#${P}-hr)` }));
   const top = [p2(x, y, h), p2(x + side, y, h), p2(x + side, y + side, h), p2(x, y + side, h)].join(' ');
   const wash = `<polygon points="${top}" fill="url(#${P}-hr)"/>
 <polygon points="${top}" class="skr fnone"/>`;
+  return `${body}${wash}`;
+}
+
+function massBadge(n) {
+  const { x, y, side, h } = g(n);
   // Badge seats: wide caps (side >= 26) carry it on the roof; smalls float it
   // north, south or east — whichever pocket their neighbours leave open.
   const MODE = { 2: 'S', 4: 'S', 7: 'S', 10: 'S', 16: 'S', 22: 'S', 5: 'E', 12: 'E', 13: 'E' };
@@ -80,8 +86,7 @@ function massBlock(n) {
   else { [bx, by] = pt(x + side, y + side / 2, h / 2); bx += 14; }
   const [ax, ay] = ADJ[n] ?? [0, 0];
   bx += ax; by += ay;
-  return `${body}${wash}
-<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="9" class="skr fp"/>
+  return `<circle cx="${bx.toFixed(1)}" cy="${by.toFixed(1)}" r="9" class="skr fp"/>
 ${txt(bx.toFixed(1), (by + 3.6).toFixed(1), String(n), 'lblr', 'middle')}`;
 }
 
@@ -124,14 +129,17 @@ ${txt(740, 530, '20 ↤ typedoc', 'lblf')}`;
 const chain = leg([[20, 230, 0], [119, 230, 0], [119, 118, 0]], { mk: 'aa', cls: 'ska', dash: '3 3', t0: 0, t1: 8 });
 
 // ---- ci:main annex: outside this survey, drawn unmassed -------------------------
-const annex = `${isoBlock(P, OX, OY, 740, 170, 34, 18, 5, { capCls: 'fp', edge: 'ska', sideFill: `url(#${P}-ha)` })}
-<polygon points="${[p2(740, 170, 5), p2(774, 170, 5), p2(774, 188, 5), p2(740, 188, 5)].join(' ')}" fill="url(#${P}-ha)"/>`;
+// seated in the gap between the harbour note above and the plain's lettering below
+const AXY = 170;
+const annex = `${solidFaces(isoBlock(P, OX, OY, 740, AXY, 34, 18, 5, { capCls: 'fp', edge: 'ska', sideFill: `url(#${P}-ha)` }))}
+<polygon points="${[p2(740, AXY, 5), p2(774, AXY, 5), p2(774, AXY + 18, 5), p2(740, AXY + 18, 5)].join(' ')}" fill="url(#${P}-ha)"/>`;
 
 // ---- bodies painted back to front ----------------------------------------------
-const bodies = M.map(([n]) => n)
-  .sort((a, b) => (g(a).cx + g(a).cy) - (g(b).cx + g(b).cy))
-  .map(massBlock)
-  .join('\n');
+const bodies = depthSort(M.map(([n]) => {
+  const b = g(n);
+  return { x: b.x, y: b.y, w: b.side, d: b.side, svg: massBlock(n) };
+})).map((m) => m.svg).join('\n')
+  + '\n' + M.map(([n]) => massBadge(n)).join('\n');
 
 // ---- structure schedule ---------------------------------------------------------
 const TOT_I = M.reduce((a, r) => a + r[4], 0);
@@ -205,8 +213,8 @@ ${txt(1030, 233, 'the virtual `with` node (plate 3A’s twin):', 'lblf')}
 ${txt(1030, 246, 'a plot with no building, even here', 'lblf')}
 <path d="M1024,232 L760,232 L496,330" class="skf" fill="none"/>
 
-${txt(430, 660, 'THE EXAMPLES PLAIN — 13,443 files watched by 17 sloc of command (25):', 'lblb')}
-${txt(430, 673, 'format:check hashes 6,926 files, lint 6,471 — the corpus from sheet 9, now as CI surface', 'lblf')}
+${txt(430, 676, 'THE EXAMPLES PLAIN — 13,443 files watched by 17 sloc of command (25):', 'lblb')}
+${txt(430, 689, 'format:check hashes 6,926 files, lint 6,471 — the corpus from sheet 9, now as CI surface', 'lblf')}
 
 ${txt(720, 610, 'the harbour (24): 37 real edges flow in — docs#build is where the city drains', 'lblf')}
 
@@ -214,9 +222,9 @@ ${schedule}
 </svg>`;
 
 export const sheet3b = {
-  num: '3B', id: 'graphcity', rev: 'A',
+  num: '3B', id: 'graphcity', rev: 'B',
   title: 'THE WATCHED CITY',
-  sub: 'ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 158 real tasks in 26 massed structures · footprint = watched files (22,972 task-file hashes) · height = command sloc (1,329) · 343 phantom plots · surveyed 2026-08-17',
+  sub: 'ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 158 real tasks in 26 massed structures · footprint = watched files (22,972 task-file hashes) · height = command sloc (1,329) · 343 phantom plots · surveyed 2026-08-17 · REV B 2026-08-31: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering',
   scale: 'THE CI TASK GRAPH',
   form: 'ISOMETRIC GRAPH CITY',
   svg,
