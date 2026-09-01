@@ -3,6 +3,18 @@
   "version": "0.0.1",
   "private": true,
   "description": "ESLint rules that understand lit-ui-router directives: lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+  "keywords": [
+    "eslint",
+    "eslintplugin"
+  ],
+  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router",
+  "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/eslint-plugin-lit-ui-router"
+  },
   "type": "module",
   "exports": {
     ".": "./src/index.ts"
@@ -35,5 +47,8 @@
   "peerDependencies": {
     "eslint": "catalog:publishedPeer",
     "eslint-plugin-lit-a11y": "catalog:publishedPeer"
+  },
+  "engines": {
+    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
   }
 }
