@@ -15,18 +15,19 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "eslint-plugin-lit": "catalog:",
-    "eslint-plugin-lit-a11y": "catalog:",
-    "eslint-rule-extender": "catalog:"
+    "eslint-plugin-lit": "catalog:publishedDependencies",
+    "eslint-rule-extender": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@types/node": "catalog:",
-    "eslint": "catalog:",
+    "eslint": "catalog:peerFloor",
+    "eslint-plugin-lit-a11y": "catalog:peerFloor",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "eslint": "catalog:"
+    "eslint": "catalog:publishedPeer",
+    "eslint-plugin-lit-a11y": "catalog:publishedPeer"
   }
 }
