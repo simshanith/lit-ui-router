@@ -14,7 +14,7 @@
   "task": "lint",
   "inputs": 15,
   "cmd": "oxlint .",
-  "deps": 0,
+  "deps": 1,
   "dependents": 1
  },
  {
@@ -23,7 +23,7 @@
   "task": "test",
   "inputs": 14,
   "cmd": "node --test \"src/**/*.test.ts\"",
-  "deps": 0,
+  "deps": 1,
   "dependents": 5
  },
  {
@@ -32,7 +32,7 @@
   "task": "typecheck",
   "inputs": 15,
   "cmd": "tsc -p tsconfig.json --noEmit",
-  "deps": 0,
+  "deps": 1,
   "dependents": 1
  },
  {
@@ -225,6 +225,33 @@
   "dependents": 1
  },
  {
+  "id": "@tools/lint-elements#format:check",
+  "pkg": "@tools/lint-elements",
+  "task": "format:check",
+  "inputs": 5,
+  "cmd": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+  "deps": 0,
+  "dependents": 1
+ },
+ {
+  "id": "@tools/lint-elements#lint",
+  "pkg": "@tools/lint-elements",
+  "task": "lint",
+  "inputs": 5,
+  "cmd": "oxlint .",
+  "deps": 2,
+  "dependents": 1
+ },
+ {
+  "id": "@tools/lint-elements#typecheck",
+  "pkg": "@tools/lint-elements",
+  "task": "typecheck",
+  "inputs": 5,
+  "cmd": "tsc -p tsconfig.json --noEmit",
+  "deps": 2,
+  "dependents": 1
+ },
+ {
   "id": "@tools/lit-template-lint#format:check",
   "pkg": "@tools/lit-template-lint",
   "task": "format:check",
@@ -239,7 +266,7 @@
   "task": "lint",
   "inputs": 4,
   "cmd": "oxlint .",
-  "deps": 0,
+  "deps": 1,
   "dependents": 1
  },
  {
@@ -248,7 +275,7 @@
   "task": "typecheck",
   "inputs": 4,
   "cmd": "tsc -p tsconfig.json --noEmit",
-  "deps": 0,
+  "deps": 1,
   "dependents": 1
  },
  {
@@ -330,7 +357,7 @@
   "inputs": 67,
   "cmd": "node src/checks/check-exports.ts",
   "deps": 1,
-  "dependents": 28
+  "dependents": 30
  },
  {
   "id": "@tools/release#format:check",
@@ -381,7 +408,7 @@
   "id": "@tools/shared#format:check",
   "pkg": "@tools/shared",
   "task": "format:check",
-  "inputs": 19,
+  "inputs": 20,
   "cmd": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
   "deps": 0,
   "dependents": 1
@@ -390,7 +417,7 @@
   "id": "@tools/shared#lint",
   "pkg": "@tools/shared",
   "task": "lint",
-  "inputs": 19,
+  "inputs": 20,
   "cmd": "oxlint .",
   "deps": 0,
   "dependents": 1
@@ -399,16 +426,16 @@
   "id": "@tools/shared#test",
   "pkg": "@tools/shared",
   "task": "test",
-  "inputs": 18,
+  "inputs": 19,
   "cmd": "node --test \"src/**/*.test.ts\"",
   "deps": 0,
-  "dependents": 6
+  "dependents": 8
  },
  {
   "id": "@tools/shared#typecheck",
   "pkg": "@tools/shared",
   "task": "typecheck",
-  "inputs": 19,
+  "inputs": 20,
   "cmd": "tsc -p tsconfig.json --noEmit",
   "deps": 0,
   "dependents": 1
@@ -486,6 +513,42 @@
   "dependents": 1
  },
  {
+  "id": "@tools/warn-lanes#format:check",
+  "pkg": "@tools/warn-lanes",
+  "task": "format:check",
+  "inputs": 5,
+  "cmd": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+  "deps": 0,
+  "dependents": 1
+ },
+ {
+  "id": "@tools/warn-lanes#lint",
+  "pkg": "@tools/warn-lanes",
+  "task": "lint",
+  "inputs": 5,
+  "cmd": "oxlint .",
+  "deps": 0,
+  "dependents": 1
+ },
+ {
+  "id": "@tools/warn-lanes#test",
+  "pkg": "@tools/warn-lanes",
+  "task": "test",
+  "inputs": 3,
+  "cmd": "node --test \"src/**/*.test.ts\"",
+  "deps": 0,
+  "dependents": 3
+ },
+ {
+  "id": "@tools/warn-lanes#typecheck",
+  "pkg": "@tools/warn-lanes",
+  "task": "typecheck",
+  "inputs": 5,
+  "cmd": "tsc -p tsconfig.json --noEmit",
+  "deps": 0,
+  "dependents": 1
+ },
+ {
   "id": "@tools/wintercg-globals#format:check",
   "pkg": "@tools/wintercg-globals",
   "task": "format:check",
@@ -552,7 +615,7 @@
   "id": "//#check:docs-api-deps",
   "pkg": "//",
   "task": "check:docs-api-deps",
-  "inputs": 1355,
+  "inputs": 1397,
   "cmd": "node check-docs-api-deps.ts",
   "deps": 0,
   "dependents": 0
@@ -561,7 +624,7 @@
   "id": "//#check:patches",
   "pkg": "//",
   "task": "check:patches",
-  "inputs": 23,
+  "inputs": 24,
   "cmd": "node check-patches.ts",
   "deps": 0,
   "dependents": 0
@@ -570,8 +633,8 @@
   "id": "//#format:check:root",
   "pkg": "//",
   "task": "format:check:root",
-  "inputs": 612,
-  "cmd": "oxfmt --check \"*.{md,ts,js,mjs,cjs,json,jsonc,yml,yaml}\" \"!pnpm-lock.yaml\" \"!app",
+  "inputs": 639,
+  "cmd": "oxfmt --check \"*.{md,ts,js,mjs,cjs,json,jsonc,yml,yaml}\" \"!pnpm-lock.yaml\" \"!apps/*/**\" \"!docs/**\" \"!examples/**\" \"!packages/**\" \"!tools/**\"",
   "deps": 0,
   "dependents": 0
  },
@@ -597,8 +660,8 @@
   "id": "//#lint:elements",
   "pkg": "//",
   "task": "lint:elements",
-  "inputs": 612,
-  "cmd": "eslint --cache --cache-location .cache/eslint-elements --cache-strategy content ",
+  "inputs": 639,
+  "cmd": "lint-elements",
   "deps": 0,
   "dependents": 0
  },
@@ -606,7 +669,7 @@
   "id": "//#lint:markdown",
   "pkg": "//",
   "task": "lint:markdown",
-  "inputs": 154,
+  "inputs": 155,
   "cmd": "mise run lint_markdown",
   "deps": 0,
   "dependents": 0
@@ -615,7 +678,7 @@
   "id": "//#lint:package-json",
   "pkg": "//",
   "task": "lint:package-json",
-  "inputs": 1342,
+  "inputs": 1383,
   "cmd": "eslint --format tap \"**/package.json\" pnpm-workspace.yaml",
   "deps": 0,
   "dependents": 0
@@ -624,8 +687,8 @@
   "id": "//#lint:root",
   "pkg": "//",
   "task": "lint:root",
-  "inputs": 612,
-  "cmd": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --igno",
+  "inputs": 639,
+  "cmd": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
   "deps": 0,
   "dependents": 0
  },
@@ -642,7 +705,7 @@
   "id": "//#lint:templates",
   "pkg": "//",
   "task": "lint:templates",
-  "inputs": 612,
+  "inputs": 639,
   "cmd": "lit-analyzer-ts-guard && lint-templates",
   "deps": 2,
   "dependents": 0
@@ -669,7 +732,7 @@
   "id": "//#typecheck:root",
   "pkg": "//",
   "task": "typecheck:root",
-  "inputs": 612,
+  "inputs": 639,
   "cmd": "tsc -p tsconfig.json --noEmit",
   "deps": 0,
   "dependents": 0
@@ -678,7 +741,7 @@
   "id": "docs#build",
   "pkg": "docs",
   "task": "build",
-  "inputs": 64,
+  "inputs": 65,
   "cmd": "vitepress build .",
   "deps": 20,
   "dependents": 5
@@ -687,7 +750,7 @@
   "id": "docs#format:check",
   "pkg": "docs",
   "task": "format:check",
-  "inputs": 154,
+  "inputs": 155,
   "cmd": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
   "deps": 0,
   "dependents": 1
@@ -696,7 +759,7 @@
   "id": "docs#lint",
   "pkg": "docs",
   "task": "lint",
-  "inputs": 66,
+  "inputs": 67,
   "cmd": "oxlint .",
   "deps": 10,
   "dependents": 1
@@ -705,7 +768,7 @@
   "id": "docs#test",
   "pkg": "docs",
   "task": "test",
-  "inputs": 64,
+  "inputs": 65,
   "cmd": "node --test \"worker/test/*.test.ts\"",
   "deps": 9,
   "dependents": 2
@@ -714,7 +777,7 @@
   "id": "docs#typecheck",
   "pkg": "docs",
   "task": "typecheck",
-  "inputs": 65,
+  "inputs": 66,
   "cmd": "tsc -p tsconfig.json --noEmit",
   "deps": 18,
   "dependents": 1
@@ -732,7 +795,7 @@
   "id": "docs#typecheck:worker",
   "pkg": "docs",
   "task": "typecheck:worker",
-  "inputs": 65,
+  "inputs": 66,
   "cmd": "tsc -p worker/tsconfig.json --noEmit",
   "deps": 10,
   "dependents": 0
@@ -741,7 +804,7 @@
   "id": "docs#typecheck:worker:tests",
   "pkg": "docs",
   "task": "typecheck:worker:tests",
-  "inputs": 65,
+  "inputs": 66,
   "cmd": "tsc -p worker/test/tsconfig.json --noEmit",
   "deps": 10,
   "dependents": 0
@@ -750,7 +813,7 @@
   "id": "docs#types:worker",
   "pkg": "docs",
   "task": "types:worker",
-  "inputs": 65,
+  "inputs": 66,
   "cmd": "wrangler types worker/worker-configuration.d.ts",
   "deps": 0,
   "dependents": 4
@@ -759,7 +822,7 @@
   "id": "examples#build:embeds",
   "pkg": "examples",
   "task": "build:embeds",
-  "inputs": 22,
+  "inputs": 29,
   "cmd": "node build-embeds.ts",
   "deps": 0,
   "dependents": 1
@@ -768,7 +831,7 @@
   "id": "examples#format:check",
   "pkg": "examples",
   "task": "format:check",
-  "inputs": 6926,
+  "inputs": 9129,
   "cmd": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
   "deps": 0,
   "dependents": 1
@@ -777,7 +840,7 @@
   "id": "examples#lint",
   "pkg": "examples",
   "task": "lint",
-  "inputs": 6471,
+  "inputs": 8503,
   "cmd": "oxlint .",
   "deps": 0,
   "dependents": 1
@@ -786,8 +849,8 @@
   "id": "examples#typecheck",
   "pkg": "examples",
   "task": "typecheck",
-  "inputs": 24,
-  "cmd": "concurrently --names helloworld,hellosolarsystem,hellogalaxy --prefix-colors aut",
+  "inputs": 31,
+  "cmd": "concurrently --prefix-colors auto \"npm:typecheck:*\"",
   "deps": 0,
   "dependents": 1
  },
@@ -868,7 +931,7 @@
   "pkg": "lit-ui-router-mobx",
   "task": "test:lit2-compat",
   "inputs": 22,
-  "cmd": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63331 vites",
+  "cmd": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63331 vitest run",
   "deps": 8,
   "dependents": 1
  },
@@ -877,7 +940,7 @@
   "pkg": "lit-ui-router-mobx",
   "task": "test:mobx6-compat",
   "inputs": 22,
-  "cmd": "mobx6-compat-guard && VITE_EXPECT_MOBX_MAJOR=6 VITEST_BROWSER_API_PORT=63332 vit",
+  "cmd": "mobx6-compat-guard && VITE_EXPECT_MOBX_MAJOR=6 VITEST_BROWSER_API_PORT=63332 vitest run",
   "deps": 8,
   "dependents": 1
  },
@@ -994,7 +1057,7 @@
   "pkg": "lit-ui-router",
   "task": "test:coverage",
   "inputs": 31,
-  "cmd": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --project=happy-dom --projec",
+  "cmd": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --project=happy-dom --project=chrome",
   "deps": 14,
   "dependents": 8
  },
@@ -1003,7 +1066,7 @@
   "pkg": "lit-ui-router",
   "task": "test:lit2-compat",
   "inputs": 42,
-  "cmd": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63322 vites",
+  "cmd": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63322 vitest run --project=happy-dom --project=chrome",
   "deps": 7,
   "dependents": 1
  },
@@ -1066,7 +1129,7 @@
   "pkg": "sample-app-lit-e2e",
   "task": "test",
   "inputs": 19,
-  "cmd": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://local",
+  "cmd": "start-server-and-test docs:start-server 'http://localhost:8787/app/|http://localhost:8787/app-mobx/' test:cypress:all",
   "deps": 2,
   "dependents": 1
  },
@@ -1282,7 +1345,7 @@
   "pkg": "ui-router-navigation-location-plugin",
   "task": "test",
   "inputs": 11,
-  "cmd": "VITEST_BROWSER_API_PORT=63340 vitest run --project=node --project=happy-dom --pr",
+  "cmd": "VITEST_BROWSER_API_PORT=63340 vitest run --project=node --project=happy-dom --project=chrome",
   "deps": 4,
   "dependents": 4
  },
@@ -1291,7 +1354,7 @@
   "pkg": "ui-router-navigation-location-plugin",
   "task": "test:coverage",
   "inputs": 11,
-  "cmd": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --project=node --project=hap",
+  "cmd": "VITEST_BROWSER_API_PORT=63345 vitest run --coverage --project=node --project=happy-dom --project=chrome",
   "deps": 8,
   "dependents": 5
  },
@@ -1381,7 +1444,7 @@
   "pkg": "ui-router-server",
   "task": "test:coverage",
   "inputs": 31,
-  "cmd": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-in",
+  "cmd": "mkdir -p coverage && node --test --experimental-test-coverage --test-coverage-include=\"src/**\" --test-reporter=spec --test-reporter-destination=stdout --test-reporter=lcov --test-reporter-destination=coverage/lcov.info \"test/**/*.test.ts\" && rebase-lcov coverage/lcov.info",
   "deps": 7,
   "dependents": 5
  },

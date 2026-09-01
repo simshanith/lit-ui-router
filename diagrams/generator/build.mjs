@@ -63,7 +63,7 @@ const verdicts = [
   ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line (REV C: recensused on the scc ruler, 179 files / 12,059 sloc)'],
   ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch (REV B: mise unmoved, turbo ci 501→535)'],
-  ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — 134 of 165 blocks are one-line pads (REV C: re-surveyed at turbo 2.10.11); the tallest is the 401-sloc //#lint:elements spire'],
+  ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — 130 of 165 blocks are one-line pads (REV C: re-surveyed at turbo 2.10.11); the tallest is the 401-sloc //#lint:elements spire'],
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],

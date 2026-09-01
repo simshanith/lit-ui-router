@@ -1,173 +1,5 @@
 [
  {
-  "id": "//#check:docs-api-deps",
-  "pkg": "//",
-  "task": "check:docs-api-deps",
-  "dir": "",
-  "inputs": 1355,
-  "mass": 39,
-  "cites": [
-   "script line",
-   "check-docs-api-deps.ts (38)"
-  ]
- },
- {
-  "id": "//#check:patches",
-  "pkg": "//",
-  "task": "check:patches",
-  "dir": "",
-  "inputs": 23,
-  "mass": 71,
-  "cites": [
-   "script line",
-   "check-patches.ts (70)"
-  ]
- },
- {
-  "id": "//#format:check:root",
-  "pkg": "//",
-  "task": "format:check:root",
-  "dir": "",
-  "inputs": 612,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "//#format:check:toml",
-  "pkg": "//",
-  "task": "format:check:toml",
-  "dir": "",
-  "inputs": 9,
-  "mass": 18,
-  "cites": [
-   "script line",
-   "config.toml run line",
-   ".config/mise/tasks/taplo (16)"
-  ]
- },
- {
-  "id": "//#lint:actionlint",
-  "pkg": "//",
-  "task": "lint:actionlint",
-  "dir": "",
-  "inputs": 16,
-  "mass": 2,
-  "cites": [
-   "script line",
-   "config.toml run line"
-  ]
- },
- {
-  "id": "//#lint:elements",
-  "pkg": "//",
-  "task": "lint:elements",
-  "dir": "",
-  "inputs": 612,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "//#lint:markdown",
-  "pkg": "//",
-  "task": "lint:markdown",
-  "dir": "",
-  "inputs": 154,
-  "mass": 17,
-  "cites": [
-   "script line",
-   "config.toml run line",
-   ".config/mise/tasks/rumdl (15)"
-  ]
- },
- {
-  "id": "//#lint:package-json",
-  "pkg": "//",
-  "task": "lint:package-json",
-  "dir": "",
-  "inputs": 1342,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "//#lint:root",
-  "pkg": "//",
-  "task": "lint:root",
-  "dir": "",
-  "inputs": 612,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "//#lint:shellcheck",
-  "pkg": "//",
-  "task": "lint:shellcheck",
-  "dir": "",
-  "inputs": 24,
-  "mass": 24,
-  "cites": [
-   "script line",
-   "config.toml run line",
-   ".config/mise/tasks/shellcheck (22)"
-  ]
- },
- {
-  "id": "//#lint:templates",
-  "pkg": "//",
-  "task": "lint:templates",
-  "dir": "",
-  "inputs": 612,
-  "mass": 51,
-  "cites": [
-   "script line",
-   "tools/compat-guards/src/lit-analyzer-ts-guard.ts (30)",
-   "tools/lit-template-lint/src/lint-templates.ts (20)"
-  ]
- },
- {
-  "id": "//#lint:toml",
-  "pkg": "//",
-  "task": "lint:toml",
-  "dir": "",
-  "inputs": 9,
-  "mass": 18,
-  "cites": [
-   "script line",
-   "config.toml run line",
-   ".config/mise/tasks/taplo (16)"
-  ]
- },
- {
-  "id": "//#lint:zizmor",
-  "pkg": "//",
-  "task": "lint:zizmor",
-  "dir": "",
-  "inputs": 17,
-  "mass": 2,
-  "cites": [
-   "script line",
-   "config.toml run line"
-  ]
- },
- {
-  "id": "//#typecheck:root",
-  "pkg": "//",
-  "task": "typecheck:root",
-  "dir": "",
-  "inputs": 612,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
   "id": "@tools/build_and_test#format:check",
   "pkg": "@tools/build_and_test",
   "task": "format:check",
@@ -316,10 +148,10 @@
   "task": "test",
   "dir": "tools/dts-backtest",
   "inputs": 8,
-  "mass": 291,
+  "mass": 292,
   "cites": [
    "script line",
-   "tools/dts-backtest/run.ts (290)"
+   "tools/dts-backtest/run.ts (291)"
   ]
  },
  {
@@ -444,6 +276,39 @@
   ]
  },
  {
+  "id": "@tools/lint-elements#format:check",
+  "pkg": "@tools/lint-elements",
+  "task": "format:check",
+  "dir": "tools/lint-elements",
+  "inputs": 5,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lint-elements#lint",
+  "pkg": "@tools/lint-elements",
+  "task": "lint",
+  "dir": "tools/lint-elements",
+  "inputs": 5,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/lint-elements#typecheck",
+  "pkg": "@tools/lint-elements",
+  "task": "typecheck",
+  "dir": "tools/lint-elements",
+  "inputs": 5,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
   "id": "@tools/lit-template-lint#format:check",
   "pkg": "@tools/lit-template-lint",
   "task": "format:check",
@@ -543,15 +408,37 @@
   ]
  },
  {
+  "id": "@tools/release-config#format:check",
+  "pkg": "@tools/release-config",
+  "task": "format:check",
+  "dir": "tools/release-config",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/release-config#lint",
+  "pkg": "@tools/release-config",
+  "task": "lint",
+  "dir": "tools/release-config",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
   "id": "@tools/release#check:exports",
   "pkg": "@tools/release",
   "task": "check:exports",
   "dir": "tools/release",
   "inputs": 67,
-  "mass": 65,
+  "mass": 66,
   "cites": [
    "script line",
-   "tools/release/src/checks/check-exports.ts (64)"
+   "tools/release/src/checks/check-exports.ts (65)"
   ]
  },
  {
@@ -582,10 +469,10 @@
   "task": "pack:all",
   "dir": "tools/release",
   "inputs": 68,
-  "mass": 39,
+  "mass": 40,
   "cites": [
    "script line",
-   "tools/release/src/steps/pack-all.ts (38)"
+   "tools/release/src/steps/pack-all.ts (39)"
   ]
  },
  {
@@ -611,33 +498,11 @@
   ]
  },
  {
-  "id": "@tools/release-config#format:check",
-  "pkg": "@tools/release-config",
-  "task": "format:check",
-  "dir": "tools/release-config",
-  "inputs": 3,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "@tools/release-config#lint",
-  "pkg": "@tools/release-config",
-  "task": "lint",
-  "dir": "tools/release-config",
-  "inputs": 3,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
   "id": "@tools/shared#format:check",
   "pkg": "@tools/shared",
   "task": "format:check",
   "dir": "tools/shared",
-  "inputs": 19,
+  "inputs": 20,
   "mass": 1,
   "cites": [
    "script line"
@@ -648,7 +513,7 @@
   "pkg": "@tools/shared",
   "task": "lint",
   "dir": "tools/shared",
-  "inputs": 19,
+  "inputs": 20,
   "mass": 1,
   "cites": [
    "script line"
@@ -659,7 +524,7 @@
   "pkg": "@tools/shared",
   "task": "test",
   "dir": "tools/shared",
-  "inputs": 18,
+  "inputs": 19,
   "mass": 1,
   "cites": [
    "script line"
@@ -670,7 +535,7 @@
   "pkg": "@tools/shared",
   "task": "typecheck",
   "dir": "tools/shared",
-  "inputs": 19,
+  "inputs": 20,
   "mass": 1,
   "cites": [
    "script line"
@@ -682,10 +547,10 @@
   "task": "build:js",
   "dir": "tools/typedoc-plugin-lit-ui-router",
   "inputs": 9,
-  "mass": 36,
+  "mass": 37,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-js.ts (35)"
+   "tools/oxc-emit/src/emit-js.ts (36)"
   ]
  },
  {
@@ -694,10 +559,10 @@
   "task": "build:types",
   "dir": "tools/typedoc-plugin-lit-ui-router",
   "inputs": 9,
-  "mass": 21,
+  "mass": 22,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-dts.ts (20)"
+   "tools/oxc-emit/src/emit-dts.ts (21)"
   ]
  },
  {
@@ -761,6 +626,50 @@
   "task": "lint",
   "dir": "tools/vue-check",
   "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/warn-lanes#format:check",
+  "pkg": "@tools/warn-lanes",
+  "task": "format:check",
+  "dir": "tools/warn-lanes",
+  "inputs": 5,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/warn-lanes#lint",
+  "pkg": "@tools/warn-lanes",
+  "task": "lint",
+  "dir": "tools/warn-lanes",
+  "inputs": 5,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/warn-lanes#test",
+  "pkg": "@tools/warn-lanes",
+  "task": "test",
+  "dir": "tools/warn-lanes",
+  "inputs": 3,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "@tools/warn-lanes#typecheck",
+  "pkg": "@tools/warn-lanes",
+  "task": "typecheck",
+  "dir": "tools/warn-lanes",
+  "inputs": 5,
   "mass": 1,
   "cites": [
    "script line"
@@ -844,11 +753,181 @@
   ]
  },
  {
+  "id": "//#check:docs-api-deps",
+  "pkg": "//",
+  "task": "check:docs-api-deps",
+  "dir": "",
+  "inputs": 1397,
+  "mass": 39,
+  "cites": [
+   "script line",
+   "check-docs-api-deps.ts (38)"
+  ]
+ },
+ {
+  "id": "//#check:patches",
+  "pkg": "//",
+  "task": "check:patches",
+  "dir": "",
+  "inputs": 24,
+  "mass": 71,
+  "cites": [
+   "script line",
+   "check-patches.ts (70)"
+  ]
+ },
+ {
+  "id": "//#format:check:root",
+  "pkg": "//",
+  "task": "format:check:root",
+  "dir": "",
+  "inputs": 639,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#format:check:toml",
+  "pkg": "//",
+  "task": "format:check:toml",
+  "dir": "",
+  "inputs": 9,
+  "mass": 19,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/taplo (17)"
+  ]
+ },
+ {
+  "id": "//#lint:actionlint",
+  "pkg": "//",
+  "task": "lint:actionlint",
+  "dir": "",
+  "inputs": 16,
+  "mass": 2,
+  "cites": [
+   "script line",
+   "config.toml run line"
+  ]
+ },
+ {
+  "id": "//#lint:elements",
+  "pkg": "//",
+  "task": "lint:elements",
+  "dir": "",
+  "inputs": 639,
+  "mass": 401,
+  "cites": [
+   "script line",
+   "tools/lint-elements/src/lint-elements.ts (186)",
+   "tools/warn-lanes/src/warn-lanes.core.ts (214)"
+  ]
+ },
+ {
+  "id": "//#lint:markdown",
+  "pkg": "//",
+  "task": "lint:markdown",
+  "dir": "",
+  "inputs": 155,
+  "mass": 18,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/rumdl (16)"
+  ]
+ },
+ {
+  "id": "//#lint:package-json",
+  "pkg": "//",
+  "task": "lint:package-json",
+  "dir": "",
+  "inputs": 1383,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#lint:root",
+  "pkg": "//",
+  "task": "lint:root",
+  "dir": "",
+  "inputs": 639,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "//#lint:shellcheck",
+  "pkg": "//",
+  "task": "lint:shellcheck",
+  "dir": "",
+  "inputs": 24,
+  "mass": 27,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/shellcheck (25)"
+  ]
+ },
+ {
+  "id": "//#lint:templates",
+  "pkg": "//",
+  "task": "lint:templates",
+  "dir": "",
+  "inputs": 639,
+  "mass": 53,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit-analyzer-ts-guard.ts (31)",
+   "tools/lit-template-lint/src/lint-templates.ts (21)"
+  ]
+ },
+ {
+  "id": "//#lint:toml",
+  "pkg": "//",
+  "task": "lint:toml",
+  "dir": "",
+  "inputs": 9,
+  "mass": 19,
+  "cites": [
+   "script line",
+   "config.toml run line",
+   ".config/mise/tasks/taplo (17)"
+  ]
+ },
+ {
+  "id": "//#lint:zizmor",
+  "pkg": "//",
+  "task": "lint:zizmor",
+  "dir": "",
+  "inputs": 17,
+  "mass": 2,
+  "cites": [
+   "script line",
+   "config.toml run line"
+  ]
+ },
+ {
+  "id": "//#typecheck:root",
+  "pkg": "//",
+  "task": "typecheck:root",
+  "dir": "",
+  "inputs": 639,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
   "id": "docs#build",
   "pkg": "docs",
   "task": "build",
   "dir": "docs",
-  "inputs": 64,
+  "inputs": 65,
   "mass": 1,
   "cites": [
    "script line"
@@ -859,7 +938,7 @@
   "pkg": "docs",
   "task": "format:check",
   "dir": "docs",
-  "inputs": 154,
+  "inputs": 155,
   "mass": 1,
   "cites": [
    "script line"
@@ -870,7 +949,7 @@
   "pkg": "docs",
   "task": "lint",
   "dir": "docs",
-  "inputs": 66,
+  "inputs": 67,
   "mass": 1,
   "cites": [
    "script line"
@@ -881,7 +960,7 @@
   "pkg": "docs",
   "task": "test",
   "dir": "docs",
-  "inputs": 64,
+  "inputs": 65,
   "mass": 1,
   "cites": [
    "script line"
@@ -892,7 +971,7 @@
   "pkg": "docs",
   "task": "typecheck",
   "dir": "docs",
-  "inputs": 65,
+  "inputs": 66,
   "mass": 1,
   "cites": [
    "script line"
@@ -904,10 +983,10 @@
   "task": "typecheck:vue",
   "dir": "docs",
   "inputs": 11,
-  "mass": 25,
+  "mass": 26,
   "cites": [
    "script line",
-   "tools/vue-check/bin.ts (24)"
+   "tools/vue-check/bin.ts (25)"
   ]
  },
  {
@@ -915,7 +994,7 @@
   "pkg": "docs",
   "task": "typecheck:worker",
   "dir": "docs",
-  "inputs": 65,
+  "inputs": 66,
   "mass": 1,
   "cites": [
    "script line"
@@ -926,7 +1005,7 @@
   "pkg": "docs",
   "task": "typecheck:worker:tests",
   "dir": "docs",
-  "inputs": 65,
+  "inputs": 66,
   "mass": 1,
   "cites": [
    "script line"
@@ -937,7 +1016,7 @@
   "pkg": "docs",
   "task": "types:worker",
   "dir": "docs",
-  "inputs": 65,
+  "inputs": 66,
   "mass": 1,
   "cites": [
    "script line"
@@ -948,11 +1027,11 @@
   "pkg": "examples",
   "task": "build:embeds",
   "dir": "examples",
-  "inputs": 22,
-  "mass": 14,
+  "inputs": 29,
+  "mass": 20,
   "cites": [
    "script line",
-   "examples/build-embeds.ts (13)"
+   "examples/build-embeds.ts (19)"
   ]
  },
  {
@@ -960,7 +1039,7 @@
   "pkg": "examples",
   "task": "format:check",
   "dir": "examples",
-  "inputs": 6926,
+  "inputs": 9129,
   "mass": 1,
   "cites": [
    "script line"
@@ -971,7 +1050,7 @@
   "pkg": "examples",
   "task": "lint",
   "dir": "examples",
-  "inputs": 6471,
+  "inputs": 8503,
   "mass": 1,
   "cites": [
    "script line"
@@ -982,155 +1061,7 @@
   "pkg": "examples",
   "task": "typecheck",
   "dir": "examples",
-  "inputs": 24,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#build:custom-elements",
-  "pkg": "lit-ui-router",
-  "task": "build:custom-elements",
-  "dir": "packages/lit-ui-router",
-  "inputs": 30,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#build:js",
-  "pkg": "lit-ui-router",
-  "task": "build:js",
-  "dir": "packages/lit-ui-router",
-  "inputs": 41,
-  "mass": 36,
-  "cites": [
-   "script line",
-   "tools/oxc-emit/src/emit-js.ts (35)"
-  ]
- },
- {
-  "id": "lit-ui-router#build:types",
-  "pkg": "lit-ui-router",
-  "task": "build:types",
-  "dir": "packages/lit-ui-router",
-  "inputs": 41,
-  "mass": 21,
-  "cites": [
-   "script line",
-   "tools/oxc-emit/src/emit-dts.ts (20)"
-  ]
- },
- {
-  "id": "lit-ui-router#check:bundle",
-  "pkg": "lit-ui-router",
-  "task": "check:bundle",
-  "dir": "packages/lit-ui-router",
-  "inputs": 41,
-  "mass": 32,
-  "cites": [
-   "script line",
-   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
-  ]
- },
- {
-  "id": "lit-ui-router#docs:api",
-  "pkg": "lit-ui-router",
-  "task": "docs:api",
-  "dir": "packages/lit-ui-router",
-  "inputs": 41,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#format:check",
-  "pkg": "lit-ui-router",
-  "task": "format:check",
-  "dir": "packages/lit-ui-router",
-  "inputs": 116,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#lint",
-  "pkg": "lit-ui-router",
-  "task": "lint",
-  "dir": "packages/lit-ui-router",
-  "inputs": 83,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#test",
-  "pkg": "lit-ui-router",
-  "task": "test",
-  "dir": "packages/lit-ui-router",
   "inputs": 31,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#test:coverage",
-  "pkg": "lit-ui-router",
-  "task": "test:coverage",
-  "dir": "packages/lit-ui-router",
-  "inputs": 31,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#test:lit2-compat",
-  "pkg": "lit-ui-router",
-  "task": "test:lit2-compat",
-  "dir": "packages/lit-ui-router",
-  "inputs": 42,
-  "mass": 20,
-  "cites": [
-   "script line",
-   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
-  ]
- },
- {
-  "id": "lit-ui-router#typecheck",
-  "pkg": "lit-ui-router",
-  "task": "typecheck",
-  "dir": "packages/lit-ui-router",
-  "inputs": 42,
-  "mass": 1,
-  "cites": [
-   "script line"
-  ]
- },
- {
-  "id": "lit-ui-router#typecheck:lit2",
-  "pkg": "lit-ui-router",
-  "task": "typecheck:lit2",
-  "dir": "packages/lit-ui-router",
-  "inputs": 43,
-  "mass": 20,
-  "cites": [
-   "script line",
-   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
-  ]
- },
- {
-  "id": "lit-ui-router#typecheck:src",
-  "pkg": "lit-ui-router",
-  "task": "typecheck:src",
-  "dir": "packages/lit-ui-router",
-  "inputs": 42,
   "mass": 1,
   "cites": [
    "script line"
@@ -1142,10 +1073,10 @@
   "task": "build:js",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 21,
-  "mass": 36,
+  "mass": 37,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-js.ts (35)"
+   "tools/oxc-emit/src/emit-js.ts (36)"
   ]
  },
  {
@@ -1154,10 +1085,10 @@
   "task": "build:types",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 21,
-  "mass": 21,
+  "mass": 22,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-dts.ts (20)"
+   "tools/oxc-emit/src/emit-dts.ts (21)"
   ]
  },
  {
@@ -1166,10 +1097,10 @@
   "task": "check:bundle",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 21,
-  "mass": 32,
+  "mass": 33,
   "cites": [
    "script line",
-   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+   "tools/bundle-probe/src/check-bundle-inputs.ts (32)"
   ]
  },
  {
@@ -1233,10 +1164,10 @@
   "task": "test:lit2-compat",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 22,
-  "mass": 20,
+  "mass": 21,
   "cites": [
    "script line",
-   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
+   "tools/compat-guards/src/lit2-compat-guard.ts (20)"
   ]
  },
  {
@@ -1245,10 +1176,10 @@
   "task": "test:mobx6-compat",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 22,
-  "mass": 18,
+  "mass": 19,
   "cites": [
    "script line",
-   "tools/compat-guards/src/mobx6-compat-guard.ts (17)"
+   "tools/compat-guards/src/mobx6-compat-guard.ts (18)"
   ]
  },
  {
@@ -1268,10 +1199,10 @@
   "task": "typecheck:lit2",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 23,
-  "mass": 20,
+  "mass": 21,
   "cites": [
    "script line",
-   "tools/compat-guards/src/lit2-compat-guard.ts (19)"
+   "tools/compat-guards/src/lit2-compat-guard.ts (20)"
   ]
  },
  {
@@ -1280,10 +1211,10 @@
   "task": "typecheck:mobx6",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 23,
-  "mass": 18,
+  "mass": 19,
   "cites": [
    "script line",
-   "tools/compat-guards/src/mobx6-compat-guard.ts (17)"
+   "tools/compat-guards/src/mobx6-compat-guard.ts (18)"
   ]
  },
  {
@@ -1292,6 +1223,154 @@
   "task": "typecheck:src",
   "dir": "packages/lit-ui-router-mobx",
   "inputs": 22,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#build:custom-elements",
+  "pkg": "lit-ui-router",
+  "task": "build:custom-elements",
+  "dir": "packages/lit-ui-router",
+  "inputs": 30,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#build:js",
+  "pkg": "lit-ui-router",
+  "task": "build:js",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 37,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-js.ts (36)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#build:types",
+  "pkg": "lit-ui-router",
+  "task": "build:types",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 22,
+  "cites": [
+   "script line",
+   "tools/oxc-emit/src/emit-dts.ts (21)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#check:bundle",
+  "pkg": "lit-ui-router",
+  "task": "check:bundle",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 33,
+  "cites": [
+   "script line",
+   "tools/bundle-probe/src/check-bundle-inputs.ts (32)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#docs:api",
+  "pkg": "lit-ui-router",
+  "task": "docs:api",
+  "dir": "packages/lit-ui-router",
+  "inputs": 41,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#format:check",
+  "pkg": "lit-ui-router",
+  "task": "format:check",
+  "dir": "packages/lit-ui-router",
+  "inputs": 116,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#lint",
+  "pkg": "lit-ui-router",
+  "task": "lint",
+  "dir": "packages/lit-ui-router",
+  "inputs": 83,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#test",
+  "pkg": "lit-ui-router",
+  "task": "test",
+  "dir": "packages/lit-ui-router",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#test:coverage",
+  "pkg": "lit-ui-router",
+  "task": "test:coverage",
+  "dir": "packages/lit-ui-router",
+  "inputs": 31,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#test:lit2-compat",
+  "pkg": "lit-ui-router",
+  "task": "test:lit2-compat",
+  "dir": "packages/lit-ui-router",
+  "inputs": 42,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit2-compat-guard.ts (20)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#typecheck",
+  "pkg": "lit-ui-router",
+  "task": "typecheck",
+  "dir": "packages/lit-ui-router",
+  "inputs": 42,
+  "mass": 1,
+  "cites": [
+   "script line"
+  ]
+ },
+ {
+  "id": "lit-ui-router#typecheck:lit2",
+  "pkg": "lit-ui-router",
+  "task": "typecheck:lit2",
+  "dir": "packages/lit-ui-router",
+  "inputs": 43,
+  "mass": 21,
+  "cites": [
+   "script line",
+   "tools/compat-guards/src/lit2-compat-guard.ts (20)"
+  ]
+ },
+ {
+  "id": "lit-ui-router#typecheck:src",
+  "pkg": "lit-ui-router",
+  "task": "typecheck:src",
+  "dir": "packages/lit-ui-router",
+  "inputs": 42,
   "mass": 1,
   "cites": [
    "script line"
@@ -1534,10 +1613,10 @@
   "task": "build:js",
   "dir": "packages/navigation-location-plugin",
   "inputs": 17,
-  "mass": 36,
+  "mass": 37,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-js.ts (35)"
+   "tools/oxc-emit/src/emit-js.ts (36)"
   ]
  },
  {
@@ -1546,10 +1625,10 @@
   "task": "build:types",
   "dir": "packages/navigation-location-plugin",
   "inputs": 17,
-  "mass": 21,
+  "mass": 22,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-dts.ts (20)"
+   "tools/oxc-emit/src/emit-dts.ts (21)"
   ]
  },
  {
@@ -1558,10 +1637,10 @@
   "task": "check:bundle",
   "dir": "packages/navigation-location-plugin",
   "inputs": 17,
-  "mass": 32,
+  "mass": 33,
   "cites": [
    "script line",
-   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+   "tools/bundle-probe/src/check-bundle-inputs.ts (32)"
   ]
  },
  {
@@ -1647,10 +1726,10 @@
   "task": "build:js",
   "dir": "packages/ui-router-server",
   "inputs": 31,
-  "mass": 36,
+  "mass": 37,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-js.ts (35)"
+   "tools/oxc-emit/src/emit-js.ts (36)"
   ]
  },
  {
@@ -1659,10 +1738,10 @@
   "task": "build:types",
   "dir": "packages/ui-router-server",
   "inputs": 31,
-  "mass": 21,
+  "mass": 22,
   "cites": [
    "script line",
-   "tools/oxc-emit/src/emit-dts.ts (20)"
+   "tools/oxc-emit/src/emit-dts.ts (21)"
   ]
  },
  {
@@ -1671,10 +1750,10 @@
   "task": "check:bundle",
   "dir": "packages/ui-router-server",
   "inputs": 31,
-  "mass": 32,
+  "mass": 33,
   "cites": [
    "script line",
-   "tools/bundle-probe/src/check-bundle-inputs.ts (31)"
+   "tools/bundle-probe/src/check-bundle-inputs.ts (32)"
   ]
  },
  {

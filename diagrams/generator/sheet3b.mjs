@@ -5,14 +5,14 @@ import { depthSort, solidFaces } from './iso-hidden.mjs';
 const P = 's3b';
 const OX = 400, OY = 170;
 
-// ---- census: bare `turbo run ci --dry=json` re-run 2026-08-31 at 0e4ab36 ------
-// (turbo 2.10.11; saved as ci-dry.json / mass-3b.json beside this file). 535
-// nodes, 165 real, 1,375 edges, 117 real->real. Per-task:
+// ---- census: census-mass3b.mjs (bare `turbo run ci --dry=json`, turbo 2.10.11),
+// saved as mass-3b.json / real-tasks-3b.json beside this file. 535 nodes, 165
+// real, 1,375 edges, 117 real->real. Per-task:
 //   footprint = files the task hashes (the dry-run `inputs` map, counted per task)
 //   height    = command mass: the package.json script line (1 sloc) + the repo
 //               script/bin file it executes, sloc'd like sheet 3 — now on scc
 //               4.0.0's `Code` basis (cites in schedule)
-// 134 of 165 tasks have mass 1 — one script line riding an external binary.
+// 130 of 165 tasks have mass 1 — one script line riding an external binary.
 
 const KS = 1.2;                      // footprint side = 1.2 · √(files hashed)
 const KH = 0.45;                     // height = 0.45 px per command sloc
@@ -25,32 +25,32 @@ const M = [
   // --- the root yard (`//`) — every //# task drawn alone -------------------------
   [1,  '//#check:docs-api-deps',  0,   48, 1397, 39, 1, 'check-docs-api-deps.ts (38 sloc)'],
   [2,  '//#check:patches',        0,  110,   24, 71, 1, 'check-patches.ts (70 sloc) — the yard’s thinnest tower'],
-  [3,  '//#format:check:root',    0,    0,  636,  1, 1, 'one oxfmt line · the 636-file root glob'],
-  [4,  '//#format:check:toml',   88,  110,    9, 18, 1, 'mise run + tasks/taplo (16 sloc) — plate 3A, seam C'],
+  [3,  '//#format:check:root',    0,    0,  639,  1, 1, 'one oxfmt line · the 639-file root glob'],
+  [4,  '//#format:check:toml',   88,  110,    9, 19, 1, 'mise run + tasks/taplo (17 sloc) — plate 3A, seam C'],
   [5,  '//#lint:actionlint',    144,  110,   16,  2, 1, 'mise run + config.toml run line'],
-  [6,  '//#lint:elements',      114,    0,  636, 401, 1, 'lint-elements.ts (186) + warn-lanes.core.ts (214) — NEW TALLEST'],
-  [7,  '//#lint:markdown',       56,  110,  155, 17, 1, 'mise run + tasks/rumdl (15 sloc)'],
+  [6,  '//#lint:elements',      114,    0,  639, 401, 1, 'lint-elements.ts (186) + warn-lanes.core.ts (214) — NEW TALLEST'],
+  [7,  '//#lint:markdown',       56,  110,  155, 18, 1, 'mise run + tasks/rumdl (16 sloc)'],
   [8,  '//#lint:package-json',   60,   48, 1383,  1, 1, 'one eslint line watching 1,383 manifests'],
-  [9,  '//#lint:root',           38,    0,  636,  1, 1, 'one oxlint line · same 636-file surface'],
-  [10, '//#lint:shellcheck',     28,  110,   24, 24, 1, 'mise run + tasks/shellcheck (22 sloc)'],
-  [11, '//#lint:templates',     152,    0,  636, 51, 1, 'lit-analyzer-ts-guard (30) + lint-templates (20)'],
-  [12, '//#lint:toml',          116,  110,    9, 18, 1, 'mise run + tasks/taplo (16 sloc) — chain hop ③'],
+  [9,  '//#lint:root',           38,    0,  639,  1, 1, 'one oxlint line · same 639-file surface'],
+  [10, '//#lint:shellcheck',     28,  110,   24, 27, 1, 'mise run + tasks/shellcheck (25 sloc)'],
+  [11, '//#lint:templates',     152,    0,  639, 53, 1, 'lit-analyzer-ts-guard (31) + lint-templates (21)'],
+  [12, '//#lint:toml',          116,  110,    9, 19, 1, 'mise run + tasks/taplo (17 sloc) — chain hop ③'],
   [13, '//#lint:zizmor',        172,  110,   17,  2, 1, 'mise run + config.toml run line'],
-  [14, '//#typecheck:root',      76,    0,  636,  1, 1, 'one tsc line · same 636-file surface'],
+  [14, '//#typecheck:root',      76,    0,  639,  1, 1, 'one tsc line · same 639-file surface'],
   // --- the four package quarters -------------------------------------------------
-  [15, 'lit-ui-router',         250,   30,  624, 137, 13, 'guards + oxc-emit + bundle-probe bins behind 13 tasks'],
-  [16, 'lit-ui-router-mobx',    292,   30,  299, 172, 14, 'heaviest commands: both compat guards ride 6 tasks'],
-  [17, 'nav-location-plugin',   360,   30,  196,  96, 10, 'the smallest quarter, same block shape'],
-  [18, 'ui-router-server',      325,   30,  377,  98, 12, 'node:test + runtime-globals lanes'],
+  [15, 'lit-ui-router',         250,   30,  624, 142, 13, 'guards + oxc-emit + bundle-probe bins behind 13 tasks'],
+  [16, 'lit-ui-router-mobx',    292,   30,  299, 179, 14, 'heaviest commands: both compat guards ride 6 tasks'],
+  [17, 'nav-location-plugin',   360,   30,  196,  99, 10, 'the smallest quarter, same block shape'],
+  [18, 'ui-router-server',      325,   30,  377, 101, 12, 'node:test + runtime-globals lanes'],
   // --- the instrument end of town -------------------------------------------------
-  [19, '@tools/release',        600,   15,  405, 108, 6, 'pack-all.ts (38) + check-exports.ts (64) live here'],
+  [19, '@tools/release',        600,   15,  405, 110, 6, 'pack-all.ts (39) + check-exports.ts (65) live here'],
   [20, '@tools/dts-backtest',   700,   40,   30, 294, 3, 'run.ts — 291 sloc on a 30-file footprint: THE TOWER'],
   [21, '@tools/shared',         600,   90,   79,   4, 4, 'the library under the instruments — all one-liners'],
-  [22, 'typedoc-plugin',        634,   96,   58,  61, 6, 'oxc-emit both passes — and the widest blast radius'],
+  [22, 'typedoc-plugin',        634,   96,   58,  63, 6, 'oxc-emit both passes — and the widest blast radius'],
   [23, 'instrument terrace',    690,  124,  320,  49, 49, '15 small tools × their style/test/typecheck rows'],
   // --- south of the river ---------------------------------------------------------
-  [24, 'docs — the harbour',    330,  205,  627,  33, 9, 'every quarter ships docs:api here — 41 inbound edges'],
-  [25, 'examples — the plain',  420,  250, 17707, 17, 4, '17,707 files watched by 17 sloc of command'],
+  [24, 'docs — the harbour',    330,  205,  627,  34, 9, 'every quarter ships docs:api here — 41 inbound edges'],
+  [25, 'examples — the plain',  420,  250, 17692, 23, 4, '17,692 files watched by 23 sloc of command'],
   [26, 'apps (5 sample pkgs)',  150,  210,  550,  21, 21, '5 packages, 21 tasks, every command one line'],
 ];
 
@@ -159,7 +159,7 @@ ${txt(58, SY + 56 + half * 16, `TOTALS — 26 massed structures reconcile all 16
 ${txt(58, SY + 72 + half * 16, 'ROADS — 83 of 117 real→real edges drawn as arteries (32 into docs · 20 from the typedoc plugin · 15 to apps · 12 to release · 4 to the tower — every split unchanged); the remaining 34 are local streets, itemised in the dry-run JSON', 'lblf')}`;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${SY + 110 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: 370 phantom plots, the sixty-nine percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: five equal slabs that each watch the same 636 root files — one of them, lint:elements, now a 401-sloc spire since its lane began running the repo's own bin — two huge flat pads watching 1,397 and 1,383 files with one-line commands, and a cluster of small pads including a thin 70-line tower for check:patches and the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. The four package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks. To the east, the instrument end of town: the release works, the typedoc plugin annotated with the widest blast radius, a terrace of fifteen small tools, and the city's landmark — the dts-backtest tower, 291 lines of run dot ts standing on a 30-file footprint. South of the river sit the apps block, the docs harbour that every quarter ships API docs into, and the defining horizontal feature: the examples plain, 17,707 watched files under 17 lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the real dependency arteries with edge counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all 165 real tasks, their 27,486 task-file hashes and 1,737 command sloc.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 110 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: 370 phantom plots, the sixty-nine percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: five equal slabs that each watch the same 639 root files — one of them, lint:elements, now a 401-sloc spire since its lane began running the repo's own bin — two huge flat pads watching 1,397 and 1,383 files with one-line commands, and a cluster of small pads including a thin 70-line tower for check:patches and the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. The four package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks. To the east, the instrument end of town: the release works, the typedoc plugin annotated with the widest blast radius, a terrace of fifteen small tools, and the city's landmark — the dts-backtest tower, 291 lines of run dot ts standing on a 30-file footprint. South of the river sit the apps block, the docs harbour that every quarter ships API docs into, and the defining horizontal feature: the examples plain, 17,692 watched files under 23 lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the real dependency arteries with edge counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all 165 real tasks, their 27,486 task-file hashes and 1,774 command sloc.">
 ${defs(P)}
 
 <rect x="40" y="24" width="420" height="72" class="skf fnone"/>
@@ -202,7 +202,7 @@ ${txt(1080, 566, 'survey, drawn unmassed · accent tier', 'lblf')}
 
 ${txt(60, 130, 'THE ROOT YARD — all 15 //# plots', 'lblb')}
 ${txt(60, 143, 'five equal slabs watch the same', 'lblf')}
-${txt(60, 156, '636 root files (3·9·14·6·11)', 'lblf')}
+${txt(60, 156, '639 root files (3·9·14·6·11)', 'lblf')}
 ${txt(60, 169, 'flats 1 + 8: thousand-file, one-line', 'lblf')}
 
 ${txt(40, 348, '①② mise run ci → turbo run ci', 'lbla')}
@@ -217,8 +217,8 @@ ${txt(1030, 233, 'the virtual `with` node (plate 3A’s twin):', 'lblf')}
 ${txt(1030, 246, 'a plot with no building, even here', 'lblf')}
 <path d="M1024,232 L760,232 L496,330" class="skf" fill="none"/>
 
-${txt(430, 676, 'THE EXAMPLES PLAIN — 17,707 files watched by 17 sloc of command (25):', 'lblb')}
-${txt(430, 689, 'format:check hashes 9,138 files, lint 8,509 — the corpus from sheet 9, now as CI surface', 'lblf')}
+${txt(430, 676, 'THE EXAMPLES PLAIN — 17,692 files watched by 23 sloc of command (25):', 'lblb')}
+${txt(430, 689, 'format:check hashes 9,129 files, lint 8,503 — the corpus from sheet 9, now as CI surface', 'lblf')}
 
 ${txt(720, 610, 'the harbour (24): 41 real edges flow in — docs#build is where the city drains', 'lblf')}
 
@@ -228,15 +228,15 @@ ${schedule}
 export const sheet3b = {
   num: '3B', id: 'graphcity', rev: 'C',
   title: 'THE WATCHED CITY',
-  sub: 'ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 165 real tasks in 26 massed structures · footprint = watched files (27,486 task-file hashes) · height = command sloc (1,737) · 370 phantom plots · surveyed 2026-08-31 · REV B: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering · REV C 2026-08-31: re-surveyed at turbo 2.10.11 — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane',
+  sub: 'ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 165 real tasks in 26 massed structures · footprint = watched files (27,486 task-file hashes) · height = command sloc (1,774) · 370 phantom plots · surveyed 2026-08-31 · REV B: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering · REV C 2026-08-31: re-surveyed at turbo 2.10.11 — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane · REV C corrected 2026-09-01: every height re-derived on scc 4.0.0 by census-mass3b.mjs — command sloc 1,737 → 1,774, flat blocks 134 → 130, and the plain re-measured on a clean tree at 17,692 files',
   scale: 'THE CI TASK GRAPH',
   form: 'ISOMETRIC GRAPH CITY',
   svg,
-  caption: 'The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 134 of 165 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 291-line test tower on a 30-file lot, a 70-line patch check on a 24-file lot, a 17,707-file plain patrolled by 17 lines of command, and, new at rev C, a root lint lane that grew a 401-sloc spire when it stopped being one eslint line.',
+  caption: 'The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 130 of 165 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 291-line test tower on a 30-file lot, a 70-line patch check on a 24-file lot, a 17,692-file plain patrolled by 23 lines of command, and, new at rev C, a root lint lane that grew a 401-sloc spire when it stopped being one eslint line.',
   notes: `
-<p><strong>Method — the graph, remeasured.</strong> Every mass comes from a fresh bare <code>turbo run ci --dry=json</code> at HEAD (2026-08-31, turbo 2.10.11): 535 nodes, 165 real, 1,375 edges, 117 real→real — against rev B's 501/158/1,294/116 two weeks earlier. <em>Footprint</em> is the per-task <code>inputs</code> map — the files whose hashes decide that task's cache key — at 1.2·√files per side. <em>Height</em> is command mass: the package.json script line plus the repo script or bin file it executes, sloc-counted like sheet 3, now on <code>scc</code> 4.0.0's <code>Code</code> basis (guards, emitters and mise task files each cited in the schedule; external binaries like <code>tsc</code> and <code>oxlint</code> contribute only their one line, because that is all this repo wrote). Wall-clock and cache-hit rates are excluded as geometry by design: they are properties of runs, not of the graph.</p>
-<p><strong>The city is flat, and that is still the finding.</strong> 134 of 165 real tasks have command mass 1 — one script line handing the work to a pinned binary; the ratio barely moved as the graph grew. The whole city executes 1,737 sloc of repo-written command while watching 27,486 task-file hashes. The skyline is inverted from intuition: <code>@tools/dts-backtest#test</code> is a 291-line <code>run.ts</code> on a 30-file lot — sheet 3 calls it "one 291-line run.ts holds the TS 5.0 floor", and the graph survey agrees to the line — while the largest footprint, the examples plain, watches 17,707 files (format:check 9,138 + lint 8,509 alone) under 17 lines of command. Rev C's one new landmark is in the root yard: <code>//#lint:elements</code>, which rev B drew as "one eslint line" on the shared root surface, now runs the repo's own <code>lint-elements</code> bin — 186 sloc over <code>warn-lanes.core.ts</code>'s 214 — so a flat slab became a 401-sloc spire, the tallest command in the city. Nothing about its footprint moved; a lane grew a building.</p>
-<p><strong>The root yard repays the walk.</strong> All 15 <code>//#</code> plots are drawn individually: five equal slabs — <code>lint:root</code>, <code>typecheck:root</code>, <code>lint:elements</code>, <code>format:check:root</code>, <code>lint:templates</code> — still watch one identical root surface, now 636 files; two one-line flats watch over 1,300 files apiece (<code>lint:package-json</code> 1,383, <code>check:docs-api-deps</code> 1,397); <code>check:patches</code> is a 70-line tower on a 24-file lot. The five-equal-slabs finding is the plate's cleanest, and it survived the refresh exactly — the same five tasks, one surface, one number. The taplo pad (12) is where plate 3A's six-hop chain touches ground: hops ①–② arrive from <code>mise run ci</code>, hop ③ is this block, and ④–⑥ leave immediately to run back inside mise through the cache gasket. And one lot in the yard is vacant on purpose — <code>//#lint:workflows</code>, the virtual <code>with</code> twin, has no command even here.</p>
+<p><strong>Method — the graph, remeasured.</strong> Every mass comes from a fresh bare <code>turbo run ci --dry=json</code> at HEAD (2026-08-31, turbo 2.10.11): 535 nodes, 165 real, 1,375 edges, 117 real→real — against rev B's 501/158/1,294/116 two weeks earlier. <em>Footprint</em> is the per-task <code>inputs</code> map — the files whose hashes decide that task's cache key — at 1.2·√files per side. <em>Height</em> is command mass: the package.json script line plus the repo script or bin file it executes, sloc-counted by <code>census-mass3b.mjs</code> on <code>scc</code> 4.0.0's <code>Code</code> basis (guards, emitters and mise task files each cited in the schedule; external binaries like <code>tsc</code> and <code>oxlint</code> contribute only their one line, because that is all this repo wrote). Wall-clock and cache-hit rates are excluded as geometry by design: they are properties of runs, not of the graph.</p>
+<p><strong>The city is flat, and that is still the finding.</strong> 130 of 165 real tasks have command mass 1 — one script line handing the work to a pinned binary; the ratio barely moved as the graph grew. The whole city executes 1,774 sloc of repo-written command while watching 27,486 task-file hashes. The skyline is inverted from intuition: <code>@tools/dts-backtest#test</code> is a 291-line <code>run.ts</code> on a 30-file lot — sheet 3 calls it "one 291-line run.ts holds the TS 5.0 floor", and the graph survey agrees to the line — while the largest footprint, the examples plain, watches 17,692 files (format:check 9,129 + lint 8,503 alone) under 23 lines of command. Rev C's one new landmark is in the root yard: <code>//#lint:elements</code>, which rev B drew as "one eslint line" on the shared root surface, now runs the repo's own <code>lint-elements</code> bin — 186 sloc over <code>warn-lanes.core.ts</code>'s 214 — so a flat slab became a 401-sloc spire, the tallest command in the city. Nothing about its footprint moved; a lane grew a building.</p>
+<p><strong>The root yard repays the walk.</strong> All 15 <code>//#</code> plots are drawn individually: five equal slabs — <code>lint:root</code>, <code>typecheck:root</code>, <code>lint:elements</code>, <code>format:check:root</code>, <code>lint:templates</code> — still watch one identical root surface, now 639 files; two one-line flats watch over 1,300 files apiece (<code>lint:package-json</code> 1,383, <code>check:docs-api-deps</code> 1,397); <code>check:patches</code> is a 70-line tower on a 24-file lot. The five-equal-slabs finding is the plate's cleanest, and it survived the refresh exactly — the same five tasks, one surface, one number. The taplo pad (12) is where plate 3A's six-hop chain touches ground: hops ①–② arrive from <code>mise run ci</code>, hop ③ is this block, and ④–⑥ leave immediately to run back inside mise through the cache gasket. And one lot in the yard is vacant on purpose — <code>//#lint:workflows</code>, the virtual <code>with</code> twin, has no command even here.</p>
 <p><strong>One tier, uniformly red.</strong> Sheet 3's severity vocabulary survives, but at this altitude it degenerates truthfully: every real node in the <code>ci</code> graph stops the PR when it fails, so every massed block wears the same red hatch, and the drawing spends its information elsewhere. The five ci:main-only tasks (test:engines ×3, check:pack, test:matrix) sit outside this survey on an unmassed accent annex; the 370 phantom plots — 69.2% of the graph, transit and ^build hash carriers — are the vacant field behind the city, inventoried hole-by-hole on sheet 12.</p>
 <p><strong>Roads and reach.</strong> The arteries carry 83 of the 117 real→real edges, and every split came back byte-identical to rev B's: 32 into the docs harbour (every quarter ships <code>docs:api</code> there, plus worker types and app fixtures — docs#build is the city's sink), 20 out of the typedoc plugin (every <code>docs:api</code> waits on it), 15 down to the apps, 12 into the release works (<code>pack:all</code> and <code>check:exports</code> read all four quarters), 4 to the tower. The remaining 34 are local streets. Reach is annotated once, where it is extreme: <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> transitively blocks 57 of the 165 real tasks — the absolute blast radius is unchanged; only the denominator grew.</p>`,
   key: [
