@@ -261,7 +261,7 @@ const anchorIsValid: Rule.RuleModule = {
       ...extended.meta?.docs,
       description:
         "lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
-      url: 'https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router',
+      url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md',
     },
   },
 };
