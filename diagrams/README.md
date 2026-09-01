@@ -33,3 +33,4 @@ notes on each sheet argue where that form fits and where it lies.
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.
 Regenerate with `node generator/build.mjs .` from this directory.
 Generated 2026-08-16 by Fable (Claude, AI); npm dates fetched same day.
+Sheets 3, 3A and 12 recensused at HEAD on 2026-08-31.

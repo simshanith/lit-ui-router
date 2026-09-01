@@ -58,6 +58,9 @@ const MEMBERS = [
   ['tools/lcov-rebase', ['src'], 'tool'],
   ['tools/happy-dom', ['src'], 'tool'],
   ['tools/wintercg-globals', ['src'], 'tool'],
+  ['tools/lint-elements', ['src'], 'tool'],
+  ['tools/warn-lanes', ['src'], 'tool'],
+  ['tools/eslint-ts-parser', ['src'], 'tool'],
 ];
 
 // current tracked universe, tagged with member + series

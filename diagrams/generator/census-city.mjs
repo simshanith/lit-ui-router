@@ -68,6 +68,9 @@ const MEMBERS = [
   ['tools/lcov-rebase', ['src']],
   ['tools/happy-dom', ['src']],
   ['tools/wintercg-globals', ['src']],
+  ['tools/lint-elements', ['src']],
+  ['tools/warn-lanes', ['src']],
+  ['tools/eslint-ts-parser', ['src']],
 ];
 
 const rows = [];

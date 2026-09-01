@@ -29,6 +29,7 @@ const MEMBERS = [
   ['tools/oxc-emit', ['src']], ['tools/release-config', ['src']], ['tools/lit-template-lint', ['src']],
   ['tools/lit-test-env', ['src']], ['tools/vue-check', ['.']], ['tools/lcov-rebase', ['src']],
   ['tools/happy-dom', ['src']], ['tools/wintercg-globals', ['src']],
+  ['tools/lint-elements', ['src']], ['tools/warn-lanes', ['src']], ['tools/eslint-ts-parser', ['src']],
 ];
 const fileToMember = new Map();
 for (const [m, dirs] of MEMBERS)

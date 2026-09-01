@@ -61,8 +61,8 @@ const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
   ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
-  ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line'],
-  ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch'],
+  ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line (REV C: recensused on the scc ruler, 179 files / 12,059 sloc)'],
+  ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch (REV B: mise unmoved, turbo ci 501→535)'],
   ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — 124 of 158 blocks are one-line pads; the tallest tower is a 291-line test'],
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
@@ -74,7 +74,7 @@ const verdicts = [
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 23%, the router 4.0% — one lit'],
   ['11', 'FOUR PACKAGES', 'ENTRY QUARTERS', 'the split view — fifteen doors priced alone'],
-  ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 68% of the graph runs nothing'],
+  ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 69% of the graph runs nothing; three new members added 52 nodes and punched 11'],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', '83% of the city is summer stone — and the port\u2019s original masonry carries the hottest edges'],
 ];
 const galCss = `
@@ -109,9 +109,9 @@ const cover = `<header class="cover">
   <div class="stat-bar" role="group" aria-label="set statistics">
     <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">4</span></div>
-    <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">16</span></div>
-    <div><span class="k">LATEST SHIPPED</span><span class="v">1.9.0 · 2026-08-01</span></div>
-    <div><span class="k">SHEETS</span><span class="v">13 · drawn 2026-08-16–17</span></div>
+    <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">19</span></div>
+    <div><span class="k">LATEST SHIPPED</span><span class="v">1.10.0 · 2026-08-17</span></div>
+    <div><span class="k">SHEETS</span><span class="v">13 · drawn 2026-08-16–17 · recensused 2026-08-31</span></div>
   </div>
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
@@ -127,7 +127,7 @@ const cover = `<header class="cover">
 writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${galCss}</style>
 ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
-<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
+<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · flat sheets 3, 3A and 12 recensused at HEAD 2026-08-31 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
 { desc: 'A thirteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
@@ -149,6 +149,7 @@ ${sheets.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.
 Regenerate with \`node generator/build.mjs .\` from this directory.
 Generated 2026-08-16 by Fable (Claude, AI); npm dates fetched same day.
+Sheets 3, 3A and 12 recensused at HEAD on 2026-08-31.
 `);
 
 console.log('built', sheets.length, 'sheets + megacanvas + gallery + README →', OUT);
