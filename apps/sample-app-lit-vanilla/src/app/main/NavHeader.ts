@@ -3,6 +3,7 @@ import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 import { TransitionController, uiSref, uiSrefActive } from 'lit-ui-router';
 
+import 'sample-app-shared/app/main/UserMenu.js';
 import AppConfig from '../global/appConfig.js';
 import AuthService from '../global/authService.js';
 
@@ -47,7 +48,14 @@ export class NavHeader extends LitElement {
         >
           <a ${uiSref('prefs')}>Preferences</a>
         </li>
+        <!-- one li, children in visual order: float stacking used to reverse
+             two lis, so tab order zigzagged back to the menu (WCAG 2.4.3) -->
         <li class="navbar-right">
+          <sample-user-menu
+            class="logged-in-user"
+            .emailAddress=${emailAddress}
+            @logout=${this.handleLogout}
+          ></sample-user-menu>
           <a
             ${uiSref('home')}
             style="margin-right: 5px"
@@ -61,20 +69,6 @@ export class NavHeader extends LitElement {
           >
             <i class="fa fa-envelope"></i> New Message
           </a>
-        </li>
-
-        <li
-          class="navbar-text navbar-right logged-in-user"
-          style="margin: 0.5em 1.5em"
-        >
-          <div>
-            ${emailAddress} <i class="fa fa-chevron-down"></i>
-            <div class="hoverdrop">
-              <button class="btn btn-primary" @click=${this.handleLogout}>
-                Log Out
-              </button>
-            </div>
-          </div>
         </li>
       </ul>
     `;
