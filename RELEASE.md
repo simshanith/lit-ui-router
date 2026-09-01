@@ -146,7 +146,7 @@ When a release PR merges and main CI is green:
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
-**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`, `ui-router-server@*`); manual dispatch for dry runs
+**Triggers:** Tag push matching a published package tag (`lit-ui-router@*`, `lit-ui-router-mobx@*`, `ui-router-navigation-location-plugin@*`, `ui-router-server@*`, `eslint-plugin-lit-ui-router@*`); manual dispatch for dry runs
 
 [Actions ▸ Publish to NPM ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/publish-npm.yml)
 
@@ -223,8 +223,8 @@ Break the cycle by hand, once, before adding the package to any workflow list:
 
 1. **Seed the package manually** — from a scratch directory containing a
    **minimal hand-written `package.json`** (name and a throwaway prerelease
-   version such as `0.0.1-alpha.0`, nothing else), run a bare `npm publish`
-   with a real token.
+   version such as `0.0.1-alpha.0`, nothing else), run
+   `npm publish --tag latest` with a real token.
 
    Publishing a stub rather than the real package is deliberate: a minimal
    manifest has no `workspace:` or `catalog:` specifiers, so none of the
@@ -232,29 +232,44 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    (`publishPath`, `check:pack`) has to be reproduced by hand. The seed only
    has to make the name exist.
 
-   **Do not pass `--tag`.** A package's first publish always takes `latest`
-   regardless — npm requires that tag to exist. `--tag alpha` cannot protect
-   `latest`; it only points a _second_ tag at the seed, and that one strands as
-   a fossil once the real release moves `latest` on. Both fossils this repo
+   **`--tag latest`, never a channel tag.** A package's first publish always
+   takes `latest` regardless — npm requires that tag to exist — and npm 12
+   refuses to publish a prerelease without an explicit `--tag`, so name the
+   tag it would take anyway. `--tag alpha` cannot protect `latest`; it only
+   points a _second_ tag at the seed, and that one strands as a fossil once the
+   real release moves `latest` on. Both fossils this repo
    accumulated came from exactly that: `lit-ui-router-mobx` seeded at
    `0.1.0-rc.0` under `next` (superseded by `0.1.0` twenty minutes later, tag
    stranded for five weeks), and `ui-router-server` at `0.0.1-alpha.1` under
    `alpha`. Both have since been retired — every package now carries `latest`
    only, which is the steady state [Dist-Tags](#dist-tags) describes.
 
-   The seed therefore holds `latest` until step 4 supersedes it. That is
+   The seed therefore holds `latest` until step 5 supersedes it. That is
    expected, and is why it should be a version nobody would want: short-lived
    and obviously prerelease.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
    pointing at `publish-npm.yml`.
 
-3. **Add the package** to the `bump-version.yml`, `publish-gh.yml`, and
-   `publish-npm.yml` package lists, and to the tag ruleset globs.
+3. **Admit the tag** on the GitHub side: add `<package>@*` to the release
+   tags ruleset and to the `publish` environment's deployment tag policies.
+   Without the latter the tag run fails with "not allowed to deploy to
+   publish due to environment protection rules"; fix the policy and rerun.
 
-4. **Cut the real release** through the standard process.
+   ```bash
+   gh api -X POST repos/simshanith/lit-ui-router/environments/publish/deployment-branch-policies \
+     -f name='<package>@*' -f type=tag
+   ```
 
-5. **Confirm the tag state** once the real release holds `latest`:
+4. **Add the package** to the `bump-version.yml`, `publish-gh.yml`, and
+   `publish-npm.yml` package lists, and to `tools/release`'s
+   devDependencies (the self-dependency guard). This lands last:
+   `publish-gh.yml` tags the current version on the very next push to
+   `main`.
+
+5. **Cut the real release** through the standard process.
+
+6. **Confirm the tag state** once the real release holds `latest`:
 
    ```bash
    npm view <package> dist-tags
