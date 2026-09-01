@@ -1,5 +1,5 @@
-// The `repo/anchor-is-valid` rule: lit-a11y's anchor-is-valid, wrapped so a
-// uiSref element part counts as the href it assigns at runtime (#659).
+// The `lit-ui-router/anchor-is-valid` rule: lit-a11y's anchor-is-valid,
+// wrapped so a uiSref element part counts as the href it assigns at runtime (#659).
 import type { Rule, SourceCode } from 'eslint';
 import litA11y from 'eslint-plugin-lit-a11y';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
@@ -232,8 +232,6 @@ const NO_HREF_MESSAGES = new Set([
  * (32 of them, #606). Wrapping rather than disabling keeps its real coverage:
  * an anchor with neither an href nor a directive still reports, and so does
  * `assignHref: false`, where the rule is right for the right reason (#602).
- *
- * Prototype for #659 — the open question is where this ships, not whether.
  */
 const anchorIsValid: Rule.RuleModule = ruleExtender(
   litA11y.rules['anchor-is-valid'],

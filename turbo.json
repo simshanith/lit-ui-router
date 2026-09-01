@@ -188,6 +188,7 @@
         "**/package.json",
         "eslint.config.ts",
         "eslint-rules/**/*.ts",
+        "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
       ]

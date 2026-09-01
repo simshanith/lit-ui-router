@@ -1,0 +1,32 @@
+{
+  "name": "eslint-plugin-lit-ui-router",
+  "version": "0.0.1",
+  "private": true,
+  "description": "ESLint rules that understand lit-ui-router directives: lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "scripts": {
+    "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
+    "lint": "oxlint .",
+    "test": "node --test \"src/**/*.test.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "eslint-plugin-lit": "catalog:",
+    "eslint-plugin-lit-a11y": "catalog:",
+    "eslint-rule-extender": "catalog:"
+  },
+  "devDependencies": {
+    "@types/node": "catalog:",
+    "eslint": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "catalog:"
+  }
+}

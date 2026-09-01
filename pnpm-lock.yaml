@@ -449,6 +449,9 @@ importers:
       eslint-plugin-lit-a11y:
         specifier: 'catalog:'
         version: 5.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))
+      eslint-plugin-lit-ui-router:
+        specifier: workspace:*
+        version: link:packages/eslint-plugin-lit-ui-router
       eslint-plugin-oxlint:
         specifier: 'catalog:'
         version: 1.80.0(oxlint@1.80.0(oxlint-tsgolint@7.0.2001))
@@ -464,9 +467,6 @@ importers:
       eslint-plugin-wc:
         specifier: 'catalog:'
         version: 3.1.0(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))
-      eslint-rule-extender:
-        specifier: 'catalog:'
-        version: 0.0.1
       husky:
         specifier: 'catalog:'
         version: 9.1.7
@@ -803,6 +803,34 @@ importers:
       concurrently:
         specifier: 'catalog:'
         version: 10.0.5
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.64.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  packages/eslint-plugin-lit-ui-router:
+    dependencies:
+      eslint-plugin-lit:
+        specifier: 'catalog:'
+        version: 2.3.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
+      eslint-plugin-lit-a11y:
+        specifier: 'catalog:'
+        version: 5.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
+      eslint-rule-extender:
+        specifier: 'catalog:'
+        version: 0.0.1
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      eslint:
+        specifier: 'catalog:'
+        version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
       oxfmt:
         specifier: 'catalog:'
         version: 0.64.0
@@ -10290,6 +10318,20 @@ snapshots:
       esquery: 1.7.0
       jsonc-eslint-parser: 3.3.0
 
+  eslint-plugin-lit-a11y@5.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2)):
+    dependencies:
+      '@thepassle/axobject-query': 4.0.0
+      aria-query: 5.3.2
+      axe-core: 4.13.0
+      dom5: 3.0.1
+      emoji-regex: 10.6.0
+      eslint: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
+      eslint-plugin-lit: 2.3.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2))
+      eslint-rule-extender: 0.0.1
+      language-tags: 1.0.9
+      parse5: 7.3.0
+      parse5-htmlparser2-tree-adapter: 6.0.1
+
   eslint-plugin-lit-a11y@5.1.1(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:
       '@thepassle/axobject-query': 4.0.0
@@ -10303,6 +10345,12 @@ snapshots:
       language-tags: 1.0.9
       parse5: 7.3.0
       parse5-htmlparser2-tree-adapter: 6.0.1
+
+  eslint-plugin-lit@2.3.1(eslint@10.9.1(jiti@2.7.0)(supports-color@10.2.2)):
+    dependencies:
+      eslint: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
+      parse5: 8.0.1
+      parse5-htmlparser2-tree-adapter: 8.0.1
 
   eslint-plugin-lit@2.3.1(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1)):
     dependencies:

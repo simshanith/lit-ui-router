@@ -11,7 +11,7 @@ declare module 'eslint-plugin-lit-a11y' {
 }
 
 // eslint-rule-extender ships no declarations either. Narrowed to the one hook
-// repo/anchor-is-valid uses: a report override that can drop a base rule's report.
+// anchor-is-valid uses: a report override that can drop a base rule's report.
 declare module 'eslint-rule-extender' {
   import type { Rule } from 'eslint';
 
