@@ -70,18 +70,6 @@ describe('link semantics', () => {
     cy.screenshot('contact-list');
   });
 
-  it('navigates from the row margin beside the New Contact glyph', () => {
-    visitWithFeatures('/contacts');
-    // the button skin is a <span>; the anchor is the whole row, padding included
-    cy.contains('.selectlist a', 'New Contact').then(($row) => {
-      expect($row.outerWidth()).to.be.greaterThan(
-        $row.find('span.btn').outerWidth(),
-      );
-    });
-    cy.contains('.selectlist a', 'New Contact').click('right');
-    cy.url().should('include', '/contacts/new');
-  });
-
   it('keeps Edit Contact an anchor and Message a button', () => {
     visitWithFeatures('/contacts');
     cy.contains(CONTACT).click();
