@@ -317,6 +317,7 @@
         "tools/lcov-rebase/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/shared/**/*.test.ts",
+        "tools/warn-lanes/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",

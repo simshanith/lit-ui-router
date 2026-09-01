@@ -419,6 +419,9 @@ importers:
       '@tools/eslint-ts-parser':
         specifier: workspace:*
         version: link:tools/eslint-ts-parser
+      '@tools/lint-elements':
+        specifier: workspace:*
+        version: link:tools/lint-elements
       '@tools/lit-template-lint':
         specifier: workspace:*
         version: link:tools/lit-template-lint
@@ -1119,6 +1122,9 @@ importers:
       '@codecov/bundle-analyzer':
         specifier: 'catalog:'
         version: 2.0.1
+      '@tools/warn-lanes':
+        specifier: workspace:*
+        version: link:../warn-lanes
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -1290,6 +1296,27 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.64.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
+  tools/lint-elements:
+    devDependencies:
+      '@tools/warn-lanes':
+        specifier: workspace:*
+        version: link:../warn-lanes
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      eslint:
+        specifier: 'catalog:'
+        version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
       oxfmt:
         specifier: 'catalog:'
         version: 0.64.0
@@ -1487,6 +1514,21 @@ importers:
       vue-tsc:
         specifier: 'catalog:'
         version: 3.3.11(typescript@6.0.3)
+
+  tools/warn-lanes:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.64.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/wintercg-globals:
     devDependencies:

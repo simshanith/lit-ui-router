@@ -26,6 +26,8 @@ import { randomUUID } from 'node:crypto';
 import { appendFile, readdir, readFile, stat } from 'node:fs/promises';
 import { basename, join } from 'node:path';
 
+import { WARN_WATCHED_LANES } from '@tools/warn-lanes/warn-lanes.core.ts';
+
 import {
   type FailureReport,
   type OverviewContext,
@@ -38,6 +40,7 @@ import {
   parseRunSummary,
   stdoutReport,
   summaryMarkdown,
+  warnLaneEntries,
 } from './run-summary.core.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
@@ -81,11 +84,17 @@ async function newestSummary(): Promise<string | undefined> {
   return newest?.path;
 }
 
+/**
+ * Logs for the tasks the report reads: every failing task, plus every
+ * warn-watched lane whatever its exit code — those pass by design, and their
+ * state lives only in the log they printed (which turbo replays on a cache hit).
+ */
 async function readLogs(summary: RunSummary): Promise<Map<string, string>> {
   const logs = new Map<string, string>();
   for (const task of summary.tasks) {
     const code = task.execution?.exitCode;
-    if (typeof code !== 'number' || code === 0) continue;
+    const watched = WARN_WATCHED_LANES.includes(task.taskId);
+    if (!watched && (typeof code !== 'number' || code === 0)) continue;
     try {
       logs.set(task.taskId, await readFile(task.logFile, 'utf8'));
     } catch {
@@ -148,9 +157,11 @@ async function main(): Promise<void> {
   // tasks all exited 0 — turbo itself died, or the runner timed out — is a
   // case summaryMarkdown reports rather than one to bail on.
   const summary = parseRunSummary(JSON.parse(await readFile(path, 'utf8')));
-  const reports = buildReports(summary, await readLogs(summary));
+  const logs = await readLogs(summary);
+  const reports = buildReports(summary, logs);
   await publish(summary, reports, {
     onActions: onActions(),
+    warnLanes: warnLaneEntries(logs),
     // Set by the workflow from the upload step's `artifact-url` output; absent
     // locally, where the file this read is already on disk.
     artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
