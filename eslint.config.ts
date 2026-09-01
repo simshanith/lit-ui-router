@@ -14,7 +14,7 @@ import packageJson from 'eslint-plugin-package-json';
 import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
 import { configs as wcConfigs } from 'eslint-plugin-wc';
 import oxlintDirectiveStubs from './eslint.oxlint-directives.ts';
-import repoRules from './eslint.repo-rules.ts';
+import repoRules from './eslint-rules/index.ts';
 
 export default defineConfig(
   globalIgnores([
@@ -176,7 +176,7 @@ export default defineConfig(
       // service and no type information — that keeps the lane seconds, not minutes.
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
-    plugins: oxlintDirectiveStubs,
+    plugins: { ...oxlintDirectiveStubs, repo: repoRules },
     linterOptions: {
       // oxlint owns the inline directives in these files, so ESLint cannot
       // judge whether one is unused.
@@ -208,26 +208,38 @@ export default defineConfig(
       // Deliberately not adopted (it ships outside best-practice): file
       // organisation, not element semantics — ~20 hits, no defect behind any.
       'wc/no-exports-with-element': 'off',
+      // Replaced by repo/anchor-is-valid, which is the same rule wrapped so a
+      // uiSref element part counts as the href it assigns at runtime (#659).
+      'lit-a11y/anchor-is-valid': 'off',
+      'repo/anchor-is-valid': 'error',
     },
   },
   {
     // Demo/docs surfaces, not shipped UI: a11y findings here are worth seeing
     // but must not gate the library's lint. packages/* stay at error.
     files: ['apps/*/src/**/*.ts', 'examples/*/src/**/*.ts'],
-    rules: Object.fromEntries(
-      Object.entries(litA11yRecommendedRules).map(([rule, severity]) => [
-        rule,
-        severity === 'off' ? 'off' : 'warn',
-      ]),
-    ),
+    rules: {
+      ...Object.fromEntries(
+        Object.entries(litA11yRecommendedRules).map(([rule, severity]) => [
+          rule,
+          severity === 'off' ? 'off' : 'warn',
+        ]),
+      ),
+      // The map above would switch the replaced rule back on.
+      'lit-a11y/anchor-is-valid': 'off',
+      'repo/anchor-is-valid': 'warn',
+    },
   },
   {
     // Test fixtures: elements exist to be driven, not shipped, and their
     // templates are assertion inputs rather than UI.
     files: ['**/*.spec.ts', '**/src/specs/**/*.ts'],
-    rules: Object.fromEntries(
-      Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
-    ),
+    rules: {
+      ...Object.fromEntries(
+        Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
+      ),
+      'repo/anchor-is-valid': 'off',
+    },
   },
   // Keep last: disables any rules oxlint already enforces.
   oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),

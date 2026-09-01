@@ -227,6 +227,9 @@ catalogs:
     eslint-plugin-wc:
       specifier: ^3.1.0
       version: 3.1.0
+    eslint-rule-extender:
+      specifier: ^0.0.1
+      version: 0.0.1
     happy-dom:
       specifier: ^20.11.8
       version: 20.11.8
@@ -461,6 +464,9 @@ importers:
       eslint-plugin-wc:
         specifier: 'catalog:'
         version: 3.1.0(eslint@10.9.1(jiti@2.7.0)(supports-color@8.1.1))
+      eslint-rule-extender:
+        specifier: 'catalog:'
+        version: 0.0.1
       husky:
         specifier: 'catalog:'
         version: 9.1.7

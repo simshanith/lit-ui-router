@@ -1,4 +1,5 @@
-// Local rules for manifest linting (see eslint.config.ts).
+// The `repo/require-build-types` rule: manifest linting for //#lint:package-json
+// (see eslint.config.ts).
 import type { Rule } from 'eslint';
 
 type Json = string | number | boolean | null | Json[] | { [key: string]: Json };
@@ -97,8 +98,4 @@ const requireBuildTypes: Rule.RuleModule = {
   },
 };
 
-export default {
-  rules: {
-    'require-build-types': requireBuildTypes,
-  },
-};
+export { requireBuildTypes };
