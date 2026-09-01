@@ -194,6 +194,12 @@ export function diffWarnings(
 
 export type WarnLaneStatus = 'at-floor' | 'below-floor' | 'above-floor';
 
+const WARN_LANE_STATUSES: readonly WarnLaneStatus[] = [
+  'at-floor',
+  'below-floor',
+  'above-floor',
+];
+
 export function statusOf(total: number, floor: number): WarnLaneStatus {
   if (total > floor) return 'above-floor';
   if (total < floor) return 'below-floor';
@@ -236,8 +242,18 @@ export function parseWarnLaneMarker(line: string): WarnLaneState | undefined {
   } catch {
     return undefined;
   }
+  // Every field, not just the two this function reads: `warnLaneLine`
+  // dereferences the rest, so a partial payload reaches it as a typed lie.
   const state = value as WarnLaneState;
-  if (typeof state?.task !== 'string' || typeof state?.total !== 'number') {
+  if (
+    typeof state?.task !== 'string' ||
+    typeof state.total !== 'number' ||
+    typeof state.floor !== 'number' ||
+    typeof state.regressions !== 'number' ||
+    !WARN_LANE_STATUSES.includes(state.status) ||
+    typeof state.rules !== 'object' ||
+    state.rules === null
+  ) {
     return undefined;
   }
   return state;

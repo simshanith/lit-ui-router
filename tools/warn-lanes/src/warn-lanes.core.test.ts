@@ -200,6 +200,30 @@ describe('the marker', () => {
     assert.equal(parseWarnLaneMarker('warn-lane: {"total":1}'), undefined);
   });
 
+  it('rejects a payload missing any field the report reads', () => {
+    for (const field of Object.keys(state)) {
+      const partial: Record<string, unknown> = { ...state };
+      delete partial[field];
+      assert.equal(
+        parseWarnLaneMarker(`warn-lane: ${JSON.stringify(partial)}`),
+        undefined,
+        `a marker without \`${field}\` must not parse`,
+      );
+    }
+  });
+
+  it('rejects a payload whose fields are present but unusable', () => {
+    for (const broken of [
+      { ...state, status: 'unknown' },
+      { ...state, rules: null },
+    ]) {
+      assert.equal(
+        parseWarnLaneMarker(`warn-lane: ${JSON.stringify(broken)}`),
+        undefined,
+      );
+    }
+  });
+
   it('finds the last marker in a task log', () => {
     const log = [
       '$ lint-elements',
