@@ -6,26 +6,33 @@ const P = 's7b';
 const OX = 600, OY = 96;
 
 // ---- plate 7B: sheet 7's city with every member drawn as a Working Plant --------
-// Massing NEVER changes: footprint side = 1.6·√sloc, height = 3 px per authored
-// file, placements and gate tiers exactly as sheet 7 rev B.  The sprite adds four
+// Massing follows sheet 7, never the sprite: side = 1.6·√sloc, height = 3 px per
+// file, placements and gate tiers exactly as sheet 7 rev D.  The sprite adds four
 // independent state channels (concept 3 of the sprite studies):
 //   RUST  (flank speckle, 5 steps) — member median days since last touch,
-//         steps cut at the weathering census's own distribution (sheet 13):
-//         0 ≤8d · R1 9–29 · R2 30–34 · R3 35–41 · R4 >180 (+ cracks) — the idle
-//         histogram is empty from 60 to 180, so R4 is a gap, not a round number.
-//   STEAM (0–3 puffs) — distinct non-merge commits touching the member, trailing
-//         90 days (2026-05-19 → 08-17, census-steam.mjs).  Breaks at the actual
-//         gaps: 0 puffs ≤2 · 1 puff 4–8 · 2 puffs 9–15 · 3 puffs ≥21.
-//   LAMPS (3 module slots) — test light from plate 7A rev B's meter: lit share
-//         = extent% × line% (how much source the suite loads × how bright).
-//         3 lamps ≥90 · 2 ≥50 · 1 >0 · 0 none; accent lamp = real e2e light no
-//         meter reads (7A cats e/u).  Gaps in the data sit at 26→53 and 69→92.
-//   PIPES (connected vs dashed+drip) — `turbo run build` at HEAD: 22/22 tasks
-//         green (all cache hits — a replay of green).  Every pipe connects.
-//   ALERT (floating triangle) — a gate red at HEAD.  No member-owned gate is
-//         red; the ONE red gate is //#lint:root, failing over diagrams/generator
-//         — the atlas's own drawings.  The triangle hangs over the drafting
-//         office in the alert register, not over any plant.
+//         steps RE-CUT at rev C on the 2026-08-31 idle distribution (sheet 13):
+//         0 ≤14d · R1 ≤30 · R2 ≤37 · R3 ≤58 · R4 >180 (+ cracks).  14 and 30 are
+//         histogram bucket walls, 37 is the median, 58 is the top of the occupied
+//         band; the empty gap is now 61–180, so R4 is still a gap, not a round
+//         number.  A step label does NOT mean across revs what it meant before:
+//         rev B's R2 (30–34d) is not rev C's R2 (31–37d).
+//   STEAM (0–3 puffs) — distinct non-merge commits touching the member, the same
+//         trailing 90-day window as rev B (2026-05-19 → 08-17) re-run at HEAD
+//         (census-steam.mjs).  Breaks at the actual gaps, which held: 0 puffs ≤2 ·
+//         1 puff 4–8 · 2 puffs 9–15 · 3 puffs ≥22.
+//   LAMPS (3 module slots) — test light from plate 7A rev D's meter (itself the
+//         2026-08-17 metering, not re-run): lit share = extent% × line% (how much
+//         source the suite loads × how bright).  3 lamps ≥90 · 2 ≥50 · 1 >0 ·
+//         0 none; accent lamp = real e2e light no meter reads (7A cats e/u).
+//         The values now cluster below 27, between 41 and 69, and above 92.
+//   PIPES (connected vs dashed+drip) — the `turbo run build` graph at HEAD: 22
+//         real tasks in 113 nodes (rev B: 103), last run green 2026-08-17 (all
+//         cache hits — a replay of green).  Every pipe connects.
+//   ALERT (floating triangle) — a gate red at HEAD.  Rev B carried one: //#lint:root
+//         failing with 16 oxlint errors, every one inside diagrams/generator —
+//         the atlas's own drawings.  Commit ffd4ef7 answered it.  At rev C the
+//         register is CLEAR, and the triangle is struck rather than deleted:
+//         an answered alarm is a record, not an erasure.
 // DESIGN GUARD: rust must not collude with gate-tier red — gate hatch is uniform
 // 45° line hatch incl. the cap; rust is a dotted SPECKLE at partial opacity on
 // the flanks only, plus jagged cracks at R4.  A red-gated pristine plant and a
@@ -48,33 +55,37 @@ const TIER = {
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc,
 //  rustStep, steamCommits90d, lamps(0-3 | 'e' = accent unmetered), lampEff%]
 const M = [
-  [1,  'lit-ui-router',            'pkg',  'line',     0,  20, 12, 1189, 14, 2879, 2, 29, 3, 92.2],
-  [2,  'ui-router-server',         'pkg',  'line',   200,  20,  8, 1141, 12, 2174, 2,  9, 3, 99.6],
-  [3,  'lit-ui-router-mobx',       'pkg',  'line',   170, 130,  4,  133,  4,  380, 0,  7, 3, 97.7],
-  [4,  'navigation-location-plugin','pkg', 'line',   260, 130,  1,  105,  7,  410, 0,  8, 3, 100],
-  [5,  'sample-app-shared',        'app',  'line',   570,  10, 36, 2103,  3,  309, 1, 23, 'e', null],
-  [6,  'sample-app-lit-vanilla',   'app',  'line',   720,  10,  8,  401,  0,    0, 3,  7, 'e', null],
-  [7,  'sample-app-lit-mobx',      'app',  'line',   720,  90,  8,  440,  0,    0, 3, 10, 'e', null],
-  [8,  'sample-app-routes',        'app',  'line',   700, 150,  2,   51,  1,  185, 2,  2, 3, 100],
-  [9,  'sample-app-lit-e2e',       'app',  'pr',     580, 150,  1,   57,  4,  348, 0, 15, 'e', null],
-  [10, 'docs',                     'site', 'line',   660, 340,  8,  677,  1,  181, 1, 21, 1, 7.8],
-  [11, 'examples',                 'site', 'line',   660, 430,  7, 1117,  0,    0, 3, 12, 0, null],
-  [12, '@tools/release',           'tool', 'halt',    20, 430, 44, 1871, 19, 1896, 1, 15, 2, 53.2],
-  [13, '@tools/typedoc-plugin',    'tool', 'report', 230, 430,  5,  755,  0,    0, 4,  7, 0, null],
-  [14, '@tools/dts-backtest',      'tool', 'pr',       8, 350,  1,  291,  0,    0, 0,  4, 0, null],
-  [15, '@tools/build_and_test',    'tool', 'report', 330, 430,  5,  427,  2,  378, 1,  5, 2, 61.3],
-  [16, '@tools/shared',            'tool', 'report',  20, 550,  9,  300,  5,  276, 2,  7, 2, 68.7],
-  [17, '@tools/workers-builds',    'tool', 'late',   220, 550,  2,  375,  1,  266, 0,  6, 2, 58.0],
-  [18, '@tools/bundle-probe',      'tool', 'report', 330, 550,  4,  236,  0,    0, 0,  4, 0, null],
-  [19, '@tools/compat-guards',     'tool', 'pr',     130, 550,  7,  189,  1,  112, 0,  4, 1, 12.2],
+  [1,  'lit-ui-router',            'pkg',  'line',     0,  20, 12, 1325, 15, 3757, 3, 31, 3, 92.2],
+  [2,  'ui-router-server',         'pkg',  'line',   200,  20,  8, 1141, 12, 2174, 3,  9, 3, 99.6],
+  [3,  'lit-ui-router-mobx',       'pkg',  'line',   170, 130,  4,  133,  4,  380, 1,  7, 3, 97.7],
+  [4,  'navigation-location-plugin','pkg', 'line',   260, 130,  1,  105,  7,  410, 1,  8, 3, 100],
+  [5,  'sample-app-shared',        'app',  'line',   570,  10, 36, 2132,  3,  309, 3, 23, 'e', null],
+  [6,  'sample-app-lit-vanilla',   'app',  'line',   720,  10,  8,  404,  0,    0, 3,  7, 'e', null],
+  [7,  'sample-app-lit-mobx',      'app',  'line',   720,  90,  8,  443,  0,    0, 3, 10, 'e', null],
+  [8,  'sample-app-routes',        'app',  'line',   700, 150,  2,   51,  1,  185, 3,  2, 3, 100],
+  [9,  'sample-app-lit-e2e',       'app',  'pr',     580, 150,  1,   57,  6,  477, 1, 15, 'e', null],
+  [10, 'docs',                     'site', 'line',   660, 340,  8,  688,  1,  181, 1, 22, 1, 7.7],
+  [11, 'examples',                 'site', 'line',   660, 430, 10, 1387,  0,    0, 1, 14, 0, null],
+  [12, '@tools/release',           'tool', 'halt',    20, 430, 44, 1871, 19, 1898, 3, 15, 2, 53.2],
+  [13, '@tools/typedoc-plugin',    'tool', 'report', 230, 430,  5,  759,  0,    0, 4,  7, 0, null],
+  [14, '@tools/dts-backtest',      'tool', 'pr',       8, 350,  1,  291,  0,    0, 1,  4, 0, null],
+  [15, '@tools/build_and_test',    'tool', 'report', 330, 430,  7, 1128,  3, 1163, 2,  6, 1, 41.0],
+  [16, '@tools/shared',            'tool', 'report',  20, 550, 10,  301,  5,  276, 2,  8, 2, 68.5],
+  [17, '@tools/workers-builds',    'tool', 'late',   220, 550,  2,  375,  1,  269, 1,  8, 2, 58.0],
+  [18, '@tools/bundle-probe',      'tool', 'report', 330, 550,  4,  236,  0,    0, 1,  4, 0, null],
+  [19, '@tools/compat-guards',     'tool', 'pr',     130, 550,  7,  189,  1,  112, 1,  4, 1, 12.2],
   [20, '@tools/oxc-emit',          'tool', 'line',   230, 350,  3,  100,  0,    0, 1,  2, 0, null],
-  [21, '@tools/release-config',    'tool', 'line',   280, 350,  1,   39,  0,    0, 0,  2, 0, null],
-  [22, '@tools/lit-template-lint', 'tool', 'report', 325, 350,  1,   21,  0,    0, 0,  1, 0, null],
-  [23, '@tools/lit-test-env',      'tool', 'pr',      85, 350,  1,   24,  0,    0, 0,  1, 0, null],
-  [24, '@tools/vue-check',         'tool', 'report', 370, 350,  1,   25,  0,    0, 2,  2, 0, null],
-  [25, '@tools/lcov-rebase',       'tool', 'report', 415, 350,  2,   23,  1,   30, 1,  1, 1, 26.1],
-  [26, '@tools/happy-dom',         'tool', 'pr',     125, 350,  1,    8,  1,   26, 1,  1, 0, 0],
+  [21, '@tools/release-config',    'tool', 'line',   280, 350,  1,   39,  0,    0, 1,  2, 0, null],
+  [22, '@tools/lit-template-lint', 'tool', 'report', 325, 350,  1,   21,  0,    0, 0,  2, 0, null],
+  [23, '@tools/lit-test-env',      'tool', 'pr',      85, 350,  1,   24,  0,    0, 1,  1, 0, null],
+  [24, '@tools/vue-check',         'tool', 'report', 370, 350,  1,   25,  0,    0, 3,  2, 0, null],
+  [25, '@tools/lcov-rebase',       'tool', 'report', 415, 350,  2,   23,  1,   30, 2,  1, 1, 26.1],
+  [26, '@tools/happy-dom',         'tool', 'pr',     125, 350,  1,    8,  1,   26, 3,  1, 0, 0],
   [27, '@tools/wintercg-globals',  'tool', 'off',    185, 350,  0,    0,  0,    0, null, 0, null, null],
+  // --- first drawn at rev C: the yard's three newest machines -------------------
+  [28, '@tools/lint-elements',     'tool', 'pr',     380, 550,  1,  186,  0,    0, 0,  2, 0, null],
+  [29, '@tools/warn-lanes',        'tool', 'report', 430, 530,  1,  214,  1,  280, 0,  1, 'e', null],
+  [30, '@tools/eslint-ts-parser',  'tool', 'report',  54, 350,  1,    1,  0,    0, 1,  1, 0, null],
 ];
 const RUST_O = [0, 0.18, 0.32, 0.5, 0.85];
 const PUFFS = (c) => (c <= 2 ? 0 : c <= 8 ? 1 : c <= 15 ? 2 : 3);
@@ -133,7 +144,7 @@ function plant(n) {
     const on = k < lampN;
     return `<rect x="${(lx - lsz / 2).toFixed(1)}" y="${(ly - lsz / 2).toFixed(1)}" width="${lsz}" height="${lsz}" class="${on ? lampCls : 'sks fnone'}" ${on ? 'opacity="0.9"' : ''}/>`;
   }).join('');
-  // PIPES — connected (build green at HEAD, 22/22): solid elbow to ground + flange
+  // PIPES — connected (the build graph's 22 real tasks): elbow to ground + flange
   const pz = Math.min(9, Math.max(2.5, b.h * 0.5));
   const pys = b.s < 20 ? [0.5] : [0.3, 0.62];
   // the elbow lands inside the annex gap (AG) — a pipe never runs into the annex wall
@@ -191,23 +202,23 @@ const TB = `
 <rect x="1090" y="96" width="430" height="122" class="sk fp"/>
 ${txt(1098, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
 <line x1="1090" y1="124" x2="1520" y2="124" class="skf"/>
-${txt(1098, 142, 'RUST (speckle) — idle: 0 ≤8d · R1 ≤29 · R2 ≤34 · R3 ≤41 · R4 >180', 'lbls')}
-${txt(1098, 160, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 4–8 · 2: 9–15 · 3: ≥21', 'lbls')}
+${txt(1098, 142, 'RUST (speckle) — idle: 0 ≤14d · R1 ≤30 · R2 ≤37 · R3 ≤58 · R4 >180 (RE-CUT AT REV C)', 'lbls')}
+${txt(1098, 160, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 4–8 · 2: 9–15 · 3: ≥22', 'lbls')}
 ${txt(1098, 178, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
-${txt(1098, 196, 'PIPES — turbo run build at HEAD, 22/22 green: all connected', 'lbls')}
+${txt(1098, 196, 'PIPES — turbo run build graph: 22 real of 113 nodes, last green 08-17', 'lbls')}
 ${txt(1098, 211, 'thresholds cut at the distributions’ own gaps — see the schedule', 'lblf')}`;
 
 // ---- alert register ---------------------------------------------------------------
 const AR = `
 <rect x="40" y="668" width="600" height="126" class="sk fp"/>
-<polygon points="76,690 62,716 90,716" class="skr fp"/>
-${txt(76, 712, '!', 'lblr', 'middle')}
-${txt(108, 696, 'ALERT REGISTER — ONE ALARM AT HEAD, AND IT RINGS OFF-MAP', 'lbls')}
-${txt(108, 714, 'no member-owned gate is red: build 22/22 green (verified), main CI green.', 'lblf')}
-${txt(108, 728, 'the one red gate is //#lint:root — oxlint, 16 errors, every one inside', 'lblf')}
-${txt(108, 742, 'diagrams/generator/: the atlas’s OWN drawings broke the lint line.', 'lblf')}
-${txt(108, 756, 'the factory runs; the alarm hangs over the drafting office.', 'lbls')}
-${txt(108, 776, 'verified 2026-08-17 · gh run 32074533487 · turbo run build (cached green replay)', 'lblf')}`;
+<polygon points="76,690 62,716 90,716" class="sks fnone"/>
+<line x1="58" y1="720" x2="94" y2="686" class="sks"/>
+${txt(108, 696, 'ALERT REGISTER — THE ALARM IS ANSWERED; THE REGISTER STAYS', 'lbls')}
+${txt(108, 714, 'rev B rang one alarm: //#lint:root, oxlint, 16 errors, every one inside', 'lblf')}
+${txt(108, 728, 'diagrams/generator/ — the atlas’s OWN drawings broke the lint line.', 'lblf')}
+${txt(108, 742, 'commit ffd4ef7 oxlint-cleaned the generator. the yard lints clean at HEAD;', 'lblf')}
+${txt(108, 756, 'no gate is red, member-owned or otherwise. the triangle is struck, not erased.', 'lbls')}
+${txt(108, 776, 're-run 2026-08-31 · oxlint over diagrams/generator, exit 0 · build graph 22 real', 'lblf')}`;
 
 // ---- schedule --------------------------------------------------------------------
 const ART_H = 812;
@@ -224,9 +235,9 @@ ${txt(58, SY + 22, 'PLANT SCHEDULE — per member: rust step (median idle) · st
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
 ${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${M.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, 'TOTAL — 26 plants running, 0 seized · steam 205 member-touches from 343 window commits · 12 lamps-bearing plants · a 28th member (@tools/eslint-ts-parser) has arrived since the census and is not yet on any map', 'lbls')}`;
+${txt(58, SY + 58 + half * 17, 'TOTAL — 29 plants running, 0 seized · steam 219 member-touches from 372 window commits · 12 metered-lamp plants + 5 accent · the yard’s three newest machines (28 · 29 · 30) carry no rust above R1 and not one puff between them', 'lbls')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine now broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, growing from clean through four steps to the typedoc plugin, whose flanks are almost fully rusted and cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, three accent puffs over lit-ui-router, sample-app-shared and docs; up to three green module lamps low on each front face showing how much of the member its own test suite lights, all three lit across the packages district, accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build is green at head, twenty-two tasks of twenty-two. A single red alert triangle appears nowhere over the city: the alert register explains that the one red gate at head is the root lint task, failing over the atlas's own generator directory — the factory runs while the alarm rings over the drafting office. A plant schedule lists every member's channel values.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine now broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, growing from clean through four re-cut steps to the typedoc plugin, whose flanks are almost fully rusted and cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, three accent puffs over lit-ui-router, sample-app-shared and docs; up to three green module lamps low on each front face showing how much of the member its own test suite lights, all three lit across the packages district, accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's twenty-two real tasks last ran green. No alert triangle stands over the city at all: the alert register records that rev B's one red gate — the root lint task, failing over the atlas's own generator directory — was answered by a commit that cleaned the drawings, and the triangle is drawn struck through rather than deleted. A plant schedule lists every member's channel values.">
 ${defs(P)}
 <defs>
   <!-- rust: dotted speckle, deliberately unlike every house line hatch -->
@@ -252,8 +263,8 @@ ${AR}
 
 <!-- district lettering -->
 ${txt(772, 110, 'packages/ — THE PRODUCT LINE', 'lblb')}
-${txt(772, 123, 'all lamps lit (90–100% light) · 53 commits/90d', 'lblf')}
-${txt(772, 135, 'rust only where the port masonry rests between chisels', 'lblf')}
+${txt(772, 123, 'all lamps lit (90–100% light) · 55 commits/90d', 'lblf')}
+${txt(772, 135, 'every one now at R1 or R3 — the whole district drifted a step', 'lblf')}
 <line x1="766" y1="126" x2="742" y2="168" class="skf"/>
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
@@ -263,23 +274,23 @@ ${txt(1540, 413, 'no meter reads it · vanilla + mobx rust at R3', 'lblf', 'end'
 
 ${txt(1014, 668, 'docs/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1014, 681, 'docs: 3 puffs, 1 lamp — hottest steam, dimmest metered light', 'lblf')}
-${txt(1014, 693, 'examples: 2 puffs, 0 lamps, R3 rust — steaming, unlit, rusting', 'lblf')}
+${txt(1014, 693, 'examples: 2 puffs, 0 lamps, R1 rust — steaming, unlit, freshly worked', 'lblf')}
 <line x1="1008" y1="664" x2="986" y2="640" class="skf"/>
 
 ${txt(60, 560, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(60, 573, '62 commits/90d across 16 machines · pipes all green', 'lblf')}
+${txt(60, 573, '71 commits/90d across 19 machines · pipes all green', 'lblf')}
 ${txt(60, 585, 'the yard rusts at the edges and steams at the centre', 'lblf')}
 <line x1="300" y1="552" x2="330" y2="522" class="skf"/>
 
 <!-- callouts -->
 ${txt(60, 118, 'lit-ui-router — THE FLAGSHIP PLANT', 'lbla')}
-${txt(60, 132, '3 puffs (29 commits/90d) · 3 lamps (92% lit) · rust R2', 'lblf')}
+${txt(60, 132, '3 puffs (31 commits/90d) · 3 lamps (92% lit) · rust R3', 'lblf')}
 ${txt(60, 144, 'the port’s masonry, at full steam with every lamp lit —', 'lblf')}
 ${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
 <line x1="388" y1="127" x2="526" y2="132" class="skf"/>
 
 ${txt(440, 650, '@tools/typedoc-plugin — R4 + cracks, 1 puff:', 'lblr')}
-${txt(440, 662, '3 of 5 files sealed 220d, index.ts still live', 'lblf')}
+${txt(440, 662, '3 of 5 files sealed 234d, index.ts still live', 'lblf')}
 <line x1="448" y1="636" x2="440" y2="492" class="skf"/>
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex, and 0 lamps:', 'lblr')}
@@ -290,29 +301,29 @@ ${schedule}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'B',
+  num: '7B', id: 'working', rev: 'C',
   title: 'THE WORKING CITY',
-  sub: 'ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · surveyed 2026-08-17 · REV B 2026-08-31: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap',
+  sub: 'ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered',
   scale: 'WHOLE WORKSPACE',
   form: 'WORKING CITY',
   svg,
-  caption: 'Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. The one alarm at HEAD rings over no plant at all — it rings over the drawings.',
+  caption: 'Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. Rev B’s one alarm rang over no plant at all — it rang over the drawings; rev C draws it struck through, because it was answered.',
   notes: `
 <p><strong>The sprite decorates; the census still governs.</strong> Every block is sheet 7 rev B's, unchanged: footprint 1.6·√sloc, height 3 px per authored file, spec annexes beside their buildings, gate severity in the same colours with the same uniform hatch including the cap. The Working Plant sprite (concept 3 of the sprite studies) adds four state channels as overlays. The design guard from the study is enforced: rust is a dotted <em>speckle</em> at partial opacity on the flanks only — never the cap, never a 45° line hatch — so a red-gated pristine plant (uniform hatch, cap included) and a rusting never-gating plant cannot be confused, in either theme.</p>
-<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is the weathering census (sheet 13): median days since last touch per member, five steps cut where the idle histogram actually cuts — the top step is the 60–180-day gap nothing occupies, so R4 means genuinely sealed, and only the typedoc plugin wears it. STEAM is distinct non-merge commits touching the member in the trailing 90 days (2026-05-19 → 08-17): the counts break cleanly at 2, 8 and 15, giving 0–3 puffs; three plants steam at three puffs — <code>lit-ui-router</code> (29), <code>sample-app-shared</code> (23), <code>docs</code> (21). LAMPS compress plate 7A's meter to one number, lit share = extent × line coverage, whose values cluster below 26, between 53 and 69, and above 92 — three lamps, two, one; the accent lamp is 7A's honest category for e2e light no meter reads. PIPES are live: <code>turbo run build</code> at HEAD, 22 of 22 tasks green (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
-<p><strong>The channels disagree, which is the point.</strong> A single wreck-to-splendor axis would have to average these stories away: <code>lit-ui-router</code> is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. The typedoc plugin is the only R4 rust on the sheet, cracked flanks and all, yet still emits a puff, because <code>index.ts</code> takes commits while <code>symbols/</code> sleeps its 220 days. <code>examples</code> steams at two puffs with zero lamps and R3 rust — worked on, untested, aging — and <code>docs</code> pairs the city's third-hottest steam with its dimmest metered light (7.8% lit). <code>@tools/happy-dom</code> keeps plate 7A's strangest fact: a plant with its own spec annex and no lamp lit, because the spec is a canary pointed upstream.</p>
-<p><strong>The alert channel found exactly one alarm, and it is not on the map.</strong> No member-owned gate is red at HEAD: the build is green, main's CI is green. The one red gate is <code>//#lint:root</code> — oxlint failing with 16 errors, every one of them inside <code>diagrams/generator/</code>. The atlas broke its own lint line drawing itself. The Factorio alert triangle therefore hangs in the alert register, over the drafting office, with the run id cited — drawing it over any plant would be fiction, and omitting it would be flattery.</p>
-<p><strong>Housekeeping the survey turned up.</strong> A 28th workspace member, <code>@tools/eslint-ts-parser</code>, has arrived since sheet 7's census was taken and appears in turbo's build graph; it stands on no map in this set yet and is recorded in the schedule total until the census is re-taken. The steam total (205 member-touches from 343 window commits) double-counts commits that touch several members, as any per-member count must; the window commit count is given so the two are never confused.</p>`,
+<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is the weathering census (sheet 13): median days since last touch per member, five steps cut where the idle histogram actually cuts — re-cut at rev C, see below. The top step is still the empty gap nothing occupies (now 61–180 days), so R4 means genuinely sealed, and only the typedoc plugin wears it. STEAM is distinct non-merge commits touching the member in the same trailing 90-day window rev B used (2026-05-19 → 08-17), re-run at HEAD: the counts still break cleanly at 2, 8 and 15, giving 0–3 puffs; three plants steam at three puffs, the same three — <code>lit-ui-router</code> (31), <code>sample-app-shared</code> (23), <code>docs</code> (22). LAMPS compress plate 7A's meter to one number, lit share = extent × line coverage, whose values now cluster below 27, between 41 and 69, and above 92 — three lamps, two, one; the accent lamp is 7A's honest category for e2e light no meter reads. PIPES are the <code>turbo run build</code> graph at HEAD: 22 real tasks in 113 nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
+<p><strong>The channels disagree, which is the point.</strong> A single wreck-to-splendor axis would have to average these stories away: <code>lit-ui-router</code> is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. The typedoc plugin is the only R4 rust on the sheet, cracked flanks and all, yet still emits a puff, because <code>index.ts</code> takes commits while <code>symbols/</code> sleeps its 234 days. <code>examples</code> steams at two puffs with zero lamps and only R1 rust — worked on, untested, and no longer aging — and <code>docs</code> pairs the city's third-hottest steam with its dimmest metered light (7.7% lit). The sharpest new disagreement is <code>@tools/build_and_test</code>: six commits of steam, and a lamp that went <em>out</em> — the error summary added 372 sloc that no suite loads, so its 7A reach fell from 61% to 41% and the plant dropped from two lamps to one. Work and light move independently, and the sprite is what lets you see it. <code>@tools/happy-dom</code> keeps plate 7A's strangest fact: a plant with its own spec annex and no lamp lit, because the spec is a canary pointed upstream.</p>
+<p><strong>The one alarm rev B drew has been answered — and the register keeps the record.</strong> Rev B's alert channel found exactly one red gate at HEAD: <code>//#lint:root</code>, oxlint failing with 16 errors, every one of them inside <code>diagrams/generator/</code>. The atlas had broken its own lint line drawing itself, and the triangle hung over the drafting office rather than over any plant. Commit <code>ffd4ef7</code> — "answer plate 7B's alarm: oxlint-clean the atlas generator" — fixed exactly that, and oxlint over <code>diagrams/generator</code> exits 0 at HEAD. So rev C strikes the triangle through instead of deleting it: an answered alarm is a record, and this is the third time the set has moved its own subject, after the lodash swap on sheet 8 and the lit dedupe on sheet 10.</p>
+<p><strong>REV C — the ladder was re-cut, so read the labels afresh.</strong> Two more weeks of clock pushed nine members' median idle into a 42–58-day band that rev B's ladder had no step for: its steps were cut at the 2026-08-17 histogram's gaps (R3 ≤41, R4 &gt;180 because nothing sat between 60 and 180). The plate's stated method is "thresholds cut at the distributions' own gaps", so honouring the method meant new numbers rather than forcing old ones: rev C cuts at 0 ≤14 · R1 ≤30 · R2 ≤37 · R3 ≤58 · R4 &gt;180, where 14 and 30 are histogram walls, 37 is the median idle and 58 is the top of the occupied band. <strong>A step label therefore does not mean the same thing across revs — rev B's R2 is not rev C's R2</strong>, and the ladder shape is preserved (№13 remains the sole cracked R4) rather than the ladder's numbers. Three members are drawn here for the first time: <code>@tools/lint-elements</code> and <code>@tools/warn-lanes</code> (born 2026-08-31, #639) and <code>@tools/eslint-ts-parser</code> (born 2026-08-16, #557) — the "28th member on no map" rev B recorded in its own total, now placed. All three are the cleanest machines in the yard: no rust above R1 and not one puff between them. The steam total (219 member-touches from 372 window commits) double-counts commits that touch several members, as any per-member count must; the window commit count is given so the two are never confused.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member, massed by sheet 7’s census — unchanged'),
     keyRow(`<rect x="6" y="3" width="36" height="12" class="sk fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-rust)" opacity="0.5"/>`, 'rust speckle (flanks only) — median idle days, 5 steps'),
     keyRow('<path d="M8,15 L12,10 L10,4" class="skr" fill="none"/><path d="M20,15 L23,11 L21,5" class="skr" fill="none"/>', 'cracks — R4 only: idle past the 180-day gap'),
     keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="sks fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="sks fnone" opacity="0.6"/>', 'steam — 0–3 puffs = commits trailing 90 days'),
-    keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="ska fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="ska fnone" opacity="0.6"/>', 'accent plume — top steam band (≥21 commits)'),
+    keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="ska fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="ska fnone" opacity="0.6"/>', 'accent plume — top steam band (≥22 commits)'),
     keyRow('<rect x="8" y="6" width="5" height="5" class="skg fg"/><rect x="16" y="6" width="5" height="5" class="skg fg"/><rect x="24" y="6" width="5" height="5" class="sks fnone"/>', 'module lamps — lit share of plate 7A’s test light'),
     keyRow('<rect x="8" y="6" width="5" height="5" class="ska fa"/><rect x="16" y="6" width="5" height="5" class="sks fnone"/><rect x="24" y="6" width="5" height="5" class="sks fnone"/>', 'accent lamp — e2e light, real but unmetered'),
-    keyRow('<path d="M4,9 L30,9 L30,16" class="sks" fill="none"/><circle cx="4" cy="9" r="2" class="sks fp2"/>', 'pipe, connected — build green at HEAD (all 22/22 are)'),
-    keyRow('<polygon points="24,2 17,15 31,15" class="skr fp"/><text x="24" y="12.5" class="lblr" text-anchor="middle">!</text>', 'alert — a red gate at HEAD (one exists: over the drawings)'),
+    keyRow('<path d="M4,9 L30,9 L30,16" class="sks" fill="none"/><circle cx="4" cy="9" r="2" class="sks fp2"/>', 'pipe, connected — the build graph’s 22 real tasks, last green'),
+    keyRow('<polygon points="24,2 17,15 31,15" class="sks fnone"/><line x1="14" y1="17" x2="34" y2="1" class="sks"/>', 'alert, struck — rev B’s one red gate, answered by ffd4ef7'),
     keyRow('<rect x="6" y="3" width="36" height="12" class="fr"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'gate severity — sheet 7’s, uniform hatch incl. cap'),
   ].join('\n'),
 };
