@@ -1,11 +1,18 @@
 // The `lit-ui-router/` eslint plugin (#659): rules that understand
 // lit-ui-router directives. Private for now — the ship decision comes after
 // the rules prove themselves in this repo's own lanes.
-import type { Linter } from 'eslint';
+import type { Linter, Rule } from 'eslint';
 import packageJson from '../package.json' with { type: 'json' };
 import { anchorIsValid } from './anchor-is-valid.ts';
 
-const plugin = {
+/** The plugin object shape; explicit so the dist d.ts is self-contained. */
+export interface LitUiRouterPlugin {
+  meta: { name: string; version: string };
+  rules: Record<string, Rule.RuleModule>;
+  configs: { recommended: Linter.Config[] };
+}
+
+const plugin: LitUiRouterPlugin = {
   meta: {
     name: packageJson.name,
     version: packageJson.version,

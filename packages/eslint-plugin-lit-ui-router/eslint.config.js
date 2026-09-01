@@ -6,6 +6,7 @@ import tsParser from '@tools/eslint-ts-parser';
 import eslintPluginPlugin from 'eslint-plugin-eslint-plugin';
 
 export default [
+  { ignores: ['dist/**'] },
   {
     ...eslintPluginPlugin.configs.recommended,
     files: ['src/**/*.ts'],
