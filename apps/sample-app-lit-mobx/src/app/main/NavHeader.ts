@@ -1,10 +1,11 @@
 import { html, LitElement } from 'lit';
-import { customElement, query, state } from 'lit/decorators.js';
+import { customElement } from 'lit/decorators.js';
 import { when } from 'lit/directives/when.js';
 import { compareStructural } from 'mobx';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import { ReactionController } from 'lit-ui-router-mobx';
 
+import 'sample-app-shared/app/main/UserMenu.js';
 import AppConfig from '../global/appConfig.js';
 import AuthService from '../global/authService.js';
 
@@ -26,56 +27,12 @@ export class NavHeader extends LitElement {
     { equals: compareStructural },
   );
 
-  // Disclosure state for the logged-in-user menu; :hover still reveals it too.
-  // Local view state, so it stays a @state() rather than a MobX observable.
-  @state()
-  private userMenuOpen = false;
-
-  @query('.logged-in-user .disclosure')
-  private readonly disclosure?: HTMLElement | null;
-
-  @query('.logged-in-user .disclosure-toggle')
-  private readonly disclosureToggle?: HTMLButtonElement | null;
-
-  // `focusout` is bound here rather than in the template: lit-analyzer's
-  // no-unknown-event doesn't know the event, and the rule is a repo-wide error.
-  connectedCallback() {
-    super.connectedCallback();
-    this.addEventListener('focusout', this.handleUserMenuFocusout);
-  }
-
-  disconnectedCallback() {
-    this.removeEventListener('focusout', this.handleUserMenuFocusout);
-    super.disconnectedCallback();
-  }
-
   handleLogout() {
-    this.userMenuOpen = false;
     this.dispatchEvent(new Event('logout'));
   }
 
-  private toggleUserMenu() {
-    this.userMenuOpen = !this.userMenuOpen;
-  }
-
-  // Escape closes the disclosure and returns focus to its trigger.
-  private handleUserMenuKeydown(event: KeyboardEvent) {
-    if (event.key !== 'Escape' || !this.userMenuOpen) return;
-    this.userMenuOpen = false;
-    this.disclosureToggle?.focus();
-  }
-
-  // Focus leaving the widget closes it, so it can't stay stuck open.
-  private readonly handleUserMenuFocusout = (event: FocusEvent) => {
-    const widget = this.disclosure;
-    const next = event.relatedTarget;
-    if (!widget || (next instanceof Node && widget.contains(next))) return;
-    this.userMenuOpen = false;
-  };
-
   render() {
     const { isAuthenticated, emailAddress } = this.auth.value;
-    const chevron = this.userMenuOpen ? 'fa-chevron-up' : 'fa-chevron-down';
     const navbar = html`
       <ul class="nav nav-tabs">
         <li
@@ -119,22 +76,10 @@ export class NavHeader extends LitElement {
           class="navbar-text navbar-right logged-in-user"
           style="margin: 0.5em 1.5em"
         >
-          <div class="disclosure" @keydown=${this.handleUserMenuKeydown}>
-            <button
-              type="button"
-              class="disclosure-toggle"
-              aria-expanded=${this.userMenuOpen ? 'true' : 'false'}
-              aria-controls="logged-in-user-menu"
-              @click=${this.toggleUserMenu}
-            >
-              ${emailAddress} <i class="fa ${chevron}"></i>
-            </button>
-            <div class="hoverdrop" id="logged-in-user-menu">
-              <button class="btn btn-primary" @click=${this.handleLogout}>
-                Log Out
-              </button>
-            </div>
-          </div>
+          <sample-user-menu
+            .emailAddress=${emailAddress}
+            @logout=${this.handleLogout}
+          ></sample-user-menu>
         </li>
       </ul>
     `;
