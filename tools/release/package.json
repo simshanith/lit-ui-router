@@ -25,6 +25,7 @@
     "@tools/workers-builds": "workspace:*",
     "@types/node": "catalog:",
     "@types/pacote": "catalog:",
+    "eslint-plugin-lit-ui-router": "workspace:*",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "oxfmt": "catalog:",

@@ -1,13 +1,16 @@
 {
   "name": "eslint-plugin-lit-ui-router",
-  "version": "0.0.1",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "description": "ESLint rules that understand lit-ui-router directives: lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
   "keywords": [
     "eslint",
     "eslintplugin"
   ],
   "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
   "license": "MIT",
   "author": "Shane Daniel",
   "repository": {
@@ -24,6 +27,7 @@
     "!src/*.d.ts"
   ],
   "type": "module",
+  "sideEffects": false,
   "exports": {
     ".": "./src/index.ts"
   },
@@ -41,6 +45,8 @@
   "scripts": {
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"eslint-plugin-lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
+    "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:rules": "eslint-doc-generator",
     "format": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",
@@ -55,8 +61,10 @@
     "eslint-rule-extender": "catalog:publishedDependencies"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "catalog:",
     "@tools/eslint-ts-parser": "workspace:*",
     "@tools/oxc-emit": "workspace:*",
+    "@tools/release-config": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:peerFloor",
     "eslint-doc-generator": "catalog:",
@@ -64,6 +72,7 @@
     "eslint-plugin-lit-a11y": "catalog:peerFloor",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "release-it": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
