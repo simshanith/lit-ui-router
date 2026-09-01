@@ -184,10 +184,14 @@
       ]
     },
     "//#lint:package-json": {
+      // $TURBO_DEFAULT$ so the list can't go stale into a false cache hit;
+      // the globs stay as documentation of what the lane actually reads
       "inputs": [
+        "$TURBO_DEFAULT$",
         "**/package.json",
         "eslint.config.ts",
         "eslint-rules/**/*.ts",
+        "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
       ]

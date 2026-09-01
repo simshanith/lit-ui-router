@@ -40,8 +40,10 @@
     "commitlint.config.ts",
     "eslint.config.ts",
     "eslint.oxlint-directives.ts",
-    "eslint.plugin-types.d.ts",
     "eslint-rules/**/*.ts",
+    // eslint.config.ts pulls the plugin's src in through the workspace dep;
+    // its untyped-dep declarations must ride along for this program too.
+    "packages/eslint-plugin-lit-ui-router/src/plugin-types.d.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"

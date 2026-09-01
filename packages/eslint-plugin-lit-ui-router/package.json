@@ -1,0 +1,76 @@
+{
+  "name": "eslint-plugin-lit-ui-router",
+  "version": "0.0.1",
+  "private": true,
+  "description": "ESLint rules that understand lit-ui-router directives: lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+  "keywords": [
+    "eslint",
+    "eslintplugin"
+  ],
+  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router",
+  "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/eslint-plugin-lit-ui-router"
+  },
+  "files": [
+    "dist/**",
+    "!dist/.*/**",
+    "docs/**",
+    "src/*.ts",
+    "!src/*.spec.ts",
+    "!src/*.d.ts"
+  ],
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "publishConfig": {
+    "main": "./dist/index.js",
+    "types": "./dist/index.d.ts",
+    "exports": {
+      ".": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      },
+      "./package.json": "./package.json"
+    }
+  },
+  "scripts": {
+    "build:js": "oxc-emit-js",
+    "build:types": "oxc-emit-dts",
+    "docs:rules": "eslint-doc-generator",
+    "format": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",
+    "lint": "oxlint .",
+    "lint:docs": "eslint-doc-generator --check",
+    "lint:rules": "eslint --config eslint.rules.config.js .",
+    "test": "node --test \"src/**/*.spec.ts\"",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "eslint-plugin-lit": "catalog:publishedDependencies",
+    "eslint-rule-extender": "catalog:publishedDependencies"
+  },
+  "devDependencies": {
+    "@tools/eslint-ts-parser": "workspace:*",
+    "@tools/oxc-emit": "workspace:*",
+    "@types/node": "catalog:",
+    "eslint": "catalog:peerFloor",
+    "eslint-doc-generator": "catalog:",
+    "eslint-plugin-eslint-plugin": "catalog:",
+    "eslint-plugin-lit-a11y": "catalog:peerFloor",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:"
+  },
+  "peerDependencies": {
+    "eslint": "catalog:publishedPeer",
+    "eslint-plugin-lit-a11y": "catalog:publishedPeer"
+  },
+  "engines": {
+    "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
+  }
+}

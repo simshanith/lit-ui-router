@@ -1,5 +1,5 @@
-// The `repo/anchor-is-valid` rule: lit-a11y's anchor-is-valid, wrapped so a
-// uiSref element part counts as the href it assigns at runtime (#659).
+// The `lit-ui-router/anchor-is-valid` rule: lit-a11y's anchor-is-valid,
+// wrapped so a uiSref element part counts as the href it assigns at runtime (#659).
 import type { Rule, SourceCode } from 'eslint';
 import litA11y from 'eslint-plugin-lit-a11y';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
@@ -232,10 +232,8 @@ const NO_HREF_MESSAGES = new Set([
  * (32 of them, #606). Wrapping rather than disabling keeps its real coverage:
  * an anchor with neither an href nor a directive still reports, and so does
  * `assignHref: false`, where the rule is right for the right reason (#602).
- *
- * Prototype for #659 — the open question is where this ships, not whether.
  */
-const anchorIsValid: Rule.RuleModule = ruleExtender(
+const extended: Rule.RuleModule = ruleExtender(
   litA11y.rules['anchor-is-valid'],
   {
     reportOverrides: (descriptor, context) => {
@@ -251,5 +249,21 @@ const anchorIsValid: Rule.RuleModule = ruleExtender(
     },
   },
 );
+
+// The extender passes the base rule's meta through wholesale, docs.url
+// included — without this override the rule advertises lit-a11y's docs.
+// `schema` stays the base rule's: options are deliberately passed through.
+const anchorIsValid: Rule.RuleModule = {
+  ...extended,
+  meta: {
+    ...extended.meta,
+    docs: {
+      ...extended.meta?.docs,
+      description:
+        "lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+      url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md',
+    },
+  },
+};
 
 export { anchorIsValid };

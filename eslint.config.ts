@@ -13,6 +13,7 @@ import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
 import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
 import { configs as wcConfigs } from 'eslint-plugin-wc';
+import litUiRouter from 'eslint-plugin-lit-ui-router';
 import oxlintDirectiveStubs from './eslint.oxlint-directives.ts';
 import repoRules from './eslint-rules/index.ts';
 
@@ -169,6 +170,11 @@ export default defineConfig(
       // is on as a guard against future code written in the shape it can see.
       wcConfigs['flat/best-practice'],
       litA11y.configs.recommended,
+      // Replaces lit-a11y/anchor-is-valid with lit-ui-router/anchor-is-valid,
+      // the same rule wrapped so a uiSref element part counts as the href it
+      // assigns at runtime (#659). Must extend after lit-a11y's config: the
+      // plugin doesn't register lit-a11y itself (peer — the host's instance).
+      ...litUiRouter.configs.recommended,
     ],
     languageOptions: {
       parser: tsParser,
@@ -176,7 +182,7 @@ export default defineConfig(
       // service and no type information — that keeps the lane seconds, not minutes.
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
-    plugins: { ...oxlintDirectiveStubs, repo: repoRules },
+    plugins: { ...oxlintDirectiveStubs },
     linterOptions: {
       // oxlint owns the inline directives in these files, so ESLint cannot
       // judge whether one is unused.
@@ -208,10 +214,6 @@ export default defineConfig(
       // Deliberately not adopted (it ships outside best-practice): file
       // organisation, not element semantics — ~20 hits, no defect behind any.
       'wc/no-exports-with-element': 'off',
-      // Replaced by repo/anchor-is-valid, which is the same rule wrapped so a
-      // uiSref element part counts as the href it assigns at runtime (#659).
-      'lit-a11y/anchor-is-valid': 'off',
-      'repo/anchor-is-valid': 'error',
     },
   },
   {
@@ -227,7 +229,7 @@ export default defineConfig(
       ),
       // The map above would switch the replaced rule back on.
       'lit-a11y/anchor-is-valid': 'off',
-      'repo/anchor-is-valid': 'warn',
+      'lit-ui-router/anchor-is-valid': 'warn',
     },
   },
   {
@@ -238,7 +240,7 @@ export default defineConfig(
       ...Object.fromEntries(
         Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
       ),
-      'repo/anchor-is-valid': 'off',
+      'lit-ui-router/anchor-is-valid': 'off',
     },
   },
   // Keep last: disables any rules oxlint already enforces.
