@@ -109,8 +109,7 @@ const galCss = `
 .lang td:first-child { text-align: left; letter-spacing: 0.08em; }
 .lang .bar { width: 40%; padding-right: 0; }
 .lang .bar span { display: block; height: 7px; background: var(--accent); }
-.lang tr:last-child td { border-bottom: none; color: var(--ink-soft); }
-.lang tr:last-child .bar span { background: var(--edge); }
+.lang tr:last-child td { border-bottom: none; }
 .survey .basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
   padding: 8px 14px 9px; border-top: 1.5px solid var(--ink); background: var(--paper-2); }
 .gal-body p { font-size: 15.5px; max-width: 72ch; margin-bottom: 11px; }
@@ -143,7 +142,12 @@ const SURVEY_LANGS = [
   ['CSS', 2, 442],
   ['TOML', 5, 236],
   ['BASH', 9, 233],
-  ['…and 6 more languages', 33, 282],   // SVG, Patch, .d.ts, JSONC, Shell, License
+  ['SVG', 17, 103],
+  ['Patch', 3, 59],
+  ['TypeScript Typings', 7, 51],
+  ['JSONC', 2, 46],
+  ['Shell', 3, 18],
+  ['License', 1, 5],
 ];
 const num = (v) => v.toLocaleString('en-US');
 const TOP_CODE = SURVEY_LANGS[0][2];
