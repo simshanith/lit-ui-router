@@ -143,6 +143,46 @@ jobs:
           # Cypress video off in CI (configs keep video:true for local runs);
           # the cypressVideo dispatch input re-enables it for debugging.
           CYPRESS_video: ${{ inputs.cypressVideo == true }}
+      - name: Upload turbo run summaries
+        # Uploaded BEFORE the report so the report can link it: the report caps
+        # every list it prints, and this is the uncapped copy to download when
+        # the tail is the interesting part. Tiny JSON, so a longer retention
+        # than the video/log artifacts costs nothing and outlives the logs.
+        id: run_summaries
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v7
+        # Fail open twice over. `if-no-files-found` covers the run that died
+        # before turbo wrote a summary; this covers the upload itself, which
+        # can fail on a service, quota or network error. Neither is a reason
+        # to redden a required job whose build already passed — the report
+        # simply omits the link when `artifact-url` never arrives.
+        continue-on-error: true
+        with:
+          name: turbo-run-summaries
+          # No `include-hidden-files` despite the dot: the hidden check runs on
+          # each traversed basename from the search root down, and `.turbo` is
+          # above the root here. Verified — the artifact holds the JSON.
+          path: .turbo/runs/
+          retention-days: 30
+          if-no-files-found: warn
+      - name: Turbo run summary
+        # Reads the `--summarize` artifact the ci/ci_main step just wrote and
+        # reports it: cache split, slowest tasks and longest dependency chain
+        # every run, plus the failing tasks when the run was red. On a red run
+        # it republishes only the tasks that really failed — turbo's stream
+        # also prints ELIFECYCLE for every task it CANCELLED, which the run
+        # summary omits entirely.
+        #
+        # `!cancelled()` rather than `always()`: a cancelled job is exactly
+        # when the artifact lies, since the tasks turbo killed are missing from
+        # it. Placed before codecov_bundle so no later `turbo run` can be the
+        # newest summary in .turbo/runs, and it fails open: a broken reporter
+        # warns, never adds a red step of its own.
+        if: ${{ !cancelled() }}
+        run: mise run //tools/build_and_test:turbo_summary
+        env:
+          # Empty when the upload found nothing; the report then omits the link.
+          TURBO_SUMMARY_ARTIFACT_URL: ${{ steps.run_summaries.outputs.artifact-url }}
       - name: Upload Codecov bundle stats
         run: mise run codecov_bundle
         env:

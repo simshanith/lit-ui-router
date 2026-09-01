@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, render } from 'lit';
+import { html, render, TemplateResult } from 'lit';
 import { TargetState } from '@uirouter/core';
 
 import {
@@ -82,6 +82,30 @@ describe('uiSref directive', () => {
     return { anchor, uiRouter };
   }
 
+  /** renders an arbitrary template inside a started router */
+  async function setupWithTemplate(
+    states: LitStateDeclaration[],
+    template: TemplateResult,
+  ): Promise<HTMLElement> {
+    router = createTestRouter(states);
+
+    const uiRouter = document.createElement('ui-router');
+    uiRouter.uiRouter = router;
+    container.appendChild(uiRouter);
+    await waitForUpdate(uiRouter);
+
+    const wrapper = document.createElement('div');
+    uiRouter.appendChild(wrapper);
+
+    render(template, wrapper);
+    await tick(50);
+
+    router.start();
+    await tick(50);
+
+    return wrapper;
+  }
+
   describe('href generation', () => {
     it('should set href attribute for state with URL', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
@@ -158,6 +182,32 @@ describe('uiSref directive', () => {
       // Should not have href or have empty href
       const href = anchor.getAttribute('href');
       expect(href === null || href === '').toBe(true);
+    });
+
+    it('should remove href when the target loses its url', async () => {
+      router = createTestRouter([
+        { name: 'home', url: '/home' },
+        { name: 'abstract', abstract: true },
+      ]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      // one literal, so the part and the directive instance are reused
+      const link = (state: string) => html`<a ${uiSref(state)}>Link</a>`;
+
+      render(link('home'), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('a')!.hasAttribute('href')).toBe(true);
+
+      render(link('abstract'), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('a')!.hasAttribute('href')).toBe(false);
     });
   });
 
@@ -243,6 +293,44 @@ describe('uiSref directive', () => {
       expect(goSpy).not.toHaveBeenCalled();
       // positive proof: the click reached default-action stage with its
       // default intact — the suppression helper was the only preventer
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'click',
+          tag: 'a',
+          defaultPrevented: false,
+        }),
+      ]);
+    });
+
+    it('should ignore click with shift key', async () => {
+      const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
+      const { anchor } = await setupWithSref(states, 'home');
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      // shift-click opens the href in a new window
+      await clickLocatedElement(anchor, { modifiers: ['Shift'] });
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'click',
+          tag: 'a',
+          defaultPrevented: false,
+        }),
+      ]);
+    });
+
+    it('should ignore click with alt key', async () => {
+      const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
+      const { anchor } = await setupWithSref(states, 'home');
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      // alt-click downloads the href on most platforms
+      await clickLocatedElement(anchor, { modifiers: ['Alt'] });
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
       expect(suppression.events).toEqual([
         expect.objectContaining({
           type: 'click',
@@ -354,6 +442,443 @@ describe('uiSref directive', () => {
         }),
       ]);
     });
+
+    it('should ignore click with rel="external noopener"', async () => {
+      // rel is a token list; an exact-string comparison misses every anchor
+      // that pairs external with another token
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')} rel="external noopener">Link</a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: false }),
+      ]);
+    });
+
+    it('should ignore click on an anchor with download', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')} download>Link</a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: false }),
+      ]);
+    });
+
+    // any target but _self leaves this browsing context, so it is the
+    // browser's click, not ours
+    it.each([
+      ['_top', 'escapes an enclosing frame'],
+      ['_parent', 'escapes one level of framing'],
+      ['results', 'names a frame, or opens a window when none matches'],
+      ['_BLANK', 'browsing-context keywords are ASCII case-insensitive'],
+      [' _blank', 'untrimmed, so this is a frame named " _blank"'],
+    ])('should ignore click with target="%s" (%s)', async (target) => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')} target=${target}>Link</a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: false }),
+      ]);
+    });
+
+    // guards the regression the widening could introduce: _self is this
+    // context, so it stays ours
+    it.each(['_self', '_SELF'])(
+      'should navigate on click with target="%s"',
+      async (target) => {
+        const wrapper = await setupWithTemplate(
+          [{ name: 'home', url: '/home' }],
+          html`<a ${uiSref('home')} target=${target}>Link</a>`,
+        );
+
+        const goSpy = vi.spyOn(router!.stateService, 'go');
+        await clickLocatedElement(wrapper.querySelector('a')!);
+        await tick();
+
+        expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+      },
+    );
+
+    it('should navigate on a button carrying target="_top"', async () => {
+      // target means nothing on a button, so it must not suppress the click.
+      // set imperatively: it is invalid markup, which lit-analyzer rejects
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
+      );
+      const button = wrapper.querySelector('button')!;
+      button.setAttribute('target', '_top');
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(button);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+  });
+
+  describe('assignHref', () => {
+    const home: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
+
+    it('should write href to a non-link by default', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<button ${uiSref('home')}>Go</button>`,
+      );
+
+      expect(wrapper.querySelector('button')!.getAttribute('href')).toContain(
+        '/home',
+      );
+      // the 1.x default is unchanged behaviour, but it names the fix
+      expect(warn).toHaveBeenCalledWith(
+        expect.stringContaining("{ assignHref: 'auto' }"),
+      );
+      warn.mockRestore();
+    });
+
+    it('should warn once per element, not once per render', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      router = createTestRouter([{ name: 'user', url: '/user/:id' }]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      const link = (id: string) =>
+        html`<button ${uiSref('user', { id })}>Go</button>`;
+      render(link('1'), wrapper);
+      await tick(50);
+      render(link('2'), wrapper);
+      await tick(50);
+
+      expect(warn).toHaveBeenCalledTimes(1);
+      warn.mockRestore();
+    });
+
+    it('should stay silent outside lit dev mode, but still write href', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const wrapper = await setupWithTemplate(
+          home,
+          html`<button ${uiSref('home')}>Go</button>`,
+        );
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated; the 1.x default still assigns
+        expect(wrapper.querySelector('button')!.getAttribute('href')).toContain(
+          '/home',
+        );
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
+    it('should not write href to a non-link under auto', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
+      );
+
+      expect(wrapper.querySelector('button')!.hasAttribute('href')).toBe(false);
+      expect(warn).not.toHaveBeenCalled();
+      warn.mockRestore();
+    });
+
+    it('should still write href to an anchor under auto', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: 'auto' })}>Link</a>`,
+      );
+
+      expect(wrapper.querySelector('a')!.getAttribute('href')).toContain(
+        '/home',
+      );
+    });
+
+    it('should write href to an SVG anchor under auto', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<svg><a ${uiSref('home', {}, { assignHref: 'auto' })}>x</a></svg>`,
+      );
+
+      // localName is 'a' for the SVG element too, so no namespace check
+      expect(wrapper.querySelector('svg a')!.getAttribute('href')).toContain(
+        '/home',
+      );
+    });
+
+    it('should never write href under false', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })}>Link</a>`,
+      );
+
+      expect(wrapper.querySelector('a')!.hasAttribute('href')).toBe(false);
+    });
+
+    it('should still dispatch uiSrefTarget under false', async () => {
+      // the href is never written, so an href-keyed dispatch guard would
+      // suppress the event for every sref (the #588 split is what makes
+      // this option possible)
+      router = createTestRouter(home);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      const eventSpy = vi.fn();
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
+
+      render(
+        html`<a ${uiSref('home', {}, { assignHref: false })}>Link</a>`,
+        wrapper,
+      );
+      await tick(50);
+
+      expect(eventSpy).toHaveBeenCalled();
+    });
+
+    it('should remove an href it wrote when the option is flipped', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      router = createTestRouter(home);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      const link = (assignHref: boolean | 'auto') =>
+        html`<button ${uiSref('home', {}, { assignHref })}>Go</button>`;
+
+      render(link(true), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('button')!.hasAttribute('href')).toBe(true);
+
+      render(link('auto'), wrapper);
+      await tick(50);
+      expect(wrapper.querySelector('button')!.hasAttribute('href')).toBe(false);
+      warn.mockRestore();
+    });
+
+    it('should leave an href it did not write alone', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })} href="/authored"
+          >Link</a
+        >`,
+      );
+
+      expect(wrapper.querySelector('a')!.getAttribute('href')).toBe(
+        '/authored',
+      );
+    });
+
+    it('should still navigate on click under auto on a button', async () => {
+      // the option governs the href only; it is never the switch for clicks
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('button')!);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+
+    it('should not leak assignHref into the transition options', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: true, reload: true })}
+          >Link</a
+        >`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      const options = goSpy.mock.calls[0][2]!;
+      expect(options).not.toHaveProperty('assignHref');
+      expect(options).toHaveProperty('reload', true);
+    });
+  });
+
+  describe('descendant clicks (currentTarget)', () => {
+    // event.target is the deepest node clicked, so every guard that reads an
+    // attribute off it is dead whenever a link wraps its label
+
+    it('should ignore a descendant click on target="_blank"', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')} target="_blank"><span>Link</span></a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('span')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({
+          type: 'click',
+          tag: 'span',
+          defaultPrevented: false,
+        }),
+      ]);
+    });
+
+    it('should ignore a descendant click on rel="external"', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')} rel="external"><span>Link</span></a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('span')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: false }),
+      ]);
+    });
+
+    it('should still navigate on a plain descendant click', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')}><span>Link</span></a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('span')!);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+  });
+
+  describe('defaultPrevented', () => {
+    it('should not navigate when another handler cancelled the event', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<a ${uiSref('home')}>Link</a>`,
+      );
+
+      // capture phase on an ancestor runs before the element's own listener,
+      // which is the only way a consumer can get in front of the router
+      wrapper.addEventListener('click', (event) => event.preventDefault(), {
+        capture: true,
+      });
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('non-link elements', () => {
+    // the guards defer to native click behaviour; an element that has none
+    // has nothing to defer to, so bailing drops the click instead of
+    // handing it back to the browser
+
+    // 'auto' only silences the 1.x href deprecation notice; the guards key off
+    // isNativeLink, not href presence, so it changes nothing these specs assert
+
+    it('should navigate on a shift-click on a button', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('button')!, {
+        modifiers: ['Shift'],
+      });
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+
+    it('should navigate on a meta-click on a button', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('button')!, {
+        modifiers: ['Meta'],
+      });
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+
+    it('should still honour defaultPrevented on a button', async () => {
+      const wrapper = await setupWithTemplate(
+        [{ name: 'home', url: '/home' }],
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
+      );
+
+      wrapper.addEventListener('click', (event) => event.preventDefault(), {
+        capture: true,
+      });
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('button')!);
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('uiSrefTarget event', () => {
@@ -412,6 +937,98 @@ describe('uiSref directive', () => {
 
       expect(receivedTargetState).toBeDefined();
       expect(receivedTargetState?.name()).toBe('home');
+    });
+
+    it('should dispatch for a state whose navigable has no url', async () => {
+      router = createTestRouter([{ name: 'abstract', abstract: true }]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      let receivedTargetState: TargetState | undefined;
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, ((
+        event: UiSrefTargetEvent,
+      ) => {
+        receivedTargetState = event.detail.targetState;
+      }) as EventListener);
+
+      // core returns null from href(): the old guard compared that to the
+      // absent attribute, matched, and returned before dispatching
+      render(html`<a ${uiSref('abstract')}>Link</a>`, wrapper);
+      await tick(50);
+
+      expect(receivedTargetState?.name()).toBe('abstract');
+    });
+
+    it('should dispatch when only a non-url param changes', async () => {
+      router = createTestRouter([
+        {
+          name: 'compose',
+          url: '/compose',
+          params: { message: { value: null, dynamic: true } },
+        },
+      ]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      // one template literal, so lit reuses the part and the directive
+      // instance; two literals would be two templates and a fresh element
+      const link = (message: string) =>
+        html`<a ${uiSref('compose', { message })}>Link</a>`;
+
+      render(link('a'), wrapper);
+      await tick(50);
+
+      const hrefBefore = wrapper.querySelector('a')!.getAttribute('href');
+
+      const eventSpy = vi.fn();
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
+
+      render(link('b'), wrapper);
+      await tick(50);
+
+      // the param never reaches the url, so the old href-change guard held
+      expect(wrapper.querySelector('a')!.getAttribute('href')).toBe(hrefBefore);
+      expect(eventSpy).toHaveBeenCalled();
+      const { targetState } = (eventSpy.mock.calls[0][0] as UiSrefTargetEvent)
+        .detail;
+      expect(targetState.params().message).toBe('b');
+    });
+
+    it('should not re-dispatch when the target is unchanged', async () => {
+      router = createTestRouter([{ name: 'home', url: '/home' }]);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      const link = () => html`<a ${uiSref('home')}>Link</a>`;
+
+      render(link(), wrapper);
+      await tick(50);
+
+      const eventSpy = vi.fn();
+      wrapper.addEventListener(UI_SREF_TARGET_EVENT, eventSpy);
+
+      render(link(), wrapper);
+      await tick(50);
+
+      expect(eventSpy).not.toHaveBeenCalled();
     });
   });
 

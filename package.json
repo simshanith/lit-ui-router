@@ -21,6 +21,7 @@
     "format:toml": "mise run format_toml",
     "lint": "turbo run lint",
     "lint:actionlint": "mise run lint_actionlint",
+    "lint:elements": "eslint --cache --cache-location .cache/eslint-elements --cache-strategy content \"{packages,apps,examples}/*/src/**/*.ts\"",
     "lint:markdown": "mise run lint_markdown",
     "lint:package-json": "eslint --format tap \"**/package.json\" pnpm-workspace.yaml",
     "lint:root": "oxlint --ignore-pattern apps --ignore-pattern tools --ignore-pattern docs --ignore-pattern packages --ignore-pattern examples .",
@@ -38,16 +39,20 @@
     "@commitlint/config-conventional": "catalog:",
     "@commitlint/types": "catalog:",
     "@tools/compat-guards": "workspace:*",
+    "@tools/eslint-ts-parser": "workspace:*",
     "@tools/lit-template-lint": "workspace:*",
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "diff": "catalog:",
     "eslint": "catalog:",
     "eslint-formatter-tap": "catalog:",
+    "eslint-plugin-lit": "catalog:",
+    "eslint-plugin-lit-a11y": "catalog:",
     "eslint-plugin-oxlint": "catalog:",
     "eslint-plugin-package-json": "catalog:",
     "eslint-plugin-pnpm": "catalog:",
     "eslint-plugin-turbo": "catalog:",
+    "eslint-plugin-wc": "catalog:",
     "husky": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
@@ -60,5 +65,5 @@
   "engines": {
     "node": ">=24.18.0"
   },
-  "packageManager": "pnpm@11.21.0+sha512.521705bce689924eac72f5a3587122f362689ef6571e55ba80076fd637c11132ecffada26fad4ea79c485bfddbfd3d5a2a5b05805a77e893de71ec8a6cca3bb1"
+  "packageManager": "pnpm@12.0.0+sha512.9e2e3dc3911995868dc94b8175c217c27e95408fa03b4a22749778f2b34f773b77cdd3b39ede8171b22fcd53be6a35342e9fac9948a68ef58df6488ce89a7e67"
 }

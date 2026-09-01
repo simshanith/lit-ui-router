@@ -20,15 +20,15 @@ export default () =>
       "password")
     </p>
     <div>
-      <button ${uiSref('mymessages')} class="btn btn-primary">
+      <a ${uiSref('mymessages')} class="btn btn-primary">
         <i class="fa fa-envelope"></i><span>Messages</span>
-      </button>
-      <button ${uiSref('contacts')} class="btn btn-primary">
+      </a>
+      <a ${uiSref('contacts')} class="btn btn-primary">
         <i class="fa fa-users"></i><span>Contacts</span>
-      </button>
-      <button ${uiSref('prefs')} class="btn btn-primary">
+      </a>
+      <a ${uiSref('prefs')} class="btn btn-primary">
         <i class="fa fa-cogs"></i><span>Preferences</span>
-      </button>
+      </a>
     </div>
     <h4>Patterns and Recipes</h4>
     <ul>

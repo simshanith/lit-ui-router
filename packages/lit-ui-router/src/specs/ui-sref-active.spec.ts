@@ -429,6 +429,533 @@ describe('uiSrefActive directive', () => {
     });
   });
 
+  describe('aria-current', () => {
+    const parentChildStates: LitStateDeclaration[] = [
+      { name: 'parent', url: '/parent' },
+      { name: 'parent.child', url: '/child' },
+    ];
+
+    it('should set aria-current="page" on an anchor when the exact state is active', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should remove aria-current when the state becomes inactive', async () => {
+      const { wrapper } = await setupWithStates([
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ]);
+
+      render(
+        html`<a ${uiSref('home')} ${uiSrefActive({ activeClasses: ['active'] })}
+          >Home</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'home');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+
+      await routerGo(router, 'about');
+      await tick(100);
+
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should not set aria-current on an ancestor link that is active but not exact', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should apply a configured aria-current value', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: 'step',
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('step');
+    });
+
+    it('should leave aria-current untouched when disabled', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: false,
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should not default aria-current on for non-link elements', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      expect(item.classList.contains('active')).toBe(true);
+      expect(item.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('should apply an explicit aria-current value to a non-link element', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: 'location',
+          })}
+        >
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      expect(item.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('should combine a wrapper for classes with an inner link for aria-current', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('parent')} ${uiSrefActive({})}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const item = wrapper.querySelector('li')!;
+      const anchor = wrapper.querySelector('a')!;
+      expect(item.classList.contains('active')).toBe(true);
+      expect(item.hasAttribute('aria-current')).toBe(false);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should default aria-current on for role="link" elements', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<span
+          role="link"
+          ${uiSref('parent', {}, { assignHref: 'auto' })}
+          ${uiSrefActive({})}
+          >Parent</span
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const span = wrapper.querySelector('span')!;
+      expect(span.getAttribute('aria-current')).toBe('page');
+      // aria-current follows the role, href follows the tag: under auto the
+      // span takes the first and not the second
+      expect(span.hasAttribute('href')).toBe(false);
+    });
+
+    it('should default aria-current on for an SVG anchor', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      // `tagName` is 'a' for SVG and 'A' for HTML, so a tag check written
+      // against `tagName` silently skips this one; `isNativeLink` reads
+      // `localName`, which is lowercase for both
+      render(
+        html`<svg>
+          <a ${uiSref('parent')} ${uiSrefActive({})}>
+            <text>Parent</text>
+          </a>
+        </svg>`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('svg a')!;
+      expect(anchor.namespaceURI).toBe('http://www.w3.org/2000/svg');
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should mark an ancestor when given a per-state value', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { exact: 'page', active: 'location' },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('should take the exact value, not the active one, when exactly active', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { exact: 'page', active: 'location' },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      // exact is a branch, not an addition: `active` is not consulted here.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should keep the ancestor state off when asked for explicitly', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { exact: 'page', active: false },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      // `active` already defaults to false, so this is the same behaviour as
+      // omitting the key. Pinned so that giving `active` a non-false default
+      // later cannot silently start marking ancestors that opted out.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.hasAttribute('aria-current')).toBe(false);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should keep the exact default when only the active value is given', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: { active: 'location' },
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('location');
+
+      // The keys default independently: supplying `active` must not cost the
+      // link its `exact` default, which the object form otherwise passes
+      // through untouched.
+      await routerGo(router, 'parent');
+      await tick(100);
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+    });
+
+    it('should not clear an aria-current it did not set', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          aria-current="location"
+          ${uiSref('parent')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      // Active but not exact, so the directive has nothing to write — and must
+      // not treat the template's own value as its to remove.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('location');
+    });
+
+    it('should warn once per element when taking over an authored value', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            aria-current="location"
+            ${uiSref('parent')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        // Nothing written yet, so nothing taken over yet.
+        await routerGo(router, 'parent.child');
+        await tick(100);
+        expect(warn).not.toHaveBeenCalled();
+
+        await routerGo(router, 'parent');
+        await tick(100);
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toContain('aria-current="location"');
+
+        // The destruction it warned about.
+        await routerGo(router, 'parent.child');
+        await tick(100);
+        const anchor = wrapper.querySelector('a')!;
+        expect(anchor.hasAttribute('aria-current')).toBe(false);
+
+        // Re-author the attribute so the directive faces a genuine second
+        // takeover — otherwise the "not written yet" branch would carry this
+        // assertion and the once-per-element guard would never be exercised.
+        anchor.setAttribute('aria-current', 'location');
+        await routerGo(router, 'parent');
+        await tick(100);
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should stay silent outside lit dev mode, but still take over', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            aria-current="location"
+            ${uiSref('parent')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        await routerGo(router, 'parent');
+        await tick(100);
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated; the takeover itself still happens
+        const anchor = wrapper.querySelector('a')!;
+        expect(anchor.getAttribute('aria-current')).toBe('page');
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
+    it('should not warn when there was no authored value to take over', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            ${uiSref('parent')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        await routerGo(router, 'parent');
+        await tick(100);
+
+        const anchor = wrapper.querySelector('a')!;
+        expect(anchor.getAttribute('aria-current')).toBe('page');
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should not warn when aria-current is disabled', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates(parentChildStates);
+
+        render(
+          html`<a
+            aria-current="page"
+            ${uiSref('parent')}
+            ${uiSrefActive({
+              activeClasses: ['active'],
+              ariaCurrentValue: false,
+            })}
+            >Parent</a
+          >`,
+          wrapper,
+        );
+        await tick(50);
+
+        await routerGo(router, 'parent');
+        await tick(100);
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should leave a consumer-managed value alone when disabled', async () => {
+      const { wrapper } = await setupWithStates(parentChildStates);
+
+      render(
+        html`<a
+          aria-current="page"
+          ${uiSref('parent')}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: false,
+          })}
+          >Parent</a
+        >`,
+        wrapper,
+      );
+      await tick(50);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      // `false` is the full opt-out: the directive neither writes nor clears,
+      // even in the state where it would otherwise be authoritative.
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('aria-current')).toBe('page');
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
+  });
+
   describe('cleanup', () => {
     it('should remove event listeners on disconnect', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];

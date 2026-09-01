@@ -48,18 +48,18 @@ export class NavHeader extends LitElement {
           <a ${uiSref('prefs')}>Preferences</a>
         </li>
         <li class="navbar-right">
-          <button
+          <a
             ${uiSref('home')}
             style="margin-right: 5px"
             class="btn btn-primary fa fa-home"
-          ></button>
-          <button
+          ></a>
+          <a
             ${uiSref('mymessages.compose')}
             style="margin-right: 15px"
             class="btn btn-primary"
           >
             <i class="fa fa-envelope"></i> New Message
-          </button>
+          </a>
         </li>
 
         <li

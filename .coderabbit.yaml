@@ -1,0 +1,130 @@
+# yaml-language-server: $schema=https://storage.googleapis.com/coderabbit_public_assets/schema.v2.json
+#
+# Review behaviour for CodeRabbit. Read from the PR's own branch, so a PR may
+# tune its own review. Static analysis this repo already gates in CI is turned
+# off below — CodeRabbit is here for semantic review, not a second linter.
+language: en-US
+
+tone_instructions: >-
+  Direct and technical. Skip praise and restating the diff. Flag a concern once,
+  with the failing case. Defer to the repo's existing conventions over general
+  best practice.
+
+reviews:
+  profile: chill
+  request_changes_workflow: false
+  high_level_summary: true
+  poem: false
+
+  auto_review:
+    enabled: true
+    # Work here sits in draft for a long time. Review on "ready for review",
+    # not on every WIP push; `@coderabbitai review` pulls one in early.
+    drafts: false
+    # Release PRs from bump-version.yml are a version bump plus a generated
+    # changelog — nothing to review. `gh pr create --label release` applies the
+    # label in the same call that opens the PR, so one is never briefly
+    # unlabeled. A negative-only filter excludes; it does not opt everything
+    # else out.
+    # `no-coderabbit` is the manual escape hatch: label a PR to spend the
+    # review budget elsewhere. `@coderabbitai review` still works on a labelled
+    # PR when you change your mind.
+    labels:
+      - '!release'
+      - '!no-coderabbit'
+    base_branches:
+      - main
+
+  path_filters:
+    - '!pnpm-lock.yaml'
+    - '!examples/*/package-lock.json'
+    - '!.config/mise/mise.lock'
+    - '!**/dist/**'
+    - '!apps/sample-app-shared/public/static/data/corpora/**'
+
+  path_instructions:
+    - path: packages/*/src/**/*.ts
+      instructions: >-
+        Published library source. Anything reaching the emitted `dist/*.d.ts`
+        must compile under TypeScript 5.0 — implementation-only use of newer
+        syntax is fine, but a construct like `NoInfer<T>` in an exported
+        signature breaks the floor. `lit` and `@uirouter/core` are peer
+        dependencies resolved to one shared singleton; never import a second
+        copy or promote either to a runtime dependency. Do not add runtime
+        dependencies to these packages without calling it out explicitly.
+        Comments state a constraint the code cannot show, in one line, or are
+        omitted.
+
+    - path: packages/lit-ui-router/src/**/*.ts
+      instructions: >-
+        Lit reactive controllers and directives. Check disconnect/reconnect
+        teardown: every subscription or transition hook registered on connect
+        must be released on disconnect, and re-registered on reconnect.
+        Element-part directives do not render under @lit-labs/ssr, so any
+        behaviour that must survive SSR belongs in an attribute position.
+
+    - path: '**/*.spec.ts'
+      instructions: >-
+        Lit re-render specs must build their markup from a single shared
+        template factory. Two separate `html` tagged literals produce two
+        templates, so Lit discards and recreates the directive instead of
+        updating it, and the assertion silently stops testing re-render.
+
+    - path: .github/workflows/**
+      instructions: >-
+        A skipped required check reports as passing to branch protection, so
+        weigh whether a new condition can silently degrade a gate. Prefer
+        maintained off-the-shelf actions over bespoke shell.
+
+    - path: tools/**
+      instructions: >-
+        Internal build tooling, never published. Judge it on whether it fails
+        loudly and reproducibly, not on API polish.
+
+    - path: '**/turbo.json'
+      instructions: >-
+        Task `inputs` must over-approximate. Enumerated globs go stale and
+        produce false cache hits; prefer `$TURBO_DEFAULT$`. A task that writes
+        files in place must be marked uncacheable, or a cache hit turns it into
+        a silent no-op.
+
+  pre_merge_checks:
+    # The Semantic PR workflow already enforces the Conventional Commit title.
+    title:
+      mode: 'off'
+    description:
+      mode: warning
+    docstrings:
+      mode: 'off'
+
+  # Every tool below is already a hard gate in `mise run ci`; leaving them on
+  # duplicates CI as advisory PR comments. Secret scanning is the exception —
+  # nothing in this repo covers it.
+  tools:
+    oxc:
+      enabled: false
+    biome:
+      enabled: false
+    eslint:
+      enabled: false
+    actionlint:
+      enabled: false
+    zizmor:
+      enabled: false
+    shellcheck:
+      enabled: false
+    markdownlint:
+      enabled: false
+    yamllint:
+      enabled: false
+    gitleaks:
+      enabled: true
+
+chat:
+  auto_reply: true
+
+knowledge_base:
+  learnings:
+    scope: local
+  code_guidelines:
+    enabled: true

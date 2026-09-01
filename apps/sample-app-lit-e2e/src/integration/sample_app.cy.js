@@ -13,16 +13,14 @@ describe('unauthenticated sample app', () => {
 
   it('renders home', () => {
     visitWithFeatures('/home');
-    cy.get('button.btn').contains('Messages');
-    cy.get('button.btn').contains('Contacts');
-    cy.get('button.btn').contains('Preferences');
+    // navigation controls are anchors, so they carry a real href
+    cy.contains('a.btn', 'Messages').should('have.attr', 'href');
+    cy.contains('a.btn', 'Contacts').should('have.attr', 'href');
+    cy.contains('a.btn', 'Preferences').should('have.attr', 'href');
   });
 
   it('asks for authentication', () => {
-    visitWithFeatures('/home')
-      .get('button.btn')
-      .contains('Preferences')
-      .click();
+    visitWithFeatures('/home').get('a.btn').contains('Preferences').click();
 
     cy.contains('Log In');
     cy.contains('Username');

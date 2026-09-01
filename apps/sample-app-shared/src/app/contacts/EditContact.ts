@@ -1,7 +1,7 @@
 import { LitElement, html } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { UIViewInjectedProps, uiSref } from 'lit-ui-router';
-import { isEqual, cloneDeep } from 'lodash';
+import { isEqual, cloneDeep } from 'lodash-es';
 
 import './ContactList.js';
 import './ContactForm.js';
@@ -98,7 +98,10 @@ export class EditContact extends LitElement {
       ></sample-contact-form>
       <hr />
       <div>
-        <button ${uiSref('^')} class="btn btn-primary">
+        <button
+          ${uiSref('^', {}, { assignHref: 'auto' })}
+          class="btn btn-primary"
+        >
           <i class="fa fa-close"></i><span>Cancel</span>
         </button>
         <button class="btn btn-primary" @click=${this.saveContact}>

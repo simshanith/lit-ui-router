@@ -2,7 +2,7 @@ import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
-import { isEqual } from 'lodash';
+import { isEqual } from 'lodash-es';
 
 import { orderBy } from './messageListUIService.js';
 
@@ -84,9 +84,16 @@ export class MessageTable extends LitElement {
       [...messages].sort(orderBy(sort)),
       ({ _id }) => _id,
       (message) =>
+        // 'auto' keeps href off a <tr>, which is no anchor; aria-current is off
+        // by default on the same shape (isLinkElement, ui-sref-active.ts) and is
+        // opted into here because a selected row is the current item in a set —
+        // 'true', not the 'location' that marks a step in a flow
         html`<tr
-          ${uiSrefActive({ activeClasses: ['active'] })}
-          ${uiSref('.message', { messageId: message._id })}
+          ${uiSrefActive({
+            activeClasses: ['active'],
+            ariaCurrentValue: 'true',
+          })}
+          ${uiSref('.message', { messageId: message._id }, { assignHref: 'auto' })}
         >
           ${visibleColumns.map(
             (column) =>

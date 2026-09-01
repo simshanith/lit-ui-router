@@ -60,9 +60,10 @@ idiomatic_version_file_enable_tools = ["node"]
 # Bootstrap pnpm, not the version that runs: `packageManager` is the authority
 # and pnpm >=11.10 self-swaps to it. Must be the aqua backend — the npm `pnpm`
 # package is a placeholder whose `preinstall` hardlinks the real binary from an
-# optional platform dep, which neither corepack nor mise's aube installer runs.
-# Keep at or above 11.20.0: below that a pnpm-12 lockfile reads as outdated.
-"aqua:pnpm/pnpm" = "11.21.0"
+# optional platform dep, which mise's aube installer does not run.
+# Held equal to `packageManager`, so the bootstrap is already the version that
+# runs and the self-swap is a no-op.
+"aqua:pnpm/pnpm" = "12.0.0"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
@@ -189,14 +190,16 @@ run = 'turbo run "${usage_package_name?}#build"'
 # the env itself (no CLI flags), plus WRANGLER_LOG for the underlying
 # tasks. TURBO_FORCE is the build-test deflake input: a truthy value
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
+# --summarize writes .turbo/runs/<id>.json (gitignored), which the
+# turbo_summary task reports on every run. It changes nothing about what runs.
 description = "Run the pull-request CI pipeline via turbo"
-run = "turbo run ci --ui=stream --log-order=stream"
+run = "turbo run ci --ui=stream --log-order=stream --summarize"
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
-run = "turbo run ci:main --ui=stream --log-order=stream"
+run = "turbo run ci:main --ui=stream --log-order=stream --summarize"
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

@@ -25,16 +25,10 @@
 | ![passing](https://img.shields.io/badge/published--diff-passing-brightgreen) | The npm release matches `main`              |
 | ![passing](https://img.shields.io/badge/published--diff-passing-orange)      | Unreleased ship-affecting changes on `main` |
 
-The `workers-builds` badge above is the same kind of signal for the deploy pipeline: it diffs the live
-Cloudflare Workers Builds triggers that ship [lit-ui-router.dev](https://lit-ui-router.dev) against the
-repo-owned [desired state](./tools/workers-builds/workers-builds-triggers.config.jsonc). See
-[DEPLOY.md](./DEPLOY.md#cd-pipeline-verification-signal).
-
-| Badge                                                                        | Meaning                                                                   |
-| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| ![passing](https://img.shields.io/badge/workers--builds-passing-brightgreen) | The dashboard triggers match the repo config                              |
-| ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
-| ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
+The `workers-builds` badge at the top is the same kind of signal for the deploy pipeline that ships
+[lit-ui-router.dev](https://lit-ui-router.dev) — see
+[CD-pipeline verification signal](./DEPLOY.md#cd-pipeline-verification-signal) for what it diffs and
+what each colour means.
 
 ---
 
@@ -56,7 +50,7 @@ application states in a transaction-like manner.
 - **Flexible Component Definitions** - Use template functions, LitElement classes, or both
 - **State-based Routing** - Hierarchical states with nested views
 - **Data Resolution** - Fetch data before rendering with built-in resolve system
-- **Navigation Directives** - `uiSref` and `uiSrefActive` for declarative navigation
+- **Navigation Directives** - `uiSref` and `uiSrefActive` for declarative navigation, with `aria-current` on active links out of the box
 
 ## Get Started
 
