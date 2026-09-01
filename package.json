@@ -55,6 +55,7 @@
     "eslint-plugin-pnpm": "catalog:",
     "eslint-plugin-turbo": "catalog:",
     "eslint-plugin-wc": "catalog:",
+    "eslint-rule-extender": "catalog:",
     "husky": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

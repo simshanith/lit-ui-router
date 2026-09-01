@@ -43,6 +43,7 @@ catalog:
   eslint-formatter-tap: ^9.0.1
   eslint-plugin-lit: ^2.3.1
   eslint-plugin-lit-a11y: ^5.1.1
+  eslint-rule-extender: ^0.0.1
   eslint-plugin-oxlint: 1.80.0
   eslint-plugin-package-json: ^1.7.1
   eslint-plugin-pnpm: ^1.8.0
