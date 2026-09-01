@@ -113,13 +113,30 @@ api-docs {
   border-radius: 10px 10px 0 0;
 }
 
+/* the disclosure trigger is a button (a plain action), so strip the UA chrome
+   and let it keep reading as the navbar text it replaced */
+.navheader .logged-in-user .disclosure-toggle {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
 .navheader .logged-in-user div.hoverdrop {
   display: none;
   position: absolute;
   width: 100%;
 }
 
-.navheader .logged-in-user:hover div.hoverdrop {
+/* revealed by hover (mouse) or by the disclosure's expanded state (keyboard) */
+.navheader .logged-in-user:hover div.hoverdrop,
+.navheader
+  .logged-in-user
+  .disclosure-toggle[aria-expanded='true']
+  + div.hoverdrop {
   display: flex;
   flex-direction: row-reverse;
 }
