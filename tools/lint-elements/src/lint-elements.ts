@@ -36,6 +36,7 @@ import {
   tallyFiles,
   totalWarnings,
 } from '@tools/warn-lanes/warn-lanes.core.ts';
+import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 
 /** The turbo task id this lane reports as; must match a WARN_WATCHED_LANES entry. */
 const TASK = '//#lint:elements';
@@ -61,7 +62,7 @@ const ESLINT_ARGS = [
   '.cache/eslint-elements',
   '--cache-strategy',
   'content',
-  '{packages,apps,examples}/*/src/**/*.ts',
+  WORKSPACE_SRC_GLOB,
 ];
 
 /** eslint's `--format json` shape, narrowed to what this lane reads. */

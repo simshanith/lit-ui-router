@@ -1308,6 +1308,9 @@ importers:
 
   tools/lint-elements:
     devDependencies:
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@tools/warn-lanes':
         specifier: workspace:*
         version: link:../warn-lanes
@@ -1329,6 +1332,9 @@ importers:
 
   tools/lit-template-lint:
     devDependencies:
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
