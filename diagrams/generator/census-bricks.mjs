@@ -2,13 +2,15 @@
 // packages, plus @uirouter/core (the baseplate) from the family clone.
 // Same basis as sheets 3 & 4: .ts/.tsx/.js/.mjs under src/, excluding *.d.ts,
 // *.{spec,test}.*, *.types.ts fixtures, specs/ __tests__/ and typedoc stubs.
-// sloc = lines that are neither blank nor comment-only.
-import { readdirSync, readFileSync } from 'node:fs';
+// sloc = scc 4.0.0 `Code` lines (string-aware: template-literal interiors count as code).
+import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
+// FAM is a scratch clone of the upstream family repos, outside this repo by nature.
 const FAM = '/Users/simloovoo/.claude/jobs/a9024f9c/tmp/family-src/';
-const WT =
-  '/Users/simloovoo/Developer/simshanith/ui-router/lit-ui-router/.claude/worktrees/altitude-atlas/packages/';
+const WT = fileURLToPath(new URL('../../packages/', import.meta.url));
 
 const MEMBERS = [
   ['@uirouter/core', FAM + 'core/src'],
@@ -33,32 +35,15 @@ function walk(dir, out = []) {
   return out;
 }
 
-function sloc(file) {
-  const src = readFileSync(file, 'utf8').split('\n');
-  let n = 0,
-    block = false;
-  for (let raw of src) {
-    let l = raw.trim();
-    if (block) {
-      const i = l.indexOf('*/');
-      if (i < 0) continue;
-      l = l.slice(i + 2).trim();
-      block = false;
-    }
-    if (!l) continue;
-    while (l.startsWith('/*')) {
-      const i = l.indexOf('*/');
-      if (i < 0) {
-        block = true;
-        l = '';
-        break;
-      }
-      l = l.slice(i + 2).trim();
-    }
-    if (!l || l.startsWith('//')) continue;
-    n++;
-  }
-  return n;
+// Batch scc over absolute paths; Location echoes each path verbatim.
+// Provision: `mise x aqua:boyter/scc@4.0.0` (bare `scc` is not an aqua name).
+function sccSloc(files) {
+  const out = execFileSync('mise',
+    ['x', 'aqua:boyter/scc@4.0.0', '--', 'scc', '--by-file', '--format', 'json', ...files],
+    { maxBuffer: 1 << 26 });
+  const map = new Map();
+  for (const lang of JSON.parse(out)) for (const f of lang.Files) map.set(f.Location, f.Code);
+  return map;
 }
 
 // The quantization rule drawn on sheet 2 rev B.
@@ -70,7 +55,8 @@ const COURSES = (f) => Math.max(1, Math.ceil(f / 3));
 const rows = [];
 for (const [name, dir] of MEMBERS) {
   const files = walk(dir);
-  const lines = files.reduce((a, f) => a + sloc(f), 0);
+  const code = sccSloc(files);
+  const lines = files.reduce((a, f) => a + code.get(f), 0);
   rows.push([name, files.length, lines, STUDS(lines), SHAPE(STUDS(lines)), COURSES(files.length)]);
 }
 for (const r of rows)

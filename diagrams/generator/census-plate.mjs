@@ -14,8 +14,9 @@
 // Output: a JSON blob on stdout (last line) for sheet12.mjs to eyeball, plus a
 // human-readable matrix on stderr-free stdout above it.
 import { execFileSync } from 'node:child_process';
+import { fileURLToPath } from 'node:url';
 
-const CWD = '/Users/simloovoo/Developer/simshanith/ui-router/lit-ui-router/.claude/worktrees/altitude-atlas';
+const CWD = fileURLToPath(new URL('../..', import.meta.url));
 const PHANTOM = '<NONEXISTENT>';
 
 function dry(pipeline) {

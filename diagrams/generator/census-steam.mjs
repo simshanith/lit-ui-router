@@ -3,8 +3,9 @@
 import { execFileSync } from 'node:child_process';
 import { readdirSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
-const ROOT = '/Users/simloovoo/Developer/simshanith/ui-router/lit-ui-router/.claude/worktrees/altitude-atlas/';
+const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const EXT = /\.(tsx?|jsx?|mjs)$/;
 const SKIP_FILE = (f) => /\.d\.ts$/.test(f) || /\.test-d\.ts$/.test(f);
 const SKIP_DIR = (d) => ['node_modules', 'dist', 'fixtures', '.wrangler', 'cache', '.turbo', 'coverage'].includes(d);

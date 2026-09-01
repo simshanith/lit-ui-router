@@ -2,12 +2,14 @@
 // Basis matches tmp/family-src/measure.mjs, extended to tools/* and apps/*:
 // counted .ts/.tsx/.js/.jsx/.mjs under each member's source dir, excluding *.d.ts,
 // *.test-d.ts, *.{spec,test}.*, specs/ __tests__/ fixtures/ dist/ node_modules/.
-// sloc = lines that are neither blank nor comment-only.
+// sloc = scc 4.0.0 `Code` lines (string-aware: template-literal interiors count as code).
 // @tools/release hosts several instruments, so it is attributed by module prefix.
-import { readdirSync, readFileSync, existsSync } from 'node:fs';
+import { readdirSync, existsSync } from 'node:fs';
 import { join, relative } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { execFileSync } from 'node:child_process';
 
-const ROOT = '/Users/simloovoo/Developer/simshanith/ui-router/lit-ui-router/';
+const ROOT = fileURLToPath(new URL('../../', import.meta.url));
 const EXT = /\.(tsx?|jsx?|mjs)$/;
 const SKIP_FILE = (f) =>
   /\.d\.ts$/.test(f) || /\.test-d\.ts$/.test(f) || /\.(spec|test)\./.test(f) || /\.typedoc\./.test(f);
@@ -23,22 +25,15 @@ function walk(dir, out = []) {
   return out;
 }
 
-function sloc(file) {
-  const src = readFileSync(file, 'utf8').split('\n');
-  let n = 0, block = false;
-  for (let raw of src) {
-    let l = raw.trim();
-    if (block) { const i = l.indexOf('*/'); if (i < 0) continue; l = l.slice(i + 2).trim(); block = false; }
-    if (!l) continue;
-    while (l.startsWith('/*')) {
-      const i = l.indexOf('*/');
-      if (i < 0) { block = true; l = ''; break; }
-      l = l.slice(i + 2).trim();
-    }
-    if (!l || l.startsWith('//')) continue;
-    n++;
-  }
-  return n;
+// Batch scc over absolute paths; Location echoes each path verbatim.
+// Provision: `mise x aqua:boyter/scc@4.0.0` (bare `scc` is not an aqua name).
+function sccSloc(files) {
+  const out = execFileSync('mise',
+    ['x', 'aqua:boyter/scc@4.0.0', '--', 'scc', '--by-file', '--format', 'json', ...files],
+    { maxBuffer: 1 << 26 });
+  const map = new Map();
+  for (const lang of JSON.parse(out)) for (const f of lang.Files) map.set(f.Location, f.Code);
+  return map;
 }
 
 // every authored file in the members this sheet draws
@@ -78,12 +73,13 @@ const INSTRUMENTS = [
 
 const acc = new Map(INSTRUMENTS.map(([n]) => [n, { files: [], sloc: 0 }]));
 const orphans = [];
+const code = sccSloc(POOL.map((f) => ROOT + f));
 for (const f of POOL) {
   const hit = INSTRUMENTS.find(([, rules]) => rules.some((r) => r.test(f)));
   if (!hit) { orphans.push(f); continue; }
   const a = acc.get(hit[0]);
   a.files.push(f);
-  a.sloc += sloc(ROOT + f);
+  a.sloc += code.get(ROOT + f);
 }
 
 const rows = [];
