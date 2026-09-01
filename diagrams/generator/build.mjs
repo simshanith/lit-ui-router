@@ -165,7 +165,7 @@ const survey = `<section class="survey" aria-label="general survey of the reposi
     <tbody>${SURVEY_LANGS.map(([n, f, c]) => `<tr><td>${n}</td><td>${num(f)}</td><td>${num(c)}</td>` +
       `<td class="bar"><span style="width:${((c / TOP_CODE) * 100).toFixed(1)}%"></span></td></tr>`).join('')}</tbody>
   </table>
-  <p class="basis">BASIS — every tracked file on main @ ee438e7 (${num(SURVEY_TOTAL.tracked)} paths, ${num(SURVEY_TOTAL.files)} of them a language scc can name; the rest are binaries and dotfiles) · scc 4.0.0 <code>Code</code> basis · counted 2026-09-01 · deliberately broader than the sheets' authored-source census, and deliberately main: this atlas's own branch would add a 29k-sloc self-portrait.</p>
+  <p class="basis">BASIS — every tracked file on main @ ee438e7 (${num(SURVEY_TOTAL.tracked)} paths, ${num(SURVEY_TOTAL.files)} of them a language scc can name; the rest are binaries, dotfiles, and lockfiles — generated, and rightly left out) · scc 4.0.0 <code>Code</code> basis · counted 2026-09-01 · deliberately broader than the sheets' authored-source census, and deliberately main: this atlas's own branch would add a 29k-sloc self-portrait.</p>
 </section>`;
 
 const cover = `<header class="cover">
