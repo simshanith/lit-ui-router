@@ -212,6 +212,18 @@ api-docs {
   font-family: 'FontAwesome';
 }
 
+/* the sort control is a button (a plain action), so strip the UA chrome and let
+   the column header keep reading as its own label */
+.messagelist thead button {
+  padding: 0;
+  border: 0;
+  background: none;
+  font: inherit;
+  text-align: inherit;
+  color: inherit;
+  cursor: pointer;
+}
+
 .messagelist table td {
   padding: 0.25em 0.75em;
   white-space: nowrap;
