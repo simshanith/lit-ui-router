@@ -12,6 +12,10 @@ export class SortMessages extends LitElement {
   @property({ attribute: false })
   label = '';
 
+  /** Names the button when `label` is deliberately empty (an icon column). */
+  @property({ attribute: false })
+  accessibleLabel = '';
+
   @property({ attribute: false })
   col = '';
 
@@ -38,7 +42,13 @@ export class SortMessages extends LitElement {
       style="padding-left:0.25em"
       class="fa ${sortClass}"
     ></i>`;
-    return html`<span @click=${this.handleClick}>${label} ${chevron}</span>`;
+    return html`<button
+      type="button"
+      aria-label=${label || this.accessibleLabel}
+      @click=${this.handleClick}
+    >
+      ${label} ${chevron}
+    </button>`;
   }
 }
 
