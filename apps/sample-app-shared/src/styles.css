@@ -113,6 +113,17 @@ api-docs {
   border-radius: 10px 10px 0 0;
 }
 
+/* the widget is its own containing block: the merged navbar-right li also
+   holds the two button-shaped anchors, and the panel below sizes to the
+   trigger, not to all three */
+.navheader .logged-in-user {
+  position: relative;
+  /* the margin and the float are the ones the second li used to carry; the
+     float keeps it out of the line box, so merging the lis moves nothing */
+  float: left;
+  margin: 0.5em 1.5em;
+}
+
 /* the disclosure trigger is a button (a plain action), so strip the UA chrome
    and let it keep reading as the navbar text it replaced */
 .navheader .logged-in-user .disclosure-toggle {
