@@ -13,9 +13,6 @@ on:
       - opened
       - synchronize
       - reopened
-      # labeled/unlabeled: the release-label exemption must re-run the check
-      - labeled
-      - unlabeled
 
 # Re-validate only the latest commits per PR
 concurrency:

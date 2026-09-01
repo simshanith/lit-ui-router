@@ -32,6 +32,14 @@ client deployed across every point on the server-support spectrum.
 - [Component Lifecycle Hooks](./component-lifecycle) — `uiCanExit` for
   unsaved-changes prompts and `uiOnParamsChanged` for dynamic parameters
 
+## Links & Markup
+
+- [Design System Links](./design-system-links) — driving a design system's
+  link component (`<sp-link>`, `<md-*>`, an in-house one) with `uiSref`:
+  `assignHref: true` is the option for a custom element that declares its own
+  `href`, and `'auto'` scopes the attribute to real `<a>` elements, with a
+  live example contrasting all three cases
+
 ## Reactivity
 
 - [Reactive Components](./reactive-components) — keep components outside

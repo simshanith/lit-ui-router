@@ -1,0 +1,34 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Design System Links - lit-ui-router</title>
+    <style>
+      :root {
+        color-scheme: light dark;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 800px;
+        margin: 32px auto;
+        padding: 0 20px;
+        color: light-dark(#222, #e6e6e6);
+        background: light-dark(#fff, #1d1d1d);
+      }
+      @media (max-width: 480px) {
+        body {
+          margin: 16px auto;
+          padding: 0 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <app-shell></app-shell>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

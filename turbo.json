@@ -154,6 +154,10 @@
         "eslint.config.ts",
         "eslint.oxlint-directives.ts",
         "eslint.repo-rules.ts",
+        "tools/lint-elements/src/**",
+        // the committed warning floor: raising or lowering it re-runs the lane
+        "tools/lint-elements/warnings.json",
+        "tools/warn-lanes/src/**",
         // feeds both the oxlint-disable layer and the disable-directive stubs
         ".oxlintrc.json",
         "tools/eslint-ts-parser/src/**"

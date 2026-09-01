@@ -3,6 +3,7 @@
 // custom-element lane over src (eslint-plugin-lit / -wc / -lit-a11y).
 // General-purpose JS/TS linting stays in oxlint (.oxlintrc.json).
 import tsParser from '@tools/eslint-ts-parser';
+import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 import { defineConfig, globalIgnores } from 'eslint/config';
 import { configs as litConfigs } from 'eslint-plugin-lit';
 import litA11y, {
@@ -156,8 +157,7 @@ export default defineConfig(
     // *correctness* — unknown tags/attributes/properties/events — and is blind
     // to lifecycle and reactivity semantics: deleting a @property leaves it
     // green. These three plugins cover that blind spot from the class AST.
-    // Same scope as that gate, so the two lanes see the same files.
-    files: ['{packages,apps,examples}/*/src/**/*.ts'],
+    files: [WORKSPACE_SRC_GLOB],
     extends: [
       litConfigs['flat/recommended'],
       // best-practice over recommended. Note require-listener-teardown scores

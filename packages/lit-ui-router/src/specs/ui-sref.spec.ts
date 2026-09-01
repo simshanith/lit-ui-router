@@ -524,7 +524,7 @@ describe('uiSref directive', () => {
       // set imperatively: it is invalid markup, which lit-analyzer rejects
       const wrapper = await setupWithTemplate(
         [{ name: 'home', url: '/home' }],
-        html`<button ${uiSref('home')}>Go</button>`,
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
       );
       const button = wrapper.querySelector('button')!;
       button.setAttribute('target', '_top');
@@ -830,10 +830,13 @@ describe('uiSref directive', () => {
     // has nothing to defer to, so bailing drops the click instead of
     // handing it back to the browser
 
+    // 'auto' only silences the 1.x href deprecation notice; the guards key off
+    // isNativeLink, not href presence, so it changes nothing these specs assert
+
     it('should navigate on a shift-click on a button', async () => {
       const wrapper = await setupWithTemplate(
         [{ name: 'home', url: '/home' }],
-        html`<button ${uiSref('home')}>Go</button>`,
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
       );
 
       const goSpy = vi.spyOn(router!.stateService, 'go');
@@ -848,7 +851,7 @@ describe('uiSref directive', () => {
     it('should navigate on a meta-click on a button', async () => {
       const wrapper = await setupWithTemplate(
         [{ name: 'home', url: '/home' }],
-        html`<button ${uiSref('home')}>Go</button>`,
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
       );
 
       const goSpy = vi.spyOn(router!.stateService, 'go');
@@ -863,7 +866,7 @@ describe('uiSref directive', () => {
     it('should still honour defaultPrevented on a button', async () => {
       const wrapper = await setupWithTemplate(
         [{ name: 'home', url: '/home' }],
-        html`<button ${uiSref('home')}>Go</button>`,
+        html`<button ${uiSref('home', {}, { assignHref: 'auto' })}>Go</button>`,
       );
 
       wrapper.addEventListener('click', (event) => event.preventDefault(), {

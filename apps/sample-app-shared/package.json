@@ -35,6 +35,7 @@
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "@vitest/browser-playwright": "catalog:",
+    "happy-dom": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "playwright": "catalog:",

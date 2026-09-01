@@ -616,7 +616,10 @@ describe('uiSrefActive directive', () => {
       const { wrapper } = await setupWithStates(parentChildStates);
 
       render(
-        html`<span role="link" ${uiSref('parent')} ${uiSrefActive({})}
+        html`<span
+          role="link"
+          ${uiSref('parent', {}, { assignHref: 'auto' })}
+          ${uiSrefActive({})}
           >Parent</span
         >`,
         wrapper,
@@ -628,6 +631,9 @@ describe('uiSrefActive directive', () => {
 
       const span = wrapper.querySelector('span')!;
       expect(span.getAttribute('aria-current')).toBe('page');
+      // aria-current follows the role, href follows the tag: under auto the
+      // span takes the first and not the second
+      expect(span.hasAttribute('href')).toBe(false);
     });
 
     it('should default aria-current on for an SVG anchor', async () => {

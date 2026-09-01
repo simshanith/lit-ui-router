@@ -1,10 +1,10 @@
 {
-  "name": "@tools/lit-template-lint",
+  "name": "@tools/lint-elements",
   "version": "0.0.1",
   "private": true,
-  "description": "Runs lit-analyzer's strict ruleset over packages/ and apps/ src as one program-wide pass",
+  "description": "Runs the eslint-plugin-lit / -wc / -lit-a11y pass over packages, apps and examples src, and ratchets its warnings against a committed snapshot",
   "bin": {
-    "lint-templates": "./src/lint-templates.ts"
+    "lint-elements": "./src/lint-elements.ts"
   },
   "type": "module",
   "scripts": {
@@ -15,8 +15,9 @@
   },
   "devDependencies": {
     "@tools/shared": "workspace:*",
+    "@tools/warn-lanes": "workspace:*",
     "@types/node": "catalog:",
-    "lit-analyzer": "catalog:",
+    "eslint": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"
