@@ -46,7 +46,7 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",
     "lint": "oxlint .",
     "lint:docs": "eslint-doc-generator --check",
-    "lint:rules": "eslint .",
+    "lint:rules": "eslint --config eslint.rules.config.js .",
     "test": "node --test \"src/**/*.spec.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
