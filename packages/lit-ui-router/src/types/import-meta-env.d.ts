@@ -14,8 +14,6 @@ interface ImportMetaEnv {
    * Guards the dev-only warnings — see check:dev-split.
    */
   readonly DEV: boolean;
-  /** test:lit2-compat's expected lit major; the VITE_ prefix carries it in. */
-  readonly VITE_EXPECT_LIT_MAJOR?: string;
 }
 
 interface ImportMeta {
