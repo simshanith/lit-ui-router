@@ -10,21 +10,18 @@
     "example:install:hellosolarsystem": "npm ci --prefix hellosolarsystem",
     "example:install:helloworld": "npm ci --prefix helloworld",
     "example:install:lint-eslint": "npm ci --prefix lint-eslint",
-    "example:install:lint-oxlint": "npm ci --prefix lint-oxlint",
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md,html}\"",
     "postinstall": "concurrently \"npm:example:install:*\"",
     "lint": "concurrently --prefix-colors auto \"npm:lint:oxlint\" \"npm:lint:example:*\"",
     "lint:example:lint-eslint": "npm run lint --prefix lint-eslint",
-    "lint:example:lint-oxlint": "npm run lint --prefix lint-oxlint",
-    "lint:oxlint": "oxlint --disable-nested-config .",
+    "lint:oxlint": "oxlint .",
     "typecheck": "concurrently --prefix-colors auto \"npm:typecheck:*\"",
     "typecheck:design-system-links": "tsc -p design-system-links",
     "typecheck:hellogalaxy": "tsc -p hellogalaxy",
     "typecheck:hellosolarsystem": "tsc -p hellosolarsystem",
     "typecheck:helloworld": "tsc -p helloworld",
-    "typecheck:lint-eslint": "tsc -p lint-eslint",
-    "typecheck:lint-oxlint": "tsc -p lint-oxlint"
+    "typecheck:lint-eslint": "tsc -p lint-eslint"
   },
   "devDependencies": {
     "concurrently": "catalog:",
