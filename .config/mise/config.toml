@@ -63,7 +63,7 @@ idiomatic_version_file_enable_tools = ["node"]
 # optional platform dep, which mise's aube installer does not run.
 # Held equal to `packageManager`, so the bootstrap is already the version that
 # runs and the self-swap is a no-op.
-"aqua:pnpm/pnpm" = "12.0.0"
+"aqua:pnpm/pnpm" = "12.2.1"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
