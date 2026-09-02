@@ -26,6 +26,7 @@
     "@types/node": "catalog:",
     "@types/pacote": "catalog:",
     "@types/semver": "catalog:",
+    "eslint-plugin-lit-ui-router": "workspace:*",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "oxfmt": "catalog:",
