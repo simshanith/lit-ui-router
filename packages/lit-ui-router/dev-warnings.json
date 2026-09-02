@@ -1,0 +1,7 @@
+{
+  "$comment": "Message prefixes that must ship in dist/development/*.js and never in dist/*.js. Gate: check:dev-split (@tools/oxc-emit). Add an entry whenever a warning goes behind the import.meta.env.DEV guard; the gate fails on an undeclared one.",
+  "devOnly": [
+    "lit-ui-router: uiSref wrote href=",
+    "lit-ui-router: uiSrefActive is taking over an existing aria-current="
+  ]
+}
