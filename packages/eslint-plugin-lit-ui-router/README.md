@@ -53,6 +53,54 @@ No lit-a11y `off` line is needed: oxlint ships no lit-a11y rules. `eslint` is im
 
 oxlint's `jsPlugins` is alpha and explicitly outside semver. This package's `test:oxlint` lane gates against the **exact pinned oxlint version** in its own devDependencies and claims nothing beyond it; a break in a later oxlint surfaces on that bump, not in your lint run.
 
+## Running ESLint and oxlint together
+
+ESLint-only, oxlint-only and both-at-once are all supported. If you run both, the recommended split is **oxlint owns `lit-ui-router/anchor-is-valid`** — it is the fast lane, and one report is better than two — while ESLint keeps only the lit-a11y `off`.
+
+`.oxlintrc.json` — the rule runs here:
+
+```json
+{
+  "jsPlugins": ["eslint-plugin-lit-ui-router"],
+  "rules": {
+    "lit-ui-router/anchor-is-valid": "error"
+  }
+}
+```
+
+`eslint.config.js` — **do not** spread `configs.recommended`; turn lit-a11y's rule off by hand:
+
+```js
+import litA11y from 'eslint-plugin-lit-a11y';
+import oxlint from 'eslint-plugin-oxlint';
+
+export default [
+  litA11y.configs.recommended,
+  {
+    // oxlint owns lit-ui-router/anchor-is-valid; this displaces lit-a11y's.
+    rules: { 'lit-a11y/anchor-is-valid': 'off' },
+  },
+  oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
+];
+```
+
+The manual `off` is the whole trick: `eslint-plugin-oxlint` de-duplicates only oxlint's **native** rule names, and has no handling for `jsPlugins` rules at all. Spreading `configs.recommended` on top of the oxlint lane would register the rule a second time and every anchor would report twice.
+
+This repository runs exactly this split — see [`.oxlintrc.json`](../../.oxlintrc.json) and [`eslint.config.ts`](../../eslint.config.ts).
+
+Optionally, exempt test fixtures, whose elements exist to be driven rather than shipped, and whose specs often import `uiSref` by relative path (which the rule cannot recognise as ours):
+
+```json
+{
+  "overrides": [
+    {
+      "files": ["**/*.spec.ts", "**/src/specs/**"],
+      "rules": { "lit-ui-router/anchor-is-valid": "off" }
+    }
+  ]
+}
+```
+
 ## Rules
 
 <!-- begin auto-generated rules list -->

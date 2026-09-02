@@ -1,7 +1,8 @@
-// ESLint owns two lanes: manifests (package.json via eslint-plugin-package-json
-// and eslint-plugin-pnpm, pnpm-workspace.yaml via eslint-plugin-pnpm) and the
-// custom-element lane over src (eslint-plugin-lit / -wc / -lit-a11y).
-// General-purpose JS/TS linting stays in oxlint (.oxlintrc.json).
+// The lane split. ESLint owns manifests (package.json via
+// eslint-plugin-package-json and eslint-plugin-pnpm, pnpm-workspace.yaml via
+// eslint-plugin-pnpm) and the custom-element lane over src (eslint-plugin-lit /
+// -wc / -lit-a11y). oxlint (.oxlintrc.json) owns general-purpose JS/TS *and*
+// lit-ui-router/anchor-is-valid, which it runs as a jsPlugin.
 import tsParser from '@tools/eslint-ts-parser';
 import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -13,7 +14,6 @@ import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
 import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
 import { configs as wcConfigs } from 'eslint-plugin-wc';
-import litUiRouter from 'eslint-plugin-lit-ui-router';
 import oxlintDirectiveStubs from './eslint.oxlint-directives.ts';
 import repoRules from './eslint-rules/index.ts';
 
@@ -170,11 +170,6 @@ export default defineConfig(
       // is on as a guard against future code written in the shape it can see.
       wcConfigs['flat/best-practice'],
       litA11y.configs.recommended,
-      // Replaces lit-a11y/anchor-is-valid with lit-ui-router/anchor-is-valid,
-      // the same rule wrapped so a uiSref element part counts as the href it
-      // assigns at runtime (#659). Must extend after lit-a11y's config: the
-      // plugin doesn't register lit-a11y itself (peer — the host's instance).
-      ...litUiRouter.configs.recommended,
     ],
     languageOptions: {
       parser: tsParser,
@@ -214,6 +209,11 @@ export default defineConfig(
       // Deliberately not adopted (it ships outside best-practice): file
       // organisation, not element semantics — ~20 hits, no defect behind any.
       'wc/no-exports-with-element': 'off',
+      // Displaced by lit-ui-router/anchor-is-valid, which oxlint runs via
+      // .oxlintrc.json jsPlugins. eslint-plugin-oxlint's config reader only
+      // knows oxlint's native rule names, so it cannot de-duplicate a JS-plugin
+      // rule — this `off` is the manual half of the split.
+      'lit-a11y/anchor-is-valid': 'off',
     },
   },
   {
@@ -227,9 +227,8 @@ export default defineConfig(
           severity === 'off' ? 'off' : 'warn',
         ]),
       ),
-      // The map above would switch the replaced rule back on.
+      // The map above would switch the displaced rule back on; oxlint owns it.
       'lit-a11y/anchor-is-valid': 'off',
-      'lit-ui-router/anchor-is-valid': 'warn',
     },
   },
   {
@@ -240,7 +239,6 @@ export default defineConfig(
       ...Object.fromEntries(
         Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
       ),
-      'lit-ui-router/anchor-is-valid': 'off',
     },
   },
   // Keep last: disables any rules oxlint already enforces.
