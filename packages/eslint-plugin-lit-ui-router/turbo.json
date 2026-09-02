@@ -14,6 +14,14 @@
     // eslint-plugin-eslint-plugin over the package's own rule source
     "lint:rules": {
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // the RuleTester suite carries the eslint side; test:oxlint rides alongside
+    "test": {
+      "with": ["test:oxlint"]
+    },
+    // oxlint `jsPlugins` over the fixture dir, gating at the exact catalog pin
+    "test:oxlint": {
+      "inputs": ["$TURBO_DEFAULT$"]
     }
   }
 }

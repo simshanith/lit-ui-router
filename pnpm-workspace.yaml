@@ -100,16 +100,13 @@ catalogs:
     mobx-6: npm:mobx@^6.16.1
   peerFloor:
     eslint: 9.0.0
-    eslint-plugin-lit-a11y: 5.0.0
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0
-    eslint-rule-extender: ^0.0.1
   publishedPeer:
     '@uirouter/core': ^6.0.8
     eslint: '^9.0.0 || ^10.0.0'
-    eslint-plugin-lit-a11y: ^5.0.0
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
     lit-ui-router: ^1.7.0

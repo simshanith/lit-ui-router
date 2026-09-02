@@ -2,7 +2,7 @@
   "name": "eslint-plugin-lit-ui-router",
   "version": "1.0.0-rc.0",
   "private": false,
-  "description": "ESLint rules that understand lit-ui-router directives: lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+  "description": "ESLint rules that understand lit-ui-router directives: a vendored anchor-is-valid where a uiSref element part counts as the href it assigns at runtime",
   "keywords": [
     "eslint",
     "eslintplugin"
@@ -50,15 +50,15 @@
     "docs:rules": "eslint-doc-generator",
     "format": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",
-    "lint": "oxlint .",
+    "lint": "oxlint --ignore-pattern test/oxlint .",
     "lint:docs": "eslint-doc-generator --check",
     "lint:rules": "eslint --config eslint.rules.config.js .",
     "test": "node --test \"src/**/*.spec.ts\"",
+    "test:oxlint": "node --test \"test/oxlint/*.spec.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "eslint-plugin-lit": "catalog:publishedDependencies",
-    "eslint-rule-extender": "catalog:publishedDependencies"
+    "eslint-plugin-lit": "catalog:publishedDependencies"
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
@@ -69,15 +69,13 @@
     "eslint": "catalog:peerFloor",
     "eslint-doc-generator": "catalog:",
     "eslint-plugin-eslint-plugin": "catalog:",
-    "eslint-plugin-lit-a11y": "catalog:peerFloor",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "release-it": "catalog:",
     "typescript": "catalog:"
   },
   "peerDependencies": {
-    "eslint": "catalog:publishedPeer",
-    "eslint-plugin-lit-a11y": "catalog:publishedPeer"
+    "eslint": "catalog:publishedPeer"
   },
   "engines": {
     "node": "^18.18.0 || ^20.9.0 || >=21.1.0"
