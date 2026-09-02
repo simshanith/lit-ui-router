@@ -1,6 +1,6 @@
 {
   "name": "eslint-plugin-lit-ui-router",
-  "version": "1.0.0",
+  "version": "1.0.0-rc.0",
   "private": false,
   "description": "ESLint rules that understand lit-ui-router directives: lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
   "keywords": [
