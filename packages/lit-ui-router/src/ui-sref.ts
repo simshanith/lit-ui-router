@@ -286,8 +286,7 @@ export class UiSrefDirective extends AsyncDirective {
       return false;
     }
 
-    // import.meta.env.DEV: build-time constant, folded away in dist/*.js so the
-    // literals below never ship; inLitDevMode() stays the runtime probe.
+    // DEV folds away in dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
     if (
       import.meta.env.DEV &&
       inLitDevMode() &&

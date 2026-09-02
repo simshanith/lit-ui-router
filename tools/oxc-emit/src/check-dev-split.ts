@@ -36,10 +36,17 @@ const { devOnly } = JSON.parse(readFileSync(CONFIG, 'utf8')) as {
   devOnly: string[];
 };
 // dist/*.js is non-recursive, so the dist/development/ emit is not double-read
+const production = read(OUT);
+if (!production) {
+  console.error(
+    `✗ dev/prod split check failed — ${OUT}/ has no production JavaScript; an empty set would pass vacuously.`,
+  );
+  process.exit(1);
+}
 const report = formatDevSplitReport(
   findDevSplitViolations({
     devOnly,
-    production: read(OUT),
+    production,
     development: read(DEV_OUT),
   }),
   devOnly.length,
