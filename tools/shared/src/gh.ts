@@ -40,14 +40,18 @@ export async function ensureGh(exec: Exec = defaultExec): Promise<void> {
   }
 }
 
-/** Create the release PR; the GitHub API write gets in-tool retry. */
+/**
+ * Create the release PR; the GitHub API write gets in-tool retry. Resolves
+ * to the PR URL gh prints — the caller surfaces it, or the run never says
+ * which PR it opened.
+ */
 export async function createReleasePr(
   base: string,
   head: string,
   exec: Exec = defaultExec,
-): Promise<void> {
+): Promise<string> {
   await ensureGh(exec);
-  await withRetry(
+  const { stdout } = await withRetry(
     () => exec('gh', prCreateArgs(base, head), { cwd: workspaceRoot }),
     {
       onRetry: (error, attempt) => {
@@ -59,4 +63,5 @@ export async function createReleasePr(
       },
     },
   );
+  return stdout.trim();
 }
