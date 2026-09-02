@@ -25,6 +25,7 @@
     "@tools/workers-builds": "workspace:*",
     "@types/node": "catalog:",
     "@types/pacote": "catalog:",
+    "@types/semver": "catalog:",
     "eslint-plugin-lit-ui-router": "workspace:*",
     "lit-ui-router": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
@@ -32,6 +33,7 @@
     "oxlint": "catalog:",
     "pacote": "catalog:",
     "publint": "catalog:",
+    "semver": "catalog:",
     "typescript": "catalog:",
     "ui-router-navigation-location-plugin": "workspace:*",
     "ui-router-server": "workspace:*"

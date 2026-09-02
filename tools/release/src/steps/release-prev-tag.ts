@@ -13,6 +13,8 @@ import {
   describeArgs,
   isFirstReleaseError,
   parsePrevTag,
+  prereleaseChannel,
+  prereleaseChannels,
 } from './release-prev-tag.core.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
@@ -29,9 +31,20 @@ export async function prevReleaseTag(
 ): Promise<string | undefined> {
   const { cwd = workspaceRoot, exec = defaultExec } = options;
   try {
+    // the other channels this package has tagged, so a prerelease's describe
+    // walk can exclude their lanes (a stable excludes all of them by glob)
+    const channel = prereleaseChannel(releaseVersion);
+    const { stdout: tagList } = await exec(
+      'git',
+      ['tag', '-l', `${packageName}@*`],
+      { cwd },
+    );
+    const otherChannels = prereleaseChannels(packageName, tagList).filter(
+      (c) => c !== channel,
+    );
     const { stdout } = await exec(
       'git',
-      describeArgs(packageName, releaseVersion),
+      describeArgs(packageName, releaseVersion, otherChannels),
       { cwd },
     );
     return parsePrevTag(stdout);
