@@ -837,12 +837,18 @@ importers:
         specifier: catalog:publishedDependencies
         version: 0.0.1
     devDependencies:
+      '@release-it/conventional-changelog':
+        specifier: 'catalog:'
+        version: 12.0.0(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.0)(release-it@21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/eslint-ts-parser':
         specifier: workspace:*
         version: link:../../tools/eslint-ts-parser
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
+      '@tools/release-config':
+        specifier: workspace:*
+        version: link:../../tools/release-config
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -864,6 +870,9 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      release-it:
+        specifier: 'catalog:'
+        version: 21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2)
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
@@ -1475,6 +1484,9 @@ importers:
       '@types/pacote':
         specifier: 'catalog:'
         version: 11.1.8
+      eslint-plugin-lit-ui-router:
+        specifier: workspace:*
+        version: link:../../packages/eslint-plugin-lit-ui-router
       lit-ui-router:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router

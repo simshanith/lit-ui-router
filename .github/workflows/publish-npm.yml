@@ -16,6 +16,7 @@ on:
       - 'lit-ui-router-mobx@*'
       - 'ui-router-navigation-location-plugin@*'
       - 'ui-router-server@*'
+      - 'eslint-plugin-lit-ui-router@*'
   workflow_dispatch:
     inputs:
       package:
@@ -27,6 +28,7 @@ on:
           - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
           - ui-router-server
+          - eslint-plugin-lit-ui-router
       dryRun:
         description: 'Dry run: log the publish/release/attestation release-it would perform without doing it'
         required: false
