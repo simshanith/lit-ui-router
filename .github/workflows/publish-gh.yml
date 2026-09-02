@@ -87,9 +87,6 @@ jobs:
         run: mise run //tools/release:git_user
       - name: Tag
         run: mise run //tools/release:tag
-        # continue-on-error: re-tagging an existing version fails here (release-it
-        # errors, not a no-op); continue-on-error lets the run proceed anyway.
-        continue-on-error: true
         env:
           PACKAGE: ${{ matrix.package }}
           # dryRun is declared for workflow_dispatch only; called runs get an
@@ -98,9 +95,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Push tag
         run: mise run //tools/release:tag_push
-        # continue-on-error: a tag existing on the remote at a different commit is
-        # rejected here, matching the previous tag-exists behavior
-        continue-on-error: true
         env:
           PACKAGE: ${{ matrix.package }}
           DRY_RUN: ${{ inputs.dryRun }}
