@@ -1,6 +1,6 @@
 ---
 title: ESLint Plugin
-description: Directive-aware accessibility linting with eslint-plugin-lit-ui-router — lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime
+description: Directive-aware accessibility linting with eslint-plugin-lit-ui-router — a vendored anchor-is-valid where a uiSref element part counts as the href it assigns at runtime
 ---
 
 # eslint-plugin-lit-ui-router
@@ -17,8 +17,9 @@ A lit-ui-router anchor carries no static `href` — the
 [`uiSref`](/api/reference/directives/uiSref) element part assigns one at
 runtime — so stock accessibility rules report every correct call site. The
 usual escape is to disable the rule, which costs its real coverage. This
-plugin instead wraps the base rule so the directive counts as the `href` it
-assigns, and reports everything the base rule would otherwise still catch.
+plugin instead ships its own copy of the base rule, taught that the directive
+counts as the `href` it assigns, and reports everything the base rule would
+otherwise still catch.
 
 ::: warning Release candidate
 The current release is `1.0.0-rc.0`, published under the `rc` dist-tag: the
@@ -30,24 +31,23 @@ as `eslint-plugin-lit-ui-router@rc` until it moves to `latest`.
 ## Installation
 
 ```bash
-pnpm add -D eslint-plugin-lit-ui-router@rc eslint-plugin-lit-a11y
+pnpm add -D eslint-plugin-lit-ui-router@rc
 # or
-npm install --save-dev eslint-plugin-lit-ui-router@rc eslint-plugin-lit-a11y
+npm install --save-dev eslint-plugin-lit-ui-router@rc
 ```
 
-`eslint` (`^9.0.0 || ^10.0.0`) and
+`eslint` (`^9.0.0 || ^10.0.0`) is the only **peer** dependency.
+`anchor-is-valid` is vendored from
 [`eslint-plugin-lit-a11y`](https://www.npmjs.com/package/eslint-plugin-lit-a11y)
-(`^5.0.0`) are **peer** dependencies, not bundled ones: the plugin extends the
-host's copy of the base rule, and a duplicated instance would be the
-shadowed-copy class of bug — two rule objects, one config key, and reports
-from whichever copy won.
+rather than wrapped around it, so lit-a11y is an **optional sibling** you may
+also run for the rest of its rules, never a requirement.
 
 The package is published as ESM only. Flat config loads ESM natively; a
 CommonJS config can `require()` it on Node `^20.19.0` or `>=22.12.0`.
 
 ## Usage
 
-Flat config (`eslint.config.js`):
+Flat config (`eslint.config.js`), with lit-a11y alongside:
 
 ```js
 import litA11y from 'eslint-plugin-lit-a11y';
@@ -88,7 +88,7 @@ An anchor counts as navigable when its `uiSref` is imported from
 doesn't opt out of href assignment. Only a literal `assignHref: false` is a
 definite no: `'auto'` assigns on a native `<a>`, and a non-literal option is
 unknowable, so both stay suppressed rather than guessed. The base rule's
-options (`allowHash`, `aspects`) pass through untouched.
+options (`allowHash`, `aspects`) are carried over untouched.
 
 The generated
 [rule documentation](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)
