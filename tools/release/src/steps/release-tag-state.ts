@@ -1,8 +1,6 @@
-// IO shell for the tag classification publish-gh's Tag and Push tag steps
-// share (#674): resolve the package's tag name from the workspace manifest,
-// ask git what already exists, and hand the shas to the pure classifier in
-// ./release-tag-state.core.ts. A git failure other than a missing local ref
-// propagates, so PAT, ruleset and network errors stay fatal.
+// IO shell for the tag classification the Tag and Push tag steps share
+// (#674): git queries in, shas to the pure classifier in
+// ./release-tag-state.core.ts. Only a missing local ref is tolerated.
 
 import type { Exec } from '@tools/shared/exec.ts';
 import { defaultExec } from '@tools/shared/exec.ts';

@@ -1,22 +1,10 @@
-// Pure logic for classifying a release tag before tagging or pushing it
-// (#674): publish-gh runs on every main push and tags the CURRENT manifest
-// version, so most runs meet a tag that already exists. The steps used to
-// absorb that with continue-on-error, which also swallowed PAT, ruleset and
-// network failures. Classifying here keeps the idempotent outcomes green and
-// everything else fatal. The IO (git queries) lives in release-tag-state.ts.
+// Pure logic classifying a release tag before the tag and push steps (#674);
+// the IO (git queries) lives in release-tag-state.ts. See RELEASE.md § 3.
 
 /**
- * What a release tag already is, relative to the commit being released:
- *
- * - `tag` — no tag anywhere; the tag step creates it, the push step pushes it
- * - `skip-local` — the tag exists locally but not on the remote; nothing to
- *   create, still something to push
- * - `skip-remote-same` — the remote tag is on this commit: already released
- * - `skip-remote-diverged` — the remote tag is on a different commit. This is
- *   the steady state, not an anomaly: publish-gh runs on every main push and
- *   tags the CURRENT manifest version, so once main advances past a release
- *   commit the tag trails HEAD. Skipped like `skip-remote-same`, and just as
- *   quietly, or every main push would annotate a warning.
+ * What already exists for a release tag: nothing (`tag`), a local tag only
+ * (`skip-local`), or a remote tag on this commit (`skip-remote-same`) or on
+ * another (`skip-remote-diverged`, the steady state once main moves on).
  */
 export type TagState =
   | 'tag'

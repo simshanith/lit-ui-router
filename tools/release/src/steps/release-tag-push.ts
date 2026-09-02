@@ -3,11 +3,9 @@
 //   env in: PACKAGE, DRY_RUN
 // The version is read from the package's manifest via pnpm's workspace
 // resolver (the bash shelled out to `node -p require('./package.json')
-// .version` for the same value). A dry run prints what it would push. The
-// idempotent outcomes (already on the remote, at this commit or another) are
-// classified here (#674) rather than absorbed by continue-on-error, so a
-// PAT, ruleset or network failure on the push fails the step. Decisions live
-// in ./release-tag-push.core.ts and ./release-tag-state.core.ts.
+// .version` for the same value). A dry run prints what it would push. A tag
+// already on the remote is skipped (#674); any other push failure is fatal.
+// Decisions live in ./release-tag-push.core.ts and ./release-tag-state.core.ts.
 
 import { defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';

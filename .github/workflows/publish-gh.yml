@@ -87,8 +87,6 @@ jobs:
         run: mise run //tools/release:git_user
       - name: Tag
         run: mise run //tools/release:tag
-        # //tools/release:tag classifies the idempotent outcomes itself (#674):
-        # an existing tag skips and exits 0, a release-it failure is fatal.
         env:
           PACKAGE: ${{ matrix.package }}
           # dryRun is declared for workflow_dispatch only; called runs get an
@@ -97,9 +95,6 @@ jobs:
           GITHUB_TOKEN: ${{ secrets.GH_PERSONAL_ACCESS_TOKEN }}
       - name: Push tag
         run: mise run //tools/release:tag_push
-        # //tools/release:tag_push classifies the idempotent outcomes itself
-        # (#674): a tag already on the remote skips and exits 0, a push
-        # rejection (PAT, ruleset, network) is fatal.
         env:
           PACKAGE: ${{ matrix.package }}
           DRY_RUN: ${{ inputs.dryRun }}
