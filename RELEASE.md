@@ -248,6 +248,14 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    expected, and is why it should be a version nobody would want: short-lived
    and obviously prerelease.
 
+   **When the first real release is itself a prerelease** (a package that opens
+   at `1.0.0-rc.0`, say), step 5 does not supersede the seed: release-it
+   publishes that version under its own channel tag, so the seed keeps `latest`
+   until the first stable release. The channel tag is current for as long as
+   that prerelease line lives, not a fossil. A maintainer who wants `latest` off
+   the stub sooner can move it by hand with
+   `npm dist-tag add <package>@<version> latest`.
+
 2. **Configure the trusted publisher** on npmjs.com for the new package,
    pointing at `publish-npm.yml`.
 
@@ -269,14 +277,16 @@ Break the cycle by hand, once, before adding the package to any workflow list:
 
 5. **Cut the real release** through the standard process.
 
-6. **Confirm the tag state** once the real release holds `latest`:
+6. **Confirm the tag state** once the first stable release holds `latest`:
 
    ```bash
    npm view <package> dist-tags
    ```
 
-   Expect `latest` only. Anything else is a fossil from a `--tag` on the seed
-   or from a prerelease bump; retire it — see [Dist-Tags](#dist-tags).
+   Expect `latest` only at that point. Anything else is a fossil from a `--tag`
+   on the seed or from a prerelease bump; retire it — see
+   [Dist-Tags](#dist-tags). Before the first stable release the live channel tag
+   of an open prerelease line stays put.
 
 ### Dist-Tags
 
