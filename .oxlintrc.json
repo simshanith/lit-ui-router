@@ -198,6 +198,17 @@
       }
     },
     {
+      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^DEV$"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/sample-app-lit-e2e/scripts/**"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
@@ -322,6 +333,7 @@
         "tools/build_and_test/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
+        "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/shared/**/*.test.ts",
         "tools/warn-lanes/**/*.test.ts",

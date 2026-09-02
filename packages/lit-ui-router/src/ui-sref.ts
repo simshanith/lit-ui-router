@@ -286,7 +286,9 @@ export class UiSrefDirective extends AsyncDirective {
       return false;
     }
 
+    // DEV folds away in dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
     if (
+      import.meta.env.DEV &&
       inLitDevMode() &&
       this.href !== null &&
       !isNativeLink(element) &&

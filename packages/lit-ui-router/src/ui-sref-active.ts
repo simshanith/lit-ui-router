@@ -424,6 +424,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
    * @internal
    */
   private warnAriaCurrentTakeover(): void {
+    // DEV folds the whole body out of dist/*.js (check:dev-split).
+    if (!import.meta.env.DEV) return;
     const existing = this.element!.getAttribute('aria-current');
     if (
       !inLitDevMode() ||
