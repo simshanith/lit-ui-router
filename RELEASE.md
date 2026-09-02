@@ -142,7 +142,7 @@ When a release PR merges and main CI is green:
 2. Pushes the tag to origin
 3. Tag push triggers the publish workflow
 
-**Note:** Uses `continue-on-error: true` because tagging is idempotent - if the tag already exists, the workflow succeeds.
+**Note:** The tag and push steps classify their own idempotent outcomes: a tag that already exists (locally, or on the remote at this or another commit) is skipped and the step succeeds. Any other failure, including a rejected push, fails the run.
 
 ### 4. Publish to NPM (`publish-npm.yml`)
 
