@@ -1475,6 +1475,9 @@ importers:
       '@types/pacote':
         specifier: 'catalog:'
         version: 11.1.8
+      '@types/semver':
+        specifier: 'catalog:'
+        version: 7.8.0
       lit-ui-router:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router
@@ -1493,6 +1496,9 @@ importers:
       publint:
         specifier: 'catalog:'
         version: 0.3.24
+      semver:
+        specifier: 'catalog:'
+        version: 7.8.5
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
