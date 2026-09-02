@@ -24,12 +24,12 @@ interface Diagnostic {
   filename: string;
 }
 
-const run = (): Diagnostic[] => {
+const run = (fixture = 'anchors.js'): Diagnostic[] => {
   let stdout: string;
   try {
     stdout = execFileSync(
       process.execPath,
-      [oxlintBin, '--config', '.oxlintrc.json', '-f', 'json', 'anchors.js'],
+      [oxlintBin, '--config', '.oxlintrc.json', '-f', 'json', fixture],
       { cwd: here, encoding: 'utf8' },
     );
   } catch (error) {
@@ -65,5 +65,30 @@ void describe('oxlint jsPlugins', () => {
           .labels[0]?.span.line,
     );
     assert.deepEqual(lines, [6, 7]);
+  });
+});
+
+void describe('oxlint jsPlugins: the option-aware rules', () => {
+  const diagnostics = run('directives.js');
+
+  void it('reports one of each, under our rule ids', () => {
+    assert.deepEqual(
+      diagnostics.map((diagnostic) => diagnostic.code),
+      [
+        'lit-ui-router(sref-assign-href)',
+        'lit-ui-router(sref-active-aria-current)',
+        'lit-ui-router(directive-position)',
+      ],
+    );
+  });
+
+  void it('leaves the documented fixes alone', () => {
+    // Lines 6, 10 and 13 are the three offenders; the fixed forms follow.
+    const lines = diagnostics.map(
+      (diagnostic) =>
+        (diagnostic as unknown as { labels: { span: { line: number } }[] })
+          .labels[0]?.span.line,
+    );
+    assert.deepEqual(lines, [6, 10, 13]);
   });
 });

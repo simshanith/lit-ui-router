@@ -6,73 +6,22 @@ import type { Rule, SourceCode } from 'eslint';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
 // same one — a break here breaks lit-a11y first.
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
-
-// A lit template's element part (`<a ${uiSref('x')}>`) reaches parse5 as a bare
-// placeholder, so it parses as a valueless attribute — same shape
-// `eslint-plugin-lit`'s `util.isExpressionPlaceholder` matches, but capturing
-// the index, which addresses the tagged template's own expressions.
-const ELEMENT_PART = /^\{\{__q:(\d+)__\}\}$/i;
-
-/** The lit-html packages the base rule's gating accepts before settings. */
-const DEFAULT_LIT_HTML_SOURCES = ['lit-html', 'lit-element', 'lit'];
+import {
+  type CallNode,
+  createDirectiveTracker,
+  elementPartIndex,
+  type Node,
+  type ObjectNode,
+  type Parse5Element,
+  propertyNamed,
+} from './directives.ts';
 
 const ALL_ASPECTS = ['noHref', 'invalidHref', 'preferButton'];
-
-// Minimal views of the two ASTs this rule crosses; eslint speaks ESTree and
-// parse5 nodes arrive untyped through the analyzer's visitor.
-interface Node {
-  type: string;
-  [key: string]: unknown;
-}
-interface CallNode extends Node {
-  callee: Node;
-  arguments: Node[];
-}
-/** parse5's Token.Location, structurally — parse5 itself is not a direct dep. */
-interface Parse5Location {
-  startLine: number;
-  startCol: number;
-  startOffset: number;
-  endLine: number;
-  endCol: number;
-  endOffset: number;
-}
-interface Parse5Element {
-  name: string;
-  attribs: Record<string, string>;
-  sourceCodeLocation?: { startTag?: Parse5Location };
-}
 
 interface RuleOptions {
   aspects?: string[];
   allowHash?: boolean;
 }
-
-/** Given `lit-html/lit-html.js`, the package name `lit-html`. */
-const packageOf = (source: string): string =>
-  source.split('/', source.startsWith('@') ? 2 : 1).join('/');
-
-/** `name` (a collected local) or `ns.name` (a collected namespace). */
-const references = (
-  node: Node,
-  locals: Set<string>,
-  namespaces: Set<string>,
-  name: string,
-): boolean => {
-  if (node.type === 'Identifier') {
-    const id = node as { name?: string };
-    return id.name !== undefined && locals.has(id.name);
-  }
-  if (node.type !== 'MemberExpression' || node.computed === true) return false;
-  const object = node.object as { type?: string; name?: string };
-  const property = (node.property as { name?: string } | undefined)?.name;
-  return (
-    object.type === 'Identifier' &&
-    object.name !== undefined &&
-    namespaces.has(object.name) &&
-    property === name
-  );
-};
 
 /**
  * Whether this call leaves the anchor with a runtime href. `assignHref` rides
@@ -83,14 +32,9 @@ const references = (
 const assignsHref = (call: CallNode): boolean => {
   const options = call.arguments[2];
   if (options?.type !== 'ObjectExpression') return true;
-  for (const property of (options.properties as Node[] | undefined) ?? []) {
-    if (property.type !== 'Property' || property.computed === true) continue;
-    const key = property.key as { name?: string; value?: unknown };
-    if ((key.name ?? key.value) !== 'assignHref') continue;
-    const value = property.value as Node & { value?: unknown };
-    return !(value.type === 'Literal' && value.value === false);
-  }
-  return true;
+  const property = propertyNamed(options as ObjectNode, 'assignHref');
+  if (property === undefined) return true;
+  return !(property.value.type === 'Literal' && property.value.value === false);
 };
 
 /** Literal-or-undefined over the analyzer's attribute value (lit-a11y util). */
@@ -160,91 +104,31 @@ const anchorIsValid: Rule.RuleModule = {
   },
 
   create(context) {
-    // Per-file state in the closure, never on `parserServices`: oxlint freezes
-    // it, and that mutation was the sole `jsPlugins` blocker (#676).
-    const { litHtmlSources } = context.settings as {
-      litHtmlSources?: boolean | string[];
-    };
-    const sources = new Set([
-      ...DEFAULT_LIT_HTML_SOURCES,
-      ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
-    ]);
-    // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
-    let shouldAnalyse = !litHtmlSources;
-    const litHtmlTags = new Set<string>(litHtmlSources ? [] : ['html']);
-    const litHtmlNamespaces = new Set<string>();
-    const srefLocals = new Set<string>();
-    const srefNamespaces = new Set<string>();
+    const tracker = createDirectiveTracker(context);
 
     const isNavigable = (
       element: Parse5Element,
       expressions: Node[],
     ): boolean =>
       Object.keys(element.attribs).some((attribute) => {
-        const match = ELEMENT_PART.exec(attribute);
-        if (match === null) return false;
-        const expression = expressions[Number(match[1])];
-        if (expression?.type !== 'CallExpression') return false;
-        const call = expression as CallNode;
+        const index = elementPartIndex(attribute);
+        if (index === undefined) return false;
+        const expression = expressions[index];
+        if (expression === undefined) return false;
         return (
-          references(call.callee, srefLocals, srefNamespaces, 'uiSref') &&
-          assignsHref(call)
+          tracker.directiveOf(expression) === 'uiSref' &&
+          assignsHref(expression as CallNode)
         );
       });
 
     return {
       ImportDeclaration(node) {
-        const source = node.source.value;
-        if (typeof source !== 'string') return;
-
-        // Our directive: the import is what makes a `uiSref` call *ours*.
-        if (/^lit-ui-router(\/|$)/.test(source)) {
-          for (const specifier of node.specifiers) {
-            if (specifier.type === 'ImportNamespaceSpecifier') {
-              srefNamespaces.add(specifier.local.name);
-            } else if (
-              specifier.type === 'ImportSpecifier' &&
-              specifier.imported.type === 'Identifier' &&
-              specifier.imported.name === 'uiSref'
-            ) {
-              srefLocals.add(specifier.local.name);
-            }
-          }
-        }
-
-        shouldAnalyse =
-          // A previous import supplied lit-html
-          shouldAnalyse ||
-          // litHtmlSources is falsy -> lint everything
-          !litHtmlSources ||
-          // litHtmlSources is an Array -> lint only the listed packages
-          node.specifiers.some(
-            (specifier) =>
-              (specifier.type === 'ImportNamespaceSpecifier' ||
-                specifier.type === 'ImportSpecifier') &&
-              sources.has(packageOf(source)),
-          );
-
-        if (!shouldAnalyse) return;
-
-        for (const specifier of node.specifiers) {
-          if (specifier.type === 'ImportNamespaceSpecifier') {
-            litHtmlNamespaces.add(specifier.local.name);
-            litHtmlTags.add('html');
-          } else if (
-            specifier.type === 'ImportSpecifier' &&
-            specifier.imported.type === 'Identifier' &&
-            specifier.imported.name === 'html'
-          ) {
-            litHtmlTags.add(specifier.local.name || 'html');
-          }
-        }
+        tracker.onImport(node);
       },
 
       TaggedTemplateExpression(node) {
-        if (!shouldAnalyse) return;
-        const tag = node.tag as unknown as Node;
-        if (!references(tag, litHtmlTags, litHtmlNamespaces, 'html')) return;
+        if (!tracker.shouldAnalyse) return;
+        if (!tracker.isLitTemplate(node.tag as unknown as Node)) return;
 
         const source = context.sourceCode;
         const expressions = node.quasi.expressions as unknown as Node[];

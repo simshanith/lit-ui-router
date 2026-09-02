@@ -9,6 +9,8 @@ ESLint rules that understand [lit-ui-router](https://lit-ui-router.dev) directiv
 
 A lit-ui-router anchor carries no static `href` — the element-part directive assigns one at runtime — so stock accessibility rules report every correct call site. These rules keep the base rules' real coverage while understanding what the directives do.
 
+The rest are the directives' own runtime dev warnings, statically: the inert `href` on a native non-link, the silent `aria-current` takeover, and the element-part-only constructor throw. Each reports at author time, on the whole codebase, in a production build — where the runtime says nothing.
+
 ## Install
 
 ```sh
@@ -43,13 +45,16 @@ Without lit-a11y installed, that `off` line is inert — flat config accepts a s
 
 ## oxlint (alpha)
 
-The rule also loads into [oxlint](https://oxc.rs) as a JS plugin. oxlint does not consume `configs.recommended`, so list the rule explicitly in `.oxlintrc.json`:
+The rules also load into [oxlint](https://oxc.rs) as JS plugins — every one is syntax-only, with no type information. oxlint does not consume `configs.recommended`, so list them explicitly in `.oxlintrc.json`:
 
 ```json
 {
   "jsPlugins": ["eslint-plugin-lit-ui-router"],
   "rules": {
-    "lit-ui-router/anchor-is-valid": "error"
+    "lit-ui-router/anchor-is-valid": "error",
+    "lit-ui-router/directive-position": "error",
+    "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-assign-href": "error"
   }
 }
 ```
@@ -60,15 +65,18 @@ oxlint's `jsPlugins` is alpha and explicitly outside semver. This package's `tes
 
 ## Running ESLint and oxlint together
 
-ESLint-only, oxlint-only and both-at-once are all supported. If you run both, the recommended split is **oxlint owns `lit-ui-router/anchor-is-valid`** — it is the fast lane, and one report is better than two — while ESLint keeps only the lit-a11y `off`.
+ESLint-only, oxlint-only and both-at-once are all supported. If you run both, the recommended split is **oxlint owns every `lit-ui-router/*` rule** — it is the fast lane, and one report is better than two — while ESLint keeps only the lit-a11y `off`.
 
-`.oxlintrc.json` — the rule runs here:
+`.oxlintrc.json` — the rules run here:
 
 ```json
 {
   "jsPlugins": ["eslint-plugin-lit-ui-router"],
   "rules": {
-    "lit-ui-router/anchor-is-valid": "error"
+    "lit-ui-router/anchor-is-valid": "error",
+    "lit-ui-router/directive-position": "error",
+    "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-assign-href": "error"
   }
 }
 ```
@@ -82,14 +90,14 @@ import oxlint from 'eslint-plugin-oxlint';
 export default [
   litA11y.configs.recommended,
   {
-    // oxlint owns lit-ui-router/anchor-is-valid; this displaces lit-a11y's.
+    // oxlint owns every lit-ui-router/* rule; this displaces lit-a11y's.
     rules: { 'lit-a11y/anchor-is-valid': 'off' },
   },
   oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 ];
 ```
 
-The manual `off` is the whole trick: `eslint-plugin-oxlint` de-duplicates only oxlint's **native** rule names, and has no handling for `jsPlugins` rules at all. Spreading `configs.recommended` on top of the oxlint lane would register the rule a second time and every anchor would report twice.
+The manual `off` is the whole trick: `eslint-plugin-oxlint` de-duplicates only oxlint's **native** rule names, and has no handling for `jsPlugins` rules at all. Spreading `configs.recommended` on top of the oxlint lane would register all four rules a second time, and every finding would report twice.
 
 This repository runs exactly this split — see [`.oxlintrc.json`](../../.oxlintrc.json) and [`eslint.config.ts`](../../eslint.config.ts).
 
@@ -100,7 +108,10 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
   "overrides": [
     {
       "files": ["**/*.spec.ts", "**/src/specs/**"],
-      "rules": { "lit-ui-router/anchor-is-valid": "off" }
+      "rules": {
+        "lit-ui-router/anchor-is-valid": "off",
+        "lit-ui-router/sref-assign-href": "off"
+      }
     }
   ]
 }
@@ -111,17 +122,21 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 <!-- begin auto-generated rules list -->
 
 💼 Configurations enabled in.\
-✅ Set in the `recommended` configuration.
+✅ Set in the `recommended` configuration.\
+🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).
 
-| Name                                             | Description                                                                                             | 💼 |
-| :----------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :- |
-| [anchor-is-valid](docs/rules/anchor-is-valid.md) | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  |
+| Name                                                               | Description                                                                                             | 💼 | 🔧 |
+| :----------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :- | :- |
+| [anchor-is-valid](docs/rules/anchor-is-valid.md)                   | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  |    |
+| [directive-position](docs/rules/directive-position.md)             | require each lit-ui-router directive to sit in the template position its part type allows               | ✅  |    |
+| [sref-active-aria-current](docs/rules/sref-active-aria-current.md) | disallow an authored aria-current on an element a uiSrefActive element part manages                     | ✅  | 🔧 |
+| [sref-assign-href](docs/rules/sref-assign-href.md)                 | require assignHref: 'auto' when a uiSref element part rides a native element with no href               | ✅  | 🔧 |
 
 <!-- end auto-generated rules list -->
 
 ## Semver policy
 
-Following ESLint core's own policy: a change that makes `recommended` or an existing rule stricter — new reports on code that previously passed — ships as a **major**. The roadmap (option-aware and state-aware rule tiers) is exactly that trajectory, so expect majors, not silent tightening.
+Following ESLint core's own policy: a change that makes `recommended` or an existing rule stricter — new reports on code that previously passed — ships as a **major**. The option-aware tier (`sref-assign-href`, `sref-active-aria-current`, `directive-position`) widened `recommended` before 1.0.0, while the package is still a release candidate and a widening costs nobody a major. The remaining roadmap (a state-aware tier) is the same trajectory, so expect majors, not silent tightening.
 
 ## Module format and Node support
 
