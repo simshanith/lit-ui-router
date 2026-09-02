@@ -9,6 +9,7 @@ import {
   endGroupCommand,
   errorCommand,
   groupCommand,
+  noticeCommand,
   outputLine,
   warningCommand,
 } from './gha.core.ts';
@@ -35,6 +36,11 @@ export async function group<T>(
 /** Red run annotation on Actions; plain stderr locally. */
 export function logError(message: string): void {
   console.error(onActions() ? errorCommand(message) : message);
+}
+
+/** Blue run annotation on Actions; plain stdout locally. */
+export function logNotice(message: string): void {
+  console.log(onActions() ? noticeCommand(message) : message);
 }
 
 /** Yellow run annotation on Actions; plain stderr locally. */
