@@ -858,6 +858,117 @@ describe('uiSref directive', () => {
     });
   });
 
+  describe('href-less links', () => {
+    // the hand-back guards only make sense when the browser has an href to
+    // act on; without one the click would dead-end
+
+    const home: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
+
+    it('should ignore a modified click on an anchor with an author href', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })} href="/authored"
+          >Link</a
+        >`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!, {
+        modifiers: ['Shift'],
+      });
+      await tick();
+
+      expect(goSpy).not.toHaveBeenCalled();
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: false }),
+      ]);
+    });
+
+    it('should navigate on a modified click on an anchor with no href', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })}>Link</a>`,
+      );
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.hasAttribute('href')).toBe(false);
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(anchor, { modifiers: ['Shift'] });
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: true }),
+      ]);
+    });
+
+    it('should navigate on a plain click on an anchor with an author href', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })} href="/authored"
+          >Link</a
+        >`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+
+    it('should navigate on a plain click on an anchor with no href', async () => {
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })}>Link</a>`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+    });
+
+    it('should navigate on a modified click for a state whose navigable has no url', async () => {
+      // core returns null from href(), so no href is written even under the
+      // 1.x default: the dead click needs no unusual configuration
+      const wrapper = await setupWithTemplate(
+        [{ name: 'abstract', abstract: true }],
+        html`<a ${uiSref('abstract')}>Link</a>`,
+      );
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.hasAttribute('href')).toBe(false);
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(anchor, { modifiers: ['Shift'] });
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('abstract', {}, expect.any(Object));
+    });
+
+    it('should navigate on a plain click on an href-less anchor with target="_blank"', async () => {
+      // the opensOffApp half of the disjunction dead-ends the same way
+      const wrapper = await setupWithTemplate(
+        home,
+        html`<a ${uiSref('home', {}, { assignHref: false })} target="_blank"
+          >Link</a
+        >`,
+      );
+
+      const goSpy = vi.spyOn(router!.stateService, 'go');
+      await clickLocatedElement(wrapper.querySelector('a')!);
+      await tick();
+
+      expect(goSpy).toHaveBeenCalledWith('home', {}, expect.any(Object));
+      expect(suppression.events).toEqual([
+        expect.objectContaining({ type: 'click', defaultPrevented: true }),
+      ]);
+    });
+  });
+
   describe('descendant clicks (currentTarget)', () => {
     // event.target is the deepest node clicked, so every guard that reads an
     // attribute off it is dead whenever a link wraps its label
