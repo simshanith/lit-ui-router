@@ -5,6 +5,7 @@ import { TargetState } from '@uirouter/core';
 import {
   uiSref,
   UiSrefDirective,
+  UiSrefElement,
   UI_SREF_TARGET_EVENT,
   uiSrefTargetEvent,
   UiSrefTargetEvent,
@@ -105,6 +106,113 @@ describe('uiSref directive', () => {
 
     return wrapper;
   }
+
+  describe('missing <ui-router> ancestor', () => {
+    // one template factory, so a re-render reuses the element rather than
+    // producing a fresh one with a fresh directive
+    const link = () => html`<a ${uiSref('home')}>Home</a>`;
+
+    it('should warn once when a render finds no router', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        render(link(), container);
+        await tick(50);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toBe(
+          'lit-ui-router: <a uiSref="home"> found no <ui-router> ancestor, ' +
+            'so it will not navigate. Wrap this subtree in <ui-router>, or ' +
+            'pass a router explicitly.',
+        );
+
+        // the no-op is unchanged: still no href, still no throw
+        const anchor = container.querySelector('a')!;
+        expect(anchor.hasAttribute('href')).toBe(false);
+
+        // and a re-render does not repeat itself
+        render(link(), container);
+        await tick(50);
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should warn once when a click finds no router', () => {
+      // driven directly: on a rendered sref the render above reports first and
+      // the shared once-per-element registry silences this site, so it is the
+      // fallback for a click that arrives with no render report behind it
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const anchor = document.createElement('a');
+        container.appendChild(anchor);
+
+        const srefDirective = new UiSrefDirective({ type: 6 } as any);
+        srefDirective.element = anchor as unknown as UiSrefElement;
+        srefDirective.state = 'home';
+
+        anchor.addEventListener(
+          'click',
+          srefDirective.onClick as EventListener,
+        );
+        clickElement(anchor);
+        clickElement(anchor);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toContain(
+          '<a uiSref="home"> found no <ui-router> ancestor, so it will not navigate',
+        );
+        // the no-op is unchanged: no target resolved, no href written
+        expect(srefDirective.targetState).toBeNull();
+        expect(anchor.hasAttribute('href')).toBe(false);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should stay silent outside lit dev mode, but still no-op', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        render(link(), container);
+        await tick(50);
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated, never the behaviour
+        expect(container.querySelector('a')!.hasAttribute('href')).toBe(false);
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
+    it('should not warn when a router ancestor is present', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const wrapper = await setupWithTemplate(
+          [{ name: 'home', url: '/home' }],
+          link(),
+        );
+
+        expect(wrapper.querySelector('a')!.getAttribute('href')).toContain(
+          '/home',
+        );
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+  });
 
   describe('href generation', () => {
     it('should set href attribute for state with URL', async () => {
