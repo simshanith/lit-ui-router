@@ -1,0 +1,27 @@
+{
+  "name": "lit-ui-router-example-lint-eslint",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@uirouter/core": "^6.1.2",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.10.0"
+  },
+  "devDependencies": {
+    "eslint": "^10.9.0",
+    "eslint-plugin-lit-a11y": "^5.1.1",
+    "eslint-plugin-lit-ui-router": "1.0.0-rc.1",
+    "typescript": "^6.0.3",
+    "typescript-eslint": "^8.69.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn"
+    }
+  }
+}

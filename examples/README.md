@@ -1,10 +1,10 @@
 # Examples
 
-This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it.
+This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **lint-eslint** and **lint-oxlint** are not rungs either: they are the two consumer wirings of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm and run in a terminal rather than a browser.
 
 ## StackBlitz Integration
 
-Each example is a self-contained Vite + TypeScript project designed to run directly on [StackBlitz](https://stackblitz.com/). You can open any example in StackBlitz using the GitHub integration:
+Each example is a self-contained TypeScript project (Vite for the tutorial rungs) designed to run directly on [StackBlitz](https://stackblitz.com/). You can open any example in the table below using the GitHub integration:
 
 ```text
 https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/<example-name>
@@ -20,6 +20,15 @@ See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/i
 | **hellosolarsystem**    | Solar System tour: route parameters and async `resolve` data with a master/detail flow           | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem)    |
 | **hellogalaxy**         | Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy)         |
 | **design-system-links** | `uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`      | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/design-system-links) |
+
+## Node Examples
+
+These run in a terminal, not a browser: `npm ci && npm run lint` is the whole story, there is no page to open and no StackBlitz link. **lint-eslint** simply has no browser surface. **lint-oxlint** additionally cannot run in a WebContainer at all: oxlint ships native bindings with no `wasm32-wasi` build, so `npm ci` succeeds on StackBlitz but the binary does not execute.
+
+| Example         | Description                                                                               |
+| --------------- | ----------------------------------------------------------------------------------------- |
+| **lint-eslint** | `eslint-plugin-lit-ui-router` the ESLint-only way: `configs.recommended` after lit-a11y's |
+| **lint-oxlint** | `eslint-plugin-lit-ui-router` the oxlint-only way: `jsPlugins` in a `.oxlintrc.json`      |
 
 ## What Each Example Teaches
 
@@ -59,6 +68,19 @@ Three links to two states, printing each element's live `href` attribute: an [`<
 - `assignHref: 'auto'` — writes the attribute only to `<a>`, `<area>` and SVG `<a>`
 - Spectrum Web Components (`@spectrum-web-components/link` + `theme`) as a real published design system, npm-installed like every other example dependency
 
+### lint-eslint
+
+A lint-only project: no Vite, no dev server, just a small lit app and an `eslint.config.js`. It is the ESLint-only shape from the [plugin README](../packages/eslint-plugin-lit-ui-router/README.md), installed from npm exactly as a consumer would.
+
+- `litA11y.configs.recommended` first, then `...litUiRouter.configs.recommended` — ours turns `lit-a11y/anchor-is-valid` off and enables `lit-ui-router/anchor-is-valid`
+- `typescript-eslint` over `src/**/*.ts`, syntax-only: the rule reads the template AST, never type information
+- `typescript` pinned to the 6 line, because typescript-eslint needs the TypeScript JS API that TS 7 no longer ships
+- `uiSref` anchors that lint clean, with the positive control written up in the example's README
+
+### lint-oxlint
+
+The same app, the oxlint-only shape: `.oxlintrc.json` loads the plugin through `jsPlugins` and names the rule, with no ESLint installed at all. Local and CI only — see [Node Examples](#node-examples).
+
 ## Running Locally
 
 To run an example locally:
@@ -69,6 +91,8 @@ npm install
 npm run dev
 ```
 
+The lint examples have no dev server and no page; run `npm run lint` instead.
+
 In the monorepo, a root `pnpm install` also installs each example's own npm dependencies via this package's `postinstall` hook. pnpm skips lifecycle scripts when the workspace is already up to date, so to restore a manually deleted `examples/<example-name>/node_modules` run the hook directly:
 
 ```bash
@@ -77,9 +101,11 @@ pnpm --filter examples postinstall
 pnpm --filter examples example:install:<example-name>
 ```
 
+`pnpm --filter examples lint` fans out over each example's own `lint` script plus one `oxlint` pass against the repo's root config. That pass runs with `--disable-nested-config`: `lint-oxlint/.oxlintrc.json` registers the same JS plugin the root config does, and oxlint rejects the second registration.
+
 ## Project Structure
 
-Each example follows the same structure:
+Each tutorial example follows the same structure (the lint examples drop `index.html` and `vite.config.ts` and add a lint config):
 
 ```text
 <example-name>/

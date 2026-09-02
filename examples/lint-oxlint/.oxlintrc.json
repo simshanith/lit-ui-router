@@ -1,0 +1,8 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "jsPlugins": ["eslint-plugin-lit-ui-router"],
+  "rules": {
+    "lit-ui-router/anchor-is-valid": "error"
+  },
+  "ignorePatterns": ["**/node_modules/**"]
+}
