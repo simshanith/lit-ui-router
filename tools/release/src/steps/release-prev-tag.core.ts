@@ -9,10 +9,12 @@
  * skipping the tag being released (re-runs of a publish already have it).
  *
  * The `--match` glob is anchored by the literal `@`, so `lit-ui-router@*`
- * cannot match `lit-ui-router-mobx@…` tags. Prerelease tags match too — a
- * `pkg@1.1.0-canary.0` between releases becomes the range start, which is
- * the intended behavior: commits already summarized in a canary's notes are
- * not repeated in the next stable's.
+ * cannot match `lit-ui-router-mobx@…` tags.
+ *
+ * A stable release also skips this package's prerelease tags, so its notes
+ * roll up everything since the last stable: rcs are cut with feature sets
+ * and previewed incrementally, then the major/minor/patch lists them all. A
+ * prerelease keeps the nearest tag, so `rc.1`'s notes start at `rc.0`.
  */
 export function describeArgs(
   packageName: string,
@@ -29,8 +31,14 @@ export function describeArgs(
     '--tags',
     `--match=${packageName}@*`,
     `--exclude=${packageName}@${releaseVersion}`,
+    ...(isPrerelease(releaseVersion) ? [] : [`--exclude=${packageName}@*-*`]),
     '--abbrev=0',
   ];
+}
+
+/** semver prerelease: a `-` right after the numeric core (`1.0.0-rc.0`). */
+export function isPrerelease(version: string): boolean {
+  return /^\d+\.\d+\.\d+-/.test(version.trim());
 }
 
 /** The previous tag from `git describe` stdout; empty output → no override. */

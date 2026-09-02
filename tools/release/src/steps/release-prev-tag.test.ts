@@ -8,6 +8,7 @@ import { after, before, describe, it } from 'node:test';
 import {
   describeArgs,
   isFirstReleaseError,
+  isPrerelease,
   parsePrevTag,
 } from './release-prev-tag.core.ts';
 import { prevReleaseTag } from './release-prev-tag.ts';
@@ -19,6 +20,17 @@ describe('describeArgs', () => {
       '--tags',
       '--match=lit-ui-router@*',
       '--exclude=lit-ui-router@1.6.0',
+      '--exclude=lit-ui-router@*-*',
+      '--abbrev=0',
+    ]);
+  });
+
+  it('lets a prerelease range from the nearest tag, prerelease or not', () => {
+    assert.deepEqual(describeArgs('lit-ui-router', '1.6.0-rc.1'), [
+      'describe',
+      '--tags',
+      '--match=lit-ui-router@*',
+      '--exclude=lit-ui-router@1.6.0-rc.1',
       '--abbrev=0',
     ]);
   });
@@ -26,6 +38,15 @@ describe('describeArgs', () => {
   it('rejects empty package or version (a blank env var upstream)', () => {
     assert.throws(() => describeArgs('', '1.0.0'), /packageName/);
     assert.throws(() => describeArgs('lit-ui-router', ' '), /releaseVersion/);
+  });
+});
+
+describe('isPrerelease', () => {
+  it('keys on the hyphen after the numeric core', () => {
+    assert.equal(isPrerelease('1.0.0-rc.0'), true);
+    assert.equal(isPrerelease('0.0.1-alpha.1'), true);
+    assert.equal(isPrerelease('1.0.0'), false);
+    assert.equal(isPrerelease('1.0.0+build.5'), false);
   });
 });
 
@@ -90,6 +111,8 @@ describe('prevReleaseTag', () => {
   let repo: string;
   // a single commit tagged only for the OTHER package
   let mobxOnlyRepo: string;
+  // rc-only history: the first stable rolls up from the root
+  let prereleaseOnlyRepo: string;
 
   before(() => {
     repo = fs.mkdtempSync(path.join(os.tmpdir(), 'prev-tag-test-'));
@@ -106,11 +129,18 @@ describe('prevReleaseTag', () => {
     mobxOnlyRepo = fs.mkdtempSync(path.join(os.tmpdir(), 'prev-tag-test-'));
     git(mobxOnlyRepo, 'init', '-q');
     commit(mobxOnlyRepo, 'feat: mobx only', 'lit-ui-router-mobx@0.3.0');
+
+    prereleaseOnlyRepo = fs.mkdtempSync(
+      path.join(os.tmpdir(), 'prev-tag-test-'),
+    );
+    git(prereleaseOnlyRepo, 'init', '-q');
+    commit(prereleaseOnlyRepo, 'feat: rc', 'lit-ui-router@1.0.0-rc.0');
   });
 
   after(() => {
     fs.rmSync(repo, { recursive: true, force: true });
     fs.rmSync(mobxOnlyRepo, { recursive: true, force: true });
+    fs.rmSync(prereleaseOnlyRepo, { recursive: true, force: true });
   });
 
   it('resolves the package’s nearest previous tag', async () => {
@@ -121,10 +151,24 @@ describe('prevReleaseTag', () => {
   });
 
   it('excludes the tag being released, so publish re-runs still range from before it', async () => {
-    // also pins that prerelease tags count as the previous release
+    // the stable also skips the canary: its notes roll up from 1.0.0
     assert.equal(
       await prevTag(repo, 'lit-ui-router', '1.1.0'),
-      'lit-ui-router@1.1.0-canary.0',
+      'lit-ui-router@1.0.0',
+    );
+  });
+
+  it('ranges a prerelease from the previous prerelease', async () => {
+    assert.equal(
+      await prevTag(prereleaseOnlyRepo, 'lit-ui-router', '1.0.0-rc.1'),
+      'lit-ui-router@1.0.0-rc.0',
+    );
+  });
+
+  it('resolves undefined for a first stable whose only earlier tags are prereleases', async () => {
+    assert.equal(
+      await prevTag(prereleaseOnlyRepo, 'lit-ui-router', '1.0.0'),
+      undefined,
     );
   });
 
