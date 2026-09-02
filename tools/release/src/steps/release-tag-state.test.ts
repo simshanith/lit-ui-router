@@ -25,15 +25,17 @@ describe('classifyTagState', () => {
     assert.equal(classifyTagState({ headSha: HEAD }), 'tag');
   });
 
-  it('skips the tag when only a local one exists', () => {
+  it('skips the tag when only a local one exists at HEAD', () => {
     assert.equal(
       classifyTagState({ localSha: HEAD, headSha: HEAD }),
       'skip-local',
     );
-    // a local tag off HEAD is still nothing to create
-    assert.equal(
-      classifyTagState({ localSha: OTHER, headSha: HEAD }),
-      'skip-local',
+  });
+
+  it('rejects a local-only tag off HEAD rather than letting the push ship it', () => {
+    assert.throws(
+      () => classifyTagState({ localSha: OTHER, headSha: HEAD }),
+      /not HEAD/,
     );
   });
 

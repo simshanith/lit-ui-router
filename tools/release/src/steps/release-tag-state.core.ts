@@ -2,8 +2,8 @@
 // the IO (git queries) lives in release-tag-state.ts. See RELEASE.md § 3.
 
 /**
- * What already exists for a release tag: nothing (`tag`), a local tag only
- * (`skip-local`), or a remote tag on this commit (`skip-remote-same`) or on
+ * What already exists for a release tag: nothing (`tag`), a local tag at this
+ * commit (`skip-local`), or a remote tag on this commit (`skip-remote-same`) or on
  * another (`skip-remote-diverged`, the steady state once main moves on).
  */
 export type TagState =
@@ -31,7 +31,15 @@ export function classifyTagState(shas: {
   if (remoteSha !== undefined && remoteSha !== '') {
     return remoteSha === headSha ? 'skip-remote-same' : 'skip-remote-diverged';
   }
-  if (localSha !== undefined && localSha !== '') return 'skip-local';
+  if (localSha !== undefined && localSha !== '') {
+    // The push step would ship this ref, so a stale local tag is fatal.
+    if (localSha !== headSha) {
+      throw new Error(
+        `local tag points at ${localSha}, not HEAD ${headSha}; delete or move it`,
+      );
+    }
+    return 'skip-local';
+  }
   return 'tag';
 }
 
