@@ -30,9 +30,9 @@ plugin.configs.recommended = [
     name: 'lit-ui-router/recommended',
     plugins: { 'lit-ui-router': plugin },
     rules: {
-      // The wrap replaces the base rule, so the host config must already
-      // register lit-a11y — registering it here instead would collide with
-      // the host's own instance of the plugin key.
+      // lit-a11y is an optional sibling now, not a peer: ours is vendored and
+      // stands alone. This line displaces lit-a11y's rule for hosts that do
+      // run it, and flat config accepts it inert when they don't.
       'lit-a11y/anchor-is-valid': 'off',
       'lit-ui-router/anchor-is-valid': 'error',
     },

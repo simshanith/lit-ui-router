@@ -1,16 +1,22 @@
-// The `lit-ui-router/anchor-is-valid` rule: lit-a11y's anchor-is-valid,
-// wrapped so a uiSref element part counts as the href it assigns at runtime (#659).
+// Vendored from eslint-plugin-lit-a11y 5.1.1 (lib/rules/anchor-is-valid.js plus
+// its lit-html import gating), Copyright (c) 2018 open-wc contributors.
+// MIT per the open-wc repo LICENSE, ISC per the package manifest.
+// Extended so a uiSref element part counts as the href it assigns (#659, #676).
 import type { Rule, SourceCode } from 'eslint';
-import litA11y from 'eslint-plugin-lit-a11y';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
 // same one — a break here breaks lit-a11y first.
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
-import ruleExtender from 'eslint-rule-extender';
 
 // A lit template's element part (`<a ${uiSref('x')}>`) reaches parse5 as a bare
-// `{{__Q:n__}}` placeholder, so it parses as a valueless attribute — and `n`
-// indexes the tagged template's own expressions.
+// placeholder, so it parses as a valueless attribute — same shape
+// `eslint-plugin-lit`'s `util.isExpressionPlaceholder` matches, but capturing
+// the index, which addresses the tagged template's own expressions.
 const ELEMENT_PART = /^\{\{__q:(\d+)__\}\}$/i;
+
+/** The lit-html packages the base rule's gating accepts before settings. */
+const DEFAULT_LIT_HTML_SOURCES = ['lit-html', 'lit-element', 'lit'];
+
+const ALL_ASPECTS = ['noHref', 'invalidHref', 'preferButton'];
 
 // Minimal views of the two ASTs this rule crosses; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
@@ -37,74 +43,14 @@ interface Parse5Element {
   sourceCodeLocation?: { startTag?: Parse5Location };
 }
 
-const walk = (value: unknown, visit: (node: Node) => void): void => {
-  if (Array.isArray(value)) {
-    for (const item of value) walk(item, visit);
-    return;
-  }
-  if (value === null || typeof value !== 'object') return;
-  const node = value as Node;
-  if (typeof node.type !== 'string') return;
-  visit(node);
-  for (const [key, child] of Object.entries(node)) {
-    // `parent` is eslint's back-reference; following it never terminates.
-    if (key !== 'parent') walk(child, visit);
-  }
-};
-
-/**
- * The import bindings the scan keys on: `uiSref` locals and namespaces from
- * lit-ui-router (the import is what makes it *our* directive), plus the `html`
- * tag locals and namespaces the base rule accepts — its report loc has to be
- * matchable by this scan for every template the base rule analyses.
- */
-interface Bindings {
-  sref: Set<string>;
-  srefNamespaces: Set<string>;
-  htmlTags: Set<string>;
-  htmlNamespaces: Set<string>;
+interface RuleOptions {
+  aspects?: string[];
+  allowHash?: boolean;
 }
 
+/** Given `lit-html/lit-html.js`, the package name `lit-html`. */
 const packageOf = (source: string): string =>
   source.split('/', source.startsWith('@') ? 2 : 1).join('/');
-
-// The default sources of the base rule's HasLitHtmlImportRuleExtension.
-const LIT_SOURCES = new Set(['lit', 'lit-html', 'lit-element']);
-
-const importBindings = (ast: Node): Bindings => {
-  const bindings: Bindings = {
-    sref: new Set(),
-    srefNamespaces: new Set(),
-    // With no `litHtmlSources` setting the base rule analyses every bare
-    // `html` tag, imported or not — mirror that or the wrap under-suppresses.
-    htmlTags: new Set(['html']),
-    htmlNamespaces: new Set(),
-  };
-  for (const statement of (ast.body as Node[] | undefined) ?? []) {
-    if (statement.type !== 'ImportDeclaration') continue;
-    const source = (statement.source as { value?: unknown }).value;
-    if (typeof source !== 'string') continue;
-    const fromRouter = /^lit-ui-router(\/|$)/.test(source);
-    const fromLit = LIT_SOURCES.has(packageOf(source));
-    if (!fromRouter && !fromLit) continue;
-    for (const specifier of statement.specifiers as Node[]) {
-      const local = (specifier.local as { name?: string } | undefined)?.name;
-      if (local === undefined) continue;
-      if (specifier.type === 'ImportNamespaceSpecifier') {
-        (fromRouter ? bindings.srefNamespaces : bindings.htmlNamespaces).add(
-          local,
-        );
-        continue;
-      }
-      if (specifier.type !== 'ImportSpecifier') continue;
-      const imported = (specifier.imported as { name?: string } | undefined)
-        ?.name;
-      if (fromRouter && imported === 'uiSref') bindings.sref.add(local);
-      if (fromLit && imported === 'html') bindings.htmlTags.add(local);
-    }
-  }
-  return bindings;
-};
 
 /** `name` (a collected local) or `ns.name` (a collected namespace). */
 const references = (
@@ -147,122 +93,253 @@ const assignsHref = (call: CallNode): boolean => {
   return true;
 };
 
-/** Start-tag locations of anchors a uiSref part makes navigable. */
-const navigableAnchors = (source: SourceCode): SourceLoc[] => {
-  const locations: SourceLoc[] = [];
-  const ast = source.ast as unknown as Node;
-  const bindings = importBindings(ast);
-  if (bindings.sref.size === 0 && bindings.srefNamespaces.size === 0) {
-    return locations;
+/** Literal-or-undefined over the analyzer's attribute value (lit-a11y util). */
+const getLiteralAttributeValue = (
+  analyzer: TemplateAnalyzer,
+  element: Parse5Element,
+  attr: string,
+  source: SourceCode,
+): string | undefined => {
+  const expr = analyzer.getAttributeValue(element as never, attr, source);
+  if (expr === null) return undefined;
+  if (typeof expr !== 'string') {
+    if (expr.type === 'Literal') return expr.value as string | undefined;
+    return undefined;
   }
-
-  walk(ast, (node) => {
-    if (node.type !== 'TaggedTemplateExpression') return;
-    const tag = node.tag as Node;
-    if (!references(tag, bindings.htmlTags, bindings.htmlNamespaces, 'html')) {
-      return;
-    }
-    const expressions = (node.quasi as { expressions: Node[] }).expressions;
-
-    const analyzer = TemplateAnalyzer.create(node as never);
-    analyzer.traverse({
-      enterElement: (element) => {
-        const el = element as unknown as Parse5Element;
-        const startTag = el.sourceCodeLocation?.startTag;
-        if (el.name !== 'a' || startTag === undefined) return;
-        const navigable = Object.keys(el.attribs).some((attribute) => {
-          const match = ELEMENT_PART.exec(attribute);
-          if (match === null) return false;
-          const expression = expressions[Number(match[1])];
-          if (expression?.type !== 'CallExpression') return false;
-          const call = expression as CallNode;
-          return (
-            references(
-              call.callee,
-              bindings.sref,
-              bindings.srefNamespaces,
-              'uiSref',
-            ) && assignsHref(call)
-          );
-        });
-        if (!navigable) return;
-        const loc = analyzer.resolveLocation(startTag, source);
-        if (loc !== null) locations.push(loc);
-      },
-    });
-  });
-  return locations;
+  return expr;
 };
-
-interface SourceLoc {
-  start: { line: number; column: number };
-  end: { line: number; column: number };
-}
-
-const sameLoc = (a: SourceLoc, b: SourceLoc): boolean =>
-  a.start.line === b.start.line &&
-  a.start.column === b.start.column &&
-  a.end.line === b.end.line &&
-  a.end.column === b.end.column;
-
-// One scan per file, not per report: anchor-is-valid reports once per anchor.
-const cache = new WeakMap<object, SourceLoc[]>();
-const anchorsFor = (source: SourceCode): SourceLoc[] => {
-  const key = source.ast as unknown as object;
-  let found = cache.get(key);
-  if (found === undefined) {
-    found = navigableAnchors(source);
-    cache.set(key, found);
-  }
-  return found;
-};
-
-// The two messages that mean "this anchor has no href". `invalidHref` only
-// fires when an href is present, so a directive never makes it a false positive.
-const NO_HREF_MESSAGES = new Set([
-  'noHrefErrorMessage',
-  'preferButtonErrorMessage',
-]);
 
 /**
- * lit-a11y's anchor-is-valid, minus the uiSref false positives.
+ * lit-a11y's anchor-is-valid, where a uiSref element part counts as an href.
  *
  * `<a ${uiSref('state')}>` carries no static href — the element-part directive
  * assigns one at runtime — so the stock rule reports every correct call site
- * (32 of them, #606). Wrapping rather than disabling keeps its real coverage:
+ * (32 of them, #606). Vendoring rather than disabling keeps its real coverage:
  * an anchor with neither an href nor a directive still reports, and so does
- * `assignHref: false`, where the rule is right for the right reason (#602).
+ * `assignHref: false`, where the base rule is right for the right reason (#602).
  */
-const extended: Rule.RuleModule = ruleExtender(
-  litA11y.rules['anchor-is-valid'],
-  {
-    reportOverrides: (descriptor, context) => {
-      const { messageId } = descriptor;
-      if (messageId === undefined || !NO_HREF_MESSAGES.has(messageId)) {
-        return true;
-      }
-      const loc = descriptor.loc;
-      if (loc === undefined) return true;
-      return !anchorsFor(context.sourceCode).some((anchor) =>
-        sameLoc(anchor, loc),
-      );
-    },
-  },
-);
-
-// The extender passes the base rule's meta through wholesale, docs.url
-// included — without this override the rule advertises lit-a11y's docs.
-// `schema` stays the base rule's: options are deliberately passed through.
 const anchorIsValid: Rule.RuleModule = {
-  ...extended,
   meta: {
-    ...extended.meta,
+    type: 'suggestion',
     docs: {
-      ...extended.meta?.docs,
       description:
-        "lit-a11y's anchor-is-valid, wrapped so a uiSref element part counts as the href it assigns at runtime",
+        'anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime',
       url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md',
     },
+    messages: {
+      preferButtonErrorMessage:
+        'Anchor used as a button. Anchors are primarily expected to navigate. Use the button element instead.',
+      noHrefErrorMessage:
+        'The href attribute is required for an anchor to be keyboard accessible. Provide a valid, navigable address as the href value. If you cannot provide an href, but still need the element to resemble a link, use a button and change it with appropriate styles.',
+      invalidHrefErrorMessage:
+        'The href attribute requires a valid value to be accessible. Provide a valid, navigable address as the href value. If you cannot provide a valid href, but still need the element to resemble a link, use a button and change it with appropriate styles.',
+    },
+    // Upstream's schema, plus the ajv descriptions and the `defaultOptions`
+    // hoist this repo's rule-authoring lane requires. Both are annotations:
+    // the accepted options and the effective `allowHash` default are unchanged.
+    schema: [
+      {
+        type: 'object',
+        properties: {
+          aspects: {
+            description: 'Which anchor checks are active.',
+            type: 'array',
+            items: { type: 'string', enum: ALL_ASPECTS },
+            uniqueItems: true,
+            additionalItems: false,
+            minItems: 1,
+          },
+          allowHash: {
+            description: 'Whether a bare `#` counts as a valid href.',
+            type: 'boolean',
+          },
+        },
+      },
+    ],
+    defaultOptions: [{ allowHash: true }],
+  },
+
+  create(context) {
+    // Per-file state in the closure, never on `parserServices`: oxlint freezes
+    // it, and that mutation was the sole `jsPlugins` blocker (#676).
+    const { litHtmlSources } = context.settings as {
+      litHtmlSources?: boolean | string[];
+    };
+    const sources = new Set([
+      ...DEFAULT_LIT_HTML_SOURCES,
+      ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
+    ]);
+    // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
+    let shouldAnalyse = !litHtmlSources;
+    const litHtmlTags = new Set<string>(litHtmlSources ? [] : ['html']);
+    const litHtmlNamespaces = new Set<string>();
+    const srefLocals = new Set<string>();
+    const srefNamespaces = new Set<string>();
+
+    const isNavigable = (
+      element: Parse5Element,
+      expressions: Node[],
+    ): boolean =>
+      Object.keys(element.attribs).some((attribute) => {
+        const match = ELEMENT_PART.exec(attribute);
+        if (match === null) return false;
+        const expression = expressions[Number(match[1])];
+        if (expression?.type !== 'CallExpression') return false;
+        const call = expression as CallNode;
+        return (
+          references(call.callee, srefLocals, srefNamespaces, 'uiSref') &&
+          assignsHref(call)
+        );
+      });
+
+    return {
+      ImportDeclaration(node) {
+        const source = node.source.value;
+        if (typeof source !== 'string') return;
+
+        // Our directive: the import is what makes a `uiSref` call *ours*.
+        if (/^lit-ui-router(\/|$)/.test(source)) {
+          for (const specifier of node.specifiers) {
+            if (specifier.type === 'ImportNamespaceSpecifier') {
+              srefNamespaces.add(specifier.local.name);
+            } else if (
+              specifier.type === 'ImportSpecifier' &&
+              specifier.imported.type === 'Identifier' &&
+              specifier.imported.name === 'uiSref'
+            ) {
+              srefLocals.add(specifier.local.name);
+            }
+          }
+        }
+
+        shouldAnalyse =
+          // A previous import supplied lit-html
+          shouldAnalyse ||
+          // litHtmlSources is falsy -> lint everything
+          !litHtmlSources ||
+          // litHtmlSources is an Array -> lint only the listed packages
+          node.specifiers.some(
+            (specifier) =>
+              (specifier.type === 'ImportNamespaceSpecifier' ||
+                specifier.type === 'ImportSpecifier') &&
+              sources.has(packageOf(source)),
+          );
+
+        if (!shouldAnalyse) return;
+
+        for (const specifier of node.specifiers) {
+          if (specifier.type === 'ImportNamespaceSpecifier') {
+            litHtmlNamespaces.add(specifier.local.name);
+            litHtmlTags.add('html');
+          } else if (
+            specifier.type === 'ImportSpecifier' &&
+            specifier.imported.type === 'Identifier' &&
+            specifier.imported.name === 'html'
+          ) {
+            litHtmlTags.add(specifier.local.name || 'html');
+          }
+        }
+      },
+
+      TaggedTemplateExpression(node) {
+        if (!shouldAnalyse) return;
+        const tag = node.tag as unknown as Node;
+        if (!references(tag, litHtmlTags, litHtmlNamespaces, 'html')) return;
+
+        const source = context.sourceCode;
+        const expressions = node.quasi.expressions as unknown as Node[];
+        const analyzer = TemplateAnalyzer.create(node);
+
+        analyzer.traverse({
+          enterElement(rawElement) {
+            const element = rawElement as unknown as Parse5Element;
+            const startTag = element.sourceCodeLocation?.startTag;
+            // probably a tree correction node
+            if (element.sourceCodeLocation === undefined) return;
+            if (element.name !== 'a') return;
+
+            const options: RuleOptions =
+              (context.options[0] as RuleOptions | undefined) ?? {};
+            const hasAspectsOption = Array.isArray(options.aspects);
+            const activeAspects = {
+              noHref: hasAspectsOption
+                ? options.aspects?.includes('noHref') === true
+                : true,
+              invalidHref: hasAspectsOption
+                ? options.aspects?.includes('invalidHref') === true
+                : true,
+              preferButton: hasAspectsOption
+                ? options.aspects?.includes('preferButton') === true
+                : true,
+            };
+
+            const attributes = Object.keys(element.attribs);
+            const hasAnyHref =
+              attributes.includes('href') ||
+              attributes.includes('.href') ||
+              // ours: the element part assigns one at runtime
+              isNavigable(element, expressions);
+            const hasClickListener = attributes.includes('@click');
+
+            const reportLoc = () =>
+              (startTag === undefined
+                ? null
+                : analyzer.resolveLocation(startTag, source)) ??
+              node.loc ??
+              null;
+
+            // When there is no href at all, specific scenarios apply:
+            if (!hasAnyHref) {
+              if (
+                activeAspects.noHref &&
+                (!hasClickListener ||
+                  (hasClickListener && !activeAspects.preferButton))
+              ) {
+                const loc = reportLoc();
+                if (loc)
+                  context.report({ loc, messageId: 'noHrefErrorMessage' });
+              }
+
+              if (hasClickListener && activeAspects.preferButton) {
+                const loc = reportLoc();
+                if (loc) {
+                  context.report({
+                    loc,
+                    messageId: 'preferButtonErrorMessage',
+                  });
+                }
+              }
+              return;
+            }
+
+            // Hrefs have been found, now check for validity.
+            const value =
+              getLiteralAttributeValue(analyzer, element, 'href', source) ??
+              getLiteralAttributeValue(analyzer, element, '.href', source);
+
+            const invalidHrefValue =
+              typeof value === 'string' &&
+              (!value.length ||
+                (options.allowHash === false && value === '#') ||
+                /^\W*?javascript:/.test(value));
+
+            if (!invalidHrefValue) return;
+
+            if (hasClickListener && activeAspects.preferButton) {
+              const loc = reportLoc();
+              if (loc) {
+                context.report({ loc, messageId: 'preferButtonErrorMessage' });
+              }
+            } else if (activeAspects.invalidHref) {
+              const loc = reportLoc();
+              if (loc) {
+                context.report({ loc, messageId: 'invalidHrefErrorMessage' });
+              }
+            }
+          },
+        });
+      },
+    };
   },
 };
 

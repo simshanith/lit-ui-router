@@ -1,7 +1,6 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 import { Linter } from 'eslint';
-import litA11y from 'eslint-plugin-lit-a11y';
 import packageJson from '../package.json' with { type: 'json' };
 import plugin from './index.ts';
 
@@ -10,12 +9,9 @@ import { html } from 'lit';
 import { uiSref } from 'lit-ui-router';
 `;
 
-// recommended expects the host config to register lit-a11y (a peer, shared
-// instance) — mirror that here, as the root repo config does.
-const config = [
-  { files: ['**/*.ts'], plugins: { 'lit-a11y': litA11y } },
-  ...plugin.configs.recommended,
-];
+// No lit-a11y registered: the `off` line for it is inert, which is the whole
+// point of the sibling shape (#676).
+const config = [{ files: ['**/*.ts'] }, ...plugin.configs.recommended];
 
 const lint = (code: string) =>
   new Linter().verify(code, config, 'component.ts');
@@ -35,7 +31,7 @@ void describe('plugin', () => {
     );
   });
 
-  void it('recommended reports a dead anchor through the wrap, not the base rule', () => {
+  void it('recommended reports a dead anchor', () => {
     const messages = lint(`${IMPORTS}html\`<a>Home</a>\`;`);
     assert.deepEqual(
       messages.map((message) => message.ruleId),
