@@ -197,6 +197,17 @@
       }
     },
     {
+      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^DEV$"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/sample-app-lit-e2e/scripts/**"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
