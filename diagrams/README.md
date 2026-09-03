@@ -23,7 +23,7 @@ notes on each sheet argue where that form fits and where it lies.
 | [8](sheet-8-the-delivered-city.html) | ONE CONSUMER | DELIVERED CITY |
 | [9](sheet-9-the-shipped-city.html) | ONE DEPLOY | SHIPPED CITY |
 | [10](sheet-10-the-bundled-city.html) | ONE BUNDLE | BUNDLED CITY |
-| [11](sheet-11-the-entry-quarters.html) | FOUR PACKAGES | ENTRY QUARTERS |
+| [11](sheet-11-the-entry-quarters.html) | FIVE PACKAGES | ENTRY QUARTERS |
 | [12](sheet-12-the-register-plate.html) | PR CI GRAPH | REGISTER PLATE |
 | [13](sheet-13-the-weathering-map.html) | WORKSPACE × TIME | WEATHERING MAP |
 
