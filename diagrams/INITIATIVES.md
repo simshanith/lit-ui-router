@@ -28,9 +28,15 @@ pnpm --frozen-lockfile → the tree's own .bin/turbo, direct); census-plate
 and census-mass3b run ref-pinned and write plates (ci now 590 nodes/176
 real at 35c6766; drift check caught + resolved 3 uncited tasks incl. the
 fifth package's lint:docs); generator/mass-3b.json + real-tasks-3b.json
-retired in favor of data/census-mass3b.json. Remaining I5: census-nm on
-the harness (+ build), bundle probes 9/10/11 reconstruction, npm dates
-probe; sheets 12/3B still hand-pasted (refactor once plates settle).
+retired in favor of data/census-mass3b.json.
+I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
+@uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
+0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
+turbo run build); sheets 12 (rev C), 3B (rev D) and 8 import their plates
+(opus fan-out; fifth package = new publishable row / structure 27 / no
+new delivered pkg). Remaining I5: bundle probes 9/10/11 reconstruction;
+sheet 4 onto census-npm.json (upstream monorepo is waking the family —
+angular 22.0.0 published 2026-08-18).
 Known follow-ups: chrome.mjs shared title-block DATE still reads
 2026-08-17 (editorial, all sheets); commitsByMonth could join the weather
 plate if the commits row is wanted back; 7A lamps / 3A / 9-11 stay
