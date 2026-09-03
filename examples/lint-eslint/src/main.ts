@@ -89,7 +89,6 @@ const renderApp = () =>
       <iframe
         ?hidden=${tab !== 'html'}
         title="ESLint html formatter"
-        sandbox="allow-same-origin"
         srcdoc=${reportHtml}
       ></iframe>
     `,
