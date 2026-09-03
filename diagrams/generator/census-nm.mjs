@@ -1,4 +1,8 @@
-// Census of the production node_modules closure of one consumer app.
+// Census of the production node_modules closure of one consumer app, ported
+// onto the pipeline (INITIATIVES.md I5, tier T3): the closure is resolved and
+// measured inside a MATERIALIZED, INSTALLED, BUILT archive of the ref
+// (basis.mjs materialize + installDeps + the tree's own .bin/turbo run build),
+// never the working tree.  Writes diagrams/data/census-nm.json.
 // BFS over package.json `dependencies` (+ peerDependencies when installed),
 // resolving each dep by walking node_modules dirs upward from the dependent's
 // real path (pnpm layout: .pnpm/<pkg>@<v>/node_modules/<dep> siblings).
@@ -8,9 +12,17 @@
 // (their registry-delivered shape); registry packages measure the whole dir.
 import { readFileSync, readdirSync, statSync, realpathSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
+import { execFileSync } from 'node:child_process';
+import { installDeps, materialize, refFromArgv } from './basis.mjs';
+import { writeData } from './census-query.mjs';
 
-const APP = process.argv[2];
-if (!APP) throw new Error('usage: node census-nm.mjs <app dir>');
+const APP_DIR = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'apps/sample-app-lit-vanilla';
+const basis = materialize(refFromArgv());
+process.on('exit', () => basis.cleanup());
+const { turbo } = installDeps(basis);
+// Real build (not dry): workspace members must have their dist/ to measure.
+execFileSync(turbo, ['run', 'build'], { cwd: basis.dir, stdio: ['ignore', 2, 2], maxBuffer: 1 << 26 });
+const APP = join(basis.dir, APP_DIR);
 
 const isDts = (f) => /\.d\.(ts|mts|cts)$/.test(f);
 const isCode = (f) => /\.(js|mjs|cjs|ts|mts|cts|css|html)$/.test(f) && !/\.map$/.test(f);
@@ -73,3 +85,16 @@ for (const r of rows)
     'code ' + r.f + 'f ' + r.l + 'l', 'dts ' + r.df + 'f ' + r.dl + 'l'].join('\t'));
 console.log('TOTAL pkgs', rows.length,
   'code', rows.reduce((s, r) => s + r.l, 0), 'dts', rows.reduce((s, r) => s + r.dl, 0));
+
+writeData('census-nm.json', {
+  ref: basis.ref,
+  sha: basis.sha,
+  commitDate: basis.commitDate,
+  generatedAtTime: new Date().toISOString(),
+  wasGeneratedBy: 'diagrams/generator/census-nm.mjs',
+  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile + turbo run build`,
+  wasAssociatedWith: ['pnpm (corepack)', 'turbo'],
+  app: APP_DIR,
+  // strip `real` — a tmpdir-absolute path with no life beyond this run
+  rows: rows.map(({ real: _real, ...r }) => r),
+});
