@@ -90,6 +90,9 @@ const M = [
   [30, '@tools/eslint-ts-parser',  'tool', 'n',  54, 350,    1,    0, null, null, null, null],
 ];
 
+// exported: the 3D city lights from THIS survey, so the two lanes cannot drift
+export const SURVEY = M.map(([n, , , cat, , , , , ext, line, branch, func]) => ({ n, cat, ext, line, branch, func }));
+
 const geom = new Map(M.map((r) => {
   const [n, name, dist, cat, x, y, sl, pl, ext] = r;
   const s = S(sl);

@@ -194,6 +194,48 @@ shown at zoom 1, 0 at the 0.45 zoom floor; console clean in both themes. Orbit
 snap unchanged: 182.51° → 225°, 2.51° → 45°, 182.51° → 225°. Cycle 3 — the
 sheet-13 coverage-shadow drape (covered = lit, uncovered = shadow) over this same
 city — remains UNSTARTED.
+I8 city cycle 3 LANDED 2026-09-03 (city-scene rev C): THE SHADOW SURVEY as a
+second material lane, and one correction to the record first — the
+coverage-shadow treatment lives on SHEET 7A, the shadow survey, not sheet 13;
+sheet 13 is the weathering map, and cycle 2's note pointed at the wrong plate.
+sheet7a.mjs now exports `SURVEY` (n, cat, ext, line, branch, func per member)
+the same way sheet7.mjs exports `CITY`, and generator/city-scene.mjs imports it
+and ships it in the JSON island, so the model and the flat shadow plate cannot
+drift any more than the model and the census can. A `TEST LIGHT` checkbox beside
+RESET — the survey office's TILT idiom — swaps the lane; default OFF is the gate
+tiers, unchanged. The lane is BUILT ONCE at init as a second set of meshes and
+frames and toggled by visibility, never rebuilt: the picking proxies belong to
+the tier pass alone, because both lanes stand on the same footprints, so hover,
+chips, snap, zoom and reset behave identically in either. Polarity is sheet 7A's:
+a metered member's src mass SPLITS along x into a lit slab of side × extent taken
+from the annex (east) side and a shadow slab beyond it, the two frames giving the
+terminator for free; the lit tint steps through the line-coverage bands (≥95 the
+full halo, 85–95 a shade back, below 85 into red); ext=100 is lit wall to wall,
+№26 happy-dom at ext=0 is all shadow under a burning lamp; the eleven `n` members
+are washed whole; `e` members take an accent wash with an accent frame; `u`
+members drop to bare paper walls — an outline of light; №27, with no mass, stays
+frame-only in both lanes. Every annex becomes the LAMP, tinted stronger than any
+wall it throws light onto. Shadow lerps toward BLACK, never `--ink`, which is
+light in the cyanotype theme — the flat plate's own rule, and it is why the wash
+darkens in both. Tints settled after screenshots: lit .46/.34, red .38/.58,
+shadow .74 black, e2e .24, lamp .60, bare .05. №31 eslint-plugin-lit-ui-router is
+in CITY and absent from SURVEY — the 2026-08-17 metering predates it — so it is
+drawn in bare paper with a faint frame and says so in the panel rather than being
+counted dark. The legend swaps with the lane (LIT ≥95 · lit 85–95 · lit <85 ·
+SHADOW — never loaded · e2e light · lamp = spec annex) and the hover panel gains
+the survey sentence, verbatim from the row: №12 `suite lights 54.1% of the source
+· line 98.4 · branch 96.3 · func 96.8`, №11 `FULL SHADOW — no suite`, №5 `tests
+run — no meter attaches`, №6 `e2e light only — no meter reads it`, №31 `not in
+the 2026-08-17 survey`. `paint()` recolours both lanes, so a theme turn under
+either is correct. Verified headless at 1440×1000 (swiftshader), console clean in
+both themes — the `--halo` token is an rgba and three warns on the dropped alpha,
+so the hue is stripped to `rgb()` before it reaches a wall. dpr=2: canvas rect
+1244×540 = the stage rect, no overflow past the sheet (the retina hotfix
+survives). Snap in the lane: released at 126.65° → 135°. 31 chips at zoom 1.
+Screenshots read the story from the air: in dark the packages district glows pale
+blue wall to wall while examples and the typedoc plugin sit near-black, and
+№12 release stands half dark, half lit — the yard's habit, in three dimensions.
+Sheets, megacanvas and README are byte-identical; only gallery.html moves.
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
