@@ -34,6 +34,7 @@
     "@types/dom-navigation": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
+    "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "happy-dom": "catalog:",
     "oxfmt": "catalog:",
