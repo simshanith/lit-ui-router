@@ -19,12 +19,13 @@ import { sheet10 } from './sheet10.mjs';
 import { sheet11 } from './sheet11.mjs';
 import { sheet12 } from './sheet12.mjs';
 import { sheet13 } from './sheet13.mjs';
+import { sheet14 } from './sheet14.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
-const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13];
+const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13, sheet14];
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
@@ -50,11 +51,11 @@ const megaCss = `
 writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
-  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it. Thirteen sheets in ascent; the form changes at every altitude because the truth does.</p>
+  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it — and last, the office that took every one of those measurements, drawn by its own instrument. Fourteen sheets in ascent; the form changes at every altitude because the truth does.</p>
 </header>
 ${rail}
 ${sheets.map((s) => sheetSection(s)).join('\n')}`,
-{ desc: 'All thirteen sheets of the lit-ui-router drawing set on one page.' }));
+{ desc: 'All fourteen sheets of the lit-ui-router drawing set on one page.' }));
 
 // --- gallery / artifact ---
 const verdicts = [
@@ -76,6 +77,7 @@ const verdicts = [
   ['11', 'FOUR PACKAGES', 'ENTRY QUARTERS', 'the split view — fifteen doors priced alone'],
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 69% of the graph runs nothing; three new members added 52 nodes and punched 11'],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', '84% of the city is summer stone — and the port\u2019s original masonry carries the hottest edges'],
+  ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', 'the atlas measuring itself — one archive, thirteen probe stations, thirteen filed plates, and every station, plate and edge introspected from the generator at build time'],
 ];
 const galCss = `
 .cover { max-width: 1180px; margin: 0 auto 34px; background: var(--paper); border: 1.5px solid var(--ink);
@@ -175,13 +177,13 @@ const cover = `<header class="cover">
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after every sheet was drawn</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
     <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · 2026-09-02</span></div>
-    <div><span class="k">SHEETS</span><span class="v">13 · drawn 2026-08-16–17 · flat and iso plates recensused 2026-08-31</span></div>
+    <div><span class="k">SHEETS</span><span class="v">14 · drawn 2026-08-16–17 · flat and iso plates recensused 2026-08-31 · the survey office added 2026-09-03</span></div>
   </div>
   ${survey}
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 295× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 23% of the wire; the router itself, 4.0%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8 and 9 now stand at REV C and sheet 10 at REV B, each remeasured after the merge it argued for; sheet 11 cuts the same wire the other way — four package quarters, fifteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding.</p>
+    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 295× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 23% of the wire; the router itself, 4.0%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8 and 9 now stand at REV C and sheet 10 at REV B, each remeasured after the merge it argued for; sheet 11 cuts the same wire the other way — four package quarters, fifteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
@@ -193,22 +195,22 @@ writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${ga
 ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
 <p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD 2026-08-31 and applied 2026-09-01 — except plate 7A's test light, which is still the 2026-08-17 metering and labelled as such · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · sheets that say FOUR packages (2, 11, and the census plates) predate eslint-plugin-lit-ui-router's 2026-09-02 graduation to packages/ and are true of their counted dates · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
-{ desc: 'A thirteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
+{ desc: 'A fourteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
 writeFileSync(join(OUT, 'README.md'), `# diagrams/ — The Altitude Atlas
 
-A drawing set: one subject surveyed at every altitude, thirteen sheets (sheets 7–10 are a survey
+A drawing set: one subject surveyed at every altitude, fourteen sheets (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
 wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
-every published entry alone), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
+every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
 notes on each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
 ${sheets.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
 
-- \`megacanvas.html\` — all thirteen sheets on one page, ascent order.
+- \`megacanvas.html\` — all fourteen sheets on one page, ascent order.
 - \`gallery.html\` — cover, index, and the full set (also published as an Artifact).
 
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.

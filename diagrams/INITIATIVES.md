@@ -51,6 +51,18 @@ were byte-identical to the plate, not the 9 claimed in 9e25592's commit
 message. EVERY sheet with a plate behind it now reads it; nothing
 numeric is hand-pasted except declared editorial (plans, scales, prose
 history). Remaining lane: I6–I8 self-portrait.
+I6 LANDED 2026-09-03: sheet 14 THE SURVEY OFFICE — the pipeline's
+self-portrait as a flow graph (archive → probe stations by tier → plate
+cabinet → sheet rack). Every station, drawer, tab and edge is introspected
+at build time by generator/census-atlas.mjs: probes = the census-*.mjs that
+WRITE a plate (13), tiers = which basis primitive they call (T1 5 / T2 2 /
+T3 6), readers = the data-plate URLs each drawing constructs (19 sheet
+imports + the cover). Guards THROW on a plate with ≠1 writer, a probe
+naming an unfiled plate, a drawing reading one, or the cabinet disagreeing
+about the ref — all four verified against a scratch copy. 0 plates unread;
+census-files.json is read by 8 stations + the cover. The module also
+exports the I7 NODES/EDGES arrays (52 nodes over probe/plate/sheet/tool,
+63 edges over writes/reads/imports). TOTAL is now 14 (19 sheet files).
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
