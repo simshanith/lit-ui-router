@@ -27,3 +27,4 @@ export const fixedPlacement = html`<a href="/home" ${uiSref('home')}>Home</a>`;
 
 // resolves through scope: this uiSref is the parameter, not the import
 export const shadowed = (uiSref) => html`<a href=${uiSref('home')}>Home</a>`;
+export const notLit = (html) => html`<a href=${uiSref('home')}>Home</a>`;

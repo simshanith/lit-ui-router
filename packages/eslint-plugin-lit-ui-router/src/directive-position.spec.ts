@@ -44,6 +44,10 @@ ruleTester.run('directive-position', directivePosition, {
       code: `${IMPORTS}function render(uiSref) { return html\`<a href=\${uiSref('home')}>Home</a>\`; }`,
     },
     {
+      name: 'a local named html is not the bare-html fallback',
+      code: `import { uiSref } from 'lit-ui-router';\nfunction render(html) { return html\`<a href=\${uiSref('home')}>Home</a>\`; }`,
+    },
+    {
       name: 'a local shadowing the html import is not a lit template',
       code: `${IMPORTS}function render(html) { return html\`<a href=\${uiSref('home')}>Home</a>\`; }`,
       settings: { litHtmlSources: ['lit'] },

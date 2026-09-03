@@ -75,11 +75,11 @@ interface ImportBinding {
   source: string;
 }
 
-/** The import an identifier resolves to, or nothing: a shadowing local wins. */
-const importBindingOf = (
+/** The definition an identifier resolves to; `undefined` when it is unbound. */
+const definitionOf = (
   context: Rule.RuleContext,
   node: Node,
-): ImportBinding | undefined => {
+): DefinitionLike | undefined => {
   if (node.type !== 'Identifier') return undefined;
   const name = (node as { name?: string }).name;
   if (name === undefined) return undefined;
@@ -88,15 +88,22 @@ const importBindingOf = (
   ) as unknown as ScopeLike;
   for (; scope !== null; scope = scope.upper) {
     const variable = scope.set.get(name);
-    if (variable === undefined) continue;
-    const definition = variable.defs[0];
-    const source = definition?.parent?.source?.value;
-    if (definition?.type !== 'ImportBinding' || typeof source !== 'string') {
-      return undefined;
-    }
-    return { node: definition.node as ImportBinding['node'], source };
+    if (variable !== undefined) return variable.defs[0];
   }
   return undefined;
+};
+
+/** The import an identifier resolves to, or nothing: a shadowing local wins. */
+const importBindingOf = (
+  context: Rule.RuleContext,
+  node: Node,
+): ImportBinding | undefined => {
+  const definition = definitionOf(context, node);
+  const source = definition?.parent?.source?.value;
+  if (definition?.type !== 'ImportBinding' || typeof source !== 'string') {
+    return undefined;
+  }
+  return { node: definition.node as ImportBinding['node'], source };
 };
 
 /** `name` imported from an accepted source, or `ns.name` with `ns` such a namespace. */
@@ -205,7 +212,9 @@ export const createDirectiveTracker = (
         tag.type === 'Identifier' &&
         (tag as { name?: string }).name === 'html'
       ) {
-        return true;
+        // unbound or imported from anywhere counts; a shadowing local does not
+        const definition = definitionOf(context, tag);
+        return definition === undefined || definition.type === 'ImportBinding';
       }
       return importedAs(context, tag, 'html', isLitSource);
     },
