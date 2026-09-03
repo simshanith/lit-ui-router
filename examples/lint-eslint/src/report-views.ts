@@ -47,11 +47,14 @@ export class LintReportView extends ReportView {
 @customElement('eslint-html-view')
 export class EslintHtmlView extends ReportView {
   static styles = css`
+    /* ESLint's html formatter emits a light-only document with hardcoded
+       colors, so pin the frame light rather than let the browser force it */
     iframe {
+      color-scheme: light;
       display: block;
       width: 100%;
       height: 420px;
-      border: 1px solid #d0d0d0;
+      border: 1px solid light-dark(#d0d0d0, #30363d);
       border-radius: 0 6px 6px 6px;
       background: #fff;
     }

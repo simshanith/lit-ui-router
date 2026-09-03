@@ -22,16 +22,16 @@ export class AppRoot extends LitElement {
     nav a {
       font-size: 13px;
       padding: 6px 12px;
-      border: 1px solid #d0d0d0;
+      border: 1px solid light-dark(#d0d0d0, #30363d);
       border-radius: 4px 4px 0 0;
       border-bottom: 0;
-      background: #f6f6f6;
-      color: #333;
+      background: light-dark(#f6f6f6, #21262d);
+      color: light-dark(#333, #e6edf3);
       text-decoration: none;
       cursor: pointer;
     }
     nav a.active {
-      background: #fff;
+      background: light-dark(#fff, #161b22);
       font-weight: 600;
     }
   `;

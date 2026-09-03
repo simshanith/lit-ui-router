@@ -27,11 +27,16 @@ export interface LintResult {
 @customElement('lint-report')
 export class LintReportPanel extends LitElement {
   static styles = css`
+    /* self-contained: the panel follows the reader's preference on its own,
+       whatever host it is dropped into */
     :host {
+      color-scheme: light dark;
       display: block;
       margin-top: 24px;
-      border: 1px solid #d0d0d0;
+      border: 1px solid light-dark(#d0d0d0, #30363d);
       border-radius: 6px;
+      background: light-dark(#fff, #161b22);
+      color: light-dark(#24292f, #e6edf3);
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 13px;
     }
@@ -41,7 +46,7 @@ export class LintReportPanel extends LitElement {
     h2 {
       margin: 0;
       padding: 10px 14px;
-      border-bottom: 1px solid #d0d0d0;
+      border-bottom: 1px solid light-dark(#d0d0d0, #30363d);
       font-size: 13px;
       font-weight: 600;
       font-family:
@@ -54,11 +59,11 @@ export class LintReportPanel extends LitElement {
       padding: 10px 14px;
     }
     .clean {
-      color: #1a7f37;
+      color: light-dark(#1a7f37, #3fb950);
     }
     .file {
       padding: 10px 14px;
-      border-top: 1px solid #eee;
+      border-top: 1px solid light-dark(#eee, #21262d);
     }
     .file-name {
       font-weight: 600;
@@ -74,13 +79,13 @@ export class LintReportPanel extends LitElement {
     }
     .loc,
     .rule {
-      color: #666;
+      color: light-dark(#666, #8b949e);
     }
     .error {
-      color: #cf222e;
+      color: light-dark(#cf222e, #f85149);
     }
     .warn {
-      color: #9a6700;
+      color: light-dark(#9a6700, #d29922);
     }
     a {
       color: inherit;
