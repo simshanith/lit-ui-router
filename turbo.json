@@ -112,7 +112,8 @@
         "//#lint:workflows",
         "//#lint:templates",
         "//#check:patches",
-        "//#check:graph-edges"
+        "//#check:graph-edges",
+        "//#check:task-inputs"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
@@ -213,6 +214,15 @@
         "**/turbo.json",
         "**/package.json",
         "pnpm-workspace.yaml",
+        "tools/shared/src/**"
+      ]
+    },
+    "//#check:task-inputs": {
+      // reads every manifest for task names and asks turbo for the hashed
+      // input set of each, so its own key is the whole tree
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "check-task-inputs.ts",
         "tools/shared/src/**"
       ]
     },

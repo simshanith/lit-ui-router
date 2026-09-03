@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { Exec } from './exec.ts';
-import { resolvedTaskDeps, splitTaskId } from './turbo.ts';
+import { plannedTasks, resolvedTaskDeps, splitTaskId } from './turbo.ts';
 
 describe('splitTaskId', () => {
   it('splits package and task, root included', () => {
@@ -52,5 +52,81 @@ describe('resolvedTaskDeps', () => {
   it('throws when the plan lacks the task', async () => {
     const exec: Exec = () => Promise.resolve({ stdout: plan, stderr: '' });
     await assert.rejects(resolvedTaskDeps('docs#typecheck', exec), /no task/);
+  });
+});
+
+describe('plannedTasks', () => {
+  const planFor = (name: string) =>
+    JSON.stringify({
+      tasks: [
+        {
+          taskId: `docs#${name}`,
+          directory: 'docs',
+          command: `run ${name}`,
+          cache: true,
+          inputs: { 'package.json': 'abc' },
+        },
+      ],
+    });
+
+  const undeclared = (name: string) =>
+    Object.assign(new Error('turbo failed'), {
+      // turbo wraps the message at terminal width
+      stderr: `× Missing tasks in project\n  ╰─▶ × Could not find task\n      \`${name}\` in project`,
+    });
+
+  it('collects every planned task, keyed by task id', async () => {
+    const calls: string[] = [];
+    const argv: unknown[] = [];
+    const exec: Exec = (command, args) => {
+      calls.push(args[1] ?? '');
+      argv.push([command, args]);
+      return Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+    };
+    const planned = await plannedTasks(['build', 'test'], exec, 1);
+    assert.deepEqual(calls, ['build', 'test']);
+    assert.deepEqual(argv, [
+      ['turbo', ['run', 'build', '--only', '--dry-run=json']],
+      ['turbo', ['run', 'test', '--only', '--dry-run=json']],
+    ]);
+    assert.deepEqual([...planned.keys()], ['docs#build', 'docs#test']);
+    assert.deepEqual(planned.get('docs#build')?.inputs, {
+      'package.json': 'abc',
+    });
+  });
+
+  it('skips a script name turbo has no task for', async () => {
+    const exec: Exec = (_command, args) =>
+      args[1] === 'prepare'
+        ? Promise.reject(undeclared('prepare'))
+        : Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+    const planned = await plannedTasks(['prepare', 'test'], exec, 1);
+    assert.deepEqual([...planned.keys()], ['docs#test']);
+  });
+
+  it('rethrows any other turbo failure', async () => {
+    const exec: Exec = () =>
+      Promise.reject(
+        Object.assign(new Error('turbo failed'), {
+          stderr: '× Invalid task configuration',
+        }),
+      );
+    await assert.rejects(plannedTasks(['e2e'], exec, 1), /turbo failed/);
+  });
+
+  it('defaults missing plan fields rather than dropping the task', async () => {
+    const exec: Exec = () =>
+      Promise.resolve({
+        stdout: JSON.stringify({ tasks: [{ taskId: '//#lint' }] }),
+        stderr: '',
+      });
+    const planned = await plannedTasks(['lint'], exec, 1);
+    assert.deepEqual(planned.get('//#lint'), {
+      taskId: '//#lint',
+      directory: '',
+      command: '',
+      cache: true,
+      inputs: {},
+    });
   });
 });

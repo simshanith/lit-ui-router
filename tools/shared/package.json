@@ -14,6 +14,7 @@
     "./graph-edges.core.ts": "./src/graph-edges.core.ts",
     "./manifest.ts": "./src/manifest.ts",
     "./retry.ts": "./src/retry.ts",
+    "./task-inputs.core.ts": "./src/task-inputs.core.ts",
     "./turbo.ts": "./src/turbo.ts",
     "./types.ts": "./src/types.ts",
     "./workspace.ts": "./src/workspace.ts"

@@ -6,6 +6,19 @@ import { defaultExec, type Exec } from './exec.ts';
 
 type DryRun = { tasks?: { taskId?: string; dependencies?: string[] }[] };
 
+/** One entry of `--dry-run=json`'s `tasks`, as the input guard reads it. */
+export type PlannedTask = {
+  taskId: string;
+  /** Package directory, repo-relative; `""` for root (`//`) tasks. */
+  directory: string;
+  command: string;
+  cache: boolean;
+  /** Resolved input files (package-relative) turbo hashes, file -> hash. */
+  inputs: Record<string, string>;
+};
+
+type DryRunTasks = { tasks?: Partial<PlannedTask>[] };
+
 /** `['<pkg>', '<task>']` from a turbo task id like `docs#build` or `//#lint`. */
 export function splitTaskId(taskId: string): [string, string] {
   const at = taskId.lastIndexOf('#');
@@ -31,4 +44,63 @@ export async function resolvedTaskDeps(
   const entry = plan.tasks?.find((t) => t.taskId === taskId);
   if (!entry) throw new Error(`turbo dry-run has no task ${taskId}`);
   return entry.dependencies ?? [];
+}
+
+/** A script name with no turbo task declared for it — skip, don't fail. */
+function isUndeclared(name: string, error: unknown): boolean {
+  const stderr =
+    typeof error === 'object' && error !== null && 'stderr' in error
+      ? String(error.stderr)
+      : '';
+  // turbo wraps the message across lines at terminal width
+  return stderr
+    .replaceAll(/\s+/g, ' ')
+    .includes(`Could not find task \`${name}\``);
+}
+
+/**
+ * Every task turbo plans for `names`, keyed by task id. One dry run per name,
+ * `--only` so the plan is that name's own tasks: turbo rejects a name it has
+ * no task for, and pulling dependencies in trips its own validation (a
+ * persistent dev task like `e2e` depends on `^docs`, which is persistent too).
+ * A name that is only a package script is skipped; every other turbo failure
+ * throws, so a broken config can never read as an empty plan.
+ */
+export async function plannedTasks(
+  names: readonly string[],
+  exec: Exec = defaultExec,
+  concurrency = 4,
+): Promise<Map<string, PlannedTask>> {
+  const planned = new Map<string, PlannedTask>();
+  const queue = [...names];
+  const worker = async () => {
+    for (let name = queue.shift(); name; name = queue.shift()) {
+      let stdout: string;
+      try {
+        ({ stdout } = await exec('turbo', [
+          'run',
+          name,
+          '--only',
+          '--dry-run=json',
+        ]));
+      } catch (error) {
+        if (isUndeclared(name, error)) continue;
+        throw error;
+      }
+      for (const task of (JSON.parse(stdout) as DryRunTasks).tasks ?? []) {
+        if (task.taskId === undefined) continue;
+        planned.set(task.taskId, {
+          taskId: task.taskId,
+          directory: task.directory ?? '',
+          command: task.command ?? '',
+          cache: task.cache ?? true,
+          inputs: task.inputs ?? {},
+        });
+      }
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.max(1, concurrency) }, () => worker()),
+  );
+  return planned;
 }

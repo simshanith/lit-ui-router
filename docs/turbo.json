@@ -95,7 +95,10 @@
     },
     "typecheck:vue": {
       "dependsOn": ["^build:types"],
+      // vue-tsc follows what the components import (.vitepress/config.ts, the
+      // theme sources), which the component glob never named
       "inputs": [
+        "$TURBO_DEFAULT$",
         ".vitepress/env.d.ts",
         ".vitepress/theme/components/*.vue",
         "tsconfig.json",
