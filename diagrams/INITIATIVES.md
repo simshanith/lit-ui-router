@@ -35,9 +35,22 @@ census-doors (9/15 doors byte-identical to the 2026-08-17 constants),
 census-bundle (wire bytes within 0.3%, visualizer estGz exact),
 census-shipped (3 districts byte-exact; the old single ORPHAN was a probe
 artifact — backtick asset URLs are reachable). EVERY probe is now
-scripted and ref-pinned. Remaining I5: sheets 9/10/11 onto their plates
-(their stories change: no orphan, first-claim attribution moves
-visualizer.esm to app: vanilla, new design-system-links example).
+scripted and ref-pinned.
+I5 wave 4 LANDED 2026-09-03 — I5 COMPLETE (opus fan-out): sheets 9 (rev E),
+10 (rev C) and 11 (rev C) import census-{shipped,bundle,doors}.json.
+Sheet 9's orphan ghost is struck (0 orphans; the district schedule, top
+tenants and basis line all render from the plate; vanilla carries
+visualizer.esm by first-claim at 18f/122,127 gz). Sheet 10's byte-exact
+reconciliation was replaced by an honest one: vanilla 122,127 = bundle
+120,098 + 2,029 residual, the api-viewer custom-elements manifest — the
+one emitted asset a generateBundle census cannot see; labels are the
+plate's own group names and ×N is a real module count. Sheet 11 gained
+the 16th door (eslint-plugin, 1,917 gz — the only door no browser opens)
+with the bottom row recomposed for air. CORRECTION: 11 of 15 old doors
+were byte-identical to the plate, not the 9 claimed in 9e25592's commit
+message. EVERY sheet with a plate behind it now reads it; nothing
+numeric is hand-pasted except declared editorial (plans, scales, prose
+history). Remaining lane: I6–I8 self-portrait.
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
@@ -48,8 +61,8 @@ sheet 4 onto census-npm.json (upstream monorepo is waking the family —
 angular 22.0.0 published 2026-08-18).
 Known follow-ups: chrome.mjs shared title-block DATE still reads
 2026-08-17 (editorial, all sheets); commitsByMonth could join the weather
-plate if the commits row is wanted back; 7A lamps / 3A / 9-11 stay
-hand-pasted until their probes exist (I5). Basis for the design: full survey of
+plate if the commits row is wanted back; 7A lamps / 3A stay hand-pasted
+(no plate of their own yet). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,
