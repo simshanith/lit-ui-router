@@ -60,15 +60,36 @@ export default [
 ```
 
 Order matters: `configs.recommended` must come **after** lit-a11y's own
-config, because it turns `lit-a11y/anchor-is-valid` off in favor of the
-wrapped rule. It deliberately does not register the `lit-a11y` plugin key
-itself — the host's instance owns it.
+config, because it turns `lit-a11y/anchor-is-valid` off in favor of ours. It
+deliberately does not register the `lit-a11y` plugin key itself — the host's
+instance owns it. Without lit-a11y installed that `off` line is simply inert,
+so the ordering rule costs nothing either way.
 
-## What the rule does
+## The rules
 
-`lit-ui-router/anchor-is-valid` is lit-a11y's `anchor-is-valid`, wrapped so a
-`uiSref` element part counts as the href it assigns at runtime. It suppresses
-exactly those reports and nothing else:
+| Rule                                                                                                                                                            | What it catches                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [`anchor-is-valid`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)                   | an anchor with no `href` — where a `uiSref` element part counts as one                                                                    |
+| [`sref-assign-href`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md)                 | an inert `href` written to a `<button>`, `<tr>` or `<div>`; fix adds `'auto'`                                                             |
+| [`sref-active-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md) | an authored `aria-current` the directive silently takes over and later removes                                                            |
+| [`directive-position`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md)             | a directive outside the part type it accepts — `uiSref` and `uiSrefActive` are element-part only, and throw on first render anywhere else |
+
+All four are in `configs.recommended` at `error`. The last three are the
+directives' own runtime development warnings and throw, said statically: they
+report at author time, across the whole codebase, and in a production build —
+where the runtime says nothing at all.
+
+Every rule is syntax-only, with no type information, so they also load into
+[oxlint](https://oxc.rs) as JS plugins.
+
+## What `anchor-is-valid` does
+
+`lit-ui-router/anchor-is-valid` is lit-a11y's `anchor-is-valid`, vendored from
+`eslint-plugin-lit-a11y@5.1.1` and extended so a `uiSref` element part counts
+as the href it assigns at runtime. lit-a11y is an optional sibling you may
+also run, not a dependency — our `recommended` turns its copy off so only one
+of them reports. The extension suppresses exactly those reports and nothing
+else:
 
 ```js
 import { html } from 'lit';
@@ -99,9 +120,10 @@ configuration the rule ships in.
 
 Following ESLint core's own policy: a change that makes `recommended` or an
 existing rule stricter — new reports on code that previously passed — ships
-as a **major**. The roadmap (option-aware and state-aware rule tiers) is
-exactly that trajectory, so expect majors rather than silent tightening, and
-pin accordingly.
+as a **major**. The option-aware tier widened `recommended` before 1.0.0,
+while the package is still a release candidate and a widening costs nobody a
+major; the remaining roadmap (a state-aware tier) is the same trajectory, so
+expect majors rather than silent tightening, and pin accordingly.
 
 ## Status
 

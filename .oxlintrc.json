@@ -158,7 +158,10 @@
     ],
     "typescript/unbound-method": "off",
     "typescript/use-unknown-in-catch-callback-variable": "error",
-    "lit-ui-router/anchor-is-valid": "error"
+    "lit-ui-router/anchor-is-valid": "error",
+    "lit-ui-router/directive-position": "error",
+    "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-assign-href": "error"
   },
   "overrides": [
     {
