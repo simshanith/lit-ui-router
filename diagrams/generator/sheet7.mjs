@@ -49,7 +49,8 @@ const TIER_TEXT = {
 };
 
 // [n, name, plate member dir, district, tier, x, y, note] — counts come from the plate
-const PLACED = [
+// exported: plate 7B draws the same city, so it imports this table rather than copying it
+export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
   [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   200,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],

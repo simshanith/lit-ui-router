@@ -16,8 +16,17 @@ I4 wave 1 LANDED 2026-09-02 (opus fan-out): sheets 2/3/7 import their
 plates — numbers by lookup (missing rows THROW), provenance lines rendered
 from plate fields, fifth package drawn as city №31 / yard's renamed
 "5 published packages" slab / brick schedule row 5 (NOT DRAWN — no stud).
-Remaining I4: sheets 7B + 13 (steam/weather plates), cover survey (sheet 1
-on census-files.json). Basis for the design: full survey of
+I4 wave 2 LANDED 2026-09-02 (opus fan-out): sheet 7B derives layout from
+sheet 7's exported PLACED × city+steam plates (geometry can't drift);
+sheet 13 reads weather+city plates (footprints reconcile with sheet 7 by
+construction; timeline "ALL COMMITS" honestly became "ALL DISTRICTS" —
+the plate carries touches, not commits); the cover survey (in build.mjs,
+not sheet1.mjs) rolls up census-files.json — identical numbers, live
+citation. I4 COMPLETE for every sheet with a plate behind it.
+Known follow-ups: chrome.mjs shared title-block DATE still reads
+2026-08-17 (editorial, all sheets); commitsByMonth could join the weather
+plate if the commits row is wanted back; 7A lamps / 3A / 9-11 stay
+hand-pasted until their probes exist (I5). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,
