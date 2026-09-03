@@ -6472,8 +6472,18 @@ a { color: var(--accent); }
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
 .pg-ctl button:hover { background: var(--paper-2); }
 .pg-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
+.pg-desk { perspective: 1600px; perspective-origin: 50% 42%; }
 .pg-stage { display: grid; grid-template-columns: minmax(0, 1fr) 240px; border: 1.5px solid var(--ink);
-  background: var(--paper); }
+  background: var(--paper); transform-origin: 50% 100%; }
+/* tilt is a viewing pose: the drawing lies on the desk and stops taking pointers */
+.pg-desk.tilt { pointer-events: none; }
+.pg-desk.tilt .pg-stage { transform: rotateX(23deg); margin-top: calc(-1 * var(--pg-pull, 0px)); }
+/* --pg-pull is measured at runtime: the height the foreshortened plate gives back,
+   so its near edge stays on the basis line and its far edge meets the control bar */
+.pg.tilt-on .pg-bar { border-bottom: 1.5px solid var(--ink); }
+@media (prefers-reduced-motion: no-preference) {
+  .pg-stage { transition: transform 420ms cubic-bezier(0.33, 0.72, 0.28, 1), margin-top 420ms cubic-bezier(0.33, 0.72, 0.28, 1); }
+}
 .pg-cy { height: 700px; min-width: 0; }
 .pg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
   font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
@@ -6506,14 +6516,17 @@ a { color: var(--accent); }
     <span class="lg"><i style="border-top-color:var(--ink-faint);border-top-style:dashed"></i>imports</span>
     </div>
     <div class="pg-ctl">
-      <span>DRAG TO PAN · SCROLL TO ZOOM</span>
+      <span id="pg-hint">DRAG TO PAN · SCROLL TO ZOOM</span>
       <label><input type="checkbox" id="pg-tools"> TOOLS LEDGER</label>
+      <label><input type="checkbox" id="pg-tilt"> TILT</label>
       <button type="button" id="pg-fit">FIT</button>
     </div>
   </div>
-  <div class="pg-stage">
-    <div class="pg-cy" id="pg-cy" role="img" aria-label="Interactive flow graph of the census pipeline: archive basis, 13 probe stations, 13 filed plates and 13 drawings."></div>
-    <aside class="pg-info" id="pg-info"></aside>
+  <div class="pg-desk" id="pg-desk">
+    <div class="pg-stage">
+      <div class="pg-cy" id="pg-cy" role="img" aria-label="Interactive flow graph of the census pipeline: archive basis, 13 probe stations, 13 filed plates and 13 drawings."></div>
+      <aside class="pg-info" id="pg-info"></aside>
+    </div>
   </div>
   <p class="pg-basis">BASIS — all 13 plates pinned to origin/main @ 35c6766 · commit 2026-09-03 · 52 nodes and 63 edges introspected from <code>diagrams/generator/</code> and <code>diagrams/data/</code> by <code>generator/census-atlas.mjs</code> and embedded here verbatim; layout ranked from those edges, drawn with cytoscape <code>preset</code> — no physics. The archive basis is the one node the census does not contain: it is drawn from the plates' own shared pin.</p>
 </section>
@@ -6652,6 +6665,42 @@ a { color: var(--accent); }
 
   document.getElementById('pg-fit').addEventListener('click', function () { cy.fit(cy.elements(':visible'), 34); });
   document.getElementById('pg-tools').addEventListener('change', function (e) { clear(); showTools(e.target.checked); });
+
+  // a 3D transform breaks cytoscape's flat-rect hit test, so tilt disables input
+  var desk = document.getElementById('pg-desk');
+  var plate = desk.firstElementChild;
+  var hint = document.getElementById('pg-hint');
+
+  // measure the foreshortening once, transition suppressed, so CSS can close the gap
+  function measurePull() {
+    var t = plate.style.transition;
+    var was = desk.classList.contains('tilt');
+    plate.style.transition = 'none';
+    plate.style.setProperty('--pg-pull', '0px');
+    desk.classList.add('tilt');
+    var pull = Math.max(0, Math.round(plate.offsetHeight - plate.getBoundingClientRect().height));
+    if (!was) desk.classList.remove('tilt');
+    plate.style.setProperty('--pg-pull', pull + 'px');
+    void plate.offsetHeight;
+    plate.style.transition = t;
+  }
+  measurePull();
+  window.addEventListener('resize', measurePull);
+  var PAN = 'DRAG TO PAN · SCROLL TO ZOOM';
+  var POSE = 'TILT — VIEWING POSE · INPUT PAUSED';
+  var TILTED = '<h4>THE SURVEY OFFICE</h4><p class="hint">Tilted: the plate is lying on the drafting table, '
+    + 'seen from the surveyor\'s chair. It is a viewing pose only — pan, zoom and hover are paused until you '
+    + 'lay it flat again.</p>';
+  document.getElementById('pg-tilt').addEventListener('change', function (e) {
+    var on = e.target.checked;
+    clear();
+    desk.classList.toggle('tilt', on);
+    document.getElementById('pipeline-graph').classList.toggle('tilt-on', on);
+    cy.userPanningEnabled(!on);
+    cy.userZoomingEnabled(!on);
+    hint.textContent = on ? POSE : PAN;
+    if (on) info.innerHTML = TILTED;
+  });
 
   function repaint() {
     var s = sprites();
