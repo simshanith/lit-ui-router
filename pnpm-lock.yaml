@@ -1511,9 +1511,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
-      jsonc-parser:
-        specifier: 'catalog:'
-        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.64.0
@@ -9718,14 +9715,6 @@ snapshots:
     optionalDependencies:
       typescript: 6.0.3
 
-  '@volar/typescript@2.4.28(typescript@7.0.2)':
-    dependencies:
-      '@volar/language-core': 2.4.28
-      path-browserify: 1.0.1
-      vscode-uri: 3.1.0
-    optionalDependencies:
-      typescript: 7.0.2
-
   '@vscode/web-custom-data@0.4.13': {}
 
   '@vue/compiler-core@3.5.41':
@@ -13306,12 +13295,6 @@ snapshots:
       '@volar/typescript': 2.4.28(typescript@6.0.3)
       '@vue/language-core': 3.3.11
       typescript: 6.0.3
-
-  vue-tsc@3.3.11(typescript@7.0.2):
-    dependencies:
-      '@volar/typescript': 2.4.28(typescript@7.0.2)
-      '@vue/language-core': 3.3.11
-      typescript: 7.0.2
 
   vue@3.5.41(typescript@7.0.2):
     dependencies:

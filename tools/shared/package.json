@@ -11,6 +11,7 @@
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
     "./globs.ts": "./src/globs.ts",
+    "./graph-edges.core.ts": "./src/graph-edges.core.ts",
     "./manifest.ts": "./src/manifest.ts",
     "./retry.ts": "./src/retry.ts",
     "./turbo.ts": "./src/turbo.ts",
@@ -30,7 +31,6 @@
     "@pnpm/workspace.projects-reader": "catalog:",
     "@pnpm/workspace.workspace-manifest-reader": "catalog:",
     "@types/node": "catalog:",
-    "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"

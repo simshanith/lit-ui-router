@@ -32,8 +32,8 @@
     },
     "build": {
       // The docs:api producers are package-qualified: docs never imports them,
-      // so there is no workspace: edge for `^` to walk. //#check:docs-api-deps
-      // keeps every task listing one of these listing all of them.
+      // so there is no workspace: edge for `^` to walk; //#check:graph-edges
+      // keeps build, typecheck and docs listing every producer.
       "dependsOn": [
         "^build",
         "lit-ui-router#docs:api",

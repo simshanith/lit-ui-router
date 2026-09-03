@@ -88,7 +88,7 @@
         "//#lint:workflows",
         "//#lint:templates",
         "//#check:patches",
-        "//#check:docs-api-deps"
+        "//#check:graph-edges"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
@@ -115,12 +115,14 @@
       // type-incompatible binding against it goes unreported (the run only
       // fails on unrelated no-missing-import noise). Root has
       // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason. ADD A LINE HERE
-      // whenever a new package ships custom elements consumed by templates in
-      // packages/*/src, apps/*/src or examples/*/src.
+      // them; these are package-qualified for that reason, one per publishable
+      // package with a build:types script (//#check:graph-edges enforces it).
       "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
-        "lit-ui-router-mobx#build:types"
+        "lit-ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-server#build:types"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -174,11 +176,11 @@
         "tools/shared/src/**"
       ]
     },
-    "//#check:docs-api-deps": {
-      // any manifest can gain or lose a docs:api script, or docs can lose an edge
+    "//#check:graph-edges": {
+      // any manifest can gain or lose a selecting script, any turbo.json an edge
       "inputs": [
-        "check-docs-api-deps.ts",
-        "docs/turbo.json",
+        "check-graph-edges.ts",
+        "**/turbo.json",
         "**/package.json",
         "pnpm-workspace.yaml",
         "tools/shared/src/**"

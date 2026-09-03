@@ -35,7 +35,7 @@
     ]
   },
   "include": [
-    "check-docs-api-deps.ts",
+    "check-graph-edges.ts",
     "check-patches.ts",
     "commitlint.config.ts",
     "eslint.config.ts",

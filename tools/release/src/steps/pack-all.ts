@@ -16,7 +16,6 @@ import {
   packStagingParent,
   packTarballPath,
 } from '../checks/cache-paths.ts';
-import { assertSelfDeclaredDeps } from '../checks/self-deps.ts';
 import { packPublishTarball } from './pack-staged.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
@@ -28,9 +27,6 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  // The same invariant every check relies on: pack:all orders on each package.
-  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
-
   // Clear stale tarballs so a removed package leaves no ghost output.
   await mkdir(packDir, { recursive: true });
   for (const entry of await readdir(packDir)) {
