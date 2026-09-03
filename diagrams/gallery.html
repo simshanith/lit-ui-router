@@ -6729,7 +6729,7 @@ a { color: var(--accent); }
 .cs-ctl button:hover { background: var(--paper-2); }
 .cs-stage { border: 1.5px solid var(--ink); background: var(--paper); }
 /* pan-y keeps the page scrollable under a touch; a horizontal drag orbits */
-.cs-canvas { height: 540px; touch-action: pan-y; cursor: grab; position: relative; }
+.cs-canvas { height: 540px; touch-action: pan-y; cursor: grab; position: relative; overflow: hidden; }
 .cs-canvas.over { cursor: pointer; }
 .cs-canvas.grabbing { cursor: grabbing; }
 .cs-canvas canvas { display: block; }
@@ -7033,7 +7033,9 @@ a { color: var(--accent); }
     function resize() {
       var w = stage.clientWidth, h = stage.clientHeight;
       if (!w || !h) return;
-      renderer.setSize(w, h, false);
+      // updateStyle must stay ON: without a CSS size the canvas displays at its
+      // backing-store size, w × devicePixelRatio — a 2× flood on retina screens
+      renderer.setSize(w, h);
       var aspect = w / h;
       var half = Math.max(baseH, baseW / aspect) * D.margin;
       camera.left = -half * aspect; camera.right = half * aspect;
