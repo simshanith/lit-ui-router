@@ -16,6 +16,11 @@ export const EXAMPLES = {
     height: '520px',
     file: 'src/main.ts',
   },
+  'lint-eslint': {
+    title: 'ESLint Plugin',
+    height: '620px',
+    file: 'src/main.ts',
+  },
 } as const;
 
 export type ExampleName = keyof typeof EXAMPLES;

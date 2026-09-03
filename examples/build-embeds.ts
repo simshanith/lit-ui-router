@@ -14,6 +14,7 @@ const EXAMPLES = [
   'hellosolarsystem',
   'hellogalaxy',
   'design-system-links',
+  'lint-eslint',
 ];
 
 for (const name of EXAMPLES) {

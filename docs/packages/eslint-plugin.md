@@ -95,6 +95,27 @@ The generated
 is the reference: every example above, the option table, and the
 configuration the rule ships in.
 
+## Example
+
+[`examples/lint-eslint`](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
+is the consumer wiring, installed from npm exactly as a consumer would:
+`eslint.config.js` spreads `litA11y.configs.recommended` first and
+`...litUiRouter.configs.recommended` after, and a local Vite plugin runs
+ESLint's Node API at build time and renders the result in the page — a custom
+panel and an iframe of ESLint's own `html` formatter, over the same results.
+
+The embed below is that built page, so its report is static (`0 problems`).
+Open it on StackBlitz to edit `src/main.ts` and watch the report re-run.
+
+<LiveExample name="lint-eslint" />
+
+For the positive control, delete `${uiSref('about')}` from the second anchor:
+the report picks up `lit-ui-router/anchor-is-valid` on the now-hrefless
+anchor, with the rule id linked to its docs.
+
+- [Open on StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
+- [Source on GitHub](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
+
 ## Semver policy
 
 Following ESLint core's own policy: a change that makes `recommended` or an
