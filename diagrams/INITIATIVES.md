@@ -151,6 +151,49 @@ megacanvas are byte-identical to before the CITY export. Cycle 2 candidates, all
 unstarted: labels and a hover info panel (which member, files, sloc, tier),
 district lettering in the scene, and the coverage-shadow treatment from sheet 13
 (covered = lit, uncovered = shadow) as a second material lane.
+I8 city cycle 2 LANDED 2026-09-03 (city-scene rev B): three things, all inside
+generator/city-scene.mjs — the flat sheets and the megacanvas are byte-identical.
+(1) NUMBER CHIPS: each of the 31 src masses now carries a billboarded THREE.Sprite
+whose texture is drawn at runtime into a canvas-2D in the page's OWN `--mono`
+stack — no network, no font file — showing sheet 7's number `n`, so the flat plate
+and the model cross-reference by the same numbering. Ink on paper with a soft
+rule, 21 world units tall, lifted 9 above the cap; drawn with `depthTest: false`
+at renderOrder 5 so it can never z-fight the frame it belongs to, and redrawn from
+scratch when the theme turns. CHOICE — chips DO fade by zoom: below zoom 0.62 all
+31 are dropped, because a pulled-back plan silts up otherwise; at the opening zoom
+(1) all 31 are up and legible, with only mild crowding in the dense tools cluster
+(20/23/26/27/30), which the flat sheet has too. (2) HOVER PANEL: a raycaster picks
+on pointermove against a set of invisible box proxies kept OUT of the scene graph
+(their matrixWorld is updated by hand), one per src mass and per annex, both
+tagged with the member — so hovering an annex reads the member it belongs to, and
+the `off` tier, which has no wall mesh at all, is still pickable. The hit member's
+walls swap to a hover twin of their own tier material (same tint pulled a shade
+further, +0.1 opacity) and its frames to the accent, and a reading panel below the
+stage fills from the schedule's own row — e.g. `12 · @tools/release` /
+`tools/ · HALTS A PUBLISH — 2,067 src sloc in 46 files · spec annex 2,206 sloc in
+20 files` / `hosts published-diff — the one publish halt`. The note line comes
+from sheet7's exported `PLACED`, so the prose is the plate's, not new prose.
+Cleared on pointerleave, suppressed while dragging or mid-snap, cursor turns to a
+pointer over a mass, touch taps to select and taps bare ground to clear, and a
+hover change asks for exactly one frame — render-on-demand is intact.
+(3) DISTRICT LETTERING: PACKAGES/ · APPS/ · DOCS + EXAMPLES/ · TOOLS/ are laid
+FLAT on their ground plates as canvas-textured ground planes (rotateX(-90°)), NOT
+billboarded, so they foreshorten with the ground like lettering on a site plan;
+each is set toward its plate's near corner where the ground is clear of massing,
+sized to its plate and clamped to fit. CHOICE on orientation: each label is turned
+onto the OPENING diagonal (rotation.y = 45°, the camera's own right vector at
+az0), so it reads dead level at rest and shows turned — and at 225° mirrored — at
+the other three snaps, exactly as a real site plan behaves when you walk round the
+table. Verified headless at 1440×1000 in both themes (swiftshader), screenshots
+inspected: chips legible and non-colliding at the init pose, lettering reading as
+ground-plan text, hover highlight plainly visible. Programmatic: hovering member
+12's projected point → panel `12 · @tools/release … HALTS A PUBLISH …`; member 1 →
+`1 · lit-ui-router … the material …`; empty ground → hovered null and the panel
+back to its idle text; hover during a snap tween → suppressed (null); 31 chips
+shown at zoom 1, 0 at the 0.45 zoom floor; console clean in both themes. Orbit
+snap unchanged: 182.51° → 225°, 2.51° → 45°, 182.51° → 225°. Cycle 3 — the
+sheet-13 coverage-shadow drape (covered = lit, uncovered = shadow) over this same
+city — remains UNSTARTED.
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
