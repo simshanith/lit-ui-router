@@ -158,7 +158,10 @@
     ],
     "typescript/unbound-method": "off",
     "typescript/use-unknown-in-catch-callback-variable": "error",
-    "lit-ui-router/anchor-is-valid": "error"
+    "lit-ui-router/anchor-is-valid": "error",
+    "lit-ui-router/directive-position": "error",
+    "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-assign-href": "error"
   },
   "overrides": [
     {
@@ -193,6 +196,17 @@
           "warn",
           {
             "allowList": ["^SSR$"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^DEV$"]
           }
         ]
       }
@@ -331,6 +345,7 @@
         "tools/build_and_test/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
+        "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/shared/**/*.test.ts",
         "tools/warn-lanes/**/*.test.ts",

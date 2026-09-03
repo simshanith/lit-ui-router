@@ -4,6 +4,9 @@
 import type { Linter, Rule } from 'eslint';
 import packageJson from '../package.json' with { type: 'json' };
 import { anchorIsValid } from './anchor-is-valid.ts';
+import { directivePosition } from './directive-position.ts';
+import { srefActiveAriaCurrent } from './sref-active-aria-current.ts';
+import { srefAssignHref } from './sref-assign-href.ts';
 
 /** The plugin object shape; explicit so the dist d.ts is self-contained. */
 export interface LitUiRouterPlugin {
@@ -19,6 +22,9 @@ const plugin: LitUiRouterPlugin = {
   },
   rules: {
     'anchor-is-valid': anchorIsValid,
+    'directive-position': directivePosition,
+    'sref-active-aria-current': srefActiveAriaCurrent,
+    'sref-assign-href': srefAssignHref,
   },
   // Self-referential (recommended registers the plugin), so it lands after
   // construction.
@@ -35,6 +41,9 @@ plugin.configs.recommended = [
       // run it, and flat config accepts it inert when they don't.
       'lit-a11y/anchor-is-valid': 'off',
       'lit-ui-router/anchor-is-valid': 'error',
+      'lit-ui-router/directive-position': 'error',
+      'lit-ui-router/sref-active-aria-current': 'error',
+      'lit-ui-router/sref-assign-href': 'error',
     },
   },
 ];

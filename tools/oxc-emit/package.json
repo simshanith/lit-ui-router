@@ -3,6 +3,7 @@
   "version": "0.0.1",
   "private": true,
   "bin": {
+    "oxc-emit-check-dev-split": "./src/check-dev-split.ts",
     "oxc-emit-dts": "./src/emit-dts.ts",
     "oxc-emit-js": "./src/emit-js.ts"
   },
@@ -11,6 +12,7 @@
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
+    "test": "node --test \"src/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {

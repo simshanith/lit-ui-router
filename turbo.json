@@ -324,12 +324,20 @@
         "typecheck",
         "format:check",
         "check:bundle",
+        "check:dev-split",
         "@tools/release#check:exports"
       ]
     },
     "check:bundle": {
       "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // Reader of the two-pass build:js emit: asserts the declared dev-only
+    // warnings ship in dist/development/*.js and in no dist/*.js. Own package's
+    // build:js only — it reads that package's dist, nothing upstream.
+    "check:dev-split": {
+      "dependsOn": ["build:js"],
+      "inputs": ["$TURBO_DEFAULT$", "dev-warnings.json"]
     },
     "ci:main": {
       // PR graph plus the main-only guards, scheduled by one turbo

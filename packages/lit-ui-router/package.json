@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router",
-  "version": "1.10.0",
+  "version": "1.11.1",
   "description": "State-based routing for Lit",
   "homepage": "https://lit-ui-router.dev",
   "license": "MIT",
@@ -21,7 +21,11 @@
     "./dist/index.js",
     "./dist/register.js",
     "./dist/ui-router.register.js",
-    "./dist/ui-view.register.js"
+    "./dist/ui-view.register.js",
+    "./dist/development/index.js",
+    "./dist/development/register.js",
+    "./dist/development/ui-router.register.js",
+    "./dist/development/ui-view.register.js"
   ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
@@ -29,33 +33,39 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json",
     "./pure": {
       "types": "./dist/pure.d.ts",
+      "development": "./dist/development/pure.js",
       "default": "./dist/pure.js"
     },
     "./register": {
       "types": "./dist/register.d.ts",
+      "development": "./dist/development/register.js",
       "default": "./dist/register.js"
     },
     "./ui-router.register": {
       "types": "./dist/ui-router.register.d.ts",
+      "development": "./dist/development/ui-router.register.js",
       "default": "./dist/ui-router.register.js"
     },
     "./ui-view.register": {
       "types": "./dist/ui-view.register.d.ts",
+      "development": "./dist/development/ui-view.register.js",
       "default": "./dist/ui-view.register.js"
     }
   },
   "scripts": {
     "build:custom-elements": "cem analyze --outdir ./dist",
-    "build:js": "oxc-emit-js",
+    "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/reference && typedoc --defaultCategory other",
@@ -85,6 +95,7 @@
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
+    "@vitest/browser": "catalog:",
     "@vitest/browser-playwright": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "happy-dom": "catalog:",

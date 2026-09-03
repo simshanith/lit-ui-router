@@ -6,7 +6,7 @@ import plugin from './index.ts';
 
 const IMPORTS = `
 import { html } from 'lit';
-import { uiSref } from 'lit-ui-router';
+import { uiSref, uiSrefActive } from 'lit-ui-router';
 `;
 
 // No lit-a11y registered: the `off` line for it is inert, which is the whole
@@ -36,6 +36,48 @@ void describe('plugin', () => {
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/anchor-is-valid'],
+    );
+  });
+
+  void it('recommended carries every rule the plugin ships', () => {
+    const configured = Object.keys(
+      plugin.configs.recommended[0]?.rules ?? {},
+    ).filter((rule) => rule.startsWith('lit-ui-router/'));
+    assert.deepEqual(
+      configured.sort(),
+      Object.keys(plugin.rules)
+        .map((rule) => `lit-ui-router/${rule}`)
+        .sort(),
+    );
+  });
+
+  void it('recommended reports an href written to a <button>', () => {
+    const messages = lint(
+      `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/sref-assign-href'],
+    );
+  });
+
+  void it('recommended reports an aria-current takeover', () => {
+    const messages = lint(
+      `${IMPORTS}html\`<a href="/home" aria-current="page" \${uiSrefActive({})}>Home</a>\`;`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/sref-active-aria-current'],
+    );
+  });
+
+  void it('recommended reports a directive outside an element part', () => {
+    const messages = lint(
+      `${IMPORTS}html\`<a href=\${uiSref('home')}>Home</a>\`;`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/directive-position'],
     );
   });
 
