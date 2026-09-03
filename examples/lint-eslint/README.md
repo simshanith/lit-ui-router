@@ -16,18 +16,26 @@ npm run lint:tap # one TAP line per file
 npm run build    # bakes the report into dist/
 ```
 
-`npm run lint:tap` prints one [TAP](https://testanything.org/) line per file (`ok 3 - src/main.ts`), so a clean run says so. ESLint 9 dropped its bundled `tap` formatter; this one comes from `eslint-formatter-tap`. `npm run lint:watch` is the terminal-only alternative to the dev server: `chokidar-cli` re-runs `eslint . --format pretty` on every save.
+`npm run lint:tap` prints one [TAP](https://testanything.org/) line per file (`ok 3 - src/main.ts` for the clean ones, `not ok` for the violation gallery). ESLint 9 dropped its bundled `tap` formatter; this one comes from `eslint-formatter-tap`. `npm run lint:watch` is the terminal-only alternative to the dev server: `chokidar-cli` re-runs `eslint . --format pretty` on every save.
 
 ## How the in-page report works
 
 `vite.config.ts` carries a local plugin — no extra dependency, just `vite` and `eslint`. It serves a virtual module, `virtual:lint-report`, whose `load` hook runs `new ESLint({ cwd }).lintFiles(['src/**/*.ts'])` and emits the results as JSON, plus a rule-id-to-docs-URL map from `getRulesMetaForResults()`. Lint problems are the payload, never a build failure.
 
-In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/main.ts` accepts it and re-renders. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 0 problems in 2 files`).
+In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/main.ts` accepts it and re-renders. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 4 problems in 3 files`).
 
 The page shows the same lint two ways, on a tab strip: **Report** is that custom panel, and **ESLint html** is an `<iframe>` of ESLint's own built-in `html` formatter, rendered from the same results (a loaded formatter supplies `cwd` and `rulesMeta` itself, so its rule links work).
 
 `src/lint-report.ts` is a plain `<lint-report>` lit element that takes `.results` (the ESLint result shape) and `.ruleDocs` as properties. It knows nothing about ESLint or Vite, so a browser-side linter could drive the same element.
 
-## Positive control
+## What the panel shows
 
-Delete `${uiSref('about')}` from the second anchor in `src/main.ts` and save: the panel reports `lit-ui-router/anchor-is-valid` on the now-hrefless anchor at `26:9`, with the rule id linked to its docs. Restore it and the panel goes back to `✓ 0 problems`. `npm run lint` reports the same thing in the terminal.
+`src/violations.ts` is a gallery: one ✓ GOOD / ✗ BAD pair per rule in the plugin's `recommended` config, marked inline the way [`eslint-plugin-vue`](https://eslint.vuejs.org/rules/) marks its rule docs. The panel opens on those four warnings, each rule id linked to its own docs page. The module is never imported — it exists to be linted, not run, which is also what makes the `directive-position` case safe to ship: that one throws at render time by design.
+
+`eslint.config.js` scopes those four rules to `warn` **for that file only**. `recommended` ships them at `error` and `src/main.ts` is held to that, so the app stays a clean consumer while the demo still has something to report and `npm run lint` still exits 0.
+
+Two of the rules are auto-fixable, so `eslint . --fix` repairs the gallery and empties the panel. `git restore src/violations.ts` puts it back.
+
+Whenever the plugin's `recommended` config gains or drops a rule, the gallery gains or drops its pair — that is what keeps this example an honest picture of what installing the plugin gives you.
+
+For the reverse check, delete `${uiSref('about')}` from the second anchor in `src/main.ts` and save: `lit-ui-router/anchor-is-valid` reports against the app itself, as an error this time.
