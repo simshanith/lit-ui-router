@@ -145,6 +145,9 @@ packageExtensions:
   conventional-changelog-preset-loader:
     dependencies:
       conventional-changelog-conventionalcommits: ^10.2.1
+  eslint-doc-generator:
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
   lit-analyzer:
     dependencies:
       typescript: npm:@typescript/typescript6@^6.0.2
