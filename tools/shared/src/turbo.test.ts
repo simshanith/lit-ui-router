@@ -63,7 +63,10 @@ describe('plannedTasks', () => {
           taskId: `docs#${name}`,
           directory: 'docs',
           command: `run ${name}`,
-          cache: true,
+          // the entry's own `cache` is this run's status object, truthy even
+          // for an uncacheable task; the flag lives on the resolved definition
+          cache: { local: false, remote: false, status: 'MISS', timeSaved: 0 },
+          resolvedTaskDefinition: { cache: name !== 'dev' },
           inputs: { 'package.json': 'abc' },
         },
       ],
@@ -112,6 +115,14 @@ describe('plannedTasks', () => {
         }),
       );
     await assert.rejects(plannedTasks(['e2e'], exec, 1), /turbo failed/);
+  });
+
+  it('reads cacheability off the resolved definition, not the status object', async () => {
+    const exec: Exec = (_command, args) =>
+      Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+    const planned = await plannedTasks(['dev', 'build'], exec, 1);
+    assert.equal(planned.get('docs#dev')?.cache, false);
+    assert.equal(planned.get('docs#build')?.cache, true);
   });
 
   it('defaults missing plan fields rather than dropping the task', async () => {

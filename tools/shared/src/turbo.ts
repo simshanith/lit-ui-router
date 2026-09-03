@@ -12,12 +12,21 @@ export type PlannedTask = {
   /** Package directory, repo-relative; `""` for root (`//`) tasks. */
   directory: string;
   command: string;
+  /**
+   * Whether the task is cacheable. Read from `resolvedTaskDefinition.cache`:
+   * the entry's own top-level `cache` is this run's cache *status* object
+   * (`{ local, remote, status, timeSaved }`), which is truthy for every task.
+   */
   cache: boolean;
   /** Resolved input files (package-relative) turbo hashes, file -> hash. */
   inputs: Record<string, string>;
 };
 
-type DryRunTasks = { tasks?: Partial<PlannedTask>[] };
+type DryRunTasks = {
+  tasks?: (Omit<Partial<PlannedTask>, 'cache'> & {
+    resolvedTaskDefinition?: { cache?: boolean };
+  })[];
+};
 
 /** `['<pkg>', '<task>']` from a turbo task id like `docs#build` or `//#lint`. */
 export function splitTaskId(taskId: string): [string, string] {
@@ -93,7 +102,7 @@ export async function plannedTasks(
           taskId: task.taskId,
           directory: task.directory ?? '',
           command: task.command ?? '',
-          cache: task.cache ?? true,
+          cache: task.resolvedTaskDefinition?.cache ?? true,
           inputs: task.inputs ?? {},
         });
       }
