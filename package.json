@@ -6,10 +6,11 @@
   "type": "module",
   "scripts": {
     "build": "turbo run build",
-    "check:docs-api-deps": "node check-docs-api-deps.ts",
+    "check:graph-edges": "node check-graph-edges.ts",
     "check:pack": "turbo run check:pack",
     "check:patches": "node check-patches.ts",
     "check:published-diff": "turbo run resolve:published && turbo run check:published-diff",
+    "check:task-inputs": "node check-task-inputs.ts",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
     "ci": "turbo run ci",
     "dev": "turbo run dev",

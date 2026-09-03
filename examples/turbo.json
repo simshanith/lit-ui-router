@@ -4,6 +4,7 @@
   "tasks": {
     "build:embeds": {
       "inputs": [
+        "$TURBO_DEFAULT$",
         "build-embeds.ts",
         "*/index.html",
         "*/package.json",

@@ -17,7 +17,6 @@ import {
   formatReport,
   type PackResult,
 } from './check-pack.core.ts';
-import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { tarballManifest } from './tarball.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
@@ -29,7 +28,6 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
   const results: PackResult[] = [];
   for (const { name, dir } of publishable) {
     // Malformed manifests reject in tarballManifest — loud, never a silent {}.

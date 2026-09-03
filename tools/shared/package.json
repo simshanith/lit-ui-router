@@ -11,8 +11,11 @@
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
     "./globs.ts": "./src/globs.ts",
+    "./graph-edges.core.ts": "./src/graph-edges.core.ts",
     "./manifest.ts": "./src/manifest.ts",
     "./retry.ts": "./src/retry.ts",
+    "./task-inputs.core.ts": "./src/task-inputs.core.ts",
+    "./turbo.ts": "./src/turbo.ts",
     "./types.ts": "./src/types.ts",
     "./workspace.ts": "./src/workspace.ts"
   },
