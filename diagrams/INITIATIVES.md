@@ -29,6 +29,15 @@ and census-mass3b run ref-pinned and write plates (ci now 590 nodes/176
 real at 35c6766; drift check caught + resolved 3 uncited tasks incl. the
 fifth package's lint:docs); generator/mass-3b.json + real-tasks-3b.json
 retired in favor of data/census-mass3b.json.
+I5 wave 3 LANDED 2026-09-02: sheet 4 on the npm plate (angular 22.0.0,
+rx's "~2020" corrected to 2021-11-30); bundle probes RECONSTRUCTED —
+census-doors (9/15 doors byte-identical to the 2026-08-17 constants),
+census-bundle (wire bytes within 0.3%, visualizer estGz exact),
+census-shipped (3 districts byte-exact; the old single ORPHAN was a probe
+artifact — backtick asset URLs are reachable). EVERY probe is now
+scripted and ref-pinned. Remaining I5: sheets 9/10/11 onto their plates
+(their stories change: no orphan, first-claim attribution moves
+visualizer.esm to app: vanilla, new design-system-links example).
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
