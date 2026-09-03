@@ -177,8 +177,11 @@
       ]
     },
     "//#check:graph-edges": {
-      // any manifest can gain or lose a selecting script, any turbo.json an edge
+      // any manifest can gain or lose a selecting script, any turbo.json an
+      // edge; $TURBO_DEFAULT$ so the list can't go stale into a false cache
+      // hit, the globs stay as documentation of what the check reads
       "inputs": [
+        "$TURBO_DEFAULT$",
         "check-graph-edges.ts",
         "**/turbo.json",
         "**/package.json",
