@@ -1,0 +1,31 @@
+{
+  "ref": "origin/main",
+  "sha": "35c6766",
+  "commitDate": "2026-09-03T00:02:22Z",
+  "generatedAtTime": "2026-09-03T04:34:23.939Z",
+  "wasGeneratedBy": "diagrams/generator/census-doors.mjs",
+  "used": "git archive origin/main @ 35c6766 + corepack pnpm install --frozen-lockfile + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
+  "wasAssociatedWith": [
+    "pnpm (corepack)",
+    "rolldown@1.2.6",
+    "node:zlib gzip"
+  ],
+  "rows": [
+    {"pkg":"eslint-plugin-lit-ui-router","door":".","min":4559,"gz":1917},
+    {"pkg":"lit-ui-router","door":".","min":17482,"gz":5607},
+    {"pkg":"lit-ui-router","door":"./pure","min":17082,"gz":5517},
+    {"pkg":"lit-ui-router","door":"./register","min":6997,"gz":2482},
+    {"pkg":"lit-ui-router","door":"./ui-router.register","min":2336,"gz":1070},
+    {"pkg":"lit-ui-router","door":"./ui-view.register","min":6794,"gz":2464},
+    {"pkg":"lit-ui-router-mobx","door":".","min":1624,"gz":650},
+    {"pkg":"ui-router-navigation-location-plugin","door":".","min":1309,"gz":670},
+    {"pkg":"ui-router-server","door":".","min":12123,"gz":4965},
+    {"pkg":"ui-router-server","door":"./connect","min":2717,"gz":1464},
+    {"pkg":"ui-router-server","door":"./fetch","min":2858,"gz":1510},
+    {"pkg":"ui-router-server","door":"./hono","min":2928,"gz":1536},
+    {"pkg":"ui-router-server","door":"./matcher","min":6645,"gz":2838},
+    {"pkg":"ui-router-server","door":"./redirects","min":8781,"gz":3597},
+    {"pkg":"ui-router-server","door":"./simulate","min":431,"gz":283},
+    {"pkg":"ui-router-server","door":"./vite","min":2844,"gz":1519}
+  ]
+}
