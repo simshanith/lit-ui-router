@@ -1,74 +1,36 @@
-// Cover census: the WHOLE tracked repo at origin/main — deliberately broader
-// than the sheets, which count only authored source under each member's src dir,
-// and deliberately NOT this atlas branch: surveying the branch counts the atlas's
-// own drawings (a 29k-sloc self-portrait), which the cover should not do.
-// Basis: `git archive origin/main` extracted to a temp dir (the archive holds
-// exactly main's tracked set), every extracted file handed to scc in ONE batch
-// (~26 KB of argv, far under this platform's 1 MiB ARG_MAX, so the explicit
-// file list is used rather than scc's directory walk — the list IS the tracked
-// set, with no reliance on scc's .gitignore reading).  `git fetch origin main`
-// first if the local origin/main may be stale; the measured sha is printed.
-// Nothing is excluded by US beyond what git already ignores — fixtures,
-// snapshots and generated .d.ts all count — but scc itself SILENTLY SKIPS
-// lockfiles (pnpm-lock.yaml 13,490 lines, plus the four example
-// package-lock.json): verified empirically, `scc pnpm-lock.yaml` returns [].
-// scc also reports only files it can name a language for, so the table is
-// short of the tracked set by the unclassified paths — binaries (favicons, the
-// gzipped demo corpora), dotfiles, and those lockfiles.  The gap is printed,
-// not silently swallowed.  Cross-check (main @ 8333121): wc -l over the whole
-// tree is 79,409; minus binaries (3,833), lockfiles (18,818) and dotfiles (805)
-// it lands within ~291 of scc's Lines total (trailing-newline off-by-ones).
-// sloc = scc 4.0.0 `Code` (string-aware: template-literal interiors are code).
-import { execFileSync } from 'node:child_process';
-import { mkdtempSync, rmSync, readdirSync } from 'node:fs';
+// Cover census, ported onto the pipeline (INITIATIVES.md I1): no measuring
+// here — this is a group-by-language QUERY over the master per-file snapshot
+// diagrams/data/census-files.json (written by census-scc.mjs, default ref
+// origin/main).  Deliberately main and not this atlas branch: surveying the
+// branch counts the atlas's own drawings (a ~29k-sloc self-portrait), which
+// the cover should not do.  The measurement ledger — what scc skips, the wc
+// cross-check discipline — lives with the measurement in census-scc.mjs.
+// Refresh flow: `node census-scc.mjs [--ref <ref>]` then re-run this.
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
+import { DATA_DIR } from './basis.mjs';
 
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-const REF = 'origin/main';
+const snap = JSON.parse(readFileSync(join(DATA_DIR, 'census-files.json'), 'utf8'));
 
-const sha = execFileSync('git', ['rev-parse', '--short', REF], { cwd: ROOT }).toString().trim();
-const tmp = mkdtempSync(join(tmpdir(), 'census-main-'));
-try {
-  const tar = execFileSync('git', ['archive', REF], { cwd: ROOT, maxBuffer: 1 << 28 });
-  execFileSync('tar', ['-x', '-C', tmp], { input: tar, maxBuffer: 1 << 28 });
-
-  const walk = (dir, out = []) => {
-    for (const e of readdirSync(dir, { withFileTypes: true })) {
-      if (e.isDirectory()) walk(join(dir, e.name), out);
-      else out.push(join(dir, e.name));
-    }
-    return out;
-  };
-  // RELATIVE paths, cwd at the extraction root: scc's shebang and filename
-  // detection (BASH task scripts, LICENSE) silently returns nothing for
-  // absolute paths — only extension-based classification survives them.
-  const files = walk(tmp).map((f) => f.slice(tmp.length + 1));
-
-  // Per-language rollups straight from scc; no --by-file, so each row is a language.
-  const langs = JSON.parse(execFileSync('mise',
-    ['x', 'aqua:boyter/scc@4.0.0', '--', 'scc', '--format', 'json', ...files],
-    { cwd: tmp, maxBuffer: 1 << 26 }).toString('utf8'));
-
-  const rows = langs
-    .map((l) => ({ name: l.Name, count: l.Count, lines: l.Lines, blank: l.Blank, comment: l.Comment, code: l.Code }))
-    .sort((a, b) => b.code - a.code || b.count - a.count);
-
-  const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
-  const TOTAL = { name: 'TOTAL', count: sum('count'), lines: sum('lines'), blank: sum('blank'), comment: sum('comment'), code: sum('code') };
-
-  const n = (v) => v.toLocaleString('en-US');
-  const line = (r) => [r.name.padEnd(24), n(r.count).padStart(6), n(r.lines).padStart(9),
-    n(r.blank).padStart(8), n(r.comment).padStart(9), n(r.code).padStart(9)].join(' ');
-
-  console.log(`ref: ${REF} @ ${sha} · tracked files:`, files.length, '· scc classified:', TOTAL.count,
-    '· unclassified (binary / dotfile / no extension):', files.length - TOTAL.count);
-  console.log(['LANGUAGE'.padEnd(24), 'FILES'.padStart(6), 'LINES'.padStart(9),
-    'BLANKS'.padStart(8), 'COMMENTS'.padStart(9), 'CODE'.padStart(9)].join(' '));
-  for (const r of rows) console.log(line(r));
-  console.log(line(TOTAL));
-  console.log(JSON.stringify({ ref: REF, sha, tracked: files.length, total: TOTAL, langs: rows }));
-} finally {
-  rmSync(tmp, { recursive: true, force: true });
+const byLang = new Map();
+for (const r of snap.rows) {
+  const l = byLang.get(r.lang) ?? { name: r.lang, count: 0, lines: 0, blank: 0, comment: 0, code: 0 };
+  l.count += 1; l.lines += r.lines; l.blank += r.blank; l.comment += r.comment; l.code += r.code;
+  byLang.set(r.lang, l);
 }
+const rows = [...byLang.values()].sort((a, b) => b.code - a.code || b.count - a.count);
+
+const sum = (k) => rows.reduce((a, r) => a + r[k], 0);
+const TOTAL = { name: 'TOTAL', count: sum('count'), lines: sum('lines'), blank: sum('blank'), comment: sum('comment'), code: sum('code') };
+
+const n = (v) => v.toLocaleString('en-US');
+const line = (r) => [r.name.padEnd(24), n(r.count).padStart(6), n(r.lines).padStart(9),
+  n(r.blank).padStart(8), n(r.comment).padStart(9), n(r.code).padStart(9)].join(' ');
+
+console.log(`ref: ${snap.ref} @ ${snap.sha} · tracked files:`, snap.tracked, '· scc classified:', TOTAL.count,
+  '· unclassified (binary / dotfile / no extension):', snap.tracked - TOTAL.count);
+console.log(['LANGUAGE'.padEnd(24), 'FILES'.padStart(6), 'LINES'.padStart(9),
+  'BLANKS'.padStart(8), 'COMMENTS'.padStart(9), 'CODE'.padStart(9)].join(' '));
+for (const r of rows) console.log(line(r));
+console.log(line(TOTAL));
+console.log(JSON.stringify({ ref: snap.ref, sha: snap.sha, tracked: snap.tracked, total: TOTAL, langs: rows }));

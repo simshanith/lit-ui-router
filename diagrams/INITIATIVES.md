@@ -1,6 +1,7 @@
 # Census pipeline rework — notes & initiatives
 
-Status: DESIGNED 2026-09-02, not started. Basis for the design: full survey of
+Status: DESIGNED 2026-09-02; I1 LANDED 2026-09-02 (basis.mjs + census-scc.mjs
+master snapshot + overview as query, behavior-identical at main @ 35c6766). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,
