@@ -1,15 +1,10 @@
-// Pure logic for the static-edges-vs-dynamic-discovery guard: a turbo task
-// that must order on a task of every workspace member matching a predicate
-// (docs:api producers, publishable packs, d.ts for the template lint). The
-// members are discovered at run time; the edges are static turbo.json lines,
-// so a new member silently falls out of the graph unless something compares
-// the two. The IO (workspace load, turbo dry-run) lives in check-graph-edges.ts.
+// Pure logic for check-graph-edges.ts, which owns the IO.
 
 /** A consumer task that must depend on `<member>#<producerTask>` for every selected member. */
 export type EdgeRule = {
   consumer: string;
   producerTask: string;
-  /** Why these members, in the words a maintainer needs to add the next line. */
+  /** Why these members. */
   why: string;
 };
 

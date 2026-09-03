@@ -12,11 +12,7 @@ export type PlannedTask = {
   /** Package directory, repo-relative; `""` for root (`//`) tasks. */
   directory: string;
   command: string;
-  /**
-   * Whether the task is cacheable. Read from `resolvedTaskDefinition.cache`:
-   * the entry's own top-level `cache` is this run's cache *status* object
-   * (`{ local, remote, status, timeSaved }`), which is truthy for every task.
-   */
+  /** From `resolvedTaskDefinition.cache`; the entry's own `cache` is this run's status object. */
   cache: boolean;
   /** Resolved input files (package-relative) turbo hashes, file -> hash. */
   inputs: Record<string, string>;
@@ -68,12 +64,9 @@ function isUndeclared(name: string, error: unknown): boolean {
 }
 
 /**
- * Every task turbo plans for `names`, keyed by task id. One dry run per name,
- * `--only` so the plan is that name's own tasks: turbo rejects a name it has
- * no task for, and pulling dependencies in trips its own validation (`e2e`
- * depends on `^docs`, which is persistent, so it cannot plan at all — #695).
- * A name that is only a package script is skipped; every other turbo failure
- * throws, so a broken config can never read as an empty plan.
+ * Every task turbo plans for `names`, keyed by task id. One `--only` dry run
+ * per name: a name with no turbo task is skipped, every other failure throws,
+ * so a broken config can never read as an empty plan.
  */
 export async function plannedTasks(
   names: readonly string[],

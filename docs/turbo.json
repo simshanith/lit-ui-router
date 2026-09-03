@@ -31,9 +31,7 @@
       "persistent": true
     },
     "build": {
-      // The docs:api producers are package-qualified: docs never imports them,
-      // so there is no workspace: edge for `^` to walk; //#check:graph-edges
-      // keeps build, typecheck and docs listing every producer.
+      // docs imports no producer, so `^` cannot reach the docs:api tasks
       "dependsOn": [
         "^build",
         "lit-ui-router#docs:api",
@@ -95,8 +93,7 @@
     },
     "typecheck:vue": {
       "dependsOn": ["^build:types"],
-      // vue-tsc follows what the components import (.vitepress/config.ts, the
-      // theme sources), which the component glob never named
+      // vue-tsc follows what the components import, not just the component glob
       "inputs": [
         "$TURBO_DEFAULT$",
         ".vitepress/env.d.ts",

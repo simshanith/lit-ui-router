@@ -1,8 +1,5 @@
-// Static turbo edges vs dynamically discovered workspace members. Each rule
-// names a consumer task that must order on `<member>#<producerTask>` for every
-// member the selector picks; the members come from the workspace, the edges
-// from turbo's own resolved graph (`--dry-run=json`), so a package-qualified
-// dependsOn line in any turbo.json counts and no manifest link is needed.
+// Each rule's consumer task must order on `<member>#<producerTask>` for every
+// member the selector picks, or a new member silently falls out of the graph.
 import {
   type EdgeRule,
   formatMissing,

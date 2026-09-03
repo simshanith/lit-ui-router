@@ -1,11 +1,4 @@
-// Pure logic for the inputs-must-over-approximate guard. A turbo task's
-// `inputs` is a cache key, so it has to be a superset of everything the task
-// reads; an enumerated list always drifts behind the files (a setup file, a
-// suite outside src/) and the failure mode is `cache hit` + `exit 0` on a tree
-// the task would have rejected. The invariant checked here: every tracked file
-// in a task's package is hashed by that task, unless the task is exempt
-// because its read-set genuinely is one file type. The IO (git ls-files, the
-// turbo dry runs) lives in check-task-inputs.ts.
+// Pure logic for check-task-inputs.ts, which owns the IO.
 
 import { splitTaskId } from './turbo.ts';
 
@@ -21,7 +14,7 @@ export type AuditableTask = {
 /** A task name whose inputs are narrow on purpose, keyed by name so every package's copy is covered. */
 export type InputsExemption = {
   task: string;
-  /** Why the narrow key is the read-set, in the words the next maintainer needs. */
+  /** Why the narrow key is the read-set. */
   why: string;
 };
 

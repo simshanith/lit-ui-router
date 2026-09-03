@@ -1,10 +1,5 @@
-// Turbo `inputs` must over-approximate: a cache key that misses a file the
-// task reads is a silent `cache hit` + `exit 0` on a tree the task would have
-// rejected (#260-#262 typecheck:root and format:check:root, #693 the test
-// lanes and their setup files). The invariant: every tracked file in a task's
-// package is hashed by that task. Task names come from the workspace
-// manifests and the hashed set from turbo's own dry run, so nothing here
-// parses a turbo.json.
+// Every tracked file in a task's package must be hashed by that task: a key
+// that misses a file the task reads is a silent cache hit on a stale tree.
 import { defaultExec } from '@tools/shared/exec.ts';
 import {
   auditTaskInputs,
@@ -16,8 +11,7 @@ import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-task-inputs';
 
-// Lanes whose read-set genuinely is one file type: the glob IS the contract,
-// and $TURBO_DEFAULT$ would only cache-miss on every unrelated change.
+// Lanes whose read-set genuinely is one file type, so the glob is the key.
 const EXEMPT: InputsExemption[] = [
   {
     task: 'format:check',
@@ -34,7 +28,7 @@ const EXEMPT: InputsExemption[] = [
   { task: 'lint:zizmor', why: 'zizmor reads .github workflows only' },
   {
     task: 'bundle:worker',
-    why: 'wrangler --dry-run bundles worker/** only; docs content never reaches the artifact (docs/turbo.json says why)',
+    why: 'wrangler --dry-run bundles worker/** only; docs content never reaches the artifact',
   },
 ];
 

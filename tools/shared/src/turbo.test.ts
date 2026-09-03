@@ -63,8 +63,7 @@ describe('plannedTasks', () => {
           taskId: `docs#${name}`,
           directory: 'docs',
           command: `run ${name}`,
-          // the entry's own `cache` is this run's status object, truthy even
-          // for an uncacheable task; the flag lives on the resolved definition
+          // the status object turbo emits, truthy even when uncacheable
           cache: { local: false, remote: false, status: 'MISS', timeSaved: 0 },
           resolvedTaskDefinition: { cache: name !== 'dev' },
           inputs: { 'package.json': 'abc' },

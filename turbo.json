@@ -21,9 +21,7 @@
     },
     "test": {
       "dependsOn": ["^test"],
-      // $TURBO_DEFAULT$ leads: the globs missed a package's own setup files
-      // (vitest.setup.browser.ts, tooling/) and any suite living outside
-      // src/, which cache-hits on a tree the run would have failed
+      // $TURBO_DEFAULT$ is the key; the globs only document what the lane reads
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**/*.ts",
@@ -140,8 +138,8 @@
       // type-incompatible binding against it goes unreported (the run only
       // fails on unrelated no-missing-import noise). Root has
       // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason, one per publishable
-      // package with a build:types script (//#check:graph-edges enforces it).
+      // them; these are package-qualified for that reason (//#check:graph-edges
+      // holds the list to every publishable package with a build:types script).
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
@@ -192,9 +190,7 @@
     },
     "//#check:patches": {
       // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
-      // could rotate a patch target re-runs the check; $TURBO_DEFAULT$ so the
-      // list can't go stale into a false cache hit, the globs stay as
-      // documentation of what the check reads
+      // could rotate a patch target re-runs the check
       "inputs": [
         "$TURBO_DEFAULT$",
         "check-patches.ts",
@@ -205,9 +201,7 @@
       ]
     },
     "//#check:graph-edges": {
-      // any manifest can gain or lose a selecting script, any turbo.json an
-      // edge; $TURBO_DEFAULT$ so the list can't go stale into a false cache
-      // hit, the globs stay as documentation of what the check reads
+      // any manifest can gain or lose a selecting script, any turbo.json an edge
       "inputs": [
         "$TURBO_DEFAULT$",
         "check-graph-edges.ts",
@@ -218,8 +212,6 @@
       ]
     },
     "//#check:task-inputs": {
-      // reads every manifest for task names and asks turbo for the hashed
-      // input set of each, so its own key is the whole tree
       "inputs": [
         "$TURBO_DEFAULT$",
         "check-task-inputs.ts",
