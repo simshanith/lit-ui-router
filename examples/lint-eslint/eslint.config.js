@@ -3,7 +3,7 @@ import litUiRouter from 'eslint-plugin-lit-ui-router';
 import tseslint from 'typescript-eslint';
 
 export default [
-  { ignores: ['node_modules/**'] },
+  { ignores: ['node_modules/**', 'dist/**', '**/*.d.ts'] },
   // syntax-only: the rule reads the template AST, never type information
   ...tseslint.configs.recommended,
   // ordering matters: ours turns lit-a11y/anchor-is-valid off in favor of it
