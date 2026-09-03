@@ -109,6 +109,9 @@ const geom = new Map(M.map(([n, name, dist, tier, x, y, sf, sl, pf, pl]) => {
 }));
 const g = (n) => geom.get(n);
 
+// exported: the 3D city renders THIS geometry, so a mass can never drift from the sheet
+export const CITY = [...geom.values()];
+
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 

@@ -115,6 +115,42 @@ together over 420ms only inside `prefers-reduced-motion: no-preference`; under
 `reduce` it snaps (verified: duration 0s, transform already applied). Nothing is
 persisted — every load is flat. The three.js scene with billboarded sprites and
 a camera orbit remains the I8 stretch, unstarted.
+I8 REDIRECTED 2026-09-03: the tilt works on the survey-office graph and the user's
+verdict was that it "does nothing for me" THERE — what they want is the 3D feel
+with isometric snap on the ISOMETRIC CITIES, and that "may need the full 3d
+rendering engine". So the full step now targets the city of sheet 7, not the
+pipeline graph. The CSS tilt STAYS (harmless, reversible, and the cheap lane is
+still the honest first step). Cycle 1 LANDED the same day: sheet7.mjs now exports
+its COMPUTED geometry as `CITY` (the geom Map's values — footprint, height, annex
+side/height and position per member), so the scene can never re-derive a mass and
+drift from the plate; generator/city-scene.mjs emits a new gallery section, THE
+CITY — ISOMETRIC, placed after the survey office and indexed on the cover as
+S7·3D; three.js 0.169.0 is the only external module, dynamically imported from
+cdnjs inside an IntersectionObserver so the gallery pays nothing (~700KB) until
+the plate scrolls into view; the camera is orthographic at the true isometric
+elevation atan(1/√2) ≈ 35.264°, fitted at init over ALL FOUR diagonals so a snap
+can never clip the city. Treatment is the pinned sprite note in three dimensions —
+each mass is a semi-opaque tinted box (cap 0.88 / flanks 0.80, depthWrite off)
+under a THREE.EdgesGeometry frame in the sheet's ink, so the girding frame of what
+stands behind reads through; annexes are dashed frames in a cooler tint (the test
+mass stays distinct), tier is COLOUR only, and the `off` tier is drawn frame-only
+because there is nothing to mass. The ground is four dashed district plates plus a
+faint grid. THE FEATURE is the isometric snap: pointer-drag orbits the azimuth
+freely (elevation fixed), and on release it eases 380ms onto the nearest of
+45/135/225/315° — instantly under prefers-reduced-motion. Verified headless at
+1440×1000 in both themes (swiftshader): 346.13° → 315°, 66.73° → 45°, reduced
+motion 6.33° → 45° with no tween; wheel zoom 1 → 1.433 and clamped at 4 / 0.45;
+double-click restores 45° / zoom 1; console clean in both themes. The wheel is
+deliberately NOT a page-scroll hijack: a plain scroll over the plate scrolls the
+page, and the wheel only zooms once the plate has been touched (or on a trackpad
+pinch, which arrives as ctrlKey), with `touch-action: pan-y` so a touch drag
+orbits horizontally while the page still scrolls vertically. Rendering is on
+demand — a frame is drawn per interaction or tween step, never a free-running
+loop. Nothing is persisted: every load is the initial pose. Sheets 7/7B/13 and the
+megacanvas are byte-identical to before the CITY export. Cycle 2 candidates, all
+unstarted: labels and a hover info panel (which member, files, sloc, tier),
+district lettering in the scene, and the coverage-shadow treatment from sheet 13
+(covered = lit, uncovered = shadow) as a second material lane.
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
