@@ -27,10 +27,9 @@ export interface LintResult {
 @customElement('lint-report')
 export class LintReportPanel extends LitElement {
   static styles = css`
-    /* self-contained: the panel follows the reader's preference on its own,
-       whatever host it is dropped into */
+    /* light-dark() resolves against the inherited color-scheme, which the host
+       page declares — lit-analyzer's no-invalid-css rejects it in a css block */
     :host {
-      color-scheme: light dark;
       display: block;
       margin-top: 24px;
       border: 1px solid light-dark(#d0d0d0, #30363d);

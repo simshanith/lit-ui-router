@@ -47,10 +47,7 @@ export class LintReportView extends ReportView {
 @customElement('eslint-html-view')
 export class EslintHtmlView extends ReportView {
   static styles = css`
-    /* ESLint's html formatter emits a light-only document with hardcoded
-       colors, so pin the frame light rather than let the browser force it */
     iframe {
-      color-scheme: light;
       display: block;
       width: 100%;
       height: 420px;
@@ -61,7 +58,12 @@ export class EslintHtmlView extends ReportView {
   `;
 
   render() {
+    // ESLint's html formatter emits a light-only document with no background
+    // of its own, so pin the frame light instead of letting a dark canvas show
+    // through under its hardcoded dark text. Inline because lit-analyzer's
+    // no-invalid-css does not know `color-scheme` in a css block.
     return html`<iframe
+      style="color-scheme: light"
       title="ESLint html formatter"
       srcdoc=${reportHtml}
     ></iframe>`;
