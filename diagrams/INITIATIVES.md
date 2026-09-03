@@ -90,6 +90,31 @@ each building and the frame reads through. Hover/tap lights a node's closed
 neighbourhood and fills an info panel (kind, tier, basis, writer, readers,
 imports) from the edges. Verified in headless Chromium light AND dark: no
 console errors, no label collisions, fit zoom 0.68.
+I8 base LANDED 2026-09-03: the CSS-perspective tilt — a TILT checkbox beside
+TOOLS LEDGER in the I7 control bar lays the interactive plate down on the
+drafting table (`perspective: 1600px` on a new `.pg-desk` wrapper,
+`rotateX(23deg)` on the stage with `transform-origin: 50% 100%`, so the near
+edge is the desk lip and nothing ever grows past the section's width — measured
+27px inside it on both sides, at 1440px and at 760px). The known trap is real
+and was not designed around: a 3D transform breaks cytoscape's hit test, which
+maps clientX/Y through the container's FLAT bounding rect, so tilt is declared a
+VIEWING POSE — `pointer-events: none` on the whole desk (not just the canvas, or
+the negative-margin overlap swallows the bar's own checkboxes — caught in the
+browser, not by reasoning), `userPanningEnabled`/`userZoomingEnabled` off, the
+highlight cleared, the hint swapped to «TILT — VIEWING POSE · INPUT PAUSED» and
+the info panel saying so. A misaligned hover is therefore impossible rather than
+merely unlikely: a 20×20 sweep over the tilted plate lights nothing, and the
+same node lights again the moment it is laid flat. Foreshortening would have
+opened a ~91px hole between the control bar and the plate's far edge; instead
+the pull is MEASURED at init (transition suppressed, class applied, layout
+height minus visual bounding height) and published as `--pg-pull`, which a
+negative `margin-top` spends — so the far edge meets the bar and the near edge
+meets the basis line (gaps 0.2px / 0.0px), and a resize re-measures (91px wide,
+109px at 760px where the stage stacks). The transform and the margin transition
+together over 420ms only inside `prefers-reduced-motion: no-preference`; under
+`reduce` it snaps (verified: duration 0s, transform already applied). Nothing is
+persisted — every load is flat. The three.js scene with billboarded sprites and
+a camera orbit remains the I8 stretch, unstarted.
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +
