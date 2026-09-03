@@ -38,6 +38,26 @@ export const materialize = (ref) => {
   return { ref, sha, dir, files, commitDate, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
 };
 
+// The ONE history read feeding every T2 probe (INITIATIVES.md): non-merge
+// commits reachable from <ref>, newest first, with rename tracking. Parsed to
+// { sha, date, files: [{ code, path, to }] } — `to` set on R/C records.
+export const historyLog = (ref, { since } = {}) => {
+  const args = ['log', ref, '-M', '--name-status', '--format=@%H|%as'];
+  if (since) args.splice(2, 0, `--since=${since}`);
+  const raw = execFileSync('git', args, { cwd: ROOT, maxBuffer: 1 << 28 }).toString();
+  const commits = [];
+  for (const line of raw.split('\n')) {
+    if (line.startsWith('@')) {
+      const bar = line.indexOf('|');
+      commits.push({ sha: line.slice(1, bar), date: line.slice(bar + 1), files: [] });
+    } else if (line) {
+      const [code, path, to] = line.split('\t');
+      commits.at(-1).files.push({ code, path, to });
+    }
+  }
+  return commits;
+};
+
 // Members discovered from the archive's OWN pnpm-workspace.yaml + package.json
 // files — never a frozen list (INITIATIVES.md fault 2: a new member appears
 // automatically; a vanished one can't silently count as zero).

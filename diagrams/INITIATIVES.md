@@ -7,7 +7,11 @@ I2 LANDED 2026-09-02: members discovered from the archive's workspace files
 city/yard/bricks are queries over the master snapshot writing their own
 diagrams/data/*.json plates; bricks fetches @uirouter/core's version-pinned
 SOURCE tarball from codeload (the npm tarball ships only lib/) — measured
-identical to the old scratch clone (80f/5,272 sloc @ 6.1.2). Basis for the design: full survey of
+identical to the old scratch clone (80f/5,272 sloc @ 6.1.2).
+I3 LANDED 2026-09-02: shared historyLog() + shared CITY UNIVERSE
+(census-query.mjs — sheets 7/7B/13 reconcile by construction);
+steam's 90-day window and weather's TODAY derive from the ref's commit
+date — the hard-coded dates are gone. Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,

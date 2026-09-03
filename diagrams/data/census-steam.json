@@ -1,0 +1,49 @@
+{
+  "ref": "origin/main",
+  "sha": "35c6766",
+  "commitDate": "2026-09-03T00:02:22Z",
+  "generatedAtTime": "2026-09-03T03:20:02.193Z",
+  "wasGeneratedBy": "diagrams/generator/census-steam.mjs",
+  "used": "diagrams/data/census-files.json @ 35c6766",
+  "wasAssociatedWith": [
+    "git log (historyLog)"
+  ],
+  "window": {
+    "since": "2026-06-05",
+    "until": "2026-09-03"
+  },
+  "windowCommits": 358,
+  "rows": [
+    {"member":"packages/eslint-plugin-lit-ui-router","commits":2},
+    {"member":"packages/lit-ui-router","commits":35},
+    {"member":"packages/lit-ui-router-mobx","commits":7},
+    {"member":"packages/navigation-location-plugin","commits":8},
+    {"member":"packages/ui-router-server","commits":9},
+    {"member":"apps/sample-app-lit-e2e","commits":16},
+    {"member":"apps/sample-app-lit-mobx","commits":12},
+    {"member":"apps/sample-app-lit-vanilla","commits":9},
+    {"member":"apps/sample-app-routes","commits":2},
+    {"member":"apps/sample-app-shared","commits":26},
+    {"member":"docs","commits":23},
+    {"member":"examples","commits":14},
+    {"member":"tools/build_and_test","commits":6},
+    {"member":"tools/bundle-probe","commits":5},
+    {"member":"tools/compat-guards","commits":4},
+    {"member":"tools/dts-backtest","commits":4},
+    {"member":"tools/eslint-ts-parser","commits":1},
+    {"member":"tools/happy-dom","commits":1},
+    {"member":"tools/lcov-rebase","commits":1},
+    {"member":"tools/lint-elements","commits":3},
+    {"member":"tools/lit-template-lint","commits":2},
+    {"member":"tools/lit-test-env","commits":1},
+    {"member":"tools/oxc-emit","commits":3},
+    {"member":"tools/release","commits":18},
+    {"member":"tools/release-config","commits":2},
+    {"member":"tools/shared","commits":9},
+    {"member":"tools/typedoc-plugin-lit-ui-router","commits":7},
+    {"member":"tools/vue-check","commits":2},
+    {"member":"tools/warn-lanes","commits":1},
+    {"member":"tools/wintercg-globals","commits":0},
+    {"member":"tools/workers-builds","commits":8}
+  ]
+}

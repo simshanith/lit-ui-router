@@ -1,53 +1,37 @@
-// Sheet 7B steam channel: distinct non-merge commits touching each member's
-// source universe (census-city rules), trailing 90 days from 2026-08-17.
-import { execFileSync } from 'node:child_process';
-import { readdirSync, existsSync } from 'node:fs';
-import { join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+// Sheet 7B steam channel, ported onto the pipeline (INITIATIVES.md I3):
+// distinct commits touching each member's CITY UNIVERSE files (census-query
+// rules — same universe as sheets 7 and 13), in the trailing 90 days ENDING AT
+// THE REF'S COMMIT DATE — never a hard-coded date, so a re-run on any ref ages
+// against that ref, reproducibly.  History = the shared historyLog() read over
+// the snapshot's sha.
+import { historyLog } from './basis.mjs';
+import { cityUniverse, loadCensus, provenance, writeData } from './census-query.mjs';
 
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-const EXT = /\.(tsx?|jsx?|mjs)$/;
-const SKIP_FILE = (f) => /\.d\.ts$/.test(f) || /\.test-d\.ts$/.test(f);
-const SKIP_DIR = (d) => ['node_modules', 'dist', 'fixtures', '.wrangler', 'cache', '.turbo', 'coverage'].includes(d);
-function walk(dir, out = []) {
-  if (!existsSync(dir)) return out;
-  for (const e of readdirSync(dir, { withFileTypes: true })) {
-    if (e.isDirectory()) { if (!SKIP_DIR(e.name)) walk(join(dir, e.name), out); }
-    else if (EXT.test(e.name) && !SKIP_FILE(e.name)) out.push(join(dir, e.name));
+const snap = loadCensus();
+const { members, files } = cityUniverse(snap);
+const fileToMember = new Map(files.map((f) => [f.path, f.member]));
+
+const until = snap.commitDate.slice(0, 10);
+const since = new Date(Date.parse(snap.commitDate) - 90 * 86400000).toISOString().slice(0, 10);
+const log = historyLog(snap.sha, { since });
+
+const commits = new Map(members.map((m) => [m.dir, new Set()]));
+for (const c of log)
+  for (const f of c.files) {
+    const m = fileToMember.get(f.to ?? f.path);
+    if (m) commits.get(m).add(c.sha);
   }
-  return out;
-}
-const MEMBERS = [
-  ['packages/lit-ui-router', ['src']], ['packages/lit-ui-router-mobx', ['src']],
-  ['packages/navigation-location-plugin', ['src']], ['packages/ui-router-server', ['src', 'test']],
-  ['apps/sample-app-shared', ['src']], ['apps/sample-app-lit-vanilla', ['src']],
-  ['apps/sample-app-lit-mobx', ['src']], ['apps/sample-app-routes', ['src', 'test']],
-  ['apps/sample-app-lit-e2e', ['src', 'cypress']], ['docs', ['.vitepress', 'worker', 'src']],
-  ['examples', ['.']], ['tools/release', ['src']], ['tools/typedoc-plugin-lit-ui-router', ['src']],
-  ['tools/dts-backtest', ['.']], ['tools/build_and_test', ['src']], ['tools/shared', ['src']],
-  ['tools/workers-builds', ['.']], ['tools/bundle-probe', ['src']], ['tools/compat-guards', ['src']],
-  ['tools/oxc-emit', ['src']], ['tools/release-config', ['src']], ['tools/lit-template-lint', ['src']],
-  ['tools/lit-test-env', ['src']], ['tools/vue-check', ['.']], ['tools/lcov-rebase', ['src']],
-  ['tools/happy-dom', ['src']], ['tools/wintercg-globals', ['src']],
-  ['tools/lint-elements', ['src']], ['tools/warn-lanes', ['src']], ['tools/eslint-ts-parser', ['src']],
-];
-const fileToMember = new Map();
-for (const [m, dirs] of MEMBERS)
-  for (const abs of dirs.flatMap((d) => walk(ROOT + m + (d === '.' ? '' : '/' + d))))
-    fileToMember.set(relative(ROOT, abs), m);
 
-const log = execFileSync('git', ['-C', ROOT, 'log', '-M', '--since=2026-05-19', '--name-status', '--format=@%H|%as'], { maxBuffer: 1 << 27 }).toString();
-const commits = new Map(MEMBERS.map(([m]) => [m, new Set()]));
-let total = new Set(); let hash = null;
-for (const line of log.split('\n')) {
-  if (line.startsWith('@')) { hash = line.slice(1, line.indexOf('|')); total.add(hash); continue; }
-  if (!line) continue;
-  const parts = line.split('\t');
-  const paths = parts[0].startsWith('R') || parts[0].startsWith('C') ? [parts[2]] : [parts[1]];
-  for (const p of paths) { const m = fileToMember.get(p); if (m) commits.get(m).add(hash); }
-}
-const rows = MEMBERS.map(([m]) => [m, commits.get(m).size]);
+const rows = members.map((m) => [m.dir, commits.get(m.dir).size]);
+console.log(`window ${since}..${until} (ref ${snap.ref} @ ${snap.sha})`);
 for (const [m, n] of rows) console.log(m.padEnd(38), n);
-console.log('window commits total (non-merge listed):', total.size);
+console.log('window commits total (non-merge listed):', log.length);
 const vals = rows.map((r) => r[1]).filter((v) => v > 0).sort((a, b) => a - b);
 console.log('nonzero sorted:', vals.join(','));
+
+writeData('census-steam.json', {
+  ...provenance(snap, 'diagrams/generator/census-steam.mjs', ['git log (historyLog)']),
+  window: { since, until },
+  windowCommits: log.length,
+  rows: rows.map(([member, touches]) => ({ member, commits: touches })),
+});
