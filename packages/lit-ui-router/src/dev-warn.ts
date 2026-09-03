@@ -42,6 +42,8 @@ export function warnMissingRouter(
   subject: string,
   consequence: string,
 ): void {
+  // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
+  if (!import.meta.env.DEV) return;
   if (!inLitDevMode() || warnedMissingRouter.has(element)) {
     return;
   }
