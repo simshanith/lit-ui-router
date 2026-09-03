@@ -63,6 +63,33 @@ about the ref — all four verified against a scratch copy. 0 plates unread;
 census-files.json is read by 8 stations + the cover. The module also
 exports the I7 NODES/EDGES arrays (52 nodes over probe/plate/sheet/tool,
 63 edges over writes/reads/imports). TOTAL is now 14 (19 sheet files).
+I7 LANDED 2026-09-03: THE SURVEY OFFICE — INTERACTIVE, sheet 14's cytoscape
+sibling, embedded in the gallery (S14i in the cover index) rather than linked,
+so the Artifact stays one self-contained page. census-atlas.mjs's NODES/EDGES
+arrays ship VERBATIM as a JSON island (52/63, asserted against the module at
+verify time); every label, tier, basis and edge on screen is that data. Layout
+is computed at build time and drawn with cytoscape `preset` — no physics, so
+the picture is identical on every load: basis → master station → master plate →
+stations banded T1/T2/T3 → cabinet → rack, with each plate pinned to its
+writer's row (every «writes» edge is horizontal) and the rack ordered by the
+barycentre of the plates each drawing reads, cover leading. cytoscape-dagre is
+NOT on cdnjs (404 at every version), so the rank-from-edges preset is the house
+pattern here; the only script is cytoscape 3.31.0 from cdnjs, pinned, UMD,
+loaded before the inline init. Two judgment calls: the archive basis is drawn
+as a node although the census does not contain one — it is derived from the
+plates' own shared pin, kept OUT of the embedded arrays, and tied by dotted
+edges to the probes whose basis says «archive»; and the two stations that file
+no plate stand in an annex off the master station, which halves the picture's
+height and lets the whole graph read at fit. The tools ledger (2 instruments +
+9 external, with the 22 `imports` edges) is folded away behind a checkbox.
+sprites.mjs authors 11 buildings as data: URIs in two palettes, swapped with
+the theme along with every colour, which is read from the page's own custom
+properties (matchMedia + a data-theme MutationObserver); walls are semi-opaque
+over a girding frame per the pinned sprite note, so the themed node body tints
+each building and the frame reads through. Hover/tap lights a node's closed
+neighbourhood and fills an info panel (kind, tier, basis, writer, readers,
+imports) from the edges. Verified in headless Chromium light AND dark: no
+console errors, no label collisions, fit zoom 0.68.
 I5 wave 2 LANDED 2026-09-02: census-npm probe (registry dates — caught
 @uirouter/angular 22.0.0 and the eslint-plugin `latest` dist-tag still at
 0.0.1-alpha.0); census-nm ref-pinned on the BUILT archive (install +

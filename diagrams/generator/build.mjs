@@ -20,6 +20,7 @@ import { sheet11 } from './sheet11.mjs';
 import { sheet12 } from './sheet12.mjs';
 import { sheet13 } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
+import { pipelineSection } from './pipeline-graph.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
@@ -187,13 +188,14 @@ const cover = `<header class="cover">
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
-    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}</tbody>
+    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}<tr><td><a href="#pipeline-graph">S14i</a></td><td>THE CENSUS PIPELINE</td><td>INTERACTIVE GRAPH</td><td>sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero</td></tr></tbody>
   </table>
 </header>`;
 
 writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${galCss}</style>
 ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
+${pipelineSection()}
 <p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD 2026-08-31 and applied 2026-09-01 — except plate 7A's test light, which is still the 2026-08-17 metering and labelled as such · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · sheets that say FOUR packages (2, 11, and the census plates) predate eslint-plugin-lit-ui-router's 2026-09-02 graduation to packages/ and are true of their counted dates · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
 { desc: 'A fourteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
