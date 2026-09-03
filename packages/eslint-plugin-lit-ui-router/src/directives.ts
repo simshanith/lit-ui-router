@@ -20,6 +20,9 @@ export type DirectiveName = 'uiSref' | 'uiSrefActive';
 
 const DIRECTIVE_NAMES: DirectiveName[] = ['uiSref', 'uiSrefActive'];
 
+/** The import is what makes a `uiSref` call *ours*. */
+const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
+
 // Minimal views of the two ASTs these rules cross; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
 export interface Node {
@@ -57,25 +60,67 @@ export interface Parse5Element {
 const packageOf = (source: string): string =>
   source.split('/', source.startsWith('@') ? 2 : 1).join('/');
 
-/** `name` (a collected local) or `ns.name` (a collected namespace). */
-export const references = (
+/** The eslint-scope surface these rules read; oxlint `jsPlugins` bundles the same. */
+interface ScopeLike {
+  set: Map<string, { defs: DefinitionLike[] }>;
+  upper: ScopeLike | null;
+}
+interface DefinitionLike {
+  type: string;
+  node: Node;
+  parent?: Node & { source?: { value?: unknown } };
+}
+interface ImportBinding {
+  node: Node & { local: { name: string }; imported?: Node & { name?: string } };
+  source: string;
+}
+
+/** The import an identifier resolves to, or nothing: a shadowing local wins. */
+const importBindingOf = (
+  context: Rule.RuleContext,
   node: Node,
-  locals: Set<string>,
-  namespaces: Set<string>,
+): ImportBinding | undefined => {
+  if (node.type !== 'Identifier') return undefined;
+  const name = (node as { name?: string }).name;
+  if (name === undefined) return undefined;
+  let scope: ScopeLike | null = context.sourceCode.getScope(
+    node as never,
+  ) as unknown as ScopeLike;
+  for (; scope !== null; scope = scope.upper) {
+    const variable = scope.set.get(name);
+    if (variable === undefined) continue;
+    const definition = variable.defs[0];
+    const source = definition?.parent?.source?.value;
+    if (definition?.type !== 'ImportBinding' || typeof source !== 'string') {
+      return undefined;
+    }
+    return { node: definition.node as ImportBinding['node'], source };
+  }
+  return undefined;
+};
+
+/** `name` imported from an accepted source, or `ns.name` with `ns` such a namespace. */
+const importedAs = (
+  context: Rule.RuleContext,
+  node: Node,
   name: string,
+  accepts: (source: string) => boolean,
 ): boolean => {
   if (node.type === 'Identifier') {
-    const id = node as { name?: string };
-    return id.name !== undefined && locals.has(id.name);
+    const binding = importBindingOf(context, node);
+    if (binding?.node.type !== 'ImportSpecifier') return false;
+    return (
+      binding.node.imported?.type === 'Identifier' &&
+      binding.node.imported.name === name &&
+      accepts(binding.source)
+    );
   }
   if (node.type !== 'MemberExpression' || node.computed === true) return false;
-  const object = node.object as { type?: string; name?: string };
   const property = (node.property as { name?: string } | undefined)?.name;
+  if (property !== name) return false;
+  const binding = importBindingOf(context, node.object as Node);
   return (
-    object.type === 'Identifier' &&
-    object.name !== undefined &&
-    namespaces.has(object.name) &&
-    property === name
+    binding?.node.type === 'ImportNamespaceSpecifier' && accepts(binding.source)
   );
 };
 
@@ -103,20 +148,21 @@ export const hasSpread = (object: ObjectNode): boolean =>
   object.properties.some((property) => property.type === 'SpreadElement');
 
 export interface DirectiveTracker {
-  /** Feed every `ImportDeclaration`; the tracker owns all per-file state. */
+  /** Feed every `ImportDeclaration`; it drives the `litHtmlSources` file gate. */
   onImport(node: ListenerNode<'ImportDeclaration'>): void;
   /** Whether `settings.litHtmlSources` gating lets this file be analysed. */
   readonly shouldAnalyse: boolean;
-  /** Whether a tagged template's tag is a tracked lit `html`. */
+  /** Whether a tagged template's tag resolves to a lit `html`. */
   isLitTemplate(tag: Node): boolean;
   /** Which lit-ui-router directive this expression calls, if any. */
   directiveOf(expression: Node): DirectiveName | undefined;
 }
 
 /**
- * Per-file import state, held in the rule's closure and never on
+ * Per-file gate state, held in the rule's closure and never on
  * `parserServices`: oxlint freezes it, and that mutation was the sole
- * `jsPlugins` blocker (#676).
+ * `jsPlugins` blocker (#676). Tags and directives resolve through scope, so a
+ * shadowing parameter or local is never mistaken for the import.
  */
 export const createDirectiveTracker = (
   context: Rule.RuleContext,
@@ -128,66 +174,25 @@ export const createDirectiveTracker = (
     ...DEFAULT_LIT_HTML_SOURCES,
     ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
   ]);
+  const isLitSource = (source: string) => sources.has(packageOf(source));
+  const isOurs = (source: string) => LIT_UI_ROUTER.test(source);
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
-  const litHtmlTags = new Set<string>(litHtmlSources ? [] : ['html']);
-  const litHtmlNamespaces = new Set<string>();
-  const directiveLocals: Record<DirectiveName, Set<string>> = {
-    uiSref: new Set(),
-    uiSrefActive: new Set(),
-  };
-  const directiveNamespaces = new Set<string>();
 
   return {
     onImport(node) {
       const source = node.source.value;
       if (typeof source !== 'string') return;
-
-      // Our directives: the import is what makes a `uiSref` call *ours*.
-      if (/^lit-ui-router(\/|$)/.test(source)) {
-        for (const specifier of node.specifiers) {
-          if (specifier.type === 'ImportNamespaceSpecifier') {
-            directiveNamespaces.add(specifier.local.name);
-          } else if (
-            specifier.type === 'ImportSpecifier' &&
-            specifier.imported.type === 'Identifier'
-          ) {
-            const imported = specifier.imported.name as DirectiveName;
-            if (DIRECTIVE_NAMES.includes(imported)) {
-              directiveLocals[imported].add(specifier.local.name);
-            }
-          }
-        }
-      }
-
       analyse =
         // A previous import supplied lit-html
         analyse ||
-        // litHtmlSources is falsy -> lint everything
-        !litHtmlSources ||
         // litHtmlSources is an Array -> lint only the listed packages
         node.specifiers.some(
           (specifier) =>
             (specifier.type === 'ImportNamespaceSpecifier' ||
               specifier.type === 'ImportSpecifier') &&
-            sources.has(packageOf(source)),
+            isLitSource(source),
         );
-
-      // Only a lit-html source supplies tags; an unrelated namespace is not one.
-      if (!analyse || !sources.has(packageOf(source))) return;
-
-      for (const specifier of node.specifiers) {
-        if (specifier.type === 'ImportNamespaceSpecifier') {
-          litHtmlNamespaces.add(specifier.local.name);
-          litHtmlTags.add('html');
-        } else if (
-          specifier.type === 'ImportSpecifier' &&
-          specifier.imported.type === 'Identifier' &&
-          specifier.imported.name === 'html'
-        ) {
-          litHtmlTags.add(specifier.local.name || 'html');
-        }
-      }
     },
 
     get shouldAnalyse() {
@@ -195,14 +200,21 @@ export const createDirectiveTracker = (
     },
 
     isLitTemplate(tag) {
-      return references(tag, litHtmlTags, litHtmlNamespaces, 'html');
+      if (
+        !litHtmlSources &&
+        tag.type === 'Identifier' &&
+        (tag as { name?: string }).name === 'html'
+      ) {
+        return true;
+      }
+      return importedAs(context, tag, 'html', isLitSource);
     },
 
     directiveOf(expression) {
       if (expression.type !== 'CallExpression') return undefined;
       const { callee } = expression as CallNode;
       return DIRECTIVE_NAMES.find((name) =>
-        references(callee, directiveLocals[name], directiveNamespaces, name),
+        importedAs(context, callee, name, isOurs),
       );
     },
   };

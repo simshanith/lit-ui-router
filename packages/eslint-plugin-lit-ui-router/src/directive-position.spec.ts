@@ -40,6 +40,15 @@ ruleTester.run('directive-position', directivePosition, {
       code: `${IMPORTS}css\`\${uiSref('home')}\`;`,
     },
     {
+      name: 'a parameter shadowing the directive import is not ours',
+      code: `${IMPORTS}function render(uiSref) { return html\`<a href=\${uiSref('home')}>Home</a>\`; }`,
+    },
+    {
+      name: 'a local shadowing the html import is not a lit template',
+      code: `${IMPORTS}function render(html) { return html\`<a href=\${uiSref('home')}>Home</a>\`; }`,
+      settings: { litHtmlSources: ['lit'] },
+    },
+    {
       name: "an unrelated module's namespace is not a lit namespace",
       code: `${IMPORTS}import * as other from './other.js';\nother.html\`<a href=\${uiSref('home')}>Home</a>\`;`,
     },
@@ -83,6 +92,11 @@ ruleTester.run('directive-position', directivePosition, {
       errors: [
         { messageId: 'elementPartOnly', data: { name: 'uiSrefActive' } },
       ],
+    },
+    {
+      name: 'aliased imports still count',
+      code: `import { html as h } from 'lit';\nimport { uiSref as sref } from 'lit-ui-router';\nh\`<a href=\${sref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'elementPartOnly', data: { name: 'uiSref' } }],
     },
     {
       name: 'a namespace import still counts',
