@@ -401,8 +401,17 @@
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
+    // `cypress open` against the docs worker: `dependsOn` builds the workspace
+    // (cache hits where warm), `with` boots the server beside it. The server
+    // has to be named package-qualified — turbo rejects `^` in `with` — and it
+    // is the wrangler worker (:8787 by default, as the Cypress baseUrls and
+    // the app's own docs:start-server script already assume), not
+    // `docs#docs` (vitepress dev), which is what the old `^docs` edge reached.
+    // A persistent task cannot be a `dependsOn` at all, so that edge made
+    // `turbo run e2e` unplannable outright.
     "e2e": {
-      "dependsOn": ["^build", "^docs", "^e2e"],
+      "dependsOn": ["^build"],
+      "with": ["docs#wrangler:dev"],
       "cache": false,
       "persistent": true
     },
