@@ -61,8 +61,8 @@ function isUndeclared(name: string, error: unknown): boolean {
 /**
  * Every task turbo plans for `names`, keyed by task id. One dry run per name,
  * `--only` so the plan is that name's own tasks: turbo rejects a name it has
- * no task for, and pulling dependencies in trips its own validation (a
- * persistent dev task like `e2e` depends on `^docs`, which is persistent too).
+ * no task for, and pulling dependencies in trips its own validation (`e2e`
+ * depends on `^docs`, which is persistent, so it cannot plan at all — #695).
  * A name that is only a package script is skipped; every other turbo failure
  * throws, so a broken config can never read as an empty plan.
  */
