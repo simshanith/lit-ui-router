@@ -244,12 +244,47 @@ turbo run build); sheets 12 (rev C), 3B (rev D) and 8 import their plates
 new delivered pkg). Remaining I5: bundle probes 9/10/11 reconstruction;
 sheet 4 onto census-npm.json (upstream monorepo is waking the family —
 angular 22.0.0 published 2026-08-18).
+I5 wave 5 LANDED 2026-09-03: the last big hand-pasted sheet is off the
+clipboard. census-handoff.mjs is a T1 tree probe — workflow `mise run`
+call sites, mise task tables (no TOML parser: `[tasks.x]` headers minus
+sub-tables, plus the file-task directory) and turbo task definitions
+(turbo.json is JSONC, so comments and trailing commas are stripped before
+parse), all read from the materialized archive, nothing executed. FIDELITY:
+run against rev B's own ref 0e4ab36 it reproduces every printed figure
+exactly — 11 workflows / 8 calling / 37 call sites / 28 targets, the eight
+per-file counts, 48 tasks split 9·9·15·15, 21 arg specs, 17 turbo.json /
+91 definitions (45+46) / 12 cache:false (7+5). The one apparent
+contradiction on the sheet was not one: the mise header's "2 use depends"
+counts TASKS and seam row D2's "5 depends" counts EDGES (setup 1 +
+lint_workflows 4), and the plate now carries both numbers under their own
+names. Nothing had to be fudged and nothing is left hand-written. At the
+cabinet's pin (35c6766) the story repeats: the mise machine has STILL not
+moved a task, and turbo grew only with the workspace — an 18th turbo.json
+(the fifth package) and root `check:dev-split` take definitions 91 → 97
+(46+51) and `ci:pull_request` to 11 lanes. Sheet 3A is rev C: every count
+imported from census-handoff.json + census-plate.json (ci graph, ci:main
+overlay, phantom shroud 414/590 = 70.2%), rows and the no-mise list
+data-driven, and the load-bearing citations re-verified against the new
+ref — turbo.json's twin 211-221 → 215-225, the cache-gasket inputs
+224-228/241-247/252-258 → 228-232/245-251/256-262, ci:pull_request
+312-324 → 316-330, package.json:30 → :31, release mise.toml:104-108 →
+104-107. One editorial claim did NOT survive and the sheet says so: door 3
+no longer bootstraps with `npx pnpm@11.21.0` — cloudflare-build.sh:26-38
+now clears corepack's shims and installs pnpm@12.2.1 globally before
+`npx turbo docs#build`, still the one production path that never sees
+mise. NOTE for the next refresh: origin/main has already moved past the
+cabinet's 35c6766, so this probe's default ref is the MASTER PLATE's sha,
+not the branch tip — a plate filed later must measure the tree its
+siblings measured, or census-atlas throws on the mismatch. The survey
+office picked the new station up on its own: 52 → 55 nodes, 63 → 69 edges,
+14 probes / 14 plates / 14 drawings, T1 5 → 6.
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block
 automatically; commitsByMonth could join the weather
-plate if the commits row is wanted back; 7A lamps / 3A stay hand-pasted
-(no plate of their own yet). Basis for the design: full survey of
+plate if the commits row is wanted back; 3A — CLOSED 2026-09-03, the
+handoff census is census-handoff.mjs and sheet 3A imports it; 7A lamps
+stay hand-pasted (no plate of their own yet). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,

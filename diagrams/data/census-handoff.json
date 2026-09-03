@@ -1,0 +1,102 @@
+{
+  "ref": "origin/main",
+  "sha": "35c6766",
+  "commitDate": "2026-09-03T00:02:22Z",
+  "generatedAtTime": "2026-09-03T23:39:04.753Z",
+  "wasGeneratedBy": "diagrams/generator/census-handoff.mjs",
+  "used": "git archive origin/main @ 35c6766",
+  "wasAssociatedWith": [
+    "git"
+  ],
+  "workflows": {
+    "files": 11,
+    "calling": 8,
+    "callSites": 37,
+    "targets": 28
+  },
+  "mise": {
+    "tasks": 48,
+    "homes": 4,
+    "withUsage": 21,
+    "withDepends": 2,
+    "dependsEdges": 5
+  },
+  "turbo": {
+    "files": 18,
+    "definitions": 97,
+    "rootDefinitions": 46,
+    "memberDefinitions": 51,
+    "cacheFalse": 12,
+    "rootCacheFalse": 7,
+    "memberCacheFalse": 5
+  },
+  "workflowRows": [
+    {"file":"build-test-branch.yml","name":"build-test-branch","callSites":1},
+    {"file":"build-test-run.yml","name":"build-test-run","callSites":11},
+    {"file":"build-test.yml","name":"build-test","callSites":0},
+    {"file":"bump-version.yml","name":"bump-version","callSites":4},
+    {"file":"commitlint.yml","name":"commitlint","callSites":0},
+    {"file":"deflake-e2e.yml","name":"deflake-e2e","callSites":4},
+    {"file":"lint-workflows.yml","name":"lint-workflows","callSites":1},
+    {"file":"publish-gh.yml","name":"publish-gh","callSites":4},
+    {"file":"publish-npm.yml","name":"publish-npm","callSites":7},
+    {"file":"release-signals.yml","name":"release-signals","callSites":5},
+    {"file":"semantic-pr.yml","name":"semantic-pr","callSites":0}
+  ],
+  "miseTargets": [
+    {"target":"//:build","calls":1},
+    {"target":"//tools/build_and_test:branch_ci_gate","calls":1},
+    {"target":"//tools/build_and_test:cypress","calls":2},
+    {"target":"//tools/build_and_test:cypress_version","calls":2},
+    {"target":"//tools/build_and_test:playwright","calls":1},
+    {"target":"//tools/build_and_test:playwright_deps_engines","calls":1},
+    {"target":"//tools/build_and_test:playwright_version","calls":1},
+    {"target":"//tools/build_and_test:turbo_summary","calls":1},
+    {"target":"//tools/build_and_test:xvfb","calls":2},
+    {"target":"//tools/release:bump","calls":1},
+    {"target":"//tools/release:check_tarball","calls":1},
+    {"target":"//tools/release:git_user","calls":2},
+    {"target":"//tools/release:pack","calls":1},
+    {"target":"//tools/release:package_info","calls":1},
+    {"target":"//tools/release:peer_floor_check_runs","calls":1},
+    {"target":"//tools/release:peer_floor_gate","calls":1},
+    {"target":"//tools/release:publish","calls":1},
+    {"target":"//tools/release:publish_check_runs","calls":1},
+    {"target":"//tools/release:published_diff","calls":1},
+    {"target":"//tools/release:reconcile","calls":1},
+    {"target":"//tools/release:tag","calls":1},
+    {"target":"//tools/release:tag_push","calls":1},
+    {"target":"//tools/release:workers_builds_check_runs","calls":1},
+    {"target":"ci","calls":1},
+    {"target":"ci_main","calls":1},
+    {"target":"codecov_bundle","calls":1},
+    {"target":"lint_workflows","calls":1},
+    {"target":"setup","calls":6}
+  ],
+  "miseHomes": [
+    {"home":"tools/build_and_test/mise.toml","label":"tools/build_and_test","count":9,"withUsage":1,"withDepends":0,"dependsEdges":0,"names":["xvfb","branch_ci_gate","turbo_summary","playwright_version","cypress_version","playwright","playwright_deps","playwright_deps_engines","cypress"]},
+    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":9,"withUsage":8,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","measure_deflake","read_secret","rumdl","shellcheck","taplo","turbo_link_worktree","turbo_login"]},
+    {"home":"tools/release/mise.toml","label":"tools/release","count":15,"withUsage":10,"withDepends":0,"dependsEdges":0,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","peer_floor_gate","bump"]},
+    {"home":".config/mise/config.toml","label":"config.toml inline","count":15,"withUsage":2,"withDepends":2,"dependsEdges":5,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","ci","ci_main","codecov_bundle","dts_backtest_matrix"]}
+  ],
+  "turboRows": [
+    {"file":"apps/sample-app-lit-e2e/turbo.json","root":false,"definitions":2,"cacheFalse":0},
+    {"file":"apps/sample-app-lit-mobx/turbo.json","root":false,"definitions":2,"cacheFalse":0},
+    {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":3,"cacheFalse":0},
+    {"file":"apps/sample-app-routes/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"apps/sample-app-shared/turbo.json","root":false,"definitions":2,"cacheFalse":0},
+    {"file":"docs/turbo.json","root":false,"definitions":13,"cacheFalse":3},
+    {"file":"examples/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":5,"cacheFalse":0},
+    {"file":"packages/lit-ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"packages/lit-ui-router/turbo.json","root":false,"definitions":3,"cacheFalse":0},
+    {"file":"packages/navigation-location-plugin/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"packages/ui-router-server/turbo.json","root":false,"definitions":6,"cacheFalse":0},
+    {"file":"tools/build_and_test/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"tools/happy-dom/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"tools/release/turbo.json","root":false,"definitions":6,"cacheFalse":1},
+    {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},
+    {"file":"tools/workers-builds/turbo.json","root":false,"definitions":2,"cacheFalse":1},
+    {"file":"turbo.json","root":true,"definitions":46,"cacheFalse":7}
+  ]
+}

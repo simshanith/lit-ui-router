@@ -1,13 +1,40 @@
+import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, box, arrow, keyRow } from './helpers.mjs';
 
 const P = 's3a';
 
-// ---- census: tmp/handoff-census/census.json, measured 2026-08-17 at 3557c29 ----
-// Rev B refresh 2026-08-31 at 0e4ab36: re-read the same sources.  The mise machine
-// did not move a task; only turbo's graph grew (three new workspace members).
-// Every printed number traces to that census or to a cited file:line.  This plate
-// promotes the sheet-3 "two task managers" inset to a full sheet; the inset stays.
+// ---- census: IMPORTED, rev C (INITIATIVES.md I5) ---------------------------------
+// The vanished tmp/handoff-census generator is reconstructed as census-handoff.mjs,
+// a T1 tree probe: workflows / mise tasks / turbo definitions counted from the
+// archive.  The turbo GRAPH is census-plate.json's ci + ci:main dry-runs.  Nothing
+// numeric is hand-pasted here; only the task-name lists, the prose and the cited
+// file:lines are editorial.  This plate promotes the sheet-3 "two task managers"
+// inset to a full sheet; the inset stays.
+const HANDOFF = JSON.parse(readFileSync(new URL('../data/census-handoff.json', import.meta.url), 'utf8'));
+const PLATE = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8'));
+
+const W = HANDOFF.workflows;
+const M = HANDOFF.mise;
+const T = HANDOFF.turbo;
+const H = (file) => {
+  const r = HANDOFF.miseHomes.find((h) => h.home === file);
+  if (!r) throw new Error(`plate 3A: mise home ${file} is missing from diagrams/data/census-handoff.json`);
+  return r;
+};
+const pipe = (n) => {
+  const p = PLATE.pipelines[n];
+  if (!p) throw new Error(`plate 3A: pipeline ${n} is missing from diagrams/data/census-plate.json`);
+  return p;
+};
+const CI = pipe('ci');
+const MAIN = pipe('ci:main');
+const PHANTOM = CI.nodes - CI.real;
+const PHANTOM_PCT = ((PHANTOM / CI.nodes) * 100).toFixed(1);
+const fmt = (n) => n.toLocaleString('en-US');
+const TURBO_V = PLATE.wasAssociatedWith.find((t) => t.startsWith('turbo'));
+const BASIS = `counted at ${HANDOFF.ref} @ ${HANDOFF.sha} (${HANDOFF.generatedAtTime.slice(0, 10)})`;
+const GRAPH_BASIS = `surveyed at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)}) · ${TURBO_V}`;
 
 // The plate is FLAT on purpose, like the inset it grows from: a task manager is
 // not a place.  Two machines, four seams drawn as gaskets, three service doors.
@@ -31,26 +58,25 @@ function gasket(x, y, h, { hatch = null } = {}) {
 }
 
 // ---- GITHUB ACTIONS panel -------------------------------------------------------
-// per-file call-site counts: census.json sheet3_corrections.workflow_mise_call_sites
-const WF = [
-  ['build-test-run', 11, true], ['publish-npm', 7, false], ['release-signals', 5, false],
-  ['bump-version', 4, false], ['publish-gh', 4, false], ['deflake-e2e', 4, false],
-  ['build-test-branch', 1, false], ['lint-workflows', 1, false],
-];
+// rows, counts and the no-mise list all read from the plate; ① marks the chain head
+const CHAIN_WF = 'build-test-run';
+const WF = HANDOFF.workflowRows.filter((w) => w.callSites)
+  .sort((a, b) => b.callSites - a.callSites || (a.name < b.name ? -1 : 1));
+const NO_MISE = HANDOFF.workflowRows.filter((w) => !w.callSites).map((w) => w.name);
 const wfRowY = (i) => 162 + i * 34;
 const ghPanel = `${box(40, 110, 190, 425, 'sk2 fp')}
 ${txt(52, 130, 'GITHUB ACTIONS', 'lblb')}
-${txt(52, 143, '11 workflows · 8 call mise', 'lblf')}
-${WF.map(([name, n, chain], i) => {
+${txt(52, 143, `${W.files} workflows · ${W.calling} call mise`, 'lblf')}
+${WF.map(({ name, callSites }, i) => {
   const y = wfRowY(i);
-  return `${box(52, y, 166, 26, chain ? 'ska fp' : 'sk fp')}
+  return `${box(52, y, 166, 26, name === CHAIN_WF ? 'ska fp' : 'sk fp')}
 ${txt(60, y + 17, name, 'lbls')}
-${txt(210, y + 17, `·${n}`, 'lblf', 'end')}`;
+${txt(210, y + 17, `·${callSites}`, 'lblf', 'end')}`;
 }).join('\n')}
 <line x1="52" y1="442" x2="218" y2="442" class="skf"/>
 ${lf(52, 456, [
-  'no mise: build-test,',
-  'commitlint · semantic-pr',
+  `no mise: ${NO_MISE[0]},`,
+  NO_MISE.slice(1).join(' · '),
 ])}
 ${lf(52, 492, [
   ['branch_ci_gate needs', 'lbls'],
@@ -65,7 +91,7 @@ ${txt(244, 278, '①', 'lbla')}
 ${gasket(286, 240, 90)}
 ${clines(296, 362, [
   ['SEAM A', 'lbla'], ['WORKFLOW → MISE', 'lbls'],
-  ['37 call sites', 'lblf'], ['28 distinct targets', 'lblf'],
+  [`${W.callSites} call sites`, 'lblf'], [`${W.targets} distinct targets`, 'lblf'],
   ['args cross as env —', 'lblf'], ['step env: satisfies', 'lblf'],
   ['$usage_* flags; no', 'lblf'], ['${{ }} in run lines', 'lblf'],
   ['buys: pinned tools +', 'lblf'], ['node-free bootstrap', 'lblf'],
@@ -79,33 +105,33 @@ ${rows.map(([s, cls], i) => txt(x + 8, y + 27 + i * lh, s, cls)).join('\n')}`;
 
 const mise = `${box(362, 110, 368, 435, 'sk2 fp')}
 ${txt(374, 130, 'MISE — THE NODE-FREE UMBRELLA', 'lblb')}
-${txt(374, 143, '48 tasks · 4 homes · 2 use depends · 21 with $usage_* specs', 'lblf')}
+${txt(374, 143, `${M.tasks} tasks · ${M.homes} homes · ${M.withDepends} use depends · ${M.withUsage} with $usage_* specs`, 'lblf')}
 ${box(374, 155, 344, 56, 'sk fp2')}
 ${txt(382, 169, 'TOOL BELT — aqua pins, mise.lock checksums', 'lbls')}
 ${txt(382, 183, '⑥ taplo 0.10.0 · rumdl · shellcheck', 'lblf')}
 ${txt(382, 195, 'actionlint · zizmor — node never installs these', 'lblf')}
-${comp(374, 222, 166, 150, 'tools/build_and_test — 9', [
+${comp(374, 222, 166, 150, `${H('tools/build_and_test/mise.toml').label} — ${H('tools/build_and_test/mise.toml').count}`, [
   ['xvfb · branch_ci_gate', 'lblf'], ['turbo_summary · cypress', 'lblf'],
   ['playwright_version', 'lblf'], ['cypress_version', 'lblf'],
   ['playwright', 'lblf'], ['playwright_deps_engines', 'lblf'],
   ['✕ playwright_deps — DEAD', 'lblr'], ['no caller; superseded', 'lblr'],
   ['(mise.toml:72-76)', 'lblr'],
 ])}
-${comp(552, 222, 166, 150, '.config/mise/tasks/* — 9', [
+${comp(552, 222, 166, 150, `${H('.config/mise/tasks/*').label} — ${H('.config/mise/tasks/*').count}`, [
   ['⑤ taplo · rumdl', 'lblf'], ['shellcheck · read_secret', 'lblf'],
   ['turbo_login', 'lblf'], ['turbo_link_worktree', 'lblf'],
   ['cloudflare_item_create', 'lblf'], ['§ check_workers_builds', 'lblf'],
   ['measure_deflake', 'lblf'], ['§ = the one mise→pnpm→', 'lblf'],
   ['turbo loop-closer (manual)', 'lblf'],
 ])}
-${comp(374, 378, 166, 158, 'tools/release — 15', [
+${comp(374, 378, 166, 158, `${H('tools/release/mise.toml').label} — ${H('tools/release/mise.toml').count}`, [
   ['git_user · package_info', 'lblf'], ['pack · check_tarball', 'lblf'],
   ['reconcile · tag · tag_push', 'lblf'], ['publish · bump', 'lblf'],
   ['peer_floor_gate', 'lblf'], ['3× *_check_runs', 'lblf'],
   ['★ check_pack', 'lbla'], ['★ published_diff', 'lbla'],
   ['   (runs turbo ×2)', 'lblf'],
 ])}
-${comp(552, 378, 166, 158, 'config.toml inline — 15', [
+${comp(552, 378, 166, 158, `${H('.config/mise/config.toml').label} — ${H('.config/mise/config.toml').count}`, [
   ['② ★ ci · ★ ci_main', 'lbla'], ['★ build', 'lbla'],
   ['★ codecov_bundle', 'lbla'], ['★ dts_backtest_matrix', 'lbla'],
   ['↩ lint_actionlint', 'lblf'], ['↩ lint_zizmor', 'lblf'],
@@ -139,16 +165,16 @@ ${wall(861, 111, 498, 19)}${wall(861, 526, 498, 18)}${wall(861, 130, 19, 396)}${
 ${box(880, 130, 460, 395, 'sk2 fp')}
 ${txt(896, 152, 'TURBO — THE CACHED FAN-OUT', 'lblb')}
 ${lf(896, 168, [
-  'ci graph: 535 nodes · 165 real · 1,375 edges · 117 real→real',
-  '17 turbo.json files · 91 task definitions (45 root + 46 member)',
-  'ci:main overlay: 567 nodes · 170 real (+5 real tasks)',
-  '12 cache:false tasks repo-wide — ZERO reachable from ci',
-  'counted from bare `turbo run ci --dry=json` · 2026-08-31',
+  `ci graph: ${CI.nodes} nodes · ${CI.real} real · ${fmt(CI.edges)} edges · ${CI.realEdges} real→real`,
+  `${T.files} turbo.json files · ${T.definitions} task definitions (${T.rootDefinitions} root + ${T.memberDefinitions} member)`,
+  `ci:main overlay: ${MAIN.nodes} nodes · ${MAIN.real} real (+${MAIN.real - CI.real} real tasks)`,
+  `${T.cacheFalse} cache:false tasks repo-wide — ${CI.cacheFalse.length === 0 ? 'ZERO' : CI.cacheFalse.length} reachable from ci`,
+  `counted from bare \`turbo run ci --dry=json\` · ${PLATE.generatedAtTime.slice(0, 10)}`,
 ], 13)}
 ${box(896, 240, 190, 26, 'sk fp2')}${txt(991, 257, 'ci → ci:pull_request', 'lbls', 'middle')}
-${box(1098, 240, 226, 26, 'sk fp2')}${txt(1211, 257, 'ci:main = ci:pr + 32 nodes, 5 real', 'lbls', 'middle')}
-${txt(896, 281, 'turbo.json:312-324 — 10 dependsOn lanes under ci:pull_request', 'lblf')}
-${txt(896, 303, 'PHANTOM SHROUD — 370 of 535 nodes run nothing (69.2%)', 'lbls')}
+${box(1098, 240, 226, 26, 'sk fp2')}${txt(1211, 257, `ci:main = ci:pr + ${MAIN.nodes - CI.nodes} nodes, ${MAIN.real - CI.real} real`, 'lbls', 'middle')}
+${txt(896, 281, 'turbo.json:316-330 — 11 dependsOn lanes under ci:pull_request', 'lblf')}
+${txt(896, 303, `PHANTOM SHROUD — ${PHANTOM} of ${CI.nodes} nodes run nothing (${PHANTOM_PCT}%)`, 'lbls')}
 ${txt(896, 316, 'transit / ^build hash carriers — punched hole-by-hole on SHEET 12', 'lblf')}
 <line x1="890" y1="308" x2="874" y2="308" class="skf"/>
 ${box(896, 332, 230, 26, 'ska fp')}${txt(1011, 349, '//#lint:workflows — virtual with ×4', 'lbls', 'middle')}
@@ -170,7 +196,7 @@ const twins = `${arrow(P, 'M896,345 L744,345 L744,430 L736,430', 'aa', 'ska', '5
 ${clines(795, 452, [
   ['HAND-SYNCED TWINS', 'lbls'], ['⌂ lint_workflows', 'lblf'],
   ['config.toml:131-135', 'lblf'], ['∥ //#lint:workflows', 'lblf'],
-  ['turbo.json:211-221', 'lblf'], ['same 4 legs, kept', 'lblf'],
+  ['turbo.json:215-225', 'lblf'], ['same 4 legs, kept', 'lblf'],
   ['in sync by hand', 'lblf'],
 ])}`;
 
@@ -184,7 +210,7 @@ const chainCap = `${txt(40, 620, 'THE DEEPEST CHAIN — 6 HOPS · runs on every 
 ${lf(40, 638, [
   '① build-test-run.yml:114 — `mise run ci` (env: TURBO_FORCE · TURBO_TOKEN/API/TEAM)',
   '② mise ci — `turbo run ci --summarize` (.config/mise/config.toml:196)',
-  '③ turbo //#lint:toml — executes the root script `mise run lint_toml` (package.json:30)',
+  '③ turbo //#lint:toml — executes the root script `mise run lint_toml` (package.json:31)',
   '④ mise lint_toml — `mise run taplo lint` (.config/mise/config.toml:116)',
   '⑤ file task .config/mise/tasks/taplo — exec taplo over `git ls-files -- *.toml`',
   '⑥ taplo 0.10.0 — pinned (.config/mise/config.toml:71) · terminal: a binary, not a task',
@@ -194,7 +220,7 @@ ${txt(40, 716, 'why it never recurses: the ★ set and the ↩ set are disjoint 
 const cacheCap = `${txt(560, 628, 'DETAIL — THE CACHE GASKET: TURBO CACHES MISE', 'lbla')}
 ${lf(560, 646, [
   '//#lint:* inputs hash .config/mise/tasks/* AND mise.lock',
-  '(turbo.json:224-228 · 241-247 · 252-258)',
+  '(turbo.json:228-232 · 245-251 · 256-262)',
   'a taplo pin bump busts exactly the taplo lane — nothing else',
   'turbo holds the cache; mise holds the versions; the gasket',
   'hashes one machine against the other',
@@ -211,31 +237,31 @@ ${lf(1090, 638, [
   ['2 deflake-e2e.yml:87 — deflake runs', 'lblr'],
   ['  OUTSIDE turbo: a cached test task', 'lblf'],
   ['  would replay attempt 1 logs (:6-8)', 'lblf'],
-  ['3 cloudflare-build.sh:16-19 — the', 'lblr'],
-  ['  PRODUCTION docs deploy: npx pnpm +', 'lblf'],
-  ['  npx turbo docs#build, NO mise — the', 'lblf'],
-  ['  CF image’s corepack shim cannot', 'lblf'],
-  ['  materialize pnpm 12', 'lblf'],
+  ['3 cloudflare-build.sh:26-38 — the', 'lblr'],
+  ['  PRODUCTION docs deploy, rev C:', 'lblf'],
+  ['  npm -g pnpm@12.2.1 replaces the', 'lblf'],
+  ['  corepack shims, then npx turbo', 'lblf'],
+  ['  docs#build — still NO mise', 'lblf'],
 ])}`;
 
 // ---- seam schedule --------------------------------------------------------------
 const SCHED = [
-  'A   workflow → mise — 37 call sites · 28 targets · crossing: env, never argv (no ${{ }} in run lines) · buys: pinned tools + node-free bootstrap · 8 workflow files',
-  'B   mise → turbo — 7 tasks · 8 invocations · crossing: TURBO_* ambient env · buys: remote cache + --summarize · config.toml:185-212 · tools/release/mise.toml:97,104-108',
-  'C   turbo → mise — 7 root scripts (6 in ci) · crossing: script body `mise run …` · buys: TURBO CACHES MISE — inputs hash the task files + mise.lock · turbo.json:224-258',
+  `A   workflow → mise — ${W.callSites} call sites · ${W.targets} targets · crossing: env, never argv (no \${{ }} in run lines) · buys: pinned tools + node-free bootstrap · ${W.calling} workflow files`,
+  'B   mise → turbo — 7 tasks · 8 invocations · crossing: TURBO_* ambient env · buys: remote cache + --summarize · config.toml:185-212 · tools/release/mise.toml:97,104-107',
+  'C   turbo → mise — 7 root scripts (6 in ci) · crossing: script body `mise run …` · buys: TURBO CACHES MISE — inputs hash the task files + mise.lock · turbo.json:228-262',
   'D   mise → pnpm → turbo — 1 (check_workers_builds, manual) · turbo leg is cache:false, so the crossing buys only env passthrough + addressing · tasks file :21',
-  'D2  mise → mise — 8 edges · 5 depends (setup · lint_workflows ×4) + run-line delegations · cutest: turbo_login → $(mise run read_secret) · config.toml:88,135',
-  'E   bypasses — 3, all deliberate · deflake-e2e.yml:73 (bare turbo) · :87 (pnpm outside turbo) · cloudflare-build.sh:16-19 (npx, no mise — production)',
+  `D2  mise → mise — 8 edges · ${M.dependsEdges} depends (setup · lint_workflows ×4, from ${M.withDepends} declaring tasks) + run-line delegations · cutest: turbo_login → $(mise run read_secret) · config.toml:88,135`,
+  'E   bypasses — 3, all deliberate · deflake-e2e.yml:73 (bare turbo) · :87 (pnpm outside turbo) · cloudflare-build.sh:26-38 (npm -g pnpm + npx turbo, no mise — production)',
 ];
 const SY = 776;
 const schedule = `${box(40, SY, 1320, 170, 'sk fp')}
 ${txt(58, SY + 22, 'SEAM SCHEDULE — every crossing between the two machines · what crosses · what the boundary buys · cite', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
 ${SCHED.map((s, i) => txt(58, SY + 52 + i * 17, s, 'lbls')).join('\n')}
-${txt(58, SY + 58 + SCHED.length * 17, 'TOTALS — 48 mise tasks · 21 with $usage_* specs · 91 turbo definitions · ci 535 nodes / 165 real · 1 dead task (playwright_deps) · recounted 2026-08-31', 'lblf')}`;
+${txt(58, SY + 58 + SCHED.length * 17, `TOTALS — ${M.tasks} mise tasks · ${M.withUsage} with $usage_* specs · ${T.definitions} turbo definitions · ci ${CI.nodes} nodes / ${CI.real} real · 1 dead task (playwright_deps) · ${BASIS} · graph via ${TURBO_V}`, 'lblf')}`;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${SY + 190}" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists eleven workflows, eight of which call mise for a total of thirty-seven call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing forty-eight tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, fifteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; seven marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 165 tasks inside a hatched phantom shroud representing the 370 nodes that run nothing, cross-referenced to sheet twelve. Six re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 190}" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists eleven workflows, eight of which call mise for a total of thirty-seven call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing forty-eight tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, fifteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; seven marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 176 tasks inside a hatched phantom shroud representing the 414 nodes that run nothing, cross-referenced to sheet twelve. Six re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
 ${defs(P)}
 
 <rect x="40" y="24" width="480" height="58" class="skf fnone"/>
@@ -245,7 +271,7 @@ ${txt(52, 70, 'the inset stays on sheet 3; this plate is the full treatment it p
 
 ${txt(1360, 34, 'READ LEFT TO RIGHT — every PR enters at a workflow, crosses two gaskets, and returns through the cache gasket', 'lbls', 'end')}
 ${txt(1360, 48, 'EMPHASIS — circled digits ①–⑥ + accent thread = the deepest chain · red + hatch = the service doors', 'lblf', 'end')}
-${txt(1360, 62, 'REV B census refresh 2026-08-31 — mise unmoved at 48 tasks / 37 call sites · turbo ci 501→535 nodes, 158→165 real', 'lblf', 'end')}
+${txt(1360, 62, `REV C counts imported — mise STILL unmoved at ${M.tasks} tasks / ${W.callSites} call sites · turbo ${T.definitions} definitions in ${T.files} files · ci 535→${CI.nodes} nodes, 165→${CI.real} real`, 'lblf', 'end')}
 
 ${door1}
 ${ghPanel}
@@ -262,9 +288,9 @@ ${schedule}
 </svg>`;
 
 export const sheet3a = {
-  num: '3A', id: 'handoff', rev: 'B',
+  num: '3A', id: 'handoff', rev: 'C',
   title: 'THE HANDOFF WORKS',
-  sub: 'ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 11 workflows · 48 mise tasks in 4 homes · turbo ci 535 nodes, 165 real · 4 seam types · 3 service doors · REV B: census refresh 2026-08-31',
+  sub: `ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: ${W.calling} of ${W.files} workflows · ${M.tasks} mise tasks in ${M.homes} homes · turbo ci ${CI.nodes} nodes, ${CI.real} real · 4 seam types · 3 service doors · REV B: census refresh 2026-08-31 · REV C: the vanished tmp/ census is a scripted probe — every count imported from diagrams/data/census-handoff.json + census-plate.json · ${BASIS}`,
   scale: 'TWO TASK MANAGERS',
   form: 'COUPLING SCHEMATIC',
   svg,
@@ -272,10 +298,11 @@ export const sheet3a = {
   notes: `
 <p><strong>Method — one census, cited throughout.</strong> Every count on this plate comes from a fresh 2026-08-17 census of the repo at HEAD: the 11 workflow files, all 17 <code>turbo.json</code> files, <code>.config/mise/**</code> and both member <code>mise.toml</code> files read directly, cross-checked against <code>mise tasks ls --all</code> and bare <code>turbo run ci --dry=json</code>. Three figures on the sheet-3 inset had drifted and were corrected at rev A: 36→37 workflow call sites, 51→48 repo-defined mise tasks (the 51 had mixed in four user-global <code>rtk:*</code> tasks), and 483→501 ci graph nodes after the lit dedupe — the phantom share held at 68.5%.</p>
 <p><strong>Rev B — census refresh, 2026-08-31.</strong> The plate was re-measured from the same sources at HEAD, and the finding it exists to make survived intact: <em>the mise machine did not move a single task.</em> 48 tasks in the same four homes, 2 <code>depends</code> declarations, 21 <code>$usage_*</code> specs, 37 workflow call sites across the same 8 of 11 workflows, the same 7 ★ / 7 ↩ disjoint sets, the same 6 re-entrant ports, the same one dead task. Only turbo's graph grew, and only because the workspace did: three new members — <code>@tools/lint-elements</code>, <code>@tools/warn-lanes</code> (#639) and <code>@tools/eslint-ts-parser</code> — take the <code>ci</code> graph from 501 nodes / 158 real to 535 / 165, edges 1,294 → 1,375, real→real 116 → 117, and the phantom share from 68.5% to 69.2%. <code>ci:main</code> now stands at 567 nodes / 170 real. The turbo <em>definitions</em> are unchanged at 91 across the same 17 files: every new node is fan-out, not authorship. Two other figures were corrected in passing — the repo holds 12 <code>cache:false</code> definitions, not 11 (7 at root, 5 in member files; still zero reachable from <code>ci</code>) — and four <code>turbo.json</code> line citations moved as <code>//#lint:elements</code> landed above them. A new root lint lane, <code>//#lint:elements</code>, joins the <code>lint</code> fan but is <em>not</em> a re-entrant port: it runs a node bin, not <code>mise run</code>.</p>
-<p><strong>The star fitting: turbo caches mise.</strong> Six root <code>//#</code> scripts in the ci graph have <code>mise run …</code> as their literal command, and their turbo <code>inputs</code> explicitly hash <code>.config/mise/tasks/*</code> and <code>.config/mise/mise.lock</code> (turbo.json:224-228, 241-247, 252-258). That is the whole trade drawn as one gasket on the return duct: mise owns the tool versions (taplo, rumdl, shellcheck, actionlint, zizmor — none installable by node), turbo owns the cache, and the gasket hashes one machine against the other, so a taplo pin bump invalidates exactly the taplo lane and nothing else.</p>
+<p><strong>Rev C — the census is a script now, and the mise machine still has not moved.</strong> The 2026-08-17 generator this plate was measured with lived in <code>tmp/</code> and is gone; it is reconstructed as <code>diagrams/generator/census-handoff.mjs</code>, a T1 tree probe that counts workflow <code>mise run</code> call sites, mise task tables and turbo task definitions from a materialized archive of the ref — no mise, no turbo, nothing executed. Run against rev B's own ref (0e4ab36) it reproduces every printed figure exactly: ${W.files} workflows, ${W.calling} calling mise, the same per-file counts, ${W.callSites} call sites, ${W.targets} targets, ${M.tasks} tasks in ${M.homes} homes, ${M.withUsage} arg specs, 17 <code>turbo.json</code> files, 91 definitions (45 + 46) and 12 <code>cache:false</code>. Two <code>depends</code> figures that read as a contradiction turn out to be two different counts, and the plate now carries both: ${M.withDepends} tasks <em>declare</em> a <code>depends</code>, and between them they declare ${M.dependsEdges} dependency edges (setup 1 + lint_workflows 4) — the mise header counts tasks, seam row D2 counts edges. Re-measured at ${HANDOFF.ref} @ ${HANDOFF.sha}, the finding this plate exists to make holds a second time: <em>the mise machine still has not moved a task</em> — ${M.tasks} tasks, ${M.withUsage} arg specs, ${W.callSites} call sites, ${W.targets} targets, all identical, and <code>playwright_deps</code> is still dead. turbo moved again, and again only because the workspace did: <code>packages/eslint-plugin-lit-ui-router</code> brings a ${T.files}th <code>turbo.json</code> with five definitions and the root file gained <code>check:dev-split</code>, so definitions go 91 → ${T.definitions} (${T.rootDefinitions} root + ${T.memberDefinitions} member) and <code>ci:pull_request</code> now lists eleven <code>dependsOn</code> lanes, not ten. <code>cache:false</code> holds at ${T.cacheFalse}, still with ${CI.cacheFalse.length === 0 ? 'none' : CI.cacheFalse.length} reachable from <code>ci</code>. The graph figures are read from <code>diagrams/data/census-plate.json</code> — ${CI.nodes} nodes / ${CI.real} real / ${fmt(CI.edges)} edges / ${CI.realEdges} real→real, phantom share ${PHANTOM_PCT}% — with <code>ci:main</code> at ${MAIN.nodes} / ${MAIN.real} from the same plate. One editorial claim did not survive the recount: the production docs deploy no longer bootstraps with <code>npx pnpm@11.21.0</code>. <code>tools/workers-builds/cloudflare-build.sh</code> now clears corepack's shims and installs <code>pnpm@12.2.1</code> globally through npm before <code>npx turbo docs#build</code> (:26-38) — a different way through the same door, and still the one production path that never sees mise. Basis: ${BASIS}; graph ${GRAPH_BASIS}.</p>
+<p><strong>The star fitting: turbo caches mise.</strong> Six root <code>//#</code> scripts in the ci graph have <code>mise run …</code> as their literal command, and their turbo <code>inputs</code> explicitly hash <code>.config/mise/tasks/*</code> and <code>.config/mise/mise.lock</code> (turbo.json:228-232, 245-251, 256-262). That is the whole trade drawn as one gasket on the return duct: mise owns the tool versions (taplo, rumdl, shellcheck, actionlint, zizmor — none installable by node), turbo owns the cache, and the gasket hashes one machine against the other, so a taplo pin bump invalidates exactly the taplo lane and nothing else.</p>
 <p><strong>A DAG in a loop costume.</strong> The circuit workflow → mise → turbo → mise looks re-entrant, but the 48 tasks partition cleanly: the seven that shell turbo (★ — <code>ci</code>, <code>ci_main</code>, <code>build</code>, <code>codecov_bundle</code>, <code>dts_backtest_matrix</code>, <code>check_pack</code>, <code>published_diff</code>) are reachable only from workflows and humans, while the seven turbo re-enters (↩ — the lint and format tasks) only exec pinned binaries or file tasks. No edge leads from the second set back to the first. The deepest chain is six hops and runs on every PR, four tool lanes in parallel: workflow YAML → <code>mise run ci</code> → <code>turbo run ci</code> → <code>//#lint:toml</code> → <code>mise run lint_toml</code> → the <code>taplo</code> file task → the pinned binary.</p>
-<p><strong>Three service doors, all deliberate.</strong> deflake-e2e.yml:73 runs bare <code>turbo run build --filter=…</code> — over the umbrella, though mise still supplies the PATH; deflake-e2e.yml:87 runs the flake attempts through pnpm <em>outside</em> turbo, because a cached test task would replay attempt 1’s logs; and the production docs deploy never sees mise at all — Cloudflare Workers Builds bootstraps with <code>npx pnpm@11.21.0</code> then <code>npx turbo docs#build</code> (tools/workers-builds/cloudflare-build.sh:16-19), because the hosted image’s corepack shim cannot materialize pnpm 12. The doors are drawn red and hatched because each one gives up something the machines provide — and each was opened on purpose.</p>
-<p><strong>Two curiosities the census surfaced.</strong> One task in the whole machine is dead: <code>//tools/build_and_test:playwright_deps</code> (mise.toml:72-76) has no caller anywhere, superseded by <code>playwright_deps_engines</code>. And one umbrella exists twice: mise <code>lint_workflows</code> (a 4-leg <code>depends</code>, config.toml:131-135) and turbo <code>//#lint:workflows</code> (a virtual <code>with</code> node, turbo.json:211-221) are the same shape maintained by hand in both schedulers — the one place the two machines duplicate rather than delegate. The phantom shroud around turbo’s core — 370 of 535 nodes that exist only to carry hashes — is drawn as wall thickness here; sheet 12 punches it hole by hole.</p>`,
+<p><strong>Three service doors, all deliberate.</strong> deflake-e2e.yml:73 runs bare <code>turbo run build --filter=…</code> — over the umbrella, though mise still supplies the PATH; deflake-e2e.yml:87 runs the flake attempts through pnpm <em>outside</em> turbo, because a cached test task would replay attempt 1’s logs; and the production docs deploy never sees mise at all — Cloudflare Workers Builds clears corepack’s shims and installs <code>pnpm@12.2.1</code> globally through npm before <code>npx turbo docs#build</code> (tools/workers-builds/cloudflare-build.sh:26-38), because the hosted image’s corepack shim cannot materialize pnpm 12. The doors are drawn red and hatched because each one gives up something the machines provide — and each was opened on purpose.</p>
+<p><strong>Two curiosities the census surfaced.</strong> One task in the whole machine is dead: <code>//tools/build_and_test:playwright_deps</code> (mise.toml:72-76) has no caller anywhere, superseded by <code>playwright_deps_engines</code>. And one umbrella exists twice: mise <code>lint_workflows</code> (a 4-leg <code>depends</code>, config.toml:131-135) and turbo <code>//#lint:workflows</code> (a virtual <code>with</code> node, turbo.json:215-225) are the same shape maintained by hand in both schedulers — the one place the two machines duplicate rather than delegate. The phantom shroud around turbo’s core — ${PHANTOM} of ${CI.nodes} nodes that exist only to carry hashes — is drawn as wall thickness here; sheet 12 punches it hole by hole.</p>`,
   key: [
     keyRow(`<path d="M2,9 L40,9" class="sk2" marker-end="url(#${P}-ai)"/>`, 'trunk — the handoff, in flow direction'),
     keyRow('<rect x="14" y="2" width="4" height="14" class="sk fp2"/><rect x="26" y="2" width="4" height="14" class="sk fp2"/><circle cx="16" cy="1" r="2" class="skf fnone"/><circle cx="28" cy="17" r="2" class="skf fnone"/>', 'coupling gasket — a seam between the machines'),
@@ -283,7 +310,7 @@ export const sheet3a = {
     keyRow(`<path d="M2,9 L34,9" class="ska" stroke-dasharray="3 3"/><text x="38" y="13" class="lbla" font-size="11">①</text>`, 'the deepest chain — 6 hops, circled digits'),
     keyRow(`<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-hr)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>`, 'service door — a deliberate bypass'),
     keyRow('<text x="4" y="13" class="lbl" font-size="11">★ / ↩</text>', 'shells turbo / re-entered by turbo — disjoint sets'),
-    keyRow(`<rect x="6" y="3" width="36" height="12" fill="url(#${P}-hd)" opacity="0.45"/><rect x="6" y="3" width="36" height="12" class="sks fnone" stroke-dasharray="4 3"/>`, 'phantom shroud — 370 nodes that run nothing (sheet 12)'),
+    keyRow(`<rect x="6" y="3" width="36" height="12" fill="url(#${P}-hd)" opacity="0.45"/><rect x="6" y="3" width="36" height="12" class="sks fnone" stroke-dasharray="4 3"/>`, `phantom shroud — ${PHANTOM} nodes that run nothing (sheet 12)`),
     keyRow('<text x="4" y="13" class="lblr" font-size="11">✕</text>', 'dead task — no caller anywhere'),
   ].join('\n'),
 };
