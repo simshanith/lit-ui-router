@@ -89,6 +89,31 @@ Three escalating lanes (separate initiatives, each independently shippable):
    camera tilt/orbit — its own initiative, only after the cytoscape lane
    proves the data model.
 
+## RDF crossover (silicon-grove, explored 2026-09-02)
+
+Survey of `~/Developer/simshanith/silicon-grove/rdf-playground/` (user's
+suggestion). The defensible reuse is narrow:
+
+- **Lift the I7 data model from `rdf-graph-core`.** Its `types.ts`
+  `GraphNode`/`GraphEdge` (integer-indexed, namespace-tagged, degree) plus
+  `getGraphStats`, `namespace-colors.ts` color map, and the legend generator
+  transfer with "namespace" → "node kind" (probe / snapshot / sheet / tool).
+  ~200 lines, tested over there; drop the Float32Array physics fields —
+  cytoscape owns layout (a probes→snapshots→sheets DAG wants dagre/elk
+  layering, not d3-force).
+- **Name snapshot provenance fields after PROV-O.** `generatedAtTime`,
+  `wasGeneratedBy`, `used`, `wasAssociatedWith` instead of ad-hoc
+  `countedAt`/`tools` — near-zero cost now, and it makes a future
+  named-graph-per-ref triple view (`<urn:atlas:census/{sha}>`, cross-ref
+  diffing via SPARQL `GRAPH ?a … MINUS GRAPH ?b`) mechanical. Oxigraph's
+  query path is proven in the playground; the JSON snapshots stay the
+  source of truth, RDF a derived view — only worth building if multi-ref
+  queries become a real want.
+- **Skip:** its Canvas renderer (no sprite/image nodes — cytoscape
+  `background-image` is the feature I7 depends on), the Mermaid emitter
+  (fine prototype, can't survive into I7), Barnes-Hut/WASM (tens of nodes),
+  and the shared 3D ambition (roadmap prose on both sides, zero code).
+
 ## Initiatives
 
 Sized in granular cycles (one cycle ≈ one commit+republish sitting). Order is
