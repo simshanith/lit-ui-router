@@ -1,8 +1,10 @@
-// Sheet 12 census — the PR CI task graph as a register plate.
-//
-// Basis: `turbo run <pipeline> --dry=json` from the worktree, turbo 2.10.9, 2026-08-16.
-// The banner goes to stderr; stdout is pure JSON. Run BARE `turbo` (the mise shim),
-// never via pnpm — pnpm's relative .bin PATH breaks turbo's spawn.
+// Sheet 12 census — the PR CI task graph as a register plate, ported onto the
+// pipeline (INITIATIVES.md I5, tier T3): the graph comes from `turbo run
+// <pipeline> --dry=json` against a MATERIALIZED, INSTALLED archive of the ref
+// (basis.mjs materialize + installDeps), never the working tree.  The tree's
+// own .bin/turbo runs directly — never via pnpm, whose relative .bin PATH
+// breaks turbo's spawn.  Banner goes to stderr; stdout is pure JSON.
+// Writes diagrams/data/census-plate.json.
 //
 // Vocabulary:
 //   node        — one (package, task) pair turbo put in the graph
@@ -14,14 +16,19 @@
 // Output: a JSON blob on stdout (last line) for sheet12.mjs to eyeball, plus a
 // human-readable matrix on stderr-free stdout above it.
 import { execFileSync } from 'node:child_process';
-import { fileURLToPath } from 'node:url';
+import { installDeps, materialize, refFromArgv } from './basis.mjs';
+import { writeData } from './census-query.mjs';
 
-const CWD = fileURLToPath(new URL('../..', import.meta.url));
 const PHANTOM = '<NONEXISTENT>';
 
+const basis = materialize(refFromArgv());
+process.on('exit', () => basis.cleanup());
+const { turbo } = installDeps(basis);
+let turboVersion = null;
+
 function dry(pipeline) {
-  const out = execFileSync('turbo', ['run', pipeline, '--dry=json'], {
-    cwd: CWD,
+  const out = execFileSync(turbo, ['run', pipeline, '--dry=json'], {
+    cwd: basis.dir,
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'ignore'],
     maxBuffer: 256 * 1024 * 1024,
@@ -103,7 +110,9 @@ const want = pipelines.length ? pipelines : ['ci', 'ci:main', 'build', 'lint', '
 const results = {};
 for (const p of want) {
   try {
-    results[p] = analyse(dry(p));
+    const j = dry(p);
+    turboVersion ??= j.turboVersion;
+    results[p] = analyse(j);
   } catch (e) {
     console.log(`# ${p}: FAILED — ${String(e.message).split('\n')[0]}`);
   }
@@ -150,3 +159,14 @@ const dump = Object.fromEntries(
   }]),
 );
 console.log('\nJSON>>' + JSON.stringify(dump));
+
+writeData('census-plate.json', {
+  ref: basis.ref,
+  sha: basis.sha,
+  commitDate: basis.commitDate,
+  generatedAtTime: new Date().toISOString(),
+  wasGeneratedBy: 'diagrams/generator/census-plate.mjs',
+  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile`,
+  wasAssociatedWith: [`turbo ${turboVersion}`, 'pnpm (corepack)'],
+  pipelines: dump,
+}, []);

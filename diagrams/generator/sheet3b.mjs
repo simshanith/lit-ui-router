@@ -6,7 +6,7 @@ const P = 's3b';
 const OX = 400, OY = 170;
 
 // ---- census: census-mass3b.mjs (bare `turbo run ci --dry=json`, turbo 2.10.11),
-// saved as mass-3b.json / real-tasks-3b.json beside this file. 535 nodes, 165
+// saved in diagrams/data/census-mass3b.json (rows + tasks). 535 nodes, 165
 // real, 1,375 edges, 117 real->real. Per-task:
 //   footprint = files the task hashes (the dry-run `inputs` map, counted per task)
 //   height    = command mass: the package.json script line (1 sloc) + the repo
@@ -151,7 +151,7 @@ const half = Math.ceil(M.length / 2);
 const ART_H = 700;
 const SY = ART_H + 14;
 const schedule = `<rect x="40" y="${SY}" width="1320" height="${90 + half * 16}" class="sk fp"/>
-${txt(58, SY + 22, 'STRUCTURE SCHEDULE — tasks (t) · watched files (per-task inputs, summed) · command sloc · every mass cited in mass-3b.json', 'lbls')}
+${txt(58, SY + 22, 'STRUCTURE SCHEDULE — tasks (t) · watched files (per-task inputs, summed) · command sloc · every mass cited in data/census-mass3b.json', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
 ${M.slice(0, half).map((r, i) => txt(58, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
 ${M.slice(half).map((r, i) => txt(712, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}

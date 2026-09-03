@@ -23,6 +23,14 @@ construction; timeline "ALL COMMITS" honestly became "ALL DISTRICTS" —
 the plate carries touches, not commits); the cover survey (in build.mjs,
 not sheet1.mjs) rolls up census-files.json — identical numbers, live
 citation. I4 COMPLETE for every sheet with a plate behind it.
+I5 wave 1 LANDED 2026-09-02: installDeps() T3 harness (archive → corepack
+pnpm --frozen-lockfile → the tree's own .bin/turbo, direct); census-plate
+and census-mass3b run ref-pinned and write plates (ci now 590 nodes/176
+real at 35c6766; drift check caught + resolved 3 uncited tasks incl. the
+fifth package's lint:docs); generator/mass-3b.json + real-tasks-3b.json
+retired in favor of data/census-mass3b.json. Remaining I5: census-nm on
+the harness (+ build), bundle probes 9/10/11 reconstruction, npm dates
+probe; sheets 12/3B still hand-pasted (refactor once plates settle).
 Known follow-ups: chrome.mjs shared title-block DATE still reads
 2026-08-17 (editorial, all sheets); commitsByMonth could join the weather
 plate if the commits row is wanted back; 7A lamps / 3A / 9-11 stay

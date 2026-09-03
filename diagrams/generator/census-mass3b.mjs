@@ -5,19 +5,26 @@
 // script/bin file the command executes. Which file a command executes is a judgement,
 // so it is encoded here in CITES, not inferred.
 // sloc = scc 4.0.0 `Code` lines. Provision: `mise x aqua:boyter/scc@4.0.0`
-// (bare `scc` is not an aqua name). The graph comes from bare `turbo` — never pnpm.
-import { writeFileSync, readFileSync, mkdtempSync, copyFileSync } from 'node:fs';
+// (bare `scc` is not an aqua name).  Ported onto the pipeline (INITIATIVES.md
+// I5, tier T3): graph + every read comes from a materialized, INSTALLED
+// archive of the ref (basis.mjs), never the working tree; the tree's own
+// .bin/turbo runs directly — never via pnpm.  Writes
+// diagrams/data/census-mass3b.json (rows + real task list, PROV-O meta).
+import { readFileSync, mkdtempSync, copyFileSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
 import { execFileSync } from 'node:child_process';
+import { installDeps, materialize, refFromArgv } from './basis.mjs';
+import { writeData } from './census-query.mjs';
 
-const ROOT = fileURLToPath(new URL('../../', import.meta.url));
-const OUT = fileURLToPath(new URL('./mass-3b.json', import.meta.url));
-const TASKS_OUT = fileURLToPath(new URL('./real-tasks-3b.json', import.meta.url));
+const basis = materialize(refFromArgv());
+process.on('exit', () => basis.cleanup());
+const { turbo } = installDeps(basis);
+const ROOT = basis.dir + '/';
 
 // task id -> { mise: script delegates to `mise run`, files: repo scripts it executes }
-// Verified against package.json scripts + .config/mise/config.toml at HEAD.
+// A judgement table, verified below against the ref's scripts + config.toml;
+// drift prints loudly.
 const CITES = {
   '//#check:docs-api-deps': { files: ['check-docs-api-deps.ts'] },
   '//#check:patches': { files: ['check-patches.ts'] },
@@ -40,6 +47,8 @@ const CITES = {
   '@tools/release#check:exports': { files: ['tools/release/src/checks/check-exports.ts'] },
   '@tools/release#pack:all': { files: ['tools/release/src/steps/pack-all.ts'] },
   'docs#typecheck:vue': { files: ['tools/vue-check/bin.ts'] },
+  'lit-ui-router#check:dev-split': { files: ['tools/oxc-emit/src/check-dev-split.ts'] },
+  'ui-router-server#test:coverage': { files: ['tools/lcov-rebase/src/rebase-lcov.ts'] },
   'examples#build:embeds': { files: ['examples/build-embeds.ts'] },
 };
 // per-task-name rules for the bins shared across the package quarters
@@ -55,8 +64,8 @@ const BY_TASK = {
 
 // stdout is pure JSON; the banner goes to stderr.
 function dryRun() {
-  const out = execFileSync('turbo', ['run', 'ci', '--dry=json'], {
-    cwd: ROOT,
+  const out = execFileSync(turbo, ['run', 'ci', '--dry=json'], {
+    cwd: basis.dir,
     stdio: ['ignore', 'pipe', 'ignore'],
     maxBuffer: 1 << 28,
   });
@@ -94,6 +103,7 @@ const EXTERNAL = new Set([
   'oxfmt', 'oxlint', 'tsc', 'eslint', 'vitest', 'node', 'vitepress', 'wrangler', 'typedoc',
   'concurrently', 'cypress', 'vite', 'turbo', 'rimraf', 'cem', 'mkdir', 'mise',
   'start-server-and-test', 'api-extractor', 'taplo', 'rumdl', 'shellcheck',
+  'eslint-doc-generator',
 ]);
 const MISE_TOML = readFileSync(ROOT + '.config/mise/config.toml', 'utf8');
 const miseRunLine = (name) =>
@@ -175,7 +185,6 @@ for (const t of real) {
   });
 }
 rows.sort((a, b) => a.id.localeCompare(b.id));
-writeFileSync(OUT, JSON.stringify(rows, null, 1) + '\n');
 
 const tasks = real
   .map((t) => ({
@@ -188,9 +197,21 @@ const tasks = real
     dependents: t.dependents.length,
   }))
   .sort((a, b) => a.id.localeCompare(b.id));
-writeFileSync(TASKS_OUT, JSON.stringify(tasks, null, 1) + '\n');
 
 for (const d of drift) console.log('DRIFT', d);
 console.log('mass 1:', rows.filter((r) => r.mass === 1).length, 'of', rows.length);
 console.log('command sloc total:', rows.reduce((a, r) => a + r.mass, 0));
 console.log('task-file hashes:', rows.reduce((a, r) => a + r.inputs, 0));
+
+writeData('census-mass3b.json', {
+  ref: basis.ref,
+  sha: basis.sha,
+  commitDate: basis.commitDate,
+  generatedAtTime: new Date().toISOString(),
+  wasGeneratedBy: 'diagrams/generator/census-mass3b.mjs',
+  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile`,
+  wasAssociatedWith: [`turbo ${graph.turboVersion}`, 'scc 4.0.0 (mise x aqua:boyter/scc)', 'pnpm (corepack)'],
+  drift,
+  rows,
+  tasks,
+}, ['drift', 'rows', 'tasks']);

@@ -1,0 +1,2612 @@
+{
+  "ref": "origin/main",
+  "sha": "35c6766",
+  "commitDate": "2026-09-03T00:02:22Z",
+  "generatedAtTime": "2026-09-03T04:02:56.874Z",
+  "wasGeneratedBy": "diagrams/generator/census-plate.mjs",
+  "used": "git archive origin/main @ 35c6766 + corepack pnpm install --frozen-lockfile",
+  "wasAssociatedWith": [
+    "turbo 2.10.11",
+    "pnpm (corepack)"
+  ],
+  "pipelines": {
+    "ci": {
+      "nodes": 590,
+      "real": 176,
+      "edges": 1504,
+      "realEdges": 126,
+      "chain": 13,
+      "realChain": 7,
+      "cacheFalse": [],
+      "names": [
+        {
+          "name": "build",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "build:js",
+          "nodes": 31,
+          "real": 6,
+          "pkgs": 31
+        },
+        {
+          "name": "check:bundle",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "check:dev-split",
+          "nodes": 31,
+          "real": 1,
+          "pkgs": 31
+        },
+        {
+          "name": "ci",
+          "nodes": 31,
+          "real": 0,
+          "pkgs": 31
+        },
+        {
+          "name": "ci:pull_request",
+          "nodes": 31,
+          "real": 0,
+          "pkgs": 31
+        },
+        {
+          "name": "format:check",
+          "nodes": 31,
+          "real": 31,
+          "pkgs": 31
+        },
+        {
+          "name": "lint",
+          "nodes": 31,
+          "real": 31,
+          "pkgs": 31
+        },
+        {
+          "name": "test",
+          "nodes": 31,
+          "real": 19,
+          "pkgs": 31
+        },
+        {
+          "name": "test:coverage",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "test:lit2-compat",
+          "nodes": 31,
+          "real": 2,
+          "pkgs": 31
+        },
+        {
+          "name": "test:mobx6-compat",
+          "nodes": 31,
+          "real": 1,
+          "pkgs": 31
+        },
+        {
+          "name": "transit",
+          "nodes": 31,
+          "real": 0,
+          "pkgs": 31
+        },
+        {
+          "name": "typecheck",
+          "nodes": 31,
+          "real": 27,
+          "pkgs": 31
+        },
+        {
+          "name": "build:types",
+          "nodes": 30,
+          "real": 6,
+          "pkgs": 30
+        },
+        {
+          "name": "typecheck:src",
+          "nodes": 30,
+          "real": 5,
+          "pkgs": 30
+        },
+        {
+          "name": "typecheck:lit2",
+          "nodes": 29,
+          "real": 2,
+          "pkgs": 29
+        },
+        {
+          "name": "typecheck:mobx6",
+          "nodes": 29,
+          "real": 1,
+          "pkgs": 29
+        },
+        {
+          "name": "docs:api",
+          "nodes": 9,
+          "real": 4,
+          "pkgs": 9
+        },
+        {
+          "name": "check:docs-api-deps",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:patches",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "format:check:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "format:check:toml",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:actionlint",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:markdown",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:package-json",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:shellcheck",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:templates",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:toml",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:workflows",
+          "nodes": 1,
+          "real": 0,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:zizmor",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:exports",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "pack:all",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:vue",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:worker",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:worker:tests",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "types:worker",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:docs",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:rules",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "test:oxlint",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:embeds",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:custom-elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:hash",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:runtime-globals",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:tests",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        }
+      ],
+      "cells": {
+        "//": {
+          "check:docs-api-deps": "r",
+          "check:patches": "r",
+          "format:check:root": "r",
+          "format:check:toml": "r",
+          "lint:actionlint": "r",
+          "lint:elements": "r",
+          "lint:markdown": "r",
+          "lint:package-json": "r",
+          "lint:root": "r",
+          "lint:shellcheck": "r",
+          "lint:templates": "r",
+          "lint:toml": "r",
+          "lint:workflows": "p",
+          "lint:zizmor": "r",
+          "typecheck:root": "r"
+        },
+        "@tools/build_and_test": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/bundle-probe": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/compat-guards": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/dts-backtest": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/eslint-ts-parser": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/happy-dom": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lcov-rebase": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lint-elements": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lit-template-lint": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lit-test-env": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/oxc-emit": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/release": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "check:exports": "r",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "pack:all": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/release-config": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/typedoc-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "r"
+        },
+        "@tools/vue-check": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/warn-lanes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/wintercg-globals": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/workers-builds": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "docs": {
+          "build": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:vue": "r",
+          "typecheck:worker": "r",
+          "typecheck:worker:tests": "r",
+          "types:worker": "r"
+        },
+        "eslint-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "lint:docs": "r",
+          "lint:rules": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "test:oxlint": "r",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "examples": {
+          "build": "p",
+          "build:embeds": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "lit-ui-router": {
+          "build": "p",
+          "build:custom-elements": "r",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "r",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:lit2-compat": "r",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "r",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "r"
+        },
+        "lit-ui-router-mobx": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:lit2-compat": "r",
+          "test:mobx6-compat": "r",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "r",
+          "typecheck:mobx6": "r",
+          "typecheck:src": "r"
+        },
+        "sample-app-lit-e2e": {
+          "build": "r",
+          "build:js": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-lit-mobx": {
+          "build": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-lit-vanilla": {
+          "build": "r",
+          "build:hash": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-routes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "ui-router-navigation-location-plugin": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "r"
+        },
+        "ui-router-server": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "p",
+          "ci": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:runtime-globals": "r",
+          "typecheck:src": "r",
+          "typecheck:tests": "r"
+        }
+      }
+    },
+    "ci:main": {
+      "nodes": 623,
+      "real": 181,
+      "edges": 1674,
+      "realEdges": 127,
+      "chain": 13,
+      "realChain": 7,
+      "cacheFalse": [],
+      "names": [
+        {
+          "name": "build",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "build:js",
+          "nodes": 31,
+          "real": 6,
+          "pkgs": 31
+        },
+        {
+          "name": "check:bundle",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "check:dev-split",
+          "nodes": 31,
+          "real": 1,
+          "pkgs": 31
+        },
+        {
+          "name": "ci:main",
+          "nodes": 31,
+          "real": 0,
+          "pkgs": 31
+        },
+        {
+          "name": "ci:pull_request",
+          "nodes": 31,
+          "real": 0,
+          "pkgs": 31
+        },
+        {
+          "name": "format:check",
+          "nodes": 31,
+          "real": 31,
+          "pkgs": 31
+        },
+        {
+          "name": "lint",
+          "nodes": 31,
+          "real": 31,
+          "pkgs": 31
+        },
+        {
+          "name": "test",
+          "nodes": 31,
+          "real": 19,
+          "pkgs": 31
+        },
+        {
+          "name": "test:coverage",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "test:engines",
+          "nodes": 31,
+          "real": 3,
+          "pkgs": 31
+        },
+        {
+          "name": "test:lit2-compat",
+          "nodes": 31,
+          "real": 2,
+          "pkgs": 31
+        },
+        {
+          "name": "test:mobx6-compat",
+          "nodes": 31,
+          "real": 1,
+          "pkgs": 31
+        },
+        {
+          "name": "transit",
+          "nodes": 31,
+          "real": 0,
+          "pkgs": 31
+        },
+        {
+          "name": "typecheck",
+          "nodes": 31,
+          "real": 27,
+          "pkgs": 31
+        },
+        {
+          "name": "build:types",
+          "nodes": 30,
+          "real": 6,
+          "pkgs": 30
+        },
+        {
+          "name": "typecheck:src",
+          "nodes": 30,
+          "real": 5,
+          "pkgs": 30
+        },
+        {
+          "name": "typecheck:lit2",
+          "nodes": 29,
+          "real": 2,
+          "pkgs": 29
+        },
+        {
+          "name": "typecheck:mobx6",
+          "nodes": 29,
+          "real": 1,
+          "pkgs": 29
+        },
+        {
+          "name": "docs:api",
+          "nodes": 9,
+          "real": 4,
+          "pkgs": 9
+        },
+        {
+          "name": "check:docs-api-deps",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:patches",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "format:check:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "format:check:toml",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:actionlint",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:markdown",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:package-json",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:shellcheck",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:templates",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:toml",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:workflows",
+          "nodes": 1,
+          "real": 0,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:zizmor",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "test:matrix",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:exports",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:pack",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "pack:all",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:vue",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:worker",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:worker:tests",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "types:worker",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:docs",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:rules",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "test:oxlint",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:embeds",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:custom-elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:hash",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:runtime-globals",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "typecheck:tests",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        }
+      ],
+      "cells": {
+        "//": {
+          "check:docs-api-deps": "r",
+          "check:patches": "r",
+          "format:check:root": "r",
+          "format:check:toml": "r",
+          "lint:actionlint": "r",
+          "lint:elements": "r",
+          "lint:markdown": "r",
+          "lint:package-json": "r",
+          "lint:root": "r",
+          "lint:shellcheck": "r",
+          "lint:templates": "r",
+          "lint:toml": "r",
+          "lint:workflows": "p",
+          "lint:zizmor": "r",
+          "typecheck:root": "r"
+        },
+        "@tools/build_and_test": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/bundle-probe": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/compat-guards": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/dts-backtest": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:matrix": "r",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/eslint-ts-parser": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/happy-dom": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lcov-rebase": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lint-elements": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lit-template-lint": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/lit-test-env": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/oxc-emit": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/release": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "check:exports": "r",
+          "check:pack": "r",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "pack:all": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/release-config": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/typedoc-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "r"
+        },
+        "@tools/vue-check": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/warn-lanes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/wintercg-globals": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "@tools/workers-builds": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "docs": {
+          "build": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:vue": "r",
+          "typecheck:worker": "r",
+          "typecheck:worker:tests": "r",
+          "types:worker": "r"
+        },
+        "eslint-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "lint:docs": "r",
+          "lint:rules": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "test:oxlint": "r",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "examples": {
+          "build": "p",
+          "build:embeds": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "lit-ui-router": {
+          "build": "p",
+          "build:custom-elements": "r",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "r",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:engines": "r",
+          "test:lit2-compat": "r",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "r",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "r"
+        },
+        "lit-ui-router-mobx": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:engines": "p",
+          "test:lit2-compat": "r",
+          "test:mobx6-compat": "r",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "r",
+          "typecheck:mobx6": "r",
+          "typecheck:src": "r"
+        },
+        "sample-app-lit-e2e": {
+          "build": "r",
+          "build:js": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "p",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-lit-mobx": {
+          "build": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-lit-vanilla": {
+          "build": "r",
+          "build:hash": "r",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "p",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-routes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "sample-app-shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "check:bundle": "p",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "p",
+          "test:engines": "r",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "p"
+        },
+        "ui-router-navigation-location-plugin": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:engines": "r",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:lit2": "p",
+          "typecheck:mobx6": "p",
+          "typecheck:src": "r"
+        },
+        "ui-router-server": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "check:bundle": "r",
+          "check:dev-split": "p",
+          "ci:main": "p",
+          "ci:pull_request": "p",
+          "docs:api": "r",
+          "format:check": "r",
+          "lint": "r",
+          "test": "r",
+          "test:coverage": "r",
+          "test:engines": "p",
+          "test:lit2-compat": "p",
+          "test:mobx6-compat": "p",
+          "transit": "p",
+          "typecheck": "r",
+          "typecheck:runtime-globals": "r",
+          "typecheck:src": "r",
+          "typecheck:tests": "r"
+        }
+      }
+    },
+    "build": {
+      "nodes": 116,
+      "real": 24,
+      "edges": 278,
+      "realEdges": 14,
+      "chain": 10,
+      "realChain": 6,
+      "cacheFalse": [],
+      "names": [
+        {
+          "name": "build",
+          "nodes": 31,
+          "real": 4,
+          "pkgs": 31
+        },
+        {
+          "name": "build:js",
+          "nodes": 27,
+          "real": 6,
+          "pkgs": 27
+        },
+        {
+          "name": "build:types",
+          "nodes": 27,
+          "real": 6,
+          "pkgs": 27
+        },
+        {
+          "name": "transit",
+          "nodes": 18,
+          "real": 0,
+          "pkgs": 18
+        },
+        {
+          "name": "docs:api",
+          "nodes": 9,
+          "real": 4,
+          "pkgs": 9
+        },
+        {
+          "name": "types:worker",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:embeds",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:custom-elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:hash",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        }
+      ],
+      "cells": {
+        "@tools/build_and_test": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "docs:api": "p",
+          "transit": "p"
+        },
+        "@tools/bundle-probe": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/compat-guards": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/dts-backtest": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/eslint-ts-parser": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/happy-dom": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/lcov-rebase": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/lint-elements": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/lit-template-lint": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/lit-test-env": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/oxc-emit": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/release": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/release-config": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/typedoc-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "transit": "p"
+        },
+        "@tools/vue-check": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "docs:api": "p"
+        },
+        "@tools/warn-lanes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/wintercg-globals": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "@tools/workers-builds": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "docs": {
+          "build": "r",
+          "types:worker": "r"
+        },
+        "eslint-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r"
+        },
+        "examples": {
+          "build": "p",
+          "build:embeds": "r",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "lit-ui-router": {
+          "build": "p",
+          "build:custom-elements": "r",
+          "build:js": "r",
+          "build:types": "r",
+          "docs:api": "r",
+          "transit": "p"
+        },
+        "lit-ui-router-mobx": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "docs:api": "r",
+          "transit": "p"
+        },
+        "sample-app-lit-e2e": {
+          "build": "r"
+        },
+        "sample-app-lit-mobx": {
+          "build": "r",
+          "docs:api": "p"
+        },
+        "sample-app-lit-vanilla": {
+          "build": "r",
+          "build:hash": "r",
+          "docs:api": "p"
+        },
+        "sample-app-routes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "docs:api": "p",
+          "transit": "p"
+        },
+        "sample-app-shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p",
+          "transit": "p"
+        },
+        "ui-router-navigation-location-plugin": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "docs:api": "r",
+          "transit": "p"
+        },
+        "ui-router-server": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r",
+          "docs:api": "r",
+          "transit": "p"
+        }
+      }
+    },
+    "lint": {
+      "nodes": 71,
+      "real": 51,
+      "edges": 132,
+      "realEdges": 32,
+      "chain": 9,
+      "realChain": 4,
+      "cacheFalse": [],
+      "names": [
+        {
+          "name": "lint",
+          "nodes": 31,
+          "real": 31,
+          "pkgs": 31
+        },
+        {
+          "name": "build:types",
+          "nodes": 25,
+          "real": 6,
+          "pkgs": 25
+        },
+        {
+          "name": "check:docs-api-deps",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:patches",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:actionlint",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:markdown",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:package-json",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:root",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:shellcheck",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:templates",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:toml",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:workflows",
+          "nodes": 1,
+          "real": 0,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:zizmor",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "types:worker",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:docs",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "lint:rules",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        }
+      ],
+      "cells": {
+        "//": {
+          "check:docs-api-deps": "r",
+          "check:patches": "r",
+          "lint:actionlint": "r",
+          "lint:elements": "r",
+          "lint:markdown": "r",
+          "lint:package-json": "r",
+          "lint:root": "r",
+          "lint:shellcheck": "r",
+          "lint:templates": "r",
+          "lint:toml": "r",
+          "lint:workflows": "p",
+          "lint:zizmor": "r"
+        },
+        "@tools/build_and_test": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/bundle-probe": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/compat-guards": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/dts-backtest": {
+          "lint": "r"
+        },
+        "@tools/eslint-ts-parser": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/happy-dom": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/lcov-rebase": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/lint-elements": {
+          "lint": "r"
+        },
+        "@tools/lit-template-lint": {
+          "lint": "r"
+        },
+        "@tools/lit-test-env": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/oxc-emit": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/release": {
+          "lint": "r"
+        },
+        "@tools/release-config": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/shared": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/typedoc-plugin-lit-ui-router": {
+          "build:types": "r",
+          "lint": "r"
+        },
+        "@tools/vue-check": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/warn-lanes": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/wintercg-globals": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "@tools/workers-builds": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "docs": {
+          "build:types": "p",
+          "lint": "r",
+          "types:worker": "r"
+        },
+        "eslint-plugin-lit-ui-router": {
+          "build:types": "r",
+          "lint": "r",
+          "lint:docs": "r",
+          "lint:rules": "r"
+        },
+        "examples": {
+          "lint": "r"
+        },
+        "lit-ui-router": {
+          "build:types": "r",
+          "lint": "r"
+        },
+        "lit-ui-router-mobx": {
+          "build:types": "r",
+          "lint": "r"
+        },
+        "sample-app-lit-e2e": {
+          "lint": "r"
+        },
+        "sample-app-lit-mobx": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "sample-app-lit-vanilla": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "sample-app-routes": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "sample-app-shared": {
+          "build:types": "p",
+          "lint": "r"
+        },
+        "ui-router-navigation-location-plugin": {
+          "build:types": "r",
+          "lint": "r"
+        },
+        "ui-router-server": {
+          "build:types": "r",
+          "lint": "r"
+        }
+      }
+    },
+    "pack:all": {
+      "nodes": 59,
+      "real": 14,
+      "edges": 113,
+      "realEdges": 5,
+      "chain": 7,
+      "realChain": 4,
+      "cacheFalse": [],
+      "names": [
+        {
+          "name": "build",
+          "nodes": 19,
+          "real": 0,
+          "pkgs": 19
+        },
+        {
+          "name": "build:js",
+          "nodes": 19,
+          "real": 6,
+          "pkgs": 19
+        },
+        {
+          "name": "build:types",
+          "nodes": 19,
+          "real": 6,
+          "pkgs": 19
+        },
+        {
+          "name": "pack:all",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "build:custom-elements",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        }
+      ],
+      "cells": {
+        "@tools/build_and_test": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/bundle-probe": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/compat-guards": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/eslint-ts-parser": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/happy-dom": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/lcov-rebase": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/lit-test-env": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/oxc-emit": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/release": {
+          "pack:all": "r"
+        },
+        "@tools/release-config": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/shared": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/typedoc-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r"
+        },
+        "@tools/warn-lanes": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/wintercg-globals": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "@tools/workers-builds": {
+          "build": "p",
+          "build:js": "p",
+          "build:types": "p"
+        },
+        "eslint-plugin-lit-ui-router": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r"
+        },
+        "lit-ui-router": {
+          "build": "p",
+          "build:custom-elements": "r",
+          "build:js": "r",
+          "build:types": "r"
+        },
+        "lit-ui-router-mobx": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r"
+        },
+        "ui-router-navigation-location-plugin": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r"
+        },
+        "ui-router-server": {
+          "build": "p",
+          "build:js": "r",
+          "build:types": "r"
+        }
+      }
+    }
+  }
+}

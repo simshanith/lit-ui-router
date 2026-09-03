@@ -6,7 +6,7 @@
 // with cwd at the tree root because scc's shebang/filename detection silently
 // returns nothing for absolute paths.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
+import { existsSync, mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -36,6 +36,19 @@ export const materialize = (ref) => {
   const files = walk(dir).map((f) => f.slice(dir.length + 1)).sort();
 
   return { ref, sha, dir, files, commitDate, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
+};
+
+// T3 step (INITIATIVES.md): give a materialized archive its node_modules so
+// execution probes (turbo dry-runs, nm closures) run against the REF, not a
+// checkout.  corepack pnpm honors the archive's own packageManager pin;
+// --frozen-lockfile means the ref's lockfile or nothing.  Returns the turbo
+// binary to use: the tree's own devDep bin invoked DIRECTLY — bare path, never
+// through pnpm, whose relative .bin PATH breaks turbo's spawn.
+export const installDeps = (basis) => {
+  execFileSync('corepack', ['pnpm', 'install', '--frozen-lockfile', '--silent'],
+    { cwd: basis.dir, stdio: ['ignore', 'inherit', 'inherit'] });
+  const turbo = join(basis.dir, 'node_modules', '.bin', 'turbo');
+  return { turbo: existsSync(turbo) ? turbo : 'turbo' };
 };
 
 // The ONE history read feeding every T2 probe (INITIATIVES.md): non-merge
