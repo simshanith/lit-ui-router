@@ -198,7 +198,10 @@
       }
     },
     {
-      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "files": [
+        "packages/lit-ui-router/src/**/*.ts",
+        "packages/lit-ui-router-mobx/src/**/*.ts"
+      ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",

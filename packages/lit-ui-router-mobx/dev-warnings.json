@@ -1,0 +1,6 @@
+{
+  "$comment": "Message prefixes that must ship in dist/development/*.js and never in dist/*.js. Gate: check:dev-split (@tools/oxc-emit). Add an entry whenever a warning goes behind the import.meta.env.DEV guard; the gate fails on an undeclared one.",
+  "devOnly": [
+    "lit-ui-router-mobx: ${subject} found no <ui-router> ancestor, so it "
+  ]
+}
