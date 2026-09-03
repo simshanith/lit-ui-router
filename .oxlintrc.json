@@ -1,7 +1,7 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
   "plugins": ["typescript", "unicorn"],
-  "jsPlugins": ["eslint-plugin-turbo"],
+  "jsPlugins": ["eslint-plugin-turbo", "eslint-plugin-lit-ui-router"],
   "options": {
     "typeAware": true
   },
@@ -157,7 +157,8 @@
       }
     ],
     "typescript/unbound-method": "off",
-    "typescript/use-unknown-in-catch-callback-variable": "error"
+    "typescript/use-unknown-in-catch-callback-variable": "error",
+    "lit-ui-router/anchor-is-valid": "error"
   },
   "overrides": [
     {
@@ -192,6 +193,17 @@
           "warn",
           {
             "allowList": ["^SSR$"]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^DEV$"]
           }
         ]
       }
@@ -292,6 +304,12 @@
       }
     },
     {
+      "files": ["**/*.spec.ts", "**/src/specs/**"],
+      "rules": {
+        "lit-ui-router/anchor-is-valid": "off"
+      }
+    },
+    {
       "files": ["**/*.spec.ts", "**/src/specs/test-utils.ts"],
       "rules": {
         "no-unused-vars": [
@@ -315,8 +333,10 @@
         "tools/build_and_test/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
+        "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
         "tools/shared/**/*.test.ts",
+        "tools/warn-lanes/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",

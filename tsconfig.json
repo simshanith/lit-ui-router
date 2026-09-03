@@ -40,8 +40,9 @@
     "commitlint.config.ts",
     "eslint.config.ts",
     "eslint.oxlint-directives.ts",
-    "eslint.plugin-types.d.ts",
-    "eslint.repo-rules.ts",
+    "eslint-rules/**/*.ts",
+    // ambient declaration for the untyped lit-a11y plugin eslint.config.ts loads
+    "eslint-plugins.d.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"

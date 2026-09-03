@@ -14,6 +14,14 @@
 // cache did anything at all. Those are silent failure modes — nothing is red,
 // so nothing prompts anyone to look.
 
+import {
+  type WarnLaneLineOptions,
+  type WarnLaneState,
+  WARN_WATCHED_LANES,
+  findWarnLaneState,
+  warnLaneLine,
+} from '@tools/warn-lanes/warn-lanes.core.ts';
+
 /** Per-task execution record. turbo 2.10 carries no `status` — exitCode is it. */
 export interface TaskExecution {
   startTime: number;
@@ -471,9 +479,40 @@ function overviewHeadline(summary: RunSummary): string {
 }
 
 /**
- * What the renderers need from the environment. An options object rather than
- * more positional parameters: `onActions` and `artifactUrl` are unrelated, and
- * a call site reading `(summary, true, url)` says nothing about either.
+ * A warn-only lane and whatever it asserted about itself this run. Warn lanes
+ * exit 0, so nothing in the run summary distinguishes one carrying 36 warnings
+ * from a clean one — the state comes from a marker the lane prints into its own
+ * task log, and `undefined` means the lane did not run (or ran before the
+ * marker existed), which is itself worth saying out loud.
+ */
+export interface WarnLaneEntry {
+  task: string;
+  state?: WarnLaneState;
+}
+
+/**
+ * The watched lanes, in list order — not in the order turbo happened to run
+ * them, and never derived from the summary: a lane that did not run must still
+ * get a line, or its absence reads as "fine".
+ */
+export function warnLaneEntries(logs: Map<string, string>): WarnLaneEntry[] {
+  return WARN_WATCHED_LANES.map((task) => ({
+    task,
+    state: findWarnLaneState(stripAnsi(logs.get(task) ?? '')),
+  }));
+}
+
+export function warnLaneReport(
+  entries: readonly WarnLaneEntry[],
+  options: WarnLaneLineOptions = {},
+): string[] {
+  return entries.map(({ task, state }) => warnLaneLine(task, state, options));
+}
+
+/**
+ * What the renderers need beyond the summary itself. An options object rather
+ * than more positional parameters: these fields are unrelated to each other,
+ * and a call site reading `(summary, true, url)` says nothing about any of them.
  */
 export interface OverviewContext {
   /** `GITHUB_ACTIONS`; gates the notes that only mean something on a runner. */
@@ -482,6 +521,12 @@ export interface OverviewContext {
   artifactUrl?: string;
   /** Which file in that artifact this report read. */
   fileName?: string;
+  /**
+   * Warn-only lanes and the state each asserted. Not derivable from `summary`:
+   * these lanes exit 0, so the artifact cannot tell one carrying warnings from
+   * a clean one. Empty renders nothing.
+   */
+  warnLanes?: readonly WarnLaneEntry[];
 }
 
 /**
@@ -502,7 +547,7 @@ export function artifactLink(
     fileName === undefined ? '' : ` (${inlineCode(cell(fileName))})`;
   return {
     markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — the untruncated run, downloadable from this run's artifacts.`,
-    line: `   full json: ${artifactUrl}`,
+    line: `   run summary json: ${artifactUrl}`,
   };
 }
 
@@ -577,6 +622,16 @@ export function overviewMarkdown(
     );
   }
 
+  const warnLines = warnLaneReport(context.warnLanes ?? []);
+  if (warnLines.length > 0) {
+    out.push(
+      '**Warn-only lanes** — green by design; the floor is `tools/lint-elements/warnings.json`.',
+      '',
+      ...warnLines.map((line) => `- ${line}`),
+      '',
+    );
+  }
+
   const misses = summary.tasks.filter((task) => !wasCacheHit(task));
   if (misses.length > 0) {
     out.push(
@@ -627,11 +682,18 @@ export function overviewLines(
     );
   }
 
+  // Verdict only: the breakdown is a markdown-twin luxury, and here it competes
+  // for one terminal row with the thing a reader actually needs off this line.
+  for (const line of warnLaneReport(context.warnLanes ?? [], { rules: false }))
+    lines.push(`   warn-lane: ${line}`);
+
   for (const note of overviewNotes(summary, tally, onActions))
     lines.push(`   note: ${note}`);
 
+  // Blank line first: the link is a footer for the whole block, and set flush
+  // against the facts it reads as a continuation of whichever one ran last.
   const link = artifactLink(context);
-  if (link !== undefined) lines.push(link.line);
+  if (link !== undefined) lines.push('', link.line);
   return lines;
 }
 

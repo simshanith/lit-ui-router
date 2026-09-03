@@ -12,21 +12,8 @@ const CONTACT = 'Delia Hunter';
  */
 describe('link semantics', () => {
   let appConfig = null;
-  const warnings = [];
 
   beforeEach(() => {
-    warnings.length = 0;
-    // captures uiSref's assignHref warning, which only fires in lit's dev
-    // build. an event hook rather than visit's onBeforeLoad, so it composes
-    // with visitWithFeatures' own (which seeds the location plugin)
-    cy.on('window:before:load', (win) => {
-      const warn = win.console.warn;
-      win.console.warn = (...args) => {
-        warnings.push(args.join(' '));
-        warn.apply(win.console, args);
-      };
-    });
-
     const applyAppConfig = () => {
       window.sessionStorage.clear();
       window.sessionStorage.setItem('appConfig', appConfig);
@@ -49,11 +36,6 @@ describe('link semantics', () => {
       applyAppConfig();
     }
   });
-
-  const expectNoAssignHrefWarning = () =>
-    cy
-      .wrap(warnings)
-      .should((all) => expect(all.join('\n')).not.to.contain('assignHref'));
 
   it('renders the home tiles as anchors with hrefs', () => {
     visitWithFeatures('/home');
@@ -83,7 +65,7 @@ describe('link semantics', () => {
   it('renders one New Contact control, an anchor with an href', () => {
     visitWithFeatures('/contacts');
     // the nested <a><button> gave two tab stops; there is one control now
-    cy.contains('a.btn', 'New Contact').should('have.attr', 'href');
+    cy.contains('.selectlist a', 'New Contact').should('have.attr', 'href');
     cy.get('button').contains('New Contact').should('not.exist');
     cy.screenshot('contact-list');
   });
@@ -120,19 +102,5 @@ describe('link semantics', () => {
     cy.get('table tbody tr').first().click();
     cy.url().should('match', /\/inbox\/.+/);
     cy.screenshot('message-list');
-  });
-
-  it('logs no assignHref warning on any of these views', () => {
-    visitWithFeatures('/home');
-    cy.contains('Messages');
-    expectNoAssignHrefWarning();
-
-    visitWithFeatures('/contacts');
-    cy.contains('New Contact');
-    expectNoAssignHrefWarning();
-
-    visitWithFeatures('/mymessages');
-    cy.get('table tbody tr').should('exist');
-    expectNoAssignHrefWarning();
   });
 });

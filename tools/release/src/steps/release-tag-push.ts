@@ -3,31 +3,36 @@
 //   env in: PACKAGE, DRY_RUN
 // The version is read from the package's manifest via pnpm's workspace
 // resolver (the bash shelled out to `node -p require('./package.json')
-// .version` for the same value). A dry run prints what it would push. The
-// workflow keeps continue-on-error: a tag existing on the remote at a
-// different commit is rejected here, matching the previous tag-exists
-// behavior. Decisions live in ./release-tag-push.core.ts.
+// .version` for the same value). A dry run prints what it would push. A tag
+// already on the remote is skipped (#674); any other push failure is fatal.
+// Decisions live in ./release-tag-push.core.ts and ./release-tag-state.core.ts.
 
 import { defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
 import { runMain } from '@tools/shared/gha.ts';
-import { memberDir } from './release-package-info.core.ts';
-import { pushTagArgs, releaseTagName } from './release-tag-push.core.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { pushTagArgs } from './release-tag-push.core.ts';
+import { isPushed, tagStateMessage } from './release-tag-state.core.ts';
+import { resolveReleaseTagName, resolveTagState } from './release-tag-state.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');
   const dryRun = boolEnv(process.env, 'DRY_RUN');
-  const { members } = await loadWorkspace(workspaceRoot);
-  // memberDir doubles as membership validation before composing a ref.
-  memberDir(packageName, members);
-  const version =
-    members.find((member) => member.name === packageName)?.manifest?.version ??
-    '';
-  const tagName = releaseTagName(packageName, version);
+  const tagName = await resolveReleaseTagName(packageName);
+  const state = await resolveTagState(tagName);
+  if (isPushed(state)) {
+    console.log(tagStateMessage(state, tagName));
+    console.log(`skipping push of refs/tags/${tagName}`);
+    return;
+  }
+  // A dry run never tagged, so it reports the push it would make and stops.
   if (dryRun) {
     console.log(`dry-run: would push refs/tags/${tagName}`);
     return;
+  }
+  if (state === 'tag') {
+    // Nothing to push: the Tag step did not leave a local tag behind.
+    throw new Error(`no local tag ${tagName} to push`);
   }
   await defaultStream('git', pushTagArgs(tagName), { cwd: workspaceRoot });
 });

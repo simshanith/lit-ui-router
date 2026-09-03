@@ -13,7 +13,7 @@
     "@spectrum-web-components/theme": "^1.12.2",
     "@uirouter/core": "^6.1.2",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.10.0"
+    "lit-ui-router": "^1.11.1"
   },
   "devDependencies": {
     "typescript": "^7.0.2",

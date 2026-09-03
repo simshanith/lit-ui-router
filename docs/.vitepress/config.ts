@@ -92,6 +92,8 @@ function makeSidebar() {
       text: 'Companion Packages',
       items: [
         { text: 'Overview', link: '/packages/' },
+        // Lint rules, not a runtime API — no typedoc reference to nest.
+        { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
         {
           text: 'MobX',
           link: '/packages/mobx',
