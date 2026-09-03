@@ -244,8 +244,10 @@ turbo run build); sheets 12 (rev C), 3B (rev D) and 8 import their plates
 new delivered pkg). Remaining I5: bundle probes 9/10/11 reconstruction;
 sheet 4 onto census-npm.json (upstream monorepo is waking the family —
 angular 22.0.0 published 2026-08-18).
-Known follow-ups: chrome.mjs shared title-block DATE still reads
-2026-08-17 (editorial, all sheets); commitsByMonth could join the weather
+Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
+now derived from census-files.json's commitDate (the ref's commit date,
+per the census-steam rule), so a recensus re-dates every title block
+automatically; commitsByMonth could join the weather
 plate if the commits row is wanted back; 7A lamps / 3A stay hand-pasted
 (no plate of their own yet). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is

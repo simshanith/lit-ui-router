@@ -1,7 +1,11 @@
 // Shared drawing-sheet chrome: tokens, frame, title block.
 // Light = graphite on vellum; dark = cyanotype. Three-state theming per artifact rules.
 
-export const DATE = '2026-08-17';
+import { readFileSync } from 'node:fs';
+
+// Title-block date = the census basis ref's commit date, never a hard-coded day
+const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
+export const DATE = PLATE.commitDate.slice(0, 10);
 export const PROJECT = 'THE ALTITUDE ATLAS';
 export const CLIENT = 'lit-ui-router · simshanith';
 export const TOTAL = 14;
