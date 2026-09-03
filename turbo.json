@@ -21,7 +21,11 @@
     },
     "test": {
       "dependsOn": ["^test"],
+      // $TURBO_DEFAULT$ leads: the globs missed a package's own setup files
+      // (vitest.setup.browser.ts, tooling/) and any suite living outside
+      // src/, which cache-hits on a tree the run would have failed
       "inputs": [
+        "$TURBO_DEFAULT$",
         "src/**/*.ts",
         "vitest.config.ts",
         "vitest.setup.ts",
@@ -34,17 +38,32 @@
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
-      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "fixtures/**",
+        "run.ts",
+        "tsconfig.fixture*.json"
+      ]
     },
     // Full TS version matrix; distinct task name = distinct cache key from
     // the current-leg-only #test above. Runs on main push, not the PR graph.
     "@tools/dts-backtest#test:matrix": {
       "dependsOn": ["^build"],
-      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "fixtures/**",
+        "run.ts",
+        "tsconfig.fixture*.json"
+      ]
     },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.ts",
+        "vitest.config.ts",
+        "vitest.setup.ts"
+      ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
       "outputs": ["coverage/**"]
     },
@@ -53,7 +72,12 @@
     // PR graph.
     "test:engines": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.ts",
+        "vitest.config.ts",
+        "vitest.setup.ts"
+      ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
