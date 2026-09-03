@@ -10,14 +10,14 @@
 // first if the local origin/main may be stale; the measured sha is printed.
 // Nothing is excluded by US beyond what git already ignores — fixtures,
 // snapshots and generated .d.ts all count — but scc itself SILENTLY SKIPS
-// lockfiles (pnpm-lock.yaml 12,945 lines, plus the four example
+// lockfiles (pnpm-lock.yaml 13,490 lines, plus the four example
 // package-lock.json): verified empirically, `scc pnpm-lock.yaml` returns [].
 // scc also reports only files it can name a language for, so the table is
 // short of the tracked set by the unclassified paths — binaries (favicons, the
 // gzipped demo corpora), dotfiles, and those lockfiles.  The gap is printed,
-// not silently swallowed.  Cross-check: wc -l over the whole tree is 75,949;
-// minus binaries (3,833), lockfiles (18,273) and dotfiles (778) it lands
-// within ~264 of scc's Lines total (trailing-newline off-by-ones).
+// not silently swallowed.  Cross-check (main @ 8333121): wc -l over the whole
+// tree is 79,409; minus binaries (3,833), lockfiles (18,818) and dotfiles (805)
+// it lands within ~291 of scc's Lines total (trailing-newline off-by-ones).
 // sloc = scc 4.0.0 `Code` (string-aware: template-literal interiors are code).
 import { execFileSync } from 'node:child_process';
 import { mkdtempSync, rmSync, readdirSync } from 'node:fs';

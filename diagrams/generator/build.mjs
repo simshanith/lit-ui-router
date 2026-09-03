@@ -125,25 +125,25 @@ const galCss = `
   max-width: 1180px; margin: 0 auto 40px; padding: 0 4px; }
 .sheet { scroll-margin-top: 16px; }`;
 
-// --- general survey: census-overview.mjs over origin/main @ ee438e7, 2026-09-01 —
-// Every tracked path (585) scc'd in one batch; 543 of them carry a language it
+// --- general survey: census-overview.mjs over origin/main @ 8333121, 2026-09-02 —
+// Every tracked path (610) scc'd in one batch; 568 of them carry a language it
 // can name, the other 42 are binaries and dotfiles. Deliberately wider than any
 // sheet (JSON, Markdown, config all count) and deliberately NOT this branch:
 // the atlas's own drawings would be a 29k-sloc self-portrait in the totals.
-const SURVEY_TOTAL = { files: 543, tracked: 585, lines: 53329, blank: 5516, comment: 6552, code: 41261 };
+const SURVEY_TOTAL = { files: 568, tracked: 610, lines: 56244, blank: 5827, comment: 6845, code: 43572 };
 const SURVEY_LANGS = [
-  ['TypeScript', 293, 26550],
-  ['Markdown', 39, 5356],
-  ['JSON', 117, 4943],
-  ['YAML', 16, 1074],
+  ['TypeScript', 305, 28382],
+  ['Markdown', 42, 5606],
+  ['JSON', 122, 5136],
+  ['YAML', 16, 1080],
   ['Vue', 6, 1047],
-  ['JavaScript', 15, 748],
-  ['CSS', 2, 463],
+  ['JavaScript', 18, 770],
+  ['CSS', 2, 481],
   ['HTML', 8, 307],
   ['TOML', 5, 236],
   ['BASH', 9, 233],
   ['SVG', 17, 103],
-  ['TypeScript Typings', 7, 73],
+  ['TypeScript Typings', 9, 63],
   ['Patch', 3, 59],
   ['JSONC', 2, 46],
   ['Shell', 3, 18],
@@ -165,7 +165,7 @@ const survey = `<section class="survey" aria-label="general survey of the reposi
     <tbody>${SURVEY_LANGS.map(([n, f, c]) => `<tr><td>${n}</td><td>${num(f)}</td><td>${num(c)}</td>` +
       `<td class="bar"><span style="width:${((c / TOP_CODE) * 100).toFixed(1)}%"></span></td></tr>`).join('')}</tbody>
   </table>
-  <p class="basis">BASIS — every tracked file on main @ ee438e7 (${num(SURVEY_TOTAL.tracked)} paths, ${num(SURVEY_TOTAL.files)} of them a language scc can name; the rest are binaries, dotfiles, and lockfiles — generated, and rightly left out) · scc 4.0.0 <code>Code</code> basis · counted 2026-09-01 · deliberately broader than the sheets' authored-source census, and deliberately main: this atlas's own branch would add a 29k-sloc self-portrait.</p>
+  <p class="basis">BASIS — every tracked file on main @ 8333121 (${num(SURVEY_TOTAL.tracked)} paths, ${num(SURVEY_TOTAL.files)} of them a language scc can name; the rest are binaries, dotfiles, and lockfiles — generated, and rightly left out) · scc 4.0.0 <code>Code</code> basis · counted 2026-09-02 · deliberately broader than the sheets' authored-source census, and deliberately main: this atlas's own branch would add a 29k-sloc self-portrait.</p>
 </section>`;
 
 const cover = `<header class="cover">
@@ -174,9 +174,9 @@ const cover = `<header class="cover">
   <span class="set">SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES</span>
   <div class="stat-bar" role="group" aria-label="set statistics">
     <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
-    <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">4</span></div>
+    <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">5 · eslint-plugin-lit-ui-router joined 2026-09-02 at 1.0.0-rc.1 — after every sheet was drawn</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">19</span></div>
-    <div><span class="k">LATEST SHIPPED</span><span class="v">1.10.0 · 2026-08-17</span></div>
+    <div><span class="k">LATEST SHIPPED</span><span class="v">1.11.1 · 2026-09-02</span></div>
     <div><span class="k">SHEETS</span><span class="v">13 · drawn 2026-08-16–17 · flat and iso plates recensused 2026-08-31</span></div>
   </div>
   ${survey}
@@ -194,7 +194,7 @@ const cover = `<header class="cover">
 writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${galCss}</style>
 ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
-<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD 2026-08-31 and applied 2026-09-01 — except plate 7A's test light, which is still the 2026-08-17 metering and labelled as such · cover general survey = main @ ee438e7, counted 2026-09-01 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
+<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD 2026-08-31 and applied 2026-09-01 — except plate 7A's test light, which is still the 2026-08-17 metering and labelled as such · cover general survey = main @ 8333121, counted 2026-09-02 · sheets that say FOUR packages (2, 11, and the census plates) predate eslint-plugin-lit-ui-router's 2026-09-02 graduation to packages/ and are true of their counted dates · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
 { desc: 'A thirteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
