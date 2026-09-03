@@ -1,0 +1,578 @@
+<title>THE SURVEY OFFICE — Sheet 14 of 14</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The instrument drawn by its own instrument: 13 probe stations over three tiers write 13 filed plates, which 13 drawings read — and the one that matters most is read nine times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0D2344;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #5F7899;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    --red: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0D2344;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #5F7899;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+}
+
+* { box-sizing: border-box; margin: 0; }
+:root {
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --serif: "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--serif);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+}
+
+.sheet {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 26px;
+  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--mono);
+}
+.sheet-head .proj {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--mono);
+  font-size: clamp(17px, 2.6vw, 23px);
+  letter-spacing: 0.10em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.sheet-sub {
+  font-family: var(--mono);
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
+.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--serif);
+  font-size: 14px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 10px auto 0;
+  font-style: italic;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
+  gap: 22px;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--mono);
+  font-size: 10.5px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.notes p {
+  font-size: 15px;
+  max-width: 62ch;
+  margin-bottom: 9px;
+}
+.notes p strong { font-weight: 600; }
+.notes p code, .gal-body code {
+  font-family: var(--mono);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 0 4px;
+  border-radius: 2px;
+  white-space: nowrap;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-size: 8.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<section class="sheet" id="sheet-14" aria-label="Sheet 14: THE SURVEY OFFICE">
+  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 14 / 14</span></div>
+  <h2 class="sheet-title">THE SURVEY OFFICE</h2>
+  <p class="sheet-sub">ALTITUDE 3½ — the atlas measuring itself · 13 probes, 13 plates, 13 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ 35c6766 · commit 2026-09-03 · REV A 2026-09-03: first printing — the instrument drawn by itself</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 20 1160 1179" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at 35c6766 extracted to a temporary directory, 610 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 568 rows — the one measurement. An accent bus carries that plate back down the left margin into eight stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 12 further probe stations are grouped into three tiers — 5 pure-tree, 2 history, 6 execution, the last fed by an install harness running corepack pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 19 thin read curves fan into a rack of 12 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 13 plates with writer, tier, basis and readers.">
+<defs>
+  <marker id="s14-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s14-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s14-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s14-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s14-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s14-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s14-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s14-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<text x="30" y="46" class="lblt" text-anchor="start" >THE SURVEY OFFICE — THE PIPELINE THAT DRAWS THIS ATLAS</text>
+<text x="30" y="62" class="lbls" text-anchor="start" >one archive · 13 probe stations · 13 filed plates · 13 drawings that read them — introspected from diagrams/generator/ at build time</text>
+<text x="1130" y="46" class="lblb" text-anchor="end" >52 NODES · 63 EDGES</text>
+<text x="1130" y="62" class="lbls" text-anchor="end" >13 WRITES · 28 READS · 22 IMPORTS</text>
+
+<path d="M70,180 L38,180 L38,778" class="sks" stroke-dasharray="4 4" opacity="0.65" fill="none"/>
+<text x="32" y="476" class="lblf" text-anchor="middle" transform="rotate(-90 32 476)">ONE BASIS — EVERY STATION RE-MATERIALIZES THIS REF</text>
+<rect x="66" y="96" width="310" height="84" rx="0" class="sk fp2"/>
+<text x="76" y="116" class="lblb" text-anchor="start" >THE ONE BASIS</text>
+<text x="76" y="132" class="lbls" text-anchor="start" >materialize(ref) — basis.mjs</text>
+<text x="76" y="145" class="lbls" text-anchor="start" >git archive origin/main @ 35c6766</text>
+<text x="76" y="158" class="lbls" text-anchor="start" >| tar -x → tmpdir, relative walk</text>
+<text x="76" y="171" class="lbls" text-anchor="start" >610 tracked paths · 2026-09-03</text>
+<path d="M186,180 L186,203" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="66" y="203" width="310" height="22" rx="0" class="ska fp"/>
+<text x="76" y="218" class="lbla" text-anchor="start" >census-scc.mjs</text>
+<text x="366" y="218" class="lblf" text-anchor="end" >scc --by-file</text>
+<path d="M376,214 L436,214" class="ska"  marker-end="url(#s14-aa)"/>
+<rect x="440" y="199" width="230" height="30" rx="4" class="ska" fill="url(#s14-ha)"/>
+<text x="450" y="212" class="lbla" text-anchor="start" >census-files.json</text>
+<text x="450" y="224" class="lblf" text-anchor="start" >568 rows — the one measurement</text>
+<path d="M670,214 L856,214" class="ska"  marker-end="url(#s14-aa)"/>
+<rect x="860" y="203" width="280" height="22" rx="0" class="ska fp"/>
+<text x="870" y="218" class="lbla" text-anchor="start" >build.mjs — GALLERY COVER SURVEY</text>
+<text x="1130" y="218" class="lblf" text-anchor="end" >×1</text>
+<path d="M460,229 L460,246 L52,246 L52,740" class="ska" fill="none"/>
+<path d="M52,272 L62,272" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,302 L62,302" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,332 L62,332" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,362 L62,362" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,410 L62,410" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,440 L62,440" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,576 L62,576" class="ska"  marker-end="url(#s14-aa)"/>
+<path d="M52,740 L62,740" class="ska"  marker-end="url(#s14-aa)"/>
+<text x="106" y="236" class="lbla" text-anchor="start" >reads — nine consumers query the one measurement</text>
+<text x="66" y="258" class="lblf" text-anchor="start" >T1 · PURE TREE — the archive measured once, or a query over the master plate</text>
+<text x="66" y="396" class="lblf" text-anchor="start" >T2 · HISTORY — one git log over the same ref (historyLog); no working tree, no hard-coded today</text>
+<text x="66" y="474" class="lblf" text-anchor="start" >T3 · EXECUTION — the ref materialized AND installed; the tree measures itself</text>
+<rect x="84" y="490" width="292" height="32" rx="0" class="sk fp2"/>
+<text x="94" y="504" class="lbls" text-anchor="start" >installDeps(basis) — THE INSTALL HARNESS</text>
+<text x="94" y="516" class="lblf" text-anchor="start" >corepack pnpm --frozen-lockfile → .bin/turbo</text>
+<path d="M92,522 L92,535" class="sks" stroke-dasharray="3 3" fill="none"/>
+<rect x="66" y="261" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="261" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="276" class="lbls" text-anchor="middle" >T1</text>
+<text x="106" y="276" class="lbl" text-anchor="start" >census-bricks.mjs</text>
+<text x="368" y="276" class="lblf" text-anchor="end" >query · master plate</text>
+<path d="M376,272 L436,272" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="261" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="276" class="lbl" text-anchor="start" >census-bricks.json</text>
+<text x="660" y="276" class="lblf" text-anchor="end" >×2</text>
+<rect x="66" y="291" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="291" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="306" class="lbls" text-anchor="middle" >T1</text>
+<text x="106" y="306" class="lbl" text-anchor="start" >census-city.mjs</text>
+<text x="368" y="306" class="lblf" text-anchor="end" >query · master plate</text>
+<path d="M376,302 L436,302" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="291" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="306" class="lbl" text-anchor="start" >census-city.json</text>
+<text x="660" y="306" class="lblf" text-anchor="end" >×3</text>
+<rect x="66" y="321" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="321" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="336" class="lbls" text-anchor="middle" >T1</text>
+<text x="106" y="336" class="lbl" text-anchor="start" >census-npm.mjs</text>
+<text x="368" y="336" class="lblf" text-anchor="end" >live registry</text>
+<path d="M376,332 L436,332" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="321" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="336" class="lbl" text-anchor="start" >census-npm.json</text>
+<text x="660" y="336" class="lblf" text-anchor="end" >×1</text>
+<rect x="66" y="351" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="351" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="366" class="lbls" text-anchor="middle" >T1</text>
+<text x="106" y="366" class="lbl" text-anchor="start" >census-yard.mjs</text>
+<text x="368" y="366" class="lblf" text-anchor="end" >query · master plate</text>
+<path d="M376,362 L436,362" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="351" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="366" class="lbl" text-anchor="start" >census-yard.json</text>
+<text x="660" y="366" class="lblf" text-anchor="end" >×1</text>
+<rect x="66" y="399" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="399" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="414" class="lbls" text-anchor="middle" >T2</text>
+<text x="106" y="414" class="lbl" text-anchor="start" >census-steam.mjs</text>
+<text x="368" y="414" class="lblf" text-anchor="end" >plate + git log</text>
+<path d="M376,410 L436,410" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="399" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="414" class="lbl" text-anchor="start" >census-steam.json</text>
+<text x="660" y="414" class="lblf" text-anchor="end" >×1</text>
+<rect x="66" y="429" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="429" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="444" class="lbls" text-anchor="middle" >T2</text>
+<text x="106" y="444" class="lbl" text-anchor="start" >census-weather.mjs</text>
+<text x="368" y="444" class="lblf" text-anchor="end" >plate + git log</text>
+<path d="M376,440 L436,440" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="429" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="444" class="lbl" text-anchor="start" >census-weather.json</text>
+<text x="660" y="444" class="lblf" text-anchor="end" >×1</text>
+<rect x="66" y="535" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="535" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="550" class="lbls" text-anchor="middle" >T3</text>
+<text x="106" y="550" class="lbl" text-anchor="start" >census-bundle.mjs</text>
+<text x="368" y="550" class="lblf" text-anchor="end" >installed archive</text>
+<path d="M376,546 L436,546" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="535" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="550" class="lbl" text-anchor="start" >census-bundle.json</text>
+<text x="660" y="550" class="lblf" text-anchor="end" >×2</text>
+<rect x="66" y="565" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="565" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="580" class="lbls" text-anchor="middle" >T3</text>
+<text x="106" y="580" class="lbl" text-anchor="start" >census-doors.mjs</text>
+<text x="368" y="580" class="lblf" text-anchor="end" >installed archive</text>
+<path d="M376,576 L436,576" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="565" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="580" class="lbl" text-anchor="start" >census-doors.json</text>
+<text x="660" y="580" class="lblf" text-anchor="end" >×2</text>
+<rect x="66" y="595" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="595" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="610" class="lbls" text-anchor="middle" >T3</text>
+<text x="106" y="610" class="lbl" text-anchor="start" >census-mass3b.mjs</text>
+<text x="368" y="610" class="lblf" text-anchor="end" >installed archive</text>
+<path d="M376,606 L436,606" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="595" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="610" class="lbl" text-anchor="start" >census-mass3b.json</text>
+<text x="660" y="610" class="lblf" text-anchor="end" >×1</text>
+<rect x="66" y="625" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="625" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="640" class="lbls" text-anchor="middle" >T3</text>
+<text x="106" y="640" class="lbl" text-anchor="start" >census-nm.mjs</text>
+<text x="368" y="640" class="lblf" text-anchor="end" >installed archive</text>
+<path d="M376,636 L436,636" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="625" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="640" class="lbl" text-anchor="start" >census-nm.json</text>
+<text x="660" y="640" class="lblf" text-anchor="end" >×1</text>
+<rect x="66" y="655" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="655" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="670" class="lbls" text-anchor="middle" >T3</text>
+<text x="106" y="670" class="lbl" text-anchor="start" >census-plate.mjs</text>
+<text x="368" y="670" class="lblf" text-anchor="end" >installed archive</text>
+<path d="M376,666 L436,666" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="655" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="670" class="lbl" text-anchor="start" >census-plate.json</text>
+<text x="660" y="670" class="lblf" text-anchor="end" >×2</text>
+<rect x="66" y="685" width="310" height="22" rx="0" class="sk fp"/>
+<rect x="66" y="685" width="30" height="22" rx="0" class="sk fp2"/>
+<text x="81" y="700" class="lbls" text-anchor="middle" >T3</text>
+<text x="106" y="700" class="lbl" text-anchor="start" >census-shipped.mjs</text>
+<text x="368" y="700" class="lblf" text-anchor="end" >installed archive</text>
+<path d="M376,696 L436,696" class="sk"  marker-end="url(#s14-ai)"/>
+<rect x="440" y="685" width="230" height="22" rx="4" class="sk fp"/>
+<text x="450" y="700" class="lbl" text-anchor="start" >census-shipped.json</text>
+<text x="660" y="700" class="lblf" text-anchor="end" >×2</text>
+<rect x="66" y="729" width="310" height="22" rx="0" class="sks fp2"/>
+<text x="76" y="744" class="lbls" text-anchor="start" >census-overview.mjs</text>
+<text x="368" y="744" class="lblf" text-anchor="end" >query · files nothing</text>
+<rect x="66" y="761" width="310" height="22" rx="0" class="sks fnone"/>
+<text x="76" y="776" class="lblf" text-anchor="start" >census.mjs</text>
+<text x="368" y="776" class="lblf" text-anchor="end" >imported by nothing</text>
+<line x1="70" y1="761" x2="372" y2="783" class="skr" opacity="0.8"/>
+<path d="M670,302 C760,302 770,668 856,668" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,666 C760,666 770,344 856,344" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,606 C760,606 770,344 856,344" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,440 C760,440 770,668 856,668" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,696 C760,696 770,524 856,524" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,302 C760,302 770,452 856,452" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,636 C760,636 770,488 856,488" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,696 C760,696 770,560 856,560" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,302 C760,302 770,416 856,416" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,272 C760,272 770,380 856,380" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,362 C760,362 770,308 856,308" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,546 C760,546 770,596 856,596" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,332 C760,332 770,380 856,380" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,410 C760,410 770,452 856,452" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,666 C760,666 770,632 856,632" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,576 C760,576 770,596 856,596" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,576 C760,576 770,560 856,560" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,546 C760,546 770,560 856,560" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<path d="M670,272 C760,272 770,272 856,272" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/>
+<text x="765" y="262" class="lblf" text-anchor="middle" >reads — 19 imports</text>
+<rect x="860" y="261" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="261" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="276" class="lbls" text-anchor="middle" >S2</text>
+<text x="910" y="276" class="lbl" text-anchor="start" >THE BRICK ASSEMBLY</text>
+<text x="1130" y="276" class="lblf" text-anchor="end" >×1</text>
+<rect x="860" y="297" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="297" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="312" class="lbls" text-anchor="middle" >S3</text>
+<text x="910" y="312" class="lbl" text-anchor="start" >THE INSTRUMENT YARD</text>
+<text x="1130" y="312" class="lblf" text-anchor="end" >×1</text>
+<rect x="860" y="333" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="333" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="348" class="lbls" text-anchor="middle" >S3B</text>
+<text x="910" y="348" class="lbl" text-anchor="start" >THE WATCHED CITY</text>
+<text x="1130" y="348" class="lblf" text-anchor="end" >×2</text>
+<rect x="860" y="369" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="369" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="384" class="lbls" text-anchor="middle" >S4</text>
+<text x="910" y="384" class="lbl" text-anchor="start" >THE FAMILY SPINE</text>
+<text x="1130" y="384" class="lblf" text-anchor="end" >×2</text>
+<rect x="860" y="405" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="405" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="420" class="lbls" text-anchor="middle" >S7</text>
+<text x="910" y="420" class="lbl" text-anchor="start" >THE MEASURED CITY</text>
+<text x="1130" y="420" class="lblf" text-anchor="end" >×1</text>
+<rect x="860" y="441" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="441" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="456" class="lbls" text-anchor="middle" >S7B</text>
+<text x="910" y="456" class="lbl" text-anchor="start" >THE WORKING CITY</text>
+<text x="1130" y="456" class="lblf" text-anchor="end" >×2</text>
+<rect x="860" y="477" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="477" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="492" class="lbls" text-anchor="middle" >S8</text>
+<text x="910" y="492" class="lbl" text-anchor="start" >THE DELIVERED CITY</text>
+<text x="1130" y="492" class="lblf" text-anchor="end" >×1</text>
+<rect x="860" y="513" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="513" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="528" class="lbls" text-anchor="middle" >S9</text>
+<text x="910" y="528" class="lbl" text-anchor="start" >THE SHIPPED CITY</text>
+<text x="1130" y="528" class="lblf" text-anchor="end" >×1</text>
+<rect x="860" y="549" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="549" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="564" class="lbls" text-anchor="middle" >S10</text>
+<text x="910" y="564" class="lbl" text-anchor="start" >THE BUNDLED CITY</text>
+<text x="1130" y="564" class="lblf" text-anchor="end" >×3</text>
+<rect x="860" y="585" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="585" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="600" class="lbls" text-anchor="middle" >S11</text>
+<text x="910" y="600" class="lbl" text-anchor="start" >THE ENTRY QUARTERS</text>
+<text x="1130" y="600" class="lblf" text-anchor="end" >×2</text>
+<rect x="860" y="621" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="621" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="636" class="lbls" text-anchor="middle" >S12</text>
+<text x="910" y="636" class="lbl" text-anchor="start" >THE REGISTER PLATE</text>
+<text x="1130" y="636" class="lblf" text-anchor="end" >×1</text>
+<rect x="860" y="657" width="280" height="22" rx="0" class="sk fp"/>
+<rect x="860" y="657" width="40" height="22" rx="0" class="sk fp2"/>
+<text x="880" y="672" class="lbls" text-anchor="middle" >S13</text>
+<text x="910" y="672" class="lbl" text-anchor="start" >THE WEATHERING MAP</text>
+<text x="1130" y="672" class="lblf" text-anchor="end" >×2</text>
+<rect x="860" y="694" width="280" height="110" rx="0" class="sk fnone"/>
+<text x="870" y="712" class="lbls" text-anchor="start" >EXTERNAL INSTRUMENTS — 9</text>
+<text x="870" y="724" class="lblf" text-anchor="start" >from each plate’s wasAssociatedWith</text>
+<text x="870" y="740" class="lblf" text-anchor="start" >codeload.github.com …</text>
+<text x="870" y="754" class="lblf" text-anchor="start" >git log (historyLog)</text>
+<text x="870" y="768" class="lblf" text-anchor="start" >node:zlib gzip level…</text>
+<text x="870" y="782" class="lblf" text-anchor="start" >npm</text>
+<text x="870" y="796" class="lblf" text-anchor="start" >pnpm (corepack)</text>
+<text x="1010" y="740" class="lblf" text-anchor="start" >rolldown@1.2.6</text>
+<text x="1010" y="754" class="lblf" text-anchor="start" >scc 4.0.0 (mise x aq…</text>
+<text x="1010" y="768" class="lblf" text-anchor="start" >turbo 2.10.11</text>
+<text x="1010" y="782" class="lblf" text-anchor="start" >vite 8.2.2</text>
+
+<rect x="30" y="842" width="1100" height="327" rx="0" class="sk fnone"/>
+<text x="46" y="864" class="lbls" text-anchor="start" >PLATE SCHEDULE — EVERY FILED PLATE, ITS ONE WRITER, AND EVERY DRAWING THAT READS IT</text>
+<line x1="30" y1="874" x2="1130" y2="874" class="sks" opacity="0.7"/>
+<text x="46" y="890" class="lblf" text-anchor="start" >PLATE</text>
+<text x="250" y="890" class="lblf" text-anchor="start" >TIER</text>
+<text x="292" y="890" class="lblf" text-anchor="start" >WRITER</text>
+<text x="430" y="890" class="lblf" text-anchor="start" >BASIS</text>
+<text x="590" y="890" class="lblf" text-anchor="start" >READ BY</text>
+<text x="46" y="910" class="lbla" text-anchor="start" >census-files.json</text><text x="250" y="910" class="lbls" text-anchor="start" >T1</text><text x="292" y="910" class="lbls" text-anchor="start" >census-scc.mjs</text><text x="430" y="910" class="lblf" text-anchor="start" >archive</text><text x="590" y="910" class="lblf" text-anchor="start" >gallery cover, bricks, city, doors, npm, steam, weather, yard, overview</text>
+<text x="46" y="927" class="lbls" text-anchor="start" >census-bricks.json</text><text x="250" y="927" class="lbls" text-anchor="start" >T1</text><text x="292" y="927" class="lbls" text-anchor="start" >census-bricks.mjs</text><text x="430" y="927" class="lblf" text-anchor="start" >master plate</text><text x="590" y="927" class="lblf" text-anchor="start" >sheet 2, sheet 4</text>
+<text x="46" y="944" class="lbls" text-anchor="start" >census-city.json</text><text x="250" y="944" class="lbls" text-anchor="start" >T1</text><text x="292" y="944" class="lbls" text-anchor="start" >census-city.mjs</text><text x="430" y="944" class="lblf" text-anchor="start" >master plate</text><text x="590" y="944" class="lblf" text-anchor="start" >sheet 7, sheet 7B, sheet 13</text>
+<text x="46" y="961" class="lbls" text-anchor="start" >census-npm.json</text><text x="250" y="961" class="lbls" text-anchor="start" >T1</text><text x="292" y="961" class="lbls" text-anchor="start" >census-npm.mjs</text><text x="430" y="961" class="lblf" text-anchor="start" >live registry</text><text x="590" y="961" class="lblf" text-anchor="start" >sheet 4</text>
+<text x="46" y="978" class="lbls" text-anchor="start" >census-yard.json</text><text x="250" y="978" class="lbls" text-anchor="start" >T1</text><text x="292" y="978" class="lbls" text-anchor="start" >census-yard.mjs</text><text x="430" y="978" class="lblf" text-anchor="start" >master plate</text><text x="590" y="978" class="lblf" text-anchor="start" >sheet 3</text>
+<text x="46" y="995" class="lbls" text-anchor="start" >census-steam.json</text><text x="250" y="995" class="lbls" text-anchor="start" >T2</text><text x="292" y="995" class="lbls" text-anchor="start" >census-steam.mjs</text><text x="430" y="995" class="lblf" text-anchor="start" >master plate + git log</text><text x="590" y="995" class="lblf" text-anchor="start" >sheet 7B</text>
+<text x="46" y="1012" class="lbls" text-anchor="start" >census-weather.json</text><text x="250" y="1012" class="lbls" text-anchor="start" >T2</text><text x="292" y="1012" class="lbls" text-anchor="start" >census-weather.mjs</text><text x="430" y="1012" class="lblf" text-anchor="start" >master plate + git log</text><text x="590" y="1012" class="lblf" text-anchor="start" >sheet 13</text>
+<text x="46" y="1029" class="lbls" text-anchor="start" >census-bundle.json</text><text x="250" y="1029" class="lbls" text-anchor="start" >T3</text><text x="292" y="1029" class="lbls" text-anchor="start" >census-bundle.mjs</text><text x="430" y="1029" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1029" class="lblf" text-anchor="start" >sheet 10, sheet 11</text>
+<text x="46" y="1046" class="lbls" text-anchor="start" >census-doors.json</text><text x="250" y="1046" class="lbls" text-anchor="start" >T3</text><text x="292" y="1046" class="lbls" text-anchor="start" >census-doors.mjs</text><text x="430" y="1046" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1046" class="lblf" text-anchor="start" >sheet 10, sheet 11</text>
+<text x="46" y="1063" class="lbls" text-anchor="start" >census-mass3b.json</text><text x="250" y="1063" class="lbls" text-anchor="start" >T3</text><text x="292" y="1063" class="lbls" text-anchor="start" >census-mass3b.mjs</text><text x="430" y="1063" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1063" class="lblf" text-anchor="start" >sheet 3B</text>
+<text x="46" y="1080" class="lbls" text-anchor="start" >census-nm.json</text><text x="250" y="1080" class="lbls" text-anchor="start" >T3</text><text x="292" y="1080" class="lbls" text-anchor="start" >census-nm.mjs</text><text x="430" y="1080" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1080" class="lblf" text-anchor="start" >sheet 8</text>
+<text x="46" y="1097" class="lbls" text-anchor="start" >census-plate.json</text><text x="250" y="1097" class="lbls" text-anchor="start" >T3</text><text x="292" y="1097" class="lbls" text-anchor="start" >census-plate.mjs</text><text x="430" y="1097" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1097" class="lblf" text-anchor="start" >sheet 3B, sheet 12</text>
+<text x="46" y="1114" class="lbls" text-anchor="start" >census-shipped.json</text><text x="250" y="1114" class="lbls" text-anchor="start" >T3</text><text x="292" y="1114" class="lbls" text-anchor="start" >census-shipped.mjs</text><text x="430" y="1114" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1114" class="lblf" text-anchor="start" >sheet 9, sheet 10</text>
+<text x="46" y="1151" class="lblf" text-anchor="start" >TOTALS — 13 plates · 13 probes (T1 5 · T2 2 · T3 6) · 13 writes · 28 reads · 0 plates unread · every plate pinned to origin/main @ 35c6766 · commit 2026-09-03 · graph: 52 nodes / 63 edges</text>
+</svg></div>
+    <figcaption>The instrument drawn by its own instrument: 13 probe stations over three tiers write 13 filed plates, which 13 drawings read — and the one that matters most is read nine times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Method — the sheet surveys its own drawer.</strong> Every station, drawer, tab and edge on this plate is introspected at build time by <code>diagrams/generator/census-atlas.mjs</code>: a probe is any <code>census-*.mjs</code> that <em>writes</em> a plate; a shared instrument is one the probes <em>import</em> (there are two — <code>basis.mjs</code> and <code>census-query.mjs</code>); a tier is decided by which basis primitive the source actually calls — <code>materialize</code> alone is T1, <code>historyLog</code> is T2, <code>installDeps</code> is T3; and a reader is any generator file that constructs the plate's URL. The introspection <em>throws</em> rather than draws if a plate has anything but exactly one writer, if a probe names a plate that is not filed, if a drawing reads a plate nothing writes, or — the claim this sheet makes loudest — if the 13 filed plates disagree about the ref they were measured at. They do not: all 13 are pinned to origin/main @ 35c6766 · commit 2026-09-03. What is editorial here is what is editorial on every sheet: placement, the short basis labels, and this prose.</p>
+<p><strong>The hero is the fan-out.</strong> One <code>scc --by-file</code> pass over the archive produces <code>census-files.json</code>, 568 rows of per-file measurement, and nine things read it: eight stations that are group-by queries over the same rows — <code>census-bricks.mjs</code>, <code>census-city.mjs</code>, <code>census-doors.mjs</code>, <code>census-npm.mjs</code>, <code>census-steam.mjs</code>, <code>census-weather.mjs</code>, <code>census-yard.mjs</code>, <code>census-overview.mjs</code> — plus the gallery cover. That is the architecture's whole argument in one edge bundle: the city census, the yard census, the brick census, the weather map and the steam channel cannot disagree about how many files there are, because there is only one count. Cross-sheet totals reconcile by construction, not by discipline.</p>
+<p><strong>Three tiers, and what each one costs.</strong> five stations are T1 — the archive measured once, or a query over that measurement. two are T2: one <code>git log</code> over the same ref, with the window and «today» derived from the ref's own commit date. six are T3, and they are the expensive half of the office: the archive is not just extracted but <em>installed</em> — <code>corepack pnpm install --frozen-lockfile</code>, then the tree's own <code>node_modules/.bin/turbo</code> invoked directly — so that turbo dry-runs, node_modules closures, vite and rolldown builds all measure the ref rather than a checkout. The harness bar above the T3 band is the only sub-instrument drawn, because it is the only one that changes what a measurement <em>means</em>.</p>
+<p><strong>Five faults of the old regime, and the answer to each.</strong> Before this pipeline: (1) the basis was whatever was checked out, with hand-rolled skip lists per probe — answered by one <code>git archive</code> per ref, the tracked set exactly as git defines it; (2) member lists were frozen 30-entry arrays that predated a package's graduation, with <code>existsSync</code> guards that let a missing directory count as zero — answered by discovering members from the archive's own workspace file; (3) numbers travelled by clipboard, printed by a probe and pasted into a sheet — answered by filed plates and lookups that throw on a missing row; (4) time was hard-coded, so re-running today still aged files against last August — answered by deriving every date from the measured commit; (5) inputs came from out of band — a dead scratch clone, vanished <code>tmp/</code> generators, npm dates typed by hand — answered by six scripted execution probes and a registry probe. The one relic still in the drawer is drawn struck through: <code>census.mjs</code>, a working-tree walker imported by nothing and writing no plate.</p>
+<p><strong>What the drawing does not show, and the schedule does.</strong> With 13 drawers and 12 reading sheets, a complete edge render would be unreadable, so the drawing keeps the shape — one horizontal <em>writes</em> edge per station, a bundled accent bus for the master plate, thin curves for the rest — and the plate schedule carries the facts: writer, tier, basis and every reader, for all 13 plates. Two counts are worth reading off it. Zero plates are unread: every filed measurement is on a drawing somewhere, which was not true of this pipeline a week ago. And seven of the atlas's 19 sheets still have no plate behind them — sheet 1, sheet 2A, sheet 3A, sheet 5, sheet 6, sheet 7A, sheet 14 — because they draw arguments, mechanisms and metering that no census produces. This sheet is honestly among them: it has no plate of its own; it reads the generator.</p>
+<p><strong>Why a flow graph and not a city.</strong> Sheet 3 refuses to draw a task manager as a place, and the same refusal applies here. A pipeline's truth is dataflow — ref to archive to measurement to plate to drawing — and the lego/containment vocabulary the atlas uses elsewhere would encode a claim about <em>what contains what</em>, which is exactly the wrong claim about a pipeline. The vocabulary that fits is the one the atlas already owns: probes as survey instruments, snapshots as filed plates, sheets as finished drawings. Tier is station type; the cabinet is a cabinet; the rack is a rack. The node and edge arrays behind this drawing (52 nodes over four kinds, 63 edges over writes, reads and imports) are also the data model the interactive lane will mount — the picture is a query, not a hand-drawing.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="10" height="12" class="sk fp2"/><rect x="14" y="3" width="30" height="12" class="sk fp"/></svg></td><td>probe station — tier tag, then the source file that writes one plate</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="40" height="12" class="ska fp"/></svg></td><td>the master station and the master plate — one measurement, many views</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="40" height="12" class="sk fp" rx="4"/></svg></td><td>a filed plate — one drawer of diagrams/data/</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="10" height="12" class="sk fp2"/><rect x="14" y="3" width="30" height="12" class="sk fp"/><line x1="4" y1="15" x2="44" y2="15" class="sk"/></svg></td><td>sheet rack — a numbered atlas drawing that reads a plate</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="sk" marker-end="url(#s14-ai)"/></svg></td><td>writes — a station files its one plate</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="ska" marker-end="url(#s14-aa)"/></svg></td><td>reads the master plate — the fan-out bus</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><path d="M4,9 C16,9 28,9 40,9" class="sks" opacity="0.5" fill="none" marker-end="url(#s14-as)"/></svg></td><td>reads — a drawing imports a plate</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="sks" stroke-dasharray="4 4"/></svg></td><td>shares the basis — same ref, re-materialized</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="40" height="12" class="sks fnone"/><line x1="4" y1="3" x2="44" y2="15" class="skr"/></svg></td><td>struck — files no plate and nothing imports it</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>THE ALTITUDE ATLAS</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE SURVEY OFFICE</div>
+  <div><span class="fld">SCALE</span>THE CENSUS PIPELINE</div>
+  <div><span class="fld">FORM</span>FLOW GRAPH</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-08-17 · A</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>14 OF 14</div>
+</div>
+    </div>
+  </div>
+</section>
