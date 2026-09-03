@@ -14,9 +14,8 @@
 // snapshot, not silently swallowed.  sloc = scc 4.0.0 `Code` (string-aware:
 // template-literal interiors are code).
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { materialize, refFromArgv, DATA_DIR } from './basis.mjs';
+import { discoverMembers, materialize, refFromArgv } from './basis.mjs';
+import { writeData } from './census-query.mjs';
 
 const SCC = 'aqua:boyter/scc@4.0.0';
 const basis = materialize(refFromArgv());
@@ -41,14 +40,11 @@ try {
     used: `git archive ${basis.ref} @ ${basis.sha}`,
     wasAssociatedWith: ['scc 4.0.0 (mise x aqua:boyter/scc)', 'git'],
     tracked: basis.files.length,
+    members: discoverMembers(basis),
     unclassified: basis.files.filter((f) => !classified.has(f)),
   };
 
-  // One row per line: the snapshot is a reviewed, committed plate — diffs must read.
-  const json = JSON.stringify(meta, null, 2).replace(/\n\}$/,
-    ',\n  "rows": [\n' + rows.map((r) => '    ' + JSON.stringify(r)).join(',\n') + '\n  ]\n}');
-  mkdirSync(DATA_DIR, { recursive: true });
-  writeFileSync(join(DATA_DIR, 'census-files.json'), json + '\n');
+  writeData('census-files.json', { ...meta, rows }, ['members', 'unclassified', 'rows']);
   console.log(`census-files.json: ${basis.ref} @ ${basis.sha} · ${rows.length} classified / ${basis.files.length} tracked`);
 } finally {
   basis.cleanup();

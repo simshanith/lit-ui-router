@@ -1,0 +1,20 @@
+{
+  "ref": "origin/main",
+  "sha": "35c6766",
+  "commitDate": "2026-09-03T00:02:22Z",
+  "generatedAtTime": "2026-09-03T03:14:15.213Z",
+  "wasGeneratedBy": "diagrams/generator/census-bricks.mjs",
+  "used": "diagrams/data/census-files.json @ 35c6766",
+  "wasAssociatedWith": [
+    "scc 4.0.0 (mise x aqua:boyter/scc)",
+    "codeload.github.com ui-router/core@6.1.2 source tarball"
+  ],
+  "rows": [
+    {"name":"@uirouter/core","version":"6.1.2","files":80,"sloc":5272,"studs":36,"shape":"2x4","courses":27},
+    {"name":"lit-ui-router","version":"1.11.1","files":13,"sloc":1383,"studs":10,"shape":"2x4","courses":5},
+    {"name":"ui-router-server","version":"0.1.1","files":8,"sloc":1141,"studs":8,"shape":"2x4","courses":3},
+    {"name":"eslint-plugin-lit-ui-router","version":"1.0.0-rc.1","files":2,"sloc":299,"studs":2,"shape":"1x2","courses":1},
+    {"name":"lit-ui-router-mobx","version":"0.5.0","files":4,"sloc":133,"studs":1,"shape":"1x1","courses":2},
+    {"name":"ui-router-navigation-location-plugin","version":"0.3.0","files":1,"sloc":105,"studs":1,"shape":"1x1","courses":1}
+  ]
+}

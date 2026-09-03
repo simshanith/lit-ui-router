@@ -1,0 +1,31 @@
+{
+  "ref": "origin/main",
+  "sha": "35c6766",
+  "commitDate": "2026-09-03T00:02:22Z",
+  "generatedAtTime": "2026-09-03T03:14:14.257Z",
+  "wasGeneratedBy": "diagrams/generator/census-yard.mjs",
+  "used": "diagrams/data/census-files.json @ 35c6766",
+  "wasAssociatedWith": [],
+  "orphans": [
+
+  ],
+  "rows": [
+    {"instrument":"src (5 published packages)","files":28,"sloc":3061},
+    {"instrument":"build — @tools/oxc-emit","files":5,"sloc":222},
+    {"instrument":"pack — packPublishTarball","files":11,"sloc":356},
+    {"instrument":"published-diff","files":5,"sloc":405},
+    {"instrument":"check:exports","files":2,"sloc":149},
+    {"instrument":"peer-floor tier-1","files":2,"sloc":106},
+    {"instrument":"peer-floor tier-2","files":3,"sloc":73},
+    {"instrument":"docs deploy watch","files":4,"sloc":508},
+    {"instrument":"publish — release-it","files":23,"sloc":913},
+    {"instrument":"compat-guards","files":6,"sloc":160},
+    {"instrument":"dts-backtest","files":1,"sloc":291},
+    {"instrument":"tests — vitest harness","files":2,"sloc":32},
+    {"instrument":"lint & probe fleet","files":18,"sloc":1845},
+    {"instrument":"@tools/shared","files":10,"sloc":309},
+    {"instrument":"typedoc plugin","files":5,"sloc":759},
+    {"instrument":"e2e — cypress","files":7,"sloc":510},
+    {"instrument":"sample apps","files":55,"sloc":3099}
+  ]
+}

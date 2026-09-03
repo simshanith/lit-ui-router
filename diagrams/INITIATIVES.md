@@ -1,7 +1,13 @@
 # Census pipeline rework — notes & initiatives
 
 Status: DESIGNED 2026-09-02; I1 LANDED 2026-09-02 (basis.mjs + census-scc.mjs
-master snapshot + overview as query, behavior-identical at main @ 35c6766). Basis for the design: full survey of
+master snapshot + overview as query, behavior-identical at main @ 35c6766).
+I2 LANDED 2026-09-02: members discovered from the archive's workspace files
+(31 found — the frozen lists' 30 + eslint-plugin-lit-ui-router);
+city/yard/bricks are queries over the master snapshot writing their own
+diagrams/data/*.json plates; bricks fetches @uirouter/core's version-pinned
+SOURCE tarball from codeload (the npm tarball ships only lib/) — measured
+identical to the old scratch clone (80f/5,272 sloc @ 6.1.2). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,

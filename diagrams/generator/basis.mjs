@@ -6,7 +6,7 @@
 // with cwd at the tree root because scc's shebang/filename detection silently
 // returns nothing for absolute paths.
 import { execFileSync } from 'node:child_process';
-import { mkdtempSync, readdirSync, rmSync } from 'node:fs';
+import { mkdtempSync, readFileSync, readdirSync, rmSync } from 'node:fs';
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
@@ -36,4 +36,38 @@ export const materialize = (ref) => {
   const files = walk(dir).map((f) => f.slice(dir.length + 1)).sort();
 
   return { ref, sha, dir, files, commitDate, cleanup: () => rmSync(dir, { recursive: true, force: true }) };
+};
+
+// Members discovered from the archive's OWN pnpm-workspace.yaml + package.json
+// files — never a frozen list (INITIATIVES.md fault 2: a new member appears
+// automatically; a vanished one can't silently count as zero).
+export const discoverMembers = ({ dir, files }) => {
+  const yaml = readFileSync(join(dir, 'pnpm-workspace.yaml'), 'utf8');
+  const globs = [];
+  let inPackages = false;
+  for (const line of yaml.split('\n')) {
+    if (/^packages:/.test(line)) { inPackages = true; continue; }
+    if (!inPackages) continue;
+    const m = line.match(/^\s+-\s+['"]?([\w./@*-]+)/);
+    if (m) globs.push(m[1]);
+    else if (line.trim()) break;
+  }
+
+  const fileSet = new Set(files);
+  const dirs = new Set();
+  for (const g of globs) {
+    if (g.endsWith('/*')) {
+      const prefix = g.slice(0, -1);
+      for (const f of files) {
+        if (!f.startsWith(prefix)) continue;
+        const seg = f.slice(prefix.length).split('/')[0];
+        if (fileSet.has(`${prefix}${seg}/package.json`)) dirs.add(prefix + seg);
+      }
+    } else if (fileSet.has(`${g}/package.json`)) dirs.add(g);
+  }
+
+  return [...dirs].sort().map((d) => {
+    const pkg = JSON.parse(readFileSync(join(dir, d, 'package.json'), 'utf8'));
+    return { dir: d, name: pkg.name, version: pkg.version ?? null, private: !!pkg.private };
+  });
 };
