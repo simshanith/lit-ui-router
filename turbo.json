@@ -167,8 +167,11 @@
     },
     "//#check:patches": {
       // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
-      // could rotate a patch target re-runs the check
+      // could rotate a patch target re-runs the check; $TURBO_DEFAULT$ so the
+      // list can't go stale into a false cache hit, the globs stay as
+      // documentation of what the check reads
       "inputs": [
+        "$TURBO_DEFAULT$",
         "check-patches.ts",
         "patches/**",
         "pnpm-workspace.yaml",
