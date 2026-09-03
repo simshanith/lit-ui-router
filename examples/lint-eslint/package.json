@@ -22,7 +22,7 @@
     "eslint-formatter-pretty": "^7.1.0",
     "eslint-formatter-tap": "^9.0.1",
     "eslint-plugin-lit-a11y": "^5.1.1",
-    "eslint-plugin-lit-ui-router": "1.0.0-rc.1",
+    "eslint-plugin-lit-ui-router": "1.0.0-rc.2",
     "typescript": "^6.0.3",
     "typescript-eslint": "^8.69.0",
     "vite": "^8.2.1"
