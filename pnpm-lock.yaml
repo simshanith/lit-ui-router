@@ -776,21 +776,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
-      '@uirouter/core':
-        specifier: 'catalog:'
-        version: 6.1.2
-      lit:
-        specifier: 'catalog:'
-        version: 3.3.3
-      lit-ui-router:
-        specifier: workspace:*
-        version: link:../packages/lit-ui-router
-      lit-ui-router-mobx:
-        specifier: workspace:*
-        version: link:../packages/lit-ui-router-mobx
-      mobx:
-        specifier: 'catalog:'
-        version: 7.0.3
       oxfmt:
         specifier: 'catalog:'
         version: 0.64.0
@@ -800,9 +785,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
-      ui-router-navigation-location-plugin:
-        specifier: workspace:*
-        version: link:../packages/navigation-location-plugin
       vite:
         specifier: 'catalog:'
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
@@ -1484,27 +1466,6 @@ importers:
       '@types/semver':
         specifier: 'catalog:'
         version: 7.8.0
-      '@uirouter/core':
-        specifier: 'catalog:'
-        version: 6.1.2
-      eslint:
-        specifier: 'catalog:'
-        version: 10.9.1(jiti@2.7.0)(supports-color@10.2.2)
-      eslint-plugin-lit-ui-router:
-        specifier: workspace:*
-        version: link:../../packages/eslint-plugin-lit-ui-router
-      lit:
-        specifier: 'catalog:'
-        version: 3.3.3
-      lit-ui-router:
-        specifier: workspace:*
-        version: link:../../packages/lit-ui-router
-      lit-ui-router-mobx:
-        specifier: workspace:*
-        version: link:../../packages/lit-ui-router-mobx
-      mobx:
-        specifier: 'catalog:'
-        version: 7.0.3
       oxfmt:
         specifier: 'catalog:'
         version: 0.64.0
@@ -1523,12 +1484,6 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
-      ui-router-navigation-location-plugin:
-        specifier: workspace:*
-        version: link:../../packages/navigation-location-plugin
-      ui-router-server:
-        specifier: workspace:*
-        version: link:../../packages/ui-router-server
 
   tools/release-config:
     devDependencies:
@@ -1556,6 +1511,9 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
+      jsonc-parser:
+        specifier: 'catalog:'
+        version: 3.3.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.64.0

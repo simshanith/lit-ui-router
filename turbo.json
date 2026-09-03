@@ -175,9 +175,10 @@
       ]
     },
     "//#check:docs-api-deps": {
-      // any manifest can gain or lose a docs:api script, or docs can lose a dep
+      // any manifest can gain or lose a docs:api script, or docs can lose an edge
       "inputs": [
         "check-docs-api-deps.ts",
+        "docs/turbo.json",
         "**/package.json",
         "pnpm-workspace.yaml",
         "tools/shared/src/**"

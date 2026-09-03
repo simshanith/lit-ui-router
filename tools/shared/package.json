@@ -13,6 +13,7 @@
     "./globs.ts": "./src/globs.ts",
     "./manifest.ts": "./src/manifest.ts",
     "./retry.ts": "./src/retry.ts",
+    "./turbo.ts": "./src/turbo.ts",
     "./types.ts": "./src/types.ts",
     "./workspace.ts": "./src/workspace.ts"
   },
@@ -29,6 +30,7 @@
     "@pnpm/workspace.projects-reader": "catalog:",
     "@pnpm/workspace.workspace-manifest-reader": "catalog:",
     "@types/node": "catalog:",
+    "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"

@@ -11,12 +11,22 @@
       // The one publish-shape pack: strip devDependencies/scripts and pack
       // every publishable package into .cache/pack/<name>.tgz, once. check:pack,
       // check:exports, and check:published-diff READ these tarballs instead of
-      // each re-packing. ^build restores fresh dist and folds every dependency's
-      // own inputs (manifest included) into this hash; pnpm-workspace.yaml
-      // carries the catalogs that substitute into packed manifests. The publish
-      // workflow deliberately does NOT read this cache (see the publish task's
-      // release-pack step) — the unsigned artifact stays off the attestation.
-      "dependsOn": ["^build"],
+      // each re-packing. The package-qualified build edges restore fresh dist
+      // and fold each package's own inputs (manifest included) into this hash;
+      // this package imports none of them, so there is no workspace: edge for
+      // `^` to walk, and assertSelfDeclaredDeps fails the run if a publishable
+      // package is missing here. pnpm-workspace.yaml carries the catalogs that
+      // substitute into packed manifests. The publish workflow deliberately
+      // does NOT read this cache (see the publish task's release-pack step) —
+      // the unsigned artifact stays off the attestation.
+      "dependsOn": [
+        "^build",
+        "eslint-plugin-lit-ui-router#build",
+        "lit-ui-router#build",
+        "lit-ui-router-mobx#build",
+        "ui-router-navigation-location-plugin#build",
+        "ui-router-server#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "outputs": [".cache/pack/*.tgz"]
     },

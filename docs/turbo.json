@@ -31,18 +31,28 @@
       "persistent": true
     },
     "build": {
-      // docs devDepends on the docs:api producers purely so this `^` reaches
-      // them (it walks direct deps only): unimported by design, not prunable.
+      // The docs:api producers are package-qualified: docs never imports them,
+      // so there is no workspace: edge for `^` to walk. //#check:docs-api-deps
+      // keeps every task listing one of these listing all of them.
       "dependsOn": [
         "^build",
-        "^docs:api",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-server#docs:api",
         "examples#build:embeds",
         "types:worker"
       ],
       "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
     },
     "typecheck": {
-      "dependsOn": ["^build:types", "^docs:api"],
+      "dependsOn": [
+        "^build:types",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-server#docs:api"
+      ],
       "with": ["typecheck:vue", "typecheck:worker", "typecheck:worker:tests"]
     },
     "test": {
@@ -70,7 +80,14 @@
       "outputs": ["worker/worker-configuration.d.ts"]
     },
     "docs": {
-      "dependsOn": ["^build", "^docs:api", "examples#build:embeds"],
+      "dependsOn": [
+        "^build",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-server#docs:api",
+        "examples#build:embeds"
+      ],
       "cache": false,
       "persistent": true,
       // dev-server browser open toggle (vite.config.ts server.open)

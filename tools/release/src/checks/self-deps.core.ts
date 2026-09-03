@@ -1,29 +1,23 @@
-// Pure logic for the static-edges-vs-dynamic-discovery guard: the check:*
-// turbo tasks hash the packed packages through ^build, which only covers
-// packages declared in @tools/release's own manifest — an undeclared
-// publishable package would get stale cached verdicts. The IO (reading this
-// package's manifest) lives in ./self-deps.ts.
+// Pure logic for the static-edges-vs-dynamic-discovery guard: pack:all hashes
+// the packed packages through package-qualified `<name>#build` edges in
+// tools/release/turbo.json — an undeclared publishable package would get
+// stale cached verdicts. The IO (reading turbo.json) lives in ./self-deps.ts.
 
-import { DEP_FIELDS } from './types.ts';
-import type { PackageManifest } from '@tools/shared/types.ts';
-
-/** Publishable member names absent from every dependency field of `manifest`. */
+/** Publishable member names whose `<name>#build` is absent from `packAllDeps`. */
 export function undeclaredMembers(
   publishable: string[],
-  manifest: PackageManifest,
+  packAllDeps: string[],
 ): string[] {
-  const declared = new Set(
-    DEP_FIELDS.flatMap((field) => Object.keys(manifest[field] ?? {})),
-  );
-  return publishable.filter((name) => !declared.has(name)).sort();
+  const declared = new Set(packAllDeps);
+  return publishable.filter((name) => !declared.has(`${name}#build`)).sort();
 }
 
-/** Error text telling the maintainer exactly which devDeps to add. */
+/** Error text telling the maintainer exactly which edges to add. */
 export function formatUndeclared(missing: string[]): string {
   return (
-    `publishable package(s) not declared in tools/release/package.json: ${missing.join(', ')}. ` +
-    'Add each as a "workspace:*" devDependency of @tools/release — the check:pack and ' +
-    'check:published-diff turbo tasks hash packed packages via ^build, so an undeclared ' +
-    'package silently gets stale cached verdicts.'
+    `publishable package(s) not ordered by tools/release/turbo.json pack:all: ${missing.join(', ')}. ` +
+    `Add ${missing.map((name) => `"${name}#build"`).join(', ')} to its dependsOn — ` +
+    'check:pack and check:published-diff hash packed packages through that edge, so an ' +
+    'undeclared package silently gets stale cached verdicts.'
   );
 }

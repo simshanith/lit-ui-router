@@ -28,7 +28,7 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  // The same invariant every check relies on: `^build` covers each package.
+  // The same invariant every check relies on: pack:all orders on each package.
   assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
   // Clear stale tarballs so a removed package leaves no ghost output.
