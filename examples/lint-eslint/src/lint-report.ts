@@ -35,6 +35,9 @@ export class LintReportPanel extends LitElement {
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 13px;
     }
+    :host([hidden]) {
+      display: none;
+    }
     h2 {
       margin: 0;
       padding: 10px 14px;

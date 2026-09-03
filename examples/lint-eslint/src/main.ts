@@ -7,7 +7,10 @@ import {
   uiSref,
   uiSrefActive,
 } from 'lit-ui-router';
-import lintReport, { type LintReport } from 'virtual:lint-report';
+import lintReport, {
+  html as lintHtml,
+  type LintReport,
+} from 'virtual:lint-report';
 import './lint-report.js';
 
 // Positive control: delete `${uiSref('about')}` from the second anchor and the
@@ -49,6 +52,13 @@ router.urlService.rules.initial({ state: 'hello' });
 router.start();
 
 let report: LintReport = lintReport;
+let reportHtml = lintHtml;
+let tab: 'panel' | 'html' = 'panel';
+
+const selectTab = (next: typeof tab) => () => {
+  tab = next;
+  renderApp();
+};
 
 // one template factory, so re-rendering reuses the directive instances
 const renderApp = () =>
@@ -57,10 +67,31 @@ const renderApp = () =>
       <ui-router .uiRouter=${router}>
         <app-root></app-root>
       </ui-router>
+      <div class="tabs">
+        <button
+          class=${tab === 'panel' ? 'selected' : ''}
+          @click=${selectTab('panel')}
+        >
+          Report
+        </button>
+        <button
+          class=${tab === 'html' ? 'selected' : ''}
+          @click=${selectTab('html')}
+        >
+          ESLint html
+        </button>
+      </div>
       <lint-report
+        ?hidden=${tab !== 'panel'}
         .results=${report.results}
         .ruleDocs=${report.ruleDocs}
       ></lint-report>
+      <iframe
+        ?hidden=${tab !== 'html'}
+        title="ESLint html formatter"
+        sandbox="allow-same-origin"
+        srcdoc=${reportHtml}
+      ></iframe>
     `,
     document.getElementById('root')!,
   );
@@ -72,6 +103,7 @@ if (import.meta.hot) {
   import.meta.hot.accept('virtual:lint-report', (mod) => {
     if (!mod) return;
     report = mod.default as LintReport;
+    reportHtml = mod.html as string;
     renderApp();
   });
 }

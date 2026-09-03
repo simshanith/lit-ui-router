@@ -24,8 +24,10 @@ npm run build    # bakes the report into dist/
 
 In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/main.ts` accepts it and re-renders. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 0 problems in 2 files`).
 
+The page shows the same lint two ways, on a tab strip: **Report** is that custom panel, and **ESLint html** is an `<iframe>` of ESLint's own built-in `html` formatter, rendered from the same results (a loaded formatter supplies `cwd` and `rulesMeta` itself, so its rule links work).
+
 `src/lint-report.ts` is a plain `<lint-report>` lit element that takes `.results` (the ESLint result shape) and `.ruleDocs` as properties. It knows nothing about ESLint or Vite, so a browser-side linter could drive the same element.
 
 ## Positive control
 
-Delete `${uiSref('about')}` from the second anchor in `src/main.ts` and save: the panel reports `lit-ui-router/anchor-is-valid` on the now-hrefless anchor at `23:9`, with the rule id linked to its docs. Restore it and the panel goes back to `✓ 0 problems`. `npm run lint` reports the same thing in the terminal.
+Delete `${uiSref('about')}` from the second anchor in `src/main.ts` and save: the panel reports `lit-ui-router/anchor-is-valid` on the now-hrefless anchor at `26:9`, with the rule id linked to its docs. Restore it and the panel goes back to `✓ 0 problems`. `npm run lint` reports the same thing in the terminal.

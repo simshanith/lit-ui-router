@@ -7,7 +7,7 @@ const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 const LINT_TARGETS = ['src/**/*.ts'];
 const CONFIG_FILE = 'eslint.config.js';
 
-const EMPTY = { results: [], ruleDocs: {} };
+const EMPTY = { results: [], ruleDocs: {}, html: '' };
 
 function lintReportPlugin(): Plugin {
   const root = import.meta.dirname;
@@ -22,9 +22,17 @@ function lintReportPlugin(): Plugin {
       const url = rule?.docs?.url;
       if (url) ruleDocs[ruleId] = url;
     }
+    const relative = (filePath: string) =>
+      filePath.slice(root.length + 1).replaceAll('\\', '/');
+    // ESLint's own formatter, over the full results — before the strip below.
+    // A loaded formatter supplies `cwd`/`rulesMeta` itself, so rule links work.
+    const formatter = await eslint.loadFormatter('html');
+    const html = await formatter.format(
+      lintResults.map((r) => ({ ...r, filePath: relative(r.filePath) })),
+    );
     // the ESLint result shape minus `source`, which the panel never renders
     const results = lintResults.map((result) => ({
-      filePath: result.filePath.slice(root.length + 1).replaceAll('\\', '/'),
+      filePath: relative(result.filePath),
       errorCount: result.errorCount,
       warningCount: result.warningCount,
       messages: result.messages.map((m) => ({
@@ -44,7 +52,12 @@ function lintReportPlugin(): Plugin {
     console.log(
       `lint-report: ${total} problem${total === 1 ? '' : 's'} in ${results.length} file${results.length === 1 ? '' : 's'}`,
     );
-    return { results, ruleDocs };
+    return { results, ruleDocs, html };
+  }
+
+  function emit(report: { html: string }) {
+    const { html, ...rest } = report;
+    return `export default ${JSON.stringify(rest)};\nexport const html = ${JSON.stringify(html)};`;
   }
 
   return {
@@ -56,10 +69,10 @@ function lintReportPlugin(): Plugin {
       if (id !== RESOLVED_ID) return undefined;
       // lint problems are this module's payload, never a build failure
       try {
-        return `export default ${JSON.stringify(await run())};`;
+        return emit(await run());
       } catch (error) {
         this.warn(`lint-report: ${String(error)}`);
-        return `export default ${JSON.stringify(EMPTY)};`;
+        return emit(EMPTY);
       }
     },
     configureServer(server) {

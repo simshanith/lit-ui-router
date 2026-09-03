@@ -6,6 +6,9 @@ declare module 'virtual:lint-report' {
     ruleDocs: Record<string, string>;
   }
 
+  /** The same results through ESLint's built-in `html` formatter. */
+  export const html: string;
+
   const report: LintReport;
   export default report;
 }

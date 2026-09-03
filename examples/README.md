@@ -68,6 +68,7 @@ A Vite project that lints itself: the same small lit app as **helloworld**, an `
 - `typescript-eslint` over `src/**/*.ts`, syntax-only: the rule reads the template AST, never type information
 - `typescript` pinned to the 6 line, because typescript-eslint needs the TypeScript JS API that TS 7 no longer ships
 - A local Vite plugin in `vite.config.ts` (no extra dependency) serving a `virtual:lint-report` module: `ESLint#lintFiles()` in its `load` hook, re-run on save via `server.reloadModule`, baked into `dist` by `vite build`
+- Two views of the same results on a tab strip: a data-only `<lint-report>` lit element, and an `<iframe>` of ESLint's own built-in `html` formatter
 - `uiSref` anchors that lint clean, with the positive control written up in the example's README
 - `lint:tap` (one TAP line per file) alongside the plain `lint`, and `lint:watch` (chokidar-cli + `eslint-formatter-pretty`) as the terminal-only alternative to the dev server
 
