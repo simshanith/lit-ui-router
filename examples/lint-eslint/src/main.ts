@@ -1,5 +1,5 @@
 import { hashLocationPlugin } from '@uirouter/core';
-import { html, LitElement, render } from 'lit';
+import { css, html, LitElement, render } from 'lit';
 import { customElement } from 'lit/decorators.js';
 import {
   LitStateDeclaration,
@@ -7,24 +7,45 @@ import {
   uiSref,
   uiSrefActive,
 } from 'lit-ui-router';
-import lintReport, {
-  html as lintHtml,
-  type LintReport,
-} from 'virtual:lint-report';
-import './lint-report.js';
+import { EslintHtmlView, LintReportView } from './report-views.js';
 
-// Positive control: delete `${uiSref('about')}` from the second anchor and the
-// panel below reports lit-ui-router/anchor-is-valid on it.
+// Positive control: delete `${uiSref('eslint-html')}` from the second tab and
+// the panel reports lit-ui-router/anchor-is-valid on it — while the tab stops
+// navigating, which is the reason the rule exists.
 @customElement('app-root')
 export class AppRoot extends LitElement {
+  static styles = css`
+    nav {
+      display: flex;
+      gap: 4px;
+    }
+    nav a {
+      font-size: 13px;
+      padding: 6px 12px;
+      border: 1px solid #d0d0d0;
+      border-radius: 4px 4px 0 0;
+      border-bottom: 0;
+      background: #f6f6f6;
+      color: #333;
+      text-decoration: none;
+      cursor: pointer;
+    }
+    nav a.active {
+      background: #fff;
+      font-weight: 600;
+    }
+  `;
+
   render() {
     return html`
       <nav>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('hello')}
-          >Hello</a
+        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('report')}
+          >Report</a
         >
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('about')}
-          >About</a
+        <a
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('eslint-html')}
+          >ESLint html</a
         >
       </nav>
       <ui-view></ui-view>
@@ -32,77 +53,31 @@ export class AppRoot extends LitElement {
   }
 }
 
-const helloState: LitStateDeclaration = {
-  name: 'hello',
-  url: '/hello',
-  component: () => html`<h3>Hello World!</h3>`,
+// The two views of one lint run are the two states: the hash picks the panel.
+const reportState: LitStateDeclaration = {
+  name: 'report',
+  url: '/report',
+  component: LintReportView,
 };
 
-const aboutState: LitStateDeclaration = {
-  name: 'about',
-  url: '/about',
-  component: () => html`<h3>About</h3>`,
+const htmlState: LitStateDeclaration = {
+  name: 'eslint-html',
+  url: '/eslint-html',
+  component: EslintHtmlView,
 };
 
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-router.stateRegistry.register(helloState);
-router.stateRegistry.register(aboutState);
-router.urlService.rules.initial({ state: 'hello' });
+router.stateRegistry.register(reportState);
+router.stateRegistry.register(htmlState);
+router.urlService.rules.initial({ state: 'report' });
 router.start();
 
-let report: LintReport = lintReport;
-let reportHtml = lintHtml;
-let tab: 'panel' | 'html' = 'panel';
-
-const selectTab = (next: typeof tab) => () => {
-  tab = next;
-  renderApp();
-};
-
-// one template factory, so re-rendering reuses the directive instances
-const renderApp = () =>
-  render(
-    html`
-      <ui-router .uiRouter=${router}>
-        <app-root></app-root>
-      </ui-router>
-      <div class="tabs">
-        <button
-          class=${tab === 'panel' ? 'selected' : ''}
-          @click=${selectTab('panel')}
-        >
-          Report
-        </button>
-        <button
-          class=${tab === 'html' ? 'selected' : ''}
-          @click=${selectTab('html')}
-        >
-          ESLint html
-        </button>
-      </div>
-      <lint-report
-        ?hidden=${tab !== 'panel'}
-        .results=${report.results}
-        .ruleDocs=${report.ruleDocs}
-      ></lint-report>
-      <iframe
-        ?hidden=${tab !== 'html'}
-        title="ESLint html formatter"
-        srcdoc=${reportHtml}
-      ></iframe>
-    `,
-    document.getElementById('root')!,
-  );
-
-renderApp();
-
-// re-render in place when the dev server re-lints, instead of reloading
-if (import.meta.hot) {
-  import.meta.hot.accept('virtual:lint-report', (mod) => {
-    if (!mod) return;
-    report = mod.default as LintReport;
-    reportHtml = mod.html as string;
-    renderApp();
-  });
-}
+render(
+  html`
+    <ui-router .uiRouter=${router}>
+      <app-root></app-root>
+    </ui-router>
+  `,
+  document.getElementById('root')!,
+);
