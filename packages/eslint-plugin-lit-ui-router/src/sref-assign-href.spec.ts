@@ -106,10 +106,102 @@ ruleTester.run('sref-assign-href', srefAssignHref, {
   ],
 });
 
+// `linkElements` (#676): a declared link element keeps the `true` default, the
+// way a native link does. Undeclared tags are unknown, not non-links, so the
+// blanket custom-element exemption is unchanged.
+ruleTester.run('sref-assign-href (linkElements option)', srefAssignHref, {
+  valid: [
+    {
+      name: 'a declared link element forwards href, so the default is right',
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home')}>Home</sp-link>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+    },
+    {
+      name: 'an undeclared custom element keeps its blanket exemption',
+      code: `${IMPORTS}html\`<sp-button \${uiSref('home')}>Home</sp-button>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+    },
+    {
+      name: 'a declaration is taken at its word, even for a native tag',
+      code: `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+      options: [{ linkElements: ['button'] }],
+    },
+    {
+      name: 'a declaration is matched lowercased, as parse5 reports tags',
+      code: `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+      options: [{ linkElements: ['BUTTON'] }],
+    },
+  ],
+  invalid: [
+    {
+      name: 'declaring one tag says nothing about a native non-link',
+      code: `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'hrefOnNonLink', data: { tag: 'button' } }],
+      output: `${IMPORTS}html\`<button \${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>\`;`,
+    },
+    {
+      name: 'an empty declaration is no declaration',
+      code: `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+      options: [{ linkElements: [] }],
+      errors: [{ messageId: 'hrefOnNonLink' }],
+      output: `${IMPORTS}html\`<button \${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>\`;`,
+    },
+  ],
+});
+
+const declaredTester = new RuleTester({
+  settings: { linkElements: ['button'] },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+declaredTester.run('sref-assign-href (linkElements setting)', srefAssignHref, {
+  valid: [
+    {
+      name: 'the shared setting alone exempts the tag',
+      code: `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+    },
+    {
+      name: 'the rule option replaces the setting wholesale',
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home')}>Home</sp-link>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+    },
+  ],
+  invalid: [
+    {
+      name: 'the setting leaves every other native non-link reported',
+      code: `${IMPORTS}html\`<div \${uiSref('home')}>Home</div>\`;`,
+      errors: [{ messageId: 'hrefOnNonLink', data: { tag: 'div' } }],
+      output: `${IMPORTS}html\`<div \${uiSref('home', {}, { assignHref: 'auto' })}>Home</div>\`;`,
+    },
+    {
+      name: 'the rule option replaces the setting, so the declared tag reports again',
+      code: `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'hrefOnNonLink', data: { tag: 'button' } }],
+      output: `${IMPORTS}html\`<button \${uiSref('home', {}, { assignHref: 'auto' })}>Home</button>\`;`,
+    },
+  ],
+});
+
 void describe('sref-assign-href meta', () => {
-  void it('is fixable and takes no options', () => {
+  void it('is fixable and takes the shared linkElements option', () => {
     assert.equal(srefAssignHref.meta?.fixable, 'code');
-    assert.deepEqual(srefAssignHref.meta?.schema, []);
+    assert.deepEqual(srefAssignHref.meta?.schema, [
+      {
+        type: 'object',
+        properties: {
+          linkElements: {
+            description:
+              'Element tags to treat as link elements, replacing `settings.linkElements` for this rule.',
+            type: 'array',
+            items: { type: 'string' },
+            uniqueItems: true,
+          },
+        },
+      },
+    ]);
+    assert.deepEqual(srefAssignHref.meta?.defaultOptions, [{}]);
   });
 
   void it("mirrors the runtime warning's wording", () => {

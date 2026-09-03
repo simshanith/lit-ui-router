@@ -60,6 +60,20 @@ export default [
 
 Tags resolve through scope, so a parameter or local named `html` or `uiSref` never counts as the import. This is stricter than lit-a11y in one place: once a file is gated in, lit-a11y also accepts `html` aliases and namespaces from any later import, while these rules only accept them from the listed sources — a wrapper module that re-exports `html` belongs in the array.
 
+`settings.linkElements` names the tags that are link elements — a design system's `<sp-link>`, `<my-link>` — which two rules would otherwise have to guess at:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { linkElements: ['sp-link'] } },
+];
+```
+
+- [`anchor-is-valid`](./docs/rules/anchor-is-valid.md) checks a declared element the way it checks `<a>`: it wants a navigable `href`, static or assigned by a `uiSref` element part.
+- [`sref-assign-href`](./docs/rules/sref-assign-href.md) goes quiet on a declared element, the way it does on `<a>` — it honours the `href` that the `assignHref: true` default writes.
+
+Undeclared tags are unchanged in both rules, so this is purely additive: with no `linkElements`, every rule behaves exactly as it did. Either rule also takes a `linkElements` option of its own, which replaces the setting for that rule.
+
 ## oxlint (alpha)
 
 The rules also load into [oxlint](https://oxc.rs) as JS plugins — every one is syntax-only, with no type information. oxlint does not consume `configs.recommended`, so list them explicitly in `.oxlintrc.json`:
