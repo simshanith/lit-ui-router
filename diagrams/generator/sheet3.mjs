@@ -1,17 +1,24 @@
+import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 
 const P = 's3';
 const OX = 360, OY = 200;
 
-// ---- census: authored source in this repo at HEAD, recounted 2026-08-31 --------
-// Same basis as sheet 4 rev B: .ts/.tsx/.js/.mjs under each member's source dir,
+// ---- census: every number below comes from diagrams/data/census-yard.json -------
+// Same basis as sheet 4: .ts/.tsx/.js/.mjs under each member's source dir,
 // excluding *.d.ts, *.test-d.ts, *.{spec,test}.*, specs/ __tests__/ fixtures/.
-// sloc = scc 4.0.0 `Code` lines (string-aware: template-literal interiors count as
+// sloc = scc `Code` lines (string-aware: template-literal interiors count as
 // code).  @tools/release hosts several instruments, so it is attributed by module
 // prefix (see diagrams/generator/census-yard.mjs).
-// Rev C refresh: tools/* is 19 packages now — @tools/lint-elements, @tools/warn-lanes
-// (#639) and @tools/eslint-ts-parser join the lint & probe fleet.
+const PLATE = JSON.parse(readFileSync(new URL('../data/census-yard.json', import.meta.url), 'utf8'));
+// every massed structure cites a plate row by instrument name — [files, sloc]
+const C = (instrument) => {
+  const r = PLATE.rows.find((x) => x.instrument === instrument);
+  if (!r) throw new Error(`census-yard.json: no row for instrument ${instrument}`);
+  return [r.files, r.sloc];
+};
+const COUNTED = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
 
 // ---- scale rule ---------------------------------------------------------------
 const KS = 1.6;   // iso footprint SIDE = 1.6 · √sloc  (plan units — plan area ∝ sloc)
@@ -38,29 +45,34 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  [1,  'src — packages/*/src',      'line',    20,    30.45, 25, 2704, null, null, 'four published packages — the material'],
-  [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,     3,  100, null, null, 'JS pass + d.ts pass, one emitter'],
-  [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  11,  356, null, null, 'the one packer (#449), cached'],
+  [1,  'src — packages/*/src',      'line',    20,    30.45, ...C('src (5 published packages)'), null, null, 'five published packages — the material'],
+  [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
+  [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
-  [5,  'publish — release-it',      'line',   578.3,  49.6,  21,  717, null, null, 'bump · tag · push · publish steps'],
+  [5,  'publish — release-it',      'line',   578.3,  49.6,  ...C('publish — release-it'), null, null, 'bump · tag · push · publish steps'],
   [6,  'npm registry',              'off',    742.6,  36,     0,    0,   70,   32, 'immutable once crossed'],
   // --- instrument yard, row A: the checks that stop a pull request --------------
-  [7,  'tests — vitest harness',    'pr',      20,   215,     2,   32, null, null, 'lit-test-env + happy-dom · 4 real browsers'],
-  [8,  'compat-guards',             'pr',      62,   215,     6,  160, null, null, 'the lit 2 / mobx 6 / analyzer lanes'],
-  [9,  'dts-backtest',              'pr',     120,   215,     1,  291, null, null, 'one 291-line run.ts holds the TS 5.0 floor'],
-  [10, 'check:exports',             'pr',     200,   215,     2,  149, null, null, 'publint + attw over the raw pack'],
-  [11, 'published-diff',            'halt',   313.9, 215,     5,  405, null, null, 'vs the LIVE npm tarball · halts publishing'],
+  [7,  'tests — vitest harness',    'pr',      20,   215,    ...C('tests — vitest harness'), null, null, 'lit-test-env + happy-dom · 4 real browsers'],
+  [8,  'compat-guards',             'pr',      62,   215,    ...C('compat-guards'), null, null, 'the lit 2 / mobx 6 / analyzer lanes'],
+  [9,  'dts-backtest',              'pr',     120,   215,    ...C('dts-backtest'), null, null, `one ${C('dts-backtest')[1]}-line run.ts holds the TS 5.0 floor`],
+  [10, 'check:exports',             'pr',     200,   215,    ...C('check:exports'), null, null, 'publint + attw over the raw pack'],
+  [11, 'published-diff',            'halt',   313.9, 215,    ...C('published-diff'), null, null, 'vs the LIVE npm tarball · halts publishing'],
   // --- instrument yard, row B: the gates that fire later, and the reporters -----
-  [12, 'peer-floor tier-2',         'late',    40,   320,     3,   73, null, null, 'gates version bumps, never a PR'],
-  [13, 'peer-floor tier-1',         'report',  90,   320,     2,  106, null, null, 'reports check runs, never gates'],
-  [14, 'lint & probe fleet',        'report', 175,   320,    18, 1834, null, null, 'oxlint · elements · warn-lanes · CI gate'],
-  [15, '@tools/shared',             'report', 275,   320,    10,  301, null, null, 'the library under every instrument'],
-  [16, 'typedoc plugin',            'report', 380,   320,     5,  759, null, null, 'builds the API pages, gates nothing'],
+  [12, 'peer-floor tier-2',         'late',    40,   320,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
+  [13, 'peer-floor tier-1',         'report',  90,   320,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
+  [14, 'lint & probe fleet',        'report', 175,   320,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · CI gate'],
+  [15, '@tools/shared',             'report', 275,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
+  [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + docs/) -------------------------------
-  [17, 'e2e — cypress',             'pr',     377.8, 420,     7,  534, null, null, 'drives the sample apps · stops the PR line'],
-  [18, 'sample apps',               'line',   560,   390,    54, 3030, null, null, 'shared routes + vanilla + mobx + e2e fixtures'],
-  [19, 'docs deploy watch',         'late',   680,   400,     4,  508, null, null, 'workers-builds triggers · gates the deploy'],
+  [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
+  [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, 'shared routes + vanilla + mobx + e2e fixtures'],
+  [19, 'docs deploy watch',         'late',   680,   400,    ...C('docs deploy watch'), null, null, 'workers-builds triggers · gates the deploy'],
 ];
+const F = (n) => M.find((r) => r[0] === n);      // [.., files, sloc, ..] by structure number
+const nf = (n) => F(n)[5];                       // authored files of structure n
+const nl = (n) => F(n)[6];                       // sloc of structure n
+const nfl = (n) => `${nf(n)} files, ${fmt(nl(n))} lines`;
+const PR_GATES = [7, 8, 9, 10, 17];
 
 const geom = new Map(
   M.map(([n, , tier, x, y, files, sloc, fw, fh]) => {
@@ -167,7 +179,7 @@ ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — authored source per structure · file
 <line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
 ${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${M.slice(half).map((r, i) => txt(710, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, `TOTAL — 17 massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · recounted 2026-08-31 · gate tiers unchanged from rev A`, 'lbls')}`;
+${txt(58, SY + 58 + half * 17, `TOTAL — ${massed.length} massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · ${COUNTED} · gate tiers unchanged from rev A`, 'lbls')}`;
 
 // ---- inset: the two task managers, drawn FLAT because the shape is a loop --------
 // Recounted 2026-08-31 from .github/workflows/*, `mise tasks ls --all`, root
@@ -199,7 +211,7 @@ ${txt(430, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
 ${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}
 ${txt(52, 172, 'rumdl · taplo · shellcheck · actionlint · zizmor — none installable by node', 'lblf')}`;
 
-const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at fifty-four files and 3,030 lines, and the source slab at twenty-five files and 2,704 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all nineteen structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at thirty-seven call sites across eight workflows, mise holds forty-eight tasks with only two dependency edges, seven of those tasks shell turbo whose continuous-integration graph expands to 535 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at ${nfl(18)}, and the source slab at ${nfl(1)}. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at thirty-seven call sites across eight workflows, mise holds forty-eight tasks with only two dependency edges, seven of those tasks shell turbo whose continuous-integration graph expands to 535 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 ${defs(P)}
 
 ${inset}
@@ -235,8 +247,8 @@ ${bodies}
 
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
 ${txt(55, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
-${txt(55, 213, '25 authored files · 2,704 sloc', 'lblf')}
-${txt(55, 225, 'four published packages enter here', 'lblf')}
+${txt(55, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
+${txt(55, 225, 'five published packages enter here', 'lblf')}
 <line x1="250" y1="212" x2="276" y2="238" class="skf"/>
 
 ${txt(742, 398, 'THE TARBALL', 'lblb')}
@@ -249,13 +261,13 @@ ${txt(1060, 625, 'and only published-diff still reads it', 'lblf')}
 <line x1="1054" y1="596" x2="1037" y2="593" class="skf"/>
 
 ${txt(560, 535, 'published-diff — the only halt', 'lblr')}
-${txt(560, 548, '5 files, 405 sloc', 'lblf')}
+${txt(560, 548, `${nf(11)} files, ${fmt(nl(11))} sloc`, 'lblf')}
 <line x1="554" y1="532" x2="455" y2="499" class="skf"/>
 
 ${txt(470, 795, 'docs deploy — gates the site', 'lbls')}
 <line x1="560" y1="789" x2="578" y2="768" class="skf"/>
 
-${txt(600, 645, 'SAMPLE APPS — 54f · 3,030 sloc', 'lblb')}
+${txt(600, 645, `SAMPLE APPS — ${nf(18)}f · ${fmt(nl(18))} sloc`, 'lblb')}
 ${txt(600, 658, 'the heaviest mass on the sheet', 'lblf')}
 ${txt(600, 670, 'gates nothing at all', 'lblf')}
 <line x1="594" y1="652" x2="582" y2="712" class="skf"/>
@@ -278,18 +290,18 @@ ${schedule}
 export const sheet3 = {
   num: 3, id: 'monorepo', rev: 'C',
   title: 'THE INSTRUMENT YARD',
-  sub: 'ALTITUDE 3 — 4 publishable packages · 19 tools · 44 turbo task names · one packer, many readers · REV C: census refresh 2026-08-31 — authored source recounted at HEAD on a new ruler (scc 4.0.0 Code lines), three new instruments massed into the fleet, the ci graph re-read at 535 nodes',
+  sub: `ALTITUDE 3 — 5 publishable packages · 19 tools · 44 turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures, the ci graph re-read at 535 nodes`,
   scale: 'THE MONOREPO',
   form: 'ISOMETRIC CITY',
   svg,
   caption: 'The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.',
   notes: `
-<p><strong>Method — one basis, shared with sheet 4.</strong> Every massed structure was counted from this repo's authored source at HEAD, recounted 2026-08-31: <code>.ts/.tsx/.js/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, <code>*.spec.*</code> and <code>*.test.*</code>, <code>specs/</code>, <code>__tests__/</code> and fixtures. <em>sloc</em> is <code>scc</code> 4.0.0's <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. <code>@tools/release</code> hosts several instruments at once, so it is attributed by module prefix — <code>check-published-diff*</code> to structure 11, <code>check-exports*</code> to 10, the pack modules to 3, the release steps to 5 — with every file landing in exactly one structure and none counted twice. Nineteen structures, seventeen of them massed: 179 authored files, 12,059 lines. The tarball, the registry and the boundary are diagrammatic.</p>
-<p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The two heaviest masses on the sheet are <em>material</em>: the sample apps (54 files, 3,030 lines) and <code>packages/*/src</code> (25 files, 2,704 lines). The five structures that can stop a pull request total eighteen files between them, and one of them — <code>dts-backtest</code> — is a single 291-line <code>run.ts</code>. Rev A encoded severity as height and so implied the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
+<p><strong>Method — one basis, shared with sheet 4.</strong> Every massed structure was counted from this repo's authored source, ${COUNTED} and read from <code>diagrams/data/census-yard.json</code>: <code>.ts/.tsx/.js/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, <code>*.spec.*</code> and <code>*.test.*</code>, <code>specs/</code>, <code>__tests__/</code> and fixtures. <em>sloc</em> is <code>scc</code>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. <code>@tools/release</code> hosts several instruments at once, so it is attributed by module prefix — <code>check-published-diff*</code> to structure 11, <code>check-exports*</code> to 10, the pack modules to 3, the release steps to 5 — with every file landing in exactly one structure and none counted twice. ${M.length} structures, ${massed.length} of them massed: ${TOT_F} authored files, ${fmt(TOT_L)} lines. The tarball, the registry and the boundary are diagrammatic.</p>
+<p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The two heaviest masses on the sheet are <em>material</em>: the sample apps (${nfl(18)}) and <code>packages/*/src</code> (${nfl(1)}). The ${PR_GATES.length} structures that can stop a pull request total ${PR_GATES.reduce((a, n) => a + nf(n), 0)} files between them, and one of them — <code>dts-backtest</code> — is a single ${nl(9)}-line <code>run.ts</code>. Rev A encoded severity as height and so implied the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
 <p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the vitest harness (7), <code>compat-guards</code> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and Cypress <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <code>@tools/shared</code> and the typedoc plugin are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
 <p><strong>One packer, many readers (#449).</strong> The dashed trunk leaving the green crate is literal: <code>check:exports</code> (publint + attw), <code>dts-backtest</code> and <code>published-diff</code> all read the same cached <code>packPublishTarball</code> output. No check re-packs, so a drift verdict is always about the artifact that would actually ship. Known failure mode, drawn nowhere but real: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
 <p><strong>Two task managers, one re-entrant loop.</strong> The inset at top left is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. GitHub Actions enters mise at 37 call sites across eight workflows (28 distinct tasks); mise itself is almost graphless — 48 tasks with exactly two <code>depends</code> edges, <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_link_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell turbo, whose <code>ci</code> graph alone expands to 535 task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>//#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/aqua owns the versions of the non-node tools (rumdl, taplo, shellcheck, actionlint, zizmor), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>
-<p><strong>Rev C — census refresh, 2026-08-31, and a change of ruler.</strong> Nothing about the argument changed; the numbers under it did, for two separate reasons that are worth keeping apart. <em>The ruler changed:</em> sloc is now <code>scc</code> 4.0.0's string-aware <code>Code</code> count instead of a homegrown blank-and-comment filter, which adds roughly 0.9% across the yard because a template literal's interior now counts line by line. Measured both ways over one identical file set — rev B's twenty-five source directories at today's HEAD — the old ruler reads 11,560 lines and <code>scc</code> reads 11,658, so of everything below, about a hundred lines are the tape measure and the rest is code. <em>The code changed:</em> re-measured at HEAD after fourteen days and one release (<code>lit-ui-router@1.10.0</code>, tagged 2026-08-17), <code>packages/*/src</code> went 2,568 → 2,704, the sample apps 2,995 → 3,030, Cypress <code>e2e</code> 5 files/405 → 7 files/534. And the yard gained three instruments — <code>@tools/lint-elements</code>, <code>@tools/warn-lanes</code> (#639) and <code>@tools/eslint-ts-parser</code> — which is why <code>tools/</code> now reads nineteen packages and the lint &amp; probe fleet is the one block that visibly grew, 13 files/732 lines to 18/1,834. Structure 15 shifted 13 plan units right to keep air around it. Totals: 179 authored files, 12,059 lines, up from 171/10,652. A note on the count: <code>@tools/wintercg-globals</code> is a member of the workspace but massed nowhere, because its entire source is one <code>globals.d.ts</code> and declaration files are outside this basis — it has always been invisible to this sheet. In the inset, only turbo moved: the <code>ci</code> graph went 501 → 535 nodes (<code>turbo run ci --dry=json</code>, turbo 2.10.11), while mise held at 48 tasks and Actions at 37 call sites across eight workflows. The tarball's readers, the gate tiers and the loop are unchanged.</p>`,
+<p><strong>Rev C — census refresh (${COUNTED}) and a change of ruler.</strong> Nothing about the argument changed; the numbers under it did, for two separate reasons that are worth keeping apart. <em>The ruler changed:</em> sloc is now <code>scc</code>'s string-aware <code>Code</code> count instead of a homegrown blank-and-comment filter, which adds roughly 0.9% across the yard because a template literal's interior now counts line by line. Measured both ways over one identical file set — rev B's twenty-five source directories — the old ruler reads 11,560 lines and <code>scc</code> reads 11,658, so of everything below, about a hundred lines are the tape measure and the rest is code. <em>The code changed:</em> re-measured on the plate, <code>packages/*/src</code> went 2,568 → ${fmt(nl(1))}, the sample apps 2,995 → ${fmt(nl(18))}, Cypress <code>e2e</code> 5 files/405 → ${nf(17)} files/${fmt(nl(17))}. And the yard gained three instruments — <code>@tools/lint-elements</code>, <code>@tools/warn-lanes</code> (#639) and <code>@tools/eslint-ts-parser</code> — which is why <code>tools/</code> now reads nineteen packages and the lint &amp; probe fleet is the one block that visibly grew, 13 files/732 lines to ${nf(14)}/${fmt(nl(14))}. Structure 15 shifted 13 plan units right to keep air around it. Totals: ${TOT_F} authored files, ${fmt(TOT_L)} lines, up from 171/10,652. A note on the count: <code>@tools/wintercg-globals</code> is a member of the workspace but massed nowhere, because its entire source is one <code>globals.d.ts</code> and declaration files are outside this basis — it has always been invisible to this sheet. In the inset, only turbo moved: the <code>ci</code> graph went 501 → 535 nodes (<code>turbo run ci --dry=json</code>, turbo 2.10.11), while mise held at 48 tasks and Actions at 37 call sites across eight workflows. The tarball's readers, the gate tiers and the loop are unchanged.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="fr"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'halts a publish (published-diff alone)'),
     keyRow('<rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3-hr)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/>', 'stops the PR line'),

@@ -1,14 +1,24 @@
+import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, lines, isoPt, keyRow } from './helpers.mjs';
 
 const P = 's2';
 
-// ---- census: authored source, repo HEAD, counted 2026-08-16 --------------------
-// Same basis and the same numbers as sheets 3 and 4: .ts/.tsx/.js/.mjs under each
+// ---- census: every number below comes from diagrams/data/census-bricks.json -----
+// Same basis and the same plate as sheets 3 and 4: .ts/.tsx/.js/.mjs under each
 // package's src/, excluding *.d.ts, *.{spec,test}.*, specs/ and typedoc stubs.
-// sloc = lines that are neither blank nor comment-only.  See census-bricks.mjs.
-// [name, version, files, sloc, studs, shape, courses]
-const CORE = ['@uirouter/core', '6.1.2', 80, 5272];
+// sloc = scc `Code`.  Rows: {name, version, files, sloc, studs, shape, courses}.
+const PLATE = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
+const row = (name) => {
+  const r = PLATE.rows.find((x) => x.name === name);
+  if (!r) throw new Error(`census-bricks.json: no row named ${name}`);
+  return r;
+};
+const COUNTED = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
+const CORE_ROW = row('@uirouter/core');
+const CORE = [CORE_ROW.name, CORE_ROW.version, CORE_ROW.files, CORE_ROW.sloc];
+// the fifth published package: a lint plugin, scheduled but NOT drawn — no stud here
+const LINT = row('eslint-plugin-lit-ui-router');
 
 // ---- quantization rule ----------------------------------------------------------
 // A brick is not drawn to a continuous scale.  Its PLAN is a whole number of studs
@@ -21,12 +31,16 @@ const COURSES = (files) => Math.max(1, Math.ceil(files / 3));
 const fmt = (v) => v.toLocaleString('en-US');
 const shapeName = ([w, d]) => `${w}×${d}`;
 
+// the four runtime companions, in drawing order — the lint plugin is not one of them
 const BRICKS = [
-  { n: 1, name: 'lit-ui-router', ver: '1.9.0', files: 12, sloc: 1189 },
-  { n: 2, name: 'ui-router-navigation-location-plugin', disp: 'navigation-location-plugin', ver: '0.3.0', files: 1, sloc: 105 },
-  { n: 3, name: 'lit-ui-router-mobx', ver: '0.5.0', files: 4, sloc: 133 },
-  { n: 4, name: 'ui-router-server', ver: '0.1.1', files: 8, sloc: 1141 },
-].map((b) => ({ disp: b.name, ...b, shape: SHAPE(STUDS(b.sloc)), courses: COURSES(b.files) }));
+  { n: 1, name: 'lit-ui-router' },
+  { n: 2, name: 'ui-router-navigation-location-plugin', disp: 'navigation-location-plugin' },
+  { n: 3, name: 'lit-ui-router-mobx' },
+  { n: 4, name: 'ui-router-server' },
+].map((b) => {
+  const r = row(b.name);
+  return { disp: b.name, ...b, ver: r.version, files: r.files, sloc: r.sloc, shape: SHAPE(STUDS(r.sloc)), courses: COURSES(r.files) };
+});
 const B = (n) => BRICKS.find((b) => b.n === n);
 
 // ---- iso brick geometry ----------------------------------------------------------
@@ -180,18 +194,14 @@ ${Array.from({ length: ws * ds }, (_, k) => {
 }).join('\n')}`;
 }
 
-const PARTS = [
-  [1, 100, 2, 4, 4],
-  [2, 152, 1, 1, 1],
-  [3, 190, 1, 1, 2],
-  [4, 236, 2, 4, 3],
-];
+// [brick, row y] — shape and courses come from the brick itself
+const PARTS = [[1, 108], [2, 152], [3, 190], [4, 236]];
 const partsBox = `<rect x="30" y="34" width="286" height="244" class="skf fnone"/>
 ${txt(44, 56, 'PARTS — 4 BRICKS, 1 PLATE', 'lbls')}
 ${leader(30, 64, 316, 64)}
-${PARTS.map(([n, oy, ws, ds, c]) => {
+${PARTS.map(([n, oy]) => {
   const b = B(n);
-  return `${miniBrick(92, oy, ws, ds, c)}
+  return `${miniBrick(92, oy, b.shape[0], b.shape[1], b.courses)}
 ${badge(48, oy - 4, n)}
 ${txt(120, oy - 6, b.disp, 'lbl')}
 ${txt(120, oy + 6, `x1 · ${shapeName(b.shape)} · ${b.courses} course${b.courses > 1 ? 's' : ''}`, 'lblf')}`;
@@ -329,6 +339,10 @@ const SCHED = [
     '    peerDependenciesMeta: { ‘@uirouter/core’: { optional: true } } — the ‘matcher’ tier is dependency-free pattern matching',
     '    the ‘simulate’ tier reaches a plate of its own behind a lazy import(): new UIRouter() + plugin(servicesPlugin) + plugin(memoryLocationPlugin)   [src/index.ts, src/simulate.ts]',
   ],
+  [
+    ` 5  ${LINT.name} ${LINT.version} · ${LINT.files}f · ${fmt(LINT.sloc)} sloc · NOT DRAWN — no stud on any router plate`,
+    '    a lint package: it plugs into ESLint/oxlint hosts, never into @uirouter/core — the set’s fifth published part lives on a different table',
+  ],
 ];
 const ROWS = SCHED.flat();
 const TOT_F = BRICKS.reduce((a, b) => a + b.files, 0);
@@ -338,9 +352,9 @@ const schedule = `<rect x="40" y="${SY}" width="1320" height="${74 + ROWS.length
 ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — one row per brick · quantized plan · courses · the exact coupling, with its source', 'lbls')}
 ${leader(40, SY + 32, 1360, SY + 32)}
 ${ROWS.map((r, i) => txt(58, SY + 52 + i * 17, r, 'lbls')).join('\n')}
-${txt(58, SY + 60 + ROWS.length * 17, `TOTAL — 4 bricks · ${TOT_F} authored files · ${fmt(TOT_L)} sloc, standing on one ${CORE[2]}-file, ${fmt(CORE[3])}-line baseplate · counted 2026-08-16, same basis as sheets 3 and 4`, 'lbls')}`;
+${txt(58, SY + 60 + ROWS.length * 17, `TOTAL — 4 bricks · ${TOT_F} authored files · ${fmt(TOT_L)} sloc, standing on one ${CORE[2]}-file, ${fmt(CORE[3])}-line baseplate · ${COUNTED}, same basis as sheets 3 and 4`, 'lbls')}`;
 
-const svg = `<svg viewBox="0 0 1400 ${SY + 110 + ROWS.length * 17}" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four four courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-one two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 110 + ROWS.length * 17}" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four ${B(1).courses} courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-one two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
 ${defs(P)}
 
 ${txt(1370, 16, 'SCALE — plan = whole studs (1 stud per 150 sloc, rounded up to the next standard brick shape) · height = one course per 3 authored files · the baseplate is not massed', 'lbls', 'end')}
@@ -363,7 +377,7 @@ ${schedule}
 export const sheet2 = {
   num: 2, id: 'companions', rev: 'B',
   title: 'THE BRICK ASSEMBLY',
-  sub: 'ALTITUDE 2 — one baseplate, four bricks, 25 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted 2026-08-16',
+  sub: `ALTITUDE 2 — one baseplate, four bricks, ${TOT_F} authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source ${COUNTED}`,
   scale: 'FOUR PACKAGES',
   form: 'BRICK ASSEMBLY',
   svg,
@@ -372,9 +386,10 @@ export const sheet2 = {
 <p><strong>Why bricks.</strong> Rev A drew these packages as sockets and panels and conceded the form broke. The mechanism they actually share is a <em>standardised coupling</em>: each companion attaches to <code>@uirouter/core</code> through a published extension point, none of them attaches to another, and any one can be left in the box without disturbing the rest. That is a stud, and a stud is worth drawing. So this is an exploded isometric — the LEGO instruction manual's own idiom — with a numbered part per package, a drop line onto the exact stud it takes, and a parts callout. Nothing is drawn seated, because a seated assembly hides the undersides, and the undersides are the argument.</p>
 <p><strong>The plate is core, not this package.</strong> Sheet 4's finding decides it: every limb in the family declares <code>@uirouter/core</code> as a peer and touches nothing else. <code>lit-ui-router</code> is therefore brick 1, not the ground — and the drawing is honest about the one place the metaphor strains: <code>class UIRouterLit extends UIRouter</code> is moulded onto the plate, not snapped to it. What the drawing then shows is that the graft is thin anyway. Everything Lit-specific arrives through two published seams — <code>this.plugin(servicesPlugin)</code> and <code>this.stateRegistry.decorator('views', litViewsBuilder)</code> — plus <code>urlService.listen()/sync()</code> to start the thing. Three calls. That is the whole renderer coupling.</p>
 <p><strong>One stud is a seat, not a socket.</strong> <code>router.plugin()</code> is the back rail: a single method that anything may queue on, which is why the spare-parts box is drawn at all — <code>@uirouter/visualizer</code>, <code>sticky-states</code>, <code>dsr</code> and <code>rx</code> all register through it and none of them knows this repo exists. One seat on that rail is ringed red, because it behaves differently: a router holds <em>exactly one</em> location plugin, so <code>ui-router-navigation-location-plugin</code> is a <em>swap</em> for core's <code>pushStateLocation</code>, never an addition. That package peers <code>@uirouter/core</code> and nothing else — it has never heard of Lit, and would work identically under the React or Angular adapters.</p>
-<p><strong>Brick 3 is the only brick-to-brick coupling in the set, and it is a small one.</strong> <code>lit-ui-router-mobx</code> seats on brick 1 through <code>UIRouterLitElement.seekRouter(host)</code> — a bubbling <code>ui-router-context</code> event, published precisely as the dependency-injection primitive for external reactivity systems — and then reaches the plate directly: one <code>transitionService.onSuccess({}, update)</code> hook, memoised one-per-router by <code>RouterStore.for()</code>, whose <code>update()</code> reads <code>globals.current</code>, <code>globals.params</code> and the last successful transition into MobX observables. It observes; it never writes router state. 133 lines, one stud on the brick above and two on the plate below.</p>
+<p><strong>Brick 3 is the only brick-to-brick coupling in the set, and it is a small one.</strong> <code>lit-ui-router-mobx</code> seats on brick 1 through <code>UIRouterLitElement.seekRouter(host)</code> — a bubbling <code>ui-router-context</code> event, published precisely as the dependency-injection primitive for external reactivity systems — and then reaches the plate directly: one <code>transitionService.onSuccess({}, update)</code> hook, memoised one-per-router by <code>RouterStore.for()</code>, whose <code>update()</code> reads <code>globals.current</code>, <code>globals.params</code> and the last successful transition into MobX observables. It observes; it never writes router state. ${fmt(B(3).sloc)} lines, one stud on the brick above and two on the plate below.</p>
 <p><strong>The fourth brick has no stud here at all, and that is the design.</strong> <code>ui-router-server</code> declares <code>@uirouter/core</code> as an <em>optional</em> peer (<code>peerDependenciesMeta</code>); its default <code>'matcher'</code> tier is dependency-free pattern matching and never loads core, and its <code>'simulate'</code> tier reaches a plate of its own behind a lazy <code>import()</code> — <code>new UIRouter()</code> with <code>servicesPlugin</code> and <code>memoryLocationPlugin</code>, built fresh per resolution because core mutates registrations. Drawing it over a dashed second plate is the only truthful placement: it is the same mould, a different assembly, and the tie back to the client plate is crossed out.</p>
-<p><strong>Massing, quantized.</strong> Continuous mass would have made these bricks unbuildable shapes, so the census is rounded to LEGO: <em>plan</em> is one stud per 150 sloc rounded up to the next standard shape (1×1, 1×2, 2×2, 2×3, 2×4), <em>height</em> is one course per three authored files. The result is legible and it is a finding — the two bricks that carry a renderer and a server are 2×4s; the two that plug the router into something are 1×1 tiles, 105 and 133 lines. A companion that needed to be a 2×4 would be <code>lit-ui-router</code>'s problem to absorb, not a package. The baseplate is deliberately <em>not</em> massed: 80 files and 5,272 lines of core is ground, and ground has no height.</p>`,
+<p><strong>Massing, quantized.</strong> Continuous mass would have made these bricks unbuildable shapes, so the census is rounded to LEGO: <em>plan</em> is one stud per 150 sloc rounded up to the next standard shape (1×1, 1×2, 2×2, 2×3, 2×4), <em>height</em> is one course per three authored files. The result is legible and it is a finding — the two bricks that carry a renderer and a server are 2×4s; the two that plug the router into something are 1×1 tiles, ${fmt(B(2).sloc)} and ${fmt(B(3).sloc)} lines. A companion that needed to be a 2×4 would be <code>lit-ui-router</code>'s problem to absorb, not a package. The baseplate is deliberately <em>not</em> massed: ${CORE[2]} files and ${fmt(CORE[3])} lines of core is ground, and ground has no height.</p>
+<p><strong>The fifth published package is not a brick.</strong> <code>eslint-plugin-lit-ui-router</code> ${LINT.version} (${LINT.files} files, ${fmt(LINT.sloc)} sloc) ships from this repo alongside the four drawn here, but it takes no stud on any router plate: it couples to ESLint and oxlint, not to <code>@uirouter/core</code>, so it is scheduled as row 5 and left off the drawing. Every number on this sheet is read from <code>diagrams/data/census-bricks.json</code> — ${COUNTED}.</p>`,
   key: [
     keyRow('<polygon points="4,12 16,5 30,12 30,16 16,9 4,16" class="sk fp"/><ellipse cx="10" cy="8" rx="4" ry="2.3" class="sk fp2"/><ellipse cx="24" cy="8" rx="4" ry="2.3" class="sk fp2"/>', 'a published package — plan ∝ quantized sloc, courses ∝ files'),
     keyRow('<ellipse cx="24" cy="9" rx="6" ry="3.5" class="ska fp"/><ellipse cx="24" cy="9" rx="11" ry="6.5" class="ska fnone"/>', 'a stud — a published extension point on @uirouter/core'),

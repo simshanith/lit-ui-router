@@ -11,7 +11,13 @@ identical to the old scratch clone (80f/5,272 sloc @ 6.1.2).
 I3 LANDED 2026-09-02: shared historyLog() + shared CITY UNIVERSE
 (census-query.mjs — sheets 7/7B/13 reconcile by construction);
 steam's 90-day window and weather's TODAY derive from the ref's commit
-date — the hard-coded dates are gone. Basis for the design: full survey of
+date — the hard-coded dates are gone.
+I4 wave 1 LANDED 2026-09-02 (opus fan-out): sheets 2/3/7 import their
+plates — numbers by lookup (missing rows THROW), provenance lines rendered
+from plate fields, fifth package drawn as city №31 / yard's renamed
+"5 published packages" slab / brick schedule row 5 (NOT DRAWN — no stud).
+Remaining I4: sheets 7B + 13 (steam/weather plates), cover survey (sheet 1
+on census-files.json). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,
