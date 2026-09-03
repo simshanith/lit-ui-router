@@ -3,8 +3,7 @@ import { describe, it } from 'node:test';
 import { RuleTester } from 'eslint';
 import { directivePosition } from './directive-position.ts';
 
-// RuleTester schedules cases through whatever framework is wired on these
-// statics; eslint's types don't declare them.
+// RuleTester runs cases through these statics, which eslint's types omit.
 const hooks = RuleTester as unknown as Record<string, unknown>;
 hooks.describe = describe;
 hooks.it = it;
@@ -39,6 +38,10 @@ ruleTester.run('directive-position', directivePosition, {
     {
       name: 'a non-lit tagged template is not a lit template',
       code: `${IMPORTS}css\`\${uiSref('home')}\`;`,
+    },
+    {
+      name: "an unrelated module's namespace is not a lit namespace",
+      code: `${IMPORTS}import * as other from './other.js';\nother.html\`<a href=\${uiSref('home')}>Home</a>\`;`,
     },
   ],
   invalid: [

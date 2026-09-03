@@ -1,8 +1,4 @@
-// Shared template plumbing for every rule in this plugin: the element-part
-// placeholder shape, the lit-html import gating vendored from lit-a11y, and
-// the `lit-ui-router` import tracking that makes a `uiSref` call *ours*.
-// Syntax-only by construction — no type information, so the rules also load
-// into oxlint `jsPlugins` (#676).
+// Syntax-only, so the rules also load into oxlint jsPlugins (#676).
 import type { Rule } from 'eslint';
 
 /** The node type eslint hands a listener, without naming `estree` directly. */
@@ -177,7 +173,8 @@ export const createDirectiveTracker = (
             sources.has(packageOf(source)),
         );
 
-      if (!analyse) return;
+      // Only a lit-html source supplies tags; an unrelated namespace is not one.
+      if (!analyse || !sources.has(packageOf(source))) return;
 
       for (const specifier of node.specifiers) {
         if (specifier.type === 'ImportNamespaceSpecifier') {
