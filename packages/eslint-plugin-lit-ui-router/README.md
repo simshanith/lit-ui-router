@@ -43,6 +43,23 @@ export default [
 
 Without lit-a11y installed, that `off` line is inert — flat config accepts a severity for an unregistered plugin's rule — so there is nothing to change either way.
 
+## Settings
+
+Every rule only looks inside lit templates, and `settings.litHtmlSources` — lit-a11y's setting, with the same three modes — decides which tagged templates those are:
+
+- **unset** (the default): every template tagged `html` is analysed, whatever `html` is imported from, plus aliases and namespaces (`h`, `lit.html`) imported from `lit`, `lit-html` or `lit-element`.
+- **`true`**: only files importing `lit`, `lit-html` or `lit-element` are analysed, and only templates whose tag resolves to that import.
+- **an array**: as `true`, with the listed packages added to the accepted sources.
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { litHtmlSources: ['@apollo-elements/lit-apollo'] } },
+];
+```
+
+Tags resolve through scope, so a parameter or local named `html` or `uiSref` never counts as the import. This is stricter than lit-a11y in one place: once a file is gated in, lit-a11y also accepts `html` aliases and namespaces from any later import, while these rules only accept them from the listed sources — a wrapper module that re-exports `html` belongs in the array.
+
 ## oxlint (alpha)
 
 The rules also load into [oxlint](https://oxc.rs) as JS plugins — every one is syntax-only, with no type information. oxlint does not consume `configs.recommended`, so list them explicitly in `.oxlintrc.json`:
