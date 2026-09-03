@@ -437,7 +437,8 @@
       ]
     },
     "e2e": {
-      "dependsOn": ["^build", "^docs", "^e2e"],
+      "dependsOn": ["^build"],
+      "with": ["docs#wrangler:dev"],
       "cache": false,
       "persistent": true
     },
