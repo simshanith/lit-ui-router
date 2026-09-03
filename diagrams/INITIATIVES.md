@@ -80,6 +80,9 @@ Three escalating lanes (separate initiatives, each independently shippable):
    node skins via cytoscape node `background-image` (the pinned
    HZD×SC2K×Factorio sprite direction generalizes: sprites are the general
    building representation, so pipeline stations get sprites too).
+   Sprite treatment note (2026-09-02): walls are TRANSLUCENT semi-opaque,
+   never fully opaque — the girding frame peeks through. Applies to every
+   sprite lane (I7 skins, I8 3D, and the weathering-map sprites alike).
 3. **3D tilt.** Cheap first step: CSS `perspective` + `rotateX` on the
    rendered graph container (a real tilt, minutes of work, reversible).
    Full step: a three.js isometric scene with billboarded sprites and a
