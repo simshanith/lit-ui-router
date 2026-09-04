@@ -1,34 +1,16 @@
 import { UIRouterLitElement } from 'lit-ui-router';
 
-/**
- * Whether lit resolved to its development build. `enableWarning` is inherited
- * from `ReactiveElement`, which declares it optional precisely because it
- * exists only in development — lit's own docs prescribe guarding on it. Same
- * shape in lit 2 and 3, and typed optional in both builds' `.d.ts`, so this
- * needs no cast. Read per call, so import order cannot matter.
- *
- * A local copy of lit-ui-router's helper, which is `@internal` and so not a
- * cross-package import.
- *
- * @internal
- */
+// Copy of lit-ui-router's @internal helper; enableWarning exists only in lit's dev build.
+/** @internal */
 export function inLitDevMode(): boolean {
   return typeof UIRouterLitElement.enableWarning === 'function';
 }
 
-/**
- * Hosts already told about a missing `<ui-router>`. One registry for the whole
- * package, not one per controller: a host wired to several controllers has a
- * single missing provider, and a wall of near-identical messages obscures the
- * one fix.
- *
- * @internal
- */
+// Package-wide, not per controller: a host with several controllers has one missing provider.
 const warnedMissingRouter = new WeakSet<Element>();
 
 /**
- * Warns once per element that a controller found no `<ui-router>` ancestor and
- * has therefore degraded to a no-op.
+ * Warns once per element that a controller found no `<ui-router>` ancestor.
  *
  * @param element the host whose controller found nothing
  * @param subject how to name it in the message, e.g. `RouterReactionController`
