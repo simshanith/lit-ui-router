@@ -27,11 +27,14 @@ export function staticSrc(name: ExampleName): string {
   return `/examples/${name}/`;
 }
 
+// view=editor, not preview: the Preview tab next to this one is the same
+// example served from this origin, which boots faster than a WebContainer can.
+// The reason to open StackBlitz at all is the code.
 export function stackblitzEmbedSrc(
   name: ExampleName,
   file: string = EXAMPLES[name].file,
 ): string {
-  return `${REPO_TREE}/${name}?embed=1&file=${file}&view=preview`;
+  return `${REPO_TREE}/${name}?embed=1&file=${file}&view=editor`;
 }
 
 export function stackblitzOpenSrc(
