@@ -110,6 +110,18 @@ pnpm --filter examples example:install:<example-name>
 
 `pnpm --filter examples lint` fans out over each example's own `lint` script plus one `oxlint` pass against the repo's root config, which covers every example with the same plugin rule.
 
+## Docs Embeds
+
+Each example is also built for the docs site (`turbo run build:embeds --filter=examples`) and embedded same-origin at `/examples/<example-name>/`. The docs reserve the embed's height up front — before the iframe loads, so the page doesn't shift when the example paints — from the `EXAMPLES` map in `docs/.vitepress/theme/components/examples.ts`.
+
+Changing what an example renders can outgrow that reservation, which shows up as a scrollbar inside the embed. Measure it:
+
+```bash
+turbo run check:embeds --filter=docs
+```
+
+It drives every state each built example's own links reach, in headless Chromium at the docs content column, and reports the tallest against the declared height — with the value to use when one no longer fits. Text wraps at engine-specific metrics, so the numbers are host-dependent by a percent or so; that is why the reservations carry slack and why this is a local check rather than a CI gate.
+
 ## Project Structure
 
 Every example follows the same structure (the lint example adds `eslint.config.js`):

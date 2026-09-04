@@ -2,8 +2,15 @@
 export type StackBlitzView = 'default' | 'editor' | 'preview';
 
 // Keep in sync with examples/build-embeds.ts and EMBEDDED_EXAMPLES in docs/.vitepress/vite.config.ts.
+//
+// `height` reserves the embed's space before its iframe loads, so the page
+// doesn't shift when the example paints — a static number by design. It is not
+// eyeballed: `turbo run check:embeds --filter=docs` measures every state each
+// built example reaches at this column and fails when one outgrows what is
+// reserved here. Slack above the measurement is fine (and wanted — text wraps
+// at engine-specific metrics); slack below it is a scrollbar inside the embed.
 export const EXAMPLES = {
-  helloworld: { title: 'Hello World', height: '180px', file: 'src/main.ts' },
+  helloworld: { title: 'Hello World', height: '190px', file: 'src/main.ts' },
   hellosolarsystem: {
     title: 'Hello Solar System',
     height: '800px',
@@ -11,7 +18,7 @@ export const EXAMPLES = {
   },
   'hellosolarsystem-mobx': {
     title: 'Hello Solar System (MobX)',
-    height: '840px',
+    height: '880px',
     file: 'src/main.ts',
   },
   hellogalaxy: {
