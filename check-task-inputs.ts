@@ -30,6 +30,10 @@ const EXEMPT: InputsExemption[] = [
     task: 'bundle:worker',
     why: 'wrangler --dry-run bundles worker/** only; docs content never reaches the artifact',
   },
+  {
+    task: 'check:embeds',
+    why: 'measures the built examples (hashed via the build:embeds edge) against the heights examples.ts declares; no other docs source is read',
+  },
 ];
 
 const { members } = await loadWorkspace(workspaceRoot);

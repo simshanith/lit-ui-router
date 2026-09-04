@@ -335,6 +335,7 @@
         "scripts/**/*.test.ts",
         "tools/build_and_test/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
+        "tools/embed-heights/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",

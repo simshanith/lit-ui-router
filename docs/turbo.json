@@ -16,6 +16,16 @@
       ],
       "outputs": ["worker/dist/**"]
     },
+    "check:embeds": {
+      // Reader of the built examples: measures each in Chromium and checks the
+      // heights examples.ts reserves for them. The dependency's hash covers the
+      // dists, so only the manifest is an input here.
+      "dependsOn": ["examples#build:embeds"],
+      "inputs": [
+        ".vitepress/theme/components/examples.ts",
+        "$TURBO_ROOT$/tools/embed-heights/src/**"
+      ]
+    },
     "codecov:bundle": {
       // Upload-only: ships the (possibly cache-replayed) dry-run artifact.
       "dependsOn": ["bundle:worker"]

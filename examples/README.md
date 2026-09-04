@@ -77,6 +77,18 @@ pnpm --filter examples postinstall
 pnpm --filter examples example:install:<example-name>
 ```
 
+## Docs Embeds
+
+Each example is also built for the docs site (`turbo run build:embeds --filter=examples`) and embedded same-origin at `/examples/<example-name>/`. The docs reserve the embed's height up front — before the iframe loads, so the page doesn't shift when the example paints — from the `EXAMPLES` map in `docs/.vitepress/theme/components/examples.ts`.
+
+Changing what an example renders can outgrow that reservation, which shows up as a scrollbar inside the embed. Measure it:
+
+```bash
+turbo run check:embeds --filter=docs
+```
+
+It drives every state each built example's own links reach, in headless Chromium at the docs content column, and reports the tallest against the declared height — with the value to use when one no longer fits. Text wraps at engine-specific metrics, so the numbers are host-dependent by a percent or so; that is why the reservations carry slack and why this is a local check rather than a CI gate.
+
 ## Project Structure
 
 Each example follows the same structure:
