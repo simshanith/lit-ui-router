@@ -6,7 +6,7 @@ import {
   formatMissing,
   missingFromClosure,
   selectedNames,
-} from './release-closure.core.ts';
+} from './check-release-closure.core.ts';
 
 describe('filterArgs', () => {
   it('splits the filter string into pnpm argv', () => {

@@ -7,7 +7,7 @@ import {
   formatMissing,
   missingFromClosure,
   selectedNames,
-} from '@tools/shared/release-closure.core.ts';
+} from './check-release-closure.core.ts';
 import {
   loadWorkspace,
   type Member,

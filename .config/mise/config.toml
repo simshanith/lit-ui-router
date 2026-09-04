@@ -46,7 +46,8 @@ _.file = [
 
 [vars]
 # What `setup --release` installs; release-it and the peer-floor scripts live in
-# packages/*, not @tools/release. Task-scoped as RELEASE_CLOSURE, not global [env].
+# packages/*, not @tools/release. Task-scoped as RELEASE_CLOSURE, not global [env]:
+# setup here, and //tools/release:check_release_closure, which guards it.
 release_closure = "--filter @tools/release... --filter {packages/*}..."
 
 [settings]
@@ -112,14 +113,6 @@ run = "actionlint"
 # --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
 description = "Audit GitHub Actions workflows for security issues"
 run = "zizmor --offline .github/workflows"
-
-[tasks.check_release_closure]
-# //#check:release-closure guards the selection; a mise task so the var needs no shell activation
-description = "Assert RELEASE_CLOSURE covers every member the release lanes run in"
-run = "node check-release-closure.ts"
-
-[tasks.check_release_closure.env]
-RELEASE_CLOSURE = "{{vars.release_closure}}"
 
 [tasks.lint_toml]
 # `taplo lint` = TOML syntax/structure validation, offline by default (taplo only

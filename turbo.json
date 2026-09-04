@@ -111,8 +111,8 @@
         "//#lint:templates",
         "//#check:patches",
         "//#check:graph-edges",
-        "//#check:release-closure",
-        "//#check:task-inputs"
+        "//#check:task-inputs",
+        "@tools/release#check:release-closure"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
@@ -209,17 +209,6 @@
         "**/turbo.json",
         "**/package.json",
         "pnpm-workspace.yaml",
-        "tools/shared/src/**"
-      ]
-    },
-    "//#check:release-closure": {
-      // pnpm resolves the filter from manifests alone, so this runs before any release lane installs
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-release-closure.ts",
-        "**/package.json",
-        "pnpm-workspace.yaml",
-        ".config/mise/config.toml",
         "tools/shared/src/**"
       ]
     },
