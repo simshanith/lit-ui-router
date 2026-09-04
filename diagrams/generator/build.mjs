@@ -11,7 +11,7 @@ import { sheet4 } from './sheet4.mjs';
 import { sheet5 } from './sheet5.mjs';
 import { sheet6 } from './sheet6.mjs';
 import { sheet7 } from './sheet7.mjs';
-import { sheet7a } from './sheet7a.mjs';
+import { sheet7a, SURVEY_META } from './sheet7a.mjs';
 import { sheet7b } from './sheet7b.mjs';
 import { sheet8 } from './sheet8.mjs';
 import { sheet9 } from './sheet9.mjs';
@@ -71,7 +71,7 @@ const verdicts = [
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
   ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR (REV D: 30 members recounted on the scc ruler)'],
-  ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', 'the shadow survey — the tests are the light: where a suite reaches it burns near-full (98.0% of 5,539 metered lines, the 2026-08-17 metering, not re-run); 2,608 sloc of instruments and 1,375 of CLI wrappers never see light'],
+  ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', `the shadow survey — the tests are the light: where a suite reaches it burns near-full (REV E: RE-METERED, ${SURVEY_META.metered} members under their own suites' meters at ${SURVEY_META.sha}, so the light and the census are one measurement and the daggers retire)`],
   ['7B', 'MONOREPO, RUNNING', 'WORKING CITY', 'the synthesis plate — rust, steam, lamps and pipes on one city: every pipe connects, the flagship runs old AND hot, and rev B’s one alarm — which rang over the drawings themselves — is drawn struck through, answered by ffd4ef7'],
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 295× the app, two swaps it argued for'],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code, and at REV F the prose pages overtook the fonts'],
@@ -198,7 +198,7 @@ ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
 ${pipelineSection()}
 ${citySection()}
-<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at ${COUNTED_AT} in one pass — except plate 7A's test light, which is still the 2026-08-17 metering, not re-run, and labelled as such wherever it is printed · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after every sheet was drawn; the plates count it and sheets 2, 4, 7, 7B, 11, 12 and 13 draw or schedule it, while plate 7A's light predates it and says so · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
+<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at ${COUNTED_AT} in one pass — plate 7A's test light included, re-metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after every sheet was drawn; the plates count it and sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 draw or schedule it · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
 { desc: 'A fourteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
@@ -220,8 +220,8 @@ ${sheets.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.
 Regenerate with \`node generator/build.mjs .\` from this directory.
 Generated 2026-08-16 by Fable (Claude, AI).
-Every plate in \`data/\` — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass;
-plate 7A's test light is the one exception, still the 2026-08-17 metering, not re-run. The cover's general survey — every
+Every plate in \`data/\` — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass,
+plate 7A's test light included: \`generator/census-shadow.mjs\` re-meters it at the same ref. The cover's general survey — every
 tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 \`data/census-files.json\`, the master snapshot \`generator/census-scc.mjs\` writes;
 \`generator/census-overview.mjs\` prints the same rollup on the terminal.

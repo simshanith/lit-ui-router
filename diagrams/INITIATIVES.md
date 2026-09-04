@@ -328,13 +328,72 @@ names) — both are hand-written on sheets with no plate behind them, both are t
 last un-cited numbers in the set, and putting either on a plate would add sheet 1
 to the survey office's rack; (6) sheet 7A's lamps and sheet 7B's rust remain
 declared editorial constants — they are the only channels a refresh does not move.
+R2 — THE LAMPS LANDED 2026-09-04: the atlas's last hand-pasted probe is
+reconstructed and the 7A follow-up is CLOSED. census-shadow.mjs is a T3 probe on
+the standard harness — materialize, `corepack pnpm install --frozen-lockfile`,
+then meter every member under ITS OWN suite's meter and parse the lcov, never a
+stdout table: the tree's own unmodified `turbo run test:coverage` where a member
+declares one, its own `test` script re-run with `--experimental-test-coverage`
+for the node:test members, and `--coverage.enabled --coverage.provider=v8` for
+the vitest ones. Two judgements only, both verified rather than assumed: the
+cypress-lit members (the run throws if the rig has stopped being a cypress
+suite), and what counts as a self-suite (dts-backtest's `node run.ts` backtests
+the PACKAGES, so it reads `n`). Everything else is derived — a meter that
+attaches and finds nothing of the member's own is `m` at extent 0 (happy-dom's
+canary), and `u` is only awarded after re-running the suite WITHOUT the meter to
+prove it passes (sample-app-shared). FIDELITY GATE at the old metering's own ref
+3557c29: EXACT. Same 13 metered members, same cat letters, and line/branch/func
+identical to the decimal on every one — the schedule's grand total comes back
+5,427/5,539 lines, 1,283/1,351 branches, 419/437 functions, which is what rev D
+printed; the narrated meter footprints reproduce too (№1 1,325 sloc, №16 shared
+9f/300). ONE named exception, and it is the tape measure, not the meter: №15
+build_and_test was recorded 7f/756 with 464 lit and the probe reads 7f/779 with
+487 — identical file sets, the whole 23 lines inside error-summary.core.ts,
+which the old "neither blank nor comment-only" counter reads at 233 and scc
+4.0.0 at 256 (template-literal interiors are code — sheet 7 rev D's own ruler
+change), confirmed by counting that one file both ways. Nothing had to be
+fudged. RE-METERED at the cabinet's eb32b4e: 16 members metered, not 13.
+№31 eslint-plugin gets its first metering and comes in lit wall to wall
+(6/6f, 100% extent, line 99.2); №29 warn-lanes, drawn at rev D as an outline of
+light on the guess that no lcov leaves it, meters clean at 100%; №20 oxc-emit,
+drawn dark, has grown a suite (25.2%). THE DAGGERED PAIR IS THE FINDING: rev D
+drew build_and_test at 41.1% and shared at 82.4%, both computed by dividing an
+August lit figure by an end-of-August census — measured at one ref they are
+73.0% and 88.4%, so the dagger mechanism SYSTEMATICALLY UNDERSTATED the members
+it marked, and 7B's "lamp that went out" was an artefact of it rather than a
+suite that stopped covering (that plant is back to two lamps). The one dimming
+is №12 release: further reach (54.1 → 57.9%) at lower brightness (line 98.4 →
+96.6, function 96.8 → 93.6). Sheet 7A is rev E — placement and numbering now
+come from sheet 7's own PLACED table so the two plates overlay by construction,
+every figure is imported, and the daggers are retired rather than explained; the
+3D city's TEST LIGHT lane is rev D and relights itself (the "not in the
+2026-08-17 survey" special case is gone, and a mass with no survey row is now a
+build error). SCOPE CALL: sheet 7B's LAMPS channel was hand-pasted FROM 7A, so
+leaving it would have printed two different meterings of one city — it now reads
+census-shadow.json too (rev E), and rust is the only editorial channel left on
+that plate. IDEMPOTENCE, with one honest wobble: four runs at the cabinet ref differ only in
+generatedAtTime EXCEPT №31's branch DENOMINATOR, which came back 213 twice and
+215 twice (191 hit either way — 89.7% vs 88.8%). node --test's V8 branch
+discovery is not perfectly repeatable; nothing else in the plate moves, and both
+7A's method paragraph and this log say so rather than pretending otherwise. Two
+probe bugs were caught by the gate and are general: an lcov SF path may be
+REPO-relative (that is what tools/lcov-rebase exists to do), so every SF is now
+resolved against both the run's cwd and the tree root and the candidate that
+names a real file wins — without it ui-router-server read 0 of 8 files lit; and
+a meter that ATTACHES and finds nothing of the member's own is `m` at extent 0,
+not `u` (happy-dom), so `u` is decided by whether the coverage run itself
+survived, proved by a second meter-less run. Error strings in the plate have the
+tmpdir stripped to `<archive>` or the plate never diffs clean.
+Survey office picked it up on its own: 14 → 15 probes/plates, T3
+6 → 7, 55 → 60 nodes, 69 → 79 edges, and 7A joins the rack (14 → 15 drawings).
+Nothing numeric on 7A or 7B is hand-typed any more.
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block
 automatically; commitsByMonth could join the weather
 plate if the commits row is wanted back; 3A — CLOSED 2026-09-03, the
-handoff census is census-handoff.mjs and sheet 3A imports it; 7A lamps
-stay hand-pasted (no plate of their own yet). Basis for the design: full survey of
+handoff census is census-handoff.mjs and sheet 3A imports it; 7A lamps —
+CLOSED 2026-09-04 (see R2 below). Basis for the design: full survey of
 `diagrams/generator/` (session altitude-atlas). Budget frame: current plan is
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,

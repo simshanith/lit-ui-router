@@ -38,7 +38,7 @@ for (const r of A.rows) {
 }
 
 const fmt = (v) => v.toLocaleString('en-US');
-const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten'];
+const WORD = ['no', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen'];
 const BASIS = `${A.ref} @ ${A.sha} · commit ${A.commitDate}`;
 
 // ---------------------------------------------------------------------------

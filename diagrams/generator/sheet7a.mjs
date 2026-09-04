@@ -1,26 +1,41 @@
+import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, keyRow } from './helpers.mjs';
+import { PLACED } from './sheet7.mjs';
 
 const P = 's7a';
 
-// ---- the survey: sheet 7's city, metered for test light on 2026-08-17 -----------
+// ---- the survey: sheet 7's city, metered for test light -------------------------
 // REV B: polarity corrected — rev A drew coverage as cast shadow, so the best-
 // tested district read gloomiest.  Same data, metaphor flipped the right way up:
 // the spec annex is the LAMP, covered source is LIT, shadow means UNTESTED.
-// Footprints are sheet 7 rev D's census (recounted 2026-08-31, sloc = scc 4.0.0
-// `Code`), so this plate reconciles building-for-building with the measured city.
-// The LIGHT is not re-metered at rev D: it is still the 2026-08-17 metering at
-// worktree HEAD 3557c29, run per member under its OWN suite's coverage meter
-// (generator: tmp/atlas-shadow/census-shadow.mjs):
-//   packages/*        — the repo's own `turbo run test:coverage` tasks, unmodified
-//   node:test members — node --test --experimental-test-coverage (CLI flags only)
-//   tools/happy-dom   — vitest run --coverage.enabled --coverage.provider=v8
-// The census has since caught up with, and in two places overtaken, the meter.
-// №1's dagger RETIRES — census and meter now agree at 1,325 sloc.  Two new
-// daggers replace it: build_and_test (meter saw 7f/756, census now 7f/1,128) and
-// shared (meter 9f/300, census 10f/301).  Footprints stay on the census, and for
-// a daggered member the drawn reach is the meter's lit sloc over the CURRENT
-// census — so unlit new code reads as shadow, which is what it is.
+// REV E: the light is a PLATE.  Both series now come from filed snapshots measured
+// at the same ref, so the meter and the census can no longer disagree:
+//   footprints + annexes — diagrams/data/census-city.json (sheet 7's own plate)
+//   cat, extent, line/branch/func, the lit footprint — diagrams/data/census-shadow.json,
+//     written by census-shadow.mjs, which materializes the ref, installs it, and
+//     meters every member under ITS OWN suite's meter (turbo run test:coverage
+//     where the member declares one; node --test --experimental-test-coverage for
+//     the node:test members; vitest run --coverage.enabled --coverage.provider=v8
+//     for the vitest ones).  Placement, numbering, district and prose are all
+//     that is left in this file.
+const CITY = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
+const SHADOW = JSON.parse(readFileSync(new URL('../data/census-shadow.json', import.meta.url), 'utf8'));
+const CITY_ROW = new Map(CITY.rows.map((r) => [r.member, r]));
+const SH_ROW = new Map(SHADOW.rows.map((r) => [r.member, r]));
+const cityOf = (dir) => {
+  const r = CITY_ROW.get(dir);
+  if (!r) throw new Error(`plate 7A: member ${dir} is missing from diagrams/data/census-city.json`);
+  return r;
+};
+const shadowOf = (dir) => {
+  const r = SH_ROW.get(dir);
+  if (!r) throw new Error(`plate 7A: member ${dir} is missing from diagrams/data/census-shadow.json`);
+  return r;
+};
+const BASIS = `metered at ${SHADOW.ref} @ ${SHADOW.sha} (${SHADOW.generatedAtTime.slice(0, 10)})`;
+const fmt = (v) => (v == null ? '—' : v.toLocaleString('en-US'));
+const pct1 = (h, f) => (f ? ((h / f) * 100).toFixed(1) : '—');
 
 // ---- scale rule — sheet 7's, unchanged ------------------------------------------
 const KS = 1.6, MIN = 12;
@@ -50,51 +65,30 @@ const CAT_BADGE = {
   z: { badge: 'sks fp2', num: 'lbls' }, // no mass
 };
 
-// [n, name, dist, cat, x, y, srcSloc(census), specSloc(census), extent%, line%, branch%, func%]
-// extent = sloc of files the suite loaded (now: LIT) / member src sloc, both at worktree HEAD.
-const M = [
-  // --- packages/ — the product ---------------------------------------------------
-  [1,  'lit-ui-router',            'pkg', 'm',   0,  20, 1325, 3757, 94.0, 98.1, 92.4, 97.4],
-  [2,  'ui-router-server',         'pkg', 'm', 200,  20, 1141, 2174, 100,  99.6, 95.6, 98.3],
-  [3,  'lit-ui-router-mobx',       'pkg', 'm', 170, 130,  133,  380, 97.7, 100,  91.7, 100],
-  [4,  'navigation-location-plugin','pkg','m', 260, 130,  105,  410, 100,  100,  100,  100],
-  // --- apps/ — the proving ground ------------------------------------------------
-  [5,  'sample-app-shared',        'app', 'u', 570,  10, 2132,  309, null, null, null, null],
-  [6,  'sample-app-lit-vanilla',   'app', 'e', 720,  10,  404,    0, null, null, null, null],
-  [7,  'sample-app-lit-mobx',      'app', 'e', 720,  90,  443,    0, null, null, null, null],
-  [8,  'sample-app-routes',        'app', 'm', 700, 150,   51,  185, 100,  100,  100,  null],
-  [9,  'sample-app-lit-e2e',       'app', 'e', 580, 150,   57,  477, null, null, null, null],
-  // --- docs/ + examples/ — the shopfront ------------------------------------------
-  [10, 'docs',                     'site', 'm', 660, 340,  688,  181, 7.7, 100,  100,  100],
-  [11, 'examples',                 'site', 'n', 660, 430, 1387,    0, null, null, null, null],
-  // --- tools/ — the instrument yard -----------------------------------------------
-  [12, '@tools/release',           'tool', 'm',  20, 430, 1871, 1898, 54.1, 98.4, 96.3, 96.8],
-  [13, '@tools/typedoc-plugin',    'tool', 'n', 230, 430,  759,    0, null, null, null, null],
-  [14, '@tools/dts-backtest',      'tool', 'n',   8, 350,  291,    0, null, null, null, null],
-  [15, '@tools/build_and_test',    'tool', 'm', 330, 430, 1128, 1163, 41.1, 99.8, 93.5, 97.3],
-  [16, '@tools/shared',            'tool', 'm',  20, 550,  301,  276, 82.4, 83.1, 98.0, 62.5],
-  [17, '@tools/workers-builds',    'tool', 'm', 220, 550,  375,  269, 58.4, 99.3, 88.5, 100],
-  [18, '@tools/bundle-probe',      'tool', 'n', 330, 550,  236,    0, null, null, null, null],
-  [19, '@tools/compat-guards',     'tool', 'm', 130, 550,  189,  112, 12.2, 100,  100,  100],
-  [20, '@tools/oxc-emit',          'tool', 'n', 230, 350,  100,    0, null, null, null, null],
-  [21, '@tools/release-config',    'tool', 'n', 280, 350,   39,    0, null, null, null, null],
-  [22, '@tools/lit-template-lint', 'tool', 'n', 325, 350,   21,    0, null, null, null, null],
-  [23, '@tools/lit-test-env',      'tool', 'n',  85, 350,   24,    0, null, null, null, null],
-  [24, '@tools/vue-check',         'tool', 'n', 370, 350,   25,    0, null, null, null, null],
-  [25, '@tools/lcov-rebase',       'tool', 'm', 415, 350,   23,   30, 26.1, 100,  100,  100],
-  [26, '@tools/happy-dom',         'tool', 'm', 125, 350,    8,   26, 0,    null, null, null],
-  [27, '@tools/wintercg-globals',  'tool', 'z', 185, 350,    0,    0, null, null, null, null],
-  // --- first drawn at rev D; none of the three was in the 2026-08-17 metering ---
-  [28, '@tools/lint-elements',     'tool', 'n', 380, 550,  186,    0, null, null, null, null],
-  [29, '@tools/warn-lanes',        'tool', 'u', 430, 530,  214,  280, null, null, null, null],
-  [30, '@tools/eslint-ts-parser',  'tool', 'n',  54, 350,    1,    0, null, null, null, null],
-];
+// [n, name, dist, cat, x, y, srcFiles, srcSloc, specFiles, specSloc,
+//  litFiles, litSloc, extent%, line%, branch%, func%]
+// Placement, numbering and district come from sheet 7's PLACED table — the two
+// plates overlay building for building because they are the same table; the
+// counts come from the two plates.  extent = sloc of the src files the suite
+// LOADED ÷ the member's src sloc, both measured at the same ref.
+const M = PLACED.map(([n, name, dir, dist, , x, y]) => {
+  const c = cityOf(dir), s = shadowOf(dir);
+  return [n, name, dist, s.cat, x, y, c.srcFiles, c.srcSloc, c.specFiles, c.specSloc,
+    s.litFiles ?? null, s.litSloc ?? null, s.extent ?? null, s.line ?? null, s.branch ?? null, s.func ?? null];
+});
+const SH = new Map(PLACED.map(([n, , dir]) => [n, shadowOf(dir)]));
 
 // exported: the 3D city lights from THIS survey, so the two lanes cannot drift
-export const SURVEY = M.map(([n, , , cat, , , , , ext, line, branch, func]) => ({ n, cat, ext, line, branch, func }));
+export const SURVEY = M.map(([n, , , cat, , , , , , , , , ext, line, branch, func]) =>
+  ({ n, cat, ext, line, branch, func }));
+// and the plate it was metered at, so the 3D lane's prose cites the same ref
+export const SURVEY_META = {
+  ref: SHADOW.ref, sha: SHADOW.sha, date: SHADOW.generatedAtTime.slice(0, 10),
+  metered: SHADOW.totals.metered, basis: BASIS,
+};
 
 const geom = new Map(M.map((r) => {
-  const [n, name, dist, cat, x, y, sl, pl, ext] = r;
+  const [n, name, dist, cat, x, y, , sl, , pl, , , ext] = r;
   const s = S(sl);
   const sa = pl ? S(pl) : 0;
   const ax = x + s + AG, ay = y + (s - sa) / 2;
@@ -108,7 +102,7 @@ const g = (n) => geom.get(n);
 function member(n) {
   const b = g(n);
   const { cat, x, y, s, sa, ax, ay } = b;
-  const line = b.r[9];
+  const line = b.r[13];
   const R = (px, py, w, h, attrs) => `<rect x="${X(px)}" y="${Y(py)}" width="${(K * w).toFixed(1)}" height="${(K * h).toFixed(1)}" ${attrs}/>`;
   const cone = sa && cat !== 'n'
     ? `<polygon points="${X(ax)},${Y(ay)} ${X(x + s)},${Y(y)} ${X(x + s)},${Y(y + s)} ${X(ax)},${Y(ay + sa)}" class="fhalo"/>`
@@ -173,63 +167,93 @@ const districts = DIST.map(([d, pad]) => {
 const bodies = M.map(([n]) => member(n)).join('\n');
 const furn = M.map(([n]) => furniture(n)).join('\n');
 
+// ---- aggregates, all derived from the two plates --------------------------------
+const T = SHADOW.totals;
+const inCat = (c) => M.filter((r) => r[3] === c).map((r) => r[0]);
+const inBand = (k) => M.filter((r) => r[3] === 'm' && BAND(r[13]) === k).map((r) => r[0]);
+const dRows = (d) => M.filter((r) => r[2] === d);
+const dAgg = (d) => {
+  const rows = dRows(d), met = rows.filter((r) => r[3] === 'm');
+  const s = (f) => rows.reduce((a, r) => a + f(r), 0);
+  const ms = (f) => met.reduce((a, r) => a + f(r), 0);
+  return {
+    n: rows.length, metered: met.length,
+    sloc: s((r) => r[7]), litSloc: ms((r) => r[11] ?? 0), meteredSloc: ms((r) => r[7]),
+    lines: ms((r) => SH.get(r[0]).lines ?? 0), linesHit: ms((r) => SH.get(r[0]).linesHit ?? 0),
+    branches: ms((r) => SH.get(r[0]).branches ?? 0), branchesHit: ms((r) => SH.get(r[0]).branchesHit ?? 0),
+  };
+};
+const DP = dAgg('pkg'), DA = dAgg('app'), DT = dAgg('tool');
+// the yard's habit, counted rather than asserted: source a metered suite never loads
+const wrapperSloc = M.filter((r) => r[2] === 'tool' && r[3] === 'm')
+  .reduce((a, r) => a + (r[7] - (r[11] ?? 0)), 0);
+const darkToolSloc = M.filter((r) => r[2] === 'tool' && (r[3] === 'n' || r[3] === 'u'))
+  .reduce((a, r) => a + r[7], 0);
+const wrapperFiles = M.filter((r) => r[2] === 'tool' && r[3] === 'm')
+  .reduce((a, r) => a + (r[6] - (r[10] ?? 0)), 0);
+const numList = (ns) => (ns.length ? `№${ns.join(' ')}` : 'none this survey');
+
 // ---- schedule --------------------------------------------------------------------
 const CAT_TEXT = {
   m: 'metered', e: 'e2e light only', u: 'tests run, no meter', n: 'FULL SHADOW — no suite', z: 'no mass',
 };
-// [litFiles, litSloc: 'lit/total' at worktree HEAD, note]
-const EXTRA = {
-  1:  ['8/12f', '1,245/1,325', 'in shadow: barrels + interface.ts (type decls)'],
-  2:  ['8/8f', '1,141/1,141', 'whole footprint fully lit'],
-  3:  ['3/4f', '130/133', 'in shadow: the 3-sloc index barrel'],
-  4:  ['1/1f', '105/105', 'all three meters read 100'],
-  5:  [null, null, '43 tests pass · no coverage provider in browser mode · e2e-lit'],
-  6:  [null, null, 'lit only by the cypress rig'],
-  7:  [null, null, 'lit only by the cypress rig'],
-  8:  ['2/2f', '51/51', 'route table fully lit (no functions to meter)'],
-  9:  [null, null, 'the rig itself — its 57 sloc are the support code'],
-  10: ['1/8f', '53/688†', 'worker lit · the site (635 sloc) sees only e2e light'],
-  11: [null, null, 'stackblitz copies — never lit'],
-  12: ['23/44f', '1,013/1,871', '21 CLI wrappers (858 sloc) in shadow'],
-  13: [null, null, 'builds the API pages, tests nothing'],
-  14: [null, null, 'no self-suite — it IS the packages’ d.ts test'],
-  15: ['4/7f', '464/1,128†', '3 wrappers + the error summary in shadow'],
-  16: ['7/10f', '248/301†', 'palest: exec 35/55 · workspace 63/103'],
-  17: ['1/2f', '219/375', 'trigger wrapper in shadow'],
-  18: [null, null, 'size probe, advisory, unlit'],
-  19: ['1/7f', '23/189', 'six CI lanes never metered'],
-  20: [null, null, 'both build passes ride it — unlit'],
-  21: [null, null, 'config only'],
-  22: [null, null, 'wrapper only'],
-  23: [null, null, 'harness for every vitest suite — borrowed light'],
-  24: [null, null, 'wrapper only'],
-  25: ['1/2f', '6/23', 'rebase.ts lit · CLI wrapper in shadow'],
-  26: ['0/1f', '0/8', 'canary lights happy-dom, not append.ts'],
-  27: [null, null, 'ambient types — nothing to light'],
-  28: [null, null, 'the shared element lane — no suite of its own'],
-  29: [null, null, 'has a core suite; no lcov leaves it — untethered light'],
-  30: [null, null, 'a one-line parser shim — nothing to light'],
+// prose only — every figure in the schedule is computed from the two plates
+const NOTE = {
+  1: 'in shadow: barrels + interface.ts',
+  2: 'whole footprint fully lit',
+  3: 'in shadow: the index barrel',
+  4: 'all three meters read 100',
+  5: 'tests pass · no provider in browser mode',
+  6: 'lit only by the cypress rig',
+  7: 'lit only by the cypress rig',
+  8: 'route table lit (no functions to meter)',
+  9: 'the rig itself — its sloc are support code',
+  10: 'worker lit · the site sees only e2e light',
+  11: 'stackblitz copies — never lit',
+  12: 'cores lit, CLI wrappers in shadow',
+  13: 'builds the API pages, tests nothing',
+  14: 'no self-suite — it IS the d.ts test',
+  15: '3 wrappers in shadow, the cores lit',
+  16: 'palest: exec.ts and workspace.ts',
+  17: 'trigger wrapper in shadow',
+  18: 'size probe, advisory, unlit',
+  19: 'ranges.ts lit; six CI lanes unmetered',
+  20: 'REV E: first metered — the check lane',
+  21: 'config only',
+  22: 'wrapper only',
+  23: 'harness for the vitest suites — borrowed light',
+  24: 'wrapper only',
+  25: 'rebase.ts lit · CLI wrapper in shadow',
+  26: 'canary lights happy-dom, not append.ts',
+  27: 'ambient types — nothing to light',
+  28: 'the element lane — no suite of its own',
+  29: 'REV E: first metered — the ratchet core',
+  30: 'a one-line parser shim — nothing to light',
+  31: 'REV E: first metered — vendored rules',
 };
 const ART_H = 866;
 const SY = ART_H + 16;
 const pctS = (v) => (v == null ? '—' : `${v}%`);
-const schedRow = ([n, name, , cat, , , , , ext, line, br, fn]) => {
-  const [ef, es, note] = EXTRA[n];
+const schedRow = ([n, name, , cat, , , sf, sl, , , lf, ls, ext, line, br, fn]) => {
   const meat = cat === 'm'
-    ? `${ef} · ${es} (${pctS(ext)}) · L ${pctS(line)} B ${pctS(br)} F ${pctS(fn)}`
+    ? `${lf}/${sf}f · ${fmt(ls)}/${fmt(sl)} (${pctS(ext)}) · L ${pctS(line)} B ${pctS(br)} F ${pctS(fn)}`
     : CAT_TEXT[cat];
-  return `${String(n).padStart(2, ' ')}  ${name} — ${meat} · ${note}`;
+  return `${String(n).padStart(2, ' ')}  ${name} — ${meat} · ${NOTE[n]}`;
 };
 const half = Math.ceil(M.length / 2);
+const TOTAL_LINE = `TOTAL — ${T.metered} members metered: ${fmt(T.linesHit)} of ${fmt(T.lines)} metered lines lit (${pct1(T.linesHit, T.lines)}%)`
+  + ` · branches ${fmt(T.branchesHit)}/${fmt(T.branches)} (${pct1(T.branchesHit, T.branches)}%)`
+  + ` · functions ${fmt(T.funcsHit)}/${fmt(T.funcs)} (${pct1(T.funcsHit, T.funcs)}%)`
+  + ` · lit extent ${fmt(T.litSloc)}/${fmt(T.meteredSrcSloc)} sloc (${pct1(T.litSloc, T.meteredSrcSloc)}%) · ${BASIS}`;
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${91 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, 'SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
 ${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${M.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 56 + half * 17, 'TOTAL — 13 members metered: 5,427 of 5,539 metered lines lit (98.0%) · branches 1,283/1,351 (95.0%) · functions 419/437 (95.9%) · lit extent 4,698/6,954 sloc (67.6%) · metered 2026-08-17, NOT re-run at rev D', 'lbls')}
-${txt(58, SY + 72 + half * 17, '† the census (2026-08-31, sheet 7 rev D) has overtaken the metering (2026-08-17, HEAD 3557c29): №10 677→688, №15 7f/756→7f/1,128, №16 9f/300→10f/301 — footprint and denominator follow the census, lit sloc follows the meter, so unlit new code reads as shadow', 'lblf')}`;
+${txt(58, SY + 56 + half * 17, TOTAL_LINE, 'lbls')}
+${txt(58, SY + 72 + half * 17, `REV E — the daggers are retired: light and footprint are now measured at the SAME ref, so no member's meter and census can disagree · every figure above is read from diagrams/data/census-shadow.json and diagrams/data/census-city.json`, 'lblf')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="A plan view of sheet 7's census city — the same thirty workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. The packages district glows wall to wall: all four published packages meter between 98 and 100 percent line coverage over 97 to 100 percent of their source. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files — one thousand three hundred seventy-five lines in all — in shadow. Eleven members are entirely dark, marked with red badges: examples, the typedoc plugin, and nine other instruments have no suite at all. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a lit lamp and still stands dark: its canary spec lights happy-dom itself, never its own eight lines. A shadow schedule below gives exact per-member figures.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a lit lamp and still stands dark: its canary spec lights happy-dom itself, never its own source. A shadow schedule below gives exact per-member figures.">
 ${defs(P)}
 <defs>
   <!-- shadow must darken in BOTH themes: a black wash (never ink, which is light
@@ -256,7 +280,7 @@ ${defs(P)}
 
 <rect x="40" y="26" width="628" height="42" class="skf fnone"/>
 ${txt(52, 43, 'THE SHADOW SURVEY — WHO STANDS IN TEST LIGHT, AND WHAT STAYS DARK', 'lbls')}
-${txt(52, 58, 'sheet 7’s city from straight above · every lamp is a spec annex · REV B: the light falls FROM the tests', 'lblf')}
+${txt(52, 58, 'sheet 7’s city from straight above · every lamp is a spec annex · REV E: the light is a plate, measured at the census’s own ref', 'lblf')}
 
 ${txt(1520, 34, 'LIGHT RULE — lit strip = side · (sloc the suite loads ÷ src sloc), from the lamp side · brightness = line coverage of what it loads', 'lbls', 'end')}
 ${txt(1520, 48, 'footprints and annexes are sheet 7’s census, unchanged · a file the suite never imports stays in shadow — darkness is data', 'lblf', 'end')}
@@ -266,12 +290,12 @@ ${txt(1520, 62, 'e2e light (cypress) is drawn, not metered — no lcov leaves th
 <rect x="1128" y="96" width="392" height="214" class="skf fnone"/>
 ${txt(1144, 118, 'BRIGHTNESS — LINE COVERAGE OF WHAT THE SUITE LIGHTS', 'lbls')}
 ${[
-  ['var(--halo)', 'sk', '', '≥ 95% — full bright · №1 2 3 4 8 10 12 15 17 19 25'],
-  [`url(#${P}-g2)`, 'sk', '', '85–95% — bright (none this survey)'],
-  [`url(#${P}-g3)`, 'skr', '', '70–85% — pale · №16 only'],
-  [`url(#${P}-g4)`, 'skr', '', 'below 70% — guttering (none this survey)'],
-  [`url(#${P}-se)`, 'ska', '5 4', 'e2e light — real, unmetered · №6 7 9'],
-  ['none', 'sks', '2 4', 'tests run, no meter attaches · №5 · 29'],
+  ['var(--halo)', 'sk', '', `≥ 95% — full bright · ${numList(inBand('b1'))}`],
+  [`url(#${P}-g2)`, 'sk', '', `85–95% — bright · ${numList(inBand('b2'))}`],
+  [`url(#${P}-g3)`, 'skr', '', `70–85% — pale · ${numList(inBand('b3'))}`],
+  [`url(#${P}-g4)`, 'skr', '', `below 70% — guttering · ${numList(inBand('b4'))}`],
+  [`url(#${P}-se)`, 'ska', '5 4', `e2e light — real, unmetered · ${numList(inCat('e'))}`],
+  ['none', 'sks', '2 4', `tests run, no meter attaches · ${numList(inCat('u'))}`],
   [`url(#${P}-sh)`, 'sk', '', 'SHADOW — source no suite ever loads'],
 ].map(([fill, edge, dash, label], i) => {
   const y = 138 + i * 22;
@@ -285,78 +309,81 @@ ${furn}
 
 <!-- district lettering + aggregates -->
 ${txt(140, 348, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(140, 360, 'lit wall to wall — 96.9% of district sloc · 99.3% of 2,397 metered lines', 'lblf')}
-${txt(140, 372, 'branches 94.7% · the annexes sheet 7 drew at 1.9–3.9× bought this glow', 'lblf')}
+${txt(140, 360, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc · ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} metered lines`, 'lblf')}
+${txt(140, 372, `branches ${pct1(DP.branchesHit, DP.branches)}% · the annexes sheet 7 drew at 1.9–3.9× bought this glow`, 'lblf')}
 <line x1="150" y1="336" x2="160" y2="326" class="skf"/>
 
 ${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
-${txt(1096, 385, 'one metered member (№8, fully lit) · two demos + the rig', 'lblf', 'end')}
+${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · two demos + the rig`, 'lblf', 'end')}
 ${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
 ${txt(1146, 560, 'docs/ + examples/ — THE SHOPFRONT', 'lblb')}
-${txt(1146, 573, 'the worker: fully lit — a 53-sloc sliver of 688', 'lblf')}
-${txt(1146, 585, 'examples: 1,387 sloc, never lit', 'lblf')}
+${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
+${txt(1146, 585, `examples: ${fmt(g(11).r[7])} sloc, never lit`, 'lblf')}
 <line x1="1140" y1="569" x2="1064" y2="560" class="skf"/>
 
 ${txt(96, 852, 'tools/ — THE INSTRUMENT YARD', 'lblb')}
-${txt(96, 865, 'seven metered members: 96.7% of 2,906 lines lit — but the lamps reach 1,973 of the yard’s 5,791 sloc (34%)', 'lblf')}
+${txt(96, 865, `${DT.metered} metered members: ${pct1(DT.linesHit, DT.lines)}% of ${fmt(DT.lines)} lines lit — the lamps reach ${pct1(DT.litSloc, DT.sloc)}% of the yard’s ${fmt(DT.sloc)} sloc`, 'lblf')}
 ${txt(96, 877, 'the habit, visible from the air: every .core.ts lit, every CLI wrapper left in shadow', 'lblf')}
 <line x1="140" y1="840" x2="152" y2="826" class="skf"/>
 
 <!-- callouts -->
-${txt(620, 82, '№1 lit-ui-router — 94% of the footprint lit, 98.1% bright', 'lbla')}
-${txt(620, 94, 'in shadow: index · pure · register · interface.ts —', 'lblf')}
-${txt(620, 106, '69 of those 80 sloc are type declarations', 'lblf')}
+${txt(620, 82, `№1 lit-ui-router — ${pctS(g(1).r[12])} of the footprint lit, ${pctS(g(1).r[13])} bright`, 'lbla')}
+${txt(620, 94, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(1).r[11])} sloc — the barrels`, 'lblf')}
+${txt(620, 106, 'and interface.ts, which is type declarations', 'lblf')}
 <line x1="612" y1="110" x2="305" y2="136" class="skf"/>
 
 ${txt(1144, 322, '№5 sample-app-shared — an outline of light:', 'lbls')}
-${txt(1144, 335, '43 unit tests pass, but browser-mode vitest cannot', 'lblf')}
+${txt(1144, 335, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
 ${txt(1144, 347, 'load a meter the repo never installed', 'lblf')}
 <line x1="1138" y1="330" x2="1032" y2="270" class="skf"/>
 
 ${txt(30, 430, '№26 happy-dom — a lamp, and NO light on itself:', 'lblr')}
 ${txt(30, 442, 'its canary spec lights happy-dom’s ordering', 'lblf')}
-${txt(30, 454, 'bug, never its own append.ts — 0 of 8 sloc;', 'lblf')}
-${txt(30, 466, 'those 8 lines are lit from №1’s lamp instead', 'lblf')}
+${txt(30, 454, `bug, never its own append.ts — 0 of ${g(26).r[7]} sloc;`, 'lblf')}
+${txt(30, 466, 'those lines are lit from №1’s lamp instead', 'lblf')}
 <line x1="250" y1="474" x2="272" y2="522" class="skf"/>
 
 ${txt(863, 724, '№12 @tools/release — the yard in one building:', 'lblr')}
-${txt(863, 737, '23 .core.ts files at 98.4% bright; 21 CLI wrappers, 858 sloc,', 'lblf')}
-${txt(863, 749, 'in shadow — the publish halt is lit at its core', 'lblf')}
+${txt(863, 737, `${g(12).r[10]} files lit at ${pctS(g(12).r[13])} bright; ${g(12).r[6] - g(12).r[10]} in shadow, ${fmt(g(12).r[7] - g(12).r[11])} sloc —`, 'lblf')}
+${txt(863, 749, 'the publish halt is lit at its core', 'lblf')}
 ${txt(863, 761, 'and dark at its process edge', 'lblf')}
 <line x1="857" y1="742" x2="240" y2="700" class="skf"/>
 
-${txt(700, 852, '№16 @tools/shared — the palest light thrown: 83.1% line, 62.5% function', 'lblr')}
-${txt(700, 865, 'exec.ts 35/55 lines · workspace.ts 63/103 — the worst-lit thing that is lit at all', 'lblf')}
+${txt(700, 852, `№16 @tools/shared — the palest light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
+${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}
 <line x1="694" y1="850" x2="166" y2="772" class="skf"/>
 
 <!-- verdict -->
 <rect x="1128" y="382" width="392" height="118" class="sk fp"/>
 ${txt(1144, 404, 'VERDICT', 'lblb')}
 ${txt(1144, 424, 'The light reaches wall to wall in packages/:', 'lbls')}
-${txt(1144, 438, '98.0% of 5,539 metered lines lit, and the', 'lbls')}
+${txt(1144, 438, `${pct1(T.linesHit, T.lines)}% of ${fmt(T.lines)} metered lines lit, and the`, 'lbls')}
 ${txt(1144, 452, 'product district has no dark corner.', 'lbls')}
-${txt(1144, 466, 'What never sees light: 2,608 sloc of untested', 'lbls')}
-${txt(1144, 480, 'instruments and 1,375 sloc of CLI wrappers.', 'lbls')}
+${txt(1144, 466, `What never sees light: ${fmt(darkToolSloc)} sloc of untested`, 'lbls')}
+${txt(1144, 480, `instruments and ${fmt(wrapperSloc)} sloc of CLI wrappers.`, 'lbls')}
 
 ${schedule}
 </svg>`;
 
 export const sheet7a = {
-  num: '7A', id: 'shadow', rev: 'D',
+  num: '7A', id: 'shadow', rev: 'E',
   title: 'THE SHADOW SURVEY',
-  sub: 'ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7 rev D, 30 members · metered 2026-08-17 at worktree HEAD 3557c29 · REV B: polarity corrected — the tests are the light, shadow is the untested · REV C 2026-08-31: lettering pass — no district boundary is drawn through a caption · REV D 2026-08-31: footprints refreshed to sheet 7 rev D’s census (30 members, scc sloc); the LIGHT is unchanged — this plate’s 5,539-line universe comes from bespoke census-shadow runs that were not re-run, and is printed as the 2026-08-17 metering it is',
+  sub: `ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, ${M.length} members · REV B: polarity corrected — the tests are the light, shadow is the untested · REV C 2026-08-31: lettering pass — no district boundary is drawn through a caption · REV D 2026-08-31: footprints refreshed to sheet 7 rev D’s census; the light was NOT re-metered and the plate said so · REV E: RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (${BASIS}); the daggers retire, №31 is metered for the first time, and nothing on this plate is hand-pasted`,
   scale: 'WHOLE WORKSPACE',
   form: 'SHADOW PLAN',
   svg,
-  caption: 'Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite was run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.',
+  caption: 'Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite is run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.',
   notes: `
-<p><strong>REV D — the footprints moved, the light did not.</strong> Sheet 7's census was re-taken on 2026-08-31 on a new sloc ruler (<code>scc</code> 4.0.0's <code>Code</code> count) and grew from 27 members to 30, so this plate's footprints, annexes and districts were refreshed to match — the two plates still overlay building for building. The <em>light</em> was <strong>not</strong> re-metered. This plate's 13-member, 5,539-line universe comes from bespoke <code>census-shadow.mjs</code> runs (nine of the thirteen members are metered by nothing the repo itself schedules), and re-running <code>turbo run test:coverage</code> reproduces only the four packages — 2,380 of 2,397 lines, 99.29%, which is exactly what the packages district already prints. So the verdict box and the schedule total are printed as what they are: the 2026-08-17 metering, unmoved, and labelled as not re-run. The census has since overtaken the meter in three places, daggered in the schedule; the sharpest is <code>@tools/build_and_test</code>, which grew 756 → 1,128 sloc when the error summary landed and lost a lamp on plate 7B, because the new code arrived with no suite behind it. The three new members are drawn dark or untethered on their first appearance: <code>lint-elements</code> and <code>eslint-ts-parser</code> have no suite at all, and <code>warn-lanes</code> has a real <code>.core.test.ts</code> that no lcov ever leaves.</p>
+<p><strong>REV E — the light is a plate, and the daggers are gone.</strong> Every earlier printing of this sheet carried a caveat the rest of the atlas had grown out of: the footprints were a filed census and the <em>light</em> was a hand-pasted transcription of a 2026-08-17 run of a generator that lived in <code>tmp/</code> and no longer exists. That generator is reconstructed as <code>diagrams/generator/census-shadow.mjs</code>, a T3 probe on the same harness every other execution probe uses — materialize the ref, <code>corepack pnpm install --frozen-lockfile</code>, then meter each member under <em>its own</em> suite's meter and parse the lcov, never a stdout table. The consequence worth saying plainly: <strong>the meter and the census are now the same measurement of the same tree</strong> (${BASIS}), so the three daggers rev D printed — members whose census had overtaken their metering — are retired rather than explained.</p>
+<p><strong>The gate first: the reconstruction had to reproduce the sheet before it was allowed to replace it.</strong> Run against the old metering's own ref, <code>3557c29</code>, the probe returns rev D's printed figures exactly — the same thirteen metered members with the same category letters, and line, branch and function coverage identical to the last decimal on every one of them; the schedule's grand total comes back as 5,427 of 5,539 lines, 1,283 of 1,351 branches, 419 of 437 functions, which is what rev D printed. It also reproduces the meter footprints the old header narrated: <code>lit-ui-router</code> at 1,325 sloc and <code>@tools/shared</code> at 9 files / 300. <strong>One figure did not reproduce, and it is worth the space:</strong> <code>@tools/build_and_test</code> was recorded at 7 files / 756 sloc with 464 lit, and the probe reads 7 files / 779 with 487. The file sets are identical; the 23 lines are all in <code>error-summary.core.ts</code>, which the old "neither blank nor comment-only" counter reads at 233 and <code>scc</code> 4.0.0 reads at 256 — the string-aware ruler sheet 7 changed to at its own rev D, counting template-literal interiors as code. So the meter reproduces perfectly and the tape measure moved, which is exactly the distinction this plate exists to keep.</p>
+<p><strong>What re-metering moved, and the dagger mechanism's own bill.</strong> Sixteen members meter now instead of thirteen. Three are new light: №31 <code>eslint-plugin-lit-ui-router</code> is metered for the first time and comes in lit wall to wall (${g(31).r[10]}/${g(31).r[6]} files, ${pctS(g(31).r[12])}, line ${pctS(g(31).r[13])}); №29 <code>@tools/warn-lanes</code>, drawn at rev D as an outline of light on the guess that no lcov left it, in fact meters clean at ${pctS(g(29).r[12])} of its source; and №20 <code>@tools/oxc-emit</code>, drawn dark, has grown a suite and lights ${pctS(g(20).r[12])}. The daggered pair moves the most, and in the direction that indicts the dagger rather than the members: rev D drew <code>build_and_test</code> at 41.1% reach and <code>shared</code> at 82.4%, both computed by dividing an August lit figure by an end-of-August census — measured properly at one ref they are ${pctS(g(15).r[12])} and ${pctS(g(16).r[12])}. <em>The dagger systematically understated the members it marked</em>, which is why retiring it matters more than relabelling it. Nothing brightened everywhere: №12 <code>@tools/release</code> reaches further than it did (54.1% → ${pctS(g(12).r[12])}) and burns dimmer inside that reach (line 98.4% → ${pctS(g(12).r[13])}, function 96.8% → ${pctS(g(12).r[15])}), which is what a growing instrument with a lagging suite looks like from the air.</p>
+<p><strong>REV D — the footprints moved, the light did not.</strong> Sheet 7's census was re-taken on 2026-08-31 on a new sloc ruler (<code>scc</code> 4.0.0's <code>Code</code> count) and grew from 27 members to 30, so this plate's footprints, annexes and districts were refreshed to match — the two plates still overlay building for building. The <em>light</em> was <strong>not</strong> re-metered. This plate's 13-member, 5,539-line universe came from bespoke <code>census-shadow.mjs</code> runs (nine of the thirteen members were metered by nothing the repo itself schedules), and re-running <code>turbo run test:coverage</code> reproduced only the four packages — 2,380 of 2,397 lines, 99.29%. So the verdict box and the schedule total were printed as what they were: the 2026-08-17 metering, unmoved, and labelled as not re-run. The census had by then overtaken the meter in three places, daggered in the schedule; the sharpest looked like <code>@tools/build_and_test</code>, which grew 756 → 1,128 sloc when the error summary landed and lost a lamp on plate 7B — a reading rev E has since shown to be an artefact of the dagger, not a suite that stopped covering. The three new members were drawn dark or untethered on their first appearance: <code>lint-elements</code> and <code>eslint-ts-parser</code> had no suite at all, and <code>warn-lanes</code> had a real <code>.core.test.ts</code> that was believed to leave no lcov.</p>
 <p><strong>REV B — the polarity is corrected, not the data.</strong> This plate's first printing drew coverage as cast shadow, so the best-tested district read gloomiest — the metaphor upside down, as the client noted: the tests are the light, and shadow should mean what shadow means. Every number below is rev A's, unchanged; only the optics flipped. The spec annex is now the lamp, covered source glows, and the members with no suite at all are finally the dark buildings they always were.</p>
-<p><strong>Method — one meter per member, nothing installed, nothing left behind.</strong> Footprints, annexes and districts are sheet 7 rev D's census (2026-08-31), so the two plates overlay. Light was metered on 2026-08-17 at worktree HEAD <code>3557c29</code>: the four packages by the repo's own <code>turbo run test:coverage</code> tasks (vitest v8 for three, <code>node --test --experimental-test-coverage</code> + <code>rebase-lcov</code> for <code>ui-router-server</code>); the eight <code>node:test</code> members by the same node flags passed on the command line; <code>@tools/happy-dom</code> by <code>vitest run --coverage.enabled --coverage.provider=v8</code>. No repo file was edited. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and never summed across meters in the drawing — only the schedule's grand total does, and says so. Lit extent uses the atlas sloc rule over the code the meter actually saw; three members' source has since moved past the metering and are daggered in the schedule.</p>
-<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> All four published packages meter 98.1–100% line, 91.7–100% branch, over 94–100% of their source. What little stays dark is entry barrels and <code>interface.ts</code> — 69 of <code>lit-ui-router</code>'s 80 shadowed sloc are type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at 1.9–3.9× their buildings turn out to buy near-total light.</p>
-<p><strong>The yard's habit: bright cores, dark wrappers.</strong> Four instruments repeat one pattern — <code>@tools/release</code> (23 <code>.core.ts</code> files at 98.4%, 21 CLI wrappers dark), <code>build_and_test</code> (3 wrappers dark), <code>workers-builds</code> (the 156-sloc trigger wrapper), <code>lcov-rebase</code> (the 17-sloc bin). 1,375 sloc of process-edge code is never loaded by any suite, while the logic behind it meters 96.7%. <code>compat-guards</code> is the pattern at its extreme: only <code>ranges.ts</code> is unit-lit; its six guard lanes run for real in CI, where no meter follows. And <code>@tools/happy-dom</code> is the survey's one genuine surprise, re-verified before inking: it owns a lit lamp and still stands dark, because its spec is a conformance canary pointed at happy-dom upstream — its own <code>append.ts</code> is lit only from <code>lit-ui-router</code>'s lamp, as borrowed light.</p>
-<p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the Cypress host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. <code>sample-app-shared</code> runs 43 unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed (<code>@vitest/coverage-v8</code> is no devDependency of it); its light is an outline. Eleven members — <code>examples</code>, the typedoc plugin, and nine instruments — are dark because nothing tests them; two of those (<code>dts-backtest</code>, <code>lit-test-env</code>) spend their working lives inside other members' suites and are red-badged with that caveat in the schedule.</p>`,
+<p><strong>Method — one meter per member, nothing installed by hand, nothing left behind.</strong> Footprints, annexes and districts are sheet 7's own plate (<code>census-city.json</code>); the light is <code>census-shadow.json</code>. The probe never edits a repo file: members that declare <code>test:coverage</code> are metered by the tree's own unmodified <code>turbo run test:coverage</code>; <code>node:test</code> members by their own <code>test</code> script re-run with <code>--experimental-test-coverage</code> and the lcov reporter; the <code>vitest</code> members by their own script with <code>--coverage.enabled --coverage.provider=v8</code>. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and are never summed across meters in the drawing — only the schedule's grand total does, and says so. LIT means a source file the suite actually executed; extent is those files' sloc over the member's src sloc, both from the same ref. One honest wobble found by re-running the probe four times over: <code>node --test</code>'s branch <em>denominator</em> for №31 came back 213 on two runs and 215 on two more, with 191 hit either way — a 0.9-point swing on one member's branch figure and nothing else in the plate moved. Branch discovery under V8 is not perfectly repeatable, and this plate says so rather than pretending the last run is the only one.</p>
+<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> The published packages meter ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines over ${pct1(DP.litSloc, DP.meteredSloc)}% of their metered source. What little stays dark is entry barrels and <code>interface.ts</code> — type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at 1.9–3.9× their buildings turn out to buy near-total light.</p>
+<p><strong>The yard's habit: bright cores, dark wrappers.</strong> The instruments repeat one pattern — <code>@tools/release</code>, <code>build_and_test</code>, <code>workers-builds</code>, <code>lcov-rebase</code>: the <code>.core.ts</code> logic is lit and the command-line file in front of it is not. ${fmt(wrapperSloc)} sloc across ${wrapperFiles} files of process-edge code is never loaded by any suite, while the logic behind it meters ${pct1(DT.linesHit, DT.lines)}%. <code>compat-guards</code> is the pattern at its extreme: only <code>ranges.ts</code> is unit-lit; its guard lanes run for real in CI, where no meter follows. And <code>@tools/happy-dom</code> remains the survey's one genuine surprise: it owns a lit lamp and still stands dark, because its spec is a conformance canary pointed at happy-dom upstream — its own <code>append.ts</code> is lit only from <code>lit-ui-router</code>'s lamp, as borrowed light.</p>
+<p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the Cypress host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. That judgement is the only one in the probe, and it is verified rather than assumed: the run throws if the rig has stopped being a Cypress suite. <code>sample-app-shared</code> runs its unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed; its light is an outline, and the probe proves it by running the suite a second time without the meter. The members that are dark are dark because nothing tests them, and two of them (<code>dts-backtest</code>, <code>lit-test-env</code>) spend their working lives inside other members' suites.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member’s footprint — sheet 7’s census, plan view'),
     keyRow('<rect x="14" y="3" width="18" height="12" class="sks fhalo"/>', 'its spec annex — the LAMP: the light falls from the tests'),
