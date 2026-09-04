@@ -201,7 +201,10 @@
       }
     },
     {
-      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "files": [
+        "packages/lit-ui-router/src/**/*.ts",
+        "packages/lit-ui-router-mobx/src/**/*.ts"
+      ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
@@ -310,6 +313,15 @@
       "files": ["**/*.spec.ts", "**/src/specs/**"],
       "rules": {
         "lit-ui-router/anchor-is-valid": "off"
+      }
+    },
+    {
+      "files": ["**/lint-eslint/src/violations.ts"],
+      "rules": {
+        "lit-ui-router/anchor-is-valid": "warn",
+        "lit-ui-router/directive-position": "warn",
+        "lit-ui-router/sref-active-aria-current": "warn",
+        "lit-ui-router/sref-assign-href": "warn"
       }
     },
     {

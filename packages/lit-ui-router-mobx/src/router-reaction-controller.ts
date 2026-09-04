@@ -3,6 +3,7 @@ import { IReactionDisposer, reaction } from 'mobx';
 import { UIRouter } from '@uirouter/core';
 import { UIRouterLitElement } from 'lit-ui-router';
 
+import { warnMissingRouter } from './dev-warn.js';
 import { RouterStore } from './router-store.js';
 import { ReactionControllerOptions } from './reaction-controller.js';
 
@@ -48,7 +49,7 @@ export interface RouterReactionControllerOptions<
  */
 export class RouterReactionController<T> implements ReactiveController {
   /** The selected value, for use in `render()`. */
-  value!: T;
+  value: T;
 
   /** The observed store; set while connected to a router context. */
   store?: RouterStore;
@@ -60,6 +61,9 @@ export class RouterReactionController<T> implements ReactiveController {
     private readonly selector: (store: RouterStore) => T,
     private readonly options: RouterReactionControllerOptions<T> = {},
   ) {
+    // Undefined unless `initialValue` is given, which is the pre-connect
+    // shape either way; the cast keeps `.value` typed `T` for render code.
+    this.value = options.initialValue as T;
     host.addController(this);
   }
 
@@ -67,9 +71,10 @@ export class RouterReactionController<T> implements ReactiveController {
     const router =
       this.options.router ?? UIRouterLitElement.seekRouter(this.host);
     if (!router) {
-      console.warn(
-        'RouterReactionController: no <ui-router> context found for host',
+      warnMissingRouter(
         this.host,
+        'RouterReactionController',
+        'will not observe the router',
       );
       return;
     }

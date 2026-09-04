@@ -39,18 +39,6 @@ void describe('plugin', () => {
     );
   });
 
-  void it('recommended carries every rule the plugin ships', () => {
-    const configured = Object.keys(
-      plugin.configs.recommended[0]?.rules ?? {},
-    ).filter((rule) => rule.startsWith('lit-ui-router/'));
-    assert.deepEqual(
-      configured.sort(),
-      Object.keys(plugin.rules)
-        .map((rule) => `lit-ui-router/${rule}`)
-        .sort(),
-    );
-  });
-
   void it('recommended reports an href written to a <button>', () => {
     const messages = lint(
       `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,

@@ -9,8 +9,10 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 const EMBEDDED_EXAMPLES = [
   'helloworld',
   'hellosolarsystem',
+  'hellosolarsystem-mobx',
   'hellogalaxy',
   'design-system-links',
+  'lint-eslint',
 ];
 
 // The mount shells as the dev server serves them. Production (docs/worker)

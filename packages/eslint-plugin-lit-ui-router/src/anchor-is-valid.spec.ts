@@ -523,11 +523,9 @@ void describe('anchor-is-valid meta', () => {
     assert.deepEqual(anchorIsValid.meta?.defaultOptions, [{ allowHash: true }]);
   });
 
-  void it("is a suggestion rule pointing at this package's docs", () => {
+  // The docs url is attached where the rule registers, so it is not on the
+  // module here; rule-url.spec.ts covers it.
+  void it('is a suggestion rule', () => {
     assert.equal(anchorIsValid.meta?.type, 'suggestion');
-    assert.match(
-      anchorIsValid.meta?.docs?.url ?? '',
-      /simshanith\/lit-ui-router.*docs\/rules\/anchor-is-valid\.md$/,
-    );
   });
 });

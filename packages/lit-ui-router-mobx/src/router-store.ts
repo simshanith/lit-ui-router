@@ -33,6 +33,8 @@ export class RouterStore {
 
   private router?: UIRouter = undefined;
 
+  private deregister?: () => void = undefined;
+
   private static readonly stores = new WeakMap<UIRouter, RouterStore>();
 
   /**
@@ -51,10 +53,11 @@ export class RouterStore {
   }
 
   constructor() {
-    makeAutoObservable<RouterStore, 'router'>(
+    makeAutoObservable<RouterStore, 'router' | 'deregister'>(
       this,
       {
         router: false,
+        deregister: false,
         // Not an action: reads inside actions are untracked, and this must
         // be trackable from observer renders.
         includes: false,
@@ -70,13 +73,37 @@ export class RouterStore {
   /**
    * Starts mirroring the given router. Called by
    * {@link RouterStore.for | for}; call directly only when managing the
-   * store instance yourself, and at most once per store.
+   * store instance yourself.
+   *
+   * Idempotent per router: attaching again to the router already being
+   * mirrored returns the same deregistration function instead of
+   * registering a second hook. Calling that function detaches the store,
+   * after which it can be attached again.
+   *
+   * @throws if the store is already attached to a *different* router — one
+   * store mirrors one router; use {@link RouterStore.for | for} to get that
+   * router's own store.
    * @returns the hook's deregistration function.
    */
   attach(router: UIRouter): () => void {
+    if (this.deregister) {
+      if (this.router === router) return this.deregister;
+      throw new Error(
+        'RouterStore.attach: already attached to a different router. Use RouterStore.for(router).',
+      );
+    }
     this.router = router;
     this.update();
-    return router.transitionService.onSuccess({}, this.update) as () => void;
+    const deregister = router.transitionService.onSuccess(
+      {},
+      this.update,
+    ) as () => void;
+    this.deregister = () => {
+      deregister();
+      this.deregister = undefined;
+      this.router = undefined;
+    };
+    return this.deregister;
   }
 
   private update(transition?: Transition) {
