@@ -61,6 +61,33 @@ describe('docs site', () => {
       .should('include', 'Hello World - lit-ui-router Tutorial');
   });
 
+  it('mounts the MobX solar system example on the bindings page', () => {
+    cy.visit('/packages/mobx');
+    cy.get(
+      '.example-embed iframe[src="/examples/hellosolarsystem-mobx/"]',
+    ).should('exist');
+  });
+
+  it('drives the MobX example: reactions keep the un-routed shell in sync', () => {
+    // The embed is same-origin, so the spec drives the example itself. Unlike
+    // the sample apps, its components keep their own shadow roots.
+    const shadow = { includeShadowDom: true };
+    cy.visit('/examples/hellosolarsystem-mobx/');
+    cy.contains('.visited-count', '0 of 10 visited', shadow);
+    cy.contains('a', 'Mars', shadow).click();
+    // <app-root> is outside every <ui-view>, so a transition never re-creates
+    // it: the breadcrumb and the counter can only come from the reactions.
+    cy.contains('.crumb strong', 'Mars', shadow);
+    // :not(.top) — the duplicate top link is phone-only (display: none here)
+    cy.contains(
+      'a.back-link:not(.top)',
+      'Back to the solar system',
+      shadow,
+    ).click();
+    cy.contains('.visited-count', '1 of 10 visited', shadow);
+    cy.contains('li', 'Mars', shadow).contains('visited');
+  });
+
   it('serves a real 404 for unknown urls', () => {
     // Assets-binding behavior (not_found_handling: "404-page"), not worker
     // logic: the worker never runs for paths outside the mounts.

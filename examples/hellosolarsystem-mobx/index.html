@@ -1,0 +1,57 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello Solar System (MobX) - lit-ui-router Tutorial</title>
+    <style>
+      html {
+        min-height: 100%;
+        background:
+          radial-gradient(1px 1px at 12% 22%, #fff, transparent),
+          radial-gradient(1px 1px at 32% 68%, #cfd8ff, transparent),
+          radial-gradient(2px 2px at 48% 12%, #fff, transparent),
+          radial-gradient(1px 1px at 63% 45%, #ffe9c4, transparent),
+          radial-gradient(1px 1px at 78% 80%, #fff, transparent),
+          radial-gradient(2px 2px at 88% 30%, #cfd8ff, transparent),
+          radial-gradient(1px 1px at 20% 90%, #fff, transparent),
+          radial-gradient(ellipse at bottom, #131c3d 0%, #060a18 70%);
+        background-attachment: fixed;
+      }
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 800px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #e6e9f0;
+        background: transparent;
+      }
+      @media (max-width: 800px) {
+        body {
+          margin: 24px auto;
+        }
+      }
+      @media (max-width: 480px) {
+        body {
+          margin: 16px auto;
+          padding: 0 12px;
+        }
+      }
+      /* The visualizer overlay covers content on phones; keep it desktop-only.
+         !important outranks the visualizer's own injected stylesheet. */
+      @media (max-width: 600px) {
+        #uirStateVisualizer,
+        #uirTransitionVisualizer {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

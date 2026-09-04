@@ -6,6 +6,11 @@ export const EXAMPLES = {
     height: '800px',
     file: 'src/main.ts',
   },
+  'hellosolarsystem-mobx': {
+    title: 'Hello Solar System (MobX)',
+    height: '840px',
+    file: 'src/main.ts',
+  },
   hellogalaxy: {
     title: 'Hello Galaxy',
     height: '920px',

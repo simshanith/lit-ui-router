@@ -90,6 +90,17 @@ _after_ navigation completed — or that are detached and re-attached, as with
 [sticky states](https://github.com/ui-router/sticky-states) — render fresh
 values immediately instead of waiting for the next transition.
 
+## See it live
+
+The same problem, solved with the
+[MobX bindings](/packages/mobx): `<app-root>` sits outside every
+`<ui-view>`, so it never receives fresh view props, and a reaction controller
+keeps its breadcrumb and visit counter in sync. Swap
+`RouterReactionController` for `TransitionController` and the shape is
+identical — a controller on the host, a value read in `render()`.
+
+<LiveExample name="hellosolarsystem-mobx" />
+
 ## See it in a real app
 
 The <a href="/app" target="_self">vanilla sample app</a> is built on this

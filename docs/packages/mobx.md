@@ -154,6 +154,38 @@ composition-friendly alternative:
 - The reaction lifecycle is bound to the host's connection lifecycle
   automatically
 
+## Resolves stay on view props
+
+`RouterStore` mirrors `current`, `params` and `transition` — not resolves.
+Resolved data reaches a routed component exactly as it does without these
+bindings: as [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+on `_uiViewProps`, scoped to that component's own view.
+
+There is no resolve accessor on the store, and
+`store.transition?.injector().get(token)` is not a substitute: that is the
+transition's _root_ injector, not the view's resolve context, so it resolves
+a different token set than the component's own view sees.
+
+The split both the live example below and the MobX sample app follow:
+
+- resolved data → `_uiViewProps.resolves`
+- route params, active state, and anything that outlives a single activation
+  → reaction controllers
+
+## Try it live
+
+The [Hello Solar System](/tutorial/hellosolarsystem) tutorial rebuilt on these
+controllers: same states, same URLs, same resolves. `<app-root>` is not
+routed, so it never receives fresh view props — a `RouterReactionController`
+drives its breadcrumb and runs a param-keyed `onChange` effect, while a plain
+`ReactionController` watches the visited-bodies store the router knows nothing
+about.
+
+<LiveExample name="hellosolarsystem-mobx" />
+
+The Edit in StackBlitz tab boots the workspace from the published
+`lit-ui-router-mobx` package, so it doubles as an install check.
+
 ## See it in a real app
 
 The <a href="/app-mobx" target="_self">MobX sample app</a> is a complete

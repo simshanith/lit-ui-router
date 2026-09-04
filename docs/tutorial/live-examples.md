@@ -26,6 +26,15 @@ and transition-driven data loading. Walkthrough:
 
 <LiveExample name="hellosolarsystem" />
 
+## Hello Solar System (MobX)
+
+The same states, URLs and resolves as above, rebuilt on the
+[MobX bindings](/packages/mobx): reaction controllers for route params and
+app state, resolves still on view props. Compare the two `src/main.ts` files
+side by side.
+
+<LiveExample name="hellosolarsystem-mobx" />
+
 ## Hello Galaxy
 
 Nested states and views: a star catalog in a three-level state tree, resolve
