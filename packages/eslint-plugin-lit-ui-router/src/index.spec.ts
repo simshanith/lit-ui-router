@@ -39,7 +39,6 @@ void describe('plugin', () => {
     );
   });
 
-
   void it('recommended reports an href written to a <button>', () => {
     const messages = lint(
       `${IMPORTS}html\`<button \${uiSref('home')}>Home</button>\`;`,
