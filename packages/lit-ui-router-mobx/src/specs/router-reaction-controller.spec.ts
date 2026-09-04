@@ -85,7 +85,7 @@ describe('RouterReactionController', () => {
     expect(controller.value).toBe('a');
   });
 
-  it('warns and no-ops without a router context', async () => {
+  it('warns once per host and no-ops without a router context', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     cleanups.push(() => warn.mockRestore());
 
@@ -100,7 +100,19 @@ describe('RouterReactionController', () => {
 
     expect(controller.store).toBeUndefined();
     expect(controller.value).toBeUndefined();
-    expect(warn).toHaveBeenCalled();
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warn.mock.calls[0]?.[0]).toBe(
+      'lit-ui-router-mobx: RouterReactionController found no <ui-router> ' +
+        'ancestor, so it will not observe the router. Wrap this subtree in ' +
+        '<ui-router>, or pass a router explicitly.',
+    );
+    expect(warn.mock.calls[0]?.[1]).toBe(host);
+
+    // reconnecting the same host repeats the failed seek, not the message
+    host.remove();
+    document.body.appendChild(host);
+    await waitForUpdate(host);
+    expect(warn).toHaveBeenCalledTimes(1);
   });
 
   it('falls back to initialValue before connect and without a context', async () => {

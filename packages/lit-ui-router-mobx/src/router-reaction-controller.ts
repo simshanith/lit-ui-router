@@ -3,6 +3,7 @@ import { IReactionDisposer, reaction } from 'mobx';
 import { UIRouter } from '@uirouter/core';
 import { UIRouterLitElement } from 'lit-ui-router';
 
+import { warnMissingRouter } from './dev-warn.js';
 import { RouterStore } from './router-store.js';
 import { ReactionControllerOptions } from './reaction-controller.js';
 
@@ -70,9 +71,10 @@ export class RouterReactionController<T> implements ReactiveController {
     const router =
       this.options.router ?? UIRouterLitElement.seekRouter(this.host);
     if (!router) {
-      console.warn(
-        'RouterReactionController: no <ui-router> context found for host',
+      warnMissingRouter(
         this.host,
+        'RouterReactionController',
+        'will not observe the router',
       );
       return;
     }
