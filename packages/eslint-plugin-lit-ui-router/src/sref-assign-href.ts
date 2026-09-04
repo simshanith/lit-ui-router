@@ -3,6 +3,7 @@
 // non-link that href is inert, and the runtime says so once, in dev, in the
 // console. This rule says it at author time, with the documented fix.
 import type { Rule } from 'eslint';
+import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   type CallNode,
@@ -20,6 +21,8 @@ const NATIVE_LINKS = new Set(['a', 'area']);
 
 const AUTO = "{ assignHref: 'auto' }";
 
+export const RULE_NAME = 'sref-assign-href';
+
 /**
  * `assignHref: 'auto'` on every native non-link.
  *
@@ -28,14 +31,13 @@ const AUTO = "{ assignHref: 'auto' }";
  * author can say so. A non-literal options argument is unknowable, so it stays
  * suppressed rather than guessed — the same posture `anchor-is-valid` takes.
  */
-const srefAssignHref: Rule.RuleModule = {
+const srefAssignHref: RuleFor<typeof RULE_NAME> = {
   meta: {
     type: 'suggestion',
     fixable: 'code',
     docs: {
       description:
         "require assignHref: 'auto' when a uiSref element part rides a native element with no href",
-      url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md',
     },
     messages: {
       hrefOnNonLink:

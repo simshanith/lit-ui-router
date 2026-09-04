@@ -1,7 +1,7 @@
 // The runtime's constructor throw, statically (#667). Each directive accepts
 // exactly one part type and throws on every other, which is a render-time
 // failure a lint run can catch at author time.
-import type { Rule } from 'eslint';
+import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   createDirectiveTracker,
@@ -22,6 +22,8 @@ const ALLOWED_POSITION: Record<DirectiveName, 'element'> = {
   uiSrefActive: 'element',
 };
 
+export const RULE_NAME = 'directive-position';
+
 /**
  * `uiSref` / `uiSrefActive` only where their part type allows.
  *
@@ -29,13 +31,12 @@ const ALLOWED_POSITION: Record<DirectiveName, 'element'> = {
  * says nothing about where it lands, and guessing there would be false
  * positives, not coverage.
  */
-const directivePosition: Rule.RuleModule = {
+const directivePosition: RuleFor<typeof RULE_NAME> = {
   meta: {
     type: 'problem',
     docs: {
       description:
         'require each lit-ui-router directive to sit in the template position its part type allows',
-      url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md',
     },
     messages: {
       elementPartOnly:
