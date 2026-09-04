@@ -110,6 +110,11 @@ run = "actionlint"
 description = "Audit GitHub Actions workflows for security issues"
 run = "zizmor --offline .github/workflows"
 
+[tasks.check_release_closure]
+# A mise task so RELEASE_CLOSURE comes from [env] above, whatever shell turbo runs in
+description = "Assert RELEASE_CLOSURE covers every member the release lanes run in"
+run = "node check-release-closure.ts"
+
 [tasks.lint_toml]
 # `taplo lint` = TOML syntax/structure validation, offline by default (taplo only
 # fetches schema catalogs with --default-schema-catalogs, which the task omits).
