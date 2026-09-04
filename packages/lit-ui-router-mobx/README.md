@@ -86,6 +86,7 @@ new RouterReactionController(host, selector, options?)
 - `options.router` — explicit router instance, skipping context discovery
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — MobX comparer (e.g. `compareStructural`) for precise, value-based change detection
+- `options.initialValue` — the value `.value` carries before the first reaction run: before `hostConnected`, and while a host has no router context
 
 ### `ReactionController`
 
