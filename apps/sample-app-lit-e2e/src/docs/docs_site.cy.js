@@ -68,6 +68,16 @@ describe('docs site', () => {
     ).should('exist');
   });
 
+  it('rejects a non-integer planet id rather than rounding it', () => {
+    // parseInt('4x') is 4. One strict parser keeps Earth out of the detail
+    // view, the breadcrumb and the visited set alike.
+    const shadow = { includeShadowDom: true };
+    cy.visit('/examples/hellosolarsystem-mobx/#/planets/4x');
+    cy.contains('Body not found', shadow);
+    cy.get('.crumb strong', shadow).should('not.exist');
+    cy.contains('.visited-count', '0 of 10 visited', shadow);
+  });
+
   it('drives the MobX example: reactions keep the un-routed shell in sync', () => {
     // The embed is same-origin, so the spec drives the example itself. Unlike
     // the sample apps, its components keep their own shadow roots.

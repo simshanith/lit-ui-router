@@ -155,6 +155,13 @@ const solarBodies: SolarBody[] = [
 const delay = <T>(value: T, ms = 300): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(value), ms));
 
+// Route params are strings, and `parseInt('4x')` is 4. Every reader of
+// :planetId goes through this instead, so a bad URL resolves to nothing
+// rather than to a silently different planet.
+function parsePlanetId(value: string | undefined): number | undefined {
+  return value !== undefined && /^\d+$/.test(value) ? Number(value) : undefined;
+}
+
 const SolarSystemService = {
   getAllBodies: (): Promise<SolarBody[]> => delay(solarBodies),
   getBody: (id: number): Promise<SolarBody | undefined> =>
@@ -449,12 +456,12 @@ export class AppRoot extends LitElement {
     this,
     (route) => ({
       onDetail: route.includes('planet'),
-      planetId: route.params.planetId as string | undefined,
+      planetId: parsePlanetId(route.params.planetId as string | undefined),
     }),
     {
       equals: compareStructural,
       onChange: ({ onDetail, planetId }) => {
-        if (onDetail && planetId) TourStore.visit(parseInt(planetId));
+        if (onDetail && planetId !== undefined) TourStore.visit(planetId);
       },
     },
   );
@@ -464,7 +471,7 @@ export class AppRoot extends LitElement {
   get openBody(): SolarBody | undefined {
     const { onDetail, planetId } = this.route.value;
     return onDetail
-      ? solarBodies.find((body) => body.id === Number(planetId))
+      ? solarBodies.find((body) => body.id === planetId)
       : undefined;
   }
 
@@ -512,10 +519,12 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
       token: 'planet',
       deps: ['$transition$'],
       resolveFn: ($transition$: Transition) => {
-        const planetId = parseInt(
+        const planetId = parsePlanetId(
           $transition$.params<{ planetId: string }>().planetId,
         );
-        return SolarSystemService.getBody(planetId);
+        return planetId === undefined
+          ? undefined
+          : SolarSystemService.getBody(planetId);
       },
     },
   ],
