@@ -39,7 +39,6 @@ void describe('plugin', () => {
     );
   });
 
-  // recommended is keyed by the roster, so a missing rule no longer compiles.
 
   void it('recommended reports an href written to a <button>', () => {
     const messages = lint(
