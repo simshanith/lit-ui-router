@@ -415,6 +415,6 @@ export function pipelineSection() {
 </section>
 <script type="application/json" id="pg-atlas">${json({ nodes: A.nodes, edges: A.edges })}</script>
 <script type="application/json" id="pg-layout">${json(LAYOUT)}</script>
-<script src="${CYTOSCAPE_URL}"></script>
+<script defer src="${CYTOSCAPE_URL}"></script>
 <script>${INIT}</script>`;
 }
