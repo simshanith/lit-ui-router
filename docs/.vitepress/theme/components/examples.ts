@@ -37,18 +37,24 @@ export function staticSrc(name: ExampleName): string {
 
 // Unset stays unset — this builder has no opinion about the pane, so callers
 // that want one say so. LiveExample is where that opinion lives.
+// `undefined` drops the key; `null` would emit a valueless `view`.
 export function stackblitzEmbedSrc(
   name: ExampleName,
   file: string = EXAMPLES[name].file,
   view?: StackBlitzView,
 ): string {
-  const viewParam = view ? `&view=${view}` : '';
-  return `${REPO_TREE}/${name}?embed=1&file=${file}${viewParam}`;
+  const url = new URL(`${REPO_TREE}/${name}`);
+  url.searchParams.set('embed', '1');
+  url.searchParams.set('file', file);
+  if (view) url.searchParams.set('view', view);
+  return url.toString();
 }
 
 export function stackblitzOpenSrc(
   name: ExampleName,
   file: string = EXAMPLES[name].file,
 ): string {
-  return `${REPO_TREE}/${name}?file=${file}`;
+  const url = new URL(`${REPO_TREE}/${name}`);
+  url.searchParams.set('file', file);
+  return url.toString();
 }
