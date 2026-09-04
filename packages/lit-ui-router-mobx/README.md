@@ -110,6 +110,12 @@ class NavHeader extends LitElement {
 }
 ```
 
+## Development and production builds
+
+`dist/development/index.js` is published alongside `dist/index.js` and picked by the `development` export condition, which bundlers resolve automatically in development; production builds get the default. Nothing to configure. `lit-ui-router` ships the same split — see the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for the mechanism and the warnings both packages carry.
+
+The development build adds one console warning here: a `RouterReactionController` whose host has no `<ui-router>` ancestor warns once, naming that host, and observes nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
+
 ## Why selectors instead of render auto-tracking?
 
 Mixins like [`MobxLitElement`](https://github.com/adobe/lit-mobx) auto-track every observable read in `render()`. The controllers here are the composition-friendly alternative:
