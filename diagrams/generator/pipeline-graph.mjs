@@ -201,6 +201,10 @@ const CSS = `
 // emitted inside one, and all of its data arrives through the JSON islands.
 const INIT = `
 (function () {
+  // The cytoscape tag above is deferred; deferred scripts run before
+  // DOMContentLoaded, so boot there rather than probing during parse.
+  if (document.readyState === 'loading') { document.addEventListener('DOMContentLoaded', boot); } else { boot(); }
+  function boot() {
   var stage = document.getElementById('pg-cy');
   if (!stage || typeof cytoscape === 'undefined') return;
   var A = JSON.parse(document.getElementById('pg-atlas').textContent);
@@ -377,6 +381,7 @@ const INIT = `
   }
   window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', repaint);
   new MutationObserver(repaint).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  }
 })();
 `;
 
