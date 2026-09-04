@@ -1,0 +1,45 @@
+{
+  "ref": "origin/main",
+  "sha": "eb32b4e",
+  "commitDate": "2026-09-03T23:27:25Z",
+  "generatedAtTime": "2026-09-04T04:40:04.260Z",
+  "wasGeneratedBy": "diagrams/generator/census-couplings.mjs",
+  "used": "git archive origin/main @ eb32b4e — packages/*/package.json ranges resolved through pnpm-workspace.yaml catalogs; core and lit versions from pnpm-lock.yaml",
+  "wasAssociatedWith": [
+    "git"
+  ],
+  "totals": {
+    "nodes": 7,
+    "published": 5,
+    "external": 2,
+    "contracts": 12,
+    "drawnContracts": 7,
+    "peers": 10,
+    "deps": 2,
+    "optional": 2,
+    "uncoupled": 1
+  },
+  "nodes": [
+    {"key":"eslint-plugin-lit-ui-router","dir":"packages/eslint-plugin-lit-ui-router","version":"1.0.0-rc.2","kind":"published","versionFrom":"packages/eslint-plugin-lit-ui-router/package.json"},
+    {"key":"lit-ui-router","dir":"packages/lit-ui-router","version":"1.11.1","kind":"published","versionFrom":"packages/lit-ui-router/package.json"},
+    {"key":"lit-ui-router-mobx","dir":"packages/lit-ui-router-mobx","version":"0.5.0","kind":"published","versionFrom":"packages/lit-ui-router-mobx/package.json"},
+    {"key":"ui-router-navigation-location-plugin","dir":"packages/navigation-location-plugin","version":"0.3.0","kind":"published","versionFrom":"packages/navigation-location-plugin/package.json"},
+    {"key":"ui-router-server","dir":"packages/ui-router-server","version":"0.1.1","kind":"published","versionFrom":"packages/ui-router-server/package.json"},
+    {"key":"@uirouter/core","dir":null,"version":"6.1.2","kind":"external","versionFrom":"pnpm-lock.yaml"},
+    {"key":"lit","dir":null,"version":"2.8.0 · 3.3.3","kind":"external","versionFrom":"pnpm-lock.yaml"}
+  ],
+  "rows": [
+    {"from":"eslint-plugin-lit-ui-router","to":"eslint","section":"peerDependencies","kind":"peer","optional":false,"range":"^9.0.0 || ^10.0.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":false},
+    {"from":"eslint-plugin-lit-ui-router","to":"eslint-plugin-lit","section":"dependencies","kind":"dep","optional":false,"range":"^2.0.0","spec":"catalog:publishedDependencies","catalog":"publishedDependencies","drawn":false},
+    {"from":"lit-ui-router","to":"@uirouter/core","section":"peerDependencies","kind":"peer","optional":false,"range":"^6.0.8","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"lit-ui-router","to":"lit","section":"peerDependencies","kind":"peer","optional":false,"range":"^2.0.0 || ^3.0.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"lit-ui-router","to":"@oxc-project/runtime","section":"dependencies","kind":"dep","optional":false,"range":">=0.50.0","spec":"catalog:publishedDependencies","catalog":"publishedDependencies","drawn":false},
+    {"from":"lit-ui-router-mobx","to":"@uirouter/core","section":"peerDependencies","kind":"peer","optional":false,"range":"^6.0.8","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"lit-ui-router-mobx","to":"lit","section":"peerDependencies","kind":"peer","optional":false,"range":"^2.0.0 || ^3.0.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"lit-ui-router-mobx","to":"lit-ui-router","section":"peerDependencies","kind":"peer","optional":false,"range":"^1.7.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"lit-ui-router-mobx","to":"mobx","section":"peerDependencies","kind":"peer","optional":false,"range":"^6.0.0 || ^7.0.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":false},
+    {"from":"ui-router-navigation-location-plugin","to":"@uirouter/core","section":"peerDependencies","kind":"peer","optional":false,"range":"^6.0.8","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"ui-router-server","to":"@uirouter/core","section":"peerDependencies","kind":"peer","optional":true,"range":"^6.0.8","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":true},
+    {"from":"ui-router-server","to":"hono","section":"peerDependencies","kind":"peer","optional":true,"range":"^4.0.0","spec":"catalog:publishedPeer","catalog":"publishedPeer","drawn":false}
+  ]
+}
