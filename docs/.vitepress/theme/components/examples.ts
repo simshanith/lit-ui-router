@@ -18,7 +18,7 @@ export const EXAMPLES = {
   },
   'hellosolarsystem-mobx': {
     title: 'Hello Solar System (MobX)',
-    height: '840px',
+    height: '880px',
     file: 'src/main.ts',
   },
   hellogalaxy: {
