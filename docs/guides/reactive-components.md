@@ -99,9 +99,10 @@ keep its breadcrumb and visit counter in sync. Swap
 `RouterReactionController` for `TransitionController` and the shape is
 identical — a controller on the host, a value read in `render()`.
 
-In both idioms the controllers only read. The example's one write — recording
-that a body was visited — sits in the route's own `onEnter` hook, which is
-where an effect that belongs to a state belongs.
+In both idioms the controllers only read. The example's one write to app
+state — recording an arrival — sits in an `onSuccess` hook, because an effect
+caused by navigating belongs to the navigation, not to a component watching
+it.
 
 This is the minimal version — the solar-system tutorial with a store layered
 in where the router stops helping, small enough to read in one sitting. For

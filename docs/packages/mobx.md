@@ -172,8 +172,12 @@ a different token set than the component's own view sees.
 The split both the live example below and the MobX sample app follow:
 
 - resolved data → `_uiViewProps.resolves`
-- route params, active state, and anything that outlives a single activation
-  → reaction controllers
+- active state, and anything that outlives a single activation → the store,
+  selected by reaction controllers
+
+Route params reach a component the same way: through the resolve that reads
+them. A component re-deriving a param the resolve already derived is how the
+two drift apart.
 
 ## Try it live
 
@@ -181,7 +185,7 @@ The [Hello Solar System](/tutorial/hellosolarsystem) tutorial rebuilt on these
 controllers: same states, same URLs, same resolves. `<app-root>` is not
 routed, so it never receives fresh view props — a `RouterReactionController`
 selects what the URL says, while a plain `ReactionController` selects what the
-app remembers, from a visited-bodies store the router knows nothing about.
+app remembers, from a tour store the router knows nothing about.
 
 Neither controller writes anything. A single `onSuccess` hook records the
 arrival — where the router landed, and what that state resolved — because both
