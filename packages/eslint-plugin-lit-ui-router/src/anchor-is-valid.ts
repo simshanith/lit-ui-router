@@ -10,6 +10,8 @@ import {
   type CallNode,
   createDirectiveTracker,
   elementPartIndex,
+  LINK_ELEMENTS_SCHEMA,
+  linkElementsOf,
   type Node,
   type ObjectNode,
   type Parse5Element,
@@ -21,20 +23,25 @@ const ALL_ASPECTS = ['noHref', 'invalidHref', 'preferButton'];
 interface RuleOptions {
   aspects?: string[];
   allowHash?: boolean;
+  linkElements?: string[];
 }
 
 /**
- * Whether this call leaves the anchor with a runtime href. `assignHref` rides
+ * Whether this call leaves the element with a runtime href. `assignHref` rides
  * in `uiSref(state, params?, options?)`'s options argument, and only a literal
  * `false` is a definite no — `'auto'` assigns on a native <a>, and a
  * non-literal is unknowable, so both stay suppressed rather than guessed.
+ * On a declared link element `'auto'` is a definite no too: it tests the tag
+ * name against HTML's link elements, and a declaration does not join that set.
  */
-const assignsHref = (call: CallNode): boolean => {
+const assignsHref = (call: CallNode, nativeLink: boolean): boolean => {
   const options = call.arguments[2];
   if (options?.type !== 'ObjectExpression') return true;
   const property = propertyNamed(options as ObjectNode, 'assignHref');
   if (property === undefined) return true;
-  return !(property.value.type === 'Literal' && property.value.value === false);
+  if (property.value.type !== 'Literal') return true;
+  const { value } = property.value;
+  return !(value === false || (value === 'auto' && !nativeLink));
 };
 
 /** Literal-or-undefined over the analyzer's attribute value (lit-a11y util). */
@@ -97,6 +104,8 @@ const anchorIsValid: Rule.RuleModule = {
             description: 'Whether a bare `#` counts as a valid href.',
             type: 'boolean',
           },
+          // ours (#676): upstream has no equivalent, so no parity to keep.
+          linkElements: LINK_ELEMENTS_SCHEMA,
         },
       },
     ],
@@ -105,6 +114,9 @@ const anchorIsValid: Rule.RuleModule = {
 
   create(context) {
     const tracker = createDirectiveTracker(context);
+    const ruleOptions: RuleOptions =
+      (context.options[0] as RuleOptions | undefined) ?? {};
+    const linkElements = linkElementsOf(context, ruleOptions.linkElements);
 
     const isNavigable = (
       element: Parse5Element,
@@ -117,7 +129,7 @@ const anchorIsValid: Rule.RuleModule = {
         if (expression === undefined) return false;
         return (
           tracker.directiveOf(expression) === 'uiSref' &&
-          assignsHref(expression as CallNode)
+          assignsHref(expression as CallNode, element.name === 'a')
         );
       });
 
@@ -140,20 +152,19 @@ const anchorIsValid: Rule.RuleModule = {
             const startTag = element.sourceCodeLocation?.startTag;
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
-            if (element.name !== 'a') return;
+            // A declared link element is checked as an <a> is (#676).
+            if (element.name !== 'a' && !linkElements.has(element.name)) return;
 
-            const options: RuleOptions =
-              (context.options[0] as RuleOptions | undefined) ?? {};
-            const hasAspectsOption = Array.isArray(options.aspects);
+            const hasAspectsOption = Array.isArray(ruleOptions.aspects);
             const activeAspects = {
               noHref: hasAspectsOption
-                ? options.aspects?.includes('noHref') === true
+                ? ruleOptions.aspects?.includes('noHref') === true
                 : true,
               invalidHref: hasAspectsOption
-                ? options.aspects?.includes('invalidHref') === true
+                ? ruleOptions.aspects?.includes('invalidHref') === true
                 : true,
               preferButton: hasAspectsOption
-                ? options.aspects?.includes('preferButton') === true
+                ? ruleOptions.aspects?.includes('preferButton') === true
                 : true,
             };
 
@@ -204,7 +215,7 @@ const anchorIsValid: Rule.RuleModule = {
             const invalidHrefValue =
               typeof value === 'string' &&
               (!value.length ||
-                (options.allowHash === false && value === '#') ||
+                (ruleOptions.allowHash === false && value === '#') ||
                 /^\W*?javascript:/.test(value));
 
             if (!invalidHrefValue) return;

@@ -16,7 +16,37 @@ Under the 1.x default (`assignHref: true`), [`uiSref`](https://lit-ui-router.dev
 
 - **`<a>` and `<area>`** — `'auto'` already writes to them; the default is right.
 - **Custom elements** (any tag with a `-`) — `'auto'` tests the tag name, not the shape, so a `<sp-link>` that forwards `href` to an internal anchor wants the `true` default. Only its author can say, so the rule does not guess. See [Design System Links](https://lit-ui-router.dev/guides/design-system-links).
+- **Declared link elements** — see below.
 - **A non-literal options argument, a spread, or a non-literal `assignHref` value** — unknowable statically, so it stays suppressed rather than guessed. This is the same posture [`anchor-is-valid`](./anchor-is-valid.md) takes.
+
+## Link elements
+
+`<sp-link>` is exempt because the rule cannot tell it apart from `<sp-button>`. [`settings.linkElements`](../../README.md#settings) is how its author says which is which, and it is shared with [`anchor-is-valid`](./anchor-is-valid.md) — declare once, both rules stop guessing:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { linkElements: ['sp-link'] } },
+];
+```
+
+What a declaration changes:
+
+- **A declared tag is quiet**, the way `<a>` and `<area>` are. It honours an `href`, so the `true` default is right for it — and unlike a native link, `'auto'` would write it *nothing*, so the default is the only right answer. [`anchor-is-valid`](./anchor-is-valid.md) says the other half: a declared link element with `assignHref: 'auto'` reports as a dead link.
+- **An undeclared custom element is still exempt.** Declaring `sp-link` is a claim about `sp-link`; it does not turn every other tag in the file into a declared non-link. `<sp-button>` stays unknown, not known-wrong, so the blanket custom-element exemption holds for every tag nobody has declared. That also keeps the shared setting safe to adopt: adding one entry for `anchor-is-valid` never floods this rule with reports.
+- **A declared *native* tag is quiet too**, taken at its word. Only `<a>`, `<area>` and SVG `<a>` have an `href` in HTML, so declaring `button` a link element is a claim the runtime cannot make true — `assignHref: true` still writes an inert attribute there. The option is meant for custom elements; a native non-link in the list silences the rule without fixing anything.
+
+## Options
+
+`linkElements` replaces `settings.linkElements` for this rule, wholesale; `[]` means "declare nothing here".
+
+<!-- begin auto-generated rule options list -->
+
+| Name           | Description                                                                              | Type     |
+| :------------- | :--------------------------------------------------------------------------------------- | :------- |
+| `linkElements` | Element tags to treat as link elements, replacing `settings.linkElements` for this rule. | String[] |
+
+<!-- end auto-generated rule options list -->
 
 ## Examples
 

@@ -92,6 +92,116 @@ ruleTester.run('anchor-is-valid', anchorIsValid, {
   ],
 });
 
+// `linkElements` (#676): declaring a tag is what makes it visible to this rule.
+ruleTester.run('anchor-is-valid (linkElements undeclared)', anchorIsValid, {
+  valid: [
+    {
+      name: 'a design-system link is invisible with no declaration anywhere',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+    },
+    {
+      name: 'an empty declaration is no declaration',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+      options: [{ linkElements: [] }],
+    },
+    {
+      name: 'declaring one tag says nothing about another',
+      code: `${IMPORTS}html\`<sp-button>Home</sp-button>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+    },
+  ],
+  invalid: [
+    {
+      name: 'the rule option alone declares a link element',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'a declared link element is checked as an <a> is',
+      code: `${IMPORTS}html\`<sp-link href="">Home</sp-link>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'invalidHrefErrorMessage' }],
+    },
+    {
+      name: 'aspects still apply to a declared link element',
+      code: `${IMPORTS}html\`<sp-link @click=\${() => {}}>Home</sp-link>\`;`,
+      options: [{ linkElements: ['sp-link'] }],
+      errors: [{ messageId: 'preferButtonErrorMessage' }],
+    },
+    {
+      name: 'a declaration is matched lowercased, as parse5 reports tags',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+      options: [{ linkElements: ['SP-Link'] }],
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+  ],
+});
+
+const declaredTester = new RuleTester({
+  settings: { linkElements: ['sp-link'] },
+  languageOptions: { ecmaVersion: 'latest', sourceType: 'module' },
+});
+
+declaredTester.run('anchor-is-valid (linkElements declared)', anchorIsValid, {
+  valid: [
+    {
+      name: 'the shared setting alone declares a link element, and uiSref answers it',
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home')}>Home</sp-link>\`;`,
+    },
+    {
+      name: 'a static href satisfies a declared link element too',
+      code: `${IMPORTS}html\`<sp-link href="/home">Home</sp-link>\`;`,
+    },
+    {
+      name: 'the rule option replaces the setting wholesale',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+      options: [{ linkElements: ['sp-button'] }],
+    },
+    {
+      name: 'an empty rule option replaces the setting with nothing',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+      options: [{ linkElements: [] }],
+    },
+    {
+      name: 'the setting leaves undeclared elements alone',
+      code: `${IMPORTS}html\`<sp-button>Home</sp-button>\`;`,
+    },
+    {
+      name: 'the setting leaves native non-links alone',
+      code: `${IMPORTS}html\`<div>Home</div>\`;`,
+    },
+  ],
+  invalid: [
+    {
+      name: 'the shared setting alone declares a link element',
+      code: `${IMPORTS}html\`<sp-link>Home</sp-link>\`;`,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: "'auto' writes no href to a declared link element, so it stays dead",
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home', undefined, { assignHref: 'auto' })}>Home</sp-link>\`;`,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'assignHref: false is a definite no on a declared link element too',
+      code: `${IMPORTS}html\`<sp-link \${uiSref('home', undefined, { assignHref: false })}>Home</sp-link>\`;`,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: 'the rule option replaces the setting, declaring another tag',
+      code: `${IMPORTS}html\`<sp-button>Home</sp-button>\`;`,
+      options: [{ linkElements: ['sp-button'] }],
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+    {
+      name: '<a> is still checked alongside a declaration',
+      code: `${IMPORTS}html\`<a>Home</a>\`;`,
+      errors: [{ messageId: 'noHrefErrorMessage' }],
+    },
+  ],
+});
+
 // `litHtmlSources` gating, vendored from lit-a11y's HasLitHtmlImportRuleExtension:
 // an array setting means "only analyse files that import one of these".
 const gatedTester = new RuleTester({
@@ -494,7 +604,7 @@ void describe('anchor-is-valid meta', () => {
     ]);
   });
 
-  void it('carries the base schema: an aspects enum array and allowHash', () => {
+  void it('carries the base schema — aspects, allowHash — plus our linkElements', () => {
     assert.deepEqual(anchorIsValid.meta?.schema, [
       {
         type: 'object',
@@ -513,6 +623,13 @@ void describe('anchor-is-valid meta', () => {
           allowHash: {
             description: 'Whether a bare `#` counts as a valid href.',
             type: 'boolean',
+          },
+          linkElements: {
+            description:
+              'Element tags to treat as link elements, replacing `settings.linkElements` for this rule.',
+            type: 'array',
+            items: { type: 'string' },
+            uniqueItems: true,
           },
         },
       },
