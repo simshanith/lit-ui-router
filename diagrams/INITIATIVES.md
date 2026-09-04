@@ -278,6 +278,56 @@ not the branch tip — a plate filed later must measure the tree its
 siblings measured, or census-atlas throws on the mismatch. The survey
 office picked the new station up on its own: 52 → 55 nodes, 63 → 69 edges,
 14 probes / 14 plates / 14 drawings, T1 5 → 6.
+R1 — FIRST FULL-CABINET REFRESH LANDED 2026-09-03: every one of the 14 plates
+re-counted at origin/main @ eb32b4e (commit 2026-09-03T23:27Z), up from the
+cabinet's 35c6766, in one pass in dependency order — census-scc first, then the
+T1/T2 queries, then the six T3 install probes. This is what the pipeline was
+built for and it did the job: no sheet needed a number typed into it, the
+census-atlas guards caught the half-refreshed cabinet on every intermediate
+build, and the two sheets that DID throw (3B on a task that left the graph, and
+census-mass3b on a citation whose file left the tree) threw for the right reason
+instead of drawing a stale figure. What moved: workspace still 31 members / 19
+tools / 5 published, but the eslint plugin went rc.1 → rc.2 and grew 2f/299 →
+6f/667 with #689's three new rules, so it moves on sheets 2, 4, 7, 7B, 11, 12 and
+13 at once; tools/shared gained the #693 guard cores; @tools/release shed 2 files.
+turbo SHRANK for the first time in this atlas's history — #696 deleted
+apps/sample-app-shared/turbo.json and #693 swapped //#check:docs-api-deps for
+//#check:graph-edges + //#check:task-inputs, so 18 files / 97 definitions became
+17 / 96, and #693's replacement of the three `^docs:api` fan-outs with four
+package-qualified `<pkg>#docs:api` edges collapsed the docs:api column 9 → 4
+nodes and took real→real edges 126 → 96 on a graph of the same size. The mise
+machine STILL has not moved a task (48/4/21/2/5, 37 call sites, 28 targets — a
+third measurement, unchanged), and 15 of the 16 doors reprobe byte-identical.
+census-nm is byte-identical but for provenance. The honesty sweep found five
+live contradictions the new numbers exposed and one that predated them: sheet 9's
+"leads the HTML by" went NEGATIVE (the prose pages overtook Inter by 258 bytes —
+rev F); sheet 11's "about a third of the flagship" became 57%; sheet 3B's
+"thinnest tower" note and root-yard plat were both invalidated by #693 (rev E);
+and sheet 3's task-manager inset was found hand-pasting `ci = 535 nodes` while
+3A and 12 printed 590 in the SAME build — it now reads census-handoff.json +
+census-plate.json, as does sheet 7B's PIPES channel, which had been hand-pasting
+22 real of 113 against the plate's 24 of 111. Revs bumped: 3→D, 3A→D, 3B→E,
+4→D, 7B→D, 9→F, 11→D, 12→D, 13→D. Sheet 7A and the 3D city's TEST LIGHT lane
+keep the 2026-08-17 metering untouched and still say so. Probe fixes, both
+general: basis.mjs gained positionalsFromArgv() because `--ref origin/main` was
+being eaten as a positional by census-plate (as a pipeline name) and by
+census-nm/census-bundle (as an app dir) — the first run of this refresh filed an
+EMPTY census-plate.json because of it, so pass --ref through the helper, never
+raw argv; and census-mass3b now throws a named error when a CITES row points at
+a file absent at the ref, instead of surfacing scc's "could not be read". NOTES
+FOR THE NEXT REFRESH: (1) budget ~35 min of wall clock for the T3 chain — each
+of the six probes pays a full `corepack pnpm install --frozen-lockfile`, and the
+examples' npm installs are the long pole; (2) run census-scc FIRST and never
+re-fetch origin mid-run, or the plates split across two shas; (3) a T3 probe that
+takes positional args must be given its ref through --ref and nothing else; (4)
+the generatedAtTime of a late T3 probe can land on the next UTC day while the
+commitDate stays put — that is honest, and only the commitDate drives the title
+blocks; (5) sheet 1's sub still prints `lit-ui-router 1.9.0` (repo is 1.11.1) and
+sheet 3's still prints `44 turbo task names` (17 turbo.json files hold 67 distinct
+names) — both are hand-written on sheets with no plate behind them, both are the
+last un-cited numbers in the set, and putting either on a plate would add sheet 1
+to the survey office's rack; (6) sheet 7A's lamps and sheet 7B's rust remain
+declared editorial constants — they are the only channels a refresh does not move.
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block

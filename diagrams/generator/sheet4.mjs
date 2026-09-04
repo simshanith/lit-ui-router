@@ -194,7 +194,7 @@ ${txt(56, SY + 22, 'STRUCTURE SCHEDULE — authored source per member · files (
 ${ALL.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, schedRow(r, i), 'lbls')).join('\n')}
 ${ALL.slice(half).map((r, i) => txt(700, SY + 52 + i * 17, schedRow(r, i + half), 'lbls')).join('\n')}
 ${txt(56, SY + 58 + half * 17, `TOTAL — ${ALL.length} packages · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · versions and dates ${REGISTRY} · this repo + core ${COUNTED} · upstream family ${CLONED}`, 'lbls')}
-${txt(56, SY + 75 + half * 17, `NOT MASSED — ${LINT.name} ${LINT.version} (published ${LINT.published}): this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.`, 'lblf')}`;
+${txt(56, SY + 75 + half * 17, `NOT MASSED — ${LINT.name} ${LINT.version} on npm (published ${LINT.published}) · ${brickRow(LINT.name).version} in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.`, 'lblf')}`;
 
 const svg = `<svg viewBox="0 0 1350 ${SY + 148 + half * 17}" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at ${CORE[3]} files and ${fmt(CORE[4])} lines, ${CORE_SHARE} percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
 ${defs(P)}
@@ -224,9 +224,9 @@ ${schedule}
 </svg>`;
 
 export const sheet4 = {
-  num: 4, id: 'family', rev: 'C',
+  num: 4, id: 'family', rev: 'D',
   title: 'THE FAMILY SPINE',
-  sub: `ALTITUDE 4 — one core, four living adapters, four dormant instruments · REV C: every version and publish date imported from census-npm.json (${REGISTRY}), core and this repo's mass from census-bricks.json`,
+  sub: `ALTITUDE 4 — one core, four living adapters, four dormant instruments · REV C: every version and publish date imported from census-npm.json (${REGISTRY}), core and this repo's mass from census-bricks.json · REV D: whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart`,
   scale: 'UI-ROUTER ECOSYSTEM',
   form: 'MASSED SPINE',
   svg,

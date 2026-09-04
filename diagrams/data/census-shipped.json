@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "35c6766",
-  "commitDate": "2026-09-03T00:02:22Z",
-  "generatedAtTime": "2026-09-03T04:40:52.046Z",
+  "sha": "eb32b4e",
+  "commitDate": "2026-09-03T23:27:25Z",
+  "generatedAtTime": "2026-09-04T00:28:30.446Z",
   "wasGeneratedBy": "diagrams/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 35c6766 + corepack pnpm install --frozen-lockfile + turbo run build -> docs/dist",
+  "used": "git archive origin/main @ eb32b4e + corepack pnpm install --frozen-lockfile + turbo run build -> docs/dist",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo",
@@ -18,16 +18,16 @@
   ],
   "totals": {
     "files": 586,
-    "rawBytes": 15517624,
-    "gzBytes": 4037514
+    "rawBytes": 15524422,
+    "gzBytes": 4039200
   },
   "rows": [
     {"district":"demo corpora","files":15,"gz":899000,"top":{"name":"static/data/corpora/two-cities.txt.gz","gz":301148}},
     {"district":"inter fonts","files":16,"gz":866700,"top":{"name":"assets/inter-italic-latin-ext.DytegdRQ.woff2","gz":140793}},
-    {"district":"html pages","files":134,"gz":866196,"top":{"name":"guides/server-route-matching.html","gz":34552}},
+    {"district":"html pages","files":134,"gz":866958,"top":{"name":"guides/server-route-matching.html","gz":34551}},
     {"district":"examples","files":14,"gz":536705,"top":{"name":"examples/hellogalaxy/assets/model-viewer-BrYn72mp.js","gz":281843}},
-    {"district":"page chunks","files":254,"gz":268371,"top":{"name":"assets/guides_server-route-matching.md.BSzMcG_9.js","gz":21332}},
-    {"district":"vp framework","files":13,"gz":176716,"top":{"name":"assets/chunks/@localSearchIndexroot.1uBY09Ei.js","gz":67575}},
+    {"district":"page chunks","files":254,"gz":269013,"top":{"name":"assets/guides_server-route-matching.md.BSzMcG_9.js","gz":21332}},
+    {"district":"vp framework","files":13,"gz":176998,"top":{"name":"assets/chunks/@localSearchIndexroot.xKXVWMHY.js","gz":67873}},
     {"district":"images","files":99,"gz":146010,"top":{"name":"images/lit-ui-router.png","gz":68708}},
     {"district":"app: vanilla","files":18,"gz":122127,"top":{"name":"assets/dist-BLSdX3Tw.js","gz":29381}},
     {"district":"app: mobx","files":9,"gz":66870,"top":{"name":"assets/dist-BOE8L-jR.js","gz":29381}},

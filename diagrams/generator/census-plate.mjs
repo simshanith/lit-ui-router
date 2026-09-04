@@ -16,7 +16,7 @@
 // Output: a JSON blob on stdout (last line) for sheet12.mjs to eyeball, plus a
 // human-readable matrix on stderr-free stdout above it.
 import { execFileSync } from 'node:child_process';
-import { installDeps, materialize, refFromArgv } from './basis.mjs';
+import { installDeps, materialize, positionalsFromArgv, refFromArgv } from './basis.mjs';
 import { writeData } from './census-query.mjs';
 
 const PHANTOM = '<NONEXISTENT>';
@@ -105,7 +105,7 @@ function analyse(j) {
   };
 }
 
-const pipelines = process.argv.slice(2);
+const pipelines = positionalsFromArgv();
 const want = pipelines.length ? pipelines : ['ci', 'ci:main', 'build', 'lint', 'pack:all'];
 const results = {};
 for (const p of want) {

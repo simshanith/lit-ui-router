@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "35c6766",
-  "commitDate": "2026-09-03T00:02:22Z",
-  "generatedAtTime": "2026-09-03T04:18:00.529Z",
+  "sha": "eb32b4e",
+  "commitDate": "2026-09-03T23:27:25Z",
+  "generatedAtTime": "2026-09-04T00:13:24.390Z",
   "wasGeneratedBy": "diagrams/generator/census-nm.mjs",
-  "used": "git archive origin/main @ 35c6766 + corepack pnpm install --frozen-lockfile + turbo run build",
+  "used": "git archive origin/main @ eb32b4e + corepack pnpm install --frozen-lockfile + turbo run build",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo"

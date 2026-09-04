@@ -10,7 +10,7 @@
 // archive of the ref (basis.mjs), never the working tree; the tree's own
 // .bin/turbo runs directly — never via pnpm.  Writes
 // diagrams/data/census-mass3b.json (rows + real task list, PROV-O meta).
-import { readFileSync, mkdtempSync, copyFileSync } from 'node:fs';
+import { readFileSync, mkdtempSync, copyFileSync, existsSync } from 'node:fs';
 import { basename, join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { execFileSync } from 'node:child_process';
@@ -26,7 +26,10 @@ const ROOT = basis.dir + '/';
 // A judgement table, verified below against the ref's scripts + config.toml;
 // drift prints loudly.
 const CITES = {
-  '//#check:docs-api-deps': { files: ['check-docs-api-deps.ts'] },
+  // #693 replaced //#check:docs-api-deps with these two; the @tools/shared .core.ts
+  // each imports is a library, not a file the command executes — same rule as before
+  '//#check:graph-edges': { files: ['check-graph-edges.ts'] },
+  '//#check:task-inputs': { files: ['check-task-inputs.ts'] },
   '//#check:patches': { files: ['check-patches.ts'] },
   '//#format:check:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:actionlint': { mise: true, files: [] },
@@ -76,6 +79,9 @@ function dryRun() {
 // tasks are extensionless, and scc classifies by extension only, so they are counted
 // through .sh copies (--remap-unknown does not reach explicitly named files).
 function sccSloc(files) {
+  // a citation that has left the tree is a stale CITES row, not a scc failure
+  const gone = files.filter((f) => !existsSync(ROOT + f));
+  if (gone.length) throw new Error(`census-mass3b: CITES names ${gone.join(', ')}, absent at this ref — update the table`);
   const shim = mkdtempSync(join(tmpdir(), 'mass3b-'));
   const arg = new Map();
   for (const f of files) {

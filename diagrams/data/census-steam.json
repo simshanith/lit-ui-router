@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "35c6766",
-  "commitDate": "2026-09-03T00:02:22Z",
-  "generatedAtTime": "2026-09-03T03:20:02.193Z",
+  "sha": "eb32b4e",
+  "commitDate": "2026-09-03T23:27:25Z",
+  "generatedAtTime": "2026-09-03T23:50:26.079Z",
   "wasGeneratedBy": "diagrams/generator/census-steam.mjs",
-  "used": "diagrams/data/census-files.json @ 35c6766",
+  "used": "diagrams/data/census-files.json @ eb32b4e",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
@@ -12,9 +12,9 @@
     "since": "2026-06-05",
     "until": "2026-09-03"
   },
-  "windowCommits": 358,
+  "windowCommits": 363,
   "rows": [
-    {"member":"packages/eslint-plugin-lit-ui-router","commits":2},
+    {"member":"packages/eslint-plugin-lit-ui-router","commits":3},
     {"member":"packages/lit-ui-router","commits":35},
     {"member":"packages/lit-ui-router-mobx","commits":7},
     {"member":"packages/navigation-location-plugin","commits":8},
@@ -37,9 +37,9 @@
     {"member":"tools/lit-template-lint","commits":2},
     {"member":"tools/lit-test-env","commits":1},
     {"member":"tools/oxc-emit","commits":3},
-    {"member":"tools/release","commits":18},
+    {"member":"tools/release","commits":19},
     {"member":"tools/release-config","commits":2},
-    {"member":"tools/shared","commits":9},
+    {"member":"tools/shared","commits":10},
     {"member":"tools/typedoc-plugin-lit-ui-router","commits":7},
     {"member":"tools/vue-check","commits":2},
     {"member":"tools/warn-lanes","commits":1},

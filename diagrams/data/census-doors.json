@@ -1,17 +1,17 @@
 {
   "ref": "origin/main",
-  "sha": "35c6766",
-  "commitDate": "2026-09-03T00:02:22Z",
-  "generatedAtTime": "2026-09-03T04:34:23.939Z",
+  "sha": "eb32b4e",
+  "commitDate": "2026-09-03T23:27:25Z",
+  "generatedAtTime": "2026-09-04T00:23:17.430Z",
   "wasGeneratedBy": "diagrams/generator/census-doors.mjs",
-  "used": "git archive origin/main @ 35c6766 + corepack pnpm install --frozen-lockfile + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
+  "used": "git archive origin/main @ eb32b4e + corepack pnpm install --frozen-lockfile + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "rolldown@1.2.6",
     "node:zlib gzip"
   ],
   "rows": [
-    {"pkg":"eslint-plugin-lit-ui-router","door":".","min":4559,"gz":1917},
+    {"pkg":"eslint-plugin-lit-ui-router","door":".","min":9253,"gz":3194},
     {"pkg":"lit-ui-router","door":".","min":17482,"gz":5607},
     {"pkg":"lit-ui-router","door":"./pure","min":17082,"gz":5517},
     {"pkg":"lit-ui-router","door":"./register","min":6997,"gz":2482},

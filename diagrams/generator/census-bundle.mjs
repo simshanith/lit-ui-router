@@ -20,10 +20,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import { gzipSync } from 'node:zlib';
-import { installDeps, materialize, refFromArgv } from './basis.mjs';
+import { installDeps, materialize, positionalsFromArgv, refFromArgv } from './basis.mjs';
 import { writeData } from './census-query.mjs';
 
-const APP_DIR = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'apps/sample-app-lit-vanilla';
+const APP_DIR = positionalsFromArgv()[0] ?? 'apps/sample-app-lit-vanilla';
 
 // EDITORIAL grouping table, first match wins: a module id (archive-relative,
 // posix) is attributed to the package a reader would name it by.  Registry

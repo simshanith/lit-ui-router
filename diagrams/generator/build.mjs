@@ -64,9 +64,9 @@ const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
   ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
-  ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line (REV C: recensused on the scc ruler, 179 files / 12,059 sloc)'],
-  ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch (REV C: counts imported; mise still unmoved, turbo ci 535→590)'],
-  ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — 130 of 165 blocks are one-line pads (REV C: re-surveyed at turbo 2.10.11); the tallest is the 401-sloc //#lint:elements spire'],
+  ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line (REV D: the task-manager inset reads the plates too, so it can no longer disagree with 3A)'],
+  ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch (REV D: counts imported; mise unmoved a third time, turbo definitions down to 96)'],
+  ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — most blocks are one-line pads (REV E: #693 re-platted the root yard); the tallest is the 401-sloc //#lint:elements spire'],
   ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
@@ -74,12 +74,12 @@ const verdicts = [
   ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', 'the shadow survey — the tests are the light: where a suite reaches it burns near-full (98.0% of 5,539 metered lines, the 2026-08-17 metering, not re-run); 2,608 sloc of instruments and 1,375 of CLI wrappers never see light'],
   ['7B', 'MONOREPO, RUNNING', 'WORKING CITY', 'the synthesis plate — rust, steam, lamps and pipes on one city: every pipe connects, the flagship runs old AND hot, and rev B’s one alarm — which rang over the drawings themselves — is drawn struck through, answered by ffd4ef7'],
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 295× the app, two swaps it argued for'],
-  ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code'],
+  ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — Dickens outweighs the code, and at REV F the prose pages overtook the fonts'],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 23%, the router 4.0% — one lit'],
-  ['11', 'FOUR PACKAGES', 'ENTRY QUARTERS', 'the split view — fifteen doors priced alone'],
-  ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 69% of the graph runs nothing; three new members added 52 nodes and punched 11'],
-  ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', '84% of the city is summer stone — and the port\u2019s original masonry carries the hottest edges'],
-  ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', 'the atlas measuring itself — one archive, thirteen probe stations, thirteen filed plates, and every station, plate and edge introspected from the generator at build time'],
+  ['11', 'FIVE PACKAGES', 'ENTRY QUARTERS', 'the split view — sixteen doors priced alone; fifteen of them reprobe byte-identical at REV D'],
+  ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 70% of the graph runs nothing, and at REV D real→real edges fell a quarter while the node count barely moved'],
+  ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', '85% of the city is summer stone — and the port\u2019s original masonry carries the hottest edges'],
+  ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', 'the atlas measuring itself — one archive, fourteen probe stations, fourteen filed plates, and every station, plate and edge introspected from the generator at build time'],
 ];
 const galCss = `
 .cover { max-width: 1180px; margin: 0 auto 34px; background: var(--paper); border: 1.5px solid var(--ink);
@@ -179,13 +179,13 @@ const cover = `<header class="cover">
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after every sheet was drawn</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
     <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · 2026-09-02</span></div>
-    <div><span class="k">SHEETS</span><span class="v">14 · drawn 2026-08-16–17 · flat and iso plates recensused 2026-08-31 · the survey office added 2026-09-03</span></div>
+    <div><span class="k">SHEETS</span><span class="v">14 · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at ${COUNTED_AT}</span></div>
   </div>
   ${survey}
   <div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 295× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 23% of the wire; the router itself, 4.0%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8 and 9 now stand at REV C and sheet 10 at REV B, each remeasured after the merge it argued for; sheet 11 cuts the same wire the other way — four package quarters, fifteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
+    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 295× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 22.5% of the wire; the router itself, 3.9%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8, 9 and 10 have each been remeasured after the merge they argued for; sheet 11 cuts the same wire the other way — five package quarters, sixteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
@@ -198,7 +198,7 @@ ${cover}
 ${sheets.map((s) => sheetSection(s)).join('\n')}
 ${pipelineSection()}
 ${citySection()}
-<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates fetched 2026-08-16 · sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD 2026-08-31 and applied 2026-09-01 — except plate 7A's test light, which is still the 2026-08-17 metering and labelled as such · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · sheets that say FOUR packages (2, 11, and the census plates) predate eslint-plugin-lit-ui-router's 2026-09-02 graduation to packages/ and are true of their counted dates · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
+<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at ${COUNTED_AT} in one pass — except plate 7A's test light, which is still the 2026-08-17 metering, not re-run, and labelled as such wherever it is printed · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after every sheet was drawn; the plates count it and sheets 2, 4, 7, 7B, 11, 12 and 13 draw or schedule it, while plate 7A's light predates it and says so · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
 { desc: 'A fourteen-sheet drawing set: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
@@ -219,9 +219,9 @@ ${sheets.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join
 
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.
 Regenerate with \`node generator/build.mjs .\` from this directory.
-Generated 2026-08-16 by Fable (Claude, AI); npm dates fetched same day.
-Sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD on 2026-08-31, applied 2026-09-01;
-plate 7A's test light is still the 2026-08-17 metering. The cover's general survey — every
+Generated 2026-08-16 by Fable (Claude, AI).
+Every plate in \`data/\` — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass;
+plate 7A's test light is the one exception, still the 2026-08-17 metering, not re-run. The cover's general survey — every
 tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 \`data/census-files.json\`, the master snapshot \`generator/census-scc.mjs\` writes;
 \`generator/census-overview.mjs\` prints the same rollup on the terminal.

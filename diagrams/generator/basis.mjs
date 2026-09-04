@@ -19,6 +19,17 @@ export const refFromArgv = (argv = process.argv.slice(2)) => {
   return i !== -1 && argv[i + 1] ? argv[i + 1] : 'origin/main';
 };
 
+// A probe's positional args, with `--flag` and any value `--ref` consumed removed:
+// `--ref origin/main` must never be mistaken for an app dir or a pipeline name.
+export const positionalsFromArgv = (argv = process.argv.slice(2)) => {
+  const out = [];
+  for (let i = 0; i < argv.length; i++) {
+    if (argv[i] === '--ref' || argv[i] === '--core') i++;
+    else if (!argv[i].startsWith('--')) out.push(argv[i]);
+  }
+  return out;
+};
+
 export const materialize = (ref) => {
   const git = (...args) => execFileSync('git', args, { cwd: ROOT, maxBuffer: 1 << 28 });
   const sha = git('rev-parse', '--short', ref).toString().trim();

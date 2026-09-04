@@ -13,10 +13,10 @@
 import { readFileSync, readdirSync, statSync, realpathSync, existsSync } from 'node:fs';
 import { join, dirname } from 'node:path';
 import { execFileSync } from 'node:child_process';
-import { installDeps, materialize, refFromArgv } from './basis.mjs';
+import { installDeps, materialize, positionalsFromArgv, refFromArgv } from './basis.mjs';
 import { writeData } from './census-query.mjs';
 
-const APP_DIR = process.argv.slice(2).find((a) => !a.startsWith('--')) ?? 'apps/sample-app-lit-vanilla';
+const APP_DIR = positionalsFromArgv()[0] ?? 'apps/sample-app-lit-vanilla';
 const basis = materialize(refFromArgv());
 process.on('exit', () => basis.cleanup());
 const { turbo } = installDeps(basis);

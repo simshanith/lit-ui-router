@@ -1,20 +1,20 @@
 {
   "ref": "origin/main",
-  "sha": "35c6766",
-  "commitDate": "2026-09-03T00:02:22Z",
-  "generatedAtTime": "2026-09-03T04:02:56.874Z",
+  "sha": "eb32b4e",
+  "commitDate": "2026-09-03T23:27:25Z",
+  "generatedAtTime": "2026-09-04T00:02:46.570Z",
   "wasGeneratedBy": "diagrams/generator/census-plate.mjs",
-  "used": "git archive origin/main @ 35c6766 + corepack pnpm install --frozen-lockfile",
+  "used": "git archive origin/main @ eb32b4e + corepack pnpm install --frozen-lockfile",
   "wasAssociatedWith": [
     "turbo 2.10.11",
     "pnpm (corepack)"
   ],
   "pipelines": {
     "ci": {
-      "nodes": 590,
-      "real": 176,
-      "edges": 1504,
-      "realEdges": 126,
+      "nodes": 586,
+      "real": 177,
+      "edges": 1382,
+      "realEdges": 96,
       "chain": 13,
       "realChain": 7,
       "cacheFalse": [],
@@ -129,18 +129,24 @@
         },
         {
           "name": "docs:api",
-          "nodes": 9,
+          "nodes": 4,
           "real": 4,
-          "pkgs": 9
+          "pkgs": 4
         },
         {
-          "name": "check:docs-api-deps",
+          "name": "check:graph-edges",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
         },
         {
           "name": "check:patches",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:task-inputs",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -310,8 +316,9 @@
       ],
       "cells": {
         "//": {
-          "check:docs-api-deps": "r",
+          "check:graph-edges": "r",
           "check:patches": "r",
+          "check:task-inputs": "r",
           "format:check:root": "r",
           "format:check:toml": "r",
           "lint:actionlint": "r",
@@ -334,7 +341,6 @@
           "check:dev-split": "p",
           "ci": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "r",
@@ -637,7 +643,6 @@
           "check:dev-split": "p",
           "ci": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "p",
@@ -845,7 +850,6 @@
           "check:dev-split": "p",
           "ci": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "p",
@@ -867,7 +871,6 @@
           "check:dev-split": "p",
           "ci": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "p",
@@ -888,7 +891,6 @@
           "check:dev-split": "p",
           "ci": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "r",
@@ -966,10 +968,10 @@
       }
     },
     "ci:main": {
-      "nodes": 623,
-      "real": 181,
-      "edges": 1674,
-      "realEdges": 127,
+      "nodes": 619,
+      "real": 182,
+      "edges": 1544,
+      "realEdges": 97,
       "chain": 13,
       "realChain": 7,
       "cacheFalse": [],
@@ -1090,18 +1092,24 @@
         },
         {
           "name": "docs:api",
-          "nodes": 9,
+          "nodes": 4,
           "real": 4,
-          "pkgs": 9
+          "pkgs": 4
         },
         {
-          "name": "check:docs-api-deps",
+          "name": "check:graph-edges",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
         },
         {
           "name": "check:patches",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:task-inputs",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -1283,8 +1291,9 @@
       ],
       "cells": {
         "//": {
-          "check:docs-api-deps": "r",
+          "check:graph-edges": "r",
           "check:patches": "r",
+          "check:task-inputs": "r",
           "format:check:root": "r",
           "format:check:toml": "r",
           "lint:actionlint": "r",
@@ -1307,7 +1316,6 @@
           "check:dev-split": "p",
           "ci:main": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "r",
@@ -1627,7 +1635,6 @@
           "check:dev-split": "p",
           "ci:main": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "p",
@@ -1845,7 +1852,6 @@
           "check:dev-split": "p",
           "ci:main": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "p",
@@ -1868,7 +1874,6 @@
           "check:dev-split": "p",
           "ci:main": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "p",
@@ -1890,7 +1895,6 @@
           "check:dev-split": "p",
           "ci:main": "p",
           "ci:pull_request": "p",
-          "docs:api": "p",
           "format:check": "r",
           "lint": "r",
           "test": "r",
@@ -1972,9 +1976,9 @@
       }
     },
     "build": {
-      "nodes": 116,
+      "nodes": 111,
       "real": 24,
-      "edges": 278,
+      "edges": 249,
       "realEdges": 14,
       "chain": 10,
       "realChain": 6,
@@ -2006,9 +2010,9 @@
         },
         {
           "name": "docs:api",
-          "nodes": 9,
+          "nodes": 4,
           "real": 4,
-          "pkgs": 9
+          "pkgs": 4
         },
         {
           "name": "types:worker",
@@ -2040,7 +2044,6 @@
           "build": "p",
           "build:js": "p",
           "build:types": "p",
-          "docs:api": "p",
           "transit": "p"
         },
         "@tools/bundle-probe": {
@@ -2125,8 +2128,7 @@
         "@tools/vue-check": {
           "build": "p",
           "build:js": "p",
-          "build:types": "p",
-          "docs:api": "p"
+          "build:types": "p"
         },
         "@tools/warn-lanes": {
           "build": "p",
@@ -2179,19 +2181,16 @@
           "build": "r"
         },
         "sample-app-lit-mobx": {
-          "build": "r",
-          "docs:api": "p"
+          "build": "r"
         },
         "sample-app-lit-vanilla": {
           "build": "r",
-          "build:hash": "r",
-          "docs:api": "p"
+          "build:hash": "r"
         },
         "sample-app-routes": {
           "build": "p",
           "build:js": "p",
           "build:types": "p",
-          "docs:api": "p",
           "transit": "p"
         },
         "sample-app-shared": {
@@ -2217,10 +2216,10 @@
       }
     },
     "lint": {
-      "nodes": 71,
-      "real": 51,
-      "edges": 132,
-      "realEdges": 32,
+      "nodes": 72,
+      "real": 52,
+      "edges": 124,
+      "realEdges": 27,
       "chain": 9,
       "realChain": 4,
       "cacheFalse": [],
@@ -2238,13 +2237,19 @@
           "pkgs": 25
         },
         {
-          "name": "check:docs-api-deps",
+          "name": "check:graph-edges",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
         },
         {
           "name": "check:patches",
+          "nodes": 1,
+          "real": 1,
+          "pkgs": 1
+        },
+        {
+          "name": "check:task-inputs",
           "nodes": 1,
           "real": 1,
           "pkgs": 1
@@ -2330,8 +2335,9 @@
       ],
       "cells": {
         "//": {
-          "check:docs-api-deps": "r",
+          "check:graph-edges": "r",
           "check:patches": "r",
+          "check:task-inputs": "r",
           "lint:actionlint": "r",
           "lint:elements": "r",
           "lint:markdown": "r",
