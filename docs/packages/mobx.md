@@ -105,6 +105,9 @@ new RouterReactionController(host, selector, options?)
   params
 - `options.equals` — MobX comparer (e.g. `compareStructural`) for precise,
   value-based change detection
+- `options.initialValue` — the value `.value` carries before the first
+  reaction run: before `hostConnected`, and while a host has no router
+  context
 
 ### ReactionController
 
