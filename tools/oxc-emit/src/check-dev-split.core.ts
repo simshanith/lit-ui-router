@@ -2,14 +2,19 @@
 // directly testable with plain fixtures (see check-dev-split.test.ts). The IO
 // (reading dist/ and dist/development/) lives in check-dev-split.ts.
 
-/** Every message this package logs is prefixed with its own name. */
-export const MESSAGE_PREFIX = 'lit-ui-router: ';
+/** Every message a package logs is prefixed with its own name. */
+export const messagePrefix = (packageName: string): string =>
+  `${packageName}: `;
 
 // A message chunk as it survives into emitted code: template literals break at
-// the first interpolated quote, so match up to the next quote character.
-const MESSAGE_CHUNK = /lit-ui-router: [^`'"]*/g;
+// the first interpolated quote, so match up to the next quote character. Built
+// per package, so `lit-ui-router-mobx: ` is not mistaken for `lit-ui-router: `.
+const messageChunks = (prefix: string): RegExp =>
+  new RegExp(`${prefix.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}[^\`'"]*`, 'g');
 
 export type DevSplitInput = {
+  /** The package's own message prefix, e.g. `lit-ui-router: `. */
+  prefix: string;
   /** Message prefixes that must ship in development only. */
   devOnly: string[];
   /** Concatenated `dist/*.js`. */
@@ -28,6 +33,7 @@ export type DevSplitInput = {
  *   must be declared, so a new dev-only warning cannot land unlisted.
  */
 export function findDevSplitViolations({
+  prefix,
   devOnly,
   production,
   development,
@@ -47,7 +53,7 @@ export function findDevSplitViolations({
     }
   }
 
-  for (const chunk of new Set(development.match(MESSAGE_CHUNK) ?? [])) {
+  for (const chunk of new Set(development.match(messageChunks(prefix)) ?? [])) {
     if (production.includes(chunk)) continue;
     if (devOnly.some((message) => chunk.startsWith(message))) continue;
     violations.push(

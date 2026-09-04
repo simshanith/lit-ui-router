@@ -65,14 +65,14 @@ No router configuration is required: the controller discovers the router from th
 
 An observable mirror of a router's current state, updated by one `transitionService.onSuccess` hook.
 
-| Member                      | Description                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                   |
-| `current`                   | The current `StateDeclaration` (`globals.current`)                           |
-| `params`                    | The current `RawParams` (`globals.params`), replaced per transition          |
-| `transition`                | The most recent successful `Transition`                                      |
-| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`) |
-| `attach(router)`            | Manual attachment, for self-managed store instances                          |
+| Member                      | Description                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                                                 |
+| `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
+| `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
+| `transition`                | The most recent successful `Transition`                                                                    |
+| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
+| `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
 ### `RouterReactionController`
 
@@ -86,6 +86,7 @@ new RouterReactionController(host, selector, options?)
 - `options.router` — explicit router instance, skipping context discovery
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — MobX comparer (e.g. `compareStructural`) for precise, value-based change detection
+- `options.initialValue` — the value `.value` carries before the first reaction run: before `hostConnected`, and while a host has no router context
 
 ### `ReactionController`
 
