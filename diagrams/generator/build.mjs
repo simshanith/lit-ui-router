@@ -4,6 +4,8 @@ import { page, sheetSection, TOTAL } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { sheet2 } from './sheet2.mjs';
 import { sheet2a } from './sheet2a.mjs';
+import { sheet2b, sheet2bPage, SHEET2B_VERDICT } from './sheet2b.mjs';
+import { couplingBenchSection } from './coupling-bench.mjs';
 import { sheet3 } from './sheet3.mjs';
 import { sheet3a } from './sheet3a.mjs';
 import { sheet3b } from './sheet3b.mjs';
@@ -18,6 +20,7 @@ import { sheet9 } from './sheet9.mjs';
 import { sheet10 } from './sheet10.mjs';
 import { sheet11 } from './sheet11.mjs';
 import { sheet12 } from './sheet12.mjs';
+import { register12iSection, sheet12i } from './sheet12i.mjs';
 import { sheet13 } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
 import { pipelineSection } from './pipeline-graph.mjs';
@@ -34,6 +37,17 @@ const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+
 for (const s of sheets) {
   writeFileSync(join(OUT, fname(s)), page(`${s.title} — Sheet ${s.num} of ${TOTAL}`, sheetSection(s), { desc: s.caption }));
 }
+
+// --- the interactive plates that have a standalone page of their own ---
+// Sheet 2B is a lane, not an SVG sheet, so it is written here rather than
+// through sheetSection(); it also rides in the gallery, like S14i and S7·3D.
+writeFileSync(join(OUT, `sheet-${sheet2b.num}-${sheet2b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`),
+  page(`${sheet2b.title} — Sheet ${sheet2b.num} of ${TOTAL}`, sheet2bPage(), { desc: sheet2b.caption }));
+
+// Sheet 12i is the same arrangement one altitude up: sheet 12's register plate
+// as a cytoscape lane, written standalone here and mounted in the gallery below.
+writeFileSync(join(OUT, fname(sheet12i)),
+  page(`${sheet12i.title} — Sheet ${sheet12i.num} of ${TOTAL}`, register12iSection(), { desc: sheet12i.caption }));
 
 // --- megacanvas ---
 const rail = `<nav class="alt-rail" aria-label="altitudes">
@@ -64,6 +78,7 @@ const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
   ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
+  ['2B', 'COMPANIONS, CONTRACTED', 'COUPLING BENCH', SHEET2B_VERDICT],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line (REV D: the task-manager inset reads the plates too, so it can no longer disagree with 3A)'],
   ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch (REV D: counts imported; mise unmoved a third time, turbo definitions down to 96)'],
   ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — most blocks are one-line pads (REV E: #693 re-platted the root yard); the tallest is the 401-sloc //#lint:elements spire'],
@@ -189,13 +204,18 @@ const cover = `<header class="cover">
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
-    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}<tr><td><a href="#pipeline-graph">S14i</a></td><td>THE CENSUS PIPELINE</td><td>INTERACTIVE GRAPH</td><td>sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero</td></tr><tr><td><a href="#city-scene">S7·3D</a></td><td>MONOREPO, IN THE ROUND</td><td>REAL 3D ISOMETRIC CITY</td><td>sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal</td></tr></tbody>
+    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}<tr><td><a href="#sheet-12i">S12i</a></td><td>PR CI GRAPH</td><td>INTERACTIVE REGISTER</td><td>sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the 70% that runs nothing</td></tr><tr><td><a href="#pipeline-graph">S14i</a></td><td>THE CENSUS PIPELINE</td><td>INTERACTIVE GRAPH</td><td>sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero</td></tr><tr><td><a href="#city-scene">S7·3D</a></td><td>MONOREPO, IN THE ROUND</td><td>REAL 3D ISOMETRIC CITY</td><td>sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal</td></tr></tbody>
   </table>
 </header>`;
 
 writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${galCss}</style>
 ${cover}
-${sheets.map((s) => sheetSection(s)).join('\n')}
+${sheets.map((s) => (s.num === '2A'
+  // sheet 2B is an interactive lane, not an SVG plate, so it rides in the
+  // gallery beside the sheet it is the sibling of rather than at the end
+  ? `${sheetSection(s)}\n<div id="sheet-2B"></div>\n${couplingBenchSection()}`
+  : sheetSection(s))).join('\n')}
+${register12iSection()}
 ${pipelineSection()}
 ${citySection()}
 <p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at ${COUNTED_AT} in one pass — plate 7A's test light included, re-metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after every sheet was drawn; the plates count it and sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 draw or schedule it · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
@@ -227,4 +247,5 @@ tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 \`generator/census-overview.mjs\` prints the same rollup on the terminal.
 `);
 
-console.log('built', sheets.length, 'sheets + megacanvas + gallery + README →', OUT);
+// + 2: the two interactive lanes with a standalone page of their own, 2B and 12i
+console.log('built', sheets.length + 2, 'sheets + megacanvas + gallery + README →', OUT);

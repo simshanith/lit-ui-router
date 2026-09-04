@@ -422,6 +422,58 @@ the gallery doubled as index.html and the two CDN scripts vendored under
 for the artifact host's CSP). Refresh cycle: build.mjs → stage-site.mjs →
 `wrangler pages deploy dist --project-name altitude-atlas` from diagrams/.
 This branch never merges to main — it is the atlas's permanent home.
+I7·12i LANDED 2026-09-04 — SHEET 12i, THE REGISTER, WALKED: sheet 12's punchcard
+with a pointer in it, the second cytoscape lane and the first one built on a
+census plate rather than on the generator's own introspection. census-plate.mjs
+gained the WIRING it had never carried: `graphNodes` (one `(package, task)` pair
+per line, `real` flag and `cacheFalse` where true, sorted by task id) and
+`graphEdges` (one `[dependency, dependent]` index pair per line, sorted), for the
+`ci` pipeline. NO AGGREGATION WAS NEEDED and none was done — the complete graph,
+586 nodes and 1,382 edges, takes the plate from 66,271 to 126,739 bytes, inside
+the 150KB budget, and the probe stays byte-stable: two runs at the cabinet's
+origin/main @ eb32b4e differ in generatedAtTime alone, and every pre-existing
+field is byte-identical to the R1 plate (the sort is what guarantees it — turbo's
+own task order is never trusted). generator/register-graph.mjs is the lane,
+modelled line for line on pipeline-graph.mjs: the same single cytoscape pin
+(CYTOSCAPE_URL is imported from it, never re-typed), the plate's arrays shipped
+VERBATIM as a JSON island, the layout computed at build time and drawn with
+`preset`, and the init wrapped so boot() runs on DOMContentLoaded — the defer/parse
+race that once silently killed the survey office is designed around here rather
+than rediscovered. Layout is the register: rows are the 32 packages in sheet 12's
+own block order, columns are the 49 task names ranked by the longest dependency
+depth any of their nodes reaches — the pipeline's real stages fall out of the edge
+list, so no hand-written column order can go stale. Sheet 12's COLS could not be
+imported (it is not exported and sheet12.mjs was out of scope), so the block rule
+is re-derived and throws if a package finds no block. THE HERO IS THE PHANTOM
+SHROUD: the default view is the REAL subgraph alone — 177 command-bearing tasks
+and the 96 edges joining two of them — and one checkbox in the TILT / TEST LIGHT
+idiom floods in the other 409 nodes and 1,286 edges faint, so the 69.8% figure
+sheet 12 prints stops being a ratio and becomes a picture. It is a visibility swap
+over one fixed layout, never a re-layout, and it restores exactly (verified
+177/96 → 586/1,382 → 177/96 in four browser passes). Four column heads are drawn
+in red and are absent from the default view because nothing in them runs at all —
+`lint:workflows`, `transit`, `ci:pull_request`, `ci`. Two sprite skins are
+authored in the lane to the house recipe (frame first, semi-opaque wall over it):
+a real task is a works shed with a lit door, a phantom is the plot without the
+building — dashed frame, no wall, no roof, unmistakable at any zoom; sprites.mjs
+was out of scope, so the palettes are mirrored there rather than shared, and that
+duplication is the one debt this initiative leaves. One thing was learned in the
+browser and not by reasoning: at 586 cells the survey office's dim-everything
+hover blanks the whole register, so the lettering — column heads, row labels, band
+labels — is now exempt from `.dim` and the ghost grid stays readable behind the
+lit neighbourhood. Sheet 12i is a standalone page (`sheet-12i-the-register-walked.html`)
+AND a gallery lane indexed as S12i, the arrangement 2B uses one altitude down;
+chrome TOTAL stays 14. Verified headless in light and dark, on the standalone page
+and in the gallery, consoles clean in all four, and sheet 14 / the survey office
+still boots after the shared build edits. The office picked the new drawing up on
+its own, as designed: sheet12i.mjs reads census-plate.json, so it joins the rack
+rather than the unplated list.
+TILT RETIRED 2026-09-04 by user request: the survey office's CSS-perspective
+viewing pose (I8 base, above) is removed from pipeline-graph.mjs — checkbox,
+desk wrapper, --pg-pull measurement, pose copy and the reduced-motion
+transition all gone; TOOLS LEDGER and FIT stay. The pose was input-paused by
+design, and once the isometric city carried the real 3D payoff it was an
+ornament. The I8 narration above stands as history.
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block
@@ -433,6 +485,51 @@ CLOSED 2026-09-04 (see R2 below). Basis for the design: full survey of
 $100/mo with a 5h rolling window, and this work also draws on the Fable weekly
 allowance — so the work is cut into initiatives sized to land one at a time,
 each its own graft → build → lint → commit → push → republish cycle.
+SHEET 2B — THE COUPLING BENCH LANDED 2026-09-04: altitude 2 gets its interactive
+sibling, and a sixteenth plate lands with it. census-couplings.mjs is a T1 tree
+probe on the standard basis — it reads the five published package.json files out
+of the archive and files every entry in `dependencies`, `peerDependencies` and
+`optionalDependencies` (devDependencies are NOT contracts: they bind the
+workspace and never reach a consumer's install). THE TRAP THIS PROBE EXISTS TO
+SOLVE: every spec in this repo is a `catalog:` reference, so the file does not
+contain a range at all — `catalog:publishedPeer` is what is written and
+`^6.0.8` is what ships. The probe resolves each spec against the archive's own
+pnpm-workspace.yaml (the catalog blocks are a flat two-level mapping; no YAML
+library for eight lines of work) and the plate carries BOTH, so the panel can
+show what is written and what a consumer would see. @uirouter/core and lit carry
+no range of their own — their versions come from the archive's pnpm-lock.yaml
+`packages:` section, which is the only honest source for a resolution, and lit
+resolves TWICE (2.8.0 and 3.3.3) because the compat lane is tested, not merely
+permitted. THE ARCHIVE CONFIRMS THE RECORD on every shipped decision this atlas
+remembers: lit's peer really is `^2.0.0 || ^3.0.0` on both packages that touch
+it; core and lit really are peers, not deps; and the oxc runtime really is the
+one thing lit-ui-router still ships in `dependencies`, at `>=0.50.0` — nothing
+had to be corrected. 12 contracts, 7 of them between nodes on the bench: 10
+peers to 2 dependencies, and neither dependency is a router. Two are red —
+ui-router-server's core and hono are OPTIONAL peers, which is sheet 2A's
+crossed-out tie in another notation — and the fifth package stands in a bay of
+its own, because eslint-plugin-lit-ui-router couples to eslint and to nothing
+else in the family. generator/coupling-bench.mjs is the lane, built on
+pipeline-graph.mjs's discipline: the same pinned cytoscape URL imported from it
+so there is ONE pin, a JSON island, a preset layout computed at build (7 nodes
+in sheet 2A's own arrangement — wall left, lit above it, companions in 2A's
+order at the right, the server below with its crossed-out tie), and the init
+wrapped so boot() runs on DOMContentLoaded. Node skins are sprites.mjs's
+existing vocabulary re-read for what each sprite DRAWS rather than what the
+pipeline calls it: core takes the strongroom, lit the external crate, and a
+published package takes a 1/2/3-storey hut whose storeys are the brick
+schedule's `courses` band — stated on the sheet, because it is a reuse and not a
+tier. sprites.mjs was not touched. Massing is census-bricks.json's (area ≈ sloc,
+1×1 companions clamped up). Hover or tap an EDGE for its range, section, written
+spec and direction; a NODE for its version, mass, what it declares, what
+declares it, and the contracts that leave the bench. sheet2b.mjs is the
+standalone page — the lane plus method prose whose every figure is a throwing
+lookup into the plate — and the gallery mounts the lane beside sheet 2A rather
+than at the end, indexed as S2B. The survey office picked the station up on its
+own with no edit to census-atlas.mjs: 15 → 16 probes/plates, T1 6 → 7, 60 → 66
+nodes, 79 → 88 edges, and sheet 2B joins the rack. Verified headless in both
+themes: consoles clean, sprites render, hover fills the panel with the plate's
+real ranges. Probe is idempotent (four runs differ only in generatedAtTime).
 
 ## Why rework
 

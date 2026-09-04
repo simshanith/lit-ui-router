@@ -309,7 +309,8 @@ export function sheetSection(sheet, { headline = true } = {}) {
 }
 
 export function page(title, body, { desc = '' } = {}) {
-  return `<title>${title}</title>
+  return `<meta charset="utf-8">
+<title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
