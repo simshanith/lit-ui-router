@@ -413,6 +413,15 @@ notes for the record: hover keeps the prior selection during a snap
 tween (no misaligned pick is possible — the contract's intent holds);
 the swapped legend labels b3 and b4 together as "lit <85" (no member
 falls in either band at this metering).
+PUBLISHED 2026-09-04: the atlas is live at https://atlas.lit-ui-router.dev/
+— a standalone Cloudflare Pages project (altitude-atlas, production branch
+worktree-altitude-atlas, direct upload; the user attached the domain in the
+dash). generator/stage-site.mjs builds the deployable: the rendered set with
+the gallery doubled as index.html and the two CDN scripts vendored under
+./vendor/ (sha256 pin-verified at stage time; the committed pages keep cdnjs
+for the artifact host's CSP). Refresh cycle: build.mjs → stage-site.mjs →
+`wrangler pages deploy dist --project-name altitude-atlas` from diagrams/.
+This branch never merges to main — it is the atlas's permanent home.
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block
