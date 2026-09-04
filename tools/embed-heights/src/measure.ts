@@ -168,6 +168,15 @@ export async function measureExamples(
             if (!seen.has(href)) queue.push(href);
           }
         }
+        // A cap hit with states still unwalked would measure a subset and
+        // report the tallest of that, which is how a too-small reservation
+        // passes. Raise MAX_STATES rather than trust the partial answer.
+        if (queue.some((state) => !seen.has(state))) {
+          throw new Error(
+            `${name}: more than ${MAX_STATES} hash states reachable; ` +
+              `measured ${states.length} and stopped, so the tallest is not known`,
+          );
+        }
         states.sort(
           (a, b) => b.height - a.height || a.state.localeCompare(b.state),
         );

@@ -107,6 +107,8 @@ Exceptions: `docs/api/**` (generated VitePress content, not a bundle output) and
 
 **Deliberately outside both ci graphs:** `docs#check:embeds` measures every built example in headless Chromium and checks the heights `docs/.vitepress/theme/components/examples.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
 
+That host-dependence is also why the task is uncached: the Chromium build and the font set decide the numbers, neither is nameable in `inputs`, and a cache hit would replay a measurement the current machine never took. Being uncacheable, it is not audited by `check-task-inputs` either — a task turbo will not hash-and-skip has no stale-cache failure mode.
+
 `typecheck:peer-floor` typechecks an adapter against its published peer-floor version. The floor pin can only reference published versions, so putting it in the ci graph would break atomic core-API + adapter-adoption PRs. It runs as a non-gating per-package check run on main pushes (the Release signals workflow) and as a hard gate at bump time.
 
 ### Workspace Extensions
@@ -244,7 +246,7 @@ TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }
 | `test:engines`                         | `ci:main` only — Firefox + WebKit vitest pass (lit-ui-router, navigation-location-plugin)                                                                                                                          |
 | `@tools/release#check:pack`            | `ci:main` only                                                                                                                                                                                                     |
 | `@tools/dts-backtest#test:matrix`      | `ci:main` only; PRs run the current-TS `#test` leg                                                                                                                                                                 |
-| `docs#check:embeds`                    | Neither ci graph — manual: measures the examples' embed heights (host-dependent font metrics)                                                                                                                      |
+| `docs#check:embeds`                    | Neither ci graph — manual and uncached: measures the examples' embed heights (host-dependent font metrics)                                                                                                         |
 | `typecheck:peer-floor`                 | Neither ci graph — Release signals check runs + bump gate                                                                                                                                                          |
 
 ## Remote Caching
