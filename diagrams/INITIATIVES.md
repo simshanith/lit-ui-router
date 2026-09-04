@@ -530,6 +530,15 @@ own with no edit to census-atlas.mjs: 15 → 16 probes/plates, T1 6 → 7, 60 �
 nodes, 79 → 88 edges, and sheet 2B joins the rack. Verified headless in both
 themes: consoles clean, sprites render, hover fills the panel with the plate's
 real ranges. Probe is idempotent (four runs differ only in generatedAtTime).
+2B REV B 2026-09-04, user-caught: the three companions share one column, so the
+mobx -> lit-ui-router peer edge drew as a vertical line STRAIGHT THROUGH the
+navigation-location-plugin node between them — it read as mobx coupling through
+the nav plugin, an overlap the plate never claimed. The data was right; the
+drawing lied. Fix in coupling-bench.mjs: any drawn edge whose endpoints share a
+column x is flagged `bow` at build and styled as an unbundled bezier arcing 120
+out of the column, so the contract and its `^1.7.0` label clear the bystander
+entirely. Verified by screenshot (playwright, file://): arc clears the node,
+label in its own air, console clean.
 
 ## Why rework
 

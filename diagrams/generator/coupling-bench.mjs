@@ -15,7 +15,7 @@ import { readFileSync } from 'node:fs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
-export const REV = 'A';
+export const REV = 'B';
 
 const C = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -80,7 +80,14 @@ const NODES = C.nodes.map((n) => {
     files: r?.files ?? null,
   };
 });
-const EDGES = C.rows.filter((r) => r.drawn);
+// An edge between two nodes of the SAME column would be drawn as a vertical
+// line straight through whatever stands between them (mobx -> lit-ui-router
+// reads as passing through the nav plugin), so it is flagged to bow out of the
+// column instead of running down it.
+const EDGES = C.rows.filter((r) => r.drawn).map((r) => ({
+  ...r,
+  bow: BENCH.get(r.from).x === BENCH.get(r.to).x,
+}));
 const OFFSTAGE = C.rows.filter((r) => !r.drawn);
 // A band is lettered off one shoulder of its node: `left` puts the text to the
 // node's left (cytoscape's own halign names the side the LABEL takes).
@@ -186,7 +193,7 @@ const INIT = `
   L.edges.forEach(function (e, i) {
     var brick = byKey[e.to] && byKey[e.to].kind === 'published';
     els.push({ data: { id: 'e' + i, idx: i, source: idOf(e.from), target: idOf(e.to), label: e.range },
-      classes: 'r-' + e.kind + (e.optional ? ' opt' : '') + (brick ? ' brick' : '') });
+      classes: 'r-' + e.kind + (e.optional ? ' opt' : '') + (brick ? ' brick' : '') + (e.bow ? ' bow' : '') });
   });
 
   function style(c) {
@@ -213,6 +220,8 @@ const INIT = `
       { selector: 'edge.opt', style: { 'line-style': 'dashed', 'line-dash-pattern': [4, 5],
         'line-color': c.red, 'target-arrow-color': c.red, color: c.red } },
       { selector: 'edge.brick', style: { 'line-style': 'solid', width: 2.6 } },
+      { selector: 'edge.bow', style: { 'curve-style': 'unbundled-bezier',
+        'control-point-distances': [120], 'control-point-weights': [0.5] } },
       { selector: '.dim', style: { opacity: 0.1 } },
       { selector: 'node.lit', style: { 'border-width': 2.6, 'border-color': c.accent } },
       { selector: 'edge.lit', style: { opacity: 1, width: 3, 'line-color': c.accent,
