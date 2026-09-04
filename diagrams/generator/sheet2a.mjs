@@ -1,16 +1,23 @@
+import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, keyRow } from './helpers.mjs';
 
 const P = 's2a';
 
-// ---- census: authored source, counted 2026-08-17 via census-bricks.mjs ---------
+// ---- census: authored source read from diagrams/data/census-bricks.json --------
 // Same basis as sheets 2/3/4: .ts/.tsx/.js/.mjs under src/, excl. *.d.ts,
-// *.{spec,test}.*, specs/ and typedoc stubs.  sloc = non-blank, non-comment lines.
-const CORE = ['@uirouter/core', '6.1.2', 80, 5272];
-const LIT = ['lit-ui-router', '1.9.0', 12, 1325];
-const NAV = ['ui-router-navigation-location-plugin', '0.3.0', 1, 105];
-const MBX = ['lit-ui-router-mobx', '0.5.0', 4, 133];
-const SRV = ['ui-router-server', '0.1.1', 8, 1141];
+// *.{spec,test}.*, specs/ and typedoc stubs.  sloc = scc Code lines.
+const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
+const brick = (name) => {
+  const r = B.rows.find((r) => r.name === name);
+  if (!r) throw new Error(`census-bricks.json: no row for ${name}`);
+  return [r.name, r.version, r.files, r.sloc];
+};
+const CORE = brick('@uirouter/core');
+const LIT = brick('lit-ui-router');
+const NAV = brick('ui-router-navigation-location-plugin');
+const MBX = brick('lit-ui-router-mobx');
+const SRV = brick('ui-router-server');
 const fmt = (v) => v.toLocaleString('en-US');
 
 // ---- shallow extrusion ----------------------------------------------------------
@@ -189,9 +196,9 @@ ${serverLane}
 </svg>`;
 
 export const sheet2a = {
-  num: '2A', id: 'companions-couplings', rev: 'A',
+  num: '2A', id: 'companions-couplings', rev: 'B',
   title: 'THE COUPLING PLAN',
-  sub: 'ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · counted 2026-08-17',
+  sub: `ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ ${B.sha} — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count`,
   scale: 'FOUR PACKAGES',
   form: 'COUPLING PLAN',
   svg,

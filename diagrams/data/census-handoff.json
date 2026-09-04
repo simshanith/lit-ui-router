@@ -2,7 +2,7 @@
   "ref": "origin/main",
   "sha": "eb32b4e",
   "commitDate": "2026-09-03T23:27:25Z",
-  "generatedAtTime": "2026-09-03T23:50:53.630Z",
+  "generatedAtTime": "2026-09-04T02:58:05.272Z",
   "wasGeneratedBy": "diagrams/generator/census-handoff.mjs",
   "used": "git archive origin/main @ eb32b4e",
   "wasAssociatedWith": [
@@ -23,6 +23,7 @@
   },
   "turbo": {
     "files": 17,
+    "distinctNames": 68,
     "definitions": 96,
     "rootDefinitions": 47,
     "memberDefinitions": 49,

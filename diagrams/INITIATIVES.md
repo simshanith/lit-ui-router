@@ -387,6 +387,22 @@ tmpdir stripped to `<archive>` or the plate never diffs clean.
 Survey office picked it up on its own: 14 → 15 probes/plates, T3
 6 → 7, 55 → 60 nodes, 69 → 79 edges, and 7A joins the rack (14 → 15 drawings).
 Nothing numeric on 7A or 7B is hand-typed any more.
+R3 — THE LAST RELICS CITED 2026-09-04: the two un-cited numbers R1 reported (and
+one more it missed) go onto plates. Sheet 1's altitude line reads the flagship's
+version from census-files.json (1.9.0 was two releases stale — it prints 1.11.1
+and re-dates itself at the next recensus); sheet 2A, which hand-typed all five
+brick rows from the 2026-08-17 count, now derives them from census-bricks.json
+via a throwing lookup (lit-ui-router 1.9.0 · 12f · 1,325 → 1.11.1 · 13f · 1,383;
+the other four rows were coincidentally still true); sheet 3's altitude line
+derives its package/tool counts from census-files.json and its task-name count
+from a new `turbo.distinctNames` field on census-handoff.json — the probe now
+collects the distinct key set while it parses, and the honest figure is 68, not
+the 67 R1's ledger estimated (verified by an independent recount at eb32b4e; the
+`//#` keys are turbo's root-task syntax, all real names). Revs: 1 → E, 2A → B,
+3 → E. Survey office grew to 17 reading drawings on its own, and the sheet-14
+WORD trap R2 fixed held (master plate still "read eleven times over" — its
+queriedBy counts stations, not drawings). With this, EVERY number printed by the
+atlas is plate-derived or a declared editorial constant (7B rust; placement).
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block

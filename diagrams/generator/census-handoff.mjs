@@ -107,8 +107,10 @@ try {
     }
     return out.replace(/,(\s*[}\]])/g, '$1');
   };
+  const turboNames = new Set();
   const turboFiles = basis.files.filter((f) => f === 'turbo.json' || f.endsWith('/turbo.json')).sort().map((file) => {
     const tasks = JSON.parse(stripJsonc(slurp(file))).tasks ?? {};
+    for (const name of Object.keys(tasks)) turboNames.add(name);
     return {
       file,
       root: file === 'turbo.json',
@@ -142,6 +144,7 @@ try {
     },
     turbo: {
       files: turboFiles.length,
+      distinctNames: turboNames.size,
       definitions: rootDefs + memberDefs,
       rootDefinitions: rootDefs,
       memberDefinitions: memberDefs,

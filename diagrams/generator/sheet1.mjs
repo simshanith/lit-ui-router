@@ -1,5 +1,11 @@
+import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, box, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+
+// The altitude line's version reads the master census, never a hand-typed string
+const FILES = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
+const LIT_V = FILES.members.find((m) => m.name === 'lit-ui-router')?.version;
+if (!LIT_V) throw new Error('census-files.json: no lit-ui-router member');
 
 const P = 's1';
 const OX = 300, OY = 120;
@@ -176,9 +182,9 @@ ${txt(x + 8, 751, sub, 'lblf')}`;
 </svg>`;
 
 export const sheet1 = {
-  num: 1, id: 'package', rev: 'D',
+  num: 1, id: 'package', rev: 'E',
   title: 'THE RENDER LOOP',
-  sub: 'ALTITUDE 1 — lit-ui-router 1.9.0 · the client circuit · REV D: the loop routed on the iso grid',
+  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic`,
   scale: 'ONE PACKAGE',
   form: 'ISO CIRCUIT',
   svg,

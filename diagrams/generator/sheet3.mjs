@@ -24,6 +24,9 @@ const COUNTED = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime
 // hand-pasted here until rev D, where they disagreed with 3A in the same build
 const HANDOFF = JSON.parse(readFileSync(new URL('../data/census-handoff.json', import.meta.url), 'utf8'));
 const CIPLATE = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8'));
+const FILES = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
+const PUBLISHED = FILES.members.filter((m) => !m.private).length;
+const TOOLS = FILES.members.filter((m) => m.dir.startsWith('tools/')).length;
 const HW = HANDOFF.workflows, HM = HANDOFF.mise;
 const CI_NODES = CIPLATE.pipelines.ci.nodes;
 
@@ -294,9 +297,9 @@ ${schedule}
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo', rev: 'D',
+  num: 3, id: 'monorepo', rev: 'E',
   title: 'THE INSTRUMENT YARD',
-  sub: `ALTITUDE 3 — 5 publishable packages · 19 tools · 44 turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci ${CI_NODES} nodes, no longer a hand-pasted 535`,
+  sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci ${CI_NODES} nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic`,
   scale: 'THE MONOREPO',
   form: 'ISOMETRIC CITY',
   svg,
