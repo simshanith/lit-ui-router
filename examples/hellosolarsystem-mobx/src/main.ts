@@ -1,5 +1,5 @@
 import { html, LitElement, css, render } from 'lit';
-import { customElement, property } from 'lit/decorators.js';
+import { customElement, property, query } from 'lit/decorators.js';
 import { hashLocationPlugin, Transition } from '@uirouter/core';
 import { compareStructural, makeAutoObservable, reaction } from 'mobx';
 import {
@@ -468,21 +468,34 @@ export class AppRoot extends LitElement {
       color: #8ab4f8;
       text-decoration: none;
     }
-    nav a.active {
+    /* uiSrefActive covers the list; the controller covers its detail view */
+    nav a.active,
+    nav a[data-detail] {
       font-weight: bold;
       border-bottom: 2px solid #8ab4f8;
     }
-    nav .trail {
-      color: #8892b8;
-    }
     .path {
-      margin: 0;
-      padding-left: 20px;
-      color: #8892b8;
+      display: flex;
+      gap: 6px;
+      margin: 0 0 16px;
+      padding: 0 0 6px;
+      list-style: none;
+      overflow-x: auto;
       font-size: 0.85em;
+      scrollbar-width: thin;
     }
     .path li {
-      margin: 2px 0;
+      flex: 0 0 auto;
+      padding: 2px 10px;
+      border: 1px solid #2c3350;
+      border-radius: 10px;
+      background: #171c2e;
+      color: #8892b8;
+      white-space: nowrap;
+    }
+    .path li:last-child {
+      border-color: #8ab4f8;
+      color: #e6e9f0;
     }
     .crumb {
       color: #8892b8;
@@ -499,10 +512,9 @@ export class AppRoot extends LitElement {
   `;
 
   // <app-root> is not routed, so it outlives every transition and never gets
-  // fresh view props. Two controllers, two sources: the route one selects
-  // what the URL says, the store one selects what the app remembers. Neither
-  // runs an effect — the route sets the active visit, and the store derives
-  // the rest from it.
+  // fresh view props. Two controllers, two authorities: `planet` is not a
+  // child of `planets`, so uiSrefActive cannot keep the nav lit on a detail
+  // view — and the route, not the store, is what should answer "where am I".
   private readonly route = new RouterReactionController(this, (route) =>
     route.includes('planet'),
   );
@@ -517,16 +529,25 @@ export class AppRoot extends LitElement {
     { equals: compareStructural },
   );
 
+  @query('.path') private readonly path?: HTMLElement | null;
+
+  // A trail only helps if its newest stop is the one you can see.
+  updated() {
+    if (this.path) this.path.scrollLeft = this.path.scrollWidth;
+  }
+
   render() {
     const onDetail = this.route.value;
     const { active, trail, visited } = this.tour.value;
     return html`
       <h2>Hello Solar System (MobX)</h2>
       <nav>
-        <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('planets')}
+        <a
+          ?data-detail=${onDetail}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          ${uiSref('planets')}
           >Planets</a
         >
-        ${onDetail ? html`<span class="trail">&rsaquo; body detail</span>` : ''}
       </nav>
       <p class="crumb">
         ${active ? html`Viewing <strong>${active.name}</strong> — ` : ''}
@@ -580,9 +601,6 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
 // Router setup
 const router = new UIRouterLit();
 router.plugin(hashLocationPlugin);
-void import('@uirouter/visualizer').then(({ Visualizer }) =>
-  router.plugin(Visualizer),
-);
 router.stateRegistry.register(planetsState);
 router.stateRegistry.register(planetState);
 router.urlService.rules.initial({ state: 'planets' });

@@ -109,6 +109,9 @@ describe('docs site', () => {
     cy.contains('a', 'Mars', shadow).click();
     // <app-root> is outside every <ui-view>, so a transition never re-creates
     // it: the breadcrumb and the counter can only come from the reactions.
+    // 'planet' is not a child of 'planets', so the nav stays lit only because
+    // the route controller says so.
+    cy.get('nav a[data-detail]', shadow).should('exist');
     cy.contains('.crumb strong', 'Mars', shadow);
     // :not(.top) — the duplicate top link is phone-only (display: none here)
     cy.contains(

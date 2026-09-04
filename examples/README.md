@@ -48,10 +48,10 @@ The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt w
 
 It layers on four things, each answering a different question:
 
-- **Where am I now?** `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: a selector reads the route, and the host re-renders when — and only when — that selection changes. `equals: compareStructural` keeps an unrelated transition from re-rendering it
+- **Where am I now?** `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props. `planet` is not a child of `planets`, so `uiSrefActive` cannot keep the nav lit on a detail view — the controller selects `route.includes('planet')` and does it, because the route is what should answer that, not the store
 - **Where have I been, and what did the route resolve?** One `onSuccess` hook records both, because both are facts about the same completed arrival: it reads the state's own resolve and appends a stop. `onSuccess` rather than `onEnter` on purpose — an entering hook fires while the transition is still in flight, and a later hook can still redirect or fail it, so a tour built on `onEnter` can record arrivals that never happened. No component parses a route param
 - **What is worth doing outside the component tree?** A plain MobX `reaction` over `RouterStore` drives the tab title. No host, no controller, nothing to re-render — the bindings' store is an ordinary observable, so application code can react to the router without a component in the middle
-- **What follows from all that?** `visited` is a `computed` over the trail, so revisiting the list never inflates it, and `ReactionController` selects it — the host re-renders when the set changes, not on every stop
+- **What follows from all that?** `visited` is a `computed` over the trail, so revisiting the list never inflates it, and `ReactionController` selects it — with `equals: compareStructural`, so the host re-renders when the selection changes, not on every stop added
 - It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings
 
 ### hellogalaxy
