@@ -3,6 +3,7 @@
 // attribute when it goes inactive — including one the author wrote — so an
 // authored value is silently lost a navigation later.
 import type { Rule } from 'eslint';
+import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
   type CallNode,
@@ -17,6 +18,8 @@ import {
 
 const OPT_OUT = 'ariaCurrentValue: false';
 
+export const RULE_NAME = 'sref-active-aria-current';
+
 /**
  * An authored `aria-current` next to a `uiSrefActive` element part.
  *
@@ -24,14 +27,13 @@ const OPT_OUT = 'ariaCurrentValue: false';
  * under the app's control. A non-literal params argument is unknowable, so it
  * stays suppressed rather than guessed.
  */
-const srefActiveAriaCurrent: Rule.RuleModule = {
+const srefActiveAriaCurrent: RuleFor<typeof RULE_NAME> = {
   meta: {
     type: 'problem',
     fixable: 'code',
     docs: {
       description:
         'disallow an authored aria-current on an element a uiSrefActive element part manages',
-      url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md',
     },
     messages: {
       ariaCurrentTakeover:
