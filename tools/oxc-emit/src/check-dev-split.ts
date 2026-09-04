@@ -9,6 +9,7 @@ import { join } from 'node:path';
 import {
   findDevSplitViolations,
   formatDevSplitReport,
+  messagePrefix,
 } from './check-dev-split.core.ts';
 import { DEV_OUT, OUT } from './shared.ts';
 
@@ -43,8 +44,14 @@ if (!production) {
   );
   process.exit(1);
 }
+// The undeclared-message scan keys off the package's own name, so a sibling
+// package's prefix (lit-ui-router-mobx:) is never read as lit-ui-router:.
+const { name } = JSON.parse(readFileSync('package.json', 'utf8')) as {
+  name: string;
+};
 const report = formatDevSplitReport(
   findDevSplitViolations({
+    prefix: messagePrefix(name),
     devOnly,
     production,
     development: read(DEV_OUT),

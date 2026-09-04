@@ -154,3 +154,13 @@ flag "--branch-prefix <branch_prefix>" help="Release branch prefix (default: rel
 flag "--dry-run" help="Show the computed version/changelog; skip branch push and PR creation" env="DRY_RUN"
 '''
 run = 'PACKAGE="${usage_package?}" INCREMENT="${usage_increment?}" OTHER_INCREMENT="${usage_other_increment:-}" PR_BASE="${usage_pr_base?}" BRANCH_PREFIX_INPUT="${usage_branch_prefix:-}" DRY_RUN="${usage_dry_run:-}" node src/steps/release-bump.ts'
+
+[tasks.check_release_closure]
+# turbo runs this as @tools/release#check:release-closure; a mise task so
+# RELEASE_CLOSURE needs no shell activation. Reads manifests only, so it is
+# honest before any release lane installs.
+description = "Assert RELEASE_CLOSURE covers every member the release lanes run in"
+run = "node src/checks/check-release-closure.ts"
+
+[tasks.check_release_closure.env]
+RELEASE_CLOSURE = "{{vars.release_closure}}"

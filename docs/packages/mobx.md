@@ -79,14 +79,14 @@ lazily attaches its single transition hook on first use.
 mirror of a router's current state, updated by one
 `transitionService.onSuccess` hook per router.
 
-| Member                      | Description                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                   |
-| `current`                   | The current `StateDeclaration` (`globals.current`)                           |
-| `params`                    | The current `RawParams` (`globals.params`), replaced per transition          |
-| `transition`                | The most recent successful `Transition`                                      |
-| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`) |
-| `attach(router)`            | Manual attachment, for self-managed store instances                          |
+| Member                      | Description                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                                                 |
+| `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
+| `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
+| `transition`                | The most recent successful `Transition`                                                                    |
+| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
+| `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
 ### RouterReactionController
 
@@ -105,6 +105,9 @@ new RouterReactionController(host, selector, options?)
   params
 - `options.equals` — MobX comparer (e.g. `compareStructural`) for precise,
   value-based change detection
+- `options.initialValue` — the value `.value` carries before the first
+  reaction run: before `hostConnected`, and while a host has no router
+  context
 
 ### ReactionController
 
@@ -153,6 +156,59 @@ composition-friendly alternative:
   structurally unchanged
 - The reaction lifecycle is bound to the host's connection lifecycle
   automatically
+
+## Resolves stay on view props
+
+`RouterStore` mirrors `current`, `params` and `transition` — not resolves.
+Resolved data reaches a routed component exactly as it does without these
+bindings: as [`UIViewInjectedProps`](/api/reference/types/UIViewInjectedProps)
+on `_uiViewProps`, scoped to that component's own view.
+
+There is no resolve accessor on the store, and
+`store.transition?.injector().get(token)` is not a substitute: that is the
+transition's _root_ injector, not the view's resolve context, so it resolves
+a different token set than the component's own view sees.
+
+The split both the live example below and the MobX sample app follow:
+
+- resolved data → `_uiViewProps.resolves`
+- active state, and anything that outlives a single activation → the store,
+  selected by reaction controllers
+
+Route params reach a component the same way: through the resolve that reads
+them. A component re-deriving a param the resolve already derived is how the
+two drift apart.
+
+## Try it live
+
+The [Hello Solar System](/tutorial/hellosolarsystem) tutorial rebuilt on these
+controllers: same states, same URLs, same resolves. `<app-root>` is not
+routed, so it never receives fresh view props — a `RouterReactionController`
+selects what the URL says, while a plain `ReactionController` selects what the
+app remembers, from a tour store the router knows nothing about.
+
+Neither controller writes anything. A single `onSuccess` hook records the
+arrival — where the router landed, and what that state resolved — because both
+are facts about the same completed transition. `onSuccess` rather than an
+entering hook on purpose: `onEnter` fires while the transition is still in
+flight, and a later hook can still redirect or fail it, so history built on it
+can record arrivals that never happened. The id is parsed once, in the resolve,
+and no component ever reads a route param.
+
+Everything else derives. The visited set and its count are `computed` over that
+history, and the tab title comes from a plain `reaction` over `RouterStore`
+with no host and no controller at all — which is the part worth stealing: the
+store these bindings give you is an ordinary MobX observable, so application
+code can react to the router without a component in the middle.
+
+<LiveExample name="hellosolarsystem-mobx" />
+
+The Edit in StackBlitz tab boots the workspace from the published
+`lit-ui-router-mobx` package, so it doubles as an install check.
+
+Read it as the minimal case: the vanilla tutorial with the store layered in,
+not a rewrite. The sample apps below are where the two idioms are compared
+directly, at the scale of a whole application.
 
 ## See it in a real app
 

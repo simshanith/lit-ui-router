@@ -21,7 +21,9 @@
     },
     "test": {
       "dependsOn": ["^test"],
+      // $TURBO_DEFAULT$ is the key; the globs only document what the lane reads
       "inputs": [
+        "$TURBO_DEFAULT$",
         "src/**/*.ts",
         "vitest.config.ts",
         "vitest.setup.ts",
@@ -34,17 +36,32 @@
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
-      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "fixtures/**",
+        "run.ts",
+        "tsconfig.fixture*.json"
+      ]
     },
     // Full TS version matrix; distinct task name = distinct cache key from
     // the current-leg-only #test above. Runs on main push, not the PR graph.
     "@tools/dts-backtest#test:matrix": {
       "dependsOn": ["^build"],
-      "inputs": ["fixtures/**", "run.ts", "tsconfig.fixture*.json"]
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "fixtures/**",
+        "run.ts",
+        "tsconfig.fixture*.json"
+      ]
     },
     "test:coverage": {
       "dependsOn": ["^build", "^test:coverage"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.ts",
+        "vitest.config.ts",
+        "vitest.setup.ts"
+      ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
       "outputs": ["coverage/**"]
     },
@@ -53,7 +70,12 @@
     // PR graph.
     "test:engines": {
       "dependsOn": ["^build"],
-      "inputs": ["src/**/*.ts", "vitest.config.ts", "vitest.setup.ts"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.ts",
+        "vitest.config.ts",
+        "vitest.setup.ts"
+      ],
       "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
@@ -88,7 +110,9 @@
         "//#lint:workflows",
         "//#lint:templates",
         "//#check:patches",
-        "//#check:docs-api-deps"
+        "//#check:graph-edges",
+        "//#check:task-inputs",
+        "@tools/release#check:release-closure"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
@@ -115,12 +139,14 @@
       // type-incompatible binding against it goes unreported (the run only
       // fails on unrelated no-missing-import noise). Root has
       // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason. ADD A LINE HERE
-      // whenever a new package ships custom elements consumed by templates in
-      // packages/*/src, apps/*/src or examples/*/src.
+      // them; these are package-qualified for that reason (//#check:graph-edges
+      // holds the list to every publishable package with a build:types script).
       "dependsOn": [
+        "eslint-plugin-lit-ui-router#build:types",
         "lit-ui-router#build:types",
-        "lit-ui-router-mobx#build:types"
+        "lit-ui-router-mobx#build:types",
+        "ui-router-navigation-location-plugin#build:types",
+        "ui-router-server#build:types"
       ],
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -167,6 +193,7 @@
       // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
       // could rotate a patch target re-runs the check
       "inputs": [
+        "$TURBO_DEFAULT$",
         "check-patches.ts",
         "patches/**",
         "pnpm-workspace.yaml",
@@ -174,12 +201,21 @@
         "tools/shared/src/**"
       ]
     },
-    "//#check:docs-api-deps": {
-      // any manifest can gain or lose a docs:api script, or docs can lose a dep
+    "//#check:graph-edges": {
+      // any manifest can gain or lose a selecting script, any turbo.json an edge
       "inputs": [
-        "check-docs-api-deps.ts",
+        "$TURBO_DEFAULT$",
+        "check-graph-edges.ts",
+        "**/turbo.json",
         "**/package.json",
         "pnpm-workspace.yaml",
+        "tools/shared/src/**"
+      ]
+    },
+    "//#check:task-inputs": {
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "check-task-inputs.ts",
         "tools/shared/src/**"
       ]
     },
@@ -402,7 +438,8 @@
       ]
     },
     "e2e": {
-      "dependsOn": ["^build", "^docs", "^e2e"],
+      "dependsOn": ["^build"],
+      "with": ["docs#wrangler:dev"],
       "cache": false,
       "persistent": true
     },

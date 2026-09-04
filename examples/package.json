@@ -8,6 +8,7 @@
     "example:install:design-system-links": "npm ci --prefix design-system-links",
     "example:install:hellogalaxy": "npm ci --prefix hellogalaxy",
     "example:install:hellosolarsystem": "npm ci --prefix hellosolarsystem",
+    "example:install:hellosolarsystem-mobx": "npm ci --prefix hellosolarsystem-mobx",
     "example:install:helloworld": "npm ci --prefix helloworld",
     "example:install:lint-eslint": "npm ci --prefix lint-eslint",
     "format": "oxfmt \"**/*.{ts,js,json,md,html}\"",
@@ -20,6 +21,7 @@
     "typecheck:design-system-links": "tsc -p design-system-links",
     "typecheck:hellogalaxy": "tsc -p hellogalaxy",
     "typecheck:hellosolarsystem": "tsc -p hellosolarsystem",
+    "typecheck:hellosolarsystem-mobx": "tsc -p hellosolarsystem-mobx",
     "typecheck:helloworld": "tsc -p helloworld",
     "typecheck:lint-eslint": "tsc -p lint-eslint"
   },

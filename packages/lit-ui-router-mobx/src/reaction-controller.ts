@@ -10,6 +10,14 @@ export interface ReactionControllerOptions<T> {
   onChange?: (value: T) => void;
 
   /**
+   * Value exposed on `.value` before the first reaction run — that is,
+   * before `hostConnected`, and on any host that renders while
+   * disconnected (SSR). Without it `.value` is `undefined` until the host
+   * connects, which is safe to render but not to read a property of.
+   */
+  initialValue?: T;
+
+  /**
    * Comparer deciding whether the selected value changed (e.g.
    * `compareStructural` on mobx 7, `comparer.structural` on mobx 6).
    * Defaults to MobX's identity comparer.
@@ -38,7 +46,7 @@ export interface ReactionControllerOptions<T> {
  * The selected value is exposed as `.value` for use in `render()`.
  */
 export class ReactionController<T> implements ReactiveController {
-  value!: T;
+  value: T;
 
   private dispose?: IReactionDisposer;
 
@@ -47,6 +55,9 @@ export class ReactionController<T> implements ReactiveController {
     private readonly expression: () => T,
     private readonly options: ReactionControllerOptions<T> = {},
   ) {
+    // Undefined unless `initialValue` is given, which is the pre-connect
+    // shape either way; the cast keeps `.value` typed `T` for render code.
+    this.value = options.initialValue as T;
     host.addController(this);
   }
 

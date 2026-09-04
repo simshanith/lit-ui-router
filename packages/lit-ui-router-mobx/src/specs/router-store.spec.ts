@@ -28,6 +28,53 @@ describe('RouterStore', () => {
     });
   });
 
+  describe('attach()', () => {
+    it('is idempotent for the router already being mirrored', () => {
+      const router = createTestRouter(testStates);
+      const store = new RouterStore();
+
+      const deregister = store.attach(router);
+      expect(store.attach(router)).toBe(deregister);
+    });
+
+    it('registers one hook, so the deregistration function detaches', async () => {
+      const router = createTestRouter(testStates);
+      const store = new RouterStore();
+
+      const deregister = store.attach(router);
+      store.attach(router);
+      deregister();
+
+      await routerGo(router, 'a');
+      expect(store.current?.name).not.toBe('a');
+    });
+
+    it('throws when attached to a different router', () => {
+      const store = new RouterStore();
+      store.attach(createTestRouter(testStates));
+
+      expect(() => store.attach(createTestRouter(testStates))).toThrow(
+        /different router/,
+      );
+    });
+
+    it('can be attached again after detaching, syncing on attach', async () => {
+      const router = createTestRouter(testStates);
+      const store = new RouterStore();
+
+      const deregister = store.attach(router);
+      await routerGo(router, 'a');
+      expect(store.current?.name).toBe('a');
+
+      deregister();
+      await routerGo(router, 'b', { id: '1' });
+      expect(store.current?.name).toBe('a');
+
+      store.attach(router);
+      expect(store.current?.name).toBe('b');
+    });
+  });
+
   describe('mirroring', () => {
     it('mirrors the current state declaration', async () => {
       const router = createTestRouter(testStates);

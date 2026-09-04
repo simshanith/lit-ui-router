@@ -2,15 +2,6 @@
   "name": "lit-ui-router-mobx",
   "version": "0.5.0",
   "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
-  "keywords": [
-    "lit",
-    "mobx",
-    "reactive-controller",
-    "routing",
-    "spa",
-    "state-management",
-    "ui-router"
-  ],
   "homepage": "https://lit-ui-router.dev/packages/mobx",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
@@ -35,16 +26,18 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
   "scripts": {
-    "build:js": "oxc-emit-js",
+    "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-mobx@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:api": "rimraf ../../docs/api/lit-ui-router-mobx && typedoc",
