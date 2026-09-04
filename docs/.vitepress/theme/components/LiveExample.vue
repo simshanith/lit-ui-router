@@ -12,13 +12,20 @@ import {
 } from './examples';
 import { webContainersSupported } from './webcontainers';
 
-const props = defineProps<{
-  name: ExampleName;
-  height?: string;
-  file?: string;
-  /** Overrides the example's own view, and DEFAULT_EMBED_VIEW under it. */
-  view?: StackBlitzView;
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: ExampleName;
+    height?: string;
+    file?: string;
+    /** Pass 'default' to hand the choice back to StackBlitz. */
+    view?: StackBlitzView;
+  }>(),
+  // The tab this embed sits behind reads "Edit in StackBlitz", and the Preview
+  // tab beside it already serves the running example from this origin. Opening
+  // on the editor is that promise kept; StackBlitz's own default would spend
+  // half a large viewport re-rendering what the other tab does without a boot.
+  { view: 'editor' },
+);
 
 type Mode = 'preview' | 'stackblitz';
 
