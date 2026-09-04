@@ -155,9 +155,10 @@ const solarBodies: SolarBody[] = [
 const delay = <T>(value: T, ms = 300): Promise<T> =>
   new Promise((resolve) => setTimeout(() => resolve(value), ms));
 
-// Route params are strings, and `parseInt('4x')` is 4. Every reader of
-// :planetId goes through this instead, so a bad URL resolves to nothing
-// rather than to a silently different planet.
+// Route params are strings, and `parseInt('4x')` is 4. The resolve is the one
+// place that turns :planetId into a body, so it is the one place that parses
+// — strictly, so a bad URL resolves to nothing rather than to a silently
+// different planet.
 function parsePlanetId(value: string | undefined): number | undefined {
   return value !== undefined && /^\d+$/.test(value) ? Number(value) : undefined;
 }
@@ -172,18 +173,27 @@ const SolarSystemService = {
 const dotSize = (diameterKm: number): number =>
   Math.round(Math.log2(diameterKm / 1000) * 6 + 10);
 
-// Application state, not route state: which bodies the visitor has opened.
-// Replaced (not mutated) per visit so reference equality is enough to detect
-// the change.
+// Application state, not route state: which body is open and which ones the
+// visitor has seen. `visited` is replaced (not mutated) per visit so
+// reference equality is enough to detect the change.
 class Tour {
+  open?: SolarBody = undefined;
+
   visited: readonly number[] = [];
 
   constructor() {
     makeAutoObservable(this);
   }
 
-  visit(id: number) {
-    if (!this.visited.includes(id)) this.visited = [...this.visited, id];
+  enter(body: SolarBody) {
+    this.open = body;
+    if (!this.visited.includes(body.id)) {
+      this.visited = [...this.visited, body.id];
+    }
+  }
+
+  exit() {
+    this.open = undefined;
   }
 }
 
@@ -433,6 +443,9 @@ export class AppRoot extends LitElement {
       font-weight: bold;
       border-bottom: 2px solid #8ab4f8;
     }
+    nav .trail {
+      color: #8892b8;
+    }
     .crumb {
       color: #8892b8;
     }
@@ -448,46 +461,35 @@ export class AppRoot extends LitElement {
   `;
 
   // <app-root> is not routed, so it outlives every transition and never gets
-  // fresh view props. The controller observes the enclosing <ui-router>'s
-  // store instead: `value` drives the breadcrumb, and `onChange` records the
-  // visit — an effect keyed on the route param, running once per distinct
-  // planet rather than once per transition.
-  private readonly route = new RouterReactionController(
-    this,
-    (route) => ({
-      onDetail: route.includes('planet'),
-      planetId: parsePlanetId(route.params.planetId as string | undefined),
-    }),
-    {
-      equals: compareStructural,
-      onChange: ({ onDetail, planetId }) => {
-        if (onDetail && planetId !== undefined) TourStore.visit(planetId);
-      },
-    },
+  // fresh view props. Two controllers, two sources: the route one selects
+  // what the URL says, the store one selects what the app remembers. Neither
+  // runs an effect — entering the `planet` state is what records a visit, so
+  // the hook that owns that transition owns the write.
+  private readonly route = new RouterReactionController(this, (route) =>
+    route.includes('planet'),
   );
 
-  private readonly tour = new ReactionController(this, () => TourStore.visited);
-
-  get openBody(): SolarBody | undefined {
-    const { onDetail, planetId } = this.route.value;
-    return onDetail
-      ? solarBodies.find((body) => body.id === planetId)
-      : undefined;
-  }
+  private readonly tour = new ReactionController(
+    this,
+    () => ({ open: TourStore.open, visited: TourStore.visited.length }),
+    { equals: compareStructural },
+  );
 
   render() {
-    const { openBody } = this;
+    const onDetail = this.route.value;
+    const { open, visited } = this.tour.value;
     return html`
       <h2>Hello Solar System (MobX)</h2>
       <nav>
         <a ${uiSrefActive({ activeClasses: ['active'] })} ${uiSref('planets')}
           >Planets</a
         >
+        ${onDetail ? html`<span class="trail">&rsaquo; body detail</span>` : ''}
       </nav>
       <p class="crumb">
-        ${openBody ? html`Viewing <strong>${openBody.name}</strong> — ` : ''}
+        ${open ? html`Viewing <strong>${open.name}</strong> — ` : ''}
         <span class="visited-count"
-          >${this.tour.value.length} of ${solarBodies.length} visited</span
+          >${visited} of ${solarBodies.length} visited</span
         >
       </p>
       <ui-view></ui-view>
@@ -513,6 +515,17 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
+  // The visit belongs to the route, not to a component watching the route:
+  // onEnter reads this state's own resolve, so it records the body the view
+  // actually received — already parsed, already validated, once per entry.
+  onEnter: (transition, state) => {
+    // injector(<name>) scopes the lookup to this state's own resolves.
+    const planet = transition.injector(state.name).get('planet') as
+      | SolarBody
+      | undefined;
+    if (planet) TourStore.enter(planet);
+  },
+  onExit: () => TourStore.exit(),
   // deps injects $transition$ so the resolve can read the route parameter.
   resolve: [
     {

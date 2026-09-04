@@ -177,9 +177,13 @@ The split both the live example below and the MobX sample app follow:
 The [Hello Solar System](/tutorial/hellosolarsystem) tutorial rebuilt on these
 controllers: same states, same URLs, same resolves. `<app-root>` is not
 routed, so it never receives fresh view props — a `RouterReactionController`
-drives its breadcrumb and runs a param-keyed `onChange` effect, while a plain
-`ReactionController` watches the visited-bodies store the router knows nothing
-about.
+selects what the URL says, while a plain `ReactionController` selects what the
+app remembers, from a visited-bodies store the router knows nothing about.
+
+Neither controller writes anything. Recording a visit belongs to the route, so
+it lives in the `planet` state's own `onEnter` hook, reading that state's
+resolve: the id is parsed once, at the edge, and the effect fires on the body
+the view actually received.
 
 <LiveExample name="hellosolarsystem-mobx" />
 

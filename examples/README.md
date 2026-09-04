@@ -46,7 +46,8 @@ A tour of the Sun, all 8 planets, and a beloved dwarf-planet easter egg — real
 
 The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt with the [MobX bindings](https://lit-ui-router.dev/packages/mobx). Resolves still arrive as `UIViewInjectedProps`; everything that outlives a single activation is observed instead.
 
-- `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: the selector drives a breadcrumb, and `onChange` runs a param-keyed effect (recording the visit) once per distinct planet rather than once per transition
+- `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: a selector reads the route, and the host re-renders when — and only when — that selection changes
+- The write is not in a component. Entering the `planet` state records the visit, in that state's own `onEnter` hook, off its own resolve: the route owns the effect, and the controllers only read
 - `equals: compareStructural` so an unrelated transition that leaves the selection unchanged does not re-render
 - `ReactionController` over a plain MobX store (the visited-bodies tour) — the generic primitive, over state the router knows nothing about
 - It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings

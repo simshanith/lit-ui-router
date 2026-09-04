@@ -94,10 +94,14 @@ values immediately instead of waiting for the next transition.
 
 The same problem, solved with the
 [MobX bindings](/packages/mobx): `<app-root>` sits outside every
-`<ui-view>`, so it never receives fresh view props, and a reaction controller
-keeps its breadcrumb and visit counter in sync. Swap
+`<ui-view>`, so it never receives fresh view props, and reaction controllers
+keep its breadcrumb and visit counter in sync. Swap
 `RouterReactionController` for `TransitionController` and the shape is
 identical — a controller on the host, a value read in `render()`.
+
+In both idioms the controllers only read. The example's one write — recording
+that a body was visited — sits in the route's own `onEnter` hook, which is
+where an effect that belongs to a state belongs.
 
 This is the minimal version — the solar-system tutorial with a store layered
 in where the router stops helping, small enough to read in one sitting. For
