@@ -403,6 +403,16 @@ the 67 R1's ledger estimated (verified by an independent recount at eb32b4e; the
 WORD trap R2 fixed held (master plate still "read eleven times over" — its
 queriedBy counts stations, not drawings). With this, EVERY number printed by the
 atlas is plate-derived or a declared editorial constant (7B rust; placement).
+QA 2026-09-04: full in-browser pass of both interactive lanes after
+R1–R3 (headless Chromium, both themes + both stamp states, dpr 2,
+reduced motion, theme turn under TEST LIGHT) — CLEAN, no defects, no
+changes. №31 draws lit wall-to-wall, №15 at exactly 73.0%, every hover
+sentence matches the plate to the decimal, tilt pauses input with the
+bar still live, wheel never hijacks an unengaged scroll. Two benign
+notes for the record: hover keeps the prior selection during a snap
+tween (no misaligned pick is possible — the contract's intent holds);
+the swapped legend labels b3 and b4 together as "lit <85" (no member
+falls in either band at this metering).
 Known follow-ups: chrome.mjs shared title-block DATE — CLOSED 2026-09-03,
 now derived from census-files.json's commitDate (the ref's commit date,
 per the census-steam rule), so a recensus re-dates every title block
