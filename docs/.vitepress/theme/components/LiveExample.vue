@@ -20,7 +20,6 @@ const props = withDefaults(
     /** Pass 'default' to hand the choice back to StackBlitz. */
     view?: StackBlitzView;
   }>(),
-  // The tab says "Edit in StackBlitz"; Preview already runs it.
   { view: 'editor' },
 );
 

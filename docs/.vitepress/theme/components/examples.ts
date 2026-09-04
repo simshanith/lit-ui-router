@@ -30,7 +30,6 @@ export function staticSrc(name: ExampleName): string {
   return `/examples/${name}/`;
 }
 
-// No default view here: LiveExample owns that choice.
 export function stackblitzEmbedSrc(
   name: ExampleName,
   file: string = EXAMPLES[name].file,
