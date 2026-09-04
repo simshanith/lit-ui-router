@@ -1,9 +1,4 @@
-/**
- * StackBlitz's `view` param. `default` — which is also what omitting the param
- * means — shows preview and editor on large viewports, editor alone on small
- * ones. StackBlitz treats all three as intent rather than instruction, and
- * adjusts for viewport width and for tab vs. iframe.
- */
+/** `default`, which is also omitting it, shows both panes only when wide. */
 export type StackBlitzView = 'default' | 'editor' | 'preview';
 
 // Keep in sync with examples/build-embeds.ts and EMBEDDED_EXAMPLES in docs/.vitepress/vite.config.ts.
@@ -35,9 +30,7 @@ export function staticSrc(name: ExampleName): string {
   return `/examples/${name}/`;
 }
 
-// Unset stays unset — this builder has no opinion about the pane, so callers
-// that want one say so. LiveExample is where that opinion lives.
-// `undefined` drops the key; `null` would emit a valueless `view`.
+// No default view here: LiveExample owns that choice.
 export function stackblitzEmbedSrc(
   name: ExampleName,
   file: string = EXAMPLES[name].file,

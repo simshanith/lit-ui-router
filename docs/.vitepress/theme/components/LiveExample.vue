@@ -20,10 +20,7 @@ const props = withDefaults(
     /** Pass 'default' to hand the choice back to StackBlitz. */
     view?: StackBlitzView;
   }>(),
-  // The tab this embed sits behind reads "Edit in StackBlitz", and the Preview
-  // tab beside it already serves the running example from this origin. Opening
-  // on the editor is that promise kept; StackBlitz's own default would spend
-  // half a large viewport re-rendering what the other tab does without a boot.
+  // The tab says "Edit in StackBlitz"; Preview already runs it.
   { view: 'editor' },
 );
 
