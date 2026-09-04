@@ -21,10 +21,8 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
-# The release closure `setup --release` installs (release-signals, bump-version,
-# publish-gh): the release tool plus every publishable package — release-it, the
-# peer-floor alias and its guard live in the packages, not in @tools/release.
-# //#check:release-closure asserts the selection covers every lane's needs.
+# What `setup --release` installs; release-it and the peer-floor scripts live in
+# packages/*, not @tools/release. //#check:release-closure guards the selection.
 RELEASE_CLOSURE = "--filter @tools/release... --filter {packages/*}..."
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker

@@ -213,9 +213,7 @@
       ]
     },
     "//#check:release-closure": {
-      // pnpm resolves the filter from manifests alone, so a new member or a
-      // lane growing a need (a release-it devDep, a peer-floor script) shows
-      // here before any release lane installs with it
+      // pnpm resolves the filter from manifests alone, so this runs before any release lane installs
       "env": ["RELEASE_CLOSURE"],
       "inputs": [
         "$TURBO_DEFAULT$",

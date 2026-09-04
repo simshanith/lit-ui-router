@@ -1,5 +1,4 @@
-// The release closure `setup --release` installs must hold every member a release lane runs
-// in, or the lane fails (or lies) on the first cache miss after a dep reshuffle.
+// Every member a release lane runs in must be inside the closure `setup --release` installs.
 import { requireEnv } from '@tools/shared/env.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import {
