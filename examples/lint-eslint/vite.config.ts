@@ -9,6 +9,25 @@ const CONFIG_FILE = 'eslint.config.js';
 
 const EMPTY = { results: [], ruleDocs: {}, html: '' };
 
+// The formatter renders `<span>${summary}</span> - Generated on ${date}` on one
+// line, so the stamp ends at the newline.
+const GENERATED_ON = / - Generated on [^\n]*/;
+
+// The stamped date is the only part of the formatter's output that varies
+// without the input, and it lands in the bundle, so an unchanged source tree
+// would still hash differently on every build. Warn rather than pass it
+// through silently: a no-op here restores the nondeterminism unnoticed.
+function stripGeneratedOn(html: string) {
+  if (!GENERATED_ON.test(html)) {
+    console.warn(
+      "lint-report: no 'Generated on' stamp to strip — ESLint's html formatter " +
+        'markup may have moved, and the build is no longer deterministic',
+    );
+    return html;
+  }
+  return html.replace(GENERATED_ON, '');
+}
+
 function lintReportPlugin(): Plugin {
   const root = import.meta.dirname;
   let eslint: ESLint | undefined;
@@ -24,11 +43,14 @@ function lintReportPlugin(): Plugin {
     }
     const relative = (filePath: string) =>
       filePath.slice(root.length + 1).replaceAll('\\', '/');
-    // ESLint's own formatter, over the full results — before the strip below.
+    // ESLint's own formatter, over the full results — before the `source`
+    // strip below.
     // A loaded formatter supplies `cwd`/`rulesMeta` itself, so rule links work.
     const formatter = await eslint.loadFormatter('html');
-    const html = await formatter.format(
-      lintResults.map((r) => ({ ...r, filePath: relative(r.filePath) })),
+    const html = stripGeneratedOn(
+      await formatter.format(
+        lintResults.map((r) => ({ ...r, filePath: relative(r.filePath) })),
+      ),
     );
     // the ESLint result shape minus `source`, which the panel never renders
     const results = lintResults.map((result) => ({

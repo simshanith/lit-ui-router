@@ -24,6 +24,8 @@ npm run build    # bakes the report into dist/
 
 In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 4 problems in 4 files`).
 
+The formatter stamps `Generated on <date>` into its output, which would put a fresh timestamp in the bundle on every build and change its content hash without a source change. The plugin strips that one line so `dist` is byte-stable, and warns if the stamp ever stops matching rather than silently letting the nondeterminism back in.
+
 The page shows the same lint two ways, and the two ways are the router's two states: `report` (`#/report`) is that custom panel, `eslint-html` (`#/eslint-html`) is an `<iframe>` of ESLint's own built-in `html` formatter over the same results (a loaded formatter supplies `cwd` and `rulesMeta` itself, so its rule links work). The tab strip is a `<nav>` of `uiSref` anchors and the panel below it is the `<ui-view>` — no local tab state, no click handlers, and the hash is a shareable link to either view.
 
 `src/report-views.ts` holds the two routed elements — `<lint-report-view>` and `<eslint-html-view>` — registered as each state's `component`, which takes a `LitElement` class directly. `src/lint-report.ts` is a plain `<lint-report>` lit element that takes `.results` (the ESLint result shape) and `.ruleDocs` as properties. It knows nothing about ESLint or Vite, so a browser-side linter could drive the same element.
