@@ -512,9 +512,13 @@ export class AppRoot extends LitElement {
   `;
 
   // <app-root> is not routed, so it outlives every transition and never gets
-  // fresh view props. Two controllers, two authorities: `planet` is not a
-  // child of `planets`, so uiSrefActive cannot keep the nav lit on a detail
-  // view — and the route, not the store, is what should answer "where am I".
+  // fresh view props. Two controllers, two authorities.
+  //
+  // These states are flat on purpose: nesting is Hello Galaxy's lesson, and
+  // there `uiSrefActive` keeps the parent lit on a child route by itself. Flat,
+  // that job needs an explicit `includes` — which RouterStore exposes as an
+  // observable, so a selector can answer "am I under here" and the nav can go
+  // on answering to the route rather than to app state.
   private readonly route = new RouterReactionController(this, (route) =>
     route.includes('planet'),
   );
