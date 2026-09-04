@@ -65,14 +65,14 @@ No router configuration is required: the controller discovers the router from th
 
 An observable mirror of a router's current state, updated by one `transitionService.onSuccess` hook.
 
-| Member                      | Description                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                   |
-| `current`                   | The current `StateDeclaration` (`globals.current`)                           |
-| `params`                    | The current `RawParams` (`globals.params`), replaced per transition          |
-| `transition`                | The most recent successful `Transition`                                      |
-| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`) |
-| `attach(router)`            | Manual attachment, for self-managed store instances                          |
+| Member                      | Description                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                                                 |
+| `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
+| `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
+| `transition`                | The most recent successful `Transition`                                                                    |
+| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
+| `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
 ### `RouterReactionController`
 

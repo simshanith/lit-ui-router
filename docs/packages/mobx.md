@@ -79,14 +79,14 @@ lazily attaches its single transition hook on first use.
 mirror of a router's current state, updated by one
 `transitionService.onSuccess` hook per router.
 
-| Member                      | Description                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                   |
-| `current`                   | The current `StateDeclaration` (`globals.current`)                           |
-| `params`                    | The current `RawParams` (`globals.params`), replaced per transition          |
-| `transition`                | The most recent successful `Transition`                                      |
-| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`) |
-| `attach(router)`            | Manual attachment, for self-managed store instances                          |
+| Member                      | Description                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                                                 |
+| `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
+| `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
+| `transition`                | The most recent successful `Transition`                                                                    |
+| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
+| `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
 ### RouterReactionController
 
