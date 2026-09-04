@@ -37,6 +37,7 @@
   "include": [
     "check-graph-edges.ts",
     "check-patches.ts",
+    "check-release-closure.ts",
     "check-task-inputs.ts",
     "commitlint.config.ts",
     "eslint.config.ts",

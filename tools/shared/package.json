@@ -13,6 +13,7 @@
     "./globs.ts": "./src/globs.ts",
     "./graph-edges.core.ts": "./src/graph-edges.core.ts",
     "./manifest.ts": "./src/manifest.ts",
+    "./release-closure.core.ts": "./src/release-closure.core.ts",
     "./retry.ts": "./src/retry.ts",
     "./task-inputs.core.ts": "./src/task-inputs.core.ts",
     "./turbo.ts": "./src/turbo.ts",

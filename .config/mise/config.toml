@@ -21,6 +21,11 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
+# The release closure `setup --release` installs (release-signals, bump-version,
+# publish-gh): the release tool plus every publishable package — release-it, the
+# peer-floor alias and its guard live in the packages, not in @tools/release.
+# //#check:release-closure asserts the selection covers every lane's needs.
+RELEASE_CLOSURE = "--filter @tools/release... --filter {packages/*}..."
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
@@ -87,9 +92,10 @@ description = "Install workspace dependencies with the pnpm on PATH"
 # leg: `mise install` puts the bootstrap pnpm on PATH by itself.
 depends = ["turbo_link_worktree"]
 usage = '''
-flag "--release" help="Scope the install to the @tools/release closure (tag-job)"
+flag "--release" help="Install only the release closure (RELEASE_CLOSURE)"
 '''
-run = 'pnpm install ${usage_release:+--filter @tools/release...}'
+# unquoted on purpose: the closure is several pnpm --filter argv words
+run = 'pnpm install ${usage_release:+$RELEASE_CLOSURE}'
 
 [tasks.setup.env]
 CYPRESS_INSTALL_BINARY = "0"
