@@ -1,6 +1,6 @@
 ---
 title: ESLint Plugin
-description: Directive-aware accessibility linting with eslint-plugin-lit-ui-router — a vendored anchor-is-valid where a uiSref element part counts as the href it assigns at runtime
+description: Directive-aware linting with eslint-plugin-lit-ui-router — four rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as the href it assigns at runtime
 ---
 
 # eslint-plugin-lit-ui-router
@@ -21,8 +21,14 @@ plugin instead ships its own copy of the base rule, taught that the directive
 counts as the `href` it assigns, and reports everything the base rule would
 otherwise still catch.
 
+That vendored rule is the origin story rather than the whole package. The
+other three cover the mistakes the directives make _possible_, rather than the
+ones they mask: an `href` written to an element that has none, an
+`aria-current` the directive silently takes over, and a directive used outside
+the part type it accepts.
+
 ::: warning Release candidate
-The current release is `1.0.0-rc.0`, published under the `rc` dist-tag: the
+The current release is `1.0.0-rc.2`, published under the `rc` dist-tag: the
 API shape is final and covered by tests, but the stable number waits on the
 [1.0 bar](https://github.com/simshanith/lit-ui-router/issues/667). Install it
 as `eslint-plugin-lit-ui-router@rc` until it moves to `latest`.
@@ -125,14 +131,18 @@ is the consumer wiring, installed from npm exactly as a consumer would:
 ESLint's Node API at build time and renders the result in the page — a custom
 panel and an iframe of ESLint's own `html` formatter, over the same results.
 
-The embed below is that built page, so its report is static (`0 problems`).
-Open it on StackBlitz to edit `src/main.ts` and watch the report re-run.
+`src/violations.ts` is a gallery with one deliberate violation per
+`recommended` rule, so the report is not empty: the embed below is that built
+page, and its report is static (`4 problems`, one per rule, each rule id
+linked to its docs). Open it on StackBlitz to edit the sources and watch the
+report re-run.
 
 <LiveExample name="lint-eslint" />
 
-For the positive control, delete `${uiSref('about')}` from the second anchor:
-the report picks up `lit-ui-router/anchor-is-valid` on the now-hrefless
-anchor, with the rule id linked to its docs.
+For the positive control, delete `${uiSref('eslint-html')}` from the second
+tab in `src/main.ts`: `lit-ui-router/anchor-is-valid` now reports against the
+app itself rather than the gallery, as an error — and the tab stops
+navigating, which is the whole reason the rule exists.
 
 - [Open on StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
 - [Source on GitHub](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
@@ -150,13 +160,15 @@ expect majors rather than silent tightening, and pin accordingly.
 
 - **npm**:
   [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
-  — `1.0.0-rc.0` on `rc`. `latest` still points at the empty seed publish
+  — `1.0.0-rc.2` on `rc`. `latest` still points at the empty seed publish
   until the stable release lands.
 - **Source**:
   [`packages/eslint-plugin-lit-ui-router`](https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router)
-  — the rule, its tests, and the generated rule docs.
+  — the four rules, their tests, and the generated rule docs.
 - **Dogfood**: this repository's own lint run uses the plugin against the
-  sample apps, where every navigation anchor is a `uiSref` call site.
+  sample apps, where every navigation anchor is a `uiSref` call site, and
+  `examples/lint-eslint` exercises every `recommended` rule from an
+  npm-installed copy.
 - **Next**: the [1.0 bar](https://github.com/simshanith/lit-ui-router/issues/667)
   — registry-install verification at both ends of the peer range, and the
   decision on which rule tiers `recommended` carries at 1.0.
