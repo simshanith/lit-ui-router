@@ -7,8 +7,6 @@ const RESOLVED_ID = `\0${VIRTUAL_ID}`;
 const LINT_TARGETS = ['src/**/*.ts'];
 const CONFIG_FILE = 'eslint.config.js';
 
-const EMPTY = { results: [], ruleDocs: {}, html: '' };
-
 // The formatter renders `<span>${summary}</span> - Generated on ${date}` on one
 // line, so the stamp ends at the newline.
 const GENERATED_ON = / - Generated on [^\n]*/;
@@ -89,17 +87,16 @@ function lintReportPlugin(): Plugin {
     },
     async load(id) {
       if (id !== RESOLVED_ID) return undefined;
-      // lint problems are this module's payload, never a build failure
-      try {
-        return emit(await run());
-      } catch (error) {
-        this.warn(`lint-report: ${String(error)}`);
-        return emit(EMPTY);
-      }
+      // Lint problems are this module's payload, never a build failure, and
+      // `lintFiles` reports them rather than throwing. What throws is the run
+      // itself failing — so let it, rather than ship a report reading zero.
+      return emit(await run());
     },
     configureServer(server) {
-      const configPath = `${root}/${CONFIG_FILE}`;
-      const srcDir = `${root}/src/`;
+      // watcher paths are compared normalized, so normalize the native root too
+      const base = root.replaceAll('\\', '/');
+      const configPath = `${base}/${CONFIG_FILE}`;
+      const srcDir = `${base}/src/`;
       const onChange = (file: string) => {
         const path = file.replaceAll('\\', '/');
         if (path !== configPath && !path.startsWith(srcDir)) return;
