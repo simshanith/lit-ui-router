@@ -12,6 +12,7 @@ const EMBEDDED_EXAMPLES = [
   'hellosolarsystem-mobx',
   'hellogalaxy',
   'design-system-links',
+  'lint-eslint',
 ];
 
 // The mount shells as the dev server serves them. Production (docs/worker)
