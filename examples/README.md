@@ -49,7 +49,7 @@ The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt w
 - `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: the selector drives a breadcrumb, and `onChange` runs a param-keyed effect (recording the visit) once per distinct planet rather than once per transition
 - `equals: compareStructural` so an unrelated transition that leaves the selection unchanged does not re-render
 - `ReactionController` over a plain MobX store (the visited-bodies tour) — the generic primitive, over state the router knows nothing about
-- The contrast with the vanilla example is the point: resolves stay on view props, reactions cover params and app state
+- It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings
 
 ### hellogalaxy
 

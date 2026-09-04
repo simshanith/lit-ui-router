@@ -186,6 +186,10 @@ about.
 The Edit in StackBlitz tab boots the workspace from the published
 `lit-ui-router-mobx` package, so it doubles as an install check.
 
+Read it as the minimal case: the vanilla tutorial with the store layered in,
+not a rewrite. The sample apps below are where the two idioms are compared
+directly, at the scale of a whole application.
+
 ## See it in a real app
 
 The <a href="/app-mobx" target="_self">MobX sample app</a> is a complete

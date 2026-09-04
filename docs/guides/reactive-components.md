@@ -99,6 +99,11 @@ keeps its breadcrumb and visit counter in sync. Swap
 `RouterReactionController` for `TransitionController` and the shape is
 identical — a controller on the host, a value read in `render()`.
 
+This is the minimal version — the solar-system tutorial with a store layered
+in where the router stops helping, small enough to read in one sitting. For
+the full comparison, the two sample apps below build the same application
+twice, once with each idiom.
+
 <LiveExample name="hellosolarsystem-mobx" />
 
 ## See it in a real app
