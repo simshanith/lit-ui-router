@@ -1,7 +1,7 @@
 import { html, LitElement, css, render } from 'lit';
 import { customElement, property } from 'lit/decorators.js';
 import { hashLocationPlugin, Transition } from '@uirouter/core';
-import { compareStructural, makeAutoObservable } from 'mobx';
+import { compareStructural, makeAutoObservable, reaction } from 'mobx';
 import {
   UIRouterLit,
   uiSref,
@@ -173,27 +173,38 @@ const SolarSystemService = {
 const dotSize = (diameterKm: number): number =>
   Math.round(Math.log2(diameterKm / 1000) * 6 + 10);
 
-// Application state, not route state: which body is open and which ones the
-// visitor has seen. `visited` is replaced (not mutated) per visit so
-// reference equality is enough to detect the change.
+// Application state, not route state. The route sets one thing — which body
+// is being visited right now — and everything else follows from it.
 class Tour {
-  open?: SolarBody = undefined;
+  /** The body currently being visited, or undefined away from a detail. */
+  active?: SolarBody = undefined;
 
+  /**
+   * Which bodies have been visited. Not a computed: it is history, so a
+   * store-level reaction accumulates it from `active`. Replaced rather than
+   * mutated, so reference equality is enough to detect the change.
+   */
   visited: readonly number[] = [];
 
   constructor() {
     makeAutoObservable(this);
+    // Reactions are not only for components — this one has no host and lives
+    // as long as the store.
+    reaction(
+      () => this.active,
+      (body) => this.record(body),
+    );
   }
 
-  enter(body: SolarBody) {
-    this.open = body;
-    if (!this.visited.includes(body.id)) {
+  /** The only write the route makes. */
+  activate(body?: SolarBody) {
+    this.active = body;
+  }
+
+  private record(body?: SolarBody) {
+    if (body && !this.visited.includes(body.id)) {
       this.visited = [...this.visited, body.id];
     }
-  }
-
-  exit() {
-    this.open = undefined;
   }
 }
 
@@ -463,21 +474,21 @@ export class AppRoot extends LitElement {
   // <app-root> is not routed, so it outlives every transition and never gets
   // fresh view props. Two controllers, two sources: the route one selects
   // what the URL says, the store one selects what the app remembers. Neither
-  // runs an effect — entering the `planet` state is what records a visit, so
-  // the hook that owns that transition owns the write.
+  // runs an effect — the route sets the active visit, and the store derives
+  // the rest from it.
   private readonly route = new RouterReactionController(this, (route) =>
     route.includes('planet'),
   );
 
   private readonly tour = new ReactionController(
     this,
-    () => ({ open: TourStore.open, visited: TourStore.visited.length }),
+    () => ({ active: TourStore.active, visited: TourStore.visited.length }),
     { equals: compareStructural },
   );
 
   render() {
     const onDetail = this.route.value;
-    const { open, visited } = this.tour.value;
+    const { active, visited } = this.tour.value;
     return html`
       <h2>Hello Solar System (MobX)</h2>
       <nav>
@@ -487,7 +498,7 @@ export class AppRoot extends LitElement {
         ${onDetail ? html`<span class="trail">&rsaquo; body detail</span>` : ''}
       </nav>
       <p class="crumb">
-        ${open ? html`Viewing <strong>${open.name}</strong> — ` : ''}
+        ${active ? html`Viewing <strong>${active.name}</strong> — ` : ''}
         <span class="visited-count"
           >${visited} of ${solarBodies.length} visited</span
         >
@@ -515,17 +526,19 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
-  // The visit belongs to the route, not to a component watching the route:
-  // onEnter reads this state's own resolve, so it records the body the view
-  // actually received — already parsed, already validated, once per entry.
+  // The visit belongs to the route, not to a component watching the route.
+  // The hook reads this state's own resolve and sets one observable — the
+  // body the view actually received, already parsed and already validated.
+  // What that implies (the visited set) is the store's business, not this
+  // hook's.
   onEnter: (transition, state) => {
     // injector(<name>) scopes the lookup to this state's own resolves.
     const planet = transition.injector(state.name).get('planet') as
       | SolarBody
       | undefined;
-    if (planet) TourStore.enter(planet);
+    TourStore.activate(planet);
   },
-  onExit: () => TourStore.exit(),
+  onExit: () => TourStore.activate(undefined),
   // deps injects $transition$ so the resolve can read the route parameter.
   resolve: [
     {

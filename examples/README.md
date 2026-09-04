@@ -49,7 +49,8 @@ The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt w
 - `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: a selector reads the route, and the host re-renders when — and only when — that selection changes
 - The write is not in a component. Entering the `planet` state records the visit, in that state's own `onEnter` hook, off its own resolve: the route owns the effect, and the controllers only read
 - `equals: compareStructural` so an unrelated transition that leaves the selection unchanged does not re-render
-- `ReactionController` over a plain MobX store (the visited-bodies tour) — the generic primitive, over state the router knows nothing about
+- `ReactionController` over a plain MobX store (the tour) — the generic primitive, over state the router knows nothing about
+- A reaction inside the store, with no host at all: the route sets one observable (the active visit) and the visited set accumulates from it, so the hook never has to know what a visit implies
 - It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings
 
 ### hellogalaxy
