@@ -103,6 +103,26 @@ describe('RouterReactionController', () => {
     expect(warn).toHaveBeenCalled();
   });
 
+  it('falls back to initialValue before connect and without a context', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    cleanups.push(() => warn.mockRestore());
+
+    const host = createHost();
+    const controller = new RouterReactionController(
+      host,
+      (route) => route.current?.name,
+      { initialValue: 'none' },
+    );
+
+    expect(controller.value).toBe('none');
+
+    document.body.appendChild(host);
+    cleanups.push(() => host.remove());
+    await waitForUpdate(host);
+
+    expect(controller.value).toBe('none');
+  });
+
   it('updates the host when the selected value changes', async () => {
     const router = createTestRouter(testStates);
     const host = createHost();
