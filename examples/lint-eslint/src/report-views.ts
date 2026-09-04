@@ -1,5 +1,5 @@
 import { css, html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import lintReport, {
   html as lintHtml,
   type LintReport,
@@ -43,6 +43,12 @@ export class LintReportView extends ReportView {
   }
 }
 
+/**
+ * Floor for the report frame, so the collapsed report is no shorter than the
+ * `report` panel beside it and switching tabs does not resize the page.
+ */
+const MIN_FRAME_HEIGHT = 420;
+
 /** The `eslint-html` state: ESLint's own formatter, same results. */
 @customElement('eslint-html-view')
 export class EslintHtmlView extends ReportView {
@@ -50,12 +56,41 @@ export class EslintHtmlView extends ReportView {
     iframe {
       display: block;
       width: 100%;
-      height: 420px;
       border: 1px solid light-dark(#d0d0d0, #30363d);
       border-radius: 0 6px 6px 6px;
       background: #fff;
     }
   `;
+
+  @state() private frameHeight = MIN_FRAME_HEIGHT;
+
+  private frameObserver?: ResizeObserver;
+
+  disconnectedCallback() {
+    this.frameObserver?.disconnect();
+    this.frameObserver = undefined;
+    super.disconnectedCallback();
+  }
+
+  // The formatter hides every message row behind a click on its file, so the
+  // report's height is a runtime fact: expanding it inside a fixed frame nests
+  // one scroll area in another. A `srcdoc` frame is same-origin, so let the
+  // report's own layout size the frame, and keep observing it for later toggles.
+  private fitFrame(event: Event) {
+    const doc = (event.target as HTMLIFrameElement).contentDocument;
+    if (!doc) return;
+    const root = doc.documentElement;
+    const measure = () => {
+      this.frameHeight = Math.max(
+        MIN_FRAME_HEIGHT,
+        Math.ceil(root.getBoundingClientRect().height),
+      );
+    };
+    this.frameObserver?.disconnect();
+    this.frameObserver = new ResizeObserver(measure);
+    this.frameObserver.observe(root);
+    measure();
+  }
 
   render() {
     // ESLint's html formatter emits a light-only document with no background
@@ -63,9 +98,10 @@ export class EslintHtmlView extends ReportView {
     // through under its hardcoded dark text. Inline because lit-analyzer's
     // no-invalid-css does not know `color-scheme` in a css block.
     return html`<iframe
-      style="color-scheme: light"
+      style="color-scheme: light; height: ${this.frameHeight}px"
       title="ESLint html formatter"
       srcdoc=${reportHtml}
+      @load=${this.fitFrame}
     ></iframe>`;
   }
 }

@@ -28,6 +28,8 @@ The formatter stamps `Generated on <date>` into its output, which would put a fr
 
 The page shows the same lint two ways, and the two ways are the router's two states: `report` (`#/report`) is that custom panel, `eslint-html` (`#/eslint-html`) is an `<iframe>` of ESLint's own built-in `html` formatter over the same results (a loaded formatter supplies `cwd` and `rulesMeta` itself, so its rule links work). The tab strip is a `<nav>` of `uiSref` anchors and the panel below it is the `<ui-view>` — no local tab state, no click handlers, and the hash is a shareable link to either view.
 
+ESLint's formatter hides every message row behind a click on its file, so the report's height is only known once you expand it. The frame measures its own document — `srcdoc` is same-origin — and resizes with it, so an expanded report grows the page instead of scrolling inside a frame that is itself scrolling. Its floor matches the `report` panel beside it, so switching tabs does not resize the page.
+
 `src/report-views.ts` holds the two routed elements — `<lint-report-view>` and `<eslint-html-view>` — registered as each state's `component`, which takes a `LitElement` class directly. `src/lint-report.ts` is a plain `<lint-report>` lit element that takes `.results` (the ESLint result shape) and `.ruleDocs` as properties. It knows nothing about ESLint or Vite, so a browser-side linter could drive the same element.
 
 ## What the panel shows
