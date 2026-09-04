@@ -236,7 +236,7 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-4" aria-label="Sheet 4: THE FAMILY SPINE">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 4 / 14</span></div>
   <h2 class="sheet-title">THE FAMILY SPINE</h2>
-  <p class="sheet-sub">ALTITUDE 4 — one core, four living adapters, four dormant instruments · REV C: every version and publish date imported from census-npm.json (npm registry read 2026-09-03), core and this repo's mass from census-bricks.json</p>
+  <p class="sheet-sub">ALTITUDE 4 — one core, four living adapters, four dormant instruments · REV C: every version and publish date imported from census-npm.json (npm registry read 2026-09-03), core and this repo's mass from census-bricks.json · REV D: whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart</p>
   <figure>
     <div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
 <defs>
@@ -397,7 +397,7 @@ a { color: var(--accent); }
 
 <text x="1310" y="508" class="lbls" text-anchor="end" >PROVENANCE — two plates and one set of hand-carried counts</text>
 <text x="1310" y="522" class="lblf" text-anchor="end" >every version and last-publish date on this sheet: census-npm.json · npm registry read 2026-09-03</text>
-<text x="1310" y="534" class="lblf" text-anchor="end" >@uirouter/core and this repo — files and sloc: census-bricks.json · counted at origin/main @ 35c6766 (2026-09-03)</text>
+<text x="1310" y="534" class="lblf" text-anchor="end" >@uirouter/core and this repo — files and sloc: census-bricks.json · counted at origin/main @ eb32b4e (2026-09-03)</text>
 <text x="1310" y="546" class="lblf" text-anchor="end" >upstream adapters and instruments — files and sloc: no plate · clone counts 2026-08-16 of the ui-router org repos</text>
 
 <rect x="40" y="580" width="1270" height="190" class="sk fp"/>
@@ -415,8 +415,8 @@ a { color: var(--accent); }
 <text x="700" y="683" class="lbls" text-anchor="start" >10  lit-ui-router-mobx 0.5.0 — 4f · 133 sloc · 33 l/f · gate ^6.0.8</text>
 <text x="700" y="700" class="lbls" text-anchor="start" >11  …-nav-location-plugin 0.3.0 — 1f · 105 sloc · 105 l/f · gate ^6.0.8</text>
 <text x="700" y="717" class="lbls" text-anchor="start" >12  @uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
-<text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 208 authored files · 13,808 sloc · versions and dates npm registry read 2026-09-03 · this repo + core counted at origin/main @ 35c6766 (2026-09-03) · upstream family clone counts 2026-08-16</text>
-<text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 (published 2026-09-01): this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
+<text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 208 authored files · 13,808 sloc · versions and dates npm registry read 2026-09-03 · this repo + core counted at origin/main @ eb32b4e (2026-09-03) · upstream family clone counts 2026-08-16</text>
+<text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 on npm (published 2026-09-01) · 1.0.0-rc.2 in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
 </svg></div>
     <figcaption>Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.</figcaption>
   </figure>
@@ -424,7 +424,7 @@ a { color: var(--accent); }
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>Method — three provenances, kept apart.</strong> Versions and last-publish dates are not typed on this sheet: every one is read by name from <code>diagrams/data/census-npm.json</code> (<code>npm view</code>, npm registry read 2026-09-03), and a drawn package missing from that plate throws the build. Mass has two sources. <code>@uirouter/core</code> and this repo's own packages are read from <code>diagrams/data/census-bricks.json</code> — scc <code>Code</code> over authored <code>.ts/.tsx/.js/.mjs</code> under each source dir, <code>*.d.ts</code>, specs and typedoc stubs excluded, counted at origin/main @ 35c6766 (2026-09-03). The upstream adapters and instruments have no plate at all: their file and line counts are clone counts 2026-08-16 of the <code>ui-router</code> org repositories, carried in this file by hand and labelled as such. 12 packages, 208 authored files, 13,808 lines.</p>
+<p><strong>Method — three provenances, kept apart.</strong> Versions and last-publish dates are not typed on this sheet: every one is read by name from <code>diagrams/data/census-npm.json</code> (<code>npm view</code>, npm registry read 2026-09-03), and a drawn package missing from that plate throws the build. Mass has two sources. <code>@uirouter/core</code> and this repo's own packages are read from <code>diagrams/data/census-bricks.json</code> — scc <code>Code</code> over authored <code>.ts/.tsx/.js/.mjs</code> under each source dir, <code>*.d.ts</code>, specs and typedoc stubs excluded, counted at origin/main @ eb32b4e (2026-09-03). The upstream adapters and instruments have no plate at all: their file and line counts are clone counts 2026-08-16 of the <code>ui-router</code> org repositories, carried in this file by hand and labelled as such. 12 packages, 208 authored files, 13,808 lines.</p>
 <p><strong>An isometric city would still lie here.</strong> Adjacent blocks imply interaction, and the adapters have none — each rib touches only the spine. So the plan stays radial and the new ink is mass: block width ∝ √sloc, block height ∝ file count, which lets a two-file, 233-line package like sticky-states read as the sliver it is beside core's 80-file slab. Core alone is 5,272 lines — 38% of the family's authored mass, and more than the four adapters combined.</p>
 <p><strong>The gates disagree, and that is the finding.</strong> Every limb declares a range on <code>@uirouter/core</code>, drawn here as a hatched tablet where the limb's stem crosses toward the rail. The dormant instruments still admit core 5 (<code>&gt;=5.0.0</code>, <code>&gt;=5.0.1</code>); rx admits <code>&gt;=6.0.1</code>; angularjs and angular carets on <code>^6.1.2</code>; this repo's four packages sit on <code>^6.0.8</code>. One gate is red: <code>@uirouter/react</code> pins core at exactly <code>6.1.2</code> <em>and ships it as a dependency, not a peer</em> — the only limb that can install a second copy of the state machine into a consumer's tree, and the only one that cannot be moved forward without a react release.</p>
 <p><strong>Mass does not track liveness.</strong> The largest limb on the sheet is the dormant <code>@uirouter/visualizer</code> (34 files, 2,018 lines, last published 2020-09-19) — it carries a preact/d3 rendering stack, so it out-masses every living adapter. The newest limb, <code>lit-ui-router</code>, is 13 files and 1,383 lines at 1.11.1, and it is the only limb growing limbs of its own: the companion bay adds another 1,379 lines behind a single shared gate, with <code>lit-ui-router-mobx</code> the one package on this sheet that peers a limb rather than the spine.</p>
@@ -444,7 +444,7 @@ a { color: var(--accent); }
   <div><span class="fld">SCALE</span>UI-ROUTER ECOSYSTEM</div>
   <div><span class="fld">FORM</span>MASSED SPINE</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-03 · C</div>
+  <div><span class="fld">DATE / REV</span>2026-09-03 · D</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
   <div><span class="fld">SHEET</span>4 OF 14</div>
 </div>

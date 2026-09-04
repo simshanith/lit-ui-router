@@ -33,9 +33,9 @@ notes on each sheet argue where that form fits and where it lies.
 
 Static HTML, no build, no dependencies. Light theme is graphite-on-vellum; dark is cyanotype.
 Regenerate with `node generator/build.mjs .` from this directory.
-Generated 2026-08-16 by Fable (Claude, AI); npm dates fetched same day.
-Sheets 3, 3A, 3B, 7, 7A, 7B, 12 and 13 recensused at HEAD on 2026-08-31, applied 2026-09-01;
-plate 7A's test light is still the 2026-08-17 metering. The cover's general survey — every
-tracked file on the scc 4.0.0 `Code` basis, origin/main @ 35c6766 — is imported from
+Generated 2026-08-16 by Fable (Claude, AI).
+Every plate in `data/` — versions, dates and all — was re-counted at origin/main @ eb32b4e in one pass;
+plate 7A's test light is the one exception, still the 2026-08-17 metering, not re-run. The cover's general survey — every
+tracked file on the scc 4.0.0 `Code` basis, origin/main @ eb32b4e — is imported from
 `data/census-files.json`, the master snapshot `generator/census-scc.mjs` writes;
 `generator/census-overview.mjs` prints the same rollup on the terminal.
