@@ -8,20 +8,28 @@ import {
   stackblitzEmbedSrc,
   stackblitzOpenSrc,
   type ExampleName,
+  type StackBlitzView,
 } from './examples';
 import { webContainersSupported } from './webcontainers';
 
-const props = defineProps<{
-  name: ExampleName;
-  height?: string;
-  file?: string;
-}>();
+const props = withDefaults(
+  defineProps<{
+    name: ExampleName;
+    height?: string;
+    file?: string;
+    /** Pass 'default' to hand the choice back to StackBlitz. */
+    view?: StackBlitzView;
+  }>(),
+  { view: 'editor' },
+);
 
 type Mode = 'preview' | 'stackblitz';
 
 const example = computed(() => EXAMPLES[props.name]);
 const previewSrc = computed(() => staticSrc(props.name));
-const embedSrc = computed(() => stackblitzEmbedSrc(props.name, props.file));
+const embedSrc = computed(() =>
+  stackblitzEmbedSrc(props.name, props.file, props.view),
+);
 const openSrc = computed(() => stackblitzOpenSrc(props.name, props.file));
 const previewHeight = computed(() => props.height ?? example.value.height);
 
