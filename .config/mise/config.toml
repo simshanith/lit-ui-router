@@ -21,9 +21,6 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
-# What `setup --release` installs; release-it and the peer-floor scripts live in
-# packages/*, not @tools/release. //#check:release-closure guards the selection.
-RELEASE_CLOSURE = "--filter @tools/release... --filter {packages/*}..."
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
@@ -46,6 +43,11 @@ _.file = [
   "{{config_root}}/.config/mise/turbo.local.env",
   "{{config_root}}/.config/mise/cloudflare.local.env",
 ]
+
+[vars]
+# What `setup --release` installs; release-it and the peer-floor scripts live in
+# packages/*, not @tools/release. Task-scoped as RELEASE_CLOSURE, not global [env].
+release_closure = "--filter @tools/release... --filter {packages/*}..."
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
@@ -96,6 +98,7 @@ flag "--release" help="Install only the release closure (RELEASE_CLOSURE)"
 run = 'pnpm install ${usage_release:+$RELEASE_CLOSURE}'
 
 [tasks.setup.env]
+RELEASE_CLOSURE = "{{vars.release_closure}}"
 CYPRESS_INSTALL_BINARY = "0"
 # npm config for the examples/*
 NPM_CONFIG_AUDIT = "false"
@@ -111,9 +114,12 @@ description = "Audit GitHub Actions workflows for security issues"
 run = "zizmor --offline .github/workflows"
 
 [tasks.check_release_closure]
-# A mise task so RELEASE_CLOSURE comes from [env] above, whatever shell turbo runs in
+# //#check:release-closure guards the selection; a mise task so the var needs no shell activation
 description = "Assert RELEASE_CLOSURE covers every member the release lanes run in"
 run = "node check-release-closure.ts"
+
+[tasks.check_release_closure.env]
+RELEASE_CLOSURE = "{{vars.release_closure}}"
 
 [tasks.lint_toml]
 # `taplo lint` = TOML syntax/structure validation, offline by default (taplo only
