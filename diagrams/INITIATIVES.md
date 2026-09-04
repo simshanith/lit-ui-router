@@ -539,6 +539,17 @@ column x is flagged `bow` at build and styled as an unbundled bezier arcing 120
 out of the column, so the contract and its `^1.7.0` label clear the bystander
 entirely. Verified by screenshot (playwright, file://): arc clears the node,
 label in its own air, console clean.
+DEBTS RETIRED 2026-09-04, sheet 14 REV B: (1) register-graph.mjs no longer
+restates the sprite palettes — sprites.mjs exports PALETTES and the register
+imports it (its SKINS stay local; they are the register's own vocabulary);
+the emitted register page is byte-identical, proving the copies had not yet
+drifted. (2) The survey office's static plate had the EXTERNAL INSTRUMENTS
+ledger colliding with the plate schedule's READ BY column — the rack grew to
+19 drawings and pushed the ledger down into a table anchored only to the LEFT
+column's depth. The schedule's SY is now max(left column, rack + ledger), and
+long READ BY lists (the master plate is read by everything) wrap at ~80 chars
+with per-row height, so neither defect can recur as the office grows.
+Screenshot-verified.
 
 ## Why rework
 

@@ -13,6 +13,7 @@
 // them.  Tick the box and the placeholders flood in faint — the 70% of this
 // graph that runs nothing, drawn rather than asserted.
 import { readFileSync } from 'node:fs';
+import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
 export const REV = 'A';
@@ -124,15 +125,8 @@ const LAYOUT = {
 // ---- sprite skins ---------------------------------------------------------
 // The house recipe (INITIATIVES.md sprite note, and generator/sprites.mjs):
 // the girding frame is drawn FIRST and a semi-opaque wall washed over it, so
-// the frame reads through and the themed node body tints the building.  The two
-// palettes mirror sprites.mjs exactly — the survey office and the register must
-// not disagree about what ink looks like.
-const PALETTES = {
-  light: { ink: '#2B302C', soft: '#5C6259', faint: '#9AA091', accent: '#2E5077',
-    wall: 'rgba(43,48,44,0.13)', roof: 'rgba(46,80,119,0.20)', glass: 'rgba(46,80,119,0.28)' },
-  dark: { ink: '#D9E6F3', soft: '#93A9C6', faint: '#5F7899', accent: '#8FBCE9',
-    wall: 'rgba(217,230,243,0.14)', roof: 'rgba(143,188,233,0.22)', glass: 'rgba(143,188,233,0.30)' },
-};
+// the frame reads through and the themed node body tints the building.  The
+// palettes are sprites.mjs's own — one ink, imported, never restated.
 
 function skins(p) {
   const line = (x1, y1, x2, y2, stroke, w = 1, dash = '') =>

@@ -186,21 +186,45 @@ ${A.tools.map((t, i) => txt(RX + 10 + (i < toolHalf ? 0 : 140), TLY + 46 + (i % 
 // ---------------------------------------------------------------------------
 // THE SCHEDULE — plate | tier | writer | basis | readers
 // ---------------------------------------------------------------------------
-const SY = RELICY + 70;
+// The schedule starts below the DEEPER of the two columns above it: the rack
+// grew past the station column once the drawing count hit 19, and the tools
+// ledger hangs off the rack — without the max() the table climbs into it.
+const SY = Math.max(RELICY + 70, TLY + 40 + toolHalf * 14 + 26);
 const SCOL = [46, 250, 292, 430, 590];
-const SH = 60 + A.plates.length * 17 + 46;
+// READ BY can outgrow its column (the master plate is read by everything), so
+// long reader lists wrap and the row takes as many 17px lines as it needs.
+const wrapReaders = (s) => {
+  const lines = [];
+  let cur = '';
+  for (const w of s.split(', ')) {
+    const next = cur ? `${cur}, ${w}` : w;
+    if (next.length > 80 && cur) { lines.push(`${cur},`); cur = w; } else { cur = next; }
+  }
+  lines.push(cur);
+  return lines;
+};
+const SROWS = A.rows.map((r) => {
+  const readers = [...r.readers.map((d) => (d.num === null ? 'gallery cover' : `sheet ${d.num}`)),
+    ...r.queriedBy.map((f) => f.replace('census-', '').replace('.mjs', ''))].join(', ')
+    || 'filed, awaiting a drawing';
+  return { r, lines: wrapReaders(readers) };
+});
+const SH = 60 + SROWS.reduce((s, x) => s + x.lines.length, 0) * 17 + 46;
+const scheduleRows = (() => {
+  let y = SY + 68;
+  return SROWS.map(({ r, lines }) => {
+    const cells = [r.file, r.tier, r.writer, r.basis]
+      .map((v, k) => txt(SCOL[k], y, v, k === 0 && r.file === A.master ? 'lbla' : k < 3 ? 'lbls' : 'lblf')).join('');
+    const readBy = lines.map((ln, j) => txt(SCOL[4], y + j * 17, ln, 'lblf')).join('');
+    y += lines.length * 17;
+    return cells + readBy;
+  }).join('\n');
+})();
 const schedule = `${box(30, SY, 1100, SH, 'sk fnone')}
 ${txt(46, SY + 22, 'PLATE SCHEDULE — EVERY FILED PLATE, ITS ONE WRITER, AND EVERY DRAWING THAT READS IT', 'lbls')}
 <line x1="30" y1="${SY + 32}" x2="1130" y2="${SY + 32}" class="sks" opacity="0.7"/>
 ${['PLATE', 'TIER', 'WRITER', 'BASIS', 'READ BY'].map((h, i) => txt(SCOL[i], SY + 48, h, 'lblf')).join('\n')}
-${A.rows.map((r, i) => {
-    const y = SY + 68 + i * 17;
-    const readers = [...r.readers.map((d) => (d.num === null ? 'gallery cover' : `sheet ${d.num}`)),
-      ...r.queriedBy.map((f) => f.replace('census-', '').replace('.mjs', ''))].join(', ')
-      || 'filed, awaiting a drawing';
-    return [r.file, r.tier, r.writer, r.basis, readers]
-      .map((v, k) => txt(SCOL[k], y, v, k === 0 && r.file === A.master ? 'lbla' : k < 3 ? 'lbls' : 'lblf')).join('');
-  }).join('\n')}
+${scheduleRows}
 ${txt(46, SY + SH - 18, `TOTALS — ${S.plates} plates · ${S.probes} probes (T1 ${S.byTier.T1} · T2 ${S.byTier.T2} · T3 ${S.byTier.T3}) · ${S.writes} writes · ${S.reads} reads · ${A.unread.length} plates unread · every plate pinned to ${BASIS} · graph: ${S.nodes} nodes / ${S.edges} edges`, 'lblf')}`;
 
 const H = SY + SH + 30;
@@ -242,9 +266,9 @@ ${schedule}
 </svg>`;
 
 export const sheet14 = {
-  num: 14, id: 'pipeline', rev: 'A',
+  num: 14, id: 'pipeline', rev: 'B',
   title: 'THE SURVEY OFFICE',
-  sub: `ALTITUDE 3½ — the atlas measuring itself · ${S.probes} probes, ${S.plates} plates, ${S.drawings} drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to ${BASIS} · REV A ${A.commitDate}: first printing — the instrument drawn by itself`,
+  sub: `ALTITUDE 3½ — the atlas measuring itself · ${S.probes} probes, ${S.plates} plates, ${S.drawings} drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to ${BASIS} · REV A ${A.commitDate}: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap`,
   scale: 'THE CENSUS PIPELINE',
   form: 'FLOW GRAPH',
   svg,

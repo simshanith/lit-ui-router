@@ -10,7 +10,7 @@
 // emitted (graphite-on-vellum / cyanotype) and the page swaps them with the
 // theme; strokes are the sheet's own ink, so a sprite never floats unlegible.
 
-const PALETTES = {
+export const PALETTES = {
   light: {
     ink: '#2B302C', soft: '#5C6259', faint: '#9AA091', accent: '#2E5077', red: '#A63D2F',
     wall: 'rgba(43,48,44,0.13)', roof: 'rgba(46,80,119,0.20)', glass: 'rgba(46,80,119,0.28)',
