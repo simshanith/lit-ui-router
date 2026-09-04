@@ -72,10 +72,24 @@ export class EslintHtmlView extends ReportView {
     super.disconnectedCallback();
   }
 
-  // The formatter hides every message row behind a click on its file, so the
-  // report's height is a runtime fact: expanding it inside a fixed frame nests
-  // one scroll area in another. A `srcdoc` frame is same-origin, so let the
-  // report's own layout size the frame, and keep observing it for later toggles.
+  // The formatter ships every message row hidden behind a click on its file
+  // header, and its own script owns that toggle — so clicking each header is
+  // how the report opens. Doing it on load means the height below is the
+  // report's real height, reserved before anything is read rather than grown
+  // when someone goes looking. A formatter that stopped emitting these rows
+  // would leave the report closed, which is where it started.
+  private expandAll(doc: Document) {
+    // typed, not `instanceof`: these elements come from the frame's realm, so
+    // they are not instances of this document's HTMLElement
+    for (const group of doc.querySelectorAll<HTMLElement>('tr[data-group]')) {
+      group.click();
+    }
+  }
+
+  // The report's height is a runtime fact: pinned to a guess, an open report
+  // nests one scroll area inside another. A `srcdoc` frame is same-origin, so
+  // let the report's own layout size the frame, and keep observing it so a
+  // collapse or a re-lint resizes it too.
   private fitFrame(event: Event) {
     const doc = (event.target as HTMLIFrameElement).contentDocument;
     if (!doc) return;
@@ -89,6 +103,7 @@ export class EslintHtmlView extends ReportView {
     this.frameObserver?.disconnect();
     this.frameObserver = new ResizeObserver(measure);
     this.frameObserver.observe(root);
+    this.expandAll(doc);
     measure();
   }
 

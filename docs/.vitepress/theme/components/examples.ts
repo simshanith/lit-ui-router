@@ -18,7 +18,8 @@ export const EXAMPLES = {
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
-    height: '620px',
+    // reserves the open report at the 688px doc column, where it needs 770px
+    height: '780px',
     file: 'src/main.ts',
   },
 } as const;
