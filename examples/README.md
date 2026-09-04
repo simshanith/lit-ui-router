@@ -46,11 +46,12 @@ A tour of the Sun, all 8 planets, and a beloved dwarf-planet easter egg — real
 
 The same states, URLs, resolves and templates as **hellosolarsystem**, rebuilt with the [MobX bindings](https://lit-ui-router.dev/packages/mobx). Resolves still arrive as `UIViewInjectedProps`; everything that outlives a single activation is observed instead.
 
-- `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: a selector reads the route, and the host re-renders when — and only when — that selection changes
-- The write is not in a component. Entering the `planet` state records the visit, in that state's own `onEnter` hook, off its own resolve: the route owns the effect, and the controllers only read
-- `equals: compareStructural` so an unrelated transition that leaves the selection unchanged does not re-render
-- `ReactionController` over a plain MobX store (the tour) — the generic primitive, over state the router knows nothing about
-- A reaction inside the store, with no host at all: the route sets one observable (the active visit) and the visited set accumulates from it, so the hook never has to know what a visit implies
+It layers on four things, each answering a different question:
+
+- **Where am I now?** `RouterReactionController` in the un-routed `<app-root>`, which never receives fresh view props: a selector reads the route, and the host re-renders when — and only when — that selection changes. `equals: compareStructural` keeps an unrelated transition from re-rendering it
+- **What did the route resolve?** The `planet` state's own `onEnter` hook sets the active body, off that state's resolve. The URL cannot answer this — only the resolve knows the body — and no component parses a route param
+- **Where have I been?** A plain MobX `reaction` over `RouterStore`, with no host and no controller, appends one stop per successful transition. The bindings' store is an ordinary observable, so application code can react to the router without a component in the middle
+- **What follows from all that?** `visited` is a `computed` over the trail, so revisiting the list never inflates it, and `ReactionController` selects it — the host re-renders when the set changes, not on every stop
 - It is the minimal layering, not a rewrite: the vanilla example's plumbing stays put and MobX goes only where the router stops helping. The [sample apps](../apps) are the direct side-by-side — two complete builds of the same application, one on `TransitionController` and one on these bindings
 
 ### hellogalaxy

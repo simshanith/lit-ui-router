@@ -12,6 +12,7 @@ import {
 import {
   ReactionController,
   RouterReactionController,
+  RouterStore,
 } from 'lit-ui-router-mobx';
 
 // Data Service
@@ -173,38 +174,58 @@ const SolarSystemService = {
 const dotSize = (diameterKm: number): number =>
   Math.round(Math.log2(diameterKm / 1000) * 6 + 10);
 
-// Application state, not route state. The route sets one thing — which body
-// is being visited right now — and everything else follows from it.
+/** One stop on the tour: a state the visitor landed on, in order. */
+interface TrailStop {
+  state: string;
+  label: string;
+  bodyId?: number;
+}
+
+// Application state, not route state. `trail` is the only history the store
+// keeps; everything else about the tour is computed from it.
 class Tour {
-  /** The body currently being visited, or undefined away from a detail. */
+  /**
+   * The resolved body being visited, set by the `planet` state's onEnter.
+   * The URL alone cannot supply this — only the resolve knows the body.
+   */
   active?: SolarBody = undefined;
 
-  /**
-   * Which bodies have been visited. Not a computed: it is history, so a
-   * store-level reaction accumulates it from `active`. Replaced rather than
-   * mutated, so reference equality is enough to detect the change.
-   */
-  visited: readonly number[] = [];
+  /** Every stop, in order. Replaced rather than mutated. */
+  trail: readonly TrailStop[] = [];
 
   constructor() {
     makeAutoObservable(this);
-    // Reactions are not only for components — this one has no host and lives
-    // as long as the store.
-    reaction(
-      () => this.active,
-      (body) => this.record(body),
-    );
   }
 
-  /** The only write the route makes. */
+  /** Set by the route's own hook, on entry and on exit. */
   activate(body?: SolarBody) {
     this.active = body;
   }
 
-  private record(body?: SolarBody) {
-    if (body && !this.visited.includes(body.id)) {
-      this.visited = [...this.visited, body.id];
-    }
+  /** Called once per successful transition, from a reaction on RouterStore. */
+  arrive(state: string) {
+    const body = this.active;
+    const stop: TrailStop =
+      body && state === 'planet'
+        ? { state, label: body.name, bodyId: body.id }
+        : { state, label: 'All bodies' };
+    this.trail = [...this.trail, stop];
+  }
+
+  /**
+   * A real computed: MobX recomputes it only when `trail` changes and hands
+   * back the same Set until then, so selectors over it stay cheap.
+   */
+  get visited(): ReadonlySet<number> {
+    return new Set(
+      this.trail.flatMap((stop) =>
+        stop.bodyId === undefined ? [] : [stop.bodyId],
+      ),
+    );
+  }
+
+  get visitedCount(): number {
+    return this.visited.size;
   }
 }
 
@@ -277,8 +298,8 @@ class PlanetListComponent extends LitElement {
   }
 
   // The `planets` resolve loads once per activation; the visited set keeps
-  // moving after it. This reaction re-renders the list when — and only when —
-  // that store changes.
+  // moving after it. Selecting the computed means this re-renders when the
+  // set actually changes, not on every stop added to the trail.
   private readonly tour = new ReactionController(this, () => TourStore.visited);
 
   // Populated by the `planets` resolve on the list state.
@@ -303,7 +324,7 @@ class PlanetListComponent extends LitElement {
                 <span class="name">${planet.name}</span>
                 <span class="kind">${planet.kind}</span>
                 ${
-                  this.tour.value.includes(planet.id)
+                  this.tour.value.has(planet.id)
                     ? html`<span class="visited">visited</span>`
                     : ''
                 }
@@ -457,6 +478,15 @@ export class AppRoot extends LitElement {
     nav .trail {
       color: #8892b8;
     }
+    .path {
+      margin: 0;
+      padding-left: 20px;
+      color: #8892b8;
+      font-size: 0.85em;
+    }
+    .path li {
+      margin: 2px 0;
+    }
     .crumb {
       color: #8892b8;
     }
@@ -482,13 +512,17 @@ export class AppRoot extends LitElement {
 
   private readonly tour = new ReactionController(
     this,
-    () => ({ active: TourStore.active, visited: TourStore.visited.length }),
+    () => ({
+      active: TourStore.active,
+      trail: TourStore.trail,
+      visited: TourStore.visitedCount,
+    }),
     { equals: compareStructural },
   );
 
   render() {
     const onDetail = this.route.value;
-    const { active, visited } = this.tour.value;
+    const { active, trail, visited } = this.tour.value;
     return html`
       <h2>Hello Solar System (MobX)</h2>
       <nav>
@@ -503,6 +537,9 @@ export class AppRoot extends LitElement {
           >${visited} of ${solarBodies.length} visited</span
         >
       </p>
+      <ol class="path">
+        ${trail.map((stop) => html`<li>${stop.label}</li>`)}
+      </ol>
       <ui-view></ui-view>
     `;
   }
@@ -565,6 +602,18 @@ void import('@uirouter/visualizer').then(({ Visualizer }) =>
 router.stateRegistry.register(planetsState);
 router.stateRegistry.register(planetState);
 router.urlService.rules.initial({ state: 'planets' });
+
+// RouterStore is a plain MobX observable, so application code can react to the
+// router with no component in the middle — no host, no controller, nothing to
+// re-render. This is what records the sequence: one stop per successful
+// transition, labelled with whatever the route's own hook resolved.
+reaction(
+  () => RouterStore.for(router).current?.name,
+  (state) => {
+    if (state) TourStore.arrive(state);
+  },
+);
+
 router.start();
 
 // Render

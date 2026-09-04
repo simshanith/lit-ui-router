@@ -68,6 +68,26 @@ describe('docs site', () => {
     ).should('exist');
   });
 
+  it('records every stop and derives the visited set from that history', () => {
+    // The trail is written by a plain MobX reaction on the bindings' own
+    // RouterStore — no component involved — and `visited` is a computed over
+    // it, so revisiting the list does not inflate the count.
+    const shadow = { includeShadowDom: true };
+    cy.visit('/examples/hellosolarsystem-mobx/');
+    cy.get('.path li', shadow).should('have.length', 1);
+
+    cy.contains('a', 'Mars', shadow).click();
+    cy.contains(
+      'a.back-link:not(.top)',
+      'Back to the solar system',
+      shadow,
+    ).click();
+    cy.contains('a', 'Venus', shadow).click();
+
+    cy.get('.path li', shadow).should('have.length', 4);
+    cy.contains('.visited-count', '2 of 10 visited', shadow);
+  });
+
   it('rejects a non-integer planet id rather than rounding it', () => {
     // parseInt('4x') is 4. One strict parser keeps Earth out of the detail
     // view, the breadcrumb and the visited set alike.
@@ -95,7 +115,8 @@ describe('docs site', () => {
       shadow,
     ).click();
     cy.contains('.visited-count', '1 of 10 visited', shadow);
-    cy.contains('li', 'Mars', shadow).contains('visited');
+    // the link, not the <li> — the trail below the crumb also lists 'Mars'
+    cy.contains('a', 'Mars', shadow).should('contain.text', 'visited');
   });
 
   it('serves a real 404 for unknown urls', () => {

@@ -180,13 +180,14 @@ routed, so it never receives fresh view props — a `RouterReactionController`
 selects what the URL says, while a plain `ReactionController` selects what the
 app remembers, from a visited-bodies store the router knows nothing about.
 
-Neither controller writes anything. Recording a visit belongs to the route, so
-it lives in the `planet` state's own `onEnter` hook, reading that state's
-resolve: the id is parsed once, at the edge, and the hook sets a single
-observable — the body being visited now. The visited set accumulates from that
-through a reaction inside the store, which is the other half of the point:
-reactions are not only for components, and a host-less one needs no
-controller.
+Neither controller writes anything. The `planet` state's own `onEnter` hook
+sets the active body from that state's resolve — the id is parsed once, at the
+edge, and no component ever reads a route param. The history is written by a
+plain `reaction` over `RouterStore` with no host and no controller at all,
+which is the part worth stealing: the store these bindings give you is an
+ordinary MobX observable, so application code can react to the router without a
+component in the middle. Everything else — the visited set, its count — is a
+`computed` over that history.
 
 <LiveExample name="hellosolarsystem-mobx" />
 
