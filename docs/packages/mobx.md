@@ -144,23 +144,17 @@ stale values.
 
 ## Development and production builds
 
-The package ships two builds. Bundlers resolve the `development` export
-condition in a dev server or development build and the default one in a
-production build, so there is nothing to install, configure, or opt into.
+Like `lit-ui-router`, this package ships two builds and bundlers pick between
+them through the `development` export condition — see
+[Development & Production Builds](/guides/development-builds) for the mechanism
+and the full warning inventory across packages.
 
-The development build carries the warnings below. Production builds fold them
-out of the bundle entirely, message strings included; behavior is otherwise
-identical.
-
-One warning exists today. A `RouterReactionController` whose host has no
+One warning exists here. A `RouterReactionController` whose host has no
 `<ui-router>` ancestor logs a one-time console warning naming that host, and
 then observes nothing: `.value` stays at `options.initialValue` and the host is
-never asked to update. Wrap the subtree in `<ui-router>`, or pass the router
-yourself with `options.router` for a host that lives outside the router's DOM.
-
-Like the core package's directive warnings, this one is also gated to lit's own
-dev build: a production lit stays silent whichever build of these bindings it is
-paired with.
+never asked to update, so the component renders once with its initial value and
+never again. Wrap the subtree in `<ui-router>`, or pass the router yourself with
+`options.router` for a host that lives outside the router's DOM.
 
 ## Why selectors instead of render auto-tracking?
 
