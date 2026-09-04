@@ -197,18 +197,15 @@ class Tour {
     makeAutoObservable(this);
   }
 
-  /** Set by the route's own hook, on entry and on exit. */
-  activate(body?: SolarBody) {
+  /**
+   * Both facts about one arrival, written together: an action, so the two
+   * observables settle in a single batch and no reader sees them disagree.
+   */
+  arrive(state: string, body?: SolarBody) {
     this.active = body;
-  }
-
-  /** Called once per successful transition, from a reaction on RouterStore. */
-  arrive(state: string) {
-    const body = this.active;
-    const stop: TrailStop =
-      body && state === 'planet'
-        ? { state, label: body.name, bodyId: body.id }
-        : { state, label: 'All bodies' };
+    const stop: TrailStop = body
+      ? { state, label: body.name, bodyId: body.id }
+      : { state, label: state === 'planet' ? 'Unknown body' : 'All bodies' };
     this.trail = [...this.trail, stop];
   }
 
@@ -563,19 +560,6 @@ const planetState: LitStateDeclaration<{ planet: SolarBody | undefined }> = {
   name: 'planet',
   url: '/planets/:planetId',
   component: PlanetDetailComponent,
-  // The visit belongs to the route, not to a component watching the route.
-  // The hook reads this state's own resolve and sets one observable — the
-  // body the view actually received, already parsed and already validated.
-  // What that implies (the visited set) is the store's business, not this
-  // hook's.
-  onEnter: (transition, state) => {
-    // injector(<name>) scopes the lookup to this state's own resolves.
-    const planet = transition.injector(state.name).get('planet') as
-      | SolarBody
-      | undefined;
-    TourStore.activate(planet);
-  },
-  onExit: () => TourStore.activate(undefined),
   // deps injects $transition$ so the resolve can read the route parameter.
   resolve: [
     {
@@ -603,14 +587,35 @@ router.stateRegistry.register(planetsState);
 router.stateRegistry.register(planetState);
 router.urlService.rules.initial({ state: 'planets' });
 
+// A visit is a transition that COMPLETED. An onEnter hook fires while the
+// transition is still in flight, and a later hook can still redirect or fail
+// it, so a tour built on onEnter can record arrivals that never happened.
+// onSuccess is the honest trigger, and it knows both facts about the arrival
+// at once: where we landed, and what that state resolved.
+router.transitionService.onSuccess({}, (transition) => {
+  const state = transition.to().name;
+  if (!state) return; // the root state, which nothing navigates to
+  // injector(<name>) scopes the lookup to that state's own resolves.
+  const body =
+    state === 'planet'
+      ? (transition.injector(state).get('planet') as SolarBody | undefined)
+      : undefined;
+  TourStore.arrive(state, body);
+});
+
 // RouterStore is a plain MobX observable, so application code can react to the
-// router with no component in the middle — no host, no controller, nothing to
-// re-render. This is what records the sequence: one stop per successful
-// transition, labelled with whatever the route's own hook resolved.
+// router with no component in the middle. Nothing here re-renders: the tab
+// title lives outside the component tree, so there is no host and no
+// controller — just a reaction.
 reaction(
-  () => RouterStore.for(router).current?.name,
-  (state) => {
-    if (state) TourStore.arrive(state);
+  () => {
+    const route = RouterStore.for(router);
+    return route.includes('planet') ? TourStore.active?.name : undefined;
+  },
+  (name) => {
+    document.title = name
+      ? `${name} — Hello Solar System (MobX)`
+      : 'Hello Solar System (MobX)';
   },
 );
 

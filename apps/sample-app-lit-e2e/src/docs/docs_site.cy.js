@@ -86,6 +86,8 @@ describe('docs site', () => {
 
     cy.get('.path li', shadow).should('have.length', 4);
     cy.contains('.visited-count', '2 of 10 visited', shadow);
+    // the tab title is driven by a reaction with no host to re-render
+    cy.title().should('include', 'Venus');
   });
 
   it('rejects a non-integer planet id rather than rounding it', () => {

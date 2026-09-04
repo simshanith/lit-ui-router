@@ -180,14 +180,19 @@ routed, so it never receives fresh view props — a `RouterReactionController`
 selects what the URL says, while a plain `ReactionController` selects what the
 app remembers, from a visited-bodies store the router knows nothing about.
 
-Neither controller writes anything. The `planet` state's own `onEnter` hook
-sets the active body from that state's resolve — the id is parsed once, at the
-edge, and no component ever reads a route param. The history is written by a
-plain `reaction` over `RouterStore` with no host and no controller at all,
-which is the part worth stealing: the store these bindings give you is an
-ordinary MobX observable, so application code can react to the router without a
-component in the middle. Everything else — the visited set, its count — is a
-`computed` over that history.
+Neither controller writes anything. A single `onSuccess` hook records the
+arrival — where the router landed, and what that state resolved — because both
+are facts about the same completed transition. `onSuccess` rather than an
+entering hook on purpose: `onEnter` fires while the transition is still in
+flight, and a later hook can still redirect or fail it, so history built on it
+can record arrivals that never happened. The id is parsed once, in the resolve,
+and no component ever reads a route param.
+
+Everything else derives. The visited set and its count are `computed` over that
+history, and the tab title comes from a plain `reaction` over `RouterStore`
+with no host and no controller at all — which is the part worth stealing: the
+store these bindings give you is an ordinary MobX observable, so application
+code can react to the router without a component in the middle.
 
 <LiveExample name="hellosolarsystem-mobx" />
 
