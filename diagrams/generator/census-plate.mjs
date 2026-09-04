@@ -91,7 +91,33 @@ function analyse(j) {
     .filter((t) => t.resolvedTaskDefinition?.cache === false)
     .map((t) => t.taskId);
 
+  // ---- the graph itself, node by node and edge by edge -------------------
+  // Sheet 12 draws this pipeline as a matrix of (package, task) cells; sheet
+  // 12i walks it, so the plate has to carry the WIRING and not just the cell
+  // codes.  Nodes are sorted by taskId and edges by index pair, so the plate
+  // is byte-stable across runs whatever order turbo happens to emit.
+  // An edge is [dependency, dependent] — the direction work flows.
+  const order = tasks.map((t) => t.taskId).sort();
+  const index = new Map(order.map((id, i) => [id, i]));
+  const uncached = new Set(cacheFalse);
+  const graphNodes = order.map((id) => {
+    const t = byId.get(id);
+    const n = { pkg: t.package, task: t.task, real: real.get(id) };
+    if (uncached.has(id)) n.cacheFalse = true;
+    return n;
+  });
+  const graphEdges = [];
+  for (const t of tasks) {
+    for (const d of t.dependencies ?? []) {
+      if (!index.has(d)) throw new Error(`census-plate: ${t.taskId} depends on ${d}, which is not a node in this graph`);
+      graphEdges.push([index.get(d), index.get(t.taskId)]);
+    }
+  }
+  graphEdges.sort((a, b) => a[0] - b[0] || a[1] - b[1]);
+
   return {
+    graphNodes,
+    graphEdges,
     nodes: tasks.length,
     real: tasks.filter((t) => real.get(t.taskId)).length,
     edges,
@@ -160,6 +186,13 @@ const dump = Object.fromEntries(
 );
 console.log('\nJSON>>' + JSON.stringify(dump));
 
+// The wiring of ONE pipeline, in full: sheet 12i walks the ci graph, and an
+// aggregate would make its phantom shroud a claim rather than a picture.  It is
+// the whole node and edge list, nothing rolled up — 586 nodes / 1,382 edges at
+// the cabinet ref, about 55KB of the plate.
+const GRAPH_OF = 'ci';
+const G = results[GRAPH_OF];
+
 writeData('census-plate.json', {
   ref: basis.ref,
   sha: basis.sha,
@@ -169,4 +202,8 @@ writeData('census-plate.json', {
   used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile`,
   wasAssociatedWith: [`turbo ${turboVersion}`, 'pnpm (corepack)'],
   pipelines: dump,
-}, []);
+  graph: GRAPH_OF,
+  graphNote: `every node and every edge of the «${GRAPH_OF}» graph, nothing aggregated: graphNodes is one (package, task) pair per line, sorted by taskId, and graphEdges is one [dependency, dependent] index pair per line into that array`,
+  graphNodes: G?.graphNodes ?? [],
+  graphEdges: G?.graphEdges ?? [],
+}, ['graphNodes', 'graphEdges']);
