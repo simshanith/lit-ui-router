@@ -9,6 +9,7 @@ import { viteStaticCopy } from 'vite-plugin-static-copy';
 const EMBEDDED_EXAMPLES = [
   'helloworld',
   'hellosolarsystem',
+  'hellosolarsystem-mobx',
   'hellogalaxy',
   'design-system-links',
 ];
