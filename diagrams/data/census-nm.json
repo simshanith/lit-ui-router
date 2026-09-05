@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "eb32b4e",
-  "commitDate": "2026-09-03T23:27:25Z",
-  "generatedAtTime": "2026-09-04T00:13:24.390Z",
+  "sha": "b2338d0",
+  "commitDate": "2026-09-04T17:11:24-07:00",
+  "generatedAtTime": "2026-09-05T04:29:09.535Z",
   "wasGeneratedBy": "diagrams/generator/census-nm.mjs",
-  "used": "git archive origin/main @ eb32b4e + corepack pnpm install --frozen-lockfile + turbo run build",
+  "used": "git archive origin/main @ b2338d0 + corepack pnpm install --frozen-lockfile + turbo run build",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo"
@@ -24,7 +24,7 @@
     {"name":"preact","version":"10.4.8","ws":false,"measured":"pkg","f":61,"l":3786,"df":11,"dl":1832},
     {"name":"d3-hierarchy","version":"2.0.0","ws":false,"measured":"pkg","f":35,"l":2688,"df":0,"dl":0},
     {"name":"@uirouter/dsr","version":"1.2.0","ws":false,"measured":"pkg","f":45,"l":2053,"df":8,"dl":236},
-    {"name":"lit-ui-router","version":"1.11.1","ws":true,"measured":"dist/","f":26,"l":1525,"df":13,"dl":1496},
+    {"name":"lit-ui-router","version":"1.11.2","ws":true,"measured":"dist/","f":26,"l":1525,"df":13,"dl":1496},
     {"name":"tslib","version":"2.8.1","ws":false,"measured":"pkg","f":6,"l":1363,"df":2,"dl":499},
     {"name":"@uirouter/sticky-states","version":"1.5.1","ws":false,"measured":"pkg","f":18,"l":1354,"df":4,"dl":186},
     {"name":"d3-interpolate","version":"1.4.0","ws":false,"measured":"pkg","f":28,"l":1219,"df":0,"dl":0},

@@ -98,6 +98,8 @@ const PLACED = [
   // --- the fifth published package (#676): sheet 7's plan slot lands under the
   //     reading box, so it takes the free third row of the packages district ----
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 30, 130],
+  // --- laid at rev E: the embed-heights check (#703), cut the day of the survey ---
+  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 430, 430],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -398,9 +400,9 @@ ${schedule}
 </svg>`;
 
 export const sheet13 = {
-  num: 13, id: 'weathering', rev: 'D',
+  num: 13, id: 'weathering', rev: 'E',
   title: 'THE WEATHERING MAP',
-  sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · REV B: drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption · REV C: re-dated off the plate at TODAY = ${TODAY}, with the fifth published package in the universe; every date and count is now imported from diagrams/data/census-weather.json · REV D: whole-cabinet refresh — ${TOT_F} dated files, every band re-tested and held — ${BASIS}`,
+  sub: `ALTITUDE t — the same city as sheet 7, surveyed in time · ${TOT_F} files dated from the whole history · three construction seasons, ${MONTHS.length - ALIVE} silent months · REV B: drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption · REV C: re-dated off the plate at TODAY = ${TODAY}, with the fifth published package in the universe; every date and count is now imported from diagrams/data/census-weather.json · REV D: whole-cabinet refresh — ${TOT_F} dated files, every band re-tested and held · REV E 2026-09-04: refreshed again after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights laid the day it was cut — ${BASIS}`,
   scale: 'WORKSPACE × TIME',
   form: 'WEATHERING MAP',
   svg,

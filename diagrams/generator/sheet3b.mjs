@@ -56,8 +56,8 @@ const H = (m) => Math.max(3, KH * m);
 const fmt = (v) => v.toLocaleString('en-US');
 
 const TERRACE = [
-  '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/eslint-ts-parser',
-  '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
+  '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/embed-heights',
+  '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
   '@tools/lit-test-env', '@tools/oxc-emit', '@tools/release-config', '@tools/vue-check',
   '@tools/warn-lanes', '@tools/wintercg-globals', '@tools/workers-builds',
 ];
@@ -304,15 +304,15 @@ ${txt(1030, 246, 'a plot with no building, even here', 'lblf')}
 ${txt(430, 676, `THE EXAMPLES PLAIN — ${fmt(CELL.get(25).inputs)} files watched by ${CELL.get(25).mass} sloc of command (25):`, 'lblb')}
 ${txt(430, 689, `format:check hashes ${fmt(row('examples#format:check').inputs)} files, lint ${fmt(row('examples#lint').inputs)} — the corpus from sheet 9, now as CI surface`, 'lblf')}
 
-${txt(720, 610, `the harbour (24): docs#build waits on ${deg('docs#build', 'deps')} nodes — where the city drains`, 'lblf')}
+${txt(752, 590, `the harbour (24): docs#build waits on ${deg('docs#build', 'deps')} nodes — where the city drains`, 'lblf')}
 
 ${schedule}
 </svg>`;
 
 export const sheet3b = {
-  num: '3B', id: 'graphcity', rev: 'E',
+  num: '3B', id: 'graphcity', rev: 'F',
   title: 'THE WATCHED CITY',
-  sub: `ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: ${CI.real} real tasks in ${M.length} massed structures · footprint = watched files (${fmt(TOT_I)} task-file hashes) · height = command sloc (${fmt(TOT_M)}) · ${fmt(PHANTOM)} phantom plots · REV B: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering · REV C 2026-08-31: re-surveyed at ${TURBO} — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane · REV C corrected 2026-09-01: every height re-derived on scc 4.0.0 by census-mass3b.mjs — command sloc 1,737 → 1,774, flat blocks 134 → 130, and the plain re-measured on a clean tree at 17,692 files · REV D 2026-09-02: every number now imported from diagrams/data/census-mass3b.json — the re-based survey grew a fifth package quarter (eslint-plugin-lit-ui-router, ${CELL.get(27).tasks} tasks), 165 → 176 real tasks and 1,774 → 2,022 command sloc · REV E: whole-cabinet refresh — #693 swapped one root guard for two, so the yard is re-platted and the plate stands at ${CI.real} real tasks in ${M.length} structures — ${BASIS}`,
+  sub: `ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: ${CI.real} real tasks in ${M.length} massed structures · footprint = watched files (${fmt(TOT_I)} task-file hashes) · height = command sloc (${fmt(TOT_M)}) · ${fmt(PHANTOM)} phantom plots · REV B: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering · REV C 2026-08-31: re-surveyed at ${TURBO} — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane · REV C corrected 2026-09-01: every height re-derived on scc 4.0.0 by census-mass3b.mjs — command sloc 1,737 → 1,774, flat blocks 134 → 130, and the plain re-measured on a clean tree at 17,692 files · REV D 2026-09-02: every number now imported from diagrams/data/census-mass3b.json — the re-based survey grew a fifth package quarter (eslint-plugin-lit-ui-router, ${CELL.get(27).tasks} tasks), 165 → 176 real tasks and 1,774 → 2,022 command sloc · REV E: whole-cabinet refresh — #693 swapped one root guard for two, so the yard is re-platted and the plate stands at ${CI.real} real tasks in ${M.length} structures · REV F 2026-09-04: refreshed after the 1.11.2 + mobx 1.0.0 releases — @tools/embed-heights (#703) takes four rows on the instrument terrace, and the examples plain grew from 17,821 to ${fmt(CELL.get(25).inputs)} watched files, so the harbour's note moved to clear its corner — ${BASIS}`,
   scale: 'THE CI TASK GRAPH',
   form: 'ISOMETRIC GRAPH CITY',
   svg,

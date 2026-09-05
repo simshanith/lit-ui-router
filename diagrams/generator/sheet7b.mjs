@@ -86,7 +86,7 @@ const RUST = new Map([
   [1, 3], [2, 3], [3, 1], [4, 1], [5, 3], [6, 3], [7, 3], [8, 3], [9, 1], [10, 1],
   [11, 1], [12, 3], [13, 4], [14, 1], [15, 2], [16, 2], [17, 1], [18, 1], [19, 1],
   [20, 1], [21, 1], [22, 0], [23, 1], [24, 3], [25, 2], [26, 3], [27, null],
-  [28, 0], [29, 0], [30, 1], [31, 0],
+  [28, 0], [29, 0], [30, 1], [31, 0], [32, 0],
 ]);
 const rustOf = (n) => {
   if (!RUST.has(n)) throw new Error(`plate 7B: member ${n} has no rust step`);
@@ -330,9 +330,9 @@ ${schedule}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'E',
+  num: '7B', id: 'working', rev: 'F',
   title: 'THE WORKING CITY',
-  sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered · steam now IMPORTED from diagrams/data/census-steam.json (window ${WINDOW} · ${BASIS}) and the massing from sheet 7’s own plate, so the fifth package joins the city as №31 · REV D: whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (${BUILD.real} real of ${BUILD.nodes} nodes) instead of a hand-pasted 22 of 113 · REV E: the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, ${SHADOW.ref} @ ${SHADOW.sha}), so rust is the last editorial channel on this sheet and №31 finally reads a lamp`,
+  sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered · steam now IMPORTED from diagrams/data/census-steam.json (window ${WINDOW} · ${BASIS}) and the massing from sheet 7’s own plate, so the fifth package joins the city as №31 · REV D: whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (${BUILD.real} real of ${BUILD.nodes} nodes) instead of a hand-pasted 22 of 113 · REV E: the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, ${SHADOW.ref} @ ${SHADOW.sha}), so rust is the last editorial channel on this sheet and №31 finally reads a lamp · REV F 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights joins the plant at rust 0, its lamp metered by its own node:test suite`,
   scale: 'WHOLE WORKSPACE',
   form: 'WORKING CITY',
   svg,

@@ -1,7 +1,7 @@
 {
   "ref": "origin/main",
-  "sha": "eb32b4e",
-  "generatedAtTime": "2026-09-03T23:50:47.992Z",
+  "sha": "b2338d0",
+  "generatedAtTime": "2026-09-05T04:28:28.579Z",
   "wasGeneratedBy": "diagrams/generator/census-npm.mjs",
   "used": "npm view <pkg> version time (registry.npmjs.org)",
   "wasAssociatedWith": [
@@ -17,8 +17,8 @@
     {"name":"@uirouter/sticky-states","version":"1.5.1","published":"2019-10-08","created":"2017-05-03"},
     {"name":"@uirouter/dsr","version":"1.2.0","published":"2019-12-26","created":"2017-05-03"},
     {"name":"eslint-plugin-lit-ui-router","version":"0.0.1-alpha.0","published":"2026-09-01","created":"2026-09-01"},
-    {"name":"lit-ui-router","version":"1.11.1","published":"2026-09-02","created":"2026-01-01"},
-    {"name":"lit-ui-router-mobx","version":"0.5.0","published":"2026-08-10","created":"2026-07-05"},
+    {"name":"lit-ui-router","version":"1.11.2","published":"2026-09-05","created":"2026-01-01"},
+    {"name":"lit-ui-router-mobx","version":"1.0.0","published":"2026-09-04","created":"2026-07-05"},
     {"name":"ui-router-navigation-location-plugin","version":"0.3.0","published":"2026-08-10","created":"2026-01-14"},
     {"name":"ui-router-server","version":"0.1.1","published":"2026-08-14","created":"2026-07-28"}
   ]

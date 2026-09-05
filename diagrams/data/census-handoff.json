@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "eb32b4e",
-  "commitDate": "2026-09-03T23:27:25Z",
-  "generatedAtTime": "2026-09-04T02:58:05.272Z",
+  "sha": "b2338d0",
+  "commitDate": "2026-09-04T17:11:24-07:00",
+  "generatedAtTime": "2026-09-05T04:28:24.791Z",
   "wasGeneratedBy": "diagrams/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ eb32b4e",
+  "used": "git archive origin/main @ b2338d0",
   "wasAssociatedWith": [
     "git"
   ],
@@ -15,7 +15,7 @@
     "targets": 28
   },
   "mise": {
-    "tasks": 48,
+    "tasks": 49,
     "homes": 4,
     "withUsage": 21,
     "withDepends": 2,
@@ -23,13 +23,13 @@
   },
   "turbo": {
     "files": 17,
-    "distinctNames": 68,
-    "definitions": 96,
+    "distinctNames": 70,
+    "definitions": 98,
     "rootDefinitions": 47,
-    "memberDefinitions": 49,
-    "cacheFalse": 12,
+    "memberDefinitions": 51,
+    "cacheFalse": 13,
     "rootCacheFalse": 7,
-    "memberCacheFalse": 5
+    "memberCacheFalse": 6
   },
   "workflowRows": [
     {"file":"build-test-branch.yml","name":"build-test-branch","callSites":1},
@@ -77,7 +77,7 @@
   "miseHomes": [
     {"home":"tools/build_and_test/mise.toml","label":"tools/build_and_test","count":9,"withUsage":1,"withDepends":0,"dependsEdges":0,"names":["xvfb","branch_ci_gate","turbo_summary","playwright_version","cypress_version","playwright","playwright_deps","playwright_deps_engines","cypress"]},
     {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":9,"withUsage":8,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","measure_deflake","read_secret","rumdl","shellcheck","taplo","turbo_link_worktree","turbo_login"]},
-    {"home":"tools/release/mise.toml","label":"tools/release","count":15,"withUsage":10,"withDepends":0,"dependsEdges":0,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","peer_floor_gate","bump"]},
+    {"home":"tools/release/mise.toml","label":"tools/release","count":16,"withUsage":10,"withDepends":0,"dependsEdges":0,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","peer_floor_gate","bump","check_release_closure"]},
     {"home":".config/mise/config.toml","label":"config.toml inline","count":15,"withUsage":2,"withDepends":2,"dependsEdges":5,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","ci","ci_main","codecov_bundle","dts_backtest_matrix"]}
   ],
   "turboRows": [
@@ -85,7 +85,7 @@
     {"file":"apps/sample-app-lit-mobx/turbo.json","root":false,"definitions":2,"cacheFalse":0},
     {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":3,"cacheFalse":0},
     {"file":"apps/sample-app-routes/turbo.json","root":false,"definitions":1,"cacheFalse":0},
-    {"file":"docs/turbo.json","root":false,"definitions":13,"cacheFalse":3},
+    {"file":"docs/turbo.json","root":false,"definitions":14,"cacheFalse":4},
     {"file":"examples/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":5,"cacheFalse":0},
     {"file":"packages/lit-ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
@@ -94,7 +94,7 @@
     {"file":"packages/ui-router-server/turbo.json","root":false,"definitions":6,"cacheFalse":0},
     {"file":"tools/build_and_test/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/happy-dom/turbo.json","root":false,"definitions":1,"cacheFalse":0},
-    {"file":"tools/release/turbo.json","root":false,"definitions":6,"cacheFalse":1},
+    {"file":"tools/release/turbo.json","root":false,"definitions":7,"cacheFalse":1},
     {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/workers-builds/turbo.json","root":false,"definitions":2,"cacheFalse":1},
     {"file":"turbo.json","root":true,"definitions":47,"cacheFalse":7}

@@ -1,31 +1,31 @@
 {
   "ref": "origin/main",
-  "sha": "eb32b4e",
-  "commitDate": "2026-09-03T23:27:25Z",
-  "generatedAtTime": "2026-09-03T23:50:25.980Z",
+  "sha": "b2338d0",
+  "commitDate": "2026-09-04T17:11:24-07:00",
+  "generatedAtTime": "2026-09-05T04:33:27.807Z",
   "wasGeneratedBy": "diagrams/generator/census-yard.mjs",
-  "used": "diagrams/data/census-files.json @ eb32b4e",
+  "used": "diagrams/data/census-files.json @ b2338d0",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src (5 published packages)","files":32,"sloc":3429},
-    {"instrument":"build — @tools/oxc-emit","files":5,"sloc":222},
+    {"instrument":"src (5 published packages)","files":36,"sloc":3520},
+    {"instrument":"build — @tools/oxc-emit","files":5,"sloc":228},
     {"instrument":"pack — packPublishTarball","files":11,"sloc":352},
     {"instrument":"published-diff","files":5,"sloc":403},
     {"instrument":"check:exports","files":2,"sloc":147},
     {"instrument":"peer-floor tier-1","files":2,"sloc":106},
     {"instrument":"peer-floor tier-2","files":3,"sloc":73},
     {"instrument":"docs deploy watch","files":4,"sloc":508},
-    {"instrument":"publish — release-it","files":21,"sloc":885},
+    {"instrument":"publish — release-it","files":23,"sloc":994},
     {"instrument":"compat-guards","files":6,"sloc":160},
     {"instrument":"dts-backtest","files":1,"sloc":291},
     {"instrument":"tests — vitest harness","files":2,"sloc":32},
-    {"instrument":"lint & probe fleet","files":18,"sloc":1845},
+    {"instrument":"lint & probe fleet","files":21,"sloc":2181},
     {"instrument":"@tools/shared","files":13,"sloc":493},
     {"instrument":"typedoc plugin","files":5,"sloc":759},
-    {"instrument":"e2e — cypress","files":7,"sloc":510},
+    {"instrument":"e2e — cypress","files":7,"sloc":553},
     {"instrument":"sample apps","files":55,"sloc":3099}
   ]
 }

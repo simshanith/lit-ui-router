@@ -87,7 +87,9 @@ export const PLACED = [
   [29, '@tools/warn-lanes',        'tools/warn-lanes',                   'tool', 'report', 430, 530, 'the warning ratchet — reports a floor, never gates'],
   [30, '@tools/eslint-ts-parser',  'tools/eslint-ts-parser',             'tool', 'report',  54, 350, 'a one-line parser shim — the smallest thing in the yard'],
   // --- the fifth published package (#676) — first drawn here --------------------
-  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 350, 170, `the vendored lint rules that read uiSref · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
+  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 350, 170, `vendored uiSref lint rules · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
+  // --- born 2026-09-04 (#703) — first drawn at rev E ------------------------------
+  [32, '@tools/embed-heights',     'tools/embed-heights',                'tool', 'report', 430, 430, 'docs embed heights, measured in Chromium — outside ci'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -332,9 +334,9 @@ ${schedule}
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'D',
+  num: 7, id: 'census', rev: 'E',
   title: 'THE MEASURED CITY',
-  sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall · REV D 2026-08-31: recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json — ${BASIS}`,
+  sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall · REV D 2026-08-31: recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json · REV E 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame — ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
   form: 'MEASURED CITY',
   svg,

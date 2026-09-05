@@ -42,7 +42,7 @@ const INSTRUMENTS = [
   ['compat-guards', [/^tools\/compat-guards\//]],
   ['dts-backtest', [/^tools\/dts-backtest\//]],
   ['tests — vitest harness', [/^tools\/lit-test-env\//, /^tools\/happy-dom\//, /^tools\/wintercg-globals\//]],
-  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/warn-lanes\//, /^tools\/eslint-ts-parser\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/build_and_test\//]],
+  ['lint & probe fleet', [/^tools\/lit-template-lint\//, /^tools\/lint-elements\//, /^tools\/warn-lanes\//, /^tools\/eslint-ts-parser\//, /^tools\/embed-heights\//, /^tools\/bundle-probe\//, /^tools\/vue-check\//, /^tools\/lcov-rebase\//, /^tools\/build_and_test\//]],
   ['@tools/shared', [/^tools\/shared\//]],
   ['typedoc plugin', [/^tools\/typedoc-plugin/]],
   ['e2e — cypress', [/^apps\/sample-app-lit-e2e\//]],

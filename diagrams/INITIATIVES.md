@@ -550,6 +550,35 @@ column's depth. The schedule's SY is now max(left column, rack + ledger), and
 long READ BY lists (the master plate is read by everything) wrap at ~80 chars
 with per-row height, so neither defect can recur as the office grows.
 Screenshot-verified.
+R3 — SECOND FULL-CABINET REFRESH 2026-09-04: main had moved 14 commits past
+eb32b4e, taking the lit-ui-router 1.11.2 and lit-ui-router-mobx 1.0.0 releases
+with it, so every one of the 16 plates was re-counted at origin/main @ b2338d0
+(commit 2026-09-04T17:11-07:00) in R1's order — scc, the nine T1/T2 queries, the
+seven T3 install probes. The whole chain ran in 3½ minutes against R1's 35-minute
+budget: the pnpm store was warm from the day's earlier probes, so each T3
+install was seconds, not minutes — budget the long figure only after a cold
+start. What moved: mobx 0.5.0 → 1.0.0 (bricks re-shape it 1x1 → 1x2, five files
+/ 176 sloc), the eslint plugin's rc.2 grew to 9f/715, and one workspace member
+was born — @tools/embed-heights (#703, docs#check:embeds: Chromium measures the
+built examples against the heights the docs reserve). The build threw for the
+right reason, in order: sheet 3B found four real tasks no structure drew, plate
+7B found №32 with no rust step. The new-member checklist, now written down
+because it is the one manual step a refresh has: 3B's TERRACE list, sheet 7's
+PLACED table (which 7B imports), sheet 13's PLACED table, 7B's RUST map, and
+census-yard's INSTRUMENTS rules — the first four throw when missed; the yard
+only prints its orphans LOUDLY (3 → 0 here), which is a guard that should
+probably throw too. №32 sits at plan (430, 430) on the yard's middle row; its
+check:embeds lane was verified against the plate to be reachable from neither
+ci nor ci:main before the note said so. Two compositions moved on their own:
+the examples plain on 3B grew 17,821 → 31,477 watched files (side ∝ √files, so
+a third wider) and its corner reached the harbour note, which moved to clear
+air; and sheet 7's schedule was found truncating row 31's note at the frame
+since rev D — both new notes are cut to fit. census-shadow re-confirmed the
+`u` verdict for sample-app-shared (vitest browser mode cannot attach the v8
+meter; the suite re-ran clean without it) and metered the newcomer on its own
+node:test suite: 17 metered members, 7,980 lines. Revs: 3B→F, 7→E, 7B→F, 13→E;
+every other sheet re-read its plates without a line changing. Screenshot-
+verified on 3B, 7, 7B and 13.
 
 ## Why rework
 
