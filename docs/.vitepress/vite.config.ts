@@ -21,11 +21,13 @@ const EMBEDDED_EXAMPLES = [
 // pushState mounts share ONE base-agnostic build (`/app.html`) — the shell
 // derives its base from location.pathname at boot (see sample-app-shared's
 // configureRouter), so it renders real routes under /not-found-spa and
-// /simulated-routing too, mirroring the worker's shellPath aliasing. /app-mobx
-// and /app-hash keep their own builds (different bindings / location mode).
+// /simulated-routing too, mirroring the worker's shellPath aliasing.
+// /app-mobx, /app-effect and /app-hash keep their own builds (different
+// bindings / location mode).
 const SHELL_PATHS: Record<string, string> = {
   '/app': '/app.html',
   '/app-mobx': '/app-mobx.html',
+  '/app-effect': '/app-effect.html',
   '/app-hash': '/app-hash.html',
   '/not-found-spa': '/app.html',
   '/simulated-routing': '/app.html',
@@ -99,6 +101,16 @@ export default defineConfig({
           dest: '',
           rename: { name: 'app-mobx.html', stripBase: true },
         },
+        {
+          src: 'node_modules/sample-app-lit-effect/dist/assets/*',
+          dest: 'assets',
+          rename: { stripBase: true },
+        },
+        {
+          src: 'node_modules/sample-app-lit-effect/dist/index.html',
+          dest: '',
+          rename: { name: 'app-effect.html', stripBase: true },
+        },
         // The hash-location sibling shell: the vanilla app's second build
         // (`vite build --mode hash`), hash location + `/app-hash/` base baked
         // in. Its bundle is content-hashed against different env, so it
@@ -123,6 +135,11 @@ export default defineConfig({
         {
           src: 'node_modules/sample-app-lit-mobx/dist/404.html',
           dest: 'app-mobx',
+          rename: { stripBase: true },
+        },
+        {
+          src: 'node_modules/sample-app-lit-effect/dist/404.html',
+          dest: 'app-effect',
           rename: { stripBase: true },
         },
         // Hash deep paths (`/app-hash/foo`) never happen under a hash client,

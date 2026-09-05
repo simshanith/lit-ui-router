@@ -13,6 +13,7 @@
 export const shellMounts: readonly string[] = [
   '/app',
   '/app-mobx',
+  '/app-effect',
   '/app-hash',
   '/not-found-spa',
   '/simulated-routing',

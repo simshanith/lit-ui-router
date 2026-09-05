@@ -1,6 +1,6 @@
 import { concurrently, type CloseEvent } from 'concurrently';
 
-// The five Cypress suites share one dev server (started by `test` via
+// The six Cypress suites share one dev server (started by `test` via
 // start-server-and-test), so running them concurrently is pure wall-clock win.
 // concurrently already fails the run when any suite exits non-zero; this wrapper
 // adds a per-suite timing table and an unambiguous PASS/FAIL banner on top, and
@@ -8,6 +8,7 @@ import { concurrently, type CloseEvent } from 'concurrently';
 const suites = [
   { name: 'vanilla', command: 'pnpm run test:cypress' },
   { name: 'mobx', command: 'pnpm run test:cypress:mobx' },
+  { name: 'effect', command: 'pnpm run test:cypress:effect' },
   { name: 'docs', command: 'pnpm run test:cypress:docs' },
   { name: 'hash', command: 'pnpm run test:cypress:hash' },
   { name: 'navigation', command: 'pnpm run test:cypress:navigation' },

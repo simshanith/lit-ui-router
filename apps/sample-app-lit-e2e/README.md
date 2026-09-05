@@ -1,6 +1,6 @@
 # sample-app-lit-e2e
 
-One Cypress spec suite, run against both sample apps and the docs site —
+One Cypress spec suite, run against all three sample apps and the docs site —
 this is what enforces the apps' behavioral identity and keeps every
 published location strategy exercised.
 
@@ -10,17 +10,18 @@ published location strategy exercised.
 pnpm --filter sample-app-lit-e2e test
 ```
 
-That production-like flow builds the docs site (which embeds both apps'
-builds), serves it with wrangler on `:8787`, and runs five Cypress suites
+That production-like flow builds the docs site (which embeds every app's
+build), serves it with wrangler on `:8787`, and runs six Cypress suites
 concurrently (`test:cypress:all`):
 
-| Suite        | Target        | Covers                                                                                                              |
-| ------------ | ------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`    | `/app/`       | vanilla app, `pushState` routing                                                                                    |
-| `mobx`       | `/app-mobx/`  | MobX app, `pushState` routing                                                                                       |
-| `docs`       | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
-| `hash`       | `/app/`       | vanilla app under the `hash` location plugin                                                                        |
-| `navigation` | `/app/`       | vanilla app under the Navigation API plugin                                                                         |
+| Suite        | Target         | Covers                                                                                                              |
+| ------------ | -------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `vanilla`    | `/app/`        | vanilla app, `pushState` routing                                                                                    |
+| `mobx`       | `/app-mobx/`   | MobX app, `pushState` routing                                                                                       |
+| `effect`     | `/app-effect/` | Effect app, `pushState` routing                                                                                     |
+| `docs`       | site + mounts  | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
+| `hash`       | `/app/`        | vanilla app under the `hash` location plugin                                                                        |
+| `navigation` | `/app/`        | vanilla app under the Navigation API plugin                                                                         |
 
 The same run executes in CI via the `ci` turbo task.
 

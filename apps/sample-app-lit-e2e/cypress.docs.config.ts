@@ -9,7 +9,8 @@ export default defineConfig({
   chromeWebSecurity: false,
   e2e: {
     // Wrangler serves all of docs/dist at :8787; the sample-app suites scope
-    // themselves to /app/ and /app-mobx/, so nothing renders the docs pages.
+    // themselves to /app/, /app-mobx/ and /app-effect/, so nothing renders
+    // the docs pages.
     baseUrl: `http://localhost:8787/`,
     specPattern: './src/docs/**/*.cy.{js,jsx,ts,tsx}',
     // The sample-app support file adds feature-flag query helpers the docs

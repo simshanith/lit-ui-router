@@ -1,0 +1,35 @@
+{
+  "name": "sample-app-lit-effect",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "codecov:bundle": "upload-bundle-stats sample-app-lit-effect-esm",
+    "dev": "vite",
+    "format": "oxfmt \"**/*.{js,ts,json,md,html}\"",
+    "format:check": "oxfmt --check \"**/*.{js,ts,json,md,html}\"",
+    "lint": "oxlint .",
+    "typecheck": "tsc -p tsconfig.json --noEmit"
+  },
+  "dependencies": {
+    "@uirouter/core": "catalog:",
+    "effect": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "workspace:*",
+    "lodash-es": "catalog:",
+    "sample-app-shared": "workspace:*"
+  },
+  "devDependencies": {
+    "@tools/build_and_test": "workspace:*",
+    "@types/dom-navigation": "catalog:",
+    "@types/lodash-es": "catalog:",
+    "@types/node": "catalog:",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
+    "vite": "catalog:",
+    "wrangler": "catalog:"
+  }
+}

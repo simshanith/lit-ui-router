@@ -11,11 +11,15 @@ import worker from '../index.ts';
 // bodies themselves stay covered by the docs suite's cy.visit smokes.
 const ORIGIN = 'http://docs.test';
 
-// Stand-ins for docs/dist: the three shell builds, the flagship 404 pages,
+// Stand-ins for docs/dist: the four shell builds, the flagship 404 pages,
 // and a default that plays the binding's own 404.html handling.
 const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
   '/app': { body: 'vanilla-shell', headers: { 'Content-Type': 'text/html' } },
   '/app-mobx': { body: 'mobx-shell', headers: { 'Content-Type': 'text/html' } },
+  '/app-effect': {
+    body: 'effect-shell',
+    headers: { 'Content-Type': 'text/html' },
+  },
   '/app-hash': { body: 'hash-shell', headers: { 'Content-Type': 'text/html' } },
   '/app/404.html': {
     body: 'vanilla-404-page',
@@ -23,6 +27,10 @@ const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
   },
   '/app-mobx/404.html': {
     body: 'mobx-404-page',
+    headers: { 'Content-Type': 'text/html; charset=utf-8' },
+  },
+  '/app-effect/404.html': {
+    body: 'effect-404-page',
     headers: { 'Content-Type': 'text/html; charset=utf-8' },
   },
 };
@@ -61,14 +69,14 @@ const env = {
 const dispatch = (path: string) =>
   worker.fetch(new Request(`${ORIGIN}${path}`), env);
 
-describe('flagship mounts (/app, /app-mobx)', () => {
+describe('flagship mounts (/app, /app-mobx, /app-effect)', () => {
   it('serves each mount its own shell at 200 for real routes, indexable', async () => {
-    for (const mount of ['/app', '/app-mobx']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
       for (const path of ['/welcome', '/contacts/1/edit']) {
         assetCalls = [];
         const res = await dispatch(`${mount}${path}`);
         assert.equal(res.status, 200, `${mount}${path}`);
-        // The flagship serves its OWN build (mobx bindings differ) — the old
+        // The flagship serves its OWN build (the bindings differ) — the old
         // cy title check ("(MobX)" suffix) becomes the shell asset path.
         assert.deepEqual(assetCalls, [mount], `${mount}${path}`);
         assert.equal(await res.text(), ASSET_TABLE[mount].body);
@@ -80,7 +88,7 @@ describe('flagship mounts (/app, /app-mobx)', () => {
   });
 
   it('302s the mount root to /welcome — hash mode is not first-class there', async () => {
-    for (const mount of ['/app', '/app-mobx']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
       const res = await dispatch(mount);
       assert.equal(res.status, 302, mount);
       assert.equal(res.headers.get('Location'), `${mount}/welcome`, mount);
@@ -89,7 +97,7 @@ describe('flagship mounts (/app, /app-mobx)', () => {
   });
 
   it('serves the per-app 404 page, re-wrapped at an honest 404', async () => {
-    for (const mount of ['/app', '/app-mobx']) {
+    for (const mount of ['/app', '/app-mobx', '/app-effect']) {
       for (const path of [
         '/definitely-not-a-route',
         '/contacts/1/edit/extra',

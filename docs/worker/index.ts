@@ -12,9 +12,9 @@ const router = createServerRouter({ mounts });
 // sample-app-shared's configureRouter + sample-app-routes' shellMounts), so
 // /app.html renders real routes under /not-found-spa and /simulated-routing
 // too — no per-prefix builds, no HTML templating. shellPath points those
-// mounts at the single shell; /app-mobx and /app-hash keep their own builds
-// (different bindings / location mode) and serve their own shells at the
-// default mount -> mount path.
+// mounts at the single shell; /app-mobx, /app-effect and /app-hash keep their
+// own builds (different bindings / location mode) and serve their own shells
+// at the default mount -> mount path.
 const VANILLA_SHELL = '/app';
 const VANILLA_SHELL_MOUNTS = new Set([
   '/app',
