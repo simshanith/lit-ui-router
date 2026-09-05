@@ -2,7 +2,7 @@
  * The client half of src/routes.ts: the same names and urls, with components
  * and resolves hung off them.
  */
-import { pushStateLocationPlugin } from '@uirouter/core';
+import { hashLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router';
 import type { LitStateDeclaration } from 'lit-ui-router';
@@ -10,6 +10,7 @@ import {
   isUIRouterNavigateEvent,
   navigationLocationPlugin,
 } from 'ui-router-navigation-location-plugin';
+import { ARTIFACT } from './mode.ts';
 import { urlOf } from './routes.ts';
 import type { Manifest, SheetRow } from './manifest.ts';
 import { findSheet, loadFragment, loadManifest } from './manifest.ts';
@@ -86,8 +87,11 @@ export function createRouter(): UIRouterLit {
   const router = new UIRouterLit();
   // The Navigation API where it exists, pushState everywhere else — the
   // pairing the location-plugins guide recommends. Both produce /sheet/7.
-  const navigationApi = typeof window !== 'undefined' && 'navigation' in window;
-  router.plugin(navigationApi ? navigationLocationPlugin : pushStateLocationPlugin);
+  // The artifact build cannot use either: its page is served from a path the
+  // host owns, so every url lives in the hash (#/sheet/7).
+  const navigationApi = !ARTIFACT && typeof window !== 'undefined' && 'navigation' in window;
+  if (ARTIFACT) router.plugin(hashLocationPlugin);
+  else router.plugin(navigationApi ? navigationLocationPlugin : pushStateLocationPlugin);
 
   // CONSUMER FINDING: the Navigation API plugin calls navigation.navigate()
   // and leaves interception to the app — the sample app wires the same

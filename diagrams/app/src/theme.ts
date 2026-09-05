@@ -14,6 +14,12 @@ export function readTheme(): ThemeChoice {
   } catch {
     // private windows and blocked site data both throw here; auto is right
   }
+  // No stored preference: honour a data-theme the HOST already stamped on the
+  // root — a claude.ai Artifact pins the viewer's theme that way, and removing
+  // it (as 'auto' would) would drop the page out of the theme it was given.
+  // Optional: @lit-labs/ssr's dom shim has no documentElement (prerender.ts).
+  const stamped = document.documentElement?.getAttribute('data-theme');
+  if (stamped === 'light' || stamped === 'dark') return stamped;
   return 'auto';
 }
 

@@ -9,6 +9,7 @@ plain `npm`, its own `package-lock.json`, and every dependency taken from the
 npm install
 npm run dev        # vite, with ui-router-server answering real 302s / 404s
 npm run build      # vite build + node prerender.ts
+npm run build:artifact  # vite build --mode artifact + node artifact.ts
 npm run preview
 npm run typecheck
 ```
@@ -96,6 +97,39 @@ a package-level ask in [`SSR-VERDICT.md`](./SSR-VERDICT.md).
 Every animation is inside `@media (prefers-reduced-motion: no-preference)`,
 and each module also checks `matchMedia('(prefers-reduced-motion: reduce)')`
 before doing any work.
+
+## Artifact build
+
+`npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as
+ONE self-contained file (~1.81 MB) that can be published as a claude.ai
+Artifact. That host is strict in four ways, and each one is a line in the
+build:
+
+- **One file, no fetches — not even same-origin.** `artifact.ts` bakes
+  `public/manifest.json` and all twenty-two generated fragments into a
+  `<script type="application/json" id="atlas-data">` island (every `<` escaped
+  as `\u003c`, so a fragment's own `</script>` cannot close it) and inlines
+  `public/sheets/atlas.css` as a `<style>`. `src/manifest.ts` reads the island
+  when it is present and falls back to the fetches the site uses. Cytoscape's
+  dynamic import is folded into the single chunk by `vite-plugin-singlefile`
+  (`useRecommendedBuildConfig`, which sets `output.codeSplitting = false` on
+  vite 8).
+- **The host owns the document skeleton.** The published file must carry no
+  `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` of its own, and only its first 8KB is
+  scanned for `<title>`, so `artifact.ts` strips the wrapper and moves the title
+  to byte 0.
+- **The page sits on an opaque origin path**, so path routing is out:
+  `src/router.ts` takes `hashLocationPlugin` instead of the Navigation
+  API/pushState pair, and every url becomes `#/sheet/7`. `uiSref` writes those
+  hrefs itself; `views.ts` prefixes its static `href` attributes to match.
+- **The flat set does not exist offline**, so `THE FLAT SET ↗` and each sheet's
+  `STANDALONE PLATE ↗` point at `https://atlas.lit-ui-router.dev/set/…` in a
+  new tab.
+
+`src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the three
+readers share. Analytics is skipped in this mode. Nothing above changes the
+site build: `npm run build` still prerenders 25 pages + `404.html` and 7
+redirects.
 
 ## Server side
 

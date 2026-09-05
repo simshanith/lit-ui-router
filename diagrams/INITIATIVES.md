@@ -670,6 +670,25 @@ too. Verified against a Pages-mimicking static server (308 to the slash,
 light, 28/28 in dark, 25/25 under the pushState fallback; tsc + oxlint clean.
 Not touched, on purpose: the prerender-flash takeover, Cloudflare's
 email-decode console error (a zone setting), sheet 14's 640 px SVG on mobile.
+ARTIFACT BUILD 2026-09-05: `npm run build:artifact` in diagrams/app emits
+dist-artifact/index.html — the whole routed atlas as ONE 1,805,904-byte file
+publishable as a claude.ai Artifact. vite mode `artifact` +
+vite-plugin-singlefile 2.3.3 (useRecommendedBuildConfig, which on vite 8 sets
+output.codeSplitting=false and so folds the cytoscape dynamic import into the
+one chunk), then artifact.ts strips the doctype/html/head/body the host
+supplies, hoists <title> to byte 0 (only the first 8KB is scanned), inlines
+sheets/atlas.css, and bakes the manifest + all 22 fragments into a
+`<script type="application/json" id="atlas-data">` island (every `<` →
+`\u003c`). Nothing is fetched at runtime; the router takes hashLocationPlugin
+(#/sheet/7), analytics is off, and the two links out to the flat set point at
+the live site in a new tab. src/mode.ts is the one flag; the site build is
+byte-for-byte unchanged (still 25 pages + 404.html + 7 redirects). Verified
+in headless Chromium against a harness that mimics the host — the file
+wrapped in a doctype skeleton at a nested path with EVERY other request
+aborted — 17/17: cover, #/sheet/2A deep link with the rail active, rail walk
+7→8→7A with no reload, back/forward, cytoscape on 1i/2B/12i, #/megacanvas?at=7
+panning, #/office → 14, #/sheet/99 notFound with the url kept, both themes
+from data-theme on the root, zero page errors, zero aborted requests.
 
 ## Why rework
 

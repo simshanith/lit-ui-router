@@ -197,6 +197,17 @@
       }
     },
     {
+      "files": ["diagrams/app/src/mode.ts"],
+      "rules": {
+        "turbo/no-undeclared-env-vars": [
+          "warn",
+          {
+            "allowList": ["^MODE$"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/sample-app-lit-e2e/scripts/**"],
       "rules": {
         "turbo/no-undeclared-env-vars": [

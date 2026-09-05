@@ -29,10 +29,31 @@ export interface Manifest {
   sheets: SheetRow[];
 }
 
+/**
+ * The artifact build's baked-in payload (see artifact.ts): the whole set in
+ * one `<script type="application/json">`, because a published Artifact may
+ * not fetch anything. Absent on the site, where the fetches below run.
+ */
+interface Island {
+  manifest: Manifest;
+  fragments: Record<string, string>;
+}
+
+let island: Island | null | undefined;
+
+function readIsland(): Island | null {
+  if (island !== undefined) return island;
+  const node = typeof document === 'undefined' ? null : document.getElementById('atlas-data');
+  island = node?.textContent ? (JSON.parse(node.textContent) as Island) : null;
+  return island;
+}
+
 let pending: Promise<Manifest> | null = null;
 
 /** Memoized: several states resolve `manifest`, and one fetch answers them all. */
 export function loadManifest(): Promise<Manifest> {
+  const baked = readIsland();
+  if (baked) pending ??= Promise.resolve(baked.manifest);
   pending ??= fetch(`${BASE}manifest.json`).then((res) => {
     if (!res.ok) throw new Error(`manifest.json: ${res.status}`);
     return res.json() as Promise<Manifest>;
@@ -52,6 +73,8 @@ export function findSheet(manifest: Manifest, num: string): SheetRow | undefined
 }
 
 export function loadFragment(sheet: SheetRow): Promise<string> {
+  const baked = readIsland()?.fragments[sheet.id];
+  if (baked !== undefined) return Promise.resolve(baked);
   return fetch(`${BASE}${sheet.file}`).then((res) => {
     if (!res.ok) throw new Error(`${sheet.file}: ${res.status}`);
     return res.text();
