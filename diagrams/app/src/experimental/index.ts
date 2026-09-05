@@ -12,9 +12,11 @@
  *                        transition.promise + two frames (release)
  *   keyboard.ts          ←/→ walk the set — no hook; reads router.globals
  *   megacanvas-pan.ts    pan/zoom the reel to ?at=<sheet> — onSuccess
+ *   analytics.ts         a page_view per navigation, if the page has gtag — onSuccess
  */
 import type { UIRouterLit } from 'lit-ui-router';
 import './experimental.css';
+import { installAnalytics } from './analytics.ts';
 import { installKeyboardWalk } from './keyboard.ts';
 import { installMegacanvasPan } from './megacanvas-pan.ts';
 import { installSlideshow } from './view-transitions.ts';
@@ -23,4 +25,5 @@ export function installExperimental(router: UIRouterLit): void {
   installSlideshow(router);
   installKeyboardWalk(router);
   installMegacanvasPan(router);
+  installAnalytics(router);
 }

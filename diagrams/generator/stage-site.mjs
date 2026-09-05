@@ -59,7 +59,34 @@ if (staged) {
   }
 }
 
-console.log(`staged ${pages.length} pages + index.html + ${VENDOR.length} vendored scripts → dist/`);
+// Google Analytics, staged copies only — the same env var the flagship docs
+// build reads, so the committed pages (the Artifact source) never carry a tag.
+// The atlas app's SPA route changes send their own page_view (app/src/experimental/analytics.ts).
+const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_TRACKING_ID;
+const gaTag = (id) => `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}');</script>
+`;
+const walkHtml = (dir, out = []) => {
+  for (const e of readdirSync(dir, { withFileTypes: true })) {
+    const p = join(dir, e.name);
+    if (e.isDirectory()) { if (e.name !== 'sheets') walkHtml(p, out); }
+    else if (e.name.endsWith('.html')) out.push(p);
+  }
+  return out;
+};
+let tagged = 0;
+if (GA_ID) {
+  for (const p of walkHtml(dist)) {
+    // the static sheets are head-less (the Artifact host wraps them), so the tag leads the file
+    const html = readFileSync(p, 'utf8');
+    writeFileSync(p, html.includes('</head>') ? html.replace('</head>', `${gaTag(GA_ID)}</head>`) : gaTag(GA_ID) + html);
+    tagged += 1;
+  }
+} else {
+  console.warn('VITE_GOOGLE_ANALYTICS_TRACKING_ID missing — staging without analytics');
+}
+
+console.log(`staged ${pages.length} pages + index.html + ${VENDOR.length} vendored scripts → dist/${GA_ID ? ` · GA tag on ${tagged} pages` : ''}`);
 console.log(staged
   ? 'staged the routed app → dist/app/ (run `npm run build` in app/ first to refresh it)'
   : 'no app/dist — run `npm install && npm run build` in diagrams/app to include /app/');
