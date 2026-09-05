@@ -4,6 +4,20 @@
 /* --- slideshow: the View Transitions path -------------------------------- */
 /* Direction is stamped on <html> by view-transitions.ts before the router
    changes anything, so the pseudo-elements can read it. */
+/* The rail is its own group, so the root slide leaves it in place; both
+   snapshots sit still and the new one (the moved is-active mark) wins. */
+.rail {
+  view-transition-name: atlas-rail;
+}
+::view-transition-group(atlas-rail),
+::view-transition-old(atlas-rail),
+::view-transition-new(atlas-rail) {
+  animation: none;
+}
+::view-transition-old(atlas-rail),
+::view-transition-new(atlas-rail) {
+  mix-blend-mode: normal;
+}
 @media (prefers-reduced-motion: no-preference) {
   ::view-transition-old(root),
   ::view-transition-new(root) {
