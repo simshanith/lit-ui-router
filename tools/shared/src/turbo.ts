@@ -51,16 +51,75 @@ export async function resolvedTaskDeps(
   return entry.dependencies ?? [];
 }
 
+// turbo colours its diagnostics even into a pipe; built rather than written as
+// a literal so no escape byte sits in the source
+const SGR = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
+
+/** A failed run's stderr, or `''` for an error that carries none. */
+function stderrOf(error: unknown): string {
+  return typeof error === 'object' && error !== null && 'stderr' in error
+    ? String(error.stderr)
+    : '';
+}
+
+/**
+ * One line of turbo diagnostics. It wraps at terminal width and gutters the
+ * continuation with `│`, so a message — or a task name inside one — arrives
+ * split by a run of whitespace and box drawing. Colour survives the pipe, so
+ * the escapes come off too.
+ */
+function flatten(stderr: string): string {
+  return stderr.replaceAll(SGR, '').replaceAll('│', '').replaceAll(/\s+/g, ' ');
+}
+
 /** A script name with no turbo task declared for it — skip, don't fail. */
 function isUndeclared(name: string, error: unknown): boolean {
-  const stderr =
-    typeof error === 'object' && error !== null && 'stderr' in error
-      ? String(error.stderr)
-      : '';
-  // turbo wraps the message across lines at terminal width
-  return stderr
-    .replaceAll(/\s+/g, ' ')
-    .includes(`Could not find task \`${name}\``);
+  return flatten(stderrOf(error)).includes(`Could not find task \`${name}\``);
+}
+
+/**
+ * Every name a run rejected as undeclared. turbo reports all of them at once,
+ * so one retry drops the whole set. Interior whitespace is stripped because a
+ * long name can land across a wrap; task names have none to lose.
+ */
+export function undeclaredTaskNames(stderr: string): string[] {
+  const flat = flatten(stderr);
+  return [...flat.matchAll(/Could not find task `([^`]+)` in project/g)].map(
+    (match) => match[1].replaceAll(' ', ''),
+  );
+}
+
+/**
+ * Plans `names` in one dry run, so turbo validates the graph it would actually
+ * build. Deliberately without `--only`: that flag strips the dependency edges,
+ * which is what let an invalid one — `dependsOn` onto a persistent task — sit
+ * unnoticed in the `e2e` lane (#695). Names with no turbo task are dropped and
+ * the run retried once.
+ */
+export async function planLanes(
+  names: readonly string[],
+  exec: Exec = defaultExec,
+): Promise<{ planned: string[]; failure?: string }> {
+  const plan = async (lanes: readonly string[]) => {
+    try {
+      await exec('turbo', ['run', ...lanes, '--dry-run=json']);
+      return undefined;
+    } catch (error) {
+      return stderrOf(error) || String(error);
+    }
+  };
+
+  const first = await plan(names);
+  if (first === undefined) return { planned: [...names] };
+
+  const undeclared = new Set(undeclaredTaskNames(first));
+  if (undeclared.size === 0) return { planned: [], failure: first };
+
+  const declared = names.filter((name) => !undeclared.has(name));
+  const retry = await plan(declared);
+  return retry === undefined
+    ? { planned: declared }
+    : { planned: [], failure: retry };
 }
 
 /**
