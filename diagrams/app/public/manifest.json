@@ -3,7 +3,7 @@
   "client": "lit-ui-router · simshanith",
   "total": 14,
   "date": "2026-09-04",
-  "base": "/app/",
+  "base": "/",
   "generatedBy": "diagrams/generator/emit-app.mjs",
   "sheets": [
     {
@@ -16,6 +16,7 @@
       "form": "ISO CIRCUIT",
       "rev": "E",
       "file": "sheets/1.html",
+      "standalone": "sheet-1-the-render-loop.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -33,6 +34,7 @@
       "form": "INTERACTIVE CIRCUIT",
       "rev": "A",
       "file": "sheets/1i.html",
+      "standalone": "sheet-1i-the-render-loop-walked.html",
       "interactive": true,
       "needsCytoscape": true,
       "plates": [
@@ -52,6 +54,7 @@
       "form": "BRICK ASSEMBLY",
       "rev": "B",
       "file": "sheets/2.html",
+      "standalone": "sheet-2-the-brick-assembly.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -71,6 +74,7 @@
       "form": "COUPLING PLAN",
       "rev": "B",
       "file": "sheets/2a.html",
+      "standalone": "sheet-2A-the-coupling-plan.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -91,6 +95,7 @@
       "form": "INTERACTIVE COUPLING GRAPH",
       "rev": "A",
       "file": "sheets/2b.html",
+      "standalone": "sheet-2B-the-coupling-bench.html",
       "interactive": true,
       "needsCytoscape": true,
       "plates": [
@@ -112,6 +117,7 @@
       "form": "ISOMETRIC CITY",
       "rev": "E",
       "file": "sheets/3.html",
+      "standalone": "sheet-3-the-instrument-yard.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -134,6 +140,7 @@
       "form": "COUPLING SCHEMATIC",
       "rev": "D",
       "file": "sheets/3a.html",
+      "standalone": "sheet-3A-the-handoff-works.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -154,6 +161,7 @@
       "form": "ISOMETRIC GRAPH CITY",
       "rev": "F",
       "file": "sheets/3b.html",
+      "standalone": "sheet-3B-the-watched-city.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -175,6 +183,7 @@
       "form": "MASSED SPINE",
       "rev": "E",
       "file": "sheets/4.html",
+      "standalone": "sheet-4-the-family-spine.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -194,6 +203,7 @@
       "form": "POSITIONED CHART",
       "rev": "A",
       "file": "sheets/5.html",
+      "standalone": "sheet-5-the-design-space.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],
@@ -212,6 +222,7 @@
       "form": "CORE SAMPLE",
       "rev": "A",
       "file": "sheets/6.html",
+      "standalone": "sheet-6-the-routing-strata.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],
@@ -229,6 +240,7 @@
       "form": "MEASURED CITY",
       "rev": "E",
       "file": "sheets/7.html",
+      "standalone": "sheet-7-the-measured-city.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -248,6 +260,7 @@
       "form": "SHADOW PLAN",
       "rev": "E",
       "file": "sheets/7a.html",
+      "standalone": "sheet-7A-the-shadow-survey.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -268,6 +281,7 @@
       "form": "WORKING CITY",
       "rev": "F",
       "file": "sheets/7b.html",
+      "standalone": "sheet-7B-the-working-city.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -296,6 +310,7 @@
       "form": "DELIVERED CITY",
       "rev": "D",
       "file": "sheets/8.html",
+      "standalone": "sheet-8-the-delivered-city.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -316,6 +331,7 @@
       "form": "SHIPPED CITY",
       "rev": "F",
       "file": "sheets/9.html",
+      "standalone": "sheet-9-the-shipped-city.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -337,6 +353,7 @@
       "form": "BUNDLED CITY",
       "rev": "C",
       "file": "sheets/10.html",
+      "standalone": "sheet-10-the-bundled-city.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -359,6 +376,7 @@
       "form": "ENTRY QUARTERS",
       "rev": "D",
       "file": "sheets/11.html",
+      "standalone": "sheet-11-the-entry-quarters.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -380,6 +398,7 @@
       "form": "REGISTER PLATE",
       "rev": "D",
       "file": "sheets/12.html",
+      "standalone": "sheet-12-the-register-plate.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -399,6 +418,7 @@
       "form": "INTERACTIVE REGISTER",
       "rev": "A",
       "file": "sheets/12i.html",
+      "standalone": "sheet-12i-the-register-walked.html",
       "interactive": true,
       "needsCytoscape": true,
       "plates": [
@@ -418,6 +438,7 @@
       "form": "WEATHERING MAP",
       "rev": "E",
       "file": "sheets/13.html",
+      "standalone": "sheet-13-the-weathering-map.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [
@@ -438,6 +459,7 @@
       "form": "FLOW GRAPH",
       "rev": "B",
       "file": "sheets/14.html",
+      "standalone": "sheet-14-the-survey-office.html",
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],

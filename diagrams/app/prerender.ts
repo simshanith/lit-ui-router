@@ -30,12 +30,12 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { createServerRouter } from 'ui-router-server';
 import type { Verdict } from 'ui-router-server';
 import type { Manifest, SheetRow } from './src/manifest.ts';
-import { MOUNT, mountsFor } from './src/routes.ts';
+import { BASE, MOUNT, href, mountsFor } from './src/routes.ts';
+import { TITLES, sheetTitle } from './src/titles.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
 const DIST = join(HERE, 'dist');
 const PUBLIC = join(HERE, 'public');
-const BASE = `${MOUNT}/`;
 
 const manifest: Manifest = JSON.parse(
   readFileSync(join(PUBLIC, 'manifest.json'), 'utf8'),
@@ -54,28 +54,28 @@ const router = createServerRouter({
 // Deliberately NOT src/views.ts: those carry uiSref/uiSrefActive, which are
 // element-part directives, and @lit-labs/ssr emits no element parts at all
 // (repo issue #564). The markup below is the same shape with plain hrefs —
-// which is also what a crawler and a no-JS reader need.
-
-const sheetHref = (row: SheetRow): string => `${BASE}sheet/${row.num}`;
+// which is also what a crawler and a no-JS reader need. The hrefs themselves
+// come from src/routes.ts, so only the markup is written twice.
 
 const railTemplate = (active: string): TemplateResult => html`
   <nav class="rail" aria-label="drawing set">
     <div class="rail-head">
       <span class="kicker">A DRAWING SET · lit-ui-router</span>
-      <h1><a href="${BASE}">THE ALTITUDE ATLAS</a></h1>
+      <h1><a href="${href.gallery}">THE ALTITUDE ATLAS</a></h1>
     </div>
     <div class="rail-top">
-      <a class="${active === 'gallery' ? 'is-active' : ''}" href="${BASE}">INDEX</a>
-      <a class="${active === 'megacanvas' ? 'is-active' : ''}" href="${BASE}megacanvas"
+      <a class="${active === 'gallery' ? 'is-active' : ''}" href="${href.gallery}">INDEX</a>
+      <a class="${active === 'megacanvas' ? 'is-active' : ''}" href="${href.megacanvas()}"
         >MEGACANVAS</a
       >
-      <a class="${active === 'about' ? 'is-active' : ''}" href="${BASE}about">ABOUT</a>
+      <a class="${active === 'about' ? 'is-active' : ''}" href="${href.about}">ABOUT</a>
+      <a class="rail-out" href="${href.set}">THE FLAT SET ↗</a>
     </div>
     <p class="rail-sec">SHEETS — ASCENT ORDER</p>
     <div class="rail-links">
       ${manifest.sheets.map(
         (row) => html`
-          <a class="${active === row.num ? 'is-active' : ''}" href="${sheetHref(row)}">
+          <a class="${active === row.num ? 'is-active' : ''}" href="${href.sheet(row.num)}">
             <span class="n">${row.num}</span><span class="t">${row.title}</span>
           </a>
         `,
@@ -103,7 +103,7 @@ const galleryContent = (): TemplateResult => html`
   <div class="cards">
     ${manifest.sheets.map(
       (row) => html`
-        <a class="card" href="${sheetHref(row)}">
+        <a class="card" href="${href.sheet(row.num)}">
           <span class="n">SHEET ${row.num} · REV ${row.rev}</span>
           <h3>${row.title}</h3>
           <p>${row.caption}</p>
@@ -123,9 +123,11 @@ const sheetContent = (row: SheetRow): TemplateResult => {
   const next = manifest.sheets[index + 1];
   return html`
     <div class="crumb">
-      <a href="${BASE}">← INDEX</a>
-      ${prev ? html`<a href="${sheetHref(prev)}">PREV · ${prev.num}</a>` : nothing}
-      ${next ? html`<a href="${sheetHref(next)}">NEXT · ${next.num}</a>` : nothing}
+      <a href="${href.gallery}">← INDEX</a>
+      ${prev ? html`<a href="${href.sheet(prev.num)}">PREV · ${prev.num}</a>` : nothing}
+      ${next ? html`<a href="${href.sheet(next.num)}">NEXT · ${next.num}</a>` : nothing}
+      <a href="${href.megacanvas(row.num)}">ON THE REEL</a>
+      <a href="${href.plate(row.standalone)}">STANDALONE PLATE ↗</a>
     </div>
     <atlas-plate>${unsafeHTML(fragment)}</atlas-plate>
   `;
@@ -211,16 +213,23 @@ interface Job {
   active: string;
 }
 
+const verdictOnly = (path: string): Job => ({
+  path,
+  title: '',
+  active: '',
+  content: galleryContent,
+});
+
 const jobs: Job[] = [
   {
-    path: `${BASE}`,
-    title: 'The Altitude Atlas — Drawing Set',
+    path: href.gallery,
+    title: TITLES.gallery,
     active: 'gallery',
     content: galleryContent,
   },
   {
-    path: `${BASE}about`,
-    title: 'About — The Altitude Atlas',
+    path: href.about,
+    title: TITLES.about,
     active: 'about',
     content: () =>
       proseContent(
@@ -229,8 +238,8 @@ const jobs: Job[] = [
       ),
   },
   {
-    path: `${BASE}megacanvas`,
-    title: 'The Megacanvas — The Altitude Atlas',
+    path: href.megacanvas(),
+    title: TITLES.megacanvas,
     active: 'megacanvas',
     content: () =>
       proseContent(
@@ -239,13 +248,17 @@ const jobs: Job[] = [
           `${String(manifest.sheets.length)} FRAGMENTS`,
       ),
   },
-  // Verdict-only: /app/office is a redirect, and /app (no slash) a redirect
-  // to the gallery. Neither gets a page; both get a _redirects line.
-  { path: `${BASE}office`, title: '', active: '', content: galleryContent },
-  { path: MOUNT, title: '', active: '', content: galleryContent },
+  // Verdict-only: /office is a redirect, a bare mount (when the mount is not
+  // the root) redirects to the gallery, and a lowercase sheet id redirects
+  // to its cased page. None gets a page; each gets a _redirects line.
+  verdictOnly(`${BASE}office`),
+  ...(MOUNT === BASE ? [] : [verdictOnly(MOUNT)]),
+  ...manifest.sheets
+    .filter((row) => row.id !== row.num)
+    .map((row) => verdictOnly(href.sheet(row.id))),
   ...manifest.sheets.map((row) => ({
-    path: sheetHref(row),
-    title: `${row.title} — Sheet ${row.num} · The Altitude Atlas`,
+    path: href.sheet(row.num),
+    title: sheetTitle(row),
     active: row.num,
     content: () => sheetContent(row),
   })),
@@ -286,12 +299,12 @@ writeFile(
       ),
     ),
   ),
-  'Not in the set — The Altitude Atlas',
+  TITLES.notFound,
 );
 
-// SPA fallback for anything the prerender did not write a file for.
 // No SPA catch-all: every route the mount claims has its own file, and
-// anything else must reach 404.html with a real 404 status.
+// anything else must reach 404.html with a real 404 status. stage-site.mjs
+// appends the site-level rules (the flat set's old filenames, /app/*).
 writeFileSync(join(DIST, '_redirects'), `${redirects.join('\n')}\n`);
 
 console.log(

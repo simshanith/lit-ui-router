@@ -36,7 +36,7 @@ let cytoscapeLoaded: Promise<unknown> | null = null;
  */
 export function loadCytoscape(): Promise<unknown> {
   cytoscapeLoaded ??= import('cytoscape').then((module) => {
-    (globalThis as Record<string, unknown>)['cytoscape'] = module.default;
+    (globalThis as Record<string, unknown>).cytoscape = module.default;
     return module.default;
   });
   return cytoscapeLoaded;
@@ -66,7 +66,7 @@ export function onXrefClick(event: MouseEvent): void {
   const anchor = (event.target as Element | null)?.closest?.(
     'a.xref',
   ) as HTMLAnchorElement | null;
-  const num = anchor?.dataset['sheet'];
+  const num = anchor?.dataset.sheet;
   if (!anchor || !num) return;
   event.preventDefault();
   anchor.dispatchEvent(

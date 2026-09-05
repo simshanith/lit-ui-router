@@ -9,8 +9,9 @@
  *
  * What it adds, and which router hook each piece uses:
  *   view-transitions.ts  slideshow between sheets — onBefore (snapshot) and
- *                        transition.promise + two frames (release)
- *   keyboard.ts          ←/→ walk the set — no hook; reads router.globals
+ *                        transition.promise + lit updateComplete (release)
+ *   view-rendered.ts     the missing "view has re-rendered" promise, shared
+ *   keyboard.ts          ←/→ walk the set, focus follows — no hook; reads router.globals
  *   megacanvas-pan.ts    pan/zoom the reel to ?at=<sheet> — onSuccess
  *   analytics.ts         a page_view per navigation, if the page has gtag — onSuccess
  */

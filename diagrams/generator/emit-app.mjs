@@ -1,10 +1,11 @@
 // EMIT-APP — the drawing set, cut into fragments a router can mount.
 //
-// The atlas ships as ~21 standalone HTML pages. `diagrams/app/` is the same
+// The atlas ships as ~22 standalone HTML pages. `diagrams/app/` is the same
 // set as a lit-ui-router single-page app, and this module is the seam: it
 // writes one CHROME-LESS fragment per sheet plus a manifest, so nothing in
 // the app is transcribed by hand. Every string here comes out of the same
-// sheet objects build.mjs already renders.
+// sheet objects build.mjs already renders — including each sheet's standalone
+// filename, so the app can link back to the flat set without hand-typing.
 //
 // Written, relative to build.mjs's OUT argument (the repo's diagrams/):
 //   app/public/sheets/<id>.html   one fragment per sheet
@@ -13,12 +14,11 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, TOTAL, sheetSection } from './chrome.mjs';
+// The app's one base constant (node strips the types). Fragment hrefs are
+// absolute so a prerendered page links correctly before any JS runs.
+import { BASE } from '../app/src/routes.ts';
 
 const GEN = new URL('.', import.meta.url).pathname;
-
-// The app is served from /app/ on the staged site; fragment hrefs are absolute
-// so a prerendered page links correctly before any JS runs.
-const BASE = '/app/';
 
 // --- which generator module draws which sheet ------------------------------
 // The plate list below is derived by walking these entry modules' imports, so
@@ -129,9 +129,10 @@ const CDN_SCRIPT = /\s*<script defer src="https:\/\/cdnjs\.cloudflare\.com\/[^"]
  * @param {Array<object>} args.sheets      the SVG sheets, in build.mjs's order
  * @param {Array<[object, () => string]>} args.interactive sheet + its own renderer
  * @param {string} args.outDir             build.mjs's OUT argument
+ * @param {(sheet: object) => string} args.fname  build.mjs's standalone filename rule
  * @returns {number} fragments written
  */
-export function emitApp({ sheets, interactive, outDir }) {
+export function emitApp({ sheets, interactive, outDir, fname }) {
   const rows = [...sheets.map((s) => [s, null]), ...interactive].sort(([a], [b]) =>
     bySheet(a.num, b.num),
   );
@@ -158,6 +159,7 @@ export function emitApp({ sheets, interactive, outDir }) {
       form: sheet.form ?? '',
       rev: sheet.rev ?? 'A',
       file: `sheets/${id}.html`,
+      standalone: fname(sheet),
       interactive: Boolean(render),
       needsCytoscape,
       plates: platesOf(MODULE[String(sheet.num)]),

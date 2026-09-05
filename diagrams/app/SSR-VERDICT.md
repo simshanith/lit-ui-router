@@ -6,7 +6,12 @@ this app actually did; the probes that produced the quoted output run on every
 `npm run build` (`prerender.ts`, `probeClientTemplates`).
 
 Versions: `ui-router-server@0.1.1`, `lit-ui-router@1.11.2`, `@uirouter/core@6.1.2`,
-`lit@3.3.3`, `@lit-labs/ssr@4.1.0`, `vite@8.2.2`, node 24.18.0.
+`ui-router-navigation-location-plugin@0.3.0`, `lit@3.3.3`, `@lit-labs/ssr@4.1.0`,
+`vite@8.2.2`, node 24.18.0.
+
+Layout note: the app was first deployed under `/app/` and moved to the site
+root on 2026-09-05 (the flat set now lives under `/set/`). Paths below are the
+current ones; where a finding only made sense under a prefix it says so.
 
 ---
 
@@ -26,7 +31,7 @@ a build-time prerenderer needs. The split this app landed on:
 
 | Question                                   | Answered by             |
 | ------------------------------------------ | ----------------------- |
-| does `/app/sheet/12i` exist, and at what status? | `ui-router-server`      |
+| does `/sheet/12i` exist, and at what status? | `ui-router-server`      |
 | what bytes go in `<div id="root">`?        | `@lit-labs/ssr` + my own server templates |
 
 That division works, and it is a good division. It is also not what a reader of
@@ -45,26 +50,43 @@ Good, and small enough to hold in your head.
   server imports for its mounts. There is no drift because there is no copy.
 - `serverRouterPlugin` (`src/vite.ts:47`) is the best thing in the package for a
   static-SPA author: `vite preview` answered exactly what the deploy will —
-  verified with curl against this app's own build:
+  re-verified with curl against this app's own build at the root (2026-09-05;
+  preview now also serves the prerendered file for a shell verdict, so the
+  `<title>` of `/sheet/7/` is the sheet's, not the shell's):
 
   ```
-  /app/sheet/7   →  200
-  /app/office    →  302  Location: /app/sheet/14
-  /app/sheet/99  →  404   (url kept)
-  /app           →  302  Location: /app/
+  /sheet/7        →  200   (the prerendered page)
+  /sheet/7/       →  200   (same page — strict: false on both sides)
+  /office         →  302   Location: /sheet/14
+  /sheet/2a       →  302   Location: /sheet/2A
+  /sheet/99       →  404   (url kept; the shell, at 404)
+  /no-such-thing  →  404
+  /megacanvas?at=7 → 200
+  /app/sheet/7    →  404   (the /app/* → /:splat 301 is a Pages _redirects
+                            rule that stage-site.mjs adds; preview has no
+                            site-level rules)
   ```
 
-- One documented sharp edge I hit anyway: **a bare mount base resolves the empty
-  subpath and is `notFound` unless you supply a root pattern**
-  (`src/index.ts:349-351`). `/app` 404ing while `/app/` worked is a confusing
-  first ten minutes. One `redirects: [{ pattern: /^$/, to: 'atlas.gallery' }]`
-  fixes it. It would be better as a default, or at least as a construction-time
-  warning.
+- One documented sharp edge I hit anyway, back when the app was mounted at
+  `/app`: **a bare mount base resolves the empty subpath and is `notFound`
+  unless you supply a root pattern** (`src/index.ts:349-351`). `/app` 404ing
+  while `/app/` worked is a confusing first ten minutes. One
+  `redirects: [{ pattern: /^$/, to: 'atlas.gallery' }]` fixes it (the rule is
+  still in `routes.ts`, inert at a root mount). It would be better as a default,
+  or at least as a construction-time warning.
+- A second edge, found only on the deployed site: **static hosts add a trailing
+  slash**. Cloudflare Pages serves `sheet/7/index.html` and 308s `/sheet/7` onto
+  `/sheet/7/`; `@uirouter/core`'s default `strictMode` rejects the slash, so
+  every prerendered deep link booted into `notFound` while `vite preview`
+  (which does not 308) looked fine. The fix is two lines —
+  `urlService.config.strictMode(false)` in the browser and
+  `config: { strict: false }` on the mount — but nothing pointed at it, and
+  the prerender recipe writes exactly the directory layout that triggers it.
 
 ### The finding I did not expect
 
 **The projection is of PATTERNS, not of existence.** My client route is
-`/sheet/:num`. `/app/sheet/99` matches that pattern perfectly, so the honest
+`/sheet/:num`. `/sheet/99` matches that pattern perfectly, so the honest
 verdict is `shell`/200 — and the app then renders its in-router 404 at a URL the
 server just told the world was fine. That is precisely the soft-404 the package
 exists to abolish, reintroduced by the shape of my own url.
@@ -77,8 +99,10 @@ an alternation built from data the server side has on disk.
 url: `/sheet/{num:(?:${alternates.join('|')})}`;
 ```
 
-With 21 sheet ids in that alternation, `/app/sheet/99` became a real 404 and
-`/app/sheet/12i` stayed a 200. Nothing in the docs pointed at this; the
+With 22 sheet ids in that alternation, `/sheet/99` became a real 404 and
+`/sheet/12i` stayed a 200 (and, since the ids are cased, `/sheet/2a` is a
+redirect rule to `/sheet/2A` in the same mount — one directory per sheet on
+disk, one canonical url). Nothing in the docs pointed at this; the
 "HTTP-semantics SEO" pitch would be much stronger with a section on it, because
 **every `:id` route in every app has this problem by default**.
 
@@ -181,7 +205,17 @@ Everything that is not a router primitive:
    inserted with `innerHTML`.
 4. **A narrowed param for the server mount** (§2), built from the manifest.
 5. **`shouldHandle` overridden** in the Vite plugin to the html-Accept
-   heuristic, so preview judges navigations and not asset fetches.
+   heuristic, so preview judges navigations and not asset fetches; and
+   `serveShell` overridden to serve the prerendered `<subpath>/index.html`
+   when the build wrote one, so preview and Pages serve the same bytes.
+6. **`strict: false` on both sides** (§2), because the prerender's own
+   directory layout makes the host add a slash.
+7. **A `navigate` interceptor for the Navigation API plugin** (`src/router.ts`).
+   Not an SSR matter, but found by the same pass: the plugin calls
+   `navigation.navigate()` and registers no `navigate` listener of its own, so
+   without `event.intercept()` in the app every router-driven navigation is a
+   cross-document load — the SPA reloads on each click and the prerendered
+   page is what you see. See ask 9.
 
 ## 5. Concrete package-level asks
 
@@ -213,16 +247,23 @@ Ordered by how much each would have saved me.
    `renderShell(verdict, path) => string` callback would be ~60 lines in the
    package and would delete ~120 from every consumer. It also keeps the
    "verdict engine, not a framework" line intact: the caller still renders.
-7. **`lit-ui-router`: a hook for "the view has re-rendered."** Unrelated to SSR
+7. **`lit-ui-router`: document "the view has re-rendered."** Unrelated to SSR
    but found in the same build. `document.startViewTransition()` needs a promise
    that resolves when the DOM has changed. `onSuccess` fires when the
    *transition* succeeded and `<ui-view>` swaps its component in a lit update
    *after* that, so resolving on `onSuccess` cross-fades to the old content.
-   `src/experimental/view-transitions.ts` releases on
-   `transition.promise` + two animation frames + a 900 ms cap, which is a guess
-   wearing a seatbelt. An `onViewRendered` hook — or simply exposing
-   `updateComplete` on `<ui-view>` — would make View-Transitions integration a
-   three-line recipe instead of a comment block.
+   The first cut of `src/experimental/view-transitions.ts` released on
+   `transition.promise` + two animation frames + a 900 ms cap — and that froze
+   the deployed site for four seconds per sheet, because rendering is
+   suspended while the snapshot is held, frames never fire, and the browser's
+   DOM-update timeout was the only release. The answer was already in the
+   package: `<ui-view>` is a `LitElement`, so `transition.promise` then
+   `updateComplete` on every `<ui-view>` (and on the element it rendered) is
+   the exact moment (`src/experimental/view-rendered.ts`; `ready` now resolves
+   in ~15 ms). It deserves a line in the docs — "await
+   `transition.promise`, then each `<ui-view>`'s `updateComplete`" — and the
+   same recipe fixed a second bug in the same layer: polling the DOM by frame
+   after `onSuccess` finds the *outgoing* view's element first.
 8. **Types: `LitStateDeclaration<T>`'s resolves generic is hard to use.** A view
    typed `RoutedLitTemplate<{ manifest: Manifest }>` is not assignable to
    `LitStateDeclaration`'s default `Record<string, any>` — parameter
@@ -230,6 +271,33 @@ Ordered by how much each would have saved me.
    generic. The fix a consumer has to find is "declare the resolves type as an
    **object type alias with all members optional**". Worth a docs line, or a
    looser default.
+9. **`ui-router-navigation-location-plugin@0.3.0`: intercept your own
+   navigations, or say in the Quick Start that the app must.** Found by a
+   Playwright pass against the deployed site: with the plugin installed per
+   its README (`router.plugin(navigationLocationPlugin)` and nothing else),
+   every `uiSref` click was a full document load. The plugin's `_set`
+   (`src/index.ts:167-183`) calls `navigation.navigate(fullUrl, { info,
+   history })` and the service registers only a `currententrychange` listener
+   (`src/index.ts:90-94`); no `navigate` listener, no `event.intercept()`. A
+   same-origin `navigate()` that nobody intercepts is a cross-document
+   navigation, so the "SPA" reloads on every click — silently, since the
+   prerendered page it lands on looks right. The README's "Navigation event
+   interception" section presents `event.intercept()` as an optional feature
+   for analytics and view transitions; it is in fact the line that makes the
+   plugin a location plugin at all (the plugin's own browser specs install
+   exactly such a catch-all interceptor before every test —
+   `src/specs/real-navigation.ts:16-23` — and the flagship sample app wires
+   one in `apps/sample-app-shared/src/router.config.ts:77-91`). Either
+   intercept `isUIRouterNavigateEvent` navigations inside the service by
+   default (an opt-out for apps that want the cross-document behaviour), or
+   move the listener into the Quick Start as required setup. This app wires
+   the listener in `src/router.ts`.
+10. **`ui-router-server` docs: a "static hosts add a slash" note.** The
+    prerender recipe (`<subpath>/index.html`) is the layout Pages, Netlify and
+    S3-style hosts 308 onto a trailing slash, and core's default `strictMode`
+    then rejects every deep link. `strict: false` on the mount and
+    `strictMode(false)` in the browser is the pairing; the prerender adapter
+    from ask 6 should default to it.
 
 ## 6. Verdict, in one paragraph
 

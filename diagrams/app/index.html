@@ -3,14 +3,16 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <!-- pushState under a subdirectory: the router reads its base from here. -->
-    <base href="/app/" />
+    <!-- The location plugins read their base from here. %BASE_URL% is vite's
+         html env replacement of `base`, which vite.config.ts derives from
+         src/routes.ts's MOUNT — the one base constant. -->
+    <base href="%BASE_URL%" />
     <title>The Altitude Atlas — Drawing Set</title>
     <meta
       name="description"
       content="The Altitude Atlas as a single-page drawing set: twenty-one sheets of the lit-ui-router codebase, routed with lit-ui-router."
     />
-    <link rel="stylesheet" href="/app/sheets/atlas.css" />
+    <link rel="stylesheet" href="%BASE_URL%sheets/atlas.css" />
     <style>
       /* The app chrome. Everything below leans on the tokens atlas.css
          declares, so the index reads as part of the drawing set. */
@@ -106,6 +108,10 @@
       }
       .rail-links a.is-active .t {
         color: var(--ink);
+      }
+      .rail-top a.rail-out {
+        color: var(--ink-soft);
+        margin-top: 4px;
       }
       .rail-sec {
         font-family: var(--mono);

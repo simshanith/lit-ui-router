@@ -11,6 +11,7 @@ import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
 import type { Manifest, SheetRow } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
+import { href } from './routes.ts';
 import type { ThemeChoice } from './theme.ts';
 import { applyTheme, readTheme } from './theme.ts';
 
@@ -104,14 +105,16 @@ function rail(manifest: Manifest | undefined): TemplateResult {
     <nav class="rail" aria-label="drawing set">
       <div class="rail-head">
         <span class="kicker">A DRAWING SET · lit-ui-router</span>
-        <h1><a ${uiSref('atlas.gallery')} href="/app/">THE ALTITUDE ATLAS</a></h1>
+        <h1><a ${uiSref('atlas.gallery')} href="${href.gallery}">THE ALTITUDE ATLAS</a></h1>
       </div>
       <div class="rail-top">
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.gallery')} href="/app/">INDEX</a>
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.megacanvas')} href="/app/megacanvas"
+        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.gallery')} href="${href.gallery}">INDEX</a>
+        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.megacanvas')} href="${href.megacanvas()}"
           >MEGACANVAS</a
         >
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="/app/about">ABOUT</a>
+        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${href.about}">ABOUT</a>
+        <!-- The flat set is plain pages beside the app, not a state: a real link. -->
+        <a class="rail-out" href="${href.set}">THE FLAT SET ↗</a>
       </div>
       <atlas-themer></atlas-themer>
       <p class="rail-sec">SHEETS — ASCENT ORDER</p>
@@ -121,7 +124,7 @@ function rail(manifest: Manifest | undefined): TemplateResult {
             <a
               ${uiSrefActive(ACTIVE)}
               ${uiSref('atlas.sheet', { num: sheet.num })}
-              href="/app/sheet/${sheet.num}"
+              href="${href.sheet(sheet.num)}"
             >
               <span class="n">${sheet.num}</span><span class="t">${sheet.title}</span>
             </a>
@@ -173,7 +176,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
             class="card"
             ${uiSrefActive(ACTIVE)}
             ${uiSref('atlas.sheet', { num: sheet.num })}
-            href="/app/sheet/${sheet.num}"
+            href="${href.sheet(sheet.num)}"
           >
             <span class="n">SHEET ${sheet.num} · REV ${sheet.rev}</span>
             <h3>${sheet.title}</h3>
@@ -213,22 +216,23 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   const [prev, next] = neighbours(manifest, sheet);
   return html`
     <div class="crumb">
-      <a ${uiSref('atlas.gallery')} href="/app/">← INDEX</a>
+      <a ${uiSref('atlas.gallery')} href="${href.gallery}">← INDEX</a>
       ${prev
-        ? html`<a ${uiSref('atlas.sheet', { num: prev.num })} href="/app/sheet/${prev.num}"
+        ? html`<a ${uiSref('atlas.sheet', { num: prev.num })} href="${href.sheet(prev.num)}"
             >PREV · ${prev.num}</a
           >`
         : nothing}
       ${next
-        ? html`<a ${uiSref('atlas.sheet', { num: next.num })} href="/app/sheet/${next.num}"
+        ? html`<a ${uiSref('atlas.sheet', { num: next.num })} href="${href.sheet(next.num)}"
             >NEXT · ${next.num}</a
           >`
         : nothing}
       <a
         ${uiSref('atlas.megacanvas', { at: sheet.num })}
-        href="/app/megacanvas?at=${sheet.num}"
+        href="${href.megacanvas(sheet.num)}"
         >ON THE REEL</a
       >
+      <a href="${href.plate(sheet.standalone)}">STANDALONE PLATE ↗</a>
       <span
         >PLATES READ:
         ${sheet.plates.length > 0 ? sheet.plates.join(' · ') : 'NONE — DRAWN FROM PROSE'}</span
@@ -240,7 +244,7 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
               (num) =>
                 html`<a
                     ${uiSref('atlas.sheet', { num })}
-                    href="/app/sheet/${num}"
+                    href="${href.sheet(num)}"
                     >${num}</a
                   >&nbsp;`,
             )}</span
@@ -260,7 +264,7 @@ export const MegacanvasView: RoutedLitTemplate<MegacanvasResolves> = (props) => 
   const fragment = props?.resolves?.megacanvas;
   if (!fragment) return html`<p class="loading">ASSEMBLING THE MEGACANVAS…</p>`;
   return html`
-    <div class="crumb"><a ${uiSref('atlas.gallery')} href="/app/">← INDEX</a></div>
+    <div class="crumb"><a ${uiSref('atlas.gallery')} href="${href.gallery}">← INDEX</a></div>
     <atlas-plate .fragment=${fragment} .needsCytoscape=${true}></atlas-plate>
   `;
 };
@@ -294,10 +298,17 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>&lt;ui-view&gt;</code>; and the Navigation API location plugin with a
           <code>pushState</code> fallback.
         </p>
+        <h3>THE FLAT SET</h3>
+        <p>
+          The same drawings as the standalone pages they were first published as — the
+          gallery, the megacanvas and one page per sheet — are kept beside this app at
+          <a href="${href.set}"><code>${href.set}</code></a> as the version to compare
+          against. Every sheet here links to its standalone plate from its crumb.
+        </p>
         <h3>WHAT THE SERVER DOES</h3>
         <p>
           <code>ui-router-server</code> compiles <code>src/routes.ts</code> — the same
-          route table, projected as data — into a mount at <code>/app</code>. It runs in
+          route table, projected as data — into a mount at the site root. It runs in
           the Vite dev and preview servers, so a bad deep link answers 404 rather than 200,
           and it drives the build-time prerender: every route a
           <code>shell</code> verdict claims gets its own HTML file, redirect verdicts
@@ -333,7 +344,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
     <div class="notes">
       <p>
         No plate is filed under that number.
-        <a ${uiSref('atlas.gallery')} href="/app/">Back to the index</a>.
+        <a ${uiSref('atlas.gallery')} href="${href.gallery}">Back to the index</a>.
       </p>
     </div>
   </section>

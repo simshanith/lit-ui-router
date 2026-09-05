@@ -11,13 +11,16 @@
  * WHICH HOOK: `onSuccess`. Unlike the slideshow (see view-transitions.ts),
  * nothing here has to happen before the DOM changes — the reel is already
  * mounted and only its transform moves — so the latest hook is the right one.
- * The one wrinkle is the same one: `<ui-view>` renders after onSuccess, so on
- * FIRST entry the reel does not exist yet and this waits for it by frame
- * rather than by promise.
+ * The one wrinkle is the same one: `<ui-view>` renders after onSuccess, so
+ * on entry the reel does not exist yet. TRAP (found once navigation was
+ * actually in-app): polling the DOM by frame finds the OUTGOING sheet's
+ * <atlas-plate> first — it has children too — pans that, and the real reel
+ * then arrives with no transform. view-rendered.ts's `updateComplete` chain
+ * is the answer here as well: it settles once the arriving view's plate has
+ * rendered, so what it finds is the reel.
  */
 import type { UIRouterLit } from 'lit-ui-router';
-
-const MAX_WAIT_FRAMES = 90;
+import { viewRendered } from './view-rendered.ts';
 
 const reducedMotion = (): boolean =>
   window.matchMedia('(prefers-reduced-motion: reduce)').matches;
@@ -51,19 +54,13 @@ function panTo(stage: HTMLElement, reel: HTMLElement, at: string): void {
   hud(stage, `PANNED TO SHEET ${at} · ${String(Math.round(scale * 100))}%`);
 }
 
-// On a DEEP LINK, `.content` itself does not exist yet when onSuccess fires:
-// the shell's ui-view renders after the hook. So the stage is looked up by
-// frame too, not just the reel inside it.
-function whenReady(at: string, frames = 0): void {
+async function arrive(at: string): Promise<void> {
+  await viewRendered();
   const stage = document.querySelector<HTMLElement>('.content');
   const reel = stage?.querySelector<HTMLElement>('atlas-plate');
-  if (stage && reel && reel.childElementCount > 0) {
-    stage.classList.add('mega-stage');
-    panTo(stage, reel, at);
-    return;
-  }
-  if (frames > MAX_WAIT_FRAMES) return;
-  requestAnimationFrame(() => whenReady(at, frames + 1));
+  if (!stage || !reel || reel.childElementCount === 0) return;
+  stage.classList.add('mega-stage');
+  panTo(stage, reel, at);
 }
 
 function leave(): void {
@@ -82,6 +79,6 @@ export function installMegacanvasPan(router: UIRouterLit): void {
       return;
     }
     if (reducedMotion()) window.scrollTo({ top: 0 });
-    whenReady(String(router.globals.params['at'] ?? ''));
+    void arrive(String(router.globals.params.at ?? ''));
   });
 }

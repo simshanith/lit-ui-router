@@ -6,10 +6,14 @@ import { pushStateLocationPlugin } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router';
 import type { LitStateDeclaration } from 'lit-ui-router';
-import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
+import {
+  isUIRouterNavigateEvent,
+  navigationLocationPlugin,
+} from 'ui-router-navigation-location-plugin';
 import { urlOf } from './routes.ts';
 import type { Manifest, SheetRow } from './manifest.ts';
 import { findSheet, loadFragment, loadManifest } from './manifest.ts';
+import { titleFor } from './titles.ts';
 import {
   AboutView,
   GalleryView,
@@ -38,10 +42,10 @@ export const states: LitStateDeclaration[] = [
         token: 'sheet',
         deps: ['manifest', '$transition$'],
         resolveFn: (manifest: Manifest, transition: Transition): SheetRow => {
-          const row = findSheet(manifest, String(transition.params()['num']));
+          const row = findSheet(manifest, String(transition.params().num));
           // The onBefore guard below has already turned an unknown number
           // into a redirect; this only keeps the type honest.
-          if (!row) throw new Error(`no sheet ${String(transition.params()['num'])}`);
+          if (!row) throw new Error(`no sheet ${String(transition.params().num)}`);
           return row;
         },
       },
@@ -81,27 +85,59 @@ export const states: LitStateDeclaration[] = [
 export function createRouter(): UIRouterLit {
   const router = new UIRouterLit();
   // The Navigation API where it exists, pushState everywhere else — the
-  // pairing the location-plugins guide recommends. Both produce /app/sheet/7.
-  router.plugin(
-    typeof window !== 'undefined' && 'navigation' in window
-      ? navigationLocationPlugin
-      : pushStateLocationPlugin,
-  );
+  // pairing the location-plugins guide recommends. Both produce /sheet/7.
+  const navigationApi = typeof window !== 'undefined' && 'navigation' in window;
+  router.plugin(navigationApi ? navigationLocationPlugin : pushStateLocationPlugin);
+
+  // CONSUMER FINDING: the Navigation API plugin calls navigation.navigate()
+  // and leaves interception to the app — the sample app wires the same
+  // listener. Without it, every router-driven navigate() is a cross-document
+  // load: the SPA reloads on each click, the view transition never runs.
+  if (navigationApi) {
+    window.navigation.addEventListener('navigate', (event) => {
+      if (!event.canIntercept || !isUIRouterNavigateEvent(event)) return;
+      event.intercept({ handler: () => Promise.resolve() });
+    });
+  }
+
+  // Cloudflare Pages serves `<subpath>/index.html` and 308s `/sheet/7` onto
+  // `/sheet/7/`, so a trailing slash must match — core's default strict mode
+  // would boot every prerendered deep link into notFound. The server mount
+  // (routes.ts) is compiled with the same `strict: false`.
+  router.urlService.config.strictMode(false);
 
   for (const state of states) router.stateRegistry.register(state);
 
   // An unknown sheet number is a miss, not a broken resolve: redirect to the
-  // url-less notFound state WITHOUT moving the address bar.
+  // url-less notFound state WITHOUT moving the address bar. A miscased
+  // number ('2a') is the sheet under its canonical id: redirect there, so
+  // the url, the rail's uiSrefActive and the prerendered directory agree.
   router.transitionService.onBefore({ to: 'atlas.sheet' }, async (transition) => {
     const manifest = await loadManifest();
-    if (findSheet(manifest, String(transition.params()['num']))) return true;
-    return router.stateService.target('atlas.notFound', undefined, {
-      location: false,
-    });
+    const num = String(transition.params().num);
+    const row = findSheet(manifest, num);
+    if (!row) {
+      return router.stateService.target('atlas.notFound', undefined, {
+        location: false,
+      });
+    }
+    if (row.num !== num) {
+      return router.stateService.target(
+        'atlas.sheet',
+        { ...transition.params(), num: row.num },
+        { location: 'replace' },
+      );
+    }
+    return true;
   });
 
-  router.transitionService.onSuccess({}, () => {
+  router.transitionService.onSuccess({}, (transition) => {
     window.scrollTo({ top: 0 });
+    // The prerendered pages carry these titles; the SPA keeps them current.
+    const to = transition.to().name;
+    const sheet =
+      to === 'atlas.sheet' ? (transition.injector().get('sheet') as SheetRow) : undefined;
+    document.title = titleFor(to, sheet);
   });
 
   router.urlService.rules.initial({ state: 'atlas.gallery' });

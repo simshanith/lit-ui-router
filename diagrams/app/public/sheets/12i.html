@@ -1,7 +1,7 @@
 <section class="sheet rg" id="sheet-12i" aria-label="Sheet 12i: THE REGISTER, WALKED">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">SHEET 12i / 14</span></div>
   <h2 class="sheet-title">THE REGISTER, WALKED</h2>
-  <p class="sheet-sub">ALTITUDE 3¼ — <a class="xref" data-sheet="12" href="/app/sheet/12">sheet 12</a>'s plate, live under the pointer · the whole ci graph carried node by node · 605 NODES · 183 RUN A COMMAND · 1,424 EDGES · 99 JOIN TWO REAL TASKS · surveyed at origin/main @ b2338d0 (commit 2026-09-04) · turbo 2.10.11</p>
+  <p class="sheet-sub">ALTITUDE 3¼ — <a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a>'s plate, live under the pointer · the whole ci graph carried node by node · 605 NODES · 183 RUN A COMMAND · 1,424 EDGES · 99 JOIN TWO REAL TASKS · surveyed at origin/main @ b2338d0 (commit 2026-09-04) · turbo 2.10.11</p>
   <style>
 .rg { max-width: 1300px; margin: 0 auto 40px; }
 .rg-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
@@ -245,7 +245,7 @@
 <p><strong>Method — what is drawn, and from where.</strong> Everything on this page comes out of
 <code>diagrams/data/census-plate.json</code>, the checked-in plate <code>generator/census-plate.mjs</code>
 writes from <code>turbo run ci --dry=json</code> against a materialized, <em>installed</em> archive of
-the ref — surveyed at origin/main @ b2338d0 (commit 2026-09-04) · turbo 2.10.11. <a class="xref" data-sheet="12" href="/app/sheet/12">Sheet 12</a> reads that plate's cell codes and tallies; this sheet reads the two fields the
+the ref — surveyed at origin/main @ b2338d0 (commit 2026-09-04) · turbo 2.10.11. <a class="xref" data-sheet="12" href="/sheet/12">Sheet 12</a> reads that plate's cell codes and tallies; this sheet reads the two fields the
 plate gained for it, <code>graphNodes</code> and <code>graphEdges</code>: one <code>(package, task)</code> pair
 per line, sorted by task id, and one <code>[dependency, dependent]</code> index pair per line into that array.
 The whole graph is carried — all 605 nodes and all 1,424 edges, unaggregated — and it is
@@ -257,11 +257,11 @@ an actual command. A <em>phantom</em> is a node whose command is the literal <co
 a placeholder turbo mints so that a <code>^task</code> chain has something in that package to hang an edge on.
 The default view here is the real subgraph alone — 183 nodes and the 99 edges that join two of
 them. <code>PHANTOM SHROUD</code> floods in the other 422 nodes and 1,325 edges, faint, and
-that flood <em>is</em> the 69.8% figure <a class="xref" data-sheet="12" href="/app/sheet/12">sheet 12</a> prints: the share of this graph a maintainer reads in
+that flood <em>is</em> the 69.8% figure <a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a> prints: the share of this graph a maintainer reads in
 <code>--graph</code> output that runs nothing at all. Untick it and the real subgraph comes back exactly as it
 was — the shroud is a visibility swap over one fixed layout, never a re-layout.</p>
 <p><strong>Layout — ranked from the edges, computed at build time.</strong> Rows are the 33 packages in
-<a class="xref" data-sheet="12" href="/app/sheet/12">sheet 12</a>'s own block order (publishable, apps, docs and examples, tools, root), so the two plates read the same
+<a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a>'s own block order (publishable, apps, docs and examples, tools, root), so the two plates read the same
 way down the page. Columns are the 50 task names, and their order is not editorial: each column is
 ranked by the longest dependency depth any of its nodes reaches, which sorts the graph into its real stages —
 gather, emit, check, prove, roll-up — out of the edge list rather than out of a hand-written list. Positions are
@@ -275,14 +275,14 @@ semi-opaque wall washed over it, so the frame reads through and the themed node 
 task is a works shed with a lit door. A phantom is the plot without the building: a dashed frame, no wall, no
 roof — it cannot be mistaken for work at any zoom. Both palettes are baked at build time and swapped with the
 page's theme, the survey office's pattern exactly.</p>
-<p><strong>What this shows that the plate cannot.</strong> <a class="xref" data-sheet="12" href="/app/sheet/12">Sheet 12</a> proves the phantom share as a ratio; here it
+<p><strong>What this shows that the plate cannot.</strong> <a class="xref" data-sheet="12" href="/sheet/12">Sheet 12</a> proves the phantom share as a ratio; here it
 is a shape. With the shroud off, the 183 real tasks fall into a handful of dense columns and the
 99 real edges are sparse enough to trace one by one — the deepest all-real run is 7
 <code>test</code> tasks, serialized by <code>^test</code> and consuming nothing from each other. With the shroud
 on, the same picture disappears into 605 nodes and 1,424 edges of scaffolding. Hover any
 building for its package, its task, whether it runs, whether a cache hit would be wrong (0 nodes in
 this graph are <code>cache:false</code> — the repo's uncacheable tier is outside every <code>ci:*</code> graph by
-design, which is <a class="xref" data-sheet="12" href="/app/sheet/12">sheet 12</a>'s finding, here as an empty field), its in and out degree in both readings, and the
+design, which is <a class="xref" data-sheet="12" href="/sheet/12">sheet 12</a>'s finding, here as an empty field), its in and out degree in both readings, and the
 full list of what it waits on.</p>
 <p><strong>What is editorial.</strong> The row blocks and their order; the pitch, the sprite drawing and the
 colours; this prose. The nodes, the edges, the column ranking, every count and every name are the plate's.</p>

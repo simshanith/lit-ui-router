@@ -1,13 +1,24 @@
-// Stage the atlas for static hosting: copy the rendered set into dist/ with
-// the gallery doubled as index.html, and vendor the two CDN scripts so the
-// deployed site carries no external origin. Run from diagrams/:
+// Stage the atlas for static hosting. Run from diagrams/:
 //   node generator/stage-site.mjs
-// Committed pages keep their cdnjs URLs (the Artifact host's CSP allows only
-// that origin); the rewrite below touches the STAGED copies alone. Vendored
-// bytes are pin-verified by sha256 — a hash mismatch aborts the stage.
-import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+//
+// The routed app owns the site root: dist/ IS app/dist (the prerendered
+// pages, assets, manifest.json, the sheets/ fragments, 404.html and the
+// app's own _redirects). The flat drawing set — every diagrams/*.html — is
+// staged beside it under dist/set/, with the gallery doubled as
+// set/index.html and the two CDN scripts vendored into set/vendor/ so the
+// deployed site carries no external origin. Committed pages keep their cdnjs
+// URLs (the Artifact host's CSP allows only that origin); the rewrite below
+// touches the STAGED copies alone. Vendored bytes are pin-verified by sha256
+// — a hash mismatch aborts the stage.
+//
+// _redirects, merged at the root (Cloudflare Pages reads only that one):
+//   the app's own lines (prerender.ts: /office, the lowercase sheet ids)
+//   /<old flat filename>  → /set/<same file>  301   (every page but index.html)
+//   /app, /app/*          → /, /:splat         301   (the app's old mount)
+import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
+import { BASE, SET } from '../app/src/routes.ts';
 
 const VENDOR = [
   {
@@ -22,10 +33,22 @@ const VENDOR = [
   },
 ];
 
+// Where the app used to be mounted; old links keep resolving through _redirects.
+const OLD_APP_MOUNT = '/app';
+
 const root = new URL('..', import.meta.url).pathname;
 const dist = join(root, 'dist');
+const appDist = join(root, 'app', 'dist');
+if (!existsSync(join(appDist, 'index.html')))
+  throw new Error('no app/dist — run `npm install && npm run build` in diagrams/app first');
+if (BASE !== '/') throw new Error(`stage-site expects the app at the root, not ${BASE}`);
+
 rmSync(dist, { recursive: true, force: true });
-mkdirSync(join(dist, 'vendor'), { recursive: true });
+cpSync(appDist, dist, { recursive: true });
+
+// --- the flat set, under /set/ --------------------------------------------
+const set = join(dist, SET.replace(/^\/|\/$/g, ''));
+mkdirSync(join(set, 'vendor'), { recursive: true });
 
 for (const { url, file, sha256 } of VENDOR) {
   const res = await fetch(url);
@@ -33,39 +56,36 @@ for (const { url, file, sha256 } of VENDOR) {
   const bytes = Buffer.from(await res.arrayBuffer());
   const got = createHash('sha256').update(bytes).digest('hex');
   if (got !== sha256) throw new Error(`${file}: sha256 ${got}, pinned ${sha256}`);
-  writeFileSync(join(dist, 'vendor', file), bytes);
+  writeFileSync(join(set, 'vendor', file), bytes);
 }
 
+// The pages sit in /set/ and the scripts in /set/vendor/, so the relative
+// path is the same one the old root layout used.
 const vendored = (html) =>
   VENDOR.reduce((s, { url, file }) => s.replaceAll(url, `./vendor/${file}`), html);
 
 const pages = readdirSync(root).filter((f) => f.endsWith('.html')).sort();
-for (const f of pages) writeFileSync(join(dist, f), vendored(readFileSync(join(root, f), 'utf8')));
-copyFileSync(join(dist, 'gallery.html'), join(dist, 'index.html'));
+for (const f of pages) writeFileSync(join(set, f), vendored(readFileSync(join(root, f), 'utf8')));
+writeFileSync(join(set, 'index.html'), readFileSync(join(set, 'gallery.html'), 'utf8'));
 
-// The routed set rides along at /app/ — vite's `base` is already /app/, and
-// its own dist carries the prerendered pages, _redirects and the fragments.
-// The static sheets stay exactly where they are.
-const appDist = join(root, 'app', 'dist');
-const staged = existsSync(appDist);
-if (staged) {
-  cpSync(appDist, join(dist, 'app'), { recursive: true });
-  // Cloudflare Pages only reads _redirects at the SITE root, and the app's
-  // rules are already absolute (/app/office -> /app/sheet/14), so lift it.
-  const nested = join(dist, 'app', '_redirects');
-  if (existsSync(nested)) {
-    writeFileSync(join(dist, '_redirects'), readFileSync(nested, 'utf8'));
-    rmSync(nested);
-  }
-}
+// --- _redirects, merged -----------------------------------------------------
+const appRules = readFileSync(join(dist, '_redirects'), 'utf8').trim();
+const legacy = [
+  // /index.html is NOT redirected: it is the app now.
+  ...pages.map((f) => `/${f} ${SET}${f} 301`),
+  `${OLD_APP_MOUNT} ${BASE} 301`,
+  `${OLD_APP_MOUNT}/* ${BASE}:splat 301`,
+];
+writeFileSync(join(dist, '_redirects'), `${[appRules, ...legacy].filter(Boolean).join('\n')}\n`);
 
-// Google Analytics, staged copies only — the SAME measurement id as the
-// flagship (one property, one stream: GA4 cookies live on .lit-ui-router.dev,
-// so a separate id would split users across the subdomains; slice the atlas
-// out with the Hostname dimension). The committed pages (the Artifact source)
-// never carry a tag. Under /app/ the router sends every page_view itself,
-// including the first (app/src/experimental/analytics.ts), so the config
-// there suppresses gtag's own initial one.
+// --- Google Analytics, staged copies only -----------------------------------
+// The SAME measurement id as the flagship (one property, one stream: GA4
+// cookies live on .lit-ui-router.dev, so a separate id would split users
+// across the subdomains; slice the atlas out with the Hostname dimension).
+// The committed pages (the Artifact source) never carry a tag. Everything
+// outside /set/ is the router's — it sends every page_view itself, including
+// the first (app/src/experimental/analytics.ts), so the config there
+// suppresses gtag's own. The flat pages under /set/ keep the default.
 const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_TRACKING_ID;
 const gaTag = (id, routed) => `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}'${routed ? ',{send_page_view:false}' : ''});</script>
@@ -73,25 +93,27 @@ const gaTag = (id, routed) => `<script async src="https://www.googletagmanager.c
 const walkHtml = (dir, out = []) => {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
     const p = join(dir, e.name);
-    if (e.isDirectory()) { if (e.name !== 'sheets') walkHtml(p, out); }
+    // sheets/ holds the chrome-less fragments the app fetches, not pages
+    if (e.isDirectory()) { if (p !== join(dist, 'sheets')) walkHtml(p, out); }
     else if (e.name.endsWith('.html')) out.push(p);
   }
   return out;
 };
-let tagged = 0;
+const tagged = { routed: 0, flat: 0 };
 if (GA_ID) {
   for (const p of walkHtml(dist)) {
-    // the static sheets are head-less (the Artifact host wraps them), so the tag leads the file
+    const routed = !p.startsWith(`${set}/`);
+    // the flat pages are head-less (the Artifact host wraps them), so the tag leads the file
     const html = readFileSync(p, 'utf8');
-    const tag = gaTag(GA_ID, p.startsWith(join(dist, 'app') + '/'));
+    const tag = gaTag(GA_ID, routed);
     writeFileSync(p, html.includes('</head>') ? html.replace('</head>', `${tag}</head>`) : tag + html);
-    tagged += 1;
+    tagged[routed ? 'routed' : 'flat'] += 1;
   }
 } else {
   console.warn('VITE_GOOGLE_ANALYTICS_TRACKING_ID missing — staging without analytics');
 }
 
-console.log(`staged ${pages.length} pages + index.html + ${VENDOR.length} vendored scripts → dist/${GA_ID ? ` · GA tag on ${tagged} pages` : ''}`);
-console.log(staged
-  ? 'staged the routed app → dist/app/ (run `npm run build` in app/ first to refresh it)'
-  : 'no app/dist — run `npm install && npm run build` in diagrams/app to include /app/');
+const routedPages = walkHtml(dist).filter((p) => !p.startsWith(`${set}/`)).length;
+console.log(`staged the routed app at ${BASE} → dist/ (${routedPages - 1} prerendered pages + 404.html + manifest + fragments)`);
+console.log(`staged the flat set at ${SET} → dist${SET} (${pages.length} pages + index.html + ${VENDOR.length} vendored scripts)`);
+console.log(`_redirects: ${appRules.split('\n').length} app rules + ${legacy.length} legacy rules (old filenames → ${SET}, ${OLD_APP_MOUNT}/* → ${BASE})${GA_ID ? ` · GA tag on ${tagged.routed} routed + ${tagged.flat} flat pages` : ''}`);

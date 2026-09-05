@@ -1,4 +1,6 @@
 /** The generated index of the drawing set (diagrams/generator/emit-app.mjs). */
+import { BASE } from './routes.ts';
+
 export interface SheetRow {
   id: string;
   num: string;
@@ -9,6 +11,8 @@ export interface SheetRow {
   form: string;
   rev: string;
   file: string;
+  /** The sheet's standalone page in the flat set (build.mjs's own filename). */
+  standalone: string;
   interactive: boolean;
   needsCytoscape: boolean;
   plates: string[];
@@ -24,8 +28,6 @@ export interface Manifest {
   generatedBy: string;
   sheets: SheetRow[];
 }
-
-export const BASE = '/app/';
 
 let pending: Promise<Manifest> | null = null;
 
@@ -45,7 +47,7 @@ export function primeManifest(manifest: Manifest): void {
 
 /** Sheet numbers are cased ('2A', '12i'); a url may not be. */
 export function findSheet(manifest: Manifest, num: string): SheetRow | undefined {
-  const wanted = String(num).toLowerCase();
+  const wanted = num.toLowerCase();
   return manifest.sheets.find((sheet) => sheet.id === wanted);
 }
 

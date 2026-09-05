@@ -45,7 +45,7 @@ for (const s of sheets) {
 // --- the interactive plates that have a standalone page of their own ---
 // Sheet 2B is a lane, not an SVG sheet, so it is written here rather than
 // through sheetSection(); it also rides in the gallery, like S14i and S7·3D.
-writeFileSync(join(OUT, `sheet-${sheet2b.num}-${sheet2b.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`),
+writeFileSync(join(OUT, fname(sheet2b)),
   page(`${sheet2b.title} — Sheet ${sheet2b.num} of ${TOTAL}`, sheet2bPage(), { desc: sheet2b.caption }));
 
 // Sheet 12i is the same arrangement one altitude up: sheet 12's register plate
@@ -113,6 +113,8 @@ const galCss = `
 .cover > * { position: relative; }
 .cover h1 { font-family: var(--mono); font-size: clamp(26px, 4.6vw, 44px); letter-spacing: 0.16em; margin: 18px 0 4px; }
 .cover .kicker, .cover .set { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover .alt { display: block; margin-top: 6px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover .alt a { color: var(--accent); }
 .stat-bar { display: flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--paper-2); }
 .stat-bar > div { padding: 8px 16px 10px; border-right: 1px solid var(--ink); flex: 1 1 auto; }
 .stat-bar > div:last-child { border-right: none; }
@@ -203,6 +205,7 @@ const cover = `<header class="cover">
   <span class="kicker">A DRAWING SET · AFTER A FORM SEEN IN THE WILD · lit-ui-router</span>
   <h1>THE ALTITUDE ATLAS</h1>
   <span class="set">SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES</span>
+  <span class="alt">THIS IS THE FLAT SET · THE SAME DRAWINGS ROUTED AS ONE lit-ui-router APP: <a href="/">THE ROUTED SET ↗</a></span>
   <div class="stat-bar" role="group" aria-label="set statistics">
     <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>
@@ -258,8 +261,11 @@ ${[...sheets, sheet1i, sheet2b, sheet12i].sort((a, b) => parseInt(a.num, 10) - p
 
 Static HTML pages, written by \`node generator/build.mjs .\` from this directory. The SVG sheets need nothing;
 the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
-\`generator/stage-site.mjs\` vendors into \`dist/\` for hosting. \`app/\` is the same set as a prerendered
-lit-ui-router app; \`build.mjs\` emits its fragments and manifest. Light theme is graphite-on-vellum; dark is cyanotype.
+\`generator/stage-site.mjs\` vendors for hosting. \`app/\` is the same set as a prerendered lit-ui-router
+app; \`build.mjs\` emits its fragments and manifest. On the published site the app owns the root
+(\`/\`, \`/sheet/7\`, \`/megacanvas\`) and this flat set is staged beside it under \`/set/\` as the version to
+compare against; the two link to each other (the app's rail and crumbs, the gallery's cover).
+Light theme is graphite-on-vellum; dark is cyanotype.
 Generated 2026-08-16 by Fable (Claude, AI).
 Every plate in \`data/\` — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass,
 plate 7A's test light included: \`generator/census-shadow.mjs\` re-meters it at the same ref. The cover's general survey — every
@@ -269,7 +275,7 @@ tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 `);
 
 // --- app/ — the same set, cut into fragments for the lit-ui-router SPA ---
-const appSheets = emitApp({ sheets, interactive: [[sheet1i, loopWalkedSection], [sheet2b, sheet2bPage], [sheet12i, register12iSection]], outDir: OUT });
+const appSheets = emitApp({ sheets, interactive: [[sheet1i, loopWalkedSection], [sheet2b, sheet2bPage], [sheet12i, register12iSection]], outDir: OUT, fname });
 
 // + 3: the three interactive lanes with a standalone page of their own, 1i, 2B and 12i
 console.log('built', sheets.length + 3, 'sheets + megacanvas + gallery + README →', OUT);

@@ -14,24 +14,26 @@
  *               have been kicked off, so a slow resolve would be captured
  *               inside the frozen old snapshot and the page would appear
  *               hung for the length of the fetch. onBefore is the right one.
- *   trans.promise + two frames — the release. This is the gap: ui-router has
- *               no "the view has been re-rendered" hook. `onSuccess` fires
- *               when the TRANSITION succeeded, and `<ui-view>` swaps its
- *               component in a lit update AFTER that, so resolving the view
- *               transition on onSuccess cross-fades to the OLD content. Two
- *               animation frames after `transition.promise` settles is the
- *               net that actually holds. A `onViewRendered`-style hook (or an
- *               awaitable `updateComplete` on `<ui-view>`) would remove the
- *               guesswork — see SSR-VERDICT.md's asks.
+ *   trans.promise + updateComplete — the release. This is the gap: ui-router
+ *               has no "the view has been re-rendered" hook. `onSuccess`
+ *               fires when the TRANSITION succeeded, and `<ui-view>` swaps
+ *               its component in a lit update AFTER that, so resolving the
+ *               view transition on onSuccess cross-fades to the OLD content.
+ *               view-rendered.ts awaits lit's own `updateComplete` on the
+ *               view hosts instead. A `onViewRendered`-style hook (or an
+ *               awaitable `updateComplete` on `<ui-view>`, which is what
+ *               this leans on) would make it a one-liner — see
+ *               SSR-VERDICT.md's asks.
  *
  * Everything here is skipped under `prefers-reduced-motion: reduce`.
  */
 import type { Transition } from '@uirouter/core';
 import type { UIRouterLit } from 'lit-ui-router';
 import { loadManifest } from '../manifest.ts';
+import { viewRendered } from './view-rendered.ts';
 
 /**
- * TWO TRAPS THE PLAYWRIGHT PASS FOUND, both worth knowing before you copy this:
+ * THREE TRAPS THE PLAYWRIGHT PASSES FOUND, all worth knowing before you copy this:
  *
  *  a. Every promise a `ViewTransition` exposes — `ready`, `finished`,
  *     `updateCallbackDone` — REJECTS when the transition is skipped or times
@@ -43,6 +45,11 @@ import { loadManifest } from '../manifest.ts';
  *     purely on `transition.promise` blows that cap whenever a route resolves
  *     something big — the megacanvas resolves twenty-one fragments — so the
  *     release is capped, and the heavy state opts out entirely.
+ *  c. NEVER release on requestAnimationFrame. Rendering is suspended while
+ *     the snapshot is held, so the frames never fire, the cap above is
+ *     already cleared, and the browser's own 4 s timeout is the only thing
+ *     that lets go: every navigation froze for four seconds. The release
+ *     must come from a promise — lit's `updateComplete` — not a frame.
  */
 interface ViewTransitionHandle {
   ready?: Promise<unknown>;
@@ -80,24 +87,29 @@ function directionOf(transition: Transition): Direction {
   const from = transition.from();
   const to = transition.to();
   if (from.name !== 'atlas.sheet' || to.name !== 'atlas.sheet') return 'none';
-  const before = order.indexOf(String(transition.params('from')['num']).toLowerCase());
-  const after = order.indexOf(String(transition.params('to')['num']).toLowerCase());
+  const before = order.indexOf(String(transition.params('from').num).toLowerCase());
+  const after = order.indexOf(String(transition.params('to').num).toLowerCase());
   if (before === -1 || after === -1 || before === after) return 'none';
   return after > before ? 'fwd' : 'back';
 }
 
-const twoFrames = (): Promise<void> =>
-  new Promise((resolve) => {
-    requestAnimationFrame(() => requestAnimationFrame(() => resolve()));
-  });
+// The direction is stamped on <html> for the ::view-transition pseudo-elements
+// to read, and cleared the moment the animation is over so it never lingers.
+const stampDirection = (direction: Direction): void => {
+  document.documentElement.dataset.atlasDir = direction;
+};
+const clearDirection = (): void => {
+  delete document.documentElement.dataset.atlasDir;
+};
 
 export function installSlideshow(router: UIRouterLit): void {
   router.transitionService.onBefore({}, (transition) => {
+    clearDirection();
     if (reducedMotion()) return true;
-    document.documentElement.dataset['atlasDir'] = directionOf(transition);
+    if (NO_SLIDESHOW.has(transition.to().name ?? '')) return true;
+    stampDirection(directionOf(transition));
 
     if (!supportsViewTransitions()) return true; // the CSS fallback below
-    if (NO_SLIDESHOW.has(transition.to().name ?? '')) return true;
 
     // The snapshot is taken here, synchronously, before any resolve runs.
     let release = (): void => {};
@@ -107,15 +119,19 @@ export function installSlideshow(router: UIRouterLit): void {
     const handle = doc.startViewTransition?.(() => domUpdated);
     // (a) every one of these rejects on a skip; unattached, they are page errors
     handle?.ready?.catch(() => {});
-    handle?.finished?.catch(() => {});
     handle?.updateCallbackDone?.catch(() => {});
+    handle?.finished?.then(clearDirection, clearDirection);
 
-    // (b) release on settle OR failure OR the cap — an aborted transition must
-    // never leave the document frozen under a snapshot.
+    // (b) release on the rendered view OR failure OR the cap — an aborted
+    // transition must never leave the document frozen under a snapshot.
+    // (c) `viewRendered` is promise-driven; no frame is waited for.
     const cap = setTimeout(release, RELEASE_CAP_MS);
-    const finish = (): void => {
+    const done = (): void => {
       clearTimeout(cap);
-      void twoFrames().then(release);
+      release();
+    };
+    const finish = (): void => {
+      void viewRendered().then(done, done);
     };
     transition.promise.then(finish, finish);
     return true;
@@ -130,5 +146,6 @@ export function installSlideshow(router: UIRouterLit): void {
     content.classList.remove('atlas-enter');
     void content.offsetWidth; // reflow, so the animation restarts
     content.classList.add('atlas-enter');
+    content.addEventListener('animationend', clearDirection, { once: true });
   });
 }

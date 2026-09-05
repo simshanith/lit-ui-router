@@ -7,10 +7,34 @@
  * with verdicts. A route that exists on one side and not the other is
  * impossible by construction, which is the point of the projection.
  */
-import type { MountConfig, RouteDeclaration } from 'ui-router-server';
+import type { MountConfig, RedirectRule, RouteDeclaration } from 'ui-router-server';
 
-/** The mount base — matches vite's `base` and the staged site's /app/. */
-export const MOUNT = '/app';
+/**
+ * The mount base — THE ONE base constant. vite's `base`, `<base href>`,
+ * every href in both template sets, the generator's fragment links and the
+ * staged site's _redirects all derive from it. The app owns the site root;
+ * the flat drawing set lives beside it under `/set/`.
+ */
+export const MOUNT = '/';
+
+/** `MOUNT` with its trailing slash: the prefix every href in the app starts with. */
+export const BASE = MOUNT.endsWith('/') ? MOUNT : `${MOUNT}/`;
+
+/** Where the standalone drawing set is staged, relative to the site root. */
+export const SET = `${BASE}set/`;
+
+/** The hrefs the client templates and the server templates share. */
+export const href = {
+  gallery: BASE,
+  about: `${BASE}about`,
+  megacanvas: (at?: string): string =>
+    at ? `${BASE}megacanvas?at=${at}` : `${BASE}megacanvas`,
+  sheet: (num: string): string => `${BASE}sheet/${num}`,
+  /** The flat set's index — a plain page, never a router state. */
+  set: SET,
+  /** A sheet's standalone page in the flat set. */
+  plate: (file: string): string => `${SET}${file}`,
+};
 
 export const routes: RouteDeclaration[] = [
   // Abstract shell: the rail and the content ui-view. Url-less, so it
@@ -47,32 +71,49 @@ export function urlOf(name: string): string | undefined {
  * A mount table for the server.
  *
  * CONSUMER FINDING: `ui-router-server` projects PATTERNS, not existence. With
- * the client's `/sheet/:num`, `/app/sheet/99` is a perfectly good match and
- * the server must answer 200 — the in-app guard is the only thing that knows
- * 99 is not a sheet. Passing the sheet numbers here narrows the param to a
+ * the client's `/sheet/:num`, `/sheet/99` is a perfectly good match and the
+ * server must answer 200 — the in-app guard is the only thing that knows 99
+ * is not a sheet. Passing the sheet numbers here narrows the param to a
  * regex alternation, and the same mount then answers an honest 404 for a
  * number that was never drawn. The numbers come from the generated manifest,
  * which the server side can read off disk; the browser keeps the loose
  * pattern and its onBefore guard.
+ *
+ * Sheet ids are cased ('2A', '12i'). The cased form is canonical: a
+ * lowercase url is a redirect to it here, exactly as the client's onBefore
+ * guard redirects it, so prerender writes one directory per sheet and the
+ * rail's uiSrefActive compares like with like.
  */
 export function mountsFor(sheetNums?: readonly string[]): Record<string, MountConfig> {
+  const nums = [...new Set(sheetNums ?? [])].sort();
   const narrowed = routes.map((route) => {
-    if (route.name !== 'atlas.sheet' || !sheetNums?.length) return route;
-    const alternates = [
-      ...new Set(sheetNums.flatMap((num) => [num, num.toLowerCase()])),
-    ].sort();
-    return { ...route, url: `/sheet/{num:(?:${alternates.join('|')})}` };
+    if (route.name !== 'atlas.sheet' || nums.length === 0) return route;
+    return { ...route, url: `/sheet/{num:(?:${nums.join('|')})}` };
   });
+  const lowercased: RedirectRule[] = nums
+    .filter((num) => num !== num.toLowerCase())
+    .map((num) => ({
+      pattern: `/sheet/${num.toLowerCase()}`,
+      to: { state: 'atlas.sheet', params: { num } },
+    }));
 
   return {
     [MOUNT]: {
       routes: narrowed,
-      // A bare `/app` (no trailing slash) resolves the empty subpath, which no
-      // route claims; send it to the gallery rather than 404ing the front door.
-      redirects: [{ pattern: /^$/, to: 'atlas.gallery' }],
+      redirects: [
+        ...lowercased,
+        // A bare mount base (no trailing slash) resolves the empty subpath,
+        // which no route claims; send it to the gallery rather than 404ing
+        // the front door. Inert at a root mount — `/` is the gallery's own
+        // url — and kept so a move back under a prefix keeps working.
+        { pattern: /^$/, to: 'atlas.gallery' },
+      ],
       otherwise: { state: 'atlas.notFound' },
       strategy: 'matcher',
+      // Cloudflare Pages serves `<subpath>/index.html` and 308s the bare
+      // path onto the slash, so `/sheet/7/` must be as real a url as
+      // `/sheet/7`. The client sets `strictMode(false)` for the same reason.
+      config: { strict: false },
     },
   };
 }
-

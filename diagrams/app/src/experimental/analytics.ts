@@ -6,7 +6,9 @@
  * loads a tracker: it only reports to one the page already has. The staged
  * config sets send_page_view:false, so THIS hook owns every page_view — the
  * first transition included. onSuccess, because the address bar is final by
- * then. Enhanced measurement's history-change page_view (a stream setting)
+ * then — and registered after the router's own onSuccess, which has already
+ * set document.title, so page_title is the arriving page's. Enhanced
+ * measurement's history-change page_view (a stream setting)
  * only patches pushState; the Navigation API plugin bypasses it, and the
  * pushState fallback would double-count — turn that toggle off in the stream.
  */

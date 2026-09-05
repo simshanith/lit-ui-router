@@ -631,6 +631,45 @@ Verified on the atlas branch itself: build, tsc, oxlint, an 11-check
 playwright pass (rail, arrows, xrefs, both cytoscape plates booting inside a
 view, /office 302, /sheet/99 an honest 404, megacanvas pan, theme). Known
 nit: the rail's background stops at content height on the tall megacanvas.
+ROOT MOVE + LIVE-SITE QA 2026-09-05: user-asked — the app "takes over the
+homepage" and the flat set is "preserved as an alternative version to compare
+against". The app now owns the site root (/, /sheet/7, /megacanvas?at=7,
+/about, /office); the flat set is staged under /set/ (gallery doubled as
+/set/index.html, vendor/ beside it); app and set link to each other (rail THE
+FLAT SET, each crumb's STANDALONE PLATE via a new `standalone` manifest field
+threaded from build.mjs's fname(); the gallery cover's THE ROUTED SET). ONE
+base constant: app/src/routes.ts MOUNT/BASE/SET + an `href` table both
+template sets read; vite `base`, `<base href>` (%BASE_URL%), emit-app.mjs and
+stage-site.mjs import it (node strips the types). stage-site.mjs rewritten:
+dist/ = app/dist, dist/set/ = the flat pages, one merged _redirects (the
+prerender's 7 lines + 24 old filenames → /set/ + /app, /app/* → /:splat),
+GA tagging = routed for everything outside /set/. A Playwright pass against
+the LIVE site had found the app broken in two critical ways and four lesser,
+all fixed in the layer that owned each: (1) CRITICAL — Pages 308s /sheet/2A
+onto /sheet/2A/ and core's default strictMode rejected the slash, so EVERY
+deep link booted into notFound; strictMode(false) in router.ts and `config:
+{ strict: false }` on the server mount, preview now agrees with live (and
+serves the prerendered file). (2) CRITICAL — no client-side navigation: the
+nav plugin calls navigation.navigate() but registers no `navigate`
+interceptor, so every click was a document load; the sample app wires one,
+so the interceptor now lives in router.ts (base layer) and SSR-VERDICT ask 9
+says the plugin should do it by default. (3) HIGH — view transitions froze
+the page ~4 s: the release waited two rAFs, which never fire under a held
+snapshot; released on lit's updateComplete instead (new
+experimental/view-rendered.ts) — `ready` resolves in ~15 ms, animations run.
+(4) MEDIUM — document.title never changed on client navigation; new
+src/titles.ts is shared by prerender.ts and an onSuccess hook. (5) LOW —
+/sheet/2a rendered 2A with no rail item active; the cased id is canonical:
+onBefore redirect in the browser, a redirect rule on the mount, a _redirects
+line from the prerender. (6) LOW — html[data-atlas-dir] lingered; cleared on
+`finished` and on the fallback's animationend. (7) ←/→ now move focus to the
+arriving sheet's title. Plus one found while fixing: megacanvas-pan polled
+the DOM by frame and panned the OUTGOING sheet's plate; it uses viewRendered()
+too. Verified against a Pages-mimicking static server (308 to the slash,
+404.html at 404, _redirects honoured): 20 cold loads clean; nav pass 28/28 in
+light, 28/28 in dark, 25/25 under the pushState fallback; tsc + oxlint clean.
+Not touched, on purpose: the prerender-flash takeover, Cloudflare's
+email-decode console error (a zone setting), sheet 14's 640 px SVG on mobile.
 
 ## Why rework
 
