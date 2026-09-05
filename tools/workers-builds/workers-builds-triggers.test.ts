@@ -70,10 +70,13 @@ describe('parseJsonc', () => {
 describe('desiredStateFromConfig', () => {
   it('accepts the real config (loaded above) with the dashboard values', () => {
     assert.equal(desired.productionBranch, 'main');
-    assert.equal(desired.production.deploy_command, 'npx wrangler deploy');
+    assert.equal(
+      desired.production.deploy_command,
+      './tools/workers-builds/cloudflare-deploy.sh main',
+    );
     assert.equal(
       desired.preview.deploy_command,
-      'npx wrangler versions upload',
+      './tools/workers-builds/cloudflare-deploy.sh branch',
     );
   });
 
@@ -101,6 +104,28 @@ describe('desiredStateFromConfig', () => {
         script,
         /^[^#\n]*\bpnpm(@\S+)?\s+install --frozen-lockfile$/m,
       );
+    }
+  });
+
+  // The deploy command is a repo script too, for the same reason: a branch that
+  // moves wrangler.jsonc changes the script, not the dashboard. So follow the
+  // path here as well — a pinned path that names no file would break every
+  // deploy, and the indirection is what makes that invisible from the config.
+  it('points both deploy commands at a repo script that runs wrangler', async () => {
+    for (const [kind, wrangler] of [
+      ['production', 'wrangler deploy'],
+      ['preview', 'wrangler versions upload'],
+    ] as const) {
+      const command = desired[kind].deploy_command ?? '';
+      const [path = '', arg] = command.split(' ');
+      assert.match(path, /^\.\/tools\/workers-builds\/[\w-]+\.sh$/);
+      assert.ok(arg, `${kind} deploy command names no trigger argument`);
+      const script = await readFile(
+        join(import.meta.dirname, '..', '..', path),
+        'utf8',
+      );
+      assert.match(script, new RegExp(`^${arg}\\)$`, 'm'));
+      assert.match(script, new RegExp(`^\\s*exec npx ${wrangler}$`, 'm'));
     }
   });
 
