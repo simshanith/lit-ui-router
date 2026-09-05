@@ -1,11 +1,19 @@
 // Each rule's consumer task must order on `<member>#<producerTask>` for every
 // member the selector picks, or a new member silently falls out of the graph.
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
 import {
   type EdgeRule,
   formatMissing,
   missingEdges,
 } from '@tools/shared/graph-edges.core.ts';
-import { planFailure, resolvedTaskDeps } from '@tools/shared/turbo.ts';
+import {
+  declaredLanes,
+  planFailure,
+  plannedLanes,
+  resolvedTaskDeps,
+} from '@tools/shared/turbo.ts';
 import {
   loadWorkspace,
   type Member,
@@ -44,21 +52,45 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
 
 const { members } = await loadWorkspace(workspaceRoot);
 
-// Lanes no CI path invokes, so nothing else notices them rotting. turbo
+// Every declared lane the ci:* graphs never reach must still plan. turbo
 // rejects an invalid edge — `dependsOn` onto a persistent task — for the whole
-// run before any task starts, and it only validates the subgraph the run names,
-// so these have to be named here: `turbo run e2e` was unusable until #695
-// because CI drives Cypress through the test:cypress* scripts instead.
-const UNRUN_LANES = ['e2e', 'dev'];
+// run before any task starts, but it validates only the subgraph a run names,
+// so a lane CI never invokes is checked nowhere: `turbo run e2e` was unusable
+// until #695 because CI drives Cypress through the test:cypress* scripts.
+// Derived rather than listed, so a lane added to turbo.json and not to CI joins
+// this set on its own instead of waiting for someone to remember it.
 
-const failure = await planFailure(UNRUN_LANES);
-if (failure !== undefined) {
-  console.error(
-    `${CHECK}: turbo cannot plan ${UNRUN_LANES.join(', ')}:\n${failure}`,
-  );
+// What build-test-run.yml invokes, via mise's `ci` / `ci_main` tasks; `ci` is
+// turbo's back-compat alias of ci:pull_request, so naming it covers both. A
+// typo here fails the dry run rather than silently shrinking the covered set.
+const CI_LANES = ['ci', 'ci:main'];
+
+const configs = await Promise.all(
+  ['<root>', ...members.map((member) => member.dir)]
+    .filter((dir, at, dirs) => dirs.indexOf(dir) === at)
+    .map((dir) =>
+      readFile(
+        join(workspaceRoot, dir === '<root>' ? '.' : dir, 'turbo.json'),
+        'utf8',
+      ).catch(() => undefined),
+    ),
+);
+const declared = declaredLanes(configs.filter((text) => text !== undefined));
+const covered = await plannedLanes(CI_LANES);
+const unrun = [...declared].filter((lane) => !covered.has(lane)).sort();
+if (unrun.length === 0) {
+  // the ci:* graphs cannot reach every lane; an empty set means the derivation
+  // broke, not that everything is covered
+  console.error(`${CHECK}: no unrun lanes found — the derivation is wrong`);
   process.exit(1);
 }
-console.log(`${CHECK}: ${UNRUN_LANES.join(', ')} plan`);
+
+const failure = await planFailure(unrun);
+if (failure !== undefined) {
+  console.error(`${CHECK}: turbo cannot plan ${unrun.join(', ')}:\n${failure}`);
+  process.exit(1);
+}
+console.log(`${CHECK}: ${unrun.length} lanes outside ci:* plan`);
 
 let failed = false;
 for (const rule of RULES) {

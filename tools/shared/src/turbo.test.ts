@@ -3,7 +3,9 @@ import { describe, it } from 'node:test';
 
 import type { Exec } from './exec.ts';
 import {
+  declaredLanes,
   planFailure,
+  plannedLanes,
   plannedTasks,
   resolvedTaskDeps,
   splitTaskId,
@@ -143,6 +145,61 @@ describe('plannedTasks', () => {
       cache: true,
       inputs: {},
     });
+  });
+});
+
+describe('declaredLanes', () => {
+  it('unqualifies task ids and unions across configs', () => {
+    const root = `{
+      // turbo.json carries comments
+      "tasks": { "build": {}, "docs#docs:api": {}, "//#lint:templates": {} }
+    }`;
+    const pkg = '{ "tasks": { "build": {}, "e2e": {} } }';
+    assert.deepEqual([...declaredLanes([root, pkg])].sort(), [
+      'build',
+      'docs:api',
+      'e2e',
+      'lint:templates',
+    ]);
+  });
+
+  it('throws on malformed JSONC rather than reading no lanes', () => {
+    assert.throws(
+      () => declaredLanes(['{ "tasks": { ']),
+      /invalid turbo\.json/,
+    );
+  });
+
+  it('tolerates a config with no tasks at all', () => {
+    assert.deepEqual([...declaredLanes(['{ "extends": ["//"] }'])], []);
+  });
+});
+
+describe('plannedLanes', () => {
+  it('returns the unqualified names turbo plans for the run', async () => {
+    const argv: unknown[] = [];
+    const exec: Exec = (command, args) => {
+      argv.push([command, args]);
+      return Promise.resolve({
+        stdout: JSON.stringify({
+          tasks: [
+            { taskId: 'docs#build' },
+            { taskId: '//#lint:templates' },
+            { taskId: 'lit-ui-router#build' },
+            // turbo has emitted an entry without an id before now
+            {},
+          ],
+        }),
+        stderr: '',
+      });
+    };
+    assert.deepEqual(
+      [...(await plannedLanes(['ci', 'ci:main'], exec))].sort(),
+      ['build', 'lint:templates'],
+    );
+    assert.deepEqual(argv, [
+      ['turbo', ['run', 'ci', 'ci:main', '--dry-run=json']],
+    ]);
   });
 });
 
