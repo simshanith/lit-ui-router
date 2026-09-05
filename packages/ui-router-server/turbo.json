@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "docs:api": {
-      "outputs": ["../../docs/api/ui-router-server/**"]
+      "outputs": ["../../www/lit-ui-router.dev/api/ui-router-server/**"]
     },
     "test": {
       "dependsOn": ["^test", "transit"],

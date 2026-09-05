@@ -54,9 +54,14 @@ const declaredPreviewLive: NonNullable<Trigger['environment_variables']> =
   );
 
 describe('parseJsonc', () => {
-  it('parses the repo wrangler.jsonc (comments + trailing commas)', async () => {
+  it('parses the site wrangler.jsonc (comments + trailing commas)', async () => {
     const raw = await readFile(
-      join(import.meta.dirname, '..', '..', 'wrangler.jsonc'),
+      join(
+        import.meta.dirname,
+        '..',
+        '..',
+        'www/lit-ui-router.dev/wrangler.jsonc',
+      ),
       'utf8',
     );
     assert.equal(workerNameFromConfig(parseJsonc(raw)), 'lit-ui-router');
@@ -70,10 +75,13 @@ describe('parseJsonc', () => {
 describe('desiredStateFromConfig', () => {
   it('accepts the real config (loaded above) with the dashboard values', () => {
     assert.equal(desired.productionBranch, 'main');
-    assert.equal(desired.production.deploy_command, 'npx wrangler deploy');
+    assert.equal(
+      desired.production.deploy_command,
+      'npx wrangler deploy --config www/lit-ui-router.dev/wrangler.jsonc',
+    );
     assert.equal(
       desired.preview.deploy_command,
-      'npx wrangler versions upload',
+      'npx wrangler versions upload --config www/lit-ui-router.dev/wrangler.jsonc',
     );
   });
 

@@ -17,7 +17,7 @@
   // `mise run setup` and the CI workflows already set.
   "production": {
     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    "deploy_command": "npx wrangler deploy",
+    "deploy_command": "npx wrangler deploy --config www/lit-ui-router.dev/wrangler.jsonc",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
       "CYPRESS_INSTALL_BINARY": "0",
@@ -26,7 +26,7 @@
   },
   "preview": {
     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    "deploy_command": "npx wrangler versions upload",
+    "deploy_command": "npx wrangler versions upload --config www/lit-ui-router.dev/wrangler.jsonc",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
       "CYPRESS_INSTALL_BINARY": "0",

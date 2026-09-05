@@ -10,8 +10,8 @@
     "src/hono.ts",
     "src/vite.ts"
   ],
-  "out": "../../docs/api/ui-router-server",
-  "docsRoot": "../../docs",
+  "out": "../../www/lit-ui-router.dev/api/ui-router-server",
+  "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
     "typedoc-plugin-markdown",
     "typedoc-vitepress-theme",

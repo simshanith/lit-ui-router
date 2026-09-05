@@ -61,7 +61,7 @@ describe('plannedTasks', () => {
       tasks: [
         {
           taskId: `docs#${name}`,
-          directory: 'docs',
+          directory: 'www/lit-ui-router.dev',
           command: `run ${name}`,
           // the status object turbo emits, truthy even when uncacheable
           cache: { local: false, remote: false, status: 'MISS', timeSaved: 0 },

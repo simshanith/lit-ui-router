@@ -386,7 +386,7 @@ Picking a tier:
     <!-- worker panel -->
     <rect x="532" y="28" width="172" height="230" rx="8" fill="var(--vp-c-bg-soft, #f6f6f7)" stroke="var(--vp-c-divider, #e2e2e3)" />
     <text x="548" y="52" font-size="13" font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">Edge worker</text>
-    <text x="548" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">docs/worker/index.ts</text>
+    <text x="548" y="68" font-size="10" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-3, #929295)">www/…/worker/index.ts</text>
     <g font-family="var(--vp-font-family-mono, ui-monospace, monospace)" font-size="11" fill="var(--vp-c-text-1, #3c3c43)">
       <text x="548" y="98">createServerRouter(</text>
       <text x="556" y="114">{ mounts })</text>
@@ -686,7 +686,7 @@ interface.
 Cloudflare Workers
 [static assets](https://developers.cloudflare.com/workers/static-assets/)
 serve the built site; the worker script runs only where a routing decision is
-needed ([`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/wrangler.jsonc)):
+needed ([`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/wrangler.jsonc)):
 
 ```jsonc
 // https://developers.cloudflare.com/workers/static-assets/configuration/
@@ -694,9 +694,9 @@ needed ([`wrangler.jsonc`](https://github.com/simshanith/lit-ui-router/blob/main
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
   "compatibility_date": "2026-07-01",
-  "main": "./docs/worker/index.ts",
+  "main": "./worker/index.ts",
   "assets": {
-    "directory": "./docs/dist",
+    "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     // Sample-app deep links and the 404-pattern exhibits invoke the worker;

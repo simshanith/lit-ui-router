@@ -1,7 +1,7 @@
 /** `default`, which is also omitting it, shows both panes only when wide. */
 export type StackBlitzView = 'default' | 'editor' | 'preview';
 
-// Keep in sync with examples/build-embeds.ts and EMBEDDED_EXAMPLES in docs/.vitepress/vite.config.ts.
+// Keep in sync with examples/build-embeds.ts and EMBEDDED_EXAMPLES in .vitepress/vite.config.ts.
 //
 // `height` reserves the embed's space before its iframe loads, so the page
 // doesn't shift when the example paints — a static number by design. It is not

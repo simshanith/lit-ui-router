@@ -2,7 +2,7 @@ packages:
   - apps/*
   - packages/*
   - tools/*
-  - docs
+  - www/lit-ui-router.dev
   - examples
 
 catalog:

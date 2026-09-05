@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "docs:api": {
-      "outputs": ["../../docs/api/navigation-location-plugin/**"]
+      "outputs": ["../../www/lit-ui-router.dev/api/navigation-location-plugin/**"]
     }
   }
 }
