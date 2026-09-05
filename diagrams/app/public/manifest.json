@@ -24,6 +24,25 @@
       "refs": []
     },
     {
+      "id": "1i",
+      "num": "1i",
+      "title": "THE RENDER LOOP, WALKED",
+      "sub": "ALTITUDE 1 — sheet 1's circuit, stepped · one navigation walked leg by leg · 10 STATIONS · 12 LEGS · 12 STEPS · surveyed at origin/main @ b2338d0 (commit 2026-09-04)",
+      "caption": "The circuit, stood up and stepped. 10 stations and 12 legs, then one click — a click on &lt;a uiSref&gt; from /people to /people/32 — walked in 12 steps under the pointer, every step standing on the 30 source lines the plate cites verbatim.",
+      "scale": "ONE PACKAGE",
+      "form": "INTERACTIVE CIRCUIT",
+      "rev": "A",
+      "file": "sheets/1i.html",
+      "interactive": true,
+      "needsCytoscape": true,
+      "plates": [
+        "census-loop.json"
+      ],
+      "refs": [
+        "1"
+      ]
+    },
+    {
       "id": "2",
       "num": "2",
       "title": "THE BRICK ASSEMBLY",
@@ -413,8 +432,8 @@
       "id": "14",
       "num": "14",
       "title": "THE SURVEY OFFICE",
-      "sub": "ALTITUDE 3½ — the atlas measuring itself · 16 probes, 16 plates, 19 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ b2338d0 · commit 2026-09-04 · REV A 2026-09-04: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap",
-      "caption": "The instrument drawn by its own instrument: 16 probe stations over three tiers write 16 filed plates, which 19 drawings read — and the one that matters most is read twelve times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.",
+      "sub": "ALTITUDE 3½ — the atlas measuring itself · 17 probes, 17 plates, 20 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ b2338d0 · commit 2026-09-04 · REV A 2026-09-04: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap",
+      "caption": "The instrument drawn by its own instrument: 17 probe stations over three tiers write 17 filed plates, which 20 drawings read — and the one that matters most is read thirteen times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.",
       "scale": "THE CENSUS PIPELINE",
       "form": "FLOW GRAPH",
       "rev": "B",

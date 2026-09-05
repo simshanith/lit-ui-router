@@ -1,7 +1,7 @@
 # diagrams/ — The Altitude Atlas
 
-A drawing set: one subject surveyed at every altitude, fourteen altitudes on 21 plates — the
-numbered sheets, their A/B alternates, and two interactive lanes (sheets 7–10 are a survey
+A drawing set: one subject surveyed at every altitude, fourteen altitudes on 22 plates — the
+numbered sheets, their A/B alternates, and three interactive lanes (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
 wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
 every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
@@ -10,6 +10,7 @@ notes on each sheet argue where that form fits and where it lies.
 | Sheet | Altitude | Form |
 | --- | --- | --- |
 | [1](sheet-1-the-render-loop.html) | ONE PACKAGE | ISO CIRCUIT |
+| [1i](sheet-1i-the-render-loop-walked.html) | ONE PACKAGE | INTERACTIVE CIRCUIT |
 | [2](sheet-2-the-brick-assembly.html) | FOUR PACKAGES | BRICK ASSEMBLY |
 | [2A](sheet-2A-the-coupling-plan.html) | FOUR PACKAGES | COUPLING PLAN |
 | [2B](sheet-2B-the-coupling-bench.html) | SEVEN NODES · TWELVE CONTRACTS | INTERACTIVE COUPLING GRAPH |
@@ -35,7 +36,7 @@ notes on each sheet argue where that form fits and where it lies.
 - `gallery.html` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
 
 Static HTML pages, written by `node generator/build.mjs .` from this directory. The SVG sheets need nothing;
-the interactive plates (2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
+the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
 `generator/stage-site.mjs` vendors into `dist/` for hosting. `app/` is the same set as a prerendered
 lit-ui-router app; `build.mjs` emits its fragments and manifest. Light theme is graphite-on-vellum; dark is cyanotype.
 Generated 2026-08-16 by Fable (Claude, AI).

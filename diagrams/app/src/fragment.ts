@@ -5,7 +5,7 @@
  *
  *  1. Inserted markup never executes a <script>. `innerHTML` (and lit's
  *     `unsafeHTML`, which uses it) marks scripts "already started", so the two
- *     interactive sheets (2B, 12i) would mount their JSON islands and their
+ *     interactive sheets (1i, 2B, 12i) would mount their JSON islands and their
  *     `<div id="cb-cy">` and then sit there dead. The fix is to REPLACE each
  *     script node with a freshly created one — the only way a parser-less
  *     insertion runs code. `<style>` DOES apply through innerHTML; only
@@ -30,7 +30,7 @@ export interface XrefDetail {
 let cytoscapeLoaded: Promise<unknown> | null = null;
 
 /**
- * The two interactive lanes call a global `cytoscape`. Their standalone pages
+ * The three interactive lanes call a global `cytoscape`. Their standalone pages
  * get it from a CDN <script>; emit-app.mjs strips that tag and the app bundles
  * the library instead, so the app carries no external origin.
  */

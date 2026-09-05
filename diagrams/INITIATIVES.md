@@ -468,6 +468,27 @@ and in the gallery, consoles clean in all four, and sheet 14 / the survey office
 still boots after the shared build edits. The office picked the new drawing up on
 its own, as designed: sheet12i.mjs reads census-plate.json, so it joins the rack
 rather than the unplated list.
+I7·1i LANDED 2026-09-05 — SHEET 1i, THE RENDER LOOP, WALKED: sheet 1's circuit
+stood up and STEPPED, the third cytoscape lane and the first on a plate read off
+the package's SOURCE. census-loop.mjs is a T1 tree probe over six files under
+packages/lit-ui-router/src/: 10 stations (sheet 1's buildings, each anchored to
+an implementing line), 12 legs (loop / click / event / tap, each with the call or
+event that carries it), and the WALK — one click on `<a uiSref>` from /people to
+/people/32 in 12 steps, 30 evidence entries of {file, line, verbatim text}. The
+evidence table is authored as (file, line, expect) and the probe THROWS when the
+line no longer reads what it expected — line numbers cannot rot silently; core's
+sequence is stated only through the hooks lit-ui-router registers, no core line
+is cited. `--tree <dir>` hands the probe an already-materialized archive of the
+cabinet sha (this plate was first filed from a sandbox with no VCS access);
+provenance still comes from the cabinet. generator/loop-walk.mjs is the lane
+(register-graph.mjs's pattern: JSON islands, preset layout on sheet 1's ring
+with the two overlays INSIDE the ring, ten sprite skins to the house recipe,
+palettes swapped with the theme) and adds the walk controls — ◀ PREV · NEXT ▶ ·
+STEP n / N, ← → only while the lane has focus (the routed app owns the page's
+arrow keys), reduced-motion honoured. sheet1i.mjs is the frame, every number
+templated from the plate. Standalone page + gallery lane right behind sheet 1
+(S1i in the index), emitted into the app as the 22nd fragment; chrome TOTAL
+stays 14.
 TILT RETIRED 2026-09-04 by user request: the survey office's CSS-perspective
 viewing pose (I8 base, above) is removed from pipeline-graph.mjs — checkbox,
 desk wrapper, --pg-pull measurement, pose copy and the reduced-motion

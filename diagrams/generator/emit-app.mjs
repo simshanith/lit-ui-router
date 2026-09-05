@@ -24,7 +24,7 @@ const BASE = '/app/';
 // The plate list below is derived by walking these entry modules' imports, so
 // a sheet that starts reading a new census plate says so without an edit here.
 const MODULE = {
-  '1': 'sheet1.mjs', '2': 'sheet2.mjs', '2A': 'sheet2a.mjs', '2B': 'sheet2b.mjs',
+  '1': 'sheet1.mjs', '1i': 'sheet1i.mjs', '2': 'sheet2.mjs', '2A': 'sheet2a.mjs', '2B': 'sheet2b.mjs',
   '3': 'sheet3.mjs', '3A': 'sheet3a.mjs', '3B': 'sheet3b.mjs', '4': 'sheet4.mjs',
   '5': 'sheet5.mjs', '6': 'sheet6.mjs', '7': 'sheet7.mjs', '7A': 'sheet7a.mjs',
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
@@ -54,7 +54,7 @@ function platesOf(entry) {
   return [...plates].sort();
 }
 
-// --- altitude order: 1, 2, 2A, 2B, 3, 3A, ... 12, 12i, 13, 14 --------------
+// --- altitude order: 1, 1i, 2, 2A, 2B, 3, 3A, ... 12, 12i, 13, 14 ----------
 export function bySheet(a, b) {
   const na = Number.parseInt(a, 10);
   const nb = Number.parseInt(b, 10);
@@ -118,7 +118,7 @@ function linkRefs(html, self, byUpper) {
   return { html: out.join(''), refs: [...refs].sort(bySheet) };
 }
 
-// The two interactive lanes pull cytoscape off a CDN on their standalone
+// The three interactive lanes pull cytoscape off a CDN on their standalone
 // pages. The app bundles it instead, so the tag is cut here and the manifest
 // records the need — see diagrams/app/src/fragment.ts for why an inserted
 // <script> would not have run anyway.

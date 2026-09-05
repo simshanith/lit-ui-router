@@ -19,7 +19,7 @@ export const routes: RouteDeclaration[] = [
   { name: 'atlas.gallery', url: '/' },
   { name: 'atlas.sheet', url: '/sheet/:num' },
   // `at` is a DYNAMIC search param on the client: changing it must not
-  // re-enter the state (that would re-resolve all twenty-one fragments).
+  // re-enter the state (that would re-resolve all twenty-two fragments).
   // The experimental layer pans the reel to it; the base app ignores it.
   {
     name: 'atlas.megacanvas',

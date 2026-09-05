@@ -2,6 +2,7 @@ import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { page, sheetSection, TOTAL } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
+import { loopWalkedSection, sheet1i } from './sheet1i.mjs';
 import { sheet2 } from './sheet2.mjs';
 import { sheet2a } from './sheet2a.mjs';
 import { sheet2b, sheet2bPage, SHEET2B_VERDICT } from './sheet2b.mjs';
@@ -25,6 +26,7 @@ import { sheet13 } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
 import { pipelineSection } from './pipeline-graph.mjs';
 import { ATLAS } from './census-atlas.mjs';
+import { LOOP } from './loop-walk.mjs';
 import { citySection } from './city-scene.mjs';
 import { emitApp } from './emit-app.mjs';
 
@@ -51,6 +53,12 @@ writeFileSync(join(OUT, `sheet-${sheet2b.num}-${sheet2b.title.toLowerCase().repl
 writeFileSync(join(OUT, fname(sheet12i)),
   page(`${sheet12i.title} — Sheet ${sheet12i.num} of ${TOTAL}`, register12iSection(), { desc: sheet12i.caption }));
 
+// Sheet 1i is the same arrangement at the first altitude: sheet 1's circuit as
+// a cytoscape lane with one navigation walked through it, standalone here and
+// mounted in the gallery right after sheet 1.
+writeFileSync(join(OUT, fname(sheet1i)),
+  page(`${sheet1i.title} — Sheet ${sheet1i.num} of ${TOTAL}`, loopWalkedSection(), { desc: sheet1i.caption }));
+
 // --- megacanvas ---
 const rail = `<nav class="alt-rail" aria-label="altitudes">
 ${sheets.map((s) => `<a href="#sheet-${s.num}"><span class="alt-n">ALT ${s.num}</span> ${s.title}</a>`).join('\n')}
@@ -69,7 +77,7 @@ const megaCss = `
 writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
-  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it — and last, the office that took every one of those measurements, drawn by its own instrument. Fourteen altitudes, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 2B and 12i stand alone); the form changes at every altitude because the truth does.</p>
+  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it — and last, the office that took every one of those measurements, drawn by its own instrument. Fourteen altitudes, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 1i, 2B and 12i stand alone); the form changes at every altitude because the truth does.</p>
 </header>
 ${rail}
 ${sheets.map((s) => sheetSection(s)).join('\n')}`,
@@ -200,7 +208,7 @@ const cover = `<header class="cover">
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
     <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · ${SHIPPED.published}</span></div>
-    <div><span class="k">SHEETS</span><span class="v">14 altitudes · ${sheets.length + 2} plates · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at ${COUNTED_AT}</span></div>
+    <div><span class="k">SHEETS</span><span class="v">14 altitudes · ${sheets.length + 3} plates · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at ${COUNTED_AT}</span></div>
   </div>
   ${survey}
   <div class="gal-body">
@@ -210,7 +218,8 @@ const cover = `<header class="cover">
   </div>
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
-    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`).join('')}<tr><td><a href="#sheet-12i">S12i</a></td><td>PR CI GRAPH</td><td>INTERACTIVE REGISTER</td><td>sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the 70% that runs nothing</td></tr><tr><td><a href="#pipeline-graph">S14i</a></td><td>THE CENSUS PIPELINE</td><td>INTERACTIVE GRAPH</td><td>sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero</td></tr><tr><td><a href="#city-scene">S7·3D</a></td><td>MONOREPO, IN THE ROUND</td><td>REAL 3D ISOMETRIC CITY</td><td>sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal</td></tr></tbody>
+    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`
+      + (n === '1' ? `<tr><td><a href="#sheet-1i">S1i</a></td><td>ONE PACKAGE</td><td>INTERACTIVE CIRCUIT</td><td>sheet 1's circuit with a pointer in it — ${LOOP.stations} stations, ${LOOP.legs} legs, and one click walked in ${LOOP.steps} steps, every step standing on the source lines the plate cites verbatim</td></tr>` : '')).join('')}<tr><td><a href="#sheet-12i">S12i</a></td><td>PR CI GRAPH</td><td>INTERACTIVE REGISTER</td><td>sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the 70% that runs nothing</td></tr><tr><td><a href="#pipeline-graph">S14i</a></td><td>THE CENSUS PIPELINE</td><td>INTERACTIVE GRAPH</td><td>sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero</td></tr><tr><td><a href="#city-scene">S7·3D</a></td><td>MONOREPO, IN THE ROUND</td><td>REAL 3D ISOMETRIC CITY</td><td>sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal</td></tr></tbody>
   </table>
 </header>`;
 
@@ -220,6 +229,8 @@ ${sheets.map((s) => (s.num === '2A'
   // sheet 2B is an interactive lane, not an SVG plate, so it rides in the
   // gallery beside the sheet it is the sibling of rather than at the end
   ? `${sheetSection(s)}\n<div id="sheet-2B"></div>\n${couplingBenchSection()}`
+  // sheet 1i walks sheet 1, so it rides right behind it
+  : s.num === 1 ? `${sheetSection(s)}\n${loopWalkedSection()}`
   : sheetSection(s))).join('\n')}
 ${register12iSection()}
 ${pipelineSection()}
@@ -230,8 +241,8 @@ ${citySection()}
 // --- README for the folder ---
 writeFileSync(join(OUT, 'README.md'), `# diagrams/ — The Altitude Atlas
 
-A drawing set: one subject surveyed at every altitude, fourteen altitudes on ${sheets.length + 2} plates — the
-numbered sheets, their A/B alternates, and two interactive lanes (sheets 7–10 are a survey
+A drawing set: one subject surveyed at every altitude, fourteen altitudes on ${sheets.length + 3} plates — the
+numbered sheets, their A/B alternates, and three interactive lanes (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
 wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
 every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
@@ -239,14 +250,14 @@ notes on each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
-${[...sheets, sheet2b, sheet12i].sort((a, b) => parseInt(a.num, 10) - parseInt(b.num, 10) || String(a.num).localeCompare(String(b.num)))
+${[...sheets, sheet1i, sheet2b, sheet12i].sort((a, b) => parseInt(a.num, 10) - parseInt(b.num, 10) || String(a.num).localeCompare(String(b.num)))
   .map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
 
 - \`megacanvas.html\` — the ${sheets.length} SVG plates on one page, ascent order.
 - \`gallery.html\` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
 
 Static HTML pages, written by \`node generator/build.mjs .\` from this directory. The SVG sheets need nothing;
-the interactive plates (2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
+the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
 \`generator/stage-site.mjs\` vendors into \`dist/\` for hosting. \`app/\` is the same set as a prerendered
 lit-ui-router app; \`build.mjs\` emits its fragments and manifest. Light theme is graphite-on-vellum; dark is cyanotype.
 Generated 2026-08-16 by Fable (Claude, AI).
@@ -258,8 +269,8 @@ tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 `);
 
 // --- app/ — the same set, cut into fragments for the lit-ui-router SPA ---
-const appSheets = emitApp({ sheets, interactive: [[sheet2b, sheet2bPage], [sheet12i, register12iSection]], outDir: OUT });
+const appSheets = emitApp({ sheets, interactive: [[sheet1i, loopWalkedSection], [sheet2b, sheet2bPage], [sheet12i, register12iSection]], outDir: OUT });
 
-// + 2: the two interactive lanes with a standalone page of their own, 2B and 12i
-console.log('built', sheets.length + 2, 'sheets + megacanvas + gallery + README →', OUT);
+// + 3: the three interactive lanes with a standalone page of their own, 1i, 2B and 12i
+console.log('built', sheets.length + 3, 'sheets + megacanvas + gallery + README →', OUT);
 console.log('emitted', appSheets, 'app fragments + manifest →', join(OUT, 'app/public'));

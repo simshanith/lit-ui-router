@@ -309,7 +309,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>lit-ui-router</code>, <code>@uirouter/core</code>,
           <code>ui-router-server</code>,
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
-          <code>cytoscape</code> (for the two interactive plates). All from npm; no
+          <code>cytoscape</code> (for the three interactive plates). All from npm; no
           workspace links.
         </p>
       </div>
