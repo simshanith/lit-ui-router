@@ -42,7 +42,7 @@ for (const n of C.nodes) {
 }
 
 // ---- massing: the brick schedule's own figures -------------------------------
-// Front-face area tracks sloc the way sheet 2A's blocks do, the 1x1 companions
+// Front-face area tracks sloc the way sheet 2A's blocks do, the smallest companions
 // clamped up to a legible minimum; the shape column sets the aspect.  lit is not
 // in the brick schedule (it is not ours to count), so it takes a fixed crate.
 const ASPECT = { '1x1': 1, '1x2': 1.2, '2x2': 1.25, '2x3': 1.4, '2x4': 1.6 };

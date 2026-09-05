@@ -348,7 +348,7 @@ const INIT = `
   function focus(node) {
     if (!node.hasClass('cell')) return;
     var hood = node.closedNeighborhood().filter(':visible');
-    // the lettering never dims: with 586 cells you must still be able to read
+    // the lettering never dims: with 600-odd cells you must still be able to read
     // which package and which task column the lit neighbourhood is standing in
     cy.elements().not('.head, .rowlabel, .band').addClass('dim');
     hood.removeClass('dim');
