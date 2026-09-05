@@ -39,12 +39,16 @@ describe('missingEdges', () => {
 describe('formatMissing', () => {
   it('names the consumer, the dependsOn lines and the rationale', () => {
     const text = formatMissing(
-      { consumer: 'docs#build', producerTask: 'docs:api', why: 'because' },
+      {
+        consumer: 'lit-ui-router.dev#build',
+        producerTask: 'docs:api',
+        why: 'because',
+      },
       ['a-new-pkg'],
     );
     assert.match(
       text,
-      /^docs#build does not order on "a-new-pkg#docs:api": because$/,
+      /^lit-ui-router\.dev#build does not order on "a-new-pkg#docs:api": because$/,
     );
   });
 });

@@ -40,7 +40,7 @@
       "persistent": true
     },
     "build": {
-      // docs imports no producer, so `^` cannot reach the docs:api tasks
+      // lit-ui-router.dev imports no producer, so `^` cannot reach the docs:api tasks
       "dependsOn": [
         "^build",
         "lit-ui-router#docs:api",

@@ -439,7 +439,7 @@
     },
     "e2e": {
       "dependsOn": ["^build"],
-      "with": ["docs#wrangler:dev"],
+      "with": ["lit-ui-router.dev#wrangler:dev"],
       "cache": false,
       "persistent": true
     },
