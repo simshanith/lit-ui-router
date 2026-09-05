@@ -60,9 +60,13 @@ const { members } = await loadWorkspace(workspaceRoot);
 // Derived rather than listed, so a lane added to turbo.json and not to CI joins
 // this set on its own instead of waiting for someone to remember it.
 
-// What build-test-run.yml invokes, via mise's `ci` / `ci_main` tasks; `ci` is
-// turbo's back-compat alias of ci:pull_request, so naming it covers both. A
-// typo here fails the dry run rather than silently shrinking the covered set.
+// turbo's CI graph entry points — build-test-run.yml runs these through mise's
+// `ci` / `ci_main`, and `ci` is turbo's back-compat alias of ci:pull_request, so
+// naming it covers both. Deliberately not every turbo call CI makes: a few mise
+// tasks invoke a lane directly (release-signals drives resolve:published and
+// check:published-diff). That only errs by leaving those lanes in the derived
+// set, where they get plan-checked anyway — the direction that costs nothing. A
+// name that is not a task fails the dry run instead of shrinking the set.
 const CI_LANES = ['ci', 'ci:main'];
 
 const configs = await Promise.all(
