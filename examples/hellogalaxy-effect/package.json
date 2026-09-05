@@ -9,6 +9,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@effect/platform": "^0.97.1",
     "@google/model-viewer": "^4.1.0",
     "@uirouter/core": "^6.1.2",
     "@uirouter/visualizer": "^7.2.1",

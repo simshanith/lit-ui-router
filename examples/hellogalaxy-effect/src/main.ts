@@ -12,6 +12,7 @@ import {
   Schedule,
   SubscriptionRef,
 } from 'effect';
+import { FetchHttpClient, HttpClient } from '@effect/platform';
 import {
   UIRouterLit,
   uiSref,
@@ -146,11 +147,14 @@ interface StarsApiService {
 class StarsApi extends Context.Tag('StarsApi')<StarsApi, StarsApiService>() {}
 
 const StarsApiLive = Layer.succeed(StarsApi, {
-  // Simulated async fetch; resolves must settle before the state activates
-  fetchAll: Effect.succeed(stars).pipe(Effect.delay('300 millis')),
+  // An Effect, not a plain array: swapping this Layer for one that talks to a
+  // real API is the only change the states would need. Resolves must settle
+  // before the state activates either way.
+  fetchAll: Effect.succeed(stars),
 });
 
-const AppLayer = Layer.mergeAll(StarsApiLive);
+// FetchHttpClient.layer is the browser HttpClient the astronaut resolve uses.
+const AppLayer = Layer.mergeAll(StarsApiLive, FetchHttpClient.layer);
 type AppServices = Layer.Layer.Success<typeof AppLayer>;
 
 // A typed failure, so an unknown :starId is a value the caller must handle
@@ -496,10 +500,17 @@ class StarDetailComponent extends LitElement {
   }
 
   firstUpdated() {
-    // The stacked (narrow) layout renders this detail below the star list
-    if (window.matchMedia('(max-width: 640px)').matches) {
-      this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
-    }
+    // The stacked (narrow) layout renders this detail below the star list, so
+    // bring it into view — but only once it is laid out (<ui-view> builds the
+    // element before attaching it, so the rect is all zeros at first update)
+    // and only if it really is off-screen, otherwise this fights the visitor.
+    requestAnimationFrame(() => {
+      const { top, bottom, height } = this.getBoundingClientRect();
+      if (height === 0) return;
+      if (top >= window.innerHeight || bottom <= 0) {
+        this.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    });
   }
 
   render() {
@@ -563,10 +574,11 @@ class AstronautViewComponent extends LitElement {
     }
   `;
 
-  // Injected by <ui-view>; required by the RoutedLitElement contract
-  _uiViewProps!: UIViewInjectedProps;
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
+  @property({ attribute: false })
+  _uiViewProps!: UIViewInjectedProps<{ modelViewer: { src: string } }>;
 
-  constructor(props: UIViewInjectedProps) {
+  constructor(props: UIViewInjectedProps<{ modelViewer: { src: string } }>) {
     super();
     this._uiViewProps = props;
   }
@@ -576,8 +588,10 @@ class AstronautViewComponent extends LitElement {
       <h3>Someone is exploring out here too</h3>
       <p>Drag to orbit the astronaut. Scroll to zoom.</p>
       <!-- touch-action="pan-y" keeps one-finger vertical swipes scrolling the page -->
+      <!-- src is the blob the resolve already downloaded, so the viewer paints
+           immediately instead of fetching the model a second time -->
       <model-viewer
-        src="${MODEL_URL}"
+        src="${this._uiViewProps.resolves.modelViewer.src}"
         alt="Neil Armstrong's Apollo 11 spacesuit, 3D scan"
         camera-controls
         auto-rotate
@@ -633,7 +647,9 @@ export class FiberLogComponent extends LitElement {
       list-style: none;
       margin: 0;
       padding: 0;
-      max-height: 190px;
+      /* A fixed height, not max-height: an arriving log line must not resize
+         the document under the visitor's scroll position. */
+      height: 190px;
       overflow-y: auto;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.75rem;
@@ -698,6 +714,21 @@ export class AppRoot extends LitElement {
       border-color: #7aa2ff;
       font-weight: 600;
     }
+    /* Height reservation for the routed view. <ui-view> builds a fresh routed
+       element on every transition, so the old one leaves the document before
+       the new one paints; without a floor the page briefly has nothing in it,
+       the browser clamps the scroll offset, and the visitor is thrown to the
+       top. The floor is the shortest routed view at each width, so no route
+       gains dead space. */
+    ui-view {
+      display: block;
+      min-height: 32rem;
+    }
+    @media (max-width: 640px) {
+      ui-view {
+        min-height: 40rem;
+      }
+    }
   `;
 
   // <app-root> is not routed, so it never gets fresh view props and cannot use
@@ -740,6 +771,18 @@ const say = (line: string) => effect.append(line);
 
 // Written by the star state's scoped ticker, read by <star-detail>.
 const observingRef = runtime.runSync(SubscriptionRef.make(''));
+
+// Written by the astronaut resolve, revoked by that state's scope.
+const modelObjectUrl = runtime.runSync(
+  SubscriptionRef.make<string | undefined>(undefined),
+);
+
+const releaseModel = (src: string | undefined) =>
+  src === undefined
+    ? Effect.void
+    : Effect.sync(() => URL.revokeObjectURL(src)).pipe(
+        Effect.zipRight(say('astronaut: model released')),
+      );
 
 // State definitions
 // Parent shell state; owns the section nav and a nested <ui-view>
@@ -839,7 +882,7 @@ const starState: EffectStateDeclaration<{ star: Star }, AppServices> = {
 
 // Sibling of galaxy.stars; swaps into the same nested <ui-view>
 const astronautState: EffectStateDeclaration<
-  Record<string, unknown>,
+  { modelViewer: { src: string } },
   AppServices
 > = {
   name: 'galaxy.astronaut',
@@ -847,32 +890,54 @@ const astronautState: EffectStateDeclaration<
   component: AstronautViewComponent,
   resolve: [
     {
-      // Resolves can await code, not just data: model-viewer loads on state
-      // activation, and the bundler splits it into its own chunk. As an
-      // Effect it is also interruptible — click Astronaut then Stars during
-      // the deliberate 1.5s pause and watch the fiber die mid-download.
+      // Resolves can await code and bytes, not just data: model-viewer loads
+      // on state activation (its own bundler chunk), and the model itself is
+      // downloaded once, here, instead of by the element. As an Effect the
+      // whole thing is interruptible — click Astronaut then Stars while the
+      // ~9 MB model is in flight and watch the fiber, and the request, die.
       token: 'modelViewer',
       resolveFn: () =>
         Effect.gen(function* () {
           yield* say('astronaut: fiber started');
-          yield* Effect.sleep(Duration.millis(1500));
           const module = yield* Effect.promise(
             () => import('@google/model-viewer'),
           );
-          yield* Effect.tryPromise({
-            // The signal is wired to interruption, so aborting the fiber
-            // aborts the request.
-            try: (signal) => fetch(MODEL_URL, { signal }),
-            catch: (cause) => new ModelDownloadFailed({ cause }),
-          }).pipe(
-            Effect.timeout(Duration.seconds(8)),
+          const bytes = yield* HttpClient.get(MODEL_URL).pipe(
+            Effect.flatMap((response) => response.arrayBuffer),
+            // The model is served from a static host that answers OPTIONS with
+            // a 405, so the request has to stay preflight-free: no traceparent.
+            Effect.locally(HttpClient.currentTracerPropagation, false),
+            Effect.timeout(Duration.seconds(30)),
             Effect.retry(Schedule.recurs(2)),
+            Effect.catchAll((cause) => new ModelDownloadFailed({ cause })),
           );
-          yield* say('astronaut: model downloaded');
-          return module;
+          const src = URL.createObjectURL(
+            new Blob([bytes], { type: 'model/gltf-binary' }),
+          );
+          // Uninterruptible, and it releases whatever the ref already held: a
+          // transition superseded between here and its scope opening must not
+          // orphan nine megabytes.
+          yield* Effect.uninterruptible(
+            SubscriptionRef.getAndSet(modelObjectUrl, src).pipe(
+              Effect.flatMap(releaseModel),
+            ),
+          );
+          yield* say(
+            `astronaut: model downloaded (${Math.round(bytes.byteLength / 1024 / 1024)} MB)`,
+          );
+          return { module, src };
         }).pipe(Effect.onInterrupt(() => say('astronaut: fiber interrupted'))),
     },
   ],
+  // The blob outlives the transition, so its release belongs to the state's
+  // scope rather than the resolve's fiber: it is revoked when the visitor
+  // navigates away, not when the transition settles.
+  scoped: () =>
+    Effect.acquireRelease(Effect.void, () =>
+      SubscriptionRef.getAndSet(modelObjectUrl, undefined).pipe(
+        Effect.flatMap(releaseModel),
+      ),
+    ),
 };
 
 // The typed error path, once: a bad :starId is caught before any resolve runs

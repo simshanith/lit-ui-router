@@ -161,14 +161,19 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     this.installResolvePolicy();
 
     // A transition's own promise only rejects once its in-flight resolves
-    // settle, which is far too late to abort them. A newly created transition
-    // is the earliest honest signal that the ones before it are dead.
+    // settle, which is far too late to abort them. Its *start* is the earliest
+    // honest signal that the ones before it are dead. onCreate is only the
+    // discovery point: core creates a transition before deciding it is
+    // redundant, and a transition-scoped onStart never fires for one that core
+    // ignores — so a double click cannot interrupt the resolve it duplicates.
     this.deregister.push(
       router.transitionService.onCreate({}, (transition) => {
-        const alive = EffectPlugin.redirectChain(transition);
-        for (const other of [...this.fibers.keys()]) {
-          if (!alive.has(other)) this.closeFibers(other);
-        }
+        transition.onStart({}, () => {
+          const alive = EffectPlugin.redirectChain(transition);
+          for (const other of [...this.fibers.keys()]) {
+            if (!alive.has(other)) this.closeFibers(other);
+          }
+        });
       }) as Deregister,
     );
 
