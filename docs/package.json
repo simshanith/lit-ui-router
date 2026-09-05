@@ -6,6 +6,7 @@
   "scripts": {
     "build": "vitepress build .",
     "bundle:worker": "mkdir -p dist && wrangler deploy --dry-run --outdir=\"$PWD/worker/dist\"",
+    "check:embeds": "check-embed-heights",
     "codecov:bundle": "upload-bundle-stats docs-worker-esm worker/dist --no-manifest",
     "docs": "vitepress dev .",
     "docs:preview": "vitepress preview .",
@@ -31,6 +32,7 @@
   },
   "devDependencies": {
     "@tools/build_and_test": "workspace:*",
+    "@tools/embed-heights": "workspace:*",
     "@tools/vue-check": "workspace:*",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
