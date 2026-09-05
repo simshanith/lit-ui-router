@@ -7,7 +7,7 @@
 # divergence never reads as drift.
 #
 # Runs from the repo root under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own
-# install step is off, so installing is this script's job (see DEPLOY.md).
+# install step is off, so installing is this script's job (see docs/DEPLOY.md).
 #
 # This branch's copy diverges from main's, which is what the indirection is
 # for. npx covers only the commands named here; turbo spawns every package

@@ -1,4 +1,4 @@
-# One version authority per tool — see the toolchain table in CONTRIBUTING.md.
+# One version authority per tool — see the toolchain table in docs/CONTRIBUTING.md.
 
 # Monorepo task addressing (`mise run '//tools/release:pack'`): task defs live
 # beside the code they run. Root trust covers every config_root below, so the

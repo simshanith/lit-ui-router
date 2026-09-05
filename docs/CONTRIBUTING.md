@@ -4,14 +4,14 @@
 
 This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Each tool has exactly one version authority — one place to bump, no drift between duplicate pins:
 
-| Tool       | Provided by                                     | Pinned in                                                                |
-| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
-| node       | mise                                            | [`.nvmrc`](./.nvmrc)                                                     |
-| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
-| pnpm       | mise bootstraps, `packageManager` decides       | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
-| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) catalog                   |
-| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
-| zizmor     | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
+| Tool       | Provided by                                     | Pinned in                                                                 |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| node       | mise                                            | [`.nvmrc`](../.nvmrc)                                                     |
+| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+| pnpm       | mise bootstraps, `packageManager` decides       | `packageManager` in [`package.json`](../package.json) (+sha512 integrity) |
+| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) catalog                   |
+| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+| zizmor     | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
@@ -58,7 +58,7 @@ current TypeScript — they only matter if they leak into a declaration
 (e.g. `NoInfer<T>` in an exported signature breaks 5.0 consumers; the same
 type inside a function body emits nothing and is fine).
 
-This is enforced in CI by [`tools/dts-backtest`](./tools/dts-backtest/README.md),
+This is enforced in CI by [`tools/dts-backtest`](../tools/dts-backtest/README.md),
 which typechecks the built declarations in `bundler` and `NodeNext`
 resolution modes. PRs run the current-TS leg (`@tools/dts-backtest#test`);
 pushes to `main` run the full TypeScript version matrix down to 5.0.4
@@ -83,7 +83,7 @@ has nothing to review. Label any other PR `no-coderabbit` to opt it out the same
 way. It is advisory either way: no required status check, nothing it says blocks
 a merge. `mise run ci` remains the gate.
 
-Its behaviour lives in [`.coderabbit.yaml`](./.coderabbit.yaml), read from the
+Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
 PR's own branch, so a PR may adjust its own review. The static analysers this
 repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
 yamllint) are switched off there to avoid a second, weaker copy of CI; secret
