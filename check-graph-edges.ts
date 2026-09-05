@@ -22,11 +22,15 @@ const publishable = (member: Member) =>
   member.manifest.private !== true;
 
 const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
-  ...['docs#build', 'docs#typecheck', 'docs#docs'].map((consumer) => ({
+  ...[
+    'lit-ui-router.dev#build',
+    'lit-ui-router.dev#typecheck',
+    'lit-ui-router.dev#docs',
+  ].map((consumer) => ({
     consumer,
     producerTask: 'docs:api',
     select: hasScript('docs:api'),
-    why: 'every docs:api producer writes into www/lit-ui-router.dev/api and docs imports none of them, so add the line to www/lit-ui-router.dev/turbo.json',
+    why: 'every docs:api producer writes into www/lit-ui-router.dev/api and lit-ui-router.dev imports none of them, so add the line to www/lit-ui-router.dev/turbo.json',
   })),
   {
     consumer: '@tools/release#pack:all',

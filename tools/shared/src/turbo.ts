@@ -24,7 +24,7 @@ type DryRunTasks = {
   })[];
 };
 
-/** `['<pkg>', '<task>']` from a turbo task id like `docs#build` or `//#lint`. */
+/** `['<pkg>', '<task>']` from a turbo task id like `lit-ui-router.dev#build` or `//#lint`. */
 export function splitTaskId(taskId: string): [string, string] {
   const at = taskId.lastIndexOf('#');
   if (at <= 0 || at === taskId.length - 1) {

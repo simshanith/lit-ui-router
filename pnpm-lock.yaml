@@ -505,7 +505,7 @@ importers:
 
   apps/sample-app-lit-e2e:
     dependencies:
-      docs:
+      lit-ui-router.dev:
         specifier: workspace:*
         version: link:../../www/lit-ui-router.dev
     devDependencies:

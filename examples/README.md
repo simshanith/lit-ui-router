@@ -117,7 +117,7 @@ Each example is also built for the docs site (`turbo run build:embeds --filter=e
 Changing what an example renders can outgrow that reservation, which shows up as a scrollbar inside the embed. Measure it:
 
 ```bash
-turbo run check:embeds --filter=docs
+turbo run check:embeds --filter=lit-ui-router.dev
 ```
 
 It drives every state each built example's own links reach, in headless Chromium at the docs content column, and reports the tallest against the declared height — with the value to use when one no longer fits. Text wraps at engine-specific metrics, so the numbers are host-dependent by a percent or so; that is why the reservations carry slack and why this is a local check rather than a CI gate.

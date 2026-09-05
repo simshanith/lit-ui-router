@@ -35,4 +35,4 @@ npm install --global --allow-scripts=pnpm pnpm@12.2.1
 pnpm install --frozen-lockfile
 
 # turbo is a workspace devDependency, not on PATH.
-npx turbo docs#build
+npx turbo lit-ui-router.dev#build

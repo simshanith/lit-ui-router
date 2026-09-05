@@ -6,7 +6,7 @@
   "scripts": {
     "build": "tsc",
     "deflake": "node ./scripts/deflake-e2e.ts",
-    "docs:start-server": "pnpm --filter docs exec wrangler dev --port 8787",
+    "docs:start-server": "pnpm --filter lit-ui-router.dev exec wrangler dev --port 8787",
     "e2e": "cypress open",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
@@ -22,7 +22,7 @@
     "test:navigation": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:navigation"
   },
   "dependencies": {
-    "docs": "workspace:*"
+    "lit-ui-router.dev": "workspace:*"
   },
   "devDependencies": {
     "@types/lodash-es": "catalog:",
