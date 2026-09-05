@@ -28,7 +28,7 @@
 
 The `workers-builds` badge at the top is the same kind of signal for the deploy pipeline that ships
 [lit-ui-router.dev](https://lit-ui-router.dev) — see
-[CD-pipeline verification signal](./DEPLOY.md#cd-pipeline-verification-signal) for what it diffs and
+[CD-pipeline verification signal](./docs/DEPLOY.md#cd-pipeline-verification-signal) for what it diffs and
 what each colour means.
 
 ---

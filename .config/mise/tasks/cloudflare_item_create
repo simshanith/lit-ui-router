@@ -65,7 +65,7 @@ else
 fi
 
 # Two files, two syntaxes: op inject wants {{ op://… }}, op run --env-file wants
-# a bare reference. See DEPLOY.md — crossing them fails as a Cloudflare 401.
+# a bare reference. See docs/DEPLOY.md — crossing them fails as a Cloudflare 401.
 ref="op://$vault/$title"
 cat >"$tmpl" <<EOF
 CLOUDFLARE_API_TOKEN={{ $ref/CLOUDFLARE_API_TOKEN }}

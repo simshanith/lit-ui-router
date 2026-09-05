@@ -87,7 +87,7 @@ export function toWorkersBuildsCheckRun(
       'outage says nothing about whether the dashboard drifted, so this',
       'renders grey rather than sharing a colour with real drift.',
       '',
-      'See DEPLOY.md for the required secrets and the read-only token scope.',
+      'See docs/DEPLOY.md for the required secrets and the read-only token scope.',
       ...reportBlock(result.output),
     ].join('\n'),
   };

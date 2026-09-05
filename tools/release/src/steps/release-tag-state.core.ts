@@ -1,5 +1,5 @@
 // Pure logic classifying a release tag before the tag and push steps (#674);
-// the IO (git queries) lives in release-tag-state.ts. See RELEASE.md § 3.
+// the IO (git queries) lives in release-tag-state.ts. See docs/RELEASE.md § 3.
 
 /**
  * What already exists for a release tag: nothing (`tag`), a local tag at this
