@@ -76,59 +76,65 @@ function flatten(stderr: string): string {
     .replaceAll(/\s+/g, ' ');
 }
 
-/** A script name with no turbo task declared for it — skip, don't fail. */
-function isUndeclared(name: string, error: unknown): boolean {
-  return flatten(stderrOf(error)).includes(`Could not find task \`${name}\``);
-}
-
 /**
- * Every name a run rejected as undeclared. Interior whitespace is stripped
- * because a long name can land across a wrap; task names have none to lose.
+ * A script name with no turbo task declared for it — skip, don't fail. Every
+ * space goes before matching: the wrap can land inside the name itself, and a
+ * task name has none to lose.
  */
-export function undeclaredTaskNames(stderr: string): string[] {
-  const flat = flatten(stderr);
-  return [...flat.matchAll(/Could not find task `([^`]+)` in project/g)].map(
-    (match) => match[1].replaceAll(' ', ''),
-  );
+function isUndeclared(name: string, error: unknown): boolean {
+  const squashed = flatten(stderrOf(error)).replaceAll(' ', '');
+  return squashed.includes(`Couldnotfindtask\`${name}\``);
 }
 
 /**
- * Plans `names` in one dry run, so turbo validates the graph it would actually
- * build. Deliberately without `--only`: that flag strips the dependency edges,
- * which is what let an invalid one — `dependsOn` onto a persistent task — sit
- * unnoticed in the `e2e` lane (#695). Names with no turbo task are dropped and
- * the run repeated; a round that names nothing new is the real failure, so a
- * genuine graph error can never be retried away into silence.
+ * The names turbo has a task for. `--only` strips the dependency edges, so a
+ * lane planned that way can fail exactly one way — no task by that name — and
+ * the exit code alone classifies it. Nothing here reads turbo's prose, which
+ * it writes for people: wrapped, guttered, and ASCII on CI but box drawing on
+ * a UTF-8 terminal.
+ */
+async function declaredLanes(
+  names: readonly string[],
+  exec: Exec,
+  concurrency = 8,
+): Promise<string[]> {
+  const queue = [...names];
+  const declared = new Set<string>();
+  const worker = async () => {
+    for (let name = queue.shift(); name; name = queue.shift()) {
+      try {
+        await exec('turbo', ['run', name, '--only', '--dry-run=json']);
+        declared.add(name);
+      } catch {
+        // --only cannot fail for any other reason, so this is an undeclared
+        // script name: skip it rather than failing the guard
+      }
+    }
+  };
+  await Promise.all(
+    Array.from({ length: Math.max(1, concurrency) }, () => worker()),
+  );
+  return names.filter((name) => declared.has(name));
+}
+
+/**
+ * Plans every declared lane in one dry run, so turbo validates the graph it
+ * would actually build. That run deliberately omits `--only`: the flag strips
+ * the dependency edges, which is what let an invalid one — `dependsOn` onto a
+ * persistent task — sit unnoticed in the `e2e` lane (#695).
  */
 export async function planLanes(
   names: readonly string[],
   exec: Exec = defaultExec,
 ): Promise<{ planned: string[]; failure?: string }> {
-  const plan = async (lanes: readonly string[]) => {
-    try {
-      await exec('turbo', ['run', ...lanes, '--dry-run=json']);
-      return undefined;
-    } catch (error) {
-      return stderrOf(error) || String(error);
-    }
-  };
-
-  // only a name we actually passed can be dropped, so every round that makes
-  // progress shortens the lane list and the loop terminates
-  const passed = new Set(names);
-  const undeclared = new Set<string>();
-  for (;;) {
-    const lanes = names.filter((name) => !undeclared.has(name));
-    const failure = await plan(lanes);
-    if (failure === undefined) return { planned: lanes };
-
-    const before = undeclared.size;
-    for (const name of undeclaredTaskNames(failure)) {
-      if (passed.has(name)) undeclared.add(name);
-    }
-    // no new name to drop means the failure is the graph itself, not a script
-    // turbo has no task for — report it rather than looping
-    if (undeclared.size === before) return { planned: [], failure };
+  const planned = await declaredLanes(names, exec);
+  // nothing to validate, and the caller fails closed on an empty plan
+  if (planned.length === 0) return { planned };
+  try {
+    await exec('turbo', ['run', ...planned, '--dry-run=json']);
+    return { planned };
+  } catch (error) {
+    return { planned: [], failure: stderrOf(error) || String(error) };
   }
 }
 

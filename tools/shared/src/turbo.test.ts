@@ -7,7 +7,6 @@ import {
   plannedTasks,
   resolvedTaskDeps,
   splitTaskId,
-  undeclaredTaskNames,
 } from './turbo.ts';
 
 describe('splitTaskId', () => {
@@ -112,6 +111,24 @@ describe('plannedTasks', () => {
     assert.deepEqual([...planned.keys()], ['docs#test']);
   });
 
+  // CI gets ASCII box drawing, a UTF-8 terminal the box characters; the name
+  // must be read out of either gutter
+  it('skips a script name reported through the ASCII gutter', async () => {
+    const exec: Exec = (_command, args) =>
+      args[1] === 'prepare'
+        ? Promise.reject(
+            Object.assign(new Error('turbo failed'), {
+              stderr:
+                '  x Missing tasks in project\n' +
+                '  `->   x Could not find task `prep\n' +
+                '        | are` in project\n',
+            }),
+          )
+        : Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
+    const planned = await plannedTasks(['prepare', 'test'], exec, 1);
+    assert.deepEqual([...planned.keys()], ['docs#test']);
+  });
+
   it('rethrows any other turbo failure', async () => {
     const exec: Exec = () =>
       Promise.reject(
@@ -147,55 +164,6 @@ describe('plannedTasks', () => {
   });
 });
 
-describe('undeclaredTaskNames', () => {
-  it('collects every name turbo reported at once', () => {
-    const stderr =
-      '× Missing tasks in project\n' +
-      '  ├─▶ × Could not find task `prepare` in project\n' +
-      '  ╰─▶ × Could not find task `postinstall` in project';
-    assert.deepEqual(undeclaredTaskNames(stderr), ['prepare', 'postinstall']);
-  });
-
-  // verbatim turbo 2.10.11, both wrap shapes: the gutter lands between the
-  // name and `in project`, and again between `in` and `project`
-  it('reads through the wrap gutter', () => {
-    const stderr =
-      '  × Missing tasks in project\n' +
-      '  ├─▶   × Could not find task `example:install:design-system-links`\n' +
-      '  │     │ in project\n' +
-      '  ╰─▶   × Could not find task `typecheck:hellosolarsystem-mobx` in\n' +
-      '        │ project\n';
-    assert.deepEqual(undeclaredTaskNames(stderr), [
-      'example:install:design-system-links',
-      'typecheck:hellosolarsystem-mobx',
-    ]);
-  });
-
-  // verbatim CI, where turbo falls back to ASCII box drawing: the gutter is
-  // `|`, not `│`, and the wrap still lands between the name and `in project`
-  it('reads through an ASCII wrap gutter', () => {
-    const stderr =
-      '  x Missing tasks in project\n' +
-      '  `->   x Could not find task `example:install:hellosolarsystem-mobx` in\n' +
-      '        | project\n';
-    assert.deepEqual(undeclaredTaskNames(stderr), [
-      'example:install:hellosolarsystem-mobx',
-    ]);
-  });
-
-  it('rejoins a name the wrap split', () => {
-    const stderr =
-      '× Could not find task `example:install:\n  │     │ hellosolarsystem` in project';
-    assert.deepEqual(undeclaredTaskNames(stderr), [
-      'example:install:hellosolarsystem',
-    ]);
-  });
-
-  it('finds nothing in an unrelated failure', () => {
-    assert.deepEqual(undeclaredTaskNames('× Invalid task configuration'), []);
-  });
-});
-
 describe('planLanes', () => {
   // the failure this guard exists for: turbo rejects the whole run up front
   const persistent =
@@ -203,107 +171,84 @@ describe('planLanes', () => {
     '  ╰─▶ × "docs#docs" is a persistent task, "sample-app-lit-e2e#e2e"\n' +
     '      │ cannot depend on it';
 
-  it('plans every lane in one run, without --only', async () => {
-    const argv: unknown[] = [];
-    const exec: Exec = (command, args) => {
-      argv.push([command, args]);
+  // `--only` per lane classifies it, then one run without the flag validates
+  // the edges that flag would have stripped
+  it('classifies each lane, then plans them together without --only', async () => {
+    const argv: string[][] = [];
+    const exec: Exec = (_command, args) => {
+      argv.push([...args]);
       return Promise.resolve({ stdout: '{}', stderr: '' });
     };
     assert.deepEqual(await planLanes(['build', 'e2e'], exec), {
       planned: ['build', 'e2e'],
     });
     assert.deepEqual(argv, [
-      ['turbo', ['run', 'build', 'e2e', '--dry-run=json']],
+      ['run', 'build', '--only', '--dry-run=json'],
+      ['run', 'e2e', '--only', '--dry-run=json'],
+      ['run', 'build', 'e2e', '--dry-run=json'],
     ]);
   });
 
-  it('drops undeclared names and re-plans', async () => {
+  // under --only a lane can only fail one way, so the exit code is the whole
+  // signal — no turbo prose is read to decide this
+  it('drops a lane whose --only run fails, whatever it printed', async () => {
     const argv: string[][] = [];
     const exec: Exec = (_command, args) => {
       argv.push([...args]);
-      return argv.length === 1
-        ? Promise.reject(
-            Object.assign(new Error('turbo failed'), {
-              stderr: '× Could not find task `prepare` in project',
-            }),
-          )
+      return args.includes('prepare')
+        ? Promise.reject(new Error('exit 1'))
         : Promise.resolve({ stdout: '{}', stderr: '' });
     };
     assert.deepEqual(await planLanes(['build', 'prepare'], exec), {
       planned: ['build'],
     });
-    assert.deepEqual(argv, [
-      ['run', 'build', 'prepare', '--dry-run=json'],
-      ['run', 'build', '--dry-run=json'],
-    ]);
+    assert.deepEqual(argv.at(-1), ['run', 'build', '--dry-run=json']);
   });
 
-  // a wrapped name can go unread in one round and be reported alone in the
-  // next; the loop keeps dropping as long as a round names something new
-  it('keeps dropping names turbo reveals a round at a time', async () => {
-    const argv: string[][] = [];
-    const missing = (name: string) =>
-      Object.assign(new Error('turbo failed'), {
-        stderr: `× Could not find task \`${name}\` in project`,
-      });
-    const exec: Exec = (_command, args) => {
-      argv.push([...args]);
-      if (args.includes('prepare')) return Promise.reject(missing('prepare'));
-      if (args.includes('postinstall'))
-        return Promise.reject(missing('postinstall'));
-      return Promise.resolve({ stdout: '{}', stderr: '' });
-    };
-    assert.deepEqual(
-      await planLanes(['build', 'prepare', 'postinstall'], exec),
-      { planned: ['build'] },
-    );
-    assert.equal(argv.length, 3);
-  });
-
-  // turbo naming something we never passed must not spin: no lane comes off
-  it('stops when the reported name is not one it passed', async () => {
-    let calls = 0;
-    const exec: Exec = () => {
-      calls += 1;
-      return Promise.reject(
-        Object.assign(new Error('turbo failed'), {
-          stderr: '× Could not find task `never-passed` in project',
-        }),
-      );
-    };
-    const { planned, failure } = await planLanes(['build'], exec);
-    assert.deepEqual(planned, []);
-    assert.match(failure ?? '', /never-passed/);
-    assert.equal(calls, 1);
-  });
-
-  it('reports an invalid edge instead of retrying it away', async () => {
-    let calls = 0;
-    const exec: Exec = () => {
-      calls += 1;
-      return Promise.reject(
-        Object.assign(new Error('turbo failed'), { stderr: persistent }),
-      );
-    };
-    const { planned, failure } = await planLanes(['e2e'], exec);
-    assert.deepEqual(planned, []);
-    assert.match(failure ?? '', /persistent task/);
-    assert.equal(calls, 1);
-  });
-
-  it('reports an invalid edge the retry uncovers', async () => {
+  it('keeps the caller order however the lanes resolve', async () => {
     const exec: Exec = (_command, args) =>
       args.includes('prepare')
-        ? Promise.reject(
-            Object.assign(new Error('turbo failed'), {
-              stderr: '× Could not find task `prepare` in project',
-            }),
-          )
+        ? Promise.reject(new Error('exit 1'))
+        : Promise.resolve({ stdout: '{}', stderr: '' });
+    const { planned } = await planLanes(
+      ['test', 'prepare', 'build', 'e2e'],
+      exec,
+    );
+    assert.deepEqual(planned, ['test', 'build', 'e2e']);
+  });
+
+  it('reports an invalid edge the combined plan rejects', async () => {
+    const exec: Exec = (_command, args) =>
+      args.includes('--only')
+        ? Promise.resolve({ stdout: '{}', stderr: '' })
         : Promise.reject(
             Object.assign(new Error('turbo failed'), { stderr: persistent }),
           );
-    const { planned, failure } = await planLanes(['e2e', 'prepare'], exec);
+    const { planned, failure } = await planLanes(['e2e', 'build'], exec);
     assert.deepEqual(planned, []);
     assert.match(failure ?? '', /persistent task/);
+  });
+
+  it('reports a failure that carries no stderr', async () => {
+    const exec: Exec = (_command, args) =>
+      args.includes('--only')
+        ? Promise.resolve({ stdout: '{}', stderr: '' })
+        : Promise.reject(new Error('turbo exploded'));
+    const { failure } = await planLanes(['build'], exec);
+    assert.match(failure ?? '', /turbo exploded/);
+  });
+
+  // every lane failing means turbo planned nothing; the caller fails closed on
+  // it, so planLanes must not run the combined plan and call that a pass
+  it('plans nothing when no lane is declared', async () => {
+    let calls = 0;
+    const exec: Exec = () => {
+      calls += 1;
+      return Promise.reject(new Error('exit 1'));
+    };
+    assert.deepEqual(await planLanes(['prepare', 'postinstall'], exec), {
+      planned: [],
+    });
+    assert.equal(calls, 2);
   });
 });
