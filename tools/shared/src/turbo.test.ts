@@ -2,7 +2,14 @@ import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
 import type { Exec } from './exec.ts';
-import { plannedTasks, resolvedTaskDeps, splitTaskId } from './turbo.ts';
+import {
+  declaredLanes,
+  planFailure,
+  plannedLanes,
+  plannedTasks,
+  resolvedTaskDeps,
+  splitTaskId,
+} from './turbo.ts';
 
 describe('splitTaskId', () => {
   it('splits package and task, root included', () => {
@@ -138,5 +145,92 @@ describe('plannedTasks', () => {
       cache: true,
       inputs: {},
     });
+  });
+});
+
+describe('declaredLanes', () => {
+  it('unqualifies task ids and unions across configs', () => {
+    const root = `{
+      // turbo.json carries comments
+      "tasks": { "build": {}, "docs#docs:api": {}, "//#lint:templates": {} }
+    }`;
+    const pkg = '{ "tasks": { "build": {}, "e2e": {} } }';
+    assert.deepEqual([...declaredLanes([root, pkg])].sort(), [
+      'build',
+      'docs:api',
+      'e2e',
+      'lint:templates',
+    ]);
+  });
+
+  it('throws on malformed JSONC rather than reading no lanes', () => {
+    assert.throws(
+      () => declaredLanes(['{ "tasks": { ']),
+      /invalid turbo\.json/,
+    );
+  });
+
+  it('tolerates a config with no tasks at all', () => {
+    assert.deepEqual([...declaredLanes(['{ "extends": ["//"] }'])], []);
+  });
+});
+
+describe('plannedLanes', () => {
+  it('returns the unqualified names turbo plans for the run', async () => {
+    const argv: unknown[] = [];
+    const exec: Exec = (command, args) => {
+      argv.push([command, args]);
+      return Promise.resolve({
+        stdout: JSON.stringify({
+          tasks: [
+            { taskId: 'docs#build' },
+            { taskId: '//#lint:templates' },
+            { taskId: 'lit-ui-router#build' },
+            // turbo has emitted an entry without an id before now
+            {},
+          ],
+        }),
+        stderr: '',
+      });
+    };
+    assert.deepEqual(
+      [...(await plannedLanes(['ci', 'ci:main'], exec))].sort(),
+      ['build', 'lint:templates'],
+    );
+    assert.deepEqual(argv, [
+      ['turbo', ['run', 'ci', 'ci:main', '--dry-run=json']],
+    ]);
+  });
+});
+
+describe('planFailure', () => {
+  it('plans the lanes in one run, without --only', async () => {
+    const argv: unknown[] = [];
+    const exec: Exec = (command, args) => {
+      argv.push([command, args]);
+      return Promise.resolve({ stdout: '{}', stderr: '' });
+    };
+    assert.equal(await planFailure(['e2e', 'dev'], exec), undefined);
+    assert.deepEqual(argv, [
+      ['turbo', ['run', 'e2e', 'dev', '--dry-run=json']],
+    ]);
+  });
+
+  it('returns the complaint about an invalid edge', async () => {
+    const exec: Exec = () =>
+      Promise.reject(
+        Object.assign(new Error('turbo failed'), {
+          stderr:
+            '  × Invalid task configuration\n' +
+            '  ╰─▶ × "docs#docs" is a persistent task, "sample-app-lit-e2e#e2e"\n' +
+            '      │ cannot depend on it',
+        }),
+      );
+    assert.match((await planFailure(['e2e'], exec)) ?? '', /persistent task/);
+  });
+
+  it('falls back to the error itself when it carries no stderr', async () => {
+    const exec: Exec = () => Promise.reject(new Error('turbo exploded'));
+    assert.match((await planFailure(['e2e'], exec)) ?? '', /turbo exploded/);
   });
 });
