@@ -3,9 +3,12 @@
  *
  * The gtag snippet itself is injected at STAGE time (generator/stage-site.mjs)
  * and only when VITE_GOOGLE_ANALYTICS_TRACKING_ID is set, so this module never
- * loads a tracker: it only reports to one the page already has. The stock
- * snippet counts the first load; every SPA navigation after that is invisible
- * to it, hence onSuccess — the url in the address bar is final by then.
+ * loads a tracker: it only reports to one the page already has. The staged
+ * config sets send_page_view:false, so THIS hook owns every page_view — the
+ * first transition included. onSuccess, because the address bar is final by
+ * then. Enhanced measurement's history-change page_view (a stream setting)
+ * only patches pushState; the Navigation API plugin bypasses it, and the
+ * pushState fallback would double-count — turn that toggle off in the stream.
  */
 import type { UIRouterLit } from 'lit-ui-router';
 

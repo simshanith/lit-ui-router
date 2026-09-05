@@ -43,7 +43,7 @@ unchanged.
 | `view-transitions.ts` | slideshow between sheets (View Transitions API, CSS keyframe fallback) | `onBefore` for the snapshot; `transition.promise` + two animation frames for the release |
 | `keyboard.ts`         | ← / → walk the set                              | none — reads `router.globals`                        |
 | `megacanvas-pan.ts`   | the megacanvas as a reel that pans/zooms to `?at=<sheet>` | `onSuccess`                                |
-| `analytics.ts`        | one `page_view` per navigation, only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time) | `onSuccess` |
+| `analytics.ts`        | every `page_view` (the first included — the staged config has `send_page_view:false`), only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time, the flagship's own id) | `onSuccess` |
 
 Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots
 the document at the moment it is called, so it must run **before** any resolve

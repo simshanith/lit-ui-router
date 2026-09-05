@@ -59,12 +59,16 @@ if (staged) {
   }
 }
 
-// Google Analytics, staged copies only — the same env var the flagship docs
-// build reads, so the committed pages (the Artifact source) never carry a tag.
-// The atlas app's SPA route changes send their own page_view (app/src/experimental/analytics.ts).
+// Google Analytics, staged copies only — the SAME measurement id as the
+// flagship (one property, one stream: GA4 cookies live on .lit-ui-router.dev,
+// so a separate id would split users across the subdomains; slice the atlas
+// out with the Hostname dimension). The committed pages (the Artifact source)
+// never carry a tag. Under /app/ the router sends every page_view itself,
+// including the first (app/src/experimental/analytics.ts), so the config
+// there suppresses gtag's own initial one.
 const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_TRACKING_ID;
-const gaTag = (id) => `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}');</script>
+const gaTag = (id, routed) => `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}'${routed ? ',{send_page_view:false}' : ''});</script>
 `;
 const walkHtml = (dir, out = []) => {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -79,7 +83,8 @@ if (GA_ID) {
   for (const p of walkHtml(dist)) {
     // the static sheets are head-less (the Artifact host wraps them), so the tag leads the file
     const html = readFileSync(p, 'utf8');
-    writeFileSync(p, html.includes('</head>') ? html.replace('</head>', `${gaTag(GA_ID)}</head>`) : gaTag(GA_ID) + html);
+    const tag = gaTag(GA_ID, p.startsWith(join(dist, 'app') + '/'));
+    writeFileSync(p, html.includes('</head>') ? html.replace('</head>', `${tag}</head>`) : tag + html);
     tagged += 1;
   }
 } else {
