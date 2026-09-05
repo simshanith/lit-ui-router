@@ -1,0 +1,125 @@
+<section class="sheet" id="sheet-5" aria-label="Sheet 5: THE DESIGN SPACE">
+  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 5 / 14</span></div>
+  <h2 class="sheet-title">THE DESIGN SPACE</h2>
+  <p class="sheet-sub">ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
+<defs>
+  <marker id="s5-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s5-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s5-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s5-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s5-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s5-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s5-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s5-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<!-- frame + column bands -->
+<rect x="130" y="70" width="870" height="440" rx="0" class="sk fnone"/>
+<line x1="420" y1="70" x2="420" y2="510" class="skf" stroke-dasharray="4 4"/>
+<line x1="710" y1="70" x2="710" y2="510" class="skf" stroke-dasharray="4 4"/>
+<text x="275" y="58" class="lbls" text-anchor="middle" >AT BUILD TIME</text>
+<text x="565" y="58" class="lbls" text-anchor="middle" >AT SERVER RUNTIME</text>
+<text x="855" y="58" class="lbls" text-anchor="middle" >AT CLIENT RUNTIME</text>
+<text x="565" y="36" class="lblb" text-anchor="middle" >WHERE ROUTES ARE MATCHED →</text>
+
+<!-- ownership bands -->
+
+<text x="118" y="147.33333333333331" class="lbls" text-anchor="end" >LIBRARY</text>
+<line x1="130" y1="216.66666666666666" x2="1000" y2="216.66666666666666" class="skf"/>
+<text x="118" y="294" class="lbls" text-anchor="end" >FRAMEWORK</text>
+<line x1="130" y1="363.3333333333333" x2="1000" y2="363.3333333333333" class="skf"/>
+<text x="118" y="440.66666666666663" class="lbls" text-anchor="end" >PLATFORM</text>
+<text x="22" y="290" class="lblb" text-anchor="middle" transform="rotate(-90 22 290)">WHO OWNS NAVIGATION ↑</text>
+
+<g><title>SvelteKit — filesystem routes, compiled</title><circle cx="217" cy="264" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="231" y="263" class="lblb" text-anchor="start" >SvelteKit</text>
+<text x="231" y="276" class="lblf" text-anchor="start" >filesystem routes, compiled</text></g>
+<g><title>Next App Router — fs routes · server-first</title><circle cx="251.8" cy="316" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="265.8" y="315" class="lblb" text-anchor="start" >Next App Router</text>
+<text x="265.8" y="328" class="lblf" text-anchor="start" >fs routes · server-first</text></g>
+<g><title>React Router v7 — framework mode — Remix folded in</title><circle cx="469.3" cy="290" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="483.3" y="289" class="lblb" text-anchor="start" >React Router v7</text>
+<text x="483.3" y="302" class="lblf" text-anchor="start" >framework mode — Remix folded in</text></g>
+<g><title>Angular Router — config tree in the injector</title><circle cx="756.4" cy="264" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="770.4" y="263" class="lblb" text-anchor="start" >Angular Router</text>
+<text x="770.4" y="276" class="lblf" text-anchor="start" >config tree in the injector</text></g>
+<g><title>Vue Router — official, but installable</title><circle cx="895.6" cy="320" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="881.6" y="319" class="lblb" text-anchor="end" >Vue Router</text>
+<text x="881.6" y="332" class="lblf" text-anchor="end" >official, but installable</text></g>
+<g><title>TanStack Router — typed at build, matched in the client</title><circle cx="739" cy="106" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="753" y="105" class="lblb" text-anchor="start" >TanStack Router</text>
+<text x="753" y="118" class="lblf" text-anchor="start" >typed at build, matched in the client</text></g>
+<g><title>wouter — minimal hook</title><circle cx="930.4000000000001" cy="144" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="916.4000000000001" y="143" class="lblb" text-anchor="end" >wouter</text>
+<text x="916.4000000000001" y="156" class="lblf" text-anchor="end" >minimal hook</text></g>
+<g><title>Hono / Express — server-only: match, no navigation</title><circle cx="460.6" cy="180" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="474.6" y="179" class="lblb" text-anchor="start" >Hono / Express</text>
+<text x="474.6" y="192" class="lblf" text-anchor="start" >server-only: match, no navigation</text></g>
+<g><title>ui-router / lit-ui-router — named state tree — URL is a projection</title><rect x="740.6999999999999" y="189" width="14" height="14" class="ska fp" stroke-width="2.2"/><rect x="734.6999999999999" y="183" width="26" height="26" rx="4" class="fhalo"/>
+<text x="767.6999999999999" y="195" class="lbla" text-anchor="start" >ui-router / lit-ui-router</text>
+<text x="767.6999999999999" y="208" class="lblf" text-anchor="start" >named state tree — URL is a projection</text></g>
+<g><title>Navigation API — the primitive the client column builds on</title><circle cx="730.3" cy="440" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="744.3" y="439" class="lblb" text-anchor="start" >Navigation API</text>
+<text x="744.3" y="452" class="lblf" text-anchor="start" >the primitive the client column builds on</text></g>
+
+<!-- the thesis callout -->
+<rect x="146" y="84" width="330" height="86" class="skr fnone" stroke-dasharray="6 4"/>
+<text x="160" y="108" class="lbls" text-anchor="start" >THE EMPTY QUARTER</text>
+<text x="160" y="123" class="lbls" text-anchor="start" >nearly every router here is URL-first:</text>
+<text x="160" y="138" class="lbls" text-anchor="start" >the address is the source of truth.</text>
+<text x="160" y="153" class="lbls" text-anchor="start" >state-first routing is a one-square niche.</text>
+
+<!-- shape legend under plot -->
+<text x="130" y="546" class="lbls" text-anchor="start" >SHAPE = SOURCE OF TRUTH</text>
+<circle cx="142" cy="568" r="6" class="sk fp" stroke-width="1.6"/>
+<text x="158" y="572" class="lbl" text-anchor="start" >URL-first — the view is derived from the address</text>
+<rect x="136" y="586" width="12" height="12" class="ska fp" stroke-width="2"/>
+<text x="158" y="600" class="lbl" text-anchor="start" >state-first — a named state tree; the URL is one projection of it</text>
+</svg></div>
+    <figcaption>No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>This altitude forbids the city outright.</strong> A diagram's edges assert mechanism, and there is none between TanStack and SvelteKit. The honest form is a positioned chart whose axes are real, contested design decisions — with the positions owned as editorial judgment, not measurement.</p>
+<p><strong>Reading the columns:</strong> the field has been sliding left for a decade — filesystem routes and typegen move matching toward build time; server components move it toward the server. The client-runtime column is where the platform itself now competes, via the Navigation API.</p>
+<p><strong>The square is the argument.</strong> Every circle on this chart treats the URL as the source of truth and derives the view from it. The ui-router lineage inverts that: a named, hierarchical state tree is primary, and the URL is a projection — one of several possible addresses for a state. That inversion is why <a class="xref" data-sheet="1" href="/app/sheet/1">sheet 1</a>'s loop runs through a state registry rather than a path matcher, and why the same tree can answer HTTP requests in <a class="xref" data-sheet="2" href="/app/sheet/2">sheet 2</a>'s server lane. It is also why the square sits alone: the niche is real, small, and — for state-heavy embedded UIs where the address bar is not the whole story — defensible.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><circle cx="22" cy="9" r="6" class="sk fp" stroke-width="1.6"/></svg></td><td>URL-first router</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="16" y="3" width="12" height="12" class="ska fp" stroke-width="2"/></svg></td><td>state-first router (this lineage)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" class="skr fnone" stroke-dasharray="4 3"/></svg></td><td>editorial callout</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="skf" stroke-dasharray="4 4"/></svg></td><td>column boundary (soft)</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>THE ALTITUDE ATLAS</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE DESIGN SPACE</div>
+  <div><span class="fld">SCALE</span>JS ECOSYSTEM</div>
+  <div><span class="fld">FORM</span>POSITIONED CHART</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · A</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>5 OF 14</div>
+</div>
+    </div>
+  </div>
+</section>

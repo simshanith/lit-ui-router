@@ -25,6 +25,7 @@ import { sheet13 } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
 import { pipelineSection } from './pipeline-graph.mjs';
 import { citySection } from './city-scene.mjs';
+import { emitApp } from './emit-app.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
@@ -247,5 +248,9 @@ tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 \`generator/census-overview.mjs\` prints the same rollup on the terminal.
 `);
 
+// --- app/ — the same set, cut into fragments for the lit-ui-router SPA ---
+const appSheets = emitApp({ sheets, interactive: [[sheet2b, sheet2bPage], [sheet12i, register12iSection]], outDir: OUT });
+
 // + 2: the two interactive lanes with a standalone page of their own, 2B and 12i
 console.log('built', sheets.length + 2, 'sheets + megacanvas + gallery + README →', OUT);
+console.log('emitted', appSheets, 'app fragments + manifest →', join(OUT, 'app/public'));

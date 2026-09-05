@@ -5,7 +5,7 @@
 // Committed pages keep their cdnjs URLs (the Artifact host's CSP allows only
 // that origin); the rewrite below touches the STAGED copies alone. Vendored
 // bytes are pin-verified by sha256 — a hash mismatch aborts the stage.
-import { copyFileSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { copyFileSync, cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
 
@@ -43,4 +43,23 @@ const pages = readdirSync(root).filter((f) => f.endsWith('.html')).sort();
 for (const f of pages) writeFileSync(join(dist, f), vendored(readFileSync(join(root, f), 'utf8')));
 copyFileSync(join(dist, 'gallery.html'), join(dist, 'index.html'));
 
+// The routed set rides along at /app/ — vite's `base` is already /app/, and
+// its own dist carries the prerendered pages, _redirects and the fragments.
+// The static sheets stay exactly where they are.
+const appDist = join(root, 'app', 'dist');
+const staged = existsSync(appDist);
+if (staged) {
+  cpSync(appDist, join(dist, 'app'), { recursive: true });
+  // Cloudflare Pages only reads _redirects at the SITE root, and the app's
+  // rules are already absolute (/app/office -> /app/sheet/14), so lift it.
+  const nested = join(dist, 'app', '_redirects');
+  if (existsSync(nested)) {
+    writeFileSync(join(dist, '_redirects'), readFileSync(nested, 'utf8'));
+    rmSync(nested);
+  }
+}
+
 console.log(`staged ${pages.length} pages + index.html + ${VENDOR.length} vendored scripts → dist/`);
+console.log(staged
+  ? 'staged the routed app → dist/app/ (run `npm run build` in app/ first to refresh it)'
+  : 'no app/dist — run `npm install && npm run build` in diagrams/app to include /app/');

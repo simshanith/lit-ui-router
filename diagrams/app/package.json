@@ -1,0 +1,36 @@
+{
+  "name": "altitude-atlas-app",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build && node prerender.ts",
+    "build:spa": "vite build",
+    "dev": "vite",
+    "preview": "vite preview",
+    "prerender": "node prerender.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@uirouter/core": "^6.1.2",
+    "cytoscape": "^3.31.0",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.11.2",
+    "ui-router-navigation-location-plugin": "^0.3.0",
+    "ui-router-server": "^0.1.1"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "^4.1.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn"
+    }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}

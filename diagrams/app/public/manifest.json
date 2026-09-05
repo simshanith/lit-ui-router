@@ -1,0 +1,432 @@
+{
+  "project": "THE ALTITUDE ATLAS",
+  "client": "lit-ui-router · simshanith",
+  "total": 14,
+  "date": "2026-09-04",
+  "base": "/app/",
+  "generatedBy": "diagrams/generator/emit-app.mjs",
+  "sheets": [
+    {
+      "id": "1",
+      "num": "1",
+      "title": "THE RENDER LOOP",
+      "sub": "ALTITUDE 1 — lit-ui-router 1.11.2 · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic",
+      "caption": "Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.",
+      "scale": "ONE PACKAGE",
+      "form": "ISO CIRCUIT",
+      "rev": "E",
+      "file": "sheets/1.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-files.json"
+      ],
+      "refs": []
+    },
+    {
+      "id": "2",
+      "num": "2",
+      "title": "THE BRICK ASSEMBLY",
+      "sub": "ALTITUDE 2 — one baseplate, four bricks, 27 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05)",
+      "caption": "Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.",
+      "scale": "FOUR PACKAGES",
+      "form": "BRICK ASSEMBLY",
+      "rev": "B",
+      "file": "sheets/2.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-bricks.json"
+      ],
+      "refs": [
+        "4"
+      ]
+    },
+    {
+      "id": "2a",
+      "num": "2A",
+      "title": "THE COUPLING PLAN",
+      "sub": "ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ b2338d0 — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count",
+      "caption": "The brick assembly, uncoupled and brought back to rev A’s elevation: core as a socket wall, companions as shallow blocks drawn just short of seated, and each of the six connection points — five published studs and one keyed red seat — large enough to letter its API call on the joint itself.",
+      "scale": "FOUR PACKAGES",
+      "form": "COUPLING PLAN",
+      "rev": "B",
+      "file": "sheets/2a.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-bricks.json"
+      ],
+      "refs": [
+        "2",
+        "4"
+      ]
+    },
+    {
+      "id": "2b",
+      "num": "2B",
+      "title": "THE COUPLING BENCH",
+      "sub": "ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · 7 nodes · every one of the 7 drawn edges is a published contract, with its declared range under the pointer",
+      "caption": "The same assembly as sheets 2 and 2A, reduced to what a consumer's installer actually reads: seven buildings and 7 contracts. Hover an edge for the range it declares and the section it lives in; hover a building for its version, what it declares, and what declares it.",
+      "scale": "SEVEN NODES · TWELVE CONTRACTS",
+      "form": "INTERACTIVE COUPLING GRAPH",
+      "rev": "A",
+      "file": "sheets/2b.html",
+      "interactive": true,
+      "needsCytoscape": true,
+      "plates": [
+        "census-bricks.json",
+        "census-couplings.json"
+      ],
+      "refs": [
+        "2",
+        "2A"
+      ]
+    },
+    {
+      "id": "3",
+      "num": "3",
+      "title": "THE INSTRUMENT YARD",
+      "sub": "ALTITUDE 3 — 5 publishable packages · 20 tools · 70 turbo task names · one packer, many readers · REV C: census refresh — every mass counted at origin/main @ b2338d0 (2026-09-05) from diagrams/data/census-yard.json (scc Code lines), 201 authored files and 13,899 sloc across 17 massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci 605 nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic",
+      "caption": "The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.",
+      "scale": "THE MONOREPO",
+      "form": "ISOMETRIC CITY",
+      "rev": "E",
+      "file": "sheets/3.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-files.json",
+        "census-handoff.json",
+        "census-plate.json",
+        "census-yard.json"
+      ],
+      "refs": [
+        "4"
+      ]
+    },
+    {
+      "id": "3a",
+      "num": "3A",
+      "title": "THE HANDOFF WORKS",
+      "sub": "ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 11 workflows · 49 mise tasks in 4 homes · turbo ci 605 nodes, 183 real · 4 seam types · 3 service doors · REV B: census refresh 2026-08-31 · REV C: the vanished tmp/ census is a scripted probe — every count imported from diagrams/data/census-handoff.json + census-plate.json · REV D: whole-cabinet refresh — mise unmoved a third time, turbo down to 17 files / 98 definitions · counted at origin/main @ b2338d0 (2026-09-05)",
+      "caption": "The two task managers drawn as the two machines they are — mise the node-free umbrella, turbo the cached fan-out — with the seams as the featured parts: every crossing is a bolted gasket labeled with what crosses it and what the boundary buys. The star fitting is the cache gasket on the return duct: turbo caches mise, because the six re-entrant lint lanes hash the mise task files and mise.lock, so a tool-pin bump invalidates exactly its own lane.",
+      "scale": "TWO TASK MANAGERS",
+      "form": "COUPLING SCHEMATIC",
+      "rev": "D",
+      "file": "sheets/3a.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-handoff.json",
+        "census-plate.json"
+      ],
+      "refs": [
+        "12"
+      ]
+    },
+    {
+      "id": "3b",
+      "num": "3B",
+      "title": "THE WATCHED CITY",
+      "sub": "ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 183 real tasks in 28 massed structures · footprint = watched files (46,520 task-file hashes) · height = command sloc (2,118) · 422 phantom plots · REV B: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering · REV C 2026-08-31: re-surveyed at turbo 2.10.11 — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane · REV C corrected 2026-09-01: every height re-derived on scc 4.0.0 by census-mass3b.mjs — command sloc 1,737 → 1,774, flat blocks 134 → 130, and the plain re-measured on a clean tree at 17,692 files · REV D 2026-09-02: every number now imported from diagrams/data/census-mass3b.json — the re-based survey grew a fifth package quarter (eslint-plugin-lit-ui-router, 9 tasks), 165 → 176 real tasks and 1,774 → 2,022 command sloc · REV E: whole-cabinet refresh — #693 swapped one root guard for two, so the yard is re-platted and the plate stands at 183 real tasks in 28 structures · REV F 2026-09-04: refreshed after the 1.11.2 + mobx 1.0.0 releases — @tools/embed-heights (#703) takes four rows on the instrument terrace, and the examples plain grew from 17,821 to 31,477 watched files, so the harbour's note moved to clear its corner — surveyed at origin/main @ b2338d0 (2026-09-05)",
+      "caption": "The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 143 of 183 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 291-line test tower on a 32-file lot, a 70-line patch check on a 659-file lot, a 31,477-file plain patrolled by 25 lines of command, and a root lint lane that grew a 401-sloc spire when it stopped being one eslint line.",
+      "scale": "THE CI TASK GRAPH",
+      "form": "ISOMETRIC GRAPH CITY",
+      "rev": "F",
+      "file": "sheets/3b.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-mass3b.json",
+        "census-plate.json"
+      ],
+      "refs": [
+        "3",
+        "12"
+      ]
+    },
+    {
+      "id": "4",
+      "num": "4",
+      "title": "THE FAMILY SPINE",
+      "sub": "ALTITUDE 4 — one core, four living adapters, four dormant instruments · REV C: every version and publish date imported from census-npm.json (npm registry read 2026-09-05), core and this repo's mass from census-bricks.json · REV D: whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart · REV E 2026-09-04: this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one",
+      "caption": "Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.",
+      "scale": "UI-ROUTER ECOSYSTEM",
+      "form": "MASSED SPINE",
+      "rev": "E",
+      "file": "sheets/4.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-bricks.json",
+        "census-couplings.json",
+        "census-npm.json"
+      ],
+      "refs": []
+    },
+    {
+      "id": "5",
+      "num": "5",
+      "title": "THE DESIGN SPACE",
+      "sub": "ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes",
+      "caption": "No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.",
+      "scale": "JS ECOSYSTEM",
+      "form": "POSITIONED CHART",
+      "rev": "A",
+      "file": "sheets/5.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [],
+      "refs": [
+        "1",
+        "2"
+      ]
+    },
+    {
+      "id": "6",
+      "num": "6",
+      "title": "THE ROUTING STRATA",
+      "sub": "ALTITUDE 6 — routing in general · the altitude where prose outranks pictures",
+      "caption": "At the widest altitude the only shared structure is a definition, so the drawing shrinks to a core sample and the writing does the work: five strata, one invariant triple.",
+      "scale": "EVERYTHING",
+      "form": "CORE SAMPLE",
+      "rev": "A",
+      "file": "sheets/6.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [],
+      "refs": [
+        "1"
+      ]
+    },
+    {
+      "id": "7",
+      "num": "7",
+      "title": "THE MEASURED CITY",
+      "sub": "ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall · REV D 2026-08-31: recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json · REV E 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame — counted at origin/main @ b2338d0 (2026-09-05)",
+      "caption": "Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Rev B keeps the census — footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and adds the two things a census alone cannot say: which districts these members belong to, and which roads actually run between them. Every road is a workspace dependency or a turbo task edge, never an impression.",
+      "scale": "WHOLE WORKSPACE",
+      "form": "MEASURED CITY",
+      "rev": "E",
+      "file": "sheets/7.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-city.json"
+      ],
+      "refs": [
+        "3"
+      ]
+    },
+    {
+      "id": "7a",
+      "num": "7A",
+      "title": "THE SHADOW SURVEY",
+      "sub": "ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, 32 members · REV B: polarity corrected — the tests are the light, shadow is the untested · REV C 2026-08-31: lettering pass — no district boundary is drawn through a caption · REV D 2026-08-31: footprints refreshed to sheet 7 rev D’s census; the light was NOT re-metered and the plate said so · REV E: RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (metered at origin/main @ b2338d0 (2026-09-05)); the daggers retire, №31 is metered for the first time, and nothing on this plate is hand-pasted",
+      "caption": "Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite is run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.",
+      "scale": "WHOLE WORKSPACE",
+      "form": "SHADOW PLAN",
+      "rev": "E",
+      "file": "sheets/7a.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-city.json",
+        "census-shadow.json"
+      ],
+      "refs": [
+        "7"
+      ]
+    },
+    {
+      "id": "7b",
+      "num": "7B",
+      "title": "THE WORKING CITY",
+      "sub": "ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered · steam now IMPORTED from diagrams/data/census-steam.json (window 2026-06-07..2026-09-04 · counted at origin/main @ b2338d0 (2026-09-05)) and the massing from sheet 7’s own plate, so the fifth package joins the city as №31 · REV D: whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (24 real of 114 nodes) instead of a hand-pasted 22 of 113 · REV E: the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, origin/main @ b2338d0), so rust is the last editorial channel on this sheet and №31 finally reads a lamp · REV F 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights joins the plant at rust 0, its lamp metered by its own node:test suite",
+      "caption": "Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. Rev B’s one alarm rang over no plant at all — it rang over the drawings; rev C draws it struck through, because it was answered.",
+      "scale": "WHOLE WORKSPACE",
+      "form": "WORKING CITY",
+      "rev": "F",
+      "file": "sheets/7b.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-city.json",
+        "census-plate.json",
+        "census-shadow.json",
+        "census-steam.json"
+      ],
+      "refs": [
+        "3",
+        "3A",
+        "7",
+        "8",
+        "10",
+        "12",
+        "13"
+      ]
+    },
+    {
+      "id": "8",
+      "num": "8",
+      "title": "THE DELIVERED CITY",
+      "sub": "ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · REV C: recounted after the lit de-duplication · 2026-08-17 · REV D 2026-08-31: hidden-line pass — opaque faces, masses painted back to front, no rear wall through a front one · every number now imported from diagrams/data/census-nm.json — measured at origin/main @ b2338d0 (2026-09-05), closure of apps/sample-app-lit-vanilla",
+      "caption": "The production dependency closure of one sample app, surveyed on disk: every delivered package as a building — footprint from file count, height from lines — with the consumer’s own 597-line building standing in the city it summoned.",
+      "scale": "ONE CONSUMER",
+      "form": "DELIVERED CITY",
+      "rev": "D",
+      "file": "sheets/8.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-nm.json"
+      ],
+      "refs": [
+        "7",
+        "9"
+      ]
+    },
+    {
+      "id": "9",
+      "num": "9",
+      "title": "THE SHIPPED CITY",
+      "sub": "ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · 593 files, 4.0 MB on the wire · REV D: hidden-line pass — opaque tenant walls painted back to front · REV E 2026-09-03: every count now imported from diagrams/data/census-shipped.json — the ghost district is struck from the drawing · REV F: whole-cabinet refresh — the HTML pages overtook Inter, measured at origin/main @ b2338d0 (2026-09-04) · diagrams/generator/census-shipped.mjs",
+      "caption": "The production docs deploy surveyed on the wire: 593 files, 4.0 MB gzipped, drawn as 12 districts — the tallest towers are still sample novels and font files, the routed apps are 199 KB of accent buildings in their own city, and the ghost block is gone: a clean deploy ships no unreachable files at all.",
+      "scale": "ONE DEPLOY",
+      "form": "SHIPPED CITY",
+      "rev": "F",
+      "file": "sheets/9.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-shipped.json"
+      ],
+      "refs": [
+        "7",
+        "8",
+        "10"
+      ]
+    },
+    {
+      "id": "10",
+      "num": "10",
+      "title": "THE BUNDLED CITY",
+      "sub": "ALTITUDE 2⅞ — inside the wire: what the bundler kept · apps/sample-app-lit-vanilla, one bundle · REV C: every byte now read from the census-bundle plate — apps/sample-app-lit-vanilla · counted at origin/main @ b2338d0 (2026-09-04)",
+      "caption": "One shipped bundle opened up: every package that survived tree-shaking as a building — footprint from source kept, height from gzipped wire share — and the machine the router wraps, the chrome that demos it, and the app that uses it stand as three districts summing to 117.3 KB, with a single lit where the first printing drew two.",
+      "scale": "ONE BUNDLE",
+      "form": "BUNDLED CITY",
+      "rev": "C",
+      "file": "sheets/10.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-bundle.json",
+        "census-doors.json",
+        "census-shipped.json"
+      ],
+      "refs": [
+        "9",
+        "11"
+      ]
+    },
+    {
+      "id": "11",
+      "num": "11",
+      "title": "THE ENTRY QUARTERS",
+      "sub": "ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors, 5 packages · REV C: every byte now read from diagrams/data/census-doors.json · REV D: whole-cabinet re-probe — 15 of 16 doors byte-identical, the lint plugin's alone up 1,917 → 3,335 gz on #689's three new rules — counted at origin/main @ b2338d0 (2026-09-04)",
+      "caption": "The split view to sheet 10’s unified city: every exported entry of every publishable package bundled alone and priced — 5 package quarters, 16 doors, the codecov bundle-analysis series drawn as skylines.",
+      "scale": "FIVE PACKAGES",
+      "form": "ENTRY QUARTERS",
+      "rev": "D",
+      "file": "sheets/11.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-bundle.json",
+        "census-doors.json"
+      ],
+      "refs": [
+        "2",
+        "10"
+      ]
+    },
+    {
+      "id": "12",
+      "num": "12",
+      "title": "THE REGISTER PLATE",
+      "sub": "ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · turbo 2.10.11 · REV B: census refresh 2026-08-31 — three new members, three new rows, the phantom share held · REV C: every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real · REV D: whole-cabinet refresh — 605 nodes / 183 real, and real→real edges down a quarter to 99 · surveyed at origin/main @ b2338d0 (2026-09-05) · turbo 2.10.11",
+      "caption": "The pull-request graph is a near-rectangle: 32 packages against 19 fanned task names, plus a ragged tail of 31 one-offs. 70% of the holes are unpunched — placeholder nodes that run nothing, minted so a ^self chain has somewhere to land an edge.",
+      "scale": "PR CI GRAPH",
+      "form": "REGISTER PLATE",
+      "rev": "D",
+      "file": "sheets/12.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-plate.json"
+      ],
+      "refs": [
+        "3"
+      ]
+    },
+    {
+      "id": "12i",
+      "num": "12i",
+      "title": "THE REGISTER, WALKED",
+      "sub": "ALTITUDE 3¼ — sheet 12's plate, live under the pointer · the whole ci graph carried node by node · 605 NODES · 183 RUN A COMMAND · 1,424 EDGES · 99 JOIN TWO REAL TASKS · surveyed at origin/main @ b2338d0 (commit 2026-09-04) · turbo 2.10.11",
+      "caption": "The punchcard, stood up. Default view is the real subgraph alone — 183 tasks that run a command over 99 edges that join two of them. PHANTOM SHROUD floods in the other 422 nodes and 1,325 edges, and 69.8% of the graph stops being a statistic.",
+      "scale": "PR CI GRAPH",
+      "form": "INTERACTIVE REGISTER",
+      "rev": "A",
+      "file": "sheets/12i.html",
+      "interactive": true,
+      "needsCytoscape": true,
+      "plates": [
+        "census-plate.json"
+      ],
+      "refs": [
+        "12"
+      ]
+    },
+    {
+      "id": "13",
+      "num": "13",
+      "title": "THE WEATHERING MAP",
+      "sub": "ALTITUDE t — the same city as sheet 7, surveyed in time · 317 files dated from the whole history · three construction seasons, 10 silent months · REV B: drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption · REV C: re-dated off the plate at TODAY = 2026-09-04, with the fifth published package in the universe; every date and count is now imported from diagrams/data/census-weather.json · REV D: whole-cabinet refresh — 317 dated files, every band re-tested and held · REV E 2026-09-04: refreshed again after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights laid the day it was cut — counted at origin/main @ b2338d0",
+      "caption": "Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.",
+      "scale": "WORKSPACE × TIME",
+      "form": "WEATHERING MAP",
+      "rev": "E",
+      "file": "sheets/13.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [
+        "census-city.json",
+        "census-weather.json"
+      ],
+      "refs": [
+        "7"
+      ]
+    },
+    {
+      "id": "14",
+      "num": "14",
+      "title": "THE SURVEY OFFICE",
+      "sub": "ALTITUDE 3½ — the atlas measuring itself · 16 probes, 16 plates, 19 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ b2338d0 · commit 2026-09-04 · REV A 2026-09-04: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap",
+      "caption": "The instrument drawn by its own instrument: 16 probe stations over three tiers write 16 filed plates, which 19 drawings read — and the one that matters most is read twelve times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.",
+      "scale": "THE CENSUS PIPELINE",
+      "form": "FLOW GRAPH",
+      "rev": "B",
+      "file": "sheets/14.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [],
+      "refs": [
+        "3",
+        "5",
+        "6"
+      ]
+    }
+  ]
+}

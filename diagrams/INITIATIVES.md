@@ -579,6 +579,37 @@ meter; the suite re-ran clean without it) and metered the newcomer on its own
 node:test suite: 17 metered members, 7,980 lines. Revs: 3B→F, 7→E, 7B→F, 13→E;
 every other sheet re-read its plates without a line changing. Screenshot-
 verified on 3B, 7, 7B and 13.
+DOGFOOD — THE ATLAS AS A lit-ui-router APP, 2026-09-04: user-asked ("ready for
+some dogfooding, it's past time"). diagrams/app/ is the whole set as one
+routed SPA, shaped like examples/helloworld — plain npm, its own lockfile,
+every dependency from the published registry (lit-ui-router 1.11.2,
+ui-router-server 0.1.1, the nav plugin 0.3.0), no workspace links. Nothing is
+transcribed: emit-app.mjs is one new generator seam (one hook line in
+build.mjs) that cuts each built sheet into a chrome-less fragment, writes the
+sheets' own CSS and a manifest (title, rev, plates read, cross-sheet refs
+found in the prose, rewritten to real hrefs), and stage-site.mjs lifts the
+app's dist to /app/ on the site. Two layers, kept apart on purpose: BASE
+(src/*.ts) is exemplary, boring lit-ui-router — a route table as data shared
+with the server, an abstract shell with the rail and a nested ui-view,
+uiSref/uiSrefActive, resolves, redirectTo for /office, a url-less notFound as
+the otherwise projection — liftable into examples/ as-is; EXPERIMENTAL
+(src/experimental/) is one import in main.ts — slideshow view transitions
+between sheets (onBefore snapshot, released on transition.promise + two
+frames because no hook says "the view re-rendered"), arrow keys, and a
+megacanvas reel that pans to ?at=. Server side: ui-router-server is a verdict
+engine, not a renderer, and used as the decider it was excellent — one route
+table drove dev, preview and a build-time prerender (24 pages, _redirects,
+404.html) identically; @lit-labs/ssr drew the bytes, but only for a SECOND
+template set with plain hrefs, because uiSref is an element-part directive
+that SSRs to a dead link (#564, symptom named) and <ui-view> throws on
+construction under the DOM shim (ui-view.ts:89 field initialiser). Four
+consumer findings and eight package-level asks are in app/SSR-VERDICT.md; the
+top two are an SSR-safe <ui-view> and the planned srefHref attribute
+directive (#689), which would collapse the two template sets into one.
+Verified on the atlas branch itself: build, tsc, oxlint, an 11-check
+playwright pass (rail, arrows, xrefs, both cytoscape plates booting inside a
+view, /office 302, /sheet/99 an honest 404, megacanvas pan, theme). Known
+nit: the rail's background stops at content height on the tall megacanvas.
 
 ## Why rework
 

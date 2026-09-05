@@ -1,0 +1,213 @@
+<section class="sheet" id="sheet-1" aria-label="Sheet 1: THE RENDER LOOP">
+  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 1 / 14</span></div>
+  <h2 class="sheet-title">THE RENDER LOOP</h2>
+  <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.11.2 · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+<defs>
+  <marker id="s1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s1-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s1-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s1-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s1-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s1-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s1-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s1-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<path d="M340.7,213.5 L446.4,274.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M578.9,341.0 L607.4,357.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M726.9,473.5 L691.4,494.0 L742.5,523.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M754.6,579.5 L695.8,613.5" class="sk2"  marker-end="url(#s1-ai)"/>
+<path d="M560.7,602.5 L391.8,505.0" class="sk2"  marker-end="url(#s1-ai)"/>
+<g>
+<polygon points="213.4,162.0 291.3,207.0 291.3,235.0 213.4,190.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="343.3,177.0 291.3,207.0 291.3,235.0 343.3,205.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="265.4,132.0 343.3,177.0 291.3,207.0 213.4,162.0" class="sk fp"/>
+</g>
+<g>
+<polygon points="455.9,234.0 555.5,291.5 555.5,347.5 455.9,290.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="624.8,251.5 555.5,291.5 555.5,347.5 624.8,307.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="525.2,194.0 624.8,251.5 555.5,291.5 455.9,234.0" class="sk fp"/>
+</g>
+<g><line x1="113.8" y1="188.5" x2="113.8" y2="292.5" class="sks" stroke-dasharray="2 3"/>
+<polygon points="66.2,143.0 113.8,170.5 113.8,188.5 66.2,161.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="148.4,150.5 113.8,170.5 113.8,188.5 148.4,168.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="100.8,123.0 148.4,150.5 113.8,170.5 66.2,143.0" class="sk fp"/>
+</g>
+<g><line x1="769.4" y1="324.0" x2="769.4" y2="384.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="713.1,275.5 769.4,308.0 769.4,324.0 713.1,291.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="802.3,289.0 769.4,308.0 769.4,324.0 802.3,305.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="746.0,256.5 802.3,289.0 769.4,308.0 713.1,275.5" class="sk fp"/>
+</g>
+<g>
+<polygon points="611.8,366.0 741.7,441.0 741.7,475.0 611.8,400.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="793.6,411.0 741.7,441.0 741.7,475.0 793.6,445.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="663.7,336.0 793.6,411.0 741.7,441.0 611.8,366.0" class="sk fp"/>
+</g>
+<g><polygon points="40.2,346.0 334.6,516.0 334.6,520.0 40.2,350.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="451.6,448.5 334.6,516.0 334.6,520.0 451.6,452.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="157.1,278.5 451.6,448.5 334.6,516.0 40.2,346.0" class="sk fp"/></g>
+<g><polygon points="67.9,329.0 327.7,479.0 327.7,482.0 67.9,332.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="414.3,429.0 327.7,479.0 327.7,482.0 414.3,432.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="154.5,279.0 414.3,429.0 327.7,479.0 67.9,329.0" class="sk fp"/></g>
+<g><polygon points="100.8,313.0 317.3,438.0 317.3,441.0 100.8,316.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="379.7,402.0 317.3,438.0 317.3,441.0 379.7,405.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="163.2,277.0 379.7,402.0 317.3,438.0 100.8,313.0" class="sk fp"/></g>
+<g><polygon points="132.0,298.0 305.2,398.0 305.2,401.0 132.0,301.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="346.8,374.0 305.2,398.0 305.2,401.0 346.8,377.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="173.6,274.0 346.8,374.0 305.2,398.0 132.0,298.0" class="sk fp2"/></g>
+<g><polygon points="250.6,322.5 298.3,350.0 298.3,353.0 250.6,325.5" class="skf" fill="none"/>
+<polygon points="317.3,339.0 298.3,350.0 298.3,353.0 317.3,342.0" class="skf" fill="none"/>
+<polygon points="269.7,311.5 317.3,339.0 298.3,350.0 250.6,322.5" class="skf fnone"/></g>
+<g><polygon points="220.3,325.0 274.0,356.0 274.0,359.0 220.3,328.0" class="skf" fill="none"/>
+<polygon points="287.9,348.0 274.0,356.0 274.0,359.0 287.9,351.0" class="skf" fill="none"/>
+<polygon points="234.2,317.0 287.9,348.0 274.0,356.0 220.3,325.0" class="skf fnone"/></g>
+<g><polygon points="161.4,278.0 216.9,310.0 216.9,314.0 161.4,282.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="239.4,297.0 216.9,310.0 216.9,314.0 239.4,301.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="184.0,265.0 239.4,297.0 216.9,310.0 161.4,278.0" class="sk fp"/></g>
+<g>
+<polygon points="741.7,535.0 823.9,582.5 823.9,612.5 741.7,565.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="884.5,547.5 823.9,582.5 823.9,612.5 884.5,577.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="802.3,500.0 884.5,547.5 823.9,582.5 741.7,535.0" class="sk fp"/>
+</g>
+<g><line x1="812.7" y1="560.0" x2="812.7" y2="590.0" class="sks" stroke-dasharray="2 3"/>
+<polygon points="771.1,514.0 812.7,538.0 812.7,560.0 771.1,536.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="843.8,520.0 812.7,538.0 812.7,560.0 843.8,542.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="802.3,496.0 843.8,520.0 812.7,538.0 771.1,514.0" class="sk fp"/>
+</g>
+<g>
+<polygon points="542.5,594.0 633.4,646.5 633.4,672.5 542.5,620.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="685.4,616.5 633.4,646.5 633.4,672.5 685.4,642.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="594.4,564.0 685.4,616.5 633.4,646.5 542.5,594.0" class="sk fp"/>
+</g>
+<line x1="707.0" y1="361.0" x2="655.1" y2="391.0" class="skf"/>
+<line x1="750.3" y1="386.0" x2="698.4" y2="416.0" class="skf"/>
+<path d="M239.4,294 C 330,270 325,165 300,180" class="ska"  marker-end="url(#s1-aa)"/>
+<path d="M161.4,275.0 C 146,240 130,212 118,194" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+<path d="M758,326 L735,366" class="sks" stroke-dasharray="4 3" marker-end="url(#s1-as)"/>
+
+<!-- station lettering: every label in its own pocket of air -->
+<text x="278" y="110" class="lblb" text-anchor="middle" >LOCATION</text>
+<text x="278" y="123" class="lblf" text-anchor="middle" >history · hash · Navigation API</text>
+<text x="525" y="158" class="lblb" text-anchor="middle" >@uirouter/core</text>
+<text x="525" y="171" class="lblf" text-anchor="middle" >state registry · match · go()</text>
+<text x="555" y="474" class="lblb" text-anchor="middle" >TRANSITION HALL</text>
+<text x="555" y="488" class="lblf" text-anchor="middle" >onBefore | onStart · resolve | onSuccess</text>
+<text x="760" y="236" class="lblb" text-anchor="middle" >TransitionController</text>
+<text x="760" y="249" class="lblf" text-anchor="middle" >ReactiveController skybridge</text>
+<text x="786" y="358" class="lblf" text-anchor="start" >registers hooks</text>
+<text x="806" y="424" class="lbls" text-anchor="start" >&lt;ui-view name='detail'&gt;</text>
+<text x="896" y="552" class="lblb" text-anchor="start" >&lt;ui-view&gt;</text>
+<text x="633" y="690" class="lblb" text-anchor="middle" >LIT RENDER</text>
+<text x="633" y="703" class="lblf" text-anchor="middle" >RoutedLitTemplate · html``</text>
+<text x="95" y="100" class="lblb" text-anchor="middle" >uiSrefActive</text>
+<text x="95" y="112" class="lblf" text-anchor="middle" >perch — toggles .active below</text>
+<text x="26" y="290" class="lblf" text-anchor="start" >uiSrefTarget</text>
+<text x="26" y="301" class="lblf" text-anchor="start" >bubbles up</text>
+<text x="334" y="322" class="lblf" text-anchor="start" >scenery — your content</text>
+<line x1="330" y1="325" x2="302" y2="330" class="skf"/>
+<text x="170" y="538" class="lbls" text-anchor="middle" >THE DOCUMENT — a browser window at /people</text>
+<text x="170" y="552" class="lblf" text-anchor="middle" >its DOM rising in plates: body → shell → &lt;ui-view&gt; → &lt;a&gt;</text>
+
+<!-- WINDOW DETAIL inset — the flat window the plates explode out of -->
+<line x1="205" y1="574" x2="240" y2="560" class="skf"/>
+<rect x="60" y="576" width="220" height="86" class="sk fp"/>
+<rect x="60" y="576" width="220" height="22" class="sk fp2"/>
+<circle cx="71" cy="587" r="2.4" class="fis"/>
+<circle cx="80" cy="587" r="2.4" class="fis"/>
+<circle cx="89" cy="587" r="2.4" class="fis"/>
+<rect x="98" y="579" width="176" height="16" class="skf fp"/>
+<text x="104" y="590.5" class="lblf" text-anchor="start" >lit-ui-router.dev/people/32</text>
+<line x1="72" y1="612" x2="252" y2="612" class="skf"/>
+<line x1="72" y1="626" x2="196" y2="626" class="skf"/>
+<rect x="72" y="637" width="64" height="12" class="ska fnone"/>
+<text x="142" y="646.5" class="lblf" text-anchor="start" >← the link, in situ</text>
+<text x="60" y="674" class="lbls" text-anchor="start" >DETAIL — the same window, flat</text>
+
+<!-- leg lettering: horizontal, in open pockets, leaders where the gap is wide -->
+<text x="355" y="272" class="lbls" text-anchor="middle" >popstate / navigate</text>
+<text x="560" y="398" class="lbls" text-anchor="middle" >match → run</text>
+<line x1="575" y1="390" x2="596" y2="360" class="skf"/>
+<text x="700" y="540" class="lbls" text-anchor="end" >viewconfigs activate</text>
+<line x1="704" y1="536" x2="722" y2="513" class="skf"/>
+<text x="652" y="551" class="lbls" text-anchor="end" >state.component / template</text>
+<line x1="658" y1="556" x2="713" y2="596" class="skf"/>
+<text x="452" y="592" class="lbls" text-anchor="middle" >directives commit</text>
+<line x1="492" y1="585" x2="510" y2="572" class="skf"/>
+
+<!-- the link + click note, off the stack with a leader to the link plate -->
+<text x="-140" y="404" class="lbl" text-anchor="start" >&lt;a href=/people/32&gt;</text>
+<text x="-140" y="417" class="lbla" text-anchor="start" >uiSref(…) element part</text>
+<text x="-140" y="438" class="lbla" text-anchor="start" >click →</text>
+<text x="-140" y="451" class="lbla" text-anchor="start" >stateService.go()</text>
+<text x="-140" y="464" class="lbla" text-anchor="start" >→ pushState</text>
+<line x1="-4" y1="396" x2="169" y2="292" class="skf"/>
+
+<!-- five doors -->
+<line x1="-140" y1="720" x2="1140" y2="720" class="skf"/>
+<text x="-140" y="738" class="lbls" text-anchor="start" >FIVE DOORS INTO THE SAME MACHINE</text>
+<rect x="190" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="198" y="739" class="lbls" text-anchor="start" >.</text>
+<text x="198" y="751" class="lblf" text-anchor="start" >registers everything</text>
+<rect x="342" y="726" width="144" height="30" rx="0" class="ska fp"/>
+<text x="350" y="739" class="lbla" text-anchor="start" >./pure</text>
+<text x="350" y="751" class="lblf" text-anchor="start" >no side effects</text>
+<rect x="494" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="502" y="739" class="lbls" text-anchor="start" >./register</text>
+<text x="502" y="751" class="lblf" text-anchor="start" >all elements</text>
+<rect x="646" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="654" y="739" class="lbls" text-anchor="start" >./ui-router.register</text>
+<text x="654" y="751" class="lblf" text-anchor="start" >one element</text>
+<rect x="798" y="726" width="144" height="30" rx="0" class="sk fp2"/>
+<text x="806" y="739" class="lbls" text-anchor="start" >./ui-view.register</text>
+<text x="806" y="751" class="lblf" text-anchor="start" >one element</text>
+</svg></div>
+    <figcaption>Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Why redraw a 2D loop in 3D:</strong> the cycle itself is flat, but the third axis is free to carry the relations flat arrows kept fumbling. Containment: the child <code>&lt;ui-view&gt;</code> literally stands on its parent's roof — nesting is stacking, not a box-in-a-box. Propagation: <code>uiSrefTarget</code> events <em>rise</em> past the document's plates to the <code>uiSrefActive</code> perch, which is how link tracking works — no registry, just bubbling. Instrumentation: <code>TransitionController</code> is a skybridge that taps the hall without standing on the route.</p>
+<p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old Tilt inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment.</p>
+<p><strong>Service discovery is still DOM events.</strong> A nested view finds its parent with a composed context CustomEvent; every <code>uiSref</code> announces its <code>targetState</code> upward. The document tree is the dependency graph — which is exactly why the drawing can stand everything in one window.</p>
+<p><strong>The five doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with registration torn off. <code>sideEffects</code> in the manifest names exactly the four register files.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="sk2"/></svg></td><td>the render loop (roads on the iso grid)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="14" x2="40" y2="4" class="ska"/></svg></td><td>the click flying back to location</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="14" x2="40" y2="4" class="sks" stroke-dasharray="4 3"/></svg></td><td>events rising / hook taps</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="8,13 22,8 36,13 22,18" class="sk fp"/><polygon points="8,7 22,2 36,7 22,12" class="sk fp2"/></svg></td><td>plates = DOM depth (window → link)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="10" y="2" width="24" height="8" class="sk fp"/><line x1="34" y1="10" x2="34" y2="16" class="sks" stroke-dasharray="2 3"/></svg></td><td>elevated = overlay, not on the route</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="8,12 22,6 36,12 22,18" class="skf fnone"/></svg></td><td>faint plate = scenery (your content)</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>THE ALTITUDE ATLAS</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE RENDER LOOP</div>
+  <div><span class="fld">SCALE</span>ONE PACKAGE</div>
+  <div><span class="fld">FORM</span>ISO CIRCUIT</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · E</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>1 OF 14</div>
+</div>
+    </div>
+  </div>
+</section>

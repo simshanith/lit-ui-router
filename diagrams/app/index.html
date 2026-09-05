@@ -1,0 +1,255 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <!-- pushState under a subdirectory: the router reads its base from here. -->
+    <base href="/app/" />
+    <title>The Altitude Atlas — Drawing Set</title>
+    <meta
+      name="description"
+      content="The Altitude Atlas as a single-page drawing set: twenty-one sheets of the lit-ui-router codebase, routed with lit-ui-router."
+    />
+    <link rel="stylesheet" href="/app/sheets/atlas.css" />
+    <style>
+      /* The app chrome. Everything below leans on the tokens atlas.css
+         declares, so the index reads as part of the drawing set. */
+      body {
+        padding: 0;
+      }
+      .app {
+        display: grid;
+        grid-template-columns: 268px minmax(0, 1fr);
+        min-height: 100vh;
+      }
+      @media (max-width: 900px) {
+        .app {
+          grid-template-columns: 1fr;
+        }
+      }
+      .rail {
+        position: sticky;
+        top: 0;
+        align-self: start;
+        max-height: 100vh;
+        overflow-y: auto;
+        background: var(--paper);
+        border-right: 1.5px solid var(--ink);
+        padding: 14px 0 30px;
+      }
+      @media (max-width: 900px) {
+        .rail {
+          position: static;
+          max-height: none;
+          border-right: none;
+          border-bottom: 1.5px solid var(--ink);
+        }
+      }
+      .rail-head {
+        padding: 6px 16px 12px;
+        border-bottom: 1.5px solid var(--ink);
+        margin-bottom: 10px;
+      }
+      .rail-head .kicker {
+        display: block;
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.18em;
+        color: var(--ink-soft);
+      }
+      .rail-head h1 {
+        font-family: var(--mono);
+        font-size: 15px;
+        letter-spacing: 0.14em;
+        font-weight: 600;
+        margin: 5px 0 0;
+      }
+      .rail-head h1 a {
+        color: inherit;
+        text-decoration: none;
+      }
+      .rail-links {
+        display: flex;
+        flex-direction: column;
+      }
+      .rail-links a,
+      .rail-top a {
+        display: flex;
+        gap: 9px;
+        align-items: baseline;
+        font-family: var(--mono);
+        font-size: 10.5px;
+        letter-spacing: 0.06em;
+        text-decoration: none;
+        color: var(--ink);
+        padding: 6px 16px;
+        border-left: 3px solid transparent;
+      }
+      .rail-links a:hover,
+      .rail-top a:hover {
+        background: var(--paper-2);
+      }
+      .rail-links a.is-active,
+      .rail-top a.is-active {
+        background: var(--paper-2);
+        border-left-color: var(--accent);
+        font-weight: 600;
+      }
+      .rail-links .n {
+        color: var(--accent);
+        font-weight: 600;
+        min-width: 34px;
+        font-variant-numeric: tabular-nums;
+      }
+      .rail-links .t {
+        color: var(--ink-soft);
+      }
+      .rail-links a.is-active .t {
+        color: var(--ink);
+      }
+      .rail-sec {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.18em;
+        color: var(--ink-faint);
+        padding: 14px 16px 5px;
+      }
+      .rail-top {
+        display: flex;
+        flex-direction: column;
+      }
+      .themer {
+        margin: 14px 16px 0;
+        display: flex;
+        gap: 0;
+        border: 1px solid var(--ink);
+      }
+      .themer button {
+        flex: 1 1 auto;
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.14em;
+        color: var(--ink);
+        background: var(--paper);
+        border: none;
+        border-right: 1px solid var(--line);
+        padding: 5px 2px;
+        cursor: pointer;
+      }
+      .themer button:last-child {
+        border-right: none;
+      }
+      .themer button[aria-pressed='true'] {
+        background: var(--accent);
+        color: var(--paper);
+      }
+      .content {
+        min-width: 0;
+        padding: clamp(12px, 2.4vw, 30px);
+      }
+      .content > .sheet:first-child {
+        margin-top: 0;
+      }
+      a.xref {
+        color: var(--accent);
+        text-decoration-color: var(--accent-soft);
+      }
+      .crumb {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.14em;
+        color: var(--ink-soft);
+        max-width: 1180px;
+        margin: 0 auto 12px;
+        display: flex;
+        gap: 14px;
+        flex-wrap: wrap;
+      }
+      .crumb a {
+        color: var(--ink-soft);
+      }
+      .loading {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.14em;
+        color: var(--ink-faint);
+        padding: 40px 4px;
+      }
+      /* Gallery index */
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 14px;
+        max-width: 1180px;
+        margin: 0 auto;
+      }
+      .card {
+        border: 1.5px solid var(--ink);
+        background: var(--paper);
+        padding: 14px 16px 15px;
+        text-decoration: none;
+        color: inherit;
+        display: block;
+      }
+      .card:hover {
+        background: var(--paper-2);
+      }
+      .card .n {
+        font-family: var(--mono);
+        font-size: 9.5px;
+        letter-spacing: 0.16em;
+        color: var(--accent);
+      }
+      .card h3 {
+        font-family: var(--mono);
+        font-size: 13px;
+        letter-spacing: 0.1em;
+        margin: 5px 0 6px;
+      }
+      .card p {
+        font-size: 13.5px;
+        color: var(--ink-soft);
+        margin: 0;
+      }
+      .card .meta {
+        font-family: var(--mono);
+        font-size: 8.5px;
+        letter-spacing: 0.12em;
+        color: var(--ink-faint);
+        margin-top: 9px;
+        display: block;
+      }
+      .prose {
+        max-width: 72ch;
+        margin: 0 auto;
+      }
+      .prose h2 {
+        font-family: var(--mono);
+        font-size: 18px;
+        letter-spacing: 0.12em;
+        margin-bottom: 12px;
+      }
+      .prose h3 {
+        font-family: var(--mono);
+        font-size: 11px;
+        letter-spacing: 0.18em;
+        color: var(--ink-soft);
+        margin: 22px 0 8px;
+      }
+      .prose p {
+        margin-bottom: 10px;
+      }
+      .prose code {
+        font-family: var(--mono);
+        font-size: 0.85em;
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+        padding: 0 4px;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,0 +1,333 @@
+<section class="sheet" id="sheet-3" aria-label="Sheet 3: THE INSTRUMENT YARD">
+  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 3 / 14</span></div>
+  <h2 class="sheet-title">THE INSTRUMENT YARD</h2>
+  <p class="sheet-sub">ALTITUDE 3 — 5 publishable packages · 20 tools · 70 turbo task names · one packer, many readers · REV C: census refresh — every mass counted at origin/main @ b2338d0 (2026-09-05) from diagrams/data/census-yard.json (scc Code lines), 201 authored files and 13,899 sloc across 17 massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci 605 nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1400 1214" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at 55 files, 3,099 lines, and the source slab at 36 files, 3,520 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all 19 structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at thirty-seven call sites across eight workflows, mise holds forty-eight tasks with only two dependency edges, seven of those tasks shell turbo whose continuous-integration graph expands to 605 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+<defs>
+  <marker id="s3-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s3-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s3-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s3-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s3-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s3-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s3-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s3-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<rect x="40" y="26" width="600" height="156" class="skf fnone"/>
+<text x="52" y="43" class="lbls" text-anchor="start" >TWO TASK MANAGERS, ONE RE-ENTRANT LOOP</text>
+<text x="52" y="55" class="lblf" text-anchor="start" >mise — node-free umbrella · turbo — cached fan-out (remote R2) · neither sits above the other</text>
+
+<rect x="52" y="74" width="104" height="32" class="sk fp"/>
+<text x="104" y="89" class="lbls" text-anchor="middle" >GITHUB ACTIONS</text>
+<text x="104" y="100" class="lblf" text-anchor="middle" >8 workflows</text>
+<rect x="254" y="74" width="166" height="32" class="sk fp"/>
+<text x="337" y="89" class="lbls" text-anchor="middle" >mise</text>
+<text x="337" y="100" class="lblf" text-anchor="middle" >49 tasks · 2 depends edges</text>
+<rect x="498" y="74" width="126" height="32" class="sk fp"/>
+<text x="561" y="89" class="lbls" text-anchor="middle" >turbo</text>
+<text x="561" y="100" class="lblf" text-anchor="middle" >ci = 605 task nodes</text>
+<rect x="52" y="130" width="200" height="28" class="sk fp"/>
+<text x="152" y="147.5" class="lbls" text-anchor="middle" >AQUA TOOL BELT</text>
+
+<path d="M160,90 L250,90" class="sk"  marker-end="url(#s3-ai)"/>
+<path d="M424,90 L494,90" class="sk"  marker-end="url(#s3-ai)"/>
+<path d="M561,106 L561,124 L300,124 L300,107" class="ska"  marker-end="url(#s3-aa)"/>
+<path d="M280,106 L280,144 L258,144" class="sks"  marker-end="url(#s3-as)"/>
+
+<text x="205" y="71" class="lblf" text-anchor="middle" >37 call sites · 28 distinct tasks</text>
+<text x="459" y="71" class="lblf" text-anchor="middle" >7 tasks shell turbo</text>
+<text x="430" y="139" class="lbls" text-anchor="middle" >7 root scripts shell mise run</text>
+<text x="430" y="151" class="lblf" text-anchor="middle" >cache key over tools node never installs</text>
+<text x="272" y="120" class="lblf" text-anchor="end" >mise/aqua provisions them</text>
+<text x="52" y="172" class="lblf" text-anchor="start" >rumdl · taplo · shellcheck · actionlint · zizmor — none installable by node</text>
+
+<text x="1360" y="34" class="lbls" text-anchor="end" >SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 1.5 px per authored file · mass = sloc × files</text>
+<text x="1360" y="48" class="lblf" text-anchor="end" >GATE SEVERITY IS COLOUR, NOT HEIGHT — red stops the line, accent gates a later stage, faint never gates</text>
+<text x="1360" y="62" class="lblf" text-anchor="end" >the tarball, the registry and the boundary are diagrammatic, not to scale</text>
+
+<!-- severity ladder: the encoding, on the drawing -->
+<rect x="950" y="130" width="410" height="146" class="skf fnone"/>
+<text x="966" y="152" class="lbls" text-anchor="start" >GATE SEVERITY — READ THE COLOUR, NOT THE HEIGHT</text>
+<rect x="966" y="176" width="34" height="14" class="fr"/><rect x="966" y="176" width="34" height="14" class="skr fnone"/>
+<text x="1014" y="187" class="lblr" text-anchor="start" >halts a publish — published-diff (11)</text>
+<rect x="966" y="200" width="34" height="14" class="fp"/><rect x="966" y="200" width="34" height="14" fill="url(#s3-hr)"/><rect x="966" y="200" width="34" height="14" class="skr fnone"/>
+<text x="1014" y="211" class="lblr" text-anchor="start" >stops the PR line — 7 · 8 · 9 · 10 · 17</text>
+<rect x="966" y="224" width="34" height="14" class="fp"/><rect x="966" y="224" width="34" height="14" fill="url(#s3-ha)"/><rect x="966" y="224" width="34" height="14" class="ska fnone"/>
+<text x="1014" y="235" class="lbla" text-anchor="start" >gates a later stage — 12 · 19</text>
+<rect x="966" y="248" width="34" height="14" class="fp2"/><rect x="966" y="248" width="34" height="14" class="skf fnone"/>
+<text x="1014" y="259" class="lbls" text-anchor="start" >never gates — 13 · 14 · 15 · 16</text>
+
+<!-- districts -->
+<polygon points="217.1,292.5 593.8,510.0 412.0,615.0 35.3,397.5" class="skf fnone" stroke-dasharray="5 4"/>
+
+<line x1="983.5" y1="520.0" x2="819.0" y2="615.0" class="sks" stroke-dasharray="9 5"/>
+<path d="M453.8,325.1 L454.7,325.7" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M509.0,357.1 L529.2,368.7" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M604.2,412.0 L634.2,429.3" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M730.8,485.1 L758.0,500.8" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M881.8,572.3 L902.4,584.2" class="sk2"  marker-end="url(#s3-ai)"/>
+<path d="M636.6,485.1 L619.6,494.9 L350.2,339.3" class="sks" stroke-dasharray="5 4" fill="none"/>
+<path d="M520.2,437.5 L477.5,462.1" class="sks" stroke-dasharray="5 4" marker-end="url(#s3-as)"/>
+<path d="M416.0,377.3 L370.3,403.7" class="sks" stroke-dasharray="5 4" marker-end="url(#s3-as)"/>
+<path d="M350.2,339.3 L304.5,365.7" class="sks" stroke-dasharray="5 4" marker-end="url(#s3-as)"/>
+<path d="M904.9,663.0 L561.4,861.3 L173.8,637.5 L422.2,494.0" class="ska" stroke-dasharray="7 4" marker-end="url(#s3-aa)"/>
+<path d="M299.4,631.6 L257.5,655.8 L437.5,759.8 L459.1,747.3" class="sks" stroke-dasharray="4 3" marker-end="url(#s3-ai)"/>
+<g>
+<polygon points="268.7,218.7 351.0,266.2 351.0,320.2 268.7,272.7" class="sk" fill="var(--paper-2)"/>
+<polygon points="433.2,218.7 351.0,266.2 351.0,320.2 433.2,272.7" class="sk" fill="url(#s3-hx)"/>
+<polygon points="351.0,171.2 433.2,218.7 351.0,266.2 268.7,218.7" class="sk fp"/>
+</g>
+<circle cx="392.1" cy="178.0" r="9.5" class="sk fp"/>
+<text x="392.1" y="181.6" class="lbl" text-anchor="middle" >1</text>
+<g>
+<polygon points="183.3,318.0 191.1,322.6 191.1,326.6 183.3,322.0" class="skr" fill="var(--paper-2)"/>
+<polygon points="199.0,318.0 191.1,322.6 191.1,326.6 199.0,322.0" class="skr" fill="url(#s3-hr)"/>
+<polygon points="191.1,313.5 199.0,318.0 191.1,322.6 183.3,318.0" class="skr fp"/>
+</g><polygon points="191.1,313.5 199.0,318.0 191.1,322.6 183.3,318.0" fill="url(#s3-hr)"/>
+<polygon points="191.1,313.5 199.0,318.0 191.1,322.6 183.3,318.0" class="skr fnone"/>
+<circle cx="195.0" cy="298.8" r="9.5" class="skr fp"/>
+<text x="195.0" y="302.4" class="lblr" text-anchor="middle" >7</text>
+<g>
+<polygon points="458.7,336.6 479.6,348.7 479.6,356.2 458.7,344.1" class="sk" fill="var(--paper-2)"/>
+<polygon points="500.5,336.6 479.6,348.7 479.6,356.2 500.5,344.1" class="sk" fill="url(#s3-hx)"/>
+<polygon points="479.6,324.6 500.5,336.6 479.6,348.7 458.7,336.6" class="sk fp"/>
+</g>
+<circle cx="490.1" cy="313.6" r="9.5" class="sk fp"/>
+<text x="490.1" y="317.2" class="lbl" text-anchor="middle" >2</text>
+<g>
+<polygon points="210.0,339.6 227.5,349.7 227.5,358.7 210.0,348.6" class="skr" fill="var(--paper-2)"/>
+<polygon points="245.0,339.6 227.5,349.7 227.5,358.7 245.0,348.6" class="skr" fill="url(#s3-hr)"/>
+<polygon points="227.5,329.5 245.0,339.6 227.5,349.7 210.0,339.6" class="skr fp"/>
+</g><polygon points="227.5,329.5 245.0,339.6 227.5,349.7 210.0,339.6" fill="url(#s3-hr)"/>
+<polygon points="227.5,329.5 245.0,339.6 227.5,349.7 210.0,339.6" class="skr fnone"/>
+<circle cx="236.3" cy="317.6" r="9.5" class="skr fp"/>
+<text x="236.3" y="321.2" class="lblr" text-anchor="middle" >8</text>
+<g>
+<polygon points="254.1,377.1 277.7,390.8 277.7,394.8 254.1,381.1" class="skr" fill="var(--paper-2)"/>
+<polygon points="301.4,377.1 277.7,390.8 277.7,394.8 301.4,381.1" class="skr" fill="url(#s3-hr)"/>
+<polygon points="277.7,363.5 301.4,377.1 277.7,390.8 254.1,377.1" class="skr fp"/>
+</g><polygon points="277.7,363.5 301.4,377.1 277.7,390.8 254.1,377.1" fill="url(#s3-hr)"/>
+<polygon points="277.7,363.5 301.4,377.1 277.7,390.8 254.1,377.1" class="skr fnone"/>
+<circle cx="277.7" cy="346.5" r="9.5" class="skr fp"/>
+<text x="277.7" y="350.1" class="lblr" text-anchor="middle" >9</text>
+<g>
+<polygon points="105.7,382.3 117.5,389.2 117.5,393.7 105.7,386.8" class="ska" fill="var(--paper-2)"/>
+<polygon points="129.4,382.3 117.5,389.2 117.5,393.7 129.4,386.8" class="ska" fill="url(#s3-ha)"/>
+<polygon points="117.5,375.5 129.4,382.3 117.5,389.2 105.7,382.3" class="ska fp"/>
+</g><polygon points="117.5,375.5 129.4,382.3 117.5,389.2 105.7,382.3" fill="url(#s3-ha)"/>
+<polygon points="117.5,375.5 129.4,382.3 117.5,389.2 105.7,382.3" class="ska fnone"/>
+<circle cx="123.4" cy="361.9" r="9.5" class="ska fp"/>
+<text x="123.4" y="365.5" class="lbla" text-anchor="middle" >12</text>
+<g>
+<polygon points="542.0,374.5 568.0,389.5 568.0,406.0 542.0,391.0" class="sk" fill="var(--paper-2)"/>
+<polygon points="594.0,374.5 568.0,389.5 568.0,406.0 594.0,391.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="568.0,359.5 594.0,374.5 568.0,389.5 542.0,374.5" class="sk fp"/>
+</g>
+<circle cx="581.0" cy="350.0" r="9.5" class="sk fp"/>
+<text x="581.0" y="353.6" class="lbl" text-anchor="middle" >3</text>
+<g>
+<polygon points="146.6,409.2 160.8,417.5 160.8,421.5 146.6,413.2" class="skf" fill="var(--paper-2)"/>
+<polygon points="175.1,409.2 160.8,417.5 160.8,421.5 175.1,413.2" class="skf" fill="url(#s3-hx)"/>
+<polygon points="160.8,401.0 175.1,409.2 160.8,417.5 146.6,409.2" class="skf fp2"/>
+</g>
+<circle cx="168.0" cy="388.1" r="9.5" class="skf fp"/>
+<text x="168.0" y="391.7" class="lbls" text-anchor="middle" >13</text>
+<g>
+<polygon points="330.2,413.2 347.0,422.9 347.0,426.9 330.2,417.2" class="skr" fill="var(--paper-2)"/>
+<polygon points="363.8,413.2 347.0,422.9 347.0,426.9 363.8,417.2" class="skr" fill="url(#s3-hr)"/>
+<polygon points="347.0,403.5 363.8,413.2 347.0,422.9 330.2,413.2" class="skr fp"/>
+</g><polygon points="347.0,403.5 363.8,413.2 347.0,422.9 330.2,413.2" fill="url(#s3-hr)"/>
+<polygon points="347.0,403.5 363.8,413.2 347.0,422.9 330.2,413.2" class="skr fnone"/>
+<circle cx="347.0" cy="386.5" r="9.5" class="skr fp"/>
+<text x="347.0" y="390.1" class="lblr" text-anchor="middle" >10</text>
+<g>
+<polygon points="652.5,431.9 683.7,449.9 683.7,475.9 652.5,457.9" class="skg" fill="var(--paper-2)"/>
+<polygon points="714.9,431.9 683.7,449.9 683.7,475.9 714.9,457.9" class="skg" fill="url(#s3-hx)"/>
+<polygon points="683.7,413.9 714.9,431.9 683.7,449.9 652.5,431.9" class="skg fg"/>
+</g>
+<circle cx="699.3" cy="405.9" r="9.5" class="skg fp"/>
+<text x="699.3" y="409.5" class="lbl" text-anchor="middle" >4</text>
+<g>
+<polygon points="417.8,473.0 445.6,489.1 445.6,496.6 417.8,480.5" class="skr" fill="var(--paper-2)"/>
+<polygon points="473.5,473.0 445.6,489.1 445.6,496.6 473.5,480.5" class="skr" fill="url(#s3-hr)"/>
+<polygon points="445.6,456.9 473.5,473.0 445.6,489.1 417.8,473.0" class="skr fr"/>
+</g>
+<circle cx="445.6" cy="439.9" r="9.5" class="skr fp"/>
+<text x="445.6" y="443.6" class="lblr" text-anchor="middle" >11</text>
+<g>
+<polygon points="169.7,453.4 234.4,490.7 234.4,522.2 169.7,484.9" class="skf" fill="var(--paper-2)"/>
+<polygon points="299.1,453.4 234.4,490.7 234.4,522.2 299.1,484.9" class="skf" fill="url(#s3-hx)"/>
+<polygon points="234.4,416.0 299.1,453.4 234.4,490.7 169.7,453.4" class="skf fp2"/>
+</g>
+<circle cx="266.8" cy="417.7" r="9.5" class="skf fp"/>
+<text x="266.8" y="421.3" class="lbls" text-anchor="middle" >14</text>
+<g>
+<polygon points="290.3,495.8 321.0,513.5 321.0,533.0 290.3,515.3" class="skf" fill="var(--paper-2)"/>
+<polygon points="351.8,495.8 321.0,513.5 321.0,533.0 351.8,515.3" class="skf" fill="url(#s3-hx)"/>
+<polygon points="321.0,478.0 351.8,495.8 321.0,513.5 290.3,495.8" class="skf fp2"/>
+</g>
+<circle cx="336.4" cy="469.9" r="9.5" class="skf fp"/>
+<text x="336.4" y="473.5" class="lbls" text-anchor="middle" >15</text>
+<g>
+<polygon points="774.2,504.7 817.9,529.9 817.9,564.4 774.2,539.2" class="sk" fill="var(--paper-2)"/>
+<polygon points="861.5,504.7 817.9,529.9 817.9,564.4 861.5,539.2" class="sk" fill="url(#s3-hx)"/>
+<polygon points="817.9,479.4 861.5,504.7 817.9,529.9 774.2,504.7" class="sk fp"/>
+</g>
+<circle cx="839.7" cy="475.1" r="9.5" class="sk fp"/>
+<text x="839.7" y="478.7" class="lbl" text-anchor="middle" >5</text>
+<g>
+<polygon points="373.8,564.5 412.0,586.6 412.0,594.1 373.8,572.0" class="skf" fill="var(--paper-2)"/>
+<polygon points="450.1,564.5 412.0,586.6 412.0,594.1 450.1,572.0" class="skf" fill="url(#s3-hx)"/>
+<polygon points="412.0,542.5 450.1,564.5 412.0,586.6 373.8,564.5" class="skf fp2"/>
+</g>
+<circle cx="431.0" cy="536.5" r="9.5" class="skf fp"/>
+<text x="431.0" y="540.1" class="lbls" text-anchor="middle" >16</text>
+<g>
+<polygon points="290.9,607.2 323.5,626.0 323.5,636.5 290.9,617.7" class="skr" fill="var(--paper-2)"/>
+<polygon points="356.0,607.2 323.5,626.0 323.5,636.5 356.0,617.7" class="skr" fill="url(#s3-hr)"/>
+<polygon points="323.5,588.4 356.0,607.2 323.5,626.0 290.9,607.2" class="skr fp"/>
+</g><polygon points="323.5,588.4 356.0,607.2 323.5,626.0 290.9,607.2" fill="url(#s3-hr)"/>
+<polygon points="323.5,588.4 356.0,607.2 323.5,626.0 290.9,607.2" class="skr fnone"/>
+<circle cx="339.7" cy="580.8" r="9.5" class="skr fp"/>
+<text x="339.7" y="584.4" class="lblr" text-anchor="middle" >17</text>
+<g>
+<polygon points="911.3,592.3 971.9,627.3 971.9,659.3 911.3,624.3" class="sks" fill="var(--paper-2)"/>
+<polygon points="1032.5,592.3 971.9,627.3 971.9,659.3 1032.5,624.3" class="sks" fill="url(#s3-hd)"/>
+<polygon points="971.9,557.3 1032.5,592.3 971.9,627.3 911.3,592.3" class="sks fp2"/>
+</g>
+<circle cx="1002.2" cy="557.8" r="9.5" class="sks fp"/>
+<text x="1002.2" y="561.4" class="lbls" text-anchor="middle" >6</text>
+<g>
+<polygon points="430.1,637.0 507.2,681.6 507.2,764.1 430.1,719.5" class="sk" fill="var(--paper-2)"/>
+<polygon points="584.4,637.0 507.2,681.6 507.2,764.1 584.4,719.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="507.2,592.5 584.4,637.0 507.2,681.6 430.1,637.0" class="sk fp"/>
+</g>
+<circle cx="545.8" cy="597.8" r="9.5" class="sk fp"/>
+<text x="545.8" y="601.4" class="lbl" text-anchor="middle" >18</text>
+<g>
+<polygon points="571.3,752.0 602.5,770.1 602.5,776.1 571.3,758.0" class="ska" fill="var(--paper-2)"/>
+<polygon points="633.7,752.0 602.5,770.1 602.5,776.1 633.7,758.0" class="ska" fill="url(#s3-ha)"/>
+<polygon points="602.5,734.0 633.7,752.0 602.5,770.1 571.3,752.0" class="ska fp"/>
+</g><polygon points="602.5,734.0 633.7,752.0 602.5,770.1 571.3,752.0" fill="url(#s3-ha)"/>
+<polygon points="602.5,734.0 633.7,752.0 602.5,770.1 571.3,752.0" class="ska fnone"/>
+<circle cx="618.1" cy="726.0" r="9.5" class="ska fp"/>
+<text x="618.1" y="729.6" class="lbla" text-anchor="middle" >19</text>
+
+<!-- lettering: every label in its own pocket, leaders where the gap is wide -->
+<text x="55" y="200" class="lblb" text-anchor="start" >PACKAGES/* — THE MATERIAL</text>
+<text x="55" y="213" class="lblf" text-anchor="start" >36 authored files · 3,520 sloc</text>
+<text x="55" y="225" class="lblf" text-anchor="start" >five published packages enter here</text>
+<line x1="250" y1="212" x2="276" y2="238" class="skf"/>
+
+<text x="742" y="398" class="lblb" text-anchor="start" >THE TARBALL</text>
+<text x="742" y="411" class="lblf" text-anchor="start" >one packer · many readers · never re-packed</text>
+<line x1="736" y1="404" x2="712" y2="424" class="skf"/>
+
+<text x="1060" y="600" class="lblb" text-anchor="start" >NPM REGISTRY</text>
+<text x="1060" y="613" class="lblf" text-anchor="start" >beyond the boundary a release is immutable</text>
+<text x="1060" y="625" class="lblf" text-anchor="start" >and only published-diff still reads it</text>
+<line x1="1054" y1="596" x2="1037" y2="593" class="skf"/>
+
+<text x="560" y="535" class="lblr" text-anchor="start" >published-diff — the only halt</text>
+<text x="560" y="548" class="lblf" text-anchor="start" >5 files, 403 sloc</text>
+<line x1="554" y1="532" x2="455" y2="499" class="skf"/>
+
+<text x="470" y="795" class="lbls" text-anchor="start" >docs deploy — gates the site</text>
+<line x1="560" y1="789" x2="578" y2="768" class="skf"/>
+
+<text x="600" y="645" class="lblb" text-anchor="start" >SAMPLE APPS — 55f · 3,099 sloc</text>
+<text x="600" y="658" class="lblf" text-anchor="start" >the heaviest mass on the sheet</text>
+<text x="600" y="670" class="lblf" text-anchor="start" >gates nothing at all</text>
+<line x1="594" y1="652" x2="582" y2="712" class="skf"/>
+
+<text x="90" y="555" class="lblr" text-anchor="start" >e2e — cypress · stops the line</text>
+<text x="90" y="568" class="lblf" text-anchor="start" >and drives the apps beside it</text>
+<line x1="278" y1="559" x2="300" y2="588" class="skf"/>
+
+<text x="620" y="900" class="lbla" text-anchor="middle" >the return: published-diff reads the LIVE npm tarball — the registry is inside the circuit, not at the end of it</text>
+
+<!-- district lettering -->
+<text x="700" y="300" class="lblf" text-anchor="start" >packages/ — the conveyor: source in, one tarball out</text>
+<text x="40" y="520" class="lblf" text-anchor="start" >tools/ — the instrument yard</text>
+<text x="40" y="532" class="lblf" text-anchor="start" >nineteen packages, mostly measurement</text>
+<text x="700" y="830" class="lblf" text-anchor="start" >apps/ + docs/ — proving ground &amp; shopfront</text>
+
+<rect x="40" y="944" width="1320" height="242" class="sk fp"/>
+<text x="58" y="966" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier</text>
+<line x1="40" y1="976" x2="1360" y2="976" class="skf"/>
+<text x="58" y="996" class="lbls" text-anchor="start" > 1  src — packages/*/src — 36f · 3,520 sloc · the line itself · five published packages — the material</text>
+<text x="58" y="1013" class="lbls" text-anchor="start" > 2  build — @tools/oxc-emit — 5f · 228 sloc · the line itself · JS pass + d.ts pass, one emitter</text>
+<text x="58" y="1030" class="lbls" text-anchor="start" > 3  pack — packPublishTarball — 11f · 352 sloc · the line itself · the one packer (#449), cached</text>
+<text x="58" y="1047" class="lbls" text-anchor="start" > 4  THE TARBALL — not massed · the artifact · the one artifact every check reads</text>
+<text x="58" y="1064" class="lbls" text-anchor="start" > 5  publish — release-it — 23f · 994 sloc · the line itself · bump · tag · push · publish steps</text>
+<text x="58" y="1081" class="lbls" text-anchor="start" > 6  npm registry — not massed · not massed · immutable once crossed</text>
+<text x="58" y="1098" class="lbls" text-anchor="start" > 7  tests — vitest harness — 2f · 32 sloc · STOPS THE PR LINE · lit-test-env + happy-dom · 4 real browsers</text>
+<text x="58" y="1115" class="lbls" text-anchor="start" > 8  compat-guards — 6f · 160 sloc · STOPS THE PR LINE · the lit 2 / mobx 6 / analyzer lanes</text>
+<text x="58" y="1132" class="lbls" text-anchor="start" > 9  dts-backtest — 1f · 291 sloc · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
+<text x="58" y="1149" class="lbls" text-anchor="start" >10  check:exports — 2f · 147 sloc · STOPS THE PR LINE · publint + attw over the raw pack</text>
+<text x="710" y="996" class="lbls" text-anchor="start" >11  published-diff — 5f · 403 sloc · HALTS A PUBLISH · vs the LIVE npm tarball · halts publishing</text>
+<text x="710" y="1013" class="lbls" text-anchor="start" >12  peer-floor tier-2 — 3f · 73 sloc · gates a later stage · gates version bumps, never a PR</text>
+<text x="710" y="1030" class="lbls" text-anchor="start" >13  peer-floor tier-1 — 2f · 106 sloc · never gates · reports check runs, never gates</text>
+<text x="710" y="1047" class="lbls" text-anchor="start" >14  lint &amp; probe fleet — 21f · 2,181 sloc · never gates · oxlint · elements · warn-lanes · CI gate</text>
+<text x="710" y="1064" class="lbls" text-anchor="start" >15  @tools/shared — 13f · 493 sloc · never gates · the library under every instrument</text>
+<text x="710" y="1081" class="lbls" text-anchor="start" >16  typedoc plugin — 5f · 759 sloc · never gates · builds the API pages, gates nothing</text>
+<text x="710" y="1098" class="lbls" text-anchor="start" >17  e2e — cypress — 7f · 553 sloc · STOPS THE PR LINE · drives the sample apps · stops the PR line</text>
+<text x="710" y="1115" class="lbls" text-anchor="start" >18  sample apps — 55f · 3,099 sloc · the line itself · shared routes + vanilla + mobx + e2e fixtures</text>
+<text x="710" y="1132" class="lbls" text-anchor="start" >19  docs deploy watch — 4f · 508 sloc · gates a later stage · workers-builds triggers · gates the deploy</text>
+<text x="58" y="1172" class="lbls" text-anchor="start" >TOTAL — 17 massed structures · 201 authored files · 13,899 sloc · counted at origin/main @ b2338d0 (2026-09-05) · gate tiers unchanged from rev A</text>
+</svg></div>
+    <figcaption>The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Method — one basis, shared with <a class="xref" data-sheet="4" href="/app/sheet/4">sheet 4</a>.</strong> Every massed structure was counted from this repo's authored source, counted at origin/main @ b2338d0 (2026-09-05) and read from <code>diagrams/data/census-yard.json</code>: <code>.ts/.tsx/.js/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, <code>*.spec.*</code> and <code>*.test.*</code>, <code>specs/</code>, <code>__tests__/</code> and fixtures. <em>sloc</em> is <code>scc</code>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. <code>@tools/release</code> hosts several instruments at once, so it is attributed by module prefix — <code>check-published-diff*</code> to structure 11, <code>check-exports*</code> to 10, the pack modules to 3, the release steps to 5 — with every file landing in exactly one structure and none counted twice. 19 structures, 17 of them massed: 201 authored files, 13,899 lines. The tarball, the registry and the boundary are diagrammatic.</p>
+<p><strong>Mass is volume; volume does not predict authority.</strong> Footprint side is <code>1.6 · √sloc</code>, so plan area tracks lines; height is <code>1.5 px</code> per authored file, so a block's volume is its <code>sloc × files</code>. The two heaviest masses on the sheet are <em>material</em>: the sample apps (55 files, 3,099 lines) and <code>packages/*/src</code> (36 files, 3,520 lines). The 5 structures that can stop a pull request total 18 files between them, and one of them — <code>dts-backtest</code> — is a single 291-line <code>run.ts</code>. Rev A encoded severity as height and so implied the opposite; the census says a gate's authority has nothing to do with how much code it is.</p>
+<p><strong>Severity in colour.</strong> Red hatch across cap and flank marks a check that stops the PR line: the vitest harness (7), <code>compat-guards</code> (8), <code>dts-backtest</code> (9), <code>check:exports</code> (10) and Cypress <code>e2e</code> (17). One block is solid red — <code>published-diff</code> (11) — because it is the only structure that halts publishing itself, and it closes the loop by pulling the <em>live</em> npm tarball back for comparison, which makes the registry part of the circuit rather than a destination. Accent hatch marks the gates that fire later rather than on a PR: <code>peer-floor</code> tier-2 (12) gates version bumps, the workers-builds watch (19) gates the docs deploy. Faint, unhatched blocks never gate at all — <code>peer-floor</code> tier-1 reports check runs, the lint &amp; probe fleet is advisory, <code>@tools/shared</code> and the typedoc plugin are libraries. The tiers survive both themes because they differ in hatch as well as hue: solid red, red hatch, accent hatch, no hatch.</p>
+<p><strong>One packer, many readers (#449).</strong> The dashed trunk leaving the green crate is literal: <code>check:exports</code> (publint + attw), <code>dts-backtest</code> and <code>published-diff</code> all read the same cached <code>packPublishTarball</code> output. No check re-packs, so a drift verdict is always about the artifact that would actually ship. Known failure mode, drawn nowhere but real: a poisoned remote cache entry can replay a stale verdict — <code>--force</code> is the remediation.</p>
+<p><strong>Two task managers, one re-entrant loop.</strong> The inset at top left is drawn flat, not isometric, because a task manager is not a place — and because the relationship is not the clean layering it sounds like. GitHub Actions enters mise at 37 call sites across 8 workflows (28 distinct tasks); mise itself is almost graphless — 49 tasks with exactly 2 <code>depends</code> edges, <code>lint_workflows</code> → its four linters and <code>setup</code> → <code>turbo_link_worktree</code> — because it delegates fan-out rather than modelling it. Seven mise tasks shell turbo, whose <code>ci</code> graph alone expands to 605 task nodes. Then the loop closes back on itself: seven root <code>package.json</code> scripts shell <code>mise run</code> again, so turbo's <code>//#lint:markdown</code> node literally runs <code>mise run lint_markdown</code>. That return is the whole point — mise/aqua owns the versions of the non-node tools (rumdl, taplo, shellcheck, actionlint, zizmor), and turbo climbs back out to it to get a cache key over tools node never installs. Neither gantry is above the other.</p>
+<p><strong>Rev C — census refresh (counted at origin/main @ b2338d0 (2026-09-05)) and a change of ruler.</strong> Nothing about the argument changed; the numbers under it did, for two separate reasons that are worth keeping apart. <em>The ruler changed:</em> sloc is now <code>scc</code>'s string-aware <code>Code</code> count instead of a homegrown blank-and-comment filter, which adds roughly 0.9% across the yard because a template literal's interior now counts line by line. Measured both ways over one identical file set — rev B's twenty-five source directories — the old ruler reads 11,560 lines and <code>scc</code> reads 11,658, so of everything below, about a hundred lines are the tape measure and the rest is code. <em>The code changed:</em> re-measured on the plate, <code>packages/*/src</code> went 2,568 → 3,520, the sample apps 2,995 → 3,099, Cypress <code>e2e</code> 5 files/405 → 7 files/553. And the yard gained three instruments — <code>@tools/lint-elements</code>, <code>@tools/warn-lanes</code> (#639) and <code>@tools/eslint-ts-parser</code> — which is why <code>tools/</code> now reads nineteen packages and the lint &amp; probe fleet is the one block that visibly grew, 13 files/732 lines to 21/2,181. Structure 15 shifted 13 plan units right to keep air around it. Totals: 201 authored files, 13,899 lines, up from 171/10,652. A note on the count: <code>@tools/wintercg-globals</code> is a member of the workspace but massed nowhere, because its entire source is one <code>globals.d.ts</code> and declaration files are outside this basis — it has always been invisible to this sheet. In the inset, only turbo moved: the <code>ci</code> graph went 501 → 535 nodes (<code>turbo run ci --dry=json</code>, turbo 2.10.11), while mise held at 48 tasks and Actions at 37 call sites across eight workflows. The tarball's readers, the gate tiers and the loop are unchanged.</p>
+<p><strong>Rev D — the inset is off the clipboard too.</strong> The whole plate cabinet was re-counted at origin/main @ b2338d0 in one pass, and the yard moved with it: 201 authored files and 13,899 sloc across 17 massed structures, up from rev C's 187 / 12,798. The correction rev D exists for is the inset. Its four task-manager figures were the last hand-pasted constants on this sheet, and by rev C's own printing one of them was wrong in the same build that printed it: the inset said the <code>ci</code> graph was 535 nodes while plates 3A and 12, reading <code>census-plate.json</code>, said 590. All four now read from the same two plates 3A draws — <code>census-handoff.json</code> for the workflow, mise and call-site counts, <code>census-plate.json</code> for the graph — so the three sheets cannot disagree about the machine again. At this ref that is 8 workflows, 37 call sites over 28 distinct tasks, 49 mise tasks with 2 <code>depends</code> edges, and <code>ci</code> at 605 nodes. The gate tiers, the loop and the argument are unchanged.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="fr"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/></svg></td><td>halts a publish (published-diff alone)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3-hr)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/></svg></td><td>stops the PR line</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3-ha)"/><rect x="6" y="3" width="36" height="12" class="ska fnone"/></svg></td><td>gates a later stage (bump · release · deploy)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="skf fp2"/></svg></td><td>never gates — reporters and libraries</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,10 24,2 42,10 24,18" class="sk fp"/></svg></td><td>mass — footprint ∝ √sloc, height ∝ files</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="10" y="4" width="28" height="11" class="skg fg"/></svg></td><td>the artifact (one tarball)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="44" y2="9" class="sks" stroke-dasharray="5 4"/></svg></td><td>checks reading the cached tarball</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="44" y2="9" class="ska" stroke-dasharray="7 4"/></svg></td><td>the return from the live registry</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span>THE ALTITUDE ATLAS</div>
+  <div class="span2"><span class="fld">SHEET TITLE</span>THE INSTRUMENT YARD</div>
+  <div><span class="fld">SCALE</span>THE MONOREPO</div>
+  <div><span class="fld">FORM</span>ISOMETRIC CITY</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · E</div>
+  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
+  <div><span class="fld">SHEET</span>3 OF 14</div>
+</div>
+    </div>
+  </div>
+</section>
