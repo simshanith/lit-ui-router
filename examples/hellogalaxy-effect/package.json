@@ -1,0 +1,35 @@
+{
+  "name": "lit-ui-router-tutorial-hellogalaxy-effect",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "vite build",
+    "dev": "vite",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@google/model-viewer": "^4.1.0",
+    "@uirouter/core": "^6.1.2",
+    "@uirouter/visualizer": "^7.2.1",
+    "effect": "^3.22.1",
+    "lit": "^3.3.3",
+    "lit-ui-router": "^1.11.2"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.2.1"
+  },
+  "overrides": {
+    "d3-color": "3.1.0"
+  },
+  "devEngines": {
+    "packageManager": {
+      "name": "npm",
+      "onFail": "warn"
+    }
+  },
+  "allowScripts": {
+    "fsevents@2.3.3": true
+  }
+}

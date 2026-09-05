@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hello Galaxy (Effect) - lit-ui-router Tutorial</title>
+    <style>
+      body {
+        font-family:
+          system-ui,
+          -apple-system,
+          sans-serif;
+        max-width: 900px;
+        margin: 40px auto;
+        padding: 0 20px;
+        color: #e6edf3;
+      }
+      @media (max-width: 480px) {
+        body {
+          margin: 16px auto;
+          padding: 0 12px;
+        }
+      }
+      html {
+        min-height: 100%;
+        /* Loading fallback while the photo downloads */
+        background: radial-gradient(
+          ellipse at bottom,
+          #1b2735 0%,
+          #090a0f 100%
+        );
+      }
+      /* Backdrop: the Milky Way's center in infrared, Spitzer Space Telescope.
+         Credit: NASA, JPL-Caltech, Susan Stolovy (SSC/Caltech) et al.
+         https://science.nasa.gov/image-detail/ssc2006-02a-0/ */
+      body::before {
+        content: '';
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        pointer-events: none;
+        background-image:
+          linear-gradient(rgba(9, 10, 15, 0.4), rgba(9, 10, 15, 0.7)),
+          url('https://science.nasa.gov/wp-content/uploads/2023/09/ssc2006-02a-0.jpg?w=2048');
+        background-size: cover;
+        background-position: center;
+      }
+      @media (max-width: 640px) {
+        /* Smaller backdrop download for phones */
+        body::before {
+          background-image:
+            linear-gradient(rgba(9, 10, 15, 0.4), rgba(9, 10, 15, 0.7)),
+            url('https://science.nasa.gov/wp-content/uploads/2023/09/ssc2006-02a-0.jpg?w=1024');
+        }
+        /* The @uirouter/visualizer overlays cover content on phones */
+        #uirStateVisualizer,
+        #uirTransitionVisualizer {
+          display: none !important;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div id="root"></div>
+    <script type="module" src="/src/main.ts"></script>
+  </body>
+</html>

@@ -1,6 +1,6 @@
 # Examples
 
-This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page.
+This folder contains standalone example projects demonstrating lit-ui-router usage. The tutorial examples escalate in scope — start with **helloworld**, then work outward through the solar system and into the galaxy. **design-system-links** is not a tutorial rung: it is live documentation for one API surface, embedded in the guide that explains it. **hellosolarsystem-mobx** is not a rung either: it is the solar-system rung rebuilt on the MobX bindings, embedded in the pages that document them. Nor is **hellogalaxy-effect**: it is the galaxy rung rebuilt on [Effect](https://effect.website), with the router plugin it would need inlined as a spike of a future `ui-router-effect` package. Nor is **lint-eslint**: it is the consumer wiring of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin), installed from npm exactly as a consumer would, and it renders its own lint report in the page.
 
 ## StackBlitz Integration
 
@@ -14,14 +14,15 @@ See [StackBlitz Tips & Best Practices](https://developer.stackblitz.com/guides/i
 
 ### Available Examples
 
-| Example                   | Description                                                                                               | StackBlitz                                                                                              |
-| ------------------------- | --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| **helloworld**            | Ultra-minimal starter: two states with `uiSref`/`uiSrefActive` navigation                                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld)            |
-| **hellosolarsystem**      | Solar System tour: route parameters and async `resolve` data with a master/detail flow                    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem)      |
-| **hellosolarsystem-mobx** | The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-mobx) |
-| **hellogalaxy**           | Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise          | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy)           |
-| **design-system-links**   | `uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`               | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/design-system-links)   |
-| **lint-eslint**           | `eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page              | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)           |
+| Example                   | Description                                                                                                  | StackBlitz                                                                                              |
+| ------------------------- | ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **helloworld**            | Ultra-minimal starter: two states with `uiSref`/`uiSrefActive` navigation                                    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/helloworld)            |
+| **hellosolarsystem**      | Solar System tour: route parameters and async `resolve` data with a master/detail flow                       | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem)      |
+| **hellosolarsystem-mobx** | The same tour rebuilt on `lit-ui-router-mobx`: an observable router store, reactions, and a computed tour    | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellosolarsystem-mobx) |
+| **hellogalaxy**           | Milky Way explorer: nested states and views, resolve inheritance, and a 3D model-viewer surprise             | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy)           |
+| **hellogalaxy-effect**    | The same explorer rebuilt on Effect: typed resolve inheritance, state-scoped fibers, and interruptible loads | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/hellogalaxy-effect)    |
+| **design-system-links**   | `uiSref` driving a design-system link element (`<sp-link>`): `assignHref: true` vs `'auto'`                  | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/design-system-links)   |
+| **lint-eslint**           | `eslint-plugin-lit-ui-router` the ESLint-only way, with the lint report rendered in the page                 | [Open](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)           |
 
 ## What Each Example Teaches
 
@@ -65,6 +66,21 @@ A Milky Way explorer built on a real star catalog (Sirius, Vega, Polaris, Betelg
 - Resolve inheritance: the `star` resolve declares `deps: ['$transition$', 'stars']` on the parent state's resolved catalog
 - Relative sref targets (`.star`) for linking to child states
 - Sibling states: `galaxy.astronaut` renders a 3D model alongside the star explorer, lazy-loading model-viewer via a resolve
+
+### hellogalaxy-effect
+
+The same states, URLs, templates, star catalog and model-viewer as **hellogalaxy**, rebuilt on [Effect](https://effect.website). Resolves still arrive as `UIViewInjectedProps`; what changes is what a resolve, a hook and a state's lifetime are made of. The plugin that bridges the two — `src/effect-plugin.ts` and `src/router-ref-controller.ts` — is inlined in the example on purpose: it is a spike of a future `ui-router-effect` package, not a published one, so it consumes `effect` directly and touches only public `@uirouter/core` API.
+
+It layers on four things, each answering a different question:
+
+- **Who provides what?** `galaxy.stars` resolves its catalog with `provide(StarCatalog, ...)` — a resolve whose token is the `Context.Tag`'s key. `galaxy.stars.star` then writes `const catalog = yield* StarCatalog` with no `deps` array at all: the plugin builds a `Context` from every service-tagged resolve already resolved on the path, plus a `CurrentTransition` service, and provides it to the child's Effect. An unknown `:starId` is a typed `StarNotFound`, caught with `Effect.catchTag` in a hook-bridge `onBefore` that returns a `TargetState` redirect instead of a failed transition
+- **What lives as long as a state?** A `scoped` property on the declaration, bracketed on `onSuccess` only — never `onEnter`/`onExit`, which fire while the transition can still be superseded. `galaxy` opens an observatory session for the whole visit; `galaxy.stars.star` forks a one-second ticker into its own `Scope`. Star-to-star navigation closes and reopens the child scope while the session above it survives, and leaving for the astronaut releases only the star's
+- **What happens when the user changes their mind mid-load?** The astronaut resolve is an Effect: a deliberate `Effect.sleep`, then the model-viewer import and a real `fetch` of the `.glb` whose `AbortSignal` is wired to interruption, under `Effect.timeout` and a short retry `Schedule`. Every hook effect and every resolve for a transition is forked into a per-transition `FiberSet`, interrupted the moment another transition is created — a transition's own promise only rejects once its in-flight resolves settle, which is far too late to abort them. So clicking Astronaut then Stars aborts the download rather than racing it
+- **Where am I now?** `RouterRefController` in the un-routed `<app-root>`, which never receives fresh view props. It forks `Stream.runForEach` over a `SubscriptionRef` the plugin updates from one `onSuccess` hook, and selects `includes('galaxy.stars')`-style state so the marker stays lit on the nested detail view — the same reasoning as the MobX rung, on a stream instead of a reaction
+
+`<fiber-log>` at the foot of the page renders the plugin's log ref, so every scope open and close, every resolve start, finish and interruption is visible in the order the fibers ran them.
+
+It is the minimal layering, not a rewrite: the vanilla rung's plumbing stays put and Effect goes only where the router stops helping
 
 ### design-system-links
 
