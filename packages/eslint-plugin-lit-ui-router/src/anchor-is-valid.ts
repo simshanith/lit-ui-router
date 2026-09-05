@@ -1,5 +1,5 @@
 // Vendored from eslint-plugin-lit-a11y 5.1.1 (lib/rules/anchor-is-valid.js plus
-// its lit-html import gating), Copyright (c) 2018 open-wc contributors.
+// its lit-html import gating), Copyright (c) 2018 open-wc.
 // MIT per the open-wc repo LICENSE, ISC per the package manifest.
 // Extended so a uiSref element part counts as the href it assigns (#659, #676).
 import type { SourceCode } from 'eslint';
