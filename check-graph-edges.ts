@@ -5,7 +5,7 @@ import {
   formatMissing,
   missingEdges,
 } from '@tools/shared/graph-edges.core.ts';
-import { planLanes, resolvedTaskDeps } from '@tools/shared/turbo.ts';
+import { planFailure, resolvedTaskDeps } from '@tools/shared/turbo.ts';
 import {
   loadWorkspace,
   type Member,
@@ -44,29 +44,21 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
 
 const { members } = await loadWorkspace(workspaceRoot);
 
-// The edge rules below assert what a lane orders on; this asserts the lane can
-// be planned at all. turbo rejects an invalid edge — `dependsOn` onto a
-// persistent task — for the whole run, before any task starts, so a lane no CI
-// path invokes rots unseen: `turbo run e2e` was unusable until #695, because
-// CI drives Cypress through the test:cypress* scripts instead.
-const lanes = [
-  ...new Set(
-    members.flatMap((member) => Object.keys(member.manifest?.scripts ?? {})),
-  ),
-].sort();
-const { planned, failure } = await planLanes(lanes);
+// Lanes no CI path invokes, so nothing else notices them rotting. turbo
+// rejects an invalid edge — `dependsOn` onto a persistent task — for the whole
+// run before any task starts, and it only validates the subgraph the run names,
+// so these have to be named here: `turbo run e2e` was unusable until #695
+// because CI drives Cypress through the test:cypress* scripts instead.
+const UNRUN_LANES = ['e2e', 'dev'];
+
+const failure = await planFailure(UNRUN_LANES);
 if (failure !== undefined) {
-  // the graph is invalid, so every edge rule below would report against a plan
-  // turbo refuses to build; the one real finding is this one
-  console.error(`${CHECK}: turbo cannot plan the declared lanes:\n${failure}`);
+  console.error(
+    `${CHECK}: turbo cannot plan ${UNRUN_LANES.join(', ')}:\n${failure}`,
+  );
   process.exit(1);
 }
-if (planned.length === 0) {
-  // an empty lane set would pass vacuously; that's a wiring bug, not a pass
-  console.error(`${CHECK}: no member declares a turbo lane`);
-  process.exit(1);
-}
-console.log(`${CHECK}: ${planned.length} declared lanes plan`);
+console.log(`${CHECK}: ${UNRUN_LANES.join(', ')} plan`);
 
 let failed = false;
 for (const rule of RULES) {

@@ -51,90 +51,36 @@ export async function resolvedTaskDeps(
   return entry.dependencies ?? [];
 }
 
-// turbo colours its diagnostics even into a pipe; built rather than written as
-// a literal so no escape byte sits in the source
-const SGR = new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, 'g');
-
-/** A failed run's stderr, or `''` for an error that carries none. */
-function stderrOf(error: unknown): string {
-  return typeof error === 'object' && error !== null && 'stderr' in error
-    ? String(error.stderr)
-    : '';
-}
-
-/**
- * One line of turbo diagnostics. It wraps at terminal width and gutters the
- * continuation with a vertical bar, so a message — or a task name inside one —
- * arrives split by a run of whitespace and box drawing. Both glyphs count: CI
- * gets the ASCII fallback (`|`), a UTF-8 terminal the box character (`│`).
- * Colour survives the pipe, so the escapes come off too.
- */
-function flatten(stderr: string): string {
-  return stderr
-    .replaceAll(SGR, '')
-    .replaceAll(/[│|]/g, '')
-    .replaceAll(/\s+/g, ' ');
-}
-
-/**
- * A script name with no turbo task declared for it — skip, don't fail. Every
- * space goes before matching: the wrap can land inside the name itself, and a
- * task name has none to lose.
- */
+/** A script name with no turbo task declared for it — skip, don't fail. */
 function isUndeclared(name: string, error: unknown): boolean {
-  const squashed = flatten(stderrOf(error)).replaceAll(' ', '');
-  return squashed.includes(`Couldnotfindtask\`${name}\``);
+  const stderr =
+    typeof error === 'object' && error !== null && 'stderr' in error
+      ? String(error.stderr)
+      : '';
+  // turbo wraps the message across lines at terminal width
+  return stderr
+    .replaceAll(/\s+/g, ' ')
+    .includes(`Could not find task \`${name}\``);
 }
 
 /**
- * The names turbo has a task for. `--only` strips the dependency edges, so a
- * lane planned that way can fail exactly one way — no task by that name — and
- * the exit code alone classifies it. Nothing here reads turbo's prose, which
- * it writes for people: wrapped, guttered, and ASCII on CI but box drawing on
- * a UTF-8 terminal.
+ * turbo's complaint about planning `lanes`, or `undefined` when it plans. The
+ * dry run deliberately omits `--only`: that flag strips the dependency edges,
+ * and an invalid edge — `dependsOn` onto a persistent task — is exactly what
+ * hides behind it. turbo validates only the subgraph the run names, so a lane
+ * has to be named here to be checked at all.
  */
-async function declaredLanes(
-  names: readonly string[],
-  exec: Exec,
-  concurrency = 8,
-): Promise<string[]> {
-  const queue = [...names];
-  const declared = new Set<string>();
-  const worker = async () => {
-    for (let name = queue.shift(); name; name = queue.shift()) {
-      try {
-        await exec('turbo', ['run', name, '--only', '--dry-run=json']);
-        declared.add(name);
-      } catch {
-        // --only cannot fail for any other reason, so this is an undeclared
-        // script name: skip it rather than failing the guard
-      }
-    }
-  };
-  await Promise.all(
-    Array.from({ length: Math.max(1, concurrency) }, () => worker()),
-  );
-  return names.filter((name) => declared.has(name));
-}
-
-/**
- * Plans every declared lane in one dry run, so turbo validates the graph it
- * would actually build. That run deliberately omits `--only`: the flag strips
- * the dependency edges, which is what let an invalid one — `dependsOn` onto a
- * persistent task — sit unnoticed in the `e2e` lane (#695).
- */
-export async function planLanes(
-  names: readonly string[],
+export async function planFailure(
+  lanes: readonly string[],
   exec: Exec = defaultExec,
-): Promise<{ planned: string[]; failure?: string }> {
-  const planned = await declaredLanes(names, exec);
-  // nothing to validate, and the caller fails closed on an empty plan
-  if (planned.length === 0) return { planned };
+): Promise<string | undefined> {
   try {
-    await exec('turbo', ['run', ...planned, '--dry-run=json']);
-    return { planned };
+    await exec('turbo', ['run', ...lanes, '--dry-run=json']);
+    return undefined;
   } catch (error) {
-    return { planned: [], failure: stderrOf(error) || String(error) };
+    return typeof error === 'object' && error !== null && 'stderr' in error
+      ? String(error.stderr)
+      : String(error);
   }
 }
 
