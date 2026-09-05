@@ -171,6 +171,18 @@ describe('undeclaredTaskNames', () => {
     ]);
   });
 
+  // verbatim CI, where turbo falls back to ASCII box drawing: the gutter is
+  // `|`, not `│`, and the wrap still lands between the name and `in project`
+  it('reads through an ASCII wrap gutter', () => {
+    const stderr =
+      '  x Missing tasks in project\n' +
+      '  `->   x Could not find task `example:install:hellosolarsystem-mobx` in\n' +
+      '        | project\n';
+    assert.deepEqual(undeclaredTaskNames(stderr), [
+      'example:install:hellosolarsystem-mobx',
+    ]);
+  });
+
   it('rejoins a name the wrap split', () => {
     const stderr =
       '× Could not find task `example:install:\n  │     │ hellosolarsystem` in project';
@@ -205,7 +217,7 @@ describe('planLanes', () => {
     ]);
   });
 
-  it('drops undeclared names and retries once', async () => {
+  it('drops undeclared names and re-plans', async () => {
     const argv: string[][] = [];
     const exec: Exec = (_command, args) => {
       argv.push([...args]);
@@ -224,6 +236,45 @@ describe('planLanes', () => {
       ['run', 'build', 'prepare', '--dry-run=json'],
       ['run', 'build', '--dry-run=json'],
     ]);
+  });
+
+  // a wrapped name can go unread in one round and be reported alone in the
+  // next; the loop keeps dropping as long as a round names something new
+  it('keeps dropping names turbo reveals a round at a time', async () => {
+    const argv: string[][] = [];
+    const missing = (name: string) =>
+      Object.assign(new Error('turbo failed'), {
+        stderr: `× Could not find task \`${name}\` in project`,
+      });
+    const exec: Exec = (_command, args) => {
+      argv.push([...args]);
+      if (args.includes('prepare')) return Promise.reject(missing('prepare'));
+      if (args.includes('postinstall'))
+        return Promise.reject(missing('postinstall'));
+      return Promise.resolve({ stdout: '{}', stderr: '' });
+    };
+    assert.deepEqual(
+      await planLanes(['build', 'prepare', 'postinstall'], exec),
+      { planned: ['build'] },
+    );
+    assert.equal(argv.length, 3);
+  });
+
+  // turbo naming something we never passed must not spin: no lane comes off
+  it('stops when the reported name is not one it passed', async () => {
+    let calls = 0;
+    const exec: Exec = () => {
+      calls += 1;
+      return Promise.reject(
+        Object.assign(new Error('turbo failed'), {
+          stderr: '× Could not find task `never-passed` in project',
+        }),
+      );
+    };
+    const { planned, failure } = await planLanes(['build'], exec);
+    assert.deepEqual(planned, []);
+    assert.match(failure ?? '', /never-passed/);
+    assert.equal(calls, 1);
   });
 
   it('reports an invalid edge instead of retrying it away', async () => {

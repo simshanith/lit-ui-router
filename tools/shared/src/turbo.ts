@@ -64,12 +64,16 @@ function stderrOf(error: unknown): string {
 
 /**
  * One line of turbo diagnostics. It wraps at terminal width and gutters the
- * continuation with `│`, so a message — or a task name inside one — arrives
- * split by a run of whitespace and box drawing. Colour survives the pipe, so
- * the escapes come off too.
+ * continuation with a vertical bar, so a message — or a task name inside one —
+ * arrives split by a run of whitespace and box drawing. Both glyphs count: CI
+ * gets the ASCII fallback (`|`), a UTF-8 terminal the box character (`│`).
+ * Colour survives the pipe, so the escapes come off too.
  */
 function flatten(stderr: string): string {
-  return stderr.replaceAll(SGR, '').replaceAll('│', '').replaceAll(/\s+/g, ' ');
+  return stderr
+    .replaceAll(SGR, '')
+    .replaceAll(/[│|]/g, '')
+    .replaceAll(/\s+/g, ' ');
 }
 
 /** A script name with no turbo task declared for it — skip, don't fail. */
@@ -78,9 +82,8 @@ function isUndeclared(name: string, error: unknown): boolean {
 }
 
 /**
- * Every name a run rejected as undeclared. turbo reports all of them at once,
- * so one retry drops the whole set. Interior whitespace is stripped because a
- * long name can land across a wrap; task names have none to lose.
+ * Every name a run rejected as undeclared. Interior whitespace is stripped
+ * because a long name can land across a wrap; task names have none to lose.
  */
 export function undeclaredTaskNames(stderr: string): string[] {
   const flat = flatten(stderr);
@@ -94,7 +97,8 @@ export function undeclaredTaskNames(stderr: string): string[] {
  * build. Deliberately without `--only`: that flag strips the dependency edges,
  * which is what let an invalid one — `dependsOn` onto a persistent task — sit
  * unnoticed in the `e2e` lane (#695). Names with no turbo task are dropped and
- * the run retried once.
+ * the run repeated; a round that names nothing new is the real failure, so a
+ * genuine graph error can never be retried away into silence.
  */
 export async function planLanes(
   names: readonly string[],
@@ -109,17 +113,23 @@ export async function planLanes(
     }
   };
 
-  const first = await plan(names);
-  if (first === undefined) return { planned: [...names] };
+  // only a name we actually passed can be dropped, so every round that makes
+  // progress shortens the lane list and the loop terminates
+  const passed = new Set(names);
+  const undeclared = new Set<string>();
+  for (;;) {
+    const lanes = names.filter((name) => !undeclared.has(name));
+    const failure = await plan(lanes);
+    if (failure === undefined) return { planned: lanes };
 
-  const undeclared = new Set(undeclaredTaskNames(first));
-  if (undeclared.size === 0) return { planned: [], failure: first };
-
-  const declared = names.filter((name) => !undeclared.has(name));
-  const retry = await plan(declared);
-  return retry === undefined
-    ? { planned: declared }
-    : { planned: [], failure: retry };
+    const before = undeclared.size;
+    for (const name of undeclaredTaskNames(failure)) {
+      if (passed.has(name)) undeclared.add(name);
+    }
+    // no new name to drop means the failure is the graph itself, not a script
+    // turbo has no task for — report it rather than looping
+    if (undeclared.size === before) return { planned: [], failure };
+  }
 }
 
 /**
