@@ -27,27 +27,36 @@ The Cloudflare [Github integration](https://developers.cloudflare.com/workers/ci
 
 ### Configuration Files
 
-| File                   | Purpose                                                                                                                                                                                                                                                                                               |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wrangler.jsonc`       | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
-| `docs/worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
-| `docs/public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
+All of them live in the site package, `www/lit-ui-router.dev/`:
+
+| File              | Purpose                                                                                                                                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
+| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
+| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
 
 ### Wrangler Setup
 
 Wrangler is installed in both:
 
 - Root `package.json` - for deployment commands
-- `docs/package.json` - wrangler discovers the root `wrangler.jsonc` by walking up from the docs directory
+- `www/lit-ui-router.dev/package.json` - its scripts (`wrangler dev`, `wrangler types`, the dry-run bundle) run with the package as cwd, so wrangler finds the `wrangler.jsonc` beside them
+
+The deploy commands run from the repo root, where no config lives, so they name it with
+`--config www/lit-ui-router.dev/wrangler.jsonc`.
 
 See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
 
 ### Build & Deploy Commands
 
-| Environment                                                                                             | Build                                        | Deploy                         |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------ |
-| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler deploy`          |
-| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler versions upload` |
+| Environment                                                                                             | Build                                        | Deploy                                                                       |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------------------------------- |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler deploy --config www/lit-ui-router.dev/wrangler.jsonc`          |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler versions upload --config www/lit-ui-router.dev/wrangler.jsonc` |
+
+The deploy command names a path only this layout has, so the dashboard has to change with the
+tree: update both deploy commands (`--apply`, or by hand) **before** merging a change that moves
+`wrangler.jsonc`, or the deploy that merge triggers runs against a config that is no longer there.
 
 The build command is a **repo script, not the steps themselves**
 ([`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh)). A trigger holds one

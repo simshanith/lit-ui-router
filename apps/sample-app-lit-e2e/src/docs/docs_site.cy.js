@@ -1,6 +1,6 @@
 // A browser smoke of the deployed docs site. The worker's HTTP contract
 // (statuses, redirects, noindex, shell aliasing, 404-page policy) lives in
-// docs/worker/test/worker.test.ts, run against the worker module itself; the
+// www/lit-ui-router.dev/worker/test/worker.test.ts, run against the worker module itself; the
 // two cy.request specs kept here assert built-asset/assets-binding behavior
 // that has no lower-level home.
 describe('docs site', () => {

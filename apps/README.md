@@ -101,7 +101,7 @@ and every published location strategy. See the
 
 The docs site runs the sample app behind several mounts — `/app`,
 `/not-found-naive`, `/not-found-spa`, `/simulated-routing` — to exhibit points
-on the [server-support spectrum](../docs/guides/server-route-matching.md). All
+on the [server-support spectrum](../www/lit-ui-router.dev/guides/server-route-matching.md). All
 four share a **single vanilla build**: the client recovers its base prefix at
 boot rather than having one baked in, so one build deep-links correctly under
 every mount. Assets emit at absolute `/assets/…`, so nothing else varies by

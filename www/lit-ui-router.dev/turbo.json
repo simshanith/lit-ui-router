@@ -11,7 +11,7 @@
         "package.json",
         "worker/**",
         "!worker/dist/**",
-        "$TURBO_ROOT$/wrangler.jsonc",
+        "wrangler.jsonc",
         "$TURBO_ROOT$/pnpm-lock.yaml"
       ],
       "outputs": ["worker/dist/**"]
@@ -83,7 +83,7 @@
       "dependsOn": ["^build:types", "types:worker"]
     },
     "types:worker": {
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
+      "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
       "outputs": ["worker/worker-configuration.d.ts"]
     },
     "docs": {

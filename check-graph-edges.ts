@@ -26,7 +26,7 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
     consumer,
     producerTask: 'docs:api',
     select: hasScript('docs:api'),
-    why: 'every docs:api producer writes into docs/api and docs imports none of them, so add the line to docs/turbo.json',
+    why: 'every docs:api producer writes into www/lit-ui-router.dev/api and docs imports none of them, so add the line to www/lit-ui-router.dev/turbo.json',
   })),
   {
     consumer: '@tools/release#pack:all',

@@ -5,7 +5,7 @@
       "trigger_uuid": "prod-uuid",
       "trigger_name": "Deploy production",
       "build_command": "./tools/workers-builds/cloudflare-build.sh",
-      "deploy_command": "npx wrangler deploy",
+      "deploy_command": "npx wrangler deploy --config www/lit-ui-router.dev/wrangler.jsonc",
       "branch_includes": ["main"],
       "branch_excludes": [],
       "environment_variables": {
@@ -23,7 +23,7 @@
       "trigger_uuid": "preview-uuid",
       "trigger_name": "Preview",
       "build_command": "./tools/workers-builds/cloudflare-build.sh",
-      "deploy_command": "npx wrangler versions upload",
+      "deploy_command": "npx wrangler versions upload --config www/lit-ui-router.dev/wrangler.jsonc",
       "branch_includes": ["*"],
       "branch_excludes": ["main"],
       "environment_variables": {
@@ -41,7 +41,7 @@
         "trigger_uuid": "preview-uuid",
         "kind": "preview",
         "patch": {
-          "deploy_command": "npx wrangler versions upload"
+          "deploy_command": "npx wrangler versions upload --config www/lit-ui-router.dev/wrangler.jsonc"
         },
         "environmentPatch": {}
       }

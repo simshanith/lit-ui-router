@@ -112,7 +112,7 @@ pnpm --filter examples example:install:<example-name>
 
 ## Docs Embeds
 
-Each example is also built for the docs site (`turbo run build:embeds --filter=examples`) and embedded same-origin at `/examples/<example-name>/`. The docs reserve the embed's height up front — before the iframe loads, so the page doesn't shift when the example paints — from the `EXAMPLES` map in `docs/.vitepress/theme/components/examples.ts`.
+Each example is also built for the docs site (`turbo run build:embeds --filter=examples`) and embedded same-origin at `/examples/<example-name>/`. The docs reserve the embed's height up front — before the iframe loads, so the page doesn't shift when the example paints — from the `EXAMPLES` map in `www/lit-ui-router.dev/.vitepress/theme/components/examples.ts`.
 
 Changing what an example renders can outgrow that reservation, which shows up as a scrollbar inside the embed. Measure it:
 

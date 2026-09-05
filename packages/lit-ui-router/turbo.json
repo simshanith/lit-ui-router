@@ -17,7 +17,7 @@
       "outputs": ["dist/custom-elements.json"]
     },
     "docs:api": {
-      "outputs": ["../../docs/api/reference/**"]
+      "outputs": ["../../www/lit-ui-router.dev/api/reference/**"]
     }
   }
 }

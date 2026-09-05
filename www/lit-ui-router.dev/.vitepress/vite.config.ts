@@ -15,7 +15,7 @@ const EMBEDDED_EXAMPLES = [
   'lint-eslint',
 ];
 
-// The mount shells as the dev server serves them. Production (docs/worker)
+// The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
 // serves the static-copied files, so the paths carry `.html`. The vanilla
 // pushState mounts share ONE base-agnostic build (`/app.html`) — the shell
@@ -113,7 +113,7 @@ export default defineConfig({
           dest: '',
           rename: { name: 'app-hash.html', stripBase: true },
         },
-        // Per-mount 404 pages: the worker (docs/worker/index.ts) serves
+        // Per-mount 404 pages: the worker (worker/index.ts) serves
         // <mount>/404.html with status 404 for unmatched paths in a mount.
         {
           src: 'node_modules/sample-app-lit-vanilla/dist/vanilla/404.html',
@@ -154,7 +154,7 @@ export default defineConfig({
         },
         // stripBase ignores the leading ../, so 3 = examples/<name>/dist.
         ...EMBEDDED_EXAMPLES.map((name) => ({
-          src: `../examples/${name}/dist/**`,
+          src: `../../examples/${name}/dist/**`,
           dest: `examples/${name}`,
           rename: { stripBase: 3 },
         })),
