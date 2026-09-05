@@ -5,7 +5,7 @@ export type StackBlitzView = 'default' | 'editor' | 'preview';
 //
 // `height` reserves the embed's space before its iframe loads, so the page
 // doesn't shift when the example paints — a static number by design. It is not
-// eyeballed: `turbo run check:embeds --filter=docs` measures every state each
+// eyeballed: `turbo run check:embeds --filter=lit-ui-router.dev` measures every state each
 // built example reaches at this column and fails when one outgrows what is
 // reserved here. Slack above the measurement is fine (and wanted — text wraps
 // at engine-specific metrics); slack below it is a scrollbar inside the embed.

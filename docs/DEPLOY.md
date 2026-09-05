@@ -215,9 +215,9 @@ plaintext only. Secrets therefore can never be committed here nor clobbered by `
 
 ```bash
 # with pnpm
-pnpm --filter docs wrangler:dev
+pnpm --filter lit-ui-router.dev wrangler:dev
 # with turbo
-turbo docs#wrangler:dev
+turbo lit-ui-router.dev#wrangler:dev
 ```
 
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
