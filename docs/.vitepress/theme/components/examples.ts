@@ -33,11 +33,11 @@ export const EXAMPLES = {
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
-    // Reserves the open report: 781px at the embed's 686px column, plus the
-    // frame's 2px of border. The report rewraps in steps as the column
-    // narrows — 752px at 720, 770px at 688, 806px at 680 — so a column much
-    // under the doc default scrolls instead of being reserved for.
-    height: '800px',
+    // Reserves the open report: 936px at the embed's 686px column, plus the
+    // frame's border and check:embeds' slack. The report rewraps in steps as
+    // the column narrows, so a column much under the doc default scrolls
+    // instead of being reserved for.
+    height: '970px',
     file: 'src/main.ts',
   },
 } as const;
