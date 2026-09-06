@@ -57,6 +57,15 @@ const RY = +(SR * Math.SQRT2 * 0.5).toFixed(2);
 const pt = (ox, oy, x, y, z = 0) => isoPt(ox, oy, x, y, z).map((v) => +v.toFixed(1));
 const p2 = (ox, oy, x, y, z = 0) => pt(ox, oy, x, y, z).join(',');
 
+// A face must be drawn OPAQUE, and a `fill` presentation attribute cannot do it:
+// every stroke class in chrome.mjs declares `fill: none`, and a class outranks a
+// presentation attribute — so the fill has to be restated inline. A patterned face
+// needs stone under it as well, because the hatch tile has no ground of its own.
+// (Same fault iso-hidden.mjs fixes for isoBlock; these builders are sheet 2's own.)
+const face = (pts, cls, fill, { under = null, extra = '' } = {}) =>
+  (under ? `<polygon points="${pts}" stroke="none" style="fill:${under}"/>\n` : '')
+  + `<polygon points="${pts}" class="${cls}"${extra} style="fill:${fill}"/>`;
+
 // One stud: an iso cylinder — swept side wall under an ellipse cap.
 function stud(ox, oy, x, y, z, { edge = 'sks', cap = 'fp2', ring = null } = {}) {
   const [cx, cy] = pt(ox, oy, x, y, z + SH);
@@ -64,7 +73,7 @@ function stud(ox, oy, x, y, z, { edge = 'sks', cap = 'fp2', ring = null } = {}) 
   const halo = ring
     ? `<ellipse cx="${cx}" cy="${cy}" rx="${(RX + 5.5).toFixed(1)}" ry="${(RY + 3.2).toFixed(1)}" class="${ring} fnone"/>`
     : '';
-  return `<path d="M${cx - RX},${cy} L${cx - RX},${by} A${RX},${RY} 0 0 0 ${cx + RX},${by} L${cx + RX},${cy} Z" class="${edge}" fill="var(--paper-2)"/>
+  return `<path d="M${cx - RX},${cy} L${cx - RX},${by} A${RX},${RY} 0 0 0 ${cx + RX},${by} L${cx + RX},${cy} Z" class="${edge}" style="fill:var(--paper-2)"/>
 <ellipse cx="${cx}" cy="${cy}" rx="${RX}" ry="${RY}" class="${edge} ${cap}"/>${halo}`;
 }
 
@@ -86,9 +95,8 @@ function brick(ox, oy, x, y, ws, ds, courses, { z0 = 0, edge = 'sk', cap = 'fp',
   for (let i = 0; i < ws; i++)
     for (let j = 0; j < ds; j++)
       studs.push(stud(ox, oy, x + (i + 0.5) * U, y + (j + 0.5) * U, t, ringStuds.has(`${i},${j}`) ? { edge: 'ska', cap: 'fp', ring: 'ska' } : { edge: studEdge ?? edge, cap: studCap }));
-  return `<polygon points="${left}" class="${edge}" fill="var(--paper-2)"/>
-<polygon points="${right}" fill="var(--paper)" stroke="none"/>
-<polygon points="${right}" class="${edge}" fill="${side ?? `url(#${P}-hx)`}"/>
+  return `${face(left, edge, 'var(--paper-2)')}
+${face(right, edge, side ?? `url(#${P}-hx)`, { under: 'var(--paper)' })}
 <polygon points="${top}" class="${edge} ${cap}"/>
 ${seams.join('\n')}
 ${studs.join('\n')}`;
@@ -109,9 +117,8 @@ function plate(ox, oy, cols, rows, { edge = 'sk', dash = '', named = new Map() }
       const k = named.get(`${i},${j}`);
       studs.push(stud(ox, oy, (i + 0.5) * U, (j + 0.5) * U, PT, k ?? {}));
     }
-  return `<polygon points="${left}" class="${edge}"${da} fill="var(--paper-2)"/>
-<polygon points="${right}" fill="var(--paper)" stroke="none"/>
-<polygon points="${right}" class="${edge}"${da} fill="url(#${P}-hx)"/>
+  return `${face(left, edge, 'var(--paper-2)', { extra: da })}
+${face(right, edge, `url(#${P}-hx)`, { under: 'var(--paper)', extra: da })}
 <polygon points="${top}" class="${edge} fp"${da}/>
 ${studs.join('\n')}`;
 }
@@ -144,7 +151,7 @@ const NAMED = new Map([
 
 const litZ0 = 96, litTop = litZ0 + B(1).courses * CRS;                 // courses from the census
 const navZ0 = 140;                                                     // 1 course
-const mbxZ0 = 252;                                                     // on top of brick 1
+const mbxZ0 = 268;                                                     // clear of brick 1's seat ring
 
 const clientPlate = plate(OX, OY, 8, 6, { named: NAMED });
 
@@ -158,7 +165,7 @@ const drops = [
 const clientBricks = [
   // brick 1 carries a stud of its own: the seat brick 3 takes (seekRouter)
   brick(OX, OY, 0, 0, 2, 4, B(1).courses, { z0: litZ0, studEdge: 'sk', ringStuds: new Set(['0,3']) }),
-  brick(OX, OY, 0, 120, 2, 1, B(3).courses, { z0: mbxZ0 }),          // 1x2, laid across brick 1's back row
+  brick(OX, OY, 0, 120, 2, 1, B(3).courses, { z0: mbxZ0 }),          // 1x2, over brick 1's front row and its seat stud
   brick(OX, OY, 160, 0, 1, 1, B(2).courses, { z0: navZ0 }),
 ].join('\n');
 
@@ -168,11 +175,11 @@ const SRV_NAMED = new Map([
   ['1,0', { edge: 'ska', cap: 'fp', ring: 'ska' }],
   ['1,2', { edge: 'ska', cap: 'fp', ring: 'ska' }],
 ]);
-const srvZ0 = 110;
+const srvZ0 = 100;
 const serverIsland = `${plate(OX2, OY2, 4, 4, { edge: 'sks', dash: '6 4', named: SRV_NAMED })}
 ${drop(OX2, OY2, 60, 20, srvZ0, PT)}
 ${drop(OX2, OY2, 60, 100, srvZ0, PT)}
-${brick(OX2, OY2, 40, 0, 2, 4, B(4).courses, { z0: srvZ0 })}`;
+${brick(OX2, OY2, 0, 0, 2, 4, B(4).courses, { z0: srvZ0 })}`;
 
 // ---- parts callout (LEGO manual language, drafting-set lettering) --------------------
 const MU = 10, MC = 7, MRX = 3.7, MRY = 2.1, MSH = 2.4;
@@ -184,8 +191,8 @@ function miniBrick(ox, oy, ws, ds, courses, dash = '') {
   };
   const da = dash ? ` stroke-dasharray="${dash}"` : '';
   const cls = dash ? 'sks' : 'sk';
-  return `<polygon points="${[q(0, d, h), q(w, d, h), q(w, d, 0), q(0, d, 0)].join(' ')}" class="${cls}"${da} fill="var(--paper-2)"/>
-<polygon points="${[q(w, 0, h), q(w, d, h), q(w, d, 0), q(w, 0, 0)].join(' ')}" class="${cls}"${da} fill="url(#${P}-hx)"/>
+  return `${face([q(0, d, h), q(w, d, h), q(w, d, 0), q(0, d, 0)].join(' '), cls, 'var(--paper-2)', { extra: da })}
+${face([q(w, 0, h), q(w, d, h), q(w, d, 0), q(w, 0, 0)].join(' '), cls, `url(#${P}-hx)`, { under: 'var(--paper)', extra: da })}
 <polygon points="${[q(0, 0, h), q(w, 0, h), q(w, d, h), q(0, d, h)].join(' ')}" class="${cls} fp"${da}/>
 ${Array.from({ length: ws * ds }, (_, k) => {
   const [sx, sy] = isoPt(ox, oy, (Math.floor(k / ds) + 0.5) * MU, ((k % ds) + 0.5) * MU, h + MSH);
@@ -253,16 +260,16 @@ ${txt(660, 214, `${B(2).files}f · ${fmt(B(2).sloc)} sloc · ${shapeName(B(2).sh
 ${txt(660, 226, 'STUD  A — the LOCATION SEAT', 'lblr')}
 ${txt(660, 238, 'a swap, never an addition', 'lblr')}
 
-${badge(366.1, 60, 3, 'ska fp', 'lbla')}
-${txt(388, 42, `${B(3).name} ${B(3).ver}`, 'lblb')}
-${txt(388, 54, `${B(3).files}f · ${fmt(B(3).sloc)} sloc · ${shapeName(B(3).shape)} · ${B(3).courses} courses`, 'lblf')}
-${txt(388, 66, 'SEATS ON BRICK 1 — seekRouter()', 'lbla')}
-${txt(388, 78, 'STUDS  C · E on the plate below', 'lbla')}
+${badge(360, 52, 3, 'ska fp', 'lbla')}
+${txt(412, 42, `${B(3).name} ${B(3).ver}`, 'lblb')}
+${txt(412, 54, `${B(3).files}f · ${fmt(B(3).sloc)} sloc · ${shapeName(B(3).shape)} · ${B(3).courses} courses`, 'lblf')}
+${txt(412, 66, 'SEATS ON BRICK 1 — seekRouter()', 'lbla')}
+${txt(412, 78, 'STUDS  C · E on the plate below', 'lbla')}
 
-${badge(1164.6, 308, 4, 'ska fp', 'lbla')}
-${txt(1140, 302, `${B(4).name} ${B(4).ver}`, 'lblb', 'end')}
-${txt(1140, 314, `${B(4).files}f · ${fmt(B(4).sloc)} sloc · ${shapeName(B(4).shape)} · ${B(4).courses} courses`, 'lblf', 'end')}
-${txt(1140, 326, 'STUDS  A′ · D′ — on a plate of its own', 'lbla', 'end')}
+${badge(1130, 306, 4, 'ska fp', 'lbla')}
+${txt(1090, 302, `${B(4).name} ${B(4).ver}`, 'lblb', 'end')}
+${txt(1090, 314, `${B(4).files}f · ${fmt(B(4).sloc)} sloc · ${shapeName(B(4).shape)} · ${B(4).courses} courses`, 'lblf', 'end')}
+${txt(1090, 326, 'STUDS  A′ · D′ — on a plate of its own', 'lbla', 'end')}
 
 <!-- the plate itself -->
 ${txt(40, 320, `${CORE[0]} ${CORE[1]} — THE BASEPLATE`, 'lblb')}
@@ -375,9 +382,9 @@ ${schedule}
 </svg>`;
 
 export const sheet2 = {
-  num: 2, id: 'companions', rev: 'B',
+  num: 2, id: 'companions', rev: 'C',
   title: 'THE BRICK ASSEMBLY',
-  sub: `ALTITUDE 2 — one baseplate, four bricks, ${TOT_F} authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source ${COUNTED}`,
+  sub: `ALTITUDE 2 — one baseplate, four bricks, ${TOT_F} authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source ${COUNTED} · REV C 2026-09-05: hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge`,
   scale: 'FOUR PACKAGES',
   form: 'BRICK ASSEMBLY',
   svg,

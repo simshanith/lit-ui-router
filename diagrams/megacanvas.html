@@ -486,7 +486,7 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-2" aria-label="Sheet 2: THE BRICK ASSEMBLY">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 2 / 14</span></div>
   <h2 class="sheet-title">THE BRICK ASSEMBLY</h2>
-  <p class="sheet-sub">ALTITUDE 2 — one baseplate, four bricks, 27 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05)</p>
+  <p class="sheet-sub">ALTITUDE 2 — one baseplate, four bricks, 27 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05) · REV C 2026-09-05: hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge</p>
   <figure>
     <div class="figure-wrap"><svg viewBox="0 0 1400 1164" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four 5 courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-two two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
 <defs>
@@ -522,8 +522,9 @@ a { color: var(--accent); }
 <rect x="30" y="34" width="286" height="244" class="skf fnone"/>
 <text x="44" y="56" class="lbls" text-anchor="start" >PARTS — 4 BRICKS, 1 PLATE</text>
 <line x1="30" y1="64" x2="316" y2="64" class="skf"/>
-<polygon points="57.4,93.0 74.7,103.0 74.7,138.0 57.4,128.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="109.3,83.0 74.7,103.0 74.7,138.0 109.3,118.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="57.4,93.0 74.7,103.0 74.7,138.0 57.4,128.0" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="109.3,83.0 74.7,103.0 74.7,138.0 109.3,118.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="109.3,83.0 74.7,103.0 74.7,138.0 109.3,118.0" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="92.0,73.0 109.3,83.0 74.7,103.0 57.4,93.0" class="sk fp"/>
 <path d="M88.3,75.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
 <ellipse cx="92.0" cy="75.6" rx="3.7" ry="2.1" class="sk fp2"/>
@@ -544,16 +545,18 @@ a { color: var(--accent); }
 <circle cx="48" cy="104" r="9.5" class="sk fp"/><text x="48" y="107.6" class="lbl" text-anchor="middle" >1</text>
 <text x="120" y="102" class="lbl" text-anchor="start" >lit-ui-router</text>
 <text x="120" y="114" class="lblf" text-anchor="start" >x1 · 2×4 · 5 courses</text>
-<polygon points="83.3,150.0 92.0,155.0 92.0,162.0 83.3,157.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="100.7,150.0 92.0,155.0 92.0,162.0 100.7,157.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="83.3,150.0 92.0,155.0 92.0,162.0 83.3,157.0" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="100.7,150.0 92.0,155.0 92.0,162.0 100.7,157.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="100.7,150.0 92.0,155.0 92.0,162.0 100.7,157.0" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="92.0,145.0 100.7,150.0 92.0,155.0 83.3,150.0" class="sk fp"/>
 <path d="M88.3,147.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
 <ellipse cx="92.0" cy="147.6" rx="3.7" ry="2.1" class="sk fp2"/>
 <circle cx="48" cy="148" r="9.5" class="sk fp"/><text x="48" y="151.6" class="lbl" text-anchor="middle" >2</text>
 <text x="120" y="146" class="lbl" text-anchor="start" >navigation-location-plugin</text>
 <text x="120" y="158" class="lblf" text-anchor="start" >x1 · 1×1 · 1 course</text>
-<polygon points="74.7,186.0 83.3,191.0 83.3,205.0 74.7,200.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="100.7,181.0 83.3,191.0 83.3,205.0 100.7,195.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="74.7,186.0 83.3,191.0 83.3,205.0 74.7,200.0" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="100.7,181.0 83.3,191.0 83.3,205.0 100.7,195.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="100.7,181.0 83.3,191.0 83.3,205.0 100.7,195.0" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="92.0,176.0 100.7,181.0 83.3,191.0 74.7,186.0" class="sk fp"/>
 <path d="M88.3,178.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
 <ellipse cx="92.0" cy="178.6" rx="3.7" ry="2.1" class="sk fp2"/>
@@ -562,8 +565,9 @@ a { color: var(--accent); }
 <circle cx="48" cy="186" r="9.5" class="sk fp"/><text x="48" y="189.6" class="lbl" text-anchor="middle" >3</text>
 <text x="120" y="184" class="lbl" text-anchor="start" >lit-ui-router-mobx</text>
 <text x="120" y="196" class="lblf" text-anchor="start" >x1 · 1×2 · 2 courses</text>
-<polygon points="57.4,235.0 74.7,245.0 74.7,266.0 57.4,256.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="109.3,225.0 74.7,245.0 74.7,266.0 109.3,246.0" class="sk" fill="url(#s2-hx)"/>
+<polygon points="57.4,235.0 74.7,245.0 74.7,266.0 57.4,256.0" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="109.3,225.0 74.7,245.0 74.7,266.0 109.3,246.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="109.3,225.0 74.7,245.0 74.7,266.0 109.3,246.0" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="92.0,215.0 109.3,225.0 74.7,245.0 57.4,235.0" class="sk fp"/>
 <path d="M88.3,217.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sk fp2"/>
 <ellipse cx="92.0" cy="217.6" rx="3.7" ry="2.1" class="sk fp2"/>
@@ -586,23 +590,27 @@ a { color: var(--accent); }
 <text x="120" y="242" class="lblf" text-anchor="start" >x1 · 2×4 · 3 courses</text>
 <rect x="30" y="460" width="286" height="142" class="skf fnone" stroke-dasharray="5 4"/>
 <text x="44" y="482" class="lbls" text-anchor="start" >SPARE PARTS — STUD A, NOT IN THIS SET</text>
-<polygon points="61.3,510.0 70.0,515.0 70.0,522.0 61.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
-<polygon points="78.7,510.0 70.0,515.0 70.0,522.0 78.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="61.3,510.0 70.0,515.0 70.0,522.0 61.3,517.0" class="sks" stroke-dasharray="3 2" style="fill:var(--paper-2)"/>
+<polygon points="78.7,510.0 70.0,515.0 70.0,522.0 78.7,517.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="78.7,510.0 70.0,515.0 70.0,522.0 78.7,517.0" class="sks" stroke-dasharray="3 2" style="fill:url(#s2-hx)"/>
 <polygon points="70.0,505.0 78.7,510.0 70.0,515.0 61.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
 <path d="M66.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
 <ellipse cx="70.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
-<polygon points="121.3,510.0 130.0,515.0 130.0,522.0 121.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
-<polygon points="138.7,510.0 130.0,515.0 130.0,522.0 138.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="121.3,510.0 130.0,515.0 130.0,522.0 121.3,517.0" class="sks" stroke-dasharray="3 2" style="fill:var(--paper-2)"/>
+<polygon points="138.7,510.0 130.0,515.0 130.0,522.0 138.7,517.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="138.7,510.0 130.0,515.0 130.0,522.0 138.7,517.0" class="sks" stroke-dasharray="3 2" style="fill:url(#s2-hx)"/>
 <polygon points="130.0,505.0 138.7,510.0 130.0,515.0 121.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
 <path d="M126.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
 <ellipse cx="130.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
-<polygon points="181.3,510.0 190.0,515.0 190.0,522.0 181.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
-<polygon points="198.7,510.0 190.0,515.0 190.0,522.0 198.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="181.3,510.0 190.0,515.0 190.0,522.0 181.3,517.0" class="sks" stroke-dasharray="3 2" style="fill:var(--paper-2)"/>
+<polygon points="198.7,510.0 190.0,515.0 190.0,522.0 198.7,517.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="198.7,510.0 190.0,515.0 190.0,522.0 198.7,517.0" class="sks" stroke-dasharray="3 2" style="fill:url(#s2-hx)"/>
 <polygon points="190.0,505.0 198.7,510.0 190.0,515.0 181.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
 <path d="M186.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
 <ellipse cx="190.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
-<polygon points="241.3,510.0 250.0,515.0 250.0,522.0 241.3,517.0" class="sks" stroke-dasharray="3 2" fill="var(--paper-2)"/>
-<polygon points="258.7,510.0 250.0,515.0 250.0,522.0 258.7,517.0" class="sks" stroke-dasharray="3 2" fill="url(#s2-hx)"/>
+<polygon points="241.3,510.0 250.0,515.0 250.0,522.0 241.3,517.0" class="sks" stroke-dasharray="3 2" style="fill:var(--paper-2)"/>
+<polygon points="258.7,510.0 250.0,515.0 250.0,522.0 258.7,517.0" stroke="none" style="fill:var(--paper)"/>
+<polygon points="258.7,510.0 250.0,515.0 250.0,522.0 258.7,517.0" class="sks" stroke-dasharray="3 2" style="fill:url(#s2-hx)"/>
 <polygon points="250.0,505.0 258.7,510.0 250.0,515.0 241.3,510.0" class="sks fp" stroke-dasharray="3 2"/>
 <path d="M246.3,507.6 v2.4 a3.7,2.1 0 0 0 7.4,0 v-2.4 Z" class="sks fp2" stroke-dasharray="3 2"/>
 <ellipse cx="250.0" cy="507.6" rx="3.7" ry="2.1" class="sks fp2" stroke-dasharray="3 2"/>
@@ -628,215 +636,215 @@ a { color: var(--accent); }
 <text x="894" y="246" class="lbla" text-anchor="start" >E</text><text x="912" y="246" class="lbl" text-anchor="start" >globals.current / .params</text>
 <text x="912" y="260" class="lblf" text-anchor="start" >brick 3 reads them into observables — it never writes router state</text>
 
-<polygon points="262.2,428 539.3,588 539.3,600 262.2,440" class="sk" fill="var(--paper-2)"/>
-<polygon points="747.1,468 539.3,588 539.3,600 747.1,480" fill="var(--paper)" stroke="none"/>
-<polygon points="747.1,468 539.3,588 539.3,600 747.1,480" class="sk" fill="url(#s2-hx)"/>
+<polygon points="262.2,428 539.3,588 539.3,600 262.2,440" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="747.1,468 539.3,588 539.3,600 747.1,480" stroke="none" style="fill:var(--paper)"/>
+<polygon points="747.1,468 539.3,588 539.3,600 747.1,480" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="470,308 747.1,468 539.3,588 262.2,428" class="sk fp"/>
-<path d="M455.3,321 L455.3,328 A14.7,8.49 0 0 0 484.7,328 L484.7,321 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M455.3,321 L455.3,328 A14.7,8.49 0 0 0 484.7,328 L484.7,321 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="321" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="470" cy="321" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M489.90000000000003,341 L489.90000000000003,348 A14.7,8.49 0 0 0 519.3000000000001,348 L519.3000000000001,341 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,341 L489.90000000000003,348 A14.7,8.49 0 0 0 519.3000000000001,348 L519.3000000000001,341 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="341" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="504.6" cy="341" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M524.5999999999999,361 L524.5999999999999,368 A14.7,8.49 0 0 0 554,368 L554,361 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M524.5999999999999,361 L524.5999999999999,368 A14.7,8.49 0 0 0 554,368 L554,361 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="539.3" cy="361" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="539.3" cy="361" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M559.1999999999999,381 L559.1999999999999,388 A14.7,8.49 0 0 0 588.6,388 L588.6,381 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M559.1999999999999,381 L559.1999999999999,388 A14.7,8.49 0 0 0 588.6,388 L588.6,381 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="573.9" cy="381" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="573.9" cy="381" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M593.9,401 L593.9,408 A14.7,8.49 0 0 0 623.3000000000001,408 L623.3000000000001,401 Z" class="skr" fill="var(--paper-2)"/>
+<path d="M593.9,401 L593.9,408 A14.7,8.49 0 0 0 623.3000000000001,408 L623.3000000000001,401 Z" class="skr" style="fill:var(--paper-2)"/>
 <ellipse cx="608.6" cy="401" rx="14.7" ry="8.49" class="skr fp"/><ellipse cx="608.6" cy="401" rx="20.2" ry="11.7" class="skr fnone"/>
-<path d="M628.5,421 L628.5,428 A14.7,8.49 0 0 0 657.9000000000001,428 L657.9000000000001,421 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M628.5,421 L628.5,428 A14.7,8.49 0 0 0 657.9000000000001,428 L657.9000000000001,421 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="643.2" cy="421" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="643.2" cy="421" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M663.0999999999999,441 L663.0999999999999,448 A14.7,8.49 0 0 0 692.5,448 L692.5,441 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M663.0999999999999,441 L663.0999999999999,448 A14.7,8.49 0 0 0 692.5,448 L692.5,441 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="677.8" cy="441" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="677.8" cy="441" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M697.8,461 L697.8,468 A14.7,8.49 0 0 0 727.2,468 L727.2,461 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M697.8,461 L697.8,468 A14.7,8.49 0 0 0 727.2,468 L727.2,461 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="712.5" cy="461" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="712.5" cy="461" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M420.7,341 L420.7,348 A14.7,8.49 0 0 0 450.09999999999997,348 L450.09999999999997,341 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M420.7,341 L420.7,348 A14.7,8.49 0 0 0 450.09999999999997,348 L450.09999999999997,341 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="341" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M455.3,361 L455.3,368 A14.7,8.49 0 0 0 484.7,368 L484.7,361 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M455.3,361 L455.3,368 A14.7,8.49 0 0 0 484.7,368 L484.7,361 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="361" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M489.90000000000003,381 L489.90000000000003,388 A14.7,8.49 0 0 0 519.3000000000001,388 L519.3000000000001,381 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,381 L489.90000000000003,388 A14.7,8.49 0 0 0 519.3000000000001,388 L519.3000000000001,381 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="381" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M524.5999999999999,401 L524.5999999999999,408 A14.7,8.49 0 0 0 554,408 L554,401 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M524.5999999999999,401 L524.5999999999999,408 A14.7,8.49 0 0 0 554,408 L554,401 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="539.3" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M559.1999999999999,421 L559.1999999999999,428 A14.7,8.49 0 0 0 588.6,428 L588.6,421 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M559.1999999999999,421 L559.1999999999999,428 A14.7,8.49 0 0 0 588.6,428 L588.6,421 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="573.9" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M593.9,441 L593.9,448 A14.7,8.49 0 0 0 623.3000000000001,448 L623.3000000000001,441 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M593.9,441 L593.9,448 A14.7,8.49 0 0 0 623.3000000000001,448 L623.3000000000001,441 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="608.6" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M628.5,461 L628.5,468 A14.7,8.49 0 0 0 657.9000000000001,468 L657.9000000000001,461 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M628.5,461 L628.5,468 A14.7,8.49 0 0 0 657.9000000000001,468 L657.9000000000001,461 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="643.2" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M663.0999999999999,481 L663.0999999999999,488 A14.7,8.49 0 0 0 692.5,488 L692.5,481 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M663.0999999999999,481 L663.0999999999999,488 A14.7,8.49 0 0 0 692.5,488 L692.5,481 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="677.8" cy="481" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="677.8" cy="481" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M386,361 L386,368 A14.7,8.49 0 0 0 415.4,368 L415.4,361 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M386,361 L386,368 A14.7,8.49 0 0 0 415.4,368 L415.4,361 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="400.7" cy="361" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M420.7,381 L420.7,388 A14.7,8.49 0 0 0 450.09999999999997,388 L450.09999999999997,381 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M420.7,381 L420.7,388 A14.7,8.49 0 0 0 450.09999999999997,388 L450.09999999999997,381 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="381" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M455.3,401 L455.3,408 A14.7,8.49 0 0 0 484.7,408 L484.7,401 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M455.3,401 L455.3,408 A14.7,8.49 0 0 0 484.7,408 L484.7,401 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M489.90000000000003,421 L489.90000000000003,428 A14.7,8.49 0 0 0 519.3000000000001,428 L519.3000000000001,421 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,421 L489.90000000000003,428 A14.7,8.49 0 0 0 519.3000000000001,428 L519.3000000000001,421 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M524.5999999999999,441 L524.5999999999999,448 A14.7,8.49 0 0 0 554,448 L554,441 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M524.5999999999999,441 L524.5999999999999,448 A14.7,8.49 0 0 0 554,448 L554,441 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="539.3" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M559.1999999999999,461 L559.1999999999999,468 A14.7,8.49 0 0 0 588.6,468 L588.6,461 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M559.1999999999999,461 L559.1999999999999,468 A14.7,8.49 0 0 0 588.6,468 L588.6,461 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="573.9" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M593.9,481 L593.9,488 A14.7,8.49 0 0 0 623.3000000000001,488 L623.3000000000001,481 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M593.9,481 L593.9,488 A14.7,8.49 0 0 0 623.3000000000001,488 L623.3000000000001,481 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="608.6" cy="481" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M628.5,501 L628.5,508 A14.7,8.49 0 0 0 657.9000000000001,508 L657.9000000000001,501 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M628.5,501 L628.5,508 A14.7,8.49 0 0 0 657.9000000000001,508 L657.9000000000001,501 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="643.2" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M351.40000000000003,381 L351.40000000000003,388 A14.7,8.49 0 0 0 380.8,388 L380.8,381 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M351.40000000000003,381 L351.40000000000003,388 A14.7,8.49 0 0 0 380.8,388 L380.8,381 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="366.1" cy="381" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M386,401 L386,408 A14.7,8.49 0 0 0 415.4,408 L415.4,401 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M386,401 L386,408 A14.7,8.49 0 0 0 415.4,408 L415.4,401 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="400.7" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M420.7,421 L420.7,428 A14.7,8.49 0 0 0 450.09999999999997,428 L450.09999999999997,421 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M420.7,421 L420.7,428 A14.7,8.49 0 0 0 450.09999999999997,428 L450.09999999999997,421 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M455.3,441 L455.3,448 A14.7,8.49 0 0 0 484.7,448 L484.7,441 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M455.3,441 L455.3,448 A14.7,8.49 0 0 0 484.7,448 L484.7,441 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M489.90000000000003,461 L489.90000000000003,468 A14.7,8.49 0 0 0 519.3000000000001,468 L519.3000000000001,461 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,461 L489.90000000000003,468 A14.7,8.49 0 0 0 519.3000000000001,468 L519.3000000000001,461 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M524.5999999999999,481 L524.5999999999999,488 A14.7,8.49 0 0 0 554,488 L554,481 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M524.5999999999999,481 L524.5999999999999,488 A14.7,8.49 0 0 0 554,488 L554,481 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="539.3" cy="481" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M559.1999999999999,501 L559.1999999999999,508 A14.7,8.49 0 0 0 588.6,508 L588.6,501 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M559.1999999999999,501 L559.1999999999999,508 A14.7,8.49 0 0 0 588.6,508 L588.6,501 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="573.9" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M593.9,521 L593.9,528 A14.7,8.49 0 0 0 623.3000000000001,528 L623.3000000000001,521 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M593.9,521 L593.9,528 A14.7,8.49 0 0 0 623.3000000000001,528 L623.3000000000001,521 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="608.6" cy="521" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="608.6" cy="521" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M316.7,401 L316.7,408 A14.7,8.49 0 0 0 346.09999999999997,408 L346.09999999999997,401 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M316.7,401 L316.7,408 A14.7,8.49 0 0 0 346.09999999999997,408 L346.09999999999997,401 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="331.4" cy="401" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M351.40000000000003,421 L351.40000000000003,428 A14.7,8.49 0 0 0 380.8,428 L380.8,421 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M351.40000000000003,421 L351.40000000000003,428 A14.7,8.49 0 0 0 380.8,428 L380.8,421 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="366.1" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M386,441 L386,448 A14.7,8.49 0 0 0 415.4,448 L415.4,441 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M386,441 L386,448 A14.7,8.49 0 0 0 415.4,448 L415.4,441 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="400.7" cy="441" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M420.7,461 L420.7,468 A14.7,8.49 0 0 0 450.09999999999997,468 L450.09999999999997,461 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M420.7,461 L420.7,468 A14.7,8.49 0 0 0 450.09999999999997,468 L450.09999999999997,461 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M455.3,481 L455.3,488 A14.7,8.49 0 0 0 484.7,488 L484.7,481 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M455.3,481 L455.3,488 A14.7,8.49 0 0 0 484.7,488 L484.7,481 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="481" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M489.90000000000003,501 L489.90000000000003,508 A14.7,8.49 0 0 0 519.3000000000001,508 L519.3000000000001,501 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,501 L489.90000000000003,508 A14.7,8.49 0 0 0 519.3000000000001,508 L519.3000000000001,501 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M524.5999999999999,521 L524.5999999999999,528 A14.7,8.49 0 0 0 554,528 L554,521 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M524.5999999999999,521 L524.5999999999999,528 A14.7,8.49 0 0 0 554,528 L554,521 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="539.3" cy="521" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M559.1999999999999,541 L559.1999999999999,548 A14.7,8.49 0 0 0 588.6,548 L588.6,541 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M559.1999999999999,541 L559.1999999999999,548 A14.7,8.49 0 0 0 588.6,548 L588.6,541 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="573.9" cy="541" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M282.1,421 L282.1,428 A14.7,8.49 0 0 0 311.5,428 L311.5,421 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M282.1,421 L282.1,428 A14.7,8.49 0 0 0 311.5,428 L311.5,421 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="296.8" cy="421" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M316.7,441 L316.7,448 A14.7,8.49 0 0 0 346.09999999999997,448 L346.09999999999997,441 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M316.7,441 L316.7,448 A14.7,8.49 0 0 0 346.09999999999997,448 L346.09999999999997,441 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="331.4" cy="441" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="331.4" cy="441" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M351.40000000000003,461 L351.40000000000003,468 A14.7,8.49 0 0 0 380.8,468 L380.8,461 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M351.40000000000003,461 L351.40000000000003,468 A14.7,8.49 0 0 0 380.8,468 L380.8,461 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="366.1" cy="461" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M386,481 L386,488 A14.7,8.49 0 0 0 415.4,488 L415.4,481 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M386,481 L386,488 A14.7,8.49 0 0 0 415.4,488 L415.4,481 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="400.7" cy="481" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="400.7" cy="481" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M420.7,501 L420.7,508 A14.7,8.49 0 0 0 450.09999999999997,508 L450.09999999999997,501 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M420.7,501 L420.7,508 A14.7,8.49 0 0 0 450.09999999999997,508 L450.09999999999997,501 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="501" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M455.3,521 L455.3,528 A14.7,8.49 0 0 0 484.7,528 L484.7,521 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M455.3,521 L455.3,528 A14.7,8.49 0 0 0 484.7,528 L484.7,521 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="521" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M489.90000000000003,541 L489.90000000000003,548 A14.7,8.49 0 0 0 519.3000000000001,548 L519.3000000000001,541 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,541 L489.90000000000003,548 A14.7,8.49 0 0 0 519.3000000000001,548 L519.3000000000001,541 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="541" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M524.5999999999999,561 L524.5999999999999,568 A14.7,8.49 0 0 0 554,568 L554,561 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M524.5999999999999,561 L524.5999999999999,568 A14.7,8.49 0 0 0 554,568 L554,561 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="539.3" cy="561" rx="14.7" ry="8.49" class="sks fp2"/>
 <line x1="504.6" y1="264" x2="504.6" y2="331.5" class="ska" stroke-dasharray="6 4"/>
 <circle cx="504.6" cy="331.5" r="2.2" class="fa"/>
 <line x1="608.6" y1="280" x2="608.6" y2="391.5" class="ska" stroke-dasharray="6 4"/>
 <circle cx="608.6" cy="391.5" r="2.2" class="fa"/>
-<line x1="366.1" y1="148" x2="366.1" y2="167.5" class="ska" stroke-dasharray="6 4"/>
+<line x1="366.1" y1="132" x2="366.1" y2="167.5" class="ska" stroke-dasharray="6 4"/>
 <circle cx="366.1" cy="167.5" r="2.2" class="fa"/>
-<polygon points="331.4,184 400.7,224 400.7,344 331.4,304" class="sk" fill="var(--paper-2)"/>
-<polygon points="539.3,144 400.7,224 400.7,344 539.3,264" fill="var(--paper)" stroke="none"/>
-<polygon points="539.3,144 400.7,224 400.7,344 539.3,264" class="sk" fill="url(#s2-hx)"/>
+<polygon points="331.4,184 400.7,224 400.7,344 331.4,304" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="539.3,144 400.7,224 400.7,344 539.3,264" stroke="none" style="fill:var(--paper)"/>
+<polygon points="539.3,144 400.7,224 400.7,344 539.3,264" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="470,104 539.3,144 400.7,224 331.4,184" class="sk fp"/>
 <path d="M331.4,280 L400.7,320 L539.3,240" class="skf fnone"/>
 <path d="M331.4,256 L400.7,296 L539.3,216" class="skf fnone"/>
 <path d="M331.4,232 L400.7,272 L539.3,192" class="skf fnone"/>
 <path d="M331.4,208 L400.7,248 L539.3,168" class="skf fnone"/>
-<path d="M455.3,117 L455.3,124 A14.7,8.49 0 0 0 484.7,124 L484.7,117 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M455.3,117 L455.3,124 A14.7,8.49 0 0 0 484.7,124 L484.7,117 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="117" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M420.7,137 L420.7,144 A14.7,8.49 0 0 0 450.09999999999997,144 L450.09999999999997,137 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M420.7,137 L420.7,144 A14.7,8.49 0 0 0 450.09999999999997,144 L450.09999999999997,137 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="137" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M386,157 L386,164 A14.7,8.49 0 0 0 415.4,164 L415.4,157 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M386,157 L386,164 A14.7,8.49 0 0 0 415.4,164 L415.4,157 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="400.7" cy="157" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M351.40000000000003,177 L351.40000000000003,184 A14.7,8.49 0 0 0 380.8,184 L380.8,177 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M351.40000000000003,177 L351.40000000000003,184 A14.7,8.49 0 0 0 380.8,184 L380.8,177 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="366.1" cy="177" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="366.1" cy="177" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M489.90000000000003,137 L489.90000000000003,144 A14.7,8.49 0 0 0 519.3000000000001,144 L519.3000000000001,137 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M489.90000000000003,137 L489.90000000000003,144 A14.7,8.49 0 0 0 519.3000000000001,144 L519.3000000000001,137 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="504.6" cy="137" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M455.3,157 L455.3,164 A14.7,8.49 0 0 0 484.7,164 L484.7,157 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M455.3,157 L455.3,164 A14.7,8.49 0 0 0 484.7,164 L484.7,157 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="470" cy="157" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M420.7,177 L420.7,184 A14.7,8.49 0 0 0 450.09999999999997,184 L450.09999999999997,177 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M420.7,177 L420.7,184 A14.7,8.49 0 0 0 450.09999999999997,184 L450.09999999999997,177 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="435.4" cy="177" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M386,197 L386,204 A14.7,8.49 0 0 0 415.4,204 L415.4,197 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M386,197 L386,204 A14.7,8.49 0 0 0 415.4,204 L415.4,197 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="400.7" cy="197" rx="14.7" ry="8.49" class="sk fp2"/>
-<polygon points="331.4,100 400.7,140 400.7,188 331.4,148" class="sk" fill="var(--paper-2)"/>
-<polygon points="435.4,120 400.7,140 400.7,188 435.4,168" fill="var(--paper)" stroke="none"/>
-<polygon points="435.4,120 400.7,140 400.7,188 435.4,168" class="sk" fill="url(#s2-hx)"/>
-<polygon points="366.1,80 435.4,120 400.7,140 331.4,100" class="sk fp"/>
-<path d="M331.4,124 L400.7,164 L435.4,144" class="skf fnone"/>
-<path d="M351.40000000000003,93 L351.40000000000003,100 A14.7,8.49 0 0 0 380.8,100 L380.8,93 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="366.1" cy="93" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M386,113 L386,120 A14.7,8.49 0 0 0 415.4,120 L415.4,113 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="400.7" cy="113" rx="14.7" ry="8.49" class="sk fp2"/>
-<polygon points="573.9,256 608.6,276 608.6,300 573.9,280" class="sk" fill="var(--paper-2)"/>
-<polygon points="643.2,256 608.6,276 608.6,300 643.2,280" fill="var(--paper)" stroke="none"/>
-<polygon points="643.2,256 608.6,276 608.6,300 643.2,280" class="sk" fill="url(#s2-hx)"/>
+<polygon points="331.4,84 400.7,124 400.7,172 331.4,132" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="435.4,104 400.7,124 400.7,172 435.4,152" stroke="none" style="fill:var(--paper)"/>
+<polygon points="435.4,104 400.7,124 400.7,172 435.4,152" class="sk" style="fill:url(#s2-hx)"/>
+<polygon points="366.1,64 435.4,104 400.7,124 331.4,84" class="sk fp"/>
+<path d="M331.4,108 L400.7,148 L435.4,128" class="skf fnone"/>
+<path d="M351.40000000000003,77 L351.40000000000003,84 A14.7,8.49 0 0 0 380.8,84 L380.8,77 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="366.1" cy="77" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M386,97 L386,104 A14.7,8.49 0 0 0 415.4,104 L415.4,97 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="400.7" cy="97" rx="14.7" ry="8.49" class="sk fp2"/>
+<polygon points="573.9,256 608.6,276 608.6,300 573.9,280" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="643.2,256 608.6,276 608.6,300 643.2,280" stroke="none" style="fill:var(--paper)"/>
+<polygon points="643.2,256 608.6,276 608.6,300 643.2,280" class="sk" style="fill:url(#s2-hx)"/>
 <polygon points="608.6,236 643.2,256 608.6,276 573.9,256" class="sk fp"/>
 
-<path d="M593.9,249 L593.9,256 A14.7,8.49 0 0 0 623.3000000000001,256 L623.3000000000001,249 Z" class="sk" fill="var(--paper-2)"/>
+<path d="M593.9,249 L593.9,256 A14.7,8.49 0 0 0 623.3000000000001,256 L623.3000000000001,249 Z" class="sk" style="fill:var(--paper-2)"/>
 <ellipse cx="608.6" cy="249" rx="14.7" ry="8.49" class="sk fp2"/>
 
-<polygon points="991.4,558 1130,638 1130,650 991.4,570" class="sks" stroke-dasharray="6 4" fill="var(--paper-2)"/>
-<polygon points="1268.6,558 1130,638 1130,650 1268.6,570" fill="var(--paper)" stroke="none"/>
-<polygon points="1268.6,558 1130,638 1130,650 1268.6,570" class="sks" stroke-dasharray="6 4" fill="url(#s2-hx)"/>
+<polygon points="991.4,558 1130,638 1130,650 991.4,570" class="sks" stroke-dasharray="6 4" style="fill:var(--paper-2)"/>
+<polygon points="1268.6,558 1130,638 1130,650 1268.6,570" stroke="none" style="fill:var(--paper)"/>
+<polygon points="1268.6,558 1130,638 1130,650 1268.6,570" class="sks" stroke-dasharray="6 4" style="fill:url(#s2-hx)"/>
 <polygon points="1130,478 1268.6,558 1130,638 991.4,558" class="sks fp" stroke-dasharray="6 4"/>
-<path d="M1115.3,491 L1115.3,498 A14.7,8.49 0 0 0 1144.7,498 L1144.7,491 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1115.3,491 L1115.3,498 A14.7,8.49 0 0 0 1144.7,498 L1144.7,491 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1130" cy="491" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1149.8999999999999,511 L1149.8999999999999,518 A14.7,8.49 0 0 0 1179.3,518 L1179.3,511 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M1149.8999999999999,511 L1149.8999999999999,518 A14.7,8.49 0 0 0 1179.3,518 L1179.3,511 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="1164.6" cy="511" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="1164.6" cy="511" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M1184.6,531 L1184.6,538 A14.7,8.49 0 0 0 1214,538 L1214,531 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1184.6,531 L1184.6,538 A14.7,8.49 0 0 0 1214,538 L1214,531 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1199.3" cy="531" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1219.2,551 L1219.2,558 A14.7,8.49 0 0 0 1248.6000000000001,558 L1248.6000000000001,551 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1219.2,551 L1219.2,558 A14.7,8.49 0 0 0 1248.6000000000001,558 L1248.6000000000001,551 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1233.9" cy="551" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1080.7,511 L1080.7,518 A14.7,8.49 0 0 0 1110.1000000000001,518 L1110.1000000000001,511 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1080.7,511 L1080.7,518 A14.7,8.49 0 0 0 1110.1000000000001,518 L1110.1000000000001,511 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1095.4" cy="511" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1115.3,531 L1115.3,538 A14.7,8.49 0 0 0 1144.7,538 L1144.7,531 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1115.3,531 L1115.3,538 A14.7,8.49 0 0 0 1144.7,538 L1144.7,531 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1130" cy="531" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1149.8999999999999,551 L1149.8999999999999,558 A14.7,8.49 0 0 0 1179.3,558 L1179.3,551 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1149.8999999999999,551 L1149.8999999999999,558 A14.7,8.49 0 0 0 1179.3,558 L1179.3,551 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1164.6" cy="551" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1184.6,571 L1184.6,578 A14.7,8.49 0 0 0 1214,578 L1214,571 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1184.6,571 L1184.6,578 A14.7,8.49 0 0 0 1214,578 L1214,571 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1199.3" cy="571" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1046,531 L1046,538 A14.7,8.49 0 0 0 1075.4,538 L1075.4,531 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1046,531 L1046,538 A14.7,8.49 0 0 0 1075.4,538 L1075.4,531 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1060.7" cy="531" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1080.7,551 L1080.7,558 A14.7,8.49 0 0 0 1110.1000000000001,558 L1110.1000000000001,551 Z" class="ska" fill="var(--paper-2)"/>
+<path d="M1080.7,551 L1080.7,558 A14.7,8.49 0 0 0 1110.1000000000001,558 L1110.1000000000001,551 Z" class="ska" style="fill:var(--paper-2)"/>
 <ellipse cx="1095.4" cy="551" rx="14.7" ry="8.49" class="ska fp"/><ellipse cx="1095.4" cy="551" rx="20.2" ry="11.7" class="ska fnone"/>
-<path d="M1115.3,571 L1115.3,578 A14.7,8.49 0 0 0 1144.7,578 L1144.7,571 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1115.3,571 L1115.3,578 A14.7,8.49 0 0 0 1144.7,578 L1144.7,571 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1130" cy="571" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1149.8999999999999,591 L1149.8999999999999,598 A14.7,8.49 0 0 0 1179.3,598 L1179.3,591 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1149.8999999999999,591 L1149.8999999999999,598 A14.7,8.49 0 0 0 1179.3,598 L1179.3,591 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1164.6" cy="591" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1011.3999999999999,551 L1011.3999999999999,558 A14.7,8.49 0 0 0 1040.8,558 L1040.8,551 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1011.3999999999999,551 L1011.3999999999999,558 A14.7,8.49 0 0 0 1040.8,558 L1040.8,551 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1026.1" cy="551" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1046,571 L1046,578 A14.7,8.49 0 0 0 1075.4,578 L1075.4,571 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1046,571 L1046,578 A14.7,8.49 0 0 0 1075.4,578 L1075.4,571 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1060.7" cy="571" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1080.7,591 L1080.7,598 A14.7,8.49 0 0 0 1110.1000000000001,598 L1110.1000000000001,591 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1080.7,591 L1080.7,598 A14.7,8.49 0 0 0 1110.1000000000001,598 L1110.1000000000001,591 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1095.4" cy="591" rx="14.7" ry="8.49" class="sks fp2"/>
-<path d="M1115.3,611 L1115.3,618 A14.7,8.49 0 0 0 1144.7,618 L1144.7,611 Z" class="sks" fill="var(--paper-2)"/>
+<path d="M1115.3,611 L1115.3,618 A14.7,8.49 0 0 0 1144.7,618 L1144.7,611 Z" class="sks" style="fill:var(--paper-2)"/>
 <ellipse cx="1130" cy="611" rx="14.7" ry="8.49" class="sks fp2"/>
-<line x1="1164.6" y1="420" x2="1164.6" y2="501.5" class="ska" stroke-dasharray="6 4"/>
+<line x1="1164.6" y1="430" x2="1164.6" y2="501.5" class="ska" stroke-dasharray="6 4"/>
 <circle cx="1164.6" cy="501.5" r="2.2" class="fa"/>
-<line x1="1095.4" y1="460" x2="1095.4" y2="541.5" class="ska" stroke-dasharray="6 4"/>
+<line x1="1095.4" y1="470" x2="1095.4" y2="541.5" class="ska" stroke-dasharray="6 4"/>
 <circle cx="1095.4" cy="541.5" r="2.2" class="fa"/>
-<polygon points="1026.1,408 1095.4,448 1095.4,520 1026.1,480" class="sk" fill="var(--paper-2)"/>
-<polygon points="1233.9,368 1095.4,448 1095.4,520 1233.9,440" fill="var(--paper)" stroke="none"/>
-<polygon points="1233.9,368 1095.4,448 1095.4,520 1233.9,440" class="sk" fill="url(#s2-hx)"/>
-<polygon points="1164.6,328 1233.9,368 1095.4,448 1026.1,408" class="sk fp"/>
-<path d="M1026.1,456 L1095.4,496 L1233.9,416" class="skf fnone"/>
-<path d="M1026.1,432 L1095.4,472 L1233.9,392" class="skf fnone"/>
-<path d="M1149.8999999999999,341 L1149.8999999999999,348 A14.7,8.49 0 0 0 1179.3,348 L1179.3,341 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1164.6" cy="341" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1115.3,361 L1115.3,368 A14.7,8.49 0 0 0 1144.7,368 L1144.7,361 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1130" cy="361" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1080.7,381 L1080.7,388 A14.7,8.49 0 0 0 1110.1000000000001,388 L1110.1000000000001,381 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1095.4" cy="381" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1046,401 L1046,408 A14.7,8.49 0 0 0 1075.4,408 L1075.4,401 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1060.7" cy="401" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1184.6,361 L1184.6,368 A14.7,8.49 0 0 0 1214,368 L1214,361 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1199.3" cy="361" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1149.8999999999999,381 L1149.8999999999999,388 A14.7,8.49 0 0 0 1179.3,388 L1179.3,381 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1164.6" cy="381" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1115.3,401 L1115.3,408 A14.7,8.49 0 0 0 1144.7,408 L1144.7,401 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1130" cy="401" rx="14.7" ry="8.49" class="sk fp2"/>
-<path d="M1080.7,421 L1080.7,428 A14.7,8.49 0 0 0 1110.1000000000001,428 L1110.1000000000001,421 Z" class="sk" fill="var(--paper-2)"/>
-<ellipse cx="1095.4" cy="421" rx="14.7" ry="8.49" class="sk fp2"/>
+<polygon points="991.4,398 1060.7,438 1060.7,510 991.4,470" class="sk" style="fill:var(--paper-2)"/>
+<polygon points="1199.3,358 1060.7,438 1060.7,510 1199.3,430" stroke="none" style="fill:var(--paper)"/>
+<polygon points="1199.3,358 1060.7,438 1060.7,510 1199.3,430" class="sk" style="fill:url(#s2-hx)"/>
+<polygon points="1130,318 1199.3,358 1060.7,438 991.4,398" class="sk fp"/>
+<path d="M991.4,446 L1060.7,486 L1199.3,406" class="skf fnone"/>
+<path d="M991.4,422 L1060.7,462 L1199.3,382" class="skf fnone"/>
+<path d="M1115.3,331 L1115.3,338 A14.7,8.49 0 0 0 1144.7,338 L1144.7,331 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1130" cy="331" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1080.7,351 L1080.7,358 A14.7,8.49 0 0 0 1110.1000000000001,358 L1110.1000000000001,351 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1095.4" cy="351" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1046,371 L1046,378 A14.7,8.49 0 0 0 1075.4,378 L1075.4,371 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1060.7" cy="371" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1011.3999999999999,391 L1011.3999999999999,398 A14.7,8.49 0 0 0 1040.8,398 L1040.8,391 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1026.1" cy="391" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1149.8999999999999,351 L1149.8999999999999,358 A14.7,8.49 0 0 0 1179.3,358 L1179.3,351 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1164.6" cy="351" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1115.3,371 L1115.3,378 A14.7,8.49 0 0 0 1144.7,378 L1144.7,371 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1130" cy="371" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1080.7,391 L1080.7,398 A14.7,8.49 0 0 0 1110.1000000000001,398 L1110.1000000000001,391 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1095.4" cy="391" rx="14.7" ry="8.49" class="sk fp2"/>
+<path d="M1046,411 L1046,418 A14.7,8.49 0 0 0 1075.4,418 L1075.4,411 Z" class="sk" style="fill:var(--paper-2)"/>
+<ellipse cx="1060.7" cy="411" rx="14.7" ry="8.49" class="sk fp2"/>
 
 <circle cx="470" cy="108" r="9.5" class="ska fp"/><text x="470" y="111.6" class="lbla" text-anchor="middle" >1</text>
 <text x="492" y="102" class="lblb" text-anchor="start" >lit-ui-router 1.11.2</text>
@@ -850,16 +858,16 @@ a { color: var(--accent); }
 <text x="660" y="226" class="lblr" text-anchor="start" >STUD  A — the LOCATION SEAT</text>
 <text x="660" y="238" class="lblr" text-anchor="start" >a swap, never an addition</text>
 
-<circle cx="366.1" cy="60" r="9.5" class="ska fp"/><text x="366.1" y="63.6" class="lbla" text-anchor="middle" >3</text>
-<text x="388" y="42" class="lblb" text-anchor="start" >lit-ui-router-mobx 1.0.0</text>
-<text x="388" y="54" class="lblf" text-anchor="start" >5f · 176 sloc · 1×2 · 2 courses</text>
-<text x="388" y="66" class="lbla" text-anchor="start" >SEATS ON BRICK 1 — seekRouter()</text>
-<text x="388" y="78" class="lbla" text-anchor="start" >STUDS  C · E on the plate below</text>
+<circle cx="360" cy="52" r="9.5" class="ska fp"/><text x="360" y="55.6" class="lbla" text-anchor="middle" >3</text>
+<text x="412" y="42" class="lblb" text-anchor="start" >lit-ui-router-mobx 1.0.0</text>
+<text x="412" y="54" class="lblf" text-anchor="start" >5f · 176 sloc · 1×2 · 2 courses</text>
+<text x="412" y="66" class="lbla" text-anchor="start" >SEATS ON BRICK 1 — seekRouter()</text>
+<text x="412" y="78" class="lbla" text-anchor="start" >STUDS  C · E on the plate below</text>
 
-<circle cx="1164.6" cy="308" r="9.5" class="ska fp"/><text x="1164.6" y="311.6" class="lbla" text-anchor="middle" >4</text>
-<text x="1140" y="302" class="lblb" text-anchor="end" >ui-router-server 0.1.1</text>
-<text x="1140" y="314" class="lblf" text-anchor="end" >8f · 1,141 sloc · 2×4 · 3 courses</text>
-<text x="1140" y="326" class="lbla" text-anchor="end" >STUDS  A′ · D′ — on a plate of its own</text>
+<circle cx="1130" cy="306" r="9.5" class="ska fp"/><text x="1130" y="309.6" class="lbla" text-anchor="middle" >4</text>
+<text x="1090" y="302" class="lblb" text-anchor="end" >ui-router-server 0.1.1</text>
+<text x="1090" y="314" class="lblf" text-anchor="end" >8f · 1,141 sloc · 2×4 · 3 courses</text>
+<text x="1090" y="326" class="lbla" text-anchor="end" >STUDS  A′ · D′ — on a plate of its own</text>
 
 <!-- the plate itself -->
 <text x="40" y="320" class="lblb" text-anchor="start" >@uirouter/core 6.1.2 — THE BASEPLATE</text>
@@ -959,7 +967,7 @@ a { color: var(--accent); }
   <div><span class="fld">SCALE</span>FOUR PACKAGES</div>
   <div><span class="fld">FORM</span>BRICK ASSEMBLY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · B</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · C</div>
   <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
   <div><span class="fld">SHEET</span>2 OF 14</div>
 </div>
