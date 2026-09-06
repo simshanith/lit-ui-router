@@ -10,13 +10,13 @@ Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from
 
 Turbo manages these workspaces (defined in `pnpm-workspace.yaml`):
 
-| Directory    | Purpose                                     | In CI               |
-| ------------ | ------------------------------------------- | ------------------- |
-| `packages/*` | Published libraries (lit-ui-router, etc.)   | Yes                 |
-| `apps/*`     | Sample applications and e2e tests           | Yes                 |
-| `tools/*`    | Internal build tools                        | Yes                 |
-| `docs`       | Documentation site                          | Yes                 |
-| `examples`   | Standalone tutorial apps (helloworld, etc.) | Only `build:embeds` |
+| Directory               | Purpose                                     | In CI               |
+| ----------------------- | ------------------------------------------- | ------------------- |
+| `packages/*`            | Published libraries (lit-ui-router, etc.)   | Yes                 |
+| `apps/*`                | Sample applications and e2e tests           | Yes                 |
+| `tools/*`               | Internal build tools                        | Yes                 |
+| `www/lit-ui-router.dev` | Documentation site                          | Yes                 |
+| `examples`              | Standalone tutorial apps (helloworld, etc.) | Only `build:embeds` |
 
 The apps inside `examples/` (helloworld, hellogalaxy, hellosolarsystem) are intentionally outside the main turbo graph. They are standalone Vite dev servers meant for learning, and they use npm (not pnpm) for Stackblitz compatibility. The one turbo touchpoint is `examples#build:embeds` (see `examples/turbo.json`), which builds them as embeds for the docs site:
 
