@@ -22,19 +22,20 @@ const commandPath = (name: string): string =>
     stdio: ['ignore', 'pipe', 'inherit'],
   }).trim();
 
-if (import.meta.main) {
-  // exactly one argument: a stray extra must not deploy
-  const [mode, ...extra] = process.argv.slice(2);
-  if (extra.length > 0 || !isDeployMode(mode)) {
-    console.error(
-      `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}>`,
-    );
-    process.exit(2);
-  }
+// Annotated, not just inferred: never-returning calls only narrow past an
+// explicitly typed declaration, which is what lets `mode` narrow below.
+const usage: () => never = () => {
+  console.error(
+    `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}>`,
+  );
+  process.exit(2);
+};
+
+const main = ([mode, ...extra]: string[]): void => {
+  if (extra.length > 0 || !isDeployMode(mode)) usage();
 
   // POSIX-only, hence optional in @types/node; replaces the process like bash `exec`.
   if (!process.execve) {
-    process.exitCode = 1;
     throw new Error(
       'cloudflare-deploy: needs process.execve (POSIX-only, node >=24)',
     );
@@ -45,4 +46,6 @@ if (import.meta.main) {
     ['npx', ...DEPLOY_MODES[mode]],
     process.env,
   );
-}
+};
+
+if (import.meta.main) main(process.argv.slice(2));
