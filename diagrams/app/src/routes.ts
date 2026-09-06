@@ -28,6 +28,7 @@ export const href = {
   gallery: BASE,
   about: `${BASE}about`,
   city: `${BASE}city`,
+  specimen: `${BASE}specimen`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
   /** The flat set's index — a plain page, never a router state. */
   set: SET,
@@ -44,6 +45,10 @@ export const routes: RouteDeclaration[] = [
   // The 3D city: a plate the flat set only publishes inside its gallery, and
   // the one state whose view loads a library on demand (three, resolved).
   { name: 'atlas.city', url: '/city' },
+  // The type specimen: a design bench, not a plate. It is the one state whose
+  // view pulls a webfont — and it pulls it on entry, so no other page's
+  // payload knows the faces exist.
+  { name: 'atlas.specimen', url: '/specimen' },
   // The survey office is sheet 14 under its own name.
   {
     name: 'atlas.office',

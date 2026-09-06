@@ -22,6 +22,7 @@ import {
   NotFoundView,
   SheetView,
   ShellView,
+  SpecimenView,
 } from './views.ts';
 
 export const states: LitStateDeclaration[] = [
@@ -81,6 +82,21 @@ export const states: LitStateDeclaration[] = [
         resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
       },
       { token: 'three', resolveFn: (): Promise<unknown> => import('three') },
+    ],
+  },
+  {
+    name: 'atlas.specimen',
+    url: urlOf('atlas.specimen'),
+    component: SpecimenView,
+    // DEPENDENCIES ON DEMAND, again: the specimen's element — its mock sheet's
+    // whole stylesheet, and the Google Fonts <link> its connectedCallback
+    // injects — is a resolve, so the webfonts are fetched by this state and by
+    // no other page in the app.
+    resolve: [
+      {
+        token: 'specimen',
+        resolveFn: (): Promise<unknown> => import('./specimen.ts'),
+      },
     ],
   },
   {

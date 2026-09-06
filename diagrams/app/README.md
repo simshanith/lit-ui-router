@@ -37,6 +37,7 @@ draws the same bytes the flat one does rather than a paraphrase. The same seam w
 | `atlas.gallery`  | `/`            | `GalleryView`   | —                                 |
 | `atlas.sheet`    | `/sheet/:num`  | `SheetView`     | `sheet`, `fragment`               |
 | `atlas.city`     | `/city`        | `CityView`      | `extra`, `fragment`, **`three`**  |
+| `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
 | `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` 14)       |
 | `atlas.about`    | `/about`       | `AboutView`     | —                                 |
 | `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
@@ -53,6 +54,30 @@ sheet number, sits in the manifest's `extras` rather than its `sheets`, and so
 is invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
 
+`atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE
+mock sheet from the set's own chrome and swaps the four role tokens
+(`--display`, `--hand`, `--data`, `--code`) on the mock's root by inline style,
+so five candidate pairings — plus a data width, a data size and a hand knob of
+its own — can be judged on real copy in both themes. It carries no sheet
+number, is not in the manifest at all, and rides at the bottom of the rail as
+`S0·T`. It is the second state to load something on entry: `src/specimen.ts` is
+a `resolve` (`import('./specimen.ts')`), and the element's
+`connectedCallback` injects the Google Fonts `<link>` for the stand-ins — so
+the webfonts are fetched by this state and by NO other page in the app.
+
+On the site, `generator/stage-site.mjs` additionally injects
+`<link rel="stylesheet" href="https://use.typekit.net/$VITE_ADOBE_FONTS_KIT.css">`
+into `dist/specimen/index.html` **and no other page** when
+`VITE_ADOBE_FONTS_KIT` is set (it sits beside the GA id in the gitignored
+`.config/mise/cloudflare.local.env`); unset, the stage logs
+`Adobe Fonts kit: none` and emits nothing. Every stack in `src/specimen.ts`
+names the Adobe family first and the Google stand-in second, so the same page
+shows Adobe faces on the site and stand-ins in the artifact, and its LOADED
+FACES readout reports which one actually rendered (ADOBE / STAND-IN / SYSTEM)
+rather than which one was asked for. A GLYPH SIZE readout measures the data
+face's cap-height, x-height and average advance against the mono it would
+replace, so "roughly equivalent glyph sizes" is a number, not a feeling.
+
 `atlas.megacanvas` was **retired from the app on 2026-09-05**. The flat set
 still publishes the whole reel as one page, so the prerender writes
 `/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`
@@ -61,7 +86,7 @@ and the reel's pan/zoom layer is gone from `src/experimental/`.
 ## Where it lives
 
 The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`,
-`/city`, `/about`, `/office`. The flat drawing set — the pages this
+`/city`, `/specimen`, `/about`, `/office`. The flat drawing set — the pages this
 app was cut from — is staged beside it under `/set/` as the version to compare
 against, and the two link to each other: the rail's THE FLAT SET entry and each
 sheet's STANDALONE PLATE crumb go out; the flat gallery's cover links back to

@@ -221,6 +221,10 @@ function rail(manifest: Manifest | undefined): TemplateResult {
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
           <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
         </a>
+        <!-- A bench, not a plate: the type specimen rides at the very bottom. -->
+        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.specimen')} href="${to(href.specimen)}">
+          <span class="n">S0·T</span><span class="t">THE TYPE SPECIMEN — FIVE PAIRINGS</span>
+        </a>
       </div>
     </nav>
   `;
@@ -305,6 +309,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
 type ManifestResolves = { manifest?: Manifest };
 type SheetResolves = { manifest?: Manifest; sheet?: SheetRow; fragment?: string };
 type CityResolves = { extra?: ExtraRow; fragment?: string; three?: unknown };
+type SpecimenResolves = { specimen?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
   const index = manifest.sheets.findIndex((row) => row.id === sheet.id);
@@ -380,6 +385,35 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       >
     </div>
     <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>
+  `;
+};
+
+// --- the type specimen: a design bench, with its element loaded on demand ---
+
+export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
+  // The element module IS the resolve (src/router.ts), so the custom element is
+  // defined before the tag is written and the webfont <link> its
+  // connectedCallback injects is fetched by this state and no other.
+  if (!props?.resolves?.specimen) return html`<p class="loading">SETTING THE TYPE…</p>`;
+  return html`
+    <div class="crumb">
+      <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
+      <span>ALTITUDE · THE SET'S OWN CHROME</span>
+      <span>NOT A PLATE — A BENCH</span>
+    </div>
+    <section class="sheet">
+      <div class="sheet-head">
+        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="shno">TYPE SPECIMEN</span>
+      </div>
+      <h2 class="sheet-title">THE TYPE SPECIMEN</h2>
+      <p class="sheet-sub">
+        FIVE PAIRINGS ON ONE MOCK SHEET · SITE FACES COME FROM ADOBE FONTS WHEN THE KIT
+        IS STAGED, GOOGLE STAND-INS OTHERWISE · THE READOUTS BELOW SAY WHICH ONE
+        ACTUALLY RENDERED AND HOW ITS GLYPHS MEASURE AGAINST TODAY'S MONO
+      </p>
+      <atlas-specimen></atlas-specimen>
+    </section>
   `;
 };
 

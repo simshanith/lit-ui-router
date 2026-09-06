@@ -70,6 +70,12 @@ Good, and small enough to hold in your head.
                             resolve, so nothing runs and nothing loads on the
                             server side, and a no-JS reader still gets the
                             legend, the reading panel and the basis note)
+  /specimen       →  200   (the type specimen, added 2026-09-05: the sheet
+                            head, title and standfirst are markup; the bench
+                            itself is an empty <atlas-specimen> the client
+                            fills, because the pairings, the two readouts and
+                            the webfont <link> are all measurements of a LIVE
+                            document — nothing about them is server-knowable)
   /megacanvas     →  301   Location: /set/megacanvas.html  (retired from the
                             app 2026-09-05; a static _redirects line from
                             prerender.ts, so preview does not answer it)

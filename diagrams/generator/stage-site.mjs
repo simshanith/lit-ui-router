@@ -15,6 +15,11 @@
 //   the app's own lines (prerender.ts: /office, the lowercase sheet ids)
 //   /<old flat filename>  → /set/<same file>  301   (every page but index.html)
 //   /app, /app/*          → /, /:splat         301   (the app's old mount)
+//
+// Two env-gated <head> injections, both staged-copies-only: the GA tag on every
+// page (VITE_GOOGLE_ANALYTICS_TRACKING_ID) and the Adobe Fonts kit on
+// /specimen/index.html alone (VITE_ADOBE_FONTS_KIT). Both ids are public and
+// both live in .config/mise/cloudflare.local.env, which is gitignored.
 import { cpSync, existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { join } from 'node:path';
@@ -112,6 +117,31 @@ if (GA_ID) {
   }
 } else {
   console.warn('VITE_GOOGLE_ANALYTICS_TRACKING_ID missing — staging without analytics');
+}
+
+// --- Adobe Fonts, the type specimen's page only -----------------------------
+// The specimen (app/src/specimen.ts) lists every Adobe family FIRST in its
+// stacks and the Google Fonts stand-in second, so one <link> is the whole
+// difference between the two hosts: with the kit the Adobe faces draw, without
+// it — the artifact build, or a stage with the variable unset — the stand-ins
+// do, and the page's own LOADED FACES readout says which. The link goes on
+// /specimen/index.html and NOWHERE else: no other page in the set asks for a
+// webfont, and the artifact never gets one at all (its host allows
+// fonts.googleapis.com and nothing more).
+// The kit id is PUBLIC (it is in the page source); it lives beside the GA id in
+// .config/mise/cloudflare.local.env, which is gitignored.
+const KIT = process.env.VITE_ADOBE_FONTS_KIT;
+const specimenPage = join(dist, 'specimen', 'index.html');
+if (KIT) {
+  if (!existsSync(specimenPage)) throw new Error('no dist/specimen/index.html to carry the Adobe kit');
+  const link = `<link rel="preconnect" href="https://use.typekit.net" crossorigin>
+<link rel="stylesheet" href="https://use.typekit.net/${KIT}.css">
+`;
+  const html = readFileSync(specimenPage, 'utf8');
+  writeFileSync(specimenPage, html.replace('</head>', `${link}</head>`));
+  console.log(`Adobe Fonts kit: ${KIT} → ${BASE}specimen/ only`);
+} else {
+  console.log('Adobe Fonts kit: none');
 }
 
 const routedPages = walkHtml(dist).filter((p) => !p.startsWith(`${set}/`)).length;

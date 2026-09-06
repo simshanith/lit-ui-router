@@ -25,6 +25,10 @@ export const CSS = `
   --red: #A63D2F;
   --green: #4C6B51;
   --halo: rgba(46, 80, 119, 0.10);
+  /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
+     read today only by the type specimen (app/src/specimen.ts). */
+  --pencil: #7B8078;
+  --cherokee: #9E3A2B;
 }
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
@@ -41,6 +45,8 @@ export const CSS = `
     --red: #E38C6F;
     --green: #8AB795;
     --halo: rgba(143, 188, 233, 0.12);
+    --pencil: #7E97B8;
+    --cherokee: #E0705A;
   }
 }
 :root[data-theme="dark"] {
@@ -57,6 +63,8 @@ export const CSS = `
   --red: #E38C6F;
   --green: #8AB795;
   --halo: rgba(143, 188, 233, 0.12);
+  --pencil: #7E97B8;
+  --cherokee: #E0705A;
 }
 
 * { box-sizing: border-box; margin: 0; }

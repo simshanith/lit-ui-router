@@ -785,6 +785,90 @@ survey / 3 prose paragraphs / 24 verdicts / 24 altitudes, About colophon), and
 23 cold loads with zero page errors — /sheet/14i and /sheet/14i/ both boot
 cytoscape from cold.
 
+THE TYPE SPECIMEN, 2026-09-05: user-asked — a bench to compare candidate
+typefaces on the live site (where Adobe Fonts load) and in the artifact (where
+only Google Fonts do). New state `atlas.specimen` at `/specimen`, rail entry
+`S0·T THE TYPE SPECIMEN — FIVE PAIRINGS` at the bottom of the same section as
+THE CITY; no sheet number, not in the manifest, so the ascent order, the ←/→
+walk and the narrowed `/sheet/{num:…}` mount are all untouched. `<atlas-specimen>`
+(`app/src/specimen.ts` + `specimen-mock.ts`) draws ONE mock sheet ported from
+the design researcher's specimen — rail as index tabs, crumb strip, a callout
+with a leader, a schedule with tabular figures, a title block with a square red
+chop, and a REV TABLE — and swaps the four role tokens (`--display`, `--hand`,
+`--data`, `--code`) on the mock's root by INLINE STYLE. Pairings: 0 baseline
+(today's mono), 1 Prairie, 2 Drafting (Zilla Slab), 3 Signage, 4 THE KIT (the
+two families the Adobe kit actually serves today). Three extra knobs: a data
+WIDTH toggle (Barlow Semi Condensed ↔ plain Barlow — "i like the barlow"), a
+data SIZE stepper, and the HAND as its own control with **NONE as the default**
+("i swear i'm just allergic to these hand types. maybe in situ i'll
+appreciate") — NONE puts the two hand slots in the data face. The hand is
+limited to the DRAWN BY value and ONE callout second line, never the REV
+descriptions or the figcaption; the COUNTED stamp is square and UNROTATED.
+
+FONT LOADING, PER HOST. `connectedCallback` injects the Google Fonts `<link>`
+(+ two preconnects) once, so the faces are fetched by THIS STATE and by no
+other page — verified: `/sheet/7/` and `/` make zero font requests. The element
+module is itself a `resolve` (`import('./specimen.ts')`), so it is its own
+35.8 KB chunk. On the site `stage-site.mjs` injects
+`https://use.typekit.net/$VITE_ADOBE_FONTS_KIT.css` into
+`dist/specimen/index.html` ALONE when the variable is set (it lives beside the
+GA id in the gitignored `.config/mise/cloudflare.local.env`); unset it logs
+`Adobe Fonts kit: none` and emits nothing. Every stack names the Adobe family
+first and the Google stand-in second, so one `<link>` is the whole difference
+between the two hosts.
+
+TWO READOUTS, both live. LOADED FACES says ADOBE / STAND-IN / SYSTEM per role.
+**TRAP: `document.fonts.check('12px "no-such-face"')` returns TRUE** — the spec
+asks "can this be rendered", and an undeclared family renders fine by fallback,
+so every PENDING Adobe family reported ADOBE until the readout was made to ask
+the FontFaceSet whether the family was DECLARED at all before trusting
+`check()`. GLYPH SIZE measures cap-height and x-height as INK
+(`measureText().actualBoundingBoxAscent` — a span's rect only ever returns the
+em box) and the average advance from a hidden span's
+`getBoundingClientRect().width` over an 87-char sample, against the mono the
+face would replace. That measurement moved the default data size from 12px to
+**11px**: at 12px Barlow Semi Condensed ran cap +9.7% over the mono; at 11px it
+is +0.6%, with advance −28.3% (the condensed face buying line length back,
+which is the point). Two tokens added to `chrome.mjs` for it — `--pencil`
+(#7B8078 / #7E97B8) and `--cherokee` (#9E3A2B / #E0705A) — used ONLY by the
+specimen; no existing chrome or plate was restyled.
+
+ADOBE KIT NAMES ARE NOT THE MARKETING NAMES. Read off the completed kit
+(`use.typekit.net/nzw4jnc.css`, 58 faces): `p22-fllw-eaglefeather` — THREE l's,
+plus `-sc` and `-inf`; `din-2014` + `din-2014-narrow`; `tekton-pro` +
+`-condensed` / `-extended`; `univers-next-pro` + `-condensed` / `-compressed` /
+`-extended`; `myriad-pro` + `-semi-condensed` / `-cond`. Every Univers, Myriad
+and Tekton family carries `-pro`. The kit serves 400 and 700 (one 500), so
+where the plan said Demi/600 the CSS asks for **600 and gets 700 from Adobe,
+600 from Google** — CSS font matching resolves a 600 request upward when only
+400/700 exist, so ONE weight number serves both hosts with nothing synthesised.
+Six memo families (`graphite-std`, the three other P22 FLW faces, `isonorm`,
+`din-condensed`) are NOT in the kit; the table marks them so, and they cost
+nothing — the stack falls to the stand-in and the readout says STAND-IN.
+
+Verified: build 23 sheets / 24 fragments, tsc clean, prerender **27 pages** +
+404 · 9 redirects, stage 27 routed + 26 flat with the kit link on
+`/specimen/index.html` and nowhere else (unset → `Adobe Fonts kit: none`, zero
+pages carry it), artifact 2,677,088 bytes / 24 fragments. Playwright against
+the Pages-mimicking server: **33/33** — cold `/specimen/` with 0 page errors,
+all five pairings change the mock title's computed `font-family`, all three
+hand options change only the hand slot, both readouts render, the rail entry is
+active, the rail click reaches `/specimen` with no document reload, `/sheet/7/`
+and `/` fetch no webfont at all, and both themes resolve `--pencil` /
+`--cherokee` with no errors. With the kit staged, EVERY Adobe-backed role
+reports ADOBE in Prairie, Drafting, Signage and The Kit — the two expected
+non-ADOBE cells are `--code` (the system monospace, by design) and Drafting's
+`--display` (Zilla Slab, an open face with no Adobe counterpart). Measured at
+11px against the mono's 7.65 ink cap: `din-2014` −0.8%, `univers-next-pro`
++3.9%, `univers-next-pro-condensed` +3.9%, Barlow Semi Condensed +0.6%.
+Offline artifact check at `#/specimen`: **9/9** — the Google link is the only
+origin asked for, no typekit link exists in the file, and every role falls back
+to SYSTEM with the readouts still drawing. Regressions clean: `artifact-qa`
+zero blocked requests, `r-qa-city` 16/16. The 24 flat-set HTML diffs are the
+two new token declarations and nothing else. Left undone: the specimen
+restyles nothing outside itself — adopting a pairing across the chrome and the
+plates is the next, separate decision.
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a

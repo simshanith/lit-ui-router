@@ -80,6 +80,9 @@ const railTemplate = (active: string): TemplateResult => html`
       <a class="${active === 'city' ? 'is-active' : ''}" href="${href.city}">
         <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
       </a>
+      <a class="${active === 'specimen' ? 'is-active' : ''}" href="${href.specimen}">
+        <span class="n">S0·T</span><span class="t">THE TYPE SPECIMEN — FIVE PAIRINGS</span>
+      </a>
     </div>
   </nav>
 `;
@@ -163,6 +166,35 @@ const cityContent = (extra: ExtraRow): TemplateResult => {
     <atlas-city>${unsafeHTML(fragment)}</atlas-city>
   `;
 };
+
+/**
+ * The type specimen, server-rendered as far as it honestly goes: the sheet
+ * head, the title and the standfirst are markup; the bench itself is an empty
+ * <atlas-specimen> the client fills. Nothing more is possible — the pairings,
+ * the two readouts and the webfont <link> are all measurements of a LIVE
+ * document — and `generator/stage-site.mjs` puts the Adobe Fonts kit's
+ * stylesheet into this page and no other.
+ */
+const specimenContent = (): TemplateResult => html`
+  <div class="crumb">
+    <a href="${href.gallery}">← INDEX</a>
+    <span>ALTITUDE · THE SET'S OWN CHROME</span>
+    <span>NOT A PLATE — A BENCH</span>
+  </div>
+  <section class="sheet">
+    <div class="sheet-head">
+      <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+      <span class="shno">TYPE SPECIMEN</span>
+    </div>
+    <h2 class="sheet-title">THE TYPE SPECIMEN</h2>
+    <p class="sheet-sub">
+      FIVE PAIRINGS ON ONE MOCK SHEET · SITE FACES COME FROM ADOBE FONTS WHEN THE KIT
+      IS PRESENT, GOOGLE STAND-INS OTHERWISE · THE READOUTS SAY WHICH ONE ACTUALLY
+      RENDERED AND HOW ITS GLYPHS MEASURE AGAINST TODAY'S MONO
+    </p>
+    <atlas-specimen></atlas-specimen>
+  </section>
+`;
 
 const proseContent = (title: string, line: string): TemplateResult => html`
   <section class="sheet">
@@ -276,6 +308,12 @@ const jobs: Job[] = [
     active: 'city',
     content: () => cityContent(extra),
   })),
+  {
+    path: href.specimen,
+    title: TITLES.specimen,
+    active: 'specimen',
+    content: specimenContent,
+  },
   // Verdict-only: /office is a redirect, a bare mount (when the mount is not
   // the root) redirects to the gallery, and a lowercase sheet id redirects
   // to its cased page. None gets a page; each gets a _redirects line.
