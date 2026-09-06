@@ -289,6 +289,7 @@ Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S <
 | T48 | chrome | P3 | `.sheet` box-shadow (0 8px 28px) under a ruled frame — paper on a light table does not cast a soft shadow | `chrome.mjs:125` drop the blur, keep the 1-px edge | S |
 | T49 | cover | P3 | `.sheet-sub` on the cover at 181ch | resolved by T12/T13; else break into two lines | S |
 | T50 | prod | P1 | production is one deploy behind (Google links present, mono plates, no hand, specimen on the rail) | deploy the staged build | S |
+| T51 | bug | P1 | `helpers.mjs::isoBlock` writes `class="sk" fill="var(--paper-2)"` and `fill="url(#hx)"`; every house stroke class sets `fill: none`, and CSS beats a presentation attribute, so the left face tint and the right-face hatch have never drawn (found while drawing A1, whose first cut lost all fills the same way) | `helpers.mjs:55–56` two-element idiom as sheetA1 does: a fill polygon with no stroke class, then the `.sk` outline over it; audit every `class="sk…" fill=` in generator/ | S |
 
 ---
 
