@@ -108,8 +108,10 @@ export default [
 
 Declared, the second row above — `assignHref: 'auto'` on `<sp-link>` — reports
 as a dead link, which is exactly what its readout shows. The
-[lint example](../packages/eslint-plugin#example) carries the same pair for
-its own link element.
+[lint example](../packages/eslint-plugin#example) carries the same pair on
+`<sp-link>`, and the root [oxlint](../packages/eslint-plugin#the-rules) config
+declares it for this example's own source, where that row reports as the
+warning it is.
 
 ## Setting up the example
 

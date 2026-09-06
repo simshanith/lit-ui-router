@@ -47,7 +47,12 @@
     "no-global-assign": "error",
     "no-import-assign": "error",
     "no-invalid-regexp": "error",
-    "no-irregular-whitespace": ["error", { "skipComments": true }],
+    "no-irregular-whitespace": [
+      "error",
+      {
+        "skipComments": true
+      }
+    ],
     "no-loss-of-precision": "error",
     "no-misleading-character-class": "error",
     "no-new-native-nonconstructor": "error",
@@ -316,11 +321,30 @@
       }
     },
     {
+      "files": ["**/design-system-links/src/**/*.ts"],
+      "rules": {
+        "lit-ui-router/anchor-is-valid": [
+          "warn",
+          {
+            "linkElements": ["sp-link"]
+          }
+        ],
+        "lit-ui-router/sref-assign-href": [
+          "error",
+          {
+            "linkElements": ["sp-link"]
+          }
+        ]
+      }
+    },
+    {
       "files": ["**/lint-eslint/src/violations.ts"],
       "rules": {
         "lit-ui-router/anchor-is-valid": [
           "warn",
-          { "linkElements": ["my-link"] }
+          {
+            "linkElements": ["sp-link"]
+          }
         ],
         "lit-ui-router/directive-position": "warn",
         "lit-ui-router/sref-active-aria-current": "warn",
