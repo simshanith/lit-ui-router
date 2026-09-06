@@ -736,6 +736,54 @@ leave with rAF scheduling → 0, re-init on return with no re-fetch, both
 megacanvas 301s), 27/27 nav in light and dark, 24/24 under the pushState
 fallback, 21 cold loads with zero page errors, and 6/6 analytics counts
 (1 router page_view per click, 0 on back, 0/0 under the fallback).
+PARITY WITH THE FLAT SET, 2026-09-05: user-asked — "really want to make sure
+all the content from the flat set makes it into the lit ui router app" and "the
+interactive survey office is missing too — you only grabbed sheets". An audit
+found the 22 plates byte-for-byte but the whole COVER missing and one lane
+absent. (1) S14i — THE SURVEY OFFICE — INTERACTIVE is now a sheet like any
+other: pipeline-graph.mjs exports a `sheet14i` meta (num 14i, scale THE CENSUS
+PIPELINE, form INTERACTIVE GRAPH, rev A) whose `sub` and `caption` ARE the
+section's own strings, so the flat gallery bytes are unchanged; build.mjs
+writes it a standalone page (sheet-14i-the-survey-office-interactive.html) the
+way 1i/2B/12i have one, emit-app.mjs maps it to pipeline-graph.mjs in MODULE
+and passes it in the fourth `interactive` lane. It needed NO app change beyond
+the manifest row: bySheet puts it after 14 exactly as 12i sits after 12, and
+the rail, the cover card, /sheet/14i, the narrowed server mount, the ←/→ walk,
+the prerendered page and the STANDALONE PLATE crumb all fell out of the
+existing sheet machinery. The flat index row still links #pipeline-graph.
+(2) THE COVER IS NOW ONE SOURCE, not two. build.mjs's gallery cover was
+extracted into named constants — statBar, survey, galBody, provenance — and
+galCss split into a `surveyCss`/`provenanceCss` half the app reuses and a
+`.cover`/`.idx` half the gallery keeps; all of it rides manifest.json as a
+`cover` object of RENDERED HTML strings that GalleryView/AboutView insert with
+unsafeHTML. So the routed index draws the flat cover's own bytes: the 5-cell
+stat bar, the GENERAL SURVEY block (totals, the per-language table, the basis
+paragraph), the three-paragraph prose column, and — in AboutView — the
+colophon line including DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL, plus the
+README's thesis sentence and generator notes, shared with the README template
+through THESIS/GEN_NOTES and an mdLine() markdown-to-HTML one-liner. TRAP: lit
+cannot bind inside <style>, so the cover CSS goes in as
+unsafeHTML(`<style>…</style>`) — a plain `<style>${...}</style>` template
+throws "Unexpected final partIndex" in @lit-labs/ssr and is an invalid
+location in the browser too. (3) THE INDEX TABLE IS CANONICAL. The gallery's
+24 FIT VERDICT rows (including the four that were inline markup) are one
+ordered `verdicts` array with optional anchor/label columns; emitApp() maps it
+onto every manifest row as `verdict` + `scale`, so the ALTITUDE wording the
+index prints is what the app's cards and each sheet's crumb now show, and the
+altitude that was emitted-but-never-rendered finally draws. Plate counts derive
+from a `lanes` array rather than a typed +3. FLAT-SET REGRESSION CHECK: after
+build.mjs the only diffs are S14i's own — README (22→23 plates, "four
+interactive lanes", the 14i table row), megacanvas (the lane list), gallery
+(the stat bar's plate count) — and no sheet-*.html moved at all. Verified:
+build 23 sheets / 24 fragments, tsc clean, oxlint clean (sheet3a's known
+finding aside), prerender 26 pages + 404 · 9 redirects, stage-site 26 routed +
+26 flat, artifact 2,638,142 bytes / 24 fragments with 21/21 offline checks
+(cover survey + verdicts, #/sheet/14i cytoscape, #/about colophon); against the
+Pages-mimicking server 39/39 nav in light and dark and 36/36 under the
+pushState fallback (rail 14 → 14i → 13, TOOLS LEDGER + FIT, cover stat bar /
+survey / 3 prose paragraphs / 24 verdicts / 24 altitudes, About colophon), and
+23 cold loads with zero page errors — /sheet/14i and /sheet/14i/ both boot
+cytoscape from cold.
 
 ## Why rework
 

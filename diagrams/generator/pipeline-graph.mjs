@@ -339,6 +339,25 @@ const INIT = `
 })();
 `;
 
+const SUB = `THE CENSUS PIPELINE AS A LIVE GRAPH · ${A.stats.nodes} NODES · ${A.stats.edges} EDGES · ${A.stats.writes} WRITES / ${A.stats.reads} READS / ${A.stats.imports} IMPORTS`;
+// The gallery index's own FIT VERDICT line for this lane — one wording, two places.
+export const PIPELINE_VERDICT = "sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero";
+const VERDICT = PIPELINE_VERDICT;
+
+// The sheet meta, in the shape build.mjs's sheet objects have: this lane is
+// S14i, drawn here and mounted in the gallery, on its own standalone page and
+// as the app's 14i fragment. `sub` and `caption` are the section's own strings.
+export const sheet14i = {
+  num: '14i',
+  id: 'pipeline-interactive',
+  rev: REV,
+  title: 'THE SURVEY OFFICE — INTERACTIVE',
+  scale: 'THE CENSUS PIPELINE',
+  form: 'INTERACTIVE GRAPH',
+  sub: SUB,
+  caption: VERDICT,
+};
+
 export function pipelineSection() {
   const swatch = (k) => `<span class="sw sw-light">${spriteSvg(k, 'light')}</span><span class="sw sw-dark">${spriteSvg(k, 'dark')}</span>`;
   const legend = LEGEND_NODES.map(([k, d]) => `<span class="lg">${swatch(k)}${d}</span>`).join('\n    ')
@@ -352,7 +371,7 @@ export function pipelineSection() {
 <section class="sheet pg" id="pipeline-graph" aria-label="The Survey Office, interactive">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">SHEET 14 · REV ${REV}</span></div>
   <h2 class="sheet-title">THE SURVEY OFFICE — INTERACTIVE</h2>
-  <p class="sheet-sub">THE CENSUS PIPELINE AS A LIVE GRAPH · ${A.stats.nodes} NODES · ${A.stats.edges} EDGES · ${A.stats.writes} WRITES / ${A.stats.reads} READS / ${A.stats.imports} IMPORTS</p>
+  <p class="sheet-sub">${SUB}</p>
   <div class="pg-bar">
     <div class="pg-legend">
     ${legend}

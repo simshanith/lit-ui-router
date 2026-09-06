@@ -85,6 +85,7 @@ const railTemplate = (active: string): TemplateResult => html`
 `;
 
 const page = (active: string, content: TemplateResult): TemplateResult => html`
+  ${unsafeHTML(`<style>${manifest.cover.css}</style>`)}
   <div class="app">${railTemplate(active)}<main class="content">${content}</main></div>
 `;
 
@@ -99,6 +100,8 @@ const galleryContent = (): TemplateResult => html`
       SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES · CLIENT
       ${manifest.client} · PLATES COUNTED ${manifest.date}
     </p>
+    ${unsafeHTML(manifest.cover.statBar)} ${unsafeHTML(manifest.cover.survey)}
+    ${unsafeHTML(manifest.cover.prose)}
   </section>
   <div class="cards">
     ${manifest.sheets.map(
@@ -106,7 +109,9 @@ const galleryContent = (): TemplateResult => html`
         <a class="card" href="${href.sheet(row.num)}">
           <span class="n">SHEET ${row.num} · REV ${row.rev}</span>
           <h3>${row.title}</h3>
+          <span class="alt">${row.scale}</span>
           <p>${row.caption}</p>
+          <p class="verdict">${row.verdict}</p>
         </a>
       `,
     )}
@@ -115,7 +120,9 @@ const galleryContent = (): TemplateResult => html`
         <a class="card" href="${href.city}">
           <span class="n">${extra.shno} · REV ${extra.rev}</span>
           <h3>${extra.title}</h3>
+          <span class="alt">${extra.scale}</span>
           <p>${extra.sub}</p>
+          <p class="verdict">${extra.verdict}</p>
         </a>
       `,
     )}
@@ -136,6 +143,7 @@ const sheetContent = (row: SheetRow): TemplateResult => {
       ${prev ? html`<a href="${href.sheet(prev.num)}">PREV · ${prev.num}</a>` : nothing}
       ${next ? html`<a href="${href.sheet(next.num)}">NEXT · ${next.num}</a>` : nothing}
       <a href="${href.plate(row.standalone)}">STANDALONE PLATE ↗</a>
+      <span>ALTITUDE · ${row.scale}</span>
     </div>
     <atlas-plate>${unsafeHTML(fragment)}</atlas-plate>
   `;
@@ -150,6 +158,7 @@ const cityContent = (extra: ExtraRow): TemplateResult => {
     <div class="crumb">
       <a href="${href.gallery}">← INDEX</a>
       <a href="${href.plate(extra.standalone)}">STANDALONE PLATE ↗</a>
+      <span>ALTITUDE · ${extra.scale}</span>
     </div>
     <atlas-city>${unsafeHTML(fragment)}</atlas-city>
   `;
@@ -253,11 +262,13 @@ const jobs: Job[] = [
     path: href.about,
     title: TITLES.about,
     active: 'about',
-    content: () =>
-      proseContent(
+    content: () => html`
+      ${proseContent(
         'COLOPHON',
         'THE SET, ROUTED — lit-ui-router, ui-router-server, and one generated manifest',
-      ),
+      )}
+      ${unsafeHTML(manifest.cover.provenance)}
+    `,
   },
   ...manifest.extras.map((extra) => ({
     path: href.city,

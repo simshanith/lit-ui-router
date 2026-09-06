@@ -24,7 +24,7 @@ import { sheet12 } from './sheet12.mjs';
 import { register12iSection, sheet12i } from './sheet12i.mjs';
 import { sheet13 } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
-import { pipelineSection } from './pipeline-graph.mjs';
+import { PIPELINE_VERDICT, pipelineSection, sheet14i } from './pipeline-graph.mjs';
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
 import { citySection } from './city-scene.mjs';
@@ -35,6 +35,10 @@ if (!OUT) throw new Error('usage: node build.mjs <outdir>');
 mkdirSync(OUT, { recursive: true });
 
 const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet5, sheet6, sheet7, sheet7a, sheet7b, sheet8, sheet9, sheet10, sheet11, sheet12, sheet13, sheet14];
+// The interactive lanes that have a standalone page of their own — the plate
+// count on the cover, in the megacanvas prose and in the README derives here.
+const lanes = [sheet1i, sheet2b, sheet12i, sheet14i];
+const PLATES = sheets.length + lanes.length;
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
@@ -59,6 +63,11 @@ writeFileSync(join(OUT, fname(sheet12i)),
 writeFileSync(join(OUT, fname(sheet1i)),
   page(`${sheet1i.title} — Sheet ${sheet1i.num} of ${TOTAL}`, loopWalkedSection(), { desc: sheet1i.caption }));
 
+// Sheet 14i is the survey office's own lane: sheet 14's flow graph as a live
+// cytoscape picture, standalone here and mounted in the gallery after 14.
+writeFileSync(join(OUT, fname(sheet14i)),
+  page(`${sheet14i.title} — Sheet ${sheet14i.num} of ${TOTAL}`, pipelineSection(), { desc: sheet14i.caption }));
+
 // --- megacanvas ---
 const rail = `<nav class="alt-rail" aria-label="altitudes">
 ${sheets.map((s) => `<a href="#sheet-${s.num}"><span class="alt-n">ALT ${s.num}</span> ${s.title}</a>`).join('\n')}
@@ -77,15 +86,20 @@ const megaCss = `
 writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
   <h1>THE MEGACANVAS</h1>
-  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it — and last, the office that took every one of those measurements, drawn by its own instrument. Fourteen altitudes, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 1i, 2B and 12i stand alone); the form changes at every altitude because the truth does.</p>
+  <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it — and last, the office that took every one of those measurements, drawn by its own instrument. Fourteen altitudes, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 1i, 2B, 12i and 14i stand alone); the form changes at every altitude because the truth does.</p>
 </header>
 ${rail}
 ${sheets.map((s) => sheetSection(s)).join('\n')}`,
 { desc: `All ${sheets.length} plates of the lit-ui-router drawing set on one page, fourteen altitudes in ascent.` }));
 
 // --- gallery / artifact ---
+// THE INDEX — [num, ALTITUDE, FORM, FIT VERDICT] and, where the row is not a
+// plain `#sheet-<num>` anchor, [anchor, label]. Canonical for both the
+// altitude wording and the verdict line: emitApp() maps it onto every manifest
+// row, so the routed cards say exactly what this table says.
 const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
+  ['1i', 'ONE PACKAGE', 'INTERACTIVE CIRCUIT', `sheet 1's circuit with a pointer in it — ${LOOP.stations} stations, ${LOOP.legs} legs, and one click walked in ${LOOP.steps} steps, every step standing on the source lines the plate cites verbatim`],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
   ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
   ['2B', 'COMPANIONS, CONTRACTED', 'COUPLING BENCH', SHEET2B_VERDICT],
@@ -105,17 +119,19 @@ const verdicts = [
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 70% of the graph runs nothing, and at REV D real→real edges fell a quarter while the node count barely moved'],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', '86% of the city is summer stone — and the port\u2019s original masonry carries the hottest edges'],
   ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', `the atlas measuring itself — one archive, ${ATLAS.stats.probes} probe stations, ${ATLAS.stats.plates} filed plates, and every station, plate and edge introspected from the generator at build time`],
+  ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', "sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the 70% that runs nothing"],
+  ['14i', 'THE CENSUS PIPELINE', 'INTERACTIVE GRAPH', PIPELINE_VERDICT, '#pipeline-graph'],
+  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
 ];
-const galCss = `
-.cover { max-width: 1180px; margin: 0 auto 34px; background: var(--paper); border: 1.5px solid var(--ink);
-  padding: 30px; position: relative; }
-.cover::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--edge); pointer-events: none; }
-.cover > * { position: relative; }
-.cover h1 { font-family: var(--mono); font-size: clamp(26px, 4.6vw, 44px); letter-spacing: 0.16em; margin: 18px 0 4px; }
-.cover .kicker, .cover .set { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink-soft); }
-.cover .alt { display: block; margin-top: 6px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); }
-.cover .alt a { color: var(--accent); }
-.stat-bar { display: flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--paper-2); }
+const idxRow = ([n, a, f, v, anchor, label]) =>
+  `<tr><td><a href="${anchor ?? `#sheet-${n}`}">${label ?? `S${n}`}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`;
+/** The row for a sheet number — the app reads its altitude and verdict here. */
+const INDEX_BY_NUM = Object.fromEntries(verdicts.map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
+// The cover's own CSS, split so the routed app can reuse the half it draws.
+// The stat bar, the general survey, the prose column and the colophon line
+// ride the manifest as `cover.css`; .cover and .idx are gallery-only. The two
+// halves are re-joined below in their original order.
+const surveyCss = `.stat-bar { display: flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--paper-2); }
 .stat-bar > div { padding: 8px 16px 10px; border-right: 1px solid var(--ink); flex: 1 1 auto; }
 .stat-bar > div:last-child { border-right: none; }
 .stat-bar .k { display: block; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin-bottom: 3px; }
@@ -143,7 +159,20 @@ const galCss = `
 .lang tr:last-child td { border-bottom: none; }
 .survey .basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
   padding: 8px 14px 9px; border-top: 1.5px solid var(--ink); background: var(--paper-2); }
-.gal-body p { font-size: 15.5px; max-width: 72ch; margin-bottom: 11px; }
+.gal-body p { font-size: 15.5px; max-width: 72ch; margin-bottom: 11px; }`;
+const provenanceCss = `.provenance { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
+  max-width: 1180px; margin: 0 auto 40px; padding: 0 4px; }`;
+const coverCss = `${surveyCss}\n${provenanceCss}`;
+const galCss = `
+.cover { max-width: 1180px; margin: 0 auto 34px; background: var(--paper); border: 1.5px solid var(--ink);
+  padding: 30px; position: relative; }
+.cover::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--edge); pointer-events: none; }
+.cover > * { position: relative; }
+.cover h1 { font-family: var(--mono); font-size: clamp(26px, 4.6vw, 44px); letter-spacing: 0.16em; margin: 18px 0 4px; }
+.cover .kicker, .cover .set { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover .alt { display: block; margin-top: 6px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover .alt a { color: var(--accent); }
+${surveyCss}
 .idx { width: 100%; border-collapse: collapse; border: 1.5px solid var(--ink); margin-top: 20px; }
 .idx th { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft);
   text-align: left; padding: 7px 12px; border-bottom: 1.5px solid var(--ink); }
@@ -152,8 +181,7 @@ const galCss = `
 .idx td:first-child { color: var(--accent); font-weight: 600; }
 .idx tr:last-child td { border-bottom: none; }
 .idx a { color: inherit; }
-.provenance { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
-  max-width: 1180px; margin: 0 auto 40px; padding: 0 4px; }
+${provenanceCss}
 .sheet { scroll-margin-top: 16px; }`;
 
 // --- general survey: every number on the cover comes from diagrams/data/census-files.json ---
@@ -201,30 +229,35 @@ const survey = `<section class="survey" aria-label="general survey of the reposi
   <p class="basis">BASIS — every tracked file on ${COUNTED_AT} (${num(SURVEY_TOTAL.tracked)} paths, ${num(SURVEY_TOTAL.files)} of them a language scc can name; the other ${num(UNCLASSIFIED)} are binaries, dotfiles, and lockfiles — generated, and rightly left out) · scc 4.0.0 <code>Code</code> basis · counted ${COUNTED_ON} · every number above imported from <code>diagrams/data/census-files.json</code> · deliberately broader than the sheets' authored-source census, and deliberately main: this atlas's own branch would add a 29k-sloc self-portrait.</p>
 </section>`;
 
+const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
+    <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
+    <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>
+    <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
+    <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · ${SHIPPED.published}</span></div>
+    <div><span class="k">SHEETS</span><span class="v">14 altitudes · ${PLATES} plates · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at ${COUNTED_AT}</span></div>
+  </div>`;
+
+const galBody = `<div class="gal-body">
+    <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
+    <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
+    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 297× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 22.5% of the wire; the router itself, 3.9%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8, 9 and 10 have each been remeasured after the merge they argued for; sheet 11 cuts the same wire the other way — five package quarters, sixteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
+  </div>`;
+
 const cover = `<header class="cover">
   <span class="kicker">A DRAWING SET · AFTER A FORM SEEN IN THE WILD · lit-ui-router</span>
   <h1>THE ALTITUDE ATLAS</h1>
   <span class="set">SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES</span>
   <span class="alt">THIS IS THE FLAT SET · THE SAME DRAWINGS ROUTED AS ONE lit-ui-router APP: <a href="/">THE ROUTED SET ↗</a></span>
-  <div class="stat-bar" role="group" aria-label="set statistics">
-    <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
-    <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>
-    <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
-    <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · ${SHIPPED.published}</span></div>
-    <div><span class="k">SHEETS</span><span class="v">14 altitudes · ${sheets.length + 3} plates · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at ${COUNTED_AT}</span></div>
-  </div>
+  ${statBar}
   ${survey}
-  <div class="gal-body">
-    <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
-    <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 297× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 22.5% of the wire; the router itself, 3.9%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8, 9 and 10 have each been remeasured after the merge they argued for; sheet 11 cuts the same wire the other way — five package quarters, sixteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
-  </div>
+  ${galBody}
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
-    <tbody>${verdicts.map(([n, a, f, v]) => `<tr><td><a href="#sheet-${n}">S${n}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`
-      + (n === '1' ? `<tr><td><a href="#sheet-1i">S1i</a></td><td>ONE PACKAGE</td><td>INTERACTIVE CIRCUIT</td><td>sheet 1's circuit with a pointer in it — ${LOOP.stations} stations, ${LOOP.legs} legs, and one click walked in ${LOOP.steps} steps, every step standing on the source lines the plate cites verbatim</td></tr>` : '')).join('')}<tr><td><a href="#sheet-12i">S12i</a></td><td>PR CI GRAPH</td><td>INTERACTIVE REGISTER</td><td>sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the 70% that runs nothing</td></tr><tr><td><a href="#pipeline-graph">S14i</a></td><td>THE CENSUS PIPELINE</td><td>INTERACTIVE GRAPH</td><td>sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero</td></tr><tr><td><a href="#city-scene">S7·3D</a></td><td>MONOREPO, IN THE ROUND</td><td>REAL 3D ISOMETRIC CITY</td><td>sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal</td></tr></tbody>
+    <tbody>${verdicts.map(idxRow).join('')}</tbody>
   </table>
 </header>`;
+
+const provenance = `<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at ${COUNTED_AT} in one pass — plate 7A's test light included, re-metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after sheets 1–13 were first drawn; the plates count it and sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 draw or schedule it · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`;
 
 writeFileSync(join(OUT, 'gallery.html'), page('The Altitude Atlas', `<style>${galCss}</style>
 ${cover}
@@ -238,28 +271,15 @@ ${sheets.map((s) => (s.num === '2A'
 ${register12iSection()}
 ${pipelineSection()}
 ${citySection()}
-<p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at ${COUNTED_AT} in one pass — plate 7A's test light included, re-metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = ${COUNTED_AT}, counted ${COUNTED_ON}, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after sheets 1–13 were first drawn; the plates count it and sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 draw or schedule it · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>`,
+${provenance}`,
 { desc: 'A drawing set over fourteen altitudes: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
 // --- README for the folder ---
-writeFileSync(join(OUT, 'README.md'), `# diagrams/ — The Altitude Atlas
-
-A drawing set: one subject surveyed at every altitude, fourteen altitudes on ${sheets.length + 3} plates — the
-numbered sheets, their A/B alternates, and three interactive lanes (sheets 7–10 are a survey
-quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
-wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
-every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
-notes on each sheet argue where that form fits and where it lies.
-
-| Sheet | Altitude | Form |
-| --- | --- | --- |
-${[...sheets, sheet1i, sheet2b, sheet12i].sort((a, b) => parseInt(a.num, 10) - parseInt(b.num, 10) || String(a.num).localeCompare(String(b.num)))
-  .map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
-
-- \`megacanvas.html\` — the ${sheets.length} SVG plates on one page, ascent order.
-- \`gallery.html\` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
-
-Static HTML pages, written by \`node generator/build.mjs .\` from this directory. The SVG sheets need nothing;
+// THESIS and GEN_NOTES are shared with the routed app's colophon: the README
+// prints them as markdown, the manifest carries the same strings as HTML.
+const THESIS = `Riffs on an isometric codebase-visualization form seen in the wild; the
+notes on each sheet argue where that form fits and where it lies.`;
+const GEN_NOTES = `Static HTML pages, written by \`node generator/build.mjs .\` from this directory. The SVG sheets need nothing;
 the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
 \`generator/stage-site.mjs\` vendors for hosting. \`app/\` is the same set as a prerendered lit-ui-router
 app; \`build.mjs\` emits its fragments and manifest. On the published site the app owns the root
@@ -271,12 +291,41 @@ Every plate in \`data/\` — versions, dates and all — was re-counted at ${COU
 plate 7A's test light included: \`generator/census-shadow.mjs\` re-meters it at the same ref. The cover's general survey — every
 tracked file on the scc 4.0.0 \`Code\` basis, ${COUNTED_AT} — is imported from
 \`data/census-files.json\`, the master snapshot \`generator/census-scc.mjs\` writes;
-\`generator/census-overview.mjs\` prints the same rollup on the terminal.
+\`generator/census-overview.mjs\` prints the same rollup on the terminal.`;
+/** The same prose as one HTML paragraph: line breaks flow, \`code\` becomes <code>. */
+const mdLine = (md) => md.replace(/\n/g, ' ').replace(/`([^`]+)`/g, '<code>$1</code>');
+
+writeFileSync(join(OUT, 'README.md'), `# diagrams/ — The Altitude Atlas
+
+A drawing set: one subject surveyed at every altitude, fourteen altitudes on ${PLATES} plates — the
+numbered sheets, their A/B alternates, and four interactive lanes (sheets 7–10 are a survey
+quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
+wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
+every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. ${THESIS}
+
+| Sheet | Altitude | Form |
+| --- | --- | --- |
+${[...sheets, ...lanes].sort((a, b) => parseInt(a.num, 10) - parseInt(b.num, 10) || String(a.num).localeCompare(String(b.num)))
+  .map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
+
+- \`megacanvas.html\` — the ${sheets.length} SVG plates on one page, ascent order.
+- \`gallery.html\` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
+
+${GEN_NOTES}
 `);
 
 // --- app/ — the same set, cut into fragments for the lit-ui-router SPA ---
-const appSheets = emitApp({ sheets, interactive: [[sheet1i, loopWalkedSection], [sheet2b, sheet2bPage], [sheet12i, register12iSection]], outDir: OUT, fname });
+const appSheets = emitApp({
+  sheets,
+  interactive: [[sheet1i, loopWalkedSection], [sheet2b, sheet2bPage], [sheet12i, register12iSection], [sheet14i, pipelineSection]],
+  // The cover, as the gallery renders it: the app draws the same bytes rather
+  // than a paraphrase, so the two indexes cannot drift.
+  index: INDEX_BY_NUM,
+  cover: { css: coverCss, statBar, survey, prose: galBody, provenance, thesis: mdLine(THESIS), notes: mdLine(GEN_NOTES) },
+  outDir: OUT,
+  fname,
+});
 
-// + 3: the three interactive lanes with a standalone page of their own, 1i, 2B and 12i
-console.log('built', sheets.length + 3, 'sheets + megacanvas + gallery + README →', OUT);
+// + 4: the four interactive lanes with a standalone page of their own
+console.log('built', PLATES, 'sheets + megacanvas + gallery + README →', OUT);
 console.log('emitted', appSheets, 'app fragments + manifest →', join(OUT, 'app/public'));

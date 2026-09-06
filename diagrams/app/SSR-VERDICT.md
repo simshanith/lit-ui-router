@@ -58,6 +58,10 @@ Good, and small enough to hold in your head.
   /sheet/7        →  200   (the prerendered page)
   /sheet/7/       →  200   (same page — strict: false on both sides)
   /office         →  302   Location: /sheet/14
+  /sheet/14i      →  200   (the fourth interactive lane, added 2026-09-05:
+                            a sheet id like any other, so the narrowed mount,
+                            the prerender and the ←/→ walk picked it up with
+                            no change beyond the manifest row)
   /sheet/2a       →  302   Location: /sheet/2A
   /sheet/99       →  404   (url kept; the shell, at 404)
   /no-such-thing  →  404
@@ -106,7 +110,7 @@ an alternation built from data the server side has on disk.
 url: `/sheet/{num:(?:${alternates.join('|')})}`;
 ```
 
-With 22 sheet ids in that alternation, `/sheet/99` became a real 404 and
+With 23 sheet ids in that alternation, `/sheet/99` became a real 404 and
 `/sheet/12i` stayed a 200 (and, since the ids are cased, `/sheet/2a` is a
 redirect rule to `/sheet/2A` in the same mount — one directory per sheet on
 disk, one canonical url). Nothing in the docs pointed at this; the

@@ -7,8 +7,11 @@ export interface SheetRow {
   title: string;
   sub: string;
   caption: string;
+  /** The gallery index's ALTITUDE wording — canonical, not the sheet's own. */
   scale: string;
   form: string;
+  /** The index's FIT VERDICT line: one editorial sentence per plate. */
+  verdict: string;
   rev: string;
   file: string;
   /** The sheet's standalone page in the flat set (build.mjs's own filename). */
@@ -30,10 +33,30 @@ export interface ExtraRow {
   sub: string;
   rev: string;
   shno: string;
+  scale: string;
+  verdict: string;
   file: string;
   /** Where the flat set draws it — a gallery anchor, not a page. */
   standalone: string;
   refs: string[];
+}
+
+/**
+ * The gallery cover, rendered by the generator and carried verbatim so the
+ * routed index and the flat one cannot drift. Every field is HTML, inserted
+ * with `unsafeHTML`; `css` is the half of the flat gallery's stylesheet these
+ * blocks need.
+ */
+export interface Cover {
+  css: string;
+  statBar: string;
+  survey: string;
+  prose: string;
+  provenance: string;
+  /** The README's thesis sentence, as one line of HTML. */
+  thesis: string;
+  /** The README's generator notes, as one line of HTML. */
+  notes: string;
 }
 
 export interface Manifest {
@@ -43,6 +66,7 @@ export interface Manifest {
   date: string;
   base: string;
   generatedBy: string;
+  cover: Cover;
   sheets: SheetRow[];
   extras: ExtraRow[];
 }

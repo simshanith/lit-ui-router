@@ -1,6 +1,6 @@
 // EMIT-APP — the drawing set, cut into fragments a router can mount.
 //
-// The atlas ships as ~22 standalone HTML pages. `diagrams/app/` is the same
+// The atlas ships as ~23 standalone HTML pages. `diagrams/app/` is the same
 // set as a lit-ui-router single-page app, and this module is the seam: it
 // writes one CHROME-LESS fragment per sheet plus a manifest, so nothing in
 // the app is transcribed by hand. Every string here comes out of the same
@@ -11,7 +11,7 @@
 //   app/public/sheets/<id>.html   one fragment per sheet
 //   app/public/sheets/city.html   the gallery-only 3D plate, same treatment
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
-//   app/public/manifest.json      one row per sheet + the `extras` rows
+//   app/public/manifest.json      one row per sheet + the `extras` rows + the cover
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -32,7 +32,7 @@ const MODULE = {
   '5': 'sheet5.mjs', '6': 'sheet6.mjs', '7': 'sheet7.mjs', '7A': 'sheet7a.mjs',
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
   '11': 'sheet11.mjs', '12': 'sheet12.mjs', '12i': 'sheet12i.mjs',
-  '13': 'sheet13.mjs', '14': 'sheet14.mjs',
+  '13': 'sheet13.mjs', '14': 'sheet14.mjs', '14i': 'pipeline-graph.mjs',
 };
 
 // chrome.mjs is read by every sheet (the title block dates itself off
@@ -121,7 +121,7 @@ function linkRefs(html, self, byUpper) {
   return { html: out.join(''), refs: [...refs].sort(bySheet) };
 }
 
-// The three interactive lanes pull cytoscape off a CDN on their standalone
+// The interactive lanes pull cytoscape off a CDN on their standalone
 // pages. The app bundles it instead, so the tag is cut here and the manifest
 // records the need — see diagrams/app/src/fragment.ts for why an inserted
 // <script> would not have run anyway.
@@ -133,9 +133,12 @@ const CDN_SCRIPT = /\s*<script defer src="https:\/\/cdnjs\.cloudflare\.com\/[^"]
  * @param {Array<[object, () => string]>} args.interactive sheet + its own renderer
  * @param {string} args.outDir             build.mjs's OUT argument
  * @param {(sheet: object) => string} args.fname  build.mjs's standalone filename rule
+ * @param {Record<string, {scale: string, verdict: string}>} args.index the gallery
+ *        index table — CANONICAL for a row's altitude wording and its fit verdict
+ * @param {Record<string, string>} args.cover the cover's own rendered HTML
  * @returns {number} fragments written (sheets + extras)
  */
-export function emitApp({ sheets, interactive, outDir, fname }) {
+export function emitApp({ sheets, interactive, outDir, fname, index, cover }) {
   const rows = [...sheets.map((s) => [s, null]), ...interactive].sort(([a], [b]) =>
     bySheet(a.num, b.num),
   );
@@ -158,7 +161,10 @@ export function emitApp({ sheets, interactive, outDir, fname }) {
       title: sheet.title,
       sub: sheet.sub ?? '',
       caption: sheet.caption ?? '',
-      scale: sheet.scale ?? '',
+      // The index's ALTITUDE wording is canonical; a sheet's own `scale` is
+      // the fallback for a row the table does not carry.
+      scale: index[String(sheet.num)]?.scale ?? sheet.scale ?? '',
+      verdict: index[String(sheet.num)]?.verdict ?? '',
       form: sheet.form ?? '',
       rev: sheet.rev ?? 'A',
       file: `sheets/${id}.html`,
@@ -200,6 +206,8 @@ export function emitApp({ sheets, interactive, outDir, fname }) {
       shno: CITY_META.head,
       file: `sheets/${CITY_META.id}.html`,
       standalone: CITY_META.standalone,
+      scale: index.city?.scale ?? '',
+      verdict: index.city?.verdict ?? '',
       refs: cityHtml.refs,
     },
   ];
@@ -214,6 +222,10 @@ export function emitApp({ sheets, interactive, outDir, fname }) {
         date: DATE,
         base: BASE,
         generatedBy: 'diagrams/generator/emit-app.mjs',
+        // The gallery cover, rendered by build.mjs and carried verbatim: the
+        // stat bar, the general survey, the prose column, the colophon line,
+        // the README's thesis and generator notes, and the CSS they need.
+        cover,
         sheets: manifest,
         extras,
       },

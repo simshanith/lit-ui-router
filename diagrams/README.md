@@ -1,7 +1,7 @@
 # diagrams/ — The Altitude Atlas
 
-A drawing set: one subject surveyed at every altitude, fourteen altitudes on 22 plates — the
-numbered sheets, their A/B alternates, and three interactive lanes (sheets 7–10 are a survey
+A drawing set: one subject surveyed at every altitude, fourteen altitudes on 23 plates — the
+numbered sheets, their A/B alternates, and four interactive lanes (sheets 7–10 are a survey
 quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
 wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
 every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
@@ -31,6 +31,7 @@ notes on each sheet argue where that form fits and where it lies.
 | [12i](sheet-12i-the-register-walked.html) | PR CI GRAPH | INTERACTIVE REGISTER |
 | [13](sheet-13-the-weathering-map.html) | WORKSPACE × TIME | WEATHERING MAP |
 | [14](sheet-14-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
+| [14i](sheet-14i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
 - `megacanvas.html` — the 19 SVG plates on one page, ascent order.
 - `gallery.html` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).

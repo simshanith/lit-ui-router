@@ -229,6 +229,10 @@ function rail(manifest: Manifest | undefined): TemplateResult {
 // --- the shell: rail + the nested content view -----------------------------
 
 export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => html`
+  <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
+  ${props?.resolves?.manifest
+    ? unsafeHTML(`<style>${props.resolves.manifest.cover.css}</style>`)
+    : nothing}
   <div class="app">
     ${rail(props?.resolves?.manifest)}
     <main class="content"><ui-view></ui-view></main>
@@ -251,14 +255,8 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES · CLIENT
         ${manifest.client} · PLATES COUNTED ${manifest.date}
       </p>
-      <div class="notes">
-        <p>
-          Every sheet below is the same drawing the standalone set publishes, cut out of
-          its page chrome by <code>${manifest.generatedBy}</code> and mounted here through
-          one <code>lit-ui-router</code> state. Nothing on this page is transcribed by
-          hand.
-        </p>
-      </div>
+      ${unsafeHTML(manifest.cover.statBar)} ${unsafeHTML(manifest.cover.survey)}
+      ${unsafeHTML(manifest.cover.prose)}
     </section>
     <div class="cards">
       ${manifest.sheets.map(
@@ -271,7 +269,9 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
           >
             <span class="n">SHEET ${sheet.num} · REV ${sheet.rev}</span>
             <h3>${sheet.title}</h3>
+            <span class="alt">${sheet.scale}</span>
             <p>${sheet.caption}</p>
+            <p class="verdict">${sheet.verdict}</p>
             <span class="meta">
               ${sheet.form} · ${sheet.plates.length}
               PLATE${sheet.plates.length === 1 ? '' : 'S'}
@@ -285,7 +285,9 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <a class="card" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
             <span class="n">${extra.shno} · REV ${extra.rev}</span>
             <h3>${extra.title}</h3>
+            <span class="alt">${extra.scale}</span>
             <p>${extra.sub}</p>
+            <p class="verdict">${extra.verdict}</p>
             <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
           </a>
         `,
@@ -331,6 +333,7 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
       <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}
         >STANDALONE PLATE ↗</a
       >
+      <span>ALTITUDE · ${sheet.scale}</span>
       <span
         >PLATES READ:
         ${sheet.plates.length > 0 ? sheet.plates.join(' · ') : 'NONE — DRAWN FROM PROSE'}</span
@@ -366,6 +369,7 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
     <div class="crumb">
       <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
       <a href="${out(href.plate(extra.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
+      <span>ALTITUDE · ${extra.scale}</span>
       <span
         >SEE ALSO
         ${extra.refs.map(
@@ -391,12 +395,16 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
       </div>
       <div class="prose">
         <h2>THE SET, ROUTED</h2>
+        ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
         <p>
           The atlas is ${manifest?.total ?? 14} sheets of static HTML. This is the same
           set as one <code>lit-ui-router</code> application: an abstract
           <code>atlas</code> state renders the rail and a nested
           <code>&lt;ui-view&gt;</code>, and <code>atlas.sheet</code> resolves one
-          generated fragment per plate.
+          generated fragment per plate. Every plate is the same drawing the standalone
+          set publishes, cut out of its page chrome by
+          <code>${manifest?.generatedBy ?? 'diagrams/generator/emit-app.mjs'}</code> and
+          mounted through one state — nothing here is transcribed by hand.
         </p>
         <h3>WHAT IS DOGFOODED</h3>
         <p>
@@ -435,11 +443,14 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>lit-ui-router</code>, <code>@uirouter/core</code>,
           <code>ui-router-server</code>,
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
-          <code>cytoscape</code> (the three interactive plates) and <code>three</code>
+          <code>cytoscape</code> (the four interactive plates) and <code>three</code>
           (the isometric city, imported only by <code>atlas.city</code>). All from npm;
           no workspace links.
         </p>
+        <h3>HOW THE SET IS DRAWN</h3>
+        ${manifest ? html`<p>${unsafeHTML(manifest.cover.notes)}</p>` : nothing}
       </div>
+      ${manifest ? unsafeHTML(manifest.cover.provenance) : nothing}
     </section>
   `;
 };
