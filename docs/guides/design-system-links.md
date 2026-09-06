@@ -90,6 +90,27 @@ message text is not present in a production bundle at all — see
 the property yourself if you would rather not see it in development.
 :::
 
+## Telling the linter
+
+[`eslint-plugin-lit-ui-router`](../packages/eslint-plugin) cannot tell
+`<sp-link>` from any other custom element on its own. `settings.linkElements`
+declares it once, and the two rules that ask whether a tag is a link stop
+guessing: `anchor-is-valid` holds it to the `<a>` bar — a `uiSref` element
+part or a static `href` — and `sref-assign-href` goes quiet on it, since the
+`true` default is right for an element that declares `href`.
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { linkElements: ['sp-link'] } },
+];
+```
+
+Declared, the second row above — `assignHref: 'auto'` on `<sp-link>` — reports
+as a dead link, which is exactly what its readout shows. The
+[lint example](../packages/eslint-plugin#example) carries the same pair for
+its own link element.
+
 ## Setting up the example
 
 The [example](https://github.com/simshanith/lit-ui-router/tree/main/examples/design-system-links)

@@ -318,7 +318,10 @@
     {
       "files": ["**/lint-eslint/src/violations.ts"],
       "rules": {
-        "lit-ui-router/anchor-is-valid": "warn",
+        "lit-ui-router/anchor-is-valid": [
+          "warn",
+          { "linkElements": ["my-link"] }
+        ],
         "lit-ui-router/directive-position": "warn",
         "lit-ui-router/sref-active-aria-current": "warn",
         "lit-ui-router/sref-assign-href": "warn"
