@@ -14,20 +14,28 @@
  * / `--title` / `--data` / `--prose` / `--code` for the whole atlas chrome. The
  * other five rows are the record of what it was chosen against.
  *
- * TWO HOSTS, ONE STACK. Every stack below names the ADOBE family first and the
- * Google Fonts stand-in second. On the live site `generator/stage-site.mjs`
- * injects the Adobe Fonts kit into EVERY STAGED PAGE (when `VITE_ADOBE_FONTS_KIT`
- * is set at stage time), so the first name wins; in the single-file artifact —
- * and on the site with no kit — only the Google stand-ins load and the second
- * name wins. The LOADED FACES readout reports which one actually rendered
- * rather than which one was asked for.
+ * TWO HOSTS, ONE STACK — and ONE HOST PER PAGE. Every stack below names the
+ * ADOBE family first and the Google Fonts stand-in second. On the live site
+ * `generator/stage-site.mjs` injects the Adobe Fonts kit into EVERY STAGED PAGE
+ * (when `VITE_ADOBE_FONTS_KIT` is set at stage time) and STRIPS the Google
+ * links, so the first name wins and nothing is asked of fonts.googleapis.com;
+ * in the single-file artifact — whose host allows Google Fonts and nothing else
+ * — only the stand-ins load and the second name wins. The LOADED FACES readout
+ * reports which one actually rendered rather than which one was asked for: on
+ * the staged site the shipped set reads ADOBE on four roles (eaglefeather,
+ * exhibition, din-2014, source-serif-pro), with --code the system mono by
+ * design.
  *
- * PAYLOAD. The Google Fonts <link> is injected by `connectedCallback`, so the
- * faces are fetched by the one state that needs them and by no other page in
- * the app — the same rule `atlas.city` follows for three.js.
+ * PAYLOAD. Nothing is fetched on connect. The staged site carries ONE font
+ * host — the kit — and the artifact carries ONE — Google Fonts — and the
+ * SHIPPED set draws from whichever is there, so the bench's own candidate
+ * stand-ins (Zilla Slab, Barlow, Fira, Architects Daughter, …) are injected by
+ * the FIRST KNOB TOUCH and never by a page load. The PROSE and CODE knobs'
+ * extras load on demand on top of that. Same rule `atlas.city` follows for
+ * three.js, one turn later: the state loads it, and only when it is used.
  */
 import { LitElement, html } from 'lit';
-import type { TemplateResult } from 'lit';
+import type { PropertyValues, TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { SPECIMEN_CSS, SPECIMEN_MOCK } from './specimen-mock.ts';
 
@@ -187,18 +195,18 @@ export const ADOBE_FAMILIES = [
     kit: false,
   },
   {
-    css: 'source-serif-4',
-    name: 'Source Serif 4',
-    role: 'prose · SHIPPED — the Google family answers on both hosts, so the prose needs no kit',
+    css: 'source-serif-pro',
+    name: 'Source Serif Pro (400/700 + italic)',
+    role: 'prose · SHIPPED — the site’s prose face; Source Serif 4 from Google stands in off the kit',
     woff2: '',
-    kit: false,
+    kit: true,
   },
   {
     css: 'source-code-pro',
     name: 'Source Code Pro',
-    role: 'code · the SOURCE CODE PRO knob — the Google family answers on both hosts',
+    role: 'code · the SOURCE CODE PRO knob — in the kit, with the same Google family standing in',
     woff2: '',
-    kit: false,
+    kit: true,
   },
   {
     css: 'graphite-std',
@@ -450,10 +458,11 @@ export const PROSE_FACES = [
   {
     id: 'source-serif',
     label: 'SOURCE SERIF 4',
-    face: face('source-serif-4', 'Source Serif 4', 'serif'),
-    // already in GOOGLE_FONTS_HREF — the shipped face costs no second request
+    face: face('source-serif-pro', 'Source Serif 4', 'serif'),
+    // both names are already on the page that draws them — the kit on the
+    // site, index.html's Google link in the artifact — so no second request
     google: '',
-    note: 'SHIPPED — Slimbach’s open text serif, the same family on BOTH hosts, so the site and the artifact agree',
+    note: 'SHIPPED — the prose face the set draws: Source Serif Pro from the kit on the site, Source Serif 4 from Google in the artifact. One Slimbach design, two releases',
   },
   {
     id: 'minion',
@@ -603,7 +612,7 @@ export const PAIRINGS: Pairing[] = [
     // it, and the DEFAULT pairing, so the specimen opens on what the set ships.
     id: 'atlas',
     label: '5 · THE ATLAS SET',
-    note: 'THE SHIPPED SET — display P22 FLLW Eaglefeather (stand-in Josefin Sans 600) on the atlas name alone · title P22 FLW Exhibition (stand-in Josefin Sans 600) on sheet AND rail titles · data DIN 2014 / Barlow Semi Condensed, tnum · prose Source Serif 4, the same family on both hosts · code system mono · NO hand',
+    note: 'THE SHIPPED SET — display P22 FLLW Eaglefeather (stand-in Josefin Sans 600) on the atlas name alone · title P22 FLW Exhibition (stand-in Josefin Sans 600) on sheet AND rail titles · data DIN 2014 / Barlow Semi Condensed, tnum · prose Source Serif Pro / Source Serif 4 · code system mono · NO hand',
     display: face('p22-fllw-eaglefeather', 'Josefin Sans', 'sans-serif'),
     dataDefault: 'din',
     titleDefault: 'exhibition',
@@ -628,9 +637,11 @@ const DEFAULT_PAIRING = indexIn(PAIRINGS, 'atlas');
 // --- font loading, this state only ----------------------------------------
 
 /**
- * The stand-ins the bench needs to draw ANY pairing, in ONE request. The PROSE
- * knob's serifs are deliberately NOT here — they load on demand (below), so
- * this is the whole of the page's default font payload.
+ * The stand-ins the bench needs to draw any pairing OTHER than the shipped one,
+ * in ONE request — fetched by the first knob touch, never on connect (the
+ * shipped set is served by whichever single host the page already carries: the
+ * kit on the site, index.html's Google link in the artifact). The PROSE knob's
+ * serifs are deliberately NOT here — they load on demand (below).
  *
  * Fira Sans Condensed carries 400 and 600 as well as 700 because it stands in
  * for BOTH a display face (Univers Next Pro Condensed, 700) and two ledger
@@ -649,6 +660,18 @@ export const GOOGLE_FONTS_HREF =
   '&family=Fira+Sans:wght@400;600' +
   '&family=Architects+Daughter' +
   '&display=swap';
+
+/** The reactive properties a KNOB writes — the gate on the stand-in fetch. */
+const KNOBS = new Set([
+  'pairing',
+  'sheetTitle',
+  'railMatch',
+  'hand',
+  'dataFace',
+  'prose',
+  'code',
+  'size',
+]);
 
 const LINK_ID = 'atlas-specimen-fonts';
 const STYLE_ID = 'atlas-specimen-css';
@@ -815,6 +838,10 @@ export class AtlasSpecimen extends LitElement {
   declare faces: FaceReport[];
   declare metrics: { base: Metric; data: Metric; code: Metric } | null;
 
+  /** False until the first render has been committed: the initial update
+   *  reports every property as changed, and that is not a knob touch. */
+  #armed = false;
+
   constructor() {
     super();
     const start = PAIRINGS[DEFAULT_PAIRING];
@@ -840,15 +867,12 @@ export class AtlasSpecimen extends LitElement {
   override connectedCallback(): void {
     super.connectedCallback();
     ensureStyle();
-    // Both readouts run twice on purpose: once when whatever is already loaded
-    // settles, once after the <link> lands (which is when a cold visit's
-    // stand-ins actually arrive).
+    // NO font request on connect. The shipped set — the pairing the bench opens
+    // on — is drawn by the one font host the staged page already carries, so a
+    // visit that never touches a knob costs nothing beyond the page itself.
     void document.fonts.ready.then(() => { this.#report(); });
-    void ensureGoogleFonts().then(() =>
-      document.fonts.ready.then(() => { this.#report(); }),
-    );
-    // The DEFAULT pairing's prose face is one of the on-demand families, so
-    // the bench pulls it the same way a click would.
+    // The DEFAULT pairing's prose face is on whichever host is present too; a
+    // pairing whose prose needs a Google family pulls it on the click.
     const prose = PROSE_FACES[this.prose]?.google ?? '';
     if (prose) {
       void ensureProseFont(prose).then(() =>
@@ -859,6 +883,23 @@ export class AtlasSpecimen extends LitElement {
 
   override firstUpdated(): void {
     this.#report();
+  }
+
+  /**
+   * The candidate stand-ins, pulled by the FIRST knob touch and no earlier.
+   * Every knob other than the shipped defaults names a Google family somewhere
+   * in its stack, so one gate covers them all — and `ensureGoogleFonts` is
+   * itself idempotent, so the later touches are free.
+   */
+  override updated(changed: PropertyValues): void {
+    if (!this.#armed) {
+      this.#armed = true;
+      return;
+    }
+    if (![...changed.keys()].some((key) => KNOBS.has(key as string))) return;
+    void ensureGoogleFonts().then(() =>
+      document.fonts.ready.then(() => { this.#report(); }),
+    );
   }
 
   get #current(): Pairing {
@@ -1289,8 +1330,14 @@ export class AtlasSpecimen extends LitElement {
         <p class="sp-foot">
           ADOBE means the site's Typekit kit answered; STAND-IN means the Google Fonts
           face did; SYSTEM means neither loaded, or the role is the system monospace on
-          purpose. The artifact build can never read ADOBE — its host allows
-          <code>fonts.googleapis.com</code> and nothing else.
+          purpose. Each host serves ONE of the two: the staged site carries the kit and
+          no Google link at all, so the shipped set reads ADOBE on four roles —
+          <code>p22-fllw-eaglefeather</code>, <code>p22-flw-exhibition</code>,
+          <code>din-2014</code>, <code>source-serif-pro</code> — with
+          <code>--code</code> SYSTEM by design; the artifact carries the Google link and
+          can never read ADOBE, so the same four read STAND-IN. This bench is the one
+          page that fetches from the other host: the candidate stand-ins arrive on the
+          first knob touch, never on load.
         </p>
       </section>
     `;
@@ -1328,8 +1375,9 @@ export class AtlasSpecimen extends LitElement {
           Put the kit id in <code>VITE_ADOBE_FONTS_KIT</code> before
           <code>node generator/stage-site.mjs</code> and every staged page — routed and
           flat, since the whole chrome now draws on the set — gets
-          <code>&lt;link rel="stylesheet" href="https://use.typekit.net/&lt;kit&gt;.css"&gt;</code>.
-          Unset, the stage logs <code>Adobe Fonts kit: none</code> and the Google
+          <code>&lt;link rel="stylesheet" href="https://use.typekit.net/&lt;kit&gt;.css"&gt;</code>
+          and LOSES the Google Fonts links, so the site talks to one font host. Unset,
+          the stage logs <code>Adobe Fonts kit: none</code>, the Google links stay and the
           stand-ins draw everywhere. A
           family that is not in the kit costs nothing: its stack falls to the Google
           stand-in and the readout above says STAND-IN until it is added to the web

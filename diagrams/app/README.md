@@ -69,21 +69,31 @@ three serifs load their Google family only when chosen — the default page pull
 none of them. It carries no sheet
 number, is not in the manifest at all, and rides at the bottom of the rail as
 `S0·T`. It is the second state to load something on entry: `src/specimen.ts` is
-a `resolve` (`import('./specimen.ts')`), and the element's
-`connectedCallback` injects the Google Fonts `<link>` for the CANDIDATE
-stand-ins (Zilla Slab, Barlow, Architects Daughter, …) — so those are fetched by
-this state and by no other page; the shipped set's three families come from the
-link `index.html` already carries.
+a `resolve` (`import('./specimen.ts')`), and the element's FIRST KNOB TOUCH
+injects the Google Fonts `<link>` for the CANDIDATE stand-ins (Zilla Slab,
+Barlow, Architects Daughter, …) — so those are fetched by this state, on
+demand, and by no other page. Nothing is fetched on connect: the shipped set is
+drawn by the ONE font host the page already carries (the kit on the site, the
+Google link in the artifact), and the bench is the only page in the atlas that
+ever talks to the other one.
 
-On the site, `generator/stage-site.mjs` additionally injects
+**One font host per page (2026-09-06).** On the site, `generator/stage-site.mjs`
+injects
 `<link rel="stylesheet" href="https://use.typekit.net/$VITE_ADOBE_FONTS_KIT.css">`
 into **every staged page, routed and flat** when `VITE_ADOBE_FONTS_KIT` is set
-(it sits beside the GA id in the gitignored `.config/mise/cloudflare.local.env`);
-unset, the stage logs `Adobe Fonts kit: none` and the Google stand-ins draw
-everywhere. Since 2026-09-06 the whole chrome draws on the decided set —
+(it sits beside the GA id in the gitignored `.config/mise/cloudflare.local.env`)
+**and strips the three Google Fonts links** `index.html` carries, so a staged
+page never references `fonts.googleapis.com` or `fonts.gstatic.com`. Unset, the
+stage logs `Adobe Fonts kit: none`, the Google links stay and the stand-ins draw
+everywhere. The artifact build never passes through the stager and keeps the
+Google links — its host allows that origin and no other.
+
+Since 2026-09-06 the whole chrome draws on the decided set —
 `atlas.css` declares `--display` / `--title` / `--data` / `--prose` / `--code`
-with the Adobe family first and the Google stand-in second, and `index.html`
-carries the Google link for the three stand-in families — so the specimen is
+with the Adobe family first and the Google stand-in second — the prose is
+`source-serif-pro` from the kit on the site and `Source Serif 4` from Google in
+the artifact, one Slimbach design under two releases — and `index.html`
+carries the Google link for the stand-in families — so the specimen is
 no longer the only page that asks for a webfont; it is the only page that asks
 for the *candidate* ones. Every stack in `src/specimen.ts`
 names the Adobe family first and the Google stand-in second, so the same page

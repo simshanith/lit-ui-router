@@ -15,11 +15,15 @@
     <link rel="stylesheet" href="%BASE_URL%sheets/atlas.css" />
     <!-- THE TYPE, stand-in half. atlas.css names the Adobe family first in
          every role stack and the Google Fonts stand-in second; this link is
-         the second half, and it is the ONLY half the artifact can have (its
-         host allows stylesheets from fonts.googleapis.com and nothing else).
-         On the site generator/stage-site.mjs adds the Adobe kit beside it, so
-         the first names win there. Source Serif 4 is the SAME family on both
-         hosts by decision — no kit dependency for the prose. -->
+         the second half, and it is the ONLY half the claude.ai ARTIFACT can
+         have (that host allows stylesheets from Google Fonts and nothing
+         else), so the artifact keeps exactly these three links.
+         On the SITE it is the other way round: generator/stage-site.mjs
+         STRIPS these three links from the staged copy and injects the Adobe
+         kit instead, so a staged page has one font host, not two.
+         The prose is therefore Source Serif Pro from the kit on the site and
+         Source Serif 4 from Google in the artifact — one design, two
+         releases. -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link

@@ -124,17 +124,20 @@ if (GA_ID) {
 // --- the type, on every staged page ----------------------------------------
 // atlas.css (generator/chrome.mjs) names the ADOBE family first in every role
 // stack and the Google Fonts stand-in second, so the <head> is the whole
-// difference between the two hosts:
+// difference between the two hosts — and since 2026-09-06 a staged page has
+// exactly ONE font host:
 //
-//   the Google <link> — Josefin Sans 600, Barlow Semi Condensed 400/600,
-//     Source Serif 4 400 + italic. The routed app carries it in its own
-//     index.html (it is the only half a claude.ai artifact can have), so it is
-//     injected HERE only into the flat pages, which are head-less until the
-//     host wraps them.
-//   the Adobe kit <link> — injected into EVERY staged page, routed and flat,
-//     when VITE_ADOBE_FONTS_KIT is set. Unset (or in the artifact build) the
-//     stand-ins simply draw and nothing breaks; the type specimen's own LOADED
-//     FACES readout is the check.
+//   WITH the kit (VITE_ADOBE_FONTS_KIT set) — the kit <link> goes into EVERY
+//     staged page, routed and flat, and the Google preconnects + stylesheet
+//     the app's own index.html carries are STRIPPED from the staged copy. All
+//     five roles resolve their first name, prose included (source-serif-pro),
+//     so the site never touches fonts.googleapis.com or fonts.gstatic.com.
+//   WITHOUT the kit — no kit link, and the Google <link> is written into every
+//     head-less flat page instead (the routed pages already have it), so the
+//     stand-ins draw everywhere and nothing breaks.
+//
+// The claude.ai artifact build is untouched by either branch: it never passes
+// through here, and its host allows fonts.googleapis.com and nothing else.
 //
 // The kit id is PUBLIC (it is in the page source); it lives beside the GA id in
 // .config/mise/cloudflare.local.env, which is gitignored.
@@ -146,13 +149,27 @@ const KIT = process.env.VITE_ADOBE_FONTS_KIT;
 const kitLink = (kit) => `<link rel="preconnect" href="https://use.typekit.net" crossorigin>
 <link rel="stylesheet" href="https://use.typekit.net/${kit}.css">
 `;
+// The three exact lines index.html carries, matched one by one rather than by
+// rewriting the <head> — the vite build indents and self-closes them, so the
+// attribute run is the stable part, not the surrounding whitespace.
+const GOOGLE_LINK_LINES =
+  /[ \t]*<link[^>]*(?:fonts\.googleapis\.com|fonts\.gstatic\.com)[^>]*>[ \t]*\n?/g;
 const typed = { routed: 0, flat: 0 };
 for (const p of walkHtml(dist)) {
   const routed = !p.startsWith(`${set}/`);
   let html = readFileSync(p, 'utf8');
   let touched = false;
-  // the app's index.html already carries the Google half; the flat pages do not
-  if (!html.includes('fonts.googleapis.com')) {
+  if (KIT) {
+    // ONE host: the kit answers every role, so the Google half goes away
+    if (GOOGLE_LINK_LINES.test(html)) {
+      GOOGLE_LINK_LINES.lastIndex = 0;
+      html = html.replace(GOOGLE_LINK_LINES, '');
+      touched = true;
+    }
+    GOOGLE_LINK_LINES.lastIndex = 0;
+  } else if (!html.includes('fonts.googleapis.com')) {
+    // no kit: the app's index.html already carries the Google half, the flat
+    // pages are head-less until the host wraps them
     html = html.includes('</head>')
       ? html.replace('</head>', `${GOOGLE_FONTS}</head>`)
       : GOOGLE_FONTS + html;
@@ -170,7 +187,7 @@ for (const p of walkHtml(dist)) {
 }
 console.log(
   KIT
-    ? `Adobe Fonts kit: ${KIT} → every staged page · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`
+    ? `Adobe Fonts kit: ${KIT} → every staged page, Google links stripped (single host) · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`
     : `Adobe Fonts kit: none — the Google stand-ins draw · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`,
 );
 

@@ -995,6 +995,32 @@ Eaglefeather, Exhibition and DIN 2014, and the specimen's ADOBE FONTS table
 then wants its `kit` flags re-read; the plates' own lettering is untouched by
 decision.
 
+SINGLE HOST ON THE SITE, 2026-09-06: the production site must load web fonts
+from ONE origin. The kit is that origin, so the prose moved onto it — the kit
+already declares `source-serif-pro` in all four faces the prose needs (400,
+700, 400 italic, 700 italic), so nothing was worked around.
+`generator/chrome.mjs` `--prose` now reads `"source-serif-pro", "Source Serif
+4", "Charter", …`; `generator/stage-site.mjs`, when `VITE_ADOBE_FONTS_KIT` is
+set, STRIPS the three Google Fonts links `app/index.html` carries from every
+staged page as it injects the kit link (unset, it behaves exactly as before and
+the Google half draws everywhere). `app/index.html`'s own links are unchanged —
+the claude.ai ARTIFACT keeps Google Fonts, because that host allows
+`fonts.googleapis.com` and nothing else, and there the prose is Source Serif 4.
+One Slimbach design, two releases, one host per page. `app/src/specimen.ts`
+followed: the `source-serif` knob and the ADOBE FONTS table name
+`source-serif-pro` (`kit: true`, as does `source-code-pro` — both were flagged
+`kit: false` and both are in fact declared in the kit CSS), and the bench no
+longer injects its candidate stand-ins on `connectedCallback` — it waits for
+the FIRST KNOB TOUCH, so a staged `/specimen/` visit that touches nothing asks
+nothing of Google either. LOADED FACES on the site therefore reads ADOBE ×4
+(eaglefeather, exhibition, din-2014, source-serif-pro) with `--code` SYSTEM by
+design.
+
+Verify: `curl -L https://atlas.lit-ui-router.dev/sheet/7/ | grep -c googleapis`
+→ 0 (same for `/`, `/specimen/` and any `/set/*.html`), and the same page shows
+one `use.typekit.net` link; the artifact still carries the Google links and no
+kit link (`grep -c fonts.googleapis app/dist-artifact/index.html` ≥ 1).
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a
