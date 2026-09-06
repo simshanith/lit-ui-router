@@ -19,13 +19,39 @@ The content is generated, never transcribed: `node generator/build.mjs .` from
 sheet), `app/public/sheets/atlas.css` (the sheets' own chrome) and
 `app/public/manifest.json` (one row per sheet: title, rev, which census plates
 it reads, the cross-sheet references found in its prose, and the sheet's
-standalone filename in the flat set). The seam is
+standalone filename in the flat set). Twenty-three fragments: the twenty-two
+sheets plus one `extras` row, the 3D city, which has no sheet number because
+the flat set only ever published it inside its gallery. The same seam writes
+`app/src/generated/city-init.js` (below). The seam is
 `diagrams/generator/emit-app.mjs`.
+
+## The routes
+
+| State            | Url            | View            | Resolves                          |
+| ---------------- | -------------- | --------------- | --------------------------------- |
+| `atlas`          | — (abstract)   | `ShellView`     | `manifest`                        |
+| `atlas.gallery`  | `/`            | `GalleryView`   | —                                 |
+| `atlas.sheet`    | `/sheet/:num`  | `SheetView`     | `sheet`, `fragment`               |
+| `atlas.city`     | `/city`        | `CityView`      | `extra`, `fragment`, **`three`**  |
+| `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` 14)       |
+| `atlas.about`    | `/about`       | `AboutView`     | —                                 |
+| `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
+
+`atlas.city` is the 3D plate and the only state that loads a library on entry
+(see **Dependencies on demand**). It is deliberately not a sheet: it carries no
+sheet number, sits in the manifest's `extras` rather than its `sheets`, and so
+is invisible to the ascent order, the ← / → walk and the server's narrowed
+`/sheet/{num:…}` — a rail entry and a cover card, nothing more.
+
+`atlas.megacanvas` was **retired from the app on 2026-09-05**. The flat set
+still publishes the whole reel as one page, so the prerender writes
+`/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`
+and the reel's pan/zoom layer is gone from `src/experimental/`.
 
 ## Where it lives
 
 The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`,
-`/megacanvas?at=7`, `/about`, `/office`. The flat drawing set — the pages this
+`/city`, `/about`, `/office`. The flat drawing set — the pages this
 app was cut from — is staged beside it under `/set/` as the version to compare
 against, and the two link to each other: the rail's THE FLAT SET entry and each
 sheet's STANDALONE PLATE crumb go out; the flat gallery's cover links back to
@@ -74,10 +100,43 @@ unchanged.
 | Module                | What it does                                    | Router hook                                          |
 | --------------------- | ----------------------------------------------- | ---------------------------------------------------- |
 | `view-transitions.ts` | slideshow between sheets (View Transitions API, CSS keyframe fallback) | `onBefore` for the snapshot; `transition.promise` + `viewRendered()` for the release |
-| `view-rendered.ts`    | the missing "view has re-rendered" promise: lit's `updateComplete` on every `<ui-view>`, then on the `<atlas-plate>` it rendered | none — shared by the three below |
+| `view-rendered.ts`    | the missing "view has re-rendered" promise: lit's `updateComplete` on every `<ui-view>`, then on the `<atlas-plate>` it rendered | none — shared by the two below |
 | `keyboard.ts`         | ← / → walk the set; focus lands on the arriving sheet's title | none — reads `router.globals`            |
-| `megacanvas-pan.ts`   | the megacanvas as a reel that pans/zooms to `?at=<sheet>` | `onSuccess` + `viewRendered()`             |
-| `analytics.ts`        | every `page_view` (the first included — the staged config has `send_page_view:false`), only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time, the flagship's own id) | `onSuccess` |
+| `analytics.ts`        | only the `page_view`s gtag cannot see for itself (below), and only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time, the flagship's own id) | `onSuccess` |
+
+**The analytics rule.** The atlas shares the flagship's GA stream, whose
+enhanced measurement counts "page changes based on browser history events". So
+gtag already owns the initial `page_view` *and* every pushState / replaceState /
+popstate — and the staged tag is now plain `gtag('config', id)` on every page,
+routed and flat alike. The one thing gtag cannot see is
+`navigation.navigate()`, which the Navigation API location plugin uses and
+which touches `history.pushState` never. `analytics.ts` therefore sends on
+`onSuccess` only when the router took that plugin (`NAVIGATION_API`, exported
+from `router.ts` so the flag is not re-derived) AND the `navigate` event behind
+the transition was a `push` or `replace`. A `traverse` is back/forward, which
+fires popstate and is gtag's; under the pushState fallback nothing is sent at
+all. No doubles, no misses — verified in Playwright with a stubbed `gtag`: one
+router `page_view` per rail click, zero on back, zero either way under the
+fallback.
+
+**Dependencies on demand.** `atlas.city` is the one state that loads a library
+when it is entered: `resolve: [{ token: 'three', resolveFn: () => import('three') }]`.
+Vite gives that dynamic import its own chunk (`three.module-*.js`, 675 kB), and
+a Playwright request log confirms `/sheet/7/` never fetches it while `/city/`
+does — the router is the loader, and the view is handed the namespace as a
+resolve like any other value. The scene itself is
+`src/generated/city-init.js`, written by the same generator seam from the flat
+gallery's inline module: the app cannot run an inserted
+`<script type="module">` (see `src/fragment.ts`) and its import must be
+bundled, not a cdnjs url, so the generator emits the identical scene body as
+an ES module `initCity(root, THREE)` that returns a teardown. The flat
+gallery's copy is byte-for-byte unchanged. **`<atlas-city>` (`views.ts`) owns
+that teardown**, not a router hook: the scene holds a WebGL context, two
+observers, a media listener and pending frames, the experimental layer is
+deletable by design and this is not optional, and the element that created the
+scene is the one thing whose lifetime already matches it —
+`disconnectedCallback` disposes, `updated` + the plate's own `updateComplete`
+raises.
 
 Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots
 the document at the moment it is called, so it must run **before** any resolve
@@ -101,19 +160,20 @@ before doing any work.
 ## Artifact build
 
 `npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as
-ONE self-contained file (~1.81 MB) that can be published as a claude.ai
-Artifact. That host is strict in four ways, and each one is a line in the
+ONE self-contained file (~2.53 MB — three.js is a third of it) that can be
+published as a claude.ai Artifact. That host is strict in four ways, and each one is a line in the
 build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes
-  `public/manifest.json` and all twenty-two generated fragments into a
+  `public/manifest.json` and all twenty-three generated fragments into a
   `<script type="application/json" id="atlas-data">` island (every `<` escaped
   as `\u003c`, so a fragment's own `</script>` cannot close it) and inlines
   `public/sheets/atlas.css` as a `<style>`. `src/manifest.ts` reads the island
-  when it is present and falls back to the fetches the site uses. Cytoscape's
-  dynamic import is folded into the single chunk by `vite-plugin-singlefile`
-  (`useRecommendedBuildConfig`, which sets `output.codeSplitting = false` on
-  vite 8).
+  when it is present and falls back to the fetches the site uses. The cytoscape
+  and three dynamic imports are folded into the single chunk by
+  `vite-plugin-singlefile` (`useRecommendedBuildConfig`, which sets
+  `output.codeSplitting = false` on vite 8), so `#/city` raises the isometric
+  scene with the network entirely blocked.
 - **The host owns the document skeleton.** The published file must carry no
   `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` of its own, and only its first 8KB is
   scanned for `<title>`, so `artifact.ts` strips the wrapper and moves the title
@@ -128,8 +188,7 @@ build:
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the three
 readers share. Analytics is skipped in this mode. Nothing above changes the
-site build: `npm run build` still prerenders 25 pages + `404.html` and 7
-redirects.
+site build: `npm run build` prerenders 25 pages + `404.html` and 9 redirects.
 
 ## Server side
 

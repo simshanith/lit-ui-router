@@ -19,6 +19,23 @@ export interface SheetRow {
   refs: string[];
 }
 
+/**
+ * A plate with no sheet number — the flat set publishes it inside the gallery
+ * only. Kept OUT of `sheets` on purpose: the reel walk, the ascent order and
+ * the server's narrowed `/sheet/:num` all read that array.
+ */
+export interface ExtraRow {
+  id: string;
+  title: string;
+  sub: string;
+  rev: string;
+  shno: string;
+  file: string;
+  /** Where the flat set draws it — a gallery anchor, not a page. */
+  standalone: string;
+  refs: string[];
+}
+
 export interface Manifest {
   project: string;
   client: string;
@@ -27,6 +44,7 @@ export interface Manifest {
   base: string;
   generatedBy: string;
   sheets: SheetRow[];
+  extras: ExtraRow[];
 }
 
 /**
@@ -61,6 +79,11 @@ export function loadManifest(): Promise<Manifest> {
   return pending;
 }
 
+/** The one extra, by id — `undefined` if an older manifest predates it. */
+export function findExtra(manifest: Manifest, id: string): ExtraRow | undefined {
+  return manifest.extras?.find((row) => row.id === id);
+}
+
 /** Seed the cache from a prerendered payload (or a test). */
 export function primeManifest(manifest: Manifest): void {
   pending = Promise.resolve(manifest);
@@ -72,7 +95,8 @@ export function findSheet(manifest: Manifest, num: string): SheetRow | undefined
   return manifest.sheets.find((sheet) => sheet.id === wanted);
 }
 
-export function loadFragment(sheet: SheetRow): Promise<string> {
+/** Either kind of row carries the two fields a fragment fetch needs. */
+export function loadFragment(sheet: { id: string; file: string }): Promise<string> {
   const baked = readIsland()?.fragments[sheet.id];
   if (baked !== undefined) return Promise.resolve(baked);
   return fetch(`${BASE}${sheet.file}`).then((res) => {

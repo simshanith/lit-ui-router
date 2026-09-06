@@ -9,8 +9,9 @@ import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
-import type { Manifest, SheetRow } from './manifest.ts';
+import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
+import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
 import { href } from './routes.ts';
 import type { ThemeChoice } from './theme.ts';
@@ -74,6 +75,78 @@ export class AtlasPlate extends LitElement {
 }
 customElements.define('atlas-plate', AtlasPlate);
 
+// --- <atlas-city> — the 3D plate, and the layer that tears it down --------
+
+/**
+ * The isometric city: a generated fragment plus a WebGL scene over it.
+ *
+ * WHY THE ELEMENT OWNS THE TEARDOWN. The scene holds a WebGL context, a
+ * ResizeObserver, a MutationObserver on <html>, a colour-scheme media listener
+ * and pending animation frames — none of which the DOM reclaims when the
+ * routed view is swapped, and a context per visit hits the browser's cap in a
+ * dozen moves. A router hook could dispose it, but the experimental layer is
+ * deletable by design and this is not optional; the element that CREATED the
+ * scene is the one thing whose lifetime already matches it, so
+ * `disconnectedCallback` is the hook. `updated` waits on the plate's own
+ * `updateComplete` for "the fragment is in the DOM" — the same promise
+ * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
+ * free of that directory.
+ */
+export class AtlasCity extends LitElement {
+  static override properties = {
+    fragment: { attribute: false },
+    three: { attribute: false },
+  };
+
+  declare fragment: string;
+  declare three: unknown;
+  #dispose: (() => void) | null = null;
+  #seq = 0;
+
+  constructor() {
+    super();
+    this.fragment = '';
+    this.three = undefined;
+  }
+
+  override createRenderRoot(): HTMLElement {
+    return this;
+  }
+
+  override render(): TemplateResult {
+    return html`<atlas-plate .fragment=${this.fragment}></atlas-plate>`;
+  }
+
+  override updated(changed: Map<PropertyKey, unknown>): void {
+    if (!changed.has('fragment') && !changed.has('three')) return;
+    void this.#boot();
+  }
+
+  override disconnectedCallback(): void {
+    super.disconnectedCallback();
+    this.#teardown();
+  }
+
+  async #boot(): Promise<void> {
+    const seq = (this.#seq += 1);
+    const plate = this.querySelector('atlas-plate');
+    if (!plate || !this.fragment || !this.three) return;
+    await plate.updateComplete; // the fragment (and its JSON island) is in the DOM
+    if (seq !== this.#seq || !this.isConnected) return;
+    this.#teardown();
+    const dispose = await initCity(this, this.three);
+    // undefined = nothing was raised (no WebGL); a superseded boot disposes at once
+    if (seq === this.#seq && this.isConnected) this.#dispose = dispose ?? null;
+    else dispose?.();
+  }
+
+  #teardown(): void {
+    this.#dispose?.();
+    this.#dispose = null;
+  }
+}
+customElements.define('atlas-city', AtlasCity);
+
 // --- <atlas-themer> — the sheets' three-state theme control ----------------
 
 export class AtlasThemer extends LitElement {
@@ -126,9 +199,6 @@ function rail(manifest: Manifest | undefined): TemplateResult {
       </div>
       <div class="rail-top">
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.gallery')} href="${to(href.gallery)}">INDEX</a>
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.megacanvas')} href="${to(href.megacanvas())}"
-          >MEGACANVAS</a
-        >
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${to(href.about)}">ABOUT</a>
         <!-- The flat set is plain pages beside the app, not a state: a real link. -->
         <a class="rail-out" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
@@ -147,6 +217,10 @@ function rail(manifest: Manifest | undefined): TemplateResult {
             </a>
           `,
         )}
+        <!-- No sheet number, so it rides at the end of the ascent rather than in it. -->
+        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
+          <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
+        </a>
       </div>
     </nav>
   `;
@@ -206,6 +280,16 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
           </a>
         `,
       )}
+      ${manifest.extras?.map(
+        (extra) => html`
+          <a class="card" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
+            <span class="n">${extra.shno} · REV ${extra.rev}</span>
+            <h3>${extra.title}</h3>
+            <p>${extra.sub}</p>
+            <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
+          </a>
+        `,
+      )}
     </div>
   `;
 };
@@ -218,7 +302,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
 // see README/SSR-VERDICT for the write-up.
 type ManifestResolves = { manifest?: Manifest };
 type SheetResolves = { manifest?: Manifest; sheet?: SheetRow; fragment?: string };
-type MegacanvasResolves = { megacanvas?: string };
+type CityResolves = { extra?: ExtraRow; fragment?: string; three?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
   const index = manifest.sheets.findIndex((row) => row.id === sheet.id);
@@ -244,11 +328,6 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
             >NEXT · ${next.num}</a
           >`
         : nothing}
-      <a
-        ${uiSref('atlas.megacanvas', { at: sheet.num })}
-        href="${to(href.megacanvas(sheet.num))}"
-        >ON THE REEL</a
-      >
       <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}
         >STANDALONE PLATE ↗</a
       >
@@ -277,14 +356,26 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   `;
 };
 
-// --- the megacanvas: the whole set on one surface --------------------------
+// --- the city: sheet 7 in the round, with three loaded on demand -----------
 
-export const MegacanvasView: RoutedLitTemplate<MegacanvasResolves> = (props) => {
-  const fragment = props?.resolves?.megacanvas;
-  if (!fragment) return html`<p class="loading">ASSEMBLING THE MEGACANVAS…</p>`;
+export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
+  const resolves = props?.resolves;
+  const extra = resolves?.extra;
+  if (!extra || !resolves.fragment) return html`<p class="loading">RAISING THE CITY…</p>`;
   return html`
-    <div class="crumb"><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a></div>
-    <atlas-plate .fragment=${fragment} .needsCytoscape=${true}></atlas-plate>
+    <div class="crumb">
+      <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
+      <a href="${out(href.plate(extra.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
+      <span
+        >SEE ALSO
+        ${extra.refs.map(
+          (num) =>
+            html`<a ${uiSref('atlas.sheet', { num })} href="${to(href.sheet(num))}">${num}</a
+              >&nbsp;`,
+        )}</span
+      >
+    </div>
+    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>
   `;
 };
 
@@ -310,7 +401,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <h3>WHAT IS DOGFOODED</h3>
         <p>
           <code>uiSref</code> and <code>uiSrefActive</code> on every rail link;
-          <code>resolve</code> for the manifest, the plate and the megacanvas;
+          <code>resolve</code> for the manifest, the plate, and — on
+          <code>atlas.city</code> — three.js itself, so a 600 KB library is
+          fetched by the state that needs it and by no other;
           <code>redirectTo</code> for <code>/office</code> → sheet 14; a url-less
           <code>atlas.notFound</code> as the <code>otherwise</code> target, so an unknown
           sheet keeps its own url in the address bar; nested
@@ -342,8 +435,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>lit-ui-router</code>, <code>@uirouter/core</code>,
           <code>ui-router-server</code>,
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
-          <code>cytoscape</code> (for the three interactive plates). All from npm; no
-          workspace links.
+          <code>cytoscape</code> (the three interactive plates) and <code>three</code>
+          (the isometric city, imported only by <code>atlas.city</code>). All from npm;
+          no workspace links.
         </p>
       </div>
     </section>
@@ -374,6 +468,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
 
 declare global {
   interface HTMLElementTagNameMap {
+    'atlas-city': AtlasCity;
     'atlas-plate': AtlasPlate;
     'atlas-themer': AtlasThemer;
   }

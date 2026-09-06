@@ -48,11 +48,11 @@
       "id": "2",
       "num": "2",
       "title": "THE BRICK ASSEMBLY",
-      "sub": "ALTITUDE 2 — one baseplate, four bricks, 27 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05)",
+      "sub": "ALTITUDE 2 — one baseplate, four bricks, 27 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05) · REV C 2026-09-05: hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge",
       "caption": "Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.",
       "scale": "FOUR PACKAGES",
       "form": "BRICK ASSEMBLY",
-      "rev": "B",
+      "rev": "C",
       "file": "sheets/2.html",
       "standalone": "sheet-2-the-brick-assembly.html",
       "interactive": false,
@@ -467,6 +467,21 @@
         "3",
         "5",
         "6"
+      ]
+    }
+  ],
+  "extras": [
+    {
+      "id": "city",
+      "title": "THE CITY — ISOMETRIC",
+      "sub": "SHEET 7'S CENSUS CITY IN THE ROUND · 32 MEMBERS · 31 MASSED · 19 SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · REV C: A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY · REV D: THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF",
+      "rev": "D",
+      "shno": "SHEET 7 · 3D",
+      "file": "sheets/city.html",
+      "standalone": "gallery.html#city-scene",
+      "refs": [
+        "7",
+        "7A"
       ]
     }
   ]

@@ -263,7 +263,7 @@ Static HTML pages, written by \`node generator/build.mjs .\` from this directory
 the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
 \`generator/stage-site.mjs\` vendors for hosting. \`app/\` is the same set as a prerendered lit-ui-router
 app; \`build.mjs\` emits its fragments and manifest. On the published site the app owns the root
-(\`/\`, \`/sheet/7\`, \`/megacanvas\`) and this flat set is staged beside it under \`/set/\` as the version to
+(\`/\`, \`/sheet/7\`, \`/city\`) and this flat set is staged beside it under \`/set/\` as the version to
 compare against; the two link to each other (the app's rail and crumbs, the gallery's cover).
 Light theme is graphite-on-vellum; dark is cyanotype.
 Generated 2026-08-16 by Fable (Claude, AI).

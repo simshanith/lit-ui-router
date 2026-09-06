@@ -1,148 +1,10 @@
-// I8 (full step) — THE CITY, ISOMETRIC: sheet 7's census city as a real 3D scene.
-//
-// The CSS-perspective tilt on the survey-office graph was the cheap first step;
-// the payoff the atlas actually wanted is here — the isometric city in the round,
-// with an isometric SNAP: the camera orbits freely under the pointer and lands on
-// one of the four true diagonals when you let go.
-//
-// Nothing is re-derived: sheet7.mjs exports its COMPUTED geometry (CITY) and this
-// module ships those rows verbatim as a JSON island, so a mass in the scene can
-// never drift from the mass on the plate.  Treatment is the pinned sprite recipe
-// in three dimensions: semi-opaque tinted walls over a girding frame, so the
-// structure behind reads through — a drafting set, not a video game.
-import { readFileSync } from 'node:fs';
-import { CITY, PLACED } from './sheet7.mjs';
-import { SURVEY, SURVEY_META } from './sheet7a.mjs';
-
-export const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.169.0/three.module.min.js';
-export const REV = 'D';
-
-const PLATE = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
-const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
-
-// Tier -> wall tint: a hue token and how far the vellum is pulled towards it.
-// Severity is COLOUR here exactly as on the plate; height stays the file count.
-const TIERS = {
-  halt: { hue: 'red', f: 0.62, label: 'halts a publish' },
-  pr: { hue: 'red', f: 0.34, label: 'stops the PR line' },
-  late: { hue: 'accent', f: 0.34, label: 'gates a later stage' },
-  report: { hue: 'soft', f: 0.13, label: 'never gates' },
-  line: { hue: 'ink', f: 0.24, label: 'the material' },
-  off: { hue: 'faint', f: 0, label: 'types only — frame, no mass' },
-  annex: { hue: 'accent', f: 0.16, label: 'spec annex — the test mass' },
-};
-// The SECOND lane — sheet 7A's polarity in three dimensions: covered source is
-// LIT, untested source is SHADOW, and the spec annex is the lamp that throws it.
-// Shadow lerps toward BLACK, never ink: ink is light in the cyanotype theme, and
-// a shadow that brightens in the dark is not a shadow.  The flat plate's own rule.
-const LIT = {
-  b1: { hue: 'halo', f: 0.46, label: 'LIT ≥95' },
-  b2: { hue: 'halo', f: 0.34, label: 'lit 85–95' },
-  b3: { hue: 'red', f: 0.38, label: 'lit <85' },
-  b4: { hue: 'red', f: 0.58, label: 'lit <85' },
-  sh: { hue: 'black', f: 0.74, label: 'SHADOW — never loaded' },
-  e2e: { hue: 'accent', f: 0.24, label: 'e2e light (accent)' },
-  bare: { hue: 'ink', f: 0.05, label: 'no meter attaches' },
-  lamp: { hue: 'halo', f: 0.60, label: 'lamp = spec annex' },
-};
-const DISTRICTS = { pkg: 24, app: 24, site: 24, tool: 26 };
-// sheet 7's own vocabulary, verbatim: the panel must read like the flat schedule
-const TIER_TEXT = {
-  halt: 'HALTS A PUBLISH', pr: 'STOPS THE PR LINE', late: 'gates a later stage',
-  report: 'never gates', line: 'the material', off: 'types only — not massed',
-};
-const DIST_TEXT = { pkg: 'packages/', app: 'apps/', site: 'docs/ + examples/', tool: 'tools/' };
-const DIST_LABEL = { pkg: 'PACKAGES/', app: 'APPS/', site: 'DOCS + EXAMPLES/', tool: 'TOOLS/' };
-
-const LEGEND = ['halt', 'pr', 'late', 'report', 'line', 'annex'].map((k) => [k, TIERS[k].label]);
-const LIGHT_LEGEND = ['b1', 'b2', 'b3', 'sh', 'e2e', 'lamp'].map((k) => [k, LIT[k].label]);
-const lgHtml = (rows) => rows
-  .map(([k, d]) => `<span class="lg"><i class="sw sw-${k}"></i>${d}</span>`).join('\n      ');
-
-// Every mass must have a survey row — sheet 7A now numbers from sheet 7's own
-// PLACED table, so a mass without light is a build error, not a blank building.
-const SURVEY_BY_N = Object.fromEntries(SURVEY.map((r) => [r.n, r]));
-for (const b of CITY) {
-  if (!SURVEY_BY_N[b.n]) throw new Error(`city-scene: member ${b.n} has no row in sheet 7A's SURVEY`);
-}
-
-const DATA = {
-  three: THREE_URL,
-  rows: CITY,
-  tiers: TIERS,
-  districts: DISTRICTS,
-  // the schedule's own note line, keyed by member number — the plate's prose, not new prose
-  notes: Object.fromEntries(PLACED.map(([n, , , , , , , note]) => [n, note])),
-  lit: LIT,
-  survey: SURVEY_BY_N,
-  tierText: TIER_TEXT,
-  distText: DIST_TEXT,
-  distLabel: DIST_LABEL,
-  chip: { h: 21, lift: 9, min: 0.62 },   // world units; min = zoom below which chips fade out
-  az0: 45,                 // the initial diagonal; the snap targets are 45/135/225/315
-  snaps: [45, 135, 225, 315],
-  snapMs: 380,
-  margin: 1.06,
-  zoom: [0.45, 4],
-  op: { cap: 0.88, side: 0.8 },
-  legend: { tier: lgHtml(LEGEND), light: lgHtml(LIGHT_LEGEND) },
-};
-
-const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
-
-const MASSED = CITY.filter((b) => b.tier !== 'off').length;
-const ANNEXES = CITY.filter((b) => b.sa).length;
-
-// The plate's own identity, shared: the gallery letters it and emit-app.mjs
-// files it in the app's manifest, so the routed card cannot drift from the page.
-export const CITY_META = {
-  id: 'city',
-  head: 'SHEET 7 · 3D',
-  rev: REV,
-  title: 'THE CITY — ISOMETRIC',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · REV C: A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY · REV D: THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF`,
-  /** The flat set's copy — an anchor in the gallery, never a page of its own. */
-  standalone: 'gallery.html#city-scene',
-};
-
-const CSS = `
-.cs { max-width: 1300px; margin: 0 auto 40px; }
-.cs-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
-  border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
-.cs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 9.5px;
-  letter-spacing: 0.06em; color: var(--ink-soft); }
-.cs-legend .sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
-.cs-legend .sw-annex, .cs-legend .sw-lamp { border-color: var(--ink-soft); border-style: dashed; }
-.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--mono); font-size: 9.5px;
-  letter-spacing: 0.1em; color: var(--ink-soft); }
-.cs-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
-  border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
-.cs-ctl button:hover { background: var(--paper-2); }
-.cs-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
-.cs-stage { border: 1.5px solid var(--ink); background: var(--paper); }
-/* pan-y keeps the page scrollable under a touch; a horizontal drag orbits */
-.cs-canvas { height: 540px; touch-action: pan-y; cursor: grab; position: relative; overflow: hidden; }
-.cs-canvas.over { cursor: pointer; }
-.cs-canvas.grabbing { cursor: grabbing; }
-.cs-canvas canvas { display: block; }
-.cs-canvas .cs-note { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-faint); padding: 20px; }
-.cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 9px 14px 10px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
-.cs-info h4 { font-size: 11.5px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
-.cs-info p { margin: 0; color: var(--ink-soft); word-break: break-word; }
-.cs-info .hint { color: var(--ink-faint); }
-.cs-basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
-@media (max-width: 860px) { .cs-canvas { height: 460px; } }`;
-
-// THE SCENE, HOSTLESS.  Two hosts fill the same body: the flat gallery wraps it
-// in an IIFE that lazy-imports three from cdnjs, and diagrams/app emits it as an
-// ES module handed a bundled THREE.  Every `$$NAME` is a host slot.
-// Written without template placeholders on purpose: it is emitted inside one, and
-// every number it draws arrives through the JSON island.
-const BODY = `  var stage = document.getElementById('cs-canvas');
+// GENERATED by diagrams/generator/city-scene.mjs — do not edit.
+// The isometric city as a module: the same scene body the flat gallery runs
+// inline, handed a bundled THREE, returning a dispose function.
+export async function initCity(root, THREE) {
+  // the plate renders into the LIGHT DOM, so the lookups below are document-wide
+  if (!root.querySelector('#cs-canvas')) return function () {};
+  var stage = document.getElementById('cs-canvas');
   var island = document.getElementById('cs-city');
   if (!stage || !island) return;
   var D = JSON.parse(island.textContent);
@@ -154,7 +16,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
   // --halo is an rgba and a wall carries no alpha: the hue rides alone, and the
   // depth comes from D.lit's own factors.  black is not a token — shadow must
   // darken in BOTH themes, and --ink is light in the cyanotype one.
-  function bare(v, fb) { return /^rgba\\(/.test(v) ? v.replace(/,[^,)]*\\)$/, ')').replace('rgba', 'rgb') : (v || fb); }
+  function bare(v, fb) { return /^rgba\(/.test(v) ? v.replace(/,[^,)]*\)$/, ')').replace('rgba', 'rgb') : (v || fb); }
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
       accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
@@ -172,7 +34,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     var renderer;
     try {
       renderer = new THREE.WebGLRenderer({ antialias: true });
-    } catch $$CATCH{
+    } catch {
       note('THIS PLATE NEEDS WEBGL — SHEET 7 DRAWS THE SAME CITY FLAT');
       return;
     }
@@ -468,7 +330,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       place();
       renderer.render(scene, camera);
     }
-    function ask() { if (!pending) { pending = true; $$RAFrequestAnimationFrame(draw); } }
+    function ask() { if (!pending) { pending = true; _raf = requestAnimationFrame(draw); } }
 
     function paint() {
       var c = pal();
@@ -526,7 +388,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       camera.zoom = tween.z0 + (tween.z1 - tween.z0) * e;
       camera.updateProjectionMatrix();
       draw();
-      if (k < 1) { $$RAFTrequestAnimationFrame(step); } else { az = tween.a1; tween = null; }
+      if (k < 1) { _rafT = requestAnimationFrame(step); } else { az = tween.a1; tween = null; }
     }
     function glide(a1, z1) {
       if (reduce.matches) {
@@ -534,7 +396,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
         return;
       }
       tween = { a0: az, a1: a1, z0: camera.zoom, z1: z1, t0: performance.now(), d: D.snapMs };
-      $$RAFTrequestAnimationFrame(step);
+      _rafT = requestAnimationFrame(step);
     }
     function snap() { glide(Math.round((az - AZ0) / STEP) * STEP + AZ0, camera.zoom); }
 
@@ -546,7 +408,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     var IDLE = '<h4>THE CITY — ISOMETRIC</h4><p class="hint">Hover or tap any mass to read its member — '
       + 'district, gate tier, authored source and the spec annex beside it. The number on each chip is '
       + 'the number sheet 7 gives that member.</p>';
-    function fmt(v) { return String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ','); }
+    function fmt(v) { return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
     function plural(n) { return n === 1 ? ' file' : ' files'; }
     // the light lane's sentence — sheet 7A's own numbers, unrounded
     function survey(b) {
@@ -663,10 +525,10 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       setLane(e.target.checked ? 'light' : 'tier');
     });
 
-    if (window.ResizeObserver) $$RO_Anew ResizeObserver(function () { resize(); ask(); })$$RO_B.observe(stage);
-    else window.addEventListener('resize', $$RZ_Afunction () { resize(); ask(); }$$RZ_B);
-    $$MQ_Awindow.matchMedia('(prefers-color-scheme: dark)')$$MQ_B.addEventListener('change', paint);
-    $$MO_Anew MutationObserver(paint)$$MO_B.observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+    if (window.ResizeObserver) (_ro = new ResizeObserver(function () { resize(); ask(); })).observe(stage);
+    else window.addEventListener('resize', _rz = function () { resize(); ask(); });
+    (_mq = window.matchMedia('(prefers-color-scheme: dark)')).addEventListener('change', paint);
+    (_mo = new MutationObserver(paint)).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
     if (hint) hint.textContent = 'DRAG TO ORBIT · RELEASE SNAPS · HOVER TO READ A MEMBER · SCROLL TO ZOOM · DOUBLE-CLICK RESETS';
 
     // verification hook: azimuth in degrees, live zoom, the initial pose
@@ -688,39 +550,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
         return { x: r.left + (v.x + 1) / 2 * r.width, y: r.top + (1 - v.y) / 2 * r.height };
       },
     };
-$$TEARDOWN  }
-$$TAIL`;
 
-// The gallery's tail: the page does not pay for three until the plate scrolls
-// into view.  The app never runs this — its THREE arrives already resolved.
-const PAGE_TAIL = `
-  // lazy: the gallery does not pay for three until the plate is on screen
-  var io = new IntersectionObserver(function (entries) {
-    if (!entries.some(function (en) { return en.isIntersecting; })) return;
-    io.disconnect();
-    import(D.three).then(boot, function () {
-      note('THREE.JS COULD NOT BE LOADED — SHEET 7 DRAWS THE SAME CITY FLAT');
-    });
-  }, { rootMargin: '300px' });
-  io.observe(stage);
-`;
-
-// The gallery captures nothing and tears nothing down: the page owns the scene
-// for as long as it is open.  Every slot is the empty string, so the emitted
-// module is byte-for-byte the one this file has always written.
-const GALLERY = { CATCH: '(err) ', TAIL: PAGE_TAIL };
-
-// The app unmounts the routed view, so every handle the scene keeps is captured
-// on the way in and released by the dispose the module returns.
-const APP = {
-  RO_A: '(_ro = ', RO_B: ')',
-  RZ_A: '_rz = ',
-  MQ_A: '(_mq = ', MQ_B: ')',
-  MO_A: '(_mo = ', MO_B: ')',
-  RAF: '_raf = ', RAFT: '_rafT = ',
-  CATCH: '', // the binding is unused, and this copy is linted
-  TAIL: '  return boot(THREE) || function () {};\n',
-  TEARDOWN: `
     // var hoists, so the captures above are legal before this declaration runs
     var _raf = 0, _rafT = 0, _ro = null, _rz = null, _mq = null, _mo = null;
     return function dispose() {
@@ -738,71 +568,6 @@ const APP = {
       if (renderer.forceContextLoss) renderer.forceContextLoss();
       renderer.domElement.remove();
     };
-`,
-};
-
-const fill = (host) => BODY.replace(/\$\$([A-Z_]+)/g, (_, k) => host[k] ?? '');
-
-/** The gallery's inline module: the body in an IIFE, three fetched from cdnjs. */
-const INIT = `\n(function () {\n${fill(GALLERY)}})();\n`;
-
-/**
- * The same scene as an ES module for diagrams/app, where three is BUNDLED: it
- * is handed in rather than imported, and the teardown the body registers is
- * returned so the routed view can dispose the scene on the way out.
- * emit-app.mjs writes this to app/src/generated/city-init.js.
- */
-export function cityInitModule() {
-  return `// GENERATED by diagrams/generator/city-scene.mjs — do not edit.
-// The isometric city as a module: the same scene body the flat gallery runs
-// inline, handed a bundled THREE, returning a dispose function.
-export async function initCity(root, THREE) {
-  // the plate renders into the LIGHT DOM, so the lookups below are document-wide
-  if (!root.querySelector('#cs-canvas')) return function () {};
-${fill(APP)}}
-`;
-}
-
-/** The plate: style, section and the JSON island — no init script. */
-export function cityMarkup() {
-  // swatch fills follow the same tints the scene uses, in page tokens
-  const HUE = { red: '--red', accent: '--accent', halo: '--accent', soft: '--ink-soft',
-    ink: '--ink', faint: '--ink-faint', black: '#000' };
-  const swatch = (k, t) => {
-    const hue = HUE[t.hue];
-    const paint = hue.startsWith('--') ? `var(${hue})` : hue;
-    return `.cs-legend .sw-${k} { background: color-mix(in srgb, ${paint} ${Math.round(t.f * 100)}%, var(--paper)); }`;
-  };
-  const swatchCss = LEGEND.map(([k]) => swatch(k, TIERS[k]))
-    .concat(LIGHT_LEGEND.map(([k]) => swatch(k, LIT[k]))).join('\n');
-
-  return `<style>${CSS}
-${swatchCss}</style>
-<section class="sheet cs" id="city-scene" aria-label="The City, isometric — sheet 7 in the round, with a second material lane that relights it from sheet 7A's shadow survey">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">${CITY_META.head} · REV ${CITY_META.rev}</span></div>
-  <h2 class="sheet-title">${CITY_META.title}</h2>
-  <p class="sheet-sub">${CITY_META.sub}</p>
-  <div class="cs-bar">
-    <div class="cs-legend">
-      ${DATA.legend.tier}
-    </div>
-    <div class="cs-ctl">
-      <span id="cs-hint">DRAG TO ORBIT · RELEASE SNAPS TO THE NEAREST DIAGONAL</span>
-      <label><input type="checkbox" id="cs-lane"> TEST LIGHT</label>
-      <button type="button" id="cs-reset">RESET</button>
-    </div>
-  </div>
-  <div class="cs-stage">
-    <div class="cs-canvas" id="cs-canvas" role="img" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each a translucent box with its girding frame showing through, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light."></div>
-    <aside class="cs-info" id="cs-info"></aside>
-  </div>
-  <p class="cs-basis">BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>diagrams/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. Walls are semi-opaque over a girding frame per the pinned sprite note; gate severity is colour, never height; the <code>off</code> tier is drawn frame-only because there is nothing to mass. Camera is orthographic at the true isometric elevation, atan(1/√2) ≈ 35.264°; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints.  three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read.  REV C adds a SECOND MATERIAL LANE over the same geometry: <code>TEST LIGHT</code> relights the city from <code>generator/sheet7a.mjs</code>'s exported <code>SURVEY</code>, so the model and the flat shadow plate cannot drift either. Its polarity is sheet 7A's — covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light; a metered member's mass splits along its footprint, the lit slab being side × the extent the meter recorded, taken from the annex (east) side, its tint stepping down through the line-coverage bands. Shadow lerps toward BLACK rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.  REV D re-lights the lane from a PLATE: sheet 7A's light is no longer a transcribed one-off but <code>diagrams/data/census-shadow.json</code>, ${SURVEY_META.basis} — the same ref the geometry is massed at, with ${SURVEY_META.metered} members metered under their own suites' meters. Every mass in this model therefore has a survey row (a mass without one is a build error), so the blank-paper case for a member the old metering predated is gone along with the metering that needed it.</p>
-</section>
-<script type="application/json" id="cs-city">${json(DATA)}</script>`;
-}
-
-/** The gallery's copy: the plate with its own inline module after it. */
-export function citySection() {
-  return `${cityMarkup()}
-<script type="module">${INIT}</script>`;
+  }
+  return boot(THREE) || function () {};
 }

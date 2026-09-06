@@ -43,8 +43,7 @@ import { viewRendered } from './view-rendered.ts';
  *  b. The browser caps the update callback at ~4s and then aborts with
  *     "Transition was aborted because of timeout in DOM update". Releasing
  *     purely on `transition.promise` blows that cap whenever a route resolves
- *     something big — the megacanvas resolves twenty-one fragments — so the
- *     release is capped, and the heavy state opts out entirely.
+ *     something big, so the release is capped.
  *  c. NEVER release on requestAnimationFrame. Rendering is suspended while
  *     the snapshot is held, so the frames never fire, the cap above is
  *     already cleared, and the browser's own 4 s timeout is the only thing
@@ -63,9 +62,6 @@ type ViewTransitionDocument = Document & {
 
 /** Longest the document may stay frozen under a snapshot. */
 const RELEASE_CAP_MS = 900;
-
-/** States whose resolves are too heavy to hold a snapshot open for. */
-const NO_SLIDESHOW = new Set(['atlas.megacanvas']);
 
 const doc = document as ViewTransitionDocument;
 
@@ -106,7 +102,6 @@ export function installSlideshow(router: UIRouterLit): void {
   router.transitionService.onBefore({}, (transition) => {
     clearDirection();
     if (reducedMotion()) return true;
-    if (NO_SLIDESHOW.has(transition.to().name ?? '')) return true;
     stampDirection(directionOf(transition));
 
     if (!supportsViewTransitions()) return true; // the CSS fallback below

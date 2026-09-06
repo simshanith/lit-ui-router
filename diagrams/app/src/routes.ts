@@ -27,8 +27,7 @@ export const SET = `${BASE}set/`;
 export const href = {
   gallery: BASE,
   about: `${BASE}about`,
-  megacanvas: (at?: string): string =>
-    at ? `${BASE}megacanvas?at=${at}` : `${BASE}megacanvas`,
+  city: `${BASE}city`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
   /** The flat set's index — a plain page, never a router state. */
   set: SET,
@@ -42,14 +41,9 @@ export const routes: RouteDeclaration[] = [
   { name: 'atlas' },
   { name: 'atlas.gallery', url: '/' },
   { name: 'atlas.sheet', url: '/sheet/:num' },
-  // `at` is a DYNAMIC search param on the client: changing it must not
-  // re-enter the state (that would re-resolve all twenty-two fragments).
-  // The experimental layer pans the reel to it; the base app ignores it.
-  {
-    name: 'atlas.megacanvas',
-    url: '/megacanvas?at',
-    params: { at: { value: null, dynamic: true } },
-  },
+  // The 3D city: a plate the flat set only publishes inside its gallery, and
+  // the one state whose view loads a library on demand (three, resolved).
+  { name: 'atlas.city', url: '/city' },
   // The survey office is sheet 14 under its own name.
   {
     name: 'atlas.office',

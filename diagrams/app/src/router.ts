@@ -12,13 +12,13 @@ import {
 } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
 import { urlOf } from './routes.ts';
-import type { Manifest, SheetRow } from './manifest.ts';
-import { findSheet, loadFragment, loadManifest } from './manifest.ts';
+import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
+import { findExtra, findSheet, loadFragment, loadManifest } from './manifest.ts';
 import { titleFor } from './titles.ts';
 import {
   AboutView,
+  CityView,
   GalleryView,
-  MegacanvasView,
   NotFoundView,
   SheetView,
   ShellView,
@@ -58,18 +58,29 @@ export const states: LitStateDeclaration[] = [
     ],
   },
   {
-    name: 'atlas.megacanvas',
-    url: urlOf('atlas.megacanvas'),
-    // Dynamic, so panning the reel never re-runs the resolve below.
-    params: { at: { value: null, dynamic: true } },
-    component: MegacanvasView,
+    name: 'atlas.city',
+    url: urlOf('atlas.city'),
+    component: CityView,
+    // DEPENDENCIES ON DEMAND: three.js is a resolve, so the router fetches the
+    // library's own chunk while it enters the state — and no other route in
+    // the app ever pays for it. The scene itself is a generated module
+    // (src/generated/city-init.js) that takes the namespace resolved here.
     resolve: [
       {
-        token: 'megacanvas',
+        token: 'extra',
         deps: ['manifest'],
-        resolveFn: async (manifest: Manifest): Promise<string> =>
-          (await Promise.all(manifest.sheets.map(loadFragment))).join('\n'),
+        resolveFn: (manifest: Manifest): ExtraRow => {
+          const row = findExtra(manifest, 'city');
+          if (!row) throw new Error('no city row in the manifest');
+          return row;
+        },
       },
+      {
+        token: 'fragment',
+        deps: ['extra'],
+        resolveFn: (extra: ExtraRow): Promise<string> => loadFragment(extra),
+      },
+      { token: 'three', resolveFn: (): Promise<unknown> => import('three') },
     ],
   },
   {
@@ -83,21 +94,27 @@ export const states: LitStateDeclaration[] = [
   { name: 'atlas.notFound', component: NotFoundView },
 ];
 
+/**
+ * Which location plugin this page got. The Navigation API where it exists,
+ * pushState everywhere else — the pairing the location-plugins guide
+ * recommends; both produce /sheet/7. The artifact build can use neither: its
+ * page is served from a path the host owns, so every url lives in the hash.
+ * Exported because the analytics layer has to know: `navigation.navigate()`
+ * never touches history.pushState, so gtag's own history hook cannot see it.
+ */
+export const NAVIGATION_API =
+  !ARTIFACT && typeof window !== 'undefined' && 'navigation' in window;
+
 export function createRouter(): UIRouterLit {
   const router = new UIRouterLit();
-  // The Navigation API where it exists, pushState everywhere else — the
-  // pairing the location-plugins guide recommends. Both produce /sheet/7.
-  // The artifact build cannot use either: its page is served from a path the
-  // host owns, so every url lives in the hash (#/sheet/7).
-  const navigationApi = !ARTIFACT && typeof window !== 'undefined' && 'navigation' in window;
   if (ARTIFACT) router.plugin(hashLocationPlugin);
-  else router.plugin(navigationApi ? navigationLocationPlugin : pushStateLocationPlugin);
+  else router.plugin(NAVIGATION_API ? navigationLocationPlugin : pushStateLocationPlugin);
 
   // CONSUMER FINDING: the Navigation API plugin calls navigation.navigate()
   // and leaves interception to the app — the sample app wires the same
   // listener. Without it, every router-driven navigate() is a cross-document
   // load: the SPA reloads on each click, the view transition never runs.
-  if (navigationApi) {
+  if (NAVIGATION_API) {
     window.navigation.addEventListener('navigate', (event) => {
       if (!event.canIntercept || !isUIRouterNavigateEvent(event)) return;
       event.intercept({ handler: () => Promise.resolve() });

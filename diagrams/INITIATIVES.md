@@ -689,6 +689,53 @@ aborted — 17/17: cover, #/sheet/2A deep link with the rail active, rail walk
 7→8→7A with no reload, back/forward, cytoscape on 1i/2B/12i, #/megacanvas?at=7
 panning, #/office → 14, #/sheet/99 notFound with the url kept, both themes
 from data-theme on the root, zero page errors, zero aborted requests.
+THE CITY AS A STATE; THE REEL RETIRED FROM THE APP, 2026-09-05: user-asked
+("did we lose the isometric city? ... i am excited to see it as a state with
+deps loaded on demand"). The I8 three.js scene was gallery-only — a section in
+generator/city-scene.mjs, never a sheet — so the routed app never had it. It is
+now `atlas.city` at `/city`, the app's ONE dependency-on-demand state:
+`resolve: [{ token: 'three', resolveFn: () => import('three') }]` gives the
+library its own vite chunk (three.module-*.js, 675 kB / 172 kB gz) and the
+router is the loader — a Playwright request log confirms /sheet/7/ never
+fetches it and /city/ does. NOT a new sheet number and not renumbering
+anything: the manifest grew an `extras` array beside `sheets`, so the ascent
+order, the ←/→ walk and the server's narrowed /sheet/{num:…} cannot see it;
+it gets a rail entry (S7·3D THE CITY — IN THE ROUND), a cover card and a
+STANDALONE PLATE crumb to the flat gallery's own anchor
+(/set/gallery.html#city-scene). city-scene.mjs was refactored into ONE hostless
+scene body with named `$$SLOT`s: the gallery fills every slot with the empty
+string (its inline module is byte-for-byte identical, diffed before/after) and
+emit-app.mjs fills them to write app/src/generated/city-init.js — an ES module
+`initCity(root, THREE)` returning a dispose, because the app's runScripts()
+cannot run an inserted <script type="module"> and the import had to be bundled
+rather than cdnjs. TEARDOWN LIVES IN THE ELEMENT, not a router hook: the scene
+holds a WebGL context, a ResizeObserver, a MutationObserver on <html>, a
+colour-scheme listener and pending frames; the experimental layer is deletable
+by design and this is not optional, so <atlas-city> disposes in
+disconnectedCallback and raises in updated() off the plate's own
+updateComplete (the same promise view-rendered.ts chains, owned locally so
+src/*.ts still imports nothing from src/experimental/). MEGACANVAS REMOVED FROM
+THE APP in the same sitting (user: "let's remove the megacanvas from the app for
+now"): state, view, rail entry, prerender job, title, experimental/
+megacanvas-pan.ts, the NO_SLIDESHOW special-case and the .mega-* CSS are gone;
+the flat page stays and /megacanvas + /megacanvas/ 301 to /set/megacanvas.html.
+ANALYTICS RE-CUT the same day, because the flagship stream keeps enhanced
+measurement's history-event page_view ON: stage-site.mjs now writes one plain
+gtag('config', id) on every staged page (the send_page_view:false special case
+is gone — gtag owns the initial view and every pushState/popstate), and
+analytics.ts sends ONLY what gtag cannot see, the Navigation API plugin's own
+navigate() pushes: it reads a NAVIGATION_API flag exported from router.ts,
+listens on `navigation` a second time purely to record navigationType, and
+fires for push/replace alone — traverse is popstate and gtag's, the fallback
+sends nothing. Verified: build 22 sheets / 23 fragments, tsc clean, oxlint
+clean (sheet3a's known finding aside), prerender 25 pages + 404 · 9 redirects,
+artifact 2,526,903 bytes with 23 fragments and three inlined (17/17 offline
+checks); against the Pages-mimicking server 16/16 city checks (cold WebGL
+canvas, drag-orbit, diagonal snap, TEST LIGHT, theme re-render, dispose on
+leave with rAF scheduling → 0, re-init on return with no re-fetch, both
+megacanvas 301s), 27/27 nav in light and dark, 24/24 under the pushState
+fallback, 21 cold loads with zero page errors, and 6/6 analytics counts
+(1 router page_view per click, 0 on back, 0/0 under the fallback).
 
 ## Why rework
 

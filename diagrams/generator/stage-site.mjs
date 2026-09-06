@@ -82,13 +82,14 @@ writeFileSync(join(dist, '_redirects'), `${[appRules, ...legacy].filter(Boolean)
 // The SAME measurement id as the flagship (one property, one stream: GA4
 // cookies live on .lit-ui-router.dev, so a separate id would split users
 // across the subdomains; slice the atlas out with the Hostname dimension).
-// The committed pages (the Artifact source) never carry a tag. Everything
-// outside /set/ is the router's — it sends every page_view itself, including
-// the first (app/src/experimental/analytics.ts), so the config there
-// suppresses gtag's own. The flat pages under /set/ keep the default.
+// The committed pages (the Artifact source) never carry a tag. ONE tag,
+// identical on every staged page: gtag owns the initial page_view and — with
+// the stream's enhanced measurement on — every history-driven one. The router
+// only fills the gap gtag cannot see, the Navigation API's own pushes
+// (app/src/experimental/analytics.ts).
 const GA_ID = process.env.VITE_GOOGLE_ANALYTICS_TRACKING_ID;
-const gaTag = (id, routed) => `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}'${routed ? ',{send_page_view:false}' : ''});</script>
+const gaTag = (id) => `<script async src="https://www.googletagmanager.com/gtag/js?id=${id}"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments)}gtag('js',new Date());gtag('config','${id}');</script>
 `;
 const walkHtml = (dir, out = []) => {
   for (const e of readdirSync(dir, { withFileTypes: true })) {
@@ -105,7 +106,7 @@ if (GA_ID) {
     const routed = !p.startsWith(`${set}/`);
     // the flat pages are head-less (the Artifact host wraps them), so the tag leads the file
     const html = readFileSync(p, 'utf8');
-    const tag = gaTag(GA_ID, routed);
+    const tag = gaTag(GA_ID);
     writeFileSync(p, html.includes('</head>') ? html.replace('</head>', `${tag}</head>`) : tag + html);
     tagged[routed ? 'routed' : 'flat'] += 1;
   }

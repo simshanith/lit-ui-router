@@ -29,7 +29,7 @@ import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { createServerRouter } from 'ui-router-server';
 import type { Verdict } from 'ui-router-server';
-import type { Manifest, SheetRow } from './src/manifest.ts';
+import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { BASE, MOUNT, href, mountsFor } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 
@@ -65,9 +65,6 @@ const railTemplate = (active: string): TemplateResult => html`
     </div>
     <div class="rail-top">
       <a class="${active === 'gallery' ? 'is-active' : ''}" href="${href.gallery}">INDEX</a>
-      <a class="${active === 'megacanvas' ? 'is-active' : ''}" href="${href.megacanvas()}"
-        >MEGACANVAS</a
-      >
       <a class="${active === 'about' ? 'is-active' : ''}" href="${href.about}">ABOUT</a>
       <a class="rail-out" href="${href.set}">THE FLAT SET ↗</a>
     </div>
@@ -80,6 +77,9 @@ const railTemplate = (active: string): TemplateResult => html`
           </a>
         `,
       )}
+      <a class="${active === 'city' ? 'is-active' : ''}" href="${href.city}">
+        <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
+      </a>
     </div>
   </nav>
 `;
@@ -110,6 +110,15 @@ const galleryContent = (): TemplateResult => html`
         </a>
       `,
     )}
+    ${manifest.extras.map(
+      (extra) => html`
+        <a class="card" href="${href.city}">
+          <span class="n">${extra.shno} · REV ${extra.rev}</span>
+          <h3>${extra.title}</h3>
+          <p>${extra.sub}</p>
+        </a>
+      `,
+    )}
   </div>
 `;
 
@@ -126,10 +135,23 @@ const sheetContent = (row: SheetRow): TemplateResult => {
       <a href="${href.gallery}">← INDEX</a>
       ${prev ? html`<a href="${href.sheet(prev.num)}">PREV · ${prev.num}</a>` : nothing}
       ${next ? html`<a href="${href.sheet(next.num)}">NEXT · ${next.num}</a>` : nothing}
-      <a href="${href.megacanvas(row.num)}">ON THE REEL</a>
       <a href="${href.plate(row.standalone)}">STANDALONE PLATE ↗</a>
     </div>
     <atlas-plate>${unsafeHTML(fragment)}</atlas-plate>
+  `;
+};
+
+// The 3D plate, server-rendered like a sheet: the same fragment, inert until
+// the client hands it a bundled three. The shell is honest with no JS at all —
+// legend, reading panel and basis note are markup; only the canvas is missing.
+const cityContent = (extra: ExtraRow): TemplateResult => {
+  const fragment = readFileSync(join(PUBLIC, extra.file), 'utf8');
+  return html`
+    <div class="crumb">
+      <a href="${href.gallery}">← INDEX</a>
+      <a href="${href.plate(extra.standalone)}">STANDALONE PLATE ↗</a>
+    </div>
+    <atlas-city>${unsafeHTML(fragment)}</atlas-city>
   `;
 };
 
@@ -237,17 +259,12 @@ const jobs: Job[] = [
         'THE SET, ROUTED — lit-ui-router, ui-router-server, and one generated manifest',
       ),
   },
-  {
-    path: href.megacanvas(),
-    title: TITLES.megacanvas,
-    active: 'megacanvas',
-    content: () =>
-      proseContent(
-        'THE MEGACANVAS',
-        'THE WHOLE SET ON ONE SURFACE — ASSEMBLED IN THE BROWSER FROM ' +
-          `${String(manifest.sheets.length)} FRAGMENTS`,
-      ),
-  },
+  ...manifest.extras.map((extra) => ({
+    path: href.city,
+    title: TITLES.city,
+    active: 'city',
+    content: () => cityContent(extra),
+  })),
   // Verdict-only: /office is a redirect, a bare mount (when the mount is not
   // the root) redirects to the gallery, and a lowercase sheet id redirects
   // to its cased page. None gets a page; each gets a _redirects line.
@@ -264,7 +281,12 @@ const jobs: Job[] = [
   })),
 ];
 
-const redirects: string[] = [];
+// The megacanvas was retired from the app on 2026-09-05; the flat set still
+// publishes the page, so both spellings of the old url are sent to it.
+const redirects: string[] = [
+  `${BASE}megacanvas ${href.plate('megacanvas.html')} 301`,
+  `${BASE}megacanvas/ ${href.plate('megacanvas.html')} 301`,
+];
 const tally = { shell: 0, redirect: 0, notFound: 0 };
 
 for (const job of jobs) {
@@ -309,7 +331,7 @@ writeFileSync(join(DIST, '_redirects'), `${redirects.join('\n')}\n`);
 
 console.log(
   `prerendered ${String(tally.shell)} pages + 404.html · ` +
-    `${String(tally.redirect)} redirects → _redirects · ` +
+    `${String(redirects.length)} redirects → _redirects · ` +
     `unknown-path verdict: ${missing.kind}` +
     ('status' in missing && missing.status ? ` ${String(missing.status)}` : ''),
 );

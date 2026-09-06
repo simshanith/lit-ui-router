@@ -29,8 +29,9 @@ const manifest = JSON.parse(
 ) as Manifest;
 
 const fragments: Record<string, string> = {};
-for (const sheet of manifest.sheets) {
-  fragments[sheet.id] = readFileSync(join(SHEETS, `${sheet.id}.html`), 'utf8');
+// `extras` included: the 3D city is a fragment with no sheet number.
+for (const row of [...manifest.sheets, ...manifest.extras]) {
+  fragments[row.id] = readFileSync(join(SHEETS, `${row.id}.html`), 'utf8');
 }
 const missing = readdirSync(SHEETS)
   .filter((name) => name.endsWith('.html'))
@@ -71,5 +72,5 @@ writeFileSync(OUT, html);
 const bytes = statSync(OUT).size;
 console.log(
   `artifact: ${OUT} · ${bytes.toLocaleString('en-US')} bytes · ` +
-    `${String(manifest.sheets.length)} fragments inlined`,
+    `${String(Object.keys(fragments).length)} fragments inlined`,
 );

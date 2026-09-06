@@ -12,21 +12,18 @@
  *                        transition.promise + lit updateComplete (release)
  *   view-rendered.ts     the missing "view has re-rendered" promise, shared
  *   keyboard.ts          ←/→ walk the set, focus follows — no hook; reads router.globals
- *   megacanvas-pan.ts    pan/zoom the reel to ?at=<sheet> — onSuccess
- *   analytics.ts         a page_view per navigation, if the page has gtag — onSuccess
+ *   analytics.ts         the page_views gtag cannot see for itself — onSuccess
  */
 import type { UIRouterLit } from 'lit-ui-router';
 import { ARTIFACT } from '../mode.ts';
 import './experimental.css';
 import { installAnalytics } from './analytics.ts';
 import { installKeyboardWalk } from './keyboard.ts';
-import { installMegacanvasPan } from './megacanvas-pan.ts';
 import { installSlideshow } from './view-transitions.ts';
 
 export function installExperimental(router: UIRouterLit): void {
   installSlideshow(router);
   installKeyboardWalk(router);
-  installMegacanvasPan(router);
   // The artifact build is one offline file: no gtag, and no origin to report to.
   if (!ARTIFACT) installAnalytics(router);
 }

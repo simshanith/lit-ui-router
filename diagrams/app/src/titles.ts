@@ -10,7 +10,7 @@ const SET = 'The Altitude Atlas';
 export const TITLES = {
   gallery: `${SET} — Drawing Set`,
   about: `About — ${SET}`,
-  megacanvas: `The Megacanvas — ${SET}`,
+  city: `The City, Isometric — ${SET}`,
   notFound: `Not in the set — ${SET}`,
 } as const;
 
@@ -24,8 +24,8 @@ export function titleFor(state: string | undefined, sheet?: SheetRow): string {
       return sheet ? sheetTitle(sheet) : TITLES.gallery;
     case 'atlas.about':
       return TITLES.about;
-    case 'atlas.megacanvas':
-      return TITLES.megacanvas;
+    case 'atlas.city':
+      return TITLES.city;
     case 'atlas.notFound':
       return TITLES.notFound;
     default:

@@ -28,9 +28,9 @@ const serverRouter = createServerRouter({
  *
  * A claude.ai Artifact is a single page on an opaque origin with every
  * network request blocked, so nothing may be fetched at runtime: the manifest
- * and all twenty-two fragments are baked in as a JSON island by artifact.ts,
- * sheets/atlas.css is inlined beside them, cytoscape's dynamic import is
- * folded into the one chunk, and the router runs on the hash.
+ * and all twenty-three fragments are baked in as a JSON island by artifact.ts,
+ * sheets/atlas.css is inlined beside them, the cytoscape and three dynamic
+ * imports are folded into the one chunk, and the router runs on the hash.
  */
 const artifactHtmlPlugin: Plugin = {
   name: 'atlas:artifact-html',
