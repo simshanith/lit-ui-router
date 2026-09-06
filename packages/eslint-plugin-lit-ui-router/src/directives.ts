@@ -154,6 +154,38 @@ export const propertyNamed = (
 export const hasSpread = (object: ObjectNode): boolean =>
   object.properties.some((property) => property.type === 'SpreadElement');
 
+/**
+ * The tags a host has declared to be link elements: `settings.linkElements`,
+ * or a rule's own `linkElements` option, which replaces it wholesale (#676).
+ * Undeclared stays undeclared — no declaration, no behaviour change.
+ */
+export const linkElementsOf = (
+  context: Rule.RuleContext,
+  option?: unknown,
+): ReadonlySet<string> => {
+  const { linkElements } = context.settings as { linkElements?: unknown };
+  const declared = Array.isArray(option)
+    ? option
+    : Array.isArray(linkElements)
+      ? linkElements
+      : [];
+  // parse5 lowercases tag names, so a declaration has to meet them there.
+  return new Set(
+    declared
+      .filter((tag): tag is string => typeof tag === 'string')
+      .map((tag) => tag.toLowerCase()),
+  );
+};
+
+/** The shared `linkElements` option, identical in every rule that reads it. */
+export const LINK_ELEMENTS_SCHEMA = {
+  description:
+    'Element tags to treat as link elements, replacing `settings.linkElements` for this rule.',
+  type: 'array',
+  items: { type: 'string' },
+  uniqueItems: true,
+} as const;
+
 export interface DirectiveTracker {
   /** Feed every `ImportDeclaration`; it drives the `litHtmlSources` file gate. */
   onImport(node: ListenerNode<'ImportDeclaration'>): void;

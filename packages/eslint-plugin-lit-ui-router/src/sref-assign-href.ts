@@ -10,6 +10,8 @@ import {
   createDirectiveTracker,
   elementPartIndex,
   hasSpread,
+  LINK_ELEMENTS_SCHEMA,
+  linkElementsOf,
   type Node,
   type ObjectNode,
   type Parse5Element,
@@ -23,14 +25,7 @@ const AUTO = "{ assignHref: 'auto' }";
 
 export const RULE_NAME = 'sref-assign-href';
 
-/**
- * `assignHref: 'auto'` on every native non-link.
- *
- * A custom element is exempt: `'auto'` tests the tag name, not the shape, so
- * a `<sp-link>` that forwards `href` wants the `true` default and only its
- * author can say so. A non-literal options argument is unknowable, so it stays
- * suppressed rather than guessed — the same posture `anchor-is-valid` takes.
- */
+// 'auto' tests the tag name, not the shape: an undeclared custom element is unknown, not a non-link.
 const srefAssignHref: RuleFor<typeof RULE_NAME> = {
   meta: {
     type: 'suggestion',
@@ -43,11 +38,20 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
       hrefOnNonLink:
         "uiSref writes an href to <{{tag}}>, which has no href in HTML. Pass { assignHref: 'auto' } to write it only to links; 'auto' becomes the default in 2.0.",
     },
-    schema: [],
+    schema: [
+      {
+        type: 'object',
+        properties: { linkElements: LINK_ELEMENTS_SCHEMA },
+      },
+    ],
+    defaultOptions: [{}],
   },
 
   create(context) {
     const tracker = createDirectiveTracker(context);
+    const { linkElements: option } =
+      (context.options[0] as { linkElements?: string[] } | undefined) ?? {};
+    const linkElements = linkElementsOf(context, option);
 
     return {
       ImportDeclaration(node) {
@@ -67,7 +71,14 @@ const srefAssignHref: RuleFor<typeof RULE_NAME> = {
             // probably a tree correction node
             if (element.sourceCodeLocation === undefined) return;
             const tag = element.name;
-            if (tag.includes('-') || NATIVE_LINKS.has(tag)) return;
+            // Declared links keep the `true` default, as native links keep 'auto'.
+            if (
+              tag.includes('-') ||
+              NATIVE_LINKS.has(tag) ||
+              linkElements.has(tag)
+            ) {
+              return;
+            }
 
             for (const attribute of Object.keys(element.attribs)) {
               const index = elementPartIndex(attribute);

@@ -32,15 +32,37 @@ html`<a @click=${() => {}}>Home</a>`;
 html`<a ${uiSref('home', undefined, { assignHref: false })}>Home</a>`;
 ```
 
+## Link elements
+
+The rule checks `<a>`. A design-system link — `<sp-link>`, `<my-link>` — is a custom element, and only its author knows it forwards `href` to an internal anchor, so nothing is checked there by default. Declare the tags and they are checked exactly as an `<a>` is:
+
+```js
+export default [
+  ...litUiRouter.configs.recommended,
+  { settings: { linkElements: ['sp-link'] } },
+];
+```
+
+[`settings.linkElements`](../../README.md#settings) is shared with [`sref-assign-href`](./sref-assign-href.md) — declare once and both rules stop guessing. A `linkElements` option on this rule replaces the setting for this rule, wholesale; `[]` means "declare nothing here".
+
+One asymmetry with `<a>`: `assignHref: 'auto'` tests the tag name against HTML's link elements, and a declaration does not join that set, so on a declared link element `'auto'` assigns nothing and the element reports as dead. Keep the `true` default there — which is what `sref-assign-href` already asks for.
+
+```js
+html`<sp-link ${uiSref('home')}>Home</sp-link>`; // ok, the default assigns
+html`<sp-link>Home</sp-link>`; // noHref
+html`<sp-link ${uiSref('home', undefined, { assignHref: 'auto' })}>Home</sp-link>`; // noHref
+```
+
 ## Options
 
-The base rule's options, unchanged.
+The base rule's options, unchanged, plus `linkElements`.
 
 <!-- begin auto-generated rule options list -->
 
-| Name        | Description                                | Type     | Default |
-| :---------- | :----------------------------------------- | :------- | :------ |
-| `allowHash` | Whether a bare `#` counts as a valid href. | Boolean  | `true`  |
-| `aspects`   | Which anchor checks are active.            | String[] |         |
+| Name           | Description                                                                              | Type     | Default |
+| :------------- | :--------------------------------------------------------------------------------------- | :------- | :------ |
+| `allowHash`    | Whether a bare `#` counts as a valid href.                                               | Boolean  | `true`  |
+| `aspects`      | Which anchor checks are active.                                                          | String[] |         |
+| `linkElements` | Element tags to treat as link elements, replacing `settings.linkElements` for this rule. | String[] |         |
 
 <!-- end auto-generated rule options list -->
