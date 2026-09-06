@@ -5,6 +5,8 @@ same non-trivial ui-router lit app, written twice so the reactivity idioms
 can be compared file-by-file, in the spirit of [TodoMVC](https://todomvc.com)
 and the [ui-router sample apps](https://github.com/ui-router/sample-app-react)
 — plus the code they share and the test suite that keeps them identical.
+Portions are derived from the ui-router sample apps (MIT); see
+[THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
 | Package                                               | What it is                                                                                                              |
 | ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
