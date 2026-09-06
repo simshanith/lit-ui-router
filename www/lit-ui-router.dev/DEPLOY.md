@@ -1,0 +1,244 @@
+# Deploying lit-ui-router.dev
+
+How a push becomes a deployment of [lit-ui-router.dev](https://lit-ui-router.dev), and where each
+piece of the pipeline is configured. The conventions this site shares with every other site in
+[`www/`](../README.md) are described there.
+
+[![workers-builds trigger drift](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=workers-builds%20%28triggers%29&label=workers-builds)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)
+[![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
+
+Live state of the pipeline this guide describes: whether the Cloudflare dashboard still matches the
+repo config, and whether the site it deploys is up. See
+[CD-pipeline verification signal](#cd-pipeline-verification-signal) for what each colour means.
+
+---
+
+<p align="center">
+<img src="https://raw.githubusercontent.com/cloudflare/workers-sdk/main/cloudflare-workers-outline.png" alt="workers-logo" width="120px" height="120px"/>
+<br />
+<a href="https://github.com/cloudflare/workers-sdk">Cloudflare Workers SDK</a>
+<br />
+</p>
+
+---
+
+## [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/)
+
+The Cloudflare [Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
+
+- Production `main` branch deploys to [lit-ui-router.dev](https://lit-ui-router.dev)
+- Development branches deploy to [preview URLs](https://developers.cloudflare.com/workers/configuration/previews/) with the `-lit-ui-router.shane-cf1.workers.dev` domain suffix
+
+### Configuration Files
+
+All of them live in the site package, `www/lit-ui-router.dev/`:
+
+| File              | Purpose                                                                                                                                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
+| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
+| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
+
+### Wrangler Setup
+
+Wrangler is installed in both:
+
+- Root `package.json` - for deployment commands
+- `www/lit-ui-router.dev/package.json` - its scripts (`wrangler dev`, `wrangler types`, the dry-run bundle) run with the package as cwd, so wrangler finds the `wrangler.jsonc` beside them
+
+The deploy runs from the repo root, where no config lives, so it names the file with
+`--config www/lit-ui-router.dev/wrangler.jsonc` — inside
+[`cloudflare-deploy.ts`](../../tools/workers-builds/cloudflare-deploy.ts), not in the dashboard
+(see [Build & Deploy Commands](#build--deploy-commands)).
+
+See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
+
+### Build & Deploy Commands
+
+| Environment                                                                                             | Build                                        | Deploy                                               |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
+
+Both commands are **repo scripts, not the steps themselves**
+([`cloudflare-build.sh`](../../tools/workers-builds/cloudflare-build.sh),
+[`cloudflare-deploy.ts`](../../tools/workers-builds/cloudflare-deploy.ts)). A trigger holds one
+command for every branch it matches, so inlining the steps means a branch cannot
+change them — and a package-manager change is exactly a branch that needs to. Pinning the
+path instead lets the script differ per branch while the declared value stays constant, so
+divergence never reads as drift and never needs an `--apply` to test.
+
+The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
+deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and both
+add `--config www/lit-ui-router.dev/wrangler.jsonc`, since the deploy runs from the repo
+root and the config lives in the site package. That flag is exactly what the indirection is
+for: on `main` before this branch the script named no `--config` at all, because
+`wrangler.jsonc` sat at the root and wrangler found it by walking up. Moving the file
+changes this script's internals and leaves the dashboard alone — no `--apply` owed, and no
+ordering against the merge.
+
+It is TypeScript rather than bash: by deploy time the install has run, so it is node's own
+type stripping like every other tool script, and it exports its mode map so the trigger
+test checks the wrangler invocation by importing it instead of grepping the source. The
+build script stays bash — it is the bootstrap, and runs before there is anything to run it
+with. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
+code and signals are the script's; execve does not search `PATH`, so the script asks the
+shell (`command -v npx`) for the path before handing over.
+
+The build script owns the dependency install because Workers Builds provisions pnpm with
+corepack, which cannot install a pnpm-12 `packageManager` pin at all — the npm package is
+a wrapper whose real binary is materialized by a `preinstall` hook out of an optional
+platform dependency, and corepack runs neither lifecycle scripts nor optional
+dependencies. So `SKIP_DEPENDENCY_INSTALL=1` turns off Cloudflare's install step and npx
+bootstraps the last pnpm 11 instead — no preinstall hook, so npx handles it — which then
+reads `packageManager` and self-swaps to whatever the branch pins. `npx pnpm@11.21.0` is a
+**bootstrap floor**, not the version that runs: it needs to be at or above 11.20.0 to read
+a pnpm-12 lockfile, and `packageManager` decides the rest.
+
+npx covers only the commands the script names. Anything turbo spawns resolves `pnpm` from
+`PATH`, where the unusable corepack shim still sits — which is why a pnpm-12 branch fails
+in turbo even with the install fixed, and why that branch needs its own bootstrap here.
+
+`build_command` and `SKIP_DEPENDENCY_INSTALL` are one state. Apply and verify preview
+before production.
+
+### Dashboard as Code
+
+The private [`tools/workers-builds`](../../tools/workers-builds) package owns
+[`workers-builds-triggers.config.jsonc`](../../tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
+the dashboard values above plus the declared [build environment variables](#build-environment-variables),
+and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
+(exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
+Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
+tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
+resolves the worker name to the tag the triggers endpoint is keyed by, and **Workers Builds Configuration:
+Read** for the diff itself, raised to **Edit** only for `--apply`.
+
+Applying is manual-only: `--apply` writes production deploy configuration, and no automation holds an
+Edit-scoped token.
+
+Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the checked-in
+`.config/mise/config.toml` loads via `[env] _.file` (the same mechanism as the
+[Remote Cache](../../docs/REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
+that one). It is deliberately not symlinked into git worktrees, so run `check:workers-builds` from
+the owning checkout.
+
+From 1Password, two mise tasks wrap `op` over gitignored files that hold `op://` references instead
+of values (no secrets, but the vault layout they encode is personal rather than repo config, so they
+stay untracked). A third task creates both files and the item they point at:
+
+| Task                                      | Reads / writes                                                                      | Reference form | Token at rest               |
+| ----------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | --------------------------- |
+| `mise run cloudflare_item_create`         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env`  | both           | no                          |
+| `mise run cloudflare_login`               | reads `.config/mise/cloudflare.local.env.tmpl`                                      | `{{ op://… }}` | yes, `chmod 600`            |
+| `mise run check_workers_builds [--apply]` | reads whichever exists: the dotenv (via mise) else `.config/mise/cloudflare.op.env` | bare `op://…`  | only if it found the dotenv |
+
+`cloudflare_item_create` is the one-time bootstrap: it creates a Secure Note (`--vault Private`,
+`--title lit-ui-router-workers-builds`) whose two fields are named after the variables and left
+**empty**, then writes both reference files pointed at it. Fill the fields in 1Password afterwards —
+the task never writes a credential. It is idempotent on the item: an existing one is left untouched,
+and the two files are only rewritten with `--force`.
+
+`cloudflare_login` regenerates the dotenv above with `op inject`, so edit the template and re-run
+rather than editing the dotenv.
+
+`check_workers_builds` picks its credential source rather than asking you to remember which one is
+set up. If `cloudflare.local.env` exists, mise's `[env] _.file` has already put both variables in the
+task's environment, so it runs the diff directly and warns that it did — wrapping that in `op run`
+would prompt for authorization on every invocation to re-resolve values the process already holds.
+With no dotenv it runs under `op run --env-file`, which injects into that process only: the
+no-secrets-at-rest path, and the one to prefer for `--apply`, whose **Edit**-scoped token is the one
+worth never writing to disk. Deleting the dotenv is what switches back — after an `--apply`, that is
+worth doing, since the file outlives the write it was created for.
+
+One file per task, because the two syntaxes are mutually exclusive: `op inject` substitutes
+`{{ op://… }}` and passes a bare `op://…` through untouched, so pointing it at the `op run` file
+yields a dotenv of literal reference strings, surfacing as an auth failure from Cloudflare rather
+than as an error from `op`.
+
+None of the three is required — they only supply the two variables, so `pnpm check:workers-builds`
+with them already in the environment works the same. `op` is deliberately not a pinned `[tools]`
+entry: a mise-managed copy would shadow the system one and lose its desktop-app integration.
+
+#### CD-pipeline verification signal
+
+[`release-signals.yml`](../../.github/workflows/release-signals.yml) runs the same read-only diff on every push to
+`main` — the push that Workers Builds deploys from — plus a weekly sweep, and reports it as the
+`workers-builds (triggers)` check run alongside its `published-diff` and `peer-floor` siblings. It is
+non-gating: green in sync, orange (`action_required`) on drift, grey (`neutral`) when the check could not run.
+It never applies; resolving drift is still a local `--apply`.
+
+The badge for it sits at the top of this file and in the README header. It diffs the live Cloudflare Workers Builds triggers that ship
+[lit-ui-router.dev](https://lit-ui-router.dev) against the repo-owned
+[desired state](../../tools/workers-builds/workers-builds-triggers.config.jsonc):
+
+| Badge                                                                        | Meaning                                                                   |
+| ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| ![passing](https://img.shields.io/badge/workers--builds-passing-brightgreen) | The dashboard triggers match the repo config                              |
+| ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
+| ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
+
+One ordering trap. When the value being applied names a file in the repo — as `build_command` and
+`deploy_command` both do, pointing at [`cloudflare-build.sh`](../../tools/workers-builds/cloudflare-build.sh)
+and [`cloudflare-deploy.ts`](../../tools/workers-builds/cloudflare-deploy.ts) — the apply has to
+_follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
+But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
+dashboard: the badge goes orange on a dashboard that is about to become correct, and nothing
+re-triggers it afterwards. Finish the `--apply` with a re-dispatch, or it stays orange against a
+converged dashboard:
+
+```sh
+gh workflow run release-signals.yml --ref main
+```
+
+Two repository secrets drive it. Both are optional — absent, the signal reports grey rather than failing:
+
+| Secret                  | Value                                                                                                                                                                                                              |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `CLOUDFLARE_API_TOKEN`  | A **user-scoped** API token with **Workers Scripts: Read** and **Workers Builds Configuration: Read** — both, or the run 403s on the tag lookup before it reaches the triggers. CI must never hold the Edit scope. |
+| `CLOUDFLARE_ACCOUNT_ID` | The Cloudflare account ID. A secret rather than a variable so it stays out of public logs.                                                                                                                         |
+
+Rotation is manual: mint a replacement in the Cloudflare dashboard under **My Profile → API Tokens** (user
+tokens, not **Manage Account → API Tokens**), update the repository secret, and revoke the old one. A stale
+token shows up as the grey `workers-builds (triggers)` badge, not a red run.
+
+`publish-npm.yml` forwards both into its post-publish `workflow_call`; secrets do not auto-propagate, and
+without that the badge would go grey after every release.
+
+### Build Environment Variables
+
+Managed per key, not per map: `check:workers-builds` diffs only the keys declared in
+[`workers-builds-triggers.config.jsonc`](../../tools/workers-builds/workers-builds-triggers.config.jsonc)
+and leaves every other variable on the trigger untouched.
+
+**Declared** (plaintext, committed, `--apply` writes them):
+
+- `SKIP_DEPENDENCY_INSTALL=1` — **required.** Hands the dependency install to
+  `cloudflare-build.sh`, per [Build & Deploy Commands](#build--deploy-commands). Without it Cloudflare
+  runs its own corepack-provisioned `pnpm install` first and the build fails there;
+  deleting it in the dashboard breaks every deploy.
+- `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs
+  deploy never runs. Without it the install downloads and unzips it every build (~15s).
+  `mise run setup` sets the same thing locally.
+- `HUSKY=0` — the root `prepare` script installs git hooks, which mean nothing in a build
+  container. Matches the `env: HUSKY: 0` every CI workflow sets.
+
+**Unmanaged** (dashboard-only; listed in the diff output as `(unmanaged)`, never diffed or patched):
+
+- `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
+- `TURBO_`-prefixed [Remote Cache](../../docs/REMOTE_CACHE.md) variables and secrets
+
+Drift semantics for a declared key: a wrong or absent live value is drift and is patched; a key
+the dashboard has marked secret is reported and **not** overwritten, since the config holds
+plaintext only. Secrets therefore can never be committed here nor clobbered by `--apply`.
+
+### Local Development
+
+```bash
+# with pnpm
+pnpm --filter docs wrangler:dev
+# with turbo
+turbo docs#wrangler:dev
+```
+
+See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
