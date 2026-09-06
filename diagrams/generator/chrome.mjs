@@ -88,15 +88,16 @@ export const CSS = `
               Serif 4 from Google in the artifact.
    --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
               source-code-pro from the kit on the site, the same Slimbach
-              design from Google in the artifact. The PLATES keep --mono,
-              which is unchanged: every SVG label is hand-placed against the
-              system mono's advance.
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
    --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
               DRAWN BY value and at most one callout line per sheet — nowhere
               else. No Google stand-in by decision: off the kit it falls to
               --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
@@ -356,13 +357,17 @@ code, kbd, samp { font-family: var(--code); }
 .fg   { fill: var(--green); }
 .fhalo{ fill: var(--halo); }
 .fnone{ fill: none; }
-text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
-text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
-text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
-text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
-text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {

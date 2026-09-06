@@ -21,7 +21,9 @@ export async function initCity(root, THREE) {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
       accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
       paper: tok('--paper'), paper2: tok('--paper-2'), black: '#000000',
-      mono: tok('--mono') || 'ui-monospace, Menlo, monospace' };
+      // the ground lettering and the number chips are plate labels, so they take
+      // the data face the plates take; mono is reserved for code
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   function note(msg) {
     var el = document.createElement('p');
@@ -183,7 +185,7 @@ export async function initCity(root, THREE) {
       var cv = document.createElement('canvas');
       cv.width = Math.max(2, Math.round(wpx)); cv.height = Math.max(2, Math.round(hpx));
       var g2 = cv.getContext('2d');
-      g2.font = '600 ' + Math.round(hpx * 0.6) + 'px ' + c.mono;
+      g2.font = '600 ' + Math.round(hpx * 0.6) + 'px ' + c.data;
       if ('letterSpacing' in g2) g2.letterSpacing = Math.round(hpx * 0.09) + 'px';
       g2.textAlign = 'center'; g2.textBaseline = 'middle';
       g2.globalAlpha = 0.85;
@@ -249,7 +251,7 @@ export async function initCity(root, THREE) {
       var K = Math.min(window.devicePixelRatio || 1, 2) * 3;
       var fs = 30, pad = 11, h = 46;
       var probe = document.createElement('canvas').getContext('2d');
-      probe.font = '600 ' + fs + 'px ' + c.mono;
+      probe.font = '600 ' + fs + 'px ' + c.data;
       var w = Math.ceil(probe.measureText(text).width) + pad * 2;
       var cv = document.createElement('canvas');
       cv.width = Math.round(w * K); cv.height = Math.round(h * K);
@@ -260,7 +262,7 @@ export async function initCity(root, THREE) {
       g2.globalAlpha = 1;
       g2.strokeStyle = c.soft; g2.lineWidth = 1.6;
       g2.strokeRect(0.8, 0.8, w - 1.6, h - 1.6);
-      g2.font = '600 ' + fs + 'px ' + c.mono;
+      g2.font = '600 ' + fs + 'px ' + c.data;
       g2.fillStyle = c.ink; g2.textAlign = 'center'; g2.textBaseline = 'middle';
       g2.fillText(text, w / 2, h / 2 + 1);
       var tex = new THREE.CanvasTexture(cv);

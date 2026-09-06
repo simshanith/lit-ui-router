@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 
 const P = 's3';
 const OX = 360, OY = 200;
@@ -180,15 +180,15 @@ const ART_H = 930;
 const massed = M.filter((r) => r[6] > 0);
 const TOT_F = massed.reduce((a, r) => a + r[5], 0);
 const TOT_L = massed.reduce((a, r) => a + r[6], 0);
-const schedRow = ([n, name, tier, , , files, sloc, , , note]) =>
-  `${String(n).padStart(2, ' ')}  ${name} — ${sloc > 0 ? `${files}f · ${fmt(sloc)} sloc` : 'not massed'} · ${TIER_TEXT[tier]} · ${note}`;
+const schedRow = ([n, name, tier, , , files, sloc, , , note]) => [n,
+  `${name} — ${sloc > 0 ? `${files}f · ${fmt(sloc)} sloc` : 'not massed'} · ${TIER_TEXT[tier]} · ${note}`];
 const half = Math.ceil(M.length / 2);
 const SY = ART_H + 14;
 const schedule = `<rect x="40" y="${SY}" width="1320" height="${72 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => txt(710, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(half).map((r, i) => schedTxt(710, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 58 + half * 17, `TOTAL — ${massed.length} massed structures · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · ${COUNTED} · gate tiers unchanged from rev A`, 'lbls')}`;
 
 // ---- inset: the two task managers, drawn FLAT because the shape is a loop --------

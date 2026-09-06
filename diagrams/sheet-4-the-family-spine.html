@@ -80,15 +80,16 @@
               Serif 4 from Google in the artifact.
    --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
               source-code-pro from the kit on the site, the same Slimbach
-              design from Google in the artifact. The PLATES keep --mono,
-              which is unchanged: every SVG label is hand-placed against the
-              system mono's advance.
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
    --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
               DRAWN BY value and at most one callout line per sheet — nowhere
               else. No Google stand-in by decision: off the kit it falls to
               --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
@@ -348,13 +349,17 @@ code, kbd, samp { font-family: var(--code); }
 .fg   { fill: var(--green); }
 .fhalo{ fill: var(--halo); }
 .fnone{ fill: none; }
-text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
-text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
-text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
-text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
-text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -534,18 +539,30 @@ a { color: var(--accent); }
 <rect x="40" y="580" width="1270" height="190" class="sk fp"/>
 <text x="56" y="602" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · mean lines per file · core gate</text>
 <line x1="40" y1="612" x2="1310" y2="612" class="skf"/>
-<text x="56" y="632" class="lbls" text-anchor="start" > 1  @uirouter/core 6.1.2 — 80f · 5,272 sloc · 66 l/f · the spine itself</text>
-<text x="56" y="649" class="lbls" text-anchor="start" > 2  @uirouter/visualizer 7.2.1 — 34f · 2,018 sloc · 59 l/f · gate &gt;=5.0.0</text>
-<text x="56" y="666" class="lbls" text-anchor="start" > 3  @uirouter/angularjs 1.1.2 — 18f · 1,512 sloc · 84 l/f · gate ^6.1.2</text>
-<text x="56" y="683" class="lbls" text-anchor="start" > 4  lit-ui-router 1.11.2 — 13f · 1,383 sloc · 106 l/f · gate ^6.0.8</text>
-<text x="56" y="700" class="lbls" text-anchor="start" > 5  ui-router-server 0.1.1 — 8f · 1,141 sloc · 143 l/f · gate ^6.0.8</text>
-<text x="56" y="717" class="lbls" text-anchor="start" > 6  @uirouter/angular 22.0.0 — 18f · 1,023 sloc · 57 l/f · gate ^6.1.2</text>
-<text x="700" y="632" class="lbls" text-anchor="start" > 7  @uirouter/react 1.0.8 — 22f · 650 sloc · 30 l/f · gate 6.1.2 (dependency)</text>
-<text x="700" y="649" class="lbls" text-anchor="start" > 8  @uirouter/dsr 1.2.0 — 4f · 266 sloc · 67 l/f · gate &gt;=5.0.0</text>
-<text x="700" y="666" class="lbls" text-anchor="start" > 9  @uirouter/sticky-states 1.5.1 — 2f · 233 sloc · 117 l/f · gate &gt;=5.0.1</text>
-<text x="700" y="683" class="lbls" text-anchor="start" >10  lit-ui-router-mobx 1.0.0 — 5f · 176 sloc · 35 l/f · gate ^6.0.8</text>
-<text x="700" y="700" class="lbls" text-anchor="start" >11  …-nav-location-plugin 0.3.0 — 1f · 105 sloc · 105 l/f · gate ^6.0.8</text>
-<text x="700" y="717" class="lbls" text-anchor="start" >12  @uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
+<text x="70" y="632" class="lbls" text-anchor="end" >1</text>
+<text x="81" y="632" class="lbls" text-anchor="start" >@uirouter/core 6.1.2 — 80f · 5,272 sloc · 66 l/f · the spine itself</text>
+<text x="70" y="649" class="lbls" text-anchor="end" >2</text>
+<text x="81" y="649" class="lbls" text-anchor="start" >@uirouter/visualizer 7.2.1 — 34f · 2,018 sloc · 59 l/f · gate &gt;=5.0.0</text>
+<text x="70" y="666" class="lbls" text-anchor="end" >3</text>
+<text x="81" y="666" class="lbls" text-anchor="start" >@uirouter/angularjs 1.1.2 — 18f · 1,512 sloc · 84 l/f · gate ^6.1.2</text>
+<text x="70" y="683" class="lbls" text-anchor="end" >4</text>
+<text x="81" y="683" class="lbls" text-anchor="start" >lit-ui-router 1.11.2 — 13f · 1,383 sloc · 106 l/f · gate ^6.0.8</text>
+<text x="70" y="700" class="lbls" text-anchor="end" >5</text>
+<text x="81" y="700" class="lbls" text-anchor="start" >ui-router-server 0.1.1 — 8f · 1,141 sloc · 143 l/f · gate ^6.0.8</text>
+<text x="70" y="717" class="lbls" text-anchor="end" >6</text>
+<text x="81" y="717" class="lbls" text-anchor="start" >@uirouter/angular 22.0.0 — 18f · 1,023 sloc · 57 l/f · gate ^6.1.2</text>
+<text x="714" y="632" class="lbls" text-anchor="end" >7</text>
+<text x="725" y="632" class="lbls" text-anchor="start" >@uirouter/react 1.0.8 — 22f · 650 sloc · 30 l/f · gate 6.1.2 (dependency)</text>
+<text x="714" y="649" class="lbls" text-anchor="end" >8</text>
+<text x="725" y="649" class="lbls" text-anchor="start" >@uirouter/dsr 1.2.0 — 4f · 266 sloc · 67 l/f · gate &gt;=5.0.0</text>
+<text x="714" y="666" class="lbls" text-anchor="end" >9</text>
+<text x="725" y="666" class="lbls" text-anchor="start" >@uirouter/sticky-states 1.5.1 — 2f · 233 sloc · 117 l/f · gate &gt;=5.0.1</text>
+<text x="714" y="683" class="lbls" text-anchor="end" >10</text>
+<text x="725" y="683" class="lbls" text-anchor="start" >lit-ui-router-mobx 1.0.0 — 5f · 176 sloc · 35 l/f · gate ^6.0.8</text>
+<text x="714" y="700" class="lbls" text-anchor="end" >11</text>
+<text x="725" y="700" class="lbls" text-anchor="start" >…-nav-location-plugin 0.3.0 — 1f · 105 sloc · 105 l/f · gate ^6.0.8</text>
+<text x="714" y="717" class="lbls" text-anchor="end" >12</text>
+<text x="725" y="717" class="lbls" text-anchor="start" >@uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
 <text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 209 authored files · 13,851 sloc · versions and dates npm registry read 2026-09-05 · this repo + core counted at origin/main @ b2338d0 (2026-09-05) · upstream family clone counts 2026-08-16</text>
 <text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 on npm (published 2026-09-01) · 1.0.0-rc.2 in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
 </svg></div>

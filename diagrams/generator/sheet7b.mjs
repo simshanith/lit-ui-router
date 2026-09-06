@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { depthSort, solidFaces } from './iso-hidden.mjs';
 import { PLACED } from './sheet7.mjs';
 
@@ -248,10 +248,10 @@ ${txt(108, 776, `re-run 2026-08-31 · oxlint over diagrams/generator, exit 0 · 
 const ART_H = 812;
 const RUST_T = ['0', 'R1', 'R2', 'R3', 'R4'];
 const schedRow = ([n, name, , , , , sf, , , , rust, steam, lamps, eff]) => {
-  if (!sf) return `${String(n).padStart(2, ' ')}  ${name} — ambient types · no machine on the pad`;
+  if (!sf) return [n, `${name} — ambient types · no machine on the pad`];
   const lampS = lamps === 'e' ? 'e2e (accent)' : lamps == null ? 'no mass — no slots'
     : eff != null ? `${lamps} (${eff}%)` : `${lamps}`;
-  return `${String(n).padStart(2, ' ')}  ${name} — rust ${RUST_T[rust]} · steam ${steam}c/90d = ${PUFFS(steam)} puff${PUFFS(steam) === 1 ? '' : 's'} · lamps ${lampS} · pipes OK`;
+  return [n, `${name} — rust ${RUST_T[rust]} · steam ${steam}c/90d = ${PUFFS(steam)} puff${PUFFS(steam) === 1 ? '' : 's'} · lamps ${lampS} · pipes OK`];
 };
 const RUNNING = M.filter((r) => r[6]).length;
 const TOT_STEAM = M.reduce((a, r) => a + r[11], 0);
@@ -262,8 +262,8 @@ const SY = ART_H + 16;
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, `PLANT SCHEDULE — per member: rust step (median idle) · steam (commits ${WINDOW} = puffs) · lamps (lit share from plate 7A) · pipe state`, 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 58 + half * 17, `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · steam ${BASIS}; rust and lamps carry their own older bases`, 'lbls')}`;
 
 const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine now broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, growing from clean through four re-cut steps to the typedoc plugin, whose flanks are almost fully rusted and cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: the alert register records that rev B's one red gate — the root lint task, failing over the atlas's own generator directory — was answered by a commit that cleaned the drawings, and the triangle is drawn struck through rather than deleted. A plant schedule lists every member's channel values.">

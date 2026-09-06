@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, keyRow } from './helpers.mjs';
 import { PLACED } from './sheet7.mjs';
 
 const P = 's7a';
@@ -239,7 +239,7 @@ const schedRow = ([n, name, , cat, , , sf, sl, , , lf, ls, ext, line, br, fn]) =
   const meat = cat === 'm'
     ? `${lf}/${sf}f · ${fmt(ls)}/${fmt(sl)} (${pctS(ext)}) · L ${pctS(line)} B ${pctS(br)} F ${pctS(fn)}`
     : CAT_TEXT[cat];
-  return `${String(n).padStart(2, ' ')}  ${name} — ${meat} · ${NOTE[n]}`;
+  return [n, `${name} — ${meat} · ${NOTE[n]}`];
 };
 const half = Math.ceil(M.length / 2);
 const TOTAL_LINE = `TOTAL — ${T.metered} members metered: ${fmt(T.linesHit)} of ${fmt(T.lines)} metered lines lit (${pct1(T.linesHit, T.lines)}%)`
@@ -249,8 +249,8 @@ const TOTAL_LINE = `TOTAL — ${T.metered} members metered: ${fmt(T.linesHit)} o
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${91 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, 'SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 56 + half * 17, TOTAL_LINE, 'lbls')}
 ${txt(58, SY + 72 + half * 17, `REV E — the daggers are retired: light and footprint are now measured at the SAME ref, so no member's meter and census can disagree · every figure above is read from diagrams/data/census-shadow.json and diagrams/data/census-city.json`, 'lblf')}`;
 

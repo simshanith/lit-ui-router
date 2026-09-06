@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, lines, keyRow } from './helpers.mjs';
+import { txt, schedTxt, lines, keyRow } from './helpers.mjs';
 
 const P = 's4';
 
@@ -201,14 +201,14 @@ ${txt(CORE_X, 444, 'states · registry · transitions', 'lblf')}`;
 const schedRow = (r, i) => {
   const [name, ver, , files, sloc, range, kind] = r;
   const g = kind === 'spine' ? 'the spine itself' : kind === 'dep' ? `gate ${range} (dependency)` : `gate ${range}`;
-  return `${String(i + 1).padStart(2, ' ')}  ${name} ${ver} — ${files}f · ${fmt(sloc)} sloc · ${Math.round(sloc / files)} l/f · ${g}`;
+  return [i + 1, `${name} ${ver} — ${files}f · ${fmt(sloc)} sloc · ${Math.round(sloc / files)} l/f · ${g}`];
 };
 const SY = 580, half = Math.ceil(ALL.length / 2);
 const schedule = `<rect x="40" y="${SY}" width="1270" height="${88 + half * 17}" class="sk fp"/>
 ${txt(56, SY + 22, 'STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · mean lines per file · core gate', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1310" y2="${SY + 32}" class="skf"/>
-${ALL.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, schedRow(r, i), 'lbls')).join('\n')}
-${ALL.slice(half).map((r, i) => txt(700, SY + 52 + i * 17, schedRow(r, i + half), 'lbls')).join('\n')}
+${ALL.slice(0, half).map((r, i) => schedTxt(56, SY + 52 + i * 17, schedRow(r, i), 'lbls')).join('\n')}
+${ALL.slice(half).map((r, i) => schedTxt(700, SY + 52 + i * 17, schedRow(r, i + half), 'lbls')).join('\n')}
 ${txt(56, SY + 58 + half * 17, `TOTAL — ${ALL.length} packages · ${TOT_F} authored files · ${fmt(TOT_L)} sloc · versions and dates ${REGISTRY} · this repo + core ${COUNTED} · upstream family ${CLONED}`, 'lbls')}
 ${txt(56, SY + 75 + half * 17, `NOT MASSED — ${LINT.name} ${LINT.version} on npm (published ${LINT.published}) · ${brickRow(LINT.name).version} in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.`, 'lblf')}`;
 

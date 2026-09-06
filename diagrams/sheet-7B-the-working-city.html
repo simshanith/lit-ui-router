@@ -80,15 +80,16 @@
               Serif 4 from Google in the artifact.
    --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
               source-code-pro from the kit on the site, the same Slimbach
-              design from Google in the artifact. The PLATES keep --mono,
-              which is unchanged: every SVG label is hand-placed against the
-              system mono's advance.
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
    --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
               DRAWN BY value and at most one callout line per sheet — nowhere
               else. No Google stand-in by decision: off the kit it falls to
               --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
@@ -348,13 +349,17 @@ code, kbd, samp { font-family: var(--code); }
 .fg   { fill: var(--green); }
 .fhalo{ fill: var(--halo); }
 .fnone{ fill: none; }
-text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
-text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
-text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
-text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
-text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -963,38 +968,70 @@ a { color: var(--accent); }
 <rect x="40" y="828" width="1480" height="346" class="sk fp"/>
 <text x="58" y="850" class="lbls" text-anchor="start" >PLANT SCHEDULE — per member: rust step (median idle) · steam (commits 2026-06-07..2026-09-04 = puffs) · lamps (lit share from plate 7A) · pipe state</text>
 <line x1="40" y1="860" x2="1520" y2="860" class="skf"/>
-<text x="58" y="880" class="lbls" text-anchor="start" > 1  lit-ui-router — rust R3 · steam 35c/90d = 3 puffs · lamps 3 (92.5%) · pipes OK</text>
-<text x="58" y="897" class="lbls" text-anchor="start" > 2  ui-router-server — rust R3 · steam 9c/90d = 2 puffs · lamps 3 (99.6%) · pipes OK</text>
-<text x="58" y="914" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — rust R1 · steam 10c/90d = 2 puffs · lamps 3 (98.3%) · pipes OK</text>
-<text x="58" y="931" class="lbls" text-anchor="start" > 4  navigation-location-plugin — rust R1 · steam 8c/90d = 1 puff · lamps 3 (100%) · pipes OK</text>
-<text x="58" y="948" class="lbls" text-anchor="start" > 5  sample-app-shared — rust R3 · steam 26c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="965" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — rust R3 · steam 9c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="982" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — rust R3 · steam 12c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="999" class="lbls" text-anchor="start" > 8  sample-app-routes — rust R3 · steam 2c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
-<text x="58" y="1016" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — rust R1 · steam 17c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="1033" class="lbls" text-anchor="start" >10  docs — rust R1 · steam 28c/90d = 3 puffs · lamps 1 (7.4%) · pipes OK</text>
-<text x="58" y="1050" class="lbls" text-anchor="start" >11  examples — rust R1 · steam 16c/90d = 3 puffs · lamps 0 · pipes OK</text>
-<text x="58" y="1067" class="lbls" text-anchor="start" >12  @tools/release — rust R3 · steam 20c/90d = 3 puffs · lamps 2 (54.7%) · pipes OK</text>
-<text x="58" y="1084" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — rust R4 · steam 7c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="58" y="1101" class="lbls" text-anchor="start" >14  @tools/dts-backtest — rust R1 · steam 4c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="58" y="1118" class="lbls" text-anchor="start" >15  @tools/build_and_test — rust R2 · steam 6c/90d = 1 puff · lamps 2 (72.6%) · pipes OK</text>
-<text x="58" y="1135" class="lbls" text-anchor="start" >16  @tools/shared — rust R2 · steam 10c/90d = 2 puffs · lamps 2 (79.2%) · pipes OK</text>
-<text x="800" y="880" class="lbls" text-anchor="start" >17  @tools/workers-builds — rust R1 · steam 8c/90d = 1 puff · lamps 2 (58%) · pipes OK</text>
-<text x="800" y="897" class="lbls" text-anchor="start" >18  @tools/bundle-probe — rust R1 · steam 5c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="800" y="914" class="lbls" text-anchor="start" >19  @tools/compat-guards — rust R1 · steam 4c/90d = 1 puff · lamps 1 (12.2%) · pipes OK</text>
-<text x="800" y="931" class="lbls" text-anchor="start" >20  @tools/oxc-emit — rust R1 · steam 4c/90d = 1 puff · lamps 1 (25%) · pipes OK</text>
-<text x="800" y="948" class="lbls" text-anchor="start" >21  @tools/release-config — rust R1 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="965" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — rust 0 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="982" class="lbls" text-anchor="start" >23  @tools/lit-test-env — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="999" class="lbls" text-anchor="start" >24  @tools/vue-check — rust R3 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="1016" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — rust R2 · steam 1c/90d = 0 puffs · lamps 1 (26.1%) · pipes OK</text>
-<text x="800" y="1033" class="lbls" text-anchor="start" >26  @tools/happy-dom — rust R3 · steam 1c/90d = 0 puffs · lamps 0 (0%) · pipes OK</text>
-<text x="800" y="1050" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — ambient types · no machine on the pad</text>
-<text x="800" y="1067" class="lbls" text-anchor="start" >28  @tools/lint-elements — rust 0 · steam 3c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="800" y="1084" class="lbls" text-anchor="start" >29  @tools/warn-lanes — rust 0 · steam 1c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
-<text x="800" y="1101" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="1118" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — rust 0 · steam 4c/90d = 1 puff · lamps 3 (98.5%) · pipes OK</text>
-<text x="800" y="1135" class="lbls" text-anchor="start" >32  @tools/embed-heights — rust 0 · steam 1c/90d = 0 puffs · lamps 1 (10.4%) · pipes OK</text>
+<text x="72" y="880" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="880" class="lbls" text-anchor="start" >lit-ui-router — rust R3 · steam 35c/90d = 3 puffs · lamps 3 (92.5%) · pipes OK</text>
+<text x="72" y="897" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="897" class="lbls" text-anchor="start" >ui-router-server — rust R3 · steam 9c/90d = 2 puffs · lamps 3 (99.6%) · pipes OK</text>
+<text x="72" y="914" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="914" class="lbls" text-anchor="start" >lit-ui-router-mobx — rust R1 · steam 10c/90d = 2 puffs · lamps 3 (98.3%) · pipes OK</text>
+<text x="72" y="931" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="931" class="lbls" text-anchor="start" >navigation-location-plugin — rust R1 · steam 8c/90d = 1 puff · lamps 3 (100%) · pipes OK</text>
+<text x="72" y="948" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="948" class="lbls" text-anchor="start" >sample-app-shared — rust R3 · steam 26c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="965" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="965" class="lbls" text-anchor="start" >sample-app-lit-vanilla — rust R3 · steam 9c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="982" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="982" class="lbls" text-anchor="start" >sample-app-lit-mobx — rust R3 · steam 12c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="999" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="999" class="lbls" text-anchor="start" >sample-app-routes — rust R3 · steam 2c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
+<text x="72" y="1016" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1016" class="lbls" text-anchor="start" >sample-app-lit-e2e — rust R1 · steam 17c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="1033" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1033" class="lbls" text-anchor="start" >docs — rust R1 · steam 28c/90d = 3 puffs · lamps 1 (7.4%) · pipes OK</text>
+<text x="72" y="1050" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1050" class="lbls" text-anchor="start" >examples — rust R1 · steam 16c/90d = 3 puffs · lamps 0 · pipes OK</text>
+<text x="72" y="1067" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1067" class="lbls" text-anchor="start" >@tools/release — rust R3 · steam 20c/90d = 3 puffs · lamps 2 (54.7%) · pipes OK</text>
+<text x="72" y="1084" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1084" class="lbls" text-anchor="start" >@tools/typedoc-plugin — rust R4 · steam 7c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="72" y="1101" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1101" class="lbls" text-anchor="start" >@tools/dts-backtest — rust R1 · steam 4c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="72" y="1118" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1118" class="lbls" text-anchor="start" >@tools/build_and_test — rust R2 · steam 6c/90d = 1 puff · lamps 2 (72.6%) · pipes OK</text>
+<text x="72" y="1135" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1135" class="lbls" text-anchor="start" >@tools/shared — rust R2 · steam 10c/90d = 2 puffs · lamps 2 (79.2%) · pipes OK</text>
+<text x="814" y="880" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="880" class="lbls" text-anchor="start" >@tools/workers-builds — rust R1 · steam 8c/90d = 1 puff · lamps 2 (58%) · pipes OK</text>
+<text x="814" y="897" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="897" class="lbls" text-anchor="start" >@tools/bundle-probe — rust R1 · steam 5c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="814" y="914" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="914" class="lbls" text-anchor="start" >@tools/compat-guards — rust R1 · steam 4c/90d = 1 puff · lamps 1 (12.2%) · pipes OK</text>
+<text x="814" y="931" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="931" class="lbls" text-anchor="start" >@tools/oxc-emit — rust R1 · steam 4c/90d = 1 puff · lamps 1 (25%) · pipes OK</text>
+<text x="814" y="948" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="948" class="lbls" text-anchor="start" >@tools/release-config — rust R1 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="965" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="965" class="lbls" text-anchor="start" >@tools/lit-template-lint — rust 0 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="982" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="982" class="lbls" text-anchor="start" >@tools/lit-test-env — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="999" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="999" class="lbls" text-anchor="start" >@tools/vue-check — rust R3 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="1016" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1016" class="lbls" text-anchor="start" >@tools/lcov-rebase — rust R2 · steam 1c/90d = 0 puffs · lamps 1 (26.1%) · pipes OK</text>
+<text x="814" y="1033" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1033" class="lbls" text-anchor="start" >@tools/happy-dom — rust R3 · steam 1c/90d = 0 puffs · lamps 0 (0%) · pipes OK</text>
+<text x="814" y="1050" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1050" class="lbls" text-anchor="start" >@tools/wintercg-globals — ambient types · no machine on the pad</text>
+<text x="814" y="1067" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1067" class="lbls" text-anchor="start" >@tools/lint-elements — rust 0 · steam 3c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="814" y="1084" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1084" class="lbls" text-anchor="start" >@tools/warn-lanes — rust 0 · steam 1c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
+<text x="814" y="1101" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1101" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="1118" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1118" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — rust 0 · steam 4c/90d = 1 puff · lamps 3 (98.5%) · pipes OK</text>
+<text x="814" y="1135" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1135" class="lbls" text-anchor="start" >@tools/embed-heights — rust 0 · steam 1c/90d = 0 puffs · lamps 1 (10.4%) · pipes OK</text>
 <text x="58" y="1158" class="lbls" text-anchor="start" >TOTAL — 31 plants running, 0 seized · steam 259 member-touches from 377 window commits (2026-06-07..2026-09-04) · 16 metered-lamp plants + 4 accent · steam counted at origin/main @ b2338d0 (2026-09-05); rust and lamps carry their own older bases</text>
 </svg></div>
     <figcaption>Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. Rev B’s one alarm rang over no plant at all — it rang over the drawings; rev C draws it struck through, because it was answered.</figcaption>

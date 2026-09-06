@@ -80,15 +80,16 @@
               Serif 4 from Google in the artifact.
    --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
               source-code-pro from the kit on the site, the same Slimbach
-              design from Google in the artifact. The PLATES keep --mono,
-              which is unchanged: every SVG label is hand-placed against the
-              system mono's advance.
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
    --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
               DRAWN BY value and at most one callout line per sheet — nowhere
               else. No Google stand-in by decision: off the kit it falls to
               --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
@@ -348,13 +349,17 @@ code, kbd, samp { font-family: var(--code); }
 .fg   { fill: var(--green); }
 .fhalo{ fill: var(--halo); }
 .fnone{ fill: none; }
-text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
-text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
-text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
-text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
-text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -822,38 +827,70 @@ a { color: var(--accent); }
 <rect x="40" y="828" width="1480" height="346" class="sk fp"/>
 <text x="58" y="850" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · spec annex · gate tier</text>
 <line x1="40" y1="860" x2="1520" y2="860" class="skf"/>
-<text x="58" y="880" class="lbls" text-anchor="start" > 1  lit-ui-router — 13f · 1,383 · annex 15f · 4,068 · the material · the subject of this set · annex 2.9× the source</text>
-<text x="58" y="897" class="lbls" text-anchor="start" > 2  ui-router-server — 8f · 1,141 · annex 12f · 2,174 · the material · the server adapter · annex 1.9×</text>
-<text x="58" y="914" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 5f · 176 · annex 4f · 453 · the material · the mobx companion · annex 2.6×</text>
-<text x="58" y="931" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 1f · 105 · annex 7f · 410 · the material · one 105-line file, seven spec files</text>
-<text x="58" y="948" class="lbls" text-anchor="start" > 5  sample-app-shared — 37f · 2,211 · annex 3f · 309 · the material · the routes + views every sample app mounts</text>
-<text x="58" y="965" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — 8f · 399 · the material · the plain-lit demo</text>
-<text x="58" y="982" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — 8f · 438 · the material · the mobx demo</text>
-<text x="58" y="999" class="lbls" text-anchor="start" > 8  sample-app-routes — 2f · 51 · annex 1f · 185 · the material · the shared route table, server-side too</text>
-<text x="58" y="1016" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — 1f · 57 · annex 6f · 496 · STOPS THE PR LINE · cypress · drives the docs build</text>
-<text x="58" y="1033" class="lbls" text-anchor="start" >10  docs — 8f · 713 · annex 1f · 181 · the material · vitepress + the worker that serves it</text>
-<text x="58" y="1050" class="lbls" text-anchor="start" >11  examples — 18f · 2,404 · the material · stackblitz-ready copies, own lockfiles</text>
-<text x="58" y="1067" class="lbls" text-anchor="start" >12  @tools/release — 46f · 2,140 · annex 20f · 2,227 · HALTS A PUBLISH · hosts published-diff — the one publish halt</text>
-<text x="58" y="1084" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — 5f · 759 · never gates · builds the API pages, gates nothing</text>
-<text x="58" y="1101" class="lbls" text-anchor="start" >14  @tools/dts-backtest — 1f · 291 · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
-<text x="58" y="1118" class="lbls" text-anchor="start" >15  @tools/build_and_test — 7f · 1,128 · annex 3f · 1,163 · never gates · the CI graph helper — and its error summary</text>
-<text x="58" y="1135" class="lbls" text-anchor="start" >16  @tools/shared — 13f · 493 · annex 8f · 562 · never gates · the library under the instruments</text>
-<text x="800" y="880" class="lbls" text-anchor="start" >17  @tools/workers-builds — 2f · 375 · annex 1f · 269 · gates a later stage · the docs deploy watch</text>
-<text x="800" y="897" class="lbls" text-anchor="start" >18  @tools/bundle-probe — 4f · 247 · never gates · size probe, advisory</text>
-<text x="800" y="914" class="lbls" text-anchor="start" >19  @tools/compat-guards — 7f · 189 · annex 1f · 112 · STOPS THE PR LINE · the lit 2 / mobx 6 / peer-floor lanes</text>
-<text x="800" y="931" class="lbls" text-anchor="start" >20  @tools/oxc-emit — 5f · 228 · annex 1f · 89 · the material · both build passes, one emitter</text>
-<text x="800" y="948" class="lbls" text-anchor="start" >21  @tools/release-config — 1f · 39 · the material · the shared release-it config</text>
-<text x="800" y="965" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — 1f · 21 · never gates · the lit-analyzer wrapper</text>
-<text x="800" y="982" class="lbls" text-anchor="start" >23  @tools/lit-test-env — 1f · 24 · STOPS THE PR LINE · the browser harness every suite loads</text>
-<text x="800" y="999" class="lbls" text-anchor="start" >24  @tools/vue-check — 1f · 25 · never gates · vue-tsc over the docs components</text>
-<text x="800" y="1016" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 2f · 23 · annex 1f · 30 · never gates · coverage path rewriting</text>
-<text x="800" y="1033" class="lbls" text-anchor="start" >26  @tools/happy-dom — 1f · 8 · annex 1f · 26 · STOPS THE PR LINE · the node-side DOM the unit suites run in</text>
-<text x="800" y="1050" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no source · types only — not massed · ambient types only — nothing to mass</text>
-<text x="800" y="1067" class="lbls" text-anchor="start" >28  @tools/lint-elements — 1f · 186 · STOPS THE PR LINE · the shared custom-element lint lane (#655)</text>
-<text x="800" y="1084" class="lbls" text-anchor="start" >29  @tools/warn-lanes — 1f · 214 · annex 1f · 280 · never gates · the warning ratchet — reports a floor, never gates</text>
-<text x="800" y="1101" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — 1f · 1 · never gates · a one-line parser shim — the smallest thing in the yard</text>
-<text x="800" y="1118" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — 9f · 715 · annex 9f · 1,038 · the material · vendored uiSref lint rules · annex 1.5×</text>
-<text x="800" y="1135" class="lbls" text-anchor="start" >32  @tools/embed-heights — 3f · 336 · annex 1f · 33 · never gates · docs embed heights, measured in Chromium — outside ci</text>
+<text x="72" y="880" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="880" class="lbls" text-anchor="start" >lit-ui-router — 13f · 1,383 · annex 15f · 4,068 · the material · the subject of this set · annex 2.9× the source</text>
+<text x="72" y="897" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="897" class="lbls" text-anchor="start" >ui-router-server — 8f · 1,141 · annex 12f · 2,174 · the material · the server adapter · annex 1.9×</text>
+<text x="72" y="914" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="914" class="lbls" text-anchor="start" >lit-ui-router-mobx — 5f · 176 · annex 4f · 453 · the material · the mobx companion · annex 2.6×</text>
+<text x="72" y="931" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="931" class="lbls" text-anchor="start" >navigation-location-plugin — 1f · 105 · annex 7f · 410 · the material · one 105-line file, seven spec files</text>
+<text x="72" y="948" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="948" class="lbls" text-anchor="start" >sample-app-shared — 37f · 2,211 · annex 3f · 309 · the material · the routes + views every sample app mounts</text>
+<text x="72" y="965" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="965" class="lbls" text-anchor="start" >sample-app-lit-vanilla — 8f · 399 · the material · the plain-lit demo</text>
+<text x="72" y="982" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="982" class="lbls" text-anchor="start" >sample-app-lit-mobx — 8f · 438 · the material · the mobx demo</text>
+<text x="72" y="999" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="999" class="lbls" text-anchor="start" >sample-app-routes — 2f · 51 · annex 1f · 185 · the material · the shared route table, server-side too</text>
+<text x="72" y="1016" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1016" class="lbls" text-anchor="start" >sample-app-lit-e2e — 1f · 57 · annex 6f · 496 · STOPS THE PR LINE · cypress · drives the docs build</text>
+<text x="72" y="1033" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1033" class="lbls" text-anchor="start" >docs — 8f · 713 · annex 1f · 181 · the material · vitepress + the worker that serves it</text>
+<text x="72" y="1050" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1050" class="lbls" text-anchor="start" >examples — 18f · 2,404 · the material · stackblitz-ready copies, own lockfiles</text>
+<text x="72" y="1067" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1067" class="lbls" text-anchor="start" >@tools/release — 46f · 2,140 · annex 20f · 2,227 · HALTS A PUBLISH · hosts published-diff — the one publish halt</text>
+<text x="72" y="1084" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1084" class="lbls" text-anchor="start" >@tools/typedoc-plugin — 5f · 759 · never gates · builds the API pages, gates nothing</text>
+<text x="72" y="1101" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1101" class="lbls" text-anchor="start" >@tools/dts-backtest — 1f · 291 · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
+<text x="72" y="1118" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1118" class="lbls" text-anchor="start" >@tools/build_and_test — 7f · 1,128 · annex 3f · 1,163 · never gates · the CI graph helper — and its error summary</text>
+<text x="72" y="1135" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1135" class="lbls" text-anchor="start" >@tools/shared — 13f · 493 · annex 8f · 562 · never gates · the library under the instruments</text>
+<text x="814" y="880" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="880" class="lbls" text-anchor="start" >@tools/workers-builds — 2f · 375 · annex 1f · 269 · gates a later stage · the docs deploy watch</text>
+<text x="814" y="897" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="897" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 247 · never gates · size probe, advisory</text>
+<text x="814" y="914" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="914" class="lbls" text-anchor="start" >@tools/compat-guards — 7f · 189 · annex 1f · 112 · STOPS THE PR LINE · the lit 2 / mobx 6 / peer-floor lanes</text>
+<text x="814" y="931" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="931" class="lbls" text-anchor="start" >@tools/oxc-emit — 5f · 228 · annex 1f · 89 · the material · both build passes, one emitter</text>
+<text x="814" y="948" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="948" class="lbls" text-anchor="start" >@tools/release-config — 1f · 39 · the material · the shared release-it config</text>
+<text x="814" y="965" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="965" class="lbls" text-anchor="start" >@tools/lit-template-lint — 1f · 21 · never gates · the lit-analyzer wrapper</text>
+<text x="814" y="982" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="982" class="lbls" text-anchor="start" >@tools/lit-test-env — 1f · 24 · STOPS THE PR LINE · the browser harness every suite loads</text>
+<text x="814" y="999" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="999" class="lbls" text-anchor="start" >@tools/vue-check — 1f · 25 · never gates · vue-tsc over the docs components</text>
+<text x="814" y="1016" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1016" class="lbls" text-anchor="start" >@tools/lcov-rebase — 2f · 23 · annex 1f · 30 · never gates · coverage path rewriting</text>
+<text x="814" y="1033" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1033" class="lbls" text-anchor="start" >@tools/happy-dom — 1f · 8 · annex 1f · 26 · STOPS THE PR LINE · the node-side DOM the unit suites run in</text>
+<text x="814" y="1050" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1050" class="lbls" text-anchor="start" >@tools/wintercg-globals — no source · types only — not massed · ambient types only — nothing to mass</text>
+<text x="814" y="1067" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1067" class="lbls" text-anchor="start" >@tools/lint-elements — 1f · 186 · STOPS THE PR LINE · the shared custom-element lint lane (#655)</text>
+<text x="814" y="1084" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1084" class="lbls" text-anchor="start" >@tools/warn-lanes — 1f · 214 · annex 1f · 280 · never gates · the warning ratchet — reports a floor, never gates</text>
+<text x="814" y="1101" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1101" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 1 · never gates · a one-line parser shim — the smallest thing in the yard</text>
+<text x="814" y="1118" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1118" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 9f · 715 · annex 9f · 1,038 · the material · vendored uiSref lint rules · annex 1.5×</text>
+<text x="814" y="1135" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1135" class="lbls" text-anchor="start" >@tools/embed-heights — 3f · 336 · annex 1f · 33 · never gates · docs embed heights, measured in Chromium — outside ci</text>
 <text x="58" y="1158" class="lbls" text-anchor="start" >TOTAL — 32 members, 31 massed · 221 authored files · 16,520 sloc · plus 96 spec files · 14,105 sloc of annex · counted at origin/main @ b2338d0 (2026-09-05) (sloc = scc Code)</text>
 </svg></div>
     <figcaption>Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Rev B keeps the census — footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and adds the two things a census alone cannot say: which districts these members belong to, and which roads actually run between them. Every road is a workspace dependency or a turbo task edge, never an impression.</figcaption>

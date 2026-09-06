@@ -80,15 +80,16 @@
               Serif 4 from Google in the artifact.
    --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
               source-code-pro from the kit on the site, the same Slimbach
-              design from Google in the artifact. The PLATES keep --mono,
-              which is unchanged: every SVG label is hand-placed against the
-              system mono's advance.
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
    --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
               DRAWN BY value and at most one callout line per sheet — nowhere
               else. No Google stand-in by decision: off the kit it falls to
               --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
@@ -348,13 +349,17 @@ code, kbd, samp { font-family: var(--code); }
 .fg   { fill: var(--green); }
 .fhalo{ fill: var(--halo); }
 .fnone{ fill: none; }
-text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
-text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
-text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
-text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
-text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -1611,25 +1616,44 @@ a { color: var(--accent); }
 <rect x="40" y="944" width="1320" height="242" class="sk fp"/>
 <text x="58" y="966" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per structure · files (f) · sloc · gate tier</text>
 <line x1="40" y1="976" x2="1360" y2="976" class="skf"/>
-<text x="58" y="996" class="lbls" text-anchor="start" > 1  src — packages/*/src — 36f · 3,520 sloc · the line itself · five published packages — the material</text>
-<text x="58" y="1013" class="lbls" text-anchor="start" > 2  build — @tools/oxc-emit — 5f · 228 sloc · the line itself · JS pass + d.ts pass, one emitter</text>
-<text x="58" y="1030" class="lbls" text-anchor="start" > 3  pack — packPublishTarball — 11f · 352 sloc · the line itself · the one packer (#449), cached</text>
-<text x="58" y="1047" class="lbls" text-anchor="start" > 4  THE TARBALL — not massed · the artifact · the one artifact every check reads</text>
-<text x="58" y="1064" class="lbls" text-anchor="start" > 5  publish — release-it — 23f · 994 sloc · the line itself · bump · tag · push · publish steps</text>
-<text x="58" y="1081" class="lbls" text-anchor="start" > 6  npm registry — not massed · not massed · immutable once crossed</text>
-<text x="58" y="1098" class="lbls" text-anchor="start" > 7  tests — vitest harness — 2f · 32 sloc · STOPS THE PR LINE · lit-test-env + happy-dom · 3 real browsers</text>
-<text x="58" y="1115" class="lbls" text-anchor="start" > 8  compat-guards — 6f · 160 sloc · STOPS THE PR LINE · the lit 2 / mobx 6 / analyzer lanes</text>
-<text x="58" y="1132" class="lbls" text-anchor="start" > 9  dts-backtest — 1f · 291 sloc · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
-<text x="58" y="1149" class="lbls" text-anchor="start" >10  check:exports — 2f · 147 sloc · STOPS THE PR LINE · publint + attw over the raw pack</text>
-<text x="710" y="996" class="lbls" text-anchor="start" >11  published-diff — 5f · 403 sloc · HALTS A PUBLISH · vs the LIVE npm tarball · halts publishing</text>
-<text x="710" y="1013" class="lbls" text-anchor="start" >12  peer-floor tier-2 — 3f · 73 sloc · gates a later stage · gates version bumps, never a PR</text>
-<text x="710" y="1030" class="lbls" text-anchor="start" >13  peer-floor tier-1 — 2f · 106 sloc · never gates · reports check runs, never gates</text>
-<text x="710" y="1047" class="lbls" text-anchor="start" >14  lint &amp; probe fleet — 21f · 2,181 sloc · never gates · oxlint · elements · warn-lanes · CI gate</text>
-<text x="710" y="1064" class="lbls" text-anchor="start" >15  @tools/shared — 13f · 493 sloc · never gates · the library under every instrument</text>
-<text x="710" y="1081" class="lbls" text-anchor="start" >16  typedoc plugin — 5f · 759 sloc · never gates · builds the API pages, gates nothing</text>
-<text x="710" y="1098" class="lbls" text-anchor="start" >17  e2e — cypress — 7f · 553 sloc · STOPS THE PR LINE · drives the sample apps · stops the PR line</text>
-<text x="710" y="1115" class="lbls" text-anchor="start" >18  sample apps — 55f · 3,099 sloc · the line itself · shared routes + vanilla + mobx + e2e fixtures</text>
-<text x="710" y="1132" class="lbls" text-anchor="start" >19  docs deploy watch — 4f · 508 sloc · gates a later stage · workers-builds triggers · gates the deploy</text>
+<text x="72" y="996" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="996" class="lbls" text-anchor="start" >src — packages/*/src — 36f · 3,520 sloc · the line itself · five published packages — the material</text>
+<text x="72" y="1013" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="1013" class="lbls" text-anchor="start" >build — @tools/oxc-emit — 5f · 228 sloc · the line itself · JS pass + d.ts pass, one emitter</text>
+<text x="72" y="1030" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="1030" class="lbls" text-anchor="start" >pack — packPublishTarball — 11f · 352 sloc · the line itself · the one packer (#449), cached</text>
+<text x="72" y="1047" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="1047" class="lbls" text-anchor="start" >THE TARBALL — not massed · the artifact · the one artifact every check reads</text>
+<text x="72" y="1064" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="1064" class="lbls" text-anchor="start" >publish — release-it — 23f · 994 sloc · the line itself · bump · tag · push · publish steps</text>
+<text x="72" y="1081" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="1081" class="lbls" text-anchor="start" >npm registry — not massed · not massed · immutable once crossed</text>
+<text x="72" y="1098" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="1098" class="lbls" text-anchor="start" >tests — vitest harness — 2f · 32 sloc · STOPS THE PR LINE · lit-test-env + happy-dom · 3 real browsers</text>
+<text x="72" y="1115" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="1115" class="lbls" text-anchor="start" >compat-guards — 6f · 160 sloc · STOPS THE PR LINE · the lit 2 / mobx 6 / analyzer lanes</text>
+<text x="72" y="1132" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1132" class="lbls" text-anchor="start" >dts-backtest — 1f · 291 sloc · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
+<text x="72" y="1149" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1149" class="lbls" text-anchor="start" >check:exports — 2f · 147 sloc · STOPS THE PR LINE · publint + attw over the raw pack</text>
+<text x="724" y="996" class="lbls" text-anchor="end" >11</text>
+<text x="735" y="996" class="lbls" text-anchor="start" >published-diff — 5f · 403 sloc · HALTS A PUBLISH · vs the LIVE npm tarball · halts publishing</text>
+<text x="724" y="1013" class="lbls" text-anchor="end" >12</text>
+<text x="735" y="1013" class="lbls" text-anchor="start" >peer-floor tier-2 — 3f · 73 sloc · gates a later stage · gates version bumps, never a PR</text>
+<text x="724" y="1030" class="lbls" text-anchor="end" >13</text>
+<text x="735" y="1030" class="lbls" text-anchor="start" >peer-floor tier-1 — 2f · 106 sloc · never gates · reports check runs, never gates</text>
+<text x="724" y="1047" class="lbls" text-anchor="end" >14</text>
+<text x="735" y="1047" class="lbls" text-anchor="start" >lint &amp; probe fleet — 21f · 2,181 sloc · never gates · oxlint · elements · warn-lanes · CI gate</text>
+<text x="724" y="1064" class="lbls" text-anchor="end" >15</text>
+<text x="735" y="1064" class="lbls" text-anchor="start" >@tools/shared — 13f · 493 sloc · never gates · the library under every instrument</text>
+<text x="724" y="1081" class="lbls" text-anchor="end" >16</text>
+<text x="735" y="1081" class="lbls" text-anchor="start" >typedoc plugin — 5f · 759 sloc · never gates · builds the API pages, gates nothing</text>
+<text x="724" y="1098" class="lbls" text-anchor="end" >17</text>
+<text x="735" y="1098" class="lbls" text-anchor="start" >e2e — cypress — 7f · 553 sloc · STOPS THE PR LINE · drives the sample apps · stops the PR line</text>
+<text x="724" y="1115" class="lbls" text-anchor="end" >18</text>
+<text x="735" y="1115" class="lbls" text-anchor="start" >sample apps — 55f · 3,099 sloc · the line itself · shared routes + vanilla + mobx + e2e fixtures</text>
+<text x="724" y="1132" class="lbls" text-anchor="end" >19</text>
+<text x="735" y="1132" class="lbls" text-anchor="start" >docs deploy watch — 4f · 508 sloc · gates a later stage · workers-builds triggers · gates the deploy</text>
 <text x="58" y="1172" class="lbls" text-anchor="start" >TOTAL — 17 massed structures · 201 authored files · 13,899 sloc · counted at origin/main @ b2338d0 (2026-09-05) · gate tiers unchanged from rev A</text>
 </svg></div>
     <figcaption>The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.</figcaption>
@@ -2291,34 +2315,62 @@ a { color: var(--accent); }
 <rect x="40" y="714" width="1320" height="314" class="sk fp"/>
 <text x="58" y="736" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — tasks (t) · watched files (per-task inputs, summed) · command sloc · every mass cited in data/census-mass3b.json</text>
 <line x1="40" y1="746" x2="1360" y2="746" class="skf"/>
-<text x="58" y="764" class="lbls" text-anchor="start" > 1  //#check:graph-edges — 1t · 2,306 files · 65 sloc · check-graph-edges.ts (64) — #693, tied with lint:package-json for the widest lot</text>
-<text x="58" y="780" class="lbls" text-anchor="start" > 2  //#check:patches — 1t · 659 files · 71 sloc · check-patches.ts (70) — the yard’s tallest one-file guard</text>
-<text x="58" y="796" class="lbls" text-anchor="start" > 3  //#format:check:root — 1t · 659 files · 1 sloc · one oxfmt line · the 659-file root glob</text>
-<text x="58" y="812" class="lbls" text-anchor="start" > 4  //#format:check:toml — 1t · 7 files · 19 sloc · mise run + tasks/taplo (17) — plate 3A, seam C</text>
-<text x="58" y="828" class="lbls" text-anchor="start" > 5  //#lint:actionlint — 1t · 14 files · 2 sloc · mise run + config.toml run line</text>
-<text x="58" y="844" class="lbls" text-anchor="start" > 6  //#lint:elements — 1t · 659 files · 401 sloc · lint-elements.ts (186) + warn-lanes.core.ts (214) — THE TALLEST</text>
-<text x="58" y="860" class="lbls" text-anchor="start" > 7  //#lint:markdown — 1t · 49 files · 18 sloc · mise run + tasks/rumdl (16)</text>
-<text x="58" y="876" class="lbls" text-anchor="start" > 8  //#lint:package-json — 1t · 2,306 files · 1 sloc · one eslint line watching 2,306 manifests</text>
-<text x="58" y="892" class="lbls" text-anchor="start" > 9  //#lint:root — 1t · 659 files · 1 sloc · one oxlint line · the same 659-file surface</text>
-<text x="58" y="908" class="lbls" text-anchor="start" >10  //#lint:shellcheck — 1t · 5 files · 27 sloc · mise run + tasks/shellcheck (25)</text>
-<text x="58" y="924" class="lbls" text-anchor="start" >11  //#lint:templates — 1t · 659 files · 53 sloc · lit-analyzer-ts-guard.ts (31) + lint-templates.ts (21)</text>
-<text x="58" y="940" class="lbls" text-anchor="start" >12  //#lint:toml — 1t · 7 files · 19 sloc · mise run + tasks/taplo (17) — chain hop ③</text>
-<text x="58" y="956" class="lbls" text-anchor="start" >13  //#lint:zizmor — 1t · 15 files · 2 sloc · mise run + config.toml run line</text>
-<text x="58" y="972" class="lbls" text-anchor="start" >14  //#typecheck:root — 1t · 659 files · 1 sloc · one tsc line · the same 659-file surface</text>
-<text x="712" y="764" class="lbls" text-anchor="start" >28  //#check:task-inputs — 1t · 659 files · 61 sloc · check-task-inputs.ts (60) — #693's twin, over the root surface</text>
-<text x="712" y="780" class="lbls" text-anchor="start" >15  lit-ui-router — 14t · 636 files · 213 sloc · guards + oxc-emit + bundle-probe bins behind every task</text>
-<text x="712" y="796" class="lbls" text-anchor="start" >16  lit-ui-router-mobx — 15t · 384 files · 200 sloc · heaviest commands: the lit2 and mobx6 guards ride four tasks</text>
-<text x="712" y="812" class="lbls" text-anchor="start" >17  nav-location-plugin — 10t · 173 files · 119 sloc · the smallest quarter, same block shape</text>
-<text x="712" y="828" class="lbls" text-anchor="start" >18  ui-router-server — 12t · 377 files · 138 sloc · node:test + runtime-globals lanes</text>
-<text x="712" y="844" class="lbls" text-anchor="start" >27  eslint-plugin — 9t · 264 files · 85 sloc · the fifth quarter, new since rev C — rules, docs and oxlint lanes</text>
-<text x="712" y="860" class="lbls" text-anchor="start" >19  @tools/release — 7t · 2,202 files · 107 sloc · pack-all.ts (37) + check-exports.ts (63) live here</text>
-<text x="712" y="876" class="lbls" text-anchor="start" >20  @tools/dts-backtest — 3t · 32 files · 294 sloc · run.ts (291) on a 32-file footprint: THE TOWER</text>
-<text x="712" y="892" class="lbls" text-anchor="start" >21  @tools/shared — 4t · 103 files · 4 sloc · the library under the instruments — all one-liners</text>
-<text x="712" y="908" class="lbls" text-anchor="start" >22  typedoc-plugin — 6t · 58 files · 82 sloc · oxc-emit both passes — 24 nodes wait on build:types</text>
-<text x="712" y="924" class="lbls" text-anchor="start" >23  instrument terrace — 54t · 366 files · 54 sloc · 16 small tools × their style/test/typecheck rows</text>
-<text x="712" y="940" class="lbls" text-anchor="start" >24  docs — the harbour — 9t · 586 files · 34 sloc · every quarter ships docs:api here — docs#build waits on 13 nodes</text>
-<text x="712" y="956" class="lbls" text-anchor="start" >25  examples — the plain — 4t · 31,477 files · 25 sloc · format:check hashes 16,418, lint 14,962</text>
-<text x="712" y="972" class="lbls" text-anchor="start" >26  apps (5 sample pkgs) — 21t · 540 files · 21 sloc · 5 packages, every command one line</text>
+<text x="72" y="764" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="764" class="lbls" text-anchor="start" >//#check:graph-edges — 1t · 2,306 files · 65 sloc · check-graph-edges.ts (64) — #693, tied with lint:package-json for the widest lot</text>
+<text x="72" y="780" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="780" class="lbls" text-anchor="start" >//#check:patches — 1t · 659 files · 71 sloc · check-patches.ts (70) — the yard’s tallest one-file guard</text>
+<text x="72" y="796" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="796" class="lbls" text-anchor="start" >//#format:check:root — 1t · 659 files · 1 sloc · one oxfmt line · the 659-file root glob</text>
+<text x="72" y="812" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="812" class="lbls" text-anchor="start" >//#format:check:toml — 1t · 7 files · 19 sloc · mise run + tasks/taplo (17) — plate 3A, seam C</text>
+<text x="72" y="828" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="828" class="lbls" text-anchor="start" >//#lint:actionlint — 1t · 14 files · 2 sloc · mise run + config.toml run line</text>
+<text x="72" y="844" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="844" class="lbls" text-anchor="start" >//#lint:elements — 1t · 659 files · 401 sloc · lint-elements.ts (186) + warn-lanes.core.ts (214) — THE TALLEST</text>
+<text x="72" y="860" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="860" class="lbls" text-anchor="start" >//#lint:markdown — 1t · 49 files · 18 sloc · mise run + tasks/rumdl (16)</text>
+<text x="72" y="876" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="876" class="lbls" text-anchor="start" >//#lint:package-json — 1t · 2,306 files · 1 sloc · one eslint line watching 2,306 manifests</text>
+<text x="72" y="892" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="892" class="lbls" text-anchor="start" >//#lint:root — 1t · 659 files · 1 sloc · one oxlint line · the same 659-file surface</text>
+<text x="72" y="908" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="908" class="lbls" text-anchor="start" >//#lint:shellcheck — 1t · 5 files · 27 sloc · mise run + tasks/shellcheck (25)</text>
+<text x="72" y="924" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="924" class="lbls" text-anchor="start" >//#lint:templates — 1t · 659 files · 53 sloc · lit-analyzer-ts-guard.ts (31) + lint-templates.ts (21)</text>
+<text x="72" y="940" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="940" class="lbls" text-anchor="start" >//#lint:toml — 1t · 7 files · 19 sloc · mise run + tasks/taplo (17) — chain hop ③</text>
+<text x="72" y="956" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="956" class="lbls" text-anchor="start" >//#lint:zizmor — 1t · 15 files · 2 sloc · mise run + config.toml run line</text>
+<text x="72" y="972" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="972" class="lbls" text-anchor="start" >//#typecheck:root — 1t · 659 files · 1 sloc · one tsc line · the same 659-file surface</text>
+<text x="726" y="764" class="lbls" text-anchor="end" >28</text>
+<text x="737" y="764" class="lbls" text-anchor="start" >//#check:task-inputs — 1t · 659 files · 61 sloc · check-task-inputs.ts (60) — #693's twin, over the root surface</text>
+<text x="726" y="780" class="lbls" text-anchor="end" >15</text>
+<text x="737" y="780" class="lbls" text-anchor="start" >lit-ui-router — 14t · 636 files · 213 sloc · guards + oxc-emit + bundle-probe bins behind every task</text>
+<text x="726" y="796" class="lbls" text-anchor="end" >16</text>
+<text x="737" y="796" class="lbls" text-anchor="start" >lit-ui-router-mobx — 15t · 384 files · 200 sloc · heaviest commands: the lit2 and mobx6 guards ride four tasks</text>
+<text x="726" y="812" class="lbls" text-anchor="end" >17</text>
+<text x="737" y="812" class="lbls" text-anchor="start" >nav-location-plugin — 10t · 173 files · 119 sloc · the smallest quarter, same block shape</text>
+<text x="726" y="828" class="lbls" text-anchor="end" >18</text>
+<text x="737" y="828" class="lbls" text-anchor="start" >ui-router-server — 12t · 377 files · 138 sloc · node:test + runtime-globals lanes</text>
+<text x="726" y="844" class="lbls" text-anchor="end" >27</text>
+<text x="737" y="844" class="lbls" text-anchor="start" >eslint-plugin — 9t · 264 files · 85 sloc · the fifth quarter, new since rev C — rules, docs and oxlint lanes</text>
+<text x="726" y="860" class="lbls" text-anchor="end" >19</text>
+<text x="737" y="860" class="lbls" text-anchor="start" >@tools/release — 7t · 2,202 files · 107 sloc · pack-all.ts (37) + check-exports.ts (63) live here</text>
+<text x="726" y="876" class="lbls" text-anchor="end" >20</text>
+<text x="737" y="876" class="lbls" text-anchor="start" >@tools/dts-backtest — 3t · 32 files · 294 sloc · run.ts (291) on a 32-file footprint: THE TOWER</text>
+<text x="726" y="892" class="lbls" text-anchor="end" >21</text>
+<text x="737" y="892" class="lbls" text-anchor="start" >@tools/shared — 4t · 103 files · 4 sloc · the library under the instruments — all one-liners</text>
+<text x="726" y="908" class="lbls" text-anchor="end" >22</text>
+<text x="737" y="908" class="lbls" text-anchor="start" >typedoc-plugin — 6t · 58 files · 82 sloc · oxc-emit both passes — 24 nodes wait on build:types</text>
+<text x="726" y="924" class="lbls" text-anchor="end" >23</text>
+<text x="737" y="924" class="lbls" text-anchor="start" >instrument terrace — 54t · 366 files · 54 sloc · 16 small tools × their style/test/typecheck rows</text>
+<text x="726" y="940" class="lbls" text-anchor="end" >24</text>
+<text x="737" y="940" class="lbls" text-anchor="start" >docs — the harbour — 9t · 586 files · 34 sloc · every quarter ships docs:api here — docs#build waits on 13 nodes</text>
+<text x="726" y="956" class="lbls" text-anchor="end" >25</text>
+<text x="737" y="956" class="lbls" text-anchor="start" >examples — the plain — 4t · 31,477 files · 25 sloc · format:check hashes 16,418, lint 14,962</text>
+<text x="726" y="972" class="lbls" text-anchor="end" >26</text>
+<text x="737" y="972" class="lbls" text-anchor="start" >apps (5 sample pkgs) — 21t · 540 files · 21 sloc · 5 packages, every command one line</text>
 <text x="58" y="994" class="lbls" text-anchor="start" >TOTALS — 28 massed structures reconcile all 183 real tasks · 46,520 task-file hashes · 2,118 command sloc · +1 vacant twin lot (//#lint:workflows, phantom) · 422 phantom plots · surveyed at origin/main @ b2338d0 (2026-09-05)</text>
 <text x="58" y="1010" class="lblf" text-anchor="start" >ROADS — five district arteries drawn, the graph's heaviest degrees: docs#build waits on 13 nodes · typedoc-plugin#build:types unblocks 24 · lit-ui-router#build:types 32 · release#check:exports 32; 99 of the graph's 1,424 edges join two real tasks, the rest are local streets itemised in the dry-run JSON</text>
 </svg></div>
@@ -2539,18 +2591,30 @@ a { color: var(--accent); }
 <rect x="40" y="580" width="1270" height="190" class="sk fp"/>
 <text x="56" y="602" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · mean lines per file · core gate</text>
 <line x1="40" y1="612" x2="1310" y2="612" class="skf"/>
-<text x="56" y="632" class="lbls" text-anchor="start" > 1  @uirouter/core 6.1.2 — 80f · 5,272 sloc · 66 l/f · the spine itself</text>
-<text x="56" y="649" class="lbls" text-anchor="start" > 2  @uirouter/visualizer 7.2.1 — 34f · 2,018 sloc · 59 l/f · gate &gt;=5.0.0</text>
-<text x="56" y="666" class="lbls" text-anchor="start" > 3  @uirouter/angularjs 1.1.2 — 18f · 1,512 sloc · 84 l/f · gate ^6.1.2</text>
-<text x="56" y="683" class="lbls" text-anchor="start" > 4  lit-ui-router 1.11.2 — 13f · 1,383 sloc · 106 l/f · gate ^6.0.8</text>
-<text x="56" y="700" class="lbls" text-anchor="start" > 5  ui-router-server 0.1.1 — 8f · 1,141 sloc · 143 l/f · gate ^6.0.8</text>
-<text x="56" y="717" class="lbls" text-anchor="start" > 6  @uirouter/angular 22.0.0 — 18f · 1,023 sloc · 57 l/f · gate ^6.1.2</text>
-<text x="700" y="632" class="lbls" text-anchor="start" > 7  @uirouter/react 1.0.8 — 22f · 650 sloc · 30 l/f · gate 6.1.2 (dependency)</text>
-<text x="700" y="649" class="lbls" text-anchor="start" > 8  @uirouter/dsr 1.2.0 — 4f · 266 sloc · 67 l/f · gate &gt;=5.0.0</text>
-<text x="700" y="666" class="lbls" text-anchor="start" > 9  @uirouter/sticky-states 1.5.1 — 2f · 233 sloc · 117 l/f · gate &gt;=5.0.1</text>
-<text x="700" y="683" class="lbls" text-anchor="start" >10  lit-ui-router-mobx 1.0.0 — 5f · 176 sloc · 35 l/f · gate ^6.0.8</text>
-<text x="700" y="700" class="lbls" text-anchor="start" >11  …-nav-location-plugin 0.3.0 — 1f · 105 sloc · 105 l/f · gate ^6.0.8</text>
-<text x="700" y="717" class="lbls" text-anchor="start" >12  @uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
+<text x="70" y="632" class="lbls" text-anchor="end" >1</text>
+<text x="81" y="632" class="lbls" text-anchor="start" >@uirouter/core 6.1.2 — 80f · 5,272 sloc · 66 l/f · the spine itself</text>
+<text x="70" y="649" class="lbls" text-anchor="end" >2</text>
+<text x="81" y="649" class="lbls" text-anchor="start" >@uirouter/visualizer 7.2.1 — 34f · 2,018 sloc · 59 l/f · gate &gt;=5.0.0</text>
+<text x="70" y="666" class="lbls" text-anchor="end" >3</text>
+<text x="81" y="666" class="lbls" text-anchor="start" >@uirouter/angularjs 1.1.2 — 18f · 1,512 sloc · 84 l/f · gate ^6.1.2</text>
+<text x="70" y="683" class="lbls" text-anchor="end" >4</text>
+<text x="81" y="683" class="lbls" text-anchor="start" >lit-ui-router 1.11.2 — 13f · 1,383 sloc · 106 l/f · gate ^6.0.8</text>
+<text x="70" y="700" class="lbls" text-anchor="end" >5</text>
+<text x="81" y="700" class="lbls" text-anchor="start" >ui-router-server 0.1.1 — 8f · 1,141 sloc · 143 l/f · gate ^6.0.8</text>
+<text x="70" y="717" class="lbls" text-anchor="end" >6</text>
+<text x="81" y="717" class="lbls" text-anchor="start" >@uirouter/angular 22.0.0 — 18f · 1,023 sloc · 57 l/f · gate ^6.1.2</text>
+<text x="714" y="632" class="lbls" text-anchor="end" >7</text>
+<text x="725" y="632" class="lbls" text-anchor="start" >@uirouter/react 1.0.8 — 22f · 650 sloc · 30 l/f · gate 6.1.2 (dependency)</text>
+<text x="714" y="649" class="lbls" text-anchor="end" >8</text>
+<text x="725" y="649" class="lbls" text-anchor="start" >@uirouter/dsr 1.2.0 — 4f · 266 sloc · 67 l/f · gate &gt;=5.0.0</text>
+<text x="714" y="666" class="lbls" text-anchor="end" >9</text>
+<text x="725" y="666" class="lbls" text-anchor="start" >@uirouter/sticky-states 1.5.1 — 2f · 233 sloc · 117 l/f · gate &gt;=5.0.1</text>
+<text x="714" y="683" class="lbls" text-anchor="end" >10</text>
+<text x="725" y="683" class="lbls" text-anchor="start" >lit-ui-router-mobx 1.0.0 — 5f · 176 sloc · 35 l/f · gate ^6.0.8</text>
+<text x="714" y="700" class="lbls" text-anchor="end" >11</text>
+<text x="725" y="700" class="lbls" text-anchor="start" >…-nav-location-plugin 0.3.0 — 1f · 105 sloc · 105 l/f · gate ^6.0.8</text>
+<text x="714" y="717" class="lbls" text-anchor="end" >12</text>
+<text x="725" y="717" class="lbls" text-anchor="start" >@uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
 <text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 209 authored files · 13,851 sloc · versions and dates npm registry read 2026-09-05 · this repo + core counted at origin/main @ b2338d0 (2026-09-05) · upstream family clone counts 2026-08-16</text>
 <text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 on npm (published 2026-09-01) · 1.0.0-rc.2 in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
 </svg></div>
@@ -3300,38 +3364,70 @@ a { color: var(--accent); }
 <rect x="40" y="828" width="1480" height="346" class="sk fp"/>
 <text x="58" y="850" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · spec annex · gate tier</text>
 <line x1="40" y1="860" x2="1520" y2="860" class="skf"/>
-<text x="58" y="880" class="lbls" text-anchor="start" > 1  lit-ui-router — 13f · 1,383 · annex 15f · 4,068 · the material · the subject of this set · annex 2.9× the source</text>
-<text x="58" y="897" class="lbls" text-anchor="start" > 2  ui-router-server — 8f · 1,141 · annex 12f · 2,174 · the material · the server adapter · annex 1.9×</text>
-<text x="58" y="914" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 5f · 176 · annex 4f · 453 · the material · the mobx companion · annex 2.6×</text>
-<text x="58" y="931" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 1f · 105 · annex 7f · 410 · the material · one 105-line file, seven spec files</text>
-<text x="58" y="948" class="lbls" text-anchor="start" > 5  sample-app-shared — 37f · 2,211 · annex 3f · 309 · the material · the routes + views every sample app mounts</text>
-<text x="58" y="965" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — 8f · 399 · the material · the plain-lit demo</text>
-<text x="58" y="982" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — 8f · 438 · the material · the mobx demo</text>
-<text x="58" y="999" class="lbls" text-anchor="start" > 8  sample-app-routes — 2f · 51 · annex 1f · 185 · the material · the shared route table, server-side too</text>
-<text x="58" y="1016" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — 1f · 57 · annex 6f · 496 · STOPS THE PR LINE · cypress · drives the docs build</text>
-<text x="58" y="1033" class="lbls" text-anchor="start" >10  docs — 8f · 713 · annex 1f · 181 · the material · vitepress + the worker that serves it</text>
-<text x="58" y="1050" class="lbls" text-anchor="start" >11  examples — 18f · 2,404 · the material · stackblitz-ready copies, own lockfiles</text>
-<text x="58" y="1067" class="lbls" text-anchor="start" >12  @tools/release — 46f · 2,140 · annex 20f · 2,227 · HALTS A PUBLISH · hosts published-diff — the one publish halt</text>
-<text x="58" y="1084" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — 5f · 759 · never gates · builds the API pages, gates nothing</text>
-<text x="58" y="1101" class="lbls" text-anchor="start" >14  @tools/dts-backtest — 1f · 291 · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
-<text x="58" y="1118" class="lbls" text-anchor="start" >15  @tools/build_and_test — 7f · 1,128 · annex 3f · 1,163 · never gates · the CI graph helper — and its error summary</text>
-<text x="58" y="1135" class="lbls" text-anchor="start" >16  @tools/shared — 13f · 493 · annex 8f · 562 · never gates · the library under the instruments</text>
-<text x="800" y="880" class="lbls" text-anchor="start" >17  @tools/workers-builds — 2f · 375 · annex 1f · 269 · gates a later stage · the docs deploy watch</text>
-<text x="800" y="897" class="lbls" text-anchor="start" >18  @tools/bundle-probe — 4f · 247 · never gates · size probe, advisory</text>
-<text x="800" y="914" class="lbls" text-anchor="start" >19  @tools/compat-guards — 7f · 189 · annex 1f · 112 · STOPS THE PR LINE · the lit 2 / mobx 6 / peer-floor lanes</text>
-<text x="800" y="931" class="lbls" text-anchor="start" >20  @tools/oxc-emit — 5f · 228 · annex 1f · 89 · the material · both build passes, one emitter</text>
-<text x="800" y="948" class="lbls" text-anchor="start" >21  @tools/release-config — 1f · 39 · the material · the shared release-it config</text>
-<text x="800" y="965" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — 1f · 21 · never gates · the lit-analyzer wrapper</text>
-<text x="800" y="982" class="lbls" text-anchor="start" >23  @tools/lit-test-env — 1f · 24 · STOPS THE PR LINE · the browser harness every suite loads</text>
-<text x="800" y="999" class="lbls" text-anchor="start" >24  @tools/vue-check — 1f · 25 · never gates · vue-tsc over the docs components</text>
-<text x="800" y="1016" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 2f · 23 · annex 1f · 30 · never gates · coverage path rewriting</text>
-<text x="800" y="1033" class="lbls" text-anchor="start" >26  @tools/happy-dom — 1f · 8 · annex 1f · 26 · STOPS THE PR LINE · the node-side DOM the unit suites run in</text>
-<text x="800" y="1050" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no source · types only — not massed · ambient types only — nothing to mass</text>
-<text x="800" y="1067" class="lbls" text-anchor="start" >28  @tools/lint-elements — 1f · 186 · STOPS THE PR LINE · the shared custom-element lint lane (#655)</text>
-<text x="800" y="1084" class="lbls" text-anchor="start" >29  @tools/warn-lanes — 1f · 214 · annex 1f · 280 · never gates · the warning ratchet — reports a floor, never gates</text>
-<text x="800" y="1101" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — 1f · 1 · never gates · a one-line parser shim — the smallest thing in the yard</text>
-<text x="800" y="1118" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — 9f · 715 · annex 9f · 1,038 · the material · vendored uiSref lint rules · annex 1.5×</text>
-<text x="800" y="1135" class="lbls" text-anchor="start" >32  @tools/embed-heights — 3f · 336 · annex 1f · 33 · never gates · docs embed heights, measured in Chromium — outside ci</text>
+<text x="72" y="880" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="880" class="lbls" text-anchor="start" >lit-ui-router — 13f · 1,383 · annex 15f · 4,068 · the material · the subject of this set · annex 2.9× the source</text>
+<text x="72" y="897" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="897" class="lbls" text-anchor="start" >ui-router-server — 8f · 1,141 · annex 12f · 2,174 · the material · the server adapter · annex 1.9×</text>
+<text x="72" y="914" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="914" class="lbls" text-anchor="start" >lit-ui-router-mobx — 5f · 176 · annex 4f · 453 · the material · the mobx companion · annex 2.6×</text>
+<text x="72" y="931" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="931" class="lbls" text-anchor="start" >navigation-location-plugin — 1f · 105 · annex 7f · 410 · the material · one 105-line file, seven spec files</text>
+<text x="72" y="948" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="948" class="lbls" text-anchor="start" >sample-app-shared — 37f · 2,211 · annex 3f · 309 · the material · the routes + views every sample app mounts</text>
+<text x="72" y="965" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="965" class="lbls" text-anchor="start" >sample-app-lit-vanilla — 8f · 399 · the material · the plain-lit demo</text>
+<text x="72" y="982" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="982" class="lbls" text-anchor="start" >sample-app-lit-mobx — 8f · 438 · the material · the mobx demo</text>
+<text x="72" y="999" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="999" class="lbls" text-anchor="start" >sample-app-routes — 2f · 51 · annex 1f · 185 · the material · the shared route table, server-side too</text>
+<text x="72" y="1016" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1016" class="lbls" text-anchor="start" >sample-app-lit-e2e — 1f · 57 · annex 6f · 496 · STOPS THE PR LINE · cypress · drives the docs build</text>
+<text x="72" y="1033" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1033" class="lbls" text-anchor="start" >docs — 8f · 713 · annex 1f · 181 · the material · vitepress + the worker that serves it</text>
+<text x="72" y="1050" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1050" class="lbls" text-anchor="start" >examples — 18f · 2,404 · the material · stackblitz-ready copies, own lockfiles</text>
+<text x="72" y="1067" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1067" class="lbls" text-anchor="start" >@tools/release — 46f · 2,140 · annex 20f · 2,227 · HALTS A PUBLISH · hosts published-diff — the one publish halt</text>
+<text x="72" y="1084" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1084" class="lbls" text-anchor="start" >@tools/typedoc-plugin — 5f · 759 · never gates · builds the API pages, gates nothing</text>
+<text x="72" y="1101" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1101" class="lbls" text-anchor="start" >@tools/dts-backtest — 1f · 291 · STOPS THE PR LINE · one 291-line run.ts holds the TS 5.0 floor</text>
+<text x="72" y="1118" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1118" class="lbls" text-anchor="start" >@tools/build_and_test — 7f · 1,128 · annex 3f · 1,163 · never gates · the CI graph helper — and its error summary</text>
+<text x="72" y="1135" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1135" class="lbls" text-anchor="start" >@tools/shared — 13f · 493 · annex 8f · 562 · never gates · the library under the instruments</text>
+<text x="814" y="880" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="880" class="lbls" text-anchor="start" >@tools/workers-builds — 2f · 375 · annex 1f · 269 · gates a later stage · the docs deploy watch</text>
+<text x="814" y="897" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="897" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 247 · never gates · size probe, advisory</text>
+<text x="814" y="914" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="914" class="lbls" text-anchor="start" >@tools/compat-guards — 7f · 189 · annex 1f · 112 · STOPS THE PR LINE · the lit 2 / mobx 6 / peer-floor lanes</text>
+<text x="814" y="931" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="931" class="lbls" text-anchor="start" >@tools/oxc-emit — 5f · 228 · annex 1f · 89 · the material · both build passes, one emitter</text>
+<text x="814" y="948" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="948" class="lbls" text-anchor="start" >@tools/release-config — 1f · 39 · the material · the shared release-it config</text>
+<text x="814" y="965" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="965" class="lbls" text-anchor="start" >@tools/lit-template-lint — 1f · 21 · never gates · the lit-analyzer wrapper</text>
+<text x="814" y="982" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="982" class="lbls" text-anchor="start" >@tools/lit-test-env — 1f · 24 · STOPS THE PR LINE · the browser harness every suite loads</text>
+<text x="814" y="999" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="999" class="lbls" text-anchor="start" >@tools/vue-check — 1f · 25 · never gates · vue-tsc over the docs components</text>
+<text x="814" y="1016" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1016" class="lbls" text-anchor="start" >@tools/lcov-rebase — 2f · 23 · annex 1f · 30 · never gates · coverage path rewriting</text>
+<text x="814" y="1033" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1033" class="lbls" text-anchor="start" >@tools/happy-dom — 1f · 8 · annex 1f · 26 · STOPS THE PR LINE · the node-side DOM the unit suites run in</text>
+<text x="814" y="1050" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1050" class="lbls" text-anchor="start" >@tools/wintercg-globals — no source · types only — not massed · ambient types only — nothing to mass</text>
+<text x="814" y="1067" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1067" class="lbls" text-anchor="start" >@tools/lint-elements — 1f · 186 · STOPS THE PR LINE · the shared custom-element lint lane (#655)</text>
+<text x="814" y="1084" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1084" class="lbls" text-anchor="start" >@tools/warn-lanes — 1f · 214 · annex 1f · 280 · never gates · the warning ratchet — reports a floor, never gates</text>
+<text x="814" y="1101" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1101" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 1 · never gates · a one-line parser shim — the smallest thing in the yard</text>
+<text x="814" y="1118" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1118" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 9f · 715 · annex 9f · 1,038 · the material · vendored uiSref lint rules · annex 1.5×</text>
+<text x="814" y="1135" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1135" class="lbls" text-anchor="start" >@tools/embed-heights — 3f · 336 · annex 1f · 33 · never gates · docs embed heights, measured in Chromium — outside ci</text>
 <text x="58" y="1158" class="lbls" text-anchor="start" >TOTAL — 32 members, 31 massed · 221 authored files · 16,520 sloc · plus 96 spec files · 14,105 sloc of annex · counted at origin/main @ b2338d0 (2026-09-05) (sloc = scc Code)</text>
 </svg></div>
     <figcaption>Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Rev B keeps the census — footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and adds the two things a census alone cannot say: which districts these members belong to, and which roads actually run between them. Every road is a workspace dependency or a turbo task edge, never an impression.</figcaption>
@@ -3659,38 +3755,70 @@ a { color: var(--accent); }
 <rect x="40" y="882" width="1480" height="363" class="sk fp"/>
 <text x="58" y="904" class="lbls" text-anchor="start" >SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files</text>
 <line x1="40" y1="914" x2="1520" y2="914" class="skf"/>
-<text x="58" y="934" class="lbls" text-anchor="start" > 1  lit-ui-router — 9/13f · 1,303/1,383 (94.2%) · L 98.2% B 92.8% F 97.5% · in shadow: barrels + interface.ts</text>
-<text x="58" y="951" class="lbls" text-anchor="start" > 2  ui-router-server — 8/8f · 1,141/1,141 (100%) · L 99.6% B 95.6% F 98.3% · whole footprint fully lit</text>
-<text x="58" y="968" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 4/5f · 173/176 (98.3%) · L 100% B 90.9% F 100% · in shadow: the index barrel</text>
-<text x="58" y="985" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 1/1f · 105/105 (100%) · L 100% B 100% F 100% · all three meters read 100</text>
-<text x="58" y="1002" class="lbls" text-anchor="start" > 5  sample-app-shared — tests run, no meter · tests pass · no provider in browser mode</text>
-<text x="58" y="1019" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — e2e light only · lit only by the cypress rig</text>
-<text x="58" y="1036" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — e2e light only · lit only by the cypress rig</text>
-<text x="58" y="1053" class="lbls" text-anchor="start" > 8  sample-app-routes — 2/2f · 51/51 (100%) · L 100% B 100% F — · route table lit (no functions to meter)</text>
-<text x="58" y="1070" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — e2e light only · the rig itself — its sloc are support code</text>
-<text x="58" y="1087" class="lbls" text-anchor="start" >10  docs — 1/8f · 53/713 (7.4%) · L 100% B 100% F 100% · worker lit · the site sees only e2e light</text>
-<text x="58" y="1104" class="lbls" text-anchor="start" >11  examples — FULL SHADOW — no suite · stackblitz copies — never lit</text>
-<text x="58" y="1121" class="lbls" text-anchor="start" >12  @tools/release — 25/46f · 1,211/2,140 (56.6%) · L 96.7% B 96.4% F 94% · cores lit, CLI wrappers in shadow</text>
-<text x="58" y="1138" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — FULL SHADOW — no suite · builds the API pages, tests nothing</text>
-<text x="58" y="1155" class="lbls" text-anchor="start" >14  @tools/dts-backtest — FULL SHADOW — no suite · no self-suite — it IS the d.ts test</text>
-<text x="58" y="1172" class="lbls" text-anchor="start" >15  @tools/build_and_test — 4/7f · 824/1,128 (73%) · L 99.5% B 93.6% F 98.5% · 3 wrappers in shadow, the cores lit</text>
-<text x="58" y="1189" class="lbls" text-anchor="start" >16  @tools/shared — 10/13f · 436/493 (88.4%) · L 89.6% B 94.7% F 81.3% · palest: exec.ts and workspace.ts</text>
-<text x="800" y="934" class="lbls" text-anchor="start" >17  @tools/workers-builds — 1/2f · 219/375 (58.4%) · L 99.3% B 88.5% F 100% · trigger wrapper in shadow</text>
-<text x="800" y="951" class="lbls" text-anchor="start" >18  @tools/bundle-probe — FULL SHADOW — no suite · size probe, advisory, unlit</text>
-<text x="800" y="968" class="lbls" text-anchor="start" >19  @tools/compat-guards — 1/7f · 23/189 (12.2%) · L 100% B 100% F 100% · ranges.ts lit; six CI lanes unmetered</text>
-<text x="800" y="985" class="lbls" text-anchor="start" >20  @tools/oxc-emit — 1/5f · 57/228 (25%) · L 100% B 100% F 100% · REV E: first metered — the check lane</text>
-<text x="800" y="1002" class="lbls" text-anchor="start" >21  @tools/release-config — FULL SHADOW — no suite · config only</text>
-<text x="800" y="1019" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — FULL SHADOW — no suite · wrapper only</text>
-<text x="800" y="1036" class="lbls" text-anchor="start" >23  @tools/lit-test-env — FULL SHADOW — no suite · harness for the vitest suites — borrowed light</text>
-<text x="800" y="1053" class="lbls" text-anchor="start" >24  @tools/vue-check — FULL SHADOW — no suite · wrapper only</text>
-<text x="800" y="1070" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 1/2f · 6/23 (26.1%) · L 100% B 100% F 100% · rebase.ts lit · CLI wrapper in shadow</text>
-<text x="800" y="1087" class="lbls" text-anchor="start" >26  @tools/happy-dom — 0/1f · 0/8 (0%) · L — B — F — · canary lights happy-dom, not append.ts</text>
-<text x="800" y="1104" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no mass · ambient types — nothing to light</text>
-<text x="800" y="1121" class="lbls" text-anchor="start" >28  @tools/lint-elements — FULL SHADOW — no suite · the element lane — no suite of its own</text>
-<text x="800" y="1138" class="lbls" text-anchor="start" >29  @tools/warn-lanes — 1/1f · 214/214 (100%) · L 100% B 88.5% F 100% · REV E: first metered — the ratchet core</text>
-<text x="800" y="1155" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — FULL SHADOW — no suite · a one-line parser shim — nothing to light</text>
-<text x="800" y="1172" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — 8/9f · 709/715 (99.2%) · L 99.3% B 90% F 100% · REV E: first metered — vendored rules</text>
-<text x="800" y="1189" class="lbls" text-anchor="start" >32  @tools/embed-heights — 1/3f · 35/336 (10.4%) · L 100% B 100% F 100% · REV E: reserve lit — driver + CLI in shadow</text>
+<text x="72" y="934" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="934" class="lbls" text-anchor="start" >lit-ui-router — 9/13f · 1,303/1,383 (94.2%) · L 98.2% B 92.8% F 97.5% · in shadow: barrels + interface.ts</text>
+<text x="72" y="951" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="951" class="lbls" text-anchor="start" >ui-router-server — 8/8f · 1,141/1,141 (100%) · L 99.6% B 95.6% F 98.3% · whole footprint fully lit</text>
+<text x="72" y="968" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="968" class="lbls" text-anchor="start" >lit-ui-router-mobx — 4/5f · 173/176 (98.3%) · L 100% B 90.9% F 100% · in shadow: the index barrel</text>
+<text x="72" y="985" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="985" class="lbls" text-anchor="start" >navigation-location-plugin — 1/1f · 105/105 (100%) · L 100% B 100% F 100% · all three meters read 100</text>
+<text x="72" y="1002" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="1002" class="lbls" text-anchor="start" >sample-app-shared — tests run, no meter · tests pass · no provider in browser mode</text>
+<text x="72" y="1019" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="1019" class="lbls" text-anchor="start" >sample-app-lit-vanilla — e2e light only · lit only by the cypress rig</text>
+<text x="72" y="1036" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="1036" class="lbls" text-anchor="start" >sample-app-lit-mobx — e2e light only · lit only by the cypress rig</text>
+<text x="72" y="1053" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="1053" class="lbls" text-anchor="start" >sample-app-routes — 2/2f · 51/51 (100%) · L 100% B 100% F — · route table lit (no functions to meter)</text>
+<text x="72" y="1070" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1070" class="lbls" text-anchor="start" >sample-app-lit-e2e — e2e light only · the rig itself — its sloc are support code</text>
+<text x="72" y="1087" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1087" class="lbls" text-anchor="start" >docs — 1/8f · 53/713 (7.4%) · L 100% B 100% F 100% · worker lit · the site sees only e2e light</text>
+<text x="72" y="1104" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1104" class="lbls" text-anchor="start" >examples — FULL SHADOW — no suite · stackblitz copies — never lit</text>
+<text x="72" y="1121" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1121" class="lbls" text-anchor="start" >@tools/release — 25/46f · 1,211/2,140 (56.6%) · L 96.7% B 96.4% F 94% · cores lit, CLI wrappers in shadow</text>
+<text x="72" y="1138" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1138" class="lbls" text-anchor="start" >@tools/typedoc-plugin — FULL SHADOW — no suite · builds the API pages, tests nothing</text>
+<text x="72" y="1155" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1155" class="lbls" text-anchor="start" >@tools/dts-backtest — FULL SHADOW — no suite · no self-suite — it IS the d.ts test</text>
+<text x="72" y="1172" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1172" class="lbls" text-anchor="start" >@tools/build_and_test — 4/7f · 824/1,128 (73%) · L 99.5% B 93.6% F 98.5% · 3 wrappers in shadow, the cores lit</text>
+<text x="72" y="1189" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1189" class="lbls" text-anchor="start" >@tools/shared — 10/13f · 436/493 (88.4%) · L 89.6% B 94.7% F 81.3% · palest: exec.ts and workspace.ts</text>
+<text x="814" y="934" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="934" class="lbls" text-anchor="start" >@tools/workers-builds — 1/2f · 219/375 (58.4%) · L 99.3% B 88.5% F 100% · trigger wrapper in shadow</text>
+<text x="814" y="951" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="951" class="lbls" text-anchor="start" >@tools/bundle-probe — FULL SHADOW — no suite · size probe, advisory, unlit</text>
+<text x="814" y="968" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="968" class="lbls" text-anchor="start" >@tools/compat-guards — 1/7f · 23/189 (12.2%) · L 100% B 100% F 100% · ranges.ts lit; six CI lanes unmetered</text>
+<text x="814" y="985" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="985" class="lbls" text-anchor="start" >@tools/oxc-emit — 1/5f · 57/228 (25%) · L 100% B 100% F 100% · REV E: first metered — the check lane</text>
+<text x="814" y="1002" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="1002" class="lbls" text-anchor="start" >@tools/release-config — FULL SHADOW — no suite · config only</text>
+<text x="814" y="1019" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="1019" class="lbls" text-anchor="start" >@tools/lit-template-lint — FULL SHADOW — no suite · wrapper only</text>
+<text x="814" y="1036" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="1036" class="lbls" text-anchor="start" >@tools/lit-test-env — FULL SHADOW — no suite · harness for the vitest suites — borrowed light</text>
+<text x="814" y="1053" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="1053" class="lbls" text-anchor="start" >@tools/vue-check — FULL SHADOW — no suite · wrapper only</text>
+<text x="814" y="1070" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1070" class="lbls" text-anchor="start" >@tools/lcov-rebase — 1/2f · 6/23 (26.1%) · L 100% B 100% F 100% · rebase.ts lit · CLI wrapper in shadow</text>
+<text x="814" y="1087" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1087" class="lbls" text-anchor="start" >@tools/happy-dom — 0/1f · 0/8 (0%) · L — B — F — · canary lights happy-dom, not append.ts</text>
+<text x="814" y="1104" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1104" class="lbls" text-anchor="start" >@tools/wintercg-globals — no mass · ambient types — nothing to light</text>
+<text x="814" y="1121" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1121" class="lbls" text-anchor="start" >@tools/lint-elements — FULL SHADOW — no suite · the element lane — no suite of its own</text>
+<text x="814" y="1138" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1138" class="lbls" text-anchor="start" >@tools/warn-lanes — 1/1f · 214/214 (100%) · L 100% B 88.5% F 100% · REV E: first metered — the ratchet core</text>
+<text x="814" y="1155" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1155" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — FULL SHADOW — no suite · a one-line parser shim — nothing to light</text>
+<text x="814" y="1172" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1172" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 8/9f · 709/715 (99.2%) · L 99.3% B 90% F 100% · REV E: first metered — vendored rules</text>
+<text x="814" y="1189" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1189" class="lbls" text-anchor="start" >@tools/embed-heights — 1/3f · 35/336 (10.4%) · L 100% B 100% F 100% · REV E: reserve lit — driver + CLI in shadow</text>
 <text x="58" y="1210" class="lbls" text-anchor="start" >TOTAL — 17 members metered: 7,822 of 7,980 metered lines lit (98.0%) · branches 1,815/1,929 (94.1%) · functions 573/595 (96.3%) · lit extent 6,560/9,418 sloc (69.7%) · metered at origin/main @ b2338d0 (2026-09-05)</text>
 <text x="58" y="1226" class="lblf" text-anchor="start" >REV E — the daggers are retired: light and footprint are now measured at the SAME ref, so no member's meter and census can disagree · every figure above is read from diagrams/data/census-shadow.json and diagrams/data/census-city.json</text>
 </svg></div>
@@ -4342,38 +4470,70 @@ a { color: var(--accent); }
 <rect x="40" y="828" width="1480" height="346" class="sk fp"/>
 <text x="58" y="850" class="lbls" text-anchor="start" >PLANT SCHEDULE — per member: rust step (median idle) · steam (commits 2026-06-07..2026-09-04 = puffs) · lamps (lit share from plate 7A) · pipe state</text>
 <line x1="40" y1="860" x2="1520" y2="860" class="skf"/>
-<text x="58" y="880" class="lbls" text-anchor="start" > 1  lit-ui-router — rust R3 · steam 35c/90d = 3 puffs · lamps 3 (92.5%) · pipes OK</text>
-<text x="58" y="897" class="lbls" text-anchor="start" > 2  ui-router-server — rust R3 · steam 9c/90d = 2 puffs · lamps 3 (99.6%) · pipes OK</text>
-<text x="58" y="914" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — rust R1 · steam 10c/90d = 2 puffs · lamps 3 (98.3%) · pipes OK</text>
-<text x="58" y="931" class="lbls" text-anchor="start" > 4  navigation-location-plugin — rust R1 · steam 8c/90d = 1 puff · lamps 3 (100%) · pipes OK</text>
-<text x="58" y="948" class="lbls" text-anchor="start" > 5  sample-app-shared — rust R3 · steam 26c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="965" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — rust R3 · steam 9c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="982" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — rust R3 · steam 12c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="999" class="lbls" text-anchor="start" > 8  sample-app-routes — rust R3 · steam 2c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
-<text x="58" y="1016" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — rust R1 · steam 17c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
-<text x="58" y="1033" class="lbls" text-anchor="start" >10  docs — rust R1 · steam 28c/90d = 3 puffs · lamps 1 (7.4%) · pipes OK</text>
-<text x="58" y="1050" class="lbls" text-anchor="start" >11  examples — rust R1 · steam 16c/90d = 3 puffs · lamps 0 · pipes OK</text>
-<text x="58" y="1067" class="lbls" text-anchor="start" >12  @tools/release — rust R3 · steam 20c/90d = 3 puffs · lamps 2 (54.7%) · pipes OK</text>
-<text x="58" y="1084" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — rust R4 · steam 7c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="58" y="1101" class="lbls" text-anchor="start" >14  @tools/dts-backtest — rust R1 · steam 4c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="58" y="1118" class="lbls" text-anchor="start" >15  @tools/build_and_test — rust R2 · steam 6c/90d = 1 puff · lamps 2 (72.6%) · pipes OK</text>
-<text x="58" y="1135" class="lbls" text-anchor="start" >16  @tools/shared — rust R2 · steam 10c/90d = 2 puffs · lamps 2 (79.2%) · pipes OK</text>
-<text x="800" y="880" class="lbls" text-anchor="start" >17  @tools/workers-builds — rust R1 · steam 8c/90d = 1 puff · lamps 2 (58%) · pipes OK</text>
-<text x="800" y="897" class="lbls" text-anchor="start" >18  @tools/bundle-probe — rust R1 · steam 5c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="800" y="914" class="lbls" text-anchor="start" >19  @tools/compat-guards — rust R1 · steam 4c/90d = 1 puff · lamps 1 (12.2%) · pipes OK</text>
-<text x="800" y="931" class="lbls" text-anchor="start" >20  @tools/oxc-emit — rust R1 · steam 4c/90d = 1 puff · lamps 1 (25%) · pipes OK</text>
-<text x="800" y="948" class="lbls" text-anchor="start" >21  @tools/release-config — rust R1 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="965" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — rust 0 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="982" class="lbls" text-anchor="start" >23  @tools/lit-test-env — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="999" class="lbls" text-anchor="start" >24  @tools/vue-check — rust R3 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="1016" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — rust R2 · steam 1c/90d = 0 puffs · lamps 1 (26.1%) · pipes OK</text>
-<text x="800" y="1033" class="lbls" text-anchor="start" >26  @tools/happy-dom — rust R3 · steam 1c/90d = 0 puffs · lamps 0 (0%) · pipes OK</text>
-<text x="800" y="1050" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — ambient types · no machine on the pad</text>
-<text x="800" y="1067" class="lbls" text-anchor="start" >28  @tools/lint-elements — rust 0 · steam 3c/90d = 1 puff · lamps 0 · pipes OK</text>
-<text x="800" y="1084" class="lbls" text-anchor="start" >29  @tools/warn-lanes — rust 0 · steam 1c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
-<text x="800" y="1101" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
-<text x="800" y="1118" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — rust 0 · steam 4c/90d = 1 puff · lamps 3 (98.5%) · pipes OK</text>
-<text x="800" y="1135" class="lbls" text-anchor="start" >32  @tools/embed-heights — rust 0 · steam 1c/90d = 0 puffs · lamps 1 (10.4%) · pipes OK</text>
+<text x="72" y="880" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="880" class="lbls" text-anchor="start" >lit-ui-router — rust R3 · steam 35c/90d = 3 puffs · lamps 3 (92.5%) · pipes OK</text>
+<text x="72" y="897" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="897" class="lbls" text-anchor="start" >ui-router-server — rust R3 · steam 9c/90d = 2 puffs · lamps 3 (99.6%) · pipes OK</text>
+<text x="72" y="914" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="914" class="lbls" text-anchor="start" >lit-ui-router-mobx — rust R1 · steam 10c/90d = 2 puffs · lamps 3 (98.3%) · pipes OK</text>
+<text x="72" y="931" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="931" class="lbls" text-anchor="start" >navigation-location-plugin — rust R1 · steam 8c/90d = 1 puff · lamps 3 (100%) · pipes OK</text>
+<text x="72" y="948" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="948" class="lbls" text-anchor="start" >sample-app-shared — rust R3 · steam 26c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="965" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="965" class="lbls" text-anchor="start" >sample-app-lit-vanilla — rust R3 · steam 9c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="982" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="982" class="lbls" text-anchor="start" >sample-app-lit-mobx — rust R3 · steam 12c/90d = 2 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="999" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="999" class="lbls" text-anchor="start" >sample-app-routes — rust R3 · steam 2c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
+<text x="72" y="1016" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1016" class="lbls" text-anchor="start" >sample-app-lit-e2e — rust R1 · steam 17c/90d = 3 puffs · lamps e2e (accent) · pipes OK</text>
+<text x="72" y="1033" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1033" class="lbls" text-anchor="start" >docs — rust R1 · steam 28c/90d = 3 puffs · lamps 1 (7.4%) · pipes OK</text>
+<text x="72" y="1050" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1050" class="lbls" text-anchor="start" >examples — rust R1 · steam 16c/90d = 3 puffs · lamps 0 · pipes OK</text>
+<text x="72" y="1067" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1067" class="lbls" text-anchor="start" >@tools/release — rust R3 · steam 20c/90d = 3 puffs · lamps 2 (54.7%) · pipes OK</text>
+<text x="72" y="1084" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1084" class="lbls" text-anchor="start" >@tools/typedoc-plugin — rust R4 · steam 7c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="72" y="1101" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1101" class="lbls" text-anchor="start" >@tools/dts-backtest — rust R1 · steam 4c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="72" y="1118" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1118" class="lbls" text-anchor="start" >@tools/build_and_test — rust R2 · steam 6c/90d = 1 puff · lamps 2 (72.6%) · pipes OK</text>
+<text x="72" y="1135" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1135" class="lbls" text-anchor="start" >@tools/shared — rust R2 · steam 10c/90d = 2 puffs · lamps 2 (79.2%) · pipes OK</text>
+<text x="814" y="880" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="880" class="lbls" text-anchor="start" >@tools/workers-builds — rust R1 · steam 8c/90d = 1 puff · lamps 2 (58%) · pipes OK</text>
+<text x="814" y="897" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="897" class="lbls" text-anchor="start" >@tools/bundle-probe — rust R1 · steam 5c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="814" y="914" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="914" class="lbls" text-anchor="start" >@tools/compat-guards — rust R1 · steam 4c/90d = 1 puff · lamps 1 (12.2%) · pipes OK</text>
+<text x="814" y="931" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="931" class="lbls" text-anchor="start" >@tools/oxc-emit — rust R1 · steam 4c/90d = 1 puff · lamps 1 (25%) · pipes OK</text>
+<text x="814" y="948" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="948" class="lbls" text-anchor="start" >@tools/release-config — rust R1 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="965" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="965" class="lbls" text-anchor="start" >@tools/lit-template-lint — rust 0 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="982" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="982" class="lbls" text-anchor="start" >@tools/lit-test-env — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="999" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="999" class="lbls" text-anchor="start" >@tools/vue-check — rust R3 · steam 2c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="1016" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1016" class="lbls" text-anchor="start" >@tools/lcov-rebase — rust R2 · steam 1c/90d = 0 puffs · lamps 1 (26.1%) · pipes OK</text>
+<text x="814" y="1033" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1033" class="lbls" text-anchor="start" >@tools/happy-dom — rust R3 · steam 1c/90d = 0 puffs · lamps 0 (0%) · pipes OK</text>
+<text x="814" y="1050" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1050" class="lbls" text-anchor="start" >@tools/wintercg-globals — ambient types · no machine on the pad</text>
+<text x="814" y="1067" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1067" class="lbls" text-anchor="start" >@tools/lint-elements — rust 0 · steam 3c/90d = 1 puff · lamps 0 · pipes OK</text>
+<text x="814" y="1084" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1084" class="lbls" text-anchor="start" >@tools/warn-lanes — rust 0 · steam 1c/90d = 0 puffs · lamps 3 (100%) · pipes OK</text>
+<text x="814" y="1101" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1101" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — rust R1 · steam 1c/90d = 0 puffs · lamps 0 · pipes OK</text>
+<text x="814" y="1118" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1118" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — rust 0 · steam 4c/90d = 1 puff · lamps 3 (98.5%) · pipes OK</text>
+<text x="814" y="1135" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1135" class="lbls" text-anchor="start" >@tools/embed-heights — rust 0 · steam 1c/90d = 0 puffs · lamps 1 (10.4%) · pipes OK</text>
 <text x="58" y="1158" class="lbls" text-anchor="start" >TOTAL — 31 plants running, 0 seized · steam 259 member-touches from 377 window commits (2026-06-07..2026-09-04) · 16 metered-lamp plants + 4 accent · steam counted at origin/main @ b2338d0 (2026-09-05); rust and lamps carry their own older bases</text>
 </svg></div>
     <figcaption>Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. Rev B’s one alarm rang over no plant at all — it rang over the drawings; rev C draws it struck through, because it was answered.</figcaption>
@@ -6320,38 +6480,70 @@ a { color: var(--accent); }
 <rect x="40" y="1486" width="1480" height="346" class="sk fp"/>
 <text x="58" y="1508" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — weathering per member · files · first-commit date · files born per season I/II/III · touches (per file) · median days since last touch</text>
 <line x1="40" y1="1518" x2="1520" y2="1518" class="skf"/>
-<text x="58" y="1538" class="lbls" text-anchor="start" > 1  lit-ui-router — 28f · 2025-07-21 · 8/5/15 · ×161 (5.8/f) · idle 48d · ui-sref.ts×18</text>
-<text x="58" y="1555" class="lbls" text-anchor="start" > 2  ui-router-server — 20f · 2026-07-14 · 0/0/20 · ×45 (2.3/f) · idle 49d · index.ts×4</text>
-<text x="58" y="1572" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 9f · 2026-07-04 · 0/0/9 · ×31 (3.4/f) · idle 1d · specs/router-reaction-controller.spec.ts×6</text>
-<text x="58" y="1589" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 8f · 2026-01-11 · 0/2/6 · ×20 (2.5/f) · idle 27d · index.ts×10</text>
-<text x="58" y="1606" class="lbls" text-anchor="start" > 5  sample-app-shared — 40f · 2025-07-21 · 8/0/32 · ×175 (4.4/f) · idle 48d · router.config.ts×14</text>
-<text x="58" y="1623" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — 8f · 2025-07-21 · 6/0/2 · ×50 (6.3/f) · idle 57d · app/main/NavHeader.ts×10</text>
-<text x="58" y="1640" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — 8f · 2026-07-04 · 0/0/8 · ×34 (4.3/f) · idle 57d · app/main/NavHeader.ts×7</text>
-<text x="58" y="1657" class="lbls" text-anchor="start" > 8  sample-app-routes — 3f · 2026-07-14 · 0/0/3 · ×5 (1.7/f) · idle 52d · routes.ts×2</text>
-<text x="58" y="1674" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — 7f · 2025-07-21 · 2/0/5 · ×32 (4.6/f) · idle 20d · integration/sample_app.cy.js×8</text>
-<text x="58" y="1691" class="lbls" text-anchor="start" >10  docs — 9f · 2025-07-23 · 2/1/6 · ×69 (7.7/f) · idle 35d · .vitepress/config.ts×27</text>
-<text x="58" y="1708" class="lbls" text-anchor="start" >11  examples — 18f · 2026-01-01 · 0/6/12 · ×47 (2.6/f) · idle 19d · 3 SEALED · hellosolarsystem/src/main.ts×11</text>
-<text x="58" y="1725" class="lbls" text-anchor="start" >12  @tools/release — 66f · 2026-07-06 · 0/0/66 · ×127 (1.9/f) · idle 44d · checks/check-pack.ts×10</text>
-<text x="58" y="1742" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — 5f · 2026-01-09 · 0/4/1 · ×15 (3.0/f) · idle 239d · 3 SEALED · index.ts×8</text>
-<text x="58" y="1759" class="lbls" text-anchor="start" >14  @tools/dts-backtest — 1f · 2026-07-06 · 0/0/1 · ×6 (6.0/f) · idle 22d · run.ts×6</text>
-<text x="58" y="1776" class="lbls" text-anchor="start" >15  @tools/build_and_test — 10f · 2026-07-07 · 0/0/10 · ×26 (2.6/f) · idle 42d · upload-bundle-stats.ts×4</text>
-<text x="58" y="1793" class="lbls" text-anchor="start" >16  @tools/shared — 21f · 2026-07-06 · 0/0/21 · ×38 (1.8/f) · idle 3d · workspace.ts×9</text>
-<text x="800" y="1538" class="lbls" text-anchor="start" >17  @tools/workers-builds — 3f · 2026-07-11 · 0/0/3 · ×13 (4.3/f) · idle 22d · workers-builds-triggers.test.ts×7</text>
-<text x="800" y="1555" class="lbls" text-anchor="start" >18  @tools/bundle-probe — 4f · 2026-07-18 · 0/0/4 · ×12 (3.0/f) · idle 3d · upload-entry-bundles.ts×5</text>
-<text x="800" y="1572" class="lbls" text-anchor="start" >19  @tools/compat-guards — 8f · 2026-08-09 · 0/0/8 · ×10 (1.3/f) · idle 27d · catalog.ts×2</text>
-<text x="800" y="1589" class="lbls" text-anchor="start" >20  @tools/oxc-emit — 6f · 2026-07-17 · 0/0/6 · ×14 (2.3/f) · idle 3d · emit-js.ts×3</text>
-<text x="800" y="1606" class="lbls" text-anchor="start" >21  @tools/release-config — 1f · 2026-07-31 · 0/0/1 · ×2 (2.0/f) · idle 27d · release-it.js×2</text>
-<text x="800" y="1623" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — 1f · 2026-08-11 · 0/0/1 · ×2 (2.0/f) · idle 5d · lint-templates.ts×2</text>
-<text x="800" y="1640" class="lbls" text-anchor="start" >23  @tools/lit-test-env — 1f · 2026-08-09 · 0/0/1 · ×1 (1.0/f) · idle 27d · setup.ts×1</text>
-<text x="800" y="1657" class="lbls" text-anchor="start" >24  @tools/vue-check — 1f · 2026-07-09 · 0/0/1 · ×3 (3.0/f) · idle 53d · bin.ts×3</text>
-<text x="800" y="1674" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 3f · 2026-07-29 · 0/0/3 · ×3 (1.0/f) · idle 38d · rebase-lcov.ts×1</text>
-<text x="800" y="1691" class="lbls" text-anchor="start" >26  @tools/happy-dom — 2f · 2026-07-19 · 0/0/2 · ×2 (1.0/f) · idle 48d · append.ts×1</text>
-<text x="800" y="1708" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no dated source (ambient types only)</text>
-<text x="800" y="1725" class="lbls" text-anchor="start" >28  @tools/lint-elements — 1f · 2026-08-31 · 0/0/1 · ×3 (3.0/f) · idle 4d · lint-elements.ts×3</text>
-<text x="800" y="1742" class="lbls" text-anchor="start" >29  @tools/warn-lanes — 2f · 2026-08-31 · 0/0/2 · ×2 (1.0/f) · idle 5d · warn-lanes.core.test.ts×1</text>
-<text x="800" y="1759" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — 1f · 2026-08-16 · 0/0/1 · ×1 (1.0/f) · idle 20d · index.ts×1</text>
-<text x="800" y="1776" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — 18f · 2026-09-01 · 0/0/18 · ×35 (1.9/f) · idle 1d · anchor-is-valid.ts×5</text>
-<text x="800" y="1793" class="lbls" text-anchor="start" >32  @tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×4 (1.0/f) · idle 1d · check-embed-heights.ts×1</text>
+<text x="72" y="1538" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="1538" class="lbls" text-anchor="start" >lit-ui-router — 28f · 2025-07-21 · 8/5/15 · ×161 (5.8/f) · idle 48d · ui-sref.ts×18</text>
+<text x="72" y="1555" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="1555" class="lbls" text-anchor="start" >ui-router-server — 20f · 2026-07-14 · 0/0/20 · ×45 (2.3/f) · idle 49d · index.ts×4</text>
+<text x="72" y="1572" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="1572" class="lbls" text-anchor="start" >lit-ui-router-mobx — 9f · 2026-07-04 · 0/0/9 · ×31 (3.4/f) · idle 1d · specs/router-reaction-controller.spec.ts×6</text>
+<text x="72" y="1589" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="1589" class="lbls" text-anchor="start" >navigation-location-plugin — 8f · 2026-01-11 · 0/2/6 · ×20 (2.5/f) · idle 27d · index.ts×10</text>
+<text x="72" y="1606" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="1606" class="lbls" text-anchor="start" >sample-app-shared — 40f · 2025-07-21 · 8/0/32 · ×175 (4.4/f) · idle 48d · router.config.ts×14</text>
+<text x="72" y="1623" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="1623" class="lbls" text-anchor="start" >sample-app-lit-vanilla — 8f · 2025-07-21 · 6/0/2 · ×50 (6.3/f) · idle 57d · app/main/NavHeader.ts×10</text>
+<text x="72" y="1640" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="1640" class="lbls" text-anchor="start" >sample-app-lit-mobx — 8f · 2026-07-04 · 0/0/8 · ×34 (4.3/f) · idle 57d · app/main/NavHeader.ts×7</text>
+<text x="72" y="1657" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="1657" class="lbls" text-anchor="start" >sample-app-routes — 3f · 2026-07-14 · 0/0/3 · ×5 (1.7/f) · idle 52d · routes.ts×2</text>
+<text x="72" y="1674" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1674" class="lbls" text-anchor="start" >sample-app-lit-e2e — 7f · 2025-07-21 · 2/0/5 · ×32 (4.6/f) · idle 20d · integration/sample_app.cy.js×8</text>
+<text x="72" y="1691" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1691" class="lbls" text-anchor="start" >docs — 9f · 2025-07-23 · 2/1/6 · ×69 (7.7/f) · idle 35d · .vitepress/config.ts×27</text>
+<text x="72" y="1708" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1708" class="lbls" text-anchor="start" >examples — 18f · 2026-01-01 · 0/6/12 · ×47 (2.6/f) · idle 19d · 3 SEALED · hellosolarsystem/src/main.ts×11</text>
+<text x="72" y="1725" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1725" class="lbls" text-anchor="start" >@tools/release — 66f · 2026-07-06 · 0/0/66 · ×127 (1.9/f) · idle 44d · checks/check-pack.ts×10</text>
+<text x="72" y="1742" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1742" class="lbls" text-anchor="start" >@tools/typedoc-plugin — 5f · 2026-01-09 · 0/4/1 · ×15 (3.0/f) · idle 239d · 3 SEALED · index.ts×8</text>
+<text x="72" y="1759" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1759" class="lbls" text-anchor="start" >@tools/dts-backtest — 1f · 2026-07-06 · 0/0/1 · ×6 (6.0/f) · idle 22d · run.ts×6</text>
+<text x="72" y="1776" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1776" class="lbls" text-anchor="start" >@tools/build_and_test — 10f · 2026-07-07 · 0/0/10 · ×26 (2.6/f) · idle 42d · upload-bundle-stats.ts×4</text>
+<text x="72" y="1793" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1793" class="lbls" text-anchor="start" >@tools/shared — 21f · 2026-07-06 · 0/0/21 · ×38 (1.8/f) · idle 3d · workspace.ts×9</text>
+<text x="814" y="1538" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="1538" class="lbls" text-anchor="start" >@tools/workers-builds — 3f · 2026-07-11 · 0/0/3 · ×13 (4.3/f) · idle 22d · workers-builds-triggers.test.ts×7</text>
+<text x="814" y="1555" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="1555" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 2026-07-18 · 0/0/4 · ×12 (3.0/f) · idle 3d · upload-entry-bundles.ts×5</text>
+<text x="814" y="1572" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="1572" class="lbls" text-anchor="start" >@tools/compat-guards — 8f · 2026-08-09 · 0/0/8 · ×10 (1.3/f) · idle 27d · catalog.ts×2</text>
+<text x="814" y="1589" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="1589" class="lbls" text-anchor="start" >@tools/oxc-emit — 6f · 2026-07-17 · 0/0/6 · ×14 (2.3/f) · idle 3d · emit-js.ts×3</text>
+<text x="814" y="1606" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="1606" class="lbls" text-anchor="start" >@tools/release-config — 1f · 2026-07-31 · 0/0/1 · ×2 (2.0/f) · idle 27d · release-it.js×2</text>
+<text x="814" y="1623" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="1623" class="lbls" text-anchor="start" >@tools/lit-template-lint — 1f · 2026-08-11 · 0/0/1 · ×2 (2.0/f) · idle 5d · lint-templates.ts×2</text>
+<text x="814" y="1640" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="1640" class="lbls" text-anchor="start" >@tools/lit-test-env — 1f · 2026-08-09 · 0/0/1 · ×1 (1.0/f) · idle 27d · setup.ts×1</text>
+<text x="814" y="1657" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="1657" class="lbls" text-anchor="start" >@tools/vue-check — 1f · 2026-07-09 · 0/0/1 · ×3 (3.0/f) · idle 53d · bin.ts×3</text>
+<text x="814" y="1674" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1674" class="lbls" text-anchor="start" >@tools/lcov-rebase — 3f · 2026-07-29 · 0/0/3 · ×3 (1.0/f) · idle 38d · rebase-lcov.ts×1</text>
+<text x="814" y="1691" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1691" class="lbls" text-anchor="start" >@tools/happy-dom — 2f · 2026-07-19 · 0/0/2 · ×2 (1.0/f) · idle 48d · append.ts×1</text>
+<text x="814" y="1708" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1708" class="lbls" text-anchor="start" >@tools/wintercg-globals — no dated source (ambient types only)</text>
+<text x="814" y="1725" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1725" class="lbls" text-anchor="start" >@tools/lint-elements — 1f · 2026-08-31 · 0/0/1 · ×3 (3.0/f) · idle 4d · lint-elements.ts×3</text>
+<text x="814" y="1742" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1742" class="lbls" text-anchor="start" >@tools/warn-lanes — 2f · 2026-08-31 · 0/0/2 · ×2 (1.0/f) · idle 5d · warn-lanes.core.test.ts×1</text>
+<text x="814" y="1759" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1759" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 2026-08-16 · 0/0/1 · ×1 (1.0/f) · idle 20d · index.ts×1</text>
+<text x="814" y="1776" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1776" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 18f · 2026-09-01 · 0/0/18 · ×35 (1.9/f) · idle 1d · anchor-is-valid.ts×5</text>
+<text x="814" y="1793" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1793" class="lbls" text-anchor="start" >@tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×4 (1.0/f) · idle 1d · check-embed-heights.ts×1</text>
 <text x="58" y="1816" class="lbls" text-anchor="start" >TOTAL — 317 dated files (sheet 7's plate counts the same 317) · 988 touches · seasons 26 / 18 / 273 · TODAY = 2026-09-04 · counted at origin/main @ b2338d0</text>
 </svg></div>
     <figcaption>Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.</figcaption>

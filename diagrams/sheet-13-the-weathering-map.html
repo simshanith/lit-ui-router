@@ -80,15 +80,16 @@
               Serif 4 from Google in the artifact.
    --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
               source-code-pro from the kit on the site, the same Slimbach
-              design from Google in the artifact. The PLATES keep --mono,
-              which is unchanged: every SVG label is hand-placed against the
-              system mono's advance.
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
    --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
               DRAWN BY value and at most one callout line per sheet — nowhere
               else. No Google stand-in by decision: off the kit it falls to
               --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
   --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
@@ -348,13 +349,17 @@ code, kbd, samp { font-family: var(--code); }
 .fg   { fill: var(--green); }
 .fhalo{ fill: var(--halo); }
 .fnone{ fill: none; }
-text.lbl   { font-family: var(--mono); font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
-text.lblb  { font-family: var(--mono); font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--mono); font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--mono); font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
-text.lbla  { font-family: var(--mono); font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
-text.lblr  { font-family: var(--mono); font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
-text.lblt  { font-family: var(--mono); font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
 text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 
 @media (prefers-reduced-motion: no-preference) {
@@ -764,38 +769,70 @@ a { color: var(--accent); }
 <rect x="40" y="1486" width="1480" height="346" class="sk fp"/>
 <text x="58" y="1508" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — weathering per member · files · first-commit date · files born per season I/II/III · touches (per file) · median days since last touch</text>
 <line x1="40" y1="1518" x2="1520" y2="1518" class="skf"/>
-<text x="58" y="1538" class="lbls" text-anchor="start" > 1  lit-ui-router — 28f · 2025-07-21 · 8/5/15 · ×161 (5.8/f) · idle 48d · ui-sref.ts×18</text>
-<text x="58" y="1555" class="lbls" text-anchor="start" > 2  ui-router-server — 20f · 2026-07-14 · 0/0/20 · ×45 (2.3/f) · idle 49d · index.ts×4</text>
-<text x="58" y="1572" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 9f · 2026-07-04 · 0/0/9 · ×31 (3.4/f) · idle 1d · specs/router-reaction-controller.spec.ts×6</text>
-<text x="58" y="1589" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 8f · 2026-01-11 · 0/2/6 · ×20 (2.5/f) · idle 27d · index.ts×10</text>
-<text x="58" y="1606" class="lbls" text-anchor="start" > 5  sample-app-shared — 40f · 2025-07-21 · 8/0/32 · ×175 (4.4/f) · idle 48d · router.config.ts×14</text>
-<text x="58" y="1623" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — 8f · 2025-07-21 · 6/0/2 · ×50 (6.3/f) · idle 57d · app/main/NavHeader.ts×10</text>
-<text x="58" y="1640" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — 8f · 2026-07-04 · 0/0/8 · ×34 (4.3/f) · idle 57d · app/main/NavHeader.ts×7</text>
-<text x="58" y="1657" class="lbls" text-anchor="start" > 8  sample-app-routes — 3f · 2026-07-14 · 0/0/3 · ×5 (1.7/f) · idle 52d · routes.ts×2</text>
-<text x="58" y="1674" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — 7f · 2025-07-21 · 2/0/5 · ×32 (4.6/f) · idle 20d · integration/sample_app.cy.js×8</text>
-<text x="58" y="1691" class="lbls" text-anchor="start" >10  docs — 9f · 2025-07-23 · 2/1/6 · ×69 (7.7/f) · idle 35d · .vitepress/config.ts×27</text>
-<text x="58" y="1708" class="lbls" text-anchor="start" >11  examples — 18f · 2026-01-01 · 0/6/12 · ×47 (2.6/f) · idle 19d · 3 SEALED · hellosolarsystem/src/main.ts×11</text>
-<text x="58" y="1725" class="lbls" text-anchor="start" >12  @tools/release — 66f · 2026-07-06 · 0/0/66 · ×127 (1.9/f) · idle 44d · checks/check-pack.ts×10</text>
-<text x="58" y="1742" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — 5f · 2026-01-09 · 0/4/1 · ×15 (3.0/f) · idle 239d · 3 SEALED · index.ts×8</text>
-<text x="58" y="1759" class="lbls" text-anchor="start" >14  @tools/dts-backtest — 1f · 2026-07-06 · 0/0/1 · ×6 (6.0/f) · idle 22d · run.ts×6</text>
-<text x="58" y="1776" class="lbls" text-anchor="start" >15  @tools/build_and_test — 10f · 2026-07-07 · 0/0/10 · ×26 (2.6/f) · idle 42d · upload-bundle-stats.ts×4</text>
-<text x="58" y="1793" class="lbls" text-anchor="start" >16  @tools/shared — 21f · 2026-07-06 · 0/0/21 · ×38 (1.8/f) · idle 3d · workspace.ts×9</text>
-<text x="800" y="1538" class="lbls" text-anchor="start" >17  @tools/workers-builds — 3f · 2026-07-11 · 0/0/3 · ×13 (4.3/f) · idle 22d · workers-builds-triggers.test.ts×7</text>
-<text x="800" y="1555" class="lbls" text-anchor="start" >18  @tools/bundle-probe — 4f · 2026-07-18 · 0/0/4 · ×12 (3.0/f) · idle 3d · upload-entry-bundles.ts×5</text>
-<text x="800" y="1572" class="lbls" text-anchor="start" >19  @tools/compat-guards — 8f · 2026-08-09 · 0/0/8 · ×10 (1.3/f) · idle 27d · catalog.ts×2</text>
-<text x="800" y="1589" class="lbls" text-anchor="start" >20  @tools/oxc-emit — 6f · 2026-07-17 · 0/0/6 · ×14 (2.3/f) · idle 3d · emit-js.ts×3</text>
-<text x="800" y="1606" class="lbls" text-anchor="start" >21  @tools/release-config — 1f · 2026-07-31 · 0/0/1 · ×2 (2.0/f) · idle 27d · release-it.js×2</text>
-<text x="800" y="1623" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — 1f · 2026-08-11 · 0/0/1 · ×2 (2.0/f) · idle 5d · lint-templates.ts×2</text>
-<text x="800" y="1640" class="lbls" text-anchor="start" >23  @tools/lit-test-env — 1f · 2026-08-09 · 0/0/1 · ×1 (1.0/f) · idle 27d · setup.ts×1</text>
-<text x="800" y="1657" class="lbls" text-anchor="start" >24  @tools/vue-check — 1f · 2026-07-09 · 0/0/1 · ×3 (3.0/f) · idle 53d · bin.ts×3</text>
-<text x="800" y="1674" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 3f · 2026-07-29 · 0/0/3 · ×3 (1.0/f) · idle 38d · rebase-lcov.ts×1</text>
-<text x="800" y="1691" class="lbls" text-anchor="start" >26  @tools/happy-dom — 2f · 2026-07-19 · 0/0/2 · ×2 (1.0/f) · idle 48d · append.ts×1</text>
-<text x="800" y="1708" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no dated source (ambient types only)</text>
-<text x="800" y="1725" class="lbls" text-anchor="start" >28  @tools/lint-elements — 1f · 2026-08-31 · 0/0/1 · ×3 (3.0/f) · idle 4d · lint-elements.ts×3</text>
-<text x="800" y="1742" class="lbls" text-anchor="start" >29  @tools/warn-lanes — 2f · 2026-08-31 · 0/0/2 · ×2 (1.0/f) · idle 5d · warn-lanes.core.test.ts×1</text>
-<text x="800" y="1759" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — 1f · 2026-08-16 · 0/0/1 · ×1 (1.0/f) · idle 20d · index.ts×1</text>
-<text x="800" y="1776" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — 18f · 2026-09-01 · 0/0/18 · ×35 (1.9/f) · idle 1d · anchor-is-valid.ts×5</text>
-<text x="800" y="1793" class="lbls" text-anchor="start" >32  @tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×4 (1.0/f) · idle 1d · check-embed-heights.ts×1</text>
+<text x="72" y="1538" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="1538" class="lbls" text-anchor="start" >lit-ui-router — 28f · 2025-07-21 · 8/5/15 · ×161 (5.8/f) · idle 48d · ui-sref.ts×18</text>
+<text x="72" y="1555" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="1555" class="lbls" text-anchor="start" >ui-router-server — 20f · 2026-07-14 · 0/0/20 · ×45 (2.3/f) · idle 49d · index.ts×4</text>
+<text x="72" y="1572" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="1572" class="lbls" text-anchor="start" >lit-ui-router-mobx — 9f · 2026-07-04 · 0/0/9 · ×31 (3.4/f) · idle 1d · specs/router-reaction-controller.spec.ts×6</text>
+<text x="72" y="1589" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="1589" class="lbls" text-anchor="start" >navigation-location-plugin — 8f · 2026-01-11 · 0/2/6 · ×20 (2.5/f) · idle 27d · index.ts×10</text>
+<text x="72" y="1606" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="1606" class="lbls" text-anchor="start" >sample-app-shared — 40f · 2025-07-21 · 8/0/32 · ×175 (4.4/f) · idle 48d · router.config.ts×14</text>
+<text x="72" y="1623" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="1623" class="lbls" text-anchor="start" >sample-app-lit-vanilla — 8f · 2025-07-21 · 6/0/2 · ×50 (6.3/f) · idle 57d · app/main/NavHeader.ts×10</text>
+<text x="72" y="1640" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="1640" class="lbls" text-anchor="start" >sample-app-lit-mobx — 8f · 2026-07-04 · 0/0/8 · ×34 (4.3/f) · idle 57d · app/main/NavHeader.ts×7</text>
+<text x="72" y="1657" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="1657" class="lbls" text-anchor="start" >sample-app-routes — 3f · 2026-07-14 · 0/0/3 · ×5 (1.7/f) · idle 52d · routes.ts×2</text>
+<text x="72" y="1674" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1674" class="lbls" text-anchor="start" >sample-app-lit-e2e — 7f · 2025-07-21 · 2/0/5 · ×32 (4.6/f) · idle 20d · integration/sample_app.cy.js×8</text>
+<text x="72" y="1691" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1691" class="lbls" text-anchor="start" >docs — 9f · 2025-07-23 · 2/1/6 · ×69 (7.7/f) · idle 35d · .vitepress/config.ts×27</text>
+<text x="72" y="1708" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1708" class="lbls" text-anchor="start" >examples — 18f · 2026-01-01 · 0/6/12 · ×47 (2.6/f) · idle 19d · 3 SEALED · hellosolarsystem/src/main.ts×11</text>
+<text x="72" y="1725" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1725" class="lbls" text-anchor="start" >@tools/release — 66f · 2026-07-06 · 0/0/66 · ×127 (1.9/f) · idle 44d · checks/check-pack.ts×10</text>
+<text x="72" y="1742" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1742" class="lbls" text-anchor="start" >@tools/typedoc-plugin — 5f · 2026-01-09 · 0/4/1 · ×15 (3.0/f) · idle 239d · 3 SEALED · index.ts×8</text>
+<text x="72" y="1759" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1759" class="lbls" text-anchor="start" >@tools/dts-backtest — 1f · 2026-07-06 · 0/0/1 · ×6 (6.0/f) · idle 22d · run.ts×6</text>
+<text x="72" y="1776" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1776" class="lbls" text-anchor="start" >@tools/build_and_test — 10f · 2026-07-07 · 0/0/10 · ×26 (2.6/f) · idle 42d · upload-bundle-stats.ts×4</text>
+<text x="72" y="1793" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1793" class="lbls" text-anchor="start" >@tools/shared — 21f · 2026-07-06 · 0/0/21 · ×38 (1.8/f) · idle 3d · workspace.ts×9</text>
+<text x="814" y="1538" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="1538" class="lbls" text-anchor="start" >@tools/workers-builds — 3f · 2026-07-11 · 0/0/3 · ×13 (4.3/f) · idle 22d · workers-builds-triggers.test.ts×7</text>
+<text x="814" y="1555" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="1555" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 2026-07-18 · 0/0/4 · ×12 (3.0/f) · idle 3d · upload-entry-bundles.ts×5</text>
+<text x="814" y="1572" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="1572" class="lbls" text-anchor="start" >@tools/compat-guards — 8f · 2026-08-09 · 0/0/8 · ×10 (1.3/f) · idle 27d · catalog.ts×2</text>
+<text x="814" y="1589" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="1589" class="lbls" text-anchor="start" >@tools/oxc-emit — 6f · 2026-07-17 · 0/0/6 · ×14 (2.3/f) · idle 3d · emit-js.ts×3</text>
+<text x="814" y="1606" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="1606" class="lbls" text-anchor="start" >@tools/release-config — 1f · 2026-07-31 · 0/0/1 · ×2 (2.0/f) · idle 27d · release-it.js×2</text>
+<text x="814" y="1623" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="1623" class="lbls" text-anchor="start" >@tools/lit-template-lint — 1f · 2026-08-11 · 0/0/1 · ×2 (2.0/f) · idle 5d · lint-templates.ts×2</text>
+<text x="814" y="1640" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="1640" class="lbls" text-anchor="start" >@tools/lit-test-env — 1f · 2026-08-09 · 0/0/1 · ×1 (1.0/f) · idle 27d · setup.ts×1</text>
+<text x="814" y="1657" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="1657" class="lbls" text-anchor="start" >@tools/vue-check — 1f · 2026-07-09 · 0/0/1 · ×3 (3.0/f) · idle 53d · bin.ts×3</text>
+<text x="814" y="1674" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1674" class="lbls" text-anchor="start" >@tools/lcov-rebase — 3f · 2026-07-29 · 0/0/3 · ×3 (1.0/f) · idle 38d · rebase-lcov.ts×1</text>
+<text x="814" y="1691" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1691" class="lbls" text-anchor="start" >@tools/happy-dom — 2f · 2026-07-19 · 0/0/2 · ×2 (1.0/f) · idle 48d · append.ts×1</text>
+<text x="814" y="1708" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1708" class="lbls" text-anchor="start" >@tools/wintercg-globals — no dated source (ambient types only)</text>
+<text x="814" y="1725" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1725" class="lbls" text-anchor="start" >@tools/lint-elements — 1f · 2026-08-31 · 0/0/1 · ×3 (3.0/f) · idle 4d · lint-elements.ts×3</text>
+<text x="814" y="1742" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1742" class="lbls" text-anchor="start" >@tools/warn-lanes — 2f · 2026-08-31 · 0/0/2 · ×2 (1.0/f) · idle 5d · warn-lanes.core.test.ts×1</text>
+<text x="814" y="1759" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1759" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 2026-08-16 · 0/0/1 · ×1 (1.0/f) · idle 20d · index.ts×1</text>
+<text x="814" y="1776" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1776" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 18f · 2026-09-01 · 0/0/18 · ×35 (1.9/f) · idle 1d · anchor-is-valid.ts×5</text>
+<text x="814" y="1793" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1793" class="lbls" text-anchor="start" >@tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×4 (1.0/f) · idle 1d · check-embed-heights.ts×1</text>
 <text x="58" y="1816" class="lbls" text-anchor="start" >TOTAL — 317 dated files (sheet 7's plate counts the same 317) · 988 touches · seasons 26 / 18 / 273 · TODAY = 2026-09-04 · counted at origin/main @ b2338d0</text>
 </svg></div>
     <figcaption>Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.</figcaption>

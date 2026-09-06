@@ -44,13 +44,13 @@ export const SPECIMEN_CSS = `
 .sp-group button.on { background: var(--accent); color: var(--paper); font-weight: 600; }
 .sp-group button:disabled { color: var(--ink-faint); cursor: not-allowed; }
 .sp-group .sp-num { display: flex; align-items: center; font-family: var(--mono); font-size: 10px; padding: 0 8px; border-right: 1px solid var(--line); font-variant-numeric: tabular-nums; }
-.sp-note { font-family: var(--mono); font-size: 10px; letter-spacing: 0.04em; line-height: 1.6; color: var(--ink-soft); margin-bottom: 14px; }
+.sp-note { font-family: var(--data); font-size: 10px; letter-spacing: 0.04em; line-height: 1.6; color: var(--ink-soft); margin-bottom: 14px; }
 .sp-note b { color: var(--ink); letter-spacing: 0.14em; }
 
 /* --- the readouts --------------------------------------------------------- */
 .sp-read { margin-top: 22px; }
-.sp-read h3 { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.18em; color: var(--ink-soft); margin-bottom: 6px; font-weight: 600; }
-.sp-tbl { border-collapse: collapse; font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.02em; }
+.sp-read h3 { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.18em; color: var(--ink-soft); margin-bottom: 6px; font-weight: 600; }
+.sp-tbl { border-collapse: collapse; font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; letter-spacing: 0.02em; }
 .sp-tbl.num { font-variant-numeric: tabular-nums; }
 .sp-tbl th { text-align: left; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-faint); border-bottom: 1px solid var(--ink); padding: 0 14px 3px 0; font-weight: 600; }
 .sp-tbl td { padding: 3px 14px 3px 0; border-bottom: 1px solid var(--line); vertical-align: baseline; }
@@ -62,7 +62,7 @@ export const SPECIMEN_CSS = `
 .sp-tbl td.got.adobe { color: var(--green); }
 .sp-tbl td.got.standin { color: var(--accent); }
 .sp-tbl td.got.system { color: var(--red); }
-.sp-foot { font-family: var(--mono); font-size: 9.5px; line-height: 1.7; color: var(--ink-faint); max-width: 92ch; margin-top: 7px; }
+.sp-foot { font-family: var(--data); font-size: 9.5px; line-height: 1.7; color: var(--ink-faint); max-width: 92ch; margin-top: 7px; }
 .sp-foot code { font-size: 0.95em; background: var(--paper-2); border: 1px solid var(--line); padding: 0 3px; }
 
 /* --- the mock sheet ------------------------------------------------------- */

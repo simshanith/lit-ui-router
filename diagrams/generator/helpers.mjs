@@ -6,6 +6,18 @@ export function txt(x, y, s, cls = 'lbl', anchor = 'start', extra = '') {
   return `<text x="${x}" y="${y}" class="${cls}" text-anchor="${anchor}" ${extra}>${esc(s)}</text>`;
 }
 
+// ---- schedule rows ----
+// The data face has no fixed advance, so a row number can no longer be padded
+// into the line: it gets its own end-anchored gutter, and the body starts at a
+// fixed x. SCHED_NUM = two DIN digits at 9.5px; SCHED_BODY keeps the body's left
+// edge exactly where the padded mono row put it.
+export const SCHED_NUM = 14;
+export const SCHED_BODY = 25;
+export function schedTxt(x, y, [n, body], cls = 'lbls') {
+  return txt(x + SCHED_NUM, y, String(n), cls, 'end')
+    + '\n' + txt(x + SCHED_BODY, y, body, cls);
+}
+
 export function lines(x, y, arr, cls = 'lbl', anchor = 'start', lh = 13) {
   return arr.map((s, i) => txt(x, y + i * lh, s, cls, anchor)).join('\n');
 }

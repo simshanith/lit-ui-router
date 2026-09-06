@@ -1073,6 +1073,57 @@ Verify: `grep -c source-code-pro dist/set/sheet-7-the-measured-city.html` → 2
 DRAWN BY value reads `Fable (Claude, AI)` — mixed case, `text-transform: none`,
 computed family leading `p22-fllw-eaglefeather-inf` on the site.
 
+THE PLATES IN DIN, 2026-09-06: "still seems like there's a lot of monospace —
+make sure we're choosing appropriate choices from data or title font; reserve
+monospace." The HTML chrome was already on the roles; the mono the user was
+seeing was the SVG plate lettering. **The seven `text.lbl*` rules in
+`generator/chrome.mjs` now draw in `var(--data)`** with `font-variant-numeric:
+tabular-nums`, sizes, weights, fills and tracking untouched — 1,983 labels
+across the set, 128 of them on sheet 7. Measured against DIN before the swap:
+a strict contraction, median −26%, nothing growing beyond +0.6% on a
+single-letter road tag, and since every label is start- or end-anchored the
+lettering only opens air. The interactive lanes followed the same rule —
+legends, controls, notes and basis lines in `city-scene`, `coupling-bench`,
+`register-graph`, `pipeline-graph` and `loop-walk` (and the cytoscape node and
+edge label faces, now read from the `--data` token through each `pal()`, and
+the city's canvas ground lettering and number chips) are the data face; the
+four `*-info h4` panels, where the whole label is one bare identifier, and
+`.lw-info .ev pre` are the code face. `specimen-mock.ts`'s `.sp-note`,
+`.sp-read h3`, `.sp-tbl` and `.sp-foot` moved to `--data` as well; the knob
+machinery was left alone. `--mono` is still declared and is now read by
+nothing but the tail of `--code`.
+
+**The schedule gutter.** Row numbers were padded with `padStart(2, ' ')`
+against the mono advance, which DIN does not have. A new
+`helpers.mjs::schedTxt` emits the number as its own end-anchored `<text>` in a
+14px gutter and the row body as a second `<text>` 25px in, and the eight
+`schedRow` helpers (sheets 3, 3B, 4, 7, 7A, 7B ×2, 13) return `[n, body]`
+instead of a padded string. Measured on sheet 7: the body's left edge moved
++0.26px, and rows 1–9 line up with 10–32 for the first time.
+
+Verified: build 23 sheets / 24 fragments, tsc clean, prerender 27 pages + 404,
+stage 28 routed + 26 flat, artifact 2,729,333 bytes. `r-qa-type` **246/246**
+(the plates' expectation flipped from mono to the data face, and a new
+page-wide check walks every element and SVG text and fails on any whose FIRST
+family is mono outside `code, kbd, samp, pre` and the specimen knobs),
+`r-qa-specimen` **69/69**, `artifact-qa` **22/22**,
+`r-qa-specimen-artifact` **10/10**, no page scrolls sideways. A bbox overlap
+probe over all 23 flat sheets, run against HEAD as well: **zero new
+overlaps**, and 25 of the 64 pre-existing ones repaired outright (sheet 12
+49→36, sheet 10 4→0, 3A 2→0, 3B 2→0, 7B 2→0, 3 1→0, 8 1→0; 14 and 5 unchanged).
+
+What remains is per-sheet recomposition: boxes drawn to a mono line now frame a
+shorter one. A probe of every label inside a box that used to sit within 30px
+of the box's right edge and now sits more than 30px short names **3A (33
+labels), 2A (6), 1 (5), 14 (3), 4 (3), 5 (3), 10 (2), 2 · 7 · 7B · 13 (1
+each)** — 3A first, then 2A and 1. Sheets 12, 13 and 14 carry the most
+lettering but their boxes already fit.
+
+Verify: `node generator/build.mjs .`, serve `dist/`, and
+`node r-qa-type.mjs http://localhost:4319` → 246/246; on any plate,
+`getComputedStyle(document.querySelector('svg text.lbls')).fontFamily` leads
+with `din-2014` on the site and `Barlow Semi Condensed` in the artifact.
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's3b';
@@ -229,7 +229,7 @@ const TOT_M = PLATE.rows.reduce((a, r) => a + r.mass, 0);
 const FLAT = PLATE.rows.filter((r) => r.mass === 1).length;
 const schedRow = ([n, name, , , , note]) => {
   const { tasks, inputs, mass } = CELL.get(n);
-  return `${String(n).padStart(2, ' ')}  ${name} — ${tasks}t · ${fmt(inputs)} files · ${fmt(mass)} sloc · ${note}`;
+  return [n, `${name} — ${tasks}t · ${fmt(inputs)} files · ${fmt(mass)} sloc · ${note}`];
 };
 const half = Math.ceil(M.length / 2);
 const ART_H = 700;
@@ -237,8 +237,8 @@ const SY = ART_H + 14;
 const schedule = `<rect x="40" y="${SY}" width="1320" height="${90 + half * 16}" class="sk fp"/>
 ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — tasks (t) · watched files (per-task inputs, summed) · command sloc · every mass cited in data/census-mass3b.json', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1360" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => txt(58, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => txt(712, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
+${M.slice(0, half).map((r, i) => schedTxt(58, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
+${M.slice(half).map((r, i) => schedTxt(712, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 56 + half * 16, `TOTALS — ${M.length} massed structures reconcile all ${CI.real} real tasks · ${fmt(TOT_I)} task-file hashes · ${fmt(TOT_M)} command sloc · +1 vacant twin lot (//#lint:workflows, phantom) · ${fmt(PHANTOM)} phantom plots · ${BASIS}`, 'lbls')}
 ${txt(58, SY + 72 + half * 16, `ROADS — five district arteries drawn, the graph's heaviest degrees: docs#build waits on ${deg('docs#build', 'deps')} nodes · typedoc-plugin#build:types unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} · lit-ui-router#build:types ${deg('lit-ui-router#build:types', 'dependents')} · release#check:exports ${deg('@tools/release#check:exports', 'dependents')}; ${fmt(CI.realEdges)} of the graph's ${fmt(CI.edges)} edges join two real tasks, the rest are local streets itemised in the dry-run JSON`, 'lblf')}`;
 

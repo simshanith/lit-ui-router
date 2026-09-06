@@ -286,6 +286,7 @@ app; \`build.mjs\` emits its fragments and manifest. On the published site the a
 (\`/\`, \`/sheet/7\`, \`/city\`) and this flat set is staged beside it under \`/set/\` as the version to
 compare against; the two link to each other (the app's rail and crumbs, the gallery's cover).
 Light theme is graphite-on-vellum; dark is cyanotype.
+Since 2026-09-06 every label on the plates draws in the data face (DIN 2014, Barlow Semi Condensed off the kit) rather than the system monospace; mono is reserved for code.
 Generated 2026-08-16 by Fable (Claude, AI).
 Every plate in \`data/\` — versions, dates and all — was re-counted at ${COUNTED_AT} in one pass,
 plate 7A's test light included: \`generator/census-shadow.mjs\` re-meters it at the same ref. The cover's general survey — every

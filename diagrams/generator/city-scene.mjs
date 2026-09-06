@@ -111,11 +111,11 @@ const CSS = `
 .cs-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
   border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
 .cs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 9.5px;
+.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 9.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
 .cs-legend .sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
 .cs-legend .sw-annex, .cs-legend .sw-lamp { border-color: var(--ink-soft); border-style: dashed; }
-.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--mono); font-size: 9.5px;
+.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 9.5px;
   letter-spacing: 0.1em; color: var(--ink-soft); }
 .cs-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
@@ -128,13 +128,14 @@ const CSS = `
 .cs-canvas.grabbing { cursor: grabbing; }
 .cs-canvas canvas { display: block; }
 .cs-canvas .cs-note { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-faint); padding: 20px; }
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-faint); padding: 20px; }
 .cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 9px 14px 10px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
-.cs-info h4 { font-size: 11.5px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
+/* the mass name is a bare identifier — the one place the code face earns its keep */
+.cs-info h4 { font-family: var(--code); font-size: 11.5px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
 .cs-info p { margin: 0; color: var(--ink-soft); word-break: break-word; }
 .cs-info .hint { color: var(--ink-faint); }
-.cs-basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
+.cs-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
 @media (max-width: 860px) { .cs-canvas { height: 460px; } }`;
 
@@ -160,7 +161,9 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
       accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
       paper: tok('--paper'), paper2: tok('--paper-2'), black: '#000000',
-      mono: tok('--mono') || 'ui-monospace, Menlo, monospace' };
+      // the ground lettering and the number chips are plate labels, so they take
+      // the data face the plates take; mono is reserved for code
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   function note(msg) {
     var el = document.createElement('p');
@@ -322,7 +325,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       var cv = document.createElement('canvas');
       cv.width = Math.max(2, Math.round(wpx)); cv.height = Math.max(2, Math.round(hpx));
       var g2 = cv.getContext('2d');
-      g2.font = '600 ' + Math.round(hpx * 0.6) + 'px ' + c.mono;
+      g2.font = '600 ' + Math.round(hpx * 0.6) + 'px ' + c.data;
       if ('letterSpacing' in g2) g2.letterSpacing = Math.round(hpx * 0.09) + 'px';
       g2.textAlign = 'center'; g2.textBaseline = 'middle';
       g2.globalAlpha = 0.85;
@@ -388,7 +391,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       var K = Math.min(window.devicePixelRatio || 1, 2) * 3;
       var fs = 30, pad = 11, h = 46;
       var probe = document.createElement('canvas').getContext('2d');
-      probe.font = '600 ' + fs + 'px ' + c.mono;
+      probe.font = '600 ' + fs + 'px ' + c.data;
       var w = Math.ceil(probe.measureText(text).width) + pad * 2;
       var cv = document.createElement('canvas');
       cv.width = Math.round(w * K); cv.height = Math.round(h * K);
@@ -399,7 +402,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       g2.globalAlpha = 1;
       g2.strokeStyle = c.soft; g2.lineWidth = 1.6;
       g2.strokeRect(0.8, 0.8, w - 1.6, h - 1.6);
-      g2.font = '600 ' + fs + 'px ' + c.mono;
+      g2.font = '600 ' + fs + 'px ' + c.data;
       g2.fillStyle = c.ink; g2.textAlign = 'center'; g2.textBaseline = 'middle';
       g2.fillText(text, w / 2, h / 2 + 1);
       var tex = new THREE.CanvasTexture(cv);

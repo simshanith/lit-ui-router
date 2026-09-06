@@ -3,7 +3,7 @@
 .pg-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
   border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
 .pg-bar .pg-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.pg-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--mono); font-size: 9.5px;
+.pg-bar .lg { display: inline-flex; align-items: center; gap: 8px; font-family: var(--data); font-size: 9.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
 .pg-bar .lg svg { display: block; }
 .pg-bar .lg .sw-dark { display: none; }
@@ -14,7 +14,7 @@
 :root[data-theme="dark"] .pg-bar .lg .sw-light { display: none; }
 :root[data-theme="dark"] .pg-bar .lg .sw-dark { display: block; }
 .pg-bar .lg i { display: block; width: 26px; height: 0; border-top-width: 2px; border-top-style: solid; }
-.pg-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--mono); font-size: 9.5px;
+.pg-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 9.5px;
   letter-spacing: 0.1em; color: var(--ink-soft); }
 .pg-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
@@ -24,14 +24,15 @@
   background: var(--paper); }
 .pg-cy { height: 700px; min-width: 0; }
 .pg-info { border-left: 1.5px solid var(--ink); background: var(--paper-2); padding: 12px 14px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); overflow-y: auto;
   max-height: 700px; }
-.pg-info h4 { font-size: 11.5px; letter-spacing: 0.08em; margin-bottom: 8px; word-break: break-all; }
+/* a station id is a bare identifier: the code face, not the data face */
+.pg-info h4 { font-family: var(--code); font-size: 11.5px; letter-spacing: 0.08em; margin-bottom: 8px; word-break: break-all; }
 .pg-info .f { display: block; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin: 9px 0 2px; }
 .pg-info ul { list-style: none; padding: 0; }
 .pg-info li { padding: 1px 0; color: var(--ink-soft); word-break: break-all; }
 .pg-info .hint { color: var(--ink-faint); font-style: normal; }
-.pg-basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
+.pg-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
 @media (max-width: 860px) {
   .pg-stage { grid-template-columns: 1fr; }
@@ -87,7 +88,8 @@
   function tok(name) { return getComputedStyle(document.documentElement).getPropertyValue(name).trim(); }
   function pal() {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'), accent: tok('--accent'),
-      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red') };
+      paper: tok('--paper'), paper2: tok('--paper-2'), line: tok('--edge'), red: tok('--red'),
+      data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
   }
   var sprites = function () { return L.sprites[dark() ? 'dark' : 'light']; };
 
@@ -120,7 +122,7 @@
         'background-fit': 'contain', 'background-clip': 'none', 'border-width': 1.1, 'border-color': c.line,
         shape: 'round-rectangle', width: 'data(w)', height: 'data(h)', label: 'data(label)',
         'text-valign': 'bottom', 'text-margin-y': 5, 'text-wrap': 'none',
-        'font-family': 'ui-monospace, Menlo, Consolas, monospace', 'font-size': 12, color: c.ink,
+        'font-family': c.data, 'font-size': 12, color: c.ink,
         'text-halign': 'center', 'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '110ms' } },
       { selector: 'node.hero', style: { 'border-width': 2.2, 'border-color': c.accent, color: c.accent,
         'font-size': 13.5, 'font-weight': 'bold' } },

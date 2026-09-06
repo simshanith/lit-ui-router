@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, keyRow } from './helpers.mjs';
 
 const P = 's13';
 
@@ -305,18 +305,18 @@ const filesOf = (r) => (r[7]?.[0] ?? 0) + (r[8]?.[0] ?? 0);
 const touchesOf = (r) => (r[7]?.[2] ?? 0) + (r[8]?.[2] ?? 0);
 const schedRow = (r) => {
   const [n, name, , , , , , src, , born, medIdle, hot, sealed] = r;
-  if (!src) return `${String(n).padStart(2, ' ')}  ${name} — no dated source (ambient types only)`;
+  if (!src) return [n, `${name} — no dated source (ambient types only)`];
   const f = filesOf(r), t = touchesOf(r);
-  return `${String(n).padStart(2, ' ')}  ${name} — ${f}f · ${born} · ${seasonsOf(r)} · ×${t} (${(t / f).toFixed(1)}/f) · idle ${medIdle}d`
-    + `${sealed ? ` · ${sealed} SEALED` : ''} · ${hot}`;
+  return [n, `${name} — ${f}f · ${born} · ${seasonsOf(r)} · ×${t} (${(t / f).toFixed(1)}/f) · idle ${medIdle}d`
+    + `${sealed ? ` · ${sealed} SEALED` : ''} · ${hot}`];
 };
 const half = Math.ceil(D.length / 2);
 const SY = TLY + 5 * ROWH + 58;
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — weathering per member · files · first-commit date · files born per season I/II/III · touches (per file) · median days since last touch', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${D.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${D.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${D.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${D.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 58 + half * 17, `TOTAL — ${TOT_F} dated files (sheet 7's plate counts the same ${TOT_F}) · ${fmt(TOT_T)} touches · seasons ${SEASON_N.join(' / ')} · TODAY = ${TODAY} · ${BASIS}`, 'lbls')}`;
 
 // ---- callouts --------------------------------------------------------------------

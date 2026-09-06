@@ -275,38 +275,70 @@
 <rect x="40" y="882" width="1480" height="363" class="sk fp"/>
 <text x="58" y="904" class="lbls" text-anchor="start" >SHADOW SCHEDULE — per member: files and sloc the suite lights / authored · L line · B branch · F function coverage of the lit files</text>
 <line x1="40" y1="914" x2="1520" y2="914" class="skf"/>
-<text x="58" y="934" class="lbls" text-anchor="start" > 1  lit-ui-router — 9/13f · 1,303/1,383 (94.2%) · L 98.2% B 92.8% F 97.5% · in shadow: barrels + interface.ts</text>
-<text x="58" y="951" class="lbls" text-anchor="start" > 2  ui-router-server — 8/8f · 1,141/1,141 (100%) · L 99.6% B 95.6% F 98.3% · whole footprint fully lit</text>
-<text x="58" y="968" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx — 4/5f · 173/176 (98.3%) · L 100% B 90.9% F 100% · in shadow: the index barrel</text>
-<text x="58" y="985" class="lbls" text-anchor="start" > 4  navigation-location-plugin — 1/1f · 105/105 (100%) · L 100% B 100% F 100% · all three meters read 100</text>
-<text x="58" y="1002" class="lbls" text-anchor="start" > 5  sample-app-shared — tests run, no meter · tests pass · no provider in browser mode</text>
-<text x="58" y="1019" class="lbls" text-anchor="start" > 6  sample-app-lit-vanilla — e2e light only · lit only by the cypress rig</text>
-<text x="58" y="1036" class="lbls" text-anchor="start" > 7  sample-app-lit-mobx — e2e light only · lit only by the cypress rig</text>
-<text x="58" y="1053" class="lbls" text-anchor="start" > 8  sample-app-routes — 2/2f · 51/51 (100%) · L 100% B 100% F — · route table lit (no functions to meter)</text>
-<text x="58" y="1070" class="lbls" text-anchor="start" > 9  sample-app-lit-e2e — e2e light only · the rig itself — its sloc are support code</text>
-<text x="58" y="1087" class="lbls" text-anchor="start" >10  docs — 1/8f · 53/713 (7.4%) · L 100% B 100% F 100% · worker lit · the site sees only e2e light</text>
-<text x="58" y="1104" class="lbls" text-anchor="start" >11  examples — FULL SHADOW — no suite · stackblitz copies — never lit</text>
-<text x="58" y="1121" class="lbls" text-anchor="start" >12  @tools/release — 25/46f · 1,211/2,140 (56.6%) · L 96.7% B 96.4% F 94% · cores lit, CLI wrappers in shadow</text>
-<text x="58" y="1138" class="lbls" text-anchor="start" >13  @tools/typedoc-plugin — FULL SHADOW — no suite · builds the API pages, tests nothing</text>
-<text x="58" y="1155" class="lbls" text-anchor="start" >14  @tools/dts-backtest — FULL SHADOW — no suite · no self-suite — it IS the d.ts test</text>
-<text x="58" y="1172" class="lbls" text-anchor="start" >15  @tools/build_and_test — 4/7f · 824/1,128 (73%) · L 99.5% B 93.6% F 98.5% · 3 wrappers in shadow, the cores lit</text>
-<text x="58" y="1189" class="lbls" text-anchor="start" >16  @tools/shared — 10/13f · 436/493 (88.4%) · L 89.6% B 94.7% F 81.3% · palest: exec.ts and workspace.ts</text>
-<text x="800" y="934" class="lbls" text-anchor="start" >17  @tools/workers-builds — 1/2f · 219/375 (58.4%) · L 99.3% B 88.5% F 100% · trigger wrapper in shadow</text>
-<text x="800" y="951" class="lbls" text-anchor="start" >18  @tools/bundle-probe — FULL SHADOW — no suite · size probe, advisory, unlit</text>
-<text x="800" y="968" class="lbls" text-anchor="start" >19  @tools/compat-guards — 1/7f · 23/189 (12.2%) · L 100% B 100% F 100% · ranges.ts lit; six CI lanes unmetered</text>
-<text x="800" y="985" class="lbls" text-anchor="start" >20  @tools/oxc-emit — 1/5f · 57/228 (25%) · L 100% B 100% F 100% · REV E: first metered — the check lane</text>
-<text x="800" y="1002" class="lbls" text-anchor="start" >21  @tools/release-config — FULL SHADOW — no suite · config only</text>
-<text x="800" y="1019" class="lbls" text-anchor="start" >22  @tools/lit-template-lint — FULL SHADOW — no suite · wrapper only</text>
-<text x="800" y="1036" class="lbls" text-anchor="start" >23  @tools/lit-test-env — FULL SHADOW — no suite · harness for the vitest suites — borrowed light</text>
-<text x="800" y="1053" class="lbls" text-anchor="start" >24  @tools/vue-check — FULL SHADOW — no suite · wrapper only</text>
-<text x="800" y="1070" class="lbls" text-anchor="start" >25  @tools/lcov-rebase — 1/2f · 6/23 (26.1%) · L 100% B 100% F 100% · rebase.ts lit · CLI wrapper in shadow</text>
-<text x="800" y="1087" class="lbls" text-anchor="start" >26  @tools/happy-dom — 0/1f · 0/8 (0%) · L — B — F — · canary lights happy-dom, not append.ts</text>
-<text x="800" y="1104" class="lbls" text-anchor="start" >27  @tools/wintercg-globals — no mass · ambient types — nothing to light</text>
-<text x="800" y="1121" class="lbls" text-anchor="start" >28  @tools/lint-elements — FULL SHADOW — no suite · the element lane — no suite of its own</text>
-<text x="800" y="1138" class="lbls" text-anchor="start" >29  @tools/warn-lanes — 1/1f · 214/214 (100%) · L 100% B 88.5% F 100% · REV E: first metered — the ratchet core</text>
-<text x="800" y="1155" class="lbls" text-anchor="start" >30  @tools/eslint-ts-parser — FULL SHADOW — no suite · a one-line parser shim — nothing to light</text>
-<text x="800" y="1172" class="lbls" text-anchor="start" >31  eslint-plugin-lit-ui-router — 8/9f · 709/715 (99.2%) · L 99.3% B 90% F 100% · REV E: first metered — vendored rules</text>
-<text x="800" y="1189" class="lbls" text-anchor="start" >32  @tools/embed-heights — 1/3f · 35/336 (10.4%) · L 100% B 100% F 100% · REV E: reserve lit — driver + CLI in shadow</text>
+<text x="72" y="934" class="lbls" text-anchor="end" >1</text>
+<text x="83" y="934" class="lbls" text-anchor="start" >lit-ui-router — 9/13f · 1,303/1,383 (94.2%) · L 98.2% B 92.8% F 97.5% · in shadow: barrels + interface.ts</text>
+<text x="72" y="951" class="lbls" text-anchor="end" >2</text>
+<text x="83" y="951" class="lbls" text-anchor="start" >ui-router-server — 8/8f · 1,141/1,141 (100%) · L 99.6% B 95.6% F 98.3% · whole footprint fully lit</text>
+<text x="72" y="968" class="lbls" text-anchor="end" >3</text>
+<text x="83" y="968" class="lbls" text-anchor="start" >lit-ui-router-mobx — 4/5f · 173/176 (98.3%) · L 100% B 90.9% F 100% · in shadow: the index barrel</text>
+<text x="72" y="985" class="lbls" text-anchor="end" >4</text>
+<text x="83" y="985" class="lbls" text-anchor="start" >navigation-location-plugin — 1/1f · 105/105 (100%) · L 100% B 100% F 100% · all three meters read 100</text>
+<text x="72" y="1002" class="lbls" text-anchor="end" >5</text>
+<text x="83" y="1002" class="lbls" text-anchor="start" >sample-app-shared — tests run, no meter · tests pass · no provider in browser mode</text>
+<text x="72" y="1019" class="lbls" text-anchor="end" >6</text>
+<text x="83" y="1019" class="lbls" text-anchor="start" >sample-app-lit-vanilla — e2e light only · lit only by the cypress rig</text>
+<text x="72" y="1036" class="lbls" text-anchor="end" >7</text>
+<text x="83" y="1036" class="lbls" text-anchor="start" >sample-app-lit-mobx — e2e light only · lit only by the cypress rig</text>
+<text x="72" y="1053" class="lbls" text-anchor="end" >8</text>
+<text x="83" y="1053" class="lbls" text-anchor="start" >sample-app-routes — 2/2f · 51/51 (100%) · L 100% B 100% F — · route table lit (no functions to meter)</text>
+<text x="72" y="1070" class="lbls" text-anchor="end" >9</text>
+<text x="83" y="1070" class="lbls" text-anchor="start" >sample-app-lit-e2e — e2e light only · the rig itself — its sloc are support code</text>
+<text x="72" y="1087" class="lbls" text-anchor="end" >10</text>
+<text x="83" y="1087" class="lbls" text-anchor="start" >docs — 1/8f · 53/713 (7.4%) · L 100% B 100% F 100% · worker lit · the site sees only e2e light</text>
+<text x="72" y="1104" class="lbls" text-anchor="end" >11</text>
+<text x="83" y="1104" class="lbls" text-anchor="start" >examples — FULL SHADOW — no suite · stackblitz copies — never lit</text>
+<text x="72" y="1121" class="lbls" text-anchor="end" >12</text>
+<text x="83" y="1121" class="lbls" text-anchor="start" >@tools/release — 25/46f · 1,211/2,140 (56.6%) · L 96.7% B 96.4% F 94% · cores lit, CLI wrappers in shadow</text>
+<text x="72" y="1138" class="lbls" text-anchor="end" >13</text>
+<text x="83" y="1138" class="lbls" text-anchor="start" >@tools/typedoc-plugin — FULL SHADOW — no suite · builds the API pages, tests nothing</text>
+<text x="72" y="1155" class="lbls" text-anchor="end" >14</text>
+<text x="83" y="1155" class="lbls" text-anchor="start" >@tools/dts-backtest — FULL SHADOW — no suite · no self-suite — it IS the d.ts test</text>
+<text x="72" y="1172" class="lbls" text-anchor="end" >15</text>
+<text x="83" y="1172" class="lbls" text-anchor="start" >@tools/build_and_test — 4/7f · 824/1,128 (73%) · L 99.5% B 93.6% F 98.5% · 3 wrappers in shadow, the cores lit</text>
+<text x="72" y="1189" class="lbls" text-anchor="end" >16</text>
+<text x="83" y="1189" class="lbls" text-anchor="start" >@tools/shared — 10/13f · 436/493 (88.4%) · L 89.6% B 94.7% F 81.3% · palest: exec.ts and workspace.ts</text>
+<text x="814" y="934" class="lbls" text-anchor="end" >17</text>
+<text x="825" y="934" class="lbls" text-anchor="start" >@tools/workers-builds — 1/2f · 219/375 (58.4%) · L 99.3% B 88.5% F 100% · trigger wrapper in shadow</text>
+<text x="814" y="951" class="lbls" text-anchor="end" >18</text>
+<text x="825" y="951" class="lbls" text-anchor="start" >@tools/bundle-probe — FULL SHADOW — no suite · size probe, advisory, unlit</text>
+<text x="814" y="968" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="968" class="lbls" text-anchor="start" >@tools/compat-guards — 1/7f · 23/189 (12.2%) · L 100% B 100% F 100% · ranges.ts lit; six CI lanes unmetered</text>
+<text x="814" y="985" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="985" class="lbls" text-anchor="start" >@tools/oxc-emit — 1/5f · 57/228 (25%) · L 100% B 100% F 100% · REV E: first metered — the check lane</text>
+<text x="814" y="1002" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="1002" class="lbls" text-anchor="start" >@tools/release-config — FULL SHADOW — no suite · config only</text>
+<text x="814" y="1019" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="1019" class="lbls" text-anchor="start" >@tools/lit-template-lint — FULL SHADOW — no suite · wrapper only</text>
+<text x="814" y="1036" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="1036" class="lbls" text-anchor="start" >@tools/lit-test-env — FULL SHADOW — no suite · harness for the vitest suites — borrowed light</text>
+<text x="814" y="1053" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="1053" class="lbls" text-anchor="start" >@tools/vue-check — FULL SHADOW — no suite · wrapper only</text>
+<text x="814" y="1070" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1070" class="lbls" text-anchor="start" >@tools/lcov-rebase — 1/2f · 6/23 (26.1%) · L 100% B 100% F 100% · rebase.ts lit · CLI wrapper in shadow</text>
+<text x="814" y="1087" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1087" class="lbls" text-anchor="start" >@tools/happy-dom — 0/1f · 0/8 (0%) · L — B — F — · canary lights happy-dom, not append.ts</text>
+<text x="814" y="1104" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1104" class="lbls" text-anchor="start" >@tools/wintercg-globals — no mass · ambient types — nothing to light</text>
+<text x="814" y="1121" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1121" class="lbls" text-anchor="start" >@tools/lint-elements — FULL SHADOW — no suite · the element lane — no suite of its own</text>
+<text x="814" y="1138" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1138" class="lbls" text-anchor="start" >@tools/warn-lanes — 1/1f · 214/214 (100%) · L 100% B 88.5% F 100% · REV E: first metered — the ratchet core</text>
+<text x="814" y="1155" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1155" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — FULL SHADOW — no suite · a one-line parser shim — nothing to light</text>
+<text x="814" y="1172" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1172" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 8/9f · 709/715 (99.2%) · L 99.3% B 90% F 100% · REV E: first metered — vendored rules</text>
+<text x="814" y="1189" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1189" class="lbls" text-anchor="start" >@tools/embed-heights — 1/3f · 35/336 (10.4%) · L 100% B 100% F 100% · REV E: reserve lit — driver + CLI in shadow</text>
 <text x="58" y="1210" class="lbls" text-anchor="start" >TOTAL — 17 members metered: 7,822 of 7,980 metered lines lit (98.0%) · branches 1,815/1,929 (94.1%) · functions 573/595 (96.3%) · lit extent 6,560/9,418 sloc (69.7%) · metered at origin/main @ b2338d0 (2026-09-05)</text>
 <text x="58" y="1226" class="lblf" text-anchor="start" >REV E — the daggers are retired: light and footprint are now measured at the SAME ref, so no member's meter and census can disagree · every figure above is read from diagrams/data/census-shadow.json and diagrams/data/census-city.json</text>
 </svg></div>

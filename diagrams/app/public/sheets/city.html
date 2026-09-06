@@ -3,11 +3,11 @@
 .cs-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
   border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
 .cs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--mono); font-size: 9.5px;
+.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 9.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
 .cs-legend .sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
 .cs-legend .sw-annex, .cs-legend .sw-lamp { border-color: var(--ink-soft); border-style: dashed; }
-.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--mono); font-size: 9.5px;
+.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 9.5px;
   letter-spacing: 0.1em; color: var(--ink-soft); }
 .cs-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
@@ -20,13 +20,14 @@
 .cs-canvas.grabbing { cursor: grabbing; }
 .cs-canvas canvas { display: block; }
 .cs-canvas .cs-note { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-faint); padding: 20px; }
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-faint); padding: 20px; }
 .cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 9px 14px 10px;
-  font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
-.cs-info h4 { font-size: 11.5px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
+/* the mass name is a bare identifier — the one place the code face earns its keep */
+.cs-info h4 { font-family: var(--code); font-size: 11.5px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
 .cs-info p { margin: 0; color: var(--ink-soft); word-break: break-word; }
 .cs-info .hint { color: var(--ink-faint); }
-.cs-basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
+.cs-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
 @media (max-width: 860px) { .cs-canvas { height: 460px; } }
 .cs-legend .sw-halt { background: color-mix(in srgb, var(--red) 62%, var(--paper)); }

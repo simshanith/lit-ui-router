@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 import { depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's7';
@@ -228,17 +228,17 @@ const bodies = depthSort(M.flatMap(([n]) => (g(n).sa ? [srcMass(n), annexMass(n)
 const ART_H = 812;
 const TOT_SF = M.reduce((a, r) => a + r[6], 0), TOT_SL = M.reduce((a, r) => a + r[7], 0);
 const TOT_PF = M.reduce((a, r) => a + r[8], 0), TOT_PL = M.reduce((a, r) => a + r[9], 0);
-const schedRow = ([n, name, , tier, , , sf, sl, pf, pl, note]) =>
-  `${String(n).padStart(2, ' ')}  ${name} — ${sf ? `${sf}f · ${fmt(sl)}` : 'no source'}`
-  + `${pf ? ` · annex ${pf}f · ${fmt(pl)}` : ''} · ${TIER_TEXT[tier]} · ${note}`;
+const schedRow = ([n, name, , tier, , , sf, sl, pf, pl, note]) => [n,
+  `${name} — ${sf ? `${sf}f · ${fmt(sl)}` : 'no source'}`
+  + `${pf ? ` · annex ${pf}f · ${fmt(pl)}` : ''} · ${TIER_TEXT[tier]} · ${note}`];
 const MASSED = M.filter((r) => r[6]).length;
 const half = Math.ceil(M.length / 2);
 const SY = ART_H + 16;
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — authored source per member · files (f) · sloc · spec annex · gate tier', 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
-${M.slice(0, half).map((r, i) => txt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${M.slice(half).map((r, i) => txt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
+${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 58 + half * 17, `TOTAL — ${M.length} members, ${MASSED} massed · ${TOT_SF} authored files · ${fmt(TOT_SL)} sloc · plus ${TOT_PF} spec files · ${fmt(TOT_PL)} sloc of annex · ${BASIS} (sloc = scc Code)`, 'lbls')}`;
 
 const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, and the fifth package, the eslint plugin, stands below them at the district's near corner. To the right is the apps district, where sample-app-shared stands at ${g(5).sf} files and ${fmt(g(5).sl)} lines. Below it sits the shopfront of docs and examples — examples now the broadest source block on the sheet at ${fmt(g(11).sl)} lines — and lower left the instrument yard of ${DT.n} tools, dominated by the tall red release block — ${g(12).sf} files and ${fmt(g(12).sl)} lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all ${M.length} members with exact file and line counts, their annex, and their gate tier.">
