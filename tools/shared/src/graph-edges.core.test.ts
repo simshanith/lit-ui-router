@@ -40,7 +40,7 @@ describe('formatMissing', () => {
   it('names the consumer, the dependsOn lines and the rationale', () => {
     const text = formatMissing(
       {
-        consumer: 'lit-ui-router.dev#build',
+        consumer: '@www/lit-ui-router.dev#build',
         producerTask: 'docs:api',
         why: 'because',
       },
@@ -48,7 +48,7 @@ describe('formatMissing', () => {
     );
     assert.match(
       text,
-      /^lit-ui-router\.dev#build does not order on "a-new-pkg#docs:api": because$/,
+      /^@www\/lit-ui-router\.dev#build does not order on "a-new-pkg#docs:api": because$/,
     );
   });
 });

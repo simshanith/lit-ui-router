@@ -6,8 +6,8 @@ import { plannedTasks, resolvedTaskDeps, splitTaskId } from './turbo.ts';
 
 describe('splitTaskId', () => {
   it('splits package and task, root included', () => {
-    assert.deepEqual(splitTaskId('lit-ui-router.dev#build'), [
-      'lit-ui-router.dev',
+    assert.deepEqual(splitTaskId('@www/lit-ui-router.dev#build'), [
+      '@www/lit-ui-router.dev',
       'build',
     ]);
     assert.deepEqual(splitTaskId('//#lint:templates'), [
@@ -22,7 +22,7 @@ describe('splitTaskId', () => {
 
   it('rejects a bare task or package', () => {
     assert.throws(() => splitTaskId('build'));
-    assert.throws(() => splitTaskId('lit-ui-router.dev#'));
+    assert.throws(() => splitTaskId('@www/lit-ui-router.dev#'));
   });
 });
 
@@ -31,7 +31,7 @@ describe('resolvedTaskDeps', () => {
     tasks: [
       { taskId: 'lit-ui-router#docs:api', dependencies: [] },
       {
-        taskId: 'lit-ui-router.dev#build',
+        taskId: '@www/lit-ui-router.dev#build',
         dependencies: ['^build', 'lit-ui-router#docs:api'],
       },
     ],
@@ -43,14 +43,14 @@ describe('resolvedTaskDeps', () => {
       calls.push([command, args]);
       return Promise.resolve({ stdout: plan, stderr: '' });
     };
-    assert.deepEqual(await resolvedTaskDeps('lit-ui-router.dev#build', exec), [
-      '^build',
-      'lit-ui-router#docs:api',
-    ]);
+    assert.deepEqual(
+      await resolvedTaskDeps('@www/lit-ui-router.dev#build', exec),
+      ['^build', 'lit-ui-router#docs:api'],
+    );
     assert.deepEqual(calls, [
       [
         'turbo',
-        ['run', 'build', '--filter=lit-ui-router.dev', '--dry-run=json'],
+        ['run', 'build', '--filter=@www/lit-ui-router.dev', '--dry-run=json'],
       ],
     ]);
   });
@@ -58,7 +58,7 @@ describe('resolvedTaskDeps', () => {
   it('throws when the plan lacks the task', async () => {
     const exec: Exec = () => Promise.resolve({ stdout: plan, stderr: '' });
     await assert.rejects(
-      resolvedTaskDeps('lit-ui-router.dev#typecheck', exec),
+      resolvedTaskDeps('@www/lit-ui-router.dev#typecheck', exec),
       /no task/,
     );
   });
@@ -69,7 +69,7 @@ describe('plannedTasks', () => {
     JSON.stringify({
       tasks: [
         {
-          taskId: `lit-ui-router.dev#${name}`,
+          taskId: `@www/lit-ui-router.dev#${name}`,
           directory: 'www/lit-ui-router.dev',
           command: `run ${name}`,
           // the status object turbo emits, truthy even when uncacheable
@@ -102,9 +102,9 @@ describe('plannedTasks', () => {
     ]);
     assert.deepEqual(
       [...planned.keys()],
-      ['lit-ui-router.dev#build', 'lit-ui-router.dev#test'],
+      ['@www/lit-ui-router.dev#build', '@www/lit-ui-router.dev#test'],
     );
-    assert.deepEqual(planned.get('lit-ui-router.dev#build')?.inputs, {
+    assert.deepEqual(planned.get('@www/lit-ui-router.dev#build')?.inputs, {
       'package.json': 'abc',
     });
   });
@@ -115,7 +115,7 @@ describe('plannedTasks', () => {
         ? Promise.reject(undeclared('prepare'))
         : Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
     const planned = await plannedTasks(['prepare', 'test'], exec, 1);
-    assert.deepEqual([...planned.keys()], ['lit-ui-router.dev#test']);
+    assert.deepEqual([...planned.keys()], ['@www/lit-ui-router.dev#test']);
   });
 
   it('rethrows any other turbo failure', async () => {
@@ -132,8 +132,8 @@ describe('plannedTasks', () => {
     const exec: Exec = (_command, args) =>
       Promise.resolve({ stdout: planFor(args[1] ?? ''), stderr: '' });
     const planned = await plannedTasks(['dev', 'build'], exec, 1);
-    assert.equal(planned.get('lit-ui-router.dev#dev')?.cache, false);
-    assert.equal(planned.get('lit-ui-router.dev#build')?.cache, true);
+    assert.equal(planned.get('@www/lit-ui-router.dev#dev')?.cache, false);
+    assert.equal(planned.get('@www/lit-ui-router.dev#build')?.cache, true);
   });
 
   it('defaults missing plan fields rather than dropping the task', async () => {
