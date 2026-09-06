@@ -6,16 +6,19 @@
 // is optional.  Nothing on the bench is hand-listed.
 //
 // Layout is computed HERE, not in the browser, and it deliberately echoes sheet
-// 2A's arrangement: the socket wall at the left with lit above it, the companions
-// in a column at its right in 2A's own order, the server below them with its one
-// coupling drawn to be crossed out, and the eslint plugin in a bay of its own
-// because it touches nothing else on the bench.  cytoscape draws it with
-// `preset` — no physics, so the picture is the same on every load.
+// 2A's arrangement: the socket wall at the left with lit above it, the lit
+// companions in a column at the right in 2A's own order, the server below them
+// with its one coupling drawn to be crossed out, and the eslint plugin in a bay
+// of its own because it touches nothing else on the bench.  The navigation
+// plugin stands in a middle column of its own, on the wall's own baseline: it
+// declares core and nothing else, so it belongs nearer the wall than the lit
+// column and its one tie runs straight.  cytoscape draws it with `preset` — no
+// physics, so the picture is the same on every load.
 import { readFileSync } from 'node:fs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
-export const REV = 'B';
+export const REV = 'C';
 
 const C = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -24,18 +27,24 @@ const brick = (name) => B.rows.find((r) => r.name === name) ?? null;
 // ---- the bench, in sheet 2A's arrangement -----------------------------------
 // x/y are the preset coordinates; `short` is the label the bench can carry at
 // node size, `band` the note lettered beside it (`halign` says which side).
-// The wall stands at the left with lit lifted clear of it — the two peer fans
-// then cross at a wide angle, and every range label lands in its own air rather
-// than in the pile four identical `^6.0.8` labels would otherwise make.  The
-// fifth package is not below the column but beside it: a bay, not a basement.
+// Four columns, read right to left the way the arrows run: the lit companions at
+// 680, the navigation plugin alone at 400, the two externals stacked at 120 with
+// lit lifted clear of the wall, and the eslint bay at 900 — a bay, not a
+// basement.  The middle column is the plate's whole argument about that plugin:
+// it declares @uirouter/core and nothing else, so it sits on the wall's own
+// baseline (y = 0) and its single tie is a straight horizontal run.  Keeping it
+// out of the lit column also leaves that column with nothing standing between
+// mobx and the flagship, so the one intra-column tie is a plain vertical.  The
+// two peer fans still cross at a wide angle, and no two range labels share a
+// baseline — which is what the four identical `^6.0.8` ties would otherwise do.
 const BENCH = new Map([
-  ['lit', { x: 250, y: -330, short: 'lit', band: 'THE OTHER PEER', halign: 'right' }],
-  ['@uirouter/core', { x: 120, y: 95, short: '@uirouter/core', band: 'THE SOCKET WALL' }],
-  ['lit-ui-router', { x: 560, y: -215, short: 'lit-ui-router' }],
-  ['ui-router-navigation-location-plugin', { x: 560, y: -55, short: 'navigation-location-plugin' }],
-  ['lit-ui-router-mobx', { x: 560, y: 95, short: 'lit-ui-router-mobx' }],
-  ['ui-router-server', { x: 560, y: 275, band: 'OPTIONAL — THE TIE 2A DRAWS CROSSED OUT', short: 'ui-router-server', halign: 'right' }],
-  ['eslint-plugin-lit-ui-router', { x: 940, y: 275, band: 'A BAY OF ITS OWN — COUPLES TO NOTHING HERE', short: 'eslint-plugin-lit-ui-router', halign: 'right' }],
+  ['lit', { x: 120, y: -350, short: 'lit', band: 'THE OTHER PEER', halign: 'right' }],
+  ['@uirouter/core', { x: 120, y: 0, short: '@uirouter/core', band: 'THE SOCKET WALL', halign: 'center' }],
+  ['ui-router-navigation-location-plugin', { x: 400, y: 0, short: 'navigation-location-plugin', band: 'A COLUMN OF ITS OWN — CORE ONLY, NO LIT', halign: 'right' }],
+  ['lit-ui-router', { x: 680, y: -300, short: 'lit-ui-router' }],
+  ['lit-ui-router-mobx', { x: 680, y: -160, short: 'lit-ui-router-mobx' }],
+  ['ui-router-server', { x: 680, y: 200, band: 'OPTIONAL — THE TIE 2A DRAWS CROSSED OUT', short: 'ui-router-server', halign: 'right' }],
+  ['eslint-plugin-lit-ui-router', { x: 900, y: -300, band: 'A BAY OF ITS OWN — COUPLES TO NOTHING HERE', short: 'eslint-plugin-lit-ui-router', halign: 'center' }],
 ]);
 for (const n of C.nodes) {
   if (!BENCH.has(n.key)) throw new Error(`coupling-bench: ${n.key} is on the plate but has no place on the bench`);
@@ -80,17 +89,30 @@ const NODES = C.nodes.map((n) => {
     files: r?.files ?? null,
   };
 });
-// An edge between two nodes of the SAME column would be drawn as a vertical
-// line straight through whatever stands between them (mobx -> lit-ui-router
-// reads as passing through the nav plugin), so it is flagged to bow out of the
-// column instead of running down it.
-const EDGES = C.rows.filter((r) => r.drawn).map((r) => ({
-  ...r,
-  bow: BENCH.get(r.from).x === BENCH.get(r.to).x,
-}));
+// No edge on this bench is bowed.  The only intra-column tie is mobx ->
+// lit-ui-router, and since the navigation plugin took a column of its own there
+// is nothing standing between them: it runs straight, like every other tie.
+// A same-column pair with a third node between them would be a layout fault to
+// fix in BENCH, not a curve to hide it behind.
+const EDGES = C.rows.filter((r) => r.drawn);
+const COLUMNS = new Map();
+for (const [key, b] of BENCH) COLUMNS.set(b.x, [...(COLUMNS.get(b.x) ?? []), key]);
+for (const e of EDGES) {
+  const [a, z] = [BENCH.get(e.from), BENCH.get(e.to)];
+  if (a.x !== z.x) continue;
+  const [lo, hi] = [Math.min(a.y, z.y), Math.max(a.y, z.y)];
+  for (const key of COLUMNS.get(a.x)) {
+    const o = BENCH.get(key);
+    if (key === e.from || key === e.to || o.y <= lo || o.y >= hi) continue;
+    throw new Error(`coupling-bench: ${e.from} -> ${e.to} runs down column x=${a.x} straight through ${key}`);
+  }
+}
 const OFFSTAGE = C.rows.filter((r) => !r.drawn);
 // A band is lettered off one shoulder of its node: `left` puts the text to the
-// node's left (cytoscape's own halign names the side the LABEL takes).
+// node's left (cytoscape's own halign names the side the LABEL takes).  `center`
+// letters it squarely over the node instead, which is how the two longest bands
+// are kept from throwing the drawing's bounding box — and so its fitted scale —
+// hundreds of units wider than the buildings themselves.
 const BANDS = [...BENCH].filter(([, b]) => b.band).map(([key, b]) => {
   const n = NODES.find((x) => x.key === key);
   const halign = b.halign ?? 'left';
@@ -98,8 +120,8 @@ const BANDS = [...BENCH].filter(([, b]) => b.band).map(([key, b]) => {
     id: `band-${key}`,
     label: b.band,
     halign,
-    x: halign === 'left' ? b.x - n.w / 2 - 12 : b.x + n.w / 2 + 12,
-    y: b.y - n.h / 2 - 14,
+    x: halign === 'left' ? b.x - n.w / 2 - 12 : halign === 'right' ? b.x + n.w / 2 + 12 : b.x,
+    y: b.y - n.h / 2 - (halign === 'center' ? 20 : 14),
   };
 });
 
@@ -195,7 +217,7 @@ const INIT = `
   L.edges.forEach(function (e, i) {
     var brick = byKey[e.to] && byKey[e.to].kind === 'published';
     els.push({ data: { id: 'e' + i, idx: i, source: idOf(e.from), target: idOf(e.to), label: e.range },
-      classes: 'r-' + e.kind + (e.optional ? ' opt' : '') + (brick ? ' brick' : '') + (e.bow ? ' bow' : '') });
+      classes: 'r-' + e.kind + (e.optional ? ' opt' : '') + (brick ? ' brick' : '') });
   });
 
   function style(c) {
@@ -204,6 +226,8 @@ const INIT = `
         'background-fit': 'contain', 'background-clip': 'none', 'border-width': 1.1, 'border-color': c.line,
         shape: 'round-rectangle', width: 'data(w)', height: 'data(h)', label: 'data(label)',
         'text-valign': 'bottom', 'text-margin-y': 5, 'text-wrap': 'none',
+        // a name lettered over a tie knocks the tie out, the way a plan label does
+        'text-background-color': c.paper, 'text-background-opacity': 0.92, 'text-background-padding': 2,
         'font-family': c.data, 'font-size': 12, color: c.ink,
         'text-halign': 'center', 'overlay-opacity': 0, 'transition-property': 'opacity', 'transition-duration': '110ms' } },
       { selector: 'node.k-external', style: { 'border-width': 2.2, 'border-color': c.accent, color: c.accent } },
@@ -222,8 +246,6 @@ const INIT = `
       { selector: 'edge.opt', style: { 'line-style': 'dashed', 'line-dash-pattern': [4, 5],
         'line-color': c.red, 'target-arrow-color': c.red, color: c.red } },
       { selector: 'edge.brick', style: { 'line-style': 'solid', width: 2.6 } },
-      { selector: 'edge.bow', style: { 'curve-style': 'unbundled-bezier',
-        'control-point-distances': [120], 'control-point-weights': [0.5] } },
       { selector: '.dim', style: { opacity: 0.1 } },
       { selector: 'node.lit', style: { 'border-width': 2.6, 'border-color': c.accent } },
       { selector: 'edge.lit', style: { opacity: 1, width: 3, 'line-color': c.accent,
@@ -354,7 +376,7 @@ export function couplingBenchSection() {
     <div class="cb-cy" id="cb-cy" role="img" aria-label="Interactive coupling graph: the five published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
-  <p class="cb-basis">BASIS — ${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement, computed at build and drawn with cytoscape <code>preset</code> — no physics.</p>
+  <p class="cb-basis">BASIS — ${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in four columns — the lit companions, the navigation plugin alone, the two externals, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.</p>
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>

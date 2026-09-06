@@ -4,7 +4,7 @@
 // the prose is looked up in census-couplings.json through a THROWING lookup, so
 // a contract that changes ranges changes the sentence or breaks the build.
 import { readFileSync } from 'node:fs';
-import { titleBlock } from './chrome.mjs';
+import { revBlock, splitRevs, titleBlock } from './chrome.mjs';
 import { keyRow } from './helpers.mjs';
 import { couplingBenchSection } from './coupling-bench.mjs';
 
@@ -36,9 +36,9 @@ const MBX = declares('lit-ui-router-mobx');
 const SHIPPED = C.rows.filter((r) => r.kind === 'dep');
 
 export const sheet2b = {
-  num: '2B', id: 'coupling-bench', rev: 'A',
+  num: '2B', id: 'coupling-bench', rev: 'C',
   title: 'THE COUPLING BENCH',
-  sub: `ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · ${T.nodes} nodes · every one of the ${T.drawnContracts} drawn edges is a published contract, with its declared range under the pointer`,
+  sub: `ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · ${T.nodes} nodes · every one of the ${T.drawnContracts} drawn edges is a published contract, with its declared range under the pointer · REV B: the intra-column lit-ui-router-mobx → lit-ui-router tie bowed out of the column, because it ran straight through the navigation plugin standing between them · REV C 2026-09-06: the bow deleted and the bench recomposed in four columns — ui-router-navigation-location-plugin declares core and nothing else, so it leaves the lit column for a middle column of its own on the wall’s baseline, its one tie a straight horizontal run; with nothing left standing between them the mobx tie is a plain vertical, a same-column tie laid through a third building is now a build error rather than a curve drawn around it, and the two longest bands letter over their node so the fit is priced on the buildings rather than on the captions`,
   scale: 'SEVEN NODES · TWELVE CONTRACTS',
   form: 'INTERACTIVE COUPLING GRAPH',
   caption: `The same assembly as sheets 2 and 2A, reduced to what a consumer's installer actually reads: seven buildings and ${T.drawnContracts} contracts. Hover an edge for the range it declares and the section it lives in; hover a building for its version, what it declares, and what declares it.`,
@@ -48,7 +48,8 @@ export const sheet2b = {
 export const SHEET2B_VERDICT = `2A’s joints made live — every one of the ${T.drawnContracts} drawn edges is a published contract with its declared range under the pointer: ${T.peers} peers to ${T.deps} dependencies across the five packages, and neither dependency is a router`;
 
 const notes = `
-<p><strong>This plate is sheet 2A with the joints made live.</strong> Sheet 2 explodes the assembly and sheet 2A draws each coupling at reading size; both letter the API call that makes the joint. This one drops the API entirely and draws the other contract — the one <code>npm install</code> reads. Its arrangement is deliberately 2A’s: <code>@uirouter/core</code> as the socket wall at the left with <code>lit</code> above it, the companions in a column at its right in 2A’s order, and the server below them with the coupling that exists only to be crossed out.</p>
+<p><strong>This plate is sheet 2A with the joints made live.</strong> Sheet 2 explodes the assembly and sheet 2A draws each coupling at reading size; both letter the API call that makes the joint. This one drops the API entirely and draws the other contract — the one <code>npm install</code> reads. Its arrangement is deliberately 2A’s: <code>@uirouter/core</code> as the socket wall at the left with <code>lit</code> above it, the lit companions in a column at the right in 2A’s order, and the server below them with the coupling that exists only to be crossed out.</p>
+<p><strong>The middle column is an argument, not a spacer.</strong> Four of the five published packages need <code>lit</code> or need something that does; <code>ui-router-navigation-location-plugin</code> needs neither, and the bench says so by standing it in a column of its own between the wall and the lit column, on the wall’s own baseline. Every other building on this bench reaches left across two column gaps; this one reaches across one, along a straight horizontal run, and that run is the whole of its coupling. Rev B drew it inside the lit column and had to bow the <code>lit-ui-router-mobx</code> tie around it — a single curve on a plate of straight lines, which is the shape a layout takes when it is hiding a fault rather than fixing one. With the plugin moved out, nothing stands between <code>lit-ui-router-mobx</code> and <code>lit-ui-router</code>: the tie is a plain vertical, and the generator now <em>throws</em> if any same-column tie is laid through a third building.</p>
 <p><strong>An edge is one declaration, not a relationship.</strong> Every line is a single entry in a published <code>package.json</code> — its section (<code>peerDependencies</code> or <code>dependencies</code>), its declared range, and whether <code>peerDependenciesMeta</code> marks it optional. <code>devDependencies</code> are not drawn: they bind this workspace and never reach a consumer’s install. Of ${T.contracts} contracts the five published packages declare, ${T.drawnContracts} land on a node that is on this bench; the other ${T.contracts - T.drawnContracts} are filed on the plate and read out in the panel under OFF THE BENCH.</p>
 <p><strong>The ranges are the ranges that ship, not the ones written in the file.</strong> Every spec in this repo is a catalog reference — <code>${CORE_PEER.spec}</code>, not <code>${CORE_PEER.range}</code> — which pnpm rewrites at pack time. <code>census-couplings.mjs</code> resolves each one against the archive’s own <code>pnpm-workspace.yaml</code> and the plate carries both, so the panel can show you what is written and what a consumer would see. <code>@uirouter/core</code> and <code>lit</code> carry no range of their own on this bench: their versions (${version('@uirouter/core')} and ${version('lit')}) come from the lockfile, which is the only honest source for a resolution.</p>
 <p><strong>The whole deps-to-peers decision is legible in one column.</strong> ${T.peers} of the ${T.contracts} contracts are peers and only ${T.deps} are dependencies — and neither of the two shipped dependencies is a router. <code>lit-ui-router</code> declares <code>@uirouter/core</code> at <code>${CORE_PEER.range}</code> and <code>lit</code> at <code>${LIT_PEER.range}</code> as <em>peers</em>, and keeps exactly one thing in its tarball’s dependency list: <code>${OXC.to}</code> at <code>${OXC.range}</code>, a runtime helper deliberately declared as wide as it can honestly be. <code>lit-ui-router-mobx</code> goes further and declares no dependency at all: all ${MBX.length} of its contracts are peers, including the one brick-to-brick joint on the bench — <code>lit-ui-router ${MBX_LIT.range}</code>, a floor the flagship has since left behind at ${version('lit-ui-router')} without breaking it.</p>
@@ -79,5 +80,6 @@ export function sheet2bPage() {
       ${titleBlock(sheet2b)}
     </div>
   </div>
+  ${revBlock(splitRevs(sheet2b.sub).revs)}
 </section>`;
 }
