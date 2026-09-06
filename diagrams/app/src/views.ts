@@ -221,10 +221,7 @@ function rail(manifest: Manifest | undefined): TemplateResult {
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
           <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
         </a>
-        <!-- A bench, not a plate: the type specimen rides at the very bottom. -->
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.specimen')} href="${to(href.specimen)}">
-          <span class="n">S0·T</span><span class="t">THE TYPE SPECIMEN</span>
-        </a>
+        <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
       </div>
     </nav>
   `;
