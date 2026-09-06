@@ -1253,6 +1253,66 @@ manifest carries `appendix: [{ id: 'a1', num: 'A1', plates: [], refs: ['7',
 '7B', '8', '10', '13'] }]`, sheet 13's row carries `'A1'` in its refs, and
 `app/dist/sheet/A1/index.html` exists.
 
+THE TITLE ARTICLE, 2026-09-06: every sheet title starts with THE, and in
+Exhibition's caps the rail says it 21 times and the cover 24 — the user finds
+the repeat tiring and added **HWT Catchwords** (Hamilton Wood Type via P22, the
+Wright faces' foundry; kit name `hwt-catchwords`, one face) to the kit for it.
+A KNOB ON THE SPECIMEN ONLY — nothing shipped changes: `generator/chrome.mjs`,
+`views.ts`, `index.html` and the rail are untouched.
+
+**The face, probed.** The kit's OTF (60 KB, CFF) was read with a 150-line
+table parser (`cmap` + CFF charset + GSUB) and rendered key by key in Chromium:
+87 glyphs, every one ENCODED, and **no GSUB table at all** — `liga`, `dlig`,
+`salt`, `swsh`, `calt` and `ss01`…`ss20` change nothing (every string's
+advance is identical under all 26 feature settings), and typing "the" draws
+THREE catchwords in a row. Each catchword is KEYED to one character. Ten keys
+are a stand-alone THE — upright: `e` (narrow block caps, two leaves), `E`
+(narrow block caps, flourish), `w` (the wide arched banner with a swash), `Q`
+(block caps on an arc with a swash), `q` (between two rules), `r` (script
+"the" reversed out of a black square); tilted IN THE GLYPH: `R` (script),
+`W`, `T`, `t` — and four more are OF THE (`I`, `P`, `U`, `Y`, unused). Also in
+the face: AND ×14, FOR ×12, OF ×5, PER/EACH/ONLY/BEST/CHOICE… and seven PUA
+duplicates (U+E000–E006 = B E S b s w y). Metrics at 64 px: Exhibition's cap
+is 44.8 px (0.700 em); every catchword's ink ascent is 40.6–42.0 px
+(0.634–0.656 em, swashes included), so the cap-matched scale is 1.07–1.10 em
+per key, stored per row.
+
+**The knob.** `specimen.ts` gains `ARTICLES` (13 rows) and a TITLE ARTICLE
+group with three sub-controls, all in `KNOBS`: AS IS · MUTED (soft ink at 55%)
+· SMALL (0.7 em, cap-aligned by a 0.3 em raise, soft ink) · CATCHWORD 1…10 (one
+per THE key, `--article-key` written into `.art::before { content }`,
+`--article-scale` = the row's cap-matched scale × the CATCHWORD SIZE stepper,
+×0.5…×3 in quarters); HEAD INLINE / STACKED (the catchword centred over the
+first word of the sheet head only, at 0.65 of the inline size — rail, title
+block and card stay inline); RAIL SAME / OFF (the rail drops the article
+outright, the memo's strip-`/^THE /`). `specimen-mock.ts` wraps the article in
+`.art > .w` on the eight rail entries, the sheet head (`.w1` around the first
+word for the stack), the title block's SHEET TITLE value, and a NEW mock cover
+card drawn with `index.html`'s `.card` rules, so all four homes of THE are
+judged at once. `hwt-catchwords` is a `kit: true` row in `ADOBE_FAMILIES` and a
+Face with NO stand-in: the CATCHWORD rows are disabled and labelled SITE ONLY
+wherever `document.fonts` has not declared the family (the artifact, and the
+vite dev server, which carries no kit), and LOADED FACES adds an `--article`
+row that reads ADOBE on the site.
+
+**What the bench shows.** At the cap-matched ×1 the whole word lives inside
+one em, so its LETTERS are a third of Exhibition's cap — a mark, not a word,
+and a smudge at the rail's 12 px. Inline reads from ×2 (`w`, `Q`, `q` best);
+STACKED at ×2 over MEASURED is the one that looks like a drawing-set title,
+and RAIL OFF is what makes the rail quiet. The rotated four (`R`, `W`, `T`,
+`t`) are drawn tilted in the glyph — nothing here rotates, the square rule
+holds. Ranking, for what it is worth: RAIL OFF + head STACKED `w` ×2; then
+MUTED (no new glyph, both hosts); SMALL; then inline `Q`/`q` ×2; the tilted
+ones last.
+
+Verified on the dev server with the kit CSS injected (Typekit served the font
+to localhost): 13 rows × inline/stacked × rail on/off clicked through, zero
+page errors, `document.fonts.check('16px "hwt-catchwords"')` true, and on the
+live site the kit already declares `hwt-catchwords` (checked from
+`atlas.lit-ui-router.dev/specimen/`). `tsc --noEmit` clean. Crops under
+`~/.claude/jobs/a9024f9c/tmp/catchwords/` (`keys-part0/1.png` = the whole
+face keyed; `shots/<row>[-stacked|-x2|-x3|-rail-off]-{title,rail,card,tb}.png`).
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a

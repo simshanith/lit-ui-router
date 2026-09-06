@@ -160,6 +160,36 @@ export const SPECIMEN_CSS = `
 .mock .m-notes { margin-top: 12px; max-width: 66ch; font-family: var(--prose); font-size: 14px; }
 .mock .m-notes h4 { font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
 .mock .m-notes code { font-family: var(--code); font-size: 0.85em; background: var(--paper-2); border: 1px solid var(--line); padding: 0 4px; }
+
+/* the cover card, once: index.html's .card rules, so the third THE is judged too */
+.mock .m-cardwrap { margin-top: 14px; max-width: 300px; }
+.mock .m-cardlbl { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 6px; font-weight: 600; }
+.mock .m-card { display: block; border: 1.5px solid var(--ink); background: var(--paper); padding: 14px 16px 15px; text-decoration: none; color: inherit; }
+.mock .m-card .n { font-family: var(--data); font-size: 10px; letter-spacing: 0.14em; color: var(--accent); font-variant-numeric: tabular-nums; }
+.mock .m-card h4 { font-family: var(--title); font-size: 15px; font-weight: 600; letter-spacing: 0.1em; text-transform: uppercase; margin: 5px 0 6px; }
+.mock .m-card .alt { display: block; font-family: var(--data); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-faint); text-transform: uppercase; margin-bottom: 6px; }
+.mock .m-card p { font-family: var(--prose); font-size: 14px; color: var(--ink-soft); line-height: 1.45; margin: 0 0 6px; }
+.mock .m-card .meta { font-family: var(--data); font-size: 9px; letter-spacing: 0.14em; color: var(--ink-faint); }
+
+/* --- THE ARTICLE knob: the leading THE of every title ---------------------
+   .art wraps the article wherever a title is drawn — rail entry, sheet head,
+   title block, cover card — and .w is the word itself. The mock's root
+   carries data-article / data-article-stack / data-article-rail and, for the
+   catchword rows, --article-key (the ONE keyboard character HWT Catchwords maps
+   the chosen THE to: the face has no GSUB, every catchword is keyed) and
+   --article-scale (the size that lands its ink height on Exhibition's caps). */
+.mock[data-article="muted"] .art { color: var(--ink-soft); opacity: 0.55; }
+/* cap-aligned: 0.7em caps sit 0.21 title-em lower, which is 0.3em of their own */
+.mock[data-article="small"] .art { font-size: 0.7em; color: var(--ink-soft); vertical-align: 0.3em; }
+.mock[data-article^="cw"] .art .w { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+.mock[data-article^="cw"] .art::before { content: var(--article-key); font-family: "hwt-catchwords", var(--title); font-size: var(--article-scale, 1.075em); font-weight: 400; letter-spacing: 0; text-transform: none; color: var(--ink-soft); margin-right: 0.22em; }
+/* STACKED — the sheet head only: the catchword centred over the first word */
+.mock[data-article^="cw"][data-article-stack="on"] .m-title .w1 { display: inline-block; position: relative; padding-top: calc(var(--article-scale, 1.075em) * 0.72); }
+.mock[data-article^="cw"][data-article-stack="on"] .m-title .art { position: absolute; top: 0; left: 0; right: 0; text-align: center; line-height: 1; }
+/* 0.65 of the inline size: the stacked word sits above the caps, so it can be smaller and still read */
+.mock[data-article^="cw"][data-article-stack="on"] .m-title .art::before { font-size: calc(var(--article-scale, 1.075em) * 0.65); margin-right: 0; }
+/* RAIL: OFF — the rail drops the article and keeps the title */
+.mock[data-article-rail="off"] .m-rail .art { display: none; }
 `;
 
 /**
@@ -175,14 +205,14 @@ export const SPECIMEN_MOCK = `
       <div class="bands" aria-hidden="true"></div>
     </div>
     <p class="m-rail-sec">Sheets — ascent order</p>
-    <a href="#" onclick="return false"><span class="n">3B</span><span class="t">The Watched City</span></a>
-    <a href="#" onclick="return false"><span class="n">4</span><span class="t">The Family Spine</span></a>
-    <a href="#" onclick="return false"><span class="n">5</span><span class="t">The Design Space</span></a>
-    <a href="#" onclick="return false"><span class="n">6</span><span class="t">The Routing Strata</span></a>
-    <a href="#" onclick="return false" class="is-active"><span class="n">7</span><span class="t">The Measured City</span></a>
-    <a href="#" onclick="return false"><span class="n">7A</span><span class="t">The Shadow Survey</span></a>
-    <a href="#" onclick="return false"><span class="n">7B</span><span class="t">The Working City</span></a>
-    <a href="#" onclick="return false"><span class="n">8</span><span class="t">The Delivered City</span></a>
+    <a href="#" onclick="return false"><span class="n">3B</span><span class="t"><span class="art"><span class="w">The </span></span>Watched City</span></a>
+    <a href="#" onclick="return false"><span class="n">4</span><span class="t"><span class="art"><span class="w">The </span></span>Family Spine</span></a>
+    <a href="#" onclick="return false"><span class="n">5</span><span class="t"><span class="art"><span class="w">The </span></span>Design Space</span></a>
+    <a href="#" onclick="return false"><span class="n">6</span><span class="t"><span class="art"><span class="w">The </span></span>Routing Strata</span></a>
+    <a href="#" onclick="return false" class="is-active"><span class="n">7</span><span class="t"><span class="art"><span class="w">The </span></span>Measured City</span></a>
+    <a href="#" onclick="return false"><span class="n">7A</span><span class="t"><span class="art"><span class="w">The </span></span>Shadow Survey</span></a>
+    <a href="#" onclick="return false"><span class="n">7B</span><span class="t"><span class="art"><span class="w">The </span></span>Working City</span></a>
+    <a href="#" onclick="return false"><span class="n">8</span><span class="t"><span class="art"><span class="w">The </span></span>Delivered City</span></a>
     <div class="foot"><span class="chop" aria-hidden="true"></span><span>Sheet 7 of 14 · rev E</span></div>
   </nav>
   <div class="m-body">
@@ -198,7 +228,7 @@ export const SPECIMEN_MOCK = `
       <span class="proj">The Altitude Atlas — drawing set</span>
       <span class="shno">SHEET 7 / 14 · ALTITUDE 3½</span>
     </div>
-    <h3 class="m-title">The Measured City</h3>
+    <h3 class="m-title"><span class="w1"><span class="art"><span class="w">The </span></span>Measured</span> City</h3>
     <p class="m-sub">Altitude 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts · counted at origin/main @ b2338d0</p>
     <div class="m-plate">
       <div>
@@ -238,6 +268,16 @@ export const SPECIMEN_MOCK = `
           <h4>General notes</h4>
           <p><strong>Numbers by import, not by paste.</strong> Every count above and on the drawing is read from <code>diagrams/data/census-city.json</code>, the snapshot <code>census-city.mjs</code> writes out of the master per-file census; this file holds placement, tiers and prose only.</p>
         </div>
+        <div class="m-cardwrap">
+          <span class="m-cardlbl">Cover card — the same title, a third time</span>
+          <a class="m-card" href="#" onclick="return false">
+            <span class="n">SHEET 7 · REV E</span>
+            <h4><span class="art"><span class="w">The </span></span>Measured City</h4>
+            <span class="alt">WHOLE WORKSPACE</span>
+            <p>The same city as sheet 3, surveyed by mass — 32 members, 4 districts, the annex hatched.</p>
+            <span class="meta">MEASURED CITY · 1 PLATE</span>
+          </a>
+        </div>
       </div>
       <div>
         <table class="m-sched">
@@ -255,7 +295,7 @@ export const SPECIMEN_MOCK = `
         </table>
         <div class="m-tb" aria-label="title block">
           <div class="span2"><span class="fld">Project</span><span class="ttl">The Altitude Atlas</span></div>
-          <div class="span2"><span class="fld">Sheet title</span><span class="ttl">THE MEASURED CITY</span></div>
+          <div class="span2"><span class="fld">Sheet title</span><span class="ttl"><span class="art"><span class="w">THE </span></span>MEASURED CITY</span></div>
           <div><span class="fld">Scale</span>WHOLE WORKSPACE</div>
           <div><span class="fld">Form</span>MEASURED CITY</div>
           <div><span class="fld">Basis</span>origin/main @ b2338d0</div>

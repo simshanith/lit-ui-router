@@ -4,8 +4,8 @@
  * A bench, not a plate: one mock sheet drawn in the atlas's own chrome, with
  * every type role swapped on the mock's root by inline style — `--display`,
  * `--title`, `--rail-title`, `--data`, `--prose`, `--hand`, `--code` — so six
- * candidate pairings and seven INDEPENDENT knobs (sheet title, rail titles,
- * data face, data size, prose, code, hand) can be compared on the same copy, in
+ * candidate pairings and eight INDEPENDENT knobs (sheet title, rail titles,
+ * data face, data size, prose, code, hand, title article) can be compared on the same copy, in
  * both themes, on both hosts. A pairing is a starting point, not a cage:
  * picking one resets the knobs it owns, and every knob then overrides it.
  *
@@ -96,6 +96,17 @@ export const ADOBE_FAMILIES = [
     css: 'p22-flw-exhibition',
     name: 'P22 FLW Exhibition',
     role: 'sheet title · the EXHIBITION knob',
+    woff2: '',
+    kit: true,
+  },
+  {
+    // Hamilton Wood Type via P22 — the same foundry as the two Wright faces.
+    // ONE face, 87 glyphs, NO GSUB: every catchword is KEYED to a single
+    // character (probed 2026-09-06 — `E`, `e`, `w`, `q`, `Q`… are all THE), so
+    // no ligature or stylistic set ever fires and the knob writes the key.
+    css: 'hwt-catchwords',
+    name: 'HWT Catchwords',
+    role: 'title article · the CATCHWORD rows of the TITLE ARTICLE knob; no Google stand-in, SITE ONLY',
     woff2: '',
     kit: true,
   },
@@ -391,6 +402,133 @@ export const SHEET_TITLES = [
     track: '0.14em',
     size: '24px',
     note: "Wright's exhibition lettering — the other P22 FLW display cut",
+  },
+] as const;
+
+/**
+ * THE CATCHWORD FACE: Adobe-only, like the hand. Off the kit the `.art::before`
+ * pseudo-element would draw the bare KEY in the title face, so the CATCHWORD
+ * rows are DISABLED — "SITE ONLY" — wherever the kit has not declared it.
+ */
+const catchwords: Face = {
+  adobe: 'hwt-catchwords',
+  standin: null,
+  stack: '"hwt-catchwords", var(--title)',
+};
+
+/**
+ * THE TITLE ARTICLE — every sheet title starts with THE, and in Exhibition's
+ * caps the rail says it 21 times and the cover 24. The user finds it tiring;
+ * this knob downplays it without touching the titles themselves. Every row is
+ * applied to the mock's rail entries, sheet head, title block AND cover card.
+ *
+ * The CATCHWORD rows draw the article in HWT Catchwords instead. PROBED
+ * 2026-09-06 with the kit's own OTF: 87 glyphs, all encoded, NO GSUB table —
+ * so `liga`/`dlig`/`salt`/`ss01`…`ss20`/`swsh`/`calt` change nothing and the
+ * words "the", "The", "THE" render as THREE catchwords in a row. Each catchword
+ * is KEYED to one character; ten keys are a stand-alone THE (four more — `I`,
+ * `P`, `U`, `Y` — are OF THE, not used). `key` is that character, written into
+ * `--article-key` for the `.art::before` content.
+ *
+ * `scale` lands the glyph's INK HEIGHT on Exhibition's cap height: Exhibition
+ * runs 0.700 cap/em (44.8 px at 64 px) and every catchword's ink ascent is
+ * 0.634–0.656 em (40.6–42.0 px at 64 px, swashes included), so the ratio is
+ * 1.07–1.10. Measured in Chromium, per key, not guessed.
+ *
+ * THE FOUR ROTATED ONES (`R`, `T`, `W`, `t`) are tilted IN THE GLYPH; nothing
+ * here rotates anything — the square rule holds, the lettering does not.
+ */
+export const ARTICLES = [
+  {
+    id: 'as-is',
+    label: 'AS IS',
+    key: '',
+    scale: 1,
+    note: 'Exhibition THE, full ink, same size — how the set draws today',
+  },
+  {
+    id: 'muted',
+    label: 'MUTED',
+    key: '',
+    scale: 1,
+    note: 'Exhibition THE at 55% of the soft ink, same size — the cheapest change, no new glyph',
+  },
+  {
+    id: 'small',
+    label: 'SMALL',
+    key: '',
+    scale: 1,
+    note: 'Exhibition THE at 0.7em, cap-aligned to the title, soft ink',
+  },
+  {
+    id: 'cw-e',
+    label: 'CATCHWORD 1 · e',
+    key: 'e',
+    scale: 1.08,
+    note: 'HWT Catchwords key e — upright, narrow, block caps with two leaves below; the plainest THE in the face',
+  },
+  {
+    id: 'cw-E',
+    label: 'CATCHWORD 2 · E',
+    key: 'E',
+    scale: 1.074,
+    note: 'key E — upright, narrow, tall block caps over a small flourish; a hair more ornate than e',
+  },
+  {
+    id: 'cw-w',
+    label: 'CATCHWORD 3 · w',
+    key: 'w',
+    scale: 1.067,
+    note: 'key w — the wide arched THE with a swash under, upright; the most banner-like, and the widest',
+  },
+  {
+    id: 'cw-Q',
+    label: 'CATCHWORD 4 · Q',
+    key: 'Q',
+    scale: 1.072,
+    note: 'key Q — upright block caps on a gentle arc with a swash under; between e and w',
+  },
+  {
+    id: 'cw-q',
+    label: 'CATCHWORD 5 · q',
+    key: 'q',
+    scale: 1.104,
+    note: 'key q — THE between two rules, the whole word on a slight rise; the smallest ink, hence the largest scale',
+  },
+  {
+    id: 'cw-r',
+    label: 'CATCHWORD 6 · r',
+    key: 'r',
+    scale: 1.074,
+    note: 'key r — script "the" reversed out of a black square; the one dark one',
+  },
+  {
+    id: 'cw-R',
+    label: 'CATCHWORD 7 · R',
+    key: 'R',
+    scale: 1.069,
+    note: 'key R — script "the", tilted in the glyph, with a swash; lowercase in a caps title',
+  },
+  {
+    id: 'cw-W',
+    label: 'CATCHWORD 8 · W',
+    key: 'W',
+    scale: 1.067,
+    note: 'key W — block caps tilted in the glyph, swash under; the rotation is drawn, not applied',
+  },
+  {
+    id: 'cw-T',
+    label: 'CATCHWORD 9 · T',
+    key: 'T',
+    scale: 1.08,
+    note: 'key T — condensed caps tilted in the glyph, bare',
+  },
+  {
+    id: 'cw-t',
+    label: 'CATCHWORD 10 · t',
+    key: 't',
+    scale: 1.074,
+    note: 'key t — caps tilted in the glyph between hatched rules',
   },
 ] as const;
 
@@ -699,6 +837,10 @@ const KNOBS = new Set([
   'prose',
   'code',
   'size',
+  'article',
+  'articleStack',
+  'articleRail',
+  'articleMul',
 ]);
 
 const LINK_ID = 'atlas-specimen-fonts';
@@ -844,6 +986,11 @@ export class AtlasSpecimen extends LitElement {
     prose: { state: true },
     code: { state: true },
     size: { state: true },
+    article: { state: true },
+    articleStack: { state: true },
+    articleRail: { state: true },
+    articleMul: { state: true },
+    kitCatchwords: { state: true },
     faces: { state: true },
     metrics: { state: true },
   };
@@ -863,6 +1010,21 @@ export class AtlasSpecimen extends LitElement {
   /** Index into CODE_FACES. 0 = the system mono, which is what ships. */
   declare code: number;
   declare size: number;
+  /** Index into ARTICLES. 0 = AS IS. Not owned by any pairing, so never reset. */
+  declare article: number;
+  /** STACKED: the catchword over the first word — the sheet head only. */
+  declare articleStack: boolean;
+  /** RAIL: SAME (true) keeps the article on the rail; OFF drops it there. */
+  declare articleRail: boolean;
+  /**
+   * CATCHWORD SIZE: a multiplier on the row's cap-matched scale. At ×1 the
+   * glyph's whole ink sits on Exhibition's cap height, which leaves the
+   * LETTERS inside it about a third of that — a mark, not a word; ×2–×3 is
+   * where the word reads, and where STACKED earns its place.
+   */
+  declare articleMul: number;
+  /** Whether the kit has DECLARED hwt-catchwords — gates the CATCHWORD rows. */
+  declare kitCatchwords: boolean;
   declare faces: FaceReport[];
   declare metrics: { base: Metric; data: Metric; code: Metric } | null;
 
@@ -882,6 +1044,11 @@ export class AtlasSpecimen extends LitElement {
     this.prose = indexIn(PROSE_FACES, start?.proseDefault ?? 'charter');
     this.code = indexIn(CODE_FACES, start?.codeDefault ?? 'mono');
     this.size = start?.dataSize ?? 12;
+    this.article = 0;
+    this.articleStack = false;
+    this.articleRail = true;
+    this.articleMul = 1;
+    this.kitCatchwords = false;
     this.faces = [];
     this.metrics = null;
   }
@@ -953,6 +1120,11 @@ export class AtlasSpecimen extends LitElement {
     return DATA_FACES[this.dataFace]?.face ?? systemMono;
   }
 
+  /** The chosen ARTICLES row; the catchword rows are the ones with a key. */
+  get #article(): (typeof ARTICLES)[number] {
+    return ARTICLES[this.article] ?? ARTICLES[0];
+  }
+
   get #proseFace(): Face {
     return PROSE_FACES[this.prose]?.face ?? systemSerif;
   }
@@ -1001,6 +1173,12 @@ export class AtlasSpecimen extends LitElement {
     this.#pickProse(indexIn(PROSE_FACES, picked?.proseDefault ?? 'charter'));
   }
 
+  /** ×1 = the cap-matched scale; ×3 puts the catchword's LETTERS near the caps. */
+  #nudgeArticle(step: number): void {
+    this.articleMul = Math.min(3, Math.max(0.5, Math.round((this.articleMul + step) * 4) / 4));
+    this.#report();
+  }
+
   #nudge(step: number): void {
     this.size = Math.min(15, Math.max(9, Math.round((this.size + step) * 2) / 2));
     this.#report();
@@ -1034,6 +1212,7 @@ export class AtlasSpecimen extends LitElement {
       ['prose', this.#proseFace],
       [this.code === 0 ? 'code (system)' : 'code', this.#codeFace],
     ];
+    if (this.#article.key) roles.push(['article', catchwords]);
     // TRAP: `document.fonts.check('12px "no-such-face"')` returns TRUE — the
     // spec asks "can this be rendered", and a family nothing declares renders
     // fine via fallback. So ask the FontFaceSet whether the family was DECLARED
@@ -1050,6 +1229,9 @@ export class AtlasSpecimen extends LitElement {
     const loaded = (name: string): boolean =>
       declared(name) &&
       (document.fonts.check(`12px "${name}"`) || document.fonts.check(`600 12px "${name}"`));
+    // DECLARED, not loaded: the kit declares it on every site page, and the
+    // font is only fetched once a CATCHWORD row puts it on the mock.
+    this.kitCatchwords = declared(catchwords.adobe ?? '');
 
     this.faces = roles.map(([role, f]): FaceReport => {
       // ADOBE first: the hand names an Adobe family with NO stand-in behind it.
@@ -1170,6 +1352,104 @@ export class AtlasSpecimen extends LitElement {
                 class=${this.railMatch === option.value ? 'on' : ''}
                 @click=${() => {
                   this.railMatch = option.value;
+                  this.#report();
+                }}
+              >
+                ${option.label}
+              </button>
+            `,
+          )}
+        </div>
+        <div class="sp-group" role="radiogroup" aria-label="title article">
+          <span class="sp-lbl">TITLE ARTICLE</span>
+          ${ARTICLES.map((option, index) => {
+            const siteOnly = Boolean(option.key) && !this.kitCatchwords;
+            return html`
+              <button
+                type="button"
+                role="radio"
+                data-article=${option.id}
+                aria-checked=${this.article === index ? 'true' : 'false'}
+                class=${this.article === index ? 'on' : ''}
+                ?disabled=${siteOnly}
+                title=${siteOnly
+                  ? `SITE ONLY — hwt-catchwords is in the kit and has no Google stand-in. ${option.note}`
+                  : option.note}
+                @click=${() => {
+                  this.article = index;
+                  this.#report();
+                }}
+              >
+                ${siteOnly ? `${option.label} · SITE ONLY` : option.label}
+              </button>
+            `;
+          })}
+        </div>
+        <div class="sp-group" role="radiogroup" aria-label="article on the sheet head">
+          <span class="sp-lbl">HEAD</span>
+          ${[
+            { value: false, label: 'INLINE' },
+            { value: true, label: 'STACKED' },
+          ].map(
+            (option) => html`
+              <button
+                type="button"
+                role="radio"
+                data-article-stack=${option.value ? 'on' : 'off'}
+                aria-checked=${this.articleStack === option.value ? 'true' : 'false'}
+                class=${this.articleStack === option.value ? 'on' : ''}
+                ?disabled=${!this.#article.key}
+                title=${option.value
+                  ? 'the catchword centred above the first word — the sheet head only; the rail, title block and card stay inline. CATCHWORD rows only'
+                  : 'the article before the title, on the line'}
+                @click=${() => {
+                  this.articleStack = option.value;
+                  this.#report();
+                }}
+              >
+                ${option.label}
+              </button>
+            `,
+          )}
+        </div>
+        <div class="sp-group" aria-label="catchword size">
+          <span class="sp-lbl">CATCHWORD SIZE</span>
+          <button
+            type="button"
+            aria-label="smaller catchword"
+            ?disabled=${!this.#article.key}
+            @click=${() => { this.#nudgeArticle(-0.25); }}
+          >
+            −
+          </button>
+          <span class="sp-num">×${this.articleMul.toFixed(2)}</span>
+          <button
+            type="button"
+            aria-label="larger catchword"
+            ?disabled=${!this.#article.key}
+            @click=${() => { this.#nudgeArticle(0.25); }}
+          >
+            +
+          </button>
+        </div>
+        <div class="sp-group" role="radiogroup" aria-label="article on the rail">
+          <span class="sp-lbl">RAIL</span>
+          ${[
+            { value: true, label: 'SAME' },
+            { value: false, label: 'OFF' },
+          ].map(
+            (option) => html`
+              <button
+                type="button"
+                role="radio"
+                data-article-rail=${option.value ? 'same' : 'off'}
+                aria-checked=${this.articleRail === option.value ? 'true' : 'false'}
+                class=${this.articleRail === option.value ? 'on' : ''}
+                title=${option.value
+                  ? 'the rail entries carry the article the way the sheet head does'
+                  : 'the rail entries drop THE altogether (the memo’s strip-/^THE / on the rail) while the sheet head keeps it'}
+                @click=${() => {
+                  this.articleRail = option.value;
                   this.#report();
                 }}
               >
@@ -1451,6 +1731,10 @@ export class AtlasSpecimen extends LitElement {
       `--title-ls:${titleTrack}`,
       `--title-sz:${titleSize}`,
       `--data-sz:${String(this.size)}px`,
+      // the catchword rows: the ONE key the face maps the chosen THE to, and
+      // the size that lands its ink on Exhibition's cap height
+      `--article-key:"${this.#article.key}"`,
+      `--article-scale:${(this.#article.scale * this.articleMul).toFixed(3)}em`,
     ].join(';');
   }
 
@@ -1476,13 +1760,25 @@ export class AtlasSpecimen extends LitElement {
           <b>HAND · ${HANDS[this.hand]?.label ?? 'NONE'}</b> — ${HANDS[this.hand]?.note ?? ''}.
           The hand is limited to the DRAWN BY value and one callout second line, never
           the REV descriptions, the figcaption or the rest of the callouts — and it is
-          set MIXED CASE, never tracked caps.
+          set MIXED CASE, never tracked caps.<br />
+          <b>TITLE ARTICLE · ${this.#article.label}</b> — ${this.#article.note}. Applied to
+          the rail entries, the sheet head, the title block and the cover card at once;
+          head ${this.articleStack && this.#article.key ? 'STACKED' : 'INLINE'}, rail
+          ${this.articleRail ? 'SAME' : 'OFF (the article dropped there)'}${this.#article.key
+            ? `, catchword at ×${this.articleMul.toFixed(2)} of the cap-matched scale (${(this.#article.scale * this.articleMul).toFixed(2)}em)`
+            : ''}.
+          ${this.kitCatchwords
+            ? 'hwt-catchwords is declared on this page.'
+            : 'The CATCHWORD rows are SITE ONLY: hwt-catchwords is kit-only, with no Google stand-in, and this page does not carry the kit.'}
         </p>
         <div
           class="mock"
           data-pairing=${pairing.id}
           data-title=${SHEET_TITLES[this.sheetTitle]?.id ?? 'same'}
           data-rail-match=${this.railMatch ? 'on' : 'off'}
+          data-article=${this.#article.id}
+          data-article-stack=${this.articleStack ? 'on' : 'off'}
+          data-article-rail=${this.articleRail ? 'same' : 'off'}
           style=${this.#mockStyle()}
         >
           ${unsafeHTML(SPECIMEN_MOCK)}

@@ -71,8 +71,11 @@ is invisible to the ascent order, the ← / → walk and the server's narrowed
 `atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE
 mock sheet from the set's own chrome and swaps every role token (`--display`,
 `--title`, `--rail-title`, `--data`, `--prose`, `--hand`, `--code`) on the
-mock's root by inline style, so six candidate pairings — plus seven independent
-knobs (sheet title, rail titles, data face, data size, prose, code, hand) — can
+mock's root by inline style, so six candidate pairings — plus eight independent
+knobs (sheet title, rail titles, data face, data size, prose, code, hand, and
+the TITLE ARTICLE — the leading THE as is, muted, small, or one of ten keyed
+HWT Catchwords glyphs, with HEAD INLINE/STACKED, RAIL SAME/OFF and a size
+stepper; the catchword rows are SITE ONLY, the face has no Google stand-in) — can
 be judged on real copy in both themes. It opens on `5 · THE ATLAS SET`, the
 pairing the set ships; the other five are the record of what it was chosen
 against. A pairing is a starting point, not a cage:
