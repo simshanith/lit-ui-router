@@ -23,8 +23,9 @@ const commandPath = (name: string): string =>
   }).trim();
 
 if (import.meta.main) {
-  const mode = process.argv[2];
-  if (!isDeployMode(mode)) {
+  // exactly one argument: a stray extra must not deploy
+  const [mode, ...extra] = process.argv.slice(2);
+  if (extra.length > 0 || !isDeployMode(mode)) {
     console.error(
       `usage: cloudflare-deploy.ts <${Object.keys(DEPLOY_MODES).join('|')}>`,
     );

@@ -1,5 +1,14 @@
 import assert from 'node:assert/strict';
+import { spawnSync } from 'node:child_process';
+import {
+  existsSync,
+  mkdtempSync,
+  readFileSync,
+  rmSync,
+  writeFileSync,
+} from 'node:fs';
 import { readFile } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
@@ -334,5 +343,58 @@ describe('diffTriggers', () => {
     assert.equal(report.ok, false);
     assert.deepEqual(drifts, []);
     assert.match(report.text, /no preview trigger found/);
+  });
+});
+
+describe('cloudflare-deploy', () => {
+  const script = join(import.meta.dirname, 'cloudflare-deploy.ts');
+
+  // Runs the script with a stub `npx` first on PATH, so the wrangler command
+  // is recorded rather than performed.
+  const runDeploy = (...args: string[]) => {
+    const dir = mkdtempSync(join(tmpdir(), 'cloudflare-deploy-'));
+    const record = join(dir, 'invoked');
+    try {
+      writeFileSync(
+        join(dir, 'npx'),
+        `#!/bin/sh\nprintf '%s' "$*" > '${record}'\n`,
+        { mode: 0o755 },
+      );
+      const result = spawnSync(process.execPath, [script, ...args], {
+        encoding: 'utf8',
+        // Only the stub on PATH: everything else the script runs is absolute.
+        env: { ...process.env, PATH: dir },
+      });
+      return {
+        status: result.status,
+        stderr: result.stderr,
+        invoked: existsSync(record) ? readFileSync(record, 'utf8') : undefined,
+      };
+    } finally {
+      rmSync(dir, { force: true, recursive: true });
+    }
+  };
+
+  it("runs the mode's wrangler command", () => {
+    for (const [mode, wrangler] of Object.entries(DEPLOY_MODES)) {
+      const { status, invoked } = runDeploy(mode);
+      assert.equal(status, 0, `${mode} exited non-zero`);
+      assert.equal(invoked, wrangler.join(' '));
+    }
+  });
+
+  it('prints usage and exits 2 with no mode, without invoking wrangler', () => {
+    const { status, stderr, invoked } = runDeploy();
+    assert.equal(status, 2);
+    assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
+    assert.equal(invoked, undefined);
+  });
+
+  // A stray extra argument must not silently deploy the mode in front of it.
+  it('prints usage and exits 2 on an extra argument', () => {
+    const { status, stderr, invoked } = runDeploy('main', 'unexpected');
+    assert.equal(status, 2);
+    assert.match(stderr, /usage: cloudflare-deploy\.ts <main\|branch>/);
+    assert.equal(invoked, undefined);
   });
 });
