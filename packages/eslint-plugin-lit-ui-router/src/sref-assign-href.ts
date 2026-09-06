@@ -22,17 +22,7 @@ const NATIVE_LINKS = new Set(['a', 'area']);
 
 const AUTO = "{ assignHref: 'auto' }";
 
-/**
- * `assignHref: 'auto'` on every native non-link.
- *
- * A custom element is exempt: `'auto'` tests the tag name, not the shape, so a
- * `<sp-link>` that forwards `href` wants the `true` default and only its author
- * can say so — which `linkElements` is how they say (#676). Declaring one is a
- * claim about that tag alone; the rest stay unknown, not non-links, so the
- * blanket custom-element exemption holds for every tag nobody has declared. A
- * non-literal options argument is unknowable, so it stays suppressed rather
- * than guessed — the same posture `anchor-is-valid` takes.
- */
+// 'auto' tests the tag name, not the shape: an undeclared custom element is unknown, not a non-link.
 const srefAssignHref: Rule.RuleModule = {
   meta: {
     type: 'suggestion',

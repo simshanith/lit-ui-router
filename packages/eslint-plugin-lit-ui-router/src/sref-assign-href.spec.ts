@@ -106,9 +106,6 @@ ruleTester.run('sref-assign-href', srefAssignHref, {
   ],
 });
 
-// `linkElements` (#676): a declared link element keeps the `true` default, the
-// way a native link does. Undeclared tags are unknown, not non-links, so the
-// blanket custom-element exemption is unchanged.
 ruleTester.run('sref-assign-href (linkElements option)', srefAssignHref, {
   valid: [
     {
