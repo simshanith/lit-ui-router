@@ -67,8 +67,8 @@ type stripping like every other tool script, and it exports its mode map so the 
 test checks the wrangler invocation by importing it instead of grepping the source. The
 build script stays bash — it is the bootstrap, and runs before there is anything to run it
 with. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
-code and signals are the script's; `/usr/bin/env` is the exec target because execve does
-not search `PATH`.
+code and signals are the script's; execve does not search `PATH`, so the script asks the
+shell (`command -v npx`) for the path before handing over.
 
 The build script owns the dependency install because Workers Builds provisions pnpm with
 corepack, which cannot install a pnpm-12 `packageManager` pin at all — the npm package is
