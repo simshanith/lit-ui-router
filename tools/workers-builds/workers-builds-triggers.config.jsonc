@@ -11,7 +11,7 @@
   // that reading as drift. The steps and why the install moved out of
   // Cloudflare's hands live in cloudflare-build.sh; the two wrangler
   // invocations, keyed by the trigger the argument names, in
-  // cloudflare-deploy.sh.
+  // cloudflare-deploy.ts.
   // SKIP_DEPENDENCY_INSTALL=1 is what hands the install to that script; without
   // it Cloudflare runs its own corepack-provisioned `pnpm install` first.
   // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
@@ -20,7 +20,7 @@
   // `mise run setup` and the CI workflows already set.
   "production": {
     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    "deploy_command": "./tools/workers-builds/cloudflare-deploy.sh main",
+    "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
       "CYPRESS_INSTALL_BINARY": "0",
@@ -29,7 +29,7 @@
   },
   "preview": {
     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    "deploy_command": "./tools/workers-builds/cloudflare-deploy.sh branch",
+    "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
       "CYPRESS_INSTALL_BINARY": "0",

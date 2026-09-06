@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { DEPLOY_MODES } from './cloudflare-deploy.ts';
 import {
   type Drift,
   type Trigger,
@@ -72,11 +73,11 @@ describe('desiredStateFromConfig', () => {
     assert.equal(desired.productionBranch, 'main');
     assert.equal(
       desired.production.deploy_command,
-      './tools/workers-builds/cloudflare-deploy.sh main',
+      './tools/workers-builds/cloudflare-deploy.ts main',
     );
     assert.equal(
       desired.preview.deploy_command,
-      './tools/workers-builds/cloudflare-deploy.sh branch',
+      './tools/workers-builds/cloudflare-deploy.ts branch',
     );
   });
 
@@ -111,21 +112,20 @@ describe('desiredStateFromConfig', () => {
   // moves wrangler.jsonc changes the script, not the dashboard. So follow the
   // path here as well — a pinned path that names no file would break every
   // deploy, and the indirection is what makes that invisible from the config.
-  it('points both deploy commands at a repo script that runs wrangler', async () => {
-    for (const [kind, wrangler] of [
-      ['production', 'wrangler deploy'],
-      ['preview', 'wrangler versions upload'],
+  // The script exports its mode map, so the wrangler invocation is imported
+  // rather than re-read out of the script's source.
+  it('points both deploy commands at the deploy script and the right mode', async () => {
+    for (const [kind, mode, wrangler] of [
+      ['production', 'main', ['wrangler', 'deploy']],
+      ['preview', 'branch', ['wrangler', 'versions', 'upload']],
     ] as const) {
       const command = desired[kind].deploy_command ?? '';
       const [path = '', arg] = command.split(' ');
-      assert.match(path, /^\.\/tools\/workers-builds\/[\w-]+\.sh$/);
-      assert.ok(arg, `${kind} deploy command names no trigger argument`);
-      const script = await readFile(
-        join(import.meta.dirname, '..', '..', path),
-        'utf8',
-      );
-      assert.match(script, new RegExp(`^${arg}\\)$`, 'm'));
-      assert.match(script, new RegExp(`^\\s*exec npx ${wrangler}$`, 'm'));
+      assert.equal(path, './tools/workers-builds/cloudflare-deploy.ts');
+      assert.equal(arg, mode, `${kind} deploy command names the wrong mode`);
+      // The pinned path must name a real file: readFile rejects if it does not.
+      await readFile(join(import.meta.dirname, '..', '..', path), 'utf8');
+      assert.deepEqual(DEPLOY_MODES[mode], wrangler);
     }
   });
 
