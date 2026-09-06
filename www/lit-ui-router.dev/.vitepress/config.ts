@@ -178,6 +178,9 @@ const config = {
   title: 'Lit UI Router',
   description: 'A @uirouter implementation for Lit',
   cleanUrls: true,
+  // DEPLOY.md is a repo doc, not a site page; VitePress would render it as one
+  // and parse its `{{ op://… }}` cells as Vue interpolation.
+  srcExclude: ['**/DEPLOY.md'],
   ignoreDeadLinks: ['/app', '/app-mobx', /^\/examples\//],
   // ignoreDeadLinks: true,
   vite: {
