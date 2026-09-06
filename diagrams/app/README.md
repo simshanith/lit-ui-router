@@ -66,7 +66,8 @@ picking one resets the knobs it owns and each knob then overrides it, so the
 SHEET TITLE can differ from the rail head's display face, the rail's entry
 titles can be matched to it or left on the data face, and the PROSE knob's
 three serifs load their Google family only when chosen — the default page pulls
-none of them. It carries no sheet
+none of them, and the CODE knob now fetches nothing at all, since both its faces
+ship. It carries no sheet
 number, is not in the manifest at all, and rides at the bottom of the rail as
 `S0·T`. It is the second state to load something on entry: `src/specimen.ts` is
 a `resolve` (`import('./specimen.ts')`), and the element's FIRST KNOB TOUCH
@@ -90,9 +91,16 @@ Google links — its host allows that origin and no other.
 
 Since 2026-09-06 the whole chrome draws on the decided set —
 `atlas.css` declares `--display` / `--title` / `--data` / `--prose` / `--code`
-with the Adobe family first and the Google stand-in second — the prose is
-`source-serif-pro` from the kit on the site and `Source Serif 4` from Google in
-the artifact, one Slimbach design under two releases — and `index.html`
+/ `--hand` with the Adobe family first and the Google stand-in second — the
+prose is `source-serif-pro` from the kit on the site and `Source Serif 4` from
+Google in the artifact, one Slimbach design under two releases, and since
+2026-09-06 **the code face is the same deal**, `source-code-pro` from the kit
+and `Source Code Pro` from Google at the kit's own 400/700 (the PLATES keep
+`--mono`, whose advance every SVG label is hand-placed against). `--hand` is
+P22 FLLW Eaglefeather Informal on the title block's DRAWN BY value, **mixed
+case**, and at most one callout line per sheet; it names no stand-in, so off
+the kit it simply falls to the data face and the artifact loads nothing new for
+it. `index.html`
 carries the Google link for the stand-in families — so the specimen is
 no longer the only page that asks for a webfont; it is the only page that asks
 for the *candidate* ones. Every stack in `src/specimen.ts`

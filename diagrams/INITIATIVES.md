@@ -1021,6 +1021,58 @@ Verify: `curl -L https://atlas.lit-ui-router.dev/sheet/7/ | grep -c googleapis`
 one `use.typekit.net` link; the artifact still carries the Google links and no
 kit link (`grep -c fonts.googleapis app/dist-artifact/index.html` ≥ 1).
 
+THE CODE AND THE HAND, 2026-09-06: the two roles the type pass left on the
+bench are adopted, and the kit is trimmed to what the set actually uses.
+**`--code` is Source Code Pro on BOTH hosts** — `"source-code-pro", "Source
+Code Pro", var(--mono)` in `generator/chrome.mjs`, so the kit serves it on the
+site and the same Slimbach design comes from Google in the artifact, at the
+kit's own 400/700 so bold resolves identically either side. `--mono` is
+UNCHANGED and the plates are untouched: every SVG label is still hand-placed
+against the system mono's advance, which the specimen had already priced at a
+0.3% difference. One rule rode along — `code, kbd, samp { font-family:
+var(--code) }` — because the cover's and the city's chips sat outside `.notes p
+code` and were drawing in the browser's own default monospace. **`--hand` is
+P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's DRAWN BY value
+and nothing else** ("maybe in situ i'll appreciate" — it does): `titleBlock()`
+now writes `<span class="hand">Fable (Claude, AI)</span>` in place of the
+tracked-caps `.dsp`, at 16px, where the neighbouring values sit. The hand names
+NO Google stand-in by decision — `--hand: "p22-fllw-eaglefeather-inf",
+var(--data)` — so off the kit the slot is simply the data face and the artifact
+loads nothing new for it. The Google link in all three places it is declared
+(`app/index.html`, `generator/stage-site.mjs`, `specimen.ts`'s
+`GOOGLE_FONTS_HREF` — via index.html, since the code face ships) gained
+`Source+Code+Pro:wght@400;700`.
+
+The kit was TRIMMED in Adobe the same day: `use.typekit.net/nzw4jnc.css` is
+**18 KB declaring 8 families** where it was 50 KB declaring 19 — din-2014 (4
+faces), din-2014-narrow (2), p22-fllw-eaglefeather (4),
+p22-fllw-eaglefeather-inf (2), p22-fllw-eaglefeather-sc (2), p22-flw-exhibition
+(2), source-code-pro (4), source-serif-pro (4). `specimen.ts`'s ADOBE FONTS
+table was re-read against it: eleven rows flipped to `kit: false` (every Univers
+Next, Tekton and Myriad), and the eight that remain `true` are exactly the
+declared list. The specimen followed the decision too: `EAGLEFEATHER INF.` is a
+new HAND row and pairing 5's `handDefault`, `SOURCE CODE PRO` is its
+`codeDefault` and no longer fetches anything, and LOADED FACES now reads ADOBE
+on ALL SEVEN role rows — six distinct families — where it read four.
+
+Verified: build 23 sheets / 24 fragments, tsc clean, prerender 27 pages + 404,
+stage 28 routed + 26 flat, artifact 2,713,442 bytes. Playwright against the
+Pages-mimicking server, light and dark: `r-qa-type` **226/226** (up from 124 —
+the DRAWN BY value's family, text and lack of a transform are checked on every
+page that has a title block, and the code role now expects source-code-pro
+first), `r-qa-specimen` **69/69**, `artifact-qa` **22/22**,
+`r-qa-specimen-artifact` **10/10**. No page scrolls sideways — `/set/`, the
+megacanvas, `/sheet/11/` and flat sheet 11 with its 90-character chip all
+measure 1440/1440. Font bytes on `/sheet/7/`: **309 KB** in 12 responses, up
+from 281 KB — the trimmed kit CSS gave back 32 KB and the two new faces
+(eaglefeather-inf 400 at 37 KB, source-code-pro 400 at 24 KB) spent 61 KB. Flat
+sheet 7 costs 298 KB.
+
+Verify: `grep -c source-code-pro dist/set/sheet-7-the-measured-city.html` → 2
+(the token and the `--code` declaration in `atlas.css`'s inlined head), and the
+DRAWN BY value reads `Fable (Claude, AI)` — mixed case, `text-transform: none`,
+computed family leading `p22-fllw-eaglefeather-inf` on the site.
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a

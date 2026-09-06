@@ -71,16 +71,22 @@
    ONE number covers both hosts.
 
    --display  the atlas name: rail head, cover title, and the title block's
-              PROJECT and DRAWN BY values
+              PROJECT value
    --title    sheet titles, card and prose headings, rail entry titles
    --data     kickers, tracked caps, numbers, schedules, the title block
    --prose    running text, figcaptions, general notes, About. Source Serif
               is the one role whose two names are the SAME design under two
               releases: source-serif-pro from the kit on the site, Source
               Serif 4 from Google in the artifact.
-   --code     code identifiers — and every SVG label in the plates, which
-              stay on the system mono: their positions are hand-tuned to its
-              advance, so the plates are NOT part of this change.
+   --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
+              source-code-pro from the kit on the site, the same Slimbach
+              design from Google in the artifact. The PLATES keep --mono,
+              which is unchanged: every SVG label is hand-placed against the
+              system mono's advance.
+   --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
+              DRAWN BY value and at most one callout line per sheet — nowhere
+              else. No Google stand-in by decision: off the kit it falls to
+              --data, so the artifact loads nothing new.
    --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
@@ -88,7 +94,8 @@
   --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
   --data: "din-2014", "Barlow Semi Condensed", sans-serif;
   --prose: "source-serif-pro", "Source Serif 4", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
-  --code: var(--mono);
+  --code: "source-code-pro", "Source Code Pro", var(--mono);
+  --hand: "p22-fllw-eaglefeather-inf", var(--data);
   --serif: var(--prose);
 }
 body {
@@ -196,6 +203,8 @@ figcaption {
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
+/* every inline chip is the code face, not the UA's own monospace default */
+code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
   font-family: var(--code);
   font-size: 0.85em;
@@ -256,6 +265,15 @@ figcaption {
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.10em;
+}
+/* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
+   caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
+   smaller cap for its em. */
+.titleblock .hand {
+  font-family: var(--hand);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-transform: none;
 }
 /* The chop: a plain square in the Cherokee red, unrotated — the corner stamp,
    not a jaunty sticker. It sits at the right edge of the SHEET cell. */
@@ -667,7 +685,7 @@ a { color: var(--accent); }
   <div><span class="fld">FORM</span>REGISTER PLATE</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
   <div><span class="fld">DATE / REV</span>2026-09-04 · D</div>
-  <div><span class="fld">DRAWN BY</span><span class="dsp">FABLE (CLAUDE, AI)</span></div>
+  <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>12 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
     </div>

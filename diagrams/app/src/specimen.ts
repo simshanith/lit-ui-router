@@ -22,16 +22,17 @@
  * in the single-file artifact — whose host allows Google Fonts and nothing else
  * — only the stand-ins load and the second name wins. The LOADED FACES readout
  * reports which one actually rendered rather than which one was asked for: on
- * the staged site the shipped set reads ADOBE on four roles (eaglefeather,
- * exhibition, din-2014, source-serif-pro), with --code the system mono by
- * design.
+ * the staged site the shipped set reads ADOBE on every role, six distinct
+ * families (eaglefeather, eaglefeather-inf, exhibition, din-2014,
+ * source-serif-pro, source-code-pro).
  *
  * PAYLOAD. Nothing is fetched on connect. The staged site carries ONE font
  * host — the kit — and the artifact carries ONE — Google Fonts — and the
  * SHIPPED set draws from whichever is there, so the bench's own candidate
  * stand-ins (Zilla Slab, Barlow, Fira, Architects Daughter, …) are injected by
- * the FIRST KNOB TOUCH and never by a page load. The PROSE and CODE knobs'
- * extras load on demand on top of that. Same rule `atlas.city` follows for
+ * the FIRST KNOB TOUCH and never by a page load. The PROSE knob's extra serifs
+ * load on demand on top of that; the CODE knob asks for nothing, since both its
+ * faces ship. Same rule `atlas.city` follows for
  * three.js, one turn later: the state loads it, and only when it is used.
  */
 import { LitElement, html } from 'lit';
@@ -45,7 +46,9 @@ import { SPECIMEN_CSS, SPECIMEN_MOCK } from './specimen-mock.ts';
  * ADOBE FONTS — the CSS family names, in ONE table.
  *
  * `IN THE KIT` rows were read off the live kit's own stylesheet
- * (`https://use.typekit.net/<id>.css`, re-read 2026-09-05: 17 families). Two
+ * (`https://use.typekit.net/<id>.css`, re-read 2026-09-06 after the user
+ * trimmed the web project: EIGHT families, 18 KB of CSS where 19 families cost
+ * 50 KB). Two
  * traps in the names: THREE l's in `p22-fllw-…`, and `-pro` on every Univers
  * Next, Myriad and Tekton family. Do not derive these from the marketing names.
  *
@@ -81,8 +84,8 @@ export const ADOBE_FAMILIES = [
   },
   {
     css: 'p22-fllw-eaglefeather-inf',
-    name: 'P22 FLLW Eaglefeather Informal',
-    role: 'unused — display alternate',
+    name: 'P22 FLLW Eaglefeather Informal (400/700)',
+    role: 'hand · SHIPPED — the DRAWN BY value, mixed case; no Google stand-in, it falls to the data face',
     woff2: '',
     kit: true,
   },
@@ -115,77 +118,77 @@ export const ADOBE_FAMILIES = [
     name: 'Tekton Pro',
     role: 'hand · the TEKTON PRO knob',
     woff2: '46 / 45',
-    kit: true,
+    kit: false,
   },
   {
     css: 'tekton-pro-condensed',
     name: 'Tekton Pro Condensed',
     role: 'unused — hand alternate',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'tekton-pro-extended',
     name: 'Tekton Pro Extended',
     role: 'unused — hand alternate',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'univers-next-pro',
     name: 'Univers Next Pro (400/700 + italic)',
     role: 'data · Signage',
     woff2: '27 / 28',
-    kit: true,
+    kit: false,
   },
   {
     css: 'univers-next-pro-condensed',
     name: 'Univers Next Pro Condensed (400/700 + italic)',
     role: 'display · Signage; data · The Kit',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'univers-next-pro-compressed',
     name: 'Univers Next Pro Compressed',
     role: 'unused — dimension strings',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'univers-next-pro-extended',
     name: 'Univers Next Pro Extended',
     role: 'unused — cover / title strip',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'myriad-pro',
     name: 'Myriad Pro',
     role: 'unused — humanist data alternate',
     woff2: '27 / 27',
-    kit: true,
+    kit: false,
   },
   {
     css: 'myriad-pro-semi-condensed',
     name: 'Myriad Pro Semi Condensed',
     role: 'unused — humanist data alternate',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'myriad-pro-cond',
     name: 'Myriad Pro Condensed',
     role: 'unused — humanist data alternate',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'myriad-pro-light-semiext',
     name: 'Myriad Pro Light SemiExtended',
     role: 'unused — cover / title strip',
     woff2: '',
-    kit: true,
+    kit: false,
   },
   {
     css: 'minion-pro',
@@ -203,8 +206,8 @@ export const ADOBE_FAMILIES = [
   },
   {
     css: 'source-code-pro',
-    name: 'Source Code Pro',
-    role: 'code · the SOURCE CODE PRO knob — in the kit, with the same Google family standing in',
+    name: 'Source Code Pro (400/700 + italic)',
+    role: 'code · SHIPPED — the site’s code face; Source Code Pro from Google stands in off the kit',
     woff2: '',
     kit: true,
   },
@@ -274,16 +277,28 @@ const face = (adobe: string | null, standin: string, generic: string): Face => (
 });
 
 /**
+ * The SHIPPED hand: Adobe-only by decision. There is no Google stand-in — off
+ * the kit the stack falls through to whatever `--data` is set to, so the
+ * artifact loads nothing new for this role.
+ */
+const eaglefeatherInf: Face = {
+  adobe: 'p22-fllw-eaglefeather-inf',
+  standin: null,
+  stack: '"p22-fllw-eaglefeather-inf", var(--data)',
+};
+
+/**
  * THE HAND, as its own knob — INDEPENDENT of the pairing.
  *
- * User constraint: "i swear i'm just allergic to these hand types. maybe in
- * situ i'll appreciate". So NONE is the DEFAULT and it is a real option, not a
- * placeholder: the two hand slots simply render in the data face, which is what
- * the set would ship if the hand never earns its place. The two hand faces stay
- * one click away for the in-situ judgement.
+ * "maybe in situ i'll appreciate" came true on 2026-09-06: EAGLEFEATHER INF.
+ * is the SHIPPED hand and the default here, drawn MIXED CASE on the DRAWN BY
+ * value and one callout line per sheet, nowhere else. NONE stays a real option
+ * — the hand slots simply render in the data face — and the two open hands stay
+ * one click away.
  *
- * `tekton-pro` is the kit's CSS name (verified 2026-09-05); off the site the
- * stack falls to Architects Daughter and LOADED FACES reports STAND-IN.
+ * `tekton-pro` is the kit's CSS name; the kit was trimmed on 2026-09-06 and no
+ * longer serves it, so that row falls to Architects Daughter and LOADED FACES
+ * reports STAND-IN.
  */
 export const HANDS = [
   {
@@ -302,7 +317,13 @@ export const HANDS = [
     id: 'tekton',
     label: 'TEKTON PRO',
     face: face('tekton-pro', 'Architects Daughter', 'cursive'),
-    note: 'the Adobe original; falls to Architects Daughter where the kit is absent',
+    note: 'the Adobe original; out of the trimmed kit, so it falls to Architects Daughter',
+  },
+  {
+    id: 'eaglefeather-inf',
+    label: 'EAGLEFEATHER INF.',
+    face: eaglefeatherInf,
+    note: 'THE SHIPPED HAND — Wright’s informal, mixed case, on the DRAWN BY value alone; no stand-in, so off the kit the slot is simply the data face',
   },
 ] as const;
 
@@ -492,8 +513,10 @@ export const PROSE_FACES = [
  * "i think i'm looking at menlo and liking it fwiw. wouldn't mind looking at
  * source mono option but nice to stick with system".
  *
- * Source Code Pro's Google family loads ON DEMAND, like the PROSE extras, so
- * the default page pulls nothing for this role.
+ * ADOPTED 2026-09-06: SOURCE CODE PRO is the shipped `--code` on BOTH hosts —
+ * source-code-pro from the kit on the site, the same family from index.html's
+ * Google link in the artifact — so neither option here fetches anything. The
+ * plates are untouched: their lettering stays on `--mono`.
  */
 export const CODE_FACES = [
   {
@@ -501,14 +524,14 @@ export const CODE_FACES = [
     label: 'SYSTEM MONO',
     face: systemMono,
     google: '',
-    note: "today's --code, and the SHIPPED choice: ui-monospace / SF Mono / Menlo / Consolas — 0 bytes, and the advance every plate's lettering is placed against",
+    note: "the plates' own face, and the last fallback behind the shipped one: ui-monospace / SF Mono / Menlo / Consolas — 0 bytes, and the advance every plate's lettering is placed against",
   },
   {
     id: 'source-code',
     label: 'SOURCE CODE PRO',
     face: face('source-code-pro', 'Source Code Pro', 'monospace'),
-    google: 'Source+Code+Pro:wght@400',
-    note: "Slimbach's open mono — Adobe on the site, the same family from Google elsewhere; its 0.600em advance is within 0.3% of Menlo's, so the plate lettering would not move",
+    google: '',
+    note: "THE SHIPPED CODE FACE — Slimbach's open mono, Adobe on the site and the same family from Google in the artifact, both at 400/700; its 0.600em advance is within 0.3% of Menlo's, so the plate lettering does not move",
   },
 ] as const;
 
@@ -525,6 +548,9 @@ export interface Pairing {
   titleDefault?: string;
   proseDefault?: string;
   railDefault?: boolean;
+  /** An id in CODE_FACES / HANDS: what picking this pairing resets them to. */
+  codeDefault?: string;
+  handDefault?: string;
   code: Face;
   dispWeight: number;
   dispTrack: string;
@@ -612,12 +638,14 @@ export const PAIRINGS: Pairing[] = [
     // it, and the DEFAULT pairing, so the specimen opens on what the set ships.
     id: 'atlas',
     label: '5 · THE ATLAS SET',
-    note: 'THE SHIPPED SET — display P22 FLLW Eaglefeather (stand-in Josefin Sans 600) on the atlas name alone · title P22 FLW Exhibition (stand-in Josefin Sans 600) on sheet AND rail titles · data DIN 2014 / Barlow Semi Condensed, tnum · prose Source Serif Pro / Source Serif 4 · code system mono · NO hand',
+    note: 'THE SHIPPED SET — display P22 FLLW Eaglefeather (stand-in Josefin Sans 600) on the atlas name alone · title P22 FLW Exhibition (stand-in Josefin Sans 600) on sheet AND rail titles · data DIN 2014 / Barlow Semi Condensed, tnum · prose Source Serif Pro / Source Serif 4 · code Source Code Pro on both hosts · hand P22 FLLW Eaglefeather Informal, mixed case, on DRAWN BY alone',
     display: face('p22-fllw-eaglefeather', 'Josefin Sans', 'sans-serif'),
     dataDefault: 'din',
     titleDefault: 'exhibition',
     proseDefault: 'source-serif',
     railDefault: true,
+    codeDefault: 'source-code',
+    handDefault: 'eaglefeather-inf',
     code: systemMono,
     dispWeight: 600,
     dispTrack: '0.16em',
@@ -849,10 +877,10 @@ export class AtlasSpecimen extends LitElement {
     this.sheetTitle = indexIn(SHEET_TITLES, start?.titleDefault ?? 'same');
     // The shipped set puts the TITLE face on the rail entries.
     this.railMatch = start?.railDefault ?? false;
-    this.hand = 0;
+    this.hand = indexIn(HANDS, start?.handDefault ?? 'none');
     this.dataFace = dataFaceIndex(start?.dataDefault ?? 'din');
     this.prose = indexIn(PROSE_FACES, start?.proseDefault ?? 'charter');
-    this.code = 0;
+    this.code = indexIn(CODE_FACES, start?.codeDefault ?? 'mono');
     this.size = start?.dataSize ?? 12;
     this.faces = [];
     this.metrics = null;
@@ -968,6 +996,8 @@ export class AtlasSpecimen extends LitElement {
     // one that does not leaves them where the user put them.
     this.sheetTitle = indexIn(SHEET_TITLES, picked?.titleDefault ?? 'same');
     this.railMatch = picked?.railDefault ?? false;
+    this.hand = indexIn(HANDS, picked?.handDefault ?? 'none');
+    this.code = indexIn(CODE_FACES, picked?.codeDefault ?? 'mono');
     this.#pickProse(indexIn(PROSE_FACES, picked?.proseDefault ?? 'charter'));
   }
 
@@ -1022,16 +1052,19 @@ export class AtlasSpecimen extends LitElement {
       (document.fonts.check(`12px "${name}"`) || document.fonts.check(`600 12px "${name}"`));
 
     this.faces = roles.map(([role, f]): FaceReport => {
+      // ADOBE first: the hand names an Adobe family with NO stand-in behind it.
+      if (f.adobe && loaded(f.adobe)) {
+        return { role, asked: f.adobe, got: 'ADOBE', detail: `the kit served ${f.adobe}` };
+      }
       if (!f.standin) {
         return {
           role,
-          asked: f.stack === SERIF ? 'the Charter stack' : 'system monospace',
+          asked: f.adobe ?? (f.stack === SERIF ? 'the Charter stack' : 'system monospace'),
           got: 'SYSTEM',
-          detail: 'by design — a system face, 0 bytes on either host',
+          detail: f.adobe
+            ? 'no stand-in by design — off the kit this slot is the data face'
+            : 'by design — a system face, 0 bytes on either host',
         };
-      }
-      if (f.adobe && loaded(f.adobe)) {
-        return { role, asked: f.adobe, got: 'ADOBE', detail: `the kit served ${f.adobe}` };
       }
       if (loaded(f.standin)) {
         return {
@@ -1329,15 +1362,17 @@ export class AtlasSpecimen extends LitElement {
         </table>
         <p class="sp-foot">
           ADOBE means the site's Typekit kit answered; STAND-IN means the Google Fonts
-          face did; SYSTEM means neither loaded, or the role is the system monospace on
+          face did; SYSTEM means neither loaded, or the role is a system face on
           purpose. Each host serves ONE of the two: the staged site carries the kit and
-          no Google link at all, so the shipped set reads ADOBE on four roles —
-          <code>p22-fllw-eaglefeather</code>, <code>p22-flw-exhibition</code>,
-          <code>din-2014</code>, <code>source-serif-pro</code> — with
-          <code>--code</code> SYSTEM by design; the artifact carries the Google link and
-          can never read ADOBE, so the same four read STAND-IN. This bench is the one
-          page that fetches from the other host: the candidate stand-ins arrive on the
-          first knob touch, never on load.
+          no Google link at all, so the shipped set reads ADOBE on every role —
+          <code>p22-fllw-eaglefeather</code>, <code>p22-flw-exhibition</code>
+          (twice, sheet and rail), <code>p22-fllw-eaglefeather-inf</code>,
+          <code>din-2014</code>, <code>source-serif-pro</code> and
+          <code>source-code-pro</code>, six distinct families; the artifact carries the
+          Google link and can never read ADOBE, so the same roles read STAND-IN — except
+          the hand, which has no stand-in by decision and falls to the data face. This
+          bench is the one page that fetches from the other host: the candidate stand-ins
+          arrive on the first knob touch, never on load.
         </p>
       </section>
     `;
@@ -1434,12 +1469,14 @@ export class AtlasSpecimen extends LitElement {
           ${PROSE_FACES[this.prose]?.note ?? ''}. The three webfont options load their
           family only when picked, so the default page pulls none of them.<br />
           <b>CODE · ${CODE_FACES[this.code]?.label ?? ''}</b> —
-          ${CODE_FACES[this.code]?.note ?? ''}. The system mono is what the set ships;
-          the alternative is here to show the plate-metrics risk, which the GLYPH SIZE
-          table below prices at a fraction of a percent.<br />
+          ${CODE_FACES[this.code]?.note ?? ''}. Neither option fetches anything: both
+          faces are on whichever host the page already carries, and the GLYPH SIZE table
+          below prices the swap the plates were protected from at a fraction of a
+          percent.<br />
           <b>HAND · ${HANDS[this.hand]?.label ?? 'NONE'}</b> — ${HANDS[this.hand]?.note ?? ''}.
           The hand is limited to the DRAWN BY value and one callout second line, never
-          the REV descriptions, the figcaption or the rest of the callouts.
+          the REV descriptions, the figcaption or the rest of the callouts — and it is
+          set MIXED CASE, never tracked caps.
         </p>
         <div
           class="mock"

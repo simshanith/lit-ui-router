@@ -143,7 +143,7 @@ if (GA_ID) {
 // .config/mise/cloudflare.local.env, which is gitignored.
 const GOOGLE_FONTS = `<link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600&family=Barlow+Semi+Condensed:wght@400;600&family=Source+Serif+4:ital,wght@0,400;1,400&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600&family=Barlow+Semi+Condensed:wght@400;600&family=Source+Serif+4:ital,wght@0,400;1,400&family=Source+Code+Pro:wght@400;700&display=swap">
 `;
 const KIT = process.env.VITE_ADOBE_FONTS_KIT;
 const kitLink = (kit) => `<link rel="preconnect" href="https://use.typekit.net" crossorigin>
