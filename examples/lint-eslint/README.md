@@ -22,7 +22,7 @@ npm run build    # bakes the report into dist/
 
 `vite.config.ts` carries a local plugin — no extra dependency, just `vite` and `eslint`. It serves a virtual module, `virtual:lint-report`, whose `load` hook runs `new ESLint({ cwd }).lintFiles(['src/**/*.ts'])` and emits the results as JSON, plus a rule-id-to-docs-URL map from `getRulesMetaForResults()`. Lint problems are the payload, never a build failure.
 
-In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 4 problems in 4 files`).
+In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 5 problems in 4 files`).
 
 The formatter stamps `Generated on <date>` into its output, which would put a fresh timestamp in the bundle on every build and change its content hash without a source change. The plugin strips that one line so `dist` is byte-stable, and warns if the stamp ever stops matching rather than silently letting the nondeterminism back in.
 
