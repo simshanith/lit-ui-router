@@ -44,19 +44,33 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 
 ### Build & Deploy Commands
 
-| Environment                                                                                             | Build                                        | Deploy                         |
-| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ------------------------------ |
-| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler deploy`          |
-| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `npx wrangler versions upload` |
+| Environment                                                                                             | Build                                        | Deploy                                               |
+| ------------------------------------------------------------------------------------------------------- | -------------------------------------------- | ---------------------------------------------------- |
+| Production                                                                                              | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts main`   |
+| Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
 
-The build command is a **repo script, not the steps themselves**
-([`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh)). A trigger holds one
-build command for every branch it matches, so inlining the steps means a branch cannot
+Both commands are **repo scripts, not the steps themselves**
+([`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh),
+[`cloudflare-deploy.ts`](./tools/workers-builds/cloudflare-deploy.ts)). A trigger holds one
+command for every branch it matches, so inlining the steps means a branch cannot
 change them — and a package-manager change is exactly a branch that needs to. Pinning the
 path instead lets the script differ per branch while the declared value stays constant, so
 divergence never reads as drift and never needs an `--apply` to test.
 
-The script owns the dependency install because Workers Builds provisions pnpm with
+The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
+deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and names no
+`--config`, because wrangler discovers `wrangler.jsonc` by walking up from the repo root. A
+branch that moves that file changes this script's internals and leaves the dashboard alone.
+
+It is TypeScript rather than bash: by deploy time the install has run, so it is node's own
+type stripping like every other tool script, and it exports its mode map so the trigger
+test checks the wrangler invocation by importing it instead of grepping the source. The
+build script stays bash — it is the bootstrap, and runs before there is anything to run it
+with. `process.execve` replaces the process the way bash `exec` did, so wrangler's exit
+code and signals are the script's; execve does not search `PATH`, so the script asks the
+shell (`command -v npx`) for the path before handing over.
+
+The build script owns the dependency install because Workers Builds provisions pnpm with
 corepack, which cannot install a pnpm-12 `packageManager` pin at all — the npm package is
 a wrapper whose real binary is materialized by a `preinstall` hook out of an optional
 platform dependency, and corepack runs neither lifecycle scripts nor optional
@@ -149,8 +163,9 @@ The badge for it sits at the top of this file and in the README header. It diffs
 | ![passing](https://img.shields.io/badge/workers--builds-passing-orange)      | The dashboard drifted — a manual `--apply` is owed                        |
 | ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
 
-One ordering trap. When the value being applied names a file in the repo — as `build_command` does,
-pointing at [`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh) — the apply has to
+One ordering trap. When the value being applied names a file in the repo — as `build_command` and
+`deploy_command` both do, pointing at [`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh)
+and [`cloudflare-deploy.ts`](./tools/workers-builds/cloudflare-deploy.ts) — the apply has to
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
 But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
 dashboard: the badge goes orange on a dashboard that is about to become correct, and nothing
