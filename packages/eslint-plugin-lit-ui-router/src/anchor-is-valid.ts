@@ -1,8 +1,9 @@
 // Vendored from eslint-plugin-lit-a11y 5.1.1 (lib/rules/anchor-is-valid.js plus
-// its lit-html import gating), Copyright (c) 2018 open-wc contributors.
+// its lit-html import gating), Copyright (c) 2018 open-wc.
 // MIT per the open-wc repo LICENSE, ISC per the package manifest.
 // Extended so a uiSref element part counts as the href it assigns (#659, #676).
-import type { Rule, SourceCode } from 'eslint';
+import type { SourceCode } from 'eslint';
+import type { RuleFor } from './rule-shape.ts';
 // Deep path (no `exports` map guards it), but lit-a11y's own rules import the
 // same one — a break here breaks lit-a11y first.
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
@@ -60,6 +61,8 @@ const getLiteralAttributeValue = (
   return expr;
 };
 
+export const RULE_NAME = 'anchor-is-valid';
+
 /**
  * lit-a11y's anchor-is-valid, where a uiSref element part counts as an href.
  *
@@ -69,13 +72,12 @@ const getLiteralAttributeValue = (
  * an anchor with neither an href nor a directive still reports, and so does
  * `assignHref: false`, where the base rule is right for the right reason (#602).
  */
-const anchorIsValid: Rule.RuleModule = {
+const anchorIsValid: RuleFor<typeof RULE_NAME> = {
   meta: {
     type: 'suggestion',
     docs: {
       description:
         'anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime',
-      url: 'https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md',
     },
     messages: {
       preferButtonErrorMessage:

@@ -40,7 +40,6 @@ reviews:
     - '!examples/*/package-lock.json'
     - '!.config/mise/mise.lock'
     - '!**/dist/**'
-    - '!apps/sample-app-shared/public/static/data/corpora/**'
 
   path_instructions:
     - path: packages/*/src/**/*.ts

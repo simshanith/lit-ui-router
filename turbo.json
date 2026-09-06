@@ -111,7 +111,8 @@
         "//#lint:templates",
         "//#check:patches",
         "//#check:graph-edges",
-        "//#check:task-inputs"
+        "//#check:task-inputs",
+        "@tools/release#check:release-closure"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],

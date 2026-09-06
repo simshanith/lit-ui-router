@@ -61,6 +61,69 @@ describe('docs site', () => {
       .should('include', 'Hello World - lit-ui-router Tutorial');
   });
 
+  it('mounts the MobX solar system example on the bindings page', () => {
+    cy.visit('/packages/mobx');
+    cy.get(
+      '.example-embed iframe[src="/examples/hellosolarsystem-mobx/"]',
+    ).should('exist');
+  });
+
+  it('records every stop and derives the visited set from that history', () => {
+    // The trail is written by a plain MobX reaction on the bindings' own
+    // RouterStore — no component involved — and `visited` is a computed over
+    // it, so revisiting the list does not inflate the count.
+    const shadow = { includeShadowDom: true };
+    cy.visit('/examples/hellosolarsystem-mobx/');
+    cy.get('.path li', shadow).should('have.length', 1);
+
+    cy.contains('a', 'Mars', shadow).click();
+    cy.contains(
+      'a.back-link:not(.top)',
+      'Back to the solar system',
+      shadow,
+    ).click();
+    cy.contains('a', 'Venus', shadow).click();
+
+    cy.get('.path li', shadow).should('have.length', 4);
+    cy.contains('.visited-count', '2 of 10 visited', shadow);
+    // the tab title is driven by a reaction with no host to re-render
+    cy.title().should('include', 'Venus');
+  });
+
+  it('rejects a non-integer planet id rather than rounding it', () => {
+    // parseInt('4x') is 4. One strict parser keeps Earth out of the detail
+    // view, the breadcrumb and the visited set alike.
+    const shadow = { includeShadowDom: true };
+    cy.visit('/examples/hellosolarsystem-mobx/#/planets/4x');
+    cy.contains('Body not found', shadow);
+    cy.get('.crumb strong', shadow).should('not.exist');
+    cy.contains('.visited-count', '0 of 10 visited', shadow);
+  });
+
+  it('drives the MobX example: reactions keep the un-routed shell in sync', () => {
+    // The embed is same-origin, so the spec drives the example itself. Unlike
+    // the sample apps, its components keep their own shadow roots.
+    const shadow = { includeShadowDom: true };
+    cy.visit('/examples/hellosolarsystem-mobx/');
+    cy.contains('.visited-count', '0 of 10 visited', shadow);
+    cy.contains('a', 'Mars', shadow).click();
+    // <app-root> is outside every <ui-view>, so a transition never re-creates
+    // it: the breadcrumb and the counter can only come from the reactions.
+    // 'planet' is not a child of 'planets', so the nav stays lit only because
+    // the route controller says so.
+    cy.get('nav a[data-detail]', shadow).should('exist');
+    cy.contains('.crumb strong', 'Mars', shadow);
+    // :not(.top) — the duplicate top link is phone-only (display: none here)
+    cy.contains(
+      'a.back-link:not(.top)',
+      'Back to the solar system',
+      shadow,
+    ).click();
+    cy.contains('.visited-count', '1 of 10 visited', shadow);
+    // the link, not the <li> — the trail below the crumb also lists 'Mars'
+    cy.contains('a', 'Mars', shadow).should('contain.text', 'visited');
+  });
+
   it('serves a real 404 for unknown urls', () => {
     // Assets-binding behavior (not_found_handling: "404-page"), not worker
     // logic: the worker never runs for paths outside the mounts.

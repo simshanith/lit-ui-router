@@ -49,6 +49,22 @@ describe('ReactionController', () => {
     expect(controller.value).toBe(7);
   });
 
+  it('exposes initialValue before the host connects', async () => {
+    const state = observable({ count: 7 });
+    const host = document.createElement('reaction-controller-host');
+    const controller = new ReactionController(host, () => state.count, {
+      initialValue: 0,
+    });
+
+    expect(controller.value).toBe(0);
+
+    document.body.appendChild(host);
+    cleanups.push(() => host.remove());
+    await waitForUpdate(host);
+
+    expect(controller.value).toBe(7);
+  });
+
   it('updates the host when the selected value changes', async () => {
     const state = observable({ count: 0 });
     const host = await mountHost();

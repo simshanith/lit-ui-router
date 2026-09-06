@@ -86,6 +86,10 @@ function makeSidebar() {
         },
         { text: 'Reactive Components', link: '/guides/reactive-components' },
         { text: 'Design System Links', link: '/guides/design-system-links' },
+        {
+          text: 'Development & Production Builds',
+          link: '/guides/development-builds',
+        },
       ],
     },
     {

@@ -16,6 +16,15 @@
       ],
       "outputs": ["worker/dist/**"]
     },
+    "check:embeds": {
+      // Reader of the built examples: measures each in Chromium and checks the
+      // heights examples.ts reserves for them. Uncached because the result is a
+      // property of the host — its Chromium build and its installed fonts —
+      // and no `inputs` glob can name either, so a hit would replay a
+      // measurement this machine never took.
+      "dependsOn": ["examples#build:embeds"],
+      "cache": false
+    },
     "codecov:bundle": {
       // Upload-only: ships the (possibly cache-replayed) dry-run artifact.
       "dependsOn": ["bundle:worker"]

@@ -65,14 +65,14 @@ No router configuration is required: the controller discovers the router from th
 
 An observable mirror of a router's current state, updated by one `transitionService.onSuccess` hook.
 
-| Member                      | Description                                                                  |
-| --------------------------- | ---------------------------------------------------------------------------- |
-| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                   |
-| `current`                   | The current `StateDeclaration` (`globals.current`)                           |
-| `params`                    | The current `RawParams` (`globals.params`), replaced per transition          |
-| `transition`                | The most recent successful `Transition`                                      |
-| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`) |
-| `attach(router)`            | Manual attachment, for self-managed store instances                          |
+| Member                      | Description                                                                                                |
+| --------------------------- | ---------------------------------------------------------------------------------------------------------- |
+| `RouterStore.for(router)`   | The store for a router — memoized, one per router instance                                                 |
+| `current`                   | The current `StateDeclaration` (`globals.current`)                                                         |
+| `params`                    | The current `RawParams` (`globals.params`), replaced per transition                                        |
+| `transition`                | The most recent successful `Transition`                                                                    |
+| `includes(stateOrName, p?)` | Observable version of `StateService.includes` (supports globs like `'a.**'`)                               |
+| `attach(router)`            | Manual attachment, for self-managed store instances — idempotent per router, and returns a detach function |
 
 ### `RouterReactionController`
 
@@ -86,6 +86,7 @@ new RouterReactionController(host, selector, options?)
 - `options.router` — explicit router instance, skipping context discovery
 - `options.onChange` — effect invoked when the selected value changes (and once on every (re)connect); useful for resetting component state from route params
 - `options.equals` — MobX comparer (e.g. `compareStructural`) for precise, value-based change detection
+- `options.initialValue` — the value `.value` carries before the first reaction run: before `hostConnected`, and while a host has no router context
 
 ### `ReactionController`
 
@@ -108,6 +109,12 @@ class NavHeader extends LitElement {
   }
 }
 ```
+
+## Development and production builds
+
+`dist/development/index.js` is published alongside `dist/index.js` and picked by the `development` export condition, which bundlers resolve automatically in development; production builds get the default. Nothing to configure. `lit-ui-router` ships the same split — see the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for the mechanism and the warnings both packages carry.
+
+The development build adds one console warning here: a `RouterReactionController` whose host has no `<ui-router>` ancestor warns once, naming that host, and observes nothing — `.value` stays at `options.initialValue`, so the host renders once and never again. Wrap the subtree in `<ui-router>`, or pass `options.router` for a host outside the router's DOM. Production builds drop the warning and its message text, and lit's own production build silences it as well.
 
 ## Why selectors instead of render auto-tracking?
 

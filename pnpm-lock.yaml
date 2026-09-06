@@ -775,6 +775,9 @@ importers:
       '@tools/build_and_test':
         specifier: workspace:*
         version: link:../tools/build_and_test
+      '@tools/embed-heights':
+        specifier: workspace:*
+        version: link:../tools/embed-heights
       '@tools/vue-check':
         specifier: workspace:*
         version: link:../tools/vue-check
@@ -1305,6 +1308,28 @@ importers:
       ui-router-server:
         specifier: workspace:*
         version: link:../../packages/ui-router-server
+
+  tools/embed-heights:
+    dependencies:
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.64.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      playwright:
+        specifier: 'catalog:'
+        version: 1.62.1
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/eslint-ts-parser:
     devDependencies:

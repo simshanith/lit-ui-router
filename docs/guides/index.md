@@ -40,6 +40,12 @@ client deployed across every point on the server-support spectrum.
   `href`, and `'auto'` scopes the attribute to real `<a>` elements, with a
   live example contrasting all three cases
 
+## Builds & Diagnostics
+
+- [Development & Production Builds](./development-builds) — the `development`
+  export condition, the warnings the development build carries and the
+  production build cannot print, and which packages ship two builds at all
+
 ## Reactivity
 
 - [Reactive Components](./reactive-components) — keep components outside

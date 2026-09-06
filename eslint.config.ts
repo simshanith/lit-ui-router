@@ -28,6 +28,10 @@ export default defineConfig(
     '**/node_modules/**',
     '**/.vitepress/cache/**',
     '**/.claude/**',
+    // this example ships its own eslint.config.js, which ESLint resolves ahead
+    // of this one for every file beneath it — including package.json, which
+    // would otherwise drop out of //#lint:package-json unannounced
+    'examples/lint-eslint/**',
   ]),
   {
     extends: [packageJson.configs.recommended],

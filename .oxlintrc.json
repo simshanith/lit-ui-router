@@ -201,7 +201,10 @@
       }
     },
     {
-      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "files": [
+        "packages/lit-ui-router/src/**/*.ts",
+        "packages/lit-ui-router-mobx/src/**/*.ts"
+      ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",
@@ -313,6 +316,15 @@
       }
     },
     {
+      "files": ["**/lint-eslint/src/violations.ts"],
+      "rules": {
+        "lit-ui-router/anchor-is-valid": "warn",
+        "lit-ui-router/directive-position": "warn",
+        "lit-ui-router/sref-active-aria-current": "warn",
+        "lit-ui-router/sref-assign-href": "warn"
+      }
+    },
+    {
       "files": ["**/*.spec.ts", "**/src/specs/test-utils.ts"],
       "rules": {
         "no-unused-vars": [
@@ -335,6 +347,7 @@
         "scripts/**/*.test.ts",
         "tools/build_and_test/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
+        "tools/embed-heights/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
