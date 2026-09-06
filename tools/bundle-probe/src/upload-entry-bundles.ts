@@ -13,7 +13,7 @@ import { mkdir, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-import { bundleEntry } from './bundle.ts';
+import { bundleEntry, PRODUCTION_DEFINE } from './bundle.ts';
 import { readPackageProbe } from './entries.ts';
 
 const packageDir = process.cwd();
@@ -41,6 +41,11 @@ for (const { label, file } of entries) {
     minify: true,
     external: declared,
     annotations: false,
+    // Production define: the series tracks the bytes consumers ship. A package
+    // with a `development` export condition emits a second, larger build; it is
+    // deliberately not a separate series — nobody ships it, so a size budget on
+    // it would be noise.
+    define: PRODUCTION_DEFINE,
   });
   const dir = path.join(statsRoot, label);
   await mkdir(dir, { recursive: true });

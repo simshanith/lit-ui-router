@@ -20,8 +20,8 @@ import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
 import { UIRouterLitElement } from './ui-router.js';
+import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import {
-  inLitDevMode,
   isNativeLink,
   UiSrefElement,
   UiSrefTargetEvent,
@@ -424,6 +424,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
    * @internal
    */
   private warnAriaCurrentTakeover(): void {
+    // DEV folds the whole body out of dist/*.js (check:dev-split).
+    if (!import.meta.env.DEV) return;
     const existing = this.element!.getAttribute('aria-current');
     if (
       !inLitDevMode() ||
@@ -542,6 +544,14 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
     if (this.uiRouter && this._firstUpdated) {
       this.doRender();
+    } else if (!this.uiRouter) {
+      // reached only past the awaited `firstUpdated` above, so the seek has
+      // run: the classes this update would have applied are never coming
+      warnMissingRouter(
+        element,
+        `<${element.localName} uiSrefActive>`,
+        'will never be marked active',
+      );
     }
   }
 
@@ -570,13 +580,16 @@ export class UiSrefActiveDirective extends AsyncDirective {
         this.targetStates.add(targetState as TargetState);
       });
     } else if (this.state) {
-      this.targetStates.add(
-        this.uiRouter!.stateService.target(
-          this.state,
-          this.params,
-          this.getOptions(),
-        ),
-      );
+      // no router: no target to resolve, and the update that follows reports it
+      if (this.uiRouter) {
+        this.targetStates.add(
+          this.uiRouter.stateService.target(
+            this.state,
+            this.params,
+            this.getOptions(),
+          ),
+        );
+      }
     } else {
       this.element!.addEventListener(
         UI_SREF_TARGET_EVENT,
@@ -587,12 +600,16 @@ export class UiSrefActiveDirective extends AsyncDirective {
       TRANSITION_STATE_CHANGE_EVENT,
       this.onTransitionStateChange,
     );
-    this._deregisterOnStart = this.uiRouter!.transitionService.onStart(
-      {},
-      this.onTransitionStart,
-    ) as deregisterFn;
-    this._deregisterOnStatesChanged =
-      this.uiRouter!.stateRegistry.onStatesChanged(this.onStatesChanged);
+    // no router: nothing to subscribe to, and `_firstUpdated` still has to be
+    // reached so the next update can report the no-op
+    if (this.uiRouter) {
+      this._deregisterOnStart = this.uiRouter.transitionService.onStart(
+        {},
+        this.onTransitionStart,
+      ) as deregisterFn;
+      this._deregisterOnStatesChanged =
+        this.uiRouter.stateRegistry.onStatesChanged(this.onStatesChanged);
+    }
 
     setTimeout(() => {
       if (this.targetStates.size) {

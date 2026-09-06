@@ -86,12 +86,18 @@ function makeSidebar() {
         },
         { text: 'Reactive Components', link: '/guides/reactive-components' },
         { text: 'Design System Links', link: '/guides/design-system-links' },
+        {
+          text: 'Development & Production Builds',
+          link: '/guides/development-builds',
+        },
       ],
     },
     {
       text: 'Companion Packages',
       items: [
         { text: 'Overview', link: '/packages/' },
+        // Lint rules, not a runtime API — no typedoc reference to nest.
+        { text: 'ESLint Plugin', link: '/packages/eslint-plugin' },
         {
           text: 'MobX',
           link: '/packages/mobx',

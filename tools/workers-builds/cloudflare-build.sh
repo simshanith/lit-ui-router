@@ -30,7 +30,7 @@ rm -f "$npm_bin/pnpm" "$npm_bin/pnpx"
 # placeholder bin: the real binary is unpacked by a preinstall hook, which npm
 # 12 blocks by default. npm 11 ignores the unknown flag and runs the hook
 # anyway, so one command covers both.
-npm install --global --allow-scripts=pnpm pnpm@12.0.0
+npm install --global --allow-scripts=pnpm pnpm@12.2.1
 
 pnpm install --frozen-lockfile
 

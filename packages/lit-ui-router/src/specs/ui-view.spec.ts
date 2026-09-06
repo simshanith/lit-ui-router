@@ -126,11 +126,14 @@ describe('UiView', () => {
     });
 
     it('should render without router context', async () => {
+      // no ancestor provider, so this trips the dev-mode missing-router warning
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const uiView = document.createElement('ui-view');
       container.appendChild(uiView);
       await waitForUpdate(uiView);
 
       expect(uiView).toBeInstanceOf(UiView);
+      warn.mockRestore();
     });
 
     it('should seek router from ancestor', async () => {
@@ -547,6 +550,81 @@ describe('UiView', () => {
 
       const parentView = UiView.seekParentView(orphan);
       expect(parentView).toBeNull();
+    });
+  });
+  describe('missing <ui-router> ancestor', () => {
+    it('should warn once when a view updates with no router', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const uiView = document.createElement('ui-view');
+        uiView.textContent = 'fallback';
+        container.appendChild(uiView);
+        await waitForUpdate(uiView);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toBe(
+          'lit-ui-router: <ui-view> found no <ui-router> ancestor, so it ' +
+            'will never render a routed view. Wrap this subtree in ' +
+            '<ui-router>, or pass a router explicitly.',
+        );
+
+        // the no-op is unchanged: still a UiView, still no throw
+        expect(uiView).toBeInstanceOf(UiView);
+
+        // and a further update does not repeat itself: `firstUpdated` runs
+        // once, and the shared WeakSet backstops it
+        uiView.requestUpdate();
+        await waitForUpdate(uiView);
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should stay silent outside lit dev mode', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        const uiView = document.createElement('ui-view');
+        container.appendChild(uiView);
+        await waitForUpdate(uiView);
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated, never the behaviour
+        expect(uiView).toBeInstanceOf(UiView);
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
+    it('should not warn when a router ancestor is present', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { uiView } = await setupRouter([
+          {
+            name: 'home',
+            url: '/home',
+            component: () => html`<div>Home</div>`,
+          },
+        ]);
+        await routerGo(router, 'home');
+
+        expect(uiView.uiRouter).toBe(router);
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
   });
 });

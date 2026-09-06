@@ -4,6 +4,13 @@ import { basename, dirname, relative } from 'node:path';
 
 export const SRC = 'src';
 export const OUT = 'dist';
+// Second JS emit for packages that ship the `development` export condition.
+// Types are NOT duplicated here: every subpath puts `types` ahead of
+// `development`, so TS resolves the one d.ts under any condition set.
+export const DEV_OUT = 'dist/development';
+// The build-time constant the guarded warning sites read. Vite/vitest supply it
+// unconfigured, so specs exercise the development branch as-is.
+export const DEV_DEFINE_KEY = 'import.meta.env.DEV';
 
 export const fail = (file: string, errors: { message: string }[]): never => {
   throw new Error(

@@ -11,12 +11,20 @@
       // The one publish-shape pack: strip devDependencies/scripts and pack
       // every publishable package into .cache/pack/<name>.tgz, once. check:pack,
       // check:exports, and check:published-diff READ these tarballs instead of
-      // each re-packing. ^build restores fresh dist and folds every dependency's
-      // own inputs (manifest included) into this hash; pnpm-workspace.yaml
-      // carries the catalogs that substitute into packed manifests. The publish
-      // workflow deliberately does NOT read this cache (see the publish task's
-      // release-pack step) — the unsigned artifact stays off the attestation.
-      "dependsOn": ["^build"],
+      // each re-packing. The package-qualified build edges restore fresh dist
+      // and fold each package's own inputs (manifest included) into this hash;
+      // pnpm-workspace.yaml carries the catalogs that substitute into packed
+      // manifests. The publish workflow deliberately does NOT read this cache
+      // (see the publish task's release-pack step) — the unsigned artifact
+      // stays off the attestation.
+      "dependsOn": [
+        "^build",
+        "eslint-plugin-lit-ui-router#build",
+        "lit-ui-router#build",
+        "lit-ui-router-mobx#build",
+        "ui-router-navigation-location-plugin#build",
+        "ui-router-server#build"
+      ],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
       "outputs": [".cache/pack/*.tgz"]
     },
@@ -27,6 +35,18 @@
     "check:exports": {
       // Reads the pre-built tarballs; publint + attw over each packed archive.
       "dependsOn": ["pack:all"]
+    },
+    "check:release-closure": {
+      // Reads manifests only, never node_modules, so the verdict is honest
+      // before any release lane installs. The closure value lives in the mise
+      // config, so a change to it must re-run this.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/tools/shared/src/**"
+      ]
     },
     "resolve:published": {
       // Reads the live registry (the only mutable state here); never cache.

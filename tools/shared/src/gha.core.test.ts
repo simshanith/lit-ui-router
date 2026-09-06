@@ -5,12 +5,13 @@ import {
   endGroupCommand,
   errorCommand,
   groupCommand,
+  noticeCommand,
   outputLine,
   warningCommand,
 } from './gha.core.ts';
 
 describe('workflow commands', () => {
-  it('emits plain group/endgroup/error/warning commands', () => {
+  it('emits plain group/endgroup/error/warning/notice commands', () => {
     assert.equal(
       groupCommand('Publish lit-ui-router'),
       '::group::Publish lit-ui-router',
@@ -18,6 +19,7 @@ describe('workflow commands', () => {
     assert.equal(endGroupCommand(), '::endgroup::');
     assert.equal(errorCommand('boom'), '::error::boom');
     assert.equal(warningCommand('skipped'), '::warning::skipped');
+    assert.equal(noticeCommand('opened #1'), '::notice::opened #1');
   });
 
   it('escapes %, CR, and LF so multi-line data stays one command line', () => {
@@ -29,6 +31,7 @@ describe('workflow commands', () => {
       warningCommand('50% done\r\nnext'),
       '::warning::50%25 done%0D%0Anext',
     );
+    assert.equal(noticeCommand('a\nb'), '::notice::a%0Ab');
     assert.equal(groupCommand('a\nb'), '::group::a%0Ab');
   });
 });

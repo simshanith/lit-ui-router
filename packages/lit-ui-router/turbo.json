@@ -9,7 +9,11 @@
       "outputs": ["dist/**", "!dist/custom-elements.json"]
     },
     "build:custom-elements": {
-      "inputs": ["src/**/*.ts", "custom-elements-manifest.config.js"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**/*.ts",
+        "custom-elements-manifest.config.js"
+      ],
       "outputs": ["dist/custom-elements.json"]
     },
     "docs:api": {

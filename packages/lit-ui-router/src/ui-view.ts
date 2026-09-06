@@ -1,5 +1,5 @@
 import { LitElement } from 'lit';
-import type { TemplateResult } from 'lit';
+import type { PropertyValues, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
@@ -27,6 +27,7 @@ import {
   NormalizedLitViewDeclaration,
 } from './interface.js';
 import { LitViewConfig, UIRouterLit } from './core.js';
+import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
 
 /** @internal */
@@ -355,6 +356,23 @@ export class UiView extends LitElement {
   /** @internal */
   public get state(): StateDeclaration {
     return (this.viewContext as StateObject).self;
+  }
+
+  /**
+   * Reports a missing provider once this view has actually rendered nothing.
+   *
+   * Deliberately here rather than at the failed seek in `setupUiView`: the seek
+   * runs in `connectedCallback`, and custom-element upgrade order is not
+   * guaranteed, so a correct app can connect a `<ui-view>` before `<ui-router>`
+   * upgrades. By the first completed update the no-op is observable.
+   *
+   * @internal
+   */
+  protected firstUpdated(changed: PropertyValues): void {
+    super.firstUpdated(changed);
+    if (!this.uiRouter) {
+      warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
+    }
   }
 
   /** @internal */

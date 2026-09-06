@@ -52,7 +52,8 @@ export class ContactDetail extends LitElement {
       </div>
 
       <div class="flex nogrow">
-        <img src=${contact.picture} />
+        <!-- decorative: the heading above already carries the name -->
+        <img src=${contact.picture} alt="" />
       </div>
     </div>`;
   }

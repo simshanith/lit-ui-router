@@ -1,7 +1,8 @@
-// ESLint owns two lanes: manifests (package.json via eslint-plugin-package-json
-// and eslint-plugin-pnpm, pnpm-workspace.yaml via eslint-plugin-pnpm) and the
-// custom-element lane over src (eslint-plugin-lit / -wc / -lit-a11y).
-// General-purpose JS/TS linting stays in oxlint (.oxlintrc.json).
+// The lane split. ESLint owns manifests (package.json via
+// eslint-plugin-package-json and eslint-plugin-pnpm, pnpm-workspace.yaml via
+// eslint-plugin-pnpm) and the custom-element lane over src (eslint-plugin-lit /
+// -wc / -lit-a11y). oxlint (.oxlintrc.json) owns general-purpose JS/TS *and*
+// lit-ui-router/anchor-is-valid, which it runs as a jsPlugin.
 import tsParser from '@tools/eslint-ts-parser';
 import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
 import { defineConfig, globalIgnores } from 'eslint/config';
@@ -14,7 +15,7 @@ import packageJson from 'eslint-plugin-package-json';
 import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
 import { configs as wcConfigs } from 'eslint-plugin-wc';
 import oxlintDirectiveStubs from './eslint.oxlint-directives.ts';
-import repoRules from './eslint.repo-rules.ts';
+import repoRules from './eslint-rules/index.ts';
 
 export default defineConfig(
   globalIgnores([
@@ -27,6 +28,10 @@ export default defineConfig(
     '**/node_modules/**',
     '**/.vitepress/cache/**',
     '**/.claude/**',
+    // this example ships its own eslint.config.js, which ESLint resolves ahead
+    // of this one for every file beneath it — including package.json, which
+    // would otherwise drop out of //#lint:package-json unannounced
+    'examples/lint-eslint/**',
   ]),
   {
     extends: [packageJson.configs.recommended],
@@ -176,7 +181,7 @@ export default defineConfig(
       // service and no type information — that keeps the lane seconds, not minutes.
       parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
     },
-    plugins: oxlintDirectiveStubs,
+    plugins: { ...oxlintDirectiveStubs },
     linterOptions: {
       // oxlint owns the inline directives in these files, so ESLint cannot
       // judge whether one is unused.
@@ -208,26 +213,37 @@ export default defineConfig(
       // Deliberately not adopted (it ships outside best-practice): file
       // organisation, not element semantics — ~20 hits, no defect behind any.
       'wc/no-exports-with-element': 'off',
+      // Displaced by lit-ui-router/anchor-is-valid, which oxlint runs via
+      // .oxlintrc.json jsPlugins. eslint-plugin-oxlint's config reader only
+      // knows oxlint's native rule names, so it cannot de-duplicate a JS-plugin
+      // rule — this `off` is the manual half of the split.
+      'lit-a11y/anchor-is-valid': 'off',
     },
   },
   {
     // Demo/docs surfaces, not shipped UI: a11y findings here are worth seeing
     // but must not gate the library's lint. packages/* stay at error.
     files: ['apps/*/src/**/*.ts', 'examples/*/src/**/*.ts'],
-    rules: Object.fromEntries(
-      Object.entries(litA11yRecommendedRules).map(([rule, severity]) => [
-        rule,
-        severity === 'off' ? 'off' : 'warn',
-      ]),
-    ),
+    rules: {
+      ...Object.fromEntries(
+        Object.entries(litA11yRecommendedRules).map(([rule, severity]) => [
+          rule,
+          severity === 'off' ? 'off' : 'warn',
+        ]),
+      ),
+      // The map above would switch the displaced rule back on; oxlint owns it.
+      'lit-a11y/anchor-is-valid': 'off',
+    },
   },
   {
     // Test fixtures: elements exist to be driven, not shipped, and their
     // templates are assertion inputs rather than UI.
     files: ['**/*.spec.ts', '**/src/specs/**/*.ts'],
-    rules: Object.fromEntries(
-      Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
-    ),
+    rules: {
+      ...Object.fromEntries(
+        Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
+      ),
+    },
   },
   // Keep last: disables any rules oxlint already enforces.
   oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),

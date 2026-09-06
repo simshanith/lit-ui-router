@@ -7,7 +7,7 @@
 // Usage (from the package dir): check-bundle-inputs
 import path from 'node:path';
 
-import { bundleEntry, bundlers } from './bundle.ts';
+import { bundleEntry, bundlers, DEVELOPMENT_DEFINE } from './bundle.ts';
 import { readPackageProbe } from './entries.ts';
 
 const packageDir = process.cwd();
@@ -18,9 +18,12 @@ for (const { label, file } of entries) {
   for (const bundler of bundlers) {
     // annotations:false keeps side-effect modules in the graph, so an
     // undeclared import can't hide behind a dist-named sideEffects glob.
+    // DEVELOPMENT_DEFINE, not production: the dev branches are the larger
+    // module graph, so an undeclared import cannot hide behind a folded guard.
     const { inputs } = await bundleEntry(file, bundler, {
       external: declared,
       annotations: false,
+      define: DEVELOPMENT_DEFINE,
     });
     const outside = inputs.filter(
       (input) =>

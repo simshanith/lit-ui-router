@@ -1,0 +1,27 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "lint": {
+      // `with` here replaces the root //# lane list for this package only;
+      // those lanes still ride every other package's lint in a full sweep
+      "with": ["lint:docs", "lint:rules"]
+    },
+    // eslint-doc-generator --check: generated rule docs cannot drift from meta
+    "lint:docs": {
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // eslint-plugin-eslint-plugin over the package's own rule source
+    "lint:rules": {
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    // the RuleTester suite carries the eslint side; test:oxlint rides alongside
+    "test": {
+      "with": ["test:oxlint"]
+    },
+    // oxlint `jsPlugins` over the fixture dir, gating at the exact catalog pin
+    "test:oxlint": {
+      "inputs": ["$TURBO_DEFAULT$"]
+    }
+  }
+}

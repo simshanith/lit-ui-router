@@ -19,10 +19,23 @@ export type BundleResult = { entry: Chunk; chunks: Chunk[]; inputs: string[] };
 // shaking unused code — package sideEffects globs name dist/*.js, so probing
 // src/*.ts would otherwise drop side-effect modules (and any undeclared
 // import hiding in them).
+// `define` feeds each bundler's build-time constant replacement, so a probe
+// can measure the same folding the shipped build does (see @tools/oxc-emit).
 export type BundleOptions = {
   minify?: boolean;
   external?: string[];
   annotations?: boolean;
+  define?: Record<string, string>;
+};
+
+// The build-time constant @tools/oxc-emit folds in each emit pass. Probes that
+// measure shipped size take the production value; probes that ask what the
+// module graph contains take the development one, which is the larger graph.
+export const PRODUCTION_DEFINE: Record<string, string> = {
+  'import.meta.env.DEV': 'false',
+};
+export const DEVELOPMENT_DEFINE: Record<string, string> = {
+  'import.meta.env.DEV': 'true',
 };
 
 export const bundlers = ['esbuild', 'rolldown'] as const;
@@ -48,7 +61,7 @@ const entryChunkName = (entryPath: string): string =>
 
 const esbuildBundle = async (
   entryPath: string,
-  { minify = false, external = [], annotations = true }: BundleOptions,
+  { minify = false, external = [], annotations = true, define }: BundleOptions,
 ): Promise<BundleResult> => {
   const result = await build({
     entryPoints: [entryPath],
@@ -61,6 +74,7 @@ const esbuildBundle = async (
     minify,
     external: external.flatMap((name) => [name, `${name}/*`]),
     ignoreAnnotations: !annotations,
+    define,
     logLevel: 'silent',
   });
   const outputs = Object.entries(result.metafile.outputs);
@@ -90,7 +104,7 @@ const esbuildBundle = async (
 
 const rolldownBundle = async (
   entryPath: string,
-  { minify = false, external = [], annotations = true }: BundleOptions,
+  { minify = false, external = [], annotations = true, define }: BundleOptions,
 ): Promise<BundleResult> => {
   const bundle = await rolldown({
     input: entryPath,
@@ -98,6 +112,9 @@ const rolldownBundle = async (
     // treeshake:false, not a moduleSideEffects override: rolldown 1.2 still
     // honors the package sideEffects manifest under any treeshake object.
     treeshake: annotations,
+    // rolldown takes `define` under `transform` (oxc's define plugin), not at
+    // the top level — an unknown top-level key is only a warning.
+    ...(define ? { transform: { define } } : {}),
     logLevel: 'silent',
   });
   try {

@@ -4,11 +4,14 @@
 // vars (TURBO_* cache config and secrets, VITE_*) stay dashboard-managed
 {
   "productionBranch": "main",
-  // The build command is a repo script, not the steps themselves: the dashboard
-  // holds one value for every branch, and a package-manager change needs a
-  // different bootstrap on its branch than main has. Pinning the path lets a
-  // branch diverge without that reading as drift. The steps and why the install
-  // moved out of Cloudflare's hands live in cloudflare-build.sh.
+  // The build and deploy commands are repo scripts, not the steps themselves:
+  // the dashboard holds one value for every branch, and a package-manager
+  // change (build) or a moved wrangler.jsonc (deploy) needs different steps on
+  // its branch than main has. Pinning the paths lets a branch diverge without
+  // that reading as drift. The steps and why the install moved out of
+  // Cloudflare's hands live in cloudflare-build.sh; the two wrangler
+  // invocations, keyed by the trigger the argument names, in
+  // cloudflare-deploy.ts.
   // SKIP_DEPENDENCY_INSTALL=1 is what hands the install to that script; without
   // it Cloudflare runs its own corepack-provisioned `pnpm install` first.
   // CYPRESS_INSTALL_BINARY=0 and HUSKY=0 skip install work a docs deploy never
@@ -17,7 +20,7 @@
   // `mise run setup` and the CI workflows already set.
   "production": {
     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    "deploy_command": "npx wrangler deploy",
+    "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts main",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
       "CYPRESS_INSTALL_BINARY": "0",
@@ -26,7 +29,7 @@
   },
   "preview": {
     "build_command": "./tools/workers-builds/cloudflare-build.sh",
-    "deploy_command": "npx wrangler versions upload",
+    "deploy_command": "./tools/workers-builds/cloudflare-deploy.ts branch",
     "environment_variables": {
       "SKIP_DEPENDENCY_INSTALL": "1",
       "CYPRESS_INSTALL_BINARY": "0",

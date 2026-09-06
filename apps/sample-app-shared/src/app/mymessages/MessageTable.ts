@@ -21,8 +21,14 @@ export { SortMessages };
  *
  * Shows/hides specific columns based on the `columns` resolved prop.
  */
-const tableColumns = [
-  { label: '', name: 'read' },
+// `accessibleLabel` names a sort control whose visible label is deliberately
+// empty — the read column is an icon column, so its header shows nothing.
+const tableColumns: {
+  label: string;
+  name: string;
+  accessibleLabel?: string;
+}[] = [
+  { label: '', accessibleLabel: 'Read', name: 'read' },
   { label: 'Sender', name: 'from' },
   { label: 'Recipient', name: 'to' },
   { label: 'Subject', name: 'subject' },
@@ -74,6 +80,7 @@ export class MessageTable extends LitElement {
         html`<td>
           <sample-sort-messages
             .label=${column.label}
+            .accessibleLabel=${column.accessibleLabel ?? ''}
             .col=${column.name}
             .sort=${sort}
             @change=${this.changeSort}

@@ -81,11 +81,13 @@ non-URL parameters — no `href` beats a wrong one, whatever the element is.
 See [Unmatched URLs](./unmatched-urls) for the related case of routing a URL
 that matches no state.
 
-::: tip Under lit's development build
+::: tip Under the development build
 `assignHref: true` on a non-anchor logs a one-time console warning naming
-`'auto'` as the fix, because it cannot know your element forwards `href`. The
-warning is gated to lit's dev build; production builds are silent. Pass
-`false` and set the property yourself if you would rather not see it.
+`'auto'` as the fix, because it cannot know your element forwards `href`. It
+is gated on both this package's development build and lit's own, and the
+message text is not present in a production bundle at all — see
+[Development & Production Builds](./development-builds). Pass `false` and set
+the property yourself if you would rather not see it in development.
 :::
 
 ## Setting up the example

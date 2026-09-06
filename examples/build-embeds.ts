@@ -12,8 +12,10 @@ const root = dirname(fileURLToPath(import.meta.url));
 const EXAMPLES = [
   'helloworld',
   'hellosolarsystem',
+  'hellosolarsystem-mobx',
   'hellogalaxy',
   'design-system-links',
+  'lint-eslint',
 ];
 
 for (const name of EXAMPLES) {

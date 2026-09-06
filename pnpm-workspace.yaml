@@ -33,14 +33,17 @@ catalog:
   '@uirouter/dsr': ^1.2.0
   '@uirouter/sticky-states': ^1.5.1
   '@uirouter/visualizer': ^7.2.1
-  '@vitest/browser-playwright': ^4.1.11
-  '@vitest/coverage-v8': ^4.1.11
+  '@vitest/browser': ^5.0.0
+  '@vitest/browser-playwright': ^5.0.0
+  '@vitest/coverage-v8': ^5.0.0
   concurrently: ^10.0.5
   cypress: ^15.21.0
   diff: ^9.0.0
   esbuild: ^0.28.2
   eslint: ^10.9.0
+  eslint-doc-generator: ^3.7.1
   eslint-formatter-tap: ^9.0.1
+  eslint-plugin-eslint-plugin: ^7.6.2
   eslint-plugin-lit: ^2.3.1
   eslint-plugin-lit-a11y: ^5.1.1
   eslint-plugin-oxlint: 1.80.0
@@ -84,7 +87,7 @@ catalog:
   vite-plugin-checker: ^0.14.5
   vite-plugin-static-copy: ^4.1.1
   vitepress: ^2.0.0-alpha.19
-  vitest: ^4.1.11
+  vitest: ^5.0.0
   vue: ^3.5.41
   vue-tsc: ^3.3.11
   wrangler: 4.113.0
@@ -97,11 +100,14 @@ catalogs:
   mobx6-compat:
     mobx-6: npm:mobx@^6.16.1
   peerFloor:
+    eslint: 9.0.0
     lit-ui-router-floor: npm:lit-ui-router@1.7.0
   publishedDependencies:
     '@oxc-project/runtime': '>=0.50.0'
+    eslint-plugin-lit: ^2.0.0
   publishedPeer:
     '@uirouter/core': ^6.0.8
+    eslint: '^9.0.0 || ^10.0.0'
     hono: ^4.0.0
     lit: '^2.0.0 || ^3.0.0'
     lit-ui-router: ^1.7.0
@@ -140,6 +146,9 @@ packageExtensions:
   conventional-changelog-preset-loader:
     dependencies:
       conventional-changelog-conventionalcommits: ^10.2.1
+  eslint-doc-generator:
+    dependencies:
+      typescript: npm:@typescript/typescript6@^6.0.2
   lit-analyzer:
     dependencies:
       typescript: npm:@typescript/typescript6@^6.0.2
@@ -150,7 +159,6 @@ linkWorkspacePackages: true
 
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
-  '@vitest/browser': patches/@vitest__browser.patch
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAgeStrict: true

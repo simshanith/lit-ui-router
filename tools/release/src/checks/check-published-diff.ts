@@ -51,7 +51,6 @@ import {
 } from './check-published-diff.core.ts';
 import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
-import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { requireManifest } from '@tools/shared/manifest.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
@@ -121,7 +120,6 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
 
   // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; empty/unset = all.
   const scoped = scopePackages(

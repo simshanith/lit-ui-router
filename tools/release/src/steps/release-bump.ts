@@ -15,7 +15,7 @@
 import { defaultExec, defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
 import { createReleasePr } from '@tools/shared/gh.ts';
-import { group, runMain } from '@tools/shared/gha.ts';
+import { group, logNotice, runMain } from '@tools/shared/gha.ts';
 import { branchPrefix, commitMessageFromScript } from './release-bump.core.ts';
 import { incrementArgs } from './release-increment-args.core.ts';
 import {
@@ -69,8 +69,9 @@ runMain(async () => {
   });
 
   if (!dryRun) {
-    await group(`create PR against ${prBase}`, () =>
+    const url = await group(`create PR against ${prBase}`, () =>
       createReleasePr(prBase, branch),
     );
+    logNotice(`release PR: ${url}`);
   }
 });

@@ -4,6 +4,9 @@ import { describe, it } from 'node:test';
 import type { Exec } from './exec.ts';
 import { createReleasePr, ensureGh, prCreateArgs } from './gh.ts';
 
+// gh pr create prints the new PR's URL, newline-terminated.
+const PR_URL_STDOUT = 'https://github.com/o/r/pull/683\n';
+
 // Fake Exec: records argv, replays scripted outcomes.
 function recordingExec(
   fail: (
@@ -17,7 +20,7 @@ function recordingExec(
     calls.push([command, ...args]);
     return fail(command, args, calls.length)
       ? Promise.reject(new Error('scripted failure'))
-      : Promise.resolve({ stdout: '', stderr: '' });
+      : Promise.resolve({ stdout: PR_URL_STDOUT, stderr: '' });
   };
   return { exec, calls };
 }
@@ -57,9 +60,10 @@ describe('ensureGh', () => {
 });
 
 describe('createReleasePr', () => {
-  it('guards, then creates the PR with the exact argv', async () => {
+  it('guards, creates the PR with the exact argv, returns its URL', async () => {
     const { exec, calls } = recordingExec();
-    await createReleasePr('main', 'release/pkg/v1.0.0', exec);
+    const url = await createReleasePr('main', 'release/pkg/v1.0.0', exec);
+    assert.equal(url, 'https://github.com/o/r/pull/683');
     assert.deepEqual(calls, [
       ['gh', '--version'],
       [

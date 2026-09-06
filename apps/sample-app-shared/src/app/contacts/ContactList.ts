@@ -18,9 +18,12 @@ export class ContactList extends LitElement {
   render() {
     // one control, not an <a> wrapping a <button>: nesting them gave two tab
     // stops, and <a>'s content model forbids interactive content
+    // the button skin rides a <span> so the row-wide anchor stays the hit target
     const newContact = html`
-      <a ${uiSref('.new')} class="btn btn-primary">
-        <i class="fa fa-pencil"></i><span>New Contact</span>
+      <a ${uiSref('.new')}>
+        <span class="btn btn-primary">
+          <i class="fa fa-pencil"></i><span>New Contact</span>
+        </span>
       </a>
     `;
     const contacts = repeat(

@@ -8,10 +8,10 @@
 // finds against the committed snapshot, and fails when an entry appears that
 // the snapshot does not already carry.
 //
-// The snapshot is a HOLDING MEASURE and a worklist, not an end state: each
-// entry is one warning awaiting a fix, a suppression, or a rule
-// re-evaluation (#606). When it empties, the rules move to `error` and this
-// lane reduces to a bare `eslint` call.
+// The snapshot is empty, so the floor is zero and any warning is a regression.
+// It stays a snapshot rather than becoming `error` because these surfaces are
+// warn-only on purpose: a11y findings in demo markup are worth seeing without
+// gating the library's lint (see eslint.config.ts).
 //
 // Regenerate after fixing warnings: `pnpm lint:elements:snapshot`.
 //

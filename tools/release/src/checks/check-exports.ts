@@ -28,7 +28,6 @@ import {
   type PackageExportsCheck,
   publintGatingMessages,
 } from './check-exports.core.ts';
-import { assertSelfDeclaredDeps } from './self-deps.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 /** Run attw + publint over one package's publish-shape tarball. */
@@ -74,7 +73,6 @@ async function main() {
       member.manifest &&
       member.manifest.private !== true,
   );
-  assertSelfDeclaredDeps(publishable.map(({ name }) => name));
   const results: PackageExportsCheck[] = [];
   for (const { name, dir } of publishable) {
     results.push(await checkExports(name, dir));

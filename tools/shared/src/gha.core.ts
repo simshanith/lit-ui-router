@@ -29,6 +29,11 @@ export function errorCommand(message: string): string {
   return `::error::${escapeData(message)}`;
 }
 
+/** `::notice::<message>` — a blue annotation; for results worth a glance. */
+export function noticeCommand(message: string): string {
+  return `::notice::${escapeData(message)}`;
+}
+
 /** `::warning::<message>` — a yellow annotation; the run still passes. */
 export function warningCommand(message: string): string {
   return `::warning::${escapeData(message)}`;

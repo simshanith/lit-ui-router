@@ -986,6 +986,120 @@ describe('uiSrefActive directive', () => {
       await tick(100);
     });
   });
+
+  describe('missing <ui-router> ancestor', () => {
+    // one template factory, so a re-render reuses the element rather than
+    // producing a fresh one with a fresh directive
+    const link = () =>
+      html`<a ${uiSrefActive({ activeClasses: ['active'], state: 'home' })}
+        >Home</a
+      >`;
+
+    it('should warn once when an update finds no router', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        render(link(), container);
+        await tick(50);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toBe(
+          'lit-ui-router: <a uiSrefActive> found no <ui-router> ancestor, ' +
+            'so it will never be marked active. Wrap this subtree in ' +
+            '<ui-router>, or pass a router explicitly.',
+        );
+
+        // the no-op is unchanged: no classes, no throw
+        const anchor = container.querySelector('a')!;
+        expect(anchor.classList.contains('active')).toBe(false);
+
+        // and a re-render does not repeat itself
+        render(link(), container);
+        await tick(50);
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should warn once for an element carrying both directives', async () => {
+      // one missing provider trips uiSref's render and uiSrefActive's update on
+      // the same element; the shared registry keeps that to one message
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        render(
+          html`<a
+            ${uiSref('home')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Home</a
+          >`,
+          container,
+        );
+        await tick(100);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should stay silent outside lit dev mode, but still no-op', async () => {
+      // ReactiveElement.enableWarning exists only in lit's development build,
+      // which is what production consumers resolve away from
+      const enableWarning = UIRouterLitElement.enableWarning;
+      UIRouterLitElement.enableWarning = undefined;
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+      try {
+        render(link(), container);
+        await tick(50);
+
+        expect(warn).not.toHaveBeenCalled();
+        // only the warning is gated, never the behaviour
+        expect(container.querySelector('a')!.classList.contains('active')).toBe(
+          false,
+        );
+      } finally {
+        warn.mockRestore();
+        UIRouterLitElement.enableWarning = enableWarning;
+      }
+    });
+
+    it('should confirm the specs run against lit dev mode', () => {
+      // the guard above is only meaningful if the suite sees dev lit; without
+      // this, every warning spec could pass vacuously
+      expect(typeof UIRouterLitElement.enableWarning).toBe('function');
+    });
+
+    it('should not warn when a correctly wired app renders', async () => {
+      // the whole surface at once: provider, view, link and active link
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const { wrapper } = await setupWithStates([
+          { name: 'home', url: '/home' },
+          { name: 'about', url: '/about' },
+        ]);
+
+        wrapper.appendChild(document.createElement('ui-view'));
+        const nav = () =>
+          html`<a
+            ${uiSref('home')}
+            ${uiSrefActive({ activeClasses: ['active'] })}
+            >Home</a
+          >`;
+        render(nav(), wrapper);
+        await tick(50);
+        render(nav(), wrapper);
+        await tick(50);
+
+        await routerGo(router, 'home');
+        await tick(100);
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+  });
 });
 
 describe('UiSrefActiveDirective', () => {

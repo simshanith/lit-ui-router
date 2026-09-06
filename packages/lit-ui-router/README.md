@@ -45,6 +45,12 @@ registries or custom tag names) without touching the global registry, and pair
 it with `lit-ui-router/register` — or a single `*.register` entry — to opt
 into registration explicitly.
 
+## Development and Production Builds
+
+Every entry point above publishes twice: `dist/development/*.js` alongside `dist/*.js`, picked by the `development` export condition, which bundlers resolve automatically. Nothing to configure.
+
+The development build carries three console warnings — `uiSref` writing an inert `href`, `uiSrefActive` taking over an `aria-current` it did not set, and any binding finding no `<ui-router>` ancestor. Each is gated on lit's own development build as well, and none of them, message text included, is present in a production bundle. See the [Development & Production Builds guide](https://lit-ui-router.dev/guides/development-builds) for what each warning means and how the split is verified.
+
 ## Component Styles
 
 | Style               | Best For                      | Example                    |
