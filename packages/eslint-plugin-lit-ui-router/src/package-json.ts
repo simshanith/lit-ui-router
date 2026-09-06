@@ -8,4 +8,6 @@ interface PackageJson {
   repository: { directory: string };
 }
 
-export const packageJson = createRequire(import.meta.url)('../package.json') as PackageJson;
+export const packageJson = createRequire(import.meta.url)(
+  '../package.json',
+) as PackageJson;
