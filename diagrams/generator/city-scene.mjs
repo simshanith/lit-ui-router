@@ -11,6 +11,7 @@
 // in three dimensions: semi-opaque tinted walls over a girding frame, so the
 // structure behind reads through — a drafting set, not a video game.
 import { readFileSync } from 'node:fs';
+import { revBlock, splitRevs } from './chrome.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
 
@@ -781,7 +782,7 @@ ${swatchCss}</style>
 <section class="sheet cs" id="city-scene" aria-label="The City, isometric — sheet 7 in the round, with a second material lane that relights it from sheet 7A's shadow survey">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">${CITY_META.head} · REV ${CITY_META.rev}</span></div>
   <h2 class="sheet-title">${CITY_META.title}</h2>
-  <p class="sheet-sub">${CITY_META.sub}</p>
+  <p class="sheet-sub">${splitRevs(CITY_META.sub).lead}</p>
   <div class="cs-bar">
     <div class="cs-legend">
       ${DATA.legend.tier}
@@ -797,6 +798,7 @@ ${swatchCss}</style>
     <aside class="cs-info" id="cs-info"></aside>
   </div>
   <p class="cs-basis">BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>diagrams/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. Walls are semi-opaque over a girding frame per the pinned sprite note; gate severity is colour, never height; the <code>off</code> tier is drawn frame-only because there is nothing to mass. Camera is orthographic at the true isometric elevation, atan(1/√2) ≈ 35.264°; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints.  three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read.  REV C adds a SECOND MATERIAL LANE over the same geometry: <code>TEST LIGHT</code> relights the city from <code>generator/sheet7a.mjs</code>'s exported <code>SURVEY</code>, so the model and the flat shadow plate cannot drift either. Its polarity is sheet 7A's — covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light; a metered member's mass splits along its footprint, the lit slab being side × the extent the meter recorded, taken from the annex (east) side, its tint stepping down through the line-coverage bands. Shadow lerps toward BLACK rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.  REV D re-lights the lane from a PLATE: sheet 7A's light is no longer a transcribed one-off but <code>diagrams/data/census-shadow.json</code>, ${SURVEY_META.basis} — the same ref the geometry is massed at, with ${SURVEY_META.metered} members metered under their own suites' meters. Every mass in this model therefore has a survey row (a mass without one is a build error), so the blank-paper case for a member the old metering predated is gone along with the metering that needed it.</p>
+  ${revBlock(splitRevs(CITY_META.sub).revs)}
 </section>
 <script type="application/json" id="cs-city">${json(DATA)}</script>`;
 }

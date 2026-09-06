@@ -74,11 +74,11 @@ ${sheets.map((s) => `<a href="#sheet-${s.num}"><span class="alt-n">ALT ${s.num}<
 </nav>`;
 const megaCss = `
 .mega-head { max-width: 1180px; margin: 0 auto 26px; }
-.mega-head h1 { font-family: var(--mono); font-size: clamp(20px, 3.4vw, 30px); letter-spacing: 0.12em; }
-.mega-head p { color: var(--ink-soft); max-width: 70ch; margin-top: 6px; }
+.mega-head h1 { font-family: var(--display); font-weight: 600; font-size: clamp(21px, 3.5vw, 32px); letter-spacing: 0.16em; }
+.mega-head p { font-family: var(--prose); color: var(--ink-soft); max-width: 70ch; margin-top: 6px; }
 .alt-rail { position: sticky; top: 0; z-index: 5; display: flex; flex-wrap: wrap; gap: 2px;
   max-width: 1180px; margin: 0 auto 30px; background: var(--paper); border: 1.5px solid var(--ink); }
-.alt-rail a { font-family: var(--mono); font-size: 10.5px; letter-spacing: 0.08em; text-decoration: none;
+.alt-rail a { font-family: var(--data); font-size: 11px; font-variant-numeric: tabular-nums; letter-spacing: 0.08em; text-decoration: none;
   color: var(--ink); padding: 8px 12px; border-right: 1px solid var(--line); flex: 1 1 auto; text-align: center; }
 .alt-rail a:hover { background: var(--paper-2); }
 .alt-rail .alt-n { color: var(--accent); font-weight: 600; }
@@ -134,33 +134,33 @@ const INDEX_BY_NUM = Object.fromEntries(verdicts.map((row) => [row[0], { scale: 
 const surveyCss = `.stat-bar { display: flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--paper-2); }
 .stat-bar > div { padding: 8px 16px 10px; border-right: 1px solid var(--ink); flex: 1 1 auto; }
 .stat-bar > div:last-child { border-right: none; }
-.stat-bar .k { display: block; font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin-bottom: 3px; }
-.stat-bar .v { font-size: 14px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
+.stat-bar .k { display: block; font-family: var(--data); font-size: 9px; letter-spacing: 0.16em; color: var(--ink-soft); margin-bottom: 3px; }
+.stat-bar .v { font-family: var(--data); font-size: 14.5px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
 .survey { border: 1.5px solid var(--ink); margin: 0 0 26px; background: var(--paper); }
-.survey h2 { font-family: var(--mono); font-size: 10px; letter-spacing: 0.2em; color: var(--ink-soft);
+.survey h2 { font-family: var(--data); font-weight: 600; font-size: 10.5px; letter-spacing: 0.2em; color: var(--ink-soft);
   padding: 8px 14px 7px; border-bottom: 1.5px solid var(--ink); background: var(--paper-2); }
 .survey-tot { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1.5px solid var(--ink); }
 .survey-tot > div { padding: 9px 14px 11px; border-right: 1px solid var(--line); flex: 1 1 auto; }
 .survey-tot > div:last-child { border-right: none; }
-.survey-tot .k { display: block; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em;
+.survey-tot .k { display: block; font-family: var(--data); font-size: 9px; letter-spacing: 0.16em;
   color: var(--ink-soft); margin-bottom: 3px; }
-.survey-tot .v { font-family: var(--mono); font-size: 17px; font-variant-numeric: tabular-nums;
+.survey-tot .v { font-family: var(--data); font-size: 17.5px; font-variant-numeric: tabular-nums;
   letter-spacing: 0.03em; }
 .survey-tot > div:first-child .v { color: var(--accent); }
 .lang { width: 100%; border-collapse: collapse; }
-.lang th { font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.16em; color: var(--ink-soft);
+.lang th { font-family: var(--data); font-size: 9px; letter-spacing: 0.16em; color: var(--ink-soft);
   text-align: right; padding: 7px 14px 6px; border-bottom: 1px solid var(--line); }
 .lang th:first-child { text-align: left; }
-.lang td { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.03em; padding: 5px 14px;
+.lang td { font-family: var(--data); font-size: 12px; letter-spacing: 0.03em; padding: 5px 14px;
   border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }
 .lang td:first-child { text-align: left; letter-spacing: 0.08em; }
 .lang .bar { width: 40%; padding-right: 0; }
 .lang .bar span { display: block; height: 7px; background: var(--accent); }
 .lang tr:last-child td { border-bottom: none; }
-.survey .basis { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
+.survey .basis { font-family: var(--data); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
   padding: 8px 14px 9px; border-top: 1.5px solid var(--ink); background: var(--paper-2); }
-.gal-body p { font-size: 15.5px; max-width: 72ch; margin-bottom: 11px; }`;
-const provenanceCss = `.provenance { font-family: var(--mono); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
+.gal-body p { font-family: var(--prose); font-size: 16px; max-width: 72ch; margin-bottom: 11px; }`;
+const provenanceCss = `.provenance { font-family: var(--data); font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-faint);
   max-width: 1180px; margin: 0 auto 40px; padding: 0 4px; }`;
 const coverCss = `${surveyCss}\n${provenanceCss}`;
 const galCss = `
@@ -168,15 +168,15 @@ const galCss = `
   padding: 30px; position: relative; }
 .cover::before { content: ""; position: absolute; inset: 8px; border: 1px solid var(--edge); pointer-events: none; }
 .cover > * { position: relative; }
-.cover h1 { font-family: var(--mono); font-size: clamp(26px, 4.6vw, 44px); letter-spacing: 0.16em; margin: 18px 0 4px; }
-.cover .kicker, .cover .set { font-family: var(--mono); font-size: 11px; letter-spacing: 0.16em; color: var(--ink-soft); }
-.cover .alt { display: block; margin-top: 6px; font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover h1 { font-family: var(--display); font-weight: 600; font-size: clamp(28px, 4.8vw, 46px); letter-spacing: 0.16em; margin: 18px 0 4px; }
+.cover .kicker, .cover .set { font-family: var(--data); font-size: 11.5px; letter-spacing: 0.16em; color: var(--ink-soft); }
+.cover .alt { display: block; margin-top: 6px; font-family: var(--data); font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft); }
 .cover .alt a { color: var(--accent); }
 ${surveyCss}
 .idx { width: 100%; border-collapse: collapse; border: 1.5px solid var(--ink); margin-top: 20px; }
-.idx th { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft);
+.idx th { font-family: var(--data); font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft);
   text-align: left; padding: 7px 12px; border-bottom: 1.5px solid var(--ink); }
-.idx td { font-family: var(--mono); font-size: 11.5px; letter-spacing: 0.04em; padding: 8px 12px;
+.idx td { font-family: var(--data); font-size: 12px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; padding: 8px 12px;
   border-bottom: 1px solid var(--line); vertical-align: baseline; }
 .idx td:first-child { color: var(--accent); font-weight: 600; }
 .idx tr:last-child td { border-bottom: none; }

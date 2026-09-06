@@ -13,6 +13,19 @@
       content="The Altitude Atlas as a single-page drawing set: twenty-one sheets of the lit-ui-router codebase, routed with lit-ui-router."
     />
     <link rel="stylesheet" href="%BASE_URL%sheets/atlas.css" />
+    <!-- THE TYPE, stand-in half. atlas.css names the Adobe family first in
+         every role stack and the Google Fonts stand-in second; this link is
+         the second half, and it is the ONLY half the artifact can have (its
+         host allows stylesheets from fonts.googleapis.com and nothing else).
+         On the site generator/stage-site.mjs adds the Adobe kit beside it, so
+         the first names win there. Source Serif 4 is the SAME family on both
+         hosts by decision — no kit dependency for the prose. -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Josefin+Sans:wght@600&family=Barlow+Semi+Condensed:wght@400;600&family=Source+Serif+4:ital,wght@0,400;1,400&display=swap"
+    />
     <style>
       /* The app chrome. Everything below leans on the tokens atlas.css
          declares, so the index reads as part of the drawing set. */
@@ -21,7 +34,7 @@
       }
       .app {
         display: grid;
-        grid-template-columns: 268px minmax(0, 1fr);
+        grid-template-columns: 240px minmax(0, 1fr);
         min-height: 100vh;
       }
       @media (max-width: 900px) {
@@ -54,14 +67,14 @@
       }
       .rail-head .kicker {
         display: block;
-        font-family: var(--mono);
-        font-size: 8.5px;
+        font-family: var(--data);
+        font-size: 9px;
         letter-spacing: 0.18em;
         color: var(--ink-soft);
       }
       .rail-head h1 {
-        font-family: var(--mono);
-        font-size: 15px;
+        font-family: var(--display);
+        font-size: 17px;
         letter-spacing: 0.14em;
         font-weight: 600;
         margin: 5px 0 0;
@@ -79,8 +92,8 @@
         display: flex;
         gap: 9px;
         align-items: baseline;
-        font-family: var(--mono);
-        font-size: 10.5px;
+        font-family: var(--data);
+        font-size: 11px;
         letter-spacing: 0.06em;
         text-decoration: none;
         color: var(--ink);
@@ -98,12 +111,18 @@
         font-weight: 600;
       }
       .rail-links .n {
+        font-family: var(--data);
         color: var(--accent);
         font-weight: 600;
         min-width: 34px;
         font-variant-numeric: tabular-nums;
       }
+      /* Entry titles take the sheet-title face; the numbers beside them stay
+         tabular data, which is why the two are separate spans. */
       .rail-links .t {
+        font-family: var(--title);
+        font-size: 11.5px;
+        letter-spacing: 0.05em;
         color: var(--ink-soft);
       }
       .rail-links a.is-active .t {
@@ -114,8 +133,8 @@
         margin-top: 4px;
       }
       .rail-sec {
-        font-family: var(--mono);
-        font-size: 8.5px;
+        font-family: var(--data);
+        font-size: 9px;
         letter-spacing: 0.18em;
         color: var(--ink-faint);
         padding: 14px 16px 5px;
@@ -132,8 +151,8 @@
       }
       .themer button {
         flex: 1 1 auto;
-        font-family: var(--mono);
-        font-size: 8.5px;
+        font-family: var(--data);
+        font-size: 9px;
         letter-spacing: 0.14em;
         color: var(--ink);
         background: var(--paper);
@@ -161,9 +180,10 @@
         text-decoration-color: var(--accent-soft);
       }
       .crumb {
-        font-family: var(--mono);
-        font-size: 9.5px;
+        font-family: var(--data);
+        font-size: 10px;
         letter-spacing: 0.14em;
+        font-variant-numeric: tabular-nums;
         color: var(--ink-soft);
         max-width: 1180px;
         margin: 0 auto 12px;
@@ -174,9 +194,14 @@
       .crumb a {
         color: var(--ink-soft);
       }
+      /* The one fact in the strip, not one link among six. */
+      .crumb .sh {
+        font-weight: 600;
+        color: var(--ink);
+      }
       .loading {
-        font-family: var(--mono);
-        font-size: 11px;
+        font-family: var(--data);
+        font-size: 11.5px;
         letter-spacing: 0.14em;
         color: var(--ink-faint);
         padding: 40px 4px;
@@ -208,39 +233,43 @@
         background: var(--paper-2);
       }
       .card .n {
-        font-family: var(--mono);
-        font-size: 9.5px;
+        font-family: var(--data);
+        font-size: 10px;
+        font-variant-numeric: tabular-nums;
         letter-spacing: 0.16em;
         color: var(--accent);
       }
       .card h3 {
-        font-family: var(--mono);
-        font-size: 13px;
+        font-family: var(--title);
+        font-size: 15px;
+        font-weight: 600;
         letter-spacing: 0.1em;
         margin: 5px 0 6px;
       }
       .card p {
-        font-size: 13.5px;
+        font-family: var(--prose);
+        font-size: 14px;
         color: var(--ink-soft);
         margin: 0;
       }
       .card .alt {
-        font-family: var(--mono);
-        font-size: 8.5px;
+        font-family: var(--data);
+        font-size: 9px;
         letter-spacing: 0.14em;
         color: var(--ink-faint);
         display: block;
         margin: -2px 0 7px;
       }
       .card .verdict {
-        font-size: 12.5px;
+        font-family: var(--prose);
+        font-size: 13px;
         font-style: italic;
         color: var(--ink-faint);
         margin: 7px 0 0;
       }
       .card .meta {
-        font-family: var(--mono);
-        font-size: 8.5px;
+        font-family: var(--data);
+        font-size: 9px;
         letter-spacing: 0.12em;
         color: var(--ink-faint);
         margin-top: 9px;
@@ -251,23 +280,26 @@
         margin: 0 auto;
       }
       .prose h2 {
-        font-family: var(--mono);
-        font-size: 18px;
+        font-family: var(--title);
+        font-size: 19px;
+        font-weight: 600;
         letter-spacing: 0.12em;
         margin-bottom: 12px;
       }
       .prose h3 {
-        font-family: var(--mono);
+        font-family: var(--data);
         font-size: 11px;
         letter-spacing: 0.18em;
         color: var(--ink-soft);
         margin: 22px 0 8px;
       }
       .prose p {
+        font-family: var(--prose);
+        font-size: 15.5px;
         margin-bottom: 10px;
       }
       .prose code {
-        font-family: var(--mono);
+        font-family: var(--code);
         font-size: 0.85em;
         background: var(--paper-2);
         border: 1px solid var(--line);

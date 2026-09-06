@@ -909,6 +909,92 @@ two new token declarations and nothing else. Left undone: the specimen
 restyles nothing outside itself — adopting a pairing across the chrome and the
 plates is the next, separate decision.
 
+THE TYPE ADOPTED, 2026-09-06: the decision, taken on the specimen the evening
+before, applied to the whole chrome — "title + sidebar as exhibition my
+favorite. eaglefeather still top for the altitude atlas title; maybe can reuse
+elsewhere for some contrast. eg project === eaglefeather always; maybe drawn by
+== eaglefeather? … definitely think we should go with source serif for prose.
+think din takes it." `generator/chrome.mjs` now declares FIVE role tokens, each
+naming the Adobe family first and the Google stand-in second: `--display`
+(P22 FLLW Eaglefeather / Josefin Sans 600 — the atlas name only: rail head,
+cover title, the title block's PROJECT and DRAWN BY values), `--title` (P22 FLW
+Exhibition / Josefin Sans — sheet titles, rail entry titles, card and prose
+headings, the title block's SHEET TITLE), `--data` (DIN 2014 / Barlow Semi
+Condensed, tabular figures — kickers, sheet heads, crumbs, rail numbers,
+schedules, title block, stat bars, index and language tables), `--prose`
+(Source Serif 4, the SAME family on both hosts, so the prose needs no kit) and
+`--code` (the system mono, unchanged — and every SVG label on every plate,
+whose positions are hand-tuned to its advance; the plates are NOT part of this
+change). `--serif` survives as an alias of `--prose`. Sizes step up by half a
+pixel where the data face replaces the mono, because 11px of DIN carries the
+same cap-height as the 10.5px mono it replaces (the specimen's GLYPH SIZE
+readout, within 1%) — "conservative choices with roughly equivalent glyph
+sizes". The hand face is NOT adopted anywhere ("i swear i'm just allergic to
+these hand types"), and the title block's chop is a plain unrotated square in
+the Cherokee red ("the jaunty stamp angle is meh … for now rather have order").
+
+Two structural changes rode along. The REV history — up to six revisions
+run together in `.sheet-sub` under every title — is split out: `splitRevs()`
+cuts each sheet's FROZEN `sub` string on the ` · REV ` seam it already uses,
+so not a character is retyped, and `revBlock()` files the tail under the title
+block as a drawing's REVISIONS table (REV / DATE / DESCRIPTION), on the flat
+pages, the routed sheets and the city plate alike. And the routed sheet's crumb
+strip now states its one fact in bold — SHEET N OF 23 — between INDEX and the
+PREV/NEXT links, with the rail narrowed from 268px to 220px, which the
+condensed data face affords.
+
+The webfonts: `app/index.html` carries ONE Google Fonts link (Josefin Sans 600,
+Barlow Semi Condensed 400/600, Source Serif 4 400 + italic) — the stand-in half,
+and the only half the artifact can have. `generator/stage-site.mjs` now writes
+the same link into every head-less flat page and the Adobe kit link into EVERY
+staged page, routed and flat (before: the specimen page alone), so on the site
+the first names win everywhere and in the artifact the second names do. The
+specimen gained pairing `5 · THE ATLAS SET` as its DEFAULT — the bench opens on
+what ships, the other five rows are the record of what it was chosen against —
+and a CODE knob (SYSTEM MONO shipped / SOURCE CODE PRO on demand) with a
+`--code` row in GLYPH SIZE measured at the baseline size, answering "would the
+plate lettering move": Source Code Pro's 0.600em advance is within 0.3% of
+Menlo's, so it would not — and the system mono still ships, at zero bytes.
+
+Verified: build 23 sheets / 24 fragments, tsc clean, prerender **27 pages** + 404 ·
+9 redirects, stage 28 routed + 26 flat with the Google link and the kit link on
+every one, artifact 2,709,834 bytes / 24 fragments. Playwright against the
+Pages-mimicking server, light and dark: a new `r-qa-type` suite **124/124** —
+every role element on the cover, three routed sheets, the city, the specimen,
+About, the flat cover, flat sheet 7 and the megacanvas resolves to its decided
+family (`p22-fllw-eaglefeather` on the rail head and the title block's PROJECT
+/ DRAWN BY, `p22-flw-exhibition` on sheet, rail and card titles, `din-2014` on
+every kicker, crumb, schedule and table cell, Source Serif 4 on the running
+text), every sampled plate label still resolves to the system mono, the
+REVISIONS table stands on every sheet that has a history with no
+`.sheet-sub` still carrying ` · REV `, the chop is unrotated, the crumb states
+SHEET N OF 14, no page scrolls sideways, and every rail entry fits the 240px
+rail (one, `14i THE SURVEY OFFICE — INTERACTIVE`, wraps to two lines as it did
+at 268px). Regressions clean: cold 23 loads with 0 page errors, nav **39/39**,
+city **16/16**, GA **6/6**, specimen **65/65** (two assertions retired: the
+GLYPH SIZE table has five rows now, and `/sheet/7/` and `/` DO fetch webfonts —
+the shipped set and never a candidate), offline artifact **21/21** with the
+Google origin the one thing asked for, specimen-in-artifact **9/9**. With the
+kit staged, `document.fonts` on `/sheet/7/` loads `p22-fllw-eaglefeather`,
+`p22-flw-exhibition`, `din-2014` and Source Serif 4; the specimen's own readout
+says ADOBE / ADOBE / ADOBE / STAND-IN (the prose, by design) / SYSTEM (the
+code). Font bytes on `/sheet/7/`: **185 KB** in 10 responses — 135 KB from the
+kit (50 KB of which is `nzw4jnc.css` itself, declaring all 22 kit families for
+the three the set uses: trimming the web project is the cheapest win left) and
+54 KB of Source Serif 4 from Google; the flat sheet 7 costs 174 KB. Two fixes
+the QA earned: sheet 11's 90-character recipe chip ran 12px off the flat cover
+and the megacanvas once the prose stepped up, so note chips now
+`overflow-wrap: anywhere` instead of `nowrap`; and the rail widened from the
+first cut's 220px to 240px, which clears `1i` and `S7·3D`. Known and accepted:
+Eaglefeather's terminal S reads as a slash at rail size ("not huge-ist fan of
+measured city with the s" — the title kept it anyway); sheet 14i has never had
+a title block, so it has no chop and no revisions table; REV B on sheets whose
+frozen sub carried no date shows an em-dash in the DATE column. Left undone:
+the kit still declares every candidate family — the user trims it to
+Eaglefeather, Exhibition and DIN 2014, and the specimen's ADOBE FONTS table
+then wants its `kit` flags re-read; the plates' own lettering is untouched by
+decision.
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a

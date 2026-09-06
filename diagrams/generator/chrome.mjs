@@ -68,14 +68,38 @@ export const CSS = `
 }
 
 * { box-sizing: border-box; margin: 0; }
+/* ---- THE TYPE ROLES ----
+   Decided 2026-09-05 on the type specimen (app/src/specimen.ts, pairing
+   5 · THE ATLAS SET). Each stack names the ADOBE FONTS family FIRST — it draws
+   on the site, where generator/stage-site.mjs injects the kit — the Google
+   Fonts stand-in SECOND, and a generic last. The artifact, and any host
+   without the kit, resolves the second name; nothing is ever synthesised.
+   Weight 600 is asked for wherever the plan said Demi: Adobe serves 400/700
+   and CSS resolves a 600 request upward to 700, Google serves a real 600, so
+   ONE number covers both hosts.
+
+   --display  the atlas name: rail head, cover title, and the title block's
+              PROJECT and DRAWN BY values
+   --title    sheet titles, card and prose headings, rail entry titles
+   --data     kickers, tracked caps, numbers, schedules, the title block
+   --prose    running text, figcaptions, general notes, About
+   --code     code identifiers — and every SVG label in the plates, which
+              stay on the system mono: their positions are hand-tuned to its
+              advance, so the plates are NOT part of this change.
+   --serif    kept as an alias of --prose so nothing downstream breaks. */
 :root {
   --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
-  --serif: "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
+  --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
+  --data: "din-2014", "Barlow Semi Condensed", sans-serif;
+  --prose: "Source Serif 4", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --code: var(--mono);
+  --serif: var(--prose);
 }
 body {
   background: var(--ground);
   color: var(--ink);
-  font-family: var(--serif);
+  font-family: var(--prose);
   padding: clamp(12px, 3vw, 40px);
   line-height: 1.5;
 }
@@ -108,30 +132,34 @@ body {
   padding: 4px 2px 10px;
   margin-bottom: 18px;
 }
+/* The ledger. 11px of the data face carries the same cap-height as the 10.5px
+   mono it replaces (specimen GLYPH SIZE readout, within 1%), so the sizes here
+   step up by half a pixel rather than by eye. */
 .lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
-  font-family: var(--mono);
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
 }
 .sheet-head .proj {
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.14em;
   color: var(--ink-soft);
 }
 .sheet-head .shno {
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.14em;
   font-variant-numeric: tabular-nums;
 }
 .sheet-title {
-  font-family: var(--mono);
-  font-size: clamp(17px, 2.6vw, 23px);
-  letter-spacing: 0.10em;
+  font-family: var(--title);
+  font-size: clamp(18px, 2.7vw, 24px);
+  letter-spacing: 0.12em;
   font-weight: 600;
   text-wrap: balance;
   margin-bottom: 4px;
 }
 .sheet-sub {
-  font-family: var(--mono);
-  font-size: 11.5px;
+  font-family: var(--data);
+  font-size: 12px;
   letter-spacing: 0.08em;
   color: var(--ink-soft);
   margin-bottom: 16px;
@@ -141,8 +169,8 @@ body {
 .figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
 figure { margin: 0; }
 figcaption {
-  font-family: var(--serif);
-  font-size: 14px;
+  font-family: var(--prose);
+  font-size: 14.5px;
   color: var(--ink-soft);
   max-width: 68ch;
   margin: 10px auto 0;
@@ -159,31 +187,34 @@ figcaption {
 }
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
 .notes h3, .keyblock h3 {
-  font-family: var(--mono);
-  font-size: 10.5px;
+  font-family: var(--data);
+  font-size: 11px;
   letter-spacing: 0.18em;
   font-weight: 600;
   color: var(--ink-soft);
   margin-bottom: 8px;
 }
 .notes p {
-  font-size: 15px;
+  font-family: var(--prose);
+  font-size: 15.5px;
   max-width: 62ch;
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
 .notes p code, .gal-body code {
-  font-family: var(--mono);
+  font-family: var(--code);
   font-size: 0.85em;
   background: var(--paper-2);
   border: 1px solid var(--line);
   padding: 0 4px;
   border-radius: 2px;
-  white-space: nowrap;
+  /* A chip breaks only when it would otherwise run off the column: sheet 11's
+     90-character recipe did, once the prose stepped up half a pixel. */
+  overflow-wrap: anywhere;
 }
 .keyblock table { border-collapse: collapse; width: 100%; }
 .keyblock td {
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.03em;
   padding: 5px 8px 5px 0;
   border-bottom: 1px solid var(--line);
@@ -204,7 +235,7 @@ figcaption {
 .titleblock > div {
   padding: 6px 10px 7px;
   border-top: 1px solid var(--ink);
-  font-size: 11px;
+  font-size: 11.5px;
   letter-spacing: 0.06em;
 }
 .titleblock > div:nth-child(-n+2) { border-top: none; }
@@ -212,11 +243,80 @@ figcaption {
 .titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
 .titleblock .fld {
   display: block;
-  font-size: 8.5px;
+  font-family: var(--data);
+  font-size: 9px;
   letter-spacing: 0.16em;
   color: var(--ink-soft);
   margin-bottom: 2px;
 }
+/* The two values that carry the atlas's own name, and the sheet's. */
+.titleblock .dsp {
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+}
+.titleblock .ttl {
+  font-family: var(--title);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+}
+/* The chop: a plain square in the Cherokee red, unrotated — the corner stamp,
+   not a jaunty sticker. It sits at the right edge of the SHEET cell. */
+.titleblock .sh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.titleblock .chop {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+  border: 1.5px solid var(--cherokee);
+  box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
+}
+
+/* ---- REVISIONS ----
+   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
+   splits the SAME frozen string on " · REV " — nothing is retyped — and files
+   the tail here, under the title block, as a drawing's revision block. */
+.revs {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid var(--ink);
+  margin-top: 18px;
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+}
+.revs caption {
+  font-family: var(--data);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 0 0 8px;
+}
+.revs th {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1.5px solid var(--ink);
+  background: var(--paper-2);
+  white-space: nowrap;
+}
+.revs td {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: baseline;
+}
+.revs tr:last-child td { border-bottom: none; }
+.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
+.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
+.revs .t { color: var(--ink-soft); }
+.revs code { font-family: var(--code); font-size: 0.88em; }
 
 /* ---- SVG drawing classes ---- */
 .sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
@@ -283,21 +383,58 @@ export function defs(p) {
 
 export function titleBlock(sheet) {
   return `<div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span>${PROJECT}</div>
-  <div class="span2"><span class="fld">SHEET TITLE</span>${sheet.title}</div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">${PROJECT}</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">${sheet.title}</span></div>
   <div><span class="fld">SCALE</span>${sheet.scale}</div>
   <div><span class="fld">FORM</span>${sheet.form}</div>
   <div><span class="fld">CLIENT</span>${CLIENT}</div>
   <div><span class="fld">DATE / REV</span>${DATE} · ${sheet.rev ?? 'A'}</div>
-  <div><span class="fld">DRAWN BY</span>FABLE (CLAUDE, AI)</div>
-  <div><span class="fld">SHEET</span>${sheet.num} OF ${TOTAL}</div>
+  <div><span class="fld">DRAWN BY</span><span class="dsp">FABLE (CLAUDE, AI)</span></div>
+  <div class="sh"><span><span class="fld">SHEET</span>${sheet.num} OF ${TOTAL}</span><span class="chop" aria-hidden="true"></span></div>
 </div>`;
 }
 
+/**
+ * A sheet's sub line, split into the one-line subject and its REV history.
+ *
+ * The strings themselves are FROZEN — each sheet's `sub` is written once, at
+ * the revision it records, and never edited. This only cuts them on the
+ * ` · REV ` seam they already use, so the wall under the title becomes a
+ * revision block without a single character changing.
+ */
+const REV_SEAM = ' · REV ';
+const REV_HEAD = /^([0-9A-Z]+(?:\s+corrected)?)\s*(\d{4}-\d{2}-\d{2})?:\s*([\s\S]*)$/;
+
+export function splitRevs(sub = '') {
+  const [lead = '', ...tail] = String(sub).split(REV_SEAM);
+  const revs = tail.map((seg) => {
+    const hit = REV_HEAD.exec(seg);
+    return hit
+      ? { rev: hit[1], date: hit[2] ?? '', desc: hit[3] }
+      : { rev: '', date: '', desc: seg };
+  });
+  return { lead, revs };
+}
+
+export function revBlock(revs) {
+  if (revs.length === 0) return '';
+  return `<table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
+  <tbody>${revs
+    .map(
+      (r) =>
+        `<tr><td class="r">${r.rev || '—'}</td><td class="d">${r.date || '—'}</td><td class="t">${r.desc}</td></tr>`,
+    )
+    .join('\n  ')}</tbody>
+</table>`;
+}
+
 export function sheetSection(sheet, { headline = true } = {}) {
+  const { lead, revs } = splitRevs(sheet.sub);
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="Sheet ${sheet.num}: ${sheet.title}">
   <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">SHEET ${sheet.num} / ${TOTAL}</span></div>
-  ${headline ? `<h2 class="sheet-title">${sheet.title}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
+  ${headline ? `<h2 class="sheet-title">${sheet.title}</h2>\n  <p class="sheet-sub">${lead}</p>` : ''}
   <figure>
     <div class="figure-wrap">${sheet.svg}</div>
     <figcaption>${sheet.caption}</figcaption>
@@ -313,6 +450,7 @@ export function sheetSection(sheet, { headline = true } = {}) {
       ${titleBlock(sheet)}
     </div>
   </div>
+  ${headline ? revBlock(revs) : ''}
 </section>`;
 }
 

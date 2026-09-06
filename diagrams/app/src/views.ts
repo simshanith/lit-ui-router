@@ -223,7 +223,7 @@ function rail(manifest: Manifest | undefined): TemplateResult {
         </a>
         <!-- A bench, not a plate: the type specimen rides at the very bottom. -->
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.specimen')} href="${to(href.specimen)}">
-          <span class="n">S0·T</span><span class="t">THE TYPE SPECIMEN — FIVE PAIRINGS</span>
+          <span class="n">S0·T</span><span class="t">THE TYPE SPECIMEN</span>
         </a>
       </div>
     </nav>
@@ -325,6 +325,8 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   return html`
     <div class="crumb">
       <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
+      <!-- The one FACT in the strip, bold, in tabular figures. -->
+      <span class="sh">SHEET ${sheet.num} OF ${manifest.total}</span>
       ${prev
         ? html`<a ${uiSref('atlas.sheet', { num: prev.num })} href="${to(href.sheet(prev.num))}"
             >PREV · ${prev.num}</a
@@ -408,9 +410,10 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
       </div>
       <h2 class="sheet-title">THE TYPE SPECIMEN</h2>
       <p class="sheet-sub">
-        FIVE PAIRINGS ON ONE MOCK SHEET · SITE FACES COME FROM ADOBE FONTS WHEN THE KIT
-        IS STAGED, GOOGLE STAND-INS OTHERWISE · THE READOUTS BELOW SAY WHICH ONE
-        ACTUALLY RENDERED AND HOW ITS GLYPHS MEASURE AGAINST TODAY'S MONO
+        SIX PAIRINGS ON ONE MOCK SHEET — IT OPENS ON THE ONE THE SET SHIPS · SITE FACES
+        COME FROM ADOBE FONTS WHEN THE KIT IS STAGED, GOOGLE STAND-INS OTHERWISE · THE
+        READOUTS BELOW SAY WHICH ONE ACTUALLY RENDERED AND HOW ITS GLYPHS MEASURE
+        AGAINST TODAY'S MONO
       </p>
       <atlas-specimen></atlas-specimen>
     </section>

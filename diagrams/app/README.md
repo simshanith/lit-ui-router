@@ -57,9 +57,11 @@ is invisible to the ascent order, the ← / → walk and the server's narrowed
 `atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE
 mock sheet from the set's own chrome and swaps every role token (`--display`,
 `--title`, `--rail-title`, `--data`, `--prose`, `--hand`, `--code`) on the
-mock's root by inline style, so five candidate pairings — plus six independent
-knobs (sheet title, rail titles, data face, data size, prose, hand) — can be
-judged on real copy in both themes. A pairing is a starting point, not a cage:
+mock's root by inline style, so six candidate pairings — plus seven independent
+knobs (sheet title, rail titles, data face, data size, prose, code, hand) — can
+be judged on real copy in both themes. It opens on `5 · THE ATLAS SET`, the
+pairing the set ships; the other five are the record of what it was chosen
+against. A pairing is a starting point, not a cage:
 picking one resets the knobs it owns and each knob then overrides it, so the
 SHEET TITLE can differ from the rail head's display face, the rail's entry
 titles can be matched to it or left on the data face, and the PROSE knob's
@@ -68,15 +70,22 @@ none of them. It carries no sheet
 number, is not in the manifest at all, and rides at the bottom of the rail as
 `S0·T`. It is the second state to load something on entry: `src/specimen.ts` is
 a `resolve` (`import('./specimen.ts')`), and the element's
-`connectedCallback` injects the Google Fonts `<link>` for the stand-ins — so
-the webfonts are fetched by this state and by NO other page in the app.
+`connectedCallback` injects the Google Fonts `<link>` for the CANDIDATE
+stand-ins (Zilla Slab, Barlow, Architects Daughter, …) — so those are fetched by
+this state and by no other page; the shipped set's three families come from the
+link `index.html` already carries.
 
 On the site, `generator/stage-site.mjs` additionally injects
 `<link rel="stylesheet" href="https://use.typekit.net/$VITE_ADOBE_FONTS_KIT.css">`
-into `dist/specimen/index.html` **and no other page** when
-`VITE_ADOBE_FONTS_KIT` is set (it sits beside the GA id in the gitignored
-`.config/mise/cloudflare.local.env`); unset, the stage logs
-`Adobe Fonts kit: none` and emits nothing. Every stack in `src/specimen.ts`
+into **every staged page, routed and flat** when `VITE_ADOBE_FONTS_KIT` is set
+(it sits beside the GA id in the gitignored `.config/mise/cloudflare.local.env`);
+unset, the stage logs `Adobe Fonts kit: none` and the Google stand-ins draw
+everywhere. Since 2026-09-06 the whole chrome draws on the decided set —
+`atlas.css` declares `--display` / `--title` / `--data` / `--prose` / `--code`
+with the Adobe family first and the Google stand-in second, and `index.html`
+carries the Google link for the three stand-in families — so the specimen is
+no longer the only page that asks for a webfont; it is the only page that asks
+for the *candidate* ones. Every stack in `src/specimen.ts`
 names the Adobe family first and the Google stand-in second, so the same page
 shows Adobe faces on the site and stand-ins in the artifact, and its LOADED
 FACES readout reports which one actually rendered (ADOBE / STAND-IN / SYSTEM)
