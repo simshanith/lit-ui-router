@@ -5,6 +5,9 @@
   "options": {
     "typeAware": true
   },
+  "settings": {
+    "linkElements": ["sp-link"]
+  },
   "categories": {
     "correctness": "off"
   },
@@ -323,29 +326,13 @@
     {
       "files": ["**/design-system-links/src/**/*.ts"],
       "rules": {
-        "lit-ui-router/anchor-is-valid": [
-          "warn",
-          {
-            "linkElements": ["sp-link"]
-          }
-        ],
-        "lit-ui-router/sref-assign-href": [
-          "error",
-          {
-            "linkElements": ["sp-link"]
-          }
-        ]
+        "lit-ui-router/anchor-is-valid": "warn"
       }
     },
     {
       "files": ["**/lint-eslint/src/violations.ts"],
       "rules": {
-        "lit-ui-router/anchor-is-valid": [
-          "warn",
-          {
-            "linkElements": ["sp-link"]
-          }
-        ],
+        "lit-ui-router/anchor-is-valid": "warn",
         "lit-ui-router/directive-position": "warn",
         "lit-ui-router/sref-active-aria-current": "warn",
         "lit-ui-router/sref-assign-href": "warn"
