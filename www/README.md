@@ -1,4 +1,13 @@
-# Deploy Guide
+# www
+
+The sites this repo publishes, one directory per domain:
+
+| Directory                                   | Site                                                                                                              |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`lit-ui-router.dev/`](./lit-ui-router.dev) | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it |
+
+The rest of this file is that site's deploy guide: how a push becomes a
+deployment, and where each piece of the pipeline is configured.
 
 [![workers-builds trigger drift](https://img.shields.io/github/check-runs/simshanith/lit-ui-router/main?nameFilter=workers-builds%20%28triggers%29&label=workers-builds)](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml?query=branch%3Amain)
 [![Website](https://img.shields.io/website?url=https%3A%2F%2Flit-ui-router.dev)](https://lit-ui-router.dev)
@@ -115,7 +124,7 @@ Edit-scoped token.
 
 Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the checked-in
 `.config/mise/config.toml` loads via `[env] _.file` (the same mechanism as the
-[Remote Cache](./REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
+[Remote Cache](../docs/REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
 that one). It is deliberately not symlinked into git worktrees, so run `check:workers-builds` from
 the owning checkout.
 
@@ -222,7 +231,7 @@ and leaves every other variable on the trigger untouched.
 **Unmanaged** (dashboard-only; listed in the diff output as `(unmanaged)`, never diffed or patched):
 
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
-- `TURBO_`-prefixed [Remote Cache](./REMOTE_CACHE.md) variables and secrets
+- `TURBO_`-prefixed [Remote Cache](../docs/REMOTE_CACHE.md) variables and secrets
 
 Drift semantics for a declared key: a wrong or absent live value is drift and is patched; a key
 the dashboard has marked secret is reported and **not** overwritten, since the config holds
