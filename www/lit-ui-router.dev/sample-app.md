@@ -47,4 +47,4 @@ app is the vehicle that axis will grow on.
 - **App implementation** — shared across the vanilla, MobX, and hash builds:
   [`apps/sample-app-shared`](https://github.com/simshanith/lit-ui-router/tree/main/apps/sample-app-shared)
 - **Edge worker** — turns each verdict into HTTP:
-  [`docs/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/docs/worker/index.ts)
+  [`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)

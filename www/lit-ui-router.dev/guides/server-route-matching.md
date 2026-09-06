@@ -564,7 +564,7 @@ this path but nothing matched" from "no mount at all".
 ## The worker: verdicts → HTTP
 
 The whole handler
-([`docs/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/docs/worker/index.ts)):
+([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)):
 
 ```ts
 import { mounts } from 'sample-app-routes';
