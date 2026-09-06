@@ -8,7 +8,14 @@
  * role tokens the switcher swaps.
  *
  * THE ROLE TOKENS, and the user's constraints on them:
- *   --display  titles, rail head, title-block PROJECT
+ *   --display  the rail head (THE ALTITUDE ATLAS) — the atlas's own voice
+ *   --title    the SHEET title (THE MEASURED CITY) and the title block's
+ *              PROJECT / SHEET TITLE values. Split off --display because
+ *              Eaglefeather reads well on the atlas name and less well on a
+ *              sheet title: "not huge-ist fan of measured city with the s".
+ *   --rail-title  the rail entries' TITLES (never their numbers): the data
+ *              face by default, the sheet-title face when the user wants the
+ *              sidebar nav to match ("maybe if the sidebar nav matched")
  *   --hand     the DRAWN BY value and ONE callout second line — NOWHERE ELSE.
  *              REV descriptions, figcaptions and every other callout are the
  *              DATA face: "i can tolerate arch. daughter sparingly but that's
@@ -16,6 +23,9 @@
  *   --data     kickers, rail entries, crumb, schedule, key rows, title-block
  *              values, REV table, the stamp — tabular figures throughout
  *   --code     code identifiers only (schedule ids, <code> in the notes)
+ *   --prose    the General Notes paragraph and the figcaption body — the only
+ *              running text on a sheet, and the one role that is a system face
+ *              (the Charter stack) by default
  * Sizes hang off --data-sz so the size stepper moves the whole ledger at once.
  * The COUNTED stamp is SQUARE and UNROTATED on purpose ("for now rather have
  * order"), and so is the chop.
@@ -72,6 +82,9 @@ export const SPECIMEN_CSS = `
 .mock .m-rail-sec { font-family: var(--data); font-size: calc(var(--data-sz) - 3.5px); letter-spacing: 0.2em; color: var(--ink-faint); padding: 12px 14px 4px; text-transform: uppercase; }
 .mock .m-rail a { display: grid; grid-template-columns: 34px 1fr; gap: 6px; align-items: baseline; text-decoration: none; color: var(--ink-soft); padding: 4px 14px 4px 12px; border-left: 3px solid transparent; font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.04em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 .mock .m-rail a .n { color: var(--accent); font-weight: 600; }
+/* the RAIL TITLES knob: the data face by default, the sheet-title face when the
+   user wants the sidebar nav to match the plate's title */
+.mock .m-rail a .t { font-family: var(--rail-title); letter-spacing: var(--rail-title-ls); }
 .mock .m-rail a.is-active { color: var(--ink); background: var(--paper); border-left-color: var(--ink); font-weight: 600; margin-right: -1.5px; border-right: 1.5px solid var(--paper); }
 .mock .m-rail .foot { margin-top: auto; padding: 10px 14px 12px; border-top: 1px solid var(--line); display: flex; align-items: center; gap: 8px; font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.12em; color: var(--ink-faint); text-transform: uppercase; font-variant-numeric: tabular-nums; }
 /* the chop: a SQUARE, unrotated */
@@ -86,7 +99,8 @@ export const SPECIMEN_CSS = `
 .mock .m-head { display: flex; justify-content: space-between; align-items: baseline; gap: 16px; flex-wrap: wrap; padding: 10px 0 8px; }
 .mock .m-head .proj { font-family: var(--data); font-size: calc(var(--data-sz) - 1px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; }
 .mock .m-head .shno { font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.14em; font-variant-numeric: tabular-nums; }
-.mock .m-title { font-family: var(--display); font-weight: var(--disp-wt); font-size: var(--disp-sz); letter-spacing: var(--disp-ls); text-transform: uppercase; line-height: 1.1; margin: 2px 0 6px; }
+/* THE SHEET TITLE is its own role: the rail head keeps --display, this does not */
+.mock .m-title { font-family: var(--title); font-weight: var(--title-wt); font-size: var(--title-sz); letter-spacing: var(--title-ls); text-transform: uppercase; line-height: 1.1; margin: 2px 0 6px; }
 .mock .m-sub { font-family: var(--data); font-size: calc(var(--data-sz) + 0.5px); letter-spacing: 0.05em; color: var(--ink-soft); line-height: 1.5; max-width: 96ch; margin-bottom: 14px; }
 
 .mock .m-plate { display: grid; grid-template-columns: minmax(0, 3fr) minmax(250px, 2fr); gap: 18px; align-items: start; }
@@ -107,7 +121,7 @@ export const SPECIMEN_CSS = `
 .mock .m-fig .fp2 { fill: var(--paper-2); }
 .mock .m-fig .fi { fill: var(--ink); }
 .mock .m-fig .hx { stroke: var(--red); stroke-width: 1; opacity: 0.55; }
-.mock .m-figcap { font-family: var(--data); font-size: calc(var(--data-sz) - 1px); letter-spacing: 0.04em; color: var(--ink-faint); margin-top: 5px; }
+.mock .m-figcap { font-family: var(--prose); font-size: calc(var(--data-sz) + 0.5px); letter-spacing: 0.04em; color: var(--ink-faint); margin-top: 5px; }
 
 /* schedule — tabular figures */
 .mock .m-sched { width: 100%; border-collapse: collapse; font-family: var(--data); font-size: var(--data-sz); letter-spacing: 0.02em; font-variant-numeric: tabular-nums; }
@@ -127,7 +141,7 @@ export const SPECIMEN_CSS = `
 .mock .m-tb > div:nth-child(2n) { border-left: 1px solid var(--ink); }
 .mock .m-tb .span2 { grid-column: 1 / -1; border-left: 0 !important; }
 .mock .m-tb .fld { display: block; font-family: var(--data); font-size: calc(var(--data-sz) - 3.5px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 1px; }
-.mock .m-tb .ttl { font-family: var(--display); font-weight: var(--disp-wt); letter-spacing: calc(var(--disp-ls) * 0.8); text-transform: uppercase; font-size: 13px; }
+.mock .m-tb .ttl { font-family: var(--title); font-weight: var(--title-wt); letter-spacing: calc(var(--title-ls) * 0.8); text-transform: uppercase; font-size: 13px; }
 .mock .m-tb .sig { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 /* THE ONE HAND VALUE in the ledger */
 .mock .m-tb .sig .hand { font-family: var(--hand); font-size: calc(var(--data-sz) + 1px); color: var(--pencil); letter-spacing: 0; }
@@ -143,7 +157,7 @@ export const SPECIMEN_CSS = `
 /* the stamp: SQUARE and UNROTATED */
 .mock .m-stamp { display: inline-block; margin-top: 12px; padding: 4px 9px; border: 1.5px solid var(--cherokee); color: var(--cherokee); font-family: var(--data); font-weight: 600; font-size: calc(var(--data-sz) - 1.5px); letter-spacing: 0.2em; text-transform: uppercase; font-variant-numeric: tabular-nums; }
 
-.mock .m-notes { margin-top: 12px; max-width: 66ch; font-family: var(--serif); font-size: 14px; }
+.mock .m-notes { margin-top: 12px; max-width: 66ch; font-family: var(--prose); font-size: 14px; }
 .mock .m-notes h4 { font-family: var(--data); font-size: calc(var(--data-sz) - 2px); letter-spacing: 0.18em; color: var(--ink-soft); text-transform: uppercase; margin-bottom: 4px; font-weight: 600; }
 .mock .m-notes code { font-family: var(--code); font-size: 0.85em; background: var(--paper-2); border: 1px solid var(--line); padding: 0 4px; }
 `;
@@ -241,7 +255,7 @@ export const SPECIMEN_MOCK = `
         </table>
         <div class="m-tb" aria-label="title block">
           <div class="span2"><span class="fld">Project</span><span class="ttl">The Altitude Atlas</span></div>
-          <div class="span2"><span class="fld">Sheet title</span>THE MEASURED CITY</div>
+          <div class="span2"><span class="fld">Sheet title</span><span class="ttl">THE MEASURED CITY</span></div>
           <div><span class="fld">Scale</span>WHOLE WORKSPACE</div>
           <div><span class="fld">Form</span>MEASURED CITY</div>
           <div><span class="fld">Basis</span>origin/main @ b2338d0</div>

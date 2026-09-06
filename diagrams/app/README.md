@@ -55,10 +55,16 @@ is invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
 
 `atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE
-mock sheet from the set's own chrome and swaps the four role tokens
-(`--display`, `--hand`, `--data`, `--code`) on the mock's root by inline style,
-so five candidate pairings — plus a data width, a data size and a hand knob of
-its own — can be judged on real copy in both themes. It carries no sheet
+mock sheet from the set's own chrome and swaps every role token (`--display`,
+`--title`, `--rail-title`, `--data`, `--prose`, `--hand`, `--code`) on the
+mock's root by inline style, so five candidate pairings — plus six independent
+knobs (sheet title, rail titles, data face, data size, prose, hand) — can be
+judged on real copy in both themes. A pairing is a starting point, not a cage:
+picking one resets the knobs it owns and each knob then overrides it, so the
+SHEET TITLE can differ from the rail head's display face, the rail's entry
+titles can be matched to it or left on the data face, and the PROSE knob's
+three serifs load their Google family only when chosen — the default page pulls
+none of them. It carries no sheet
 number, is not in the manifest at all, and rides at the bottom of the rail as
 `S0·T`. It is the second state to load something on entry: `src/specimen.ts` is
 a `resolve` (`import('./specimen.ts')`), and the element's

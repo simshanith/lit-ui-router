@@ -833,12 +833,47 @@ which is the point). Two tokens added to `chrome.mjs` for it — `--pencil`
 (#7B8078 / #7E97B8) and `--cherokee` (#9E3A2B / #E0705A) — used ONLY by the
 specimen; no existing chrome or plate was restyled.
 
+SIX KNOBS, NOT FIVE PRESETS (user feedback on the live bench, same day):
+"really liking din"; Eaglefeather on THE ALTITUDE ATLAS "looks great" but "not
+huge-ist fan of measured city with the s" — "maybe if the sidebar nav matched";
+"liked josephine [Josefin] quite a bit actually but for the title"; and "i want
+to see univers and myriad still don't think i've seen the option yet". So a
+pairing became a STARTING POINT rather than a cage: picking one resets the knobs
+it owns, and each knob then overrides it. (1) `--title` split off `--display`:
+the rail head keeps the pairing's display face, the SHEET title and the title
+block's PROJECT / SHEET TITLE values get their own knob — SAME AS DISPLAY /
+JOSEFIN SANS 600 / DIN 2014 700 / EAGLEFEATHER SC / FLW EXHIBITION, sized 23–24px
+so the cap-height stays near the mono's 16.8 ink at 23px. (2) `--rail-title`: the
+rail's entry TITLES (never its numbers, which stay tabular data) take the data
+face by default or match the sheet title on request. (3) the DATA FACE toggle
+became a seven-way chooser — DIN 2014 / BARLOW / UNIVERS NEXT PRO / UNIVERS NEXT
+COND. / MYRIAD PRO / MYRIAD SEMI-COND. / SYSTEM MONO — because Myriad was wired
+to nothing and Univers only appeared under Signage. (4) `--prose`: the General
+Notes paragraph and the figcaption body, CHARTER STACK (default, 0 bytes) /
+SOURCE SERIF 4 / MINION PRO / CHARIS SIL, whose Google families are appended as a
+SECOND `<link>` only when chosen, so the default payload does not grow. All four
+get a LOADED FACES row, and the readout is now seven roles.
+
+TRAP, and a real bug the knobs exposed: a webfont is only DOWNLOADED when
+something uses it, so the first LOADED FACES pass after a knob click reads
+SYSTEM for a face the browser has not fetched yet — and stayed wrong for ever.
+`#report()` now chains `updateComplete` (the mock is painted in the new stacks,
+which starts the fetch) then `document.fonts.ready` (it has settled) for one
+deferred second pass. Also: `title` is taken by `HTMLElement`, so the reactive
+property is `sheetTitle`; and `getComputedStyle` drops the quotes on
+single-word families, which a QA regex has to allow for.
+
 ADOBE KIT NAMES ARE NOT THE MARKETING NAMES. Read off the completed kit
-(`use.typekit.net/nzw4jnc.css`, 58 faces): `p22-fllw-eaglefeather` — THREE l's,
-plus `-sc` and `-inf`; `din-2014` + `din-2014-narrow`; `tekton-pro` +
-`-condensed` / `-extended`; `univers-next-pro` + `-condensed` / `-compressed` /
-`-extended`; `myriad-pro` + `-semi-condensed` / `-cond`. Every Univers, Myriad
-and Tekton family carries `-pro`. The kit serves 400 and 700 (one 500), so
+(`use.typekit.net/nzw4jnc.css`, 17 families): `p22-fllw-eaglefeather` — THREE
+l's, plus `-sc` and `-inf` — but `p22-flw-exhibition` with TWO, the same kit
+spelling the Wright abbreviation both ways; `din-2014` + `din-2014-narrow`;
+`tekton-pro` + `-condensed` / `-extended`; `univers-next-pro` + `-condensed` /
+`-compressed` / `-extended`; `myriad-pro` + `-semi-condensed` / `-cond` /
+`-light-semiext`. Every Univers, Myriad and Tekton family carries `-pro`.
+Measured latin-subset woff2 (Regular/Bold KB) now rides the table as its own
+column: din-2014 15/16, p22-fllw-eaglefeather 32/29, tekton-pro 46/45,
+univers-next-pro 27/28, myriad-pro 27/27. `minion-pro` is NOT in the kit and
+falls to Source Serif 4. The kit serves 400 and 700 (one 500), so
 where the plan said Demi/600 the CSS asks for **600 and gets 700 from Adobe,
 600 from Google** — CSS font matching resolves a 600 request upward when only
 400/700 exist, so ONE weight number serves both hosts with nothing synthesised.
@@ -849,13 +884,18 @@ nothing — the stack falls to the stand-in and the readout says STAND-IN.
 Verified: build 23 sheets / 24 fragments, tsc clean, prerender **27 pages** +
 404 · 9 redirects, stage 27 routed + 26 flat with the kit link on
 `/specimen/index.html` and nowhere else (unset → `Adobe Fonts kit: none`, zero
-pages carry it), artifact 2,677,088 bytes / 24 fragments. Playwright against
-the Pages-mimicking server: **33/33** — cold `/specimen/` with 0 page errors,
-all five pairings change the mock title's computed `font-family`, all three
-hand options change only the hand slot, both readouts render, the rail entry is
-active, the rail click reaches `/specimen` with no document reload, `/sheet/7/`
-and `/` fetch no webfont at all, and both themes resolve `--pencil` /
-`--cherokee` with no errors. With the kit staged, EVERY Adobe-backed role
+pages carry it), artifact 2,685,109 bytes / 24 fragments. Playwright against
+the Pages-mimicking server: **65/65** — cold `/specimen/` with 0 page errors,
+all five pairings change the mock title's computed `font-family`, all five
+sheet-title options drive the title AND the title block while leaving the rail
+head alone, MATCH SHEET TITLE moves the rail's entry titles but not its numbers,
+all seven data faces drive the schedule and a pairing click resets the chooser
+to its own default, all four prose faces drive the notes and the figcaption with
+the extra stylesheet appended only on demand, all three hand options change only
+the hand slot, both readouts render, the rail entry is active, the rail click
+reaches `/specimen` with no document reload, `/sheet/7/` and `/` fetch no
+webfont at all, and both themes resolve `--pencil` / `--cherokee` with no
+errors. With the kit staged, EVERY Adobe-backed role
 reports ADOBE in Prairie, Drafting, Signage and The Kit — the two expected
 non-ADOBE cells are `--code` (the system monospace, by design) and Drafting's
 `--display` (Zilla Slab, an open face with no Adobe counterpart). Measured at
