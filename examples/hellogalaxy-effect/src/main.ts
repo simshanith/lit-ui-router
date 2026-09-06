@@ -647,9 +647,7 @@ export class FiberLogComponent extends LitElement {
       list-style: none;
       margin: 0;
       padding: 0;
-      /* A fixed height, not max-height: an arriving log line must not resize
-         the document under the visitor's scroll position. */
-      height: 190px;
+      max-height: 190px;
       overflow-y: auto;
       font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
       font-size: 0.75rem;
@@ -666,9 +664,15 @@ export class FiberLogComponent extends LitElement {
     readonly string[]
   >(this, (value) => value, { ref: (plugin) => plugin.log });
 
+  // <ui-view> rebuilds its routed element on every update (#723), so a
+  // synchronous layout read here can land mid-transition, measure the empty
+  // rebuilt view and let the browser clamp the page scroll. Defer to a frame.
   updated() {
     const list = this.renderRoot.querySelector('ol');
-    if (list) list.scrollTop = list.scrollHeight;
+    if (list)
+      requestAnimationFrame(() => {
+        list.scrollTop = list.scrollHeight;
+      });
   }
 
   render() {
@@ -713,21 +717,6 @@ export class AppRoot extends LitElement {
       background: #7aa2ff;
       border-color: #7aa2ff;
       font-weight: 600;
-    }
-    /* Height reservation for the routed view. <ui-view> builds a fresh routed
-       element on every transition, so the old one leaves the document before
-       the new one paints; without a floor the page briefly has nothing in it,
-       the browser clamps the scroll offset, and the visitor is thrown to the
-       top. The floor is the shortest routed view at each width, so no route
-       gains dead space. */
-    ui-view {
-      display: block;
-      min-height: 32rem;
-    }
-    @media (max-width: 640px) {
-      ui-view {
-        min-height: 40rem;
-      }
     }
   `;
 
