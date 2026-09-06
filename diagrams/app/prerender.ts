@@ -30,6 +30,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { createServerRouter } from 'ui-router-server';
 import type { Verdict } from 'ui-router-server';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
+import { allSheets, isAppendix } from './src/manifest.ts';
 import { BASE, MOUNT, href, mountsFor } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 
@@ -46,8 +47,12 @@ const ROOT_RE = /(<div id="root">)(\s*)(<\/div>)/;
 if (!ROOT_RE.test(shellHtml))
   throw new Error('prerender: dist/index.html has no empty <div id="root">');
 
+// BOTH lists narrow the `/sheet/{num:...}` alternation: the appendix is out of
+// the ascent, but /sheet/A1 is as real a url as /sheet/13.
+const PLATES = allSheets(manifest);
+
 const router = createServerRouter({
-  mounts: mountsFor(manifest.sheets.map((sheet) => sheet.num)),
+  mounts: mountsFor(PLATES.map((sheet) => sheet.num)),
 });
 
 // --- the server templates --------------------------------------------------
@@ -80,10 +85,21 @@ const railTemplate = (active: string): TemplateResult => html`
       <a class="${active === 'city' ? 'is-active' : ''}" href="${href.city}">
         <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
       </a>
-      <a class="${active === 'specimen' ? 'is-active' : ''}" href="${href.specimen}">
-        <span class="n">S0·T</span><span class="t">THE TYPE SPECIMEN — FIVE PAIRINGS</span>
-      </a>
     </div>
+    ${manifest.appendix.length > 0
+      ? html`
+          <p class="rail-sec">APPENDIX — ABOUT THE ATLAS</p>
+          <div class="rail-links">
+            ${manifest.appendix.map(
+              (row) => html`
+                <a class="${active === row.num ? 'is-active' : ''}" href="${href.sheet(row.num)}">
+                  <span class="n">${row.num}</span><span class="t">${row.title}</span>
+                </a>
+              `,
+            )}
+          </div>
+        `
+      : nothing}
   </nav>
 `;
 
@@ -130,6 +146,24 @@ const galleryContent = (): TemplateResult => html`
       `,
     )}
   </div>
+  ${manifest.appendix.length > 0
+    ? html`
+        <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
+        <div class="cards">
+          ${manifest.appendix.map(
+            (row) => html`
+              <a class="card" href="${href.sheet(row.num)}">
+                <span class="n">APPENDIX ${row.num} · REV ${row.rev}</span>
+                <h3>${row.title}</h3>
+                <span class="alt">${row.scale}</span>
+                <p>${row.caption}</p>
+                <p class="verdict">${row.verdict}</p>
+              </a>
+            `,
+          )}
+        </div>
+      `
+    : nothing}
 `;
 
 // The plate itself, server-rendered: the generated fragment is read off disk
@@ -137,9 +171,11 @@ const galleryContent = (): TemplateResult => html`
 // them (see src/fragment.ts), which is exactly the static-page behaviour.
 const sheetContent = (row: SheetRow): TemplateResult => {
   const fragment = readFileSync(join(PUBLIC, row.file), 'utf8');
-  const index = manifest.sheets.findIndex((other) => other.id === row.id);
-  const prev = manifest.sheets[index - 1];
-  const next = manifest.sheets[index + 1];
+  // The walk stays inside the row's own list: A1 is not sheet 14's "next".
+  const list = isAppendix(row.num) ? manifest.appendix : manifest.sheets;
+  const index = list.findIndex((other) => other.id === row.id);
+  const prev = list[index - 1];
+  const next = list[index + 1];
   return html`
     <div class="crumb">
       <a href="${href.gallery}">← INDEX</a>
@@ -319,10 +355,10 @@ const jobs: Job[] = [
   // to its cased page. None gets a page; each gets a _redirects line.
   verdictOnly(`${BASE}office`),
   ...(MOUNT === BASE ? [] : [verdictOnly(MOUNT)]),
-  ...manifest.sheets
+  ...PLATES
     .filter((row) => row.id !== row.num)
     .map((row) => verdictOnly(href.sheet(row.id))),
-  ...manifest.sheets.map((row) => ({
+  ...PLATES.map((row) => ({
     path: href.sheet(row.num),
     title: sheetTitle(row),
     active: row.num,

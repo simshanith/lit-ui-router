@@ -33,6 +33,12 @@ notes on each sheet argue where that form fits and where it lies.
 | [14](sheet-14-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
 | [14i](sheet-14i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
+### Appendix — plates about the atlas, not the codebase
+
+| Plate | Subject | Form |
+| --- | --- | --- |
+| [A1](sheet-A1-the-sprite-study.html) | THE ATLAS ITSELF | SPRITE STUDIES |
+
 - `megacanvas.html` — the 19 SVG plates on one page, ascent order.
 - `gallery.html` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
 

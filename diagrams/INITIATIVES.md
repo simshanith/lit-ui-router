@@ -1124,6 +1124,135 @@ Verify: `node generator/build.mjs .`, serve `dist/`, and
 `getComputedStyle(document.querySelector('svg text.lbls')).fontFamily` leads
 with `din-2014` on the site and `Barlow Semi Condensed` in the artifact.
 
+THE NAVIGATION PLUGIN GETS ITS OWN COLUMN, 2026-09-06: "the bowing logic works
+but looks a bit off / out of place — cleaner would be to move navigation plugin
+to its own column; it doesn't depend on lit anything, legitimately sits closer
+to core." Sheet 2B rev B had put all four companions in one column at x=560,
+which left `lit-ui-router-mobx → lit-ui-router` running vertically straight
+through `ui-router-navigation-location-plugin` standing between them; the fix
+was a 120-unit `unbundled-bezier` bow — one curve on a plate of otherwise
+straight ties, arcing across the plugin's own name label. **Rev C deletes the
+bow and recomposes the bench in four columns**: the two externals stacked at
+x=120 (lit at y=−350 over the wall at y=0), the navigation plugin ALONE at
+x=400 on the wall's own baseline, the lit companions at x=680 (lit-ui-router
+−300, mobx −160, server 200), and the eslint bay at x=900. The middle column is
+the argument, not a spacer — the plugin's `package.json` declares
+`@uirouter/core ^6.0.8` and nothing else, so it reaches across one column gap
+along a straight horizontal run while everything else reaches across two, and
+it is banded `A COLUMN OF ITS OWN — CORE ONLY, NO LIT`. With it out of the lit
+column nothing stands between mobx and the flagship, so that tie is a plain
+vertical. The bow is not kept for anything: `coupling-bench.mjs` now THROWS at
+build time if any same-column tie is laid through a third building, so the next
+such fault is a build error rather than a curve drawn around it (verified by
+temporarily moving the plugin back to x=680 — the build fails).
+
+Two composition repairs rode along. Node labels gained a paper `text-background`
+knockout, the way a plan label breaks the line it crosses — rev B's bow struck
+through `navigation-location-plugin`, and the new vertical tie would otherwise
+have struck through `lit-ui-router`. And the two longest bands (`THE SOCKET
+WALL`, `A BAY OF ITS OWN`) moved to a new `halign: 'center'`, lettered squarely
+over their node instead of off one shoulder: side-lettered they threw the
+drawing's bounding box 390 units wider than the buildings, and cytoscape's
+`fit` prices the whole box. Bench bbox 1367×635 → 980×635, ratio 2.15 → 1.54
+against a 976×620 stage, so the fitted zoom goes **0.655 → 0.851** and the
+whole plate draws 30% larger in the same panel.
+
+Verified: build clean; a cytoscape-geometry probe of the rendered bench reports
+**0 tie-through-node hits and 0 edge-label clashes** (the only two box overlaps
+are each band's 3px shoulder against its own node's box — text-free in both
+cases). The set-wide `text.lbl*` bbox probe re-run over all flat sheets against
+the last recorded run: **zero sheets gained overlaps**; sheet 2B itself carries
+no SVG labels, so that probe is structurally inert for it and the cytoscape
+probe is the evidence. Light and dark both read.
+
+Verify: `node generator/build.mjs .`, open
+`sheet-2B-the-coupling-bench.html`, and in the console
+`document.getElementById('cb-cy')._cyreg.cy.edges().every((e) =>
+e.style('curve-style') === 'bezier')` → `true`, with
+`…cy.zoom()` ≈ 0.85.
+
+THE SPRITE STUDY, ROLLED IN AS AN APPENDIX, 2026-09-06: "the sprite study
+artifact remains relevant and should be included as a meta appendix in some
+form — roll it in." The standalone sprite-studies exploration (the HZD × SC2K ×
+Factorio research pinned in the sprite note above, and the thing sheet 7B and
+sheet 13 were drawn from) is now **APPENDIX A1 — THE SPRITE STUDY**, a real
+plate in the set: `generator/sheetA1.mjs`, a flat page
+`sheet-A1-the-sprite-study.html`, an app fragment `app/public/sheets/a1.html`
+and the route `/sheet/A1`.
+
+**Filed as an APPENDIX, not as sheet 15.** The numbered sheets are ordered by
+altitude and every one cites a census plate; this plate's subject is the atlas's
+own drawing convention and it reads no plate at all (`plates: []` in the
+manifest — the card says NO CENSUS PLATE — META). So it gets a **letter-first
+id**, which is the marker, and its own manifest array. `manifest.appendix` is
+the third list beside `sheets` and `extras`, for exactly the reason `extras`
+exists: everything that walks the set in ascent order reads `sheets`. The
+appendix rides after the city in the rail under `APPENDIX — ABOUT THE ATLAS`,
+after the extras on the index under its own `.set-sec` heading, and after the
+whole set in the flat gallery and its cover table (a spanning `.idx-sec` row).
+
+**Numeric-id assumptions relaxed, four of them, all minimal.** (1)
+`emit-app.mjs::bySheet` parsed every id with `parseInt` and compared the NaNs;
+it now sorts a NaN id *after* every numbered one, so a cross-reference list ends
+with the appendix instead of landing wherever NaN happened to sort. (2) the
+cross-reference scanner's `REF_RE`/`TOKEN_RE` matched `sheets? \d+[A-Za-z]?`
+only; the token now allows a LEADING letter and the phrase allows the word
+"appendix", so sheet 13's new *see also — appendix A1* paragraph links, and A1's
+prose links back to 7, 7B, 8, 10 and 13. `expand()` still filters every token
+against the known ids, so a stray "sheet 99" links nothing. (3) `findSheet()`
+searches both arrays (new `allSheets()`), and `prerender.ts` feeds BOTH to
+`mountsFor()`, so `/sheet/A1` narrows into the server's alternation and
+`/sheet/a1` 302s to the cased id like `/sheet/2a`. (4) the ← / → walk (both
+`views.ts` and `prerender.ts`) now walks the row's OWN list, so A1 is never
+sheet 14's "next"; `sheetTitle()` says *Appendix A1*, and the crumb and the
+title block say APPENDIX rather than SHEET A1 OF 14 — `chrome.mjs` reads one new
+optional flag, `sheet.appendix`.
+
+**What the plate draws.** One demo member — 16 files · 1,900 sloc, massed under
+the house rules (side = 1.6·√1900 ≈ 70, height 3 px/file = 48, the atlas's own
+0.866/0.5 projection), so the fifteen blocks could each stand in sheet 7's city
+— drawn five times along the wreck-to-splendor gauge under each of the three
+concepts: THE RECLAIMED MACHINE (vines, breached parapet, moss, live trace,
+survey flag), THE LEDGER ROOF (a 4×4 roof grid, one tile per authored file, the
+SC2K abandonment wash, boarded door, crane, AC cubes, water tower, antenna) and
+THE WORKING PLANT (rust hatch, cracks, steam plume, module lamps, connected vs
+dripping pipes, the alert triangle). Beside each ladder its DATA → VISUAL
+CHANNEL table and a cost note; at the foot the ranked recommendation and the
+DESIGN GUARD on rust red vs gate red. The verdict is recorded as *already
+shipped*: study 3 is sheet 7B, and study 1's gauge is sheet 13.
+
+**A drafting trap worth writing down.** Every house drawing class (`.sk`,
+`.skf`, `.sks`, `.skr` …) declares `fill: none`, and **a CSS declaration always
+beats a presentation attribute** — so `class="sk" fill="url(#…)"` draws NOTHING.
+The first cut of this plate lost every wall fill, every roof tile and the whole
+rust and abandonment wash to that, silently. The house idiom (sheet 13 stacks it
+this way) is two elements: the fill polygon with no class, then the stroke
+polygon with `class="sk fnone"`. `sheetA1.mjs`'s `poly()` helper now emits that
+pair, and the same trap is latent in `helpers.mjs::isoBlock`, which writes
+`class="${edge}" fill="var(--paper-2)"` — worth a look next time a sheet's left
+faces read as bare paper.
+
+**Left out on purpose.** The artifact's reference strip — six fair-use game
+screenshots (HZD, Ta Prohm, SC2K, SCURK, two Factorio FFF posts) as base64
+JPEGs, about 380 KB of the 393 KB file — is NOT re-drawn. The atlas is
+hand-authored SVG on the house palette; a raster would be the only image in the
+set and the only thing on a plate a strict CSP could drop. The teaching survives
+as the citation paragraph in the notes, with the four FFF posts as real links.
+The plate's own SVG is ~55 KB and its only stochastic marks, study 1's vines,
+are seeded (a fixed LCG per state), so it is byte-identical on every build.
+
+Verified: build 23 sheets + 1 appendix / 25 fragments, prerender 28 pages + 404
+(was 27) and 10 redirects (was 9 — `/sheet/a1` → `/sheet/A1`), `tsc` clean for
+everything this change touches. Playwright, light and dark: the flat plate, the
+routed `/sheet/A1/`, the rail's APPENDIX section, the index's appendix card and
+the flat gallery's appendix heading all render; **zero SVG text-bbox overlaps**
+on the new plate and no page scrolls sideways (1440/1440 on all six shots).
+
+Verify: `node generator/build.mjs .` then `npm --prefix app run build`; the
+manifest carries `appendix: [{ id: 'a1', num: 'A1', plates: [], refs: ['7',
+'7B', '8', '10', '13'] }]`, sheet 13's row carries `'A1'` in its refs, and
+`app/dist/sheet/A1/index.html` exists.
+
 ## Why rework
 
 Ten census scripts, five distinct bases, and every number on every sheet is a

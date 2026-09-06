@@ -1,0 +1,874 @@
+<meta charset="utf-8">
+<title>THE SPRITE STUDY — Appendix A1</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict has already shipped: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+  /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
+     read today only by the type specimen (app/src/specimen.ts). */
+  --pencil: #7B8078;
+  --cherokee: #9E3A2B;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0D2344;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #5F7899;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    --red: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+    --pencil: #7E97B8;
+    --cherokee: #E0705A;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0D2344;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #5F7899;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+  --pencil: #7E97B8;
+  --cherokee: #E0705A;
+}
+
+* { box-sizing: border-box; margin: 0; }
+/* ---- THE TYPE ROLES ----
+   Decided 2026-09-05 on the type specimen (app/src/specimen.ts, pairing
+   5 · THE ATLAS SET). Each stack names the ADOBE FONTS family FIRST — it draws
+   on the site, where generator/stage-site.mjs injects the kit — the Google
+   Fonts stand-in SECOND, and a generic last. The artifact, and any host
+   without the kit, resolves the second name; nothing is ever synthesised.
+   Weight 600 is asked for wherever the plan said Demi: Adobe serves 400/700
+   and CSS resolves a 600 request upward to 700, Google serves a real 600, so
+   ONE number covers both hosts.
+
+   --display  the atlas name: rail head, cover title, and the title block's
+              PROJECT value
+   --title    sheet titles, card and prose headings, rail entry titles
+   --data     kickers, tracked caps, numbers, schedules, the title block
+   --prose    running text, figcaptions, general notes, About. Source Serif
+              is the one role whose two names are the SAME design under two
+              releases: source-serif-pro from the kit on the site, Source
+              Serif 4 from Google in the artifact.
+   --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
+              source-code-pro from the kit on the site, the same Slimbach
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
+   --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
+              DRAWN BY value and at most one callout line per sheet — nowhere
+              else. No Google stand-in by decision: off the kit it falls to
+              --data, so the artifact loads nothing new.
+   --serif    kept as an alias of --prose so nothing downstream breaks. */
+:root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
+  --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
+  --data: "din-2014", "Barlow Semi Condensed", sans-serif;
+  --prose: "source-serif-pro", "Source Serif 4", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --code: "source-code-pro", "Source Code Pro", var(--mono);
+  --hand: "p22-fllw-eaglefeather-inf", var(--data);
+  --serif: var(--prose);
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--prose);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+}
+
+.sheet {
+  position: relative;
+  max-width: 1180px;
+  margin: 0 auto 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 26px;
+  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+/* The ledger. 11px of the data face carries the same cap-height as the 10.5px
+   mono it replaces (specimen GLYPH SIZE readout, within 1%), so the sizes here
+   step up by half a pixel rather than by eye. */
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-head .proj {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--title);
+  font-size: clamp(18px, 2.7vw, 24px);
+  letter-spacing: 0.12em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+.sheet-sub {
+  font-family: var(--data);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
+.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--prose);
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  max-width: 68ch;
+  margin: 10px auto 0;
+  font-style: italic;
+}
+
+.notes-grid {
+  display: grid;
+  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
+  gap: 22px;
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--data);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+.notes p {
+  font-family: var(--prose);
+  font-size: 15.5px;
+  max-width: 62ch;
+  margin-bottom: 9px;
+}
+.notes p strong { font-weight: 600; }
+/* every inline chip is the code face, not the UA's own monospace default */
+code, kbd, samp { font-family: var(--code); }
+.notes p code, .gal-body code {
+  font-family: var(--code);
+  font-size: 0.85em;
+  background: var(--paper-2);
+  border: 1px solid var(--line);
+  padding: 0 4px;
+  border-radius: 2px;
+  /* A chip breaks only when it would otherwise run off the column: sheet 11's
+     90-character recipe did, once the prose stepped up half a pixel. */
+  overflow-wrap: anywhere;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-family: var(--data);
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+/* The two values that carry the atlas's own name, and the sheet's. */
+.titleblock .dsp {
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+}
+.titleblock .ttl {
+  font-family: var(--title);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+}
+/* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
+   caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
+   smaller cap for its em. */
+.titleblock .hand {
+  font-family: var(--hand);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+/* The chop: a plain square in the Cherokee red, unrotated — the corner stamp,
+   not a jaunty sticker. It sits at the right edge of the SHEET cell. */
+.titleblock .sh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.titleblock .chop {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+  border: 1.5px solid var(--cherokee);
+  box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
+}
+
+/* ---- REVISIONS ----
+   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
+   splits the SAME frozen string on " · REV " — nothing is retyped — and files
+   the tail here, under the title block, as a drawing's revision block. */
+.revs {
+  width: 100%;
+  border-collapse: collapse;
+  border: 1.5px solid var(--ink);
+  margin-top: 18px;
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+}
+.revs caption {
+  font-family: var(--data);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 0 0 8px;
+}
+.revs th {
+  font-size: 9px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  text-align: left;
+  padding: 6px 12px;
+  border-bottom: 1.5px solid var(--ink);
+  background: var(--paper-2);
+  white-space: nowrap;
+}
+.revs td {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  padding: 7px 12px;
+  border-bottom: 1px solid var(--line);
+  vertical-align: baseline;
+}
+.revs tr:last-child td { border-bottom: none; }
+.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
+.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
+.revs .t { color: var(--ink-soft); }
+.revs code { font-family: var(--code); font-size: 0.88em; }
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<section class="sheet" id="sheet-A1" aria-label="Appendix A1: THE SPRITE STUDY">
+  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">APPENDIX A1 · META</span></div>
+  <h2 class="sheet-title">THE SPRITE STUDY</h2>
+  <p class="sheet-sub">APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each</p>
+  <figure>
+    <div class="figure-wrap"><svg viewBox="0 0 1560 1216" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red.">
+<defs>
+  <marker id="sA1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="sA1-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="sA1-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="sA1-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="sA1-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="sA1-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="sA1-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="sA1-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<rect x="40" y="26" width="760" height="42" class="skf fnone"/>
+<text x="52" y="43" class="lbls" text-anchor="start" >THE SPRITE STUDY — HOW A MEMBER SHOULD BE DRAWN WHEN IT IS DRAWN AS A BUILDING</text>
+<text x="52" y="58" class="lblf" text-anchor="start" >META — the subject of this plate is the atlas, not the codebase · three worked directions, one recommendation</text>
+
+<text x="1520" y="34" class="lbls" text-anchor="end" >ONE DEMO MEMBER — 16 files · 1,900 sloc — drawn fifteen times · footprint 1.6·√sloc ≈ 70, height 3 px/file = 48, the house rules</text>
+<text x="1520" y="48" class="lblf" text-anchor="end" >HORIZON ZERO DAWN × SIMCITY 2000 × FACTORIO · the gauge is WRECK &amp; RUIN ↔ SHINE &amp; SPLENDOR, driven by git age × churn</text>
+<text x="1520" y="62" class="lblf" text-anchor="end" >NO CENSUS PLATE — this appendix measures nothing; it argues a drawing convention · SEE ALSO sheets 7, 7B and 13</text>
+
+<g>
+<rect x="60" y="104" width="640" height="40" rx="0" class="skf fnone"/>
+<text x="76" y="121" class="lbls" text-anchor="start" >STUDY 1 / 3 — THE RECLAIMED MACHINE</text>
+<text x="76" y="135" class="lblf" text-anchor="start" >HZD-LEANING · overgrowth is time; the machine underneath is the member</text>
+<g transform="translate(128,304)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 27.3,-63.7 14.5,-62.2 8.5,-51.5 -10.9,-61.1 -27.3,-63.7 -60.6,-83.0" class="sk fp2"/>
+
+<ellipse cx="51.5" cy="-77.7" rx="7" ry="3.2" class="fg" opacity="0.5"/><ellipse cx="36.4" cy="-69.0" rx="7" ry="3.2" class="fg" opacity="0.5"/><ellipse cx="17.0" cy="-57.8" rx="7" ry="3.2" class="fg" opacity="0.5"/>
+<path d="M14.3,-5.8 L10.2,-12.8 L11.6,-19.9 L13.1,-26.9 L8.5,-34.0 L8.9,-41.0 L12.6,-48.1" class="skg" fill="none" opacity="0.85"/><circle cx="11.6" cy="-19.9" r="1.6" class="fg" opacity="0.7"/><circle cx="8.5" cy="-34.0" r="1.6" class="fg" opacity="0.7"/><circle cx="12.6" cy="-48.1" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-17.1,-7.5 L-12.7,-13.7 L-12.5,-19.9 L-13.1,-26.1 L-11.1,-32.4 L-14.4,-38.6 L-11.9,-44.8" class="skg" fill="none" opacity="0.85"/><circle cx="-12.5" cy="-19.9" r="1.6" class="fg" opacity="0.7"/><circle cx="-11.1" cy="-32.4" r="1.6" class="fg" opacity="0.7"/><circle cx="-11.9" cy="-44.8" r="1.6" class="fg" opacity="0.7"/>
+<path d="M16.0,-9.2 L20.1,-16.7 L15.2,-24.3 L16.9,-31.8 L14.7,-39.4 L17.1,-46.9 L20.0,-54.5" class="skg" fill="none" opacity="0.85"/><circle cx="15.2" cy="-24.3" r="1.6" class="fg" opacity="0.7"/><circle cx="14.7" cy="-39.4" r="1.6" class="fg" opacity="0.7"/><circle cx="20.0" cy="-54.5" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-22.6,-10.9 L-20.5,-17.5 L-17.1,-24.1 L-20.6,-30.7 L-19.3,-37.3 L-14.8,-43.9 L-22.0,-50.6" class="skg" fill="none" opacity="0.85"/><circle cx="-17.1" cy="-24.1" r="1.6" class="fg" opacity="0.7"/><circle cx="-19.3" cy="-37.3" r="1.6" class="fg" opacity="0.7"/><circle cx="-22.0" cy="-50.6" r="1.6" class="fg" opacity="0.7"/>
+<path d="M24.2,-12.6 L20.6,-19.8 L20.6,-26.9 L18.9,-34.1 L18.8,-41.3 L21.1,-48.5 L18.0,-55.7" class="skg" fill="none" opacity="0.85"/><circle cx="20.6" cy="-26.9" r="1.6" class="fg" opacity="0.7"/><circle cx="18.8" cy="-41.3" r="1.6" class="fg" opacity="0.7"/><circle cx="18.0" cy="-55.7" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-22.8,-14.3 L-27.6,-21.6 L-25.8,-28.8 L-29.1,-36.1 L-26.8,-43.4 L-28.5,-50.6 L-25.8,-57.9" class="skg" fill="none" opacity="0.85"/><circle cx="-25.8" cy="-28.8" r="1.6" class="fg" opacity="0.7"/><circle cx="-26.8" cy="-43.4" r="1.6" class="fg" opacity="0.7"/><circle cx="-25.8" cy="-57.9" r="1.6" class="fg" opacity="0.7"/>
+<path d="M28.6,-16.0 L27.3,-22.1 L32.1,-28.2 L26.2,-34.3 L24.0,-40.4 L30.2,-46.5 L30.0,-52.6" class="skg" fill="none" opacity="0.85"/><circle cx="32.1" cy="-28.2" r="1.6" class="fg" opacity="0.7"/><circle cx="24.0" cy="-40.4" r="1.6" class="fg" opacity="0.7"/><circle cx="30.0" cy="-52.6" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-35.0,-17.7 L-30.2,-24.7 L-29.4,-31.7 L-33.7,-38.7 L-30.3,-45.6 L-28.8,-52.6 L-28.0,-59.6" class="skg" fill="none" opacity="0.85"/><circle cx="-29.4" cy="-31.7" r="1.6" class="fg" opacity="0.7"/><circle cx="-30.3" cy="-45.6" r="1.6" class="fg" opacity="0.7"/><circle cx="-28.0" cy="-59.6" r="1.6" class="fg" opacity="0.7"/>
+<path d="M33.8,-19.4 L37.9,-25.3 L30.2,-31.2 L35.4,-37.1 L37.5,-43.0 L33.5,-49.0 L37.6,-54.9" class="skg" fill="none" opacity="0.85"/><circle cx="30.2" cy="-31.2" r="1.6" class="fg" opacity="0.7"/><circle cx="37.5" cy="-43.0" r="1.6" class="fg" opacity="0.7"/><circle cx="37.6" cy="-54.9" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-35.4,-21.1 L-35.6,-28.2 L-41.0,-35.3 L-39.3,-42.5 L-36.5,-49.6 L-33.6,-56.7 L-32.9,-63.8" class="skg" fill="none" opacity="0.85"/><circle cx="-41.0" cy="-35.3" r="1.6" class="fg" opacity="0.7"/><circle cx="-36.5" cy="-49.6" r="1.6" class="fg" opacity="0.7"/><circle cx="-32.9" cy="-63.8" r="1.6" class="fg" opacity="0.7"/>
+<path d="M39.5,-22.8 L37.0,-30.6 L38.4,-38.3 L42.1,-46.1 L42.5,-53.8 L41.0,-61.6 L37.4,-69.4" class="skg" fill="none" opacity="0.85"/><circle cx="38.4" cy="-38.3" r="1.6" class="fg" opacity="0.7"/><circle cx="42.5" cy="-53.8" r="1.6" class="fg" opacity="0.7"/><circle cx="37.4" cy="-69.4" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-42.1,-24.5 L-39.1,-32.1 L-38.5,-39.6 L-42.6,-47.2 L-46.1,-54.8 L-46.6,-62.3 L-42.2,-69.9" class="skg" fill="none" opacity="0.85"/><circle cx="-38.5" cy="-39.6" r="1.6" class="fg" opacity="0.7"/><circle cx="-46.1" cy="-54.8" r="1.6" class="fg" opacity="0.7"/><circle cx="-42.2" cy="-69.9" r="1.6" class="fg" opacity="0.7"/>
+<path d="M47.8,-26.2 L46.2,-32.4 L44.3,-38.6 L41.9,-44.8 L41.1,-50.9 L43.7,-57.1 L44.1,-63.3" class="skg" fill="none" opacity="0.85"/><circle cx="44.3" cy="-38.6" r="1.6" class="fg" opacity="0.7"/><circle cx="41.1" cy="-50.9" r="1.6" class="fg" opacity="0.7"/><circle cx="44.1" cy="-63.3" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-44.2,-27.9 L-45.8,-34.8 L-52.2,-41.7 L-49.1,-48.6 L-45.8,-55.5 L-51.8,-62.4 L-51.3,-69.2" class="skg" fill="none" opacity="0.85"/><circle cx="-52.2" cy="-41.7" r="1.6" class="fg" opacity="0.7"/><circle cx="-45.8" cy="-55.5" r="1.6" class="fg" opacity="0.7"/><circle cx="-51.3" cy="-69.2" r="1.6" class="fg" opacity="0.7"/>
+<path d="M52.9,-29.6 L48.3,-35.5 L47.7,-41.4 L48.5,-47.3 L52.5,-53.1 L54.4,-59.0 L47.9,-64.9" class="skg" fill="none" opacity="0.85"/><circle cx="47.7" cy="-41.4" r="1.6" class="fg" opacity="0.7"/><circle cx="52.5" cy="-53.1" r="1.6" class="fg" opacity="0.7"/><circle cx="47.9" cy="-64.9" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-58.2,-31.3 L-56.7,-38.0 L-53.9,-44.6 L-54.9,-51.2 L-55.6,-57.8 L-53.7,-64.4 L-56.5,-71.0" class="skg" fill="none" opacity="0.85"/><circle cx="-53.9" cy="-44.6" r="1.6" class="fg" opacity="0.7"/><circle cx="-55.6" cy="-57.8" r="1.6" class="fg" opacity="0.7"/><circle cx="-56.5" cy="-71.0" r="1.6" class="fg" opacity="0.7"/>
+<polygon points="8.7,-1.0 13.0,5.5 1.7,7.0 -0.9,1.5" fill="url(#sA1-hd)"/><polygon points="8.7,-1.0 13.0,5.5 1.7,7.0 -0.9,1.5" class="sks fnone"/><polygon points="-7.8,0.5 -5.2,6.0 -13.0,5.5" class="sks fp2"/>
+</g>
+<g transform="translate(334,304)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+
+<ellipse cx="51.5" cy="-77.7" rx="7" ry="3.2" class="fg" opacity="0.5"/><ellipse cx="36.4" cy="-69.0" rx="7" ry="3.2" class="fg" opacity="0.5"/>
+<path d="M11.3,-6.4 L8.1,-12.5 L9.4,-18.5 L8.2,-24.6 L7.0,-30.7 L13.0,-36.7 L9.9,-42.8" class="skg" fill="none" opacity="0.85"/><circle cx="9.4" cy="-18.5" r="1.6" class="fg" opacity="0.7"/><circle cx="7.0" cy="-30.7" r="1.6" class="fg" opacity="0.7"/><circle cx="9.9" cy="-42.8" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-20.8,-9.5 L-18.7,-16.4 L-19.1,-23.3 L-20.1,-30.2 L-12.9,-37.1 L-18.9,-44.0 L-16.1,-50.9" class="skg" fill="none" opacity="0.85"/><circle cx="-19.1" cy="-23.3" r="1.6" class="fg" opacity="0.7"/><circle cx="-12.9" cy="-37.1" r="1.6" class="fg" opacity="0.7"/><circle cx="-16.1" cy="-50.9" r="1.6" class="fg" opacity="0.7"/>
+<path d="M24.0,-12.5 L17.5,-18.0 L21.6,-23.4 L20.4,-28.9 L25.6,-34.4 L17.4,-39.9 L18.7,-45.4" class="skg" fill="none" opacity="0.85"/><circle cx="21.6" cy="-23.4" r="1.6" class="fg" opacity="0.7"/><circle cx="25.6" cy="-34.4" r="1.6" class="fg" opacity="0.7"/><circle cx="18.7" cy="-45.4" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-26.1,-15.5 L-26.9,-20.8 L-24.8,-26.1 L-30.7,-31.3 L-22.9,-36.6 L-22.9,-41.9 L-24.3,-47.1" class="skg" fill="none" opacity="0.85"/><circle cx="-24.8" cy="-26.1" r="1.6" class="fg" opacity="0.7"/><circle cx="-22.9" cy="-36.6" r="1.6" class="fg" opacity="0.7"/><circle cx="-24.3" cy="-47.1" r="1.6" class="fg" opacity="0.7"/>
+<path d="M28.3,-18.6 L28.7,-22.6 L28.2,-26.6 L34.3,-30.7 L28.9,-34.7 L33.9,-38.8 L32.8,-42.8" class="skg" fill="none" opacity="0.85"/><circle cx="28.2" cy="-26.6" r="1.6" class="fg" opacity="0.7"/><circle cx="28.9" cy="-34.7" r="1.6" class="fg" opacity="0.7"/><circle cx="32.8" cy="-42.8" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-34.3,-21.6 L-35.6,-26.1 L-34.3,-30.5 L-39.3,-35.0 L-39.5,-39.5 L-34.4,-43.9 L-32.9,-48.4" class="skg" fill="none" opacity="0.85"/><circle cx="-34.3" cy="-30.5" r="1.6" class="fg" opacity="0.7"/><circle cx="-39.5" cy="-39.5" r="1.6" class="fg" opacity="0.7"/><circle cx="-32.9" cy="-48.4" r="1.6" class="fg" opacity="0.7"/>
+<path d="M43.7,-24.6 L44.7,-29.2 L43.5,-33.9 L39.9,-38.5 L41.5,-43.1 L40.4,-47.8 L44.9,-52.4" class="skg" fill="none" opacity="0.85"/><circle cx="43.5" cy="-33.9" r="1.6" class="fg" opacity="0.7"/><circle cx="41.5" cy="-43.1" r="1.6" class="fg" opacity="0.7"/><circle cx="44.9" cy="-52.4" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-46.8,-27.7 L-45.7,-35.0 L-46.9,-42.4 L-50.9,-49.7 L-52.0,-57.1 L-46.1,-64.4 L-48.4,-71.8" class="skg" fill="none" opacity="0.85"/><circle cx="-46.9" cy="-42.4" r="1.6" class="fg" opacity="0.7"/><circle cx="-52.0" cy="-57.1" r="1.6" class="fg" opacity="0.7"/><circle cx="-48.4" cy="-71.8" r="1.6" class="fg" opacity="0.7"/>
+<path d="M55.0,-30.7 L51.6,-36.6 L48.8,-42.5 L56.3,-48.4 L51.7,-54.4 L57.3,-60.3 L54.9,-66.2" class="skg" fill="none" opacity="0.85"/><circle cx="48.8" cy="-42.5" r="1.6" class="fg" opacity="0.7"/><circle cx="51.7" cy="-54.4" r="1.6" class="fg" opacity="0.7"/><circle cx="54.9" cy="-66.2" r="1.6" class="fg" opacity="0.7"/>
+
+</g>
+<g transform="translate(540,304)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+
+
+<path d="M10.5,-8.3 L17.2,-14.4 L18.4,-20.5 L14.5,-26.6 L16.7,-32.6 L10.2,-38.7 L18.4,-44.8" class="skg" fill="none" opacity="0.85"/><circle cx="18.4" cy="-20.5" r="1.6" class="fg" opacity="0.7"/><circle cx="16.7" cy="-32.6" r="1.6" class="fg" opacity="0.7"/><circle cx="18.4" cy="-44.8" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-21.9,-15.1 L-22.2,-20.8 L-23.2,-26.5 L-24.5,-32.1 L-30.1,-37.8 L-29.8,-43.5 L-26.6,-49.1" class="skg" fill="none" opacity="0.85"/><circle cx="-23.2" cy="-26.5" r="1.6" class="fg" opacity="0.7"/><circle cx="-30.1" cy="-37.8" r="1.6" class="fg" opacity="0.7"/><circle cx="-26.6" cy="-49.1" r="1.6" class="fg" opacity="0.7"/>
+<path d="M33.8,-22.0 L34.6,-26.0 L38.7,-30.1 L34.5,-34.2 L38.1,-38.3 L37.3,-42.4 L37.1,-46.5" class="skg" fill="none" opacity="0.85"/><circle cx="38.7" cy="-30.1" r="1.6" class="fg" opacity="0.7"/><circle cx="38.1" cy="-38.3" r="1.6" class="fg" opacity="0.7"/><circle cx="37.1" cy="-46.5" r="1.6" class="fg" opacity="0.7"/>
+<path d="M-53.5,-28.8 L-48.2,-34.0 L-47.4,-39.3 L-46.8,-44.5 L-50.4,-49.8 L-46.0,-55.1 L-50.6,-60.3" class="skg" fill="none" opacity="0.85"/><circle cx="-47.4" cy="-39.3" r="1.6" class="fg" opacity="0.7"/><circle cx="-50.4" cy="-49.8" r="1.6" class="fg" opacity="0.7"/><circle cx="-50.6" cy="-60.3" r="1.6" class="fg" opacity="0.7"/>
+
+</g>
+<g transform="translate(746,304)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+
+
+<path d="M33.1,-18.6 L31.6,-24.7 L32.8,-30.8 L35.2,-36.9 L31.8,-43.0 L30.9,-49.1 L32.3,-55.2" class="skg" fill="none" opacity="0.85"/><circle cx="32.8" cy="-30.8" r="1.6" class="fg" opacity="0.7"/><circle cx="31.8" cy="-43.0" r="1.6" class="fg" opacity="0.7"/><circle cx="32.3" cy="-55.2" r="1.6" class="fg" opacity="0.7"/>
+
+<line x1="0.0" y1="-112.0" x2="0.0" y2="-128.0" class="sks"/><polygon points="0.0,-128.0 0.0,-123.0 8.7,-120.5" class="fa"/></g>
+<g transform="translate(952,304)"><ellipse cx="0.0" cy="0.0" rx="72.6" ry="16" class="fhalo"/>
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<path d="M-60.6,-83.0 L0.0,-48.0 L60.6,-83.0" class="ska" fill="none" opacity="0.9"/>
+
+
+
+<line x1="0.0" y1="-112.0" x2="0.0" y2="-128.0" class="sks"/><polygon points="0.0,-128.0 0.0,-123.0 8.7,-120.5" class="fa"/></g>
+<text x="128" y="328" class="lblb" text-anchor="middle" >RECLAIMED</text>
+<text x="334" y="328" class="lblb" text-anchor="middle" >OVERGROWN</text>
+<text x="540" y="328" class="lblb" text-anchor="middle" >CREEPING</text>
+<text x="746" y="328" class="lblb" text-anchor="middle" >TENDED</text>
+<text x="952" y="328" class="lblb" text-anchor="middle" >HUMMING</text>
+<text x="128" y="342" class="lblf" text-anchor="middle" >parapet breached · rubble</text>
+<text x="334" y="342" class="lblf" text-anchor="middle" >thinning vines · moss</text>
+<text x="540" y="342" class="lblf" text-anchor="middle" >four creepers left</text>
+<text x="746" y="342" class="lblf" text-anchor="middle" >one creeper · survey flag</text>
+<text x="952" y="342" class="lblf" text-anchor="middle" >halo + live trace + flag</text>
+<path d="M60,362 L1012,362" class="sks" marker-end="url(#sA1-ai)"/>
+<text x="60" y="378" class="lbls" text-anchor="start" >WRECK &amp; RUIN</text>
+<text x="1012" y="378" class="lbls" text-anchor="end" >SHINE &amp; SPLENDOR</text>
+<rect x="1054" y="154" width="466" height="172" rx="0" class="sk fp"/>
+<text x="1068" y="172" class="lbls" text-anchor="start" >DATA → VISUAL CHANNEL — STUDY 1</text>
+<line x1="1054" y1="180" x2="1520" y2="180" class="skf"/>
+<text x="1068" y="192" class="lbl" text-anchor="start" >overgrowth coverage — vine count × climb height</text>
+<text x="1068" y="204" class="lblf" text-anchor="start" >months since the last commit touching the member · 0% at ≤1 mo → 95% at ≥24 mo</text>
+<text x="1068" y="219" class="lbl" text-anchor="start" >broken parapet + rubble</text>
+<text x="1068" y="231" class="lblf" text-anchor="start" >net-deleted mass, files removed vs added over 12 mo · intact → breached below 0.6</text>
+<text x="1068" y="246" class="lbl" text-anchor="start" >moss on the roof line</text>
+<text x="1068" y="258" class="lblf" text-anchor="start" >staleness crossing the district’s churn median · binary, only past state 2</text>
+<text x="1068" y="273" class="lbl" text-anchor="start" >accent roof trace + ground halo</text>
+<text x="1068" y="285" class="lblf" text-anchor="start" >commits in the last 90 days — the machine still hums · top decile of the city only</text>
+<text x="1068" y="300" class="lbl" text-anchor="start" >survey flag</text>
+<text x="1068" y="312" class="lblf" text-anchor="start" >touched by the most recent release · binary</text>
+<text x="1068" y="344" class="lblf" text-anchor="start" >CHEAP AT SPLENDOR, DEAREST AT DECAY — 8–14 short paths plus a few circles</text>
+<text x="1068" y="356" class="lblf" text-anchor="start" >per wrecked building, near zero at splendor; +2–6 KB of raw SVG per</text>
+<text x="1068" y="368" class="lblf" text-anchor="start" >weathered building. Vines are seeded polylines, deterministic across</text>
+<text x="1068" y="380" class="lblf" text-anchor="start" >rebuilds; at the census floor they degrade to one or two strokes and still</text>
+<text x="1068" y="392" class="lblf" text-anchor="start" >read as green-equals-stale.</text>
+</g>
+<g>
+<rect x="60" y="406" width="640" height="40" rx="0" class="skf fnone"/>
+<text x="76" y="423" class="lbls" text-anchor="start" >STUDY 2 / 3 — THE LEDGER ROOF</text>
+<text x="76" y="437" class="lblf" text-anchor="start" >SC2K-LEANING · the roof is a ledger — one tile per authored file, on the census that already sets the height</text>
+<g transform="translate(128,606)"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" fill="url(#sA1-hd)"/><polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" class="skf fnone"/>
+<polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" fill="var(--ink-soft)"/><polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" class="skf fnone"/>
+<polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" class="sks fnone"/>
+<polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" fill="var(--paper-2)"/><polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" class="skf fnone"/>
+<polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" fill="url(#sA1-hd)"/><polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" class="skf fnone"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" fill="var(--ink-soft)"/><polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="skf fnone"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="sks fnone"/>
+<polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" fill="var(--paper-2)"/><polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" class="skf fnone"/>
+<line x1="0.0" y1="-100.5" x2="0.0" y2="-83.0" class="sks" stroke-dasharray="2 2"/>
+<polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" fill="url(#sA1-hd)"/><polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" class="skf fnone"/>
+<polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" fill="var(--ink-soft)"/><polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" class="skf fnone"/>
+<polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" class="sks fnone"/>
+<polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" fill="var(--paper-2)"/><polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" class="skf fnone"/>
+<line x1="30.3" y1="-100.5" x2="30.3" y2="-83.0" class="sks" stroke-dasharray="2 2"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" fill="var(--ink-soft)"/><polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="skf fnone"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="sks fnone"/>
+<polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" fill="url(#sA1-hd)"/><polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" class="skf fnone"/>
+<polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" fill="var(--paper-2)"/><polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" class="skf fnone"/>
+<line x1="-15.2" y1="-74.3" x2="-15.2" y2="-56.8" class="sks" stroke-dasharray="2 2"/>
+<polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" fill="var(--ink-soft)"/><polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" class="skf fnone"/>
+<polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" class="sks fnone"/>
+<polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" fill="url(#sA1-hd)"/><polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" class="skf fnone"/>
+<polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" fill="var(--ink-soft)"/><polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" class="skf fnone"/>
+<polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" class="sks fnone"/>
+<polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" fill="url(#sA1-hd)"/><polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" class="skf fnone"/>
+<g opacity="0.3"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--ink)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="var(--ink)"/><polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" fill="var(--ink)"/></g>
+<polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" fill="var(--paper-2)"/><polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" class="sks fnone"/>
+<line x1="7.9" y1="-20.6" x2="26.7" y2="-21.4" class="sks"/><line x1="7.9" y1="-10.6" x2="26.7" y2="-31.4" class="sks"/>
+
+</g>
+<g transform="translate(334,606)"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" fill="var(--paper-2)"/><polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" class="skf fnone"/>
+<line x1="0.0" y1="-118.0" x2="0.0" y2="-100.5" class="sks" stroke-dasharray="2 2"/>
+<polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" fill="url(#sA1-hd)"/><polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" class="skf fnone"/>
+<polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" fill="var(--paper)"/><polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" class="skf fnone"/>
+<polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" fill="url(#sA1-hd)"/><polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" class="skf fnone"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" fill="var(--ink-soft)"/><polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="skf fnone"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="sks fnone"/>
+<polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" fill="var(--paper-2)"/><polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" class="skf fnone"/>
+<polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" fill="var(--paper-2)"/><polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" class="skf fnone"/>
+<line x1="-15.2" y1="-91.8" x2="-15.2" y2="-74.3" class="sks" stroke-dasharray="2 2"/>
+<polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" fill="url(#sA1-hd)"/><polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" class="skf fnone"/>
+<polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" fill="var(--paper-2)"/><polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" class="skf fnone"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" fill="var(--ink-soft)"/><polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="skf fnone"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="sks fnone"/>
+<polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" fill="var(--paper-2)"/><polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" class="skf fnone"/>
+<line x1="0.0" y1="-83.0" x2="0.0" y2="-65.5" class="sks" stroke-dasharray="2 2"/>
+<polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" fill="var(--paper-2)"/><polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" class="skf fnone"/>
+<polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" fill="url(#sA1-hd)"/><polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" class="skf fnone"/>
+<polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" fill="var(--paper-2)"/><polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" class="skf fnone"/>
+<line x1="30.3" y1="-83.0" x2="30.3" y2="-65.5" class="sks" stroke-dasharray="2 2"/>
+<polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" fill="url(#sA1-hd)"/><polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" class="skf fnone"/>
+<polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" fill="var(--paper-2)"/><polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" class="skf fnone"/>
+<line x1="0.0" y1="-65.5" x2="0.0" y2="-48.0" class="sks" stroke-dasharray="2 2"/>
+<g opacity="0.16"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--ink)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="var(--ink)"/><polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" fill="var(--ink)"/></g>
+<polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" fill="var(--paper-2)"/><polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" class="sk fnone"/>
+
+
+</g>
+<g transform="translate(540,606)"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" fill="var(--paper-2)"/><polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" class="skf fnone"/>
+<polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" fill="var(--paper-2)"/><polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" class="skf fnone"/>
+<line x1="-15.2" y1="-109.3" x2="-15.2" y2="-91.8" class="sks" stroke-dasharray="2 2"/>
+<polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" fill="var(--paper)"/><polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" class="skf fnone"/>
+<polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" fill="var(--paper-2)"/><polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" class="skf fnone"/>
+<line x1="-45.5" y1="-91.8" x2="-45.5" y2="-74.3" class="sks" stroke-dasharray="2 2"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" fill="url(#sA1-hd)"/><polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="skf fnone"/>
+<polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" fill="var(--paper)"/><polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" class="skf fnone"/>
+<polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" fill="var(--paper-2)"/><polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" class="skf fnone"/>
+<polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" fill="var(--paper-2)"/><polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" class="skf fnone"/>
+<line x1="-30.3" y1="-83.0" x2="-30.3" y2="-65.5" class="sks" stroke-dasharray="2 2"/>
+<polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" fill="var(--paper-2)"/><polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" class="skf fnone"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" fill="url(#sA1-hd)"/><polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="skf fnone"/>
+<polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" fill="var(--paper-2)"/><polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" class="skf fnone"/>
+<polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" fill="var(--paper)"/><polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" class="skf fnone"/>
+<polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" fill="var(--paper-2)"/><polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" class="skf fnone"/>
+<line x1="45.5" y1="-91.8" x2="45.5" y2="-74.3" class="sks" stroke-dasharray="2 2"/>
+<polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" fill="var(--paper-2)"/><polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" class="skf fnone"/>
+<polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" fill="var(--paper-2)"/><polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" class="skf fnone"/>
+<line x1="15.2" y1="-74.3" x2="15.2" y2="-56.8" class="sks" stroke-dasharray="2 2"/>
+<polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" fill="var(--paper-2)"/><polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" class="skf fnone"/>
+
+<polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" fill="var(--paper-2)"/><polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" class="sk fnone"/>
+
+
+</g>
+<g transform="translate(746,606)"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" fill="var(--paper)"/><polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" class="skf fnone"/>
+<polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" fill="var(--paper-2)"/><polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" class="skf fnone"/>
+<polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" fill="var(--paper)"/><polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" class="skf fnone"/>
+<polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" fill="var(--paper-2)"/><polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" class="skf fnone"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" fill="var(--paper-2)"/><polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="skf fnone"/>
+<line x1="15.2" y1="-109.3" x2="15.2" y2="-91.8" class="sks" stroke-dasharray="2 2"/>
+<polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" fill="var(--paper)"/><polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" class="skf fnone"/>
+<polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" fill="var(--paper)"/><polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" class="skf fnone"/>
+<polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" fill="var(--paper-2)"/><polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" class="skf fnone"/>
+<polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" fill="var(--paper)"/><polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" class="skf fnone"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" fill="var(--paper-2)"/><polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="skf fnone"/>
+<line x1="15.2" y1="-91.8" x2="15.2" y2="-74.3" class="sks" stroke-dasharray="2 2"/>
+<polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" fill="var(--paper)"/><polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" class="skf fnone"/>
+<polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" fill="var(--paper)"/><polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" class="skf fnone"/>
+<polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" fill="var(--paper-2)"/><polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" class="skf fnone"/>
+<polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" fill="var(--paper)"/><polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" class="skf fnone"/>
+<polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" fill="var(--paper-2)"/><polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" class="skf fnone"/>
+<polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" fill="var(--paper-2)"/><polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" class="skf fnone"/>
+
+<polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" fill="var(--paper-2)"/><polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" class="sk fnone"/>
+
+<line x1="10.4" y1="-94.0" x2="10.4" y2="-138.0" class="ska"/><line x1="10.4" y1="-138.0" x2="41.6" y2="-120.0" class="ska"/><line x1="34.6" y1="-124.0" x2="34.6" y2="-100.0" class="ska" stroke-dasharray="3 3"/><polygon points="34.6,-102.0 38.1,-100.0 34.6,-96.0" class="fa"/>
+</g>
+<g transform="translate(952,606)"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" fill="var(--paper)"/><polygon points="0.0,-118.0 15.2,-109.3 0.0,-100.5 -15.2,-109.3" class="skf fnone"/>
+<polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" fill="var(--paper)"/><polygon points="-15.2,-109.3 0.0,-100.5 -15.2,-91.8 -30.3,-100.5" class="skf fnone"/>
+<polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" fill="var(--paper)"/><polygon points="-30.3,-100.5 -15.2,-91.8 -30.3,-83.0 -45.5,-91.8" class="skf fnone"/>
+<polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" fill="var(--paper)"/><polygon points="-45.5,-91.8 -30.3,-83.0 -45.5,-74.3 -60.6,-83.0" class="skf fnone"/>
+<polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" fill="var(--paper-2)"/><polygon points="15.2,-109.3 30.3,-100.5 15.2,-91.8 0.0,-100.5" class="skf fnone"/>
+<polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" fill="var(--paper)"/><polygon points="0.0,-100.5 15.2,-91.8 0.0,-83.0 -15.2,-91.8" class="skf fnone"/>
+<polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" fill="var(--paper)"/><polygon points="-15.2,-91.8 0.0,-83.0 -15.2,-74.3 -30.3,-83.0" class="skf fnone"/>
+<polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" fill="var(--paper)"/><polygon points="-30.3,-83.0 -15.2,-74.3 -30.3,-65.5 -45.5,-74.3" class="skf fnone"/>
+<polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" fill="var(--paper)"/><polygon points="30.3,-100.5 45.5,-91.8 30.3,-83.0 15.2,-91.8" class="skf fnone"/>
+<polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" fill="var(--paper-2)"/><polygon points="15.2,-91.8 30.3,-83.0 15.2,-74.3 0.0,-83.0" class="skf fnone"/>
+<polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" fill="var(--paper)"/><polygon points="0.0,-83.0 15.2,-74.3 0.0,-65.5 -15.2,-74.3" class="skf fnone"/>
+<polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" fill="var(--paper)"/><polygon points="-15.2,-74.3 0.0,-65.5 -15.2,-56.8 -30.3,-65.5" class="skf fnone"/>
+<polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" fill="var(--paper)"/><polygon points="45.5,-91.8 60.6,-83.0 45.5,-74.3 30.3,-83.0" class="skf fnone"/>
+<polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" fill="var(--paper)"/><polygon points="30.3,-83.0 45.5,-74.3 30.3,-65.5 15.2,-74.3" class="skf fnone"/>
+<polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" fill="var(--paper-2)"/><polygon points="15.2,-74.3 30.3,-65.5 15.2,-56.8 0.0,-65.5" class="skf fnone"/>
+<polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" fill="var(--paper)"/><polygon points="0.0,-65.5 15.2,-56.8 0.0,-48.0 -15.2,-56.8" class="skf fnone"/>
+
+<polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" fill="var(--paper-2)"/><polygon points="9.1,-25.3 25.5,-34.7 25.5,-14.7 9.1,-5.3" class="sk fnone"/>
+
+
+<polygon points="-9.5,-111.5 0.0,-106.0 0.0,-99.0 -9.5,-104.5" class="sk fp2"/><polygon points="9.5,-111.5 0.0,-106.0 0.0,-99.0 9.5,-104.5" class="sk fp2"/><polygon points="0.0,-117.0 9.5,-111.5 0.0,-106.0 -9.5,-111.5" class="sk fp2"/><polygon points="-28.6,-100.5 -19.1,-95.0 -19.1,-88.0 -28.6,-93.5" class="sk fp2"/><polygon points="-9.5,-100.5 -19.1,-95.0 -19.1,-88.0 -9.5,-93.5" class="sk fp2"/><polygon points="-19.1,-106.0 -9.5,-100.5 -19.1,-95.0 -28.6,-100.5" class="sk fp2"/><line x1="27.7" y1="-90.0" x2="27.7" y2="-110.0" class="sks"/><line x1="39.8" y1="-83.0" x2="39.8" y2="-103.0" class="sks"/><line x1="15.6" y1="-83.0" x2="15.6" y2="-103.0" class="sks"/><line x1="27.7" y1="-76.0" x2="27.7" y2="-96.0" class="sks"/><polygon points="15.6,-94.0 27.7,-87.0 27.7,-76.0 15.6,-83.0" class="sk fp"/><polygon points="39.8,-94.0 27.7,-87.0 27.7,-76.0 39.8,-83.0" class="sk fp"/><polygon points="27.7,-101.0 39.8,-94.0 27.7,-87.0 15.6,-94.0" class="sk fp"/><line x1="-19.1" y1="-77.0" x2="-19.1" y2="-103.0" class="ska"/><circle cx="-19.1" cy="-103.0" r="2.4" class="fa"/></g>
+<text x="128" y="630" class="lblb" text-anchor="middle" >ABANDONED</text>
+<text x="334" y="630" class="lblb" text-anchor="middle" >DECAYING</text>
+<text x="540" y="630" class="lblb" text-anchor="middle" >AGING</text>
+<text x="746" y="630" class="lblb" text-anchor="middle" >RENOVATING</text>
+<text x="952" y="630" class="lblb" text-anchor="middle" >PRIME</text>
+<text x="128" y="644" class="lblf" text-anchor="middle" >12/16 tiles gone · boarded</text>
+<text x="334" y="644" class="lblf" text-anchor="middle" >dark wash · 7 tiles gone</text>
+<text x="540" y="644" class="lblf" text-anchor="middle" >no wash · 2 dark</text>
+<text x="746" y="644" class="lblf" text-anchor="middle" >crane — renovation, not ruin</text>
+<text x="952" y="644" class="lblf" text-anchor="middle" >AC · water tower · antenna</text>
+<path d="M60,664 L1012,664" class="sks" marker-end="url(#sA1-ai)"/>
+<text x="60" y="680" class="lbls" text-anchor="start" >WRECK &amp; RUIN</text>
+<text x="1012" y="680" class="lbls" text-anchor="end" >SHINE &amp; SPLENDOR</text>
+<rect x="1054" y="456" width="466" height="172" rx="0" class="sk fp"/>
+<text x="1068" y="474" class="lbls" text-anchor="start" >DATA → VISUAL CHANNEL — STUDY 2</text>
+<line x1="1054" y1="482" x2="1520" y2="482" class="skf"/>
+<text x="1068" y="494" class="lbl" text-anchor="start" >roof tile condition — crisp → plain → cracked → dark → collapsed</text>
+<text x="1068" y="506" class="lblf" text-anchor="start" >per-file age since its last commit · 5 steps, quantile-bucketed per district</text>
+<text x="1068" y="521" class="lbl" text-anchor="start" >whole-shell dark wash — SC2K abandonment</text>
+<text x="1068" y="533" class="lblf" text-anchor="start" >share of tiles at dark or collapsed · &gt;50% light · &gt;80% heavy + boarded door</text>
+<text x="1068" y="548" class="lbl" text-anchor="start" >rooftop AC cubes</text>
+<text x="1068" y="560" class="lblf" text-anchor="start" >files with spec coverage in the annex · one cube per covered quartile</text>
+<text x="1068" y="575" class="lbl" text-anchor="start" >water tower + antenna</text>
+<text x="1068" y="587" class="lblf" text-anchor="start" >member has a docs page · member has a published entry point · binary each, splendor only</text>
+<text x="1068" y="602" class="lbl" text-anchor="start" >accent crane + scaffold hook</text>
+<text x="1068" y="614" class="lblf" text-anchor="start" >files added or renamed in the last 30 days · binary — RENOVATION, not ruin</text>
+<text x="1068" y="646" class="lblf" text-anchor="start" >DEAREST OF THE THREE, AND THE ONLY ONE NEEDING A NEW PROBE — tile count</text>
+<text x="1068" y="658" class="lblf" text-anchor="start" >equals file count, so sheet 7’s city would gain a few hundred elements</text>
+<text x="1068" y="670" class="lblf" text-anchor="start" >(+15–30 KB per city sheet) and a per-FILE age census the cabinet does not</text>
+<text x="1068" y="682" class="lblf" text-anchor="start" >hold. A one-file tool degenerates to a single-tile roof, which still</text>
+<text x="1068" y="694" class="lblf" text-anchor="start" >reads: the whole roof darkens when the file is old.</text>
+</g>
+<g>
+<rect x="60" y="708" width="640" height="40" rx="0" class="skf fnone"/>
+<text x="76" y="725" class="lbls" text-anchor="start" >STUDY 3 / 3 — THE WORKING PLANT</text>
+<text x="76" y="739" class="lblf" text-anchor="start" >FACTORIO-LEANING · every member is a machine; state is broadcast, never implied</text>
+<g transform="translate(128,908)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<g opacity="0.85"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="url(#sA1-hr)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hr)"/></g>
+<path d="M15.2,-12.8 L20.6,-27.9 L17.0,-35.8 L23.0,-51.3" class="skr" fill="none" opacity="0.8"/><path d="M-33.3,-25.3 L-29.1,-34.8 L-36.4,-51.0" class="skr" fill="none" opacity="0.7"/>
+<polygon points="-37.6,-21.7 -52.1,-30.1 -56.1,-23.1 -41.6,-14.7" class="sks fp2"/>
+<line x1="-45.0" y1="-25.1" x2="-48.7" y2="-19.7" class="skr"/>
+<line x1="52.1" y1="-44.1" x2="86.1" y2="-50.1" class="sks" stroke-dasharray="4 3"/><ellipse cx="86.1" cy="-41.1" rx="2.4" ry="3.4" class="fr" opacity="0.65"/>
+<line x1="52.1" y1="-57.1" x2="86.1" y2="-63.1" class="sks" stroke-dasharray="4 3"/><ellipse cx="86.1" cy="-54.1" rx="2.4" ry="3.4" class="fr" opacity="0.65"/>
+<polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" fill="var(--paper-2)"/><polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" class="skf fnone"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" fill="var(--paper-2)"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" class="skf fnone"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" fill="var(--paper-2)"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" class="skf fnone"/>
+<polygon points="13.0,-86.5 20.8,-82.0 20.8,-77.0 13.0,-81.5" class="sk fp2"/><polygon points="28.6,-86.5 20.8,-82.0 20.8,-77.0 28.6,-81.5" class="sk fp2"/><polygon points="20.8,-91.0 28.6,-86.5 20.8,-82.0 13.0,-86.5" class="sk fp2"/>
+
+<polygon points="0.0,-152.0 11.0,-134.0 -11.0,-134.0" fill="var(--paper)"/><polygon points="0.0,-152.0 11.0,-134.0 -11.0,-134.0" class="skr fnone"/><text x="0" y="-137" class="lblr" text-anchor="middle" >!</text></g>
+<g transform="translate(334,908)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<g opacity="0.6"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="url(#sA1-hr)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hr)"/></g>
+<path d="M15.2,-12.8 L20.6,-27.9 L17.0,-35.8 L23.0,-51.3" class="skr" fill="none" opacity="0.8"/><path d="M-33.3,-25.3 L-29.1,-34.8 L-36.4,-51.0" class="skr" fill="none" opacity="0.7"/>
+<polygon points="-37.6,-21.7 -52.1,-30.1 -56.1,-23.1 -41.6,-14.7" class="sks fp2"/>
+<line x1="-45.0" y1="-25.1" x2="-48.7" y2="-19.7" class="skr"/>
+<line x1="52.1" y1="-44.1" x2="86.1" y2="-50.1" class="sks" stroke-dasharray="4 3"/><ellipse cx="86.1" cy="-41.1" rx="2.4" ry="3.4" class="fr" opacity="0.65"/>
+<line x1="52.1" y1="-57.1" x2="86.1" y2="-63.1" class="sks" stroke-dasharray="4 3"/><ellipse cx="86.1" cy="-54.1" rx="2.4" ry="3.4" class="fr" opacity="0.65"/>
+<polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" fill="var(--paper-2)"/><polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" class="skf fnone"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" fill="var(--paper-2)"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" class="skf fnone"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" fill="var(--paper-2)"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" class="skf fnone"/>
+<polygon points="13.0,-86.5 20.8,-82.0 20.8,-77.0 13.0,-81.5" class="sk fp2"/><polygon points="28.6,-86.5 20.8,-82.0 20.8,-77.0 28.6,-81.5" class="sk fp2"/><polygon points="20.8,-91.0 28.6,-86.5 20.8,-82.0 13.0,-86.5" class="sk fp2"/>
+
+</g>
+<g transform="translate(540,908)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<g opacity="0.3"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="url(#sA1-hr)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hr)"/></g>
+
+<polygon points="-37.6,-21.7 -52.1,-30.1 -56.1,-23.1 -41.6,-14.7" class="sk fp2"/>
+<path d="M-41.2,-22.8 L-44.6,-20.3 L-41.2,-17.8" class="sks" fill="none"/><path d="M-47.3,-26.3 L-50.7,-23.8 L-47.3,-21.3" class="sks" fill="none"/>
+<line x1="52.1" y1="-44.1" x2="86.1" y2="-50.1" class="sk"/><circle cx="86.1" cy="-50.1" r="3.2" class="sk fp"/>
+<line x1="52.1" y1="-57.1" x2="86.1" y2="-63.1" class="sk"/><circle cx="86.1" cy="-63.1" r="3.2" class="sk fp"/>
+<polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" fill="var(--green)"/><polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" class="skg fnone"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" fill="var(--paper-2)"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" class="skf fnone"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" fill="var(--paper-2)"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" class="skf fnone"/>
+<polygon points="13.0,-86.5 20.8,-82.0 20.8,-77.0 13.0,-81.5" class="sk fp2"/><polygon points="28.6,-86.5 20.8,-82.0 20.8,-77.0 28.6,-81.5" class="sk fp2"/><polygon points="20.8,-91.0 28.6,-86.5 20.8,-82.0 13.0,-86.5" class="sk fp2"/>
+
+</g>
+<g transform="translate(746,908)">
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+<g opacity="0.12"><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="url(#sA1-hr)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hr)"/></g>
+
+<polygon points="-37.6,-21.7 -52.1,-30.1 -56.1,-23.1 -41.6,-14.7" class="sk fp2"/>
+<path d="M-41.2,-22.8 L-44.6,-20.3 L-41.2,-17.8" class="sks" fill="none"/><path d="M-47.3,-26.3 L-50.7,-23.8 L-47.3,-21.3" class="sks" fill="none"/>
+<line x1="52.1" y1="-44.1" x2="86.1" y2="-50.1" class="sk"/><circle cx="86.1" cy="-50.1" r="3.2" class="sk fp"/>
+<line x1="52.1" y1="-57.1" x2="86.1" y2="-63.1" class="sk"/><circle cx="86.1" cy="-63.1" r="3.2" class="sk fp"/>
+<polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" fill="var(--green)"/><polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" class="skg fnone"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" fill="var(--green)"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" class="skg fnone"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" fill="var(--paper-2)"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" class="skf fnone"/>
+<polygon points="13.0,-86.5 20.8,-82.0 20.8,-77.0 13.0,-81.5" class="sk fp2"/><polygon points="28.6,-86.5 20.8,-82.0 20.8,-77.0 28.6,-81.5" class="sk fp2"/><polygon points="20.8,-91.0 28.6,-86.5 20.8,-82.0 13.0,-86.5" class="sk fp2"/>
+<ellipse cx="20.8" cy="-97.5" rx="5" ry="3.4" class="sks fnone"/><ellipse cx="25.8" cy="-109.5" rx="6.8" ry="4.6" class="sks fnone"/>
+</g>
+<g transform="translate(952,908)"><ellipse cx="0.0" cy="0.0" rx="72.6" ry="16" class="fhalo"/>
+<polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" fill="var(--paper-2)"/><polygon points="-60.6,-83.0 0.0,-48.0 0.0,0.0 -60.6,-35.0" class="sk fnone"/>
+<polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" fill="url(#sA1-hx)"/><polygon points="60.6,-83.0 0.0,-48.0 0.0,0.0 60.6,-35.0" class="sk fnone"/>
+<polygon points="0.0,-118.0 60.6,-83.0 0.0,-48.0 -60.6,-83.0" class="sk fp"/>
+
+
+<polygon points="-37.6,-21.7 -52.1,-30.1 -56.1,-23.1 -41.6,-14.7" class="sk fp2"/>
+<path d="M-41.2,-22.8 L-44.6,-20.3 L-41.2,-17.8" class="sks" fill="none"/><path d="M-47.3,-26.3 L-50.7,-23.8 L-47.3,-21.3" class="sks" fill="none"/>
+<line x1="52.1" y1="-44.1" x2="86.1" y2="-50.1" class="sk"/><circle cx="86.1" cy="-50.1" r="3.2" class="sk fp"/>
+<line x1="52.1" y1="-57.1" x2="86.1" y2="-63.1" class="sk"/><circle cx="86.1" cy="-63.1" r="3.2" class="sk fp"/>
+<polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" fill="var(--green)"/><polygon points="12.1,-19.0 17.6,-22.2 17.6,-15.2 12.1,-12.0" class="skg fnone"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" fill="var(--green)"/><polygon points="20.0,-23.6 25.5,-26.7 25.5,-19.7 20.0,-16.6" class="skg fnone"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" fill="var(--green)"/><polygon points="27.9,-28.1 33.3,-31.3 33.3,-24.3 27.9,-21.1" class="skg fnone"/>
+<polygon points="13.0,-86.5 20.8,-82.0 20.8,-77.0 13.0,-81.5" class="sk fp2"/><polygon points="28.6,-86.5 20.8,-82.0 20.8,-77.0 28.6,-81.5" class="sk fp2"/><polygon points="20.8,-91.0 28.6,-86.5 20.8,-82.0 13.0,-86.5" class="sk fp2"/>
+<ellipse cx="20.8" cy="-97.5" rx="5" ry="3.4" class="sks fnone"/><ellipse cx="25.8" cy="-109.5" rx="6.8" ry="4.6" class="sks fnone"/><ellipse cx="30.8" cy="-121.5" rx="8.6" ry="5.8" class="ska fnone"/>
+</g>
+<text x="128" y="932" class="lblb" text-anchor="middle" >SEIZED</text>
+<text x="334" y="932" class="lblb" text-anchor="middle" >RUSTING</text>
+<text x="540" y="932" class="lblb" text-anchor="middle" >IDLING</text>
+<text x="746" y="932" class="lblb" text-anchor="middle" >RUNNING</text>
+<text x="952" y="932" class="lblb" text-anchor="middle" >HUMMING</text>
+<text x="128" y="946" class="lblf" text-anchor="middle" >pipes dripping · belt stopped · alert</text>
+<text x="334" y="946" class="lblf" text-anchor="middle" >heavy rust · still stopped</text>
+<text x="540" y="946" class="lblf" text-anchor="middle" >clean, no plume</text>
+<text x="746" y="946" class="lblf" text-anchor="middle" >plume · two lamps</text>
+<text x="952" y="946" class="lblf" text-anchor="middle" >accent plume · three lamps · halo</text>
+<path d="M60,966 L1012,966" class="sks" marker-end="url(#sA1-ai)"/>
+<text x="60" y="982" class="lbls" text-anchor="start" >WRECK &amp; RUIN</text>
+<text x="1012" y="982" class="lbls" text-anchor="end" >SHINE &amp; SPLENDOR</text>
+<rect x="1054" y="758" width="466" height="172" rx="0" class="sk fp"/>
+<text x="1068" y="776" class="lbls" text-anchor="start" >DATA → VISUAL CHANNEL — STUDY 3</text>
+<line x1="1054" y1="784" x2="1520" y2="784" class="skf"/>
+<text x="1068" y="796" class="lbl" text-anchor="start" >rust hatch density + cracks</text>
+<text x="1068" y="808" class="lblf" text-anchor="start" >age of the median line (git blame) × absence of commits · 0–85% overlay, 5 steps</text>
+<text x="1068" y="823" class="lbl" text-anchor="start" >steam plume — 0–3 puffs, accent at the top</text>
+<text x="1068" y="835" class="lblf" text-anchor="start" >commits touching the member, trailing 90 days · quartiles within the city</text>
+<text x="1068" y="850" class="lbl" text-anchor="start" >module lamps — 0–3 lit green</text>
+<text x="1068" y="862" class="lblf" text-anchor="start" >spec-annex coverage ratio, annex sloc / src sloc · terciles, 0 = no annex</text>
+<text x="1068" y="877" class="lbl" text-anchor="start" >pipes connected vs dashed + drip</text>
+<text x="1068" y="889" class="lblf" text-anchor="start" >the build currently succeeds for this member · binary, from turbo at HEAD</text>
+<text x="1068" y="904" class="lbl" text-anchor="start" >alert triangle</text>
+<text x="1068" y="916" class="lblf" text-anchor="start" >a gate this member owns is red at HEAD · binary — borrowed straight from Factorio alerts</text>
+<text x="1068" y="948" class="lblf" text-anchor="start" >CHEAPEST — every decoration is a fixed micro-template (pipe = two paths</text>
+<text x="1068" y="960" class="lblf" text-anchor="start" >and a circle, lamp = one quad, plume = at most three ellipses, alert = a</text>
+<text x="1068" y="972" class="lblf" text-anchor="start" >polygon and one glyph) positioned by the same plan-to-screen helper; +1–3</text>
+<text x="1068" y="984" class="lblf" text-anchor="start" >KB per building and near-zero new defs, since the red hatch and the arrow</text>
+<text x="1068" y="996" class="lblf" text-anchor="start" >markers already exist.</text>
+</g>
+<g>
+<rect x="60" y="1010" width="960" height="172" rx="0" class="sk fp"/>
+<text x="76" y="1030" class="lbls" text-anchor="start" >RECOMMENDATION — BUILD THE WORKING PLANT FIRST, THEN LAYER THE VINES, THEN PARK THE LEDGER</text>
+<line x1="60" y1="1038" x2="1020" y2="1038" class="skf"/>
+<text x="76" y="1056" class="lbla" text-anchor="start" >1st</text>
+<text x="112" y="1056" class="lblb" text-anchor="start" >BUILD THE WORKING PLANT FIRST</text>
+<text x="112" y="1069" class="lblf" text-anchor="start" >Lowest path budget and ZERO new census machinery — age, churn, annex ratio and gate state are already computed for sheets 3, 7 and 8. It composes with the road grammar</text>
+<text x="112" y="1081" class="lblf" text-anchor="start" >the city already has, and its channels are independent, so the wreck-to-splendor gauge can coexist with “old but healthy”, which this repo genuinely contains.</text>
+<text x="76" y="1102" class="lbla" text-anchor="start" >2nd</text>
+<text x="112" y="1102" class="lblb" text-anchor="start" >LAYER THE VINES ON TOP</text>
+<text x="112" y="1115" class="lblf" text-anchor="start" >The purest rendering of wreck-and-ruin vs shine-and-splendor, and the most atmospheric. The vines composite cleanly over the plant sprite — HZD is literally overgrowth</text>
+<text x="112" y="1127" class="lblf" text-anchor="start" >ON machines, so the hybrid is canon rather than a compromise.</text>
+<text x="76" y="1148" class="lbla" text-anchor="start" >3rd</text>
+<text x="112" y="1148" class="lblb" text-anchor="start" >PARK THE LEDGER FOR A CLOSE-UP</text>
+<text x="112" y="1161" class="lblf" text-anchor="start" >The most informative and the only one needing a per-FILE census. Park it until a sheet wants file-level stories: it would make a superb single-district close-up plate</text>
+<text x="112" y="1173" class="lblf" text-anchor="start" >rather than a whole-city treatment.</text>
+<rect x="1054" y="1010" width="466" height="172" rx="0" class="skr fnone"/>
+<text x="1068" y="1030" class="lblr" text-anchor="start" >DESIGN GUARD — RUST RED VS GATE RED</text>
+<line x1="1054" y1="1038" x2="1520" y2="1038" class="skf"/>
+<text x="1068" y="1056" class="lblf" text-anchor="start" >The rust overlay must never collude with the gate-severity hatch sheet 7</text>
+<text x="1068" y="1068" class="lblf" text-anchor="start" >already spends hue on. Rust rides at partial opacity on the FLANKS ONLY</text>
+<text x="1068" y="1080" class="lblf" text-anchor="start" >and its cracks are jagged; the gate hatch is uniform and includes the</text>
+<text x="1068" y="1092" class="lblf" text-anchor="start" >CAP. A reviewer must be able to say “rusting, but no gate” at a glance —</text>
+<text x="1068" y="1104" class="lblf" text-anchor="start" >and the converse, a red-gated pristine building, must stay legible too.</text>
+<text x="1068" y="1158" class="lbls" text-anchor="start" >THREE RULES ALL THREE STUDIES OBEY</text>
+<text x="1068" y="1172" class="lblf" text-anchor="start" >massing never lies · house materials only · severity stays where sheet 7 put it</text>
+</g>
+</svg></div>
+    <figcaption>Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict has already shipped: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Why an appendix, and not a sheet.</strong> The set's numbered sheets are ordered by <em>altitude</em> — how far back you stand from lit-ui-router — and every one of them cites a census plate. This plate stands nowhere on that ladder, because its subject is the atlas's own drawing convention rather than the codebase: it carries no <code>diagrams/data/*.json</code> import and no measured number. Filing it as A1 rather than as sheet 15 keeps the ascent honest: fourteen altitudes, and behind them a folder of the research the drawings were made from. Its id is letter-prefixed for the same reason, so nothing that walks the set in ascent order picks it up by accident.</p>
+<p><strong>The brief the studies answered.</strong> The atlas draws workspace members as measured cities — footprint 1.6·√sloc, height 3 px per authored file, gate severity in colour. That is enough to say how <em>big</em> a member is and whether it is currently failing, and nothing at all about how it is <em>doing</em>. The question was whether a general building-sprite treatment could carry the second reading on any building-shaped sheet — the measured city of sheet 7, the delivered city of sheet 8, the bundled city of sheet 10 — hybridising three inspirations that each pull a different way: Horizon's overgrown megastructures, SimCity 2000's dimetric state-tiles, Factorio's broadcast-everything industrial sprites. The weathering-specific application is a single axis, wreck &amp; ruin ↔ shine &amp; splendor, driven by git age × churn — which is exactly the pair of measurements sheet 13 had already made.</p>
+<p><strong>The three rules every study obeys.</strong> <em>Massing never lies</em> — decay and splendor are overlays on the honest block, never a change to its size, so a ruin is exactly as big as its code and the same solid a census would draw. <em>House materials only</em> — the atlas palette tokens, the existing 45° hatches, the same isometric projection, hand-authored inline SVG: no images, no filters, nothing a strict content-security policy would drop. <em>Severity stays where sheet 7 put it</em> — gate tier already owns hue on cap and flank, so the weathering gauge is spent on different channels (vegetation, tile condition, rust overlay) and a red-gated pristine building and a never-gating ruin both stay legible. The demo member is massed under those rules rather than invented: 1,900 sloc gives a 70-unit footprint and 16 files give 48 px of height, so the fifteen blocks on this plate could each stand in the measured city without adjustment.</p>
+<p><strong>What the studies each teach.</strong> Study 1 is the purest reading of the gauge: nature is the only thing that moves, which is what actually happens to unmaintained code — it does not shrink, it gets <em>covered</em>. Study 2 is the most informative and the strictest: the roof grid is not decoration, it is the same census that already sets the height, so the tile count and the block height cannot disagree — and SimCity's own vocabulary keeps construction and abandonment as <em>different</em> sprites rather than as two ends of one axis, which is why RENOVATING sits at the healthy end. Study 3 is the one that survives contact with the repository: rust, steam, lamps and the alert are four independent channels, so <em>old AND running</em> is drawable — and old-and-running is the true state of most stable code, which no single wreck-to-splendor axis can say.</p>
+<p><strong>The verdict, and where it shipped.</strong> The recommendation was to build the working plant first, layer the vines second, and park the ledger for a close-up. That is what happened: <strong>sheet 7B, THE WORKING CITY</strong>, is the working plant drawn over the whole measured city — every pipe, plume, lamp and alarm on it is a channel from study 3's table — and <strong>sheet 13, THE WEATHERING MAP</strong>, is the age-and-churn gauge those studies were commissioned to render, drawn flat rather than sprited so the dating stays readable at city scale. The ledger roof is still parked and still wants the one probe the cabinet does not have: a per-<em>file</em> age census rather than a per-member one.</p>
+<p><strong>What is not re-drawn here.</strong> The original studies carried a reference strip — six annotated screenshots from Horizon Zero Dawn, Angkor's Ta Prohm, SimCity 2000, SCURK and two Factorio Friday Facts posts — and this plate carries none of them. The atlas is hand-authored SVG on the house palette; a fair-use raster would be the only image in the set and the only thing on a plate that a content-security policy could drop. The teaching survives as citations: Guerrilla's GDC talk <em>Between Tech and Art: The Vegetation of Horizon Zero Dawn</em> (vegetation as a systematic, parameterised layer over hard geometry — the generator posture exactly, two numbers per member); Jonathan Benainous's and Miguel Martinez's HZD environment work (overgrowth rides edges and openings while the masonry keeps its silhouette; breached parapets, spalled corners, debris at the base); the SimCity 2000 documentation of construction graphics and darkened abandonment sprites, and SCURK's fixed tile size and fixed palette, which are what make a whole-city re-skin safe; and Factorio's Friday Facts <a href="https://factorio.com/blog/post/fff-355">#355</a> (remnants are a <em>designed</em> sprite, not a missing one), <a href="https://factorio.com/blog/post/fff-269">#269</a> (belts get per-rotation sprites and strict tile-edge rules, so connections never lie), <a href="https://factorio.com/blog/post/fff-228">#228</a> (silhouette first, effects second) and <a href="https://factorio.com/blog/post/fff-348">#348</a> (alert legibility across scales — which is why the alert triangle is the only floating element on study 3).</p>
+<p><strong>Determinism.</strong> Study 1's vines are the only stochastic marks in the set, and they are seeded: a fixed linear-congruential stream per state, so the same plate is drawn byte-for-byte on every build. Nothing here is animated, nothing is rotated, and the fifteen blocks share one projection helper with <code>generator/helpers.mjs</code>'s <code>iso()</code>.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,9 16,3 26,9 16,15" class="sk fp"/><polygon points="6,9 16,15 16,18 6,12" class="sk" fill="var(--paper-2)"/><polygon points="26,9 16,15 16,18 26,12" class="sk fp2"/></svg></td><td>the honest block — massing never lies</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><path d="M10,16 L12,11 L9,7 L11,3" class="skg"/><circle cx="9" cy="7" r="1.6" class="fg"/><circle cx="12" cy="11" r="1.6" class="fg"/></svg></td><td>STUDY 1 — vine · months since last commit</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,9 16,3 26,9 16,15" class="skf fp"/><line x1="11" y1="6" x2="21" y2="12" class="skf"/><line x1="21" y1="6" x2="11" y2="12" class="skf"/></svg></td><td>STUDY 2 — roof ledger · one tile per file</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="4" width="30" height="11" fill="url(#sA1-hr)"/><rect x="6" y="4" width="30" height="11" class="sk fnone"/></svg></td><td>STUDY 3 — rust hatch · age without maintenance</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><ellipse cx="14" cy="12" rx="5" ry="3.4" class="sks fnone"/><ellipse cx="22" cy="6" rx="7" ry="4.6" class="ska fnone"/></svg></td><td>STUDY 3 — steam plume · trailing-90-day commits</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="6" width="7" height="6" fill="var(--green)" class="skg"/><rect x="16" y="6" width="7" height="6" class="skf fp2"/><rect x="26" y="6" width="7" height="6" class="skf fp2"/></svg></td><td>STUDY 3 — module lamps · spec-annex coverage</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="16,3 26,15 6,15" class="skr fp"/></svg></td><td>STUDY 3 — alert · a gate red at HEAD</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><ellipse cx="22" cy="12" rx="18" ry="4" class="fhalo"/><line x1="4" y1="12" x2="40" y2="12" class="ska"/></svg></td><td>live trace + halo · shipped in the last 90 days</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="sks"/><polygon points="40,9 33,6 33,12" class="fis"/></svg></td><td>the gauge — wreck & ruin → shine & splendor</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">THE SPRITE STUDY</span></div>
+  <div><span class="fld">SCALE</span>THE ATLAS ITSELF</div>
+  <div><span class="fld">FORM</span>SPRITE STUDIES</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · A</div>
+  <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
+  <div class="sh"><span><span class="fld">APPENDIX</span>A1</span><span class="chop" aria-hidden="true"></span></div>
+</div>
+    </div>
+  </div>
+  <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
+  <tbody><tr><td class="r">A</td><td class="d">2026-09-06</td><td class="t">rolled into the set from the standalone sprite-studies exploration; the reference strip of game screenshots is cited in the notes rather than re-drawn, because the atlas draws no images</td></tr></tbody>
+</table>
+</section>

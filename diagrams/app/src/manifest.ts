@@ -68,6 +68,14 @@ export interface Manifest {
   generatedBy: string;
   cover: Cover;
   sheets: SheetRow[];
+  /**
+   * Plates whose subject is the atlas itself, not the codebase — letter-
+   * prefixed ids ('A1'), deliberately OUTSIDE `sheets`. Everything that walks
+   * the set in ascent order (the rail's ascent block, the ← / → walk, the
+   * server's narrowed `/sheet/{num:…}` alternation is fed BOTH) reads
+   * `sheets`; the appendix rides its own section after the city.
+   */
+  appendix: SheetRow[];
   extras: ExtraRow[];
 }
 
@@ -113,11 +121,19 @@ export function primeManifest(manifest: Manifest): void {
   pending = Promise.resolve(manifest);
 }
 
-/** Sheet numbers are cased ('2A', '12i'); a url may not be. */
+/** Every plate a `/sheet/:num` url can reach — the ascent, then the appendix. */
+export function allSheets(manifest: Manifest): SheetRow[] {
+  return [...manifest.sheets, ...(manifest.appendix ?? [])];
+}
+
+/** Sheet numbers are cased ('2A', '12i', 'A1'); a url may not be. */
 export function findSheet(manifest: Manifest, num: string): SheetRow | undefined {
   const wanted = num.toLowerCase();
-  return manifest.sheets.find((sheet) => sheet.id === wanted);
+  return allSheets(manifest).find((sheet) => sheet.id === wanted);
 }
+
+/** An appendix plate is letter-first: it carries no altitude and no "OF 14". */
+export const isAppendix = (num: string): boolean => /^[A-Za-z]/.test(num);
 
 /** Either kind of row carries the two fields a fragment fetch needs. */
 export function loadFragment(sheet: { id: string; file: string }): Promise<string> {

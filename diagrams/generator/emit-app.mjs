@@ -33,6 +33,7 @@ const MODULE = {
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
   '11': 'sheet11.mjs', '12': 'sheet12.mjs', '12i': 'sheet12i.mjs',
   '13': 'sheet13.mjs', '14': 'sheet14.mjs', '14i': 'pipeline-graph.mjs',
+  A1: 'sheetA1.mjs',
 };
 
 // chrome.mjs is read by every sheet (the title block dates itself off
@@ -61,15 +62,23 @@ function platesOf(entry) {
 export function bySheet(a, b) {
   const na = Number.parseInt(a, 10);
   const nb = Number.parseInt(b, 10);
-  if (na !== nb) return na - nb;
+  // A letter-FIRST id is an appendix plate ('A1'): it parses to NaN and sorts
+  // after every numbered one, so a cross-reference list ends with the appendix
+  // rather than putting it wherever NaN happens to land.
+  const xa = Number.isNaN(na), xb = Number.isNaN(nb);
+  if (xa !== xb) return xa ? 1 : -1;
+  if (!xa && na !== nb) return na - nb;
   return String(a).localeCompare(String(b));
 }
 
 // --- cross-sheet references -------------------------------------------------
 // "sheet 2", "sheets 7–10", "sheets 8, 9 and 10" — the prose's own index.
+// Appendix ids are letter-FIRST ('A1'), so the token allows a leading letter
+// and the phrase allows the word "appendix". `expand()` still filters every
+// token against the known ids, so a stray "sheet 99" links nothing.
 const REF_RE =
-  /\bsheets?\b\s+(\d+[A-Za-z]?(?:\s*(?:,|and|&|–|—|-|to)\s*\d+[A-Za-z]?)*)/gi;
-const TOKEN_RE = /\d+[A-Za-z]?/g;
+  /\b(?:sheets?|appendix|appendices)\b\s+([A-Za-z]?\d+[A-Za-z]?(?:\s*(?:,|and|&|–|—|-|to)\s*[A-Za-z]?\d+[A-Za-z]?)*)/gi;
+const TOKEN_RE = /[A-Za-z]?\d+[A-Za-z]?/g;
 
 // A run like "7–10" is a range only when both ends are plain numbers.
 function expand(run, known) {
@@ -130,6 +139,8 @@ const CDN_SCRIPT = /\s*<script defer src="https:\/\/cdnjs\.cloudflare\.com\/[^"]
 /**
  * @param {object} args
  * @param {Array<object>} args.sheets      the SVG sheets, in build.mjs's order
+ * @param {Array<object>} args.appendix    the appendix plates — letter-prefixed
+ *        ids, OUTSIDE the ascent, emitted into `manifest.appendix`
  * @param {Array<[object, () => string]>} args.interactive sheet + its own renderer
  * @param {string} args.outDir             build.mjs's OUT argument
  * @param {(sheet: object) => string} args.fname  build.mjs's standalone filename rule
@@ -138,18 +149,23 @@ const CDN_SCRIPT = /\s*<script defer src="https:\/\/cdnjs\.cloudflare\.com\/[^"]
  * @param {Record<string, string>} args.cover the cover's own rendered HTML
  * @returns {number} fragments written (sheets + extras)
  */
-export function emitApp({ sheets, interactive, outDir, fname, index, cover }) {
+export function emitApp({ sheets, appendix = [], interactive, outDir, fname, index, cover }) {
   const rows = [...sheets.map((s) => [s, null]), ...interactive].sort(([a], [b]) =>
     bySheet(a.num, b.num),
   );
-  const byUpper = new Map(rows.map(([s]) => [String(s.num).toUpperCase(), String(s.num)]));
+  const appRows = appendix.map((s) => [s, null]);
+  // Cross-references resolve across BOTH sets: sheet 13's notes may point at A1,
+  // and A1's notes point back at 7, 7B and 13.
+  const byUpper = new Map(
+    [...rows, ...appRows].map(([s]) => [String(s.num).toUpperCase(), String(s.num)]),
+  );
 
   const publicDir = join(outDir, 'app', 'public');
   const sheetsDir = join(publicDir, 'sheets');
   mkdirSync(sheetsDir, { recursive: true });
   writeFileSync(join(sheetsDir, 'atlas.css'), `${CSS}\n`);
 
-  const manifest = rows.map(([sheet, render]) => {
+  const rowFor = ([sheet, render]) => {
     const id = String(sheet.num).toLowerCase();
     const source = render ? render() : sheetSection(sheet);
     const needsCytoscape = source.includes('cdnjs.cloudflare.com/ajax/libs/cytoscape');
@@ -174,7 +190,9 @@ export function emitApp({ sheets, interactive, outDir, fname, index, cover }) {
       plates: platesOf(MODULE[String(sheet.num)]),
       refs,
     };
-  });
+  };
+  const manifest = rows.map(rowFor);
+  const appManifest = appRows.map(rowFor);
 
   // EXTRAS — a plate the flat set only ever published inside the gallery. It
   // has no sheet number, so it is kept OUT of `sheets`: the reel walk, the
@@ -227,11 +245,15 @@ export function emitApp({ sheets, interactive, outDir, fname, index, cover }) {
         // the README's thesis and generator notes, and the CSS they need.
         cover,
         sheets: manifest,
+        // The appendix rides its own array for the same reason the city rides
+        // `extras`: everything that walks the set in ascent order reads
+        // `sheets`, and an appendix plate stands at no altitude.
+        appendix: appManifest,
         extras,
       },
       null,
       2,
     )}\n`,
   );
-  return manifest.length + extras.length;
+  return manifest.length + appManifest.length + extras.length;
 }

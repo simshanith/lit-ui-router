@@ -20,9 +20,9 @@ sheet), `app/public/sheets/atlas.css` (the sheets' own chrome) and
 `app/public/manifest.json` (one row per sheet: title, rev, the gallery index's
 own ALTITUDE wording and FIT VERDICT line, which census plates it reads, the
 cross-sheet references found in its prose, and the sheet's standalone filename
-in the flat set). Twenty-four fragments: the twenty-three sheets plus one
-`extras` row, the 3D city, which has no sheet number because the flat set only
-ever published it inside its gallery. The manifest also carries a `cover`
+in the flat set). Twenty-five fragments: the twenty-three sheets, one
+`appendix` row (**A1**, below) and one `extras` row, the 3D city, which has no
+sheet number because the flat set only ever published it inside its gallery. The manifest also carries a `cover`
 object — the flat gallery's stat bar, general survey, prose column and
 colophon line as rendered HTML, plus the CSS they need — so the routed index
 draws the same bytes the flat one does rather than a paraphrase. The same seam writes
@@ -47,6 +47,20 @@ The twenty-three sheets are the nineteen SVG plates and four interactive lanes
 joins the ascent right after sheet 14 exactly as 12i sits after 12 and carries
 a standalone page of its own in the flat set
 (`sheet-14i-the-survey-office-interactive.html`).
+
+The manifest's **`appendix`** array is the third list, beside `sheets` and
+`extras`. An appendix plate's subject is the atlas itself rather than the
+codebase, so it stands at no altitude and carries no census plate; today that is
+**A1 THE SPRITE STUDY**, the design research behind the building sprites sheets
+7B and 13 draw. It is reachable at `/sheet/A1` like any other plate — the id is
+letter-FIRST, which is what marks it — but it is deliberately out of `sheets`,
+so the rail's ascent block, the ← / → walk and the gallery's main card grid
+never pick it up: it rides its own `APPENDIX — ABOUT THE ATLAS` section in the
+rail, after the city, and its own card grid under the index. `mountsFor()` is
+fed BOTH lists, so `/sheet/A1` narrows into the server's `/sheet/{num:…}`
+alternation and `/sheet/a1` 302s to the cased id exactly as `/sheet/2a` does.
+Three helpers in `src/manifest.ts` own the distinction — `allSheets()`,
+`findSheet()` (which searches both) and `isAppendix()`.
 
 `atlas.city` is the 3D plate and the only state that loads a library on entry
 (see **Dependencies on demand**). It is deliberately not a sheet: it carries no
@@ -233,7 +247,7 @@ published as a claude.ai Artifact. That host is strict in four ways, and each on
 build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes
-  `public/manifest.json` and all twenty-four generated fragments into a
+  `public/manifest.json` and all twenty-five generated fragments into a
   `<script type="application/json" id="atlas-data">` island (every `<` escaped
   as `\u003c`, so a fragment's own `</script>` cannot close it) and inlines
   `public/sheets/atlas.css` as a `<style>`. `src/manifest.ts` reads the island
@@ -256,7 +270,7 @@ build:
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the three
 readers share. Analytics is skipped in this mode. Nothing above changes the
-site build: `npm run build` prerenders 26 pages + `404.html` and 9 redirects.
+site build: `npm run build` prerenders 28 pages + `404.html` and 10 redirects.
 
 ## Server side
 

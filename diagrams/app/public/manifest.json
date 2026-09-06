@@ -102,12 +102,12 @@
       "id": "2b",
       "num": "2B",
       "title": "THE COUPLING BENCH",
-      "sub": "ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · 7 nodes · every one of the 7 drawn edges is a published contract, with its declared range under the pointer",
+      "sub": "ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · 7 nodes · every one of the 7 drawn edges is a published contract, with its declared range under the pointer · REV B: the intra-column lit-ui-router-mobx → lit-ui-router tie bowed out of the column, because it ran straight through the navigation plugin standing between them · REV C 2026-09-06: the bow deleted and the bench recomposed in four columns — ui-router-navigation-location-plugin declares core and nothing else, so it leaves the lit column for a middle column of its own on the wall’s baseline, its one tie a straight horizontal run; with nothing left standing between them the mobx tie is a plain vertical, a same-column tie laid through a third building is now a build error rather than a curve drawn around it, and the two longest bands letter over their node so the fit is priced on the buildings rather than on the captions",
       "caption": "The same assembly as sheets 2 and 2A, reduced to what a consumer's installer actually reads: seven buildings and 7 contracts. Hover an edge for the range it declares and the section it lives in; hover a building for its version, what it declares, and what declares it.",
       "scale": "COMPANIONS, CONTRACTED",
       "verdict": "2A’s joints made live — every one of the 7 drawn edges is a published contract with its declared range under the pointer: 10 peers to 2 dependencies across the five packages, and neither dependency is a router",
       "form": "INTERACTIVE COUPLING GRAPH",
-      "rev": "A",
+      "rev": "C",
       "file": "sheets/2b.html",
       "standalone": "sheet-2B-the-coupling-bench.html",
       "interactive": true,
@@ -476,7 +476,9 @@
         "census-weather.json"
       ],
       "refs": [
-        "7"
+        "7",
+        "7B",
+        "A1"
       ]
     },
     {
@@ -497,7 +499,8 @@
       "refs": [
         "3",
         "5",
-        "6"
+        "6",
+        "A1"
       ]
     },
     {
@@ -517,6 +520,31 @@
       "plates": [],
       "refs": [
         "14"
+      ]
+    }
+  ],
+  "appendix": [
+    {
+      "id": "a1",
+      "num": "A1",
+      "title": "THE SPRITE STUDY",
+      "sub": "APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each · REV A 2026-09-06: rolled into the set from the standalone sprite-studies exploration; the reference strip of game screenshots is cited in the notes rather than re-drawn, because the atlas draws no images",
+      "caption": "Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict has already shipped: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.",
+      "scale": "THE ATLAS ITSELF",
+      "verdict": "meta — the research behind the building sprites, argued on one demo member in fifteen blocks: the working plant wins on cost and independence and shipped as sheet 7B, the vines are its second layer, and the ledger roof stays parked until a sheet wants per-file stories",
+      "form": "SPRITE STUDIES",
+      "rev": "A",
+      "file": "sheets/a1.html",
+      "standalone": "sheet-A1-the-sprite-study.html",
+      "interactive": false,
+      "needsCytoscape": false,
+      "plates": [],
+      "refs": [
+        "7",
+        "7B",
+        "8",
+        "10",
+        "13"
       ]
     }
   ],

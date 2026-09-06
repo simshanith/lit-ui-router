@@ -416,7 +416,7 @@ export function titleBlock(sheet) {
   <div><span class="fld">CLIENT</span>${CLIENT}</div>
   <div><span class="fld">DATE / REV</span>${DATE} · ${sheet.rev ?? 'A'}</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
-  <div class="sh"><span><span class="fld">SHEET</span>${sheet.num} OF ${TOTAL}</span><span class="chop" aria-hidden="true"></span></div>
+  <div class="sh"><span><span class="fld">${sheet.appendix ? 'APPENDIX' : 'SHEET'}</span>${sheet.num}${sheet.appendix ? '' : ` OF ${TOTAL}`}</span><span class="chop" aria-hidden="true"></span></div>
 </div>`;
 }
 
@@ -458,8 +458,8 @@ export function revBlock(revs) {
 
 export function sheetSection(sheet, { headline = true } = {}) {
   const { lead, revs } = splitRevs(sheet.sub);
-  return `<section class="sheet" id="sheet-${sheet.num}" aria-label="Sheet ${sheet.num}: ${sheet.title}">
-  <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">SHEET ${sheet.num} / ${TOTAL}</span></div>
+  return `<section class="sheet" id="sheet-${sheet.num}" aria-label="${sheet.appendix ? 'Appendix' : 'Sheet'} ${sheet.num}: ${sheet.title}">
+  <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h2 class="sheet-title">${sheet.title}</h2>\n  <p class="sheet-sub">${lead}</p>` : ''}
   <figure>
     <div class="figure-wrap">${sheet.svg}</div>

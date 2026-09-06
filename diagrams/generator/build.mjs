@@ -24,6 +24,7 @@ import { sheet12 } from './sheet12.mjs';
 import { register12iSection, sheet12i } from './sheet12i.mjs';
 import { sheet13 } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
+import { sheetA1 } from './sheetA1.mjs';
 import { PIPELINE_VERDICT, pipelineSection, sheet14i } from './pipeline-graph.mjs';
 import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
@@ -38,12 +39,19 @@ const sheets = [sheet1, sheet2, sheet2a, sheet3, sheet3a, sheet3b, sheet4, sheet
 // The interactive lanes that have a standalone page of their own — the plate
 // count on the cover, in the megacanvas prose and in the README derives here.
 const lanes = [sheet1i, sheet2b, sheet12i, sheet14i];
+// THE APPENDIX — plates whose subject is the atlas itself rather than the
+// codebase. Letter-prefixed ids, deliberately OUTSIDE `sheets`: the ascent
+// order, the megacanvas reel, the cover's plate count and the ← / → walk all
+// read that array, and an appendix stands at no altitude.
+const appendix = [sheetA1];
 const PLATES = sheets.length + lanes.length;
 const fname = (s) => `sheet-${s.num}-${s.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')}.html`;
 
 // --- individual sheet files ---
-for (const s of sheets) {
-  writeFileSync(join(OUT, fname(s)), page(`${s.title} — Sheet ${s.num} of ${TOTAL}`, sheetSection(s), { desc: s.caption }));
+for (const s of [...sheets, ...appendix]) {
+  writeFileSync(join(OUT, fname(s)),
+    page(s.appendix ? `${s.title} — Appendix ${s.num}` : `${s.title} — Sheet ${s.num} of ${TOTAL}`,
+      sheetSection(s), { desc: s.caption }));
 }
 
 // --- the interactive plates that have a standalone page of their own ---
@@ -123,10 +131,16 @@ const verdicts = [
   ['14i', 'THE CENSUS PIPELINE', 'INTERACTIVE GRAPH', PIPELINE_VERDICT, '#pipeline-graph'],
   ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
 ];
+// THE APPENDIX INDEX — same four columns, filed under its own heading. These
+// rows are NOT in the ascent: `appendixIdx` is concatenated for the lookup the
+// app reads, and rendered after a section row in the cover's table.
+const appendixIdx = [
+  ['A1', 'THE ATLAS ITSELF', 'SPRITE STUDIES', 'meta — the research behind the building sprites, argued on one demo member in fifteen blocks: the working plant wins on cost and independence and shipped as sheet 7B, the vines are its second layer, and the ledger roof stays parked until a sheet wants per-file stories', '#sheet-A1', 'A1'],
+];
 const idxRow = ([n, a, f, v, anchor, label]) =>
   `<tr><td><a href="${anchor ?? `#sheet-${n}`}">${label ?? `S${n}`}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`;
 /** The row for a sheet number — the app reads its altitude and verdict here. */
-const INDEX_BY_NUM = Object.fromEntries(verdicts.map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
+const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appendixIdx].map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
 // The cover's own CSS, split so the routed app can reuse the half it draws.
 // The stat bar, the general survey, the prose column and the colophon line
 // ride the manifest as `cover.css`; .cover and .idx are gallery-only. The two
@@ -180,8 +194,13 @@ ${surveyCss}
   border-bottom: 1px solid var(--line); vertical-align: baseline; }
 .idx td:first-child { color: var(--accent); font-weight: 600; }
 .idx tr:last-child td { border-bottom: none; }
+.idx .idx-sec td { font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft);
+  background: var(--paper-2); border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
 .idx a { color: inherit; }
 ${provenanceCss}
+.set-sec { font-family: var(--data); font-size: 11px; letter-spacing: 0.2em; font-weight: 600;
+  color: var(--ink-soft); max-width: 1180px; margin: 0 auto 14px; padding: 10px 4px 0;
+  border-top: 1.5px solid var(--ink); }
 .sheet { scroll-margin-top: 16px; }`;
 
 // --- general survey: every number on the cover comes from diagrams/data/census-files.json ---
@@ -253,7 +272,7 @@ const cover = `<header class="cover">
   ${galBody}
   <table class="idx">
     <thead><tr><th>SHEET</th><th>ALTITUDE</th><th>FORM</th><th>FIT VERDICT</th></tr></thead>
-    <tbody>${verdicts.map(idxRow).join('')}</tbody>
+    <tbody>${verdicts.map(idxRow).join('')}<tr class="idx-sec"><td colspan="4">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</td></tr>${appendixIdx.map(idxRow).join('')}</tbody>
   </table>
 </header>`;
 
@@ -271,6 +290,8 @@ ${sheets.map((s) => (s.num === '2A'
 ${register12iSection()}
 ${pipelineSection()}
 ${citySection()}
+<h2 class="set-sec" id="appendix">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
+${appendix.map((s) => sheetSection(s)).join('\n')}
 ${provenance}`,
 { desc: 'A drawing set over fourteen altitudes: the lit-ui-router codebase and its ecosystems, each altitude in the form it earns.' }));
 
@@ -309,6 +330,12 @@ every published entry alone, and sheet 14 draws the census pipeline that measure
 ${[...sheets, ...lanes].sort((a, b) => parseInt(a.num, 10) - parseInt(b.num, 10) || String(a.num).localeCompare(String(b.num)))
   .map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
 
+### Appendix — plates about the atlas, not the codebase
+
+| Plate | Subject | Form |
+| --- | --- | --- |
+${appendix.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
+
 - \`megacanvas.html\` — the ${sheets.length} SVG plates on one page, ascent order.
 - \`gallery.html\` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
 
@@ -318,6 +345,7 @@ ${GEN_NOTES}
 // --- app/ — the same set, cut into fragments for the lit-ui-router SPA ---
 const appSheets = emitApp({
   sheets,
+  appendix,
   interactive: [[sheet1i, loopWalkedSection], [sheet2b, sheet2bPage], [sheet12i, register12iSection], [sheet14i, pipelineSection]],
   // The cover, as the gallery renders it: the app draws the same bytes rather
   // than a paraphrase, so the two indexes cannot drift.
@@ -328,5 +356,5 @@ const appSheets = emitApp({
 });
 
 // + 4: the four interactive lanes with a standalone page of their own
-console.log('built', PLATES, 'sheets + megacanvas + gallery + README →', OUT);
+console.log('built', PLATES, 'sheets +', appendix.length, 'appendix + megacanvas + gallery + README →', OUT);
 console.log('emitted', appSheets, 'app fragments + manifest →', join(OUT, 'app/public'));

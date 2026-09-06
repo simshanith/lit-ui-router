@@ -29,8 +29,9 @@ const manifest = JSON.parse(
 ) as Manifest;
 
 const fragments: Record<string, string> = {};
-// `extras` included: the 3D city is a fragment with no sheet number.
-for (const row of [...manifest.sheets, ...manifest.extras]) {
+// `appendix` and `extras` included: A1 stands at no altitude and the 3D city
+// has no sheet number, but both are fragments a route can reach.
+for (const row of [...manifest.sheets, ...manifest.appendix, ...manifest.extras]) {
   fragments[row.id] = readFileSync(join(SHEETS, `${row.id}.html`), 'utf8');
 }
 const missing = readdirSync(SHEETS)

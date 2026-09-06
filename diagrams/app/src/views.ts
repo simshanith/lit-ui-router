@@ -10,6 +10,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
+import { isAppendix } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
@@ -191,6 +192,7 @@ customElements.define('atlas-themer', AtlasThemer);
 
 function rail(manifest: Manifest | undefined): TemplateResult {
   const sheets = manifest?.sheets ?? [];
+  const appendixRows = manifest?.appendix ?? [];
   return html`
     <nav class="rail" aria-label="drawing set">
       <div class="rail-head">
@@ -223,6 +225,26 @@ function rail(manifest: Manifest | undefined): TemplateResult {
         </a>
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
       </div>
+      ${appendixRows.length > 0
+        ? html`
+            <!-- Letter-prefixed ids, no altitude: the appendix rides AFTER the
+                 ascent and after the city, under its own section label. -->
+            <p class="rail-sec">APPENDIX — ABOUT THE ATLAS</p>
+            <div class="rail-links">
+              ${appendixRows.map(
+                (sheet) => html`
+                  <a
+                    ${uiSrefActive(ACTIVE)}
+                    ${uiSref('atlas.sheet', { num: sheet.num })}
+                    href="${to(href.sheet(sheet.num))}"
+                  >
+                    <span class="n">${sheet.num}</span><span class="t">${sheet.title}</span>
+                  </a>
+                `,
+              )}
+            </div>
+          `
+        : nothing}
     </nav>
   `;
 }
@@ -294,6 +316,30 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         `,
       )}
     </div>
+    ${(manifest.appendix ?? []).length > 0
+      ? html`
+          <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
+          <div class="cards">
+            ${manifest.appendix.map(
+              (sheet) => html`
+                <a
+                  class="card"
+                  ${uiSrefActive(ACTIVE)}
+                  ${uiSref('atlas.sheet', { num: sheet.num })}
+                  href="${to(href.sheet(sheet.num))}"
+                >
+                  <span class="n">APPENDIX ${sheet.num} · REV ${sheet.rev}</span>
+                  <h3>${sheet.title}</h3>
+                  <span class="alt">${sheet.scale}</span>
+                  <p>${sheet.caption}</p>
+                  <p class="verdict">${sheet.verdict}</p>
+                  <span class="meta">${sheet.form} · NO CENSUS PLATE — META</span>
+                </a>
+              `,
+            )}
+          </div>
+        `
+      : nothing}
   `;
 };
 
@@ -309,8 +355,11 @@ type CityResolves = { extra?: ExtraRow; fragment?: string; three?: unknown };
 type SpecimenResolves = { specimen?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
-  const index = manifest.sheets.findIndex((row) => row.id === sheet.id);
-  return [manifest.sheets[index - 1], manifest.sheets[index + 1]];
+  // The ← / → walk stays inside the ascent; an appendix plate walks its own
+  // (currently one-plate) list, so A1 never appears as "next" after sheet 14.
+  const list = isAppendix(sheet.num) ? (manifest.appendix ?? []) : manifest.sheets;
+  const index = list.findIndex((row) => row.id === sheet.id);
+  return [list[index - 1], list[index + 1]];
 };
 
 export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
@@ -323,7 +372,11 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
     <div class="crumb">
       <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
       <!-- The one FACT in the strip, bold, in tabular figures. -->
-      <span class="sh">SHEET ${sheet.num} OF ${manifest.total}</span>
+      <span class="sh"
+        >${isAppendix(sheet.num)
+          ? `APPENDIX ${sheet.num}`
+          : `SHEET ${sheet.num} OF ${String(manifest.total)}`}</span
+      >
       ${prev
         ? html`<a ${uiSref('atlas.sheet', { num: prev.num })} href="${to(href.sheet(prev.num))}"
             >PREV · ${prev.num}</a

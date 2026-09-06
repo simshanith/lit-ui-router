@@ -15,8 +15,11 @@ export const TITLES = {
   notFound: `Not in the set — ${SET}`,
 } as const;
 
+// Appendix ids are letter-first: A1 is not "Sheet A1".
 export const sheetTitle = (row: SheetRow): string =>
-  `${row.title} — Sheet ${row.num} · ${SET}`;
+  /^[A-Za-z]/.test(row.num)
+    ? `${row.title} — Appendix ${row.num} · ${SET}`
+    : `${row.title} — Sheet ${row.num} · ${SET}`;
 
 /** The title for a state, given the resolved sheet when the state is a sheet. */
 export function titleFor(state: string | undefined, sheet?: SheetRow): string {
