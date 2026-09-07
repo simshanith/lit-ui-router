@@ -230,11 +230,16 @@ plaintext only. Secrets, therefore, can never be committed here nor clobbered by
 
 ### Local Development
 
+With pnpm:
+
 ```bash
-# with pnpm
-pnpm --filter docs wrangler:dev
-# with turbo
-turbo docs#wrangler:dev
+pnpm --filter @www/lit-ui-router.dev wrangler:dev
+```
+
+With turbo:
+
+```bash
+turbo @www/lit-ui-router.dev#wrangler:dev
 ```
 
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)
