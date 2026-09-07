@@ -46,7 +46,6 @@
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"eslint-plugin-lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
-    "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:rules": "eslint-doc-generator",
     "format": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",

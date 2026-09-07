@@ -65,16 +65,17 @@ export function bumpArgs(options: {
  *   relative to the package dir, which stopped holding the tarball in #449
  * - `--git.tagExclude '${npm.name}@<version>'`: literal release-it template,
  *   never shell-expanded here
- * - `gitRawCommitsOpts.from=<prevTag>`: pins the conventional-changelog range
- *   to THIS package's previous tag (#302); omitted on a first release
+ * - `gitRawCommitsOpts.from=<from>`: pins the conventional-changelog range
+ *   to THIS package's previous tag, or the repo root on a first release
+ *   (#302, release-prev-tag.ts)
  */
 export function publishArgs(options: {
   releaseVersion: string;
   tarballPath: string;
-  prevTag: string | undefined;
+  from: string;
   dryRun: boolean;
 }): string[] {
-  const { releaseVersion, tarballPath, prevTag, dryRun } = options;
+  const { releaseVersion, tarballPath, from, dryRun } = options;
   if (releaseVersion.trim() === '') {
     throw new Error('releaseVersion must be non-empty');
   }
@@ -95,13 +96,36 @@ export function publishArgs(options: {
     tarballPath,
     '--git.tagExclude',
     `\${npm.name}@${releaseVersion}`,
-    ...(prevTag !== undefined
-      ? [
-          `--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=${prevTag}`,
-        ]
-      : []),
+    changelogFromArg(from),
     ...(dryRun ? ['--dry-run'] : []),
   ];
+}
+
+/**
+ * The bump driver's changelog capture — what the packages' `changelog`
+ * script runs, plus the same range pin the publish argv carries. The
+ * package's own tag glob keeps release-it's latest-tag context (and its
+ * flat-log fallback, #423) off other packages' tags; the pin is what sets
+ * the range, since that glob still matches the package's prerelease tags.
+ */
+export function changelogArgs(options: {
+  packageName: string;
+  from: string;
+}): string[] {
+  const { packageName, from } = options;
+  if (packageName.trim() === '') {
+    throw new Error('packageName must be non-empty');
+  }
+  return [
+    '--changelog',
+    `--git.tagMatch=${packageName}@[0-9]*.[0-9]*.[0-9]*`,
+    changelogFromArg(from),
+  ];
+}
+
+function changelogFromArg(from: string): string {
+  if (from.trim() === '') throw new Error('from must be non-empty');
+  return `--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=${from}`;
 }
 
 /**

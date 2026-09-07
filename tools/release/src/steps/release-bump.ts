@@ -8,22 +8,28 @@
 //   1. compute the bumped version (release-it --release-version, with the
 //      increment argv validated by release-increment-args.core.ts)
 //   2. create the release branch (skipped on dry runs, like the old `if:`)
-//   3. bump: release-it commits and pushes, message from commit:changelog
+//   3. bump: release-it commits and pushes, message = "Release <version>" +
+//      the changelog, its range pinned to the package's previous tag in
+//      this lane or the repo root (#302, release-prev-tag.ts) — the same
+//      pin the publish driver applies, so the PR body, the squash commit
+//      and the GitHub release notes agree
 //   4. create the release PR via gh (skipped on dry runs; in-tool retry)
 // Every release-it argv comes from the engine seam (release-it.core.ts).
 
-import { defaultExec, defaultStream } from '@tools/shared/exec.ts';
+import { defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
 import { createReleasePr } from '@tools/shared/gh.ts';
 import { group, logNotice, runMain } from '@tools/shared/gha.ts';
-import { branchPrefix, commitMessageFromScript } from './release-bump.core.ts';
+import { branchPrefix, releaseCommitMessage } from './release-bump.core.ts';
 import { incrementArgs } from './release-increment-args.core.ts';
 import {
   bumpArgs,
+  changelogArgs,
   parseReleaseVersion,
   releaseVersionArgs,
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
+import { changelogFrom } from './release-prev-tag.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 runMain(async () => {
@@ -52,21 +58,21 @@ runMain(async () => {
     );
   }
 
-  await group(`bump ${packageName} to ${version}`, async () => {
-    const { stdout } = await defaultExec(
-      'pnpm',
-      ['--silent', '--filter', packageName, 'run', 'commit:changelog'],
-      { cwd: workspaceRoot },
-    );
-    await releaseItRun(
+  const commitMessage = await group('changelog', async () => {
+    const from = await changelogFrom(packageName, version);
+    console.log(`range start: ${from}`);
+    const changelog = await releaseItOutput(
       packageName,
-      bumpArgs({
-        version,
-        commitMessage: commitMessageFromScript(stdout),
-        dryRun,
-      }),
+      changelogArgs({ packageName, from }),
     );
+    const message = releaseCommitMessage(version, changelog);
+    console.log(message);
+    return message;
   });
+
+  await group(`bump ${packageName} to ${version}`, () =>
+    releaseItRun(packageName, bumpArgs({ version, commitMessage, dryRun })),
+  );
 
   if (!dryRun) {
     const url = await group(`create PR against ${prBase}`, () =>

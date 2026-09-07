@@ -1,5 +1,5 @@
-// Pure logic for the bump-version driver: branch naming and the commit
-// message capture. The orchestration (release-it, git, gh) lives in
+// Pure logic for the bump-version driver: branch naming and the release
+// commit message. The orchestration (release-it, git, gh) lives in
 // release-bump.ts.
 
 /**
@@ -20,14 +20,20 @@ export function branchPrefix(
 }
 
 /**
- * The commit message as bash `$(pnpm --silent … commit:changelog)` captured
- * it: trailing newlines stripped, everything else (including the blank line
- * between subject and changelog body) preserved.
+ * The release commit message: `Release <version>`, a blank line, then the
+ * captured `release-it --changelog` output — the shape the old
+ * `commit:changelog` package scripts echoed. An empty changelog is refused:
+ * the PR body and the squash commit are built from this message, and an
+ * empty one means the range pin is wrong, not that nothing shipped.
  */
-export function commitMessageFromScript(stdout: string): string {
-  const message = stdout.replace(/\n+$/, '');
-  if (message.trim() === '') {
-    throw new Error('commit:changelog printed an empty commit message');
+export function releaseCommitMessage(
+  version: string,
+  changelog: string,
+): string {
+  if (version.trim() === '') throw new Error('version must be non-empty');
+  const body = changelog.trim();
+  if (body === '') {
+    throw new Error(`release-it printed an empty changelog for ${version}`);
   }
-  return message;
+  return `Release ${version}\n\n${body}`;
 }
