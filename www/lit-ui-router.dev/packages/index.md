@@ -24,9 +24,9 @@ has a runtime API — its own reference.
 
 `eslint-plugin-lit-ui-router` is the odd one out: it ships lint rules rather
 than runtime code, so its only peer is `eslint` rather than the router
-itself. It is a **release candidate** today
-(`1.0.0-rc.2`, on the `rc` dist-tag) — the shape is final, the stable number
-waits on the [1.0 bar](https://github.com/simshanith/lit-ui-router/issues/667).
+itself. Its `1.0.0` is stable, and its
+[semver policy](/packages/eslint-plugin#semver-policy) treats any tightening
+of `recommended` as a major.
 
 `ui-router-server` is the newest of these and still an early `0.x` line: it
 ships, this site's own Worker runs it in production, and its API can still

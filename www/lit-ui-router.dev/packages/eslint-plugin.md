@@ -27,19 +27,12 @@ ones they mask: an `href` written to an element that has none, an
 `aria-current` the directive silently takes over, and a directive used outside
 the part type it accepts.
 
-::: warning Release candidate
-The current release is `1.0.0-rc.2`, published under the `rc` dist-tag: the
-API shape is final and covered by tests, but the stable number waits on the
-[1.0 bar](https://github.com/simshanith/lit-ui-router/issues/667). Install it
-as `eslint-plugin-lit-ui-router@rc` until it moves to `latest`.
-:::
-
 ## Installation
 
 ```bash
-pnpm add -D eslint-plugin-lit-ui-router@rc
+pnpm add -D eslint-plugin-lit-ui-router
 # or
-npm install --save-dev eslint-plugin-lit-ui-router@rc
+npm install --save-dev eslint-plugin-lit-ui-router
 ```
 
 `eslint` (`^9.0.0 || ^10.0.0`) is the only **peer** dependency.
@@ -49,7 +42,8 @@ rather than wrapped around it, so lit-a11y is an **optional sibling** you may
 also run for the rest of its rules, never a requirement.
 
 The package is published as ESM only. Flat config loads ESM natively; a
-CommonJS config can `require()` it on Node `^20.19.0` or `>=22.12.0`.
+CommonJS config can `require()` it on Node `^20.19.0` or `>=22.12.0`; the
+call returns the module namespace, so read the plugin from its `.default`.
 
 ## Usage
 
@@ -151,17 +145,16 @@ navigating, which is the whole reason the rule exists.
 
 Following ESLint core's own policy: a change that makes `recommended` or an
 existing rule stricter — new reports on code that previously passed — ships
-as a **major**. The option-aware tier widened `recommended` before 1.0.0,
-while the package is still a release candidate and a widening costs nobody a
-major; the remaining roadmap (a state-aware tier) is the same trajectory, so
+as a **major**. The option-aware tier widened `recommended` during the
+1.0.0 release candidates, where a widening cost nobody a major; the remaining
+roadmap (a state-aware tier) is the same trajectory, so
 expect majors rather than silent tightening, and pin accordingly.
 
 ## Status
 
 - **npm**:
   [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
-  — `1.0.0-rc.2` on `rc`. `latest` still points at the empty seed publish
-  until the stable release lands.
+  — `1.0.0` on `latest`.
 - **Source**:
   [`packages/eslint-plugin-lit-ui-router`](https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router)
   — the four rules, their tests, and the generated rule docs.
