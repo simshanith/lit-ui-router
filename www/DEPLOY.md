@@ -5,7 +5,7 @@
 
 Live state of the pipeline this guide describes: whether the Cloudflare dashboard still matches the
 repo config, and whether the site it deploys is up. See
-[CD-pipeline verification signal](#cd-pipeline-verification-signal) for what each colour means.
+[CD-pipeline verification signal](#cd-pipeline-verification-signal) for what each color means.
 
 ---
 
@@ -20,7 +20,7 @@ repo config, and whether the site it deploys is up. See
 
 ## [Cloudflare Workers](https://developers.cloudflare.com/workers/) with [Static Assets](https://developers.cloudflare.com/workers/static-assets/)
 
-The Cloudflare [Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
+The Cloudflare [GitHub integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push.
 
 - Production `main` branch deploys to [lit-ui-router.dev](https://lit-ui-router.dev)
 - Development branches deploy to [preview URLs](https://developers.cloudflare.com/workers/configuration/previews/) with the `-lit-ui-router.shane-cf1.workers.dev` domain suffix
@@ -115,7 +115,7 @@ Edit-scoped token.
 
 Both belong in `.config/mise/cloudflare.local.env`, a gitignored dotenv that the checked-in
 `.config/mise/config.toml` loads via `[env] _.file` (the same mechanism as the
-[Remote Cache](./REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
+[Remote Cache](../docs/REMOTE_CACHE.md) credentials, but a separate file — `mise run turbo_login` rewrites
 that one). It is deliberately not symlinked into git worktrees, so run `check:workers-builds` from
 the owning checkout.
 
@@ -131,7 +131,7 @@ stay untracked). A third task creates both files and the item they point at:
 
 `cloudflare_item_create` is the one-time bootstrap: it creates a Secure Note (`--vault Private`,
 `--title lit-ui-router-workers-builds`) whose two fields are named after the variables and left
-**empty**, then writes both reference files pointed at it. Fill the fields in 1Password afterwards —
+**empty**, then writes both reference files pointed at it. Fill the fields in 1Password afterward —
 the task never writes a credential. It is idempotent on the item: an existing one is left untouched,
 and the two files are only rewritten with `--force`.
 
@@ -161,7 +161,7 @@ entry: a mise-managed copy would shadow the system one and lose its desktop-app 
 [`release-signals.yml`](../.github/workflows/release-signals.yml) runs the same read-only diff on every push to
 `main` — the push that Workers Builds deploys from — plus a weekly sweep, and reports it as the
 `workers-builds (triggers)` check run alongside its `published-diff` and `peer-floor` siblings. It is
-non-gating: green in sync, orange (`action_required`) on drift, grey (`neutral`) when the check could not run.
+non-gating: green in sync, orange (`action_required`) on drift, gray (`neutral`) when the check could not run.
 It never applies; resolving drift is still a local `--apply`.
 
 The badge for it sits at the top of this file and in the README header. It diffs the live Cloudflare Workers Builds triggers that ship
@@ -180,14 +180,14 @@ and [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts) — t
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
 But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
 dashboard: the badge goes orange on a dashboard that is about to become correct, and nothing
-re-triggers it afterwards. Finish the `--apply` with a re-dispatch, or it stays orange against a
+re-triggers it afterward. Finish the `--apply` with a re-dispatch, or it stays orange against a
 converged dashboard:
 
 ```sh
 gh workflow run release-signals.yml --ref main
 ```
 
-Two repository secrets drive it. Both are optional — absent, the signal reports grey rather than failing:
+Two repository secrets drive it. Both are optional — absent, the signal reports gray rather than failing:
 
 | Secret                  | Value                                                                                                                                                                                                              |
 | ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -199,7 +199,7 @@ tokens, not **Manage Account → API Tokens**), update the repository secret, an
 token shows up as the grey `workers-builds (triggers)` badge, not a red run.
 
 `publish-npm.yml` forwards both into its post-publish `workflow_call`; secrets do not auto-propagate, and
-without that the badge would go grey after every release.
+without that the badge would go gray after every release.
 
 ### Build Environment Variables
 
@@ -210,11 +210,11 @@ and leaves every other variable on the trigger untouched.
 **Declared** (plaintext, committed, `--apply` writes them):
 
 - `SKIP_DEPENDENCY_INSTALL=1` — **required.** Hands the dependency install to
-  `cloudflare-build.sh`, per [Build & Deploy Commands](#build--deploy-commands). Without it Cloudflare
+  `cloudflare-build.sh`, per [Build & Deploy Commands](#build--deploy-commands). Without it, Cloudflare
   runs its own corepack-provisioned `pnpm install` first and the build fails there;
   deleting it in the dashboard breaks every deploy.
 - `CYPRESS_INSTALL_BINARY=0` — the Cypress binary belongs to the e2e suite, which a docs
-  deploy never runs. Without it the install downloads and unzips it every build (~15s).
+  deploy never runs. Without it, the install downloads and unzips it every build (~15s).
   `mise run setup` sets the same thing locally.
 - `HUSKY=0` — the root `prepare` script installs git hooks, which mean nothing in a build
   container. Matches the `env: HUSKY: 0` every CI workflow sets.
@@ -222,11 +222,11 @@ and leaves every other variable on the trigger untouched.
 **Unmanaged** (dashboard-only; listed in the diff output as `(unmanaged)`, never diffed or patched):
 
 - `VITE_GOOGLE_ANALYTICS_TRACKING_ID`
-- `TURBO_`-prefixed [Remote Cache](./REMOTE_CACHE.md) variables and secrets
+- `TURBO_`-prefixed [Remote Cache](../docs/REMOTE_CACHE.md) variables and secrets
 
 Drift semantics for a declared key: a wrong or absent live value is drift and is patched; a key
 the dashboard has marked secret is reported and **not** overwritten, since the config holds
-plaintext only. Secrets therefore can never be committed here nor clobbered by `--apply`.
+plaintext only. Secrets, therefore, can never be committed here nor clobbered by `--apply`.
 
 ### Local Development
 

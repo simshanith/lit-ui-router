@@ -29,7 +29,7 @@
 The `workers-builds` badge at the top is the same kind of signal for the deploy pipeline that ships
 [lit-ui-router.dev](https://lit-ui-router.dev) — see
 [CD-pipeline verification signal](./www/DEPLOY.md#cd-pipeline-verification-signal) for what it diffs and
-what each colour means.
+what each color means.
 
 ---
 
@@ -66,7 +66,7 @@ The UI-Router package is distributed using [npm](https://www.npmjs.com/), the no
 npm install lit-ui-router
 ```
 
-Import `UIRouterLit` into your project, register some states and you're good to go!
+Import `UIRouterLit` into your project, register some states, and you're good to go!
 
 ```ts
 import { render, html } from 'lit';
