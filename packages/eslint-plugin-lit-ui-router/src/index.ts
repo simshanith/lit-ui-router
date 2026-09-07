@@ -1,5 +1,4 @@
-// The `lit-ui-router/` eslint plugin (#659): rules that understand
-// lit-ui-router directives.
+// eslint-plugin-lit-ui-router: rules that understand the library's directives.
 import type { Linter } from 'eslint';
 import { packageJson } from './package-json.ts';
 import type { RegisteredRule } from './rule-shape.ts';
