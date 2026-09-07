@@ -445,9 +445,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
-      diff:
-        specifier: 'catalog:'
-        version: 9.0.0
       eslint:
         specifier: 'catalog:'
         version: 10.9.1(jiti@2.7.0)(supports-color@8.1.1)
@@ -1471,6 +1468,27 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.80.0(oxlint-tsgolint@7.0.2001)
+
+  tools/repo-checks:
+    devDependencies:
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      diff:
+        specifier: 'catalog:'
+        version: 9.0.0
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.64.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
 
   tools/shared:
     devDependencies:

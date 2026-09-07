@@ -7,7 +7,7 @@ import {
   type EdgeRule,
   formatMissing,
   missingEdges,
-} from '@tools/shared/graph-edges.core.ts';
+} from './graph-edges.core.ts';
 import {
   declaredLanes,
   planFailure,

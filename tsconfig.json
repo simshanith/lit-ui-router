@@ -35,9 +35,6 @@
     ]
   },
   "include": [
-    "check-graph-edges.ts",
-    "check-patches.ts",
-    "check-task-inputs.ts",
     "commitlint.config.ts",
     "eslint.config.ts",
     "eslint.oxlint-directives.ts",

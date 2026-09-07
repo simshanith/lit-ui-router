@@ -5,6 +5,12 @@
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 
 import { defaultExec, type Exec } from './exec.ts';
+import { workspaceRoot } from './workspace.ts';
+
+// turbo scopes a run to the package it is invoked from, so every dry run here
+// is anchored at the root: these guards ask about the whole graph, and a caller
+// that happens to live in a package must not silently narrow the answer.
+const AT_ROOT = { cwd: workspaceRoot };
 
 type DryRun = { tasks?: { taskId?: string; dependencies?: string[] }[] };
 
@@ -41,12 +47,11 @@ export async function resolvedTaskDeps(
   exec: Exec = defaultExec,
 ): Promise<string[]> {
   const [pkg, task] = splitTaskId(taskId);
-  const { stdout } = await exec('turbo', [
-    'run',
-    task,
-    `--filter=${pkg}`,
-    '--dry-run=json',
-  ]);
+  const { stdout } = await exec(
+    'turbo',
+    ['run', task, `--filter=${pkg}`, '--dry-run=json'],
+    AT_ROOT,
+  );
   const plan = JSON.parse(stdout) as DryRun;
   const entry = plan.tasks?.find((t) => t.taskId === taskId);
   if (!entry) throw new Error(`turbo dry-run has no task ${taskId}`);
@@ -98,7 +103,11 @@ export async function plannedLanes(
   lanes: readonly string[],
   exec: Exec = defaultExec,
 ): Promise<Set<string>> {
-  const { stdout } = await exec('turbo', ['run', ...lanes, '--dry-run=json']);
+  const { stdout } = await exec(
+    'turbo',
+    ['run', ...lanes, '--dry-run=json'],
+    AT_ROOT,
+  );
   const plan = JSON.parse(stdout) as DryRun;
   return new Set(
     (plan.tasks ?? [])
@@ -120,7 +129,7 @@ export async function planFailure(
   exec: Exec = defaultExec,
 ): Promise<string | undefined> {
   try {
-    await exec('turbo', ['run', ...lanes, '--dry-run=json']);
+    await exec('turbo', ['run', ...lanes, '--dry-run=json'], AT_ROOT);
     return undefined;
   } catch (error) {
     return typeof error === 'object' && error !== null && 'stderr' in error
@@ -145,12 +154,11 @@ export async function plannedTasks(
     for (let name = queue.shift(); name; name = queue.shift()) {
       let stdout: string;
       try {
-        ({ stdout } = await exec('turbo', [
-          'run',
-          name,
-          '--only',
-          '--dry-run=json',
-        ]));
+        ({ stdout } = await exec(
+          'turbo',
+          ['run', name, '--only', '--dry-run=json'],
+          AT_ROOT,
+        ));
       } catch (error) {
         if (isUndeclared(name, error)) continue;
         throw error;
