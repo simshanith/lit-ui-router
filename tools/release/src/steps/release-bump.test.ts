@@ -27,17 +27,16 @@ describe('branchPrefix', () => {
 
 describe('releaseCommitMessage', () => {
   it('joins the version and the trimmed changelog like the old echo did', () => {
-    assert.equal(
+    assert.deepEqual(
       releaseCommitMessage('1.8.0', '\n### Bug Fixes\n\n* fix: things\n\n'),
-      'Release 1.8.0\n\n### Bug Fixes\n\n* fix: things',
+      { message: 'Release 1.8.0\n\n### Bug Fixes\n\n* fix: things' },
     );
   });
 
-  it('refuses an empty changelog instead of opening a bodyless release PR', () => {
-    assert.throws(
-      () => releaseCommitMessage('1.0.0', '\n\n', 'abc'),
-      /empty changelog for 1\.0\.0 \(abc\.\.HEAD\)/,
-    );
+  it('warns on an empty changelog and keeps the bare heading', () => {
+    const { message, warning } = releaseCommitMessage('1.0.0', '\n\n', 'abc');
+    assert.equal(message, 'Release 1.0.0');
+    assert.match(warning ?? '', /empty changelog for 1\.0\.0 \(abc\.\.HEAD\)/);
   });
 
   it('rejects a blank version', () => {

@@ -19,7 +19,7 @@
 import { defaultStream } from '@tools/shared/exec.ts';
 import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
 import { createReleasePr } from '@tools/shared/gh.ts';
-import { group, logNotice, runMain } from '@tools/shared/gha.ts';
+import { group, logNotice, logWarning, runMain } from '@tools/shared/gha.ts';
 import { branchPrefix, releaseCommitMessage } from './release-bump.core.ts';
 import { incrementArgs } from './release-increment-args.core.ts';
 import {
@@ -65,7 +65,8 @@ runMain(async () => {
       packageName,
       changelogArgs({ packageName, from }),
     );
-    const message = releaseCommitMessage(version, changelog, from);
+    const { message, warning } = releaseCommitMessage(version, changelog, from);
+    if (warning !== undefined) logWarning(warning);
     console.log(message);
     return message;
   });

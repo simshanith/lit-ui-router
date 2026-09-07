@@ -22,23 +22,26 @@ export function branchPrefix(
 /**
  * The release commit message: `Release <version>`, a blank line, then the
  * captured `release-it --changelog` output — the shape the old
- * `commit:changelog` package scripts echoed. An empty changelog is refused:
- * the PR body and the squash commit are built from this message, and an
- * empty one means the range pin is wrong, not that nothing shipped.
+ * `commit:changelog` package scripts echoed. An empty changelog still
+ * yields the bare `Release <version>` (the shape #733 shipped with) plus a
+ * warning for the driver to surface, since it usually means the range pin
+ * is wrong rather than that nothing shipped.
  */
 export function releaseCommitMessage(
   version: string,
   changelog: string,
   from?: string,
-): string {
+): { message: string; warning?: string } {
   if (version.trim() === '') throw new Error('version must be non-empty');
   const body = changelog.trim();
   if (body === '') {
     const range = from === undefined ? '' : ` (${from}..HEAD)`;
-    throw new Error(
-      `empty changelog for ${version}${range}: no changelog-worthy commits ` +
-        'under this package since the range start; check the range pin',
-    );
+    return {
+      message: `Release ${version}`,
+      warning:
+        `empty changelog for ${version}${range}: no changelog-worthy ` +
+        'commits under this package since the range start; check the range pin',
+    };
   }
-  return `Release ${version}\n\n${body}`;
+  return { message: `Release ${version}\n\n${body}` };
 }
