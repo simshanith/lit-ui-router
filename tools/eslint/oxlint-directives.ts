@@ -3,16 +3,20 @@
 // createDisableDirectives) and offers no opt-out. These stubs define every
 // namespaced rule .oxlintrc.json enables as a no-op so the directives parse;
 // oxlint remains the only enforcer of them.
-import type { ESLint, Rule } from 'eslint';
 import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+
+import { workspaceRoot } from '@tools/shared/workspace.ts';
+import type { ESLint, Rule } from 'eslint';
 
 interface OxlintConfig {
   rules?: Record<string, unknown>;
   overrides?: { rules?: Record<string, unknown> }[];
 }
 
+// .oxlintrc.json stays at the root — it is oxlint's own discovery path.
 const config = JSON.parse(
-  readFileSync(new URL('./.oxlintrc.json', import.meta.url), 'utf8'),
+  readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
 ) as OxlintConfig;
 
 const noop: Rule.RuleModule = { create: () => ({}) };

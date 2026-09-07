@@ -178,8 +178,7 @@
         "apps/*/src/**",
         "examples/*/src/**",
         "eslint.config.ts",
-        "eslint.oxlint-directives.ts",
-        "eslint-rules/**/*.ts",
+        "tools/eslint/**",
         "tools/lint-elements/src/**",
         // the committed warning floor: raising or lowering it re-runs the lane
         "tools/lint-elements/warnings.json",
@@ -196,7 +195,7 @@
         "$TURBO_DEFAULT$",
         "**/package.json",
         "eslint.config.ts",
-        "eslint-rules/**/*.ts",
+        "tools/eslint/**",
         "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
