@@ -1,14 +1,8 @@
-// Suppressed on purpose, to keep the workaround visible: delete both lines
-// the day eslint-plugin-lit-a11y ships its own declarations.
 // oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="./eslint-plugins.d.ts" />
+
 // The custom-element lane: eslint-plugin-lit / -wc / -lit-a11y over workspace
 // src, composed into the root eslint.config.ts.
-//
-// eslint-plugin-lit-a11y ships no declarations, and an ambient declaration is
-// only in scope for a program that names the file. The reference above carries
-// it into every program that compiles this one — this package's own typecheck
-// and the root's, which reaches here through eslint.config.ts.
 
 import tsParser from '@tools/eslint-ts-parser';
 import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
