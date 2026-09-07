@@ -10,10 +10,12 @@ import {
   isFirstReleaseError,
   isPrerelease,
   parsePrevTag,
+  parseRootCommit,
   prereleaseChannel,
   prereleaseChannels,
+  rootCommitArgs,
 } from './release-prev-tag.core.ts';
-import { prevReleaseTag } from './release-prev-tag.ts';
+import { changelogFrom, prevReleaseTag } from './release-prev-tag.ts';
 
 describe('describeArgs', () => {
   it('anchors the match glob and excludes the tag being released', () => {
@@ -126,6 +128,24 @@ describe('parsePrevTag', () => {
   });
 });
 
+describe('rootCommitArgs', () => {
+  it('lists the parentless commits of HEAD', () => {
+    assert.deepEqual(rootCommitArgs(), ['rev-list', '--max-parents=0', 'HEAD']);
+  });
+});
+
+describe('parseRootCommit', () => {
+  it('takes the first sha of the rev-list output', () => {
+    const root = '2407f49e29e058e21bffc9b0a69fd235e99a73c9';
+    assert.equal(parseRootCommit(`${root}\n`), root);
+  });
+
+  it('rejects anything but a full sha', () => {
+    assert.throws(() => parseRootCommit(''), /root commit/);
+    assert.throws(() => parseRootCommit('2407f49\n'), /root commit/);
+  });
+});
+
 describe('isFirstReleaseError', () => {
   it('recognizes both no-tags-at-all and none-matching messages', () => {
     assert.equal(
@@ -169,6 +189,16 @@ function commit(cwd: string, message: string, ...tags: string[]): void {
 
 function prevTag(cwd: string, packageName: string, version: string) {
   return prevReleaseTag(packageName, version, { cwd });
+}
+
+function rootSha(cwd: string): string {
+  const run = spawnSync('git', ['rev-list', '--max-parents=0', 'HEAD'], {
+    cwd,
+    encoding: 'utf8',
+    env: GIT_ENV,
+  });
+  assert.equal(run.status, 0, run.stderr);
+  return run.stdout.trim();
 }
 
 describe('prevReleaseTag', () => {
@@ -290,5 +320,43 @@ describe('prevReleaseTag', () => {
       await prevTag(mobxOnlyRepo, 'lit-ui-router', '1.0.0'),
       undefined,
     );
+  });
+
+  describe('changelogFrom', () => {
+    it('is the previous tag when the lane has one', async () => {
+      assert.equal(
+        await changelogFrom('lit-ui-router', '1.2.0', { cwd: repo }),
+        'lit-ui-router@1.1.0',
+      );
+    });
+
+    it('is the repo root for a first stable after an rc lane (#733)', async () => {
+      assert.equal(
+        await changelogFrom('lit-ui-router', '1.0.0', {
+          cwd: prereleaseOnlyRepo,
+        }),
+        rootSha(prereleaseOnlyRepo),
+      );
+    });
+
+    it('is the repo root on a first release', async () => {
+      assert.equal(
+        await changelogFrom('lit-ui-router', '1.0.0', { cwd: mobxOnlyRepo }),
+        rootSha(mobxOnlyRepo),
+      );
+    });
+
+    it('surfaces a genuine git failure instead of falling back to the root', async () => {
+      const exec = () =>
+        Promise.reject(
+          Object.assign(new Error('git failed'), {
+            stderr: 'fatal: not a git repository (or any parent)',
+          }),
+        );
+      await assert.rejects(
+        changelogFrom('lit-ui-router', '1.2.0', { cwd: repo, exec }),
+        { message: 'git failed' },
+      );
+    });
   });
 });

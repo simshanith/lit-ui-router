@@ -3,6 +3,7 @@ import { describe, it } from 'node:test';
 
 import {
   bumpArgs,
+  changelogArgs,
   currentReleaseVersionArgs,
   parseReleaseVersion,
   publishArgs,
@@ -89,11 +90,12 @@ describe('publishArgs', () => {
   const base = {
     releaseVersion: '1.8.0',
     tarballPath: '/w/tools/release/.cache/publish/lit-ui-router.tgz',
+    from: 'lit-ui-router@1.7.0',
     dryRun: false,
   };
 
-  it('matches the publish-npm.yml Publish argv with a previous tag', () => {
-    assert.deepEqual(publishArgs({ ...base, prevTag: 'lit-ui-router@1.7.0' }), [
+  it('matches the publish-npm.yml Publish argv, range pinned to the previous tag', () => {
+    assert.deepEqual(publishArgs(base), [
       '--no-increment',
       '--npm.publish',
       'true',
@@ -112,34 +114,60 @@ describe('publishArgs', () => {
   });
 
   it('keeps ${npm.name} a literal release-it template, never expanded', () => {
-    const args = publishArgs({ ...base, prevTag: undefined });
+    const args = publishArgs(base);
     const exclude = args[args.indexOf('--git.tagExclude') + 1];
     assert.equal(exclude, '${npm.name}@1.8.0');
   });
 
-  it('omits the changelog range override on a first release', () => {
-    const args = publishArgs({ ...base, prevTag: undefined });
+  it('pins a first release to the repo root sha, never leaving the range to release-it', () => {
+    const root = '2407f49e29e058e21bffc9b0a69fd235e99a73c9';
+    const args = publishArgs({ ...base, from: root });
     assert.equal(
-      args.some((a) => a.includes('gitRawCommitsOpts')),
-      false,
+      args.at(-1),
+      `--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=${root}`,
     );
   });
 
   it('appends --dry-run last for manual dry runs', () => {
-    assert.equal(
-      publishArgs({ ...base, prevTag: undefined, dryRun: true }).at(-1),
-      '--dry-run',
-    );
+    assert.equal(publishArgs({ ...base, dryRun: true }).at(-1), '--dry-run');
   });
 
-  it('rejects blank version/tarball', () => {
+  it('rejects blank version/tarball/from', () => {
     assert.throws(
-      () => publishArgs({ ...base, releaseVersion: '', prevTag: undefined }),
+      () => publishArgs({ ...base, releaseVersion: '' }),
       /releaseVersion/,
     );
     assert.throws(
-      () => publishArgs({ ...base, tarballPath: '', prevTag: undefined }),
+      () => publishArgs({ ...base, tarballPath: '' }),
       /tarballPath/,
+    );
+    assert.throws(() => publishArgs({ ...base, from: ' ' }), /from/);
+  });
+});
+
+describe('changelogArgs', () => {
+  it('is the package changelog script plus the same range pin publish carries', () => {
+    assert.deepEqual(
+      changelogArgs({
+        packageName: 'lit-ui-router',
+        from: 'lit-ui-router@1.7.0',
+      }),
+      [
+        '--changelog',
+        '--git.tagMatch=lit-ui-router@[0-9]*.[0-9]*.[0-9]*',
+        '--plugins.@release-it/conventional-changelog.gitRawCommitsOpts.from=lit-ui-router@1.7.0',
+      ],
+    );
+  });
+
+  it('rejects a blank package name or range start', () => {
+    assert.throws(
+      () => changelogArgs({ packageName: '', from: 'x' }),
+      /packageName/,
+    );
+    assert.throws(
+      () => changelogArgs({ packageName: 'lit-ui-router', from: '' }),
+      /from/,
     );
   });
 });
