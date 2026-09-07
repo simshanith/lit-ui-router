@@ -9,6 +9,8 @@ export default [
   // ordering matters: ours turns lit-a11y/anchor-is-valid off in favor of it
   litA11y.configs.recommended,
   ...litUiRouter.configs.recommended,
+  // the design system's link element, declared once for both rules that ask
+  { settings: { linkElements: ['sp-link'] } },
   {
     // The violation gallery: recommended ships these at error, and the app
     // itself is held to that. Here they warn so the demo has output to show

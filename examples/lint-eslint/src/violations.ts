@@ -3,6 +3,7 @@
 // `eslint . --fix` would silently repair the two fixable ones.
 import { html } from 'lit';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
+import '@spectrum-web-components/link/sp-link.js';
 
 // lit-ui-router/sref-assign-href
 export const assignHref = html`
@@ -39,4 +40,13 @@ export const anchorIsValid = html`
   <a ${uiSref('about')}>About</a>
   <!-- ✗ BAD: no href, no directive -->
   <a>About</a>
+`;
+
+// settings.linkElements — `sp-link` is declared in eslint.config.js, so
+// anchor-is-valid holds it to the <a> bar and sref-assign-href goes quiet on it
+export const linkElements = html`
+  <!-- ✓ GOOD: the true default assigns the href the element declares -->
+  <sp-link ${uiSref('about')}>About</sp-link>
+  <!-- ✗ BAD: 'auto' assigns nothing to a tag HTML gives no href, so the link is dead -->
+  <sp-link ${uiSref('about', undefined, { assignHref: 'auto' })}>About</sp-link>
 `;

@@ -2,7 +2,7 @@
 
 The **ESLint-only** shape of [`eslint-plugin-lit-ui-router`](https://lit-ui-router.dev/packages/eslint-plugin): a standalone Vite project that installs the published plugin from npm, lints a small lit app whose anchors carry `uiSref` instead of a static `href`, and renders the lint result in the page.
 
-`eslint.config.js` spreads `litA11y.configs.recommended` first, then `...litUiRouter.configs.recommended`. That order is required: ours turns `lit-a11y/anchor-is-valid` off and enables `lit-ui-router/anchor-is-valid` in its place, so the anchors report as valid while the rest of the lit-a11y ruleset keeps running.
+`eslint.config.js` spreads `litA11y.configs.recommended` first, then `...litUiRouter.configs.recommended`. That order is required: ours turns `lit-a11y/anchor-is-valid` off and enables `lit-ui-router/anchor-is-valid` in its place, so the anchors report as valid while the rest of the lit-a11y ruleset keeps running. One more entry declares `sp-link` in `settings.linkElements`: the design system's link element ([Spectrum Web Components](https://opensource.adobe.com/spectrum-web-components/components/link/), a custom element that declares `href`), which the plugin could not otherwise tell from any other custom element — so `anchor-is-valid` holds it to the `<a>` bar and `sref-assign-href` goes quiet on it, the way it is on `<a>`.
 
 `src/main.ts` is TypeScript, parsed by `typescript-eslint`. `typescript` is pinned to the 6 line because typescript-eslint needs the TypeScript JS API, which TS 7 no longer ships; Vite transpiles without it. The rule itself reads the template AST: no project service, no type information.
 
@@ -22,7 +22,7 @@ npm run build    # bakes the report into dist/
 
 `vite.config.ts` carries a local plugin — no extra dependency, just `vite` and `eslint`. It serves a virtual module, `virtual:lint-report`, whose `load` hook runs `new ESLint({ cwd }).lintFiles(['src/**/*.ts'])` and emits the results as JSON, plus a rule-id-to-docs-URL map from `getRulesMetaForResults()`. Lint problems are the payload, never a build failure.
 
-In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 4 problems in 4 files`).
+In dev, the plugin watches `src/` and `eslint.config.js` on the Vite file watcher and calls `server.reloadModule()` on the virtual module, which re-runs the lint and pushes an HMR update; `src/report-views.ts` accepts it and re-renders the connected views in place. `vite build` runs the same `load` once and bakes the report into `dist`. Either way the terminal gets a one-line summary (`lint-report: 5 problems in 4 files`).
 
 The formatter stamps `Generated on <date>` into its output, which would put a fresh timestamp in the bundle on every build and change its content hash without a source change. The plugin strips that one line so `dist` is byte-stable, and warns if the stamp ever stops matching rather than silently letting the nondeterminism back in.
 
@@ -34,7 +34,7 @@ ESLint's formatter ships every message row hidden behind a click on its file hea
 
 ## What the panel shows
 
-`src/violations.ts` is a gallery: one ✓ GOOD / ✗ BAD pair per rule in the plugin's `recommended` config, marked inline the way [`eslint-plugin-vue`](https://eslint.vuejs.org/rules/) marks its rule docs. The panel opens on those four warnings, each rule id linked to its own docs page. The module is never imported — it exists to be linted, not run, which is also what makes the `directive-position` case safe to ship: that one throws at render time by design.
+`src/violations.ts` is a gallery: one ✓ GOOD / ✗ BAD pair per rule in the plugin's `recommended` config, marked inline the way [`eslint-plugin-vue`](https://eslint.vuejs.org/rules/) marks its rule docs, plus one pair for `settings.linkElements` on `<sp-link>`, the element the config declares. The panel opens on those five warnings, each rule id linked to its own docs page at the installed version. The module is never imported — it exists to be linted, not run, which is also what makes the `directive-position` case safe to ship: that one throws at render time by design.
 
 `eslint.config.js` scopes those four rules to `warn` **for that file only**. `recommended` ships them at `error` and `src/main.ts` is held to that, so the app stays a clean consumer while the demo still has something to report and `npm run lint` still exits 0.
 

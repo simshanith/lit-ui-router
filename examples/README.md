@@ -79,6 +79,7 @@ Three links to two states, printing each element's live `href` attribute: an [`<
 A Vite project that lints itself: the same small lit app as **helloworld**, an `eslint.config.js` wired the way the [plugin README](../packages/eslint-plugin-lit-ui-router/README.md) documents, and a `<lint-report>` panel under the nav showing what ESLint found.
 
 - `litA11y.configs.recommended` first, then `...litUiRouter.configs.recommended` — ours turns `lit-a11y/anchor-is-valid` off and enables `lit-ui-router/anchor-is-valid`
+- `settings.linkElements: ['sp-link']` — the design system's link element declared once for both rules that ask whether a tag is a link, with its own ✓/✗ pair in the gallery
 - `typescript-eslint` over `src/**/*.ts`, syntax-only: the rule reads the template AST, never type information
 - `typescript` pinned to the 6 line, because typescript-eslint needs the TypeScript JS API that TS 7 no longer ships
 - A local Vite plugin in `vite.config.ts` (no extra dependency) serving a `virtual:lint-report` module: `ESLint#lintFiles()` in its `load` hook, re-run on save via `server.reloadModule`, baked into `dist` by `vite build`
