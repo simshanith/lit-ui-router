@@ -17,10 +17,10 @@ import oxlintDirectiveStubs from './oxlint-directives.ts';
 
 export default defineConfig(
   {
-    // Custom-element lane. lit-analyzer (//#lint:templates) gates template
-    // *correctness* — unknown tags/attributes/properties/events — and is blind
-    // to lifecycle and reactivity semantics: deleting a @property leaves it
-    // green. These three plugins cover that blind spot from the class AST.
+    // lit-analyzer (//#lint:templates) gates template *correctness* — unknown
+    // tags/attributes/properties/events — and is blind to lifecycle and
+    // reactivity semantics: deleting a @property leaves it green. These three
+    // plugins cover that blind spot from the class AST.
     files: [WORKSPACE_SRC_GLOB],
     extends: [
       litConfigs['flat/recommended'],
