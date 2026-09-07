@@ -44,7 +44,7 @@ Wrangler is installed in both:
 
 The deploy runs from the repo root, where no config lives, so it names the file with
 `--config www/lit-ui-router.dev/wrangler.jsonc` — inside
-[`cloudflare-deploy.ts`](./tools/workers-builds/cloudflare-deploy.ts), not in the dashboard
+[`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts), not in the dashboard
 (see [Build & Deploy Commands](#build--deploy-commands)).
 
 See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
@@ -57,8 +57,8 @@ See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/comm
 | Preview ([Versions](https://developers.cloudflare.com/workers/configuration/versions-and-deployments/)) | `./tools/workers-builds/cloudflare-build.sh` | `./tools/workers-builds/cloudflare-deploy.ts branch` |
 
 Both commands are **repo scripts, not the steps themselves**
-([`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh),
-[`cloudflare-deploy.ts`](./tools/workers-builds/cloudflare-deploy.ts)). A trigger holds one
+([`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh),
+[`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts)). A trigger holds one
 command for every branch it matches, so inlining the steps means a branch cannot
 change them — and a package-manager change is exactly a branch that needs to. Pinning the
 path instead lets the script differ per branch while the declared value stays constant, so
@@ -100,8 +100,8 @@ before production.
 
 ### Dashboard as Code
 
-The private [`tools/workers-builds`](./tools/workers-builds) package owns
-[`workers-builds-triggers.config.jsonc`](./tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
+The private [`tools/workers-builds`](../tools/workers-builds) package owns
+[`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
 the dashboard values above plus the declared [build environment variables](#build-environment-variables),
 and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 (exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
@@ -158,7 +158,7 @@ entry: a mise-managed copy would shadow the system one and lose its desktop-app 
 
 #### CD-pipeline verification signal
 
-[`release-signals.yml`](./.github/workflows/release-signals.yml) runs the same read-only diff on every push to
+[`release-signals.yml`](../.github/workflows/release-signals.yml) runs the same read-only diff on every push to
 `main` — the push that Workers Builds deploys from — plus a weekly sweep, and reports it as the
 `workers-builds (triggers)` check run alongside its `published-diff` and `peer-floor` siblings. It is
 non-gating: green in sync, orange (`action_required`) on drift, grey (`neutral`) when the check could not run.
@@ -166,7 +166,7 @@ It never applies; resolving drift is still a local `--apply`.
 
 The badge for it sits at the top of this file and in the README header. It diffs the live Cloudflare Workers Builds triggers that ship
 [lit-ui-router.dev](https://lit-ui-router.dev) against the repo-owned
-[desired state](./tools/workers-builds/workers-builds-triggers.config.jsonc):
+[desired state](../tools/workers-builds/workers-builds-triggers.config.jsonc):
 
 | Badge                                                                        | Meaning                                                                   |
 | ---------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
@@ -175,8 +175,8 @@ The badge for it sits at the top of this file and in the README header. It diffs
 | ![neutral](https://img.shields.io/badge/workers--builds-neutral-lightgrey)   | Could not verify (no/expired token, API outage) — not a claim about drift |
 
 One ordering trap. When the value being applied names a file in the repo — as `build_command` and
-`deploy_command` both do, pointing at [`cloudflare-build.sh`](./tools/workers-builds/cloudflare-build.sh)
-and [`cloudflare-deploy.ts`](./tools/workers-builds/cloudflare-deploy.ts) — the apply has to
+`deploy_command` both do, pointing at [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh)
+and [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts) — the apply has to
 _follow_ the merge, or it breaks the preview build of every branch that does not have the file yet.
 But the push-triggered run fires seconds after that merge, so it necessarily reads the pre-apply
 dashboard: the badge goes orange on a dashboard that is about to become correct, and nothing
@@ -204,7 +204,7 @@ without that the badge would go grey after every release.
 ### Build Environment Variables
 
 Managed per key, not per map: `check:workers-builds` diffs only the keys declared in
-[`workers-builds-triggers.config.jsonc`](./tools/workers-builds/workers-builds-triggers.config.jsonc)
+[`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
 and leaves every other variable on the trigger untouched.
 
 **Declared** (plaintext, committed, `--apply` writes them):

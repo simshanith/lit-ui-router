@@ -49,14 +49,14 @@ The following [repository variables](https://docs.github.com/en/actions/referenc
 
 | Variable     | Purpose                                      |
 | ------------ | -------------------------------------------- |
-| `TURBO_API`  | Worker endpoint URL (no trailing slash)      |
 | `TURBO_TEAM` | Team identifier (e.g., `team_lit-ui-router`) |
 
 ### Repository Secrets (Turbo Remote Cache)
 
-| Secret        | Purpose                               |
-| ------------- | ------------------------------------- |
-| `TURBO_TOKEN` | Authentication token for remote cache |
+| Secret        | Purpose                                 |
+| ------------- | --------------------------------------- |
+| `TURBO_API`   | Worker endpoint URL (no trailing slash) |
+| `TURBO_TOKEN` | Authentication token for remote cache   |
 
 These are consumed by `build-test.yml` and `publish-npm.yml` to enable remote caching during CI builds.
 

@@ -113,7 +113,7 @@ The worker needs no signature configuration: it accepts `x-artifact-tag` on
 upload, stores it as R2 custom metadata, and echoes it back on download.
 Signing and verification are entirely client-side.
 
-## Cloudflare Workers Build Varaiables & Secrets
+## Cloudflare Workers Build Variables & Secrets
 
 ```sh
 TURBO_API=https://<your-worker>.workers.dev

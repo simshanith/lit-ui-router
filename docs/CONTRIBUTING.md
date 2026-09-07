@@ -4,14 +4,14 @@
 
 This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Each tool has exactly one version authority — one place to bump, no drift between duplicate pins:
 
-| Tool       | Provided by                                     | Pinned in                                                                |
-| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
-| node       | mise                                            | [`.nvmrc`](./.nvmrc)                                                     |
-| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
-| pnpm       | mise bootstraps, `packageManager` decides       | `packageManager` in [`package.json`](./package.json) (+sha512 integrity) |
-| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](./pnpm-workspace.yaml) catalog                   |
-| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
-| zizmor     | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](./.config/mise/config.toml)                 |
+| Tool       | Provided by                                     | Pinned in                                                                 |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| node       | mise                                            | [`.nvmrc`](../.nvmrc)                                                     |
+| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+| pnpm       | mise bootstraps, `packageManager` decides       | `packageManager` in [`package.json`](../package.json) (+sha512 integrity) |
+| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) catalog                   |
+| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+| zizmor     | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
 
 ```bash
 # Install mise: https://mise.jdx.dev/getting-started.html
@@ -23,7 +23,7 @@ turbo build
 
 `mise install` provisions the pinned Node and a bootstrap pnpm. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): `pnpm install` runs — frozen-lockfile automatically in CI.
 
-The mise pin is a **bootstrap floor, not the version that runs**: pnpm ≥ 11.10 reads `packageManager` and swaps itself to it, so that field stays the single version authority for contributors, CI, and [Cloudflare Workers Builds](./DEPLOY.md) alike. corepack used to fill this role, could not for the first pnpm 12 prereleases, and can again as of 12.0.0-rc.6 — the published package ships a `bin/pnpm.mjs` that fetches the pinned native binary on first use. The aqua backend is still what this repo provisions with: it needs no Node, makes no first-use network fetch, and records a checksum **per platform** in `mise.lock` plus GitHub artifact attestations, against corepack's single `+sha512`. That `+sha512` is carried in `packageManager` anyway, so a contributor whose environment reaches for corepack still gets an integrity-checked binary — it is enforced there and ignored by pnpm's own self-swap, which resolves through the lockfile instead. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. mise-owned binaries (actionlint, zizmor) are invoked via mise tasks; package.json scripts delegate with `mise run`, never `mise exec`.
+The mise pin is a **bootstrap floor, not the version that runs**: pnpm ≥ 11.10 reads `packageManager` and swaps itself to it, so that field stays the single version authority for contributors, CI, and [Cloudflare Workers Builds](../www/DEPLOY.md) alike. corepack used to fill this role, could not for the first pnpm 12 prereleases, and can again as of 12.0.0-rc.6 — the published package ships a `bin/pnpm.mjs` that fetches the pinned native binary on first use. The aqua backend is still what this repo provisions with: it needs no Node, makes no first-use network fetch, and records a checksum **per platform** in `mise.lock` plus GitHub artifact attestations, against corepack's single `+sha512`. That `+sha512` is carried in `packageManager` anyway, so a contributor whose environment reaches for corepack still gets an integrity-checked binary — it is enforced there and ignored by pnpm's own self-swap, which resolves through the lockfile instead. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. mise-owned binaries (actionlint, zizmor) are invoked via mise tasks; package.json scripts delegate with `mise run`, never `mise exec`.
 
 pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vitest`, `typedoc`, `vitepress`, …) live in that member's own `node_modules/.bin`, not the root one. When your shell is cd'd into a member directory, mise also puts that member's `.bin` first on `PATH`, so bare invocations resolve exactly as the member's own pnpm scripts would — including a member-local version shadowing the root one (e.g. `tools/vue-check`'s TypeScript 6 `tsc`). This only applies at the member's root directory, not its subdirectories; `pnpm run` inside the member works everywhere regardless. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
 
@@ -58,7 +58,7 @@ current TypeScript — they only matter if they leak into a declaration
 (e.g. `NoInfer<T>` in an exported signature breaks 5.0 consumers; the same
 type inside a function body emits nothing and is fine).
 
-This is enforced in CI by [`tools/dts-backtest`](./tools/dts-backtest/README.md),
+This is enforced in CI by [`tools/dts-backtest`](../tools/dts-backtest/README.md),
 which typechecks the built declarations in `bundler` and `NodeNext`
 resolution modes. PRs run the current-TS leg (`@tools/dts-backtest#test`);
 pushes to `main` run the full TypeScript version matrix down to 5.0.4
@@ -83,7 +83,7 @@ has nothing to review. Label any other PR `no-coderabbit` to opt it out the same
 way. It is advisory either way: no required status check, nothing it says blocks
 a merge. `mise run ci` remains the gate.
 
-Its behaviour lives in [`.coderabbit.yaml`](./.coderabbit.yaml), read from the
+Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
 PR's own branch, so a PR may adjust its own review. The static analysers this
 repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
 yamllint) are switched off there to avoid a second, weaker copy of CI; secret
@@ -167,4 +167,4 @@ Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./REL
 
 ## Deployment
 
-The [Cloudflare Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push. See [DEPLOY.md](./DEPLOY.md) for details.
+The [Cloudflare Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push. See [`www/DEPLOY.md`](../www/DEPLOY.md) for details.

@@ -4,19 +4,19 @@ This monorepo uses [Turborepo](https://turbo.build/) for orchestrating builds, t
 
 ## Installation
 
-Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from `node_modules/.bin`, which [mise](https://mise.jdx.dev) puts on `PATH` (see [`.config/mise/config.toml`](./.config/mise/config.toml) and [CONTRIBUTING.md](./CONTRIBUTING.md#development) for setup). After `mise install` and `mise run setup`, bare `turbo` runs the workspace-pinned version — no separate global install needed.
+Turbo is the workspace devDependency (pinned in the pnpm catalog), resolved from `node_modules/.bin`, which [mise](https://mise.jdx.dev) puts on `PATH` (see [`.config/mise/config.toml`](../.config/mise/config.toml) and [CONTRIBUTING.md](./CONTRIBUTING.md#development) for setup). After `mise install` and `mise run setup`, bare `turbo` runs the workspace-pinned version — no separate global install needed.
 
 ## Workspace Structure
 
 Turbo manages these workspaces (defined in `pnpm-workspace.yaml`):
 
-| Directory               | Purpose                                     | In CI               |
-| ----------------------- | ------------------------------------------- | ------------------- |
-| `packages/*`            | Published libraries (lit-ui-router, etc.)   | Yes                 |
-| `apps/*`                | Sample applications and e2e tests           | Yes                 |
-| `tools/*`               | Internal build tools                        | Yes                 |
-| `www/lit-ui-router.dev` | Documentation site                          | Yes                 |
-| `examples`              | Standalone tutorial apps (helloworld, etc.) | Only `build:embeds` |
+| Directory    | Purpose                                     | In CI               |
+| ------------ | ------------------------------------------- | ------------------- |
+| `packages/*` | Published libraries (lit-ui-router, etc.)   | Yes                 |
+| `apps/*`     | Sample applications and e2e tests           | Yes                 |
+| `tools/*`    | Internal build tools                        | Yes                 |
+| `docs`       | Documentation site                          | Yes                 |
+| `examples`   | Standalone tutorial apps (helloworld, etc.) | Only `build:embeds` |
 
 The apps inside `examples/` (helloworld, hellogalaxy, hellosolarsystem) are intentionally outside the main turbo graph. They are standalone Vite dev servers meant for learning, and they use npm (not pnpm) for Stackblitz compatibility. The one turbo touchpoint is `examples#build:embeds` (see `examples/turbo.json`), which builds them as embeds for the docs site:
 
@@ -225,7 +225,7 @@ The prefix affects the graph only. Tagging and publishing stay bound to pushes t
 
 ```yaml
 TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} # Remote cache auth
-TURBO_API: ${{ vars.TURBO_API }} # Cache API endpoint
+TURBO_API: ${{ secrets.TURBO_API }} # Cache API endpoint
 TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Team identifier
 TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }} # Artifact signing
 ```
