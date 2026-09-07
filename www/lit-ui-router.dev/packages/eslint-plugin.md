@@ -31,7 +31,11 @@ the part type it accepts.
 
 ```bash
 pnpm add -D eslint-plugin-lit-ui-router
-# or
+```
+
+or
+
+```bash
 npm install --save-dev eslint-plugin-lit-ui-router
 ```
 
