@@ -35,6 +35,14 @@ export function arrow(p, d, mk = 'ai', cls = 'sk', dash = '') {
 const C = 0.866, S = 0.5;
 export const iso = (x, y, z = 0) => [(x - y) * C, (x + y) * S - z];
 
+// A filled, stroked face. Every stroke class declares fill:none and CSS beats a
+// presentation attribute, so the fill is its own element under the outline; a
+// pattern fill gets the sheet's stone laid under it first (a hatch has no ground).
+export function face(points, edge, fill) {
+  return (fill.startsWith('url(') ? `<polygon points="${points}" fill="var(--paper-2)"/>\n` : '')
+    + `<polygon points="${points}" fill="${fill}"/>\n<polygon points="${points}" class="${edge} fnone"/>`;
+}
+
 // Isometric block at plan (x,y), footprint w×d, height h; ox/oy = screen origin offset.
 // faces: top (paper), left (paper-2), right (hatch pattern). capCls fills the top instead.
 // z0 raises the block off the ground (a mast drops from the near corner to the ground).
@@ -52,8 +60,8 @@ export function isoBlock(p, ox, oy, x, y, w, d, h, { capCls = 'fp', edge = 'sk',
     ? `<line x1="${pt(x + w, y + d, z0).split(',')[0]}" y1="${pt(x + w, y + d, z0).split(',')[1]}" x2="${pt(x + w, y + d, 0).split(',')[0]}" y2="${pt(x + w, y + d, 0).split(',')[1]}" class="sks" stroke-dasharray="2 3"/>`
     : '';
   return `<g>${mast}
-<polygon points="${left}" class="${edge}" fill="var(--paper-2)"/>
-<polygon points="${right}" class="${edge}" fill="${sideFill ?? `url(#${p}-hx)`}"/>
+${face(left, edge, 'var(--paper-2)')}
+${face(right, edge, sideFill ?? `url(#${p}-hx)`)}
 <polygon points="${top}" class="${edge} ${capCls}"/>
 </g>`;
 }

@@ -220,9 +220,27 @@ const districts = DIST.map(([d, pad]) => {
 // ---- bodies, painted back to front ------------------------------------------------
 // Order is topological on the plan-axis separation, not a distance guess: with the
 // faces now opaque, a front mass hides the rear edges of everything behind it.
-const bodies = depthSort(M.flatMap(([n]) => (g(n).sa ? [srcMass(n), annexMass(n)] : [srcMass(n)])))
-  .map((m) => m.svg).join('\n')
-  + '\n' + M.map(([n]) => badge(n)).join('\n');
+const masses = depthSort(M.flatMap(([n]) => (g(n).sa ? [srcMass(n), annexMass(n)] : [srcMass(n)])))
+  .map((m) => m.svg).join('\n');
+const bodies = `${masses}\n${M.map(([n]) => badge(n)).join('\n')}`;
+
+// The city alone — districts and masses, no roads, badges or lettering — cropped
+// to its own extent: the routed cover's key image, drawn from the same geometry.
+export function cityHero() {
+  const corners = M.flatMap(([n]) => {
+    const b = g(n);
+    const box = (x, y, s, h) => [[x, y, 0], [x + s, y, 0], [x + s, y + s, 0], [x, y + s, 0], [x, y, h], [x + s, y, h], [x + s, y + s, h], [x, y + s, h]];
+    return [...box(b.x, b.y, b.s, b.h), ...(b.sa ? box(b.ax, b.ay, b.sa, b.ha) : [])];
+  }).map(([x, y, z]) => pt(x, y, z));
+  const pad = 34;
+  const x1 = Math.min(...corners.map((c) => c[0])) - pad, x2 = Math.max(...corners.map((c) => c[0])) + pad;
+  const y1 = Math.min(...corners.map((c) => c[1])) - pad, y2 = Math.max(...corners.map((c) => c[1])) + pad;
+  return `<svg viewBox="${x1.toFixed(0)} ${y1.toFixed(0)} ${(x2 - x1).toFixed(0)} ${(y2 - y1).toFixed(0)}" role="img" aria-label="Sheet 7's census city, massed from the same census as the plate: ${M.length} members in four dashed districts, footprint by source lines, height by authored files, gate severity in colour.">
+${defs(P)}
+${districts}
+${masses}
+</svg>`;
+}
 
 // ---- schedule -----------------------------------------------------------------------
 const ART_H = 812;

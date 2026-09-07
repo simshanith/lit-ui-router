@@ -15,6 +15,7 @@
   --accent: #2E5077;
   --accent-soft: #6E88A6;
   --red: #A63D2F;
+  --red-hatch: #A63D2F;
   --green: #4C6B51;
   --halo: rgba(46, 80, 119, 0.10);
   /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
@@ -26,15 +27,17 @@
   :root:not([data-theme="light"]) {
     --ground: #0A1B34;
     --paper: #102A50;
-    --paper-2: #0D2344;
+    --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #5F7899;
+    --ink-faint: #6E88A8;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
     --accent-soft: #5B84B4;
-    --red: #E38C6F;
+    /* fills keep the red red; the salmon survives as the hatch stroke */
+    --red: #D96C55;
+    --red-hatch: #E38C6F;
     --green: #8AB795;
     --halo: rgba(143, 188, 233, 0.12);
     --pencil: #7E97B8;
@@ -44,15 +47,16 @@
 :root[data-theme="dark"] {
   --ground: #0A1B34;
   --paper: #102A50;
-  --paper-2: #0D2344;
+  --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #5F7899;
+  --ink-faint: #6E88A8;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
   --accent-soft: #5B84B4;
-  --red: #E38C6F;
+  --red: #D96C55;
+  --red-hatch: #E38C6F;
   --green: #8AB795;
   --halo: rgba(143, 188, 233, 0.12);
   --pencil: #7E97B8;
@@ -105,15 +109,20 @@ body {
   font-family: var(--prose);
   padding: clamp(12px, 3vw, 40px);
   line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
 }
 
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
 .sheet {
   position: relative;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  max-width: none;
+  margin: 0 0 40px;
   background: var(--paper);
   border: 1.5px solid var(--ink);
-  padding: 26px;
+  padding: 22px;
   box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
 }
 .sheet::before {
@@ -155,7 +164,7 @@ body {
 .sheet-title {
   font-family: var(--title);
   font-size: clamp(18px, 2.7vw, 24px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   font-weight: 600;
   text-wrap: balance;
   margin-bottom: 4px;
@@ -168,27 +177,62 @@ body {
   margin-bottom: 16px;
 }
 
-.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
-.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  padding: 6px 0 0;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
   font-size: 14.5px;
   color: var(--ink-soft);
-  max-width: 68ch;
-  margin: 10px auto 0;
+  max-width: 66ch;
+  margin: 0;
   font-style: italic;
 }
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-right: 10px;
+}
 
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column at 66ch;
+   the key, the title block and the revisions are one 352px inset strip that
+   rides alongside whatever paragraph is on screen. */
 .notes-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 7fr) 352px;
+  gap: 24px;
   border-top: 1px solid var(--ink);
   padding-top: 16px;
   align-items: start;
 }
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.keyblock { position: sticky; top: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
 .notes h3, .keyblock h3 {
   font-family: var(--data);
   font-size: 11px;
@@ -200,7 +244,7 @@ figcaption {
 .notes p {
   font-family: var(--prose);
   font-size: 15.5px;
-  max-width: 62ch;
+  max-width: 66ch;
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
@@ -208,14 +252,15 @@ figcaption {
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
   font-family: var(--code);
-  font-size: 0.85em;
+  font-size: 0.88em;
   background: var(--paper-2);
   border: 1px solid var(--line);
-  padding: 0 4px;
+  padding: 0 3px;
   border-radius: 2px;
-  /* A chip breaks only when it would otherwise run off the column: sheet 11's
-     90-character recipe did, once the prose stepped up half a pixel. */
-  overflow-wrap: anywhere;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 .keyblock table { border-collapse: collapse; width: 100%; }
 .keyblock td {
@@ -249,7 +294,7 @@ code, kbd, samp { font-family: var(--code); }
 .titleblock .fld {
   display: block;
   font-family: var(--data);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
   color: var(--ink-soft);
   margin-bottom: 2px;
@@ -265,7 +310,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--title);
   font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.04em;
 }
 /* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
    caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
@@ -291,7 +336,8 @@ code, kbd, samp { font-family: var(--code); }
 /* ---- REVISIONS ----
    The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
    splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, under the title block, as a drawing's revision block. */
+   the tail here, in the inset strip under the title block, as a drawing's
+   revision block: one row of rev + date, the description wrapped beneath. */
 .revs {
   width: 100%;
   border-collapse: collapse;
@@ -309,27 +355,30 @@ code, kbd, samp { font-family: var(--code); }
   text-align: left;
   padding: 0 0 8px;
 }
+.revs th, .revs td { text-align: left; vertical-align: baseline; }
 .revs th {
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
+  font-weight: 600;
+  padding: 6px 10px 2px;
+  white-space: nowrap;
+  width: 1%;
+}
+.revs .d {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   color: var(--ink-soft);
-  text-align: left;
-  padding: 6px 12px;
-  border-bottom: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  padding: 6px 10px 2px;
   white-space: nowrap;
 }
-.revs td {
+.revs .t {
   font-size: 11.5px;
   letter-spacing: 0.03em;
-  padding: 7px 12px;
+  color: var(--ink-soft);
+  padding: 0 10px 7px;
   border-bottom: 1px solid var(--line);
-  vertical-align: baseline;
 }
-.revs tr:last-child td { border-bottom: none; }
-.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
-.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
-.revs .t { color: var(--ink-soft); }
+.revs tr:last-child .t { border-bottom: none; }
 .revs code { font-family: var(--code); font-size: 0.88em; }
 
 /* ---- SVG drawing classes ---- */
@@ -373,7 +422,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title">THE SPRITE STUDY</h2>
   <p class="sheet-sub">APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1560 1216" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1560 1216" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red.">
 <defs>
   <marker id="sA1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -394,7 +443,7 @@ a { color: var(--accent); }
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="sA1-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="sA1-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -828,8 +877,8 @@ a { color: var(--accent); }
 <text x="1068" y="1158" class="lbls" text-anchor="start" >THREE RULES ALL THREE STUDIES OBEY</text>
 <text x="1068" y="1172" class="lblf" text-anchor="start" >massing never lies · house materials only · severity stays where sheet 7 put it</text>
 </g>
-</svg></div>
-    <figcaption>Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict has already shipped: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. A1</span>Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict has already shipped: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -845,12 +894,12 @@ a { color: var(--accent); }
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
-      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,9 16,3 26,9 16,15" class="sk fp"/><polygon points="6,9 16,15 16,18 6,12" class="sk" fill="var(--paper-2)"/><polygon points="26,9 16,15 16,18 26,12" class="sk fp2"/></svg></td><td>the honest block — massing never lies</td></tr>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,9 16,3 26,9 16,15" class="sk fp"/><polygon points="6,9 16,15 16,18 6,12" class="sk fp2"/><polygon points="26,9 16,15 16,18 26,12" class="sk fp2"/></svg></td><td>the honest block — massing never lies</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><path d="M10,16 L12,11 L9,7 L11,3" class="skg"/><circle cx="9" cy="7" r="1.6" class="fg"/><circle cx="12" cy="11" r="1.6" class="fg"/></svg></td><td>STUDY 1 — vine · months since last commit</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,9 16,3 26,9 16,15" class="skf fp"/><line x1="11" y1="6" x2="21" y2="12" class="skf"/><line x1="21" y1="6" x2="11" y2="12" class="skf"/></svg></td><td>STUDY 2 — roof ledger · one tile per file</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="4" width="30" height="11" fill="url(#sA1-hr)"/><rect x="6" y="4" width="30" height="11" class="sk fnone"/></svg></td><td>STUDY 3 — rust hatch · age without maintenance</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><ellipse cx="14" cy="12" rx="5" ry="3.4" class="sks fnone"/><ellipse cx="22" cy="6" rx="7" ry="4.6" class="ska fnone"/></svg></td><td>STUDY 3 — steam plume · trailing-90-day commits</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="6" width="7" height="6" fill="var(--green)" class="skg"/><rect x="16" y="6" width="7" height="6" class="skf fp2"/><rect x="26" y="6" width="7" height="6" class="skf fp2"/></svg></td><td>STUDY 3 — module lamps · spec-annex coverage</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="6" width="7" height="6" class="skg fg"/><rect x="16" y="6" width="7" height="6" class="skf fp2"/><rect x="26" y="6" width="7" height="6" class="skf fp2"/></svg></td><td>STUDY 3 — module lamps · spec-annex coverage</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="16,3 26,15 6,15" class="skr fp"/></svg></td><td>STUDY 3 — alert · a gate red at HEAD</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><ellipse cx="22" cy="12" rx="18" ry="4" class="fhalo"/><line x1="4" y1="12" x2="40" y2="12" class="ska"/></svg></td><td>live trace + halo · shipped in the last 90 days</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="sks"/><polygon points="40,9 33,6 33,12" class="fis"/></svg></td><td>the gauge — wreck & ruin → shine & splendor</td></tr></table>
@@ -864,11 +913,11 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">APPENDIX</span>A1</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV A</th><td class="d">2026-09-06</td></tr>
+  <tr><td class="t" colspan="2">rolled into the set from the standalone sprite-studies exploration; the reference strip of game screenshots is cited in the notes rather than re-drawn, because the atlas draws no images</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">A</td><td class="d">2026-09-06</td><td class="t">rolled into the set from the standalone sprite-studies exploration; the reference strip of game screenshots is cited in the notes rather than re-drawn, because the atlas draws no images</td></tr></tbody>
-</table>
 </section>

@@ -1,6 +1,6 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
-import { txt, box, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { face, txt, box, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
 
 // The altitude line's version reads the master census, never a hand-typed string
 const FILES = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
@@ -33,8 +33,8 @@ const plate = (x, y, w, d, z, h = 3, edge = 'sk', cap = 'fp', sideFill = 'var(--
   const top = [p4(x, y, t), p4(x + w, y, t), p4(x + w, y + d, t), p4(x, y + d, t)].join(' ');
   const left = [p4(x, y + d, t), p4(x + w, y + d, t), p4(x + w, y + d, z), p4(x, y + d, z)].join(' ');
   const right = [p4(x + w, y, t), p4(x + w, y + d, t), p4(x + w, y + d, z), p4(x + w, y, z)].join(' ');
-  return `<g><polygon points="${left}" class="${edge}" fill="${sideFill}"/>
-<polygon points="${right}" class="${edge}" fill="${sideFill}"/>
+  return `<g>${face(left, edge, sideFill)}
+${face(right, edge, sideFill)}
 <polygon points="${top}" class="${edge} ${cap}"/></g>`;
 };
 
@@ -182,9 +182,9 @@ ${txt(x + 8, 751, sub, 'lblf')}`;
 </svg>`;
 
 export const sheet1 = {
-  num: 1, id: 'package', rev: 'E',
+  num: 1, id: 'package', rev: 'F',
   title: 'THE RENDER LOOP',
-  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic`,
+  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic · REV F 2026-09-06: fills — every block’s left face and the Tilt plates’ flanks now carry their paper-2 tint, and the right faces their hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no geometry moved`,
   scale: 'ONE PACKAGE',
   form: 'ISO CIRCUIT',
   svg,

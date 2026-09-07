@@ -191,9 +191,9 @@ ${schedule}
 </svg>`;
 
 export const sheet10 = {
-  num: 10, id: 'bundled', rev: 'C',
+  num: 10, id: 'bundled', rev: 'D',
   title: 'THE BUNDLED CITY',
-  sub: `ALTITUDE 2⅞ — inside the wire: what the bundler kept · ${PLATE.app}, one bundle · REV C: every byte now read from the census-bundle plate — ${BASIS}`,
+  sub: `ALTITUDE 2⅞ — inside the wire: what the bundler kept · ${PLATE.app}, one bundle · REV C: every byte now read from the census-bundle plate — ${BASIS} · REV D 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved`,
   scale: 'ONE BUNDLE',
   form: 'BUNDLED CITY',
   svg,

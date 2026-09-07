@@ -6,6 +6,7 @@ export interface SheetRow {
   num: string;
   title: string;
   sub: string;
+  /** HTML — the same string the plate's figcaption prints. */
   caption: string;
   /** The gallery index's ALTITUDE wording — canonical, not the sheet's own. */
   scale: string;
@@ -53,10 +54,25 @@ export interface Cover {
   survey: string;
   prose: string;
   provenance: string;
+  /** Sheet 7's city alone, an inline SVG cropped to its extent: the key image. */
+  hero: string;
   /** The README's thesis sentence, as one line of HTML. */
   thesis: string;
   /** The README's generator notes, as one line of HTML. */
   notes: string;
+}
+
+/** One REV from a sheet's frozen sub line — an issue of the set. */
+export interface IssueEntry {
+  /** YYYY-MM-DD, or '' when the rev carries no date. */
+  date: string;
+  /** The sheet number, or 'city' for the 3D plate. */
+  num: string;
+  head: string;
+  title: string;
+  rev: string;
+  /** The rev's first clause, plain text; the full text is on the sheet. */
+  desc: string;
 }
 
 export interface Manifest {
@@ -67,6 +83,8 @@ export interface Manifest {
   base: string;
   generatedBy: string;
   cover: Cover;
+  /** Every REV across the set: dated ones latest first, then the undated. */
+  issueLog: IssueEntry[];
   sheets: SheetRow[];
   /**
    * Plates whose subject is the atlas itself, not the codebase — letter-
@@ -125,6 +143,22 @@ export function primeManifest(manifest: Manifest): void {
 export function allSheets(manifest: Manifest): SheetRow[] {
   return [...manifest.sheets, ...(manifest.appendix ?? [])];
 }
+
+/**
+ * The ascent as the rail and the index file it: the numbered sheets with the
+ * 3D city seated right after 7B — it is sheet 7's third plate, so that is
+ * where it belongs, not at the end of the list.
+ */
+export type AscentRow = { kind: 'sheet'; row: SheetRow } | { kind: 'city'; row: ExtraRow };
+export function ascent(manifest: Manifest): AscentRow[] {
+  const city = findExtra(manifest, 'city');
+  return manifest.sheets.flatMap((row): AscentRow[] =>
+    row.num === '7B' && city ? [{ kind: 'sheet', row }, { kind: 'city', row: city }] : [{ kind: 'sheet', row }],
+  );
+}
+
+/** Entry titles on the rail and the cards drop the article; the sheet keeps it. */
+export const entryTitle = (title: string): string => title.replace(/^THE\s+/, '');
 
 /** Sheet numbers are cased ('2A', '12i', 'A1'); a url may not be. */
 export function findSheet(manifest: Manifest, num: string): SheetRow | undefined {

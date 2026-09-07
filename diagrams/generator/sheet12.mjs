@@ -179,7 +179,8 @@ const TOTY = MBOT + 22;
 
 function hole(x, y, kind) {
   const a = (x - CW / 2).toFixed(1), b = (y - CH / 2).toFixed(1);
-  const r = (cls, fill) => `<rect x="${a}" y="${b}" width="${CW}" height="${CH}" class="${cls}"${fill ? ` fill="${fill}"` : ''}/>`;
+  const r = (cls, fill) => (fill ? `<rect x="${a}" y="${b}" width="${CW}" height="${CH}" fill="${fill}"/>` : '')
+    + `<rect x="${a}" y="${b}" width="${CW}" height="${CH}" class="${fill ? `${cls} fnone` : cls}"/>`;
   switch (kind) {
     case 'R': return r('sk fa');
     case 'p': return `<rect x="${a}" y="${b}" width="${CW}" height="${CH}" stroke="var(--ink-faint)" stroke-width="1" fill="url(#${P}-hp)"/>`;
@@ -346,9 +347,9 @@ ${ledger}
 </svg>`;
 
 export const sheet12 = {
-  num: 12, id: 'graph', rev: 'D',
+  num: 12, id: 'graph', rev: 'E',
   title: 'THE REGISTER PLATE',
-  sub: `ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · ${TURBO} · REV B: census refresh 2026-08-31 — three new members, three new rows, the phantom share held · REV C: every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real · REV D: whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96 · ${BASIS}`,
+  sub: `ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · ${TURBO} · REV B: census refresh 2026-08-31 — three new members, three new rows, the phantom share held · REV C: every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real · REV D: whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96 · ${BASIS} · REV E 2026-09-06: the ci:main overlay holes and their key swatch now carry the accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); the register is otherwise untouched`,
   scale: 'PR CI GRAPH',
   form: 'REGISTER PLATE',
   svg,
@@ -368,7 +369,7 @@ export const sheet12 = {
     keyRow(`<rect x="14" y="3" width="15" height="10" stroke="var(--ink-faint)" stroke-width="1" fill="url(#${P}-hp)"/>`, 'unpunched — placeholder node, runs nothing'),
     keyRow('<rect x="14" y="3" width="15" height="10" class="skr fnone"/><line x1="14" y1="3" x2="29" y2="13" class="skr" opacity="0.7"/>', 'phantom by design — the whole column'),
     keyRow('<line x1="4" y1="9" x2="40" y2="9" stroke="var(--ink-faint)" stroke-width="1" opacity="0.5" stroke-dasharray="1 5"/>', 'grid station — no node in this graph'),
-    keyRow(`<rect x="14" y="3" width="15" height="10" class="ska" fill="url(#${P}-ha)"/>`, 'ci:main overlay — main-branch only'),
+    keyRow(`<rect x="14" y="3" width="15" height="10" fill="url(#${P}-ha)"/><rect x="14" y="3" width="15" height="10" class="ska fnone"/>`, 'ci:main overlay — main-branch only'),
     keyRow('<rect x="14" y="3" width="15" height="10" class="skg fp"/><circle cx="21.5" cy="8" r="2.2" class="fg"/>', 'cache:false — a cache hit would be wrong'),
     keyRow('<text x="4" y="13" class="lbla" font-size="10">^self</text>', 'accent column head = carries a ^self chain'),
   ].join('\n'),

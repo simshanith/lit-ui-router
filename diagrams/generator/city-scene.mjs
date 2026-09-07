@@ -107,7 +107,7 @@ export const CITY_META = {
 };
 
 const CSS = `
-.cs { max-width: 1300px; margin: 0 auto 40px; }
+.cs { margin: 0 0 40px; }
 .cs-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
   border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
 .cs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }

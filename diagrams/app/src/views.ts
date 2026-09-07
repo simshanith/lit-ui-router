@@ -9,8 +9,8 @@ import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
-import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
-import { isAppendix } from './manifest.ts';
+import type { AscentRow, ExtraRow, IssueEntry, Manifest, SheetRow } from './manifest.ts';
+import { ascent, entryTitle, findExtra, isAppendix } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
@@ -22,6 +22,8 @@ const ACTIVE = { activeClasses: ['is-active'] };
 
 /** The live site — the only place the flat set exists for an artifact reader. */
 const SITE = 'https://atlas.lit-ui-router.dev';
+const DOCS = 'https://lit-ui-router.dev';
+const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 
 /**
  * An in-app href. Written straight through on the site; hash-prefixed in the
@@ -188,63 +190,83 @@ export class AtlasThemer extends LitElement {
 }
 customElements.define('atlas-themer', AtlasThemer);
 
+// --- the utility bar: crumb left, utilities right, on every page ------------
+
+function utilBar(crumb: TemplateResult): TemplateResult {
+  return html`
+    <div class="util">
+      <div class="crumb">${crumb}</div>
+      <nav class="util-links" aria-label="utilities">
+        <a class="util-docs" href="${DOCS}" target="_blank" rel="noopener">DOCS ↗</a>
+        <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
+        <!-- The flat set is plain pages beside the app, not a state: a real link. -->
+        <a class="util-set" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
+        <atlas-themer></atlas-themer>
+      </nav>
+    </div>
+  `;
+}
+
+const indexCrumb = (): TemplateResult =>
+  html`<a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>`;
+
 // --- the rail --------------------------------------------------------------
 
+/** ≤900 the sheet list is a disclosure; a pick closes it over the new page. */
+const closeRail = (): void => {
+  const box = document.getElementById('rail-open') as HTMLInputElement | null;
+  if (box) box.checked = false;
+};
+
+const sheetEntry = (sheet: SheetRow): TemplateResult => html`
+  <a
+    ${uiSrefActive(ACTIVE)}
+    ${uiSref('atlas.sheet', { num: sheet.num })}
+    href="${to(href.sheet(sheet.num))}"
+  >
+    <span class="n">${sheet.num}</span><span class="t">${entryTitle(sheet.title)}</span>
+  </a>
+`;
+
+const railEntry = (entry: AscentRow): TemplateResult =>
+  entry.kind === 'sheet'
+    ? sheetEntry(entry.row)
+    : html`
+        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
+          <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
+        </a>
+      `;
+
 function rail(manifest: Manifest | undefined): TemplateResult {
-  const sheets = manifest?.sheets ?? [];
+  const rows = manifest ? ascent(manifest) : [];
   const appendixRows = manifest?.appendix ?? [];
   return html`
     <nav class="rail" aria-label="drawing set">
+      <input type="checkbox" id="rail-open" class="rail-open" aria-label="show the sheets" />
       <div class="rail-head">
-        <span class="kicker">A DRAWING SET · lit-ui-router</span>
-        <h1><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">THE ALTITUDE ATLAS</a></h1>
+        <div>
+          <span class="kicker">A DRAWING SET · lit-ui-router</span>
+          <h1><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">THE ALTITUDE ATLAS</a></h1>
+        </div>
+        <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
-      <div class="rail-top">
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.gallery')} href="${to(href.gallery)}">INDEX</a>
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${to(href.about)}">ABOUT</a>
-        <!-- The flat set is plain pages beside the app, not a state: a real link. -->
-        <a class="rail-out" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
-      </div>
-      <atlas-themer></atlas-themer>
-      <p class="rail-sec">SHEETS — ASCENT ORDER</p>
-      <div class="rail-links">
-        ${sheets.map(
-          (sheet) => html`
-            <a
-              ${uiSrefActive(ACTIVE)}
-              ${uiSref('atlas.sheet', { num: sheet.num })}
-              href="${to(href.sheet(sheet.num))}"
-            >
-              <span class="n">${sheet.num}</span><span class="t">${sheet.title}</span>
-            </a>
-          `,
-        )}
-        <!-- No sheet number, so it rides at the end of the ascent rather than in it. -->
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
-          <span class="n">S7·3D</span><span class="t">THE CITY — IN THE ROUND</span>
-        </a>
+      <div class="rail-body" @click=${closeRail}>
+        <div class="rail-top">
+          <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.gallery')} href="${to(href.gallery)}">INDEX</a>
+          <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${to(href.about)}">ABOUT</a>
+        </div>
+        <p class="rail-sec">SHEETS — ASCENT ORDER</p>
+        <div class="rail-links">${rows.map(railEntry)}</div>
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
+        ${appendixRows.length > 0
+          ? html`
+              <!-- Letter-prefixed ids, no altitude: the appendix rides AFTER the
+                   ascent, under its own section label. -->
+              <p class="rail-sec">APPENDIX — ABOUT THE ATLAS</p>
+              <div class="rail-links">${appendixRows.map(sheetEntry)}</div>
+            `
+          : nothing}
       </div>
-      ${appendixRows.length > 0
-        ? html`
-            <!-- Letter-prefixed ids, no altitude: the appendix rides AFTER the
-                 ascent and after the city, under its own section label. -->
-            <p class="rail-sec">APPENDIX — ABOUT THE ATLAS</p>
-            <div class="rail-links">
-              ${appendixRows.map(
-                (sheet) => html`
-                  <a
-                    ${uiSrefActive(ACTIVE)}
-                    ${uiSref('atlas.sheet', { num: sheet.num })}
-                    href="${to(href.sheet(sheet.num))}"
-                  >
-                    <span class="n">${sheet.num}</span><span class="t">${sheet.title}</span>
-                  </a>
-                `,
-              )}
-            </div>
-          `
-        : nothing}
     </nav>
   `;
 }
@@ -262,82 +284,118 @@ export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => html`
   </div>
 `;
 
-// --- gallery ---------------------------------------------------------------
+// --- gallery: the title sheet — key image, issue log, index ----------------
+
+const logLink = (entry: IssueEntry): TemplateResult =>
+  entry.num === 'city'
+    ? html`<a class="s" ${uiSref('atlas.city')} href="${to(href.city)}"
+        >${entry.head} · REV ${entry.rev}</a
+      >`
+    : html`<a class="s" ${uiSref('atlas.sheet', { num: entry.num })} href="${to(href.sheet(entry.num))}"
+        >${entry.head} · REV ${entry.rev}</a
+      >`;
+
+const logEntry = (entry: IssueEntry): TemplateResult => html`
+  <li>
+    <span class="d">${entry.date || '—'}</span>${logLink(entry)}<span class="t">${entry.desc}</span>
+  </li>
+`;
+
+const sheetCard = (sheet: SheetRow): TemplateResult => html`
+  <a
+    class="card"
+    ${uiSrefActive(ACTIVE)}
+    ${uiSref('atlas.sheet', { num: sheet.num })}
+    href="${to(href.sheet(sheet.num))}"
+  >
+    <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
+    <h3>${entryTitle(sheet.title)}</h3>
+    <span class="alt">${sheet.scale}</span>
+    <p>${unsafeHTML(sheet.caption)}</p>
+    <span class="meta">
+      ${isAppendix(sheet.num)
+        ? `${sheet.form} · NO CENSUS PLATE — META`
+        : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}${sheet.interactive ? ' · INTERACTIVE' : ''}`}
+    </span>
+  </a>
+`;
+
+const cityCard = (extra: ExtraRow): TemplateResult => html`
+  <a class="card" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
+    <span class="n">${extra.shno} · REV ${extra.rev}</span>
+    <h3>${entryTitle(extra.title)}</h3>
+    <span class="alt">${extra.scale}</span>
+    <p>${extra.sub.split(' · REV ')[0]}</p>
+    <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
+  </a>
+`;
 
 export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const manifest = props?.resolves?.manifest;
   if (!manifest) return html`<p class="loading">LOADING INDEX…</p>`;
+  const city = findExtra(manifest, 'city');
+  const log = manifest.issueLog ?? [];
+  const dated = log.filter((entry) => entry.date);
+  const undated = log.filter((entry) => !entry.date);
   return html`
+    ${utilBar(
+      html`<span class="sh">INDEX</span
+        ><span>${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>`,
+    )}
     <section class="sheet">
       <div class="sheet-head">
         <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <h2 class="sheet-title">THE INDEX</h2>
+      <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
       <p class="sheet-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES · CLIENT
         ${manifest.client} · PLATES COUNTED ${manifest.date}
       </p>
+      <div class="hero">
+        <!-- The key image: sheet 7's city, drawn at build time. three.js loads on /city and nowhere else. -->
+        ${city
+          ? html`
+              <a class="hero-plate" ${uiSref('atlas.city')} href="${to(href.city)}">
+                ${unsafeHTML(manifest.cover.hero)}
+                <span class="hero-cap">
+                  <span>${city.shno} · REV ${city.rev}</span>
+                  <span class="t">${city.title}</span>
+                  <span class="go">RAISE THE CITY ↗</span>
+                </span>
+              </a>
+            `
+          : nothing}
+        <aside class="issue-log" aria-label="issue log">
+          <h3>ISSUE LOG — LATEST FIRST</h3>
+          <ol>
+            ${dated.map(logEntry)}
+          </ol>
+          ${undated.length > 0
+            ? html`
+                <details>
+                  <summary>UNDATED — ORIGINAL ISSUE · ${undated.length} REVS</summary>
+                  <ol>
+                    ${undated.map(logEntry)}
+                  </ol>
+                </details>
+              `
+            : nothing}
+        </aside>
+      </div>
       ${unsafeHTML(manifest.cover.statBar)} ${unsafeHTML(manifest.cover.survey)}
       ${unsafeHTML(manifest.cover.prose)}
     </section>
+    <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
     <div class="cards">
-      ${manifest.sheets.map(
-        (sheet) => html`
-          <a
-            class="card"
-            ${uiSrefActive(ACTIVE)}
-            ${uiSref('atlas.sheet', { num: sheet.num })}
-            href="${to(href.sheet(sheet.num))}"
-          >
-            <span class="n">SHEET ${sheet.num} · REV ${sheet.rev}</span>
-            <h3>${sheet.title}</h3>
-            <span class="alt">${sheet.scale}</span>
-            <p>${sheet.caption}</p>
-            <p class="verdict">${sheet.verdict}</p>
-            <span class="meta">
-              ${sheet.form} · ${sheet.plates.length}
-              PLATE${sheet.plates.length === 1 ? '' : 'S'}
-              ${sheet.interactive ? ' · INTERACTIVE' : ''}
-            </span>
-          </a>
-        `,
-      )}
-      ${manifest.extras?.map(
-        (extra) => html`
-          <a class="card" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
-            <span class="n">${extra.shno} · REV ${extra.rev}</span>
-            <h3>${extra.title}</h3>
-            <span class="alt">${extra.scale}</span>
-            <p>${extra.sub}</p>
-            <p class="verdict">${extra.verdict}</p>
-            <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
-          </a>
-        `,
+      ${ascent(manifest).map((entry) =>
+        entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),
       )}
     </div>
     ${(manifest.appendix ?? []).length > 0
       ? html`
           <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
-          <div class="cards">
-            ${manifest.appendix.map(
-              (sheet) => html`
-                <a
-                  class="card"
-                  ${uiSrefActive(ACTIVE)}
-                  ${uiSref('atlas.sheet', { num: sheet.num })}
-                  href="${to(href.sheet(sheet.num))}"
-                >
-                  <span class="n">APPENDIX ${sheet.num} · REV ${sheet.rev}</span>
-                  <h3>${sheet.title}</h3>
-                  <span class="alt">${sheet.scale}</span>
-                  <p>${sheet.caption}</p>
-                  <p class="verdict">${sheet.verdict}</p>
-                  <span class="meta">${sheet.form} · NO CENSUS PLATE — META</span>
-                </a>
-              `,
-            )}
-          </div>
+          <div class="cards">${manifest.appendix.map(sheetCard)}</div>
         `
       : nothing}
   `;
@@ -362,6 +420,23 @@ const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?]
   return [list[index - 1], list[index + 1]];
 };
 
+const seeAlso = (refs: string[]): TemplateResult | typeof nothing =>
+  refs.length > 0
+    ? html`<span
+        >SEE ALSO
+        ${refs.map(
+          (num) =>
+            html`<a ${uiSref('atlas.sheet', { num })} href="${to(href.sheet(num))}">${num}</a
+              >&nbsp;`,
+        )}</span
+      >`
+    : nothing;
+
+const verdictLine = (verdict: string): TemplateResult | typeof nothing =>
+  verdict
+    ? html`<p class="plate-verdict"><span class="lead">FIT VERDICT</span>${verdict}</p>`
+    : nothing;
+
 export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   const resolves = props?.resolves;
   const sheet = resolves?.sheet;
@@ -369,8 +444,8 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
   if (!sheet || !manifest) return html`<p class="loading">LOADING PLATE…</p>`;
   const [prev, next] = neighbours(manifest, sheet);
   return html`
-    <div class="crumb">
-      <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
+    ${utilBar(html`
+      ${indexCrumb()}
       <!-- The one FACT in the strip, bold, in tabular figures. -->
       <span class="sh"
         >${isAppendix(sheet.num)
@@ -387,28 +462,17 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
             >NEXT · ${next.num}</a
           >`
         : nothing}
-      <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}
-        >STANDALONE PLATE ↗</a
-      >
+      <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
+    `)}
+    <div class="plate-data">
       <span>ALTITUDE · ${sheet.scale}</span>
       <span
         >PLATES READ:
         ${sheet.plates.length > 0 ? sheet.plates.join(' · ') : 'NONE — DRAWN FROM PROSE'}</span
       >
-      ${sheet.refs.length > 0
-        ? html`<span
-            >SEE ALSO
-            ${sheet.refs.map(
-              (num) =>
-                html`<a
-                    ${uiSref('atlas.sheet', { num })}
-                    href="${to(href.sheet(num))}"
-                    >${num}</a
-                  >&nbsp;`,
-            )}</span
-          >`
-        : nothing}
+      ${seeAlso(sheet.refs)}
     </div>
+    ${verdictLine(sheet.verdict)}
     <atlas-plate
       .fragment=${resolves.fragment ?? ''}
       .needsCytoscape=${sheet.needsCytoscape}
@@ -423,19 +487,16 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
   const extra = resolves?.extra;
   if (!extra || !resolves.fragment) return html`<p class="loading">RAISING THE CITY…</p>`;
   return html`
-    <div class="crumb">
-      <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
+    ${utilBar(html`
+      ${indexCrumb()}
+      <span class="sh">${extra.shno}</span>
       <a href="${out(href.plate(extra.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
+    `)}
+    <div class="plate-data">
       <span>ALTITUDE · ${extra.scale}</span>
-      <span
-        >SEE ALSO
-        ${extra.refs.map(
-          (num) =>
-            html`<a ${uiSref('atlas.sheet', { num })} href="${to(href.sheet(num))}">${num}</a
-              >&nbsp;`,
-        )}</span
-      >
+      ${seeAlso(extra.refs)}
     </div>
+    ${verdictLine(extra.verdict)}
     <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>
   `;
 };
@@ -448,8 +509,8 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
   // connectedCallback injects is fetched by this state and no other.
   if (!props?.resolves?.specimen) return html`<p class="loading">SETTING THE TYPE…</p>`;
   return html`
-    <div class="crumb">
-      <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>
+    ${utilBar(html`${indexCrumb()}<span class="sh">TYPE SPECIMEN</span>`)}
+    <div class="plate-data">
       <span>ALTITUDE · THE SET'S OWN CHROME</span>
       <span>NOT A PLATE — A BENCH</span>
     </div>
@@ -475,6 +536,7 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
 export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const manifest = props?.resolves?.manifest;
   return html`
+    ${utilBar(html`${indexCrumb()}<span class="sh">COLOPHON</span>`)}
     <section class="sheet">
       <div class="sheet-head">
         <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
@@ -545,6 +607,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
 // --- unmatched -------------------------------------------------------------
 
 export const NotFoundView: RoutedLitTemplate = () => html`
+  ${utilBar(html`${indexCrumb()}<span class="sh">NO SUCH SHEET</span>`)}
   <section class="sheet">
     <div class="sheet-head">
       <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>

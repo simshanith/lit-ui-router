@@ -15,8 +15,9 @@
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CSS, DATE, TOTAL, sheetSection } from './chrome.mjs';
+import { CSS, DATE, TOTAL, sheetSection, splitRevs } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
+import { cityHero } from './sheet7.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
 // absolute so a prerendered page links correctly before any JS runs.
 import { BASE } from '../app/src/routes.ts';
@@ -130,6 +131,28 @@ function linkRefs(html, self, byUpper) {
   return { html: out.join(''), refs: [...refs].sort(bySheet) };
 }
 
+// --- the issue log ----------------------------------------------------------
+// Every REV a sheet's frozen sub line records is one issue of the set. The
+// cover lists them latest first; an entry carries the rev's first clause and
+// links to the sheet, where the full revision block is filed.
+const untag = (html) => html.replace(/<[^>]*>/g, '');
+function firstClause(desc) {
+  const text = untag(desc).replace(/\s+/g, ' ').trim();
+  const cuts = [' — ', '; ', ' · '].map((sep) => text.indexOf(sep, 40)).filter((i) => i !== -1 && i < 180);
+  if (cuts.length > 0) return text.slice(0, Math.min(...cuts));
+  if (text.length <= 180) return text;
+  return `${text.slice(0, text.lastIndexOf(' ', 180))}…`;
+}
+function issueLogOf(rows) {
+  const entries = rows.flatMap(({ num, head, title, sub }) =>
+    splitRevs(sub).revs.map((r) => ({ date: r.date, num, head, title, rev: r.rev, desc: firstClause(r.desc) })));
+  const order = (a, b) => bySheet(a.num === 'city' ? '7B·' : a.num, b.num === 'city' ? '7B·' : b.num);
+  const dated = entries.filter((e) => e.date)
+    .sort((a, b) => b.date.localeCompare(a.date) || order(a, b) || b.rev.localeCompare(a.rev));
+  const undated = entries.filter((e) => !e.date).sort((a, b) => order(a, b) || a.rev.localeCompare(b.rev));
+  return [...dated, ...undated];
+}
+
 // The interactive lanes pull cytoscape off a CDN on their standalone
 // pages. The app bundles it instead, so the tag is cut here and the manifest
 // records the need — see diagrams/app/src/fragment.ts for why an inserted
@@ -230,6 +253,12 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
     },
   ];
 
+  const issueLog = issueLogOf([
+    ...manifest.map((r) => ({ num: r.num, head: `SHEET ${r.num}`, title: r.title, sub: r.sub })),
+    ...appManifest.map((r) => ({ num: r.num, head: `APPENDIX ${r.num}`, title: r.title, sub: r.sub })),
+    ...extras.map((r) => ({ num: r.id, head: r.shno, title: r.title, sub: r.sub })),
+  ]);
+
   writeFileSync(
     join(publicDir, 'manifest.json'),
     `${JSON.stringify(
@@ -243,7 +272,10 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
         // The gallery cover, rendered by build.mjs and carried verbatim: the
         // stat bar, the general survey, the prose column, the colophon line,
         // the README's thesis and generator notes, and the CSS they need.
-        cover,
+        // + the key image: sheet 7's city alone, cropped to its extent
+        cover: { ...cover, hero: cityHero() },
+        // every dated REV across the set, latest first, then the undated ones
+        issueLog,
         sheets: manifest,
         // The appendix rides its own array for the same reason the city rides
         // `extras`: everything that walks the set in ascent order reads

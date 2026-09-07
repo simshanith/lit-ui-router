@@ -3,7 +3,7 @@
   <h2 class="sheet-title">THE SHADOW SURVEY</h2>
   <p class="sheet-sub">ALTITUDE 3½ — ALTERNATE PLATE TO <a class="xref" data-sheet="7" href="/sheet/7">SHEET 7</a>: the measured city under its own test light · same city as <a class="xref" data-sheet="7" href="/sheet/7">sheet 7, 32</a> members</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1560 1275" role="img" aria-label="A plan view of sheet 7's census city — the same 32 workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. 17 members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a lit lamp and still stands dark: its canary spec lights happy-dom itself, never its own source. A shadow schedule below gives exact per-member figures.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1560 1275" role="img" aria-label="A plan view of sheet 7's census city — the same 32 workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. 17 members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a lit lamp and still stands dark: its canary spec lights happy-dom itself, never its own source. A shadow schedule below gives exact per-member figures.">
 <defs>
   <marker id="s7a-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -24,7 +24,7 @@
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s7a-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s7a-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -341,8 +341,8 @@
 <text x="825" y="1189" class="lbls" text-anchor="start" >@tools/embed-heights — 1/3f · 35/336 (10.4%) · L 100% B 100% F 100% · REV E: reserve lit — driver + CLI in shadow</text>
 <text x="58" y="1210" class="lbls" text-anchor="start" >TOTAL — 17 members metered: 7,822 of 7,980 metered lines lit (98.0%) · branches 1,815/1,929 (94.1%) · functions 573/595 (96.3%) · lit extent 6,560/9,418 sloc (69.7%) · metered at origin/main @ b2338d0 (2026-09-05)</text>
 <text x="58" y="1226" class="lblf" text-anchor="start" >REV E — the daggers are retired: light and footprint are now measured at the SAME ref, so no member's meter and census can disagree · every figure above is read from diagrams/data/census-shadow.json and diagrams/data/census-city.json</text>
-</svg></div>
-    <figcaption><a class="xref" data-sheet="7" href="/sheet/7">Sheet 7</a> counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite is run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 7A</span><a class="xref" data-sheet="7" href="/sheet/7">Sheet 7</a> counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite is run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -379,14 +379,17 @@
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>7A OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">polarity corrected — the tests are the light, shadow is the untested</td></tr>
+  <tr><th scope="row" class="r">REV C</th><td class="d">2026-08-31</td></tr>
+  <tr><td class="t" colspan="2">lettering pass — no district boundary is drawn through a caption</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">2026-08-31</td></tr>
+  <tr><td class="t" colspan="2">footprints refreshed to <a class="xref" data-sheet="7" href="/sheet/7">sheet 7</a> rev D’s census; the light was NOT re-metered and the plate said so</td></tr>
+  <tr><th scope="row" class="r">REV E</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (metered at origin/main @ b2338d0 (2026-09-05)); the daggers retire, №31 is metered for the first time, and nothing on this plate is hand-pasted</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">B</td><td class="d">—</td><td class="t">polarity corrected — the tests are the light, shadow is the untested</td></tr>
-  <tr><td class="r">C</td><td class="d">2026-08-31</td><td class="t">lettering pass — no district boundary is drawn through a caption</td></tr>
-  <tr><td class="r">D</td><td class="d">2026-08-31</td><td class="t">footprints refreshed to <a class="xref" data-sheet="7" href="/sheet/7">sheet 7</a> rev D’s census; the light was NOT re-metered and the plate said so</td></tr>
-  <tr><td class="r">E</td><td class="d">—</td><td class="t">RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (metered at origin/main @ b2338d0 (2026-09-05)); the daggers retire, №31 is metered for the first time, and nothing on this plate is hand-pasted</td></tr></tbody>
-</table>
 </section>

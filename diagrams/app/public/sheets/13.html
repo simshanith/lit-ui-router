@@ -3,7 +3,7 @@
   <h2 class="sheet-title">THE WEATHERING MAP</h2>
   <p class="sheet-sub">ALTITUDE t — the same city as <a class="xref" data-sheet="7" href="/sheet/7">sheet 7</a>, surveyed in time · 317 files dated from the whole history · three construction seasons, 10 silent months</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1560 1862" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built 273 of the 317 files since July fourth. Under each building a tick gauge counts touches per file; 6 buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal the typedoc plugin and three example slabs, untouched for over two hundred days. A 15-month timeline below shows all activity concentrated in 5 months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from 10.0 for the port cohort to 2.3 for the summer cohort — the oldest walls are the most chiselled.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1560 1862" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built 273 of the 317 files since July fourth. Under each building a tick gauge counts touches per file; 6 buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal the typedoc plugin and three example slabs, untouched for over two hundred days. A 15-month timeline below shows all activity concentrated in 5 months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from 10.0 for the port cohort to 2.3 for the summer cohort — the oldest walls are the most chiselled.">
 <defs>
   <marker id="s13-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -24,7 +24,7 @@
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s13-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s13-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -464,8 +464,8 @@
 <text x="814" y="1793" class="lbls" text-anchor="end" >32</text>
 <text x="825" y="1793" class="lbls" text-anchor="start" >@tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×4 (1.0/f) · idle 1d · check-embed-heights.ts×1</text>
 <text x="58" y="1816" class="lbls" text-anchor="start" >TOTAL — 317 dated files (sheet 7's plate counts the same 317) · 988 touches · seasons 26 / 18 / 273 · TODAY = 2026-09-04 · counted at origin/main @ b2338d0</text>
-</svg></div>
-    <figcaption>Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as <a class="xref" data-sheet="7" href="/sheet/7">sheet 7</a> — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 13</span>Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as <a class="xref" data-sheet="7" href="/sheet/7">sheet 7</a> — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -502,14 +502,17 @@
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>13 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption</td></tr>
+  <tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">re-dated off the plate at TODAY = 2026-09-04, with the fifth published package in the universe; every date and count is now imported from diagrams/data/census-weather.json</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">whole-cabinet refresh — 317 dated files, every band re-tested and held</td></tr>
+  <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-04</td></tr>
+  <tr><td class="t" colspan="2">refreshed again after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights laid the day it was cut — counted at origin/main @ b2338d0</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">B</td><td class="d">—</td><td class="t">drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption</td></tr>
-  <tr><td class="r">C</td><td class="d">—</td><td class="t">re-dated off the plate at TODAY = 2026-09-04, with the fifth published package in the universe; every date and count is now imported from diagrams/data/census-weather.json</td></tr>
-  <tr><td class="r">D</td><td class="d">—</td><td class="t">whole-cabinet refresh — 317 dated files, every band re-tested and held</td></tr>
-  <tr><td class="r">E</td><td class="d">2026-09-04</td><td class="t">refreshed again after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights laid the day it was cut — counted at origin/main @ b2338d0</td></tr></tbody>
-</table>
 </section>

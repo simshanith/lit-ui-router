@@ -297,9 +297,9 @@ ${schedule}
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo', rev: 'E',
+  num: 3, id: 'monorepo', rev: 'F',
   title: 'THE INSTRUMENT YARD',
-  sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci ${CI_NODES} nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic`,
+  sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci ${CI_NODES} nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic · REV F 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (the fault sheet 7’s rev C worked around per plate — a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved`,
   scale: 'THE MONOREPO',
   form: 'ISOMETRIC CITY',
   svg,

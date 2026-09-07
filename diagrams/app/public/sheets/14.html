@@ -3,7 +3,7 @@
   <h2 class="sheet-title">THE SURVEY OFFICE</h2>
   <p class="sheet-sub">ALTITUDE 3½ — the atlas measuring itself · 17 probes, 17 plates, 20 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ b2338d0 · commit 2026-09-04</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 20 1160 1518" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at b2338d0 extracted to a temporary directory, 659 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 615 rows — the one measurement. An accent bus carries that plate back down the left margin into twelve stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 16 further probe stations are grouped into three tiers — 8 pure-tree, 2 history, 7 execution, the last fed by an install harness running corepack pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 34 thin read curves fan into a rack of 19 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 17 plates with writer, tier, basis and readers.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 20 1160 1518" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at b2338d0 extracted to a temporary directory, 659 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 615 rows — the one measurement. An accent bus carries that plate back down the left margin into twelve stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 16 further probe stations are grouped into three tiers — 8 pure-tree, 2 history, 7 execution, the last fed by an install harness running corepack pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 34 thin read curves fan into a rack of 19 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 17 plates with writer, tier, basis and readers.">
 <defs>
   <marker id="s14-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -24,7 +24,7 @@
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s14-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s14-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -49,7 +49,8 @@
 <text x="76" y="218" class="lbla" text-anchor="start" >census-scc.mjs</text>
 <text x="366" y="218" class="lblf" text-anchor="end" >scc --by-file</text>
 <path d="M376,214 L436,214" class="ska"  marker-end="url(#s14-aa)"/>
-<rect x="440" y="199" width="230" height="30" rx="4" class="ska" fill="url(#s14-ha)"/>
+<rect x="440" y="199" width="230" height="30" rx="4" fill="url(#s14-ha)"/>
+<rect x="440" y="199" width="230" height="30" rx="4" class="ska fnone"/>
 <text x="450" y="212" class="lbla" text-anchor="start" >census-files.json</text>
 <text x="450" y="224" class="lblf" text-anchor="start" >615 rows — the one measurement</text>
 <path d="M670,214 L856,214" class="ska"  marker-end="url(#s14-aa)"/>
@@ -399,8 +400,8 @@
 <text x="46" y="1436" class="lbls" text-anchor="start" >census-shadow.json</text><text x="250" y="1436" class="lbls" text-anchor="start" >T3</text><text x="292" y="1436" class="lbls" text-anchor="start" >census-shadow.mjs</text><text x="430" y="1436" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1436" class="lblf" text-anchor="start" >sheet 7A, sheet 7B</text>
 <text x="46" y="1453" class="lbls" text-anchor="start" >census-shipped.json</text><text x="250" y="1453" class="lbls" text-anchor="start" >T3</text><text x="292" y="1453" class="lbls" text-anchor="start" >census-shipped.mjs</text><text x="430" y="1453" class="lblf" text-anchor="start" >installed archive</text><text x="590" y="1453" class="lblf" text-anchor="start" >sheet 9, sheet 10</text>
 <text x="46" y="1490" class="lblf" text-anchor="start" >TOTALS — 17 plates · 17 probes (T1 8 · T2 2 · T3 7) · 17 writes · 48 reads · 0 plates unread · every plate pinned to origin/main @ b2338d0 · commit 2026-09-04 · graph: 69 nodes / 95 edges</text>
-</svg></div>
-    <figcaption>The instrument drawn by its own instrument: 17 probe stations over three tiers write 17 filed plates, which 20 drawings read — and the one that matters most is read thirteen times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 14</span>The instrument drawn by its own instrument: 17 probe stations over three tiers write 17 filed plates, which 20 drawings read — and the one that matters most is read thirteen times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -430,16 +431,19 @@
   <div><span class="fld">SCALE</span>THE CENSUS PIPELINE</div>
   <div><span class="fld">FORM</span>FLOW GRAPH</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · B</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · C</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>14 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV A</th><td class="d">2026-09-04</td></tr>
+  <tr><td class="t" colspan="2">first printing — the instrument drawn by itself</td></tr>
+  <tr><th scope="row" class="r">REV B</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap</td></tr>
+  <tr><th scope="row" class="r">REV C</th><td class="d">2026-09-06</td></tr>
+  <tr><td class="t" colspan="2">the master-snapshot plate now carries its accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); nothing else moved</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">A</td><td class="d">2026-09-04</td><td class="t">first printing — the instrument drawn by itself</td></tr>
-  <tr><td class="r">B</td><td class="d">—</td><td class="t">the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap</td></tr></tbody>
-</table>
 </section>

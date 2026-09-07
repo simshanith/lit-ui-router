@@ -15,6 +15,7 @@
   --accent: #2E5077;
   --accent-soft: #6E88A6;
   --red: #A63D2F;
+  --red-hatch: #A63D2F;
   --green: #4C6B51;
   --halo: rgba(46, 80, 119, 0.10);
   /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
@@ -26,15 +27,17 @@
   :root:not([data-theme="light"]) {
     --ground: #0A1B34;
     --paper: #102A50;
-    --paper-2: #0D2344;
+    --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #5F7899;
+    --ink-faint: #6E88A8;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
     --accent-soft: #5B84B4;
-    --red: #E38C6F;
+    /* fills keep the red red; the salmon survives as the hatch stroke */
+    --red: #D96C55;
+    --red-hatch: #E38C6F;
     --green: #8AB795;
     --halo: rgba(143, 188, 233, 0.12);
     --pencil: #7E97B8;
@@ -44,15 +47,16 @@
 :root[data-theme="dark"] {
   --ground: #0A1B34;
   --paper: #102A50;
-  --paper-2: #0D2344;
+  --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #5F7899;
+  --ink-faint: #6E88A8;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
   --accent-soft: #5B84B4;
-  --red: #E38C6F;
+  --red: #D96C55;
+  --red-hatch: #E38C6F;
   --green: #8AB795;
   --halo: rgba(143, 188, 233, 0.12);
   --pencil: #7E97B8;
@@ -105,15 +109,20 @@ body {
   font-family: var(--prose);
   padding: clamp(12px, 3vw, 40px);
   line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
 }
 
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
 .sheet {
   position: relative;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  max-width: none;
+  margin: 0 0 40px;
   background: var(--paper);
   border: 1.5px solid var(--ink);
-  padding: 26px;
+  padding: 22px;
   box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
 }
 .sheet::before {
@@ -155,7 +164,7 @@ body {
 .sheet-title {
   font-family: var(--title);
   font-size: clamp(18px, 2.7vw, 24px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   font-weight: 600;
   text-wrap: balance;
   margin-bottom: 4px;
@@ -168,27 +177,62 @@ body {
   margin-bottom: 16px;
 }
 
-.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
-.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  padding: 6px 0 0;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
   font-size: 14.5px;
   color: var(--ink-soft);
-  max-width: 68ch;
-  margin: 10px auto 0;
+  max-width: 66ch;
+  margin: 0;
   font-style: italic;
 }
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-right: 10px;
+}
 
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column at 66ch;
+   the key, the title block and the revisions are one 352px inset strip that
+   rides alongside whatever paragraph is on screen. */
 .notes-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 7fr) 352px;
+  gap: 24px;
   border-top: 1px solid var(--ink);
   padding-top: 16px;
   align-items: start;
 }
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.keyblock { position: sticky; top: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
 .notes h3, .keyblock h3 {
   font-family: var(--data);
   font-size: 11px;
@@ -200,7 +244,7 @@ figcaption {
 .notes p {
   font-family: var(--prose);
   font-size: 15.5px;
-  max-width: 62ch;
+  max-width: 66ch;
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
@@ -208,14 +252,15 @@ figcaption {
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
   font-family: var(--code);
-  font-size: 0.85em;
+  font-size: 0.88em;
   background: var(--paper-2);
   border: 1px solid var(--line);
-  padding: 0 4px;
+  padding: 0 3px;
   border-radius: 2px;
-  /* A chip breaks only when it would otherwise run off the column: sheet 11's
-     90-character recipe did, once the prose stepped up half a pixel. */
-  overflow-wrap: anywhere;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 .keyblock table { border-collapse: collapse; width: 100%; }
 .keyblock td {
@@ -249,7 +294,7 @@ code, kbd, samp { font-family: var(--code); }
 .titleblock .fld {
   display: block;
   font-family: var(--data);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
   color: var(--ink-soft);
   margin-bottom: 2px;
@@ -265,7 +310,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--title);
   font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.04em;
 }
 /* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
    caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
@@ -291,7 +336,8 @@ code, kbd, samp { font-family: var(--code); }
 /* ---- REVISIONS ----
    The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
    splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, under the title block, as a drawing's revision block. */
+   the tail here, in the inset strip under the title block, as a drawing's
+   revision block: one row of rev + date, the description wrapped beneath. */
 .revs {
   width: 100%;
   border-collapse: collapse;
@@ -309,27 +355,30 @@ code, kbd, samp { font-family: var(--code); }
   text-align: left;
   padding: 0 0 8px;
 }
+.revs th, .revs td { text-align: left; vertical-align: baseline; }
 .revs th {
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
+  font-weight: 600;
+  padding: 6px 10px 2px;
+  white-space: nowrap;
+  width: 1%;
+}
+.revs .d {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   color: var(--ink-soft);
-  text-align: left;
-  padding: 6px 12px;
-  border-bottom: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  padding: 6px 10px 2px;
   white-space: nowrap;
 }
-.revs td {
+.revs .t {
   font-size: 11.5px;
   letter-spacing: 0.03em;
-  padding: 7px 12px;
+  color: var(--ink-soft);
+  padding: 0 10px 7px;
   border-bottom: 1px solid var(--line);
-  vertical-align: baseline;
 }
-.revs tr:last-child td { border-bottom: none; }
-.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
-.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
-.revs .t { color: var(--ink-soft); }
+.revs tr:last-child .t { border-bottom: none; }
 .revs code { font-family: var(--code); font-size: 0.88em; }
 
 /* ---- SVG drawing classes ---- */
@@ -373,7 +422,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title">THE FAMILY SPINE</h2>
   <p class="sheet-sub">ALTITUDE 4 — one core, four living adapters, four dormant instruments</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
 <defs>
   <marker id="s4-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -394,7 +443,7 @@ a { color: var(--accent); }
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s4-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s4-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -565,8 +614,8 @@ a { color: var(--accent); }
 <text x="725" y="717" class="lbls" text-anchor="start" >@uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
 <text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 209 authored files · 13,851 sloc · versions and dates npm registry read 2026-09-05 · this repo + core counted at origin/main @ b2338d0 (2026-09-05) · upstream family clone counts 2026-08-16</text>
 <text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 on npm (published 2026-09-01) · 1.0.0-rc.2 in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
-</svg></div>
-    <figcaption>Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 4</span>Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -596,13 +645,15 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>4 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">every version and publish date imported from census-npm.json (npm registry read 2026-09-05), core and this repo's mass from census-bricks.json</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart</td></tr>
+  <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-04</td></tr>
+  <tr><td class="t" colspan="2">this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">C</td><td class="d">—</td><td class="t">every version and publish date imported from census-npm.json (npm registry read 2026-09-05), core and this repo's mass from census-bricks.json</td></tr>
-  <tr><td class="r">D</td><td class="d">—</td><td class="t">whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart</td></tr>
-  <tr><td class="r">E</td><td class="d">2026-09-04</td><td class="t">this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one</td></tr></tbody>
-</table>
 </section>

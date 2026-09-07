@@ -15,6 +15,7 @@
   --accent: #2E5077;
   --accent-soft: #6E88A6;
   --red: #A63D2F;
+  --red-hatch: #A63D2F;
   --green: #4C6B51;
   --halo: rgba(46, 80, 119, 0.10);
   /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
@@ -26,15 +27,17 @@
   :root:not([data-theme="light"]) {
     --ground: #0A1B34;
     --paper: #102A50;
-    --paper-2: #0D2344;
+    --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #5F7899;
+    --ink-faint: #6E88A8;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
     --accent-soft: #5B84B4;
-    --red: #E38C6F;
+    /* fills keep the red red; the salmon survives as the hatch stroke */
+    --red: #D96C55;
+    --red-hatch: #E38C6F;
     --green: #8AB795;
     --halo: rgba(143, 188, 233, 0.12);
     --pencil: #7E97B8;
@@ -44,15 +47,16 @@
 :root[data-theme="dark"] {
   --ground: #0A1B34;
   --paper: #102A50;
-  --paper-2: #0D2344;
+  --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #5F7899;
+  --ink-faint: #6E88A8;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
   --accent-soft: #5B84B4;
-  --red: #E38C6F;
+  --red: #D96C55;
+  --red-hatch: #E38C6F;
   --green: #8AB795;
   --halo: rgba(143, 188, 233, 0.12);
   --pencil: #7E97B8;
@@ -105,15 +109,20 @@ body {
   font-family: var(--prose);
   padding: clamp(12px, 3vw, 40px);
   line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
 }
 
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
 .sheet {
   position: relative;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  max-width: none;
+  margin: 0 0 40px;
   background: var(--paper);
   border: 1.5px solid var(--ink);
-  padding: 26px;
+  padding: 22px;
   box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
 }
 .sheet::before {
@@ -155,7 +164,7 @@ body {
 .sheet-title {
   font-family: var(--title);
   font-size: clamp(18px, 2.7vw, 24px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   font-weight: 600;
   text-wrap: balance;
   margin-bottom: 4px;
@@ -168,27 +177,62 @@ body {
   margin-bottom: 16px;
 }
 
-.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
-.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  padding: 6px 0 0;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
   font-size: 14.5px;
   color: var(--ink-soft);
-  max-width: 68ch;
-  margin: 10px auto 0;
+  max-width: 66ch;
+  margin: 0;
   font-style: italic;
 }
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-right: 10px;
+}
 
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column at 66ch;
+   the key, the title block and the revisions are one 352px inset strip that
+   rides alongside whatever paragraph is on screen. */
 .notes-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 7fr) 352px;
+  gap: 24px;
   border-top: 1px solid var(--ink);
   padding-top: 16px;
   align-items: start;
 }
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.keyblock { position: sticky; top: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
 .notes h3, .keyblock h3 {
   font-family: var(--data);
   font-size: 11px;
@@ -200,7 +244,7 @@ figcaption {
 .notes p {
   font-family: var(--prose);
   font-size: 15.5px;
-  max-width: 62ch;
+  max-width: 66ch;
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
@@ -208,14 +252,15 @@ figcaption {
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
   font-family: var(--code);
-  font-size: 0.85em;
+  font-size: 0.88em;
   background: var(--paper-2);
   border: 1px solid var(--line);
-  padding: 0 4px;
+  padding: 0 3px;
   border-radius: 2px;
-  /* A chip breaks only when it would otherwise run off the column: sheet 11's
-     90-character recipe did, once the prose stepped up half a pixel. */
-  overflow-wrap: anywhere;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 .keyblock table { border-collapse: collapse; width: 100%; }
 .keyblock td {
@@ -249,7 +294,7 @@ code, kbd, samp { font-family: var(--code); }
 .titleblock .fld {
   display: block;
   font-family: var(--data);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
   color: var(--ink-soft);
   margin-bottom: 2px;
@@ -265,7 +310,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--title);
   font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.04em;
 }
 /* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
    caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
@@ -291,7 +336,8 @@ code, kbd, samp { font-family: var(--code); }
 /* ---- REVISIONS ----
    The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
    splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, under the title block, as a drawing's revision block. */
+   the tail here, in the inset strip under the title block, as a drawing's
+   revision block: one row of rev + date, the description wrapped beneath. */
 .revs {
   width: 100%;
   border-collapse: collapse;
@@ -309,27 +355,30 @@ code, kbd, samp { font-family: var(--code); }
   text-align: left;
   padding: 0 0 8px;
 }
+.revs th, .revs td { text-align: left; vertical-align: baseline; }
 .revs th {
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
+  font-weight: 600;
+  padding: 6px 10px 2px;
+  white-space: nowrap;
+  width: 1%;
+}
+.revs .d {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   color: var(--ink-soft);
-  text-align: left;
-  padding: 6px 12px;
-  border-bottom: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  padding: 6px 10px 2px;
   white-space: nowrap;
 }
-.revs td {
+.revs .t {
   font-size: 11.5px;
   letter-spacing: 0.03em;
-  padding: 7px 12px;
+  color: var(--ink-soft);
+  padding: 0 10px 7px;
   border-bottom: 1px solid var(--line);
-  vertical-align: baseline;
 }
-.revs tr:last-child td { border-bottom: none; }
-.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
-.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
-.revs .t { color: var(--ink-soft); }
+.revs tr:last-child .t { border-bottom: none; }
 .revs code { font-family: var(--code); font-size: 0.88em; }
 
 /* ---- SVG drawing classes ---- */
@@ -373,7 +422,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title">THE BRICK ASSEMBLY</h2>
   <p class="sheet-sub">ALTITUDE 2 — one baseplate, four bricks, 27 authored files</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1400 1164" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four 5 courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-two two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1400 1164" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four 5 courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-two two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
 <defs>
   <marker id="s2-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -394,7 +443,7 @@ a { color: var(--accent); }
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s2-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s2-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -822,8 +871,8 @@ a { color: var(--accent); }
 <text x="58" y="1072" class="lbls" text-anchor="start" > 5  eslint-plugin-lit-ui-router 1.0.0-rc.2 · 9f · 715 sloc · NOT DRAWN — no stud on any router plate</text>
 <text x="58" y="1089" class="lbls" text-anchor="start" >    a lint package: it plugs into ESLint/oxlint hosts, never into @uirouter/core — the set’s fifth published part lives on a different table</text>
 <text x="58" y="1114" class="lbls" text-anchor="start" >TOTAL — 4 bricks · 27 authored files · 2,805 sloc, standing on one 80-file, 5,272-line baseplate · counted at origin/main @ b2338d0 (2026-09-05), same basis as sheets 3 and 4</text>
-</svg></div>
-    <figcaption>Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 2</span>Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -856,12 +905,13 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>2 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05)</td></tr>
+  <tr><th scope="row" class="r">REV C</th><td class="d">2026-09-05</td></tr>
+  <tr><td class="t" colspan="2">hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">B</td><td class="d">—</td><td class="t">the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ b2338d0 (2026-09-05)</td></tr>
-  <tr><td class="r">C</td><td class="d">2026-09-05</td><td class="t">hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge</td></tr></tbody>
-</table>
 </section>

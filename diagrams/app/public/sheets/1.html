@@ -3,7 +3,7 @@
   <h2 class="sheet-title">THE RENDER LOOP</h2>
   <p class="sheet-sub">ALTITUDE 1 — lit-ui-router 1.11.2 · the client circuit</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
 <defs>
   <marker id="s1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -24,7 +24,7 @@
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s1-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s1-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -37,64 +37,102 @@
 <path d="M754.6,579.5 L695.8,613.5" class="sk2"  marker-end="url(#s1-ai)"/>
 <path d="M560.7,602.5 L391.8,505.0" class="sk2"  marker-end="url(#s1-ai)"/>
 <g>
-<polygon points="213.4,162.0 291.3,207.0 291.3,235.0 213.4,190.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="343.3,177.0 291.3,207.0 291.3,235.0 343.3,205.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="213.4,162.0 291.3,207.0 291.3,235.0 213.4,190.0" fill="var(--paper-2)"/>
+<polygon points="213.4,162.0 291.3,207.0 291.3,235.0 213.4,190.0" class="sk fnone"/>
+<polygon points="343.3,177.0 291.3,207.0 291.3,235.0 343.3,205.0" fill="var(--paper-2)"/>
+<polygon points="343.3,177.0 291.3,207.0 291.3,235.0 343.3,205.0" fill="url(#s1-hx)"/>
+<polygon points="343.3,177.0 291.3,207.0 291.3,235.0 343.3,205.0" class="sk fnone"/>
 <polygon points="265.4,132.0 343.3,177.0 291.3,207.0 213.4,162.0" class="sk fp"/>
 </g>
 <g>
-<polygon points="455.9,234.0 555.5,291.5 555.5,347.5 455.9,290.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="624.8,251.5 555.5,291.5 555.5,347.5 624.8,307.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="455.9,234.0 555.5,291.5 555.5,347.5 455.9,290.0" fill="var(--paper-2)"/>
+<polygon points="455.9,234.0 555.5,291.5 555.5,347.5 455.9,290.0" class="sk fnone"/>
+<polygon points="624.8,251.5 555.5,291.5 555.5,347.5 624.8,307.5" fill="var(--paper-2)"/>
+<polygon points="624.8,251.5 555.5,291.5 555.5,347.5 624.8,307.5" fill="url(#s1-hx)"/>
+<polygon points="624.8,251.5 555.5,291.5 555.5,347.5 624.8,307.5" class="sk fnone"/>
 <polygon points="525.2,194.0 624.8,251.5 555.5,291.5 455.9,234.0" class="sk fp"/>
 </g>
 <g><line x1="113.8" y1="188.5" x2="113.8" y2="292.5" class="sks" stroke-dasharray="2 3"/>
-<polygon points="66.2,143.0 113.8,170.5 113.8,188.5 66.2,161.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="148.4,150.5 113.8,170.5 113.8,188.5 148.4,168.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="66.2,143.0 113.8,170.5 113.8,188.5 66.2,161.0" fill="var(--paper-2)"/>
+<polygon points="66.2,143.0 113.8,170.5 113.8,188.5 66.2,161.0" class="sk fnone"/>
+<polygon points="148.4,150.5 113.8,170.5 113.8,188.5 148.4,168.5" fill="var(--paper-2)"/>
+<polygon points="148.4,150.5 113.8,170.5 113.8,188.5 148.4,168.5" fill="url(#s1-hx)"/>
+<polygon points="148.4,150.5 113.8,170.5 113.8,188.5 148.4,168.5" class="sk fnone"/>
 <polygon points="100.8,123.0 148.4,150.5 113.8,170.5 66.2,143.0" class="sk fp"/>
 </g>
 <g><line x1="769.4" y1="324.0" x2="769.4" y2="384.0" class="sks" stroke-dasharray="2 3"/>
-<polygon points="713.1,275.5 769.4,308.0 769.4,324.0 713.1,291.5" class="sk" fill="var(--paper-2)"/>
-<polygon points="802.3,289.0 769.4,308.0 769.4,324.0 802.3,305.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="713.1,275.5 769.4,308.0 769.4,324.0 713.1,291.5" fill="var(--paper-2)"/>
+<polygon points="713.1,275.5 769.4,308.0 769.4,324.0 713.1,291.5" class="sk fnone"/>
+<polygon points="802.3,289.0 769.4,308.0 769.4,324.0 802.3,305.0" fill="var(--paper-2)"/>
+<polygon points="802.3,289.0 769.4,308.0 769.4,324.0 802.3,305.0" fill="url(#s1-hx)"/>
+<polygon points="802.3,289.0 769.4,308.0 769.4,324.0 802.3,305.0" class="sk fnone"/>
 <polygon points="746.0,256.5 802.3,289.0 769.4,308.0 713.1,275.5" class="sk fp"/>
 </g>
 <g>
-<polygon points="611.8,366.0 741.7,441.0 741.7,475.0 611.8,400.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="793.6,411.0 741.7,441.0 741.7,475.0 793.6,445.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="611.8,366.0 741.7,441.0 741.7,475.0 611.8,400.0" fill="var(--paper-2)"/>
+<polygon points="611.8,366.0 741.7,441.0 741.7,475.0 611.8,400.0" class="sk fnone"/>
+<polygon points="793.6,411.0 741.7,441.0 741.7,475.0 793.6,445.0" fill="var(--paper-2)"/>
+<polygon points="793.6,411.0 741.7,441.0 741.7,475.0 793.6,445.0" fill="url(#s1-hx)"/>
+<polygon points="793.6,411.0 741.7,441.0 741.7,475.0 793.6,445.0" class="sk fnone"/>
 <polygon points="663.7,336.0 793.6,411.0 741.7,441.0 611.8,366.0" class="sk fp"/>
 </g>
-<g><polygon points="40.2,346.0 334.6,516.0 334.6,520.0 40.2,350.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="451.6,448.5 334.6,516.0 334.6,520.0 451.6,452.5" class="sk" fill="var(--paper-2)"/>
+<g><polygon points="40.2,346.0 334.6,516.0 334.6,520.0 40.2,350.0" fill="var(--paper-2)"/>
+<polygon points="40.2,346.0 334.6,516.0 334.6,520.0 40.2,350.0" class="sk fnone"/>
+<polygon points="451.6,448.5 334.6,516.0 334.6,520.0 451.6,452.5" fill="var(--paper-2)"/>
+<polygon points="451.6,448.5 334.6,516.0 334.6,520.0 451.6,452.5" class="sk fnone"/>
 <polygon points="157.1,278.5 451.6,448.5 334.6,516.0 40.2,346.0" class="sk fp"/></g>
-<g><polygon points="67.9,329.0 327.7,479.0 327.7,482.0 67.9,332.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="414.3,429.0 327.7,479.0 327.7,482.0 414.3,432.0" class="sk" fill="var(--paper-2)"/>
+<g><polygon points="67.9,329.0 327.7,479.0 327.7,482.0 67.9,332.0" fill="var(--paper-2)"/>
+<polygon points="67.9,329.0 327.7,479.0 327.7,482.0 67.9,332.0" class="sk fnone"/>
+<polygon points="414.3,429.0 327.7,479.0 327.7,482.0 414.3,432.0" fill="var(--paper-2)"/>
+<polygon points="414.3,429.0 327.7,479.0 327.7,482.0 414.3,432.0" class="sk fnone"/>
 <polygon points="154.5,279.0 414.3,429.0 327.7,479.0 67.9,329.0" class="sk fp"/></g>
-<g><polygon points="100.8,313.0 317.3,438.0 317.3,441.0 100.8,316.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="379.7,402.0 317.3,438.0 317.3,441.0 379.7,405.0" class="sk" fill="var(--paper-2)"/>
+<g><polygon points="100.8,313.0 317.3,438.0 317.3,441.0 100.8,316.0" fill="var(--paper-2)"/>
+<polygon points="100.8,313.0 317.3,438.0 317.3,441.0 100.8,316.0" class="sk fnone"/>
+<polygon points="379.7,402.0 317.3,438.0 317.3,441.0 379.7,405.0" fill="var(--paper-2)"/>
+<polygon points="379.7,402.0 317.3,438.0 317.3,441.0 379.7,405.0" class="sk fnone"/>
 <polygon points="163.2,277.0 379.7,402.0 317.3,438.0 100.8,313.0" class="sk fp"/></g>
-<g><polygon points="132.0,298.0 305.2,398.0 305.2,401.0 132.0,301.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="346.8,374.0 305.2,398.0 305.2,401.0 346.8,377.0" class="sk" fill="var(--paper-2)"/>
+<g><polygon points="132.0,298.0 305.2,398.0 305.2,401.0 132.0,301.0" fill="var(--paper-2)"/>
+<polygon points="132.0,298.0 305.2,398.0 305.2,401.0 132.0,301.0" class="sk fnone"/>
+<polygon points="346.8,374.0 305.2,398.0 305.2,401.0 346.8,377.0" fill="var(--paper-2)"/>
+<polygon points="346.8,374.0 305.2,398.0 305.2,401.0 346.8,377.0" class="sk fnone"/>
 <polygon points="173.6,274.0 346.8,374.0 305.2,398.0 132.0,298.0" class="sk fp2"/></g>
-<g><polygon points="250.6,322.5 298.3,350.0 298.3,353.0 250.6,325.5" class="skf" fill="none"/>
-<polygon points="317.3,339.0 298.3,350.0 298.3,353.0 317.3,342.0" class="skf" fill="none"/>
+<g><polygon points="250.6,322.5 298.3,350.0 298.3,353.0 250.6,325.5" fill="none"/>
+<polygon points="250.6,322.5 298.3,350.0 298.3,353.0 250.6,325.5" class="skf fnone"/>
+<polygon points="317.3,339.0 298.3,350.0 298.3,353.0 317.3,342.0" fill="none"/>
+<polygon points="317.3,339.0 298.3,350.0 298.3,353.0 317.3,342.0" class="skf fnone"/>
 <polygon points="269.7,311.5 317.3,339.0 298.3,350.0 250.6,322.5" class="skf fnone"/></g>
-<g><polygon points="220.3,325.0 274.0,356.0 274.0,359.0 220.3,328.0" class="skf" fill="none"/>
-<polygon points="287.9,348.0 274.0,356.0 274.0,359.0 287.9,351.0" class="skf" fill="none"/>
+<g><polygon points="220.3,325.0 274.0,356.0 274.0,359.0 220.3,328.0" fill="none"/>
+<polygon points="220.3,325.0 274.0,356.0 274.0,359.0 220.3,328.0" class="skf fnone"/>
+<polygon points="287.9,348.0 274.0,356.0 274.0,359.0 287.9,351.0" fill="none"/>
+<polygon points="287.9,348.0 274.0,356.0 274.0,359.0 287.9,351.0" class="skf fnone"/>
 <polygon points="234.2,317.0 287.9,348.0 274.0,356.0 220.3,325.0" class="skf fnone"/></g>
-<g><polygon points="161.4,278.0 216.9,310.0 216.9,314.0 161.4,282.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="239.4,297.0 216.9,310.0 216.9,314.0 239.4,301.0" class="sk" fill="var(--paper-2)"/>
+<g><polygon points="161.4,278.0 216.9,310.0 216.9,314.0 161.4,282.0" fill="var(--paper-2)"/>
+<polygon points="161.4,278.0 216.9,310.0 216.9,314.0 161.4,282.0" class="sk fnone"/>
+<polygon points="239.4,297.0 216.9,310.0 216.9,314.0 239.4,301.0" fill="var(--paper-2)"/>
+<polygon points="239.4,297.0 216.9,310.0 216.9,314.0 239.4,301.0" class="sk fnone"/>
 <polygon points="184.0,265.0 239.4,297.0 216.9,310.0 161.4,278.0" class="sk fp"/></g>
 <g>
-<polygon points="741.7,535.0 823.9,582.5 823.9,612.5 741.7,565.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="884.5,547.5 823.9,582.5 823.9,612.5 884.5,577.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="741.7,535.0 823.9,582.5 823.9,612.5 741.7,565.0" fill="var(--paper-2)"/>
+<polygon points="741.7,535.0 823.9,582.5 823.9,612.5 741.7,565.0" class="sk fnone"/>
+<polygon points="884.5,547.5 823.9,582.5 823.9,612.5 884.5,577.5" fill="var(--paper-2)"/>
+<polygon points="884.5,547.5 823.9,582.5 823.9,612.5 884.5,577.5" fill="url(#s1-hx)"/>
+<polygon points="884.5,547.5 823.9,582.5 823.9,612.5 884.5,577.5" class="sk fnone"/>
 <polygon points="802.3,500.0 884.5,547.5 823.9,582.5 741.7,535.0" class="sk fp"/>
 </g>
 <g><line x1="812.7" y1="560.0" x2="812.7" y2="590.0" class="sks" stroke-dasharray="2 3"/>
-<polygon points="771.1,514.0 812.7,538.0 812.7,560.0 771.1,536.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="843.8,520.0 812.7,538.0 812.7,560.0 843.8,542.0" class="sk" fill="url(#s1-hx)"/>
+<polygon points="771.1,514.0 812.7,538.0 812.7,560.0 771.1,536.0" fill="var(--paper-2)"/>
+<polygon points="771.1,514.0 812.7,538.0 812.7,560.0 771.1,536.0" class="sk fnone"/>
+<polygon points="843.8,520.0 812.7,538.0 812.7,560.0 843.8,542.0" fill="var(--paper-2)"/>
+<polygon points="843.8,520.0 812.7,538.0 812.7,560.0 843.8,542.0" fill="url(#s1-hx)"/>
+<polygon points="843.8,520.0 812.7,538.0 812.7,560.0 843.8,542.0" class="sk fnone"/>
 <polygon points="802.3,496.0 843.8,520.0 812.7,538.0 771.1,514.0" class="sk fp"/>
 </g>
 <g>
-<polygon points="542.5,594.0 633.4,646.5 633.4,672.5 542.5,620.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="685.4,616.5 633.4,646.5 633.4,672.5 685.4,642.5" class="sk" fill="url(#s1-hx)"/>
+<polygon points="542.5,594.0 633.4,646.5 633.4,672.5 542.5,620.0" fill="var(--paper-2)"/>
+<polygon points="542.5,594.0 633.4,646.5 633.4,672.5 542.5,620.0" class="sk fnone"/>
+<polygon points="685.4,616.5 633.4,646.5 633.4,672.5 685.4,642.5" fill="var(--paper-2)"/>
+<polygon points="685.4,616.5 633.4,646.5 633.4,672.5 685.4,642.5" fill="url(#s1-hx)"/>
+<polygon points="685.4,616.5 633.4,646.5 633.4,672.5 685.4,642.5" class="sk fnone"/>
 <polygon points="594.4,564.0 685.4,616.5 633.4,646.5 542.5,594.0" class="sk fp"/>
 </g>
 <line x1="707.0" y1="361.0" x2="655.1" y2="391.0" class="skf"/>
@@ -178,8 +216,8 @@
 <rect x="798" y="726" width="144" height="30" rx="0" class="sk fp2"/>
 <text x="806" y="739" class="lbls" text-anchor="start" >./ui-view.register</text>
 <text x="806" y="751" class="lblf" text-anchor="start" >one element</text>
-</svg></div>
-    <figcaption>Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 1</span>Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -204,16 +242,19 @@
   <div><span class="fld">SCALE</span>ONE PACKAGE</div>
   <div><span class="fld">FORM</span>ISO CIRCUIT</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · E</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · F</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>1 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the loop routed on the iso grid</td></tr>
+  <tr><th scope="row" class="r">REV E</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the version reads census-files.json — 1.9.0 was a hand-typed relic</td></tr>
+  <tr><th scope="row" class="r">REV F</th><td class="d">2026-09-06</td></tr>
+  <tr><td class="t" colspan="2">fills — every block’s left face and the Tilt plates’ flanks now carry their paper-2 tint, and the right faces their hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no geometry moved</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">D</td><td class="d">—</td><td class="t">the loop routed on the iso grid</td></tr>
-  <tr><td class="r">E</td><td class="d">—</td><td class="t">the version reads census-files.json — 1.9.0 was a hand-typed relic</td></tr></tbody>
-</table>
 </section>

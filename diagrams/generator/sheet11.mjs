@@ -184,9 +184,9 @@ ${schedule}
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'D',
+  num: 11, id: 'entries', rev: 'E',
   title: 'THE ENTRY QUARTERS',
-  sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors, ${PKG_N} packages · REV C: every byte now read from diagrams/data/census-doors.json · REV D: whole-cabinet re-probe — 14 of ${DOOR_N} doors byte-identical, the lint plugin's up 1,917 → ${fmt(LINT.gz)} gz on #689's three new rules and the mobx door 650 → ${fmt(MOBX.gz)} gz at mobx 1.0.0 — ${BASIS}`,
+  sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors, ${PKG_N} packages · REV C: every byte now read from diagrams/data/census-doors.json · REV D: whole-cabinet re-probe — 14 of ${DOOR_N} doors byte-identical, the lint plugin's up 1,917 → ${fmt(LINT.gz)} gz on #689's three new rules and the mobx door 650 → ${fmt(MOBX.gz)} gz at mobx 1.0.0 — ${BASIS} · REV E 2026-09-06: fills — every quarter’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no door moved`,
   scale: 'FIVE PACKAGES',
   form: 'ENTRY QUARTERS',
   svg,

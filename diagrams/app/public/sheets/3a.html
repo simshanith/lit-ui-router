@@ -3,7 +3,7 @@
   <h2 class="sheet-title">THE HANDOFF WORKS</h2>
   <p class="sheet-sub">ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 11 workflows · 49 mise tasks in 4 homes · turbo ci 605 nodes, 183 real · 4 seam types · 3 service doors</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1400 966" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists eleven workflows, eight of which call mise for a total of thirty-seven call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing 49 tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 183 tasks inside a hatched phantom shroud representing the 422 nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1400 966" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists eleven workflows, eight of which call mise for a total of thirty-seven call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing 49 tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 183 tasks inside a hatched phantom shroud representing the 422 nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
 <defs>
   <marker id="s3a-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -24,7 +24,7 @@
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s3a-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s3a-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -236,8 +236,8 @@
 <text x="58" y="896" class="lbls" text-anchor="start" >D2  mise → mise — 8 edges · 5 depends (setup · lint_workflows ×4, from 2 declaring tasks) + run-line delegations · cutest: turbo_login → $(mise run read_secret) · config.toml:94,143</text>
 <text x="58" y="913" class="lbls" text-anchor="start" >E   bypasses — 3, all deliberate · deflake-e2e.yml:73 (bare turbo) · :87 (pnpm outside turbo) · cloudflare-build.sh:26-38 (npm -g pnpm + npx turbo, no mise — production)</text>
 <text x="58" y="936" class="lblf" text-anchor="start" >TOTALS — 49 mise tasks · 21 with $usage_* specs · 98 turbo definitions · ci 605 nodes / 183 real · 1 dead task (playwright_deps) · counted at origin/main @ b2338d0 (2026-09-05) · graph via turbo 2.10.11</text>
-</svg></div>
-    <figcaption>The two task managers drawn as the two machines they are — mise the node-free umbrella, turbo the cached fan-out — with the seams as the featured parts: every crossing is a bolted gasket labeled with what crosses it and what the boundary buys. The star fitting is the cache gasket on the return duct: turbo caches mise, because the six re-entrant lint lanes hash the mise task files and mise.lock, so a tool-pin bump invalidates exactly its own lane.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 3A</span>The two task managers drawn as the two machines they are — mise the node-free umbrella, turbo the cached fan-out — with the seams as the featured parts: every crossing is a bolted gasket labeled with what crosses it and what the boundary buys. The star fitting is the cache gasket on the return duct: turbo caches mise, because the six re-entrant lint lanes hash the mise task files and mise.lock, so a tool-pin bump invalidates exactly its own lane.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -272,13 +272,15 @@
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>3A OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">census refresh 2026-08-31</td></tr>
+  <tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the vanished tmp/ census is a scripted probe — every count imported from diagrams/data/census-handoff.json + census-plate.json</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">whole-cabinet refresh — mise unmoved a third time, turbo down to 17 files / 96 definitions · counted at origin/main @ b2338d0 (2026-09-05)</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">B</td><td class="d">—</td><td class="t">census refresh 2026-08-31</td></tr>
-  <tr><td class="r">C</td><td class="d">—</td><td class="t">the vanished tmp/ census is a scripted probe — every count imported from diagrams/data/census-handoff.json + census-plate.json</td></tr>
-  <tr><td class="r">D</td><td class="d">—</td><td class="t">whole-cabinet refresh — mise unmoved a third time, turbo down to 17 files / 96 definitions · counted at origin/main @ b2338d0 (2026-09-05)</td></tr></tbody>
-</table>
 </section>

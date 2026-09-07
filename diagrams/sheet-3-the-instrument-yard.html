@@ -15,6 +15,7 @@
   --accent: #2E5077;
   --accent-soft: #6E88A6;
   --red: #A63D2F;
+  --red-hatch: #A63D2F;
   --green: #4C6B51;
   --halo: rgba(46, 80, 119, 0.10);
   /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
@@ -26,15 +27,17 @@
   :root:not([data-theme="light"]) {
     --ground: #0A1B34;
     --paper: #102A50;
-    --paper-2: #0D2344;
+    --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #5F7899;
+    --ink-faint: #6E88A8;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
     --accent-soft: #5B84B4;
-    --red: #E38C6F;
+    /* fills keep the red red; the salmon survives as the hatch stroke */
+    --red: #D96C55;
+    --red-hatch: #E38C6F;
     --green: #8AB795;
     --halo: rgba(143, 188, 233, 0.12);
     --pencil: #7E97B8;
@@ -44,15 +47,16 @@
 :root[data-theme="dark"] {
   --ground: #0A1B34;
   --paper: #102A50;
-  --paper-2: #0D2344;
+  --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #5F7899;
+  --ink-faint: #6E88A8;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
   --accent-soft: #5B84B4;
-  --red: #E38C6F;
+  --red: #D96C55;
+  --red-hatch: #E38C6F;
   --green: #8AB795;
   --halo: rgba(143, 188, 233, 0.12);
   --pencil: #7E97B8;
@@ -105,15 +109,20 @@ body {
   font-family: var(--prose);
   padding: clamp(12px, 3vw, 40px);
   line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
 }
 
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
 .sheet {
   position: relative;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  max-width: none;
+  margin: 0 0 40px;
   background: var(--paper);
   border: 1.5px solid var(--ink);
-  padding: 26px;
+  padding: 22px;
   box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
 }
 .sheet::before {
@@ -155,7 +164,7 @@ body {
 .sheet-title {
   font-family: var(--title);
   font-size: clamp(18px, 2.7vw, 24px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   font-weight: 600;
   text-wrap: balance;
   margin-bottom: 4px;
@@ -168,27 +177,62 @@ body {
   margin-bottom: 16px;
 }
 
-.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
-.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  padding: 6px 0 0;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
   font-size: 14.5px;
   color: var(--ink-soft);
-  max-width: 68ch;
-  margin: 10px auto 0;
+  max-width: 66ch;
+  margin: 0;
   font-style: italic;
 }
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-right: 10px;
+}
 
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column at 66ch;
+   the key, the title block and the revisions are one 352px inset strip that
+   rides alongside whatever paragraph is on screen. */
 .notes-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 7fr) 352px;
+  gap: 24px;
   border-top: 1px solid var(--ink);
   padding-top: 16px;
   align-items: start;
 }
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.keyblock { position: sticky; top: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
 .notes h3, .keyblock h3 {
   font-family: var(--data);
   font-size: 11px;
@@ -200,7 +244,7 @@ figcaption {
 .notes p {
   font-family: var(--prose);
   font-size: 15.5px;
-  max-width: 62ch;
+  max-width: 66ch;
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
@@ -208,14 +252,15 @@ figcaption {
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
   font-family: var(--code);
-  font-size: 0.85em;
+  font-size: 0.88em;
   background: var(--paper-2);
   border: 1px solid var(--line);
-  padding: 0 4px;
+  padding: 0 3px;
   border-radius: 2px;
-  /* A chip breaks only when it would otherwise run off the column: sheet 11's
-     90-character recipe did, once the prose stepped up half a pixel. */
-  overflow-wrap: anywhere;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 .keyblock table { border-collapse: collapse; width: 100%; }
 .keyblock td {
@@ -249,7 +294,7 @@ code, kbd, samp { font-family: var(--code); }
 .titleblock .fld {
   display: block;
   font-family: var(--data);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
   color: var(--ink-soft);
   margin-bottom: 2px;
@@ -265,7 +310,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--title);
   font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.04em;
 }
 /* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
    caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
@@ -291,7 +336,8 @@ code, kbd, samp { font-family: var(--code); }
 /* ---- REVISIONS ----
    The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
    splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, under the title block, as a drawing's revision block. */
+   the tail here, in the inset strip under the title block, as a drawing's
+   revision block: one row of rev + date, the description wrapped beneath. */
 .revs {
   width: 100%;
   border-collapse: collapse;
@@ -309,27 +355,30 @@ code, kbd, samp { font-family: var(--code); }
   text-align: left;
   padding: 0 0 8px;
 }
+.revs th, .revs td { text-align: left; vertical-align: baseline; }
 .revs th {
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
+  font-weight: 600;
+  padding: 6px 10px 2px;
+  white-space: nowrap;
+  width: 1%;
+}
+.revs .d {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   color: var(--ink-soft);
-  text-align: left;
-  padding: 6px 12px;
-  border-bottom: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  padding: 6px 10px 2px;
   white-space: nowrap;
 }
-.revs td {
+.revs .t {
   font-size: 11.5px;
   letter-spacing: 0.03em;
-  padding: 7px 12px;
+  color: var(--ink-soft);
+  padding: 0 10px 7px;
   border-bottom: 1px solid var(--line);
-  vertical-align: baseline;
 }
-.revs tr:last-child td { border-bottom: none; }
-.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
-.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
-.revs .t { color: var(--ink-soft); }
+.revs tr:last-child .t { border-bottom: none; }
 .revs code { font-family: var(--code); font-size: 0.88em; }
 
 /* ---- SVG drawing classes ---- */
@@ -373,7 +422,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title">THE INSTRUMENT YARD</h2>
   <p class="sheet-sub">ALTITUDE 3 — 5 publishable packages · 20 tools · 70 turbo task names · one packer, many readers</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1400 1214" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at 55 files, 3,099 lines, and the source slab at 36 files, 3,520 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all 19 structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at thirty-seven call sites across eight workflows, mise holds 49 tasks with only 2 of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to 605 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1400 1214" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at 55 files, 3,099 lines, and the source slab at 36 files, 3,520 lines. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all 19 structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at thirty-seven call sites across eight workflows, mise holds 49 tasks with only 2 of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to 605 task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 <defs>
   <marker id="s3-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -394,7 +443,7 @@ a { color: var(--accent); }
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s3-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s3-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -461,140 +510,197 @@ a { color: var(--accent); }
 <path d="M904.9,663.0 L561.4,861.3 L173.8,637.5 L422.2,494.0" class="ska" stroke-dasharray="7 4" marker-end="url(#s3-aa)"/>
 <path d="M299.4,631.6 L257.5,655.8 L437.5,759.8 L459.1,747.3" class="sks" stroke-dasharray="4 3" marker-end="url(#s3-ai)"/>
 <g>
-<polygon points="268.7,218.7 351.0,266.2 351.0,320.2 268.7,272.7" class="sk" fill="var(--paper-2)"/>
-<polygon points="433.2,218.7 351.0,266.2 351.0,320.2 433.2,272.7" class="sk" fill="url(#s3-hx)"/>
+<polygon points="268.7,218.7 351.0,266.2 351.0,320.2 268.7,272.7" fill="var(--paper-2)"/>
+<polygon points="268.7,218.7 351.0,266.2 351.0,320.2 268.7,272.7" class="sk fnone"/>
+<polygon points="433.2,218.7 351.0,266.2 351.0,320.2 433.2,272.7" fill="var(--paper-2)"/>
+<polygon points="433.2,218.7 351.0,266.2 351.0,320.2 433.2,272.7" fill="url(#s3-hx)"/>
+<polygon points="433.2,218.7 351.0,266.2 351.0,320.2 433.2,272.7" class="sk fnone"/>
 <polygon points="351.0,171.2 433.2,218.7 351.0,266.2 268.7,218.7" class="sk fp"/>
 </g>
 <circle cx="392.1" cy="178.0" r="9.5" class="sk fp"/>
 <text x="392.1" y="181.6" class="lbl" text-anchor="middle" >1</text>
 <g>
-<polygon points="183.3,318.0 191.1,322.6 191.1,326.6 183.3,322.0" class="skr" fill="var(--paper-2)"/>
-<polygon points="199.0,318.0 191.1,322.6 191.1,326.6 199.0,322.0" class="skr" fill="url(#s3-hr)"/>
+<polygon points="183.3,318.0 191.1,322.6 191.1,326.6 183.3,322.0" fill="var(--paper-2)"/>
+<polygon points="183.3,318.0 191.1,322.6 191.1,326.6 183.3,322.0" class="skr fnone"/>
+<polygon points="199.0,318.0 191.1,322.6 191.1,326.6 199.0,322.0" fill="var(--paper-2)"/>
+<polygon points="199.0,318.0 191.1,322.6 191.1,326.6 199.0,322.0" fill="url(#s3-hr)"/>
+<polygon points="199.0,318.0 191.1,322.6 191.1,326.6 199.0,322.0" class="skr fnone"/>
 <polygon points="191.1,313.5 199.0,318.0 191.1,322.6 183.3,318.0" class="skr fp"/>
 </g><polygon points="191.1,313.5 199.0,318.0 191.1,322.6 183.3,318.0" fill="url(#s3-hr)"/>
 <polygon points="191.1,313.5 199.0,318.0 191.1,322.6 183.3,318.0" class="skr fnone"/>
 <circle cx="195.0" cy="298.8" r="9.5" class="skr fp"/>
 <text x="195.0" y="302.4" class="lblr" text-anchor="middle" >7</text>
 <g>
-<polygon points="458.7,336.6 479.6,348.7 479.6,356.2 458.7,344.1" class="sk" fill="var(--paper-2)"/>
-<polygon points="500.5,336.6 479.6,348.7 479.6,356.2 500.5,344.1" class="sk" fill="url(#s3-hx)"/>
+<polygon points="458.7,336.6 479.6,348.7 479.6,356.2 458.7,344.1" fill="var(--paper-2)"/>
+<polygon points="458.7,336.6 479.6,348.7 479.6,356.2 458.7,344.1" class="sk fnone"/>
+<polygon points="500.5,336.6 479.6,348.7 479.6,356.2 500.5,344.1" fill="var(--paper-2)"/>
+<polygon points="500.5,336.6 479.6,348.7 479.6,356.2 500.5,344.1" fill="url(#s3-hx)"/>
+<polygon points="500.5,336.6 479.6,348.7 479.6,356.2 500.5,344.1" class="sk fnone"/>
 <polygon points="479.6,324.6 500.5,336.6 479.6,348.7 458.7,336.6" class="sk fp"/>
 </g>
 <circle cx="490.1" cy="313.6" r="9.5" class="sk fp"/>
 <text x="490.1" y="317.2" class="lbl" text-anchor="middle" >2</text>
 <g>
-<polygon points="210.0,339.6 227.5,349.7 227.5,358.7 210.0,348.6" class="skr" fill="var(--paper-2)"/>
-<polygon points="245.0,339.6 227.5,349.7 227.5,358.7 245.0,348.6" class="skr" fill="url(#s3-hr)"/>
+<polygon points="210.0,339.6 227.5,349.7 227.5,358.7 210.0,348.6" fill="var(--paper-2)"/>
+<polygon points="210.0,339.6 227.5,349.7 227.5,358.7 210.0,348.6" class="skr fnone"/>
+<polygon points="245.0,339.6 227.5,349.7 227.5,358.7 245.0,348.6" fill="var(--paper-2)"/>
+<polygon points="245.0,339.6 227.5,349.7 227.5,358.7 245.0,348.6" fill="url(#s3-hr)"/>
+<polygon points="245.0,339.6 227.5,349.7 227.5,358.7 245.0,348.6" class="skr fnone"/>
 <polygon points="227.5,329.5 245.0,339.6 227.5,349.7 210.0,339.6" class="skr fp"/>
 </g><polygon points="227.5,329.5 245.0,339.6 227.5,349.7 210.0,339.6" fill="url(#s3-hr)"/>
 <polygon points="227.5,329.5 245.0,339.6 227.5,349.7 210.0,339.6" class="skr fnone"/>
 <circle cx="236.3" cy="317.6" r="9.5" class="skr fp"/>
 <text x="236.3" y="321.2" class="lblr" text-anchor="middle" >8</text>
 <g>
-<polygon points="254.1,377.1 277.7,390.8 277.7,394.8 254.1,381.1" class="skr" fill="var(--paper-2)"/>
-<polygon points="301.4,377.1 277.7,390.8 277.7,394.8 301.4,381.1" class="skr" fill="url(#s3-hr)"/>
+<polygon points="254.1,377.1 277.7,390.8 277.7,394.8 254.1,381.1" fill="var(--paper-2)"/>
+<polygon points="254.1,377.1 277.7,390.8 277.7,394.8 254.1,381.1" class="skr fnone"/>
+<polygon points="301.4,377.1 277.7,390.8 277.7,394.8 301.4,381.1" fill="var(--paper-2)"/>
+<polygon points="301.4,377.1 277.7,390.8 277.7,394.8 301.4,381.1" fill="url(#s3-hr)"/>
+<polygon points="301.4,377.1 277.7,390.8 277.7,394.8 301.4,381.1" class="skr fnone"/>
 <polygon points="277.7,363.5 301.4,377.1 277.7,390.8 254.1,377.1" class="skr fp"/>
 </g><polygon points="277.7,363.5 301.4,377.1 277.7,390.8 254.1,377.1" fill="url(#s3-hr)"/>
 <polygon points="277.7,363.5 301.4,377.1 277.7,390.8 254.1,377.1" class="skr fnone"/>
 <circle cx="277.7" cy="346.5" r="9.5" class="skr fp"/>
 <text x="277.7" y="350.1" class="lblr" text-anchor="middle" >9</text>
 <g>
-<polygon points="105.7,382.3 117.5,389.2 117.5,393.7 105.7,386.8" class="ska" fill="var(--paper-2)"/>
-<polygon points="129.4,382.3 117.5,389.2 117.5,393.7 129.4,386.8" class="ska" fill="url(#s3-ha)"/>
+<polygon points="105.7,382.3 117.5,389.2 117.5,393.7 105.7,386.8" fill="var(--paper-2)"/>
+<polygon points="105.7,382.3 117.5,389.2 117.5,393.7 105.7,386.8" class="ska fnone"/>
+<polygon points="129.4,382.3 117.5,389.2 117.5,393.7 129.4,386.8" fill="var(--paper-2)"/>
+<polygon points="129.4,382.3 117.5,389.2 117.5,393.7 129.4,386.8" fill="url(#s3-ha)"/>
+<polygon points="129.4,382.3 117.5,389.2 117.5,393.7 129.4,386.8" class="ska fnone"/>
 <polygon points="117.5,375.5 129.4,382.3 117.5,389.2 105.7,382.3" class="ska fp"/>
 </g><polygon points="117.5,375.5 129.4,382.3 117.5,389.2 105.7,382.3" fill="url(#s3-ha)"/>
 <polygon points="117.5,375.5 129.4,382.3 117.5,389.2 105.7,382.3" class="ska fnone"/>
 <circle cx="123.4" cy="361.9" r="9.5" class="ska fp"/>
 <text x="123.4" y="365.5" class="lbla" text-anchor="middle" >12</text>
 <g>
-<polygon points="542.0,374.5 568.0,389.5 568.0,406.0 542.0,391.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="594.0,374.5 568.0,389.5 568.0,406.0 594.0,391.0" class="sk" fill="url(#s3-hx)"/>
+<polygon points="542.0,374.5 568.0,389.5 568.0,406.0 542.0,391.0" fill="var(--paper-2)"/>
+<polygon points="542.0,374.5 568.0,389.5 568.0,406.0 542.0,391.0" class="sk fnone"/>
+<polygon points="594.0,374.5 568.0,389.5 568.0,406.0 594.0,391.0" fill="var(--paper-2)"/>
+<polygon points="594.0,374.5 568.0,389.5 568.0,406.0 594.0,391.0" fill="url(#s3-hx)"/>
+<polygon points="594.0,374.5 568.0,389.5 568.0,406.0 594.0,391.0" class="sk fnone"/>
 <polygon points="568.0,359.5 594.0,374.5 568.0,389.5 542.0,374.5" class="sk fp"/>
 </g>
 <circle cx="581.0" cy="350.0" r="9.5" class="sk fp"/>
 <text x="581.0" y="353.6" class="lbl" text-anchor="middle" >3</text>
 <g>
-<polygon points="146.6,409.2 160.8,417.5 160.8,421.5 146.6,413.2" class="skf" fill="var(--paper-2)"/>
-<polygon points="175.1,409.2 160.8,417.5 160.8,421.5 175.1,413.2" class="skf" fill="url(#s3-hx)"/>
+<polygon points="146.6,409.2 160.8,417.5 160.8,421.5 146.6,413.2" fill="var(--paper-2)"/>
+<polygon points="146.6,409.2 160.8,417.5 160.8,421.5 146.6,413.2" class="skf fnone"/>
+<polygon points="175.1,409.2 160.8,417.5 160.8,421.5 175.1,413.2" fill="var(--paper-2)"/>
+<polygon points="175.1,409.2 160.8,417.5 160.8,421.5 175.1,413.2" fill="url(#s3-hx)"/>
+<polygon points="175.1,409.2 160.8,417.5 160.8,421.5 175.1,413.2" class="skf fnone"/>
 <polygon points="160.8,401.0 175.1,409.2 160.8,417.5 146.6,409.2" class="skf fp2"/>
 </g>
 <circle cx="168.0" cy="388.1" r="9.5" class="skf fp"/>
 <text x="168.0" y="391.7" class="lbls" text-anchor="middle" >13</text>
 <g>
-<polygon points="330.2,413.2 347.0,422.9 347.0,426.9 330.2,417.2" class="skr" fill="var(--paper-2)"/>
-<polygon points="363.8,413.2 347.0,422.9 347.0,426.9 363.8,417.2" class="skr" fill="url(#s3-hr)"/>
+<polygon points="330.2,413.2 347.0,422.9 347.0,426.9 330.2,417.2" fill="var(--paper-2)"/>
+<polygon points="330.2,413.2 347.0,422.9 347.0,426.9 330.2,417.2" class="skr fnone"/>
+<polygon points="363.8,413.2 347.0,422.9 347.0,426.9 363.8,417.2" fill="var(--paper-2)"/>
+<polygon points="363.8,413.2 347.0,422.9 347.0,426.9 363.8,417.2" fill="url(#s3-hr)"/>
+<polygon points="363.8,413.2 347.0,422.9 347.0,426.9 363.8,417.2" class="skr fnone"/>
 <polygon points="347.0,403.5 363.8,413.2 347.0,422.9 330.2,413.2" class="skr fp"/>
 </g><polygon points="347.0,403.5 363.8,413.2 347.0,422.9 330.2,413.2" fill="url(#s3-hr)"/>
 <polygon points="347.0,403.5 363.8,413.2 347.0,422.9 330.2,413.2" class="skr fnone"/>
 <circle cx="347.0" cy="386.5" r="9.5" class="skr fp"/>
 <text x="347.0" y="390.1" class="lblr" text-anchor="middle" >10</text>
 <g>
-<polygon points="652.5,431.9 683.7,449.9 683.7,475.9 652.5,457.9" class="skg" fill="var(--paper-2)"/>
-<polygon points="714.9,431.9 683.7,449.9 683.7,475.9 714.9,457.9" class="skg" fill="url(#s3-hx)"/>
+<polygon points="652.5,431.9 683.7,449.9 683.7,475.9 652.5,457.9" fill="var(--paper-2)"/>
+<polygon points="652.5,431.9 683.7,449.9 683.7,475.9 652.5,457.9" class="skg fnone"/>
+<polygon points="714.9,431.9 683.7,449.9 683.7,475.9 714.9,457.9" fill="var(--paper-2)"/>
+<polygon points="714.9,431.9 683.7,449.9 683.7,475.9 714.9,457.9" fill="url(#s3-hx)"/>
+<polygon points="714.9,431.9 683.7,449.9 683.7,475.9 714.9,457.9" class="skg fnone"/>
 <polygon points="683.7,413.9 714.9,431.9 683.7,449.9 652.5,431.9" class="skg fg"/>
 </g>
 <circle cx="699.3" cy="405.9" r="9.5" class="skg fp"/>
 <text x="699.3" y="409.5" class="lbl" text-anchor="middle" >4</text>
 <g>
-<polygon points="417.8,473.0 445.6,489.1 445.6,496.6 417.8,480.5" class="skr" fill="var(--paper-2)"/>
-<polygon points="473.5,473.0 445.6,489.1 445.6,496.6 473.5,480.5" class="skr" fill="url(#s3-hr)"/>
+<polygon points="417.8,473.0 445.6,489.1 445.6,496.6 417.8,480.5" fill="var(--paper-2)"/>
+<polygon points="417.8,473.0 445.6,489.1 445.6,496.6 417.8,480.5" class="skr fnone"/>
+<polygon points="473.5,473.0 445.6,489.1 445.6,496.6 473.5,480.5" fill="var(--paper-2)"/>
+<polygon points="473.5,473.0 445.6,489.1 445.6,496.6 473.5,480.5" fill="url(#s3-hr)"/>
+<polygon points="473.5,473.0 445.6,489.1 445.6,496.6 473.5,480.5" class="skr fnone"/>
 <polygon points="445.6,456.9 473.5,473.0 445.6,489.1 417.8,473.0" class="skr fr"/>
 </g>
 <circle cx="445.6" cy="439.9" r="9.5" class="skr fp"/>
 <text x="445.6" y="443.6" class="lblr" text-anchor="middle" >11</text>
 <g>
-<polygon points="169.7,453.4 234.4,490.7 234.4,522.2 169.7,484.9" class="skf" fill="var(--paper-2)"/>
-<polygon points="299.1,453.4 234.4,490.7 234.4,522.2 299.1,484.9" class="skf" fill="url(#s3-hx)"/>
+<polygon points="169.7,453.4 234.4,490.7 234.4,522.2 169.7,484.9" fill="var(--paper-2)"/>
+<polygon points="169.7,453.4 234.4,490.7 234.4,522.2 169.7,484.9" class="skf fnone"/>
+<polygon points="299.1,453.4 234.4,490.7 234.4,522.2 299.1,484.9" fill="var(--paper-2)"/>
+<polygon points="299.1,453.4 234.4,490.7 234.4,522.2 299.1,484.9" fill="url(#s3-hx)"/>
+<polygon points="299.1,453.4 234.4,490.7 234.4,522.2 299.1,484.9" class="skf fnone"/>
 <polygon points="234.4,416.0 299.1,453.4 234.4,490.7 169.7,453.4" class="skf fp2"/>
 </g>
 <circle cx="266.8" cy="417.7" r="9.5" class="skf fp"/>
 <text x="266.8" y="421.3" class="lbls" text-anchor="middle" >14</text>
 <g>
-<polygon points="290.3,495.8 321.0,513.5 321.0,533.0 290.3,515.3" class="skf" fill="var(--paper-2)"/>
-<polygon points="351.8,495.8 321.0,513.5 321.0,533.0 351.8,515.3" class="skf" fill="url(#s3-hx)"/>
+<polygon points="290.3,495.8 321.0,513.5 321.0,533.0 290.3,515.3" fill="var(--paper-2)"/>
+<polygon points="290.3,495.8 321.0,513.5 321.0,533.0 290.3,515.3" class="skf fnone"/>
+<polygon points="351.8,495.8 321.0,513.5 321.0,533.0 351.8,515.3" fill="var(--paper-2)"/>
+<polygon points="351.8,495.8 321.0,513.5 321.0,533.0 351.8,515.3" fill="url(#s3-hx)"/>
+<polygon points="351.8,495.8 321.0,513.5 321.0,533.0 351.8,515.3" class="skf fnone"/>
 <polygon points="321.0,478.0 351.8,495.8 321.0,513.5 290.3,495.8" class="skf fp2"/>
 </g>
 <circle cx="336.4" cy="469.9" r="9.5" class="skf fp"/>
 <text x="336.4" y="473.5" class="lbls" text-anchor="middle" >15</text>
 <g>
-<polygon points="774.2,504.7 817.9,529.9 817.9,564.4 774.2,539.2" class="sk" fill="var(--paper-2)"/>
-<polygon points="861.5,504.7 817.9,529.9 817.9,564.4 861.5,539.2" class="sk" fill="url(#s3-hx)"/>
+<polygon points="774.2,504.7 817.9,529.9 817.9,564.4 774.2,539.2" fill="var(--paper-2)"/>
+<polygon points="774.2,504.7 817.9,529.9 817.9,564.4 774.2,539.2" class="sk fnone"/>
+<polygon points="861.5,504.7 817.9,529.9 817.9,564.4 861.5,539.2" fill="var(--paper-2)"/>
+<polygon points="861.5,504.7 817.9,529.9 817.9,564.4 861.5,539.2" fill="url(#s3-hx)"/>
+<polygon points="861.5,504.7 817.9,529.9 817.9,564.4 861.5,539.2" class="sk fnone"/>
 <polygon points="817.9,479.4 861.5,504.7 817.9,529.9 774.2,504.7" class="sk fp"/>
 </g>
 <circle cx="839.7" cy="475.1" r="9.5" class="sk fp"/>
 <text x="839.7" y="478.7" class="lbl" text-anchor="middle" >5</text>
 <g>
-<polygon points="373.8,564.5 412.0,586.6 412.0,594.1 373.8,572.0" class="skf" fill="var(--paper-2)"/>
-<polygon points="450.1,564.5 412.0,586.6 412.0,594.1 450.1,572.0" class="skf" fill="url(#s3-hx)"/>
+<polygon points="373.8,564.5 412.0,586.6 412.0,594.1 373.8,572.0" fill="var(--paper-2)"/>
+<polygon points="373.8,564.5 412.0,586.6 412.0,594.1 373.8,572.0" class="skf fnone"/>
+<polygon points="450.1,564.5 412.0,586.6 412.0,594.1 450.1,572.0" fill="var(--paper-2)"/>
+<polygon points="450.1,564.5 412.0,586.6 412.0,594.1 450.1,572.0" fill="url(#s3-hx)"/>
+<polygon points="450.1,564.5 412.0,586.6 412.0,594.1 450.1,572.0" class="skf fnone"/>
 <polygon points="412.0,542.5 450.1,564.5 412.0,586.6 373.8,564.5" class="skf fp2"/>
 </g>
 <circle cx="431.0" cy="536.5" r="9.5" class="skf fp"/>
 <text x="431.0" y="540.1" class="lbls" text-anchor="middle" >16</text>
 <g>
-<polygon points="290.9,607.2 323.5,626.0 323.5,636.5 290.9,617.7" class="skr" fill="var(--paper-2)"/>
-<polygon points="356.0,607.2 323.5,626.0 323.5,636.5 356.0,617.7" class="skr" fill="url(#s3-hr)"/>
+<polygon points="290.9,607.2 323.5,626.0 323.5,636.5 290.9,617.7" fill="var(--paper-2)"/>
+<polygon points="290.9,607.2 323.5,626.0 323.5,636.5 290.9,617.7" class="skr fnone"/>
+<polygon points="356.0,607.2 323.5,626.0 323.5,636.5 356.0,617.7" fill="var(--paper-2)"/>
+<polygon points="356.0,607.2 323.5,626.0 323.5,636.5 356.0,617.7" fill="url(#s3-hr)"/>
+<polygon points="356.0,607.2 323.5,626.0 323.5,636.5 356.0,617.7" class="skr fnone"/>
 <polygon points="323.5,588.4 356.0,607.2 323.5,626.0 290.9,607.2" class="skr fp"/>
 </g><polygon points="323.5,588.4 356.0,607.2 323.5,626.0 290.9,607.2" fill="url(#s3-hr)"/>
 <polygon points="323.5,588.4 356.0,607.2 323.5,626.0 290.9,607.2" class="skr fnone"/>
 <circle cx="339.7" cy="580.8" r="9.5" class="skr fp"/>
 <text x="339.7" y="584.4" class="lblr" text-anchor="middle" >17</text>
 <g>
-<polygon points="911.3,592.3 971.9,627.3 971.9,659.3 911.3,624.3" class="sks" fill="var(--paper-2)"/>
-<polygon points="1032.5,592.3 971.9,627.3 971.9,659.3 1032.5,624.3" class="sks" fill="url(#s3-hd)"/>
+<polygon points="911.3,592.3 971.9,627.3 971.9,659.3 911.3,624.3" fill="var(--paper-2)"/>
+<polygon points="911.3,592.3 971.9,627.3 971.9,659.3 911.3,624.3" class="sks fnone"/>
+<polygon points="1032.5,592.3 971.9,627.3 971.9,659.3 1032.5,624.3" fill="var(--paper-2)"/>
+<polygon points="1032.5,592.3 971.9,627.3 971.9,659.3 1032.5,624.3" fill="url(#s3-hd)"/>
+<polygon points="1032.5,592.3 971.9,627.3 971.9,659.3 1032.5,624.3" class="sks fnone"/>
 <polygon points="971.9,557.3 1032.5,592.3 971.9,627.3 911.3,592.3" class="sks fp2"/>
 </g>
 <circle cx="1002.2" cy="557.8" r="9.5" class="sks fp"/>
 <text x="1002.2" y="561.4" class="lbls" text-anchor="middle" >6</text>
 <g>
-<polygon points="430.1,637.0 507.2,681.6 507.2,764.1 430.1,719.5" class="sk" fill="var(--paper-2)"/>
-<polygon points="584.4,637.0 507.2,681.6 507.2,764.1 584.4,719.5" class="sk" fill="url(#s3-hx)"/>
+<polygon points="430.1,637.0 507.2,681.6 507.2,764.1 430.1,719.5" fill="var(--paper-2)"/>
+<polygon points="430.1,637.0 507.2,681.6 507.2,764.1 430.1,719.5" class="sk fnone"/>
+<polygon points="584.4,637.0 507.2,681.6 507.2,764.1 584.4,719.5" fill="var(--paper-2)"/>
+<polygon points="584.4,637.0 507.2,681.6 507.2,764.1 584.4,719.5" fill="url(#s3-hx)"/>
+<polygon points="584.4,637.0 507.2,681.6 507.2,764.1 584.4,719.5" class="sk fnone"/>
 <polygon points="507.2,592.5 584.4,637.0 507.2,681.6 430.1,637.0" class="sk fp"/>
 </g>
 <circle cx="545.8" cy="597.8" r="9.5" class="sk fp"/>
 <text x="545.8" y="601.4" class="lbl" text-anchor="middle" >18</text>
 <g>
-<polygon points="571.3,752.0 602.5,770.1 602.5,776.1 571.3,758.0" class="ska" fill="var(--paper-2)"/>
-<polygon points="633.7,752.0 602.5,770.1 602.5,776.1 633.7,758.0" class="ska" fill="url(#s3-ha)"/>
+<polygon points="571.3,752.0 602.5,770.1 602.5,776.1 571.3,758.0" fill="var(--paper-2)"/>
+<polygon points="571.3,752.0 602.5,770.1 602.5,776.1 571.3,758.0" class="ska fnone"/>
+<polygon points="633.7,752.0 602.5,770.1 602.5,776.1 633.7,758.0" fill="var(--paper-2)"/>
+<polygon points="633.7,752.0 602.5,770.1 602.5,776.1 633.7,758.0" fill="url(#s3-ha)"/>
+<polygon points="633.7,752.0 602.5,770.1 602.5,776.1 633.7,758.0" class="ska fnone"/>
 <polygon points="602.5,734.0 633.7,752.0 602.5,770.1 571.3,752.0" class="ska fp"/>
 </g><polygon points="602.5,734.0 633.7,752.0 602.5,770.1 571.3,752.0" fill="url(#s3-ha)"/>
 <polygon points="602.5,734.0 633.7,752.0 602.5,770.1 571.3,752.0" class="ska fnone"/>
@@ -682,8 +788,8 @@ a { color: var(--accent); }
 <text x="724" y="1132" class="lbls" text-anchor="end" >19</text>
 <text x="735" y="1132" class="lbls" text-anchor="start" >docs deploy watch — 4f · 508 sloc · gates a later stage · workers-builds triggers · gates the deploy</text>
 <text x="58" y="1172" class="lbls" text-anchor="start" >TOTAL — 17 massed structures · 201 authored files · 13,899 sloc · counted at origin/main @ b2338d0 (2026-09-05) · gate tiers unchanged from rev A</text>
-</svg></div>
-    <figcaption>The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 3</span>The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -713,17 +819,21 @@ a { color: var(--accent); }
   <div><span class="fld">SCALE</span>THE MONOREPO</div>
   <div><span class="fld">FORM</span>ISOMETRIC CITY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · E</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · F</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>3 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">census refresh — every mass counted at origin/main @ b2338d0 (2026-09-05) from diagrams/data/census-yard.json (scc Code lines), 201 authored files and 13,899 sloc across 17 massed structures</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the task-manager inset reads census-handoff.json + census-plate.json — ci 605 nodes, no longer a hand-pasted 535</td></tr>
+  <tr><th scope="row" class="r">REV E</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">the altitude line reads the plates — 44 task names was a hand-typed relic</td></tr>
+  <tr><th scope="row" class="r">REV F</th><td class="d">2026-09-06</td></tr>
+  <tr><td class="t" colspan="2">fills — every mass’s left-face tint and right-face hatch draw for the first time (the fault sheet 7’s rev C worked around per plate — a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">C</td><td class="d">—</td><td class="t">census refresh — every mass counted at origin/main @ b2338d0 (2026-09-05) from diagrams/data/census-yard.json (scc Code lines), 201 authored files and 13,899 sloc across 17 massed structures</td></tr>
-  <tr><td class="r">D</td><td class="d">—</td><td class="t">the task-manager inset reads census-handoff.json + census-plate.json — ci 605 nodes, no longer a hand-pasted 535</td></tr>
-  <tr><td class="r">E</td><td class="d">—</td><td class="t">the altitude line reads the plates — 44 task names was a hand-typed relic</td></tr></tbody>
-</table>
 </section>

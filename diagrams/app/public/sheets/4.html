@@ -3,7 +3,7 @@
   <h2 class="sheet-title">THE FAMILY SPINE</h2>
   <p class="sheet-sub">ALTITUDE 4 — one core, four living adapters, four dormant instruments</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
 <defs>
   <marker id="s4-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -24,7 +24,7 @@
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s4-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s4-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -195,8 +195,8 @@
 <text x="725" y="717" class="lbls" text-anchor="start" >@uirouter/rx 1.0.0 — 4f · 72 sloc · 18 l/f · gate &gt;=6.0.1</text>
 <text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 209 authored files · 13,851 sloc · versions and dates npm registry read 2026-09-05 · this repo + core counted at origin/main @ b2338d0 (2026-09-05) · upstream family clone counts 2026-08-16</text>
 <text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 on npm (published 2026-09-01) · 1.0.0-rc.2 in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
-</svg></div>
-    <figcaption>Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 4</span>Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -226,13 +226,15 @@
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>4 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">every version and publish date imported from census-npm.json (npm registry read 2026-09-05), core and this repo's mass from census-bricks.json</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart</td></tr>
+  <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-04</td></tr>
+  <tr><td class="t" colspan="2">this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">C</td><td class="d">—</td><td class="t">every version and publish date imported from census-npm.json (npm registry read 2026-09-05), core and this repo's mass from census-bricks.json</td></tr>
-  <tr><td class="r">D</td><td class="d">—</td><td class="t">whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart</td></tr>
-  <tr><td class="r">E</td><td class="d">2026-09-04</td><td class="t">this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one</td></tr></tbody>
-</table>
 </section>

@@ -15,6 +15,7 @@
   --accent: #2E5077;
   --accent-soft: #6E88A6;
   --red: #A63D2F;
+  --red-hatch: #A63D2F;
   --green: #4C6B51;
   --halo: rgba(46, 80, 119, 0.10);
   /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
@@ -26,15 +27,17 @@
   :root:not([data-theme="light"]) {
     --ground: #0A1B34;
     --paper: #102A50;
-    --paper-2: #0D2344;
+    --paper-2: #0B1F3E;
     --ink: #D9E6F3;
     --ink-soft: #93A9C6;
-    --ink-faint: #5F7899;
+    --ink-faint: #6E88A8;
     --line: #23406B;
     --edge: #2E4C7C;
     --accent: #8FBCE9;
     --accent-soft: #5B84B4;
-    --red: #E38C6F;
+    /* fills keep the red red; the salmon survives as the hatch stroke */
+    --red: #D96C55;
+    --red-hatch: #E38C6F;
     --green: #8AB795;
     --halo: rgba(143, 188, 233, 0.12);
     --pencil: #7E97B8;
@@ -44,15 +47,16 @@
 :root[data-theme="dark"] {
   --ground: #0A1B34;
   --paper: #102A50;
-  --paper-2: #0D2344;
+  --paper-2: #0B1F3E;
   --ink: #D9E6F3;
   --ink-soft: #93A9C6;
-  --ink-faint: #5F7899;
+  --ink-faint: #6E88A8;
   --line: #23406B;
   --edge: #2E4C7C;
   --accent: #8FBCE9;
   --accent-soft: #5B84B4;
-  --red: #E38C6F;
+  --red: #D96C55;
+  --red-hatch: #E38C6F;
   --green: #8AB795;
   --halo: rgba(143, 188, 233, 0.12);
   --pencil: #7E97B8;
@@ -105,15 +109,20 @@ body {
   font-family: var(--prose);
   padding: clamp(12px, 3vw, 40px);
   line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
 }
 
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
 .sheet {
   position: relative;
-  max-width: 1180px;
-  margin: 0 auto 40px;
+  max-width: none;
+  margin: 0 0 40px;
   background: var(--paper);
   border: 1.5px solid var(--ink);
-  padding: 26px;
+  padding: 22px;
   box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
 }
 .sheet::before {
@@ -155,7 +164,7 @@ body {
 .sheet-title {
   font-family: var(--title);
   font-size: clamp(18px, 2.7vw, 24px);
-  letter-spacing: 0.12em;
+  letter-spacing: 0.06em;
   font-weight: 600;
   text-wrap: balance;
   margin-bottom: 4px;
@@ -168,27 +177,62 @@ body {
   margin-bottom: 16px;
 }
 
-.figure-wrap { overflow-x: auto; margin: 6px 0 18px; }
-.figure-wrap svg { display: block; max-width: 100%; height: auto; min-width: 640px; margin: 0 auto; }
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  padding: 6px 0 0;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
   font-size: 14.5px;
   color: var(--ink-soft);
-  max-width: 68ch;
-  margin: 10px auto 0;
+  max-width: 66ch;
+  margin: 0;
   font-style: italic;
 }
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-right: 10px;
+}
 
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column at 66ch;
+   the key, the title block and the revisions are one 352px inset strip that
+   rides alongside whatever paragraph is on screen. */
 .notes-grid {
   display: grid;
-  grid-template-columns: minmax(260px, 3fr) minmax(200px, 2fr);
-  gap: 22px;
+  grid-template-columns: minmax(0, 7fr) 352px;
+  gap: 24px;
   border-top: 1px solid var(--ink);
   padding-top: 16px;
   align-items: start;
 }
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.keyblock { position: sticky; top: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
 .notes h3, .keyblock h3 {
   font-family: var(--data);
   font-size: 11px;
@@ -200,7 +244,7 @@ figcaption {
 .notes p {
   font-family: var(--prose);
   font-size: 15.5px;
-  max-width: 62ch;
+  max-width: 66ch;
   margin-bottom: 9px;
 }
 .notes p strong { font-weight: 600; }
@@ -208,14 +252,15 @@ figcaption {
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
   font-family: var(--code);
-  font-size: 0.85em;
+  font-size: 0.88em;
   background: var(--paper-2);
   border: 1px solid var(--line);
-  padding: 0 4px;
+  padding: 0 3px;
   border-radius: 2px;
-  /* A chip breaks only when it would otherwise run off the column: sheet 11's
-     90-character recipe did, once the prose stepped up half a pixel. */
-  overflow-wrap: anywhere;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 .keyblock table { border-collapse: collapse; width: 100%; }
 .keyblock td {
@@ -249,7 +294,7 @@ code, kbd, samp { font-family: var(--code); }
 .titleblock .fld {
   display: block;
   font-family: var(--data);
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
   color: var(--ink-soft);
   margin-bottom: 2px;
@@ -265,7 +310,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--title);
   font-size: 13.5px;
   font-weight: 600;
-  letter-spacing: 0.10em;
+  letter-spacing: 0.04em;
 }
 /* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
    caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
@@ -291,7 +336,8 @@ code, kbd, samp { font-family: var(--code); }
 /* ---- REVISIONS ----
    The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
    splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, under the title block, as a drawing's revision block. */
+   the tail here, in the inset strip under the title block, as a drawing's
+   revision block: one row of rev + date, the description wrapped beneath. */
 .revs {
   width: 100%;
   border-collapse: collapse;
@@ -309,27 +355,30 @@ code, kbd, samp { font-family: var(--code); }
   text-align: left;
   padding: 0 0 8px;
 }
+.revs th, .revs td { text-align: left; vertical-align: baseline; }
 .revs th {
-  font-size: 9px;
+  font-size: 9.5px;
   letter-spacing: 0.16em;
+  font-weight: 600;
+  padding: 6px 10px 2px;
+  white-space: nowrap;
+  width: 1%;
+}
+.revs .d {
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
   color: var(--ink-soft);
-  text-align: left;
-  padding: 6px 12px;
-  border-bottom: 1.5px solid var(--ink);
-  background: var(--paper-2);
+  padding: 6px 10px 2px;
   white-space: nowrap;
 }
-.revs td {
+.revs .t {
   font-size: 11.5px;
   letter-spacing: 0.03em;
-  padding: 7px 12px;
+  color: var(--ink-soft);
+  padding: 0 10px 7px;
   border-bottom: 1px solid var(--line);
-  vertical-align: baseline;
 }
-.revs tr:last-child td { border-bottom: none; }
-.revs .r { font-weight: 600; white-space: nowrap; width: 74px; }
-.revs .d { color: var(--ink-soft); white-space: nowrap; width: 96px; }
-.revs .t { color: var(--ink-soft); }
+.revs tr:last-child .t { border-bottom: none; }
 .revs code { font-family: var(--code); font-size: 0.88em; }
 
 /* ---- SVG drawing classes ---- */
@@ -373,7 +422,7 @@ a { color: var(--accent); }
   <h2 class="sheet-title">THE BUNDLED CITY</h2>
   <p class="sheet-sub">ALTITUDE 2⅞ — inside the wire: what the bundler kept · apps/sample-app-lit-vanilla, one bundle</p>
   <figure>
-    <div class="figure-wrap"><svg viewBox="0 0 1160 1036" role="img" aria-label="The inside of one shipped app bundle drawn as an isometric city of fourteen buildings in three districts: footprint from post-tree-shake source bytes kept, height from gzipped wire share. The routing machine district is dominated by @uirouter/core at 26.3 KB while lit-ui-router itself is a small accent building at 4.5 KB; a single lit stands where an earlier revision drew two lit majors; the demo-chrome district — visualizer, marked, dompurify, api-viewer, now largely deferred to a lazy chunk — outweighs the machine; the app district holds the shared demo code, the 7.5 KB lodash-es remainder, the app's own source and, new in this revision, a tiny building for the shared route table. A priced strip of the five entry doors and a structure schedule give exact counts.">
+    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1160 1036" role="img" aria-label="The inside of one shipped app bundle drawn as an isometric city of fourteen buildings in three districts: footprint from post-tree-shake source bytes kept, height from gzipped wire share. The routing machine district is dominated by @uirouter/core at 26.3 KB while lit-ui-router itself is a small accent building at 4.5 KB; a single lit stands where an earlier revision drew two lit majors; the demo-chrome district — visualizer, marked, dompurify, api-viewer, now largely deferred to a lazy chunk — outweighs the machine; the app district holds the shared demo code, the 7.5 KB lodash-es remainder, the app's own source and, new in this revision, a tiny building for the shared route table. A priced strip of the five entry doors and a structure schedule give exact counts.">
 <defs>
   <marker id="s10-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -394,7 +443,7 @@ a { color: var(--accent); }
     <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
   </pattern>
   <pattern id="s10-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
-    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red)" stroke-width="1" opacity="0.55"/>
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
   </pattern>
   <pattern id="s10-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
     <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
@@ -409,99 +458,141 @@ a { color: var(--accent); }
 <text x="336" y="660" class="lblf" text-anchor="start" >the app itself</text>
 
 <g>
-<polygon points="390.3,112.0 493.0,171.3 493.0,351.1 390.3,291.8" class="sk" fill="var(--paper-2)"/>
-<polygon points="595.7,112.0 493.0,171.3 493.0,351.1 595.7,291.8" class="sk" fill="url(#s10-hx)"/>
+<polygon points="390.3,112.0 493.0,171.3 493.0,351.1 390.3,291.8" fill="var(--paper-2)"/>
+<polygon points="390.3,112.0 493.0,171.3 493.0,351.1 390.3,291.8" class="sk fnone"/>
+<polygon points="595.7,112.0 493.0,171.3 493.0,351.1 595.7,291.8" fill="var(--paper-2)"/>
+<polygon points="595.7,112.0 493.0,171.3 493.0,351.1 595.7,291.8" fill="url(#s10-hx)"/>
+<polygon points="595.7,112.0 493.0,171.3 493.0,351.1 595.7,291.8" class="sk fnone"/>
 <polygon points="493.0,52.7 595.7,112.0 493.0,171.3 390.3,112.0" class="sk fp"/>
 </g>
 <circle cx="544.3" cy="68.3" r="9" class="sk fp"/>
 <text x="544.3" y="71.7" class="lbls" text-anchor="middle" >1</text>
 <g>
-<polygon points="602.1,294.6 647.1,320.6 647.1,380.5 602.1,354.5" class="sk" fill="var(--paper-2)"/>
-<polygon points="692.1,294.6 647.1,320.6 647.1,380.5 692.1,354.5" class="sk" fill="url(#s10-hx)"/>
+<polygon points="602.1,294.6 647.1,320.6 647.1,380.5 602.1,354.5" fill="var(--paper-2)"/>
+<polygon points="602.1,294.6 647.1,320.6 647.1,380.5 602.1,354.5" class="sk fnone"/>
+<polygon points="692.1,294.6 647.1,320.6 647.1,380.5 692.1,354.5" fill="var(--paper-2)"/>
+<polygon points="692.1,294.6 647.1,320.6 647.1,380.5 692.1,354.5" fill="url(#s10-hx)"/>
+<polygon points="692.1,294.6 647.1,320.6 647.1,380.5 692.1,354.5" class="sk fnone"/>
 <polygon points="647.1,268.7 692.1,294.6 647.1,320.6 602.1,294.6" class="sk fp"/>
 </g>
 <circle cx="669.6" cy="267.6" r="9" class="sk fp"/>
 <text x="669.6" y="271.0" class="lbls" text-anchor="middle" >2</text>
 <g>
-<polygon points="518.6,351.7 557.9,374.4 557.9,405.5 518.6,382.7" class="sk" fill="var(--paper-2)"/>
-<polygon points="597.3,351.7 557.9,374.4 557.9,405.5 597.3,382.7" class="sk" fill="url(#s10-hx)"/>
+<polygon points="518.6,351.7 557.9,374.4 557.9,405.5 518.6,382.7" fill="var(--paper-2)"/>
+<polygon points="518.6,351.7 557.9,374.4 557.9,405.5 518.6,382.7" class="sk fnone"/>
+<polygon points="597.3,351.7 557.9,374.4 557.9,405.5 597.3,382.7" fill="var(--paper-2)"/>
+<polygon points="597.3,351.7 557.9,374.4 557.9,405.5 597.3,382.7" fill="url(#s10-hx)"/>
+<polygon points="597.3,351.7 557.9,374.4 557.9,405.5 597.3,382.7" class="sk fnone"/>
 <polygon points="557.9,329.0 597.3,351.7 557.9,374.4 518.6,351.7" class="sk fa"/>
 </g>
 <circle cx="577.6" cy="326.3" r="9" class="ska fp"/>
 <text x="577.6" y="329.7" class="lbls" text-anchor="middle" >3</text>
 <g>
-<polygon points="578.2,403.9 611.6,423.1 611.6,448.6 578.2,429.3" class="sk" fill="var(--paper-2)"/>
-<polygon points="645.0,403.9 611.6,423.1 611.6,448.6 645.0,429.3" class="sk" fill="url(#s10-hx)"/>
+<polygon points="578.2,403.9 611.6,423.1 611.6,448.6 578.2,429.3" fill="var(--paper-2)"/>
+<polygon points="578.2,403.9 611.6,423.1 611.6,448.6 578.2,429.3" class="sk fnone"/>
+<polygon points="645.0,403.9 611.6,423.1 611.6,448.6 645.0,429.3" fill="var(--paper-2)"/>
+<polygon points="645.0,403.9 611.6,423.1 611.6,448.6 645.0,429.3" fill="url(#s10-hx)"/>
+<polygon points="645.0,403.9 611.6,423.1 611.6,448.6 645.0,429.3" class="sk fnone"/>
 <polygon points="611.6,384.6 645.0,403.9 611.6,423.1 578.2,403.9" class="sk fp"/>
 </g>
 <circle cx="628.3" cy="380.2" r="9" class="sk fp"/>
 <text x="628.3" y="383.6" class="lbls" text-anchor="middle" >4</text>
 <g>
-<polygon points="636.6,443.4 653.2,452.9 653.2,461.1 636.6,451.6" class="sk" fill="var(--paper-2)"/>
-<polygon points="669.8,443.4 653.2,452.9 653.2,461.1 669.8,451.6" class="sk" fill="url(#s10-hx)"/>
+<polygon points="636.6,443.4 653.2,452.9 653.2,461.1 636.6,451.6" fill="var(--paper-2)"/>
+<polygon points="636.6,443.4 653.2,452.9 653.2,461.1 636.6,451.6" class="sk fnone"/>
+<polygon points="669.8,443.4 653.2,452.9 653.2,461.1 669.8,451.6" fill="var(--paper-2)"/>
+<polygon points="669.8,443.4 653.2,452.9 653.2,461.1 669.8,451.6" fill="url(#s10-hx)"/>
+<polygon points="669.8,443.4 653.2,452.9 653.2,461.1 669.8,451.6" class="sk fnone"/>
 <polygon points="653.2,433.8 669.8,443.4 653.2,452.9 636.6,443.4" class="sk fp"/>
 </g>
 <circle cx="661.5" cy="424.6" r="9" class="sk fp"/>
 <text x="661.5" y="428.0" class="lbls" text-anchor="middle" >5</text>
 <g>
-<polygon points="764.2,316.1 848.1,364.5 848.1,529.3 764.2,480.9" class="sk" fill="var(--paper-2)"/>
-<polygon points="931.9,316.1 848.1,364.5 848.1,529.3 931.9,480.9" class="sk" fill="url(#s10-hx)"/>
+<polygon points="764.2,316.1 848.1,364.5 848.1,529.3 764.2,480.9" fill="var(--paper-2)"/>
+<polygon points="764.2,316.1 848.1,364.5 848.1,529.3 764.2,480.9" class="sk fnone"/>
+<polygon points="931.9,316.1 848.1,364.5 848.1,529.3 931.9,480.9" fill="var(--paper-2)"/>
+<polygon points="931.9,316.1 848.1,364.5 848.1,529.3 931.9,480.9" fill="url(#s10-hx)"/>
+<polygon points="931.9,316.1 848.1,364.5 848.1,529.3 931.9,480.9" class="sk fnone"/>
 <polygon points="848.0,267.7 931.9,316.1 848.1,364.5 764.2,316.1" class="sk fp2"/>
 </g>
 <circle cx="890.0" cy="277.9" r="9" class="sk fp"/>
 <text x="890.0" y="281.3" class="lbls" text-anchor="middle" >6</text>
 <g>
-<polygon points="310.4,409.5 367.4,442.5 367.4,520.9 310.4,487.9" class="sk" fill="var(--paper-2)"/>
-<polygon points="424.5,409.5 367.4,442.5 367.4,520.9 424.5,487.9" class="sk" fill="url(#s10-hx)"/>
+<polygon points="310.4,409.5 367.4,442.5 367.4,520.9 310.4,487.9" fill="var(--paper-2)"/>
+<polygon points="310.4,409.5 367.4,442.5 367.4,520.9 310.4,487.9" class="sk fnone"/>
+<polygon points="424.5,409.5 367.4,442.5 367.4,520.9 424.5,487.9" fill="var(--paper-2)"/>
+<polygon points="424.5,409.5 367.4,442.5 367.4,520.9 424.5,487.9" fill="url(#s10-hx)"/>
+<polygon points="424.5,409.5 367.4,442.5 367.4,520.9 424.5,487.9" class="sk fnone"/>
 <polygon points="367.4,376.6 424.5,409.5 367.4,442.5 310.4,409.5" class="sk fp"/>
 </g>
 <circle cx="396.0" cy="379.1" r="9" class="sk fp"/>
 <text x="396.0" y="382.5" class="lbls" text-anchor="middle" >11</text>
 <g>
-<polygon points="378.5,472.5 441.0,508.6 441.0,559.7 378.5,523.6" class="sk" fill="var(--paper-2)"/>
-<polygon points="503.6,472.5 441.0,508.6 441.0,559.7 503.6,523.6" class="sk" fill="url(#s10-hx)"/>
+<polygon points="378.5,472.5 441.0,508.6 441.0,559.7 378.5,523.6" fill="var(--paper-2)"/>
+<polygon points="378.5,472.5 441.0,508.6 441.0,559.7 378.5,523.6" class="sk fnone"/>
+<polygon points="503.6,472.5 441.0,508.6 441.0,559.7 503.6,523.6" fill="var(--paper-2)"/>
+<polygon points="503.6,472.5 441.0,508.6 441.0,559.7 503.6,523.6" fill="url(#s10-hx)"/>
+<polygon points="503.6,472.5 441.0,508.6 441.0,559.7 503.6,523.6" class="sk fnone"/>
 <polygon points="441.0,436.4 503.6,472.5 441.0,508.6 378.5,472.5" class="sk fp"/>
 </g>
 <circle cx="472.3" cy="440.5" r="9" class="sk fp"/>
 <text x="472.3" y="443.9" class="lbls" text-anchor="middle" >12</text>
 <g>
-<polygon points="713.6,495.5 751.9,517.6 751.9,549.3 713.6,527.1" class="sk" fill="var(--paper-2)"/>
-<polygon points="790.2,495.5 751.9,517.6 751.9,549.3 790.2,527.1" class="sk" fill="url(#s10-hx)"/>
+<polygon points="713.6,495.5 751.9,517.6 751.9,549.3 713.6,527.1" fill="var(--paper-2)"/>
+<polygon points="713.6,495.5 751.9,517.6 751.9,549.3 713.6,527.1" class="sk fnone"/>
+<polygon points="790.2,495.5 751.9,517.6 751.9,549.3 790.2,527.1" fill="var(--paper-2)"/>
+<polygon points="790.2,495.5 751.9,517.6 751.9,549.3 790.2,527.1" fill="url(#s10-hx)"/>
+<polygon points="790.2,495.5 751.9,517.6 751.9,549.3 790.2,527.1" class="sk fnone"/>
 <polygon points="751.9,473.4 790.2,495.5 751.9,517.6 713.6,495.5" class="sk fp"/>
 </g>
 <circle cx="771.1" cy="470.4" r="9" class="sk fp"/>
 <text x="771.1" y="473.8" class="lbls" text-anchor="middle" >9</text>
 <g>
-<polygon points="892.8,456.3 952.0,490.5 952.0,565.8 892.8,531.7" class="sk" fill="var(--paper-2)"/>
-<polygon points="1011.1,456.3 952.0,490.5 952.0,565.8 1011.1,531.7" class="sk" fill="url(#s10-hx)"/>
+<polygon points="892.8,456.3 952.0,490.5 952.0,565.8 892.8,531.7" fill="var(--paper-2)"/>
+<polygon points="892.8,456.3 952.0,490.5 952.0,565.8 892.8,531.7" class="sk fnone"/>
+<polygon points="1011.1,456.3 952.0,490.5 952.0,565.8 1011.1,531.7" fill="var(--paper-2)"/>
+<polygon points="1011.1,456.3 952.0,490.5 952.0,565.8 1011.1,531.7" fill="url(#s10-hx)"/>
+<polygon points="1011.1,456.3 952.0,490.5 952.0,565.8 1011.1,531.7" class="sk fnone"/>
 <polygon points="952.0,422.1 1011.1,456.3 952.0,490.5 892.8,456.3" class="sk fp"/>
 </g>
 <circle cx="981.6" cy="425.2" r="9" class="sk fp"/>
 <text x="981.6" y="428.6" class="lbls" text-anchor="middle" >7</text>
 <g>
-<polygon points="781.3,548.0 794.4,555.6 794.4,561.6 781.3,554.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="807.4,548.0 794.4,555.6 794.4,561.6 807.4,554.0" class="sk" fill="url(#s10-hx)"/>
+<polygon points="781.3,548.0 794.4,555.6 794.4,561.6 781.3,554.0" fill="var(--paper-2)"/>
+<polygon points="781.3,548.0 794.4,555.6 794.4,561.6 781.3,554.0" class="sk fnone"/>
+<polygon points="807.4,548.0 794.4,555.6 794.4,561.6 807.4,554.0" fill="var(--paper-2)"/>
+<polygon points="807.4,548.0 794.4,555.6 794.4,561.6 807.4,554.0" fill="url(#s10-hx)"/>
+<polygon points="807.4,548.0 794.4,555.6 794.4,561.6 807.4,554.0" class="sk fnone"/>
 <polygon points="794.4,540.5 807.4,548.0 794.4,555.6 781.3,548.0" class="sk fp"/>
 </g>
 <circle cx="800.9" cy="530.3" r="9" class="sk fp"/>
 <text x="800.9" y="533.7" class="lbls" text-anchor="middle" >10</text>
 <g>
-<polygon points="473.9,550.0 499.1,564.5 499.1,580.1 473.9,565.5" class="sk" fill="var(--paper-2)"/>
-<polygon points="524.2,550.0 499.1,564.5 499.1,580.1 524.2,565.5" class="sk" fill="url(#s10-hx)"/>
+<polygon points="473.9,550.0 499.1,564.5 499.1,580.1 473.9,565.5" fill="var(--paper-2)"/>
+<polygon points="473.9,550.0 499.1,564.5 499.1,580.1 473.9,565.5" class="sk fnone"/>
+<polygon points="524.2,550.0 499.1,564.5 499.1,580.1 524.2,565.5" fill="var(--paper-2)"/>
+<polygon points="524.2,550.0 499.1,564.5 499.1,580.1 524.2,565.5" fill="url(#s10-hx)"/>
+<polygon points="524.2,550.0 499.1,564.5 499.1,580.1 524.2,565.5" class="sk fnone"/>
 <polygon points="499.1,535.4 524.2,550.0 499.1,564.5 473.9,550.0" class="sk fp"/>
 </g>
 <circle cx="511.6" cy="528.7" r="9" class="sk fp"/>
 <text x="511.6" y="532.1" class="lbls" text-anchor="middle" >13</text>
 <g>
-<polygon points="433.2,576.0 445.4,583.0 445.4,589.0 433.2,582.0" class="sk" fill="var(--paper-2)"/>
-<polygon points="457.5,576.0 445.4,583.0 445.4,589.0 457.5,582.0" class="sk" fill="url(#s10-hx)"/>
+<polygon points="433.2,576.0 445.4,583.0 445.4,589.0 433.2,582.0" fill="var(--paper-2)"/>
+<polygon points="433.2,576.0 445.4,583.0 445.4,589.0 433.2,582.0" class="sk fnone"/>
+<polygon points="457.5,576.0 445.4,583.0 445.4,589.0 457.5,582.0" fill="var(--paper-2)"/>
+<polygon points="457.5,576.0 445.4,583.0 445.4,589.0 457.5,582.0" fill="url(#s10-hx)"/>
+<polygon points="457.5,576.0 445.4,583.0 445.4,589.0 457.5,582.0" class="sk fnone"/>
 <polygon points="445.4,569.0 457.5,576.0 445.4,583.0 433.2,576.0" class="sk fp"/>
 </g>
 <circle cx="451.4" cy="558.5" r="9" class="sk fp"/>
 <text x="451.4" y="561.9" class="lbls" text-anchor="middle" >14</text>
 <g>
-<polygon points="880.0,534.1 939.0,568.2 939.0,643.1 880.0,609.1" class="sk" fill="var(--paper-2)"/>
-<polygon points="998.0,534.1 939.0,568.2 939.0,643.1 998.0,609.1" class="sk" fill="url(#s10-hx)"/>
+<polygon points="880.0,534.1 939.0,568.2 939.0,643.1 880.0,609.1" fill="var(--paper-2)"/>
+<polygon points="880.0,534.1 939.0,568.2 939.0,643.1 880.0,609.1" class="sk fnone"/>
+<polygon points="998.0,534.1 939.0,568.2 939.0,643.1 998.0,609.1" fill="var(--paper-2)"/>
+<polygon points="998.0,534.1 939.0,568.2 939.0,643.1 998.0,609.1" fill="url(#s10-hx)"/>
+<polygon points="998.0,534.1 939.0,568.2 939.0,643.1 998.0,609.1" class="sk fnone"/>
 <polygon points="939.0,500.1 998.0,534.1 939.0,568.2 880.0,534.1" class="sk fp"/>
 </g>
 <circle cx="968.5" cy="503.1" r="9" class="sk fp"/>
@@ -562,8 +653,8 @@ a { color: var(--accent); }
 <text x="590" y="964" class="lbls" text-anchor="start" >14 sample-app-routes — kept 292 b → 59 b wire · ×1 · the shared route table, its own group now</text>
 <text x="56" y="981" class="lbls" text-anchor="start" >TOTAL — 14 groups in 17 chunks · 663,008 kept → 371,713 emitted → 120,098 gz · apps/sample-app-lit-vanilla · counted at origin/main @ b2338d0 (2026-09-04)</text>
 </g>
-</svg></div>
-    <figcaption>One shipped bundle opened up: every package that survived tree-shaking as a building — footprint from source kept, height from gzipped wire share — and the machine the router wraps, the chrome that demos it, and the app that uses it stand as three districts summing to 117.3 KB, with a single lit where the first printing drew two.</figcaption>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 10</span>One shipped bundle opened up: every package that survived tree-shaking as a building — footprint from source kept, height from gzipped wire share — and the machine the router wraps, the chrome that demos it, and the app that uses it stand as three districts summing to 117.3 KB, with a single lit where the first printing drew two.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -590,15 +681,17 @@ a { color: var(--accent); }
   <div><span class="fld">SCALE</span>ONE BUNDLE</div>
   <div><span class="fld">FORM</span>BUNDLED CITY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · C</div>
+  <div><span class="fld">DATE / REV</span>2026-09-04 · D</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>10 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
+  <tr><td class="t" colspan="2">every byte now read from the census-bundle plate — apps/sample-app-lit-vanilla · counted at origin/main @ b2338d0 (2026-09-04)</td></tr>
+  <tr><th scope="row" class="r">REV D</th><td class="d">2026-09-06</td></tr>
+  <tr><td class="t" colspan="2">fills — every mass’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved</td></tr></tbody>
+</table>
     </div>
   </div>
-  <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <thead><tr><th>REV</th><th>DATE</th><th>DESCRIPTION</th></tr></thead>
-  <tbody><tr><td class="r">C</td><td class="d">—</td><td class="t">every byte now read from the census-bundle plate — apps/sample-app-lit-vanilla · counted at origin/main @ b2338d0 (2026-09-04)</td></tr></tbody>
-</table>
 </section>

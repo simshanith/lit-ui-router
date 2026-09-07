@@ -96,7 +96,8 @@ ${box(SX, MY - 11, SW, RH, 'ska fp')}
 ${txt(SX + 10, MY + 4, MASTER.writer, 'lbla')}
 ${txt(SX + SW - 10, MY + 4, 'scc --by-file', 'lblf', 'end')}
 ${arrow(P, `M${SX + SW},${MY} L${DX - 4},${MY}`, 'aa', 'ska')}
-<rect x="${DX}" y="${MY - 15}" width="${DW}" height="30" rx="4" class="ska" fill="url(#${P}-ha)"/>
+<rect x="${DX}" y="${MY - 15}" width="${DW}" height="30" rx="4" fill="url(#${P}-ha)"/>
+<rect x="${DX}" y="${MY - 15}" width="${DW}" height="30" rx="4" class="ska fnone"/>
 ${txt(DX + 10, MY - 2, A.master, 'lbla')}
 ${txt(DX + 10, MY + 10, `${fmt(A.masterRows)} rows — the one measurement`, 'lblf')}
 ${arrow(P, `M${DX + DW},${MY} L${RX - 4},${MY}`, 'aa', 'ska')}
@@ -266,9 +267,9 @@ ${schedule}
 </svg>`;
 
 export const sheet14 = {
-  num: 14, id: 'pipeline', rev: 'B',
+  num: 14, id: 'pipeline', rev: 'C',
   title: 'THE SURVEY OFFICE',
-  sub: `ALTITUDE 3½ — the atlas measuring itself · ${S.probes} probes, ${S.plates} plates, ${S.drawings} drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to ${BASIS} · REV A ${A.commitDate}: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap`,
+  sub: `ALTITUDE 3½ — the atlas measuring itself · ${S.probes} probes, ${S.plates} plates, ${S.drawings} drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to ${BASIS} · REV A ${A.commitDate}: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap · REV C 2026-09-06: the master-snapshot plate now carries its accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); nothing else moved`,
   scale: 'THE CENSUS PIPELINE',
   form: 'FLOW GRAPH',
   svg,

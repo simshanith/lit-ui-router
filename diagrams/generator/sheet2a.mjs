@@ -31,9 +31,11 @@ function slab(x, y, w, h, { edge = 'sk', side = `url(#${P}-hx)`, front = 'fp', d
   const da = dash ? ` stroke-dasharray="${dash}"` : '';
   const top = `${x},${y} ${x + w},${y} ${x + w + DX},${y - DY} ${x + DX},${y - DY}`;
   const right = `${x + w},${y} ${x + w + DX},${y - DY} ${x + w + DX},${y + h - DY} ${x + w},${y + h}`;
-  return `<polygon points="${top}" class="${edge}"${da} fill="var(--paper-2)"/>
-<polygon points="${right}" fill="var(--paper)" stroke="none"/>
-<polygon points="${right}" class="${edge}"${da} fill="${side}"/>
+  return `<polygon points="${top}" fill="var(--paper-2)"/>
+<polygon points="${top}" class="${edge} fnone"${da}/>
+<polygon points="${right}" fill="var(--paper)"/>
+<polygon points="${right}" fill="${side}"/>
+<polygon points="${right}" class="${edge} fnone"${da}/>
 <rect x="${x}" y="${y}" width="${w}" height="${h}" class="${edge} ${front}"${da}/>`;
 }
 
@@ -196,9 +198,9 @@ ${serverLane}
 </svg>`;
 
 export const sheet2a = {
-  num: '2A', id: 'companions-couplings', rev: 'B',
+  num: '2A', id: 'companions-couplings', rev: 'C',
   title: 'THE COUPLING PLAN',
-  sub: `ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ ${B.sha} — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count`,
+  sub: `ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ ${B.sha} — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count · REV C 2026-09-06: fills — the slab tops now carry their paper-2 tint and the right flanks their hatch, sheet 2’s rev C fault in this plate’s own slab helper; nothing moved`,
   scale: 'FOUR PACKAGES',
   form: 'COUPLING PLAN',
   svg,

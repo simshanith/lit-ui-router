@@ -3,11 +3,12 @@
 // Two faults made every mass on these plates see-through, so rear edges read
 // straight through the front of a building:
 //
-//   1. isoBlock paints its side faces with a `fill` PRESENTATION ATTRIBUTE while
-//      carrying a stroke class — and every stroke class in chrome.mjs declares
-//      `fill: none`.  A CSS declaration outranks a presentation attribute, so the
-//      faces were never filled at all.  `solidFaces` restates each face fill as an
-//      inline style, which does outrank the class.
+//   1. isoBlock USED TO paint its side faces with a `fill` PRESENTATION ATTRIBUTE
+//      while carrying a stroke class — and every stroke class in chrome.mjs
+//      declares `fill: none`.  A CSS declaration outranks a presentation
+//      attribute, so the faces were never filled at all.  Since 2026-09-06
+//      helpers.mjs's face() writes the fill as its own element; `solidFaces`
+//      stays for any face a sheet still writes the old way (a no-op otherwise).
 //   2. The hatch patterns are bare line tiles with no ground, so even a face that
 //      IS filled with one lets the drawing behind it through between the marks.
 //      `solidFaces` lays the sheet's own --paper-2 stone under a patterned face.

@@ -239,7 +239,7 @@ Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S <
 
 | id | area | sev | issue | file / selector — current → proposed | effort |
 |---|---|---|---|---|---|
-| T1 | plate | P1 | plates render at 0.696 scale (0.436 at 1024); 9-px labels show at 6.3 px | `chrome.mjs:118` `.sheet max-width 1180 → 1320`; `:180` `min-width 640 → min(100%, 1180px)` | S |
+| T1 | plate | P1 | plates render at 0.696 scale (0.436 at 1024); 9-px labels show at 6.3 px | full width, no cap: `.sheet { max-width: none; margin: 0 0 40px }` and `.figure-wrap svg { width: 100%; min-width: 1000px }` — the sheet fills the content column at every viewport (the user reads on a 3008-px display), the plate scrolls in its own wrap below 1000; only running text keeps a ch measure | S |
 | T2 | layout | P1 | 1,663 px empty right column under title block on every sheet | `chrome.mjs:191` `.keyblock { position: sticky; top: 30px }`; move `.revs` into `.keyblock` in `sheetSection()` `:437–460` | S |
 | T3 | layout | P1 | prose narrower than its column: 62ch = 481 px in a 638 px cell | `chrome.mjs:191–213` `.notes-grid 3fr 2fr → minmax(0,7fr) 352px`, `.notes p max-width 62ch → 66ch` | S |
 | T4 | responsive | P1 | ≤ 900 the full 979-px rail precedes every page; `/` is 12,699 px tall at 390 | `index.html:62–69` collapse `.rail` to a 48-px header + disclosure | M |
