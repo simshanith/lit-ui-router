@@ -34,6 +34,10 @@ const PHANTOM_PCT = ((PHANTOM / CI.nodes) * 100).toFixed(1);
 const fmt = (n) => n.toLocaleString('en-US');
 const TURBO_V = PLATE.wasAssociatedWith.find((t) => t.startsWith('turbo'));
 const BASIS = `counted at ${HANDOFF.ref} @ ${HANDOFF.sha} (${HANDOFF.generatedAtTime.slice(0, 10)})`;
+// The ★ / ↩ partition, editorial like the task-name lists it marks up: the mise
+// tasks that shell turbo, and the ones turbo re-enters. Stated once, so the
+// plate, the seam schedule and the cover's verdict cannot disagree.
+const SHELLS = 7, REENTERS = 8;
 const GRAPH_BASIS = `surveyed at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)}) · ${TURBO_V}`;
 
 // The plate is FLAT on purpose, like the inset it grows from: a task manager is
@@ -164,7 +168,7 @@ ${comp(MX + 12 + C1 + CGAP, 370, C2, [
   ['↩ format_toml (writer)', 'lblf'], ['⌂ lint_workflows (dep×4)', 'lblf'],
   ['setup · cloudflare_login', 'lblf'],
 ], `${H('.config/mise/config.toml').label} — ${H('.config/mise/config.toml').count}`)}
-${txt(MX, MACH_BOT + 15, '★ shells turbo (7) · ↩ turbo re-enters (8)', 'lblf')}`;
+${txt(MX, MACH_BOT + 15, `★ shells turbo (${SHELLS}) · ↩ turbo re-enters (${REENTERS})`, 'lblf')}`;
 
 // ---- SEAM B — mise → turbo ------------------------------------------------------
 // Both trunks run on one datum at y=285, so the sheet reads as the single left-to-
@@ -315,6 +319,9 @@ ${cacheCap}
 ${doorsBox}
 ${schedule}
 </svg>`;
+
+// the cover index's fit verdict, told from the plate's own tallies
+export const SHEET3A_VERDICT = `turbo caches mise — and the loop is a DAG in a loop costume: the ${SHELLS} tasks that shell turbo and the ${REENTERS} turbo re-enters never touch; every count imported, turbo at ${T.definitions} definitions in ${T.files} files`;
 
 export const sheet3a = {
   num: '3A', id: 'handoff', rev: 'E',

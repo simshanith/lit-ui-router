@@ -93,6 +93,8 @@ const OREAL = Object.fromEntries(OCOLS.map((n) => [n, new Set(Object.keys(MAIN.c
 const ODN = MAIN.nodes - CI.nodes;                                   // nodes the overlay adds
 const ODR = OCOLS.reduce((s, n) => s + OREAL[n].size, 0);            // …of which command-bearing
 const OPCT = Math.round((ODN / CI.nodes) * 100);
+// the phantom share of the PR graph — the cover's verdict for 12 AND 12i reads it
+export const PHANTOM_PCT = phantomPct(CI);
 
 // the ragged tail: one node, one package, no fan
 const TAIL = CI.names

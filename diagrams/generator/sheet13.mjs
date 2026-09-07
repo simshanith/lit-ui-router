@@ -208,6 +208,9 @@ const SEASON_FIRST = [0, 1, 2].map((s) => PLATE.rows.filter((r) => season(r.firs
 const TOT_F = PLATE.rows.length;
 const TOT_T = PLATE.rows.reduce((a, r) => a + r.touches, 0);
 const ONCE = PLATE.rows.filter((r) => r.touches === 1).length;
+const SUMMER_PCT = Math.round((SEASON_N[2] / TOT_F) * 100);
+// the cover index's fit verdict, told from the plate's own seasons
+export const SHEET13_VERDICT = `${SUMMER_PCT}% of the city is summer stone — and the port’s original masonry, ${SEASON_N[0]} files from ${SEASON_FIRST[0]}, carries the hottest edges`;
 const HOT_BLOCKS = D.filter((r) => r[7] && tier(r[7][2], r[7][0]) === 'hot').length;
 const SEALED_F = PLATE.rows.filter((r) => days(r.last) > SEAL).length;
 // the empty band the SEAL threshold sits in: last idle day before it, first after

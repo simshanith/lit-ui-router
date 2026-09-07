@@ -227,6 +227,10 @@ const bodies = depthSort(M.map(([n]) => {
 const TOT_I = PLATE.rows.reduce((a, r) => a + r.inputs, 0);
 const TOT_M = PLATE.rows.reduce((a, r) => a + r.mass, 0);
 const FLAT = PLATE.rows.filter((r) => r.mass === 1).length;
+// the skyline's one spire, read off the plate rather than pinned in prose
+const TALLEST = PLATE.rows.reduce((a, r) => (r.mass > a.mass ? r : a));
+// the cover index's fit verdict, told from the plate's own tallies
+export const SHEET3B_VERDICT = `footprint = watched files, height = command sloc — ${FLAT} of ${PLATE.rows.length} tasks are one-line pads; the tallest is the ${TALLEST.mass}-sloc ${TALLEST.id} spire`;
 const schedRow = ([n, name, , , , note]) => {
   const { tasks, inputs, mass } = CELL.get(n);
   return [n, `${name} — ${tasks}t · ${fmt(inputs)} files · ${fmt(mass)} sloc · ${note}`];

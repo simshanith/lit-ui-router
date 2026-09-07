@@ -60,6 +60,8 @@ const TOT_DL = PLATE.rows.reduce((a, r) => a + r.dl, 0);
 const APP_L = DATA.consumer[0].l, APP_F = DATA.consumer[0].f;
 const pkg = (name) => item(name);
 const times = Math.round(TOT_L / APP_L);
+// the cover index's fit verdict, told from the plate's own tallies
+export const SHEET8_VERDICT = `node_modules surveyed — ${DELIVERED} delivered packages, ${times}× the app that installs them`;
 
 // Heavier city, coarser scale than sheet 7 — stated on the sheet.
 const SIDE = (f) => Math.max(10, 4.5 * Math.sqrt(f));

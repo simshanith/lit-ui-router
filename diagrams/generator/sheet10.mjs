@@ -95,6 +95,9 @@ const all = PLACED.map(([name, district, opaque], i) => {
 });
 const G = (name) => all.find((b) => b.name === name);
 
+// the cover index's fit verdict, told from the plate's own wire shares
+export const SHEET10_VERDICT = `tree-shaking’s verdict — core is ${pct(G('@uirouter/core').gz)}, the router ${pct(G('lit-ui-router').gz)} — one lit`;
+
 const bodies = all
   .slice()
   .sort((a, b) => (a.x + a.y + a.s) - (b.x + b.y + b.s))

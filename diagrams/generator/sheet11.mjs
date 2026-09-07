@@ -124,6 +124,10 @@ const SRV_GAP = FLAG.gz - SRV.gz;
 const ADAPTERS = ['./hono', './fetch', './vite', './connect'].map((d) => at('ui-router-server', d));
 const ADAPTER_SPREAD = Math.max(...ADAPTERS.map((a) => a.gz)) - Math.min(...ADAPTERS.map((a) => a.gz));
 const RECEIPT = group('lit-ui-router').estGz;
+// the cheapest door, read off the plate rather than named in prose
+const CHEAPEST = PLATE.rows.reduce((a, r) => (r.gz < a.gz ? r : a));
+// the cover index's fit verdict, told from the plate's own prices
+export const SHEET11_VERDICT = `the split view — ${DOOR_N} doors priced alone across ${PKG_N} quarters; the cheapest is «${CHEAPEST.door}» at ${CHEAPEST.gz} b, and the lint plugin's is the one door no browser opens`;
 
 const NOTE = {
   'lit-ui-router|.': 'the flagship door',

@@ -184,6 +184,10 @@ const TOT_F = ALL.reduce((a, r) => a + r[3], 0);
 const TOT_L = ALL.reduce((a, r) => a + r[4], 0);
 const CORE_SHARE = Math.round((CORE[4] / TOT_L) * 100);
 const BAY_L = COMPANIONS.reduce((a, r) => a + r[4], 0);
+// red gates: a limb that ships core as a dependency rather than admitting a peer range
+const RED = ALL.filter((r) => r[6] === 'dep');
+// the cover index's fit verdict, told from the plate's own gate schedule
+export const SHEET4_VERDICT = `every limb re-massed from sloc × files — ${RED.length === 1 ? 'one red gate' : `${RED.length} red gates`}: ${RED.map((r) => r[0]).join(' · ')} pins core as a dependency`;
 
 // ---- the spine ------------------------------------------------------------------
 const CORE_W = W(CORE[4]), CORE_H = H(CORE[3]);

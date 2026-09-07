@@ -101,6 +101,11 @@ const dsum = (d) => M.filter((r) => r[2] === d)
   .reduce((a, r) => ({ n: a.n + 1, f: a.f + r[6], sl: a.sl + r[7] }), { n: 0, f: 0, sl: 0 });
 const DP = dsum('pkg'), DA = dsum('app'), DS = dsum('site'), DT = dsum('tool');
 const inTier = (t) => M.filter((r) => r[3] === t).map((r) => r[0]).join(' · ');
+// the smallest structure that can stop a pull request — the node-side DOM harness
+const HARNESS = M.find((r) => r[1] === '@tools/happy-dom');
+if (!HARNESS) throw new Error('sheet 7: the harness member is missing from PLACED');
+// the cover index's fit verdict, told from the plate's own tallies
+export const SHEET7_VERDICT = `the census with districts and roads — tests as annexes, every edge cited: the ${HARNESS[7]}-line harness stops every PR, and all ${M.length} members are measured on the scc ruler`;
 
 const geom = new Map(M.map(([n, name, dist, tier, x, y, sf, sl, pf, pl]) => {
   const s = S(sl), h = H(sf);

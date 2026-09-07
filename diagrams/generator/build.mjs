@@ -8,21 +8,21 @@ import { sheet2a } from './sheet2a.mjs';
 import { sheet2b, sheet2bPage, SHEET2B_VERDICT } from './sheet2b.mjs';
 import { couplingBenchSection } from './coupling-bench.mjs';
 import { sheet3 } from './sheet3.mjs';
-import { sheet3a } from './sheet3a.mjs';
-import { sheet3b } from './sheet3b.mjs';
-import { sheet4 } from './sheet4.mjs';
+import { sheet3a, SHEET3A_VERDICT } from './sheet3a.mjs';
+import { sheet3b, SHEET3B_VERDICT } from './sheet3b.mjs';
+import { sheet4, SHEET4_VERDICT } from './sheet4.mjs';
 import { sheet5 } from './sheet5.mjs';
 import { sheet6 } from './sheet6.mjs';
-import { sheet7 } from './sheet7.mjs';
+import { sheet7, SHEET7_VERDICT } from './sheet7.mjs';
 import { sheet7a, SURVEY_META } from './sheet7a.mjs';
-import { sheet7b } from './sheet7b.mjs';
-import { sheet8 } from './sheet8.mjs';
+import { sheet7b, SHEET7B_VERDICT } from './sheet7b.mjs';
+import { sheet8, SHEET8_VERDICT } from './sheet8.mjs';
 import { sheet9 } from './sheet9.mjs';
-import { sheet10 } from './sheet10.mjs';
-import { sheet11 } from './sheet11.mjs';
-import { sheet12 } from './sheet12.mjs';
+import { sheet10, SHEET10_VERDICT } from './sheet10.mjs';
+import { sheet11, SHEET11_VERDICT } from './sheet11.mjs';
+import { sheet12, PHANTOM_PCT } from './sheet12.mjs';
 import { register12iSection, sheet12i } from './sheet12i.mjs';
-import { sheet13 } from './sheet13.mjs';
+import { sheet13, SHEET13_VERDICT } from './sheet13.mjs';
 import { sheet14 } from './sheet14.mjs';
 import { sheetA1 } from './sheetA1.mjs';
 import { PIPELINE_VERDICT, pipelineSection, sheet14i } from './pipeline-graph.mjs';
@@ -112,22 +112,22 @@ const verdicts = [
   ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
   ['2B', 'COMPANIONS, CONTRACTED', 'COUPLING BENCH', SHEET2B_VERDICT],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line; the task-manager inset reads the same plates as 3A, so the two cannot disagree'],
-  ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', 'turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch; every count imported, turbo at 98 definitions in 17 files'],
-  ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', 'footprint = watched files, height = command sloc — most blocks are one-line pads; the tallest is the 401-sloc //#lint:elements spire'],
-  ['4', 'ECOSYSTEM', 'MASSED SPINE', 'every limb re-massed from sloc × files — one red gate: react pins core as a dependency'],
+  ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', SHEET3A_VERDICT],
+  ['3B', 'CI TASK GRAPH', 'ISOMETRIC GRAPH CITY', SHEET3B_VERDICT],
+  ['4', 'ECOSYSTEM', 'MASSED SPINE', SHEET4_VERDICT],
   ['5', 'JS ECOSYSTEM', 'POSITIONED CHART', 'no shared mechanism — position, not edges'],
   ['6', 'EVERYTHING', 'CORE SAMPLE', 'prose outranks pictures; one small column earns its place'],
-  ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', 'the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR, and all 32 members are measured on the scc ruler'],
+  ['7', 'MONOREPO, MEASURED', 'MEASURED CITY', SHEET7_VERDICT],
   ['7A', 'MONOREPO, TESTED', 'SHADOW PLAN', `the shadow survey — the tests are the light: where a suite reaches it burns near-full — ${SURVEY_META.metered} members read under their own suites' meters at ${SURVEY_META.sha}, so the light and the census are one measurement`],
-  ['7B', 'MONOREPO, RUNNING', 'WORKING CITY', 'the synthesis plate — rust, steam, lamps and pipes on one city: every pipe connects, the flagship runs old AND hot, and the set’s one alarm — which rang over the drawings themselves — stands struck through, answered by ffd4ef7'],
-  ['8', 'ONE CONSUMER', 'DELIVERED CITY', 'node_modules surveyed — 297× the app, two swaps it argued for'],
+  ['7B', 'MONOREPO, RUNNING', 'WORKING CITY', SHEET7B_VERDICT],
+  ['8', 'ONE CONSUMER', 'DELIVERED CITY', SHEET8_VERDICT],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', 'the wire survey — prose pages outweigh the fonts, and both outweigh every line of code'],
-  ['10', 'ONE BUNDLE', 'BUNDLED CITY', 'tree-shaking’s verdict — core is 22.5%, the router 3.9% — one lit'],
-  ['11', 'FIVE PACKAGES', 'ENTRY QUARTERS', 'the split view — sixteen doors priced alone; fifteen of them measure byte-identical'],
-  ['12', 'PR CI GRAPH', 'REGISTER PLATE', 'the punched inventory — 70% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count'],
-  ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', '86% of the city is summer stone — and the port\u2019s original masonry carries the hottest edges'],
+  ['10', 'ONE BUNDLE', 'BUNDLED CITY', SHEET10_VERDICT],
+  ['11', 'FIVE PACKAGES', 'ENTRY QUARTERS', SHEET11_VERDICT],
+  ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
+  ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
   ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', `the atlas measuring itself — one archive, ${ATLAS.stats.probes} probe stations, ${ATLAS.stats.plates} filed plates, and every station, plate and edge introspected from the generator at build time`],
-  ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', "sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the 70% that runs nothing"],
+  ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', `sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the ${PHANTOM_PCT}% that runs nothing`],
   ['14i', 'THE CENSUS PIPELINE', 'INTERACTIVE GRAPH', PIPELINE_VERDICT, '#pipeline-graph'],
   ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
 ];

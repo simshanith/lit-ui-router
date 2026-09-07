@@ -254,6 +254,8 @@ const RUNNING = M.filter((r) => r[6]).length;
 const TOT_STEAM = M.reduce((a, r) => a + r[11], 0);
 const METERED = M.filter((r) => typeof r[12] === 'number' && r[12] > 0).length;
 const ACCENT = M.filter((r) => r[12] === 'e').length;
+// the cover index's fit verdict, told from the plate's own channels
+export const SHEET7B_VERDICT = `the synthesis plate — rust, steam, lamps and pipes on one city: ${RUNNING} plants run and every pipe connects on ${BUILD.real} green build tasks, ${METERED} carry metered lamps, and the alert register stands drawn and empty — no gate is red at HEAD`;
 const half = Math.ceil(M.length / 2);
 const SY = ART_H + 16;
 const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>

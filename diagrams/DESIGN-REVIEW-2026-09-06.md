@@ -327,3 +327,23 @@ All under `/Users/simloovoo/.claude/jobs/a9024f9c/tmp/design-review/`. Staged un
 | `w390-cover.png` (12,699 px), `w390-sheet-7.png`, `w390-sheet-7-top.png` | the uncollapsed rail above every page; plate scrolling at 0.41 |
 | `prod/*.png` | the live site, same set — one deploy behind (mono plates, Google prose, no hand, `S0·T` on the rail) |
 | `measure.log`, `overflow.log`, `kit.css` | computed styles, cap heights, feature probe; layout at 1440/1024/900/899/390; the served kit CSS (8 families, 24 faces, no feature params) |
+
+---
+
+## 8. Status, 2026-09-07
+
+Audited against the source at 6e92017 after the P1 pass (b1c0942), the P2 pass (cf45bb0) and the copy re-draft (6e92017). The triage table above is left as written; this section is the record.
+
+Closed in source: T1 T2 T3 T4 T5 T6 T8 T10 T11 T12 T13 T14 T15 T17 T18 T19 T23 T24 T25 T26 T27 T29 T30 T31 T32 T50 T51.
+
+Moot: T22 (`.revs` retired with the copy re-draft; history is `HISTORY.md` → `/log`), T42 (trigger removed by T1), T43 T44 T45 (kit faces reserved by design; the cover's article is HWT + `sup.art`).
+
+| id | sev | state | what is left |
+|---|---|---|---|
+| T7 | P1 | partial | `overflow-wrap: break-word` landed; no `<wbr>` after `/` in the sheet-11 chip |
+| T28 | P2 | partial | notes-grid has its 1180 step; the rail has no 900–1180 narrow step (plate half moot after T1) |
+| T37 | P2 | partial | `.gal-body p` measure fixed at 72ch; still flush-left, no col 9–12 insets |
+| T16 | P3 | open | cards carry no picture of the plate |
+| T40 | P3 | open | per-sheet box recomposition backlog; not re-measured since the T39 probe |
+| T41 | P3 | open | 12 and 14 relettered a step larger — after T40 |
+| T46 | P3 | open | 12-column model with feature insets; subsumes T37 |
