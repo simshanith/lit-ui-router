@@ -29,11 +29,16 @@ export function branchPrefix(
 export function releaseCommitMessage(
   version: string,
   changelog: string,
+  from?: string,
 ): string {
   if (version.trim() === '') throw new Error('version must be non-empty');
   const body = changelog.trim();
   if (body === '') {
-    throw new Error(`release-it printed an empty changelog for ${version}`);
+    const range = from === undefined ? '' : ` (${from}..HEAD)`;
+    throw new Error(
+      `empty changelog for ${version}${range}: no changelog-worthy commits ` +
+        'under this package since the range start; check the range pin',
+    );
   }
   return `Release ${version}\n\n${body}`;
 }

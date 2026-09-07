@@ -40,10 +40,9 @@ export async function changelogFrom(
 }
 
 /**
- * Same tolerance as the inline `… || true` this replaced: a first release
- * resolves undefined silently; a genuine git failure is surfaced on stderr
- * but still resolves undefined, so the publish proceeds without the range
- * override rather than dying here.
+ * A first release resolves undefined; a genuine git failure throws, since
+ * `changelogFrom` would otherwise read it as "no tag" and roll a routine
+ * release's changelog up from the repo root.
  */
 export async function prevReleaseTag(
   packageName: string,
@@ -77,9 +76,7 @@ export async function prevReleaseTag(
       typeof error.stderr === 'string'
         ? error.stderr
         : '';
-    if (!isFirstReleaseError(stderr)) {
-      console.error(stderr === '' ? error : stderr);
-    }
+    if (!isFirstReleaseError(stderr)) throw error;
     return undefined;
   }
 }

@@ -345,5 +345,18 @@ describe('prevReleaseTag', () => {
         rootSha(mobxOnlyRepo),
       );
     });
+
+    it('surfaces a genuine git failure instead of falling back to the root', async () => {
+      const exec = () =>
+        Promise.reject(
+          Object.assign(new Error('git failed'), {
+            stderr: 'fatal: not a git repository (or any parent)',
+          }),
+        );
+      await assert.rejects(
+        changelogFrom('lit-ui-router', '1.2.0', { cwd: repo, exec }),
+        { message: 'git failed' },
+      );
+    });
   });
 });

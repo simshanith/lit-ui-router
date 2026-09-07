@@ -65,7 +65,7 @@ runMain(async () => {
       packageName,
       changelogArgs({ packageName, from }),
     );
-    const message = releaseCommitMessage(version, changelog);
+    const message = releaseCommitMessage(version, changelog, from);
     console.log(message);
     return message;
   });

@@ -105,7 +105,7 @@ export function rootCommitArgs(): string[] {
  */
 export function parseRootCommit(stdout: string): string {
   const [root] = stdout.split('\n').map((line) => line.trim());
-  if (root === undefined || !/^[0-9a-f]{40}$/.test(root)) {
+  if (root === undefined || !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(root)) {
     throw new Error(
       `expected a root commit sha, got: ${JSON.stringify(stdout)}`,
     );

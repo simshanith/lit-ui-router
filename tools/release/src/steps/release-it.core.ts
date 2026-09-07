@@ -35,6 +35,8 @@ export function tagArgs(dryRun: boolean): string[] {
  * commit, and push the release branch. `--dry-run` makes release-it log
  * every git/github/npm write instead of performing it.
  */
+// The commit message is passed whole, built from the pinned `changelogArgs`
+// run; release-it's own changelog here is unpinned and unused (no infile).
 export function bumpArgs(options: {
   version: string;
   commitMessage: string;

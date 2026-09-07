@@ -7,7 +7,7 @@ describe('strippedManifest', () => {
   const manifest = {
     name: 'lit-ui-router',
     version: '1.8.0',
-    scripts: { build: 'tsc', 'commit:changelog': 'echo' },
+    scripts: { build: 'tsc', changelog: 'echo' },
     dependencies: { lit: '^3.0.0' },
     devDependencies: { '@tools/typedoc-plugin-lit-ui-router': 'workspace:*' },
     peerDependencies: { '@uirouter/core': '^6.0.0' },

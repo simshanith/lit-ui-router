@@ -35,8 +35,8 @@ describe('releaseCommitMessage', () => {
 
   it('refuses an empty changelog instead of opening a bodyless release PR', () => {
     assert.throws(
-      () => releaseCommitMessage('1.0.0', '\n\n'),
-      /empty changelog for 1\.0\.0/,
+      () => releaseCommitMessage('1.0.0', '\n\n', 'abc'),
+      /empty changelog for 1\.0\.0 \(abc\.\.HEAD\)/,
     );
   });
 
