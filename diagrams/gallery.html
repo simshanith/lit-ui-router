@@ -222,8 +222,11 @@ sup.art {
   color: var(--ink-soft);
   background: linear-gradient(90deg, transparent, var(--paper) 70%);
   pointer-events: none;
+  transition: opacity 0.2s;
 }
 @container (width < 1000px) { .plate::after { display: block; } }
+/* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
+.plate[data-end]::after { opacity: 0; }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
@@ -10097,3 +10100,8 @@ colours; this prose. The nodes, the edges, the column ranking, every count and e
   </div>
 </section>
 <p class="provenance">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ counted at origin/main @ 185d414 in one pass — plate 7A's test light included, metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = origin/main @ 185d414, counted 2026-09-07, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router is counted on every plate and drawn or scheduled on sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>
+<script>document.addEventListener('scroll', (e) => {
+  const w = e.target;
+  if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
+  w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
+}, true);</script>

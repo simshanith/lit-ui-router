@@ -73,6 +73,28 @@ export class AtlasPlate extends LitElement {
     return this;
   }
 
+  override connectedCallback(): void {
+    super.connectedCallback();
+    // scroll does not bubble; capture it from the plate's own wrap
+    this.addEventListener('scroll', this.#markEnd, true);
+  }
+
+  override disconnectedCallback(): void {
+    this.removeEventListener('scroll', this.#markEnd, true);
+    super.disconnectedCallback();
+  }
+
+  // The scrolled plate marks its end so the SCROLL → fade clears the drawing's
+  // right edge — the same rule chrome.mjs writes for the flat set.
+  #markEnd = (event: Event): void => {
+    const wrap = event.target;
+    if (!(wrap instanceof HTMLElement) || !wrap.classList.contains('figure-wrap')) return;
+    wrap.parentElement?.toggleAttribute(
+      'data-end',
+      wrap.scrollLeft + wrap.clientWidth >= wrap.scrollWidth - 1,
+    );
+  };
+
   override render(): TemplateResult {
     return html`${unsafeHTML(this.fragment)}`;
   }

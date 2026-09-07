@@ -222,8 +222,11 @@ sup.art {
   color: var(--ink-soft);
   background: linear-gradient(90deg, transparent, var(--paper) 70%);
   pointer-events: none;
+  transition: opacity 0.2s;
 }
 @container (width < 1000px) { .plate::after { display: block; } }
+/* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
+.plate[data-end]::after { opacity: 0; }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
@@ -1110,3 +1113,8 @@ a { color: var(--accent); }
     </div>
   </div>
 </section>
+<script>document.addEventListener('scroll', (e) => {
+  const w = e.target;
+  if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
+  w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
+}, true);</script>

@@ -230,8 +230,11 @@ sup.art {
   color: var(--ink-soft);
   background: linear-gradient(90deg, transparent, var(--paper) 70%);
   pointer-events: none;
+  transition: opacity 0.2s;
 }
 @container (width < 1000px) { .plate::after { display: block; } }
+/* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
+.plate[data-end]::after { opacity: 0; }
 figure { margin: 0; }
 figcaption {
   font-family: var(--prose);
@@ -484,11 +487,20 @@ export function sheetSection(sheet, { headline = true } = {}) {
 </section>`;
 }
 
+// The scrolled plate marks its end so the SCROLL → fade clears the drawing's
+// right edge. The app's <atlas-plate> keeps the same rule in views.ts.
+export const PLATE_END_SCRIPT = `document.addEventListener('scroll', (e) => {
+  const w = e.target;
+  if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
+  w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
+}, true);`;
+
 export function page(title, body, { desc = '' } = {}) {
   return `<meta charset="utf-8">
 <title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
-${body}`;
+${body}
+<script>${PLATE_END_SCRIPT}</script>`;
 }
