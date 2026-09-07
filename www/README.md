@@ -33,9 +33,10 @@ the two scripts in [`tools/workers-builds`](../tools/workers-builds) rather than
 holding the build and deploy steps inline. A trigger holds one command for every
 branch it matches, so inlined steps mean a branch cannot change them — and a
 package-manager change or a moved `wrangler.jsonc` is exactly a branch that needs
-to. Pinning the script path instead lets the steps differ per branch while the
-declared value stays constant, so divergence never reads as drift and never needs
-an `--apply` to test. The same package diffs the config against the live triggers
+to change them. Pinning the script path instead lets the steps differ per branch
+while the declared value stays constant, so divergence never reads as drift and
+never needs an `--apply` to test. The same package diffs the config against the
+live triggers
 (`pnpm check:workers-builds`) and reports it as the non-gating `workers-builds
 (triggers)` check run.
 

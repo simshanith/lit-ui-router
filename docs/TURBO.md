@@ -225,7 +225,7 @@ The prefix affects the graph only. Tagging and publishing stay bound to pushes t
 
 ```yaml
 TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }} # Remote cache auth
-TURBO_API: ${{ vars.TURBO_API }} # Cache API endpoint
+TURBO_API: ${{ secrets.TURBO_API }} # Cache API endpoint
 TURBO_TEAM: ${{ vars.TURBO_TEAM }} # Team identifier
 TURBO_REMOTE_CACHE_SIGNATURE_KEY: ${{ secrets.TURBO_REMOTE_CACHE_SIGNATURE_KEY }} # Artifact signing
 ```
