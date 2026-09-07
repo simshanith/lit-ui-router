@@ -24,7 +24,7 @@ has a runtime API — its own reference.
 
 `eslint-plugin-lit-ui-router` is the odd one out: it ships lint rules rather
 than runtime code, so its only peer is `eslint` rather than the router
-itself. Its `1.0.0` is stable, and its
+itself. Its `1.0` line is stable, and its
 [semver policy](/packages/eslint-plugin#semver-policy) treats any tightening
 of `recommended` as a major.
 

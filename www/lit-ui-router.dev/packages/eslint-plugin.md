@@ -158,7 +158,7 @@ expect majors rather than silent tightening, and pin accordingly.
 
 - **npm**:
   [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
-  — `1.0.0` on `latest`.
+  — `1.0.1` on `latest`.
 - **Source**:
   [`packages/eslint-plugin-lit-ui-router`](https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router)
   — the four rules, their tests, and the generated rule docs.
