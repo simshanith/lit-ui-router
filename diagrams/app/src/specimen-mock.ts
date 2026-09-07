@@ -233,7 +233,7 @@ export const SPECIMEN_MOCK = `
       <span class="shno">SHEET 7 / 14 · ALTITUDE 3½</span>
     </div>
     <h3 class="m-title"><span class="w1"><span class="art"><span class="w">The </span></span>Measured</span> City</h3>
-    <p class="m-sub">Altitude 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts · counted at origin/main @ b2338d0</p>
+    <p class="m-sub">Altitude 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts · counted at origin/main @ 185d414</p>
     <div class="m-plate">
       <div>
         <div class="m-fig">
@@ -275,7 +275,7 @@ export const SPECIMEN_MOCK = `
         <div class="m-cardwrap">
           <span class="m-cardlbl">Cover card — the same title, a third time</span>
           <a class="m-card" href="#" onclick="return false">
-            <span class="n">SHEET 7 · REV E</span>
+            <span class="n">SHEET 7 · REV F</span>
             <h4><span class="art"><span class="w">The </span></span>Measured City</h4>
             <span class="alt">WHOLE WORKSPACE</span>
             <p>The same city as sheet 3, surveyed by mass — 32 members, 4 districts, the annex hatched.</p>
@@ -302,7 +302,7 @@ export const SPECIMEN_MOCK = `
           <div class="span2"><span class="fld">Sheet title</span><span class="ttl"><span class="art"><span class="w">THE </span></span>MEASURED CITY</span></div>
           <div><span class="fld">Scale</span>WHOLE WORKSPACE</div>
           <div><span class="fld">Form</span>MEASURED CITY</div>
-          <div><span class="fld">Basis</span>origin/main @ b2338d0</div>
+          <div><span class="fld">Basis</span>origin/main @ 185d414</div>
           <div><span class="fld">Date / rev</span>2026-09-04 · E</div>
           <div class="sig"><span><span class="fld">Drawn by</span><span class="hand">Fable (Claude, AI)</span></span></div>
           <div class="sig"><span><span class="fld">Sheet</span>7 OF 14</span><span class="chop" aria-hidden="true"></span></div>
@@ -316,7 +316,7 @@ export const SPECIMEN_MOCK = `
             <tr><td class="r">C</td><td class="d">2026-08-24</td><td>annex split out of the block and hatched; gate severity moved from height to colour</td></tr>
           </tbody>
         </table>
-        <span class="m-stamp">Counted · b2338d0</span>
+        <span class="m-stamp">Counted · 185d414</span>
       </div>
     </div>
   </div>

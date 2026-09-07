@@ -357,54 +357,6 @@ code, kbd, samp { font-family: var(--code); }
   box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
 }
 
-/* ---- REVISIONS ----
-   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
-   splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, in the inset strip under the title block, as a drawing's
-   revision block: one row of rev + date, the description wrapped beneath. */
-.revs {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1.5px solid var(--ink);
-  margin-top: 18px;
-  font-family: var(--data);
-  font-variant-numeric: tabular-nums;
-}
-.revs caption {
-  font-family: var(--data);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  text-align: left;
-  padding: 0 0 8px;
-}
-.revs th, .revs td { text-align: left; vertical-align: baseline; }
-.revs th {
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  font-weight: 600;
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-  width: 1%;
-}
-.revs .d {
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-}
-.revs .t {
-  font-size: 11.5px;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
-  padding: 0 10px 7px;
-  border-bottom: 1px solid var(--line);
-}
-.revs tr:last-child .t { border-bottom: none; }
-.revs code { font-family: var(--code); font-size: 0.88em; }
-
 /* ---- SVG drawing classes ---- */
 .sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
 .sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
@@ -444,7 +396,7 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-5" aria-label="Sheet 5: THE DESIGN SPACE">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 5 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>DESIGN SPACE</h2>
-  <p class="sheet-sub">ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes</p>
+  <p class="sheet-sub">ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes</p>
   <figure>
     <div class="plate" style="--plate-ar:1.6875"><div class="figure-wrap"><svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
 <defs>
@@ -563,11 +515,6 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>5 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
-      <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">2026-09-06</td></tr>
-  <tr><td class="t" colspan="2">the empty-quarter callout re-cut to the line it frames (330 → 236 wide) — the dashed box had been drawn to the mono lettering and, at the data face, crossed the first column boundary into the server column it says nothing about; no point moved</td></tr></tbody>
-</table>
     </div>
   </div>
 </section>

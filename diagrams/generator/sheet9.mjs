@@ -41,8 +41,8 @@ const PLAN = {
   'app: mobx': [655, 345],
 };
 
-// REV G: the corpora district left the deploy with #716. Its lot stays on the
-// plan as a vacant footprint at rev F's side, so the skyline change is drawn.
+// The demo corpora are not shipped; their footprint is drawn as a vacant lot so
+// the plan shows the gap. Files size the outline, as for every other district.
 const LOT = { name: 'demo corpora', x: 60, y: 10, files: 15, gz: 899000 };
 
 // Plate order is drawing order; a district with no plan slot is a build error.
@@ -96,7 +96,7 @@ const APP_PCT = ((APPS / PLATE.totals.gzBytes) * 100).toFixed(1);
 const INTER = row('inter fonts'), PAGES = row('html pages');
 const EXAMPLES = row('examples'), VANILLA = row('app: vanilla'), HASH = row('app: hash');
 const LETTER_GAP = Math.abs(INTER.gz - PAGES.gz);
-// at rev F the HTML district passed the fonts — the label has to know which way
+// the HTML and font districts run close; the label has to know which way
 const PAGES_LEAD = PAGES.gz > INTER.gz;
 
 const half = Math.ceil(all.length / 2);
@@ -111,7 +111,7 @@ ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, line(r), 'lbls')).joi
 ${txt(56, SY + 58 + half * 17, `TOTAL — ${all.length} districts · ${fmt(PLATE.totals.files)} files · ${fmt(PLATE.totals.rawBytes)} raw bytes · ${fmt(PLATE.totals.gzBytes)} gzipped · 0 orphans · ${BASIS}`, 'lbls')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 108 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The tallest towers are the prerendered HTML pages and the Inter font files, not code; the demo text corpora that stood tallest until rev F left the deploy, and their lot is drawn vacant. The three routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the scripted census walks backtick-quoted asset URLs too, and a clean deploy ships no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
+const svg = `<svg viewBox="0 0 1160 ${SY + 108 + half * 17}" role="img" aria-label="The production docs-site deploy drawn as an isometric city of ${all.length} districts: footprint area from file counts, height from gzipped bytes on the wire. The tallest towers are the prerendered HTML pages and the Inter font files, not code; the examples district stands third. A vacant lot at the plan's edge marks the footprint of the demo corpora, which the site no longer ships. The three routed sample apps are small accent buildings totalling ${APP_PCT} percent of the deploy. There is no ghost block: the census walks backtick-quoted asset URLs too, and this deploy carries no unreachable files at all. A structure schedule lists every district with exact counts and its largest tenant.">
 ${defs(P)}
 
 ${groupOutline(20, 0, 230, 200, 'demo payload — media · data', 40, 150)}
@@ -121,25 +121,23 @@ ${groupOutline(540, 290, 720, 450, 'the routed apps', 540, 700, 'end')}
 
 ${bodies}
 
-${txt(150, 120, `the corpora's lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
-${txt(150, 132, 'Beowulf and an RFC — struck from the deploy at #716', 'lbla')}
+${txt(150, 120, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
+${txt(150, 132, 'Beowulf and an RFC the site no longer ships', 'lbla')}
 <line x1="442" y1="132" x2="502" y2="248" class="skf"/>
 ${txt(1120, 96, `${KB(INTER.gz)} of Inter — the lettering still`, 'lbla', 'end')}
-${txt(1120, 108, `outweighs every script — and the HTML ${PAGES_LEAD ? 'just passed it' : 'is closing'}`, 'lbla', 'end')}
+${txt(1120, 108, `outweighs every script — ${PAGES_LEAD ? 'only the HTML stands taller' : 'and the HTML stands close'}`, 'lbla', 'end')}
 ${txt(1120, 715, `all three apps: ${KB(APPS)} —`, 'lbla', 'end')}
-${txt(1120, 727, `${APP_PCT}% of the deploy (rev C read 4.5%, pre-attribution)`, 'lbla', 'end')}
+${txt(1120, 727, `${APP_PCT}% of the deploy they exist to demonstrate`, 'lbla', 'end')}
 <line x1="937" y1="711" x2="878" y2="689" class="skf"/>
-${txt(110, 558, 'no ghost district stands here any more:', 'lbla')}
-${txt(110, 570, 'the walk follows backtick-quoted asset URLs now,', 'lbla')}
-${txt(110, 582, 'and a clean deploy ships ZERO unreachable files', 'lbla')}
-${txt(110, 614, 'REV C (#618): one lit major, and api-viewer waits', 'lbla')}
-${txt(110, 626, 'in a lazy api-docs chunk — every main shrinks', 'lbla')}
-${txt(110, 638, '34 → 7 KB, and mobx now rides chunks vanilla', 'lbla')}
-${txt(110, 650, 'already ships', 'lbla')}
-${txt(110, 674, 'REV E: every district read from the census plate —', 'lbla')}
-${txt(110, 686, 'first claim now seats the visualizer in app: vanilla', 'lbla')}
-${txt(110, 710, `REV G: the tallest tower left town — ${KB(LOT.gz)} of corpora`, 'lbla')}
-${txt(110, 722, 'gone with #716, and the skyline is prose, then type', 'lbla')}
+${txt(110, 558, 'no ghost district stands on this plan:', 'lbla')}
+${txt(110, 570, 'the walk follows backtick-quoted asset URLs,', 'lbla')}
+${txt(110, 582, 'and this deploy ships ZERO unreachable files', 'lbla')}
+${txt(110, 614, 'the api-viewer panel is off the critical path:', 'lbla')}
+${txt(110, 626, 'it arrives in a lazy api-docs chunk, and the apps', 'lbla')}
+${txt(110, 638, 'share one lit major, so identical chunks hash', 'lbla')}
+${txt(110, 650, 'alike across all three', 'lbla')}
+${txt(110, 674, 'every district is read from the census plate —', 'lbla')}
+${txt(110, 686, 'first claim seats the visualizer in app: vanilla', 'lbla')}
 
 ${txt(1120, 26, 'SCALE — footprint area ∝ files · 1 px of height ≈ 4.2 KB gzipped', 'lbls', 'end')}
 
@@ -149,24 +147,21 @@ ${schedule}
 export const sheet9 = {
   num: 9, id: 'shipped', rev: 'G',
   title: 'THE SHIPPED CITY',
-  sub: `ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} on the wire · REV D: hidden-line pass — opaque tenant walls painted back to front · REV E 2026-09-03: every count now imported from diagrams/data/census-shipped.json — the ghost district is struck from the drawing · REV F: whole-cabinet refresh — the HTML pages overtook Inter, measured at origin/main @ b2338d0 (2026-09-04) · REV G 2026-09-07: re-surveyed after #716 dropped the sample app's markov seed pipeline — the corpora district (15 files, 899 KB, the tallest tower since rev A) left the deploy with three static data files, so ${all.length} districts stand and the HTML pages are the skyline; the corpora's lot is drawn vacant — ${BASIS}`,
+  sub: `ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · ${fmt(PLATE.totals.files)} files in ${all.length} districts, ${MB(PLATE.totals.gzBytes)} on the wire, footprint from file count and height from gzipped bytes — ${BASIS}`,
   scale: 'ONE DEPLOY',
   form: 'SHIPPED CITY',
   svg,
-  caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest towers are now prerendered prose and font files — the sample novels left the deploy at rev G, and their lot is drawn vacant — the routed apps are ${KB(APPS)} of accent buildings in their own city, and the ghost block is gone: a clean deploy ships no unreachable files at all.`,
+  caption: `The production docs deploy surveyed on the wire: ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.gzBytes)} gzipped, drawn as ${all.length} districts — the tallest towers are prerendered prose and font files, the routed apps are ${KB(APPS)} of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.`,
   notes: `
-<p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <code>diagrams/data/census-shipped.json</code> — ${BASIS}. The probe builds <code>www/lit-ui-router.dev/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → hash), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measured what we wrote, sheet 8 what npm delivered, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>
-<p><strong>The tallest building is the prose.</strong> For five revisions the skyline belonged to the demo corpora — novels, Beowulf, an RFC, pre-gzipped <code>.txt.gz</code> so compression couldn't help further. They are gone (see REV G), and the city's tallest district is now the site's ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with Inter's ${INTER.files} <code>woff2</code> faces ${PAGES_LEAD ? `${fmt(LETTER_GAP)} bytes behind` : `${fmt(LETTER_GAP)} bytes ahead`} at ${KB(INTER.gz)}. Code still doesn't crack the top two: on the wire, this documentation site is mostly prose and typography, and the first script district — the examples, led by one galaxy — stands third at ${KB(EXAMPLES.gz)}.</p>
-<p><strong>The product is a guest in its own city.</strong> The three routed sample apps — the thing the site exists to demonstrate — total ${KB(APPS)} gzipped, ${APP_PCT}% of the deploy. The rise from rev C's 173 KB / 4.5% is mostly bookkeeping: that survey counted the visualizer chunk with the page chunks, and on the scripted census, first claim seats <code>visualizer.esm</code> (and the custom-elements manifest) in <code>app: vanilla</code>, which is why that district reads ${VANILLA.files} files and ${KB(VANILLA.gz)}. The bytes on the CDN did not move. What did move at rev C stands: PR #618 scoped an override so the <code>@api-viewer</code>/<code>lit-dialog</code> stack shares one lit 3.3.3, and identical lit chunks now hash identically <em>across</em> apps, so part of mobx's download is chunks vanilla already shipped.</p>
-<p><strong>The panel that waited its turn.</strong> The api-viewer docs panel — marked, dompurify, three <code>@api-viewer</code> packages — only renders behind a feature flag, but rev B's apps carried it in the eager main chunk anyway. It now arrives as a lazy <code>api-docs</code> chunk, and every app's main chunk drops 34 → 7 KB gz: the hash app's whole district is ${HASH.files} files and ${KB(HASH.gz)}. Same bytes on the CDN, different bytes on the critical path.</p>
-<p><strong>The ghost district was the instrument, twice.</strong> Rev A reported twelve orphan files, 138 KB of dead weight in every deploy — but that survey read an accumulated local <code>dist/</code>, where parallel app builds pile up stale hashes. Rev C rebuilt from a clean checkout and reported exactly one unreachable file, a 1.7 KB custom-elements manifest, and the drawing made a rule of it: a clean tree ships exactly one. That rule was also an artifact. The scripted probe's reachability walk follows the backtick-quoted asset URLs the app chunks build by hand, and the manifest is reachable after all: the orphan list on this plate is <em>empty</em>. The hatched ghost block is struck from the drawing, and the caution survives it in stronger form — twice now, the orphans were a property of the instrument, not of the deploy.</p>
-<p><strong>REV F — the whole cabinet, one ref, and a district changed places.</strong> Every plate in <code>diagrams/data/</code> was re-counted at origin/main @ b2338d0 in one pass, and this deploy moved where the shopfront grew: 593 files against rev E's 586, the same 12 districts, still no orphans, 4.0 MB on the wire — 126,991 gzipped bytes more than rev E, on a four-megabyte deploy. The examples district took most of it (four more files, the lint-eslint example landing); the three documentation districts — html pages, page chunks and the VitePress framework — each gained a percent or two as the guides grew, and that was enough to settle the closest race on the sheet. The HTML pages have overtaken Inter: 883,505 gz against 866,700, a 16,805-byte lead where rev E had the fonts ahead by 504. The reading stands as it did, only sharper — the two tallest things this documentation site ships are prose and typography, and the corpora still tower over both.</p>
-<p><strong>REV G — the tallest tower left town.</strong> PR #716 dropped the sample app's markov seed pipeline, and with it the fifteen pre-gzipped corpora that had been this city's tallest district since rev A: 899 KB of Dickens, Beowulf, Flatland and an RFC, plus three of the static data files that fed them. Re-surveyed at ${PLATE.ref} @ ${PLATE.sha}, the deploy is ${fmt(PLATE.totals.files)} files against rev F's 593 and ${MB(PLATE.totals.gzBytes)} on the wire against 4.0 — ${fmt(4164505 - PLATE.totals.gzBytes)} gzipped bytes lighter, ${((1 - PLATE.totals.gzBytes / 4164505) * 100).toFixed(0)}% of the deploy, on a change that touched no page and no script. Nothing else moved: Inter is identical to the byte, the HTML pages gained ${fmt(PAGES.gz - 883505)}. The corpora's lot stays on the plan, drawn vacant beside the images, because a skyline that loses its landmark should show where it stood. The routed apps' share rises to ${APP_PCT}% without a byte of theirs changing — the same arithmetic that made rev C's 4.5% a bookkeeping number cuts the other way when the city shrinks around them.</p>
-<p><strong>One example outweighs the router.</strong> The examples district (${EXAMPLES.files} files, ${KB(EXAMPLES.gz)}, and two examples wider than rev C — the design-system-links tutorial and the lint-eslint example) is led by the hellogalaxy demo's <code>model-viewer</code> chunk at ${KB(EXAMPLES.top.gz)} on its own — heavier than all three sample apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
+<p><strong>Method:</strong> every number on this sheet is read at build time from the checked-in plate <code>diagrams/data/census-shipped.json</code> — ${BASIS}. The probe builds <code>www/lit-ui-router.dev/dist</code> inside a materialized, installed archive of the ref, never the working tree, and measures it file by file: height is gzip level 9 of each file, the honest wire measure, since the CDN serves compressed. Footprint is file count, as on sheets 7 and 8. A reachability walk — every HTML shell and hashed chunk, following static asset references — sorts the assets into districts, and a shared chunk counts where it is first claimed (vanilla → mobx → hash), because the CDN ships it once. This sheet extends the survey a step further: sheet 7 measures the source, sheet 8 what npm delivers, this sheet what one deploy actually ships — ${fmt(PLATE.totals.files)} files, ${MB(PLATE.totals.rawBytes)} on disk, ${MB(PLATE.totals.gzBytes)} on the wire. Sheet 10 goes one level in again and opens the bundle itself.</p>
+<p><strong>The tallest building is the prose.</strong> The skyline is the site's ${PAGES.files} prerendered HTML pages at ${KB(PAGES.gz)}, with Inter's ${INTER.files} <code>woff2</code> faces ${PAGES_LEAD ? `${fmt(LETTER_GAP)} bytes behind` : `${fmt(LETTER_GAP)} bytes ahead`} at ${KB(INTER.gz)} — a race close enough that a few new guides decide it. Code does not crack the top two: on the wire, this documentation site is mostly prose and typography, and the first script district — the examples, led by one galaxy — stands third at ${KB(EXAMPLES.gz)}. A vacant lot at the plan's edge marks where the demo corpora stood; they are no longer shipped.</p>
+<p><strong>The product is a guest in its own city.</strong> The three routed sample apps — the thing the site exists to demonstrate — total ${KB(APPS)} gzipped, ${APP_PCT}% of the deploy. First claim seats <code>visualizer.esm</code> and the custom-elements manifest in <code>app: vanilla</code>, which is why that district reads ${VANILLA.files} files and ${KB(VANILLA.gz)} while the hash app's whole district is ${HASH.files} files and ${KB(HASH.gz)}. Two rules shape those numbers rather than the CDN: a scoped override holds the <code>@api-viewer</code>/<code>lit-dialog</code> stack to one lit major, so identical lit chunks hash identically <em>across</em> apps and part of mobx's download is chunks vanilla already ships; and the api-viewer docs panel, which renders only behind a feature flag, arrives in a lazy <code>api-docs</code> chunk rather than the eager main one. Same bytes on the CDN, fewer on the critical path.</p>
+<p><strong>There is no ghost district.</strong> The reachability walk follows the backtick-quoted asset URLs the app chunks build by hand, so the api-viewer custom-elements manifest is reachable after all, and the orphan list on this plate is <em>empty</em> — no hatched block stands here. Read that as a statement about the instrument as much as the deploy: an orphan count is only as good as the walk that produces it, and earlier walks over an accumulated local <code>dist/</code> reported orphans that were stale build output, not shipped weight. This census builds clean, into a materialized archive of the ref, and counts what a browser can reach.</p>
+<p><strong>One example outweighs the router.</strong> The examples district — ${EXAMPLES.files} files, ${KB(EXAMPLES.gz)} — is led by the hellogalaxy demo's <code>model-viewer</code> chunk at ${KB(EXAMPLES.top.gz)} on its own, heavier than all three sample apps combined, delivered so one tutorial page can spin a galaxy.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'site district — height = gzipped bytes'),
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fa"/>', 'a routed sample app'),
     keyRow('<rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/>', 'group (role in the deploy)'),
-    keyRow(`<rect x="8" y="3" width="18" height="12" fill="url(#${P}-hd)" opacity="0.35"/><rect x="8" y="3" width="18" height="12" class="sks fnone" stroke-dasharray="4 3"/>`, 'a vacant lot — a district that left the deploy'),
+    keyRow(`<rect x="8" y="3" width="18" height="12" fill="url(#${P}-hd)" opacity="0.35"/><rect x="8" y="3" width="18" height="12" class="sks fnone" stroke-dasharray="4 3"/>`, 'a vacant lot — a footprint the deploy does not fill'),
   ].join('\n'),
 };

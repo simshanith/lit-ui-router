@@ -338,7 +338,7 @@ const cityCard = (extra: ExtraRow): TemplateResult => html`
     <span class="n">${extra.shno} · REV ${extra.rev}</span>
     <h3>${articleTitle(extra.title)}</h3>
     <span class="alt">${extra.scale}</span>
-    <p>${extra.sub.split(' · REV ')[0]}</p>
+    <p>${extra.sub}</p>
     <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
   </a>
 `;
@@ -438,9 +438,9 @@ export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
       </div>
       <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ISSUE LOG</h2>
       <p class="sheet-sub">
-        EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD ·
-        EACH SHEET'S REVISIONS TABLE READS THE OTHER WAY, ASCENDING, AS A DRAWING'S REV
-        BLOCK DOES
+        EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD,
+        READ FROM diagrams/HISTORY.md AT BUILD TIME; THE SHEETS THEMSELVES DESCRIBE
+        THEIR PRESENT STATE ONLY
       </p>
       <div class="issue-log issue-log-page" aria-label="issue log">
         <ol>
@@ -632,10 +632,10 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           Every REV across every plate — the set's own revision record, latest first —
           is at
           <a ${uiSref('atlas.log')} href="${to(href.log)}"><code>${href.log}</code></a>.
-          It rode the cover's right-hand column until 2026-09-06, where it pushed the
-          sheet index off the first screen; a drawing set's issue record earns a sheet
-          of its own once it outgrows the title sheet. Each sheet's own REVISIONS table
-          still reads ascending, as a drawing's rev block does.
+          It is parsed at build time out of <code>diagrams/HISTORY.md</code>, the frozen
+          record, and rides the manifest as JSON, so the app fetches no markdown. The
+          sheets themselves carry no revision table: each describes its present state,
+          and the log is where the set's history is read.
         </p>
         <h3>THE FLAT SET</h3>
         <p>

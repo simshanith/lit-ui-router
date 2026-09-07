@@ -7,10 +7,10 @@
   "generatedBy": "diagrams/generator/emit-app.mjs",
   "cover": {
     "css": ".stat-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--ink); }\n/* two ruled rows on a six-column field: the three one-line facts across the top\n   at a third each, the two roster paragraphs at a half each below — nothing\n   wraps to a row of its own and no cell is left half-empty */\n.stat-bar > div { padding: 8px 16px 10px; background: var(--paper-2); grid-column: span 2; }\n.stat-bar > div:nth-child(n+4) { grid-column: span 3; }\n@media (max-width: 760px) { .stat-bar { grid-template-columns: 1fr; } .stat-bar > div, .stat-bar > div:nth-child(n+4) { grid-column: auto; } }\n.stat-bar .k { display: block; font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin-bottom: 3px; }\n.stat-bar .v { font-family: var(--data); font-size: 14.5px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }\n.survey { border: 1.5px solid var(--ink); margin: 0 0 26px; background: var(--paper); }\n.survey h2 { font-family: var(--data); font-weight: 600; font-size: 10.5px; letter-spacing: 0.2em; color: var(--ink-soft);\n  padding: 8px 14px 7px; border-bottom: 1.5px solid var(--ink); background: var(--paper-2); }\n.survey-tot { display: flex; flex-wrap: wrap; gap: 0; border-bottom: 1.5px solid var(--ink); }\n.survey-tot > div { padding: 9px 14px 11px; border-right: 1px solid var(--line); flex: 1 1 auto; }\n.survey-tot > div:last-child { border-right: none; }\n.survey-tot .k { display: block; font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em;\n  color: var(--ink-soft); margin-bottom: 3px; }\n.survey-tot .v { font-family: var(--data); font-size: 17.5px; font-variant-numeric: tabular-nums;\n  letter-spacing: 0.03em; }\n.survey-tot > div:first-child .v { color: var(--accent); }\n.lang { width: 100%; border-collapse: collapse; }\n.lang th { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft);\n  text-align: right; padding: 7px 14px 6px; border-bottom: 1px solid var(--line); }\n.lang th:first-child { text-align: left; }\n.lang td { font-family: var(--data); font-size: 12px; letter-spacing: 0.03em; padding: 5px 14px;\n  border-bottom: 1px solid var(--line); text-align: right; font-variant-numeric: tabular-nums; }\n.lang td:first-child { text-align: left; letter-spacing: 0.08em; }\n.lang .bar { width: 40%; padding-right: 0; }\n.lang .bar span { display: block; height: 7px; background: var(--accent); }\n.lang tr:last-child td { border-bottom: none; }\n.survey .basis { font-family: var(--data); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);\n  padding: 8px 14px 9px; border-top: 1.5px solid var(--ink); background: var(--paper-2); }\n.gal-body p { font-family: var(--prose); font-size: 16px; max-width: 72ch; margin-bottom: 11px; }\n.provenance, .prose p.provenance { font-family: var(--prose); font-size: 13.5px;\n  line-height: 1.5; color: var(--ink-soft); max-width: 68ch; margin: 0 0 40px; padding: 0 4px; }",
-    "statBar": "<div class=\"stat-bar\" role=\"group\" aria-label=\"set statistics\">\n    <div><span class=\"k\">REPOSITORY</span><span class=\"v\">lit-ui-router · simshanith</span></div>\n    <div><span class=\"k\">INSTRUMENTS (tools/*)</span><span class=\"v\">20</span></div>\n    <div><span class=\"k\">LATEST SHIPPED</span><span class=\"v\">1.11.2 · 2026-09-05</span></div>\n    <div><span class=\"k\">PUBLISHABLE PACKAGES</span><span class=\"v\">5 · eslint-plugin-lit-ui-router 1.0.0-rc.3 · lit-ui-router 1.11.2 · lit-ui-router-mobx 1.0.0 · ui-router-navigation-location-plugin 0.3.0 · ui-router-server 0.1.1 — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>\n    <div><span class=\"k\">SHEETS</span><span class=\"v\">14 altitudes · 23 plates · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at origin/main @ 185d414</span></div>\n  </div>",
+    "statBar": "<div class=\"stat-bar\" role=\"group\" aria-label=\"set statistics\">\n    <div><span class=\"k\">REPOSITORY</span><span class=\"v\">lit-ui-router · simshanith</span></div>\n    <div><span class=\"k\">INSTRUMENTS (tools/*)</span><span class=\"v\">20</span></div>\n    <div><span class=\"k\">LATEST SHIPPED</span><span class=\"v\">1.11.2 · 2026-09-05</span></div>\n    <div><span class=\"k\">PUBLISHABLE PACKAGES</span><span class=\"v\">5 · eslint-plugin-lit-ui-router 1.0.0-rc.3 · lit-ui-router 1.11.2 · lit-ui-router-mobx 1.0.0 · ui-router-navigation-location-plugin 0.3.0 · ui-router-server 0.1.1</span></div>\n    <div><span class=\"k\">SHEETS</span><span class=\"v\">14 altitudes · 23 plates · whole plate cabinet counted at origin/main @ 185d414</span></div>\n  </div>",
     "survey": "<section class=\"survey\" aria-label=\"general survey of the repository\">\n  <h2>GENERAL SURVEY — THE WHOLE TRACKED REPOSITORY, AS SHIPPED ON MAIN</h2>\n  <div class=\"survey-tot\">\n    <div><span class=\"k\">SLOC (CODE)</span><span class=\"v\">47,872</span></div>\n    <div><span class=\"k\">FILES COUNTED</span><span class=\"v\">616</span></div>\n    <div><span class=\"k\">LINES</span><span class=\"v\">61,559</span></div>\n    <div><span class=\"k\">BLANKS</span><span class=\"v\">6,380</span></div>\n    <div><span class=\"k\">COMMENTS</span><span class=\"v\">7,307</span></div>\n  </div>\n  <table class=\"lang\">\n    <thead><tr><th>LANGUAGE</th><th>FILES</th><th>SLOC</th><th class=\"bar\"></th></tr></thead>\n    <tbody><tr><td>TypeScript</td><td>337</td><td>31,766</td><td class=\"bar\"><span style=\"width:100.0%\"></span></td></tr><tr><td>Markdown</td><td>49</td><td>6,161</td><td class=\"bar\"><span style=\"width:19.4%\"></span></td></tr><tr><td>JSON</td><td>128</td><td>5,390</td><td class=\"bar\"><span style=\"width:17.0%\"></span></td></tr><tr><td>YAML</td><td>16</td><td>1,082</td><td class=\"bar\"><span style=\"width:3.4%\"></span></td></tr><tr><td>Vue</td><td>6</td><td>1,054</td><td class=\"bar\"><span style=\"width:3.3%\"></span></td></tr><tr><td>JavaScript</td><td>19</td><td>797</td><td class=\"bar\"><span style=\"width:2.5%\"></span></td></tr><tr><td>CSS</td><td>2</td><td>481</td><td class=\"bar\"><span style=\"width:1.5%\"></span></td></tr><tr><td>HTML</td><td>10</td><td>392</td><td class=\"bar\"><span style=\"width:1.2%\"></span></td></tr><tr><td>TOML</td><td>5</td><td>249</td><td class=\"bar\"><span style=\"width:0.8%\"></span></td></tr><tr><td>BASH</td><td>9</td><td>233</td><td class=\"bar\"><span style=\"width:0.7%\"></span></td></tr><tr><td>SVG</td><td>17</td><td>103</td><td class=\"bar\"><span style=\"width:0.3%\"></span></td></tr><tr><td>TypeScript Typings</td><td>12</td><td>83</td><td class=\"bar\"><span style=\"width:0.3%\"></span></td></tr><tr><td>JSONC</td><td>2</td><td>46</td><td class=\"bar\"><span style=\"width:0.1%\"></span></td></tr><tr><td>Patch</td><td>2</td><td>24</td><td class=\"bar\"><span style=\"width:0.1%\"></span></td></tr><tr><td>Shell</td><td>1</td><td>6</td><td class=\"bar\"><span style=\"width:0.0%\"></span></td></tr><tr><td>License</td><td>1</td><td>5</td><td class=\"bar\"><span style=\"width:0.0%\"></span></td></tr></tbody>\n  </table>\n  <p class=\"basis\">BASIS — every tracked file on origin/main @ 185d414 (646 paths, 616 of them a language scc can name; the other 30 are binaries, dotfiles, and lockfiles — generated, and rightly left out) · scc 4.0.0 <code>Code</code> basis · counted 2026-09-07 · every number above imported from <code>diagrams/data/census-files.json</code> · deliberately broader than the sheets' authored-source census, and deliberately main: this atlas's own branch would add a 29k-sloc self-portrait.</p>\n</section>",
-    "prose": "<div class=\"gal-body\">\n    <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>\n    <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>\n    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 297× the app it serves), what the browser downloads (the docs deploy on the wire — where the prose and the fonts outweigh every line of code — the demo corpora that once towered over both left the deploy at rev G), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 22.5% of the wire; the router itself, 3.9%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8, 9 and 10 have each been remeasured after the merge they argued for; sheet 11 cuts the same wire the other way — five package quarters, sixteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>\n  </div>",
-    "provenance": "<p class=\"provenance\">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ re-counted at origin/main @ 185d414 in one pass — plate 7A's test light included, re-metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = origin/main @ 185d414, counted 2026-09-07, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router graduated to packages/ on 2026-09-02, after sheets 1–13 were first drawn; the plates count it and sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 draw or schedule it · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>",
+    "prose": "<div class=\"gal-body\">\n    <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>\n    <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>\n    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, 297× the app it serves), what the browser downloads (the docs deploy on the wire, where prose and fonts outweigh every line of code), and who occupies the bytes after tree-shaking (the machine the router wraps is 22.5% of the bundle; the router itself, 3.9%). Sheet 11 cuts the same wire the other way, pricing five package quarters and sixteen doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 turns the instrument on itself: the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings and introspected from the generator at build time. Interactive lanes (1i, 2B, 12i, 14i and the three.js city) walk the plates they sit beside; the appendix files plates whose subject is the atlas rather than the codebase.</p>\n  </div>",
+    "provenance": "<p class=\"provenance\">SOURCES — module inventory & manifests read from the repo at branch worktree-altitude-atlas · npm dates from diagrams/data/census-npm.json, which prints its own registry-read date on sheet 4 · every plate in diagrams/data/ counted at origin/main @ 185d414 in one pass — plate 7A's test light included, metered at that ref by diagrams/generator/census-shadow.mjs · cover general survey = origin/main @ 185d414, counted 2026-09-07, imported from diagrams/data/census-files.json · eslint-plugin-lit-ui-router is counted on every plate and drawn or scheduled on sheets 2, 4, 7, 7A, 7B, 11, 12 and 13 · sheet 5 positions are editorial. FILES — diagrams/ holds each sheet standalone, megacanvas.html, and this gallery. DRAWN BY FABLE (CLAUDE, AI) FOR SHANE DANIEL.</p>",
     "thesis": "Riffs on an isometric codebase-visualization form seen in the wild; the notes on each sheet argue where that form fits and where it lies.",
     "notes": "Static HTML pages, written by <code>node generator/build.mjs .</code> from this directory. The SVG sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which <code>generator/stage-site.mjs</code> vendors for hosting. <code>app/</code> is the same set as a prerendered lit-ui-router app; <code>build.mjs</code> emits its fragments and manifest. On the published site the app owns the root (<code>/</code>, <code>/sheet/7</code>, <code>/city</code>) and this flat set is staged beside it under <code>/set/</code> as the version to compare against; the two link to each other (the app's rail and crumbs, the gallery's cover). Light theme is graphite-on-vellum; dark is cyanotype. Since 2026-09-06 every label on the plates draws in the data face (DIN 2014, Barlow Semi Condensed off the kit) rather than the system monospace; mono is reserved for code. Generated 2026-08-16 by Fable (Claude, AI). Every plate in <code>data/</code> — versions, dates and all — was re-counted at origin/main @ 185d414 in one pass, plate 7A's test light included: <code>generator/census-shadow.mjs</code> re-meters it at the same ref. The cover's general survey — every tracked file on the scc 4.0.0 <code>Code</code> basis, origin/main @ 185d414 — is imported from <code>data/census-files.json</code>, the master snapshot <code>generator/census-scc.mjs</code> writes; <code>generator/census-overview.mjs</code> prints the same rollup on the terminal.",
     "hero": "<svg style=\"--plate-ar:1.6644\" viewBox=\"76 33 1200 721\" role=\"img\" aria-label=\"Sheet 7's census city, massed from the same census as the plate: 32 members in four dashed districts, footprint by source lines, height by authored files, gate severity in colour.\">\n<defs>\n  <marker id=\"s7-ai\" viewBox=\"0 0 10 8\" refX=\"9\" refY=\"4\" markerWidth=\"9\" markerHeight=\"7\" orient=\"auto-start-reverse\">\n    <path d=\"M0,0 L10,4 L0,8 z\" class=\"fi\"/>\n  </marker>\n  <marker id=\"s7-aa\" viewBox=\"0 0 10 8\" refX=\"9\" refY=\"4\" markerWidth=\"9\" markerHeight=\"7\" orient=\"auto-start-reverse\">\n    <path d=\"M0,0 L10,4 L0,8 z\" class=\"fa\"/>\n  </marker>\n  <marker id=\"s7-ar\" viewBox=\"0 0 10 8\" refX=\"9\" refY=\"4\" markerWidth=\"9\" markerHeight=\"7\" orient=\"auto-start-reverse\">\n    <path d=\"M0,0 L10,4 L0,8 z\" class=\"fr\"/>\n  </marker>\n  <marker id=\"s7-as\" viewBox=\"0 0 10 8\" refX=\"9\" refY=\"4\" markerWidth=\"9\" markerHeight=\"7\" orient=\"auto-start-reverse\">\n    <path d=\"M0,0 L10,4 L0,8 z\" class=\"fis\"/>\n  </marker>\n  <pattern id=\"s7-hx\" width=\"6\" height=\"6\" patternUnits=\"userSpaceOnUse\" patternTransform=\"rotate(45)\">\n    <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"6\" class=\"skf\"/>\n  </pattern>\n  <pattern id=\"s7-hd\" width=\"5\" height=\"5\" patternUnits=\"userSpaceOnUse\" patternTransform=\"rotate(45)\">\n    <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"5\" stroke=\"var(--ink-soft)\" stroke-width=\"1\"/>\n  </pattern>\n  <pattern id=\"s7-hr\" width=\"6\" height=\"6\" patternUnits=\"userSpaceOnUse\" patternTransform=\"rotate(-45)\">\n    <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"6\" stroke=\"var(--red-hatch)\" stroke-width=\"1\" opacity=\"0.55\"/>\n  </pattern>\n  <pattern id=\"s7-ha\" width=\"6\" height=\"6\" patternUnits=\"userSpaceOnUse\" patternTransform=\"rotate(45)\">\n    <line x1=\"0\" y1=\"0\" x2=\"0\" y2=\"6\" stroke=\"var(--accent)\" stroke-width=\"1\" opacity=\"0.5\"/>\n  </pattern>\n</defs>\n<polygon points=\"601.1,71.4 1041.6,325.7 808.1,460.5 367.6,206.2\" class=\"skf fnone\" stroke-dasharray=\"5 4\"/>\n<polygon points=\"1085.0,362.0 1285.4,477.7 1102.0,583.7 901.5,467.9\" class=\"skf fnone\" stroke-dasharray=\"5 4\"/>\n<polygon points=\"877.1,572.0 986.7,635.3 799.2,743.6 689.6,680.3\" class=\"skf fnone\" stroke-dasharray=\"5 4\"/>\n<polygon points=\"303.8,249.0 766.4,516.1 516.4,660.5 53.8,393.4\" class=\"skf fnone\" stroke-dasharray=\"5 4\"/>\n<g>\n<polygon points=\"531.2,96.8 582.7,126.5 582.7,165.5 531.2,135.8\" fill=\"var(--paper-2)\"/>\n<polygon points=\"531.2,96.8 582.7,126.5 582.7,165.5 531.2,135.8\" class=\"sk fnone\"/>\n<polygon points=\"634.2,96.8 582.7,126.5 582.7,165.5 634.2,135.8\" fill=\"var(--paper-2)\"/>\n<polygon points=\"634.2,96.8 582.7,126.5 582.7,165.5 634.2,135.8\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"634.2,96.8 582.7,126.5 582.7,165.5 634.2,135.8\" class=\"sk fnone\"/>\n<polygon points=\"582.7,67.0 634.2,96.8 582.7,126.5 531.2,96.8\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"572.9,136.1 661.3,187.2 661.3,232.2 572.9,181.1\" fill=\"var(--paper-2)\"/>\n<polygon points=\"572.9,136.1 661.3,187.2 661.3,232.2 572.9,181.1\" class=\"sks fnone\"/>\n<polygon points=\"749.7,136.1 661.3,187.2 661.3,232.2 749.7,181.1\" fill=\"var(--paper-2)\"/>\n<polygon points=\"749.7,136.1 661.3,187.2 661.3,232.2 749.7,181.1\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"749.7,136.1 661.3,187.2 661.3,232.2 749.7,181.1\" class=\"sks fnone\"/>\n<polygon points=\"661.3,85.1 749.7,136.1 661.3,187.2 572.9,136.1\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"709.1,209.0 755.9,236.0 755.9,260.0 709.1,233.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"709.1,209.0 755.9,236.0 755.9,260.0 709.1,233.0\" class=\"sk fnone\"/>\n<polygon points=\"802.7,209.0 755.9,236.0 755.9,260.0 802.7,233.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"802.7,209.0 755.9,236.0 755.9,260.0 802.7,233.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"802.7,209.0 755.9,236.0 755.9,260.0 802.7,233.0\" class=\"sk fnone\"/>\n<polygon points=\"755.9,182.0 802.7,209.0 755.9,236.0 709.1,209.0\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"616.3,241.6 634.6,252.2 634.6,267.2 616.3,256.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"616.3,241.6 634.6,252.2 634.6,267.2 616.3,256.6\" class=\"sk fnone\"/>\n<polygon points=\"653.0,241.6 634.6,252.2 634.6,267.2 653.0,256.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"653.0,241.6 634.6,252.2 634.6,267.2 653.0,256.6\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"653.0,241.6 634.6,252.2 634.6,267.2 653.0,256.6\" class=\"sk fnone\"/>\n<polygon points=\"634.6,231.0 653.0,241.6 634.6,252.2 616.3,241.6\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"637.7,263.4 667.2,280.5 667.2,292.5 637.7,275.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"637.7,263.4 667.2,280.5 667.2,292.5 637.7,275.4\" class=\"sks fnone\"/>\n<polygon points=\"696.7,263.4 667.2,280.5 667.2,292.5 696.7,275.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"696.7,263.4 667.2,280.5 667.2,292.5 696.7,275.4\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"696.7,263.4 667.2,280.5 667.2,292.5 696.7,275.4\" class=\"sks fnone\"/>\n<polygon points=\"667.2,246.4 696.7,263.4 667.2,280.5 637.7,263.4\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"280.2,284.6 303.8,298.3 303.8,302.3 280.2,288.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"280.2,284.6 303.8,298.3 303.8,302.3 280.2,288.6\" class=\"skr fnone\"/>\n<polygon points=\"327.5,284.6 303.8,298.3 303.8,302.3 327.5,288.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"327.5,284.6 303.8,298.3 303.8,302.3 327.5,288.6\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"327.5,284.6 303.8,298.3 303.8,302.3 327.5,288.6\" class=\"skr fnone\"/>\n<polygon points=\"303.8,271.0 327.5,284.6 303.8,298.3 280.2,284.6\" class=\"skr fp\"/>\n</g><polygon points=\"303.8,271.0 327.5,284.6 303.8,298.3 280.2,284.6\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"303.8,271.0 327.5,284.6 303.8,298.3 280.2,284.6\" class=\"skr fnone\"/>\n<g>\n<polygon points=\"755.6,234.2 820.2,271.5 820.2,307.5 755.6,270.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"755.6,234.2 820.2,271.5 820.2,307.5 755.6,270.2\" class=\"sks fnone\"/>\n<polygon points=\"884.8,234.2 820.2,271.5 820.2,307.5 884.8,270.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"884.8,234.2 820.2,271.5 820.2,307.5 884.8,270.2\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"884.8,234.2 820.2,271.5 820.2,307.5 884.8,270.2\" class=\"sks fnone\"/>\n<polygon points=\"820.2,196.9 884.8,234.2 820.2,271.5 755.6,234.2\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"698.4,295.2 712.6,303.4 712.6,307.4 698.4,299.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"698.4,295.2 712.6,303.4 712.6,307.4 698.4,299.2\" class=\"sk fnone\"/>\n<polygon points=\"726.8,295.2 712.6,303.4 712.6,307.4 726.8,299.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"726.8,295.2 712.6,303.4 712.6,307.4 726.8,299.2\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"726.8,295.2 712.6,303.4 712.6,307.4 726.8,299.2\" class=\"sk fnone\"/>\n<polygon points=\"712.6,287.0 726.8,295.2 712.6,303.4 698.4,295.2\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"333.3,300.0 343.7,306.0 343.7,310.0 333.3,304.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"333.3,300.0 343.7,306.0 343.7,310.0 333.3,304.0\" class=\"skf fnone\"/>\n<polygon points=\"354.1,300.0 343.7,306.0 343.7,310.0 354.1,304.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"354.1,300.0 343.7,306.0 343.7,310.0 354.1,304.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"354.1,300.0 343.7,306.0 343.7,310.0 354.1,304.0\" class=\"skf fnone\"/>\n<polygon points=\"343.7,294.0 354.1,300.0 343.7,306.0 333.3,300.0\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"360.1,315.5 370.5,321.5 370.5,325.5 360.1,319.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"360.1,315.5 370.5,321.5 370.5,325.5 360.1,319.5\" class=\"skr fnone\"/>\n<polygon points=\"380.9,315.5 370.5,321.5 370.5,325.5 380.9,319.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"380.9,315.5 370.5,321.5 370.5,325.5 380.9,319.5\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"380.9,315.5 370.5,321.5 370.5,325.5 380.9,319.5\" class=\"skr fnone\"/>\n<polygon points=\"370.5,309.5 380.9,315.5 370.5,321.5 360.1,315.5\" class=\"skr fp\"/>\n</g><polygon points=\"370.5,309.5 380.9,315.5 370.5,321.5 360.1,315.5\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"370.5,309.5 380.9,315.5 370.5,321.5 360.1,315.5\" class=\"skr fnone\"/>\n<g>\n<polygon points=\"714.3,295.4 742.4,311.6 742.4,332.6 714.3,316.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"714.3,295.4 742.4,311.6 742.4,332.6 714.3,316.4\" class=\"sks fnone\"/>\n<polygon points=\"770.4,295.4 742.4,311.6 742.4,332.6 770.4,316.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"770.4,295.4 742.4,311.6 742.4,332.6 770.4,316.4\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"770.4,295.4 742.4,311.6 742.4,332.6 770.4,316.4\" class=\"sks fnone\"/>\n<polygon points=\"742.4,279.2 770.4,295.4 742.4,311.6 714.3,295.4\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"394.8,335.5 405.1,341.5 405.1,345.5 394.8,339.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"394.8,335.5 405.1,341.5 405.1,345.5 394.8,339.5\" class=\"skr fnone\"/>\n<polygon points=\"415.5,335.5 405.1,341.5 405.1,345.5 415.5,339.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"415.5,335.5 405.1,341.5 405.1,345.5 415.5,339.5\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"415.5,335.5 405.1,341.5 405.1,345.5 415.5,339.5\" class=\"skr fnone\"/>\n<polygon points=\"405.1,329.5 415.5,335.5 405.1,341.5 394.8,335.5\" class=\"skr fp\"/>\n</g><polygon points=\"405.1,329.5 415.5,335.5 405.1,341.5 394.8,335.5\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"405.1,329.5 415.5,335.5 405.1,341.5 394.8,335.5\" class=\"skr fnone\"/>\n<g>\n<polygon points=\"413.8,346.5 424.2,352.5 424.2,356.5 413.8,350.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"413.8,346.5 424.2,352.5 424.2,356.5 413.8,350.5\" class=\"sks fnone\"/>\n<polygon points=\"434.6,346.5 424.2,352.5 424.2,356.5 434.6,350.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"434.6,346.5 424.2,352.5 424.2,356.5 434.6,350.5\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"434.6,346.5 424.2,352.5 424.2,356.5 434.6,350.5\" class=\"sks fnone\"/>\n<polygon points=\"424.2,340.5 434.6,346.5 424.2,352.5 413.8,346.5\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"446.7,365.5 457.1,371.5 457.1,375.5 446.7,369.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"446.7,365.5 457.1,371.5 457.1,375.5 446.7,369.5\" class=\"sks fnone\"/>\n<polygon points=\"467.5,365.5 457.1,371.5 457.1,375.5 467.5,369.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"467.5,365.5 457.1,371.5 457.1,375.5 467.5,369.5\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"467.5,365.5 457.1,371.5 457.1,375.5 467.5,369.5\" class=\"sks fnone\"/>\n<polygon points=\"457.1,359.5 467.5,365.5 457.1,371.5 446.7,365.5\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"180.8,220.0 244.9,257.0 244.9,395.0 180.8,358.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"180.8,220.0 244.9,257.0 244.9,395.0 180.8,358.0\" class=\"skr fnone\"/>\n<polygon points=\"309.0,220.0 244.9,257.0 244.9,395.0 309.0,358.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"309.0,220.0 244.9,257.0 244.9,395.0 309.0,358.0\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"309.0,220.0 244.9,257.0 244.9,395.0 309.0,358.0\" class=\"skr fnone\"/>\n<polygon points=\"244.9,183.0 309.0,220.0 244.9,257.0 180.8,220.0\" class=\"skr fr\"/>\n</g>\n<g>\n<polygon points=\"717.4,348.2 755.9,370.4 755.9,400.4 717.4,378.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"717.4,348.2 755.9,370.4 755.9,400.4 717.4,378.2\" class=\"sk fnone\"/>\n<polygon points=\"794.4,348.2 755.9,370.4 755.9,400.4 794.4,378.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"794.4,348.2 755.9,370.4 755.9,400.4 794.4,378.2\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"794.4,348.2 755.9,370.4 755.9,400.4 794.4,378.2\" class=\"sk fnone\"/>\n<polygon points=\"755.9,326.0 794.4,348.2 755.9,370.4 717.4,348.2\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"475.2,383.1 496.1,395.2 496.1,410.2 475.2,398.1\" fill=\"var(--paper-2)\"/>\n<polygon points=\"475.2,383.1 496.1,395.2 496.1,410.2 475.2,398.1\" class=\"sk fnone\"/>\n<polygon points=\"517.0,383.1 496.1,395.2 496.1,410.2 517.0,398.1\" fill=\"var(--paper-2)\"/>\n<polygon points=\"517.0,383.1 496.1,395.2 496.1,410.2 517.0,398.1\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"517.0,383.1 496.1,395.2 496.1,410.2 517.0,398.1\" class=\"sk fnone\"/>\n<polygon points=\"496.1,371.0 517.0,383.1 496.1,395.2 475.2,383.1\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"110.3,359.8 141.0,377.5 141.0,416.5 110.3,398.8\" fill=\"var(--paper-2)\"/>\n<polygon points=\"110.3,359.8 141.0,377.5 141.0,416.5 110.3,398.8\" class=\"skf fnone\"/>\n<polygon points=\"171.8,359.8 141.0,377.5 141.0,416.5 171.8,398.8\" fill=\"var(--paper-2)\"/>\n<polygon points=\"171.8,359.8 141.0,377.5 141.0,416.5 171.8,398.8\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"171.8,359.8 141.0,377.5 141.0,416.5 171.8,398.8\" class=\"skf fnone\"/>\n<polygon points=\"141.0,342.0 171.8,359.8 141.0,377.5 110.3,359.8\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"508.7,408.9 521.7,416.4 521.7,420.4 508.7,412.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"508.7,408.9 521.7,416.4 521.7,420.4 508.7,412.9\" class=\"sks fnone\"/>\n<polygon points=\"534.8,408.9 521.7,416.4 521.7,420.4 534.8,412.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"534.8,408.9 521.7,416.4 521.7,420.4 534.8,412.9\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"534.8,408.9 521.7,416.4 521.7,420.4 534.8,412.9\" class=\"sks fnone\"/>\n<polygon points=\"521.7,401.3 534.8,408.9 521.7,416.4 508.7,408.9\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"529.0,413.0 539.4,419.0 539.4,423.0 529.0,417.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"529.0,413.0 539.4,419.0 539.4,423.0 529.0,417.0\" class=\"sk fnone\"/>\n<polygon points=\"549.8,413.0 539.4,419.0 539.4,423.0 549.8,417.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"549.8,413.0 539.4,419.0 539.4,423.0 549.8,417.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"549.8,413.0 539.4,419.0 539.4,423.0 549.8,417.0\" class=\"sk fnone\"/>\n<polygon points=\"539.4,407.0 549.8,413.0 539.4,419.0 529.0,413.0\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"759.4,381.4 808.1,409.5 808.1,436.5 759.4,408.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"759.4,381.4 808.1,409.5 808.1,436.5 759.4,408.4\" class=\"sks fnone\"/>\n<polygon points=\"856.9,381.4 808.1,409.5 808.1,436.5 856.9,408.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"856.9,381.4 808.1,409.5 808.1,436.5 856.9,408.4\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"856.9,381.4 808.1,409.5 808.1,436.5 856.9,408.4\" class=\"sks fnone\"/>\n<polygon points=\"808.1,353.3 856.9,381.4 808.1,409.5 759.4,381.4\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"253.0,340.4 318.3,378.1 318.3,438.1 253.0,400.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"253.0,340.4 318.3,378.1 318.3,438.1 253.0,400.4\" class=\"sks fnone\"/>\n<polygon points=\"383.7,340.4 318.3,378.1 318.3,438.1 383.7,400.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"383.7,340.4 318.3,378.1 318.3,438.1 383.7,400.4\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"383.7,340.4 318.3,378.1 318.3,438.1 383.7,400.4\" class=\"sks fnone\"/>\n<polygon points=\"318.3,302.6 383.7,340.4 318.3,378.1 253.0,340.4\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"148.6,398.1 181.5,417.1 181.5,441.1 148.6,422.1\" fill=\"var(--paper-2)\"/>\n<polygon points=\"148.6,398.1 181.5,417.1 181.5,441.1 148.6,422.1\" class=\"sks fnone\"/>\n<polygon points=\"214.3,398.1 181.5,417.1 181.5,441.1 214.3,422.1\" fill=\"var(--paper-2)\"/>\n<polygon points=\"214.3,398.1 181.5,417.1 181.5,441.1 214.3,422.1\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"214.3,398.1 181.5,417.1 181.5,441.1 214.3,422.1\" class=\"sks fnone\"/>\n<polygon points=\"181.5,379.2 214.3,398.1 181.5,417.1 148.6,398.1\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"568.0,435.5 578.4,441.5 578.4,445.5 568.0,439.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"568.0,435.5 578.4,441.5 578.4,445.5 568.0,439.5\" class=\"skf fnone\"/>\n<polygon points=\"588.7,435.5 578.4,441.5 578.4,445.5 588.7,439.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"588.7,435.5 578.4,441.5 578.4,445.5 588.7,439.5\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"588.7,435.5 578.4,441.5 578.4,445.5 588.7,439.5\" class=\"skf fnone\"/>\n<polygon points=\"578.4,429.5 588.7,435.5 578.4,441.5 568.0,435.5\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"217.2,426.0 236.3,437.0 236.3,458.0 217.2,447.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"217.2,426.0 236.3,437.0 236.3,458.0 217.2,447.0\" class=\"skr fnone\"/>\n<polygon points=\"255.3,426.0 236.3,437.0 236.3,458.0 255.3,447.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"255.3,426.0 236.3,437.0 236.3,458.0 255.3,447.0\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"255.3,426.0 236.3,437.0 236.3,458.0 255.3,447.0\" class=\"skr fnone\"/>\n<polygon points=\"236.3,415.0 255.3,426.0 236.3,437.0 217.2,426.0\" class=\"skr fp\"/>\n</g><polygon points=\"236.3,415.0 255.3,426.0 236.3,437.0 217.2,426.0\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"236.3,415.0 255.3,426.0 236.3,437.0 217.2,426.0\" class=\"skr fnone\"/>\n<g>\n<polygon points=\"1019.8,312.6 1085.0,350.2 1085.0,461.2 1019.8,423.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1019.8,312.6 1085.0,350.2 1085.0,461.2 1019.8,423.6\" class=\"sk fnone\"/>\n<polygon points=\"1150.1,312.6 1085.0,350.2 1085.0,461.2 1150.1,423.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1150.1,312.6 1085.0,350.2 1085.0,461.2 1150.1,423.6\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"1150.1,312.6 1085.0,350.2 1085.0,461.2 1150.1,423.6\" class=\"sk fnone\"/>\n<polygon points=\"1085.0,275.0 1150.1,312.6 1085.0,350.2 1019.8,312.6\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"606.9,458.0 617.3,464.0 617.3,468.0 606.9,462.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"606.9,458.0 617.3,464.0 617.3,468.0 606.9,462.0\" class=\"skf fnone\"/>\n<polygon points=\"627.7,458.0 617.3,464.0 617.3,468.0 627.7,462.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"627.7,458.0 617.3,464.0 617.3,468.0 627.7,462.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"627.7,458.0 617.3,464.0 617.3,468.0 627.7,462.0\" class=\"skf fnone\"/>\n<polygon points=\"617.3,452.0 627.7,458.0 617.3,464.0 606.9,458.0\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"1114.0,445.5 1138.4,459.5 1138.4,468.5 1114.0,454.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1114.0,445.5 1138.4,459.5 1138.4,468.5 1114.0,454.5\" class=\"sks fnone\"/>\n<polygon points=\"1162.7,445.5 1138.4,459.5 1138.4,468.5 1162.7,454.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1162.7,445.5 1138.4,459.5 1138.4,468.5 1162.7,454.5\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"1162.7,445.5 1138.4,459.5 1138.4,468.5 1162.7,454.5\" class=\"sks fnone\"/>\n<polygon points=\"1138.4,431.4 1162.7,445.5 1138.4,459.5 1114.0,445.5\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"388.6,433.0 426.8,455.1 426.8,470.1 388.6,448.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"388.6,433.0 426.8,455.1 426.8,470.1 388.6,448.0\" class=\"skf fnone\"/>\n<polygon points=\"465.0,433.0 426.8,455.1 426.8,470.1 465.0,448.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"465.0,433.0 426.8,455.1 426.8,470.1 465.0,448.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"465.0,433.0 426.8,455.1 426.8,470.1 465.0,448.0\" class=\"skf fnone\"/>\n<polygon points=\"426.8,411.0 465.0,433.0 426.8,455.1 388.6,433.0\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"247.1,457.7 261.8,466.2 261.8,470.2 247.1,461.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"247.1,457.7 261.8,466.2 261.8,470.2 247.1,461.7\" class=\"sks fnone\"/>\n<polygon points=\"276.5,457.7 261.8,466.2 261.8,470.2 276.5,461.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"276.5,457.7 261.8,466.2 261.8,470.2 276.5,461.7\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"276.5,457.7 261.8,466.2 261.8,470.2 276.5,461.7\" class=\"sks fnone\"/>\n<polygon points=\"261.8,449.3 276.5,457.7 261.8,466.2 247.1,457.7\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"961.9,463.0 972.4,469.1 972.4,473.1 961.9,467.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"961.9,463.0 972.4,469.1 972.4,473.1 961.9,467.0\" class=\"skr fnone\"/>\n<polygon points=\"982.8,463.0 972.4,469.1 972.4,473.1 982.8,467.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"982.8,463.0 972.4,469.1 972.4,473.1 982.8,467.0\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"982.8,463.0 972.4,469.1 972.4,473.1 982.8,467.0\" class=\"skr fnone\"/>\n<polygon points=\"972.4,457.0 982.8,463.0 972.4,469.1 961.9,463.0\" class=\"skr fp\"/>\n</g><polygon points=\"972.4,457.0 982.8,463.0 972.4,469.1 961.9,463.0\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"972.4,457.0 982.8,463.0 972.4,469.1 961.9,463.0\" class=\"skr fnone\"/>\n<g>\n<polygon points=\"645.9,478.5 656.3,484.5 656.3,490.5 645.9,484.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"645.9,478.5 656.3,484.5 656.3,490.5 645.9,484.5\" class=\"skf fnone\"/>\n<polygon points=\"666.7,478.5 656.3,484.5 656.3,490.5 666.7,484.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"666.7,478.5 656.3,484.5 656.3,490.5 666.7,484.5\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"666.7,478.5 656.3,484.5 656.3,490.5 666.7,484.5\" class=\"skf fnone\"/>\n<polygon points=\"656.3,472.5 666.7,478.5 656.3,484.5 645.9,478.5\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"1187.2,453.0 1214.9,469.0 1214.9,493.0 1187.2,477.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1187.2,453.0 1214.9,469.0 1214.9,493.0 1187.2,477.0\" class=\"sk fnone\"/>\n<polygon points=\"1242.5,453.0 1214.9,469.0 1214.9,493.0 1242.5,477.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1242.5,453.0 1214.9,469.0 1214.9,493.0 1242.5,477.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"1242.5,453.0 1214.9,469.0 1214.9,493.0 1242.5,477.0\" class=\"sk fnone\"/>\n<polygon points=\"1214.9,437.0 1242.5,453.0 1214.9,469.0 1187.2,453.0\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"665.0,491.5 675.3,497.5 675.3,501.5 665.0,495.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"665.0,491.5 675.3,497.5 675.3,501.5 665.0,495.5\" class=\"sks fnone\"/>\n<polygon points=\"685.7,491.5 675.3,497.5 675.3,501.5 685.7,495.5\" fill=\"var(--paper-2)\"/>\n<polygon points=\"685.7,491.5 675.3,497.5 675.3,501.5 685.7,495.5\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"685.7,491.5 675.3,497.5 675.3,501.5 685.7,495.5\" class=\"sks fnone\"/>\n<polygon points=\"675.3,485.5 685.7,491.5 675.3,497.5 665.0,491.5\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"970.8,466.0 1001.7,483.8 1001.7,501.8 970.8,484.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"970.8,466.0 1001.7,483.8 1001.7,501.8 970.8,484.0\" class=\"sks fnone\"/>\n<polygon points=\"1032.6,466.0 1001.7,483.8 1001.7,501.8 1032.6,484.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1032.6,466.0 1001.7,483.8 1001.7,501.8 1032.6,484.0\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"1032.6,466.0 1001.7,483.8 1001.7,501.8 1032.6,484.0\" class=\"sks fnone\"/>\n<polygon points=\"1001.7,448.2 1032.6,466.0 1001.7,483.8 970.8,466.0\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"285.9,488.4 314.2,504.7 314.2,513.7 285.9,497.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"285.9,488.4 314.2,504.7 314.2,513.7 285.9,497.4\" class=\"ska fnone\"/>\n<polygon points=\"342.5,488.4 314.2,504.7 314.2,513.7 342.5,497.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"342.5,488.4 314.2,504.7 314.2,513.7 342.5,497.4\" fill=\"url(#s7-ha)\"/>\n<polygon points=\"342.5,488.4 314.2,504.7 314.2,513.7 342.5,497.4\" class=\"ska fnone\"/>\n<polygon points=\"314.2,472.0 342.5,488.4 314.2,504.7 285.9,488.4\" class=\"ska fp\"/>\n</g><polygon points=\"314.2,472.0 342.5,488.4 314.2,504.7 285.9,488.4\" fill=\"url(#s7-ha)\"/>\n<polygon points=\"314.2,472.0 342.5,488.4 314.2,504.7 285.9,488.4\" class=\"ska fnone\"/>\n<g>\n<polygon points=\"466.9,481.9 513.4,508.7 513.4,529.7 466.9,502.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"466.9,481.9 513.4,508.7 513.4,529.7 466.9,502.9\" class=\"skf fnone\"/>\n<polygon points=\"559.9,481.9 513.4,508.7 513.4,529.7 559.9,502.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"559.9,481.9 513.4,508.7 513.4,529.7 559.9,502.9\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"559.9,481.9 513.4,508.7 513.4,529.7 559.9,502.9\" class=\"skf fnone\"/>\n<polygon points=\"513.4,455.0 559.9,481.9 513.4,508.7 466.9,481.9\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"324.1,514.0 350.0,528.9 350.0,532.9 324.1,518.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"324.1,514.0 350.0,528.9 350.0,532.9 324.1,518.0\" class=\"sks fnone\"/>\n<polygon points=\"375.8,514.0 350.0,528.9 350.0,532.9 375.8,518.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"375.8,514.0 350.0,528.9 350.0,532.9 375.8,518.0\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"375.8,514.0 350.0,528.9 350.0,532.9 375.8,518.0\" class=\"sks fnone\"/>\n<polygon points=\"350.0,499.1 375.8,514.0 350.0,528.9 324.1,514.0\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"1065.9,521.0 1076.3,527.0 1076.3,533.0 1065.9,527.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1065.9,521.0 1076.3,527.0 1076.3,533.0 1065.9,527.0\" class=\"sk fnone\"/>\n<polygon points=\"1086.7,521.0 1076.3,527.0 1076.3,533.0 1086.7,527.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1086.7,521.0 1076.3,527.0 1076.3,533.0 1086.7,527.0\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"1086.7,521.0 1076.3,527.0 1076.3,533.0 1086.7,527.0\" class=\"sk fnone\"/>\n<polygon points=\"1076.3,515.0 1086.7,521.0 1076.3,527.0 1065.9,521.0\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"1116.6,493.7 1145.6,510.5 1145.6,534.5 1116.6,517.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1116.6,493.7 1145.6,510.5 1145.6,534.5 1116.6,517.7\" class=\"sk fnone\"/>\n<polygon points=\"1174.6,493.7 1145.6,510.5 1145.6,534.5 1174.6,517.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1174.6,493.7 1145.6,510.5 1145.6,534.5 1174.6,517.7\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"1174.6,493.7 1145.6,510.5 1145.6,534.5 1174.6,517.7\" class=\"sk fnone\"/>\n<polygon points=\"1145.6,477.0 1174.6,493.7 1145.6,510.5 1116.6,493.7\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"1080.7,536.4 1099.6,547.3 1099.6,551.3 1080.7,540.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1080.7,536.4 1099.6,547.3 1099.6,551.3 1080.7,540.4\" class=\"sks fnone\"/>\n<polygon points=\"1118.4,536.4 1099.6,547.3 1099.6,551.3 1118.4,540.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"1118.4,536.4 1099.6,547.3 1099.6,551.3 1118.4,540.4\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"1118.4,536.4 1099.6,547.3 1099.6,551.3 1118.4,540.4\" class=\"sks fnone\"/>\n<polygon points=\"1099.6,525.6 1118.4,536.4 1099.6,547.3 1080.7,536.4\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"574.6,531.7 600.0,546.3 600.0,555.3 574.6,540.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"574.6,531.7 600.0,546.3 600.0,555.3 574.6,540.7\" class=\"skf fnone\"/>\n<polygon points=\"625.4,531.7 600.0,546.3 600.0,555.3 625.4,540.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"625.4,531.7 600.0,546.3 600.0,555.3 625.4,540.7\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"625.4,531.7 600.0,546.3 600.0,555.3 625.4,540.7\" class=\"skf fnone\"/>\n<polygon points=\"600.0,517.0 625.4,531.7 600.0,546.3 574.6,531.7\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"387.7,536.6 409.5,549.1 409.5,561.1 387.7,548.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"387.7,536.6 409.5,549.1 409.5,561.1 387.7,548.6\" class=\"skf fnone\"/>\n<polygon points=\"431.3,536.6 409.5,549.1 409.5,561.1 431.3,548.6\" fill=\"var(--paper-2)\"/>\n<polygon points=\"431.3,536.6 409.5,549.1 409.5,561.1 431.3,548.6\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"431.3,536.6 409.5,549.1 409.5,561.1 431.3,548.6\" class=\"skf fnone\"/>\n<polygon points=\"409.5,524.0 431.3,536.6 409.5,549.1 387.7,536.6\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"521.7,525.9 569.0,553.2 569.0,562.2 521.7,534.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"521.7,525.9 569.0,553.2 569.0,562.2 521.7,534.9\" class=\"sks fnone\"/>\n<polygon points=\"616.2,525.9 569.0,553.2 569.0,562.2 616.2,534.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"616.2,525.9 569.0,553.2 569.0,562.2 616.2,534.9\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"616.2,525.9 569.0,553.2 569.0,562.2 616.2,534.9\" class=\"sks fnone\"/>\n<polygon points=\"569.0,498.7 616.2,525.9 569.0,553.2 521.7,525.9\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"616.2,552.0 626.6,558.0 626.6,562.0 616.2,556.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"616.2,552.0 626.6,558.0 626.6,562.0 616.2,556.0\" class=\"sks fnone\"/>\n<polygon points=\"636.9,552.0 626.6,558.0 626.6,562.0 636.9,556.0\" fill=\"var(--paper-2)\"/>\n<polygon points=\"636.9,552.0 626.6,558.0 626.6,562.0 636.9,556.0\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"636.9,552.0 626.6,558.0 626.6,562.0 636.9,556.0\" class=\"sks fnone\"/>\n<polygon points=\"626.6,546.0 636.9,552.0 626.6,558.0 616.2,552.0\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"433.9,567.9 452.8,578.8 452.8,582.8 433.9,571.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"433.9,567.9 452.8,578.8 452.8,582.8 433.9,571.9\" class=\"skr fnone\"/>\n<polygon points=\"471.7,567.9 452.8,578.8 452.8,582.8 471.7,571.9\" fill=\"var(--paper-2)\"/>\n<polygon points=\"471.7,567.9 452.8,578.8 452.8,582.8 471.7,571.9\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"471.7,567.9 452.8,578.8 452.8,582.8 471.7,571.9\" class=\"skr fnone\"/>\n<polygon points=\"452.8,557.0 471.7,567.9 452.8,578.8 433.9,567.9\" class=\"skr fp\"/>\n</g><polygon points=\"452.8,557.0 471.7,567.9 452.8,578.8 433.9,567.9\" fill=\"url(#s7-hr)\"/>\n<polygon points=\"452.8,557.0 471.7,567.9 452.8,578.8 433.9,567.9\" class=\"skr fnone\"/>\n<g>\n<polygon points=\"493.1,583.7 513.4,595.4 513.4,599.4 493.1,587.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"493.1,583.7 513.4,595.4 513.4,599.4 493.1,587.7\" class=\"skf fnone\"/>\n<polygon points=\"533.7,583.7 513.4,595.4 513.4,599.4 533.7,587.7\" fill=\"var(--paper-2)\"/>\n<polygon points=\"533.7,583.7 513.4,595.4 513.4,599.4 533.7,587.7\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"533.7,583.7 513.4,595.4 513.4,599.4 533.7,587.7\" class=\"skf fnone\"/>\n<polygon points=\"513.4,572.0 533.7,583.7 513.4,595.4 493.1,583.7\" class=\"skf fp2\"/>\n</g>\n<g>\n<polygon points=\"520.6,601.2 543.8,614.6 543.8,618.6 520.6,605.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"520.6,601.2 543.8,614.6 543.8,618.6 520.6,605.2\" class=\"sks fnone\"/>\n<polygon points=\"567.0,601.2 543.8,614.6 543.8,618.6 567.0,605.2\" fill=\"var(--paper-2)\"/>\n<polygon points=\"567.0,601.2 543.8,614.6 543.8,618.6 567.0,605.2\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"567.0,601.2 543.8,614.6 543.8,618.6 567.0,605.2\" class=\"sks fnone\"/>\n<polygon points=\"543.8,587.9 567.0,601.2 543.8,614.6 520.6,601.2\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"840.1,593.4 877.1,614.7 877.1,638.7 840.1,617.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"840.1,593.4 877.1,614.7 877.1,638.7 840.1,617.4\" class=\"sk fnone\"/>\n<polygon points=\"914.1,593.4 877.1,614.7 877.1,638.7 914.1,617.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"914.1,593.4 877.1,614.7 877.1,638.7 914.1,617.4\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"914.1,593.4 877.1,614.7 877.1,638.7 914.1,617.4\" class=\"sk fnone\"/>\n<polygon points=\"877.1,572.0 914.1,593.4 877.1,614.7 840.1,593.4\" class=\"sk fp\"/>\n</g>\n<g>\n<polygon points=\"895.0,634.4 913.6,645.2 913.6,649.2 895.0,638.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"895.0,634.4 913.6,645.2 913.6,649.2 895.0,638.4\" class=\"sks fnone\"/>\n<polygon points=\"932.2,634.4 913.6,645.2 913.6,649.2 932.2,638.4\" fill=\"var(--paper-2)\"/>\n<polygon points=\"932.2,634.4 913.6,645.2 913.6,649.2 932.2,638.4\" fill=\"url(#s7-hd)\"/>\n<polygon points=\"932.2,634.4 913.6,645.2 913.6,649.2 932.2,638.4\" class=\"sks fnone\"/>\n<polygon points=\"913.6,623.7 932.2,634.4 913.6,645.2 895.0,634.4\" class=\"sks fp2\"/>\n</g>\n<g>\n<polygon points=\"731.1,626.3 799.2,665.6 799.2,719.6 731.1,680.3\" fill=\"var(--paper-2)\"/>\n<polygon points=\"731.1,626.3 799.2,665.6 799.2,719.6 731.1,680.3\" class=\"sk fnone\"/>\n<polygon points=\"867.2,626.3 799.2,665.6 799.2,719.6 867.2,680.3\" fill=\"var(--paper-2)\"/>\n<polygon points=\"867.2,626.3 799.2,665.6 799.2,719.6 867.2,680.3\" fill=\"url(#s7-hx)\"/>\n<polygon points=\"867.2,626.3 799.2,665.6 799.2,719.6 867.2,680.3\" class=\"sk fnone\"/>\n<polygon points=\"799.2,587.0 867.2,626.3 799.2,665.6 731.1,626.3\" class=\"sk fp\"/>\n</g>\n</svg>"
@@ -103,6 +103,14 @@
       "title": "THE COUPLING BENCH",
       "rev": "C",
       "desc": "the bow deleted and the bench recomposed in four columns"
+    },
+    {
+      "date": "2026-09-06",
+      "num": "2B",
+      "head": "SHEET 2B",
+      "title": "THE COUPLING BENCH",
+      "rev": "B",
+      "desc": "the intra-column lit-ui-router-mobx → lit-ui-router tie bowed out of the column, because it ran straight through the navigation plugin standing between them"
     },
     {
       "date": "2026-09-06",
@@ -233,6 +241,22 @@
       "desc": "hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge…"
     },
     {
+      "date": "2026-09-05",
+      "num": "11",
+      "head": "SHEET 11",
+      "title": "THE ENTRY QUARTERS",
+      "rev": "D",
+      "desc": "whole-cabinet re-probe — 14 of 16 doors byte-identical, the lint plugin's up 1,917 → 3,510 gz on #689's three new rules and the mobx door 650 → 908 gz at mobx 1.0.0"
+    },
+    {
+      "date": "2026-09-05",
+      "num": "12",
+      "head": "SHEET 12",
+      "title": "THE REGISTER PLATE",
+      "rev": "D",
+      "desc": "whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96"
+    },
+    {
       "date": "2026-09-04",
       "num": "3B",
       "head": "SHEET 3B",
@@ -274,11 +298,163 @@
     },
     {
       "date": "2026-09-03",
+      "num": "1",
+      "head": "SHEET 1",
+      "title": "THE RENDER LOOP",
+      "rev": "E",
+      "desc": "the version reads census-files.json — 1.9.0 was a hand-typed relic"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "2A",
+      "head": "SHEET 2A",
+      "title": "THE COUPLING PLAN",
+      "rev": "B",
+      "desc": "rows read census-bricks.json @ 185d414 — lit-ui-router 1.9.0"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "3",
+      "head": "SHEET 3",
+      "title": "THE INSTRUMENT YARD",
+      "rev": "E",
+      "desc": "the altitude line reads the plates — 44 task names was a hand-typed relic"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "3",
+      "head": "SHEET 3",
+      "title": "THE INSTRUMENT YARD",
+      "rev": "D",
+      "desc": "the task-manager inset reads census-handoff.json + census-plate.json"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "3A",
+      "head": "SHEET 3A",
+      "title": "THE HANDOFF WORKS",
+      "rev": "D",
+      "desc": "whole-cabinet refresh — mise unmoved a third time, turbo down to 17 files / 96 definitions"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "3A",
+      "head": "SHEET 3A",
+      "title": "THE HANDOFF WORKS",
+      "rev": "C",
+      "desc": "the vanished tmp/ census is a scripted probe"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "3B",
+      "head": "SHEET 3B",
+      "title": "THE WATCHED CITY",
+      "rev": "E",
+      "desc": "whole-cabinet refresh — #693 swapped one root guard for two, so the yard is re-platted and the plate stands at 183 real tasks in 28 structures"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "4",
+      "head": "SHEET 4",
+      "title": "THE FAMILY SPINE",
+      "rev": "D",
+      "desc": "whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "7A",
+      "head": "SHEET 7A",
+      "title": "THE SHADOW SURVEY",
+      "rev": "E",
+      "desc": "RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (metered at origin/main @ 185d414 (2026-09-07))"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "7B",
+      "head": "SHEET 7B",
+      "title": "THE WORKING CITY",
+      "rev": "E",
+      "desc": "the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, origin/main @ 185d414), so rust is the last editorial channel on this sheet and…"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "7B",
+      "head": "SHEET 7B",
+      "title": "THE WORKING CITY",
+      "rev": "D",
+      "desc": "whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (24 real of 114 nodes) instead of a hand-pasted 22 of 113"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "city",
+      "head": "SHEET 7 · 3D",
+      "title": "THE CITY — ISOMETRIC",
+      "rev": "D",
+      "desc": "THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "city",
+      "head": "SHEET 7 · 3D",
+      "title": "THE CITY — ISOMETRIC",
+      "rev": "C",
+      "desc": "A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
+      "rev": "F",
+      "desc": "whole-cabinet refresh — the HTML pages overtook Inter, measured at origin/main @ b2338d0 (2026-09-04)"
+    },
+    {
+      "date": "2026-09-03",
       "num": "9",
       "head": "SHEET 9",
       "title": "THE SHIPPED CITY",
       "rev": "E",
       "desc": "every count now imported from diagrams/data/census-shipped.json"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "10",
+      "head": "SHEET 10",
+      "title": "THE BUNDLED CITY",
+      "rev": "C",
+      "desc": "every byte now read from the census-bundle plate"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "11",
+      "head": "SHEET 11",
+      "title": "THE ENTRY QUARTERS",
+      "rev": "C",
+      "desc": "every byte now read from diagrams/data/census-doors.json"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "13",
+      "head": "SHEET 13",
+      "title": "THE WEATHERING MAP",
+      "rev": "D",
+      "desc": "whole-cabinet refresh — 319 dated files, every band re-tested and held"
+    },
+    {
+      "date": "2026-09-03",
+      "num": "14",
+      "head": "SHEET 14",
+      "title": "THE SURVEY OFFICE",
+      "rev": "B",
+      "desc": "the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap"
+    },
+    {
+      "date": "2026-09-02",
+      "num": "3",
+      "head": "SHEET 3",
+      "title": "THE INSTRUMENT YARD",
+      "rev": "C",
+      "desc": "census refresh — every mass counted at origin/main @ 185d414 (2026-09-07) from diagrams/data/census-yard.json (scc Code lines), 203 authored files and 13,998 sloc across 17 massed…"
     },
     {
       "date": "2026-09-02",
@@ -287,6 +463,30 @@
       "title": "THE WATCHED CITY",
       "rev": "D",
       "desc": "every number now imported from diagrams/data/census-mass3b.json"
+    },
+    {
+      "date": "2026-09-02",
+      "num": "4",
+      "head": "SHEET 4",
+      "title": "THE FAMILY SPINE",
+      "rev": "C",
+      "desc": "every version and publish date imported from census-npm.json (npm registry read 2026-09-07), core and this repo's mass from census-bricks.json"
+    },
+    {
+      "date": "2026-09-02",
+      "num": "12",
+      "head": "SHEET 12",
+      "title": "THE REGISTER PLATE",
+      "rev": "C",
+      "desc": "every number now imported from diagrams/data/census-plate.json"
+    },
+    {
+      "date": "2026-09-02",
+      "num": "13",
+      "head": "SHEET 13",
+      "title": "THE WEATHERING MAP",
+      "rev": "C",
+      "desc": "re-dated off the plate at TODAY = 2026-09-06, with the fifth published package in the universe"
     },
     {
       "date": "2026-09-01",
@@ -298,11 +498,27 @@
     },
     {
       "date": "2026-08-31",
+      "num": "3A",
+      "head": "SHEET 3A",
+      "title": "THE HANDOFF WORKS",
+      "rev": "B",
+      "desc": "census refresh 2026-08-31"
+    },
+    {
+      "date": "2026-08-31",
       "num": "3B",
       "head": "SHEET 3B",
       "title": "THE WATCHED CITY",
       "rev": "C",
       "desc": "re-surveyed at turbo 2.10.11 — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane"
+    },
+    {
+      "date": "2026-08-31",
+      "num": "3B",
+      "head": "SHEET 3B",
+      "title": "THE WATCHED CITY",
+      "rev": "B",
+      "desc": "hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering"
     },
     {
       "date": "2026-08-31",
@@ -346,6 +562,14 @@
     },
     {
       "date": "2026-08-31",
+      "num": "7B",
+      "head": "SHEET 7B",
+      "title": "THE WORKING CITY",
+      "rev": "B",
+      "desc": "hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap"
+    },
+    {
+      "date": "2026-08-31",
       "num": "8",
       "head": "SHEET 8",
       "title": "THE DELIVERED CITY",
@@ -353,7 +577,47 @@
       "desc": "hidden-line pass — opaque faces, masses painted back to front, no rear wall through a front one"
     },
     {
-      "date": "",
+      "date": "2026-08-31",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
+      "rev": "D",
+      "desc": "hidden-line pass — opaque tenant walls painted back to front"
+    },
+    {
+      "date": "2026-08-31",
+      "num": "12",
+      "head": "SHEET 12",
+      "title": "THE REGISTER PLATE",
+      "rev": "B",
+      "desc": "census refresh 2026-08-31 — three new members, three new rows, the phantom share held"
+    },
+    {
+      "date": "2026-08-31",
+      "num": "13",
+      "head": "SHEET 13",
+      "title": "THE WEATHERING MAP",
+      "rev": "B",
+      "desc": "drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption"
+    },
+    {
+      "date": "2026-08-17",
+      "num": "7A",
+      "head": "SHEET 7A",
+      "title": "THE SHADOW SURVEY",
+      "rev": "B",
+      "desc": "polarity corrected — the tests are the light, shadow is the untested"
+    },
+    {
+      "date": "2026-08-17",
+      "num": "8",
+      "head": "SHEET 8",
+      "title": "THE DELIVERED CITY",
+      "rev": "C",
+      "desc": "recounted after the lit de-duplication · 2026-08-17"
+    },
+    {
+      "date": "2026-08-16",
       "num": "1",
       "head": "SHEET 1",
       "title": "THE RENDER LOOP",
@@ -361,15 +625,7 @@
       "desc": "the loop routed on the iso grid"
     },
     {
-      "date": "",
-      "num": "1",
-      "head": "SHEET 1",
-      "title": "THE RENDER LOOP",
-      "rev": "E",
-      "desc": "the version reads census-files.json — 1.9.0 was a hand-typed relic"
-    },
-    {
-      "date": "",
+      "date": "2026-08-16",
       "num": "2",
       "head": "SHEET 2",
       "title": "THE BRICK ASSEMBLY",
@@ -377,103 +633,7 @@
       "desc": "the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ 185d414 (2026-09-07)"
     },
     {
-      "date": "",
-      "num": "2A",
-      "head": "SHEET 2A",
-      "title": "THE COUPLING PLAN",
-      "rev": "B",
-      "desc": "rows read census-bricks.json @ 185d414 — lit-ui-router 1.9.0"
-    },
-    {
-      "date": "",
-      "num": "2B",
-      "head": "SHEET 2B",
-      "title": "THE COUPLING BENCH",
-      "rev": "B",
-      "desc": "the intra-column lit-ui-router-mobx → lit-ui-router tie bowed out of the column, because it ran straight through the navigation plugin standing between them"
-    },
-    {
-      "date": "",
-      "num": "3",
-      "head": "SHEET 3",
-      "title": "THE INSTRUMENT YARD",
-      "rev": "C",
-      "desc": "census refresh — every mass counted at origin/main @ 185d414 (2026-09-07) from diagrams/data/census-yard.json (scc Code lines), 203 authored files and 13,998 sloc across 17 massed…"
-    },
-    {
-      "date": "",
-      "num": "3",
-      "head": "SHEET 3",
-      "title": "THE INSTRUMENT YARD",
-      "rev": "D",
-      "desc": "the task-manager inset reads census-handoff.json + census-plate.json"
-    },
-    {
-      "date": "",
-      "num": "3",
-      "head": "SHEET 3",
-      "title": "THE INSTRUMENT YARD",
-      "rev": "E",
-      "desc": "the altitude line reads the plates — 44 task names was a hand-typed relic"
-    },
-    {
-      "date": "",
-      "num": "3A",
-      "head": "SHEET 3A",
-      "title": "THE HANDOFF WORKS",
-      "rev": "B",
-      "desc": "census refresh 2026-08-31"
-    },
-    {
-      "date": "",
-      "num": "3A",
-      "head": "SHEET 3A",
-      "title": "THE HANDOFF WORKS",
-      "rev": "C",
-      "desc": "the vanished tmp/ census is a scripted probe"
-    },
-    {
-      "date": "",
-      "num": "3A",
-      "head": "SHEET 3A",
-      "title": "THE HANDOFF WORKS",
-      "rev": "D",
-      "desc": "whole-cabinet refresh — mise unmoved a third time, turbo down to 17 files / 96 definitions"
-    },
-    {
-      "date": "",
-      "num": "3B",
-      "head": "SHEET 3B",
-      "title": "THE WATCHED CITY",
-      "rev": "B",
-      "desc": "hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering"
-    },
-    {
-      "date": "",
-      "num": "3B",
-      "head": "SHEET 3B",
-      "title": "THE WATCHED CITY",
-      "rev": "E",
-      "desc": "whole-cabinet refresh — #693 swapped one root guard for two, so the yard is re-platted and the plate stands at 183 real tasks in 28 structures"
-    },
-    {
-      "date": "",
-      "num": "4",
-      "head": "SHEET 4",
-      "title": "THE FAMILY SPINE",
-      "rev": "C",
-      "desc": "every version and publish date imported from census-npm.json (npm registry read 2026-09-07), core and this repo's mass from census-bricks.json"
-    },
-    {
-      "date": "",
-      "num": "4",
-      "head": "SHEET 4",
-      "title": "THE FAMILY SPINE",
-      "rev": "D",
-      "desc": "whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart"
-    },
-    {
-      "date": "",
+      "date": "2026-08-16",
       "num": "7",
       "head": "SHEET 7",
       "title": "THE MEASURED CITY",
@@ -482,163 +642,115 @@
     },
     {
       "date": "",
-      "num": "7A",
-      "head": "SHEET 7A",
-      "title": "THE SHADOW SURVEY",
+      "num": "2",
+      "head": "SHEET 2",
+      "title": "THE BRICK ASSEMBLY",
+      "rev": "A",
+      "desc": "Why bricks. Rev A drew these packages as sockets and panels and conceded the form broke. The mechanism they actually share is a standardised coupling: each companion attaches to…"
+    },
+    {
+      "date": "",
+      "num": "2A",
+      "head": "SHEET 2A",
+      "title": "THE COUPLING PLAN",
+      "rev": "A",
+      "desc": "This plate is the legibility companion to sheet 2. The exploded assembly (sheet 2, THE BRICK ASSEMBLY) shows the whole stack and where every brick falls"
+    },
+    {
+      "date": "",
+      "num": "3",
+      "head": "SHEET 3",
+      "title": "THE INSTRUMENT YARD",
+      "rev": "A",
+      "desc": "Mass is volume; volume does not predict authority. Footprint side is 1.6"
+    },
+    {
+      "date": "",
+      "num": "3",
+      "head": "SHEET 3",
+      "title": "THE INSTRUMENT YARD",
       "rev": "B",
-      "desc": "polarity corrected — the tests are the light, shadow is the untested"
+      "desc": "caption: 'The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B…"
     },
     {
       "date": "",
-      "num": "7A",
-      "head": "SHEET 7A",
-      "title": "THE SHADOW SURVEY",
-      "rev": "E",
-      "desc": "RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (metered at origin/main @ 185d414 (2026-09-07))"
+      "num": "3A",
+      "head": "SHEET 3A",
+      "title": "THE HANDOFF WORKS",
+      "rev": "A",
+      "desc": "Method — one census, cited throughout. Every count on this plate comes from a fresh 2026-08-17 census of the repo at HEAD: the 11 workflow files, all 17 turbo.json files,…"
     },
     {
       "date": "",
-      "num": "7B",
-      "head": "SHEET 7B",
-      "title": "THE WORKING CITY",
+      "num": "4",
+      "head": "SHEET 4",
+      "title": "THE FAMILY SPINE",
       "rev": "B",
-      "desc": "hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap"
-    },
-    {
-      "date": "",
-      "num": "7B",
-      "head": "SHEET 7B",
-      "title": "THE WORKING CITY",
-      "rev": "D",
-      "desc": "whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (24 real of 114 nodes) instead of a hand-pasted 22 of 113"
-    },
-    {
-      "date": "",
-      "num": "7B",
-      "head": "SHEET 7B",
-      "title": "THE WORKING CITY",
-      "rev": "E",
-      "desc": "the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, origin/main @ 185d414), so rust is the last editorial channel on this sheet and…"
-    },
-    {
-      "date": "",
-      "num": "city",
-      "head": "SHEET 7 · 3D",
-      "title": "THE CITY — ISOMETRIC",
-      "rev": "C",
-      "desc": "A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY"
-    },
-    {
-      "date": "",
-      "num": "city",
-      "head": "SHEET 7 · 3D",
-      "title": "THE CITY — ISOMETRIC",
-      "rev": "D",
-      "desc": "THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF"
+      "desc": "caption: `Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other"
     },
     {
       "date": "",
       "num": "8",
       "head": "SHEET 8",
       "title": "THE DELIVERED CITY",
+      "rev": "A",
+      "desc": "The drawing changed the city — twice. Rev A drew lodash 4.18.1 as the tallest building on the skyline"
+    },
+    {
+      "date": "",
+      "num": "8",
+      "head": "SHEET 8",
+      "title": "THE DELIVERED CITY",
+      "rev": "B",
+      "desc": "${txt(1120, 48, 'rev B drew the lit stack twice (2.8.0"
+    },
+    {
+      "date": "",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
+      "rev": "A",
+      "desc": "The ghost district was the instrument, twice. Rev A reported twelve orphan files, 138 KB of dead weight in every deploy"
+    },
+    {
+      "date": "",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
+      "rev": "B",
+      "desc": "The panel that waited its turn. The api-viewer docs panel"
+    },
+    {
+      "date": "",
+      "num": "9",
+      "head": "SHEET 9",
+      "title": "THE SHIPPED CITY",
       "rev": "C",
-      "desc": "recounted after the lit de-duplication · 2026-08-17"
-    },
-    {
-      "date": "",
-      "num": "9",
-      "head": "SHEET 9",
-      "title": "THE SHIPPED CITY",
-      "rev": "D",
-      "desc": "hidden-line pass — opaque tenant walls painted back to front"
-    },
-    {
-      "date": "",
-      "num": "9",
-      "head": "SHEET 9",
-      "title": "THE SHIPPED CITY",
-      "rev": "F",
-      "desc": "whole-cabinet refresh — the HTML pages overtook Inter, measured at origin/main @ b2338d0 (2026-09-04)"
+      "desc": "The product is a guest in its own city. The three routed sample apps"
     },
     {
       "date": "",
       "num": "10",
       "head": "SHEET 10",
       "title": "THE BUNDLED CITY",
-      "rev": "C",
-      "desc": "every byte now read from the census-bundle plate"
+      "rev": "A",
+      "desc": "The déjà vu is gone. Rev A's one redundancy tree-shaking could not reach"
     },
     {
       "date": "",
       "num": "11",
       "head": "SHEET 11",
       "title": "THE ENTRY QUARTERS",
-      "rev": "C",
-      "desc": "every byte now read from diagrams/data/census-doors.json"
+      "rev": "A",
+      "desc": "The server is a storefront, not a tower. Eight doors: an index at ${fmt(SRV.gz)} gz"
     },
     {
       "date": "",
       "num": "11",
       "head": "SHEET 11",
       "title": "THE ENTRY QUARTERS",
-      "rev": "D",
-      "desc": "whole-cabinet re-probe — 14 of 16 doors byte-identical, the lint plugin's up 1,917 → 3,510 gz on #689's three new rules and the mobx door 650 → 908 gz at mobx 1.0.0"
-    },
-    {
-      "date": "",
-      "num": "12",
-      "head": "SHEET 12",
-      "title": "THE REGISTER PLATE",
       "rev": "B",
-      "desc": "census refresh 2026-08-31 — three new members, three new rows, the phantom share held"
-    },
-    {
-      "date": "",
-      "num": "12",
-      "head": "SHEET 12",
-      "title": "THE REGISTER PLATE",
-      "rev": "C",
-      "desc": "every number now imported from diagrams/data/census-plate.json"
-    },
-    {
-      "date": "",
-      "num": "12",
-      "head": "SHEET 12",
-      "title": "THE REGISTER PLATE",
-      "rev": "D",
-      "desc": "whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96"
-    },
-    {
-      "date": "",
-      "num": "13",
-      "head": "SHEET 13",
-      "title": "THE WEATHERING MAP",
-      "rev": "B",
-      "desc": "drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption"
-    },
-    {
-      "date": "",
-      "num": "13",
-      "head": "SHEET 13",
-      "title": "THE WEATHERING MAP",
-      "rev": "C",
-      "desc": "re-dated off the plate at TODAY = 2026-09-06, with the fifth published package in the universe"
-    },
-    {
-      "date": "",
-      "num": "13",
-      "head": "SHEET 13",
-      "title": "THE WEATHERING MAP",
-      "rev": "D",
-      "desc": "whole-cabinet refresh — 319 dated files, every band re-tested and held"
-    },
-    {
-      "date": "",
-      "num": "14",
-      "head": "SHEET 14",
-      "title": "THE SURVEY OFFICE",
-      "rev": "B",
-      "desc": "the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap"
+      "desc": "// graduated after rev B, so it takes 16 and leaves rev B's numbering intact."
     }
   ],
   "sheets": [
@@ -646,8 +758,8 @@
       "id": "1",
       "num": "1",
       "title": "THE RENDER LOOP",
-      "sub": "ALTITUDE 1 — lit-ui-router 1.11.2 · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic · REV F 2026-09-06: fills — every block’s left face and the Tilt plates’ flanks now carry their paper-2 tint, and the right faces their hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no geometry moved · REV G 2026-09-06: the five doors re-cut — each frame tightened to the DIN line it now carries (144 → 116 wide) and the strip hung on the right end of the footer rule, so the band reads title left, doors right instead of trailing 200px of empty paper",
-      "caption": "Rev D puts the loop on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city still breaks its metaphor once, on purpose: the document is not a building — it is a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.",
+      "sub": "ALTITUDE 1 — lit-ui-router 1.11.2 · the client circuit drawn as one isometric scene: every leg of the loop is a road on the grid, the document a browser window whose DOM rises in plates, and the five package entries a door strip along the footer · version read from census-files.json",
+      "caption": "The loop sits on the ground: every leg is a road that turns along the iso axes and stops short of the wall it points at. The city breaks its metaphor once, on purpose — the document is not a building but a browser window whose DOM rises in plates. The core matches, the hall runs its hook bays, Lit commits onto a layer, and a click on the topmost plate flies back to location.",
       "scale": "ONE PACKAGE",
       "verdict": "strong fit — the render cycle is a genuine circuit",
       "form": "ISO CIRCUIT",
@@ -686,7 +798,7 @@
       "id": "2",
       "num": "2",
       "title": "THE BRICK ASSEMBLY",
-      "sub": "ALTITUDE 2 — one baseplate, four bricks, 27 authored files · REV B: the companions redrawn as an exploded LEGO assembly, every coupling named to its API call, source counted at origin/main @ 185d414 (2026-09-07) · REV C 2026-09-05: hidden line — every brick, plate and stud face is drawn OPAQUE now (a stroke class’s fill:none was outranking the fill attribute, so the flanks were see-through: brick 1’s top edge and studs read straight through brick 3, and the second plate’s studs through brick 4), and the two masses that fault had hidden are recomposed for air — brick 3 lifts clear of the seat ring it drops onto, and brick 4 moves onto its own plate’s iso axis, its left face standing over the plate’s left edge",
+      "sub": "ALTITUDE 2 — one baseplate, four bricks, 27 authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · source counted at origin/main @ 185d414 (2026-09-07)",
       "caption": "Every companion enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.",
       "scale": "COMPANIONS",
       "verdict": "exploded: every coupling is a published stud on core — and the server takes none",
@@ -707,8 +819,8 @@
       "id": "2a",
       "num": "2A",
       "title": "THE COUPLING PLAN",
-      "sub": "ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ 185d414 — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count · REV C 2026-09-06: fills — the slab tops now carry their paper-2 tint and the right flanks their hatch, sheet 2’s rev C fault in this plate’s own slab helper; nothing moved · REV D 2026-09-06: the two clamped companions re-cut to the line they frame — the location plugin 180 → 156 wide and the mobx brick 160 → 136, both slabs having been sized to the mono lettering the data face replaced; every other block keeps its sloc-proportional face",
-      "caption": "The brick assembly, uncoupled and brought back to rev A’s elevation: core as a socket wall, companions as shallow blocks drawn just short of seated, and each of the six connection points — five published studs and one keyed red seat — large enough to letter its API call on the joint itself.",
+      "sub": "ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ 185d414",
+      "caption": "The brick assembly, uncoupled and brought down to one elevation: core as a socket wall, companions as shallow blocks drawn just short of seated, and each of the six connection points — five published studs and one keyed red seat — large enough to letter its API call on the joint itself.",
       "scale": "COMPANIONS",
       "verdict": "alternate plate — the same joints at reading size; nothing plugs anything but the wall",
       "form": "COUPLING PLAN",
@@ -729,7 +841,7 @@
       "id": "2b",
       "num": "2B",
       "title": "THE COUPLING BENCH",
-      "sub": "ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · 7 nodes · every one of the 7 drawn edges is a published contract, with its declared range under the pointer · REV B: the intra-column lit-ui-router-mobx → lit-ui-router tie bowed out of the column, because it ran straight through the navigation plugin standing between them · REV C 2026-09-06: the bow deleted and the bench recomposed in four columns — ui-router-navigation-location-plugin declares core and nothing else, so it leaves the lit column for a middle column of its own on the wall’s baseline, its one tie a straight horizontal run; with nothing left standing between them the mobx tie is a plain vertical, a same-column tie laid through a third building is now a build error rather than a curve drawn around it, and the two longest bands letter over their node so the fit is priced on the buildings rather than on the captions",
+      "sub": "ALTITUDE 2 — INTERACTIVE PLATE: sheet 2A’s joints made live · 7 nodes in four columns, every tie a straight run · each of the 7 drawn edges is a published contract, with its declared range under the pointer",
       "caption": "The same assembly as sheets 2 and 2A, reduced to what a consumer's installer actually reads: seven buildings and 7 contracts. Hover an edge for the range it declares and the section it lives in; hover a building for its version, what it declares, and what declares it.",
       "scale": "COMPANIONS, CONTRACTED",
       "verdict": "2A’s joints made live — every one of the 7 drawn edges is a published contract with its declared range under the pointer: 10 peers to 2 dependencies across the five packages, and neither dependency is a router",
@@ -752,10 +864,10 @@
       "id": "3",
       "num": "3",
       "title": "THE INSTRUMENT YARD",
-      "sub": "ALTITUDE 3 — 5 publishable packages · 20 tools · 70 turbo task names · one packer, many readers · REV C: census refresh — every mass counted at origin/main @ 185d414 (2026-09-07) from diagrams/data/census-yard.json (scc Code lines), 203 authored files and 13,998 sloc across 17 massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci 605 nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic · REV F 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (the fault sheet 7’s rev C worked around per plate — a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved · REV G 2026-09-06: mass 1’s badge takes the far corner of its roof — at the data face the aqua-tool-belt caption reached under the old centred badge, so the site now keeps clear of the inset’s frame rather than pushing a label through it · REV H 2026-09-07: the shopfront's district lettering reads apps/ + www/ — #717 moved the documentation site out of docs/, and no directory of that name is left to letter",
-      "caption": "The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Rev B gives every structure its measured mass — footprint ∝ √sloc, height ∝ authored files — and moves gate severity out of height and into colour, because the two never correlated: the blocks that stop the line are among the smallest on the sheet.",
+      "sub": "ALTITUDE 3 — 5 publishable packages · 20 tools · 70 turbo task names · one packer, many readers · every mass counted at origin/main @ 185d414 (2026-09-07) from diagrams/data/census-yard.json on scc Code lines — 203 authored files and 13,998 sloc across 17 massed structures, with the task-manager inset reading the same two plates sheet 3A draws",
+      "caption": "The monorepo drawn as what it functionally is: a short conveyor that turns source into one tarball, inside a yard of instruments built to measure that tarball. Every structure carries its measured mass — footprint ∝ √sloc, height ∝ authored files — and gate severity is colour rather than height, because the two do not correlate: the blocks that stop the line are among the smallest on the sheet.",
       "scale": "MONOREPO",
-      "verdict": "the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line (REV D: the task-manager inset reads the plates too, so it can no longer disagree with 3A)",
+      "verdict": "the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line; the task-manager inset reads the same plates as 3A, so the two cannot disagree",
       "form": "ISOMETRIC CITY",
       "rev": "H",
       "file": "sheets/3.html",
@@ -769,18 +881,18 @@
         "census-yard.json"
       ],
       "refs": [
-        "4",
-        "7"
+        "3A",
+        "4"
       ]
     },
     {
       "id": "3a",
       "num": "3A",
       "title": "THE HANDOFF WORKS",
-      "sub": "ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 11 workflows · 49 mise tasks in 4 homes · turbo ci 605 nodes, 183 real · 4 seam types · 3 service doors · REV B: census refresh 2026-08-31 · REV C: the vanished tmp/ census is a scripted probe — every count imported from diagrams/data/census-handoff.json + census-plate.json · REV D: whole-cabinet refresh — mise unmoved a third time, turbo down to 17 files / 96 definitions · REV E 2026-09-06: recomposed to the data face — every frame on this plate was drawn to the old mono advance and is now sized to the widest DIN line it holds, so the spine is computed rather than hand-set: the Actions panel, the mise compartments and the service-door catalogue tighten to their own measure, the freed width goes to the two seam corridors and to the turbo core, which finally fits its re-entrant-ports line, one leading runs through all four mise compartments and each is as tall as its task list, and the bottom band files as three columns on even gutters · counted at origin/main @ 185d414 (2026-09-07)",
+      "sub": "ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 11 workflows · 49 mise tasks in 4 homes · turbo ci 605 nodes, 183 real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from diagrams/data/census-handoff.json + census-plate.json · counted at origin/main @ 185d414 (2026-09-07)",
       "caption": "The two task managers drawn as the two machines they are — mise the node-free umbrella, turbo the cached fan-out — with the seams as the featured parts: every crossing is a bolted gasket labeled with what crosses it and what the boundary buys. The star fitting is the cache gasket on the return duct: turbo caches mise, because the six re-entrant lint lanes hash the mise task files and mise.lock, so a tool-pin bump invalidates exactly its own lane.",
       "scale": "TWO TASK MANAGERS",
-      "verdict": "turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch (REV D: counts imported; mise unmoved a third time, turbo at 98 definitions in 17 files)",
+      "verdict": "turbo caches mise — and the loop is a DAG in a loop costume: the 7 callers and the 7 called never touch; every count imported, turbo at 98 definitions in 17 files",
       "form": "COUPLING SCHEMATIC",
       "rev": "E",
       "file": "sheets/3a.html",
@@ -799,10 +911,10 @@
       "id": "3b",
       "num": "3B",
       "title": "THE WATCHED CITY",
-      "sub": "ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 183 real tasks in 28 massed structures · footprint = watched files (46,781 task-file hashes) · height = command sloc (2,118) · 422 phantom plots · REV B: hidden-line pass — opaque walls painted back to front, and the main-line annex reseated clear of the plain’s lettering · REV C 2026-08-31: re-surveyed at turbo 2.10.11 — the graph grew, the plain widened by a third, and //#lint:elements stopped being a one-line lane · REV C corrected 2026-09-01: every height re-derived on scc 4.0.0 by census-mass3b.mjs — command sloc 1,737 → 1,774, flat blocks 134 → 130, and the plain re-measured on a clean tree at 17,692 files · REV D 2026-09-02: every number now imported from diagrams/data/census-mass3b.json — the re-based survey grew a fifth package quarter (eslint-plugin-lit-ui-router, 9 tasks), 165 → 176 real tasks and 1,774 → 2,022 command sloc · REV E: whole-cabinet refresh — #693 swapped one root guard for two, so the yard is re-platted and the plate stands at 183 real tasks in 28 structures · REV F 2026-09-04: refreshed after the 1.11.2 + mobx 1.0.0 releases — @tools/embed-heights (#703) takes four rows on the instrument terrace, and the examples plain grew from 17,821 to 31,866 watched files, so the harbour's note moved to clear its corner — surveyed at origin/main @ 185d414 (2026-09-07) · REV G 2026-09-06: the schedule re-ruled — the right column stood half a pixel off the longest //# row, so the band's spare measure is now split evenly into a 40px gutter and a 40px right margin, and the roads note wraps rather than running 57px off the sheet · REV H 2026-09-07: re-surveyed at origin/main @ 185d414 after #716 and #717 — the examples plain grew again and its south vertex crossed the old art edge into the schedule band, so the art region is 70px deeper and the plain's own lettering sits clear beneath the vertex instead of under it",
-      "caption": "The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 143 of 183 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 291-line test tower on a 32-file lot, a 70-line patch check on a 646-file lot, a 31,866-file plain patrolled by 25 lines of command, and a root lint lane that grew a 401-sloc spire when it stopped being one eslint line.",
+      "sub": "ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 183 real tasks in 28 massed structures · footprint = watched files (46,781 task-file hashes) · height = command sloc (2,118) · 422 phantom plots · every number imported from diagrams/data/census-mass3b.json, surveyed at origin/main @ 185d414 (2026-09-07)",
+      "caption": "The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — 143 of 183 blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a 291-line test tower on a 32-file lot, a 70-line patch check on a 646-file lot, a 31,866-file plain patrolled by 25 lines of command, and a 401-sloc spire over the root lint lane that runs this repo's own bin instead of an external one.",
       "scale": "CI TASK GRAPH",
-      "verdict": "footprint = watched files, height = command sloc — most blocks are one-line pads (REV E: #693 re-platted the root yard); the tallest is the 401-sloc //#lint:elements spire",
+      "verdict": "footprint = watched files, height = command sloc — most blocks are one-line pads; the tallest is the 401-sloc //#lint:elements spire",
       "form": "ISOMETRIC GRAPH CITY",
       "rev": "H",
       "file": "sheets/3b.html",
@@ -822,8 +934,8 @@
       "id": "4",
       "num": "4",
       "title": "THE FAMILY SPINE",
-      "sub": "ALTITUDE 4 — one core, four living adapters, four dormant instruments · REV C: every version and publish date imported from census-npm.json (npm registry read 2026-09-07), core and this repo's mass from census-bricks.json · REV D: whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart · REV E 2026-09-04: this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one",
-      "caption": "Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.",
+      "sub": "ALTITUDE 4 — one core, four living adapters, four dormant instruments, massed by authored source and gated on the core range each admits · versions npm registry read 2026-09-07, mass counted at origin/main @ 185d414 (2026-09-07)",
+      "caption": "Not a loop and not a city: a spine. Every limb shares @uirouter/core and no limb talks to another, so the honest drawing is radial. Each block is massed from its own authored source and each stem crosses a gate naming the core range that limb admits — and the gates do not agree.",
       "scale": "ECOSYSTEM",
       "verdict": "every limb re-massed from sloc × files — one red gate: react pins core as a dependency",
       "form": "MASSED SPINE",
@@ -843,7 +955,7 @@
       "id": "5",
       "num": "5",
       "title": "THE DESIGN SPACE",
-      "sub": "ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes · REV B 2026-09-06: the empty-quarter callout re-cut to the line it frames (330 → 236 wide) — the dashed box had been drawn to the mono lettering and, at the data face, crossed the first column boundary into the server column it says nothing about; no point moved",
+      "sub": "ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes",
       "caption": "No mechanism connects these projects, so any drawn edge would be fiction. What is real is position: where matching happens, who owns navigation, and — the one square — whether the URL or a state tree is the source of truth.",
       "scale": "JS ECOSYSTEM",
       "verdict": "no shared mechanism — position, not edges",
@@ -882,10 +994,10 @@
       "id": "7",
       "num": "7",
       "title": "THE MEASURED CITY",
-      "sub": "ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall · REV D 2026-08-31: recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json · REV E 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame · REV F 2026-09-07: re-surveyed after #717 moved the documentation site from docs/ to www/lit-ui-router.dev/ and #716 dropped the sample app's markov seed pipeline — member №10 is massed at its new path and the shopfront's district lettering follows it; the member keeps the name docs, which is still what its package.json and every turbo task id say — counted at origin/main @ 185d414 (2026-09-07)",
-      "caption": "Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Rev B keeps the census — footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and adds the two things a census alone cannot say: which districts these members belong to, and which roads actually run between them. Every road is a workspace dependency or a turbo task edge, never an impression.",
+      "sub": "ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 32 members in 4 districts, footprint ∝ √sloc, height ∝ authored files, spec mass drawn as an annex, gate severity in colour · counted at origin/main @ 185d414 (2026-09-07)",
+      "caption": "Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and over that census the two things a census alone cannot say: which district each member belongs to, and which roads run between them. Every road is a workspace dependency or a turbo task edge, never an impression.",
       "scale": "MONOREPO, MEASURED",
-      "verdict": "the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR (REV E: 32 members recounted on the scc ruler)",
+      "verdict": "the census with districts and roads — tests as annexes, every edge cited: the 8-line harness stops every PR, and all 32 members are measured on the scc ruler",
       "form": "MEASURED CITY",
       "rev": "F",
       "file": "sheets/7.html",
@@ -903,10 +1015,10 @@
       "id": "7a",
       "num": "7A",
       "title": "THE SHADOW SURVEY",
-      "sub": "ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, 32 members · REV B: polarity corrected — the tests are the light, shadow is the untested · REV C 2026-08-31: lettering pass — no district boundary is drawn through a caption · REV D 2026-08-31: footprints refreshed to sheet 7 rev D’s census; the light was NOT re-metered and the plate said so · REV E: RE-METERED — census-shadow.mjs is a scripted probe now, so the light is measured at the same ref as the census (metered at origin/main @ 185d414 (2026-09-07)); the daggers retire, №31 is metered for the first time, and nothing on this plate is hand-pasted",
+      "sub": "ALTITUDE 3½ — ALTERNATE PLATE TO SHEET 7: the measured city under its own test light · same city as sheet 7, 32 members · reach = the source each suite loads, brightness = line coverage of what it loads · metered at origin/main @ 185d414 (2026-09-07)",
       "caption": "Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite is run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.",
       "scale": "MONOREPO, TESTED",
-      "verdict": "the shadow survey — the tests are the light: where a suite reaches it burns near-full (REV E: RE-METERED, 17 members under their own suites' meters at 185d414, so the light and the census are one measurement and the daggers retire)",
+      "verdict": "the shadow survey — the tests are the light: where a suite reaches it burns near-full — 17 members read under their own suites' meters at 185d414, so the light and the census are one measurement",
       "form": "SHADOW PLAN",
       "rev": "E",
       "file": "sheets/7a.html",
@@ -925,10 +1037,10 @@
       "id": "7b",
       "num": "7B",
       "title": "THE WORKING CITY",
-      "sub": "ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered · steam now IMPORTED from diagrams/data/census-steam.json (window 2026-06-09..2026-09-06 · counted at origin/main @ 185d414 (2026-09-07)) and the massing from sheet 7’s own plate, so the fifth package joins the city as №31 · REV D: whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (24 real of 114 nodes) instead of a hand-pasted 22 of 113 · REV E: the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, origin/main @ 185d414), so rust is the last editorial channel on this sheet and №31 finally reads a lamp · REV F 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights joins the plant at rust 0, its lamp metered by its own node:test suite · REV G 2026-09-06: the telemetry box re-cut — the rust ladder had outgrown the wall it was drawn to and ran off the plate, so the reading takes a continuation line and the box is sized to the widest line that remains and hung on the plate’s right margin, clear of the packages lettering",
-      "caption": "Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. Rev B’s one alarm rang over no plant at all — it rang over the drawings; rev C draws it struck through, because it was answered.",
+      "sub": "ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · steam window 2026-06-09..2026-09-06 · counted at origin/main @ 185d414 (2026-09-07)",
+      "caption": "Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. The alert channel is drawn and empty: no gate in the city is red at HEAD.",
       "scale": "MONOREPO, RUNNING",
-      "verdict": "the synthesis plate — rust, steam, lamps and pipes on one city: every pipe connects, the flagship runs old AND hot, and rev B’s one alarm — which rang over the drawings themselves — is drawn struck through, answered by ffd4ef7",
+      "verdict": "the synthesis plate — rust, steam, lamps and pipes on one city: every pipe connects, the flagship runs old AND hot, and the set’s one alarm — which rang over the drawings themselves — stands struck through, answered by ffd4ef7",
       "form": "WORKING CITY",
       "rev": "G",
       "file": "sheets/7b.html",
@@ -942,12 +1054,7 @@
         "census-steam.json"
       ],
       "refs": [
-        "3",
-        "3A",
         "7",
-        "8",
-        "10",
-        "12",
         "13"
       ]
     },
@@ -955,7 +1062,7 @@
       "id": "8",
       "num": "8",
       "title": "THE DELIVERED CITY",
-      "sub": "ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · REV C: recounted after the lit de-duplication · 2026-08-17 · REV D 2026-08-31: hidden-line pass — opaque faces, masses painted back to front, no rear wall through a front one · every number now imported from diagrams/data/census-nm.json — measured at origin/main @ 185d414 (2026-09-07), closure of apps/sample-app-lit-vanilla",
+      "sub": "ALTITUDE 1½ — what npm actually installs for one consumer · sample-app-lit-vanilla · 32 delivered packages, 177,091 lines of code and 39,942 d.ts lines on disk, footprint from files and height from lines — measured at origin/main @ 185d414 (2026-09-07), closure of apps/sample-app-lit-vanilla",
       "caption": "The production dependency closure of one sample app, surveyed on disk: every delivered package as a building — footprint from file count, height from lines — with the consumer’s own 592-line building standing in the city it summoned.",
       "scale": "ONE CONSUMER",
       "verdict": "node_modules surveyed — 297× the app, two swaps it argued for",
@@ -977,10 +1084,10 @@
       "id": "9",
       "num": "9",
       "title": "THE SHIPPED CITY",
-      "sub": "ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · 575 files, 3.1 MB on the wire · REV D: hidden-line pass — opaque tenant walls painted back to front · REV E 2026-09-03: every count now imported from diagrams/data/census-shipped.json — the ghost district is struck from the drawing · REV F: whole-cabinet refresh — the HTML pages overtook Inter, measured at origin/main @ b2338d0 (2026-09-04) · REV G 2026-09-07: re-surveyed after #716 dropped the sample app's markov seed pipeline — the corpora district (15 files, 899 KB, the tallest tower since rev A) left the deploy with three static data files, so 11 districts stand and the HTML pages are the skyline; the corpora's lot is drawn vacant — measured at origin/main @ 185d414 (2026-09-06) · diagrams/generator/census-shipped.mjs",
-      "caption": "The production docs deploy surveyed on the wire: 575 files, 3.1 MB gzipped, drawn as 11 districts — the tallest towers are now prerendered prose and font files — the sample novels left the deploy at rev G, and their lot is drawn vacant — the routed apps are 199 KB of accent buildings in their own city, and the ghost block is gone: a clean deploy ships no unreachable files at all.",
+      "sub": "ALTITUDE 2¾ — what the browser downloads · lit-ui-router.dev, one deploy · 575 files in 11 districts, 3.1 MB on the wire, footprint from file count and height from gzipped bytes — measured at origin/main @ 185d414 (2026-09-06) · diagrams/generator/census-shipped.mjs",
+      "caption": "The production docs deploy surveyed on the wire: 575 files, 3.1 MB gzipped, drawn as 11 districts — the tallest towers are prerendered prose and font files, the routed apps are 199 KB of accent buildings in their own city, and there is no ghost block: the deploy carries no unreachable files at all.",
       "scale": "ONE DEPLOY",
-      "verdict": "the wire survey — Dickens outweighs the code, and at REV F the prose pages overtook the fonts",
+      "verdict": "the wire survey — prose pages outweigh the fonts, and both outweigh every line of code",
       "form": "SHIPPED CITY",
       "rev": "G",
       "file": "sheets/9.html",
@@ -1000,8 +1107,8 @@
       "id": "10",
       "num": "10",
       "title": "THE BUNDLED CITY",
-      "sub": "ALTITUDE 2⅞ — inside the wire: what the bundler kept · apps/sample-app-lit-vanilla, one bundle · REV C: every byte now read from the census-bundle plate — apps/sample-app-lit-vanilla · counted at origin/main @ 185d414 (2026-09-06) · REV D 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved · REV E 2026-09-06: the paper re-ruled — the five door frames tightened to the DIN line (144 → 116), the structure schedule opened to the plate’s full measure so its two columns get a real gutter instead of the left column running into the right, and every flush-right note now hangs on one margin at 1150",
-      "caption": "One shipped bundle opened up: every package that survived tree-shaking as a building — footprint from source kept, height from gzipped wire share — and the machine the router wraps, the chrome that demos it, and the app that uses it stand as three districts summing to 117.3 KB, with a single lit where the first printing drew two.",
+      "sub": "ALTITUDE 2⅞ — inside the wire: what the bundler kept · one production bundle: 14 package groups in 17 chunks, 120,098 gz, footprint from source kept and height from wire share — apps/sample-app-lit-vanilla · counted at origin/main @ 185d414 (2026-09-06)",
+      "caption": "One shipped bundle opened up: every package that survived tree-shaking as a building — footprint from source kept, height from gzipped wire share — and the machine the router wraps, the chrome that demos it, and the app that uses it stand as three districts summing to 117.3 KB.",
       "scale": "ONE BUNDLE",
       "verdict": "tree-shaking’s verdict — core is 22.5%, the router 3.9% — one lit",
       "form": "BUNDLED CITY",
@@ -1024,10 +1131,10 @@
       "id": "11",
       "num": "11",
       "title": "THE ENTRY QUARTERS",
-      "sub": "ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors, 5 packages · REV C: every byte now read from diagrams/data/census-doors.json · REV D: whole-cabinet re-probe — 14 of 16 doors byte-identical, the lint plugin's up 1,917 → 3,510 gz on #689's three new rules and the mobx door 650 → 908 gz at mobx 1.0.0 — counted at origin/main @ 185d414 (2026-09-06) · REV E 2026-09-06: fills — every quarter’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no door moved",
+      "sub": "ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors in 5 package quarters, footprint from minified bytes and height from gzipped, dependencies external — counted at origin/main @ 185d414 (2026-09-06)",
       "caption": "The split view to sheet 10’s unified city: every exported entry of every publishable package bundled alone and priced — 5 package quarters, 16 doors, the codecov bundle-analysis series drawn as skylines.",
       "scale": "FIVE PACKAGES",
-      "verdict": "the split view — sixteen doors priced alone; fifteen of them reprobe byte-identical at REV D",
+      "verdict": "the split view — sixteen doors priced alone; fifteen of them measure byte-identical",
       "form": "ENTRY QUARTERS",
       "rev": "E",
       "file": "sheets/11.html",
@@ -1047,10 +1154,10 @@
       "id": "12",
       "num": "12",
       "title": "THE REGISTER PLATE",
-      "sub": "ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · turbo 2.10.11 · REV B: census refresh 2026-08-31 — three new members, three new rows, the phantom share held · REV C: every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real · REV D: whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96 · surveyed at origin/main @ 185d414 (2026-09-07) · turbo 2.10.11 · REV E 2026-09-06: the ci:main overlay holes and their key swatch now carry the accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); the register is otherwise untouched · REV F 2026-09-06: the uncacheable tier’s reason column hangs on the plate’s right margin — at the data face the longest reason no longer fitted a left-set column and ran off the sheet; the register, the overlay and the tail are untouched",
+      "sub": "ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · surveyed at origin/main @ 185d414 (2026-09-07) · turbo 2.10.11",
       "caption": "The pull-request graph is a near-rectangle: 32 packages against 19 fanned task names, plus a ragged tail of 31 one-offs. 70% of the holes are unpunched — placeholder nodes that run nothing, minted so a ^self chain has somewhere to land an edge.",
       "scale": "PR CI GRAPH",
-      "verdict": "the punched inventory — 70% of the graph runs nothing, and at REV D real→real edges fell a quarter while the node count barely moved",
+      "verdict": "the punched inventory — 70% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count",
       "form": "REGISTER PLATE",
       "rev": "F",
       "file": "sheets/12.html",
@@ -1089,7 +1196,7 @@
       "id": "13",
       "num": "13",
       "title": "THE WEATHERING MAP",
-      "sub": "ALTITUDE t — the same city as sheet 7, surveyed in time · 319 files dated from the whole history · three construction seasons, 10 silent months · REV B: drafting pass — the timeline rows now clear their own tallest bar, and no badge sits on a caption · REV C: re-dated off the plate at TODAY = 2026-09-06, with the fifth published package in the universe; every date and count is now imported from diagrams/data/census-weather.json · REV D: whole-cabinet refresh — 319 dated files, every band re-tested and held · REV E 2026-09-04: refreshed again after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights laid the day it was cut · REV F 2026-09-07: re-dated after #717 moved the documentation site to www/lit-ui-router.dev/ — the most-weathered wall in the city is the same file under a new address, and its callout and the verdict now name it there; the rename chain is followed backwards, so its first date and touch count carry across the move — counted at origin/main @ 185d414",
+      "sub": "ALTITUDE t — the same city as sheet 7, surveyed in time · 319 files dated from the whole history · three construction seasons, 10 silent months · counted at origin/main @ 185d414",
       "caption": "Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.",
       "scale": "WORKSPACE × TIME",
       "verdict": "86% of the city is summer stone — and the port’s original masonry carries the hottest edges",
@@ -1113,7 +1220,7 @@
       "id": "14",
       "num": "14",
       "title": "THE SURVEY OFFICE",
-      "sub": "ALTITUDE 3½ — the atlas measuring itself · 17 probes, 17 plates, 20 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ 185d414 · commit 2026-09-06 · REV A 2026-09-06: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap · REV C 2026-09-06: the master-snapshot plate now carries its accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); nothing else moved · REV D 2026-09-06: the external-instrument ledger runs as one column instead of two — the 140px half-column had been cut for the mono line and clipped ten of the eleven instruments to an ellipsis; on the full measure all but the tarball URL stand whole",
+      "sub": "ALTITUDE 3½ — the atlas measuring itself · 17 probes, 17 plates, 20 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ 185d414 · commit 2026-09-06",
       "caption": "The instrument drawn by its own instrument: 17 probe stations over three tiers write 17 filed plates, which 20 drawings read — and the one that matters most is read thirteen times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.",
       "scale": "THE CENSUS PIPELINE",
       "verdict": "the atlas measuring itself — one archive, 17 probe stations, 17 filed plates, and every station, plate and edge introspected from the generator at build time",
@@ -1156,8 +1263,8 @@
       "id": "a1",
       "num": "A1",
       "title": "THE SPRITE STUDY",
-      "sub": "APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each · REV A 2026-09-06: rolled into the set from the standalone sprite-studies exploration; the reference strip of game screenshots is cited in the notes rather than re-drawn, because the atlas draws no images",
-      "caption": "Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict has already shipped: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.",
+      "sub": "APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each · the reference strip of game screenshots is cited in the notes rather than drawn, because the atlas draws no images",
+      "caption": "Every other plate in this set measures the codebase. This one measures a decision: how a workspace member should look when a sheet draws it as a building. One demo member — 16 files, 1,900 sloc, massed under the same rules sheet 7 uses — is drawn fifteen times, five states along a wreck-to-splendor gauge under three competing treatments, and each treatment is priced. The verdict stands in the set: sheet 7B is the working plant, and sheet 13 is the weathering gauge those studies were commissioned for.",
       "scale": "THE ATLAS ITSELF",
       "verdict": "meta — the research behind the building sprites, argued on one demo member in fifteen blocks: the working plant wins on cost and independence and shipped as sheet 7B, the vines are its second layer, and the ledger roof stays parked until a sheet wants per-file stories",
       "form": "SPRITE STUDIES",
@@ -1180,8 +1287,8 @@
     {
       "id": "city",
       "title": "THE CITY — ISOMETRIC",
-      "sub": "SHEET 7'S CENSUS CITY IN THE ROUND · 32 MEMBERS · 31 MASSED · 19 SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · REV C: A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY · REV D: THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF · REV E 2026-09-07: THE STAGE IS VIEWPORT-RELATIVE — 80VH, CAPPED AT 1400PX AND FLOORED AT 520 — SO THE MODEL STANDS AS TALL AS A CONTAINED PLATE INSTEAD OF A FIXED 620PX BAND",
-      "rev": "D",
+      "sub": "SHEET 7'S CENSUS CITY IN THE ROUND · 32 MEMBERS · 31 MASSED · 19 SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE · THE STAGE IS VIEWPORT-RELATIVE, 80VH BETWEEN 520 AND 1400PX",
+      "rev": "E",
       "shno": "SHEET 7 · 3D",
       "file": "sheets/city.html",
       "standalone": "gallery.html#city-scene",

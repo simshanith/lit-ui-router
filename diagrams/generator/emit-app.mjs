@@ -15,7 +15,7 @@
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CSS, DATE, TOTAL, plateRatio, sheetSection, splitRevs } from './chrome.mjs';
+import { CSS, DATE, TOTAL, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
 import { cityHero } from './sheet7.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
@@ -132,9 +132,11 @@ function linkRefs(html, self, byUpper) {
 }
 
 // --- the issue log ----------------------------------------------------------
-// Every REV a sheet's frozen sub line records is one issue of the set. The
-// cover lists them latest first; an entry carries the rev's first clause and
-// links to the sheet, where the full revision block is filed.
+// The sheets describe their present state only; the set's revision record is
+// diagrams/HISTORY.md, and the log is parsed out of it at BUILD time so the app
+// ships JSON rather than fetching the markdown. One entry per `### REV X` under
+// a `## <sheet>` heading, carrying that rev's opening clause.
+const HISTORY = readFileSync(new URL('../HISTORY.md', import.meta.url), 'utf8');
 const untag = (html) => html.replace(/<[^>]*>/g, '');
 function firstClause(desc) {
   const text = untag(desc).replace(/\s+/g, ' ').trim();
@@ -143,9 +145,56 @@ function firstClause(desc) {
   if (text.length <= 180) return text;
   return `${text.slice(0, text.lastIndexOf(' ', 180))}…`;
 }
+
+/** `## Sheet 3B — THE WATCHED CITY` → `3B`; the city plate files under `city`. */
+function historySheetNum(heading) {
+  const sheet = /^Sheet\s+([0-9]+[A-Za-z]?|[A-Z][0-9]+)\s+—/.exec(heading);
+  if (sheet) return sheet[1];
+  if (/^City\b/.test(heading)) return 'city';
+  return '';
+}
+
+/** The revision's own words: the resolved `sub` clause where the record gives one. */
+function historyDesc(body) {
+  const blocks = [];
+  let current = null;
+  let resolved = false;
+  for (const raw of body.split('\n')) {
+    const line = raw.startsWith('> ') ? raw.slice(2) : raw === '>' ? '' : null;
+    if (line === null) {
+      if (current) { blocks.push({ text: current.join(' ').trim(), resolved }); current = null; }
+      if (/resolved\s*→/.test(raw)) resolved = true;
+      continue;
+    }
+    if (line.startsWith('```')) continue;
+    if (!current) current = [];
+    current.push(line);
+  }
+  if (current) blocks.push({ text: current.join(' ').trim(), resolved });
+  const pick = blocks.find((b) => b.resolved) ?? blocks[0];
+  if (!pick) return '';
+  // the rev head is printed by the log itself, so the clause drops its own prefix
+  return pick.text.replace(/^REV\s+[0-9A-Z]+(?:\s+corrected)?(?:\s+\d{4}-\d{2}-\d{2})?\s*[:—-]?\s*/i, '');
+}
+
+/** Every rev the frozen record carries, as log entries — dated newest first. */
 function issueLogOf(rows) {
-  const entries = rows.flatMap(({ num, head, title, sub }) =>
-    splitRevs(sub).revs.map((r) => ({ date: r.date, num, head, title, rev: r.rev, desc: firstClause(r.desc) })));
+  const byNum = new Map(rows.map((r) => [r.num.toUpperCase(), r]));
+  const entries = [];
+  for (const section of HISTORY.split(/^## /m).slice(1)) {
+    const heading = section.slice(0, section.indexOf('\n')).trim();
+    const row = byNum.get(historySheetNum(heading).toUpperCase());
+    if (!row) continue;
+    for (const part of section.split(/^### /m).slice(1)) {
+      const head = /^REV\s+([0-9A-Z]+(?:\s+corrected)?)\s*(?:—([^\n]*))?/.exec(part);
+      if (!head) continue;
+      const date = /(\d{4}-\d{2}-\d{2})/.exec(head[2] ?? '');
+      const desc = historyDesc(part.slice(part.indexOf('\n') + 1));
+      if (!desc) continue;
+      entries.push({ date: date ? date[1] : '', num: row.num, head: row.head,
+        title: row.title, rev: head[1], desc: firstClause(desc) });
+    }
+  }
   const order = (a, b) => bySheet(a.num === 'city' ? '7B·' : a.num, b.num === 'city' ? '7B·' : b.num);
   const dated = entries.filter((e) => e.date)
     .sort((a, b) => b.date.localeCompare(a.date) || order(a, b) || b.rev.localeCompare(a.rev));
@@ -263,9 +312,9 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
   ];
 
   const issueLog = issueLogOf([
-    ...manifest.map((r) => ({ num: r.num, head: `SHEET ${r.num}`, title: r.title, sub: r.sub })),
-    ...appManifest.map((r) => ({ num: r.num, head: `APPENDIX ${r.num}`, title: r.title, sub: r.sub })),
-    ...extras.map((r) => ({ num: r.id, head: r.shno, title: r.title, sub: r.sub })),
+    ...manifest.map((r) => ({ num: r.num, head: `SHEET ${r.num}`, title: r.title })),
+    ...appManifest.map((r) => ({ num: r.num, head: `APPENDIX ${r.num}`, title: r.title })),
+    ...extras.map((r) => ({ num: r.id, head: r.shno, title: r.title })),
   ]);
 
   writeFileSync(
@@ -285,7 +334,7 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
         // the hero carries its own viewBox ratio so the cover's contain cap can be
         // spent on max-width, exactly as a plate's is (see .plate in chrome.mjs)
         cover: { ...cover, hero: heroPlate() },
-        // every dated REV across the set, latest first, then the undated ones
+        // every REV in diagrams/HISTORY.md, dated newest first, undated after
         issueLog,
         sheets: manifest,
         // The appendix rides its own array for the same reason the city rides

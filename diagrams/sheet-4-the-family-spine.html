@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <title>THE FAMILY SPINE — Sheet 4 of 14</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.">
+<meta name="description" content="Not a loop and not a city: a spine. Every limb shares @uirouter/core and no limb talks to another, so the honest drawing is radial. Each block is massed from its own authored source and each stem crosses a gate naming the core range that limb admits — and the gates do not agree.">
 <style>
 :root {
   --ground: #E6E6DA;
@@ -357,54 +357,6 @@ code, kbd, samp { font-family: var(--code); }
   box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
 }
 
-/* ---- REVISIONS ----
-   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
-   splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, in the inset strip under the title block, as a drawing's
-   revision block: one row of rev + date, the description wrapped beneath. */
-.revs {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1.5px solid var(--ink);
-  margin-top: 18px;
-  font-family: var(--data);
-  font-variant-numeric: tabular-nums;
-}
-.revs caption {
-  font-family: var(--data);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  text-align: left;
-  padding: 0 0 8px;
-}
-.revs th, .revs td { text-align: left; vertical-align: baseline; }
-.revs th {
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  font-weight: 600;
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-  width: 1%;
-}
-.revs .d {
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-}
-.revs .t {
-  font-size: 11.5px;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
-  padding: 0 10px 7px;
-  border-bottom: 1px solid var(--line);
-}
-.revs tr:last-child .t { border-bottom: none; }
-.revs code { font-family: var(--code); font-size: 0.88em; }
-
 /* ---- SVG drawing classes ---- */
 .sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
 .sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
@@ -444,9 +396,9 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-4" aria-label="Sheet 4: THE FAMILY SPINE">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 4 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>FAMILY SPINE</h2>
-  <p class="sheet-sub">ALTITUDE 4 — one core, four living adapters, four dormant instruments</p>
+  <p class="sheet-sub">ALTITUDE 4 — one core, four living adapters, four dormant instruments, massed by authored source and gated on the core range each admits · versions npm registry read 2026-09-07, mass counted at origin/main @ 185d414 (2026-09-07)</p>
   <figure>
-    <div class="plate" style="--plate-ar:1.6265"><div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, re-massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
+    <div class="plate" style="--plate-ar:1.6265"><div class="figure-wrap"><svg viewBox="0 0 1350 830" role="img" aria-label="The ui-router family drawn as a spine, massed from measured source: @uirouter/core is a hatched block astride a horizontal rail, four framework adapters stand on the rail above it and four dormant instruments hang below, each drawn as a block whose width is proportional to the square root of its authored source lines and whose height is proportional to its file count. Core is by far the largest mass at 80 files and 5,272 lines, 38 percent of the family; the visualizer is the next largest at 2,018 lines; sticky-states is a two-file sliver. Every limb's stem crosses a gate — a hatched tablet in the accent colour naming the @uirouter/core version range that limb admits — and the gates disagree: floors of greater-or-equal 5.0.0, 5.0.1 and 6.0.1, carets on 6.1.2 and 6.0.8, and one red gate on @uirouter/react, which pins core exactly at 6.1.2 and ships it as a dependency instead of a peer. A dashed bay at the right holds this repo's three companion packages behind a single shared gate. A structure schedule lists every member with exact file and line counts.">
 <defs>
   <marker id="s4-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -639,7 +591,7 @@ a { color: var(--accent); }
 <text x="56" y="740" class="lbls" text-anchor="start" >TOTAL — 12 packages · 209 authored files · 13,851 sloc · versions and dates npm registry read 2026-09-07 · this repo + core counted at origin/main @ 185d414 (2026-09-07) · upstream family clone counts 2026-08-16</text>
 <text x="56" y="757" class="lblf" text-anchor="start" >NOT MASSED — eslint-plugin-lit-ui-router 0.0.1-alpha.0 on npm (published 2026-09-01) · 1.0.0-rc.3 in the repo: this repo's fifth published package is a lint plugin, not a router limb — it declares no gate on the spine.</text>
 </svg></div></div>
-    <figcaption><span class="figno">FIG. 4</span>Not a loop and not a city: a spine. Every limb shares @uirouter/core and none of the limbs talk to each other — so the honest drawing is radial. Rev B gave every limb its measured mass and a gate on every stem; rev C stops typing the registry by hand — versions and publish dates now come from the checked-in npm plate, which is how @uirouter/angular 22.0.0 (2026-08-18) arrived on the sheet: upstream is consolidating ui-router into a monorepo, and the family is waking up.</figcaption>
+    <figcaption><span class="figno">FIG. 4</span>Not a loop and not a city: a spine. Every limb shares @uirouter/core and no limb talks to another, so the honest drawing is radial. Each block is massed from its own authored source and each stem crosses a gate naming the core range that limb admits — and the gates do not agree.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
@@ -649,7 +601,7 @@ a { color: var(--accent); }
 <p><strong>An isometric city would still lie here.</strong> Adjacent blocks imply interaction, and the adapters have none — each rib touches only the spine. So the plan stays radial and the new ink is mass: block width ∝ √sloc, block height ∝ file count, which lets a two-file, 233-line package like sticky-states read as the sliver it is beside core's 80-file slab. Core alone is 5,272 lines — 38% of the family's authored mass, and more than the four adapters combined.</p>
 <p><strong>The gates disagree, and that is the finding.</strong> Every limb declares a range on <code>@uirouter/core</code>, drawn here as a hatched tablet where the limb's stem crosses toward the rail. The dormant instruments still admit core 5 (<code>&gt;=5.0.0</code>, <code>&gt;=5.0.1</code>); rx admits <code>&gt;=6.0.1</code>; angularjs and angular carets on <code>^6.1.2</code>; this repo's four packages sit on <code>^6.0.8</code>. One gate is red: <code>@uirouter/react</code> pins core at exactly <code>6.1.2</code> <em>and ships it as a dependency, not a peer</em> — the only limb that can install a second copy of the state machine into a consumer's tree, and the only one that cannot be moved forward without a react release.</p>
 <p><strong>Mass does not track liveness.</strong> The largest limb on the sheet is the dormant <code>@uirouter/visualizer</code> (34 files, 2,018 lines, last published 2020-09-19) — it carries a preact/d3 rendering stack, so it out-masses every living adapter. The newest limb, <code>lit-ui-router</code>, is 13 files and 1,383 lines at 1.11.2, and it is the only limb growing limbs of its own: the companion bay adds another 1,422 lines behind a single shared gate, with <code>lit-ui-router-mobx</code> the one package on this sheet that peers a limb as well as the spine.</p>
-<p><strong>The family is waking up.</strong> The plate makes the movement legible. <code>@uirouter/angular</code> went 22.0.0 on 2026-08-18 — a major, eight months after the 2025-12-31 wave that patched core, angularjs and react inside a day. Read together, the republish wave and the major say the same thing: upstream is consolidating ui-router into a monorepo. That is why <code>@uirouter/angular</code> is drawn <em>active</em> and the other two upstream adapters only <em>wave</em> — they moved because core moved, not on their own. Nothing below the rail has moved: the newest instrument publish is rx at 2021-11-30, and the rest are 2019–2020. And <code>@uirouter/vue</code> stays the one name on the constellation with no registry row at all — an absence, not a package.</p>
+<p><strong>Publish dates sort the family into three states.</strong> <code>@uirouter/angular</code> stands at 22.0.0 (2026-08-18), a major of its own, so it is drawn <em>active</em>; angularjs and react carry only the 2025-12-31 patch wave that followed core inside a day, so they are drawn <em>wave</em>. Below the rail nothing is current — the newest instrument publish is rx at 2021-11-30, the rest 2019–2020 — and the dashes say so. <code>@uirouter/vue</code> holds a seat with no registry row at all: an absence, not a package.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -669,15 +621,6 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>4 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
-      <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <tbody><tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">every version and publish date imported from census-npm.json (npm registry read 2026-09-07), core and this repo's mass from census-bricks.json</td></tr>
-  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">whole-cabinet refresh — the lint plugin's schedule line now prints BOTH its npm version and its in-repo version, which the rc.2 release pulled apart</td></tr>
-  <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-04</td></tr>
-  <tr><td class="t" colspan="2">this repo's gates — the shared core gate and mobx's own on lit-ui-router — now read census-couplings.json instead of two hand-typed ranges, and the build throws if the companions ever stop sharing one</td></tr></tbody>
-</table>
     </div>
   </div>
 </section>

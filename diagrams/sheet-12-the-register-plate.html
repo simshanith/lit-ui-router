@@ -357,54 +357,6 @@ code, kbd, samp { font-family: var(--code); }
   box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
 }
 
-/* ---- REVISIONS ----
-   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
-   splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, in the inset strip under the title block, as a drawing's
-   revision block: one row of rev + date, the description wrapped beneath. */
-.revs {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1.5px solid var(--ink);
-  margin-top: 18px;
-  font-family: var(--data);
-  font-variant-numeric: tabular-nums;
-}
-.revs caption {
-  font-family: var(--data);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  text-align: left;
-  padding: 0 0 8px;
-}
-.revs th, .revs td { text-align: left; vertical-align: baseline; }
-.revs th {
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  font-weight: 600;
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-  width: 1%;
-}
-.revs .d {
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-}
-.revs .t {
-  font-size: 11.5px;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
-  padding: 0 10px 7px;
-  border-bottom: 1px solid var(--line);
-}
-.revs tr:last-child .t { border-bottom: none; }
-.revs code { font-family: var(--code); font-size: 0.88em; }
-
 /* ---- SVG drawing classes ---- */
 .sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
 .sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
@@ -444,7 +396,7 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-12" aria-label="Sheet 12: THE REGISTER PLATE">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 12 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>REGISTER PLATE</h2>
-  <p class="sheet-sub">ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · turbo 2.10.11</p>
+  <p class="sheet-sub">ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · surveyed at origin/main @ 185d414 (2026-09-07) · turbo 2.10.11</p>
   <figure>
     <div class="plate" style="--plate-ar:0.7647"><div class="figure-wrap"><svg viewBox="0 78 1160 1517" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the 32 workspace packages plus the root, grouped into publishable packages, sample apps, docs and examples, tools, and root. Columns are the 19 task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the 3 task names that are one hundred percent placeholder by design — transit, ci:pull_request, ci. Of 605 nodes only 183 run a command and only 99 of 1424 dependency edges connect two real tasks. A ghosted 4-column overlay to the right shows the 34 extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a 13-rung ladder of which 5 rungs are real, and the 13 uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, 31 singleton tasks form a ragged tail, and a structure schedule totals 5 pipelines.">
 <defs>
@@ -743,9 +695,7 @@ a { color: var(--accent); }
 <p><strong>Depth is mostly scaffolding too.</strong> The deepest chain is 13 nodes and 5 of them run anything. The longest chain of consecutive real nodes is 7 — and it is 7 <code>test</code> tasks in a row, serialized by <code>^test</code> and nothing else: no task in that chain consumes an artifact from the one above it. That is the price of a self-chain used for ordering rather than for data flow, and it is what a plate makes visible that a node-and-arrow render never does.</p>
 <p><strong>What the plate is not evidence for.</strong> Placeholders are cheap — turbo schedules and skips them, and the phantom share is not a runtime cost. The argument is about legibility: 70% of what a maintainer sees in <code>--graph</code> output is scaffolding, and the two ratios worth watching are the real-node share per column and the real-edge count. Note also the one tier that never appears here at all: the repo's 13 <code>cache:false</code> definitions — four writers, six persistent servers, two live-network readers and one host-bound measurement (<code>docs#check:embeds</code>, #703) — are all outside every <code>ci:*</code> graph by design. A cache hit on any of them would be wrong, and the gate depends on their read-only twins instead (<code>format:check</code> for <code>format</code>).</p>
 <p><strong>The overlay.</strong> <code>ci:main</code> is not a different pipeline; it swallows <code>ci:pull_request</code> whole and adds 34 nodes across 4 names — <code>ci:main</code>, <code>test:engines</code>, <code>test:matrix</code>, <code>check:pack</code> — of which 5 are command-bearing. The main-branch graph is 6% larger and buys three engine tests, one d.ts back-test and one pack check.</p>
-<p><strong>Rev B — census refresh, 2026-08-31.</strong> Two weeks and one release (<code>lit-ui-router@1.10.0</code>) after the first printing, the plate was re-punched from a fresh <code>--dry=json</code>. Three rows joined the tools block — <code>@tools/eslint-ts-parser</code>, <code>@tools/lint-elements</code> and <code>@tools/warn-lanes</code> (#639) — taking the register from 27 packages to 30 and the graph from 483 nodes / 154 real to 535 / 165; edges 1,280 → 1,375, real edges 116 → 117. The <em>shape</em> is what held: the phantom share moved only 68% → 69%, the eighteen fanned names are the same eighteen, and all three new rows punch the same sparse pattern every small instrument does: <code>typecheck</code>, <code>lint</code>, <code>format:check</code> — three holes of eighteen — plus <code>test</code> for <code>@tools/warn-lanes</code>, which is the only one of the three with a suite. That is the plate's own thesis holding under a new measurement: a new member adds eighteen stations to the register and punches three or four of them. Elsewhere: the ragged tail gained <code>//#lint:elements</code> (25 → 26 singletons, fifteen of them root); the deepest chain grew a rung to thirteen — still five real — because <code>@tools/warn-lanes#build:types</code> now sits above <code>build_and_test</code>; the longest all-real chain shortened from seven <code>test</code> tasks to six; and the uncacheable tier was recounted across all seventeen <code>turbo.json</code> files rather than the root alone, which is twelve definitions, not seven. Still none of them reachable from <code>ci</code>.</p>
-<p><strong>Rev C — off the plate.</strong> The hand-pasted constants are gone: rows, columns, cells, tallies, the overlay and the schedule are all read from <code>diagrams/data/census-plate.json</code> at draw time, and the sheet throws rather than draws if a pipeline or a fanned name it needs is missing. Re-surveyed at origin/main @ 35c6766, the graph had grown again: <code>packages/eslint-plugin-lit-ui-router</code> is the fifth publishable package, taking the register from 30 fanned rows to 31 and the graph from 535 nodes / 165 real to 590 / 176; edges 1,375 → 1,504, real edges 117 → 126, phantom share 69% → 70%. There was also a 19th fanned column — <code>check:dev-split</code>, the dev-warning split guard, command-bearing in 1 package and a placeholder in the other 30 — which is the same story the eighteen told, one column wider. The ragged tail took the new package's three singletons (<code>lint:docs</code>, <code>lint:rules</code>, <code>test:oxlint</code>) and stood at 29; the deepest chain was 13 rungs with 5 real, and the longest all-real chain went back up to 7 <code>test</code> tasks — a new publishable package with a suite is exactly the sort of member that lengthens it.</p>
-<p><strong>Rev D — the whole cabinet, one ref, and the first recount that shrank.</strong> Every plate in <code>diagrams/data/</code> was re-counted at origin/main @ eb32b4e in one pass. The register keeps its shape — 31 fanned rows, 19 fanned columns, 13 rungs at the deepest and 7 at the longest all-real — but the punched inventory did not simply grow: nodes 586 against rev C's 590 and edges 1,382 against 1,504, real tasks up one to 177, the ragged tail up one to 30 as the root swapped one guard for two, and the phantom share easing from 70.2% to 69.8%. Two root singletons changed hands — <code>//#check:docs-api-deps</code> left, <code>//#check:graph-edges</code> and <code>//#check:task-inputs</code> arrived with #693 — and <code>apps/sample-app-shared</code> gave up its own <code>turbo.json</code> when #696 restored <code>turbo run e2e</code>. The figure that actually moved is real→real: 96 against rev C's 126, down a quarter on a graph the same size. That is #693's doing, and it is this plate's own thesis arriving from the other side. The <code>docs:api</code> column stood in nine packages and was command-bearing in four; the other five holes existed because <code>docs#build</code> reached its producers through <code>^docs:api</code>, and <code>^</code> walks direct dependencies, so <code>docs</code> carried devDependencies it never imports to make the walk land. #693 names the four producers instead — <code>lit-ui-router#docs:api</code> and its three siblings — and the column collapses to 4 holes, every one of them punched. Scaffolding came out of the graph and the real work stayed. Two thirds of the holes still run nothing.</p>
+<p><strong>Where the real edges are, and are not.</strong> The <code>docs:api</code> column is punched in every package it stands in: <code>docs#build</code> names its four producers directly rather than walking <code>^docs:api</code> through devDependencies it never imports (#693). That is this plate's thesis arriving from the other side — scaffolding leaves the graph and the real work stays. It is also why real→real edges are a small fraction of 1,424: most edges land on a node that runs nothing.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -766,19 +716,6 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>12 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
-      <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">census refresh 2026-08-31 — three new members, three new rows, the phantom share held</td></tr>
-  <tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real</td></tr>
-  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96 · surveyed at origin/main @ 185d414 (2026-09-07) · turbo 2.10.11</td></tr>
-  <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-06</td></tr>
-  <tr><td class="t" colspan="2">the ci:main overlay holes and their key swatch now carry the accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); the register is otherwise untouched</td></tr>
-  <tr><th scope="row" class="r">REV F</th><td class="d">2026-09-06</td></tr>
-  <tr><td class="t" colspan="2">the uncacheable tier’s reason column hangs on the plate’s right margin — at the data face the longest reason no longer fitted a left-set column and ran off the sheet; the register, the overlay and the tail are untouched</td></tr></tbody>
-</table>
     </div>
   </div>
 </section>

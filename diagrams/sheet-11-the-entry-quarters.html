@@ -357,54 +357,6 @@ code, kbd, samp { font-family: var(--code); }
   box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
 }
 
-/* ---- REVISIONS ----
-   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
-   splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, in the inset strip under the title block, as a drawing's
-   revision block: one row of rev + date, the description wrapped beneath. */
-.revs {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1.5px solid var(--ink);
-  margin-top: 18px;
-  font-family: var(--data);
-  font-variant-numeric: tabular-nums;
-}
-.revs caption {
-  font-family: var(--data);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  text-align: left;
-  padding: 0 0 8px;
-}
-.revs th, .revs td { text-align: left; vertical-align: baseline; }
-.revs th {
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  font-weight: 600;
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-  width: 1%;
-}
-.revs .d {
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-}
-.revs .t {
-  font-size: 11.5px;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
-  padding: 0 10px 7px;
-  border-bottom: 1px solid var(--line);
-}
-.revs tr:last-child .t { border-bottom: none; }
-.revs code { font-family: var(--code); font-size: 0.88em; }
-
 /* ---- SVG drawing classes ---- */
 .sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
 .sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
@@ -444,9 +396,9 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-11" aria-label="Sheet 11: THE ENTRY QUARTERS">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 11 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ENTRY QUARTERS</h2>
-  <p class="sheet-sub">ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors, 5 packages</p>
+  <p class="sheet-sub">ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors in 5 package quarters, footprint from minified bytes and height from gzipped, dependencies external — counted at origin/main @ 185d414 (2026-09-06)</p>
   <figure>
-    <div class="plate" style="--plate-ar:1.2008"><div class="figure-wrap"><svg viewBox="0 0 1160 966" role="img" aria-label="Every exported entry of the five publishable packages drawn as an isometric city split into five package quarters: 16 door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors; the ui-router-server quarter is an eight-door storefront whose index tower prices 642 gzipped bytes under lit-ui-router's; the mobx and navigation-location plugins stand alone as small one-door quarters; and a new one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, the fifth published package, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
+    <div class="plate" style="--plate-ar:1.2008"><div class="figure-wrap"><svg viewBox="0 0 1160 966" role="img" aria-label="Every exported entry of the five publishable packages drawn as an isometric city split into five package quarters: 16 door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors; the ui-router-server quarter is an eight-door storefront whose index tower prices 642 gzipped bytes under lit-ui-router's; the mobx and navigation-location plugins stand alone as small one-door quarters; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, the fifth published package, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
 <defs>
   <marker id="s11-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -692,12 +644,10 @@ a { color: var(--accent); }
       
 <p><strong>Method:</strong> the same probe as sheet 10's doors strip, run to completion: every exported entry of the 5 publishable packages bundled alone with rolldown — minified, declared dependencies and peers external — which is the price a consumer's bundler pays at that door, and byte-for-byte the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads to codecov. Footprint is minified bytes, height gzipped. Every number is read at build time from the checked-in plate <code>diagrams/data/census-doors.json</code> — counted at origin/main @ 185d414 (2026-09-06), probed as <code>git archive origin/main @ 185d414 + corepack pnpm install --frozen-lockfile + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)</code> — and a door the plate carries that the drawing does not place is a build error, not a stale constant. Sheet 10 is the unified view — one real app's bundle with all of these mixed by the bundler; this sheet cuts the same machinery by published package and entry point. The quarters don't sum and shouldn't: doors overlap (<code>./pure</code> is <code>.</code> minus registration), which is exactly what the split view exists to show.</p>
 <p><strong>The twin towers are one building with two doors.</strong> <code>.</code> and <code>./pure</code> differ by 90 gzipped bytes — the whole cost of custom-element registration. The register economics run the other way: the two one-element doors sum to 3,534 gz while the umbrella <code>./register</code> is 2,482, because each element door carries the shared element core with it. Take the umbrella or one element door; taking two per-element doors ships the core twice.</p>
-<p><strong>The server is a storefront, not a tower.</strong> Eight doors: an index at 4,965 gz — rev A caught it within 12 bytes of lit-ui-router's flagship, a coincidence #590 promptly broke and the summer has widened to 642 — redirect and matcher wings, and four framework adapters — hono, fetch, vite, connect — packed within 72 bytes of one another: thin skins over one core. <code>./simulate</code>, the test double, is 283 bytes. All eight of these doors reprobe byte-identical against rev B.</p>
+<p><strong>The server is a storefront, not a tower.</strong> Eight doors: an index at 4,965 gz, 642 under the client flagship; redirect and matcher wings at 3,597 and 2,838; and four framework adapters — hono, fetch, vite, connect — packed within 72 bytes of one another, which is what thin skins over one core look like priced. <code>./simulate</code>, the test double, is 283 bytes, the cheapest door on the sheet.</p>
 <p><strong>Plugins price like footnotes.</strong> The entire mobx reactivity layer enters at 908 gz and the navigation-location plugin at 670 — each cheaper than the gap between <code>./register</code> and its two element doors. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's <code>@uirouter/core</code>) is external here by design.</p>
 <p><strong>The sixteenth door is not a door a browser opens.</strong> <code>eslint-plugin-lit-ui-router</code> (#676) is the family's fifth published package and the first non-runtime one, so its quarter is drawn but its number means something different: 9,703 minified, 3,510 gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs 63% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers ESLint alone — oxlint loads it as a JS plugin, unpeered — never <code>@uirouter/core</code> (sheet 2 leaves it off the plate for the same reason).</p>
 <p><strong>Why both views exist.</strong> The split view is the seller's ledger — what each door costs at the threshold. The unified view is the buyer's receipt — what one app's bundler actually made of them (it paid 4,655 of the flagship's 5,607). Codecov tracks the ledger per commit; sheet 10 audits the receipt.</p>
-<p><strong>Rev C — the numbers by import, and a fifth quarter.</strong> The sheet no longer carries a hand-pasted probe: it reads the plate, keyed by package and door, and throws on a miss. Reprobing at origin/main @ 185d414 moves two things. The <em>city</em>: sixteen doors rather than fifteen, with the lint plugin taking a new one-door quarter in the lower middle — the navigation-location quarter slid down and right to give it air, so the three one-door quarters now read as a row along the bottom. The <em>client</em>: only <code>lit-ui-router</code> moved. Four of its doors — the flagship, <code>./pure</code>, <code>./register</code> and <code>./ui-view.register</code> — each grew about 5% as main advanced past rev B's ref, while the other eleven doors, <code>./ui-router.register</code> plus both runtime plugins plus all eight server doors, reprobe byte-identical. The registration premium held its shape through that growth: 90 gz, against rev B's 85. Rev B's own findings stand — #590's two flagship jumps, and the door name corrected from <code>./url-matcher</code> to <code>./matcher</code>.</p>
-<p><strong>Rev D — two doors moved, and one of them is the one no browser opens.</strong> The whole plate cabinet was re-probed at origin/main @ 185d414 in one pass. Fourteen of the 16 doors come back byte-identical — every <code>lit-ui-router</code> door, the navigation-location plugin and all eight server doors price exactly as they did at rev C, so the registration premium, the umbrella economics and the adapter spread are unchanged figures, not re-rounded ones. The mover that matters is <code>eslint-plugin-lit-ui-router</code>, which #689 gave three more rules — <code>sref-assign-href</code>, <code>sref-active-aria-current</code> and <code>directive-position</code> — taking its one door from 4,559 / 1,917 to 9,703 / 3,510 gz, three quarters heavier across two release candidates. That moves the comparison rev C drew with it: the plugin was about a third of the flagship's weight and is now 63% of it. Its quarter is drawn to the same scale as the rest, so the sixteenth tower simply grew. The other mover is the mobx door, 650 → 908 gz at <code>lit-ui-router-mobx@1.0.0</code> — still a footnote against the flagship.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -714,15 +664,6 @@ a { color: var(--accent); }
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>11 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
-      <table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <tbody><tr><th scope="row" class="r">REV C</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">every byte now read from diagrams/data/census-doors.json</td></tr>
-  <tr><th scope="row" class="r">REV D</th><td class="d">UNDATED</td></tr>
-  <tr><td class="t" colspan="2">whole-cabinet re-probe — 14 of 16 doors byte-identical, the lint plugin's up 1,917 → 3,510 gz on #689's three new rules and the mobx door 650 → 908 gz at mobx 1.0.0 — counted at origin/main @ 185d414 (2026-09-06)</td></tr>
-  <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-06</td></tr>
-  <tr><td class="t" colspan="2">fills — every quarter’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no door moved</td></tr></tbody>
-</table>
     </div>
   </div>
 </section>

@@ -80,7 +80,7 @@ ${txt(PX + 28, PY + PH + 90, 'state-first — a named state tree; the URL is one
 export const sheet5 = {
   num: 5, id: 'runtime', rev: 'B',
   title: 'THE DESIGN SPACE',
-  sub: 'ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes · REV B 2026-09-06: the empty-quarter callout re-cut to the line it frames (330 → 236 wide) — the dashed box had been drawn to the mono lettering and, at the data face, crossed the first column boundary into the server column it says nothing about; no point moved',
+  sub: 'ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes',
   scale: 'JS ECOSYSTEM',
   form: 'POSITIONED CHART',
   svg,

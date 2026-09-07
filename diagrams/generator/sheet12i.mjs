@@ -35,8 +35,8 @@ const NOTES = `
 <p><strong>Method — what is drawn, and from where.</strong> Everything on this page comes out of
 <code>diagrams/data/census-plate.json</code>, the checked-in plate <code>generator/census-plate.mjs</code>
 writes from <code>turbo run ${R.pipeline} --dry=json</code> against a materialized, <em>installed</em> archive of
-the ref — ${BASIS}. Sheet 12 reads that plate's cell codes and tallies; this sheet reads the two fields the
-plate gained for it, <code>graphNodes</code> and <code>graphEdges</code>: one <code>(package, task)</code> pair
+the ref — ${BASIS}. Sheet 12 reads that plate's cell codes and tallies; this sheet reads the plate's two
+full-graph fields, <code>graphNodes</code> and <code>graphEdges</code>: one <code>(package, task)</code> pair
 per line, sorted by task id, and one <code>[dependency, dependent]</code> index pair per line into that array.
 The whole graph is carried — all ${fmt(R.nodes)} nodes and all ${fmt(R.edges)} edges, unaggregated — and it is
 embedded in this page verbatim, so what the pointer walks is the measurement itself and not a summary of it.
@@ -48,8 +48,8 @@ a placeholder turbo mints so that a <code>^task</code> chain has something in th
 The default view here is the real subgraph alone — ${R.real} nodes and the ${R.realEdges} edges that join two of
 them. <code>PHANTOM SHROUD</code> floods in the other ${SHROUD_N} nodes and ${fmt(SHROUD_E)} edges, faint, and
 that flood <em>is</em> the ${PCT}% figure sheet 12 prints: the share of this graph a maintainer reads in
-<code>--graph</code> output that runs nothing at all. Untick it and the real subgraph comes back exactly as it
-was — the shroud is a visibility swap over one fixed layout, never a re-layout.</p>
+<code>--graph</code> output that runs nothing at all. Untick it and the real subgraph comes back unchanged —
+the shroud is a visibility swap over one fixed layout, never a re-layout.</p>
 <p><strong>Layout — ranked from the edges, computed at build time.</strong> Rows are the ${R.pkgs} packages in
 sheet 12's own block order (publishable, apps, docs and examples, tools, root), so the two plates read the same
 way down the page. Columns are the ${R.cols} task names, and their order is not editorial: each column is

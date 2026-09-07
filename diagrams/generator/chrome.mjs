@@ -365,54 +365,6 @@ code, kbd, samp { font-family: var(--code); }
   box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
 }
 
-/* ---- REVISIONS ----
-   The REV history used to be a six-line wall inside .sheet-sub. sheetSection()
-   splits the SAME frozen string on " · REV " — nothing is retyped — and files
-   the tail here, in the inset strip under the title block, as a drawing's
-   revision block: one row of rev + date, the description wrapped beneath. */
-.revs {
-  width: 100%;
-  border-collapse: collapse;
-  border: 1.5px solid var(--ink);
-  margin-top: 18px;
-  font-family: var(--data);
-  font-variant-numeric: tabular-nums;
-}
-.revs caption {
-  font-family: var(--data);
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  font-weight: 600;
-  color: var(--ink-soft);
-  text-align: left;
-  padding: 0 0 8px;
-}
-.revs th, .revs td { text-align: left; vertical-align: baseline; }
-.revs th {
-  font-size: 9.5px;
-  letter-spacing: 0.16em;
-  font-weight: 600;
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-  width: 1%;
-}
-.revs .d {
-  font-size: 9.5px;
-  letter-spacing: 0.1em;
-  color: var(--ink-soft);
-  padding: 6px 10px 2px;
-  white-space: nowrap;
-}
-.revs .t {
-  font-size: 11.5px;
-  letter-spacing: 0.03em;
-  color: var(--ink-soft);
-  padding: 0 10px 7px;
-  border-bottom: 1px solid var(--line);
-}
-.revs tr:last-child .t { border-bottom: none; }
-.revs code { font-family: var(--code); font-size: 0.88em; }
-
 /* ---- SVG drawing classes ---- */
 .sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
 .sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
@@ -502,41 +454,6 @@ export function titleBlock(sheet) {
 </div>`;
 }
 
-/**
- * A sheet's sub line, split into the one-line subject and its REV history.
- *
- * The strings themselves are FROZEN — each sheet's `sub` is written once, at
- * the revision it records, and never edited. This only cuts them on the
- * ` · REV ` seam they already use, so the wall under the title becomes a
- * revision block without a single character changing.
- */
-const REV_SEAM = ' · REV ';
-const REV_HEAD = /^([0-9A-Z]+(?:\s+corrected)?)\s*(\d{4}-\d{2}-\d{2})?:\s*([\s\S]*)$/;
-
-export function splitRevs(sub = '') {
-  const [lead = '', ...tail] = String(sub).split(REV_SEAM);
-  const revs = tail.map((seg) => {
-    const hit = REV_HEAD.exec(seg);
-    return hit
-      ? { rev: hit[1], date: hit[2] ?? '', desc: hit[3] }
-      : { rev: '', date: '', desc: seg };
-  });
-  return { lead, revs };
-}
-
-export function revBlock(revs) {
-  if (revs.length === 0) return '';
-  return `<table class="revs" aria-label="revisions">
-  <caption>REVISIONS</caption>
-  <tbody>${revs
-    .map(
-      (r) =>
-        `<tr><th scope="row" class="r">REV ${r.rev || '—'}</th><td class="d">${r.date || 'UNDATED'}</td></tr>\n  <tr><td class="t" colspan="2">${r.desc}</td></tr>`,
-    )
-    .join('\n  ')}</tbody>
-</table>`;
-}
-
 // the plate's own aspect ratio, read off its viewBox, so the contain cap can be
 // spent on max-width (CSS cannot reach an inline SVG's width through max-height)
 export function plateRatio(svg) {
@@ -545,11 +462,10 @@ export function plateRatio(svg) {
 }
 
 export function sheetSection(sheet, { headline = true } = {}) {
-  const { lead, revs } = splitRevs(sheet.sub);
   const ar = plateRatio(sheet.svg);
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="${sheet.appendix ? 'Appendix' : 'Sheet'} ${sheet.num}: ${sheet.title}">
   <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
-  ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${lead}</p>` : ''}
+  ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
     <div class="plate"${ar ? ` style="--plate-ar:${ar}"` : ''}><div class="figure-wrap">${sheet.svg}</div></div>
     <figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
@@ -563,7 +479,6 @@ export function sheetSection(sheet, { headline = true } = {}) {
       <h3>KEY</h3>
       <table>${sheet.key}</table>
       ${titleBlock(sheet)}
-      ${headline ? revBlock(revs) : ''}
     </div>
   </div>
 </section>`;
