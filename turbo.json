@@ -109,9 +109,9 @@
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
-        "//#check:patches",
-        "//#check:graph-edges",
-        "//#check:task-inputs",
+        "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:graph-edges",
+        "@tools/repo-checks#check:task-inputs",
         "@tools/release#check:release-closure"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
@@ -139,7 +139,7 @@
       // type-incompatible binding against it goes unreported (the run only
       // fails on unrelated no-missing-import noise). Root has
       // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason (//#check:graph-edges
+      // them; these are package-qualified for that reason (check:graph-edges
       // holds the list to every publishable package with a build:types script).
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
@@ -187,37 +187,6 @@
         // feeds both the oxlint-disable layer and the disable-directive stubs
         ".oxlintrc.json",
         "tools/eslint-ts-parser/src/**"
-      ]
-    },
-    "//#check:patches": {
-      // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
-      // could rotate a patch target re-runs the check
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-patches.ts",
-        "patches/**",
-        "pnpm-workspace.yaml",
-        "pnpm-lock.yaml",
-        "tools/shared/src/**"
-      ]
-    },
-    "//#check:graph-edges": {
-      // any manifest can gain or lose a lane, any turbo.json an edge that
-      // selects differently — or stops planning at all
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-graph-edges.ts",
-        "**/turbo.json",
-        "**/package.json",
-        "pnpm-workspace.yaml",
-        "tools/shared/src/**"
-      ]
-    },
-    "//#check:task-inputs": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-task-inputs.ts",
-        "tools/shared/src/**"
       ]
     },
     "//#lint:package-json": {

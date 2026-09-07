@@ -351,6 +351,7 @@
         "tools/lcov-rebase/**/*.test.ts",
         "tools/oxc-emit/**/*.test.ts",
         "tools/release/**/*.test.ts",
+        "tools/repo-checks/**/*.test.ts",
         "tools/shared/**/*.test.ts",
         "tools/warn-lanes/**/*.test.ts",
         "tools/workers-builds/**/*.test.ts",

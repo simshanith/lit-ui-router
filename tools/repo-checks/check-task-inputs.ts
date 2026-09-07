@@ -5,7 +5,7 @@ import {
   auditTaskInputs,
   formatFailure,
   type InputsExemption,
-} from '@tools/shared/task-inputs.core.ts';
+} from './task-inputs.core.ts';
 import { plannedTasks } from '@tools/shared/turbo.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
