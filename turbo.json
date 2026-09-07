@@ -269,10 +269,10 @@
       ]
     },
     "//#lint:zizmor": {
-      // zizmor also reads its own config (zizmor.yml).
+      // zizmor discovers its own config at .github/zizmor.yml, so the
+      // .github/** glob already covers it.
       "inputs": [
         ".github/**",
-        "zizmor.yml",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
