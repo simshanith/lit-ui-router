@@ -202,7 +202,8 @@
       ]
     },
     "//#check:graph-edges": {
-      // any manifest can gain or lose a selecting script, any turbo.json an edge
+      // any manifest can gain or lose a lane, any turbo.json an edge that
+      // selects differently — or stops planning at all
       "inputs": [
         "$TURBO_DEFAULT$",
         "check-graph-edges.ts",
