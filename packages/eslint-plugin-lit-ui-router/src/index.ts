@@ -2,15 +2,9 @@
 // lit-ui-router directives. Private for now — the ship decision comes after
 // the rules prove themselves in this repo's own lanes.
 import type { Linter } from 'eslint';
-import { createRequire } from 'node:module';
+import { packageJson } from './package-json.ts';
 import type { RegisteredRule } from './rule-shape.ts';
 import { RULES, type RuleName } from './rules.ts';
-
-const require = createRequire(import.meta.url);
-const packageJson = require('../package.json') as {
-  name: string;
-  version: string;
-};
 
 /** The plugin object shape; explicit so the dist d.ts is self-contained. */
 export interface LitUiRouterPlugin {

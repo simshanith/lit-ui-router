@@ -2,15 +2,9 @@
  * Documentation urls for the rules, pinned to the version that reports them.
  */
 
-import { createRequire } from 'node:module';
+import { packageJson } from './package-json.ts';
 import type { RuleName } from './rules.ts';
 
-const require = createRequire(import.meta.url);
-const packageJson = require('../package.json') as {
-  name: string;
-  version: string;
-  repository: { directory: string };
-};
 const REPO = 'https://github.com/simshanith/lit-ui-router';
 
 // The rule docs ship in the tarball, so a `blob/main` url would answer a problem

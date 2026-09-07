@@ -1,14 +1,8 @@
 import assert from 'node:assert/strict';
-import { createRequire } from 'node:module';
 import { describe, it } from 'node:test';
 import { Linter } from 'eslint';
+import packageJson from '../package.json' with { type: 'json' };
 import plugin from './index.ts';
-
-const require = createRequire(import.meta.url);
-const packageJson = require('../package.json') as {
-  name: string;
-  version: string;
-};
 
 const IMPORTS = `
 import { html } from 'lit';
