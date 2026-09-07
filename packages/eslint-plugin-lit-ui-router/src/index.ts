@@ -1,6 +1,5 @@
 // The `lit-ui-router/` eslint plugin (#659): rules that understand
-// lit-ui-router directives. Private for now — the ship decision comes after
-// the rules prove themselves in this repo's own lanes.
+// lit-ui-router directives.
 import type { Linter } from 'eslint';
 import { packageJson } from './package-json.ts';
 import type { RegisteredRule } from './rule-shape.ts';
