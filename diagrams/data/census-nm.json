@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "b2338d0",
-  "commitDate": "2026-09-04T17:11:24-07:00",
-  "generatedAtTime": "2026-09-05T04:29:09.535Z",
+  "sha": "185d414",
+  "commitDate": "2026-09-06T20:42:44-07:00",
+  "generatedAtTime": "2026-09-07T04:39:07.254Z",
   "wasGeneratedBy": "diagrams/generator/census-nm.mjs",
-  "used": "git archive origin/main @ b2338d0 + corepack pnpm install --frozen-lockfile + turbo run build",
+  "used": "git archive origin/main @ 185d414 + corepack pnpm install --frozen-lockfile + turbo run build",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo"
@@ -20,7 +20,7 @@
     {"name":"@uirouter/visualizer","version":"7.2.1","ws":false,"measured":"pkg","f":3,"l":6048,"df":1,"dl":241},
     {"name":"@oxc-project/runtime","version":"0.147.0","ws":false,"measured":"pkg","f":232,"l":5198,"df":0,"dl":0},
     {"name":"@lit/reactive-element","version":"2.1.2","ws":false,"measured":"pkg","f":58,"l":4084,"df":30,"dl":2682},
-    {"name":"sample-app-shared","version":"0.0.0","ws":true,"measured":"dist/","f":45,"l":3962,"df":2,"dl":16},
+    {"name":"sample-app-shared","version":"0.0.0","ws":true,"measured":"dist/","f":44,"l":3890,"df":2,"dl":16},
     {"name":"preact","version":"10.4.8","ws":false,"measured":"pkg","f":61,"l":3786,"df":11,"dl":1832},
     {"name":"d3-hierarchy","version":"2.0.0","ws":false,"measured":"pkg","f":35,"l":2688,"df":0,"dl":0},
     {"name":"@uirouter/dsr","version":"1.2.0","ws":false,"measured":"pkg","f":45,"l":2053,"df":8,"dl":236},

@@ -178,6 +178,10 @@ export const SPECIMEN_CSS = `
    catchword rows, --article-key (the ONE keyboard character HWT Catchwords maps
    the chosen THE to: the face has no GSUB, every catchword is keyed) and
    --article-scale (the size that lands its ink height on Exhibition's caps). */
+/* SUP — the SHIPPED article: the word kept, drawn as a lowercase superior in
+   the data face. No kit glyph is involved, so it draws the same everywhere;
+   line-height 0 keeps it out of the title's line box. */
+.mock[data-article="sup"] .art .w { font-family: var(--data); font-size: 0.6em; font-weight: 400; letter-spacing: 0; text-transform: lowercase; vertical-align: super; line-height: 0; color: var(--ink-soft); }
 .mock[data-article="muted"] .art { color: var(--ink-soft); opacity: 0.55; }
 /* cap-aligned: 0.7em caps sit 0.21 title-em lower, which is 0.3em of their own */
 .mock[data-article="small"] .art { font-size: 0.7em; color: var(--ink-soft); vertical-align: 0.3em; }

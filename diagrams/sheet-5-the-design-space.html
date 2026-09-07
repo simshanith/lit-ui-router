@@ -123,7 +123,8 @@ body {
   background: var(--paper);
   border: 1.5px solid var(--ink);
   padding: 22px;
-  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+  /* paper on a light table casts no soft shadow: the 1px edge only */
+  box-shadow: 0 1px 0 var(--edge);
 }
 .sheet::before {
   content: "";
@@ -169,6 +170,25 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
+  font-family: var(--data);
+  font-size: 0.6em;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-right: 0.1em;
+}
 .sheet-sub {
   font-family: var(--data);
   font-size: 12px;
@@ -178,10 +198,14 @@ body {
 }
 
 /* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
-   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so.
+   Above that it grows with the column but is CONTAINED: the whole plate stays on
+   one screen. An inline SVG letterboxes under max-height instead of shrinking,
+   so the cap reaches it through max-width times the plate's own viewBox ratio
+   (--plate-ar, written per sheet). */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
-.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
   display: none;
@@ -254,7 +278,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--code);
   font-size: 0.88em;
   background: var(--paper-2);
-  border: 1px solid var(--line);
+  /* fill only: at 14 chips in 15 lines a border made the paragraph a form */
   padding: 0 3px;
   border-radius: 2px;
   /* A chip breaks only when it would otherwise run off the column, and then at
@@ -402,10 +426,10 @@ code, kbd, samp { font-family: var(--code); }
    DIN is a strict contraction of the system mono at these sizes — median -26%,
    nothing grows — and every label is start- or end-anchored, so the lettering
    only opens air. Sizes, weights, fills and tracking are unchanged. */
-text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; fill: var(--ink); letter-spacing: 0.05em; }
 text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10px; fill: var(--ink-faint); letter-spacing: 0.05em; }
 text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
 text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
 text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
@@ -419,10 +443,10 @@ a { color: var(--accent); }
 </style>
 <section class="sheet" id="sheet-5" aria-label="Sheet 5: THE DESIGN SPACE">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 5 / 14</span></div>
-  <h2 class="sheet-title">THE DESIGN SPACE</h2>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>DESIGN SPACE</h2>
   <p class="sheet-sub">ALTITUDE 5 — routers in the JS runtime · positions are editorial, argued in the notes</p>
   <figure>
-    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
+    <div class="plate" style="--plate-ar:1.6875"><div class="figure-wrap"><svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
 <defs>
   <marker id="s5-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -500,7 +524,7 @@ a { color: var(--accent); }
 <text x="744.3" y="452" class="lblf" text-anchor="start" >the primitive the client column builds on</text></g>
 
 <!-- the thesis callout -->
-<rect x="146" y="84" width="330" height="86" class="skr fnone" stroke-dasharray="6 4"/>
+<rect x="146" y="84" width="236" height="86" class="skr fnone" stroke-dasharray="6 4"/>
 <text x="160" y="108" class="lbls" text-anchor="start" >THE EMPTY QUARTER</text>
 <text x="160" y="123" class="lbls" text-anchor="start" >nearly every router here is URL-first:</text>
 <text x="160" y="138" class="lbls" text-anchor="start" >the address is the source of truth.</text>
@@ -531,15 +555,19 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="skf" stroke-dasharray="4 4"/></svg></td><td>column boundary (soft)</td></tr></table>
       <div class="titleblock" aria-label="title block">
   <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">THE DESIGN SPACE</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>DESIGN SPACE</span></div>
   <div><span class="fld">SCALE</span>JS ECOSYSTEM</div>
   <div><span class="fld">FORM</span>POSITIONED CHART</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · A</div>
+  <div><span class="fld">DATE / REV</span>2026-09-06 · B</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>5 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
-      
+      <table class="revs" aria-label="revisions">
+  <caption>REVISIONS</caption>
+  <tbody><tr><th scope="row" class="r">REV B</th><td class="d">2026-09-06</td></tr>
+  <tr><td class="t" colspan="2">the empty-quarter callout re-cut to the line it frames (330 → 236 wide) — the dashed box had been drawn to the mono lettering and, at the data face, crossed the first column boundary into the server column it says nothing about; no point moved</td></tr></tbody>
+</table>
     </div>
   </div>
 </section>

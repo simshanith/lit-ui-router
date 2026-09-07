@@ -178,11 +178,15 @@ const readLabel = `${txt((DX + DW + RX) / 2, 262, `reads — ${readsN} imports`,
 // THE EXTERNAL INSTRUMENT LEDGER (from the plates' own PROV-O fields)
 // ---------------------------------------------------------------------------
 const TLY = TABY(SHEETS.length - 1) + 26;
-const toolHalf = Math.ceil(A.tools.length / 2);
+// One column, not two: at the data face a 140px half-column clipped every
+// instrument that carries a version or a source, so ten of the eleven read as
+// ellipses.  The full 260px measure lets all but the tarball URL stand whole.
+const toolHalf = A.tools.length;
+const TOOL_CH = 45;
 const toolsBox = `${box(RX, TLY, RW, 40 + toolHalf * 14, 'sk fnone')}
 ${txt(RX + 10, TLY + 18, `EXTERNAL INSTRUMENTS — ${A.tools.length}`, 'lbls')}
 ${txt(RX + 10, TLY + 30, 'from each plate’s wasAssociatedWith', 'lblf')}
-${A.tools.map((t, i) => txt(RX + 10 + (i < toolHalf ? 0 : 140), TLY + 46 + (i % toolHalf) * 14, t.label.length > 21 ? `${t.label.slice(0, 20)}…` : t.label, 'lblf')).join('\n')}`;
+${A.tools.map((t, i) => txt(RX + 10, TLY + 46 + i * 14, t.label.length > TOOL_CH ? `${t.label.slice(0, TOOL_CH - 1)}…` : t.label, 'lblf')).join('\n')}`;
 
 // ---------------------------------------------------------------------------
 // THE SCHEDULE — plate | tier | writer | basis | readers
@@ -267,9 +271,9 @@ ${schedule}
 </svg>`;
 
 export const sheet14 = {
-  num: 14, id: 'pipeline', rev: 'C',
+  num: 14, id: 'pipeline', rev: 'D',
   title: 'THE SURVEY OFFICE',
-  sub: `ALTITUDE 3½ — the atlas measuring itself · ${S.probes} probes, ${S.plates} plates, ${S.drawings} drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to ${BASIS} · REV A ${A.commitDate}: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap · REV C 2026-09-06: the master-snapshot plate now carries its accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); nothing else moved`,
+  sub: `ALTITUDE 3½ — the atlas measuring itself · ${S.probes} probes, ${S.plates} plates, ${S.drawings} drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to ${BASIS} · REV A ${A.commitDate}: first printing — the instrument drawn by itself · REV B: the schedule now clears the instrument ledger however tall the rack grows, and long READ BY lists wrap · REV C 2026-09-06: the master-snapshot plate now carries its accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); nothing else moved · REV D 2026-09-06: the external-instrument ledger runs as one column instead of two — the 140px half-column had been cut for the mono line and clipped ten of the eleven instruments to an ellipsis; on the full measure all but the tarball URL stand whole`,
   scale: 'THE CENSUS PIPELINE',
   form: 'FLOW GRAPH',
   svg,

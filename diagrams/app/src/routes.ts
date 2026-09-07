@@ -29,6 +29,7 @@ export const href = {
   about: `${BASE}about`,
   city: `${BASE}city`,
   specimen: `${BASE}specimen`,
+  log: `${BASE}log`,
   sheet: (num: string): string => `${BASE}sheet/${num}`,
   /** The flat set's index — a plain page, never a router state. */
   set: SET,
@@ -56,6 +57,10 @@ export const routes: RouteDeclaration[] = [
     redirectTo: { state: 'atlas.sheet', params: { num: '14' } },
   },
   { name: 'atlas.about', url: '/about' },
+  // The set's issue log — every REV across every plate, latest first. It was
+  // the cover's right-hand column until 2026-09-06; a page of its own is where
+  // a drawing set's issue record belongs once it outgrows the title sheet.
+  { name: 'atlas.log', url: '/log' },
   // Url-less on purpose: an unmatched path keeps its own url in the address
   // bar, exactly as a server 404 does. This is the `otherwise` projection.
   { name: 'atlas.notFound' },

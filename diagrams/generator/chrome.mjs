@@ -131,7 +131,8 @@ body {
   background: var(--paper);
   border: 1.5px solid var(--ink);
   padding: 22px;
-  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+  /* paper on a light table casts no soft shadow: the 1px edge only */
+  box-shadow: 0 1px 0 var(--edge);
 }
 .sheet::before {
   content: "";
@@ -177,6 +178,25 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
+  font-family: var(--data);
+  font-size: 0.6em;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-right: 0.1em;
+}
 .sheet-sub {
   font-family: var(--data);
   font-size: 12px;
@@ -186,10 +206,14 @@ body {
 }
 
 /* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
-   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so.
+   Above that it grows with the column but is CONTAINED: the whole plate stays on
+   one screen. An inline SVG letterboxes under max-height instead of shrinking,
+   so the cap reaches it through max-width times the plate's own viewBox ratio
+   (--plate-ar, written per sheet). */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
-.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
   display: none;
@@ -262,7 +286,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--code);
   font-size: 0.88em;
   background: var(--paper-2);
-  border: 1px solid var(--line);
+  /* fill only: at 14 chips in 15 lines a border made the paragraph a form */
   padding: 0 3px;
   border-radius: 2px;
   /* A chip breaks only when it would otherwise run off the column, and then at
@@ -410,10 +434,10 @@ code, kbd, samp { font-family: var(--code); }
    DIN is a strict contraction of the system mono at these sizes — median -26%,
    nothing grows — and every label is start- or end-anchored, so the lettering
    only opens air. Sizes, weights, fills and tracking are unchanged. */
-text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; fill: var(--ink); letter-spacing: 0.05em; }
 text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10px; fill: var(--ink-faint); letter-spacing: 0.05em; }
 text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
 text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
 text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
@@ -456,10 +480,19 @@ export function defs(p) {
 </defs>`;
 }
 
+/**
+ * A title with its leading THE drawn as the article superior (see `sup.art`).
+ * The manifest titles stay frozen — this is a RENDER transform, applied
+ * wherever a title is printed in full. Twin in the app: `articleTitle` in
+ * app/src/views.ts and app/prerender.ts; keep the three in lockstep.
+ */
+export const articleTitle = (title = '') =>
+  String(title).replace(/^THE\s+/, '<sup class="art">the&nbsp;</sup>');
+
 export function titleBlock(sheet) {
   return `<div class="titleblock" aria-label="title block">
   <div class="span2"><span class="fld">PROJECT</span><span class="dsp">${PROJECT}</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">${sheet.title}</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">${articleTitle(sheet.title)}</span></div>
   <div><span class="fld">SCALE</span>${sheet.scale}</div>
   <div><span class="fld">FORM</span>${sheet.form}</div>
   <div><span class="fld">CLIENT</span>${CLIENT}</div>
@@ -504,13 +537,21 @@ export function revBlock(revs) {
 </table>`;
 }
 
+// the plate's own aspect ratio, read off its viewBox, so the contain cap can be
+// spent on max-width (CSS cannot reach an inline SVG's width through max-height)
+export function plateRatio(svg) {
+  const m = /viewBox="\s*[-\d.]+\s+[-\d.]+\s+([\d.]+)\s+([\d.]+)/.exec(svg ?? '');
+  return m && Number(m[2]) > 0 ? (Number(m[1]) / Number(m[2])).toFixed(4) : null;
+}
+
 export function sheetSection(sheet, { headline = true } = {}) {
   const { lead, revs } = splitRevs(sheet.sub);
+  const ar = plateRatio(sheet.svg);
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="${sheet.appendix ? 'Appendix' : 'Sheet'} ${sheet.num}: ${sheet.title}">
   <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
-  ${headline ? `<h2 class="sheet-title">${sheet.title}</h2>\n  <p class="sheet-sub">${lead}</p>` : ''}
+  ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${lead}</p>` : ''}
   <figure>
-    <div class="plate"><div class="figure-wrap">${sheet.svg}</div></div>
+    <div class="plate"${ar ? ` style="--plate-ar:${ar}"` : ''}><div class="figure-wrap">${sheet.svg}</div></div>
     <figcaption><span class="figno">FIG. ${sheet.num}</span>${sheet.caption}</figcaption>
   </figure>
   <div class="notes-grid">

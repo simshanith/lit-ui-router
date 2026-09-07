@@ -126,7 +126,7 @@ ${txt(832, 226, 'PLUGS  B · D · A(seat 1)', 'lbla')}
 ${txt(1036, 330, 'its own stud ↓', 'lblf', 'end')}
 <rect x="1041" y="340" width="18" height="30" rx="6" class="ska fp"/>`;
 
-const navBlock = `${slab(780, 355, 180, 90)}
+const navBlock = `${slab(780, 355, 156, 90)}
 ${badge(766, 347, 2)}
 ${txt(792, 381, 'ui-router-navigation-', 'lblb')}
 ${txt(792, 395, `location-plugin ${NAV[1]}`, 'lblb')}
@@ -136,7 +136,7 @@ ${txt(792, 437, 'PLUG  THE LOCATION SEAT', 'lblr')}`;
 
 // The brick-to-brick seat: lit's stud points down, mobx's socket opens up.
 const mbxBlock = `<line x1="1050" y1="372" x2="1050" y2="438" class="ska" stroke-dasharray="4 3"/>
-${slab(990, 460, 160, 120)}
+${slab(990, 460, 136, 120)}
 <path d="M${1050 - 19},460 v-20 h8 v12 h22 v-12 h8 v20 z" class="ska fp2"/>
 ${badge(966, 470, 3)}
 ${txt(1002, 498, `${MBX[0]}`, 'lblb')}
@@ -198,9 +198,9 @@ ${serverLane}
 </svg>`;
 
 export const sheet2a = {
-  num: '2A', id: 'companions-couplings', rev: 'C',
+  num: '2A', id: 'companions-couplings', rev: 'D',
   title: 'THE COUPLING PLAN',
-  sub: `ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ ${B.sha} — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count · REV C 2026-09-06: fills — the slab tops now carry their paper-2 tint and the right flanks their hatch, sheet 2’s rev C fault in this plate’s own slab helper; nothing moved`,
+  sub: `ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, rev A’s arrangement, every coupling drawn to read · REV B: rows read census-bricks.json @ ${B.sha} — lit-ui-router 1.9.0 · 12f · 1,325 was the 2026-08-17 hand count · REV C 2026-09-06: fills — the slab tops now carry their paper-2 tint and the right flanks their hatch, sheet 2’s rev C fault in this plate’s own slab helper; nothing moved · REV D 2026-09-06: the two clamped companions re-cut to the line they frame — the location plugin 180 → 156 wide and the mobx brick 160 → 136, both slabs having been sized to the mono lettering the data face replaced; every other block keeps its sloc-proportional face`,
   scale: 'FOUR PACKAGES',
   form: 'COUPLING PLAN',
   svg,

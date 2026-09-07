@@ -440,6 +440,16 @@ const catchwords: Face = {
  */
 export const ARTICLES = [
   {
+    id: 'sup',
+    label: 'SUP · din 0.6em lowercase',
+    key: '',
+    scale: 1,
+    note:
+      'SHIPPED 2026-09-06 — the word kept, set as a superior in the DATA face at 0.6em, ' +
+      'lowercase, soft ink: the one treatment that needs no glyph the title face does not have, ' +
+      'so the site, the flat set and the artifact draw it identically',
+  },
+  {
     id: 'as-is',
     label: 'AS IS',
     key: '',
@@ -1010,7 +1020,7 @@ export class AtlasSpecimen extends LitElement {
   /** Index into CODE_FACES. 0 = the system mono, which is what ships. */
   declare code: number;
   declare size: number;
-  /** Index into ARTICLES. 0 = AS IS. Not owned by any pairing, so never reset. */
+  /** Index into ARTICLES. 0 = SUP, the shipped article. Never reset by a pairing. */
   declare article: number;
   /** STACKED: the catchword over the first word — the sheet head only. */
   declare articleStack: boolean;
@@ -1046,7 +1056,8 @@ export class AtlasSpecimen extends LitElement {
     this.size = start?.dataSize ?? 12;
     this.article = 0;
     this.articleStack = false;
-    this.articleRail = true;
+    // The shipped rail drops the article outright (T9); the sheet keeps it.
+    this.articleRail = false;
     this.articleMul = 1;
     this.kitCatchwords = false;
     this.faces = [];

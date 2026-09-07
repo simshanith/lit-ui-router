@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "b2338d0",
-  "commitDate": "2026-09-04T17:11:24-07:00",
-  "generatedAtTime": "2026-09-05T04:28:24.791Z",
+  "sha": "185d414",
+  "commitDate": "2026-09-06T20:42:44-07:00",
+  "generatedAtTime": "2026-09-07T04:37:54.429Z",
   "wasGeneratedBy": "diagrams/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ b2338d0",
+  "used": "git archive origin/main @ 185d414",
   "wasAssociatedWith": [
     "git"
   ],
@@ -85,7 +85,6 @@
     {"file":"apps/sample-app-lit-mobx/turbo.json","root":false,"definitions":2,"cacheFalse":0},
     {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":3,"cacheFalse":0},
     {"file":"apps/sample-app-routes/turbo.json","root":false,"definitions":1,"cacheFalse":0},
-    {"file":"docs/turbo.json","root":false,"definitions":14,"cacheFalse":4},
     {"file":"examples/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":5,"cacheFalse":0},
     {"file":"packages/lit-ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
@@ -97,6 +96,7 @@
     {"file":"tools/release/turbo.json","root":false,"definitions":7,"cacheFalse":1},
     {"file":"tools/shared/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"tools/workers-builds/turbo.json","root":false,"definitions":2,"cacheFalse":1},
-    {"file":"turbo.json","root":true,"definitions":47,"cacheFalse":7}
+    {"file":"turbo.json","root":true,"definitions":47,"cacheFalse":7},
+    {"file":"www/lit-ui-router.dev/turbo.json","root":false,"definitions":14,"cacheFalse":4}
   ]
 }

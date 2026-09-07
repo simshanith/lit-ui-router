@@ -318,7 +318,7 @@ ${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · two demos + the rig`, 'lblf', 'end')}
 ${txt(1096, 397, 'live on e2e light alone · №5 tests pass with no meter', 'lblf', 'end')}
 
-${txt(1146, 560, 'docs/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(1146, 560, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1146, 573, `the worker: fully lit — a ${fmt(g(10).r[11])}-sloc sliver of ${fmt(g(10).r[7])}`, 'lblf')}
 ${txt(1146, 585, `examples: ${fmt(g(11).r[7])} sloc, never lit`, 'lblf')}
 <line x1="1140" y1="569" x2="1064" y2="560" class="skf"/>

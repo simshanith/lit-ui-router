@@ -11,7 +11,7 @@
 // in three dimensions: semi-opaque tinted walls over a girding frame, so the
 // structure behind reads through — a drafting set, not a video game.
 import { readFileSync } from 'node:fs';
-import { revBlock, splitRevs } from './chrome.mjs';
+import { articleTitle, revBlock, splitRevs } from './chrome.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
 
@@ -52,7 +52,7 @@ const TIER_TEXT = {
   halt: 'HALTS A PUBLISH', pr: 'STOPS THE PR LINE', late: 'gates a later stage',
   report: 'never gates', line: 'the material', off: 'types only — not massed',
 };
-const DIST_TEXT = { pkg: 'packages/', app: 'apps/', site: 'docs/ + examples/', tool: 'tools/' };
+const DIST_TEXT = { pkg: 'packages/', app: 'apps/', site: 'www/ + examples/', tool: 'tools/' };
 const DIST_LABEL = { pkg: 'PACKAGES/', app: 'APPS/', site: 'DOCS + EXAMPLES/', tool: 'TOOLS/' };
 
 const LEGEND = ['halt', 'pr', 'late', 'report', 'line', 'annex'].map((k) => [k, TIERS[k].label]);
@@ -101,7 +101,7 @@ export const CITY_META = {
   head: 'SHEET 7 · 3D',
   rev: REV,
   title: 'THE CITY — ISOMETRIC',
-  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · REV C: A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY · REV D: THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF`,
+  sub: `SHEET 7'S CENSUS CITY IN THE ROUND · ${CITY.length} MEMBERS · ${MASSED} MASSED · ${ANNEXES} SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · REV C: A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S SHADOW SURVEY · REV D: THAT SURVEY IS NOW A FILED PLATE, METERED AT THE CITY'S OWN REF · REV E 2026-09-07: THE STAGE IS VIEWPORT-RELATIVE — 80VH, CAPPED AT 1400PX AND FLOORED AT 520 — SO THE MODEL STANDS AS TALL AS A CONTAINED PLATE INSTEAD OF A FIXED 620PX BAND`,
   /** The flat set's copy — an anchor in the gallery, never a page of its own. */
   standalone: 'gallery.html#city-scene',
 };
@@ -111,11 +111,11 @@ const CSS = `
 .cs-bar { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; justify-content: space-between;
   border: 1.5px solid var(--ink); border-bottom: none; background: var(--paper-2); padding: 8px 14px; }
 .cs-legend { display: flex; flex-wrap: wrap; gap: 4px 14px; align-items: center; }
-.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 9.5px;
+.cs-legend .lg { display: inline-flex; align-items: center; gap: 7px; font-family: var(--data); font-size: 10.5px;
   letter-spacing: 0.06em; color: var(--ink-soft); }
 .cs-legend .sw { display: block; width: 20px; height: 12px; border: 1.2px solid var(--ink); }
 .cs-legend .sw-annex, .cs-legend .sw-lamp { border-color: var(--ink-soft); border-style: dashed; }
-.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 9.5px;
+.cs-ctl { display: flex; gap: 12px; align-items: center; font-family: var(--data); font-size: 10.5px;
   letter-spacing: 0.1em; color: var(--ink-soft); }
 .cs-ctl button { font: inherit; letter-spacing: inherit; color: var(--ink); background: var(--paper);
   border: 1px solid var(--ink); padding: 4px 9px; cursor: pointer; }
@@ -123,7 +123,7 @@ const CSS = `
 .cs-ctl label { display: inline-flex; gap: 5px; align-items: center; cursor: pointer; }
 .cs-stage { border: 1.5px solid var(--ink); background: var(--paper); }
 /* pan-y keeps the page scrollable under a touch; a horizontal drag orbits */
-.cs-canvas { height: 540px; touch-action: pan-y; cursor: grab; position: relative; overflow: hidden; }
+.cs-canvas { height: clamp(520px, 80vh, 1400px); touch-action: pan-y; cursor: grab; position: relative; overflow: hidden; }
 .cs-canvas.over { cursor: pointer; }
 .cs-canvas.grabbing { cursor: grabbing; }
 .cs-canvas canvas { display: block; }
@@ -132,12 +132,24 @@ const CSS = `
 .cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 9px 14px 10px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
 /* the mass name is a bare identifier — the one place the code face earns its keep */
-.cs-info h4 { font-family: var(--code); font-size: 11.5px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
+.cs-info h4 { font-family: var(--code); font-size: 13px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
 .cs-info p { margin: 0; color: var(--ink-soft); word-break: break-word; }
 .cs-info .hint { color: var(--ink-faint); }
-.cs-basis { font-family: var(--data); font-size: 9.5px; letter-spacing: 0.06em; color: var(--ink-faint);
-  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2); padding: 8px 14px 9px; }
-@media (max-width: 860px) { .cs-canvas { height: 460px; } }`;
+/* the basis is running text, so it is set as prose; the frame stays full width and the
+   right padding holds the measure to 68ch — a note strip, not a 228ch wall of data face */
+.cs-basis { font-family: var(--prose); font-size: 13.5px; line-height: 1.5; color: var(--ink-soft);
+  border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2);
+  padding: 12px max(14px, calc(100% - 68ch - 14px)) 14px 14px; }
+/* a rev's basis note is running text under its ledger headline */
+.cs .revs .rev-note { display: block; margin-top: 7px; font-family: var(--prose); font-size: 13.5px;
+  line-height: 1.5; letter-spacing: normal; max-width: 68ch; }
+/* below 1100 the legend and the controls each take a row: one bar, two lines */
+@media (max-width: 1100px) {
+  .cs-bar { flex-direction: column; align-items: stretch; gap: 8px; }
+  .cs-ctl { flex-wrap: wrap; justify-content: flex-start; }
+  .cs-ctl #cs-hint { flex: 1 1 240px; min-width: 0; }
+}
+@media (max-width: 860px) { .cs-canvas { height: clamp(420px, 62vh, 620px); } }`;
 
 // THE SCENE, HOSTLESS.  Two hosts fill the same body: the flat gallery wraps it
 // in an IIFE that lazy-imports three from cdnjs, and diagrams/app emits it as an
@@ -437,18 +449,22 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
         [minZ - cz, maxZ - cz].forEach(function (z) { corners.push(new THREE.Vector3(x, y, z)); });
       });
     });
-    // fit over ALL four diagonals, so a snap can never clip the city
-    var baseW = 0, baseH = 0, keep = az;
+    // fit over ALL four diagonals, so a snap can never clip the city.  The vertical
+    // fit takes the SPAN, not the largest |y|: a model that sits above the ground
+    // centre would otherwise be paid for twice and leave empty paper under it.
+    var baseW = 0, loY = Infinity, hiY = -Infinity, keep = az;
     D.snaps.forEach(function (deg) {
       az = deg * Math.PI / 180;
       place();
       corners.forEach(function (v) {
         var p = v.clone().applyMatrix4(camera.matrixWorldInverse);
         baseW = Math.max(baseW, Math.abs(p.x));
-        baseH = Math.max(baseH, Math.abs(p.y));
+        loY = Math.min(loY, p.y);
+        hiY = Math.max(hiY, p.y);
       });
     });
     az = keep;
+    var baseH = (hiY - loY) / 2, midY = (hiY + loY) / 2;
 
     function resize() {
       var w = stage.clientWidth, h = stage.clientHeight;
@@ -459,7 +475,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
       var aspect = w / h;
       var half = Math.max(baseH, baseW / aspect) * D.margin;
       camera.left = -half * aspect; camera.right = half * aspect;
-      camera.top = half; camera.bottom = -half;
+      camera.top = midY + half; camera.bottom = midY - half;
       camera.updateProjectionMatrix();
     }
 
@@ -767,6 +783,31 @@ ${fill(APP)}}
 `;
 }
 
+// THE BASIS, FROZEN.  The strip is running prose; its REV ¶s are filed the way a
+// sheet files its own — split on the same " REV <letter> " seam sheetSection() uses,
+// so the revision block below the stage is the very text that was in the strip.
+const BASIS_TEXT = `BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>diagrams/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. Walls are semi-opaque over a girding frame per the pinned sprite note; gate severity is colour, never height; the <code>off</code> tier is drawn frame-only because there is nothing to mass. Camera is orthographic at the true isometric elevation, atan(1/√2) ≈ 35.264°; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints.  three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read.  REV C adds a SECOND MATERIAL LANE over the same geometry: <code>TEST LIGHT</code> relights the city from <code>generator/sheet7a.mjs</code>'s exported <code>SURVEY</code>, so the model and the flat shadow plate cannot drift either. Its polarity is sheet 7A's — covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light; a metered member's mass splits along its footprint, the lit slab being side × the extent the meter recorded, taken from the annex (east) side, its tint stepping down through the line-coverage bands. Shadow lerps toward BLACK rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.  REV D re-lights the lane from a PLATE: sheet 7A's light is no longer a transcribed one-off but <code>diagrams/data/census-shadow.json</code>, ${SURVEY_META.basis} — the same ref the geometry is massed at, with ${SURVEY_META.metered} members metered under their own suites' meters. Every mass in this model therefore has a survey row (a mass without one is a build error), so the blank-paper case for a member the old metering predated is gone along with the metering that needed it.`;
+
+/** lead prose + one note per rev letter, keyed onto the sub's own rev rows. */
+function fileBasisRevs(text, revs) {
+  const [lead = '', ...tail] = text.split(/ {2,}(?=REV [A-Z]\b)/);
+  const notes = {};
+  for (const seg of tail) {
+    // the whole sentence is filed, prefix and all: its subject IS the rev
+    const hit = /^REV ([A-Z]) /.exec(seg);
+    if (hit) notes[hit[1]] = seg;
+  }
+  return { lead, revs: revs.map((r) => ({ ...r, note: notes[r.rev] ?? '' })) };
+}
+
+/** revBlock's table, with the basis note filed under each rev's headline. */
+function cityRevBlock(revs) {
+  return revBlock(revs).replace(/<td class="t" colspan="2">([\s\S]*?)<\/td>/g, (cell, desc) => {
+    const note = (revs.find((r) => r.desc === desc) ?? {}).note;
+    return note ? `<td class="t" colspan="2">${desc}<span class="rev-note">${note}</span></td>` : cell;
+  });
+}
+
 /** The plate: style, section and the JSON island — no init script. */
 export function cityMarkup() {
   // swatch fills follow the same tints the scene uses, in page tokens
@@ -779,12 +820,13 @@ export function cityMarkup() {
   };
   const swatchCss = LEGEND.map(([k]) => swatch(k, TIERS[k]))
     .concat(LIGHT_LEGEND.map(([k]) => swatch(k, LIT[k]))).join('\n');
+  const { lead: basisLead, revs: basisRevs } = fileBasisRevs(BASIS_TEXT, splitRevs(CITY_META.sub).revs);
 
   return `<style>${CSS}
 ${swatchCss}</style>
 <section class="sheet cs" id="city-scene" aria-label="The City, isometric — sheet 7 in the round, with a second material lane that relights it from sheet 7A's shadow survey">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">${CITY_META.head} · REV ${CITY_META.rev}</span></div>
-  <h2 class="sheet-title">${CITY_META.title}</h2>
+  <h2 class="sheet-title">${articleTitle(CITY_META.title)}</h2>
   <p class="sheet-sub">${splitRevs(CITY_META.sub).lead}</p>
   <div class="cs-bar">
     <div class="cs-legend">
@@ -800,8 +842,8 @@ ${swatchCss}</style>
     <div class="cs-canvas" id="cs-canvas" role="img" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each a translucent box with its girding frame showing through, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light."></div>
     <aside class="cs-info" id="cs-info"></aside>
   </div>
-  <p class="cs-basis">BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>diagrams/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. Walls are semi-opaque over a girding frame per the pinned sprite note; gate severity is colour, never height; the <code>off</code> tier is drawn frame-only because there is nothing to mass. Camera is orthographic at the true isometric elevation, atan(1/√2) ≈ 35.264°; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints.  three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read.  REV C adds a SECOND MATERIAL LANE over the same geometry: <code>TEST LIGHT</code> relights the city from <code>generator/sheet7a.mjs</code>'s exported <code>SURVEY</code>, so the model and the flat shadow plate cannot drift either. Its polarity is sheet 7A's — covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light; a metered member's mass splits along its footprint, the lit slab being side × the extent the meter recorded, taken from the annex (east) side, its tint stepping down through the line-coverage bands. Shadow lerps toward BLACK rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.  REV D re-lights the lane from a PLATE: sheet 7A's light is no longer a transcribed one-off but <code>diagrams/data/census-shadow.json</code>, ${SURVEY_META.basis} — the same ref the geometry is massed at, with ${SURVEY_META.metered} members metered under their own suites' meters. Every mass in this model therefore has a survey row (a mass without one is a build error), so the blank-paper case for a member the old metering predated is gone along with the metering that needed it.</p>
-  ${revBlock(splitRevs(CITY_META.sub).revs)}
+  <p class="cs-basis">${basisLead}</p>
+  ${cityRevBlock(basisRevs)}
 </section>
 <script type="application/json" id="cs-city">${json(DATA)}</script>`;
 }

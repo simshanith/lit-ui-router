@@ -137,11 +137,11 @@ const half = Math.ceil(all.length / 2);
 const SY = 810;
 const line = (r) => `${r.n} ${r.name} — kept ${KB(r.r)} → ${KB(r.gz)} wire · ×${r.mods} · ${TOPS[r.name]}`;
 const schedule = `<g>
-<rect x="40" y="${SY}" width="1080" height="${52 + (half + 1) * 17}" class="sk fp"/>
+<rect x="40" y="${SY}" width="1110" height="${52 + (half + 1) * 17}" class="sk fp"/>
 ${txt(56, SY + 22, 'STRUCTURE SCHEDULE — source bytes the bundler kept · gzipped wire share · modules · note', 'lbls')}
-<line x1="40" y1="${SY + 32}" x2="1120" y2="${SY + 32}" class="skf"/>
+<line x1="40" y1="${SY + 32}" x2="1150" y2="${SY + 32}" class="skf"/>
 ${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, line(r), 'lbls')).join('\n')}
-${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, line(r), 'lbls')).join('\n')}
+${all.slice(half).map((r, i) => txt(636, SY + 52 + i * 17, line(r), 'lbls')).join('\n')}
 ${txt(56, SY + 52 + half * 17, `TOTAL — ${all.length} groups in ${T.chunks} chunks · ${fmt(T.kept)} kept → ${fmt(T.emitted)} emitted → ${fmt(T.gz)} gz · ${BASIS}`, 'lbls')}
 </g>`;
 
@@ -152,13 +152,13 @@ ${txt(40, DY - 8, 'THE FIVE DOORS, PRICED — the codecov bundle-analysis series
 ${DOOR_STRIP.map((name, i) => {
   const d = door(name);
   const se = name.includes('register');
-  const x = 40 + i * 152;
-  return `${box(x, DY, 144, 30, se ? 'sk fp2' : 'ska fp')}
+  const x = 40 + i * 132;
+  return `${box(x, DY, 116, 30, se ? 'sk fp2' : 'ska fp')}
 ${txt(x + 8, DY + 13, name, se ? 'lbls' : 'lbla')}
 ${txt(x + 8, DY + 25, `${fmt(d.gz)} gz`, 'lblf')}`;
 }).join('\n')}
-${txt(816, DY + 13, `door "." prices at ${fmt(door('.').gz)} gz — and this app pulls ${fmt(G('lit-ui-router').gz)}:`, 'lbls')}
-${txt(816, DY + 25, `the app leaves ${Math.round((1 - G('lit-ui-router').gz / door('.').gz) * 100)}% of the door on the shelf`, 'lbls')}
+${txt(724, DY + 13, `door "." prices at ${fmt(door('.').gz)} gz — and this app pulls ${fmt(G('lit-ui-router').gz)}:`, 'lbls')}
+${txt(724, DY + 25, `the app leaves ${Math.round((1 - G('lit-ui-router').gz / door('.').gz) * 100)}% of the door on the shelf`, 'lbls')}
 </g>`;
 
 const CHROME_GZ = G('marked').gz + G('dompurify').gz;
@@ -173,8 +173,8 @@ ${bodies}
 
 ${txt(60, 56, `the machine the skin wraps: core ${KB(G('@uirouter/core').gz)} gz (${pct(G('@uirouter/core').gz)}) —`, 'lbla')}
 ${txt(60, 68, `lit-ui-router itself is ${KB(G('lit-ui-router').gz)} (${pct(G('lit-ui-router').gz)})`, 'lbla')}
-${txt(1120, 240, `REV C: one lit major, ${KB(G('lit').gz)} — rev A shipped two,`, 'lbla', 'end')}
-${txt(1120, 252, '12.5 KB; the déjà vu is gone (#618)', 'lbla', 'end')}
+${txt(1150, 240, `REV C: one lit major, ${KB(G('lit').gz)} — rev A shipped two,`, 'lbla', 'end')}
+${txt(1150, 252, '12.5 KB; the déjà vu is gone (#618)', 'lbla', 'end')}
 ${txt(1150, 336, `marked + dompurify: ${KB(CHROME_GZ)}`, 'lbla', 'end')}
 ${txt(1150, 348, 'gz — 5× the router they', 'lbla', 'end')}
 ${txt(1150, 360, 'document, now parked in a', 'lbla', 'end')}
@@ -183,17 +183,17 @@ ${txt(60, 585, `what the swap left: lodash-es ${KB(G('lodash-es').gz)} —`, 'lb
 ${txt(60, 597, `the true cost of four imports, ${G('lodash-es').mods} modules unmoved`, 'lbla')}
 <line x1="352" y1="578" x2="378" y2="518" class="skf"/>
 
-${txt(1120, 26, 'SCALE — footprint area ∝ source kept · 1 px of height ≈ 150 gz bytes', 'lbls', 'end')}
-${txt(1120, 40, BASIS, 'lblf', 'end')}
+${txt(1150, 26, 'SCALE — footprint area ∝ source kept · 1 px of height ≈ 150 gz bytes', 'lbls', 'end')}
+${txt(1150, 40, BASIS, 'lblf', 'end')}
 
 ${doors}
 ${schedule}
 </svg>`;
 
 export const sheet10 = {
-  num: 10, id: 'bundled', rev: 'D',
+  num: 10, id: 'bundled', rev: 'E',
   title: 'THE BUNDLED CITY',
-  sub: `ALTITUDE 2⅞ — inside the wire: what the bundler kept · ${PLATE.app}, one bundle · REV C: every byte now read from the census-bundle plate — ${BASIS} · REV D 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved`,
+  sub: `ALTITUDE 2⅞ — inside the wire: what the bundler kept · ${PLATE.app}, one bundle · REV C: every byte now read from the census-bundle plate — ${BASIS} · REV D 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved · REV E 2026-09-06: the paper re-ruled — the five door frames tightened to the DIN line (144 → 116), the structure schedule opened to the plate’s full measure so its two columns get a real gutter instead of the left column running into the right, and every flush-right note now hangs on one margin at 1150`,
   scale: 'ONE BUNDLE',
   form: 'BUNDLED CITY',
   svg,

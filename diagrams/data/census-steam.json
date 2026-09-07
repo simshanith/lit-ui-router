@@ -1,36 +1,36 @@
 {
   "ref": "origin/main",
-  "sha": "b2338d0",
-  "commitDate": "2026-09-04T17:11:24-07:00",
-  "generatedAtTime": "2026-09-05T04:28:24.499Z",
+  "sha": "185d414",
+  "commitDate": "2026-09-06T20:42:44-07:00",
+  "generatedAtTime": "2026-09-07T04:45:27.958Z",
   "wasGeneratedBy": "diagrams/generator/census-steam.mjs",
-  "used": "diagrams/data/census-files.json @ b2338d0",
+  "used": "diagrams/data/census-files.json @ 185d414",
   "wasAssociatedWith": [
     "git log (historyLog)"
   ],
   "window": {
-    "since": "2026-06-07",
-    "until": "2026-09-04"
+    "since": "2026-06-09",
+    "until": "2026-09-06"
   },
-  "windowCommits": 377,
+  "windowCommits": 386,
   "rows": [
-    {"member":"packages/eslint-plugin-lit-ui-router","commits":4},
+    {"member":"packages/eslint-plugin-lit-ui-router","commits":7},
     {"member":"packages/lit-ui-router","commits":35},
     {"member":"packages/lit-ui-router-mobx","commits":10},
     {"member":"packages/navigation-location-plugin","commits":8},
     {"member":"packages/ui-router-server","commits":9},
-    {"member":"apps/sample-app-lit-e2e","commits":17},
+    {"member":"apps/sample-app-lit-e2e","commits":18},
     {"member":"apps/sample-app-lit-mobx","commits":12},
     {"member":"apps/sample-app-lit-vanilla","commits":9},
-    {"member":"apps/sample-app-routes","commits":2},
+    {"member":"apps/sample-app-routes","commits":3},
     {"member":"apps/sample-app-shared","commits":26},
-    {"member":"docs","commits":28},
-    {"member":"examples","commits":16},
+    {"member":"www/lit-ui-router.dev","commits":1},
+    {"member":"examples","commits":17},
     {"member":"tools/build_and_test","commits":6},
     {"member":"tools/bundle-probe","commits":5},
     {"member":"tools/compat-guards","commits":4},
     {"member":"tools/dts-backtest","commits":4},
-    {"member":"tools/embed-heights","commits":1},
+    {"member":"tools/embed-heights","commits":3},
     {"member":"tools/eslint-ts-parser","commits":1},
     {"member":"tools/happy-dom","commits":1},
     {"member":"tools/lcov-rebase","commits":1},
@@ -38,13 +38,13 @@
     {"member":"tools/lit-template-lint","commits":2},
     {"member":"tools/lit-test-env","commits":1},
     {"member":"tools/oxc-emit","commits":4},
-    {"member":"tools/release","commits":20},
+    {"member":"tools/release","commits":21},
     {"member":"tools/release-config","commits":2},
-    {"member":"tools/shared","commits":10},
+    {"member":"tools/shared","commits":11},
     {"member":"tools/typedoc-plugin-lit-ui-router","commits":7},
     {"member":"tools/vue-check","commits":2},
     {"member":"tools/warn-lanes","commits":1},
     {"member":"tools/wintercg-globals","commits":0},
-    {"member":"tools/workers-builds","commits":8}
+    {"member":"tools/workers-builds","commits":11}
   ]
 }

@@ -157,8 +157,11 @@ export function ascent(manifest: Manifest): AscentRow[] {
   );
 }
 
-/** Entry titles on the rail and the cards drop the article; the sheet keeps it. */
-export const entryTitle = (title: string): string => title.replace(/^THE\s+/, '');
+/** The leading article of a title. The manifest strings themselves stay frozen. */
+export const ARTICLE = /^THE\s+/;
+
+/** Rail entries drop the article (T9); every full title keeps it as `sup.art`. */
+export const entryTitle = (title: string): string => title.replace(ARTICLE, '');
 
 /** Sheet numbers are cased ('2A', '12i', 'A1'); a url may not be. */
 export function findSheet(manifest: Manifest, num: string): SheetRow | undefined {

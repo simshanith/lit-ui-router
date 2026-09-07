@@ -174,17 +174,17 @@ ${[
   ['./ui-router.register', 'one element', true],
   ['./ui-view.register', 'one element', true],
 ].map(([name, sub, se], i) => {
-  const x = 190 + i * 152;
-  return `${box(x, 726, 144, 30, se ? 'sk fp2' : 'ska fp')}
+  const x = 496 + i * 132;
+  return `${box(x, 726, 116, 30, se ? 'sk fp2' : 'ska fp')}
 ${txt(x + 8, 739, name, se ? 'lbls' : 'lbla')}
 ${txt(x + 8, 751, sub, 'lblf')}`;
 }).join('\n')}
 </svg>`;
 
 export const sheet1 = {
-  num: 1, id: 'package', rev: 'F',
+  num: 1, id: 'package', rev: 'G',
   title: 'THE RENDER LOOP',
-  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic · REV F 2026-09-06: fills — every block’s left face and the Tilt plates’ flanks now carry their paper-2 tint, and the right faces their hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no geometry moved`,
+  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit · REV D: the loop routed on the iso grid · REV E: the version reads census-files.json — 1.9.0 was a hand-typed relic · REV F 2026-09-06: fills — every block’s left face and the Tilt plates’ flanks now carry their paper-2 tint, and the right faces their hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no geometry moved · REV G 2026-09-06: the five doors re-cut — each frame tightened to the DIN line it now carries (144 → 116 wide) and the strip hung on the right end of the footer rule, so the band reads title left, doors right instead of trailing 200px of empty paper`,
   scale: 'ONE PACKAGE',
   form: 'ISO CIRCUIT',
   svg,

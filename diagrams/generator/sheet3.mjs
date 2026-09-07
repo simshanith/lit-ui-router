@@ -73,7 +73,7 @@ const M = [
   [14, 'lint & probe fleet',        'report', 175,   320,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · CI gate'],
   [15, '@tools/shared',             'report', 275,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
-  // --- proving ground & shopfront (apps/ + docs/) -------------------------------
+  // --- proving ground & shopfront (apps/ + www/) --------------------------------
   [17, 'e2e — cypress',             'pr',     377.8, 420,    ...C('e2e — cypress'), null, null, 'drives the sample apps · stops the PR line'],
   [18, 'sample apps',               'line',   560,   390,    ...C('sample apps'), null, null, 'shared routes + vanilla + mobx + e2e fixtures'],
   [19, 'docs deploy watch',         'late',   680,   400,    ...C('docs deploy watch'), null, null, 'workers-builds triggers · gates the deploy'],
@@ -94,6 +94,9 @@ const geom = new Map(
 const g = (n) => geom.get(n);
 
 const BADGE_LEFT = new Set([9, 10, 11]);
+// mass 1 stands under the task-manager inset: its badge takes the far corner so the
+// site keeps clear of the inset's frame instead of pushing a label through it.
+const BADGE_RIGHT = new Set([1]);
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 
@@ -107,7 +110,9 @@ function massBlock(n) {
   const wash = t.hatch ? `<polygon points="${top}" fill="url(#${P}-${t.hatch})"/>
 <polygon points="${top}" class="${t.edge} fnone"/>` : '';
   // Readers take a stub down their centre line, so their badge moves off it.
-  const [bx, by] = BADGE_LEFT.has(n) ? pt(x, y, h) : pt(x + side / 2, y, h);
+  const [bx, by] = BADGE_LEFT.has(n) ? pt(x, y, h)
+    : BADGE_RIGHT.has(n) ? pt(x + side, y, h)
+    : pt(x + side / 2, y, h);
   return `${body}${wash}
 <circle cx="${bx.toFixed(1)}" cy="${(by - 17).toFixed(1)}" r="9.5" class="${t.badge}"/>
 ${txt(bx.toFixed(1), (by - 13.4).toFixed(1), String(n), t.num, 'middle')}`;
@@ -291,15 +296,15 @@ ${txt(620, 900, 'the return: published-diff reads the LIVE npm tarball — the r
 ${txt(700, 300, 'packages/ — the conveyor: source in, one tarball out', 'lblf')}
 ${txt(40, 520, 'tools/ — the instrument yard', 'lblf')}
 ${txt(40, 532, 'twenty packages, mostly measurement', 'lblf')}
-${txt(700, 830, 'apps/ + docs/ — proving ground & shopfront', 'lblf')}
+${txt(700, 830, 'apps/ + www/ — proving ground & shopfront', 'lblf')}
 
 ${schedule}
 </svg>`;
 
 export const sheet3 = {
-  num: 3, id: 'monorepo', rev: 'F',
+  num: 3, id: 'monorepo', rev: 'H',
   title: 'THE INSTRUMENT YARD',
-  sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci ${CI_NODES} nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic · REV F 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (the fault sheet 7’s rev C worked around per plate — a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved`,
+  sub: `ALTITUDE 3 — ${PUBLISHED} publishable packages · ${TOOLS} tools · ${HANDOFF.turbo.distinctNames} turbo task names · one packer, many readers · REV C: census refresh — every mass ${COUNTED} from diagrams/data/census-yard.json (scc Code lines), ${TOT_F} authored files and ${fmt(TOT_L)} sloc across ${massed.length} massed structures · REV D: the task-manager inset reads census-handoff.json + census-plate.json — ci ${CI_NODES} nodes, no longer a hand-pasted 535 · REV E: the altitude line reads the plates — 44 task names was a hand-typed relic · REV F 2026-09-06: fills — every mass’s left-face tint and right-face hatch draw for the first time (the fault sheet 7’s rev C worked around per plate — a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); no mass moved · REV G 2026-09-06: mass 1’s badge takes the far corner of its roof — at the data face the aqua-tool-belt caption reached under the old centred badge, so the site now keeps clear of the inset’s frame rather than pushing a label through it · REV H 2026-09-07: the shopfront's district lettering reads apps/ + www/ — #717 moved the documentation site out of docs/, and no directory of that name is left to letter`,
   scale: 'THE MONOREPO',
   form: 'ISOMETRIC CITY',
   svg,

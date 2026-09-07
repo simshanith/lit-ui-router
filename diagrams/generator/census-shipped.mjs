@@ -11,7 +11,7 @@
 // walk; a shared chunk loaded by several apps counts where it is FIRST claimed
 // (vanilla -> mobx -> hash), because the CDN ships it once.
 // Writes diagrams/data/census-shipped.json.
-import { readFileSync, readdirSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, posix } from 'node:path';
 import { gzipSync } from 'node:zlib';
 import { execFileSync } from 'node:child_process';
@@ -24,7 +24,10 @@ const { turbo } = installDeps(basis);
 // Whole-graph build: docs#build's dependsOn reaches `examples#build:embeds`,
 // which `--filter=docs...` would prune (examples is not a docs dependency).
 execFileSync(turbo, ['run', 'build'], { cwd: basis.dir, stdio: ['ignore', 2, 2], maxBuffer: 1 << 26 });
-const DIST = join(basis.dir, 'docs', 'dist');
+// #717 moved the docs site docs/ -> www/lit-ui-router.dev/; probe the ref for it.
+const SITE = ['www/lit-ui-router.dev', 'docs'].find((d) => existsSync(join(basis.dir, d, 'dist')));
+if (!SITE) throw new Error('no built docs site at www/lit-ui-router.dev/dist or docs/dist');
+const DIST = join(basis.dir, SITE, 'dist');
 
 // --- measure ---------------------------------------------------------------
 const walk = (dir, base = '', out = []) => {
@@ -36,7 +39,7 @@ const walk = (dir, base = '', out = []) => {
   return out;
 };
 const files = walk(DIST).sort();
-if (!files.length) throw new Error(`empty docs/dist at ${DIST}`);
+if (!files.length) throw new Error(`empty ${SITE}/dist at ${DIST}`);
 const raw = new Map();
 const gz = new Map();
 for (const f of files) {
@@ -171,7 +174,7 @@ writeData('census-shipped.json', {
   commitDate: basis.commitDate,
   generatedAtTime: new Date().toISOString(),
   wasGeneratedBy: 'diagrams/generator/census-shipped.mjs',
-  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile + turbo run build -> docs/dist`,
+  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile + turbo run build -> ${SITE}/dist`,
   wasAssociatedWith: ['pnpm (corepack)', 'turbo', 'node:zlib gzip level 9'],
   measure: 'per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> hash',
   seededTrees: ['images/', 'static/', '_headers'],

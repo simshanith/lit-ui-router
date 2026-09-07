@@ -123,7 +123,8 @@ body {
   background: var(--paper);
   border: 1.5px solid var(--ink);
   padding: 22px;
-  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+  /* paper on a light table casts no soft shadow: the 1px edge only */
+  box-shadow: 0 1px 0 var(--edge);
 }
 .sheet::before {
   content: "";
@@ -169,6 +170,25 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
+  font-family: var(--data);
+  font-size: 0.6em;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-right: 0.1em;
+}
 .sheet-sub {
   font-family: var(--data);
   font-size: 12px;
@@ -178,10 +198,14 @@ body {
 }
 
 /* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
-   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so.
+   Above that it grows with the column but is CONTAINED: the whole plate stays on
+   one screen. An inline SVG letterboxes under max-height instead of shrinking,
+   so the cap reaches it through max-width times the plate's own viewBox ratio
+   (--plate-ar, written per sheet). */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
-.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
   display: none;
@@ -254,7 +278,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--code);
   font-size: 0.88em;
   background: var(--paper-2);
-  border: 1px solid var(--line);
+  /* fill only: at 14 chips in 15 lines a border made the paragraph a form */
   padding: 0 3px;
   border-radius: 2px;
   /* A chip breaks only when it would otherwise run off the column, and then at
@@ -402,10 +426,10 @@ code, kbd, samp { font-family: var(--code); }
    DIN is a strict contraction of the system mono at these sizes — median -26%,
    nothing grows — and every label is start- or end-anchored, so the lettering
    only opens air. Sizes, weights, fills and tracking are unchanged. */
-text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; fill: var(--ink); letter-spacing: 0.05em; }
 text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10px; fill: var(--ink-faint); letter-spacing: 0.05em; }
 text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
 text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
 text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
@@ -419,10 +443,10 @@ a { color: var(--accent); }
 </style>
 <section class="sheet" id="sheet-A1" aria-label="Appendix A1: THE SPRITE STUDY">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">APPENDIX A1 · META</span></div>
-  <h2 class="sheet-title">THE SPRITE STUDY</h2>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SPRITE STUDY</h2>
   <p class="sheet-sub">APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each</p>
   <figure>
-    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1560 1216" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red.">
+    <div class="plate" style="--plate-ar:1.2829"><div class="figure-wrap"><svg viewBox="0 0 1560 1216" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red.">
 <defs>
   <marker id="sA1-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -905,11 +929,11 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="sks"/><polygon points="40,9 33,6 33,12" class="fis"/></svg></td><td>the gauge — wreck & ruin → shine & splendor</td></tr></table>
       <div class="titleblock" aria-label="title block">
   <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">THE SPRITE STUDY</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>SPRITE STUDY</span></div>
   <div><span class="fld">SCALE</span>THE ATLAS ITSELF</div>
   <div><span class="fld">FORM</span>SPRITE STUDIES</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · A</div>
+  <div><span class="fld">DATE / REV</span>2026-09-06 · A</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">APPENDIX</span>A1</span><span class="chop" aria-hidden="true"></span></div>
 </div>

@@ -10,7 +10,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
 import type { AscentRow, ExtraRow, IssueEntry, Manifest, SheetRow } from './manifest.ts';
-import { ascent, entryTitle, findExtra, isAppendix } from './manifest.ts';
+import { ARTICLE, ascent, entryTitle, findExtra, isAppendix } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
@@ -19,6 +19,17 @@ import type { ThemeChoice } from './theme.ts';
 import { applyTheme, readTheme } from './theme.ts';
 
 const ACTIVE = { activeClasses: ['is-active'] };
+
+/**
+ * THE ARTICLE (T9, shipped 2026-09-06): a title keeps its THE, drawn as a
+ * lowercase superior in the data face (`sup.art`, styled in the generated
+ * sheets/atlas.css so the flat set, the app and the artifact draw it alike).
+ * Twins: `articleTitle` in generator/chrome.mjs and in prerender.ts.
+ */
+const articleTitle = (title: string): TemplateResult =>
+  ARTICLE.test(title)
+    ? html`<sup class="art">the&nbsp;</sup>${entryTitle(title)}`
+    : html`${title}`;
 
 /** The live site — the only place the flat set exists for an artifact reader. */
 const SITE = 'https://atlas.lit-ui-router.dev';
@@ -197,6 +208,8 @@ function utilBar(crumb: TemplateResult): TemplateResult {
     <div class="util">
       <div class="crumb">${crumb}</div>
       <nav class="util-links" aria-label="utilities">
+        <!-- The set's issue record: its own state since 2026-09-06, not a cover column. -->
+        <a class="util-log" ${uiSref('atlas.log')} href="${to(href.log)}">LOG</a>
         <a class="util-docs" href="${DOCS}" target="_blank" rel="noopener">DOCS ↗</a>
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
         <!-- The flat set is plain pages beside the app, not a state: a real link. -->
@@ -245,7 +258,7 @@ function rail(manifest: Manifest | undefined): TemplateResult {
       <input type="checkbox" id="rail-open" class="rail-open" aria-label="show the sheets" />
       <div class="rail-head">
         <div>
-          <span class="kicker">A DRAWING SET · lit-ui-router</span>
+          <a class="kicker" href="https://lit-ui-router.dev">A DRAWING SET · lit-ui-router</a>
           <h1><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">THE ALTITUDE ATLAS</a></h1>
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
@@ -309,7 +322,7 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
     href="${to(href.sheet(sheet.num))}"
   >
     <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
-    <h3>${entryTitle(sheet.title)}</h3>
+    <h3>${articleTitle(sheet.title)}</h3>
     <span class="alt">${sheet.scale}</span>
     <p>${unsafeHTML(sheet.caption)}</p>
     <span class="meta">
@@ -323,7 +336,7 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
 const cityCard = (extra: ExtraRow): TemplateResult => html`
   <a class="card" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
     <span class="n">${extra.shno} · REV ${extra.rev}</span>
-    <h3>${entryTitle(extra.title)}</h3>
+    <h3>${articleTitle(extra.title)}</h3>
     <span class="alt">${extra.scale}</span>
     <p>${extra.sub.split(' · REV ')[0]}</p>
     <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
@@ -334,23 +347,28 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const manifest = props?.resolves?.manifest;
   if (!manifest) return html`<p class="loading">LOADING INDEX…</p>`;
   const city = findExtra(manifest, 'city');
-  const log = manifest.issueLog ?? [];
-  const dated = log.filter((entry) => entry.date);
-  const undated = log.filter((entry) => !entry.date);
+  // ONE line of issue record on the title sheet; the log itself is /log.
+  const latest = (manifest.issueLog ?? []).find((entry) => entry.date);
   return html`
     ${utilBar(
       html`<span class="sh">INDEX</span
         ><span>${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>`,
     )}
-    <section class="sheet">
+    <section class="sheet cover-sheet">
       <div class="sheet-head">
         <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
-      <p class="sheet-sub">
-        SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES · CLIENT
-        ${manifest.client} · PLATES COUNTED ${manifest.date}
+      <h2 class="cover-title">
+        <!-- THE ONE CATCHWORD IN THE ATLAS: on a host that declares the kit's
+             hwt-catchwords, the cw span draws catchword key e in its place (the
+             rule is in index.html); off the kit — the artifact, any host without
+             it — the superior every other title uses stays on the page. -->
+        <span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS
+      </h2>
+      <p class="sheet-sub cover-sub">
+        SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
+        <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
       </p>
       <div class="hero">
         <!-- The key image: sheet 7's city, drawn at build time. three.js loads on /city and nowhere else. -->
@@ -360,31 +378,22 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
                 ${unsafeHTML(manifest.cover.hero)}
                 <span class="hero-cap">
                   <span>${city.shno} · REV ${city.rev}</span>
-                  <span class="t">${city.title}</span>
+                  <span class="t">${articleTitle(city.title)}</span>
                   <span class="go">RAISE THE CITY ↗</span>
                 </span>
               </a>
             `
           : nothing}
-        <aside class="issue-log" aria-label="issue log">
-          <h3>ISSUE LOG — LATEST FIRST</h3>
-          <ol>
-            ${dated.map(logEntry)}
-          </ol>
-          ${undated.length > 0
-            ? html`
-                <details>
-                  <summary>UNDATED — ORIGINAL ISSUE · ${undated.length} REVS</summary>
-                  <ol>
-                    ${undated.map(logEntry)}
-                  </ol>
-                </details>
-              `
-            : nothing}
-        </aside>
       </div>
-      ${unsafeHTML(manifest.cover.statBar)} ${unsafeHTML(manifest.cover.survey)}
-      ${unsafeHTML(manifest.cover.prose)}
+      ${latest
+        ? html`<p class="cover-latest">
+            <a ${uiSref('atlas.log')} href="${to(href.log)}"
+              ><span class="k">LATEST</span><span class="d">${latest.date}</span
+              ><span class="s">${latest.head} · REV ${latest.rev}</span
+              ><span class="t">${latest.desc}</span><span class="go">ISSUE LOG ↗</span></a
+            >
+          </p>`
+        : nothing}
     </section>
     <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
     <div class="cards">
@@ -398,6 +407,57 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <div class="cards">${manifest.appendix.map(sheetCard)}</div>
         `
       : nothing}
+    <!-- The wide band: the numbers, then the argument. Side by side over 1800. -->
+    <div class="cover-band">
+      ${unsafeHTML(manifest.cover.statBar)}
+      <div class="cover-wide">
+        ${unsafeHTML(manifest.cover.survey)} ${unsafeHTML(manifest.cover.prose)}
+      </div>
+    </div>
+  `;
+};
+
+// --- the issue log: the set's own revision record, on its own sheet --------
+
+export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
+  const manifest = props?.resolves?.manifest;
+  if (!manifest) return html`<p class="loading">LOADING THE LOG…</p>`;
+  const log = manifest.issueLog ?? [];
+  const dated = log.filter((entry) => entry.date);
+  const undated = log.filter((entry) => !entry.date);
+  return html`
+    ${utilBar(html`${indexCrumb()}<span class="sh">ISSUE LOG</span>`)}
+    <div class="plate-data">
+      <span>ALTITUDE · THE SET'S OWN REVISIONS</span>
+      <span>${dated.length} DATED · ${undated.length} AT ORIGINAL ISSUE</span>
+    </div>
+    <section class="sheet">
+      <div class="sheet-head">
+        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="shno">ISSUE LOG</span>
+      </div>
+      <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ISSUE LOG</h2>
+      <p class="sheet-sub">
+        EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD ·
+        EACH SHEET'S REVISIONS TABLE READS THE OTHER WAY, ASCENDING, AS A DRAWING'S REV
+        BLOCK DOES
+      </p>
+      <div class="issue-log issue-log-page" aria-label="issue log">
+        <ol>
+          ${dated.map(logEntry)}
+        </ol>
+        ${undated.length > 0
+          ? html`
+              <details open>
+                <summary>UNDATED — ORIGINAL ISSUE · ${undated.length} REVS</summary>
+                <ol>
+                  ${undated.map(logEntry)}
+                </ol>
+              </details>
+            `
+          : nothing}
+      </div>
+    </section>
   `;
 };
 
@@ -519,7 +579,7 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
         <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
         <span class="shno">TYPE SPECIMEN</span>
       </div>
-      <h2 class="sheet-title">THE TYPE SPECIMEN</h2>
+      <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>TYPE SPECIMEN</h2>
       <p class="sheet-sub">
         SIX PAIRINGS ON ONE MOCK SHEET — IT OPENS ON THE ONE THE SET SHIPS · SITE FACES
         COME FROM ADOBE FONTS WHEN THE KIT IS STAGED, GOOGLE STAND-INS OTHERWISE · THE
@@ -567,6 +627,16 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>&lt;ui-view&gt;</code>; and the Navigation API location plugin with a
           <code>pushState</code> fallback.
         </p>
+        <h3>THE ISSUE LOG</h3>
+        <p>
+          Every REV across every plate — the set's own revision record, latest first —
+          is at
+          <a ${uiSref('atlas.log')} href="${to(href.log)}"><code>${href.log}</code></a>.
+          It rode the cover's right-hand column until 2026-09-06, where it pushed the
+          sheet index off the first screen; a drawing set's issue record earns a sheet
+          of its own once it outgrows the title sheet. Each sheet's own REVISIONS table
+          still reads ascending, as a drawing's rev block does.
+        </p>
         <h3>THE FLAT SET</h3>
         <p>
           The same drawings as the standalone pages they were first published as — the
@@ -598,8 +668,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         </p>
         <h3>HOW THE SET IS DRAWN</h3>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.notes)}</p>` : nothing}
+        <!-- SOURCES is a footnote to the reading column, so it sits in it -->
+        ${manifest ? unsafeHTML(manifest.cover.provenance) : nothing}
       </div>
-      ${manifest ? unsafeHTML(manifest.cover.provenance) : nothing}
     </section>
   `;
 };

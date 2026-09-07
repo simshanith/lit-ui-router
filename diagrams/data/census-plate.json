@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "b2338d0",
-  "commitDate": "2026-09-04T17:11:24-07:00",
-  "generatedAtTime": "2026-09-05T04:28:53.001Z",
+  "sha": "185d414",
+  "commitDate": "2026-09-06T20:42:44-07:00",
+  "generatedAtTime": "2026-09-07T04:38:43.000Z",
   "wasGeneratedBy": "diagrams/generator/census-plate.mjs",
-  "used": "git archive origin/main @ b2338d0 + corepack pnpm install --frozen-lockfile",
+  "used": "git archive origin/main @ 185d414 + corepack pnpm install --frozen-lockfile",
   "wasAssociatedWith": [
     "turbo 2.10.11",
     "pnpm (corepack)"

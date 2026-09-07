@@ -123,7 +123,8 @@ body {
   background: var(--paper);
   border: 1.5px solid var(--ink);
   padding: 22px;
-  box-shadow: 0 1px 0 var(--edge), 0 8px 28px rgba(0,0,0,0.08);
+  /* paper on a light table casts no soft shadow: the 1px edge only */
+  box-shadow: 0 1px 0 var(--edge);
 }
 .sheet::before {
   content: "";
@@ -169,6 +170,25 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
+  font-family: var(--data);
+  font-size: 0.6em;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-right: 0.1em;
+}
 .sheet-sub {
   font-family: var(--data);
   font-size: 12px;
@@ -178,10 +198,14 @@ body {
 }
 
 /* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
-   scrolls in its own wrap like a drawing on a light table, and the wrap says so. */
-.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; }
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so.
+   Above that it grows with the column but is CONTAINED: the whole plate stays on
+   one screen. An inline SVG letterboxes under max-height instead of shrinking,
+   so the cap reaches it through max-width times the plate's own viewBox ratio
+   (--plate-ar, written per sheet). */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
 .figure-wrap { overflow-x: auto; }
-.figure-wrap svg { display: block; width: 100%; max-width: 100%; height: auto; min-width: 1000px; margin: 0; }
+.figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
 .plate::after {
   content: "SCROLL →";
   display: none;
@@ -254,7 +278,7 @@ code, kbd, samp { font-family: var(--code); }
   font-family: var(--code);
   font-size: 0.88em;
   background: var(--paper-2);
-  border: 1px solid var(--line);
+  /* fill only: at 14 chips in 15 lines a border made the paragraph a form */
   padding: 0 3px;
   border-radius: 2px;
   /* A chip breaks only when it would otherwise run off the column, and then at
@@ -402,10 +426,10 @@ code, kbd, samp { font-family: var(--code); }
    DIN is a strict contraction of the system mono at these sizes — median -26%,
    nothing grows — and every label is start- or end-anchored, so the lettering
    only opens air. Sizes, weights, fills and tracking are unchanged. */
-text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; fill: var(--ink); letter-spacing: 0.05em; }
 text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
-text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
-text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10px; fill: var(--ink-faint); letter-spacing: 0.05em; }
 text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
 text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
 text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
@@ -419,10 +443,10 @@ a { color: var(--accent); }
 </style>
 <section class="sheet" id="sheet-7" aria-label="Sheet 7: THE MEASURED CITY">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 7 / 14</span></div>
-  <h2 class="sheet-title">THE MEASURED CITY</h2>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>MEASURED CITY</h2>
   <p class="sheet-sub">ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts</p>
   <figure>
-    <div class="plate"><div class="figure-wrap"><svg viewBox="0 0 1560 1204" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, and the fifth package, the eslint plugin, stands below them at the district's near corner. To the right is the apps district, where sample-app-shared stands at 37 files and 2,211 lines. Below it sits the shopfront of docs and examples — examples now the broadest source block on the sheet at 2,404 lines — and lower left the instrument yard of 20 tools, dominated by the tall red release block — 46 files and 2,140 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all 32 members with exact file and line counts, their annex, and their gate tier.">
+    <div class="plate" style="--plate-ar:1.2957"><div class="figure-wrap"><svg viewBox="0 0 1560 1204" role="img" aria-label="An isometric census city of the whole lit-ui-router workspace, drawn in four dashed districts. Every workspace member is a block massed by its own measured source — footprint side proportional to the square root of its authored lines, height three pixels per authored file — and every member that has tests carries a hatched annex beside it, massed the same way from its spec files. Upper left is the packages district, the product: lit-ui-router and ui-router-server each stand beside an annex with a larger footprint than the building it guards, and the fifth package, the eslint plugin, stands below them at the district's near corner. To the right is the apps district, where sample-app-shared stands at 37 files and 2,211 lines. Below it sits the shopfront of docs and examples — examples now the broadest source block on the sheet at 2,412 lines — and lower left the instrument yard of 20 tools, dominated by the tall red release block — 46 files and 2,140 lines, the only structure that can halt a publish. Gate severity is carried in colour, never in height: solid red halts a publish, red hatch stops the pull request line, accent hatch gates a later stage, faint blocks never gate at all. Roads run between the districts and carry real edges from the repository: solid roads where one member builds into another, dashed soft roads where tests exercise the code they cover, and an accent road that leaves both the source block and its spec annex together, because typecheck reads both. A structure schedule below lists all 32 members with exact file and line counts, their annex, and their gate tier.">
 <defs>
   <marker id="s7-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -457,7 +481,7 @@ a { color: var(--accent); }
 <text x="1520" y="34" class="lbls" text-anchor="end" >SCALE — footprint side = 1.6 · √sloc (plan area ∝ sloc) · height = 3 px per authored file · mass = sloc × files</text>
 <text x="1520" y="48" class="lblf" text-anchor="end" >footprint floored at 12 plan units so the smallest instruments stay visible · annexes massed on the same rule from spec files</text>
 <text x="1520" y="62" class="lblf" text-anchor="end" >GATE SEVERITY IS COLOUR, NOT HEIGHT — tiers match sheet 3 · the tallest block on the sheet is also the only publish halt</text>
-<text x="1520" y="76" class="lblf" text-anchor="end" >every number on this sheet is read from diagrams/data/census-city.json — counted at origin/main @ b2338d0 (2026-09-05)</text>
+<text x="1520" y="76" class="lblf" text-anchor="end" >every number on this sheet is read from diagrams/data/census-city.json — counted at origin/main @ 185d414 (2026-09-07)</text>
 
 <!-- severity ladder -->
 <rect x="1090" y="104" width="430" height="146" class="skf fnone"/>
@@ -471,9 +495,9 @@ a { color: var(--accent); }
 <rect x="1106" y="222" width="34" height="14" class="fp2"/><rect x="1106" y="222" width="34" height="14" class="skf fnone"/>
 <text x="1154" y="233" class="lbls" text-anchor="start" >never gates — 13 · 15 · 16 · 18 · 22 · 24 · 25 · 29 · 30 · 32</text>
 
-<polygon points="601.1,71.4 1036.1,322.5 805.4,455.7 370.4,204.6" class="skf fnone" stroke-dasharray="5 4"/>
+<polygon points="601.1,71.4 1041.6,325.7 808.1,460.5 367.6,206.2" class="skf fnone" stroke-dasharray="5 4"/>
 <polygon points="1085.0,362.0 1285.4,477.7 1102.0,583.7 901.5,467.9" class="skf fnone" stroke-dasharray="5 4"/>
-<polygon points="877.1,572.0 986.6,635.2 799.2,743.4 689.7,680.2" class="skf fnone" stroke-dasharray="5 4"/>
+<polygon points="877.1,572.0 986.7,635.3 799.2,743.6 689.6,680.3" class="skf fnone" stroke-dasharray="5 4"/>
 <polygon points="303.8,249.0 766.4,516.1 516.4,660.5 53.8,393.4" class="skf fnone" stroke-dasharray="5 4"/>
 <path d="M862.1,292.3 L947.1,341.4" class="sk2"  marker-end="url(#s7-ai)"/>
 <path d="M1036.6,523.9 L926.7,587.4" class="sk2"  marker-end="url(#s7-ai)"/>
@@ -611,12 +635,12 @@ a { color: var(--accent); }
 <polygon points="244.9,183.0 309.0,220.0 244.9,257.0 180.8,220.0" class="skr fr"/>
 </g>
 <g>
-<polygon points="718.8,350.4 755.9,371.8 755.9,398.8 718.8,377.4" fill="var(--paper-2)"/>
-<polygon points="718.8,350.4 755.9,371.8 755.9,398.8 718.8,377.4" class="sk fnone"/>
-<polygon points="792.9,350.4 755.9,371.8 755.9,398.8 792.9,377.4" fill="var(--paper-2)"/>
-<polygon points="792.9,350.4 755.9,371.8 755.9,398.8 792.9,377.4" fill="url(#s7-hx)"/>
-<polygon points="792.9,350.4 755.9,371.8 755.9,398.8 792.9,377.4" class="sk fnone"/>
-<polygon points="755.9,329.0 792.9,350.4 755.9,371.8 718.8,350.4" class="sk fp"/>
+<polygon points="717.4,348.2 755.9,370.4 755.9,400.4 717.4,378.2" fill="var(--paper-2)"/>
+<polygon points="717.4,348.2 755.9,370.4 755.9,400.4 717.4,378.2" class="sk fnone"/>
+<polygon points="794.4,348.2 755.9,370.4 755.9,400.4 794.4,378.2" fill="var(--paper-2)"/>
+<polygon points="794.4,348.2 755.9,370.4 755.9,400.4 794.4,378.2" fill="url(#s7-hx)"/>
+<polygon points="794.4,348.2 755.9,370.4 755.9,400.4 794.4,378.2" class="sk fnone"/>
+<polygon points="755.9,326.0 794.4,348.2 755.9,370.4 717.4,348.2" class="sk fp"/>
 </g>
 <g>
 <polygon points="475.2,383.1 496.1,395.2 496.1,410.2 475.2,398.1" fill="var(--paper-2)"/>
@@ -651,12 +675,12 @@ a { color: var(--accent); }
 <polygon points="539.4,407.0 549.8,413.0 539.4,419.0 529.0,413.0" class="sk fp"/>
 </g>
 <g>
-<polygon points="760.7,379.0 805.4,404.7 805.4,431.7 760.7,406.0" fill="var(--paper-2)"/>
-<polygon points="760.7,379.0 805.4,404.7 805.4,431.7 760.7,406.0" class="sks fnone"/>
-<polygon points="850.0,379.0 805.4,404.7 805.4,431.7 850.0,406.0" fill="var(--paper-2)"/>
-<polygon points="850.0,379.0 805.4,404.7 805.4,431.7 850.0,406.0" fill="url(#s7-hd)"/>
-<polygon points="850.0,379.0 805.4,404.7 805.4,431.7 850.0,406.0" class="sks fnone"/>
-<polygon points="805.4,353.2 850.0,379.0 805.4,404.7 760.7,379.0" class="sks fp2"/>
+<polygon points="759.4,381.4 808.1,409.5 808.1,436.5 759.4,408.4" fill="var(--paper-2)"/>
+<polygon points="759.4,381.4 808.1,409.5 808.1,436.5 759.4,408.4" class="sks fnone"/>
+<polygon points="856.9,381.4 808.1,409.5 808.1,436.5 856.9,408.4" fill="var(--paper-2)"/>
+<polygon points="856.9,381.4 808.1,409.5 808.1,436.5 856.9,408.4" fill="url(#s7-hd)"/>
+<polygon points="856.9,381.4 808.1,409.5 808.1,436.5 856.9,408.4" class="sks fnone"/>
+<polygon points="808.1,353.3 856.9,381.4 808.1,409.5 759.4,381.4" class="sks fp2"/>
 </g>
 <g>
 <polygon points="253.0,340.4 318.3,378.1 318.3,438.1 253.0,400.4" fill="var(--paper-2)"/>
@@ -773,22 +797,14 @@ a { color: var(--accent); }
 <polygon points="1001.7,448.2 1032.6,466.0 1001.7,483.8 970.8,466.0" class="sks fp2"/>
 </g>
 <g>
-<polygon points="287.4,490.5 314.2,506.0 314.2,512.0 287.4,496.5" fill="var(--paper-2)"/>
-<polygon points="287.4,490.5 314.2,506.0 314.2,512.0 287.4,496.5" class="ska fnone"/>
-<polygon points="341.1,490.5 314.2,506.0 314.2,512.0 341.1,496.5" fill="var(--paper-2)"/>
-<polygon points="341.1,490.5 314.2,506.0 314.2,512.0 341.1,496.5" fill="url(#s7-ha)"/>
-<polygon points="341.1,490.5 314.2,506.0 314.2,512.0 341.1,496.5" class="ska fnone"/>
-<polygon points="314.2,475.0 341.1,490.5 314.2,506.0 287.4,490.5" class="ska fp"/>
-</g><polygon points="314.2,475.0 341.1,490.5 314.2,506.0 287.4,490.5" fill="url(#s7-ha)"/>
-<polygon points="314.2,475.0 341.1,490.5 314.2,506.0 287.4,490.5" class="ska fnone"/>
-<g>
-<polygon points="324.9,511.8 347.7,524.9 347.7,528.9 324.9,515.8" fill="var(--paper-2)"/>
-<polygon points="324.9,511.8 347.7,524.9 347.7,528.9 324.9,515.8" class="sks fnone"/>
-<polygon points="370.4,511.8 347.7,524.9 347.7,528.9 370.4,515.8" fill="var(--paper-2)"/>
-<polygon points="370.4,511.8 347.7,524.9 347.7,528.9 370.4,515.8" fill="url(#s7-hd)"/>
-<polygon points="370.4,511.8 347.7,524.9 347.7,528.9 370.4,515.8" class="sks fnone"/>
-<polygon points="347.7,498.7 370.4,511.8 347.7,524.9 324.9,511.8" class="sks fp2"/>
-</g>
+<polygon points="285.9,488.4 314.2,504.7 314.2,513.7 285.9,497.4" fill="var(--paper-2)"/>
+<polygon points="285.9,488.4 314.2,504.7 314.2,513.7 285.9,497.4" class="ska fnone"/>
+<polygon points="342.5,488.4 314.2,504.7 314.2,513.7 342.5,497.4" fill="var(--paper-2)"/>
+<polygon points="342.5,488.4 314.2,504.7 314.2,513.7 342.5,497.4" fill="url(#s7-ha)"/>
+<polygon points="342.5,488.4 314.2,504.7 314.2,513.7 342.5,497.4" class="ska fnone"/>
+<polygon points="314.2,472.0 342.5,488.4 314.2,504.7 285.9,488.4" class="ska fp"/>
+</g><polygon points="314.2,472.0 342.5,488.4 314.2,504.7 285.9,488.4" fill="url(#s7-ha)"/>
+<polygon points="314.2,472.0 342.5,488.4 314.2,504.7 285.9,488.4" class="ska fnone"/>
 <g>
 <polygon points="466.9,481.9 513.4,508.7 513.4,529.7 466.9,502.9" fill="var(--paper-2)"/>
 <polygon points="466.9,481.9 513.4,508.7 513.4,529.7 466.9,502.9" class="skf fnone"/>
@@ -796,6 +812,14 @@ a { color: var(--accent); }
 <polygon points="559.9,481.9 513.4,508.7 513.4,529.7 559.9,502.9" fill="url(#s7-hx)"/>
 <polygon points="559.9,481.9 513.4,508.7 513.4,529.7 559.9,502.9" class="skf fnone"/>
 <polygon points="513.4,455.0 559.9,481.9 513.4,508.7 466.9,481.9" class="skf fp2"/>
+</g>
+<g>
+<polygon points="324.1,514.0 350.0,528.9 350.0,532.9 324.1,518.0" fill="var(--paper-2)"/>
+<polygon points="324.1,514.0 350.0,528.9 350.0,532.9 324.1,518.0" class="sks fnone"/>
+<polygon points="375.8,514.0 350.0,528.9 350.0,532.9 375.8,518.0" fill="var(--paper-2)"/>
+<polygon points="375.8,514.0 350.0,528.9 350.0,532.9 375.8,518.0" fill="url(#s7-hd)"/>
+<polygon points="375.8,514.0 350.0,528.9 350.0,532.9 375.8,518.0" class="sks fnone"/>
+<polygon points="350.0,499.1 375.8,514.0 350.0,528.9 324.1,514.0" class="sks fp2"/>
 </g>
 <g>
 <polygon points="1065.9,521.0 1076.3,527.0 1076.3,533.0 1065.9,527.0" fill="var(--paper-2)"/>
@@ -895,12 +919,12 @@ a { color: var(--accent); }
 <polygon points="913.6,623.7 932.2,634.4 913.6,645.2 895.0,634.4" class="sks fp2"/>
 </g>
 <g>
-<polygon points="731.2,626.2 799.2,665.4 799.2,719.4 731.2,680.2" fill="var(--paper-2)"/>
-<polygon points="731.2,626.2 799.2,665.4 799.2,719.4 731.2,680.2" class="sk fnone"/>
-<polygon points="867.1,626.2 799.2,665.4 799.2,719.4 867.1,680.2" fill="var(--paper-2)"/>
-<polygon points="867.1,626.2 799.2,665.4 799.2,719.4 867.1,680.2" fill="url(#s7-hx)"/>
-<polygon points="867.1,626.2 799.2,665.4 799.2,719.4 867.1,680.2" class="sk fnone"/>
-<polygon points="799.2,587.0 867.1,626.2 799.2,665.4 731.2,626.2" class="sk fp"/>
+<polygon points="731.1,626.3 799.2,665.6 799.2,719.6 731.1,680.3" fill="var(--paper-2)"/>
+<polygon points="731.1,626.3 799.2,665.6 799.2,719.6 731.1,680.3" class="sk fnone"/>
+<polygon points="867.2,626.3 799.2,665.6 799.2,719.6 867.2,680.3" fill="var(--paper-2)"/>
+<polygon points="867.2,626.3 799.2,665.6 799.2,719.6 867.2,680.3" fill="url(#s7-hx)"/>
+<polygon points="867.2,626.3 799.2,665.6 799.2,719.6 867.2,680.3" class="sk fnone"/>
+<polygon points="799.2,587.0 867.2,626.3 799.2,665.6 731.1,626.3" class="sk fp"/>
 </g>
 <circle cx="608.4" cy="61.9" r="9" class="sk fp"/>
 <text x="608.4" y="65.3" class="lbl" text-anchor="middle" >1</text>
@@ -922,8 +946,8 @@ a { color: var(--accent); }
 <text x="977.6" y="448.4" class="lblr" text-anchor="middle" >9</text>
 <circle cx="895.6" cy="554.7" r="9" class="sk fp"/>
 <text x="895.6" y="558.1" class="lbl" text-anchor="middle" >10</text>
-<circle cx="833.1" cy="591.6" r="9" class="sk fp"/>
-<text x="833.1" y="595.0" class="lbl" text-anchor="middle" >11</text>
+<circle cx="833.2" cy="591.6" r="9" class="sk fp"/>
+<text x="833.2" y="595.0" class="lbl" text-anchor="middle" >11</text>
 <circle cx="277.0" cy="186.5" r="9" class="skr fp"/>
 <text x="277.0" y="189.9" class="lblr" text-anchor="middle" >12</text>
 <circle cx="445.9" cy="407.0" r="9" class="skf fp"/>
@@ -934,8 +958,8 @@ a { color: var(--accent); }
 <text x="536.7" y="456.8" class="lbls" text-anchor="middle" >15</text>
 <circle cx="156.4" cy="320.9" r="9" class="skf fp"/>
 <text x="156.4" y="324.3" class="lbls" text-anchor="middle" >16</text>
-<circle cx="327.6" cy="467.7" r="9" class="ska fp"/>
-<text x="327.6" y="471.1" class="lbla" text-anchor="middle" >17</text>
+<circle cx="328.4" cy="465.2" r="9" class="ska fp"/>
+<text x="328.4" y="468.6" class="lbla" text-anchor="middle" >17</text>
 <circle cx="420.4" cy="515.3" r="9" class="skf fp"/>
 <text x="420.4" y="518.7" class="lbls" text-anchor="middle" >18</text>
 <circle cx="245.8" cy="405.5" r="9" class="skr fp"/>
@@ -962,8 +986,8 @@ a { color: var(--accent); }
 <text x="523.5" y="566.3" class="lbls" text-anchor="middle" >29</text>
 <circle cx="348.9" cy="282.0" r="9" class="skf fp"/>
 <text x="348.9" y="285.4" class="lbls" text-anchor="middle" >30</text>
-<circle cx="774.4" cy="324.7" r="9" class="sk fp"/>
-<text x="774.4" y="328.1" class="lbl" text-anchor="middle" >31</text>
+<circle cx="775.1" cy="322.1" r="9" class="sk fp"/>
+<text x="775.1" y="325.5" class="lbl" text-anchor="middle" >31</text>
 <circle cx="612.7" cy="509.3" r="9" class="skf fp"/>
 <text x="612.7" y="512.7" class="lbls" text-anchor="middle" >32</text>
 
@@ -978,7 +1002,7 @@ a { color: var(--accent); }
 
 <!-- district lettering, off the geometry, leaders where the gap is wide -->
 <text x="772" y="110" class="lblb" text-anchor="start" >packages/ — THE PRODUCT</text>
-<text x="772" y="123" class="lblf" text-anchor="start" >5 published packages · 36 files · 3,520 sloc</text>
+<text x="772" y="123" class="lblf" text-anchor="start" >5 published packages · 37 files · 3,576 sloc</text>
 <text x="772" y="135" class="lblf" text-anchor="start" >every one carries a bigger annex than itself</text>
 <line x1="766" y1="126" x2="742" y2="168" class="skf"/>
 
@@ -992,12 +1016,12 @@ a { color: var(--accent); }
 <text x="1540" y="405" class="lblf" text-anchor="end" >the proving ground gates nothing but e2e</text>
 <line x1="1284" y1="416" x2="1248" y2="446" class="skf"/>
 
-<text x="1014" y="656" class="lblb" text-anchor="start" >docs/ + examples/ — THE SHOPFRONT</text>
-<text x="1014" y="669" class="lblf" text-anchor="start" >2 members · 26 files · 3,117 sloc</text>
+<text x="1014" y="656" class="lblb" text-anchor="start" >www/ + examples/ — THE SHOPFRONT</text>
+<text x="1014" y="669" class="lblf" text-anchor="start" >2 members · 26 files · 3,125 sloc</text>
 <line x1="1008" y1="652" x2="986" y2="636" class="skf"/>
 
 <text x="60" y="560" class="lblb" text-anchor="start" >tools/ — THE INSTRUMENT YARD</text>
-<text x="60" y="573" class="lblf" text-anchor="start" >20 members · 103 files · 6,727 sloc</text>
+<text x="60" y="573" class="lblf" text-anchor="start" >20 members · 104 files · 6,770 sloc</text>
 <text x="60" y="585" class="lblf" text-anchor="start" >8 of its masses sit on this drawing’s minimum footprint</text>
 <line x1="300" y1="552" x2="330" y2="522" class="skf"/>
 
@@ -1050,7 +1074,7 @@ a { color: var(--accent); }
 <text x="72" y="1033" class="lbls" text-anchor="end" >10</text>
 <text x="83" y="1033" class="lbls" text-anchor="start" >docs — 8f · 713 · annex 1f · 181 · the material · vitepress + the worker that serves it</text>
 <text x="72" y="1050" class="lbls" text-anchor="end" >11</text>
-<text x="83" y="1050" class="lbls" text-anchor="start" >examples — 18f · 2,404 · the material · stackblitz-ready copies, own lockfiles</text>
+<text x="83" y="1050" class="lbls" text-anchor="start" >examples — 18f · 2,412 · the material · stackblitz-ready copies, own lockfiles</text>
 <text x="72" y="1067" class="lbls" text-anchor="end" >12</text>
 <text x="83" y="1067" class="lbls" text-anchor="start" >@tools/release — 46f · 2,140 · annex 20f · 2,227 · HALTS A PUBLISH · hosts published-diff — the one publish halt</text>
 <text x="72" y="1084" class="lbls" text-anchor="end" >13</text>
@@ -1062,7 +1086,7 @@ a { color: var(--accent); }
 <text x="72" y="1135" class="lbls" text-anchor="end" >16</text>
 <text x="83" y="1135" class="lbls" text-anchor="start" >@tools/shared — 13f · 493 · annex 8f · 562 · never gates · the library under the instruments</text>
 <text x="814" y="880" class="lbls" text-anchor="end" >17</text>
-<text x="825" y="880" class="lbls" text-anchor="start" >@tools/workers-builds — 2f · 375 · annex 1f · 269 · gates a later stage · the docs deploy watch</text>
+<text x="825" y="880" class="lbls" text-anchor="start" >@tools/workers-builds — 3f · 418 · annex 1f · 348 · gates a later stage · the docs deploy watch</text>
 <text x="814" y="897" class="lbls" text-anchor="end" >18</text>
 <text x="825" y="897" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 247 · never gates · size probe, advisory</text>
 <text x="814" y="914" class="lbls" text-anchor="end" >19</text>
@@ -1090,10 +1114,10 @@ a { color: var(--accent); }
 <text x="814" y="1101" class="lbls" text-anchor="end" >30</text>
 <text x="825" y="1101" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 1 · never gates · a one-line parser shim — the smallest thing in the yard</text>
 <text x="814" y="1118" class="lbls" text-anchor="end" >31</text>
-<text x="825" y="1118" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 9f · 715 · annex 9f · 1,038 · the material · vendored uiSref lint rules · annex 1.5×</text>
+<text x="825" y="1118" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 10f · 771 · annex 9f · 1,237 · the material · vendored uiSref lint rules · annex 1.6×</text>
 <text x="814" y="1135" class="lbls" text-anchor="end" >32</text>
 <text x="825" y="1135" class="lbls" text-anchor="start" >@tools/embed-heights — 3f · 336 · annex 1f · 33 · never gates · docs embed heights, measured in Chromium — outside ci</text>
-<text x="58" y="1158" class="lbls" text-anchor="start" >TOTAL — 32 members, 31 massed · 221 authored files · 16,520 sloc · plus 96 spec files · 14,105 sloc of annex · counted at origin/main @ b2338d0 (2026-09-05) (sloc = scc Code)</text>
+<text x="58" y="1158" class="lbls" text-anchor="start" >TOTAL — 32 members, 31 massed · 223 authored files · 16,627 sloc · plus 96 spec files · 14,383 sloc of annex · counted at origin/main @ 185d414 (2026-09-07) (sloc = scc Code)</text>
 </svg></div></div>
     <figcaption><span class="figno">FIG. 7</span>Sheet 3 drew the monorepo as a process; this sheet counts who lives in it. Rev B keeps the census — footprint ∝ √sloc, height ∝ authored files, tests drawn as annexes rather than deleted — and adds the two things a census alone cannot say: which districts these members belong to, and which roads actually run between them. Every road is a workspace dependency or a turbo task edge, never an impression.</figcaption>
   </figure>
@@ -1101,13 +1125,13 @@ a { color: var(--accent); }
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>Method — one basis, two series.</strong> Every count on this sheet is read at build time from the checked-in plate <code>diagrams/data/census-city.json</code>, counted at origin/main @ b2338d0 (2026-09-05): <code>.ts/.tsx/.js/.jsx/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, fixtures, <code>dist/</code> and <code>node_modules/</code>; <em>sloc</em> is <code>scc</code>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. Sheet 3 throws test code away; this sheet does not — anything matching <code>*.{spec,test,cy}.*</code> or living under <code>specs/ test/ tests/ __tests__/ cypress/</code> is counted into a second series and drawn as that member's annex. 32 members: 221 authored files and 16,520 sloc of source, plus 96 files and 14,105 sloc of spec. The packages district is five buildings now, and it still reconciles exactly with sheet 3's source slab — 36 files, 3,520 lines — because both are queries over the same census rather than two hand counts.</p>
-<p><strong>Every shipped building still has an annex bigger than itself.</strong> <code>lit-ui-router</code>: 1,383 authored lines against 4,068 of spec (2.9×). <code>ui-router-server</code>: 1,141 vs 2,174 (1.9×). <code>lit-ui-router-mobx</code>: 176 vs 453 (2.6×). <code>eslint-plugin-lit-ui-router</code>, the newcomer: 715 vs 1038 (1.5×). <code>navigation-location-plugin</code> is one 105-line file with 7 spec files over it (3.9×). The test budget lives exactly where the repo says it should — in <code>packages/*</code>, and nowhere else at that ratio.</p>
+<p><strong>Method — one basis, two series.</strong> Every count on this sheet is read at build time from the checked-in plate <code>diagrams/data/census-city.json</code>, counted at origin/main @ 185d414 (2026-09-07): <code>.ts/.tsx/.js/.jsx/.mjs</code> under each member's source directory, excluding <code>*.d.ts</code>, <code>*.test-d.ts</code>, fixtures, <code>dist/</code> and <code>node_modules/</code>; <em>sloc</em> is <code>scc</code>'s <code>Code</code> count — string-aware, so the interior of a template literal counts as code rather than as one line. Sheet 3 throws test code away; this sheet does not — anything matching <code>*.{spec,test,cy}.*</code> or living under <code>specs/ test/ tests/ __tests__/ cypress/</code> is counted into a second series and drawn as that member's annex. 32 members: 223 authored files and 16,627 sloc of source, plus 96 files and 14,383 sloc of spec. The packages district is five buildings now, and it still reconciles exactly with sheet 3's source slab — 37 files, 3,576 lines — because both are queries over the same census rather than two hand counts.</p>
+<p><strong>Every shipped building still has an annex bigger than itself.</strong> <code>lit-ui-router</code>: 1,383 authored lines against 4,068 of spec (2.9×). <code>ui-router-server</code>: 1,141 vs 2,174 (1.9×). <code>lit-ui-router-mobx</code>: 176 vs 453 (2.6×). <code>eslint-plugin-lit-ui-router</code>, the newcomer: 771 vs 1237 (1.6×). <code>navigation-location-plugin</code> is one 105-line file with 7 spec files over it (3.9×). The test budget lives exactly where the repo says it should — in <code>packages/*</code>, and nowhere else at that ratio.</p>
 <p><strong>The roads are the new content, and every one is citable.</strong> Solid roads are build edges: <code>packages/*</code> into the sample apps, the apps into <code>docs</code>, <code>@tools/oxc-emit</code> into all five packages — each a <code>workspace:</code> dependency, each backed by turbo's <code>build</code>/<code>docs</code> tasks depending on <code>^build</code>. Dashed soft roads are the test lane: <code>@tools/dts-backtest</code> depends on the four runtime packages and backtests their emitted <code>d.ts</code> against the TS 5.0 floor; <code>@tools/lit-test-env</code> and <code>@tools/happy-dom</code> run up into <code>lit-ui-router</code>'s annex because they are its devDependencies and the harness its suites load; <code>sample-app-lit-e2e</code> depends on <code>docs</code>, and turbo's <code>e2e</code> depends on <code>^build</code> and runs with <code>docs#wrangler:dev</code>, so Cypress drives the built shopfront under its worker rather than a vite dev server. The accent road is the one that leaves a member twice — once from the source block and once from the spec annex — because the package's <code>typecheck</code> reads both: <code>tsconfig.json</code> includes <code>src/**</code>, specs and all (only the narrower <code>typecheck:src</code> excludes them), while the <code>^build:types</code> dependency is what carries the result into the next district. One faint road remains: eight instruments now import <code>@tools/shared</code> — <code>src/globs.ts</code> (#655) added the custom-element glob three lanes share; only the road to the largest is drawn, because drawing all eight would turn the yard into hatching.</p>
 <p><strong>Severity in colour, mass in geometry — and they disagree.</strong> The tiers are sheet 3's, applied to whole members: <code>@tools/release</code> is solid red because it hosts <code>published-diff</code>, the only structure that halts a publish; red hatch marks the six members that can stop a pull request — Cypress <code>e2e</code>, <code>dts-backtest</code>, <code>compat-guards</code>, <code>lit-test-env</code>, <code>happy-dom</code>, and now <code>lint-elements</code>, whose ratchet exits non-zero on a new warning; accent hatch marks <code>@tools/workers-builds</code>, which gates the docs deploy and nothing earlier. Here the two encodings happen to agree once, on <code>release</code>, and disagree everywhere else: the harness that can stop every pull request in the repo is 8 authored lines of <code>@tools/happy-dom</code>, sitting on the drawing's minimum footprint.</p>
-<p><strong>What the districts say.</strong> The product is 5 modest buildings — 3,520 lines — against 6,727 in the instrument yard and 3,156 in the proving ground. The broadest source block on the sheet is <code>examples</code> — 2,404 lines of stackblitz copies — with <code>sample-app-shared</code>, which ships to nobody and gates nothing, just behind at 2,211; the only footprint that outbuilds both is <code>lit-ui-router</code>'s spec annex. <code>@tools/wintercg-globals</code> is drawn on the floor with no mass at all: it is ambient types, and a census that hides its empty members is not a census.</p>
-<p><strong>REV D — two things moved at once, and the plate keeps them apart.</strong> First the <em>ruler</em>: sloc is now <code>scc</code> 4.0.0's <code>Code</code> count rather than the old "neither blank nor comment-only" filter. Measured both ways over one identical file set — sheet 3 rev B's twenty-five source directories at today's HEAD — the old counter reads 11,560 and <code>scc</code> reads 11,658, about +0.9%. So roughly a hundred lines of the growth below is the tape measure, not the building. Second the <em>city</em>: fourteen days, one release (<code>lit-ui-router@1.10.0</code>, tagged 2026-08-17) and three new instruments. №28 <code>@tools/lint-elements</code> and №29 <code>@tools/warn-lanes</code> were both born 2026-08-31 (#639); №30 <code>@tools/eslint-ts-parser</code> was born 2026-08-16 (#557) and is the "28th member, not yet on any map" that plate 7B recorded — it can be placed now, and at 1 authored line it lands on the drawing's minimum footprint, the smallest thing in the yard. The yard is where the growth is: 16 members and 4,684 sloc become 20 and 6,727, and it stays the city's largest district by a wide margin.</p>
-<p><strong>Numbers by import, not by paste.</strong> Every count above and on the drawing is read from <code>diagrams/data/census-city.json</code>, the snapshot <code>census-city.mjs</code> writes out of the master per-file census; this file now holds placement, tiers and prose only. The plate is measured at a named ref rather than at whatever a working tree happens to hold — counted at origin/main @ b2338d0 (2026-09-05) — so a number here is citable to a committed file, and a member the sheet draws but the plate does not carry is a build error rather than a stale constant. Two things followed from the swap: the fifth published package, <code>eslint-plugin-lit-ui-router</code> (#676), gets a building for the first time — 9 files, 715 lines, with a 9-file annex over it — and several members moved because the basis did, most visibly <code>@tools/oxc-emit</code>, hand-kept at 3 files and 100 lines and actually 5 files and 228.</p>
+<p><strong>What the districts say.</strong> The product is 5 modest buildings — 3,576 lines — against 6,770 in the instrument yard and 3,156 in the proving ground. The broadest source block on the sheet is <code>examples</code> — 2,412 lines of stackblitz copies — with <code>sample-app-shared</code>, which ships to nobody and gates nothing, just behind at 2,211; the only footprint that outbuilds both is <code>lit-ui-router</code>'s spec annex. <code>@tools/wintercg-globals</code> is drawn on the floor with no mass at all: it is ambient types, and a census that hides its empty members is not a census.</p>
+<p><strong>REV D — two things moved at once, and the plate keeps them apart.</strong> First the <em>ruler</em>: sloc is now <code>scc</code> 4.0.0's <code>Code</code> count rather than the old "neither blank nor comment-only" filter. Measured both ways over one identical file set — sheet 3 rev B's twenty-five source directories at today's HEAD — the old counter reads 11,560 and <code>scc</code> reads 11,658, about +0.9%. So roughly a hundred lines of the growth below is the tape measure, not the building. Second the <em>city</em>: fourteen days, one release (<code>lit-ui-router@1.10.0</code>, tagged 2026-08-17) and three new instruments. №28 <code>@tools/lint-elements</code> and №29 <code>@tools/warn-lanes</code> were both born 2026-08-31 (#639); №30 <code>@tools/eslint-ts-parser</code> was born 2026-08-16 (#557) and is the "28th member, not yet on any map" that plate 7B recorded — it can be placed now, and at 1 authored line it lands on the drawing's minimum footprint, the smallest thing in the yard. The yard is where the growth is: 16 members and 4,684 sloc become 20 and 6,770, and it stays the city's largest district by a wide margin.</p>
+<p><strong>Numbers by import, not by paste.</strong> Every count above and on the drawing is read from <code>diagrams/data/census-city.json</code>, the snapshot <code>census-city.mjs</code> writes out of the master per-file census; this file now holds placement, tiers and prose only. The plate is measured at a named ref rather than at whatever a working tree happens to hold — counted at origin/main @ 185d414 (2026-09-07) — so a number here is citable to a committed file, and a member the sheet draws but the plate does not carry is a build error rather than a stale constant. Two things followed from the swap: the fifth published package, <code>eslint-plugin-lit-ui-router</code> (#676), gets a building for the first time — 10 files, 771 lines, with a 9-file annex over it — and several members moved because the basis did, most visibly <code>@tools/oxc-emit</code>, hand-kept at 3 files and 100 lines and actually 5 files and 228.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -1124,11 +1148,11 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/></svg></td><td>district (workspace glob)</td></tr></table>
       <div class="titleblock" aria-label="title block">
   <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">THE MEASURED CITY</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>MEASURED CITY</span></div>
   <div><span class="fld">SCALE</span>WHOLE WORKSPACE</div>
   <div><span class="fld">FORM</span>MEASURED CITY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-04 · E</div>
+  <div><span class="fld">DATE / REV</span>2026-09-06 · F</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>7 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>
@@ -1141,7 +1165,9 @@ a { color: var(--accent); }
   <tr><th scope="row" class="r">REV D</th><td class="d">2026-08-31</td></tr>
   <tr><td class="t" colspan="2">recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json</td></tr>
   <tr><th scope="row" class="r">REV E</th><td class="d">2026-09-04</td></tr>
-  <tr><td class="t" colspan="2">cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame — counted at origin/main @ b2338d0 (2026-09-05)</td></tr></tbody>
+  <tr><td class="t" colspan="2">cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame</td></tr>
+  <tr><th scope="row" class="r">REV F</th><td class="d">2026-09-07</td></tr>
+  <tr><td class="t" colspan="2">re-surveyed after #717 moved the documentation site from docs/ to www/lit-ui-router.dev/ and #716 dropped the sample app's markov seed pipeline — member №10 is massed at its new path and the shopfront's district lettering follows it; the member keeps the name docs, which is still what its package.json and every turbo task id say — counted at origin/main @ 185d414 (2026-09-07)</td></tr></tbody>
 </table>
     </div>
   </div>

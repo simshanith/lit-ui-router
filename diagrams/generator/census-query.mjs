@@ -55,9 +55,10 @@ export const CITY_DIRS = new Map([
   ['packages/eslint-plugin-lit-ui-router', ['src', 'test']],
   ['apps/sample-app-routes', ['src', 'test']],
   ['apps/sample-app-lit-e2e', ['src', 'cypress']],
-  ['docs', ['.vitepress', 'worker', 'src']],
+  // #717 moved the docs site docs/ -> www/lit-ui-router.dev/ (package name still `docs`).
+  ['www/lit-ui-router.dev', ['.vitepress', 'worker', 'src']],
 ]);
-const RANK = ['packages/', 'apps/', 'docs', 'examples', 'tools/'];
+const RANK = ['packages/', 'apps/', 'www/', 'examples', 'tools/'];
 const DISTRICT = (dir) =>
   dir.startsWith('packages/') ? 'pkg' : dir.startsWith('apps/') ? 'app' : dir.startsWith('tools/') ? 'tool' : 'site';
 

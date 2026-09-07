@@ -297,18 +297,22 @@ export async function initCity(root, THREE) {
         [minZ - cz, maxZ - cz].forEach(function (z) { corners.push(new THREE.Vector3(x, y, z)); });
       });
     });
-    // fit over ALL four diagonals, so a snap can never clip the city
-    var baseW = 0, baseH = 0, keep = az;
+    // fit over ALL four diagonals, so a snap can never clip the city.  The vertical
+    // fit takes the SPAN, not the largest |y|: a model that sits above the ground
+    // centre would otherwise be paid for twice and leave empty paper under it.
+    var baseW = 0, loY = Infinity, hiY = -Infinity, keep = az;
     D.snaps.forEach(function (deg) {
       az = deg * Math.PI / 180;
       place();
       corners.forEach(function (v) {
         var p = v.clone().applyMatrix4(camera.matrixWorldInverse);
         baseW = Math.max(baseW, Math.abs(p.x));
-        baseH = Math.max(baseH, Math.abs(p.y));
+        loY = Math.min(loY, p.y);
+        hiY = Math.max(hiY, p.y);
       });
     });
     az = keep;
+    var baseH = (hiY - loY) / 2, midY = (hiY + loY) / 2;
 
     function resize() {
       var w = stage.clientWidth, h = stage.clientHeight;
@@ -319,7 +323,7 @@ export async function initCity(root, THREE) {
       var aspect = w / h;
       var half = Math.max(baseH, baseW / aspect) * D.margin;
       camera.left = -half * aspect; camera.right = half * aspect;
-      camera.top = half; camera.bottom = -half;
+      camera.top = midY + half; camera.bottom = midY - half;
       camera.updateProjectionMatrix();
     }
 

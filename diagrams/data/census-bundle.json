@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "b2338d0",
-  "commitDate": "2026-09-04T17:11:24-07:00",
-  "generatedAtTime": "2026-09-05T04:29:26.511Z",
+  "sha": "185d414",
+  "commitDate": "2026-09-06T20:42:44-07:00",
+  "generatedAtTime": "2026-09-07T04:39:29.051Z",
   "wasGeneratedBy": "diagrams/generator/census-bundle.mjs",
-  "used": "git archive origin/main @ b2338d0 + corepack pnpm install --frozen-lockfile + turbo run build + vite build (JS API)",
+  "used": "git archive origin/main @ 185d414 + corepack pnpm install --frozen-lockfile + turbo run build + vite build (JS API)",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo",

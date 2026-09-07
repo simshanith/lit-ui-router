@@ -12,6 +12,7 @@ export const TITLES = {
   about: `About — ${SET}`,
   city: `The City, Isometric — ${SET}`,
   specimen: `The Type Specimen — ${SET}`,
+  log: `Issue Log — ${SET}`,
   notFound: `Not in the set — ${SET}`,
 } as const;
 
@@ -32,6 +33,8 @@ export function titleFor(state: string | undefined, sheet?: SheetRow): string {
       return TITLES.city;
     case 'atlas.specimen':
       return TITLES.specimen;
+    case 'atlas.log':
+      return TITLES.log;
     case 'atlas.notFound':
       return TITLES.notFound;
     default:

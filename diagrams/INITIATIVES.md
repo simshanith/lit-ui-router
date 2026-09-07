@@ -600,6 +600,47 @@ meter; the suite re-ran clean without it) and metered the newcomer on its own
 node:test suite: 17 metered members, 7,980 lines. Revs: 3B→F, 7→E, 7B→F, 13→E;
 every other sheet re-read its plates without a line changing. Screenshot-
 verified on 3B, 7, 7B and 13.
+R4 — THIRD FULL-CABINET REFRESH 2026-09-07: main had moved past b2338d0 taking
+two structural PRs, so all 17 plates were re-counted at origin/main @ 185d414
+(commit 2026-09-06T20:42-07:00) in R1's order. Both PRs changed the SUBJECT, not
+just the numbers. #717 moved the documentation site out of docs/ into
+www/lit-ui-router.dev/, and #716 dropped the sample app's markov seed pipeline —
+with it the fifteen pre-gzipped demo corpora that had been sheet 9's tallest
+district since rev A. The build threw for the right reason twice: sheet 9 on
+"census-shipped.json: no district named demo corpora", sheet 13 on a file() miss
+for docs/.vitepress/vite.config.ts. THE RENAME IS A HALF-RENAME, and that is the
+trap to remember: the DIRECTORY is www/lit-ui-router.dev/, but at 185d414 the
+package is still NAMED docs, so every turbo task id (docs#build and its twelve
+siblings) and the census-city member name stay "docs" — only PATHS move. Sheet 7
+massed member №10 at the new path and its shopfront lettering follows it, sheet
+13 re-addressed the city's most-weathered wall (the rename chain is followed
+backwards, so its first date and touch count carry across the move), sheet 3's
+district lettering reads apps/ + www/, and sheet 9's probe note names
+www/lit-ui-router.dev/dist. Sheet 9 keeps the lost district as a VACANT LOT on
+the plan, drawn in plate 3B's phantom-plot idiom (faint hatch under a dashed
+outline, its own key row) with a leader from the callout — a skyline that loses
+its landmark should show where it stood. Two compositions moved on their own
+again, both on 3B: the examples plain grew 31,477 → 31,866 watched files and its
+south vertex finally crossed the art edge into the schedule band, so the art
+region is 70px deeper and the plain's own lettering sits beneath the vertex; and
+the Inter callout on sheet 9 was found running 5px off the frame and is now
+right-aligned to it. Revs: 9→G, 3B→H, 7→F, 13→F, 3→H, city-scene→E.
+Screenshot-verified on 9, 7, 3B and the city at 3008, 1440 and 390.
+WIDESCREEN — CONTAIN, AND THE MODEL AS A PEER 2026-09-07: user-asked, on a
+3008px display ("with the full size drawings on the plates now it looks awesome
+on widescreen. if anything too big — maybe contain instead of cover ... the
+isometric city interactive by comparison is tiny"). The flat set's plates
+already CONTAIN — .plate's --plate-cap spends min(84vh, 1400px) through
+max-width × the plate's own --plate-ar, because an inline SVG letterboxes under
+max-height instead of shrinking. Two things had not been brought over. The
+cover's key image was still capped by max-height: min(72vh, 820px) inside a
+full-width frame, so it letterboxed; it now takes the same formula against the
+--plate-ar emit-app already stamps on it (heroPlate), and the prerender and the
+client shell both read that one manifest.cover.hero, so they move together. And
+the three.js stage was a fixed 620px band next to 1400px plates; .cs-canvas is
+now clamp(520px, 80vh, 1400px), with the mobile rule clamp(420px, 62vh, 620px) —
+the renderer already reads stage.clientHeight and has a ResizeObserver, so
+nothing else changed.
 DOGFOOD — THE ATLAS AS A lit-ui-router APP, 2026-09-04: user-asked ("ready for
 some dogfooding, it's past time"). diagrams/app/ is the whole set as one
 routed SPA, shaped like examples/helloworld — plain npm, its own lockfile,
@@ -1312,6 +1353,43 @@ live site the kit already declares `hwt-catchwords` (checked from
 `atlas.lit-ui-router.dev/specimen/`). `tsc --noEmit` clean. Crops under
 `~/.claude/jobs/a9024f9c/tmp/catchwords/` (`keys-part0/1.png` = the whole
 face keyed; `shots/<row>[-stacked|-x2|-x3|-rail-off]-{title,rail,card,tb}.png`).
+
+**SHIPPED 2026-09-06 — the article is a SUP, and the catchword is the cover's
+alone.** The user's call off the bench: "i kinda like the hwt catchwords
+sparingly but found myself converting `the` to a `<sup>` with .6em din-2014
+font, lowercase". So the default treatment is a NEW `ARTICLES` row, `sup` — the
+word kept, drawn as `<sup class="art">the&nbsp;</sup>`: the data face at 0.6 em
+of the title, lowercase, `--ink-soft`, `letter-spacing: 0`, `line-height: 0` so
+it never opens the title's line box, and its own no-break space so the heading
+still reads "the MEASURED CITY" and never breaks after the article. It needs no
+kit glyph, so the site, the flat set and the artifact draw it identically. It is
+the knob's default, so `/specimen` opens on the shipped state (with RAIL OFF
+beside it, which is what the rail actually does).
+
+WHERE: `sup.art` is styled once in `generator/chrome.mjs` (so `sheets/atlas.css`
+carries it to the app and the artifact too). `articleTitle()` in chrome.mjs
+rewrites `/^THE\s+/` at RENDER — the manifest titles stay frozen — for the
+`.sheet-title` and the title block's SHEET TITLE on every sheet of both sets;
+its twins in `app/src/views.ts` and `app/prerender.ts` do the cover cards' `h3`,
+the hero caption's title, and the app's own `/log` and `/specimen` headlines.
+The five hand-written sheet heads (city, 1i, 12i, 2B, 14i) call it or carry the
+sup literally. The rail keeps T9's stripped form — one treatment per home.
+
+THE ONE CATCHWORD: the cover's `THE ALTITUDE ATLAS` `h2`, and nowhere else. A
+`.cw` span wraps the sup; `html[data-catchwords="on"] .cover-title .cw::before`
+draws catchword key `e` (the plainest of the ten) at the bench's cap-matched
+1.08 em, and hides the sup behind it. The `data-catchwords` flag is set by a
+12-line guard in `app/index.html` that walks `document.fonts` for a DECLARED
+`hwt-catchwords` — the same trap the specimen documents (`fonts.check()` says
+yes to families nothing declares). Off the kit — the artifact, any host without
+it — nothing fires and the sup is what draws; a bare key `e` in the display face
+is the failure that guard exists to prevent.
+
+MEASURED (Chromium, staged dist): `.sheet-title` clamp(18, 2.7vw, 24) → the sup
+is **14.4 px at 1440** and **10.8 px at the 18-px end**; the title block's
+13.5-px SHEET TITLE → 8.1 px; the cover card's 15-px `h3` → 9 px; the cover's
+44-px `h2` → a 26.4-px sup off the kit, or the catchword at 47.52 px (33.9 ×
+51 px of ink) on it.
 
 ## Why rework
 

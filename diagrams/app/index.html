@@ -56,6 +56,9 @@
         position: sticky;
         top: 0;
         align-self: start;
+        /* The paper box is the COLUMN, not the height of its links: without the
+           min-height the ground shows under the last sheet on every page. */
+        min-height: 100vh;
         max-height: 100vh;
         overflow-y: auto;
         background: var(--paper);
@@ -73,6 +76,11 @@
         font-size: 10px;
         letter-spacing: 0.14em;
         color: var(--ink-soft);
+        text-decoration: none;
+      }
+      .rail-head .kicker:hover {
+        color: var(--accent);
+        text-decoration: underline;
       }
       .rail-head h1 {
         font-family: var(--display);
@@ -171,6 +179,7 @@
       @media (max-width: 900px) {
         .rail {
           z-index: 8;
+          min-height: 0;
           max-height: none;
           overflow: visible;
           border-right: none;
@@ -362,22 +371,45 @@
         font-weight: 600;
         margin: 6px 0 6px;
       }
+      /* THE ONE CATCHWORD IN THE ATLAS — the cover's own name, nowhere else.
+         HWT Catchwords is an Adobe-kit face with NO GSUB: every THE in it is
+         keyed to one character, and key `e` is the plainest of the ten (upright
+         block caps over two leaves). It is drawn as a ::before on the `.cw`
+         span, at the cap-matched scale the type specimen measured against the
+         title face (1.08em, ink-height for cap-height), and the superior the
+         rest of the set uses is hidden behind it — but ONLY where the kit
+         declared the face. Off the kit (the artifact, any host without it)
+         nothing here applies and the `sup.art` fallback is what draws; the bare
+         key `e` in the display face is the failure this guard prevents. */
+      html[data-catchwords="on"] .cover-title .cw::before {
+        content: "e";
+        font-family: "hwt-catchwords";
+        font-size: 1.08em;
+        font-weight: 400;
+        letter-spacing: 0;
+        text-transform: none;
+        color: var(--ink-soft);
+        margin-right: 0.16em;
+      }
+      html[data-catchwords="on"] .cover-title .cw sup.art {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        overflow: hidden;
+        clip-path: inset(50%);
+        white-space: nowrap;
+      }
+      /* two lines, not one 141-character rule: the motto, then the stamp */
+      .cover-sub .stamp {
+        display: block;
+        color: var(--ink-faint);
+        margin-top: 3px;
+      }
+      /* The key image is the whole width of the sheet — the issue log that used
+         to ride beside it is its own state at /log. */
       .hero {
-        display: grid;
-        grid-template-columns: minmax(0, 7fr) 352px;
-        gap: 24px;
-        align-items: start;
-        margin: 22px 0 26px;
-      }
-      @media (max-width: 1180px) {
-        .hero {
-          grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr);
-        }
-      }
-      @media (max-width: 900px) {
-        .hero {
-          grid-template-columns: 1fr;
-        }
+        display: block;
+        margin: 22px 0 14px;
       }
       .hero-plate {
         display: block;
@@ -391,8 +423,14 @@
       }
       .hero-plate svg {
         display: block;
+        margin: 0 auto;
         width: 100%;
         height: auto;
+        /* Prominent, but not a screenful — and CONTAINED like a plate. An inline
+           SVG letterboxes under max-height inside a full-width frame, so the cap
+           reaches it through max-width times the hero's own viewBox ratio
+           (--plate-ar, stamped by emit-app's heroPlate). */
+        max-width: min(100%, calc(min(72vh, 820px) * var(--plate-ar, 1.4)));
         padding: 6px 4px 0;
       }
       .hero-cap {
@@ -418,6 +456,53 @@
       .hero-cap .go {
         color: var(--accent);
         font-weight: 600;
+      }
+      /* THE ONE LINE OF ISSUE RECORD ON THE COVER — the log itself is /log. */
+      .cover-latest {
+        margin: 0 0 8px;
+      }
+      .cover-latest a {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 2px 14px;
+        border: 1.5px solid var(--ink);
+        border-top: none;
+        background: var(--paper);
+        padding: 8px 12px 9px;
+        font-family: var(--data);
+        font-size: 10.5px;
+        letter-spacing: 0.12em;
+        font-variant-numeric: tabular-nums;
+        color: var(--ink-soft);
+        text-decoration: none;
+      }
+      .cover-latest a:hover {
+        background: var(--paper-2);
+      }
+      .cover-latest .k {
+        font-weight: 600;
+        color: var(--ink-faint);
+      }
+      .cover-latest .s {
+        color: var(--accent);
+        font-weight: 600;
+      }
+      .cover-latest .t {
+        flex: 1 1 22ch;
+        min-width: 0;
+        font-family: var(--prose);
+        font-size: 13px;
+        letter-spacing: 0;
+        color: var(--ink-soft);
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      .cover-latest .go {
+        color: var(--accent);
+        font-weight: 600;
+        flex: 0 0 auto;
       }
       .issue-log h3 {
         font-family: var(--data);
@@ -465,6 +550,19 @@
       .issue-log details {
         margin-top: 10px;
       }
+      /* /log: the same rows with room to be a rev BLOCK — date, sheet, clause. */
+      .issue-log-page {
+        margin-top: 18px;
+      }
+      @media (min-width: 1000px) {
+        .issue-log-page li {
+          grid-template-columns: 96px 260px minmax(0, 1fr);
+          gap: 0 16px;
+        }
+        .issue-log-page .t {
+          grid-column: 3;
+        }
+      }
       .issue-log summary {
         font-family: var(--data);
         font-size: 10px;
@@ -499,6 +597,13 @@
         grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
         gap: 14px;
         margin: 0;
+      }
+      /* On a wide display the cards get room to read rather than more of them. */
+      @media (min-width: 1800px) {
+        .cards {
+          grid-template-columns: repeat(auto-fill, minmax(330px, 1fr));
+          gap: 16px;
+        }
       }
       .card {
         border: 1.5px solid var(--ink);
@@ -552,6 +657,28 @@
         margin-top: 9px;
         display: block;
       }
+      /* THE WIDE BAND — the numbers and the argument, after the index. Over
+         1800 the survey table and the reading column sit side by side, so the
+         width is used instead of leaving a canyon beside a 72ch column. */
+      .cover-band {
+        margin: 26px 0 0;
+        padding: 10px 0 0;
+        border-top: 1.5px solid var(--ink);
+      }
+      .cover-band .stat-bar {
+        margin-top: 0;
+      }
+      @media (min-width: 1800px) {
+        .cover-wide {
+          display: grid;
+          grid-template-columns: minmax(0, 1fr) minmax(0, 72ch);
+          gap: 0 28px;
+          align-items: start;
+        }
+        .cover-wide .survey {
+          margin-bottom: 0;
+        }
+      }
       .prose {
         max-width: 72ch;
         margin: 0 auto;
@@ -579,7 +706,6 @@
         font-family: var(--code);
         font-size: 0.88em;
         background: var(--paper-2);
-        border: 1px solid var(--line);
         padding: 0 3px;
       }
       .plate-verdict .lead {
@@ -593,6 +719,30 @@
     </style>
   </head>
   <body>
+    <script>
+      // THE CATCHWORD GUARD. The kit <link> is injected at stage time, so the
+      // page cannot know at build time whether it has the face — it asks the
+      // FontFaceSet. TRAP (the one the specimen documents): document.fonts
+      // .check() answers "can this be rendered", which is true for a family
+      // nothing declares; only a DECLARED @font-face lands in the set, so that
+      // is what is asked. Sets html[data-catchwords="on"] — the only thing the
+      // cover's catchword rule keys on.
+      (function () {
+        var armed = function () {
+          for (var f of document.fonts) {
+            if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+              document.documentElement.dataset.catchwords = 'on';
+              return true;
+            }
+          }
+          return false;
+        };
+        if (armed()) return;
+        addEventListener('DOMContentLoaded', function () {
+          if (!armed()) document.fonts.ready.then(armed);
+        });
+      })();
+    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -62,8 +62,8 @@ export const PLACED = [
   [7,  'sample-app-lit-mobx',      'apps/sample-app-lit-mobx',           'app',  'line',   720,  90, 'the mobx demo'],
   [8,  'sample-app-routes',        'apps/sample-app-routes',             'app',  'line',   700, 150, 'the shared route table, server-side too'],
   [9,  'sample-app-lit-e2e',       'apps/sample-app-lit-e2e',            'app',  'pr',     580, 150, 'cypress · drives the docs build'],
-  // --- docs/ + examples/ — the shopfront ---------------------------------------
-  [10, 'docs',                     'docs',                               'site', 'line',   660, 340, 'vitepress + the worker that serves it'],
+  // --- www/ + examples/ — the shopfront ---------------------------------------
+  [10, 'docs',                     'www/lit-ui-router.dev',              'site', 'line',   660, 340, 'vitepress + the worker that serves it'],
   [11, 'examples',                 'examples',                           'site', 'line',   660, 430, 'stackblitz-ready copies, own lockfiles'],
   // --- tools/ — the instrument yard --------------------------------------------
   [12, '@tools/release',           'tools/release',                      'tool', 'halt',    20, 430, 'hosts published-diff — the one publish halt'],
@@ -309,7 +309,7 @@ ${txt(1540, 393, `${DA.n} members · ${DA.f} files · ${fmt(DA.sl)} sloc`, 'lblf
 ${txt(1540, 405, 'the proving ground gates nothing but e2e', 'lblf', 'end')}
 <line x1="1284" y1="416" x2="1248" y2="446" class="skf"/>
 
-${txt(1014, 656, 'docs/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(1014, 656, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1014, 669, `${DS.n} members · ${DS.f} files · ${fmt(DS.sl)} sloc`, 'lblf')}
 <line x1="1008" y1="652" x2="986" y2="636" class="skf"/>
 
@@ -352,9 +352,9 @@ ${schedule}
 </svg>`;
 
 export const sheet7 = {
-  num: 7, id: 'census', rev: 'E',
+  num: 7, id: 'census', rev: 'F',
   title: 'THE MEASURED CITY',
-  sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall · REV D 2026-08-31: recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json · REV E 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame — ${BASIS}`,
+  sub: `ALTITUDE 3½ — the same city as sheet 3, surveyed by mass · ${M.length} members · 4 districts · REV B: districts, gate severity in colour, and the roads between them — counted 2026-08-16 · REV C 2026-08-31: hidden-line pass — the masses now carry opaque faces and are painted back to front, so no rear iso edge reads through a front wall · REV D 2026-08-31: recount — three new instruments massed (28 lint-elements, 29 warn-lanes, 30 eslint-ts-parser), and every sloc rebased on scc 4.0.0’s Code count; on one identical file set the new ruler reads about +0.9% over the old “neither blank nor comment-only” filter, and the rest of the movement is code · every number now imported from diagrams/data/census-city.json · REV E 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights (#703) massed on the yard's middle row, and two schedule notes shortened to fit the frame · REV F 2026-09-07: re-surveyed after #717 moved the documentation site from docs/ to www/lit-ui-router.dev/ and #716 dropped the sample app's markov seed pipeline — member №10 is massed at its new path and the shopfront's district lettering follows it; the member keeps the name docs, which is still what its package.json and every turbo task id say — ${BASIS}`,
   scale: 'WHOLE WORKSPACE',
   form: 'MEASURED CITY',
   svg,

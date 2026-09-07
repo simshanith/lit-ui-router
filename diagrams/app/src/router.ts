@@ -19,6 +19,7 @@ import {
   AboutView,
   CityView,
   GalleryView,
+  LogView,
   NotFoundView,
   SheetView,
   ShellView,
@@ -105,6 +106,9 @@ export const states: LitStateDeclaration[] = [
     redirectTo: { state: 'atlas.sheet', params: { num: '14' } },
   },
   { name: 'atlas.about', url: urlOf('atlas.about'), component: AboutView },
+  // The issue log reads the shell's already-resolved manifest — no resolve of
+  // its own, and no second fetch.
+  { name: 'atlas.log', url: urlOf('atlas.log'), component: LogView },
   // Url-less: an unmatched path keeps its own url, exactly as a server 404
   // does — the shape ui-router-server projects as `otherwise`.
   { name: 'atlas.notFound', component: NotFoundView },

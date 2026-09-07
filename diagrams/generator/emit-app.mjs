@@ -15,7 +15,7 @@
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CSS, DATE, TOTAL, sheetSection, splitRevs } from './chrome.mjs';
+import { CSS, DATE, TOTAL, plateRatio, sheetSection, splitRevs } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
 import { cityHero } from './sheet7.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
@@ -159,6 +159,15 @@ function issueLogOf(rows) {
 // <script> would not have run anyway.
 const CDN_SCRIPT = /\s*<script defer src="https:\/\/cdnjs\.cloudflare\.com\/[^"]*"><\/script>/g;
 
+// the cover's key image, tagged with its own viewBox ratio: an inline SVG
+// letterboxes under max-height, so index.html's contain cap spends itself on
+// max-width instead — the same rule the plates use.
+function heroPlate() {
+  const svg = cityHero();
+  const ar = plateRatio(svg);
+  return ar ? svg.replace('<svg ', `<svg style="--plate-ar:${ar}" `) : svg;
+}
+
 /**
  * @param {object} args
  * @param {Array<object>} args.sheets      the SVG sheets, in build.mjs's order
@@ -273,7 +282,9 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
         // stat bar, the general survey, the prose column, the colophon line,
         // the README's thesis and generator notes, and the CSS they need.
         // + the key image: sheet 7's city alone, cropped to its extent
-        cover: { ...cover, hero: cityHero() },
+        // the hero carries its own viewBox ratio so the cover's contain cap can be
+        // spent on max-width, exactly as a plate's is (see .plate in chrome.mjs)
+        cover: { ...cover, hero: heroPlate() },
         // every dated REV across the set, latest first, then the undated ones
         issueLog,
         sheets: manifest,

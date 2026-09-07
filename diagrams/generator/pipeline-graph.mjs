@@ -372,7 +372,7 @@ export function pipelineSection() {
   return `<style>${CSS}</style>
 <section class="sheet pg" id="pipeline-graph" aria-label="The Survey Office, interactive">
   <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">SHEET 14 · REV ${REV}</span></div>
-  <h2 class="sheet-title">THE SURVEY OFFICE — INTERACTIVE</h2>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SURVEY OFFICE — INTERACTIVE</h2>
   <p class="sheet-sub">${SUB}</p>
   <div class="pg-bar">
     <div class="pg-legend">

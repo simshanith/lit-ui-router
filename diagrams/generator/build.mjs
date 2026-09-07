@@ -145,9 +145,13 @@ const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appendixIdx].map((row) 
 // The stat bar, the general survey, the prose column and the colophon line
 // ride the manifest as `cover.css`; .cover and .idx are gallery-only. The two
 // halves are re-joined below in their original order.
-const surveyCss = `.stat-bar { display: flex; flex-wrap: wrap; gap: 0; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--paper-2); }
-.stat-bar > div { padding: 8px 16px 10px; border-right: 1px solid var(--ink); flex: 1 1 auto; }
-.stat-bar > div:last-child { border-right: none; }
+const surveyCss = `.stat-bar { display: grid; grid-template-columns: repeat(6, 1fr); gap: 1px; border: 1.5px solid var(--ink); margin: 22px 0 26px; background: var(--ink); }
+/* two ruled rows on a six-column field: the three one-line facts across the top
+   at a third each, the two roster paragraphs at a half each below — nothing
+   wraps to a row of its own and no cell is left half-empty */
+.stat-bar > div { padding: 8px 16px 10px; background: var(--paper-2); grid-column: span 2; }
+.stat-bar > div:nth-child(n+4) { grid-column: span 3; }
+@media (max-width: 760px) { .stat-bar { grid-template-columns: 1fr; } .stat-bar > div, .stat-bar > div:nth-child(n+4) { grid-column: auto; } }
 .stat-bar .k { display: block; font-family: var(--data); font-size: 9.5px; letter-spacing: 0.16em; color: var(--ink-soft); margin-bottom: 3px; }
 .stat-bar .v { font-family: var(--data); font-size: 14.5px; font-variant-numeric: tabular-nums; letter-spacing: 0.04em; }
 .survey { border: 1.5px solid var(--ink); margin: 0 0 26px; background: var(--paper); }
@@ -174,8 +178,10 @@ const surveyCss = `.stat-bar { display: flex; flex-wrap: wrap; gap: 0; border: 1
 .survey .basis { font-family: var(--data); font-size: 10px; letter-spacing: 0.06em; color: var(--ink-faint);
   padding: 8px 14px 9px; border-top: 1.5px solid var(--ink); background: var(--paper-2); }
 .gal-body p { font-family: var(--prose); font-size: 16px; max-width: 72ch; margin-bottom: 11px; }`;
-const provenanceCss = `.provenance { font-family: var(--data); font-size: 10.5px; letter-spacing: 0.06em; color: var(--ink-faint);
-  margin: 0 0 40px; padding: 0 4px; }`;
+// SOURCES is a paragraph, not a schedule; the second selector outranks the app's
+// `.prose p`, so in the reading column it stays a footnote under the body
+const provenanceCss = `.provenance, .prose p.provenance { font-family: var(--prose); font-size: 13.5px;
+  line-height: 1.5; color: var(--ink-soft); max-width: 68ch; margin: 0 0 40px; padding: 0 4px; }`;
 const coverCss = `${surveyCss}\n${provenanceCss}`;
 const galCss = `
 .cover { margin: 0 0 34px; background: var(--paper); border: 1.5px solid var(--ink);
@@ -250,16 +256,16 @@ const survey = `<section class="survey" aria-label="general survey of the reposi
 
 const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
     <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
-    <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
     <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · ${SHIPPED.published}</span></div>
+    <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')} — the eslint plugin joined 2026-09-02, after sheets 1–13 were first drawn</span></div>
     <div><span class="k">SHEETS</span><span class="v">14 altitudes · ${PLATES} plates · drawn 2026-08-16–17 · the survey office added 2026-09-03 · whole plate cabinet re-counted at ${COUNTED_AT}</span></div>
   </div>`;
 
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 297× the app it serves), what the browser downloads (the docs deploy on the wire — where the demo corpora and the fonts outweigh every line of code), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 22.5% of the wire; the router itself, 3.9%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8, 9 and 10 have each been remeasured after the merge they argued for; sheet 11 cuts the same wire the other way — five package quarters, sixteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
+    <p>The set has grown since its first printing. Sheet 1 is now REV C — first staged isometric at the client's ask, then given one deliberate metaphor break: the document is drawn the way Firefox's old Tilt inspector drew it, a browser window whose DOM rises as stacked plates. Sheets 7–10 are a survey quartet: what we wrote (the monorepo by mass), what npm delivered (the sample app's <code>node_modules</code>, 297× the app it serves), what the browser downloads (the docs deploy on the wire — where the prose and the fonts outweigh every line of code — the demo corpora that once towered over both left the deploy at rev G), and who actually occupies the bytes after tree-shaking (one bundle opened up — the machine the router wraps is 22.5% of the wire; the router itself, 3.9%). The set has already changed its own subject twice: sheet 8's rev A drew lodash as the tallest building in the delivered city, and that drawing became a merged <code>lodash-es</code> swap — the building halved, the wire chunk cut 84%; then sheet 10's first printing drew two complete lit majors riding in every app, and that drawing became the merged single-lit + lazy api-viewer dedupe (#618). Sheets 8, 9 and 10 have each been remeasured after the merge they argued for; sheet 11 cuts the same wire the other way — five package quarters, sixteen doors, each priced alone. Sheet 12 leaves the wire entirely and draws the monorepo as its own CI reads it: the pull-request task graph punched onto a register plate, where two thirds of the holes turn out to be scaffolding. Sheet 14 turns the instrument on itself: the census pipeline that produced almost every number in this set, drawn as a flow of archive → probe stations → filed plates → drawings, and introspected from the generator at build time rather than described by hand.</p>
   </div>`;
 
 const cover = `<header class="cover">

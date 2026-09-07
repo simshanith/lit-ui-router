@@ -221,16 +221,19 @@ const bodies = depthSort(M.flatMap(([n]) => {
   + '\n' + M.map(([n]) => badge(n)).join('\n');
 
 // ---- telemetry (reading) box ------------------------------------------------------
-// the longest reading (LAMPS) sets the inset — it must clear the box wall, not touch it
+// The rust ladder outgrew the wall it was drawn to, so the reading takes a
+// continuation line and the box is re-cut to the widest line that remains
+// (PIPES) and hung on the plate's right margin, clear of the packages lettering.
 const TB = `
-<rect x="1090" y="96" width="430" height="122" class="sk fp"/>
-${txt(1098, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
-<line x1="1090" y1="124" x2="1520" y2="124" class="skf"/>
-${txt(1098, 142, 'RUST (speckle) — idle: 0 ≤14d · R1 ≤30 · R2 ≤37 · R3 ≤58 · R4 >180 (RE-CUT AT REV C)', 'lbls')}
-${txt(1098, 160, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16', 'lbls')}
-${txt(1098, 178, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
-${txt(1098, 196, `PIPES — turbo run build graph: ${BUILD.real} real of ${BUILD.nodes} nodes, last green 08-17`, 'lbls')}
-${txt(1098, 211, `steam window ${WINDOW} — ${PLATE.ref} @ ${PLATE.sha}`, 'lblf')}`;
+<rect x="1152" y="96" width="388" height="148" class="sk fp"/>
+${txt(1168, 116, 'PLANT TELEMETRY — FOUR CHANNELS, ALL INDEPENDENT', 'lbls')}
+<line x1="1152" y1="124" x2="1540" y2="124" class="skf"/>
+${txt(1168, 142, 'RUST (speckle) — idle: 0 ≤14d · R1 ≤30 · R2 ≤37 ·', 'lbls')}
+${txt(1180, 156, 'R3 ≤58 · R4 >180 (RE-CUT AT REV C)', 'lbls')}
+${txt(1168, 174, 'STEAM (puffs) — commits/90d: 0 ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16', 'lbls')}
+${txt(1168, 192, 'LAMPS — 7A lit share: 3 ≥90 · 2 ≥50 · 1 >0 · accent = unmetered e2e', 'lbls')}
+${txt(1168, 210, `PIPES — turbo run build graph: ${BUILD.real} real of ${BUILD.nodes} nodes, last green 08-17`, 'lbls')}
+${txt(1168, 225, `steam window ${WINDOW} — ${PLATE.ref} @ ${PLATE.sha}`, 'lblf')}`;
 
 // ---- alert register ---------------------------------------------------------------
 const AR = `
@@ -301,7 +304,7 @@ ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`
 ${txt(1540, 413, 'no meter reads it · vanilla + mobx rust at R3', 'lblf', 'end')}
 <line x1="1284" y1="416" x2="1248" y2="446" class="skf"/>
 
-${txt(1014, 668, 'docs/ + examples/ — THE SHOPFRONT', 'lblb')}
+${txt(1014, 668, 'www/ + examples/ — THE SHOPFRONT', 'lblb')}
 ${txt(1014, 681, `docs: ${PUFFS(g(10).steam)} puffs (${g(10).steam}c), 1 lamp — top steam band, dimmest metered light`, 'lblf')}
 ${txt(1014, 693, `examples: ${PUFFS(g(11).steam)} puffs (${g(11).steam}c), 0 lamps, R1 rust — at full steam, unlit, freshly worked`, 'lblf')}
 <line x1="1008" y1="664" x2="986" y2="640" class="skf"/>
@@ -330,9 +333,9 @@ ${schedule}
 </svg>`;
 
 export const sheet7b = {
-  num: '7B', id: 'working', rev: 'F',
+  num: '7B', id: 'working', rev: 'G',
   title: 'THE WORKING CITY',
-  sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered · steam now IMPORTED from diagrams/data/census-steam.json (window ${WINDOW} · ${BASIS}) and the massing from sheet 7’s own plate, so the fifth package joins the city as №31 · REV D: whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (${BUILD.real} real of ${BUILD.nodes} nodes) instead of a hand-pasted 22 of 113 · REV E: the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, ${SHADOW.ref} @ ${SHADOW.sha}), so rust is the last editorial channel on this sheet and №31 finally reads a lamp · REV F 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights joins the plant at rust 0, its lamp metered by its own node:test suite`,
+  sub: `ALTITUDE 3½ — SYNTHESIS PLATE TO SHEET 7: the census city as a working plant · weathering (13) × test light (7A) × gates (7) × live build, one sprite per member · re-surveyed 2026-08-31 · REV B: hidden-line pass — opaque plant walls painted back to front, and the pipes now stop inside the annex gap · REV C 2026-08-31: 30 plants (three new machines), rust ladder RE-CUT on the fresh idle distribution — an R2 here is not rev B’s R2 — and rev B’s one alarm struck through: //#lint:root is answered · steam now IMPORTED from diagrams/data/census-steam.json (window ${WINDOW} · ${BASIS}) and the massing from sheet 7’s own plate, so the fifth package joins the city as №31 · REV D: whole-cabinet refresh — the PIPES channel now reads the build graph off census-plate.json (${BUILD.real} real of ${BUILD.nodes} nodes) instead of a hand-pasted 22 of 113 · REV E: the LAMPS channel is imported too — plate 7A's light is a filed snapshot now (census-shadow.json, ${SHADOW.ref} @ ${SHADOW.sha}), so rust is the last editorial channel on this sheet and №31 finally reads a lamp · REV F 2026-09-04: cabinet refresh after the 1.11.2 + mobx 1.0.0 releases — №32 @tools/embed-heights joins the plant at rust 0, its lamp metered by its own node:test suite · REV G 2026-09-06: the telemetry box re-cut — the rust ladder had outgrown the wall it was drawn to and ran off the plate, so the reading takes a continuation line and the box is sized to the widest line that remains and hung on the plate’s right margin, clear of the packages lettering`,
   scale: 'WHOLE WORKSPACE',
   form: 'WORKING CITY',
   svg,

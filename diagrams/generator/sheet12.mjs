@@ -274,7 +274,9 @@ ${txt(RX, UY + 25, 'root, 6 in member files (@tools/ scope elided)', 'lblf')}
 ${txt(RX, UY + 36, 'none of them reachable from ci', 'lblf')}
 ${UNCACHED.map(([n, why], i) => {
     const y = UY + 57 + i * 17;
-    return hole(RX + 8, y, 'c') + txt(RX + 26, y + 3.5, n, 'lbls') + txt(RX + 26 + 162, y + 3.5, why, 'lblf');
+    // The reason column hangs on the plate's right margin: at the data face the
+    // longest reason no longer fits a left-set column between the names and 1130.
+    return hole(RX + 8, y, 'c') + txt(RX + 26, y + 3.5, n, 'lbls') + txt(1130, y + 3.5, why, 'lblf', 'end');
   }).join('\n')}`;
 
 // --- the ragged tail, below the plate
@@ -347,9 +349,9 @@ ${ledger}
 </svg>`;
 
 export const sheet12 = {
-  num: 12, id: 'graph', rev: 'E',
+  num: 12, id: 'graph', rev: 'F',
   title: 'THE REGISTER PLATE',
-  sub: `ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · ${TURBO} · REV B: census refresh 2026-08-31 — three new members, three new rows, the phantom share held · REV C: every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real · REV D: whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96 · ${BASIS} · REV E 2026-09-06: the ci:main overlay holes and their key swatch now carry the accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); the register is otherwise untouched`,
+  sub: `ALTITUDE 3¼ — the monorepo as its CI reads it · every task node punched · ${TURBO} · REV B: census refresh 2026-08-31 — three new members, three new rows, the phantom share held · REV C: every number now imported from diagrams/data/census-plate.json — the fifth publishable package joined the register and the graph grew to 590 nodes / 176 real · REV D: whole-cabinet refresh at eb32b4e — 586 nodes / 177 real, and real→real edges down a quarter to 96 · ${BASIS} · REV E 2026-09-06: the ci:main overlay holes and their key swatch now carry the accent hatch (a stroke class’s fill:none was outranking the fill attribute, fixed at the source in helpers.mjs); the register is otherwise untouched · REV F 2026-09-06: the uncacheable tier’s reason column hangs on the plate’s right margin — at the data face the longest reason no longer fitted a left-set column and ran off the sheet; the register, the overlay and the tail are untouched`,
   scale: 'PR CI GRAPH',
   form: 'REGISTER PLATE',
   svg,

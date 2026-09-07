@@ -5,7 +5,7 @@
 // the frame, the prose and the title block; generator/loop-walk.mjs holds the
 // lane and its layout.
 import { readFileSync } from 'node:fs';
-import { PROJECT, TOTAL, titleBlock } from './chrome.mjs';
+import { PROJECT, TOTAL, articleTitle, titleBlock } from './chrome.mjs';
 import { esc, keyRow } from './helpers.mjs';
 import { LOOP as R, loopWalkLane } from './loop-walk.mjs';
 
@@ -93,7 +93,7 @@ export const sheet1i = {
 export function loopWalkedSection() {
   return `<section class="sheet lw" id="sheet-${sheet1i.num}" aria-label="Sheet ${sheet1i.num}: ${sheet1i.title}">
   <div class="sheet-head"><span class="proj">${PROJECT} — INTERACTIVE PLATE</span><span class="shno">SHEET ${sheet1i.num} / ${TOTAL}</span></div>
-  <h2 class="sheet-title">${sheet1i.title}</h2>
+  <h2 class="sheet-title">${articleTitle(sheet1i.title)}</h2>
   <p class="sheet-sub">${sheet1i.sub}</p>
   ${loopWalkLane()}
   <figure><figcaption>${sheet1i.caption}</figcaption></figure>
