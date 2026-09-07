@@ -230,10 +230,15 @@ plaintext only. Secrets therefore can never be committed here nor clobbered by `
 
 ### Local Development
 
+With pnpm:
+
 ```bash
-# with pnpm
 pnpm --filter @www/lit-ui-router.dev wrangler:dev
-# with turbo
+```
+
+With turbo:
+
+```bash
 turbo @www/lit-ui-router.dev#wrangler:dev
 ```
 
