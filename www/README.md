@@ -4,9 +4,9 @@ The sites this repo publishes, one directory per domain. Each directory is a
 workspace package that owns its own content, its own Cloudflare Worker, and its
 own wrangler config; the pipeline that ships them is shared.
 
-| Directory                                   | Site                                                                                                              | Deploy guide                                                   |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------- |
-| [`lit-ui-router.dev/`](./lit-ui-router.dev) | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it | [`lit-ui-router.dev/DEPLOY.md`](./lit-ui-router.dev/DEPLOY.md) |
+| Directory                                   | Site                                                                                                              |
+| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`lit-ui-router.dev/`](./lit-ui-router.dev) | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it |
 
 ## Adding a site
 
@@ -39,7 +39,6 @@ an `--apply` to test. The same package diffs the config against the live trigger
 (`pnpm check:workers-builds`) and reports it as the non-gating `workers-builds
 (triggers)` check run.
 
-Per-site detail — the config file table, the wrangler setup, the build and deploy
-commands and their rationale, the dashboard-as-code credentials, the build
-environment variables, and local development — lives in each site's deploy guide:
-[`lit-ui-router.dev/DEPLOY.md`](./lit-ui-router.dev/DEPLOY.md).
+The current deployment guide for the shared pipeline and
+[`lit-ui-router.dev`](./lit-ui-router.dev) is [`DEPLOY.md`](./DEPLOY.md). Future
+sites can add their own guide when their deployment details differ.

@@ -1,13 +1,12 @@
 #!/usr/bin/env node
 // The Workers Builds deploy command, in the repo like the build command: the
 // dashboard holds one value for every branch, so wrangler details live here.
-// Runs after cloudflare-build.sh (bash: it runs before the install) — see
-// www/lit-ui-router.dev/DEPLOY.md.
+// Runs after cloudflare-build.sh (bash: it runs before the install) — see www/DEPLOY.md.
 import { execFileSync } from 'node:child_process';
 
 // The site's wrangler.jsonc sits in the package, not the root, and the deploy
 // runs from the root — so every mode names it. It lives here rather than in the
-// dashboard: that is what the script indirection is for (see www/README.md).
+// dashboard: that is what the script indirection is for (see www/DEPLOY.md).
 const SITE_CONFIG = [
   '--config',
   'www/lit-ui-router.dev/wrangler.jsonc',

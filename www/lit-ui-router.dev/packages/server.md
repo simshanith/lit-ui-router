@@ -185,7 +185,7 @@ the static layer and should judge everything.
 ### fetch — the edge
 
 The representative example, and what serves this site
-([`www/lit-ui-router.dev/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/worker/index.ts)):
+([`docs/worker/index.ts`](https://github.com/simshanith/lit-ui-router/blob/main/docs/worker/index.ts)):
 
 ```ts
 import { mounts } from 'sample-app-routes';
@@ -253,7 +253,7 @@ export default defineConfig({
 ```
 
 This site's own dev server runs it
-([`www/lit-ui-router.dev/.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/www/lit-ui-router.dev/.vitepress/vite.config.ts)).
+([`docs/.vitepress/vite.config.ts`](https://github.com/simshanith/lit-ui-router/blob/main/docs/.vitepress/vite.config.ts)).
 
 ### connect — Node servers
 
