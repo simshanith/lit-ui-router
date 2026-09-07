@@ -238,10 +238,8 @@
       ]
     },
     "//#lint:zizmor": {
-      // zizmor also reads its own config (zizmor.yml).
       "inputs": [
         ".github/**",
-        "zizmor.yml",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
