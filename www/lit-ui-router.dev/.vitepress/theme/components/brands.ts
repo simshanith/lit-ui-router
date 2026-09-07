@@ -1,4 +1,4 @@
-// per-ground official marks under docs/public/images/brands/
+// per-ground official marks under public/images/brands/
 // height: optical size (px) inside the cards' common 40px mark box —
 // tuned by rendered screenshot, not intrinsic dimensions
 export const brandMarks = {

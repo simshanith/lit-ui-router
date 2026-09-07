@@ -22,7 +22,7 @@ export default defineConfig(
     // build outputs (every output lives under a dist/ dir): parallel tasks
     // rewrite these mid-lint, so the **/package.json glob must never traverse them
     '**/dist/**',
-    'docs/api/**',
+    'www/lit-ui-router.dev/api/**',
     'tools/release/.cache/**',
     '**/coverage/**',
     '**/node_modules/**',
@@ -132,7 +132,7 @@ export default defineConfig(
       'packages/*/package.json',
       'apps/*/package.json',
       'tools/*/package.json',
-      'docs/package.json',
+      'www/lit-ui-router.dev/package.json',
       'examples/package.json',
     ],
     plugins: { repo: repoRules },

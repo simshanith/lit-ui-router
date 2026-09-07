@@ -28,7 +28,7 @@ ones they mask: an `href` written to an element that has none, an
 the part type it accepts.
 
 ::: warning Release candidate
-The current release is `1.0.0-rc.3`, published under the `rc` dist-tag: the
+The current release is `1.0.0-rc.2`, published under the `rc` dist-tag: the
 API shape is final and covered by tests, but the stable number waits on the
 [1.0 bar](https://github.com/simshanith/lit-ui-router/issues/667). Install it
 as `eslint-plugin-lit-ui-router@rc` until it moves to `latest`.
@@ -133,9 +133,8 @@ panel and an iframe of ESLint's own `html` formatter, over the same results.
 
 `src/violations.ts` is a gallery with one deliberate violation per
 `recommended` rule, so the report is not empty: the embed below is that built
-page, and its report is static (`5 problems`: one per rule and one for
-`settings.linkElements`, each rule id linked to its docs at the installed
-version). Open it on StackBlitz to edit the sources and watch the
+page, and its report is static (`4 problems`, one per rule, each rule id
+linked to its docs). Open it on StackBlitz to edit the sources and watch the
 report re-run.
 
 <LiveExample name="lint-eslint" />
@@ -161,7 +160,7 @@ expect majors rather than silent tightening, and pin accordingly.
 
 - **npm**:
   [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
-  — `1.0.0-rc.3` on `rc`. `latest` still points at the empty seed publish
+  — `1.0.0-rc.2` on `rc`. `latest` still points at the empty seed publish
   until the stable release lands.
 - **Source**:
   [`packages/eslint-plugin-lit-ui-router`](https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router)

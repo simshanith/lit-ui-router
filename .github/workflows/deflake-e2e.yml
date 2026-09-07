@@ -67,7 +67,7 @@ jobs:
       - name: Start shared Xvfb display
         run: mise run //tools/build_and_test:xvfb
       - name: Build the served site
-        # The e2e server serves docs/dist; the filter pulls the app's full
+        # The e2e server serves www/lit-ui-router.dev/dist; the filter pulls the app's full
         # dependency closure. Remote cache makes this a restore when secrets
         # are present; dependabot/fork PRs (no secrets) build locally.
         run: turbo run build --filter=sample-app-lit-e2e...

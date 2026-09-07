@@ -3,9 +3,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "lit-ui-router",
   "compatibility_date": "2026-07-01",
-  "main": "./docs/worker/index.ts",
+  "main": "./worker/index.ts",
   "assets": {
-    "directory": "./docs/dist",
+    "directory": "./dist",
     "binding": "ASSETS",
     "not_found_handling": "404-page",
     // Sample-app deep links and the 404-pattern exhibits invoke the worker;

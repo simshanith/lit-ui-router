@@ -27,18 +27,25 @@ The Cloudflare [Github integration](https://developers.cloudflare.com/workers/ci
 
 ### Configuration Files
 
-| File                   | Purpose                                                                                                                                                                                                                                                                                               |
-| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `wrangler.jsonc`       | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
-| `docs/worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
-| `docs/public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
+All of them live in the site package, `www/lit-ui-router.dev/`:
+
+| File              | Purpose                                                                                                                                                                                                                                                                                               |
+| ----------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `wrangler.jsonc`  | [Wrangler configuration](https://developers.cloudflare.com/workers/wrangler/configuration/) - defines worker name, entry point, assets directory, and routing                                                                                                                                         |
+| `worker/index.ts` | [Worker script](https://developers.cloudflare.com/workers/static-assets/routing/worker-script/) - serves `ui-router-server` verdicts for `/app/*` and `/app-mobx/*` (shell, 302, or 404) from the tables in `sample-app-routes`; everything else serves static assets, misses fall back to `404.html` |
+| `public/_headers` | [Headers](https://developers.cloudflare.com/pages/configuration/headers/) - sets security headers (COOP, COEP)                                                                                                                                                                                        |
 
 ### Wrangler Setup
 
 Wrangler is installed in both:
 
 - Root `package.json` - for deployment commands
-- `docs/package.json` - wrangler discovers the root `wrangler.jsonc` by walking up from the docs directory
+- `www/lit-ui-router.dev/package.json` - its scripts (`wrangler dev`, `wrangler types`, the dry-run bundle) run with the package as cwd, so wrangler finds the `wrangler.jsonc` beside them
+
+The deploy runs from the repo root, where no config lives, so it names the file with
+`--config www/lit-ui-router.dev/wrangler.jsonc` — inside
+[`cloudflare-deploy.ts`](./tools/workers-builds/cloudflare-deploy.ts), not in the dashboard
+(see [Build & Deploy Commands](#build--deploy-commands)).
 
 See: [Wrangler Commands](https://developers.cloudflare.com/workers/wrangler/commands/)
 
@@ -58,9 +65,13 @@ path instead lets the script differ per branch while the declared value stays co
 divergence never reads as drift and never needs an `--apply` to test.
 
 The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
-deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and names no
-`--config`, because wrangler discovers `wrangler.jsonc` by walking up from the repo root. A
-branch that moves that file changes this script's internals and leaves the dashboard alone.
+deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and both
+add `--config www/lit-ui-router.dev/wrangler.jsonc`, since the deploy runs from the repo
+root and the config lives in the site package. That flag is exactly what the indirection is
+for: on `main` before this branch the script named no `--config` at all, because
+`wrangler.jsonc` sat at the root and wrangler found it by walking up. Moving the file
+changes this script's internals and leaves the dashboard alone — no `--apply` owed, and no
+ordering against the merge.
 
 It is TypeScript rather than bash: by deploy time the install has run, so it is node's own
 type stripping like every other tool script, and it exports its mode map so the trigger

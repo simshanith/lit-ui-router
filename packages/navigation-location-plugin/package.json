@@ -47,7 +47,7 @@
     "check:bundle": "check-bundle-inputs",
     "codecov:bundle": "upload-entry-bundles navigation-location-plugin",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
-    "docs:api": "rimraf ../../docs/api/navigation-location-plugin && typedoc",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/navigation-location-plugin && typedoc",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",

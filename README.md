@@ -1,6 +1,6 @@
 # lit-ui-router
 
-<img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
+<img src="www/lit-ui-router.dev/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)

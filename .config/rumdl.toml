@@ -6,9 +6,9 @@
 
 [global]
 # MD013 (line length 80): oxfmt does not hard-wrap markdown prose, so the rule
-# fights the formatter. MD033 (inline HTML): docs/ is VitePress, where inline
-# HTML is legitimate. MD057 (relative link targets exist): docs/api/* links
-# point into docs/api/reference, typedoc output that is gitignored and absent at
+# fights the formatter. MD033 (inline HTML): www/lit-ui-router.dev/ is VitePress, where inline
+# HTML is legitimate. MD057 (relative link targets exist): the site's api/* links
+# point into www/lit-ui-router.dev/api/reference, typedoc output that is gitignored and absent at
 # lint time; VitePress's own ignoreDeadLinks-gated build already checks these.
 # MD036 (emphasis as heading): the hits are labels on sibling code samples, and
 # only the labels without a trailing parenthetical trip it — promoting them

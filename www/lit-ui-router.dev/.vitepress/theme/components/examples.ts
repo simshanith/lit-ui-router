@@ -1,7 +1,7 @@
 /** `default`, which is also omitting it, shows both panes only when wide. */
 export type StackBlitzView = 'default' | 'editor' | 'preview';
 
-// Keep in sync with examples/build-embeds.ts and EMBEDDED_EXAMPLES in docs/.vitepress/vite.config.ts.
+// Keep in sync with examples/build-embeds.ts and EMBEDDED_EXAMPLES in .vitepress/vite.config.ts.
 //
 // `height` reserves the embed's space before its iframe loads, so the page
 // doesn't shift when the example paints — a static number by design. It is not
@@ -33,11 +33,11 @@ export const EXAMPLES = {
   },
   'lint-eslint': {
     title: 'ESLint Plugin',
-    // Reserves the open report: 936px at the embed's 686px column, plus the
-    // frame's border and check:embeds' slack. The report rewraps in steps as
-    // the column narrows, so a column much under the doc default scrolls
-    // instead of being reserved for.
-    height: '970px',
+    // Reserves the open report: 781px at the embed's 686px column, plus the
+    // frame's 2px of border. The report rewraps in steps as the column
+    // narrows — 752px at 720, 770px at 688, 806px at 680 — so a column much
+    // under the doc default scrolls instead of being reserved for.
+    height: '800px',
     file: 'src/main.ts',
   },
 } as const;

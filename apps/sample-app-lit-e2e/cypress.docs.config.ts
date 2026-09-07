@@ -8,7 +8,7 @@ export default defineConfig({
   video: true,
   chromeWebSecurity: false,
   e2e: {
-    // Wrangler serves all of docs/dist at :8787; the sample-app suites scope
+    // Wrangler serves all of www/lit-ui-router.dev/dist at :8787; the sample-app suites scope
     // themselves to /app/ and /app-mobx/, so nothing renders the docs pages.
     baseUrl: `http://localhost:8787/`,
     specPattern: './src/docs/**/*.cy.{js,jsx,ts,tsx}',

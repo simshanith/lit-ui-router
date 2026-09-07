@@ -4,10 +4,18 @@
 // Runs after cloudflare-build.sh (bash: it runs before the install) — see DEPLOY.md.
 import { execFileSync } from 'node:child_process';
 
+// The site's wrangler.jsonc sits in the package, not the root, and the deploy
+// runs from the root — so every mode names it. It lives here rather than in the
+// dashboard: that is what the script indirection is for (see DEPLOY.md).
+const SITE_CONFIG = [
+  '--config',
+  'www/lit-ui-router.dev/wrangler.jsonc',
+] as const;
+
 // Trigger names, not git refs; the trigger test imports this map.
 export const DEPLOY_MODES = {
-  main: ['wrangler', 'deploy'],
-  branch: ['wrangler', 'versions', 'upload'],
+  main: ['wrangler', 'deploy', ...SITE_CONFIG],
+  branch: ['wrangler', 'versions', 'upload', ...SITE_CONFIG],
 } as const;
 
 export type DeployMode = keyof typeof DEPLOY_MODES;

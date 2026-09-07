@@ -64,9 +64,14 @@ const declaredPreviewLive: NonNullable<Trigger['environment_variables']> =
   );
 
 describe('parseJsonc', () => {
-  it('parses the repo wrangler.jsonc (comments + trailing commas)', async () => {
+  it('parses the site wrangler.jsonc (comments + trailing commas)', async () => {
     const raw = await readFile(
-      join(import.meta.dirname, '..', '..', 'wrangler.jsonc'),
+      join(
+        import.meta.dirname,
+        '..',
+        '..',
+        'www/lit-ui-router.dev/wrangler.jsonc',
+      ),
       'utf8',
     );
     assert.equal(workerNameFromConfig(parseJsonc(raw)), 'lit-ui-router');
@@ -122,11 +127,17 @@ describe('desiredStateFromConfig', () => {
   // path here as well — a pinned path that names no file would break every
   // deploy, and the indirection is what makes that invisible from the config.
   // The script exports its mode map, so the wrangler invocation is imported
-  // rather than re-read out of the script's source.
+  // rather than re-read out of the script's source. This branch is that case:
+  // the site config moved into www/lit-ui-router.dev/, so both modes name it
+  // with --config and the dashboard value is unchanged.
   it('points both deploy commands at the deploy script and the right mode', async () => {
+    const config = [
+      '--config',
+      'www/lit-ui-router.dev/wrangler.jsonc',
+    ] as const;
     for (const [kind, mode, wrangler] of [
-      ['production', 'main', ['wrangler', 'deploy']],
-      ['preview', 'branch', ['wrangler', 'versions', 'upload']],
+      ['production', 'main', ['wrangler', 'deploy', ...config]],
+      ['preview', 'branch', ['wrangler', 'versions', 'upload', ...config]],
     ] as const) {
       const command = desired[kind].deploy_command ?? '';
       const [path = '', arg] = command.split(' ');

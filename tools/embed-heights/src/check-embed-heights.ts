@@ -26,7 +26,7 @@ import {
 
 const MANIFEST = join(
   workspaceRoot,
-  'docs/.vitepress/theme/components/examples.ts',
+  'www/lit-ui-router.dev/.vitepress/theme/components/examples.ts',
 );
 const EXAMPLES_DIR = join(workspaceRoot, 'examples');
 
@@ -64,7 +64,7 @@ const built = await exampleDirs();
 const missing = built.filter((name) => !(name in declared));
 if (missing.length > 0) {
   fail(
-    `no entry in docs/.vitepress/theme/components/examples.ts for: ${missing.join(', ')}`,
+    `no entry in www/lit-ui-router.dev/.vitepress/theme/components/examples.ts for: ${missing.join(', ')}`,
   );
 }
 const orphaned = Object.keys(declared).filter((name) => !built.includes(name));
@@ -159,6 +159,6 @@ if (broken.length > 0) {
     );
   }
   fail(
-    `${broken.length} height(s) out of date in docs/.vitepress/theme/components/examples.ts`,
+    `${broken.length} height(s) out of date in www/lit-ui-router.dev/.vitepress/theme/components/examples.ts`,
   );
 }

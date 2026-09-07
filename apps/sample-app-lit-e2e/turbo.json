@@ -10,8 +10,11 @@
       "dependsOn": ["build", "^test"],
       // $TURBO_DEFAULT$: the root task's globs miss the .cy.js specs; served
       // content invalidates via the build edge to docs#build.
-      // wrangler.jsonc: `wrangler dev` discovers it upward at serve time.
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/wrangler.jsonc"],
+      // wrangler.jsonc: `wrangler dev` runs in the site package, beside it.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/www/lit-ui-router.dev/wrangler.jsonc"
+      ],
       "env": ["CI"],
       // CYPRESS_* is pass-through, not env: artifact knobs (video) must not
       // affect cache validity.

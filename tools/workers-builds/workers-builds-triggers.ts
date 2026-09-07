@@ -149,7 +149,12 @@ async function main() {
   const desired = await loadDesired();
 
   // The worker name comes from the same config wrangler deploys with.
-  const configPath = join(import.meta.dirname, '..', '..', 'wrangler.jsonc');
+  const configPath = join(
+    import.meta.dirname,
+    '..',
+    '..',
+    'www/lit-ui-router.dev/wrangler.jsonc',
+  );
   const name = workerNameFromConfig(
     parseJsonc(await readFile(configPath, 'utf8')),
   );

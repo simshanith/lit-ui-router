@@ -11,7 +11,7 @@ import worker from '../index.ts';
 // bodies themselves stay covered by the docs suite's cy.visit smokes.
 const ORIGIN = 'http://docs.test';
 
-// Stand-ins for docs/dist: the three shell builds, the flagship 404 pages,
+// Stand-ins for dist/: the three shell builds, the flagship 404 pages,
 // and a default that plays the binding's own 404.html handling.
 const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
   '/app': { body: 'vanilla-shell', headers: { 'Content-Type': 'text/html' } },

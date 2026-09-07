@@ -40,7 +40,7 @@
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
     "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
-    "docs:api": "rimraf ../../docs/api/lit-ui-router-mobx && typedoc",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/lit-ui-router-mobx && typedoc",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",

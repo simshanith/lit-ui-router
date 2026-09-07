@@ -507,7 +507,7 @@ importers:
     dependencies:
       docs:
         specifier: workspace:*
-        version: link:../../docs
+        version: link:../../www/lit-ui-router.dev
     devDependencies:
       '@types/lodash-es':
         specifier: 'catalog:'
@@ -747,64 +747,6 @@ importers:
       vitest:
         specifier: 'catalog:'
         version: 5.0.0(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(happy-dom@20.11.8)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
-
-  docs:
-    dependencies:
-      '@spectrum-web-components/icons-workflow':
-        specifier: 'catalog:'
-        version: 1.12.2
-      sample-app-lit-mobx:
-        specifier: workspace:*
-        version: link:../apps/sample-app-lit-mobx
-      sample-app-lit-vanilla:
-        specifier: workspace:*
-        version: link:../apps/sample-app-lit-vanilla
-      sample-app-routes:
-        specifier: workspace:*
-        version: link:../apps/sample-app-routes
-      screenfull:
-        specifier: 'catalog:'
-        version: 6.0.2
-      ui-router-server:
-        specifier: workspace:*
-        version: link:../packages/ui-router-server
-      vue:
-        specifier: 'catalog:'
-        version: 3.5.41(typescript@7.0.2)
-    devDependencies:
-      '@tools/build_and_test':
-        specifier: workspace:*
-        version: link:../tools/build_and_test
-      '@tools/embed-heights':
-        specifier: workspace:*
-        version: link:../tools/embed-heights
-      '@tools/vue-check':
-        specifier: workspace:*
-        version: link:../tools/vue-check
-      '@types/node':
-        specifier: 'catalog:'
-        version: 24.13.3
-      oxfmt:
-        specifier: 'catalog:'
-        version: 0.64.0
-      oxlint:
-        specifier: 'catalog:'
-        version: 1.80.0(oxlint-tsgolint@7.0.2001)
-      typescript:
-        specifier: 'catalog:'
-        version: 7.0.2
-      vite:
-        specifier: 'catalog:'
-        version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
-      vite-plugin-static-copy:
-        specifier: 'catalog:'
-        version: 4.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
-      vitepress:
-        specifier: 'catalog:'
-        version: 2.0.0-alpha.19(@types/node@24.13.3)(axios@1.18.1(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(change-case@5.4.4)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.26)(typescript@7.0.2)(yaml@2.9.0)
-      wrangler:
-        specifier: 'catalog:'
-        version: 4.113.0
 
   examples:
     devDependencies:
@@ -1647,6 +1589,64 @@ importers:
       valibot:
         specifier: 'catalog:'
         version: 1.4.2(typescript@7.0.2)
+
+  www/lit-ui-router.dev:
+    dependencies:
+      '@spectrum-web-components/icons-workflow':
+        specifier: 'catalog:'
+        version: 1.12.2
+      sample-app-lit-mobx:
+        specifier: workspace:*
+        version: link:../../apps/sample-app-lit-mobx
+      sample-app-lit-vanilla:
+        specifier: workspace:*
+        version: link:../../apps/sample-app-lit-vanilla
+      sample-app-routes:
+        specifier: workspace:*
+        version: link:../../apps/sample-app-routes
+      screenfull:
+        specifier: 'catalog:'
+        version: 6.0.2
+      ui-router-server:
+        specifier: workspace:*
+        version: link:../../packages/ui-router-server
+      vue:
+        specifier: 'catalog:'
+        version: 3.5.41(typescript@7.0.2)
+    devDependencies:
+      '@tools/build_and_test':
+        specifier: workspace:*
+        version: link:../../tools/build_and_test
+      '@tools/embed-heights':
+        specifier: workspace:*
+        version: link:../../tools/embed-heights
+      '@tools/vue-check':
+        specifier: workspace:*
+        version: link:../../tools/vue-check
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.64.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.80.0(oxlint-tsgolint@7.0.2001)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+      vite:
+        specifier: 'catalog:'
+        version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
+      vite-plugin-static-copy:
+        specifier: 'catalog:'
+        version: 4.1.1(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+      vitepress:
+        specifier: 'catalog:'
+        version: 2.0.0-alpha.19(@types/node@24.13.3)(axios@1.18.1(debug@4.4.3(supports-color@10.2.2))(supports-color@10.2.2))(change-case@5.4.4)(esbuild@0.28.2)(jiti@2.7.0)(postcss@8.5.26)(typescript@7.0.2)(yaml@2.9.0)
+      wrangler:
+        specifier: 'catalog:'
+        version: 4.113.0
 
 packages:
 
