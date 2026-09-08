@@ -12,7 +12,7 @@ import { publishedDiffSummaryPath } from './cache-paths.ts';
 import type { PackageSummary } from './check-published-diff.core.ts';
 import { checkRunApiArgs, toCheckRun } from './publish-check-runs.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
-import { ensureGh } from '@tools/shared/gh.ts';
+import { ensureGh } from '../lib/gh.ts';
 
 async function main() {
   const dryRun = process.argv.includes('--dry-run');

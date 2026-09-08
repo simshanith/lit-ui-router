@@ -9,7 +9,7 @@
 // in ./peer-floor-check-runs.core.ts.
 
 import { defaultExec } from '@tools/shared/exec.ts';
-import { ensureGh } from '@tools/shared/gh.ts';
+import { ensureGh } from '../lib/gh.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 import {

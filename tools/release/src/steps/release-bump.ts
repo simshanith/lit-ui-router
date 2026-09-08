@@ -17,8 +17,8 @@
 // Every release-it argv comes from the engine seam (release-it.core.ts).
 
 import { defaultStream } from '@tools/shared/exec.ts';
-import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
-import { createReleasePr } from '@tools/shared/gh.ts';
+import { boolEnv, requireEnv } from '../lib/env.core.ts';
+import { createReleasePr } from '../lib/gh.ts';
 import { group, logNotice, logWarning, runMain } from '@tools/shared/gha.ts';
 import { branchPrefix, releaseCommitMessage } from './release-bump.core.ts';
 import { incrementArgs } from './release-increment-args.core.ts';

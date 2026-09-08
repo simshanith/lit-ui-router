@@ -2,16 +2,13 @@
   "name": "@tools/shared",
   "version": "0.0.1",
   "private": true,
-  "description": "Cross-workflow tooling helpers: env contracts, exec/gh seams, GitHub Actions plumbing, retry, and workspace enumeration",
+  "description": "Cross-workflow tooling helpers: the exec seam, GitHub Actions plumbing, shared source globs, and workspace enumeration",
   "type": "module",
   "exports": {
-    "./env.core.ts": "./src/env.core.ts",
     "./exec.ts": "./src/exec.ts",
-    "./gh.ts": "./src/gh.ts",
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
     "./globs.ts": "./src/globs.ts",
-    "./retry.ts": "./src/retry.ts",
     "./workspace.ts": "./src/workspace.ts"
   },
   "scripts": {

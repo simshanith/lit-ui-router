@@ -5,10 +5,10 @@
 // logic graduates to octokit + throttling — nothing in this pipeline does
 // yet.
 
-import type { Exec } from './exec.ts';
-import { defaultExec } from './exec.ts';
+import type { Exec } from '@tools/shared/exec.ts';
+import { defaultExec } from '@tools/shared/exec.ts';
 import { withRetry } from './retry.ts';
-import { workspaceRoot } from './workspace.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 /** argv for `gh pr create`, verbatim from bump-version.yml's Create PR step. */
 export function prCreateArgs(base: string, head: string): string[] {
