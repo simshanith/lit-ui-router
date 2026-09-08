@@ -88,17 +88,7 @@ export class UiView extends LitElement {
   @state()
   private component: RoutedLitComponent | null = null;
 
-  /**
-   * The routed element this view currently owns, for class components.
-   *
-   * Only {@link _viewConfigUpdated} clears this slot, and only once the view
-   * config identity check has established that the config really changed. Every
-   * other update — a param change, a resolve landing, a parent re-render —
-   * reuses the committed element and re-delivers props, so a `<ui-view>` whose
-   * state the router retained never tears down its subtree.
-   *
-   * @internal
-   */
+  /** Cleared only by a real view config change, so a retained view keeps its subtree. @internal */
   private routedElement: InstanceType<RoutedLitElement> | null = null;
 
   private readonly inner = document.createDocumentFragment();
@@ -146,8 +136,7 @@ export class UiView extends LitElement {
     }
 
     this.resolveContext = new ResolveContext(config.path);
-    // Past the identity gate in `_viewConfigUpdated`, so this is a genuinely new
-    // config: drop the old element and let `render` mint a replacement.
+    // Past the identity gate, so the config genuinely changed: `render` mints a replacement.
     this.routedElement = null;
     this.component = (
       config.viewDecl as NormalizedLitViewDeclaration
@@ -311,9 +300,7 @@ export class UiView extends LitElement {
    * For each transition, checks if any param values changed and notify component
    */
   private _invokeUiOnParamsChangedHook($transition$: Transition) {
-    // Re-render on every transition so the committed element sees fresh
-    // resolves. This no longer rebuilds the element: `render` reuses
-    // `routedElement` until the view config changes.
+    // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
 
     const instance = this.firstElementChild as UiOnParamsChanged & Element;
@@ -419,9 +406,6 @@ export class UiView extends LitElement {
     const props: UIViewInjectedProps = { router, resolves, transition };
 
     if (isRoutedLitElement(this.component)) {
-      // `??=` is the whole reuse rule: the slot is only ever emptied by a real
-      // view config change, so a retained view returns the same node and lit's
-      // ChildPart commits nothing.
       this.routedElement ??= new this.component(props);
       this.routedElement._uiViewProps = props;
       return html`${this.routedElement}`;
