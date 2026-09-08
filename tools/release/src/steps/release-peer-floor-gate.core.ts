@@ -5,7 +5,7 @@
 // the typecheck:peer-floor script; everyone else skips. The IO (workspace
 // load, turbo) lives in ./release-peer-floor-gate.ts.
 
-import type { Member } from '@tools/shared/workspace.ts';
+import { isRootMember, type Member } from '@tools/shared/workspace.ts';
 
 import {
   PEER_FLOOR_SCRIPT,
@@ -22,7 +22,7 @@ export function gateDecision(
   members: readonly Member[],
 ): GateDecision {
   const member = members.find(
-    (candidate) => candidate.name === packageName && candidate.dir !== '<root>',
+    (candidate) => candidate.name === packageName && !isRootMember(candidate),
   );
   if (member === undefined) {
     throw new Error(
