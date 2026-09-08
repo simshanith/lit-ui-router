@@ -74,6 +74,14 @@ at once, so renaming it would break the preview build of every branch whose chec
 carry the new name. Once every open branch carries the `.ts`, `build_command` can name it
 directly and the shim can go.
 
+That resolve-without-`node_modules` constraint is lint-enforced, not just documented:
+`.oxlintrc.json` scopes `no-restricted-imports` to `cloudflare-build.ts` and allows only node
+builtins plus an explicit list of relative paths. Bare specifiers are refused because nothing
+resolves them at that point, and same-package siblings are refused because the rule is
+per-file and cannot see what a sibling imports — `workers-builds-triggers.core.ts` pulls
+`valibot` and `jsonc-parser`. Adding a relative import means adding it to that list, and it
+has to be a file whose own imports are node builtins all the way down.
+
 The build image is Ubuntu with node and npm; the script installs pnpm, and `pnpm install`
 provides everything after that. There is no mise, so none of the repo's mise-managed tools —
 `taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. Anything the
