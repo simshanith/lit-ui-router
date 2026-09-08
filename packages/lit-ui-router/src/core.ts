@@ -133,9 +133,9 @@ export function litViewsBuilder<
       let normalizedConfig: NormalizedLitViewDeclaration<T>;
       name = name || '$default'; // Account for views: { "": { template... } }
       if (isLitViewDeclarationTemplate<T>(config)) {
-        normalizedConfig = { component: config as LitViewDeclarationTemplate };
+        normalizedConfig = { component: config };
       } else {
-        normalizedConfig = config as NormalizedLitViewDeclaration<T>;
+        normalizedConfig = config;
       }
       if (Object.keys(normalizedConfig || {}).length === 0) return;
 
@@ -151,11 +151,18 @@ export function litViewsBuilder<
       normalizedConfig.$uiViewContextAnchor =
         normalizedTarget.uiViewContextAnchor;
 
-      if (isRoutedLitElement<T>(normalizedConfig.component)) {
+      // A `sticky` class keeps its single instance on the view declaration, so it
+      // outlives the `<ui-view>` elements that render it. Every other class is left
+      // as-is: `<ui-view>` owns instance identity and only mints a new element when
+      // the view config actually changes (see UiView.render).
+      if (
+        isRoutedLitElement<T>(normalizedConfig.component) &&
+        normalizedConfig.component.sticky
+      ) {
         const Component = normalizedConfig.component;
         let component: InstanceType<RoutedLitElement<T>>;
         normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
-          component = (Component.sticky && component) || new Component(props);
+          component ??= new Component(props);
           component._uiViewProps = props;
           return html`${component}`;
         };
