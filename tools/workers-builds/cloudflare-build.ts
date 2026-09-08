@@ -53,12 +53,9 @@ export const buildSteps = (root: string, npmBin: string): readonly Step[] => [
   // rather than reaching for --force.
   ['rm', ['-f', `${npmBin}/pnpm`, `${npmBin}/pnpx`]],
 
-  // npx covers only the commands named here; turbo spawns every package script
-  // through the `pnpm` on PATH, which in the build image is corepack's shim,
-  // and corepack could not materialize a pnpm-12 pin through rc.5. So the shim
-  // is replaced rather than bypassed. rc.6 restored the bin entry points
-  // corepack looks for, which may make this unnecessary — untested, and this
-  // path is verified, so it stays until something forces the question.
+  // turbo spawns every package script through the `pnpm` on PATH, which in the
+  // build image is corepack's shim, so the shim is replaced rather than
+  // bypassed: npx would cover only the commands named here.
   //
   // --allow-scripts is what makes this a pnpm 12 rather than the wrapper's
   // placeholder bin: the real binary is unpacked by a preinstall hook, which

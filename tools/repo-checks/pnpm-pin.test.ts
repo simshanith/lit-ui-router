@@ -2,11 +2,9 @@
 // mise lockfile and pnpm-lock.yaml restate the same version with nothing else
 // checking them against it. Assert they agree.
 //
-// The Workers Builds bootstrap used to be a fourth pin here, and was the one
-// that hid: pnpm self-swaps to `packageManager`, so a stale bootstrap still
-// deploys green (missed on #761, caught by hand). It derives the version now
-// instead of restating it, so there is nothing left to compare — see
-// tools/workers-builds/cloudflare-build.ts.
+// The Workers Builds bootstrap is deliberately not a fourth pin: it derives the
+// version from `packageManager` rather than restating it, so there is nothing
+// here to compare (tools/workers-builds/cloudflare-build.ts).
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
