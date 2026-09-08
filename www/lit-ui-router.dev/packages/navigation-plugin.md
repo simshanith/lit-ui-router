@@ -102,6 +102,55 @@ window.navigation.addEventListener('navigate', (event) => {
 });
 ```
 
+## What else observes navigation
+
+`navigation.navigate()` does not call `history.pushState`, does not call
+`history.replaceState`, and does not fire `popstate`. Anything that watches for
+navigation by patching those methods — Google Analytics' enhanced measurement is
+the common case, and most session-replay and RUM shims do the same — is
+therefore blind to router-driven navigation under this plugin. Nothing throws;
+the events simply stop arriving, which is the kind of thing you discover in
+production a week later.
+
+The gap is narrower than it first looks. Taking gtag as the worked example:
+
+| Navigation                | Who sees it                     |
+| ------------------------- | ------------------------------- |
+| Cold load                 | gtag, via its own `config` call |
+| Router transition         | **nobody** — this is the gap    |
+| Back/forward (`traverse`) | gtag, via `popstate`            |
+
+So the fix is not "switch the integration off and send everything by hand" —
+that double-counts traversals. Send exactly what the observer cannot see, by
+reading the navigation kind off a second `navigate` listener:
+
+```ts
+let lastNavigationType = '';
+
+// records only — a `navigate` listener is an interception boundary
+// solely when it calls `event.intercept()`
+window.navigation.addEventListener('navigate', (event) => {
+  lastNavigationType = event.navigationType;
+});
+
+router.transitionService.onSuccess({}, () => {
+  // read once per transition: a transition with no `navigate` event of its
+  // own must not reuse the previous one's kind
+  const navigationType = lastNavigationType;
+  lastNavigationType = '';
+
+  if (navigationType === 'push' || navigationType === 'replace') {
+    gtag('event', 'page_view', { page_location: location.href });
+  }
+});
+```
+
+The <a href="/app" target="_self">sample app</a> boots this plugin by default,
+so it is running the rule live: see
+[`ga.js`](https://github.com/simshanith/lit-ui-router/blob/main/apps/sample-app-shared/src/app/util/ga.js),
+whose Cypress suite asserts the resulting `page_view` counts separately under
+each location plugin.
+
 ## API summary
 
 - **`navigationLocationPlugin`** — the plugin factory; pass it to
