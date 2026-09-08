@@ -27,12 +27,8 @@ import {
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
 } from './interface.js';
-import {
-  LitViewConfig,
-  UIRouterLit,
-  isRoutedLitElement,
-  routedLitElementRenderer,
-} from './core.js';
+import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
+import { routedLitElementRenderer } from './routed-element.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
 

@@ -11,18 +11,17 @@ import {
   ViewService,
   _ViewDeclaration,
 } from '@uirouter/core';
-import { html, LitElement } from 'lit';
+import { LitElement } from 'lit';
 
 import {
   RoutedLitElement,
   LitViewDeclaration,
   LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
-  UIViewInjectedProps,
   LitViewDeclarationElement,
   DefaultResolvesType,
-  RoutedLitTemplate,
 } from './interface.js';
+import { routedLitElementRenderer } from './routed-element.js';
 
 /**
  * `@uirouter/core` types `forEach` as `any` because it resolves to
@@ -105,23 +104,6 @@ export function isRoutedLitElement<
   T extends DefaultResolvesType = DefaultResolvesType,
 >(component?: unknown): component is RoutedLitElement<T> {
   return (component as { prototype: unknown })?.prototype instanceof LitElement;
-}
-
-/**
- * Binds a routed class to a single instance for as long as the returned renderer
- * lives, so whoever holds the renderer decides how long the element survives.
- *
- * @internal
- */
-export function routedLitElementRenderer<
-  T extends DefaultResolvesType = DefaultResolvesType,
->(Component: RoutedLitElement<T>): RoutedLitTemplate<T> {
-  let element: InstanceType<RoutedLitElement<T>>;
-  return (props: UIViewInjectedProps<T>) => {
-    element ??= new Component(props);
-    element._uiViewProps = props;
-    return html`${element}`;
-  };
 }
 
 /**
