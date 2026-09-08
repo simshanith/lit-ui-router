@@ -13,7 +13,7 @@ import {
   planFailure,
   plannedLanes,
   resolvedTaskDeps,
-} from '@tools/shared/turbo.ts';
+} from './turbo.ts';
 import {
   loadWorkspace,
   type Member,
