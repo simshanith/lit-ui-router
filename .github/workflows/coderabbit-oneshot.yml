@@ -11,10 +11,6 @@ on:
   issue_comment:
     types:
       - created
-      # Load-bearing. CodeRabbit posts ONE summary comment when the PR opens —
-      # on a draft that is a "not reviewed" notice — and EDITS it in place when
-      # the review actually lands. On `created` alone this never fires for the
-      # label-a-draft-then-mark-ready flow, which is the common one here.
       - edited
 
 permissions: {}
