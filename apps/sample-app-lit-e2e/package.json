@@ -17,9 +17,9 @@
     "test:cypress:docs": "cypress run --config-file cypress.docs.config.ts",
     "test:cypress:hash": "cypress run --expose LOCATION_PLUGIN=hash --config baseUrl=http://localhost:8787/app-hash/,videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
     "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:8787/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
-    "test:cypress:navigation": "cypress run --expose LOCATION_PLUGIN=navigation --config videosFolder=cypress/videos-navigation,screenshotsFolder=cypress/screenshots-navigation",
+    "test:cypress:pushstate": "cypress run --expose LOCATION_PLUGIN=pushState --config videosFolder=cypress/videos-pushstate,screenshotsFolder=cypress/screenshots-pushstate",
     "test:hash": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:hash",
-    "test:navigation": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:navigation"
+    "test:pushstate": "start-server-and-test docs:start-server http://localhost:8787/app/ test:cypress:pushstate"
   },
   "dependencies": {
     "@www/lit-ui-router.dev": "workspace:*"

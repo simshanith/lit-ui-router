@@ -79,7 +79,8 @@ router.plugin(
 
 The <a href="/app" target="_self">sample app</a> ships all three strategies —
 its Preferences → Feature Flags panel switches between them and shows browser
-compatibility for each.
+compatibility for each. It defaults to the Navigation API, falling back to
+pushState only where the browser lacks it.
 
 ## The initial rule
 

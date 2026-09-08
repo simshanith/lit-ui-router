@@ -159,12 +159,20 @@ describe('feature detection', () => {
       expect(resolveLocationPlugin()).toBe('hash');
     });
 
-    it('falls back to pushState for an unrecognized preference', () => {
+    it('auto-detects past an unrecognized preference', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
       vi.stubEnv(ENV_KEY, 'memory');
-      expect(resolveLocationPlugin()).toBe('pushState');
+      expect(resolveLocationPlugin()).toBe('navigation');
     });
 
-    it('falls back to pushState when nothing is configured', () => {
+    it('defaults to navigation when nothing is configured', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, undefined);
+      expect(resolveLocationPlugin()).toBe('navigation');
+    });
+
+    it('defaults to pushState when the browser lacks the Navigation API', () => {
+      vi.stubGlobal('navigation', undefined);
       vi.stubEnv(ENV_KEY, undefined);
       expect(resolveLocationPlugin()).toBe('pushState');
     });

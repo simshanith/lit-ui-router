@@ -14,19 +14,19 @@ That production-like flow builds the docs site (which embeds both apps'
 builds), serves it with wrangler on `:8787`, and runs five Cypress suites
 concurrently (`test:cypress:all`):
 
-| Suite        | Target        | Covers                                                                                                              |
-| ------------ | ------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `vanilla`    | `/app/`       | vanilla app, `pushState` routing                                                                                    |
-| `mobx`       | `/app-mobx/`  | MobX app, `pushState` routing                                                                                       |
-| `docs`       | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
-| `hash`       | `/app/`       | vanilla app under the `hash` location plugin                                                                        |
-| `navigation` | `/app/`       | vanilla app under the Navigation API plugin                                                                         |
+| Suite       | Target        | Covers                                                                                                              |
+| ----------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `vanilla`   | `/app/`       | vanilla app, default routing — the Navigation API plugin                                                            |
+| `mobx`      | `/app-mobx/`  | MobX app, default routing — the Navigation API plugin                                                               |
+| `docs`      | site + mounts | docs pages plus the mount matrix — flagships, hash demo, and the server-support exhibits (`cypress.docs.config.ts`) |
+| `hash`      | `/app/`       | vanilla app under the `hash` location plugin                                                                        |
+| `pushState` | `/app/`       | vanilla app under the `pushState` fallback                                                                          |
 
 The same run executes in CI via the `ci` turbo task.
 
 ## Location plugin suites
 
-The `hash` and `navigation` suites re-run the vanilla specs with a
+The `hash` and `pushState` suites re-run the vanilla specs with a
 suite-wide plugin selected via `cypress run --expose LOCATION_PLUGIN=<mode>`.
 The support file seeds the app's `featureFlags` session storage in
 `cy.visit`'s `onBeforeLoad` — hash routing never rewrites `location.search`,
@@ -34,11 +34,18 @@ so a `?feature-location-plugin` URL param would pin the flag as
 URL-overridden for the whole session. Explicit per-spec `features` passed to
 `visitWithFeatures` still go through the URL param.
 
+The `vanilla` and `mobx` suites seed nothing, so they exercise the app's own
+resolution — the Navigation API, with pushState only where the browser lacks
+it. That is why there is no `navigation` lane and there _is_ a `pushState`
+one: every strategy that is not the default needs a lane of its own, or it
+rides the default and loses coverage the moment the default moves.
+`location_plugin.cy.js` asserts which plugin each lane actually booted.
+
 To run a single mode with its own server:
 
 ```bash
 pnpm --filter sample-app-lit-e2e test:hash
-pnpm --filter sample-app-lit-e2e test:navigation
+pnpm --filter sample-app-lit-e2e test:pushstate
 ```
 
 ## Measuring the wrangler crash rate

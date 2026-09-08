@@ -56,7 +56,8 @@ export function resolveLocationPluginFeature(): string | undefined {
  * Resolves location plugin with auto-detection:
  * 1. Detect preference (URL param, session storage, env var) when set
  * 2. Navigation API when preferred and available in browser
- * 3. Fallback to pushState
+ * 3. Navigation API by default when the browser has it
+ * 4. Fallback to pushState
  */
 export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
   let feature = resolveLocationPluginFeature();
@@ -64,7 +65,9 @@ export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
     feature = 'pushState';
   }
   if (isValidLocationPlugin(feature)) return feature;
-  return 'pushState';
+  // No preference: the flagship leads with the Navigation API and keeps
+  // pushState as the unsupported-browser fallback.
+  return canUseNavigationAPI() ? 'navigation' : 'pushState';
 }
 
 export interface FeatureFlagDefinitions {

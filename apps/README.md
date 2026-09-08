@@ -65,8 +65,7 @@ shared `router.config.ts`:
 | `pushState`  | `/path`    | Modern browsers                              |
 | `navigation` | `/path`    | Chrome/Edge 102+, Firefox 147+, Safari 26.2+ |
 
-**Auto-detection**: When `navigation` preference is set, the app automatically
-selects the best available plugin:
+**Default**: with no preference set, the app selects the best available plugin:
 
 1. Navigation API when supported, via the 🧑‍🔬 _experimental_
    [navigation plugin](../packages/navigation-location-plugin/)

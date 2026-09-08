@@ -15,8 +15,8 @@ import { LOCATION_PLUGIN, visitWithFeatures, syncUrl } from '../support/e2e.ts';
  * mid-test reset that could race a transition's onSuccess.
  *
  * Runs per lane (`cypress run --expose LOCATION_PLUGIN=...`), which is the
- * point: this is the guard that flipping the sample apps' default to the
- * Navigation API cannot silently drop page views.
+ * point: this is the guard that the sample apps' Navigation API default cannot
+ * silently drop page views.
  */
 const EXPECTED = {
   navigation: { load: 0, forward: 1, back: 1 },
@@ -24,7 +24,8 @@ const EXPECTED = {
   pushState: { load: 0, forward: 0, back: 0 },
 };
 
-const lane = LOCATION_PLUGIN || 'pushState';
+// unseeded lanes run the app default, which is the Navigation API (#656)
+const lane = LOCATION_PLUGIN || 'navigation';
 const expected = EXPECTED[lane];
 
 describe(`gtag page_view under the ${lane} location plugin`, () => {
