@@ -6,7 +6,13 @@ const carded = frameworks.filter((f) => f.blurb);
 </script>
 
 <template>
-  <div class="framework-cards">
+  <!-- one named group: the cards are toggles over the shared highlight the
+       spectrum above also writes, not a list of unrelated controls -->
+  <div
+    class="framework-cards"
+    role="group"
+    aria-label="Frameworks on the server-support spectrum — activate a card to highlight that tool in the spectrum above"
+  >
     <FrameworkCard v-for="f in carded" :key="f.id" :entry="f" />
   </div>
 </template>
