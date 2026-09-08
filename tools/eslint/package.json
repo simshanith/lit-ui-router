@@ -23,6 +23,7 @@
     "eslint-plugin-lit": "catalog:",
     "eslint-plugin-lit-a11y": "catalog:",
     "eslint-plugin-wc": "catalog:",
+    "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:"

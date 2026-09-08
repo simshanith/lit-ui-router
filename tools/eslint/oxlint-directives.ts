@@ -8,14 +8,17 @@ import { join } from 'node:path';
 
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 import type { ESLint, Rule } from 'eslint';
+import { parse } from 'jsonc-parser';
 
 interface OxlintConfig {
   rules?: Record<string, unknown>;
   overrides?: { rules?: Record<string, unknown> }[];
 }
 
-// .oxlintrc.json stays at the root — it is oxlint's own discovery path.
-const config = JSON.parse(
+// .oxlintrc.json stays at the root — it is oxlint's own discovery path. It is
+// JSONC, as oxlint and eslint-plugin-oxlint both read it: parse it the same way
+// they do, so a comment in the config cannot take down this ESLint config.
+const config = parse(
   readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
 ) as OxlintConfig;
 
