@@ -6,7 +6,7 @@ import {
   formatFailure,
   type InputsExemption,
 } from './task-inputs.core.ts';
-import { plannedTasks } from '@tools/shared/turbo.ts';
+import { plannedTasks } from './turbo.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-task-inputs';

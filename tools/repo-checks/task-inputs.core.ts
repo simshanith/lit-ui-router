@@ -1,6 +1,6 @@
 // Pure logic for check-task-inputs.ts, which owns the IO.
 
-import { splitTaskId } from '@tools/shared/turbo.ts';
+import { splitTaskId } from './turbo.ts';
 
 /** Only what the audit reads of a planned task; see turbo.ts `PlannedTask`. */
 export type AuditableTask = {

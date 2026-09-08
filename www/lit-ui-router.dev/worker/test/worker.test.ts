@@ -27,26 +27,38 @@ const ASSET_TABLE: Record<string, { body: string; headers: HeadersInit }> = {
   },
 };
 
-// The worker feeds the binding Requests (shell, pass-through) and bare URLs
-// (the 404-page probe), so normalize both.
+// Every binding call is a Request built from the original — shell,
+// pass-through, and the 404-page probe alike — but stay tolerant of a bare
+// URL so a regression shows up as a method assertion, not a crash.
 const pathnameOf = (input: Request | URL | string): string =>
   new URL(input instanceof Request ? input.url : String(input)).pathname;
+const methodOf = (input: Request | URL | string): string =>
+  input instanceof Request ? input.method : 'GET';
 
 let assetCalls: string[] = [];
+let assetMethods: string[] = [];
 beforeEach(() => {
   assetCalls = [];
+  assetMethods = [];
 });
 
 const env = {
   ASSETS: {
     fetch: (input: Request | URL | string) => {
       const pathname = pathnameOf(input);
+      const method = methodOf(input);
       assetCalls.push(pathname);
+      assetMethods.push(method);
       const asset = ASSET_TABLE[pathname];
+      // Like the real binding: a HEAD answers with the headers and no body.
+      const bodyOf = (body: string) => (method === 'HEAD' ? null : body);
       return Promise.resolve(
         asset
-          ? new Response(asset.body, { status: 200, headers: asset.headers })
-          : new Response('binding-404-page', {
+          ? new Response(bodyOf(asset.body), {
+              status: 200,
+              headers: asset.headers,
+            })
+          : new Response(bodyOf('binding-404-page'), {
               status: 404,
               headers: { 'Content-Type': 'text/html' },
             }),
@@ -58,8 +70,12 @@ const env = {
 // Plain GETs, like the Cypress cy.request calls these tests replace; the
 // worker judges every request it receives (shouldHandle: () => true — it only
 // runs for the run_worker_first prefixes).
-const dispatch = (path: string) =>
-  worker.fetch(new Request(`${ORIGIN}${path}`), env);
+// The cf type parameter is the incoming one: a bare `RequestInit` would
+// narrow the Request the handler receives to the outgoing shape.
+const dispatch = (
+  path: string,
+  init?: RequestInit<IncomingRequestCfProperties>,
+) => worker.fetch(new Request(`${ORIGIN}${path}`, init), env);
 
 describe('flagship mounts (/app, /app-mobx)', () => {
   it('serves each mount its own shell at 200 for real routes, indexable', async () => {
@@ -111,6 +127,31 @@ describe('flagship mounts (/app, /app-mobx)', () => {
         assert.equal(res.headers.get('X-Robots-Tag'), null, `${mount}${path}`);
       }
     }
+  });
+
+  it('carries the request method into the 404-page fetch', async () => {
+    // The page probe is built from the original request, so a HEAD miss stays
+    // a HEAD at the binding: 404 headers, no body. A bare-URL fetch would
+    // silently promote it to GET and hand back the whole page.
+    for (const mount of ['/app', '/app-mobx']) {
+      assetCalls = [];
+      assetMethods = [];
+      const res = await dispatch(`${mount}/definitely-not-a-route`, {
+        method: 'HEAD',
+      });
+      assert.equal(res.status, 404, mount);
+      assert.deepEqual(assetCalls, [`${mount}/404.html`], mount);
+      assert.deepEqual(assetMethods, ['HEAD'], mount);
+      assert.equal(res.body, null, mount);
+      assert.match(res.headers.get('Content-Type') ?? '', /text\/html/, mount);
+    }
+  });
+
+  it('still serves the full 404 page body on GET', async () => {
+    const res = await dispatch('/app/definitely-not-a-route');
+    assert.equal(res.status, 404);
+    assert.deepEqual(assetMethods, ['GET']);
+    assert.equal(await res.text(), ASSET_TABLE['/app/404.html'].body);
   });
 });
 

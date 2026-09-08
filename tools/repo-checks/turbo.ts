@@ -4,8 +4,8 @@
 
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 
-import { defaultExec, type Exec } from './exec.ts';
-import { workspaceRoot } from './workspace.ts';
+import { defaultCapture, type Exec } from '@tools/shared/exec.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 // turbo scopes a run to the package it is invoked from, so every dry run here
 // is anchored at the root: these guards ask about the whole graph, and a caller
@@ -44,7 +44,7 @@ export function splitTaskId(taskId: string): [string, string] {
 /** Resolved `dependencies` of `taskId` per `turbo run --dry-run=json`. */
 export async function resolvedTaskDeps(
   taskId: string,
-  exec: Exec = defaultExec,
+  exec: Exec = defaultCapture,
 ): Promise<string[]> {
   const [pkg, task] = splitTaskId(taskId);
   const { stdout } = await exec(
@@ -101,7 +101,7 @@ export function declaredLanes(configs: readonly string[]): Set<string> {
 /** Unqualified task names turbo plans when it runs `lanes`. */
 export async function plannedLanes(
   lanes: readonly string[],
-  exec: Exec = defaultExec,
+  exec: Exec = defaultCapture,
 ): Promise<Set<string>> {
   const { stdout } = await exec(
     'turbo',
@@ -126,7 +126,7 @@ export async function plannedLanes(
  */
 export async function planFailure(
   lanes: readonly string[],
-  exec: Exec = defaultExec,
+  exec: Exec = defaultCapture,
 ): Promise<string | undefined> {
   try {
     await exec('turbo', ['run', ...lanes, '--dry-run=json'], AT_ROOT);
@@ -145,7 +145,7 @@ export async function planFailure(
  */
 export async function plannedTasks(
   names: readonly string[],
-  exec: Exec = defaultExec,
+  exec: Exec = defaultCapture,
   concurrency = 4,
 ): Promise<Map<string, PlannedTask>> {
   const planned = new Map<string, PlannedTask>();

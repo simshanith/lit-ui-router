@@ -8,14 +8,14 @@ import { join } from 'node:path';
 
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 import type { ESLint, Rule } from 'eslint';
+import { parse } from 'jsonc-parser';
 
 interface OxlintConfig {
   rules?: Record<string, unknown>;
   overrides?: { rules?: Record<string, unknown> }[];
 }
 
-// .oxlintrc.json stays at the root — it is oxlint's own discovery path.
-const config = JSON.parse(
+const config = parse(
   readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
 ) as OxlintConfig;
 

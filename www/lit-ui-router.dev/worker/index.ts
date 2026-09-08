@@ -83,8 +83,11 @@ export default {
       // 404; anything but the page itself (or an asset with no 404.html) falls
       // through to the assets binding's own 404.html handling.
       serveNotFound: async (mount, req) => {
+        // Built from the original request, like the naive branch above: a bare
+        // URL would make the binding a fresh GET, so a HEAD miss came back
+        // with a full body and conditional headers never reached the binding.
         const page = await env.ASSETS.fetch(
-          new URL(`${mount}/404.html`, req.url),
+          new Request(new URL(`${mount}/404.html`, req.url), req),
         );
         return page.status === 200
           ? new Response(page.body, {

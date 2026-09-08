@@ -1,5 +1,13 @@
 import assert from 'node:assert/strict';
+import { execFile } from 'node:child_process';
+import { copyFile, mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import { fileURLToPath } from 'node:url';
+import { promisify } from 'node:util';
+
+import ts from 'typescript-6';
 
 import {
   type BaseVerdict,
@@ -268,5 +276,71 @@ describe('summaryMarkdown', () => {
     const markdown = summaryMarkdown(gateRun('topic', [], []));
     assert.match(markdown, /No open pull requests/);
     assert.doesNotMatch(markdown, /\| base \|/);
+  });
+});
+
+// The gate job runs on mise-action alone, with no `mise run setup` before it:
+// an install there would cost more than it saves on the runs it cannot skip.
+// That makes "resolves with no node_modules" a contract, not a preference, and
+// it lived only in a comment -- which is how a bare import got added.
+describe('branch-ci-gate.ts resolution', () => {
+  const GATE_FILES = ['branch-ci-gate.ts', 'branch-ci-gate.core.ts'];
+
+  // preProcessFile reports every specifier the loader can reach -- static and
+  // dynamic `import`, `export ... from`, `require`, side-effect `import`, at any
+  // indentation. A hand-rolled matcher stood here first and missed four of those.
+  // TS 6 rather than the repo's TS 7 because 7 ships no JS API.
+  const importsOf = (source: string): string[] =>
+    ts
+      .preProcessFile(source, true, true)
+      .importedFiles.map(({ fileName }) => fileName);
+
+  it('names only node builtins and relative siblings', async () => {
+    const bare: string[] = [];
+    for (const file of GATE_FILES) {
+      const source = await readFile(
+        new URL(`./${file}`, import.meta.url),
+        'utf8',
+      );
+      for (const specifier of importsOf(source)) {
+        if (!specifier.startsWith('node:') && !specifier.startsWith('./')) {
+          bare.push(`${file}: ${specifier}`);
+        }
+      }
+    }
+    assert.deepEqual(bare, []);
+  });
+
+  // The scan reads the source; this runs it the way CI does, which is the part
+  // no parser can answer: copied outside the repo, where no node_modules sits
+  // on any parent, a bare specifier is ERR_MODULE_NOT_FOUND and a failing exit.
+  it('loads and fails open with no node_modules on any parent', async () => {
+    const dir = await mkdtemp(join(tmpdir(), 'branch-ci-gate-'));
+    try {
+      for (const file of GATE_FILES) {
+        await copyFile(
+          fileURLToPath(new URL(`./${file}`, import.meta.url)),
+          join(dir, file),
+        );
+      }
+      // Dropped rather than blanked: the gate throws on a missing ref name
+      // before it spawns git or gh, so the run stays hermetic. The two runner
+      // files go too, or this would append to the real job's output.
+      const env = { ...process.env };
+      delete env.GITHUB_REF_NAME;
+      delete env.GITHUB_OUTPUT;
+      delete env.GITHUB_STEP_SUMMARY;
+
+      const { stdout } = await promisify(execFile)(
+        process.execPath,
+        [join(dir, 'branch-ci-gate.ts')],
+        { cwd: dir, env },
+      );
+
+      assert.match(stdout, /run=true/);
+      assert.match(stdout, /mainGraph=false/);
+    } finally {
+      await rm(dir, { recursive: true, force: true });
+    }
   });
 });

@@ -357,7 +357,8 @@
         "tools/workers-builds/**/*.test.ts",
         "packages/ui-router-server/test/**/*.test.ts",
         "apps/sample-app-routes/test/**/*.test.ts",
-        "www/lit-ui-router.dev/worker/test/**/*.test.ts"
+        "www/lit-ui-router.dev/worker/test/**/*.test.ts",
+        "www/lit-ui-router.dev/.vitepress/test/**/*.test.ts"
       ],
       "rules": {
         "typescript/no-floating-promises": "off"
@@ -455,6 +456,30 @@
           "warn",
           {
             "allowList": ["^CLOUDFLARE_"]
+          }
+        ]
+      }
+    },
+    {
+      // Same-package siblings are excluded alongside bare specifiers: this rule
+      // is per-file, so it cannot see what a sibling imports, and
+      // workers-builds-triggers.core.ts pulls valibot and jsonc-parser.
+      "files": ["tools/workers-builds/cloudflare-build.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "*",
+                  "!node:*",
+                  "!node:*/*",
+                  "!../shared/src/manifest.ts"
+                ],
+                "message": "runs under SKIP_DEPENDENCY_INSTALL=1, before `pnpm install`, so every specifier has to resolve with no node_modules: node builtins plus the relative paths listed here. A bare specifier has nothing to resolve against. Same-package siblings are excluded too — this rule is per-file and cannot see what a sibling imports (workers-builds-triggers.core.ts pulls valibot and jsonc-parser). Each negation is an explicit exception whose own imports must be node builtins all the way down; see www/DEPLOY.md."
+              }
+            ]
           }
         ]
       }

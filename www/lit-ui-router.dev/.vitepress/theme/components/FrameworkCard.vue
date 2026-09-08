@@ -11,33 +11,40 @@ function toggle() {
 </script>
 
 <template>
-  <article
+  <!-- A real button, like the spectrum's points and legend rows: focus,
+       Enter/Space and the pressed state come free. Its content is phrasing
+       only (the blurbs carry <code> and nothing else), so the card reads as
+       one control whose name is the framework name plus its blurb. -->
+  <button
+    type="button"
     class="framework-card"
     :class="{
       active: activeId === entry.id,
       dimmed: activeId !== null && activeId !== entry.id,
     }"
     data-fw-toggle
+    :aria-pressed="activeId === entry.id"
     @click="toggle"
   >
+    <!-- decorative: the name follows in the button's own text -->
     <span class="mark">
       <img
         class="mark-light"
         :src="mark.light"
-        :alt="`${entry.name} logo`"
+        alt=""
         :style="{ height: `${mark.height}px` }"
       />
       <img
         class="mark-dark"
         :src="mark.dark"
-        :alt="`${entry.name} logo`"
+        alt=""
         :style="{ height: `${mark.height}px` }"
       />
     </span>
     <strong class="name">{{ entry.name }}</strong>
     <!-- blurbs are authored strings from frameworks.ts, not user input -->
-    <p class="blurb" v-html="entry.blurb"></p>
-  </article>
+    <span class="blurb" v-html="entry.blurb"></span>
+  </button>
 </template>
 
 <style scoped>
@@ -45,10 +52,16 @@ function toggle() {
   display: flex;
   flex-direction: column;
   gap: 8px;
+  width: 100%;
   padding: 16px;
+  /* the button reset: the card owns its own type and alignment */
+  font: inherit;
+  text-align: left;
+  color: inherit;
   background: var(--vp-c-bg-soft);
   border: 1px solid var(--vp-c-divider);
   border-radius: 12px;
+  cursor: pointer;
   transition:
     transform 0.15s ease,
     border-color 0.15s ease,
@@ -65,15 +78,16 @@ function toggle() {
   opacity: 0.6;
 }
 
+.framework-card:focus-visible {
+  outline: 2px solid var(--vp-c-brand-1);
+  outline-offset: 1px;
+}
+
 /* cosmetic lift only — linked highlighting is click-intent */
 @media (hover: hover) {
   .framework-card:hover {
     transform: translateY(-2px);
   }
-}
-
-.framework-card {
-  cursor: pointer;
 }
 
 @media (prefers-reduced-motion: reduce) {
@@ -112,6 +126,7 @@ function toggle() {
 }
 
 .blurb {
+  display: block;
   margin: 0;
   font-size: 13.5px;
   line-height: 1.55;

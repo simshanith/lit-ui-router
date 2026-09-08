@@ -13,8 +13,9 @@ import {
   planFailure,
   plannedLanes,
   resolvedTaskDeps,
-} from '@tools/shared/turbo.ts';
+} from './turbo.ts';
 import {
+  isPublishable,
   loadWorkspace,
   type Member,
   workspaceRoot,
@@ -24,10 +25,6 @@ const CHECK = 'check-graph-edges';
 
 const hasScript = (task: string) => (member: Member) =>
   member.manifest?.scripts?.[task] !== undefined;
-const publishable = (member: Member) =>
-  member.dir !== '<root>' &&
-  member.manifest !== undefined &&
-  member.manifest.private !== true;
 
 const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
   ...[
@@ -43,13 +40,14 @@ const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
   {
     consumer: '@tools/release#pack:all',
     producerTask: 'build',
-    select: publishable,
+    select: isPublishable,
     why: 'check:pack, check:exports and check:published-diff hash packed packages through this edge, so an unlisted publishable package gets stale cached verdicts; add the line to tools/release/turbo.json',
   },
   {
     consumer: '//#lint:templates',
     producerTask: 'build:types',
-    select: (member) => publishable(member) && hasScript('build:types')(member),
+    select: (member) =>
+      isPublishable(member) && hasScript('build:types')(member),
     why: 'lit-analyzer resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
   },
 ];

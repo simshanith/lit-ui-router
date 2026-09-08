@@ -194,6 +194,8 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "**/package.json",
+        "!**/node_modules/**",
+        "!.claude/**",
         "eslint.config.ts",
         "tools/eslint/**",
         "packages/eslint-plugin-lit-ui-router/src/**",
