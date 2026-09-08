@@ -17,7 +17,7 @@
 // commands, all workspace binaries.
 import { execFileSync } from 'node:child_process';
 
-import { requireManifest } from '../bootstrap/manifest.ts';
+import { requireManifest } from '../bootstrap/src/manifest.ts';
 
 /** A command and its argv tail, run from the repo root. */
 export type Step = readonly [command: string, args: readonly string[]];

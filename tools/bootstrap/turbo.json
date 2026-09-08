@@ -3,8 +3,8 @@
   "extends": ["//"],
   "tasks": {
     "test": {
-      // The root test task's src/** inputs would stale-cache this src-less
-      // package; over-approximate instead.
+      // The root test task's src/** inputs miss the tsconfig/package surface
+      // these node:test suites depend on; over-approximate instead.
       "inputs": ["$TURBO_DEFAULT$"]
     }
   }

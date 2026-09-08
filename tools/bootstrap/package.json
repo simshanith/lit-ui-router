@@ -5,14 +5,14 @@
   "description": "Zero-dependency manifest reads for tooling that runs before pnpm install, importable across a package boundary by relative path",
   "type": "module",
   "exports": {
-    "./manifest.ts": "./manifest.ts",
-    "./types.ts": "./types.ts"
+    "./manifest.ts": "./src/manifest.ts",
+    "./types.ts": "./src/types.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc,md}\"",
     "lint": "oxlint .",
-    "test": "node --test \"*.test.ts\"",
+    "test": "node --test \"src/**/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
