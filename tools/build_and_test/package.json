@@ -19,6 +19,7 @@
   },
   "devDependencies": {
     "@codecov/bundle-analyzer": "catalog:",
+    "@tools/shared": "workspace:*",
     "@tools/warn-lanes": "workspace:*",
     "@types/node": "catalog:",
     "cypress": "catalog:",

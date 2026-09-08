@@ -1112,6 +1112,9 @@ importers:
       '@codecov/bundle-analyzer':
         specifier: 'catalog:'
         version: 2.0.1
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@tools/warn-lanes':
         specifier: workspace:*
         version: link:../warn-lanes

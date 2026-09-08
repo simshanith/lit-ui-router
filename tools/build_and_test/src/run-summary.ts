@@ -42,12 +42,10 @@ import {
   summaryMarkdown,
   warnLaneEntries,
 } from './run-summary.core.ts';
+import { errorCommand, warningCommand } from '@tools/shared/gha.core.ts';
+import { onActions } from '@tools/shared/gha.ts';
 
 const RUNS_DIR = process.env.TURBO_RUNS_DIR ?? '.turbo/runs';
-
-function onActions(): boolean {
-  return process.env.GITHUB_ACTIONS === 'true';
-}
 
 /** Fresh per run: a log that could guess the token could escape the guard. */
 function commandToken(): string | undefined {
@@ -55,9 +53,7 @@ function commandToken(): string | undefined {
 }
 
 function warn(message: string): void {
-  console.log(
-    onActions() ? `::warning::${message.replaceAll('\n', '%0A')}` : message,
-  );
+  console.log(onActions() ? warningCommand(message) : message);
 }
 
 /**
@@ -140,7 +136,7 @@ async function publish(
   // The annotation is the top-of-page pointer; the summary is the detail. Only
   // on a failure: a green run has nothing that warrants an annotation.
   if (onActions() && failed) {
-    console.log(`::error::${line.replaceAll('\n', '%0A')}`);
+    console.log(errorCommand(line));
   }
 }
 

@@ -131,16 +131,32 @@ async function main(): Promise<void> {
   });
 }
 
+// @tools/shared/gha.ts owns both of these, but this script must resolve with
+// no node_modules present (see the header), so it keeps local copies.
+
+/** Both outputs in one write; prints when GITHUB_OUTPUT is absent. */
+async function writeOutputs(run: boolean, mainGraph: boolean): Promise<void> {
+  const lines = `run=${run}\nmainGraph=${mainGraph}\n`;
+  const file = process.env.GITHUB_OUTPUT;
+  if (file) await appendFile(file, lines);
+  else process.stdout.write(lines);
+}
+
+/** Workflow-command data escaping per actions/toolkit: %, \r, \n, % first. */
+function escapeData(value: string): string {
+  return value
+    .replaceAll('%', '%25')
+    .replaceAll('\r', '%0D')
+    .replaceAll('\n', '%0A');
+}
+
 async function report(gate: GateRun): Promise<void> {
   const { decision } = gate;
   console.log(`${decision.run ? 'RUN' : 'SKIP'}: ${decision.reason}`);
 
   // Both runner files are absent on a local `mise run`; print instead so a dry
   // local invocation still shows exactly what CI would export.
-  const output = process.env.GITHUB_OUTPUT;
-  const lines = `run=${decision.run}\nmainGraph=${decision.mainGraph}\n`;
-  if (output) await appendFile(output, lines);
-  else process.stdout.write(lines);
+  await writeOutputs(decision.run, decision.mainGraph);
 
   const summary = process.env.GITHUB_STEP_SUMMARY;
   const markdown = summaryMarkdown(gate);
@@ -153,13 +169,10 @@ main().catch(async (error: unknown) => {
   // (gh down, unexpected JSON, no git) reports as "run" and stays green.
   const message = messageOf(error);
   console.log(
-    `::warning::branch CI gate failed, running CI anyway: ${message}`,
+    `::warning::${escapeData(`branch CI gate failed, running CI anyway: ${message}`)}`,
   );
   // The opt-in survives here too: it is a string test on the ref name, so it
   // cannot be what broke, and degrading it would silently run the smaller graph.
   const mainGraph = wantsMainGraph(process.env.GITHUB_REF_NAME?.trim() ?? '');
-  const output = process.env.GITHUB_OUTPUT;
-  const lines = `run=true\nmainGraph=${mainGraph}\n`;
-  if (output) await appendFile(output, lines);
-  else process.stdout.write(lines);
+  await writeOutputs(true, mainGraph);
 });

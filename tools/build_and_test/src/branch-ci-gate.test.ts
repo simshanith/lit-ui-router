@@ -1,4 +1,5 @@
 import assert from 'node:assert/strict';
+import { readFile } from 'node:fs/promises';
 import { describe, it } from 'node:test';
 
 import {
@@ -268,5 +269,25 @@ describe('summaryMarkdown', () => {
     const markdown = summaryMarkdown(gateRun('topic', [], []));
     assert.match(markdown, /No open pull requests/);
     assert.doesNotMatch(markdown, /\| base \|/);
+  });
+});
+
+// The gate job runs on mise-action alone, with no `mise run setup` before it:
+// an install there would cost more than it saves on the runs it cannot skip.
+// That makes "resolves with no node_modules" a contract, not a preference, and
+// it lived only in a comment -- which is how a bare import got added.
+describe('branch-ci-gate.ts resolution', () => {
+  it('imports node builtins and its own core only', async () => {
+    const source = await readFile(
+      new URL('./branch-ci-gate.ts', import.meta.url),
+      'utf8',
+    );
+    const bare = [...source.matchAll(/^import[^'"]*['"]([^'"]+)['"]/gmu)]
+      .map(([, specifier]) => specifier)
+      .filter(
+        (specifier) =>
+          !specifier.startsWith('node:') && !specifier.startsWith('./'),
+      );
+    assert.deepEqual(bare, []);
   });
 });

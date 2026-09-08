@@ -17,16 +17,15 @@ import {
   packTarballPath,
 } from '../checks/cache-paths.ts';
 import { packPublishTarball } from './pack-staged.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import {
+  isPublishable,
+  loadWorkspace,
+  workspaceRoot,
+} from '@tools/shared/workspace.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
-  const publishable = members.filter(
-    (member) =>
-      member.dir !== '<root>' &&
-      member.manifest &&
-      member.manifest.private !== true,
-  );
+  const publishable = members.filter(isPublishable);
   // Clear stale tarballs so a removed package leaves no ghost output.
   await mkdir(packDir, { recursive: true });
   for (const entry of await readdir(packDir)) {
