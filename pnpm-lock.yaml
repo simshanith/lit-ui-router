@@ -1525,6 +1525,9 @@ importers:
 
   tools/repo-checks:
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1649,9 +1652,9 @@ importers:
 
   tools/workers-builds:
     devDependencies:
-      '@tools/shared':
+      '@tools/bootstrap':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

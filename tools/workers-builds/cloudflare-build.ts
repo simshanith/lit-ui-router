@@ -7,8 +7,8 @@
 // install step is off, so installing is this script's job. That is before
 // `pnpm install`, so nothing here may import a workspace package by name:
 // node_modules does not exist yet. The one non-builtin import is relative and
-// resolves without it — ../shared/src/manifest.ts imports only node:fs,
-// node:path and a type-only sibling, so resolution never consults node_modules.
+// resolves without it — @tools/bootstrap is a zero-dependency package, so
+// resolution never consults node_modules.
 //
 // The image has node and npm; this script installs pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
@@ -17,7 +17,7 @@
 // commands, all workspace binaries.
 import { execFileSync } from 'node:child_process';
 
-import { requireManifest } from '../shared/src/manifest.ts';
+import { requireManifest } from '../bootstrap/manifest.ts';
 
 /** A command and its argv tail, run from the repo root. */
 export type Step = readonly [command: string, args: readonly string[]];

@@ -11,7 +11,7 @@ import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { requireManifest } from '@tools/shared/manifest.ts';
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 // `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version

@@ -13,7 +13,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/shared": "workspace:*",
+    "@tools/bootstrap": "workspace:*",
     "@types/node": "catalog:",
     "jsonc-parser": "catalog:",
     "oxfmt": "catalog:",
