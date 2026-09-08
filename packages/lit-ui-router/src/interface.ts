@@ -412,5 +412,10 @@ export interface LitStateDeclaration<
 export interface NormalizedLitViewDeclaration<
   T extends DefaultResolvesType = DefaultResolvesType,
 > extends _ViewDeclaration {
-  component: RoutedLitTemplate<T>;
+  /**
+   * A template function, or a {@link RoutedLitElement} class that the rendering
+   * `<ui-view>` instantiates and owns. `sticky` classes are normalized to a
+   * template function so their single instance outlives any one `<ui-view>`.
+   */
+  component: RoutedLitComponent<T>;
 }

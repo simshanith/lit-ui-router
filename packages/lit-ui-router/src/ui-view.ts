@@ -22,11 +22,13 @@ import {
 
 import {
   RoutedLitTemplate,
+  UIViewInjectedProps,
   UiOnExit,
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
 } from './interface.js';
-import { LitViewConfig, UIRouterLit } from './core.js';
+import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
+import { routedLitElementRenderer } from './routed-element.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
 
@@ -83,6 +85,7 @@ export class UiView extends LitElement {
   @state()
   private viewAddress!: UiViewAddress;
 
+  /** Replaced only by a real view config change, so a retained view keeps its subtree. */
   @state()
   private component: RoutedLitTemplate | null = null;
 
@@ -130,9 +133,12 @@ export class UiView extends LitElement {
     }
 
     this.resolveContext = new ResolveContext(config.path);
-    this.component = (
-      config.viewDecl as NormalizedLitViewDeclaration
-    ).component;
+    // Past the identity gate, so the config genuinely changed: a fresh renderer
+    // here is what drops the old element.
+    const { component } = config.viewDecl as NormalizedLitViewDeclaration;
+    this.component = isRoutedLitElement(component)
+      ? routedLitElementRenderer(component)
+      : component;
     this.requestUpdate();
   }
 
@@ -292,6 +298,7 @@ export class UiView extends LitElement {
    * For each transition, checks if any param values changed and notify component
    */
   private _invokeUiOnParamsChangedHook($transition$: Transition) {
+    // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
 
     const instance = this.firstElementChild as UiOnParamsChanged & Element;
@@ -394,11 +401,9 @@ export class UiView extends LitElement {
       .reduce(applyPairs, {});
     const transition = injector.get(Transition) as Transition;
 
-    return this.component({
-      router,
-      resolves,
-      transition,
-    });
+    const props: UIViewInjectedProps = { router, resolves, transition };
+
+    return this.component(props);
   }
 }
 
