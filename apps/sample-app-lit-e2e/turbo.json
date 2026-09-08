@@ -7,7 +7,7 @@
       "outputs": []
     },
     "test": {
-      "dependsOn": ["build", "^test"],
+      "dependsOn": ["build"],
       // $TURBO_DEFAULT$: the root task's globs miss the .cy.js specs; served
       // content invalidates via the build edge to @www/lit-ui-router.dev#build.
       // wrangler.jsonc: `wrangler dev` runs in the site package, beside it.

@@ -20,7 +20,10 @@
       "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },
     "test": {
-      "dependsOn": ["^test"],
+      // Suites import workspace deps by their published entry (dist), so the
+      // upstream build is a real precondition — it was previously supplied by
+      // accident, via the timing cushion of the old `^test` chain.
+      "dependsOn": ["^build"],
       // $TURBO_DEFAULT$ is the key; the globs only document what the lane reads
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -55,7 +58,7 @@
       ]
     },
     "test:coverage": {
-      "dependsOn": ["^build", "^test:coverage"],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**/*.ts",

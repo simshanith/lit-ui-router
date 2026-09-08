@@ -6,12 +6,12 @@
       "outputs": ["../../www/lit-ui-router.dev/api/ui-router-server/**"]
     },
     "test": {
-      "dependsOn": ["^test", "transit"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"]
     },
     // root task keys inputs on vitest configs; this suite is node --test
     "test:coverage": {
-      "dependsOn": ["^test:coverage", "transit"],
+      "dependsOn": ["transit"],
       "inputs": ["$TURBO_DEFAULT$"],
       "outputs": ["coverage/**"]
     },
