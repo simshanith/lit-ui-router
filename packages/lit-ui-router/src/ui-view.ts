@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { LitElement } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
@@ -21,14 +21,18 @@ import {
 } from '@uirouter/core';
 
 import {
-  RoutedLitComponent,
-  RoutedLitElement,
+  RoutedLitTemplate,
   UIViewInjectedProps,
   UiOnExit,
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
 } from './interface.js';
-import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
+import {
+  LitViewConfig,
+  UIRouterLit,
+  isRoutedLitElement,
+  routedLitElementRenderer,
+} from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
 
@@ -85,11 +89,9 @@ export class UiView extends LitElement {
   @state()
   private viewAddress!: UiViewAddress;
 
+  /** Replaced only by a real view config change, so a retained view keeps its subtree. */
   @state()
-  private component: RoutedLitComponent | null = null;
-
-  /** Cleared only by a real view config change, so a retained view keeps its subtree. @internal */
-  private routedElement: InstanceType<RoutedLitElement> | null = null;
+  private component: RoutedLitTemplate | null = null;
 
   private readonly inner = document.createDocumentFragment();
 
@@ -107,7 +109,6 @@ export class UiView extends LitElement {
   private _viewConfigUpdated(config: ViewConfig) {
     if (!config) {
       this.component = null;
-      this.routedElement = null;
       this.requestUpdate();
       return;
     }
@@ -136,11 +137,12 @@ export class UiView extends LitElement {
     }
 
     this.resolveContext = new ResolveContext(config.path);
-    // Past the identity gate, so the config genuinely changed: `render` mints a replacement.
-    this.routedElement = null;
-    this.component = (
-      config.viewDecl as NormalizedLitViewDeclaration
-    ).component;
+    // Past the identity gate, so the config genuinely changed: a fresh renderer
+    // here is what drops the old element.
+    const { component } = config.viewDecl as NormalizedLitViewDeclaration;
+    this.component = isRoutedLitElement(component)
+      ? routedLitElementRenderer(component)
+      : component;
     this.requestUpdate();
   }
 
@@ -404,12 +406,6 @@ export class UiView extends LitElement {
     const transition = injector.get(Transition) as Transition;
 
     const props: UIViewInjectedProps = { router, resolves, transition };
-
-    if (isRoutedLitElement(this.component)) {
-      this.routedElement ??= new this.component(props);
-      this.routedElement._uiViewProps = props;
-      return html`${this.routedElement}`;
-    }
 
     return this.component(props);
   }
