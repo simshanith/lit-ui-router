@@ -9,6 +9,12 @@
 // node_modules does not exist yet. The one non-builtin import is relative and
 // resolves without it — ../shared/src/manifest.ts imports only node:fs,
 // node:path and a type-only sibling, so resolution never consults node_modules.
+//
+// The image has node and npm; this script installs pnpm; everything past that
+// comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
+// tools (taplo, shellcheck, rumdl, actionlint, zizmor) exists here — keep them
+// out of anything the turbo target below reaches. Today that closure runs 21
+// commands, all workspace binaries.
 import { execFileSync } from 'node:child_process';
 
 import { requireManifest } from '../shared/src/manifest.ts';

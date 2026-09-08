@@ -74,6 +74,14 @@ value is the same for every branch at once, so renaming it would break the previ
 every branch whose checkout predates the rename. Once every open branch carries the `.ts`,
 `build_command` can name it directly and the shim can go.
 
+The build image is Ubuntu with node and npm; the script installs pnpm, and `pnpm install`
+provides everything after that. There is no mise, so none of the repo's mise-managed tools —
+`taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. Anything the
+build's turbo target reaches has to run on workspace binaries alone. It does today: that
+closure is 89 tasks, 21 of which run a command, and every one of those is a package
+`devDependency`. Nothing enforces this, because nothing needs to — a violation turns the
+Workers Builds check red on the branch that introduces it, before any merge.
+
 The one thing the TypeScript version does differently is **derive the pnpm to bootstrap from
 `packageManager`** rather than restate it. A second pin can only ever be wrong, and wrong
 silently — pnpm >=11.10 self-swaps to `packageManager`, so a stale bootstrap still deploys
