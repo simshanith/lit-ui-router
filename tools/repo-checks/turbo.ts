@@ -4,8 +4,8 @@
 
 import { type ParseError, parse, printParseErrorCode } from 'jsonc-parser';
 
-import { defaultExec, type Exec } from './exec.ts';
-import { workspaceRoot } from './workspace.ts';
+import { defaultExec, type Exec } from '@tools/shared/exec.ts';
+import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 // turbo scopes a run to the package it is invoked from, so every dry run here
 // is anchored at the root: these guards ask about the whole graph, and a caller
