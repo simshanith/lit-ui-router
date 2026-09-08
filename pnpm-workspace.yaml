@@ -90,7 +90,7 @@ catalog:
   vitest: ^5.0.0
   vue: ^3.5.41
   vue-tsc: ^3.3.11
-  wrangler: 4.113.0
+  wrangler: 4.129.1
 
 catalogMode: prefer
 
@@ -164,13 +164,17 @@ patchedDependencies:
 minimumReleaseAgeStrict: true
 
 minimumReleaseAgeExclude:
+  - '@cloudflare/*'
   - '@oxc-minify/*'
   - '@oxc-project/*'
   - '@oxc-transform/*'
   - '@oxfmt/*'
   - '@oxlint/*'
   - eslint-plugin-oxlint
+  - miniflare
   - oxc-minify
   - oxc-transform
   - oxfmt
   - oxlint
+  - workerd
+  - wrangler
