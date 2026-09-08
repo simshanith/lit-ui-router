@@ -23,7 +23,8 @@ reviews:
     # works on any PR without touching a label.
     enabled: false
     # Work here sits in draft for a long time. Review on "ready for review",
-    # not on every WIP push.
+    # not on every WIP push. Labelling a draft is still how you queue one up:
+    # the label survives the flip and the review fires on it.
     drafts: false
     # `coderabbit:review` asks for one. It is one-shot: coderabbit-oneshot.yml
     # strips the label once the review lands, so later pushes do not re-review

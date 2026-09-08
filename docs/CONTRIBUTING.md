@@ -83,8 +83,10 @@ the label again once the review lands, so pushing more commits does not spend a
 second review. Re-label to ask for another pass, or comment
 `@coderabbitai review`, which works on any PR without touching a label. Label a
 PR `coderabbit:skip` to record that it is reviewed by hand: that veto wins even
-if `coderabbit:review` is also on. Drafts are never reviewed automatically. It
-is advisory either way: no required status check, nothing it says blocks a
+if `coderabbit:review` is also on. Drafts are not reviewed — work here sits in
+draft a long time and a WIP push is not a review request — but the label
+survives the flip, so labelling a draft queues the review up for the moment it
+is marked ready. It is advisory either way: no required status check, nothing it says blocks a
 merge. `mise run ci` remains the gate.
 
 The older `no-coderabbit` opt-out and the `release` exclusion still sit in the
@@ -92,7 +94,8 @@ config. Neither does anything now that a review has to be asked for; they stay
 until the new labels have proven out.
 
 Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
-PR's own branch, so a PR may adjust its own review. The static analysers this
+PR's own branch, so a PR may adjust its own review — and a long-lived branch
+keeps the rules it was cut with until it picks up `main`. The static analysers this
 repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
 yamllint) are switched off there to avoid a second, weaker copy of CI; secret
 scanning is left on because nothing else covers it.
