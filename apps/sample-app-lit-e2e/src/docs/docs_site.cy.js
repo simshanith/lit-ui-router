@@ -21,10 +21,14 @@ describe('docs site', () => {
     cy.window().then((win) => {
       win.hydrationProbe = true;
     });
-    // "Guides" now lives in the "Docs" nav flyout, which VitePress opens on
-    // mouseenter. A plain button click races that handler — mouseenter opens
-    // it, then the button's own click toggles it shut — so hover to reveal.
-    cy.contains('.VPNavBar .VPFlyout', 'Docs').trigger('mouseenter');
+    // "Guides" now lives in the "Docs" nav flyout. VitePress 2.0.0-alpha.20
+    // moved opening off the root element's `mouseenter` (and dropped the
+    // `.VPFlyout:hover .menu` rule that backed it) onto the button's
+    // `pointerenter`, which ignores anything but a mouse — so hover the
+    // button, as a mouse, to reveal the panel.
+    cy.contains('.VPNavBar .VPFlyout', 'Docs')
+      .find('button')
+      .trigger('pointerenter', { pointerType: 'mouse' });
     cy.get('a[href="/guides/"]').first().click();
     cy.location('pathname').should('eq', '/guides/');
     // A full reload drops the probe; surviving it proves the client router
