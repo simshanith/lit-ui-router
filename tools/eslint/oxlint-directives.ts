@@ -15,9 +15,6 @@ interface OxlintConfig {
   overrides?: { rules?: Record<string, unknown> }[];
 }
 
-// .oxlintrc.json stays at the root — it is oxlint's own discovery path. It is
-// JSONC, as oxlint and eslint-plugin-oxlint both read it: parse it the same way
-// they do, so a comment in the config cannot take down this ESLint config.
 const config = parse(
   readFileSync(join(workspaceRoot, '.oxlintrc.json'), 'utf8'),
 ) as OxlintConfig;
