@@ -31,6 +31,20 @@ void describe('plugin', () => {
     );
   });
 
+  // The roster keying in index.ts types the source object; this walks the
+  // config the plugin actually emits, past the lit-a11y spread.
+  void it('recommended carries every rule the plugin ships', () => {
+    const configured = Object.keys(
+      plugin.configs.recommended[0]?.rules ?? {},
+    ).filter((rule) => rule.startsWith('lit-ui-router/'));
+    assert.deepEqual(
+      configured.sort(),
+      Object.keys(plugin.rules)
+        .map((rule) => `lit-ui-router/${rule}`)
+        .sort(),
+    );
+  });
+
   void it('recommended reports a dead anchor', () => {
     const messages = lint(`${IMPORTS}html\`<a>Home</a>\`;`);
     assert.deepEqual(
