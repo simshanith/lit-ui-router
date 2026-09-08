@@ -58,8 +58,10 @@ class TestParamsComponent extends LitElement implements UiOnParamsChanged {
 }
 
 /** Instance/connection counters, reset per test by `resetCounts`. */
-const counts: Record<string, { constructed: number; connected: number; disconnected: number }> =
-  {};
+const counts: Record<
+  string,
+  { constructed: number; connected: number; disconnected: number }
+> = {};
 
 function countsFor(tag: string) {
   return (counts[tag] ??= { constructed: 0, connected: 0, disconnected: 0 });
