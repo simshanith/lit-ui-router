@@ -116,12 +116,17 @@
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
-      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
-      // mid-graph (build:js, pack:all staging) and oxlint never reads them
+      // explicit globs hash gitignored files too, and oxlint reads none of
+      // these: dist/ and .cache/ mutate mid-graph (build:js, pack:all
+      // staging), coverage/ and .turbo/ are written by sibling lanes, and
+      // examples/* carry their own un-hoisted npm installs
       "inputs": [
         "**/*.ts",
         "**/*.js",
-        "!dist/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.turbo/**",
         "!.cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
@@ -179,6 +184,10 @@
         "examples/*/src/**",
         "eslint.config.ts",
         "tools/eslint/**",
+        // the glob above is explicit, so it is not gitignore-pruned and would
+        // otherwise hash that package's own run logs and .bin shims
+        "!**/.turbo/**",
+        "!**/node_modules/**",
         "tools/lint-elements/src/**",
         // the committed warning floor: raising or lowering it re-runs the lane
         "tools/lint-elements/warnings.json",
@@ -198,6 +207,7 @@
         "!.claude/**",
         "eslint.config.ts",
         "tools/eslint/**",
+        "!**/.turbo/**",
         "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
@@ -210,6 +220,10 @@
       "inputs": [
         "**/*.md",
         "!**/node_modules/**",
+        // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
+        // the sample apps stage READMEs into dist, typedoc writes www api/
+        "!**/dist/**",
+        "!www/lit-ui-router.dev/api/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"
@@ -376,9 +390,14 @@
     },
     "format:check": {
       "with": ["//#format:check:root", "//#format:check:toml"],
+      // oxfmt skips gitignored files but this glob does not, so the generated
+      // trees have to come off by hand (same set as `lint` above)
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
-        "!dist/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.turbo/**",
         "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"

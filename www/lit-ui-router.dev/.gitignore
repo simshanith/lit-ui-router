@@ -1,4 +1,5 @@
 .vitepress/cache
+.vitepress/.temp
 dist
 api/reference
 api/lit-ui-router-mobx
