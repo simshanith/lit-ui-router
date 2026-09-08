@@ -17,7 +17,9 @@
     },
     // Every check below reads the whole repo, not just this package, so each
     // names its read-set with $TURBO_ROOT$ globs on top of $TURBO_DEFAULT$
-    // (which covers the shells and cores that live here).
+    // (which covers the shells and cores that live here). $TURBO_ROOT$ globs
+    // are not gitignore-pruned, so a `**` walk has to exclude the untracked
+    // trees by hand or it hashes every installed manifest.
     "check:patches": {
       // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
       // could rotate a patch target re-runs the check
@@ -36,6 +38,8 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
@@ -47,6 +51,8 @@
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/turbo.json",
         "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
     }
