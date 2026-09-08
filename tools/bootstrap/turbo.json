@@ -1,0 +1,11 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      // The root test task's src/** inputs would stale-cache this src-less
+      // package; over-approximate instead.
+      "inputs": ["$TURBO_DEFAULT$"]
+    }
+  }
+}

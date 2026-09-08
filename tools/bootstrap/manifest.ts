@@ -1,5 +1,13 @@
 // The one way the tools read a package.json off disk: parse the bytes.
 //
+// @tools/bootstrap depends on nothing but node builtins, which is what makes a
+// relative import of this file from a sibling package the endorsed pattern —
+// tooling that runs before `pnpm install` has no node_modules and so cannot
+// name a workspace package by bare specifier. Two guards keep the guarantee:
+// the .oxlintrc.json override on tools/bootstrap/** bans any import that is
+// not node:* or ./*, and the eslint.config.ts block on this package's manifest
+// bans a `dependencies` key and any devDependency off the allow-list.
+//
 // Why a raw read, and not a resolver or a reader library — this keeps getting
 // re-proposed, so the answers live here:
 //

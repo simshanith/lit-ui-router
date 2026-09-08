@@ -51,7 +51,7 @@ import {
 } from './check-published-diff.core.ts';
 import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
-import { requireManifest } from '@tools/shared/manifest.ts';
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import {
   isPublishable,
   loadWorkspace,
