@@ -1,0 +1,45 @@
+# Makes `coderabbit:review` a one-shot request: the label opts a PR into an
+# automatic review (see .coderabbit.yaml), and this strips it again once the
+# review lands, so later pushes do not spend a second review. Re-label to ask
+# for another pass.
+#
+# YAML here is triggers/permissions only; inputs flow through step env — never
+# `${{ }}` inside run lines.
+name: CodeRabbit one-shot
+
+on:
+  issue_comment:
+    types:
+      - created
+
+permissions: {}
+
+# One at a time per PR; CodeRabbit edits its summary comment more than once.
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.issue.number }}
+  cancel-in-progress: false
+
+jobs:
+  drop_review_label:
+    # Only PRs, and only CodeRabbit's own review summary. Its "review skipped"
+    # and "rate limit reached" notices carry the same `summarize` marker while
+    # spending no review, so both are excluded by their own marker — the label
+    # has to survive for the retry.
+    if: >-
+      github.event.issue.pull_request != null
+      && github.event.comment.user.login == 'coderabbitai[bot]'
+      && contains(github.event.comment.body, 'summarize by coderabbit.ai')
+      && !contains(github.event.comment.body, 'skip review by coderabbit.ai')
+      && !contains(github.event.comment.body, 'rate limited by coderabbit.ai')
+      && contains(github.event.issue.labels.*.name, 'coderabbit:review')
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Drop the coderabbit:review label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.issue.number }}
+        run: gh pr edit "$PR_NUMBER" --remove-label 'coderabbit:review'
