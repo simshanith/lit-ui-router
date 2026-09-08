@@ -162,19 +162,3 @@ patchedDependencies:
   lit-dialog: patches/lit-dialog.patch
 
 minimumReleaseAgeStrict: true
-
-minimumReleaseAgeExclude:
-  - '@cloudflare/*'
-  - '@oxc-minify/*'
-  - '@oxc-project/*'
-  - '@oxc-transform/*'
-  - '@oxfmt/*'
-  - '@oxlint/*'
-  - eslint-plugin-oxlint
-  - miniflare
-  - oxc-minify
-  - oxc-transform
-  - oxfmt
-  - oxlint
-  - workerd
-  - wrangler
