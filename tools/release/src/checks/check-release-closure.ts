@@ -9,6 +9,7 @@ import {
   selectedNames,
 } from './check-release-closure.core.ts';
 import {
+  isPublishable,
   loadWorkspace,
   type Member,
   workspaceRoot,
@@ -21,10 +22,6 @@ const hasScript = (task: string) => (member: Member) =>
   member.manifest?.scripts?.[task] !== undefined;
 const hasDevDep = (dep: string) => (member: Member) =>
   member.manifest?.devDependencies?.[dep] !== undefined;
-const publishable = (member: Member) =>
-  member.dir !== '<root>' &&
-  member.manifest !== undefined &&
-  member.manifest.private !== true;
 
 const RULES: (ClosureRule & { select: (member: Member) => boolean })[] = [
   {
@@ -34,7 +31,7 @@ const RULES: (ClosureRule & { select: (member: Member) => boolean })[] = [
   },
   {
     need: 'publishable packages',
-    select: publishable,
+    select: isPublishable,
     why: `release-signals builds and packs them through @tools/release#pack:all, and only a remote-cache hit hides a missing toolchain; ${FIX}`,
   },
   {

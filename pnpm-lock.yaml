@@ -1112,6 +1112,9 @@ importers:
       '@codecov/bundle-analyzer':
         specifier: 'catalog:'
         version: 2.0.1
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../shared
       '@tools/warn-lanes':
         specifier: workspace:*
         version: link:../warn-lanes
@@ -1133,6 +1136,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      typescript-6:
+        specifier: catalog:typescript6
+        version: typescript@6.0.3
       vite:
         specifier: 'catalog:'
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
