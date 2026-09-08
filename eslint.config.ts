@@ -121,6 +121,34 @@ export default defineConfig(
     },
   },
   {
+    // @tools/bootstrap is the one package a sibling may import by relative
+    // path, because tooling that runs before `pnpm install` has no
+    // node_modules to resolve a bare specifier against. That only holds while
+    // the package needs nothing installed: no dependencies at all, and
+    // devDependencies limited to the lint/typecheck/format toolchain that
+    // never reaches its runtime. The .oxlintrc.json override on
+    // tools/bootstrap/**/*.ts covers the other escape — a relative import out
+    // of the package — and neither guard subsumes the other.
+    files: ['tools/bootstrap/package.json'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"])',
+          message:
+            '@tools/bootstrap must resolve with no node_modules: it takes no dependencies of any kind. Put the helper that needs one in @tools/shared instead.',
+        },
+        {
+          selector:
+            'JSONProperty[key.value="devDependencies"] > JSONObjectExpression > JSONProperty:not([key.value="@types/node"]):not([key.value="oxfmt"]):not([key.value="oxlint"]):not([key.value="typescript"])',
+          message:
+            '@tools/bootstrap devDependencies are limited to @types/node, oxfmt, oxlint and typescript — anything else is a package that has to be installed before this one can be read.',
+        },
+      ],
+    },
+  },
+  {
     // Workspace members advertising dist-resolved types must pass-split their
     // build: turbo typecheck/lint depend on ^build:types only, so a dist-typed
     // package without one leaves dependents typechecking against a missing dist.
