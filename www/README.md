@@ -22,7 +22,8 @@ A new site is a package under `www/<domain>/`, named for the domain it serves:
 - **Trigger config.** An entry in
   [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc)
   whose `build_command` and `deploy_command` name the shared
-  [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) and
+  [`cloudflare-build.sh`](../tools/workers-builds/cloudflare-build.sh) — a shim over
+  [`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts) — and
   [`cloudflare-deploy.ts`](../tools/workers-builds/cloudflare-deploy.ts), plus the
   build environment variables that script expects.
 

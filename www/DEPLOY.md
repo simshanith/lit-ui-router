@@ -64,6 +64,38 @@ change them — and a package-manager change is exactly a branch that needs to. 
 path instead lets the script differ per branch while the declared value stays constant, so
 divergence never reads as drift and never needs an `--apply` to test.
 
+`cloudflare-build.sh` is a two-line shim over
+[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts), which holds the actual
+steps. The script runs **before** the install, so it cannot import a workspace package by
+name; its one non-builtin import is a relative reach into `tools/shared/src/manifest.ts`,
+which pulls only `node:fs`, `node:path` and a type-only sibling and so never consults
+`node_modules`. The shim keeps the path still: the pinned value is the same for every branch
+at once, so renaming it would break the preview build of every branch whose checkout does not
+carry the new name. Once every open branch carries the `.ts`, `build_command` can name it
+directly and the shim can go.
+
+That resolve-without-`node_modules` constraint is lint-enforced, not just documented:
+`.oxlintrc.json` scopes `no-restricted-imports` to `cloudflare-build.ts` and allows only node
+builtins plus an explicit list of relative paths. Bare specifiers are refused because nothing
+resolves them at that point, and same-package siblings are refused because the rule is
+per-file and cannot see what a sibling imports — `workers-builds-triggers.core.ts` pulls
+`valibot` and `jsonc-parser`. Adding a relative import means adding it to that list, and it
+has to be a file whose own imports are node builtins all the way down.
+
+The build image is Ubuntu with node and npm; the script installs pnpm, and `pnpm install`
+provides everything after that. There is no mise, so none of the repo's mise-managed tools —
+`taplo`, `shellcheck`, `rumdl`, `actionlint`, `zizmor` — exists during a deploy. Anything the
+build's turbo target reaches has to run on workspace binaries alone. It does today: that
+closure is 89 tasks, 21 of which run a command, and every one of those is a package
+`devDependency`. Nothing enforces this, because nothing needs to — a violation turns the
+Workers Builds check red on the branch that introduces it, before any merge.
+
+The script **derives the pnpm to bootstrap from `packageManager`** rather than restating it.
+A second pin can only ever be wrong, and wrong silently — pnpm >=11.10 self-swaps to
+`packageManager`, so a stale bootstrap still deploys green. Deriving is also what makes the
+per-branch divergence above free: a branch that changes the package manager gets the right
+bootstrap with no edit to this file.
+
 The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
 deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and both
 add `--config www/lit-ui-router.dev/wrangler.jsonc`, since the deploy runs from the repo

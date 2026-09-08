@@ -5,15 +5,14 @@
     "test": {
       // The root test task's src/** inputs would stale-cache this src-less
       // package; over-approximate instead. The extra globs are pnpm-pin.test.ts's
-      // read-set: it compares every pnpm version pin in the repo against
+      // read-set: it compares the repo's pnpm version pins against
       // package.json's `packageManager`, so a bump to any of them must re-run it.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/package.json",
         "$TURBO_ROOT$/pnpm-lock.yaml",
         "$TURBO_ROOT$/.config/mise/config.toml",
-        "$TURBO_ROOT$/.config/mise/mise.lock",
-        "$TURBO_ROOT$/tools/workers-builds/cloudflare-build.sh"
+        "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
     },
     // Every check below reads the whole repo, not just this package, so each
