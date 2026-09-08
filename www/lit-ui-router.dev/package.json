@@ -13,7 +13,7 @@
     "format": "oxfmt \"**/*.{md,json,ts,vue}\"",
     "format:check": "oxfmt --check \"**/*.{md,json,ts,vue}\"",
     "lint": "oxlint .",
-    "test": "node --test \"worker/test/*.test.ts\"",
+    "test": "node --test \"worker/test/*.test.ts\" \".vitepress/test/*.test.ts\"",
     "typecheck": "tsc -p tsconfig.json --noEmit",
     "typecheck:vue": "vue-check www/lit-ui-router.dev/tsconfig.vue.json",
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
