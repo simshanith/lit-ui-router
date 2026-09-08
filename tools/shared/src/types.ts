@@ -13,6 +13,8 @@ export type PackageManifest = {
   name?: string;
   version?: string;
   private?: boolean;
+  // `<name>@<version>+<integrity>`; the root manifest's is the pnpm authority
+  packageManager?: string;
   scripts?: Record<string, string>;
   // the one field that is genuinely not a string map: a subpath maps to a
   // string target or a conditions object, so the shape is caller-checked
