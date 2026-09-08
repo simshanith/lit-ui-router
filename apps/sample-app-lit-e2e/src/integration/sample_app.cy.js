@@ -127,6 +127,27 @@ describe('authenticated sample app', () => {
     cy.get('table').contains('somebody@somewhere.com');
   });
 
+  // `mymessages` is a sticky state, so leaving it inactivates the branch rather
+  // than exiting it: the ui-view stays mounted and must keep the same Compose
+  // element, unsent draft and all. Regression guard for #723, where <ui-view>
+  // rebuilt its routed element on every transition and dropped the draft.
+  it('retains an unsent draft across a trip out of the sticky branch', () => {
+    visitWithFeatures('/mymessages');
+    cy.url().should('include', '/mymessages/inbox');
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').type('Half-written subject');
+
+    cy.get('li a').contains('Contacts').click();
+    cy.url().should('include', '/contacts');
+
+    // Deep state redirect returns to the deepest previously-active child.
+    cy.get('li a').contains('Messages').click();
+    cy.url().should('include', '/mymessages/compose');
+
+    cy.get('input#subject').should('have.value', 'Half-written subject');
+  });
+
   it('prompts to save a message being composed', () => {
     visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
