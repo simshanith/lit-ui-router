@@ -35,7 +35,7 @@
     ]
   },
   "include": [
-    "commitlint.config.ts",
+    ".commitlintrc.ts",
     "eslint.config.ts",
     "examples/build-embeds.ts",
     "tools/dts-backtest/run.ts",
