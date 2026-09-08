@@ -75,13 +75,21 @@ discussion (see the tool README).
 
 ### Automated review
 
-[CodeRabbit](https://docs.coderabbit.ai) reviews a PR once it leaves draft, and
-re-reviews each push after that. Drafts are skipped on purpose — comment
-`@coderabbitai review` to pull one in early. Release PRs are skipped too — the
-`release` label excludes them, since a version bump plus a generated changelog
-has nothing to review. Label any other PR `no-coderabbit` to opt it out the same
-way. It is advisory either way: no required status check, nothing it says blocks
-a merge. `mise run ci` remains the gate.
+[CodeRabbit](https://docs.coderabbit.ai) reviews by request, not by default —
+the free OSS tier meters reviews, so they are worth spending deliberately. Label
+a PR `coderabbit:review` to ask for one; it is one-shot, and
+[`coderabbit-oneshot.yml`](../.github/workflows/coderabbit-oneshot.yml) strips
+the label again once the review lands, so pushing more commits does not spend a
+second review. Re-label to ask for another pass, or comment
+`@coderabbitai review`, which works on any PR without touching a label. Label a
+PR `coderabbit:skip` to record that it is reviewed by hand: that veto wins even
+if `coderabbit:review` is also on. Drafts are never reviewed automatically. It
+is advisory either way: no required status check, nothing it says blocks a
+merge. `mise run ci` remains the gate.
+
+The older `no-coderabbit` opt-out and the `release` exclusion still sit in the
+config. Neither does anything now that a review has to be asked for; they stay
+until the new labels have proven out.
 
 Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
 PR's own branch, so a PR may adjust its own review. The static analysers this
