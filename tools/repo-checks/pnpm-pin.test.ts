@@ -1,9 +1,14 @@
-// package.json's `packageManager` is the pnpm authority, but four other files
-// pin the same version and nothing else checks them against it. The bootstrap
-// pin in cloudflare-build.sh is the one that hides: pnpm self-swaps to
-// `packageManager`, so a stale bootstrap still deploys green (missed on #761,
-// caught only by hand). Assert all five agree.
+// package.json's `packageManager` is the pnpm authority; the mise config, the
+// mise lockfile and pnpm-lock.yaml restate the same version with nothing else
+// checking them against it. Assert they agree.
+//
+// The Workers Builds bootstrap used to be a fourth pin here, and was the one
+// that hid: pnpm self-swaps to `packageManager`, so a stale bootstrap still
+// deploys green (missed on #761, caught by hand). It derives the version now
+// instead of restating it, so there is nothing left to compare — see
+// tools/workers-builds/cloudflare-build.ts.
 import assert from 'node:assert/strict';
+import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
@@ -11,51 +16,29 @@ import { describe, it } from 'node:test';
 import { requireManifest } from '@tools/shared/manifest.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
-const read = (path: string) => readFileSync(join(workspaceRoot, path), 'utf8');
-
-// `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the
-// version ahead of it is the pin every other file has to match.
+// `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version
+// ahead of it is what the other files have to match.
 const packageManager = requireManifest(workspaceRoot).packageManager ?? '';
 const pinned = /^pnpm@([^+]+)\+sha512\./.exec(packageManager)?.[1];
 
-// Each entry names a file and every pnpm version in it, so a failure reads as
-// the file to edit. `from`/`until` bound the scan where a bare pattern would
-// also match unrelated versions.
-const sources = [
-  {
-    file: '.config/mise/config.toml',
-    // the aqua bootstrap tool pin
-    pattern: /^"aqua:pnpm\/pnpm" = "(.+)"$/gm,
-  },
-  {
-    file: '.config/mise/mise.lock',
-    // the tool version, then the six per-platform download URLs
-    pattern: /^version = "(.+)"$|pnpm\/pnpm\/releases\/download\/v([^/]+)\//gm,
-    from: /^\[\[tools\."aqua:pnpm\/pnpm"\]\]$/,
-    until: /^\[\[?tools\."(?!aqua:pnpm\/pnpm")/,
-  },
-  {
-    file: 'pnpm-lock.yaml',
-    // packageManagerDependencies.pnpm: both `specifier` and `version`
-    pattern: /^\s+(?:specifier|version): (.+)$/gm,
-    from: /^ {6}pnpm:$/,
-    until: /^ {0,6}\S/,
-  },
-  {
-    file: 'tools/workers-builds/cloudflare-build.sh',
-    // the `npm install --global` bootstrap line
-    pattern: /pnpm@(\S+)/g,
-  },
-];
+// The mise files are TOML, so query them instead of matching their text:
+// taplo is already this repo's TOML linter and formatter, and its `get` takes
+// a jq-like path. `aqua:pnpm/pnpm` needs quoting — it carries a `:` and a `/`.
+const MISE_TOOL = 'tools."aqua:pnpm/pnpm"';
+const taploGet = (file: string, pattern: string): unknown =>
+  JSON.parse(
+    execFileSync(
+      'taplo',
+      ['get', '-f', join(workspaceRoot, file), '-o', 'json', pattern],
+      { encoding: 'utf8' },
+    ),
+  );
 
-const scope = (content: string, from?: RegExp, until?: RegExp) => {
-  if (!from) return content;
-  const lines = content.split('\n');
-  const start = lines.findIndex((line) => from.test(line));
-  assert.notEqual(start, -1, `no line matched ${from}`);
-  const rest = lines.slice(start + 1);
-  const end = rest.findIndex((line) => until?.test(line));
-  return (end === -1 ? rest : rest.slice(0, end)).join('\n');
+// One locked tool: the requested version, plus a per-platform table each of
+// whose download URLs carries that version in its path.
+type LockedTool = {
+  version: string;
+  [platform: string]: unknown;
 };
 
 describe('pnpm version pins', () => {
@@ -63,19 +46,42 @@ describe('pnpm version pins', () => {
     assert.ok(pinned, `unparseable packageManager: ${packageManager}`);
   });
 
-  for (const { file, pattern, from, until } of sources) {
-    it(`${file} pins ${pinned}`, () => {
-      const found = [...scope(read(file), from, until).matchAll(pattern)]
-        .map((groups) => groups.slice(1).find((group) => group !== undefined))
-        .filter((version) => version !== undefined);
-      assert.notEqual(found.length, 0, `no pnpm version found in ${file}`);
-      for (const version of found) {
-        assert.equal(
-          version,
-          pinned,
-          `${file} pins pnpm ${version}, package.json pins ${pinned}`,
-        );
-      }
-    });
-  }
+  it('.config/mise/config.toml requests it', () => {
+    assert.equal(taploGet('.config/mise/config.toml', MISE_TOOL), pinned);
+  });
+
+  it('.config/mise/mise.lock locks it, on every platform it covers', () => {
+    const [tool, ...extra] = taploGet(
+      '.config/mise/mise.lock',
+      MISE_TOOL,
+    ) as LockedTool[];
+    assert.equal(extra.length, 0, 'pnpm is locked more than once');
+    assert.ok(tool, 'pnpm is not in the lockfile');
+    assert.equal(tool.version, pinned);
+
+    // Every platform mise did lock has to point at the same release. Which
+    // platforms belong here is `mise lock`'s business, not this test's: pnpm
+    // publishes no macos-x64 asset, so it locks six where every other tool
+    // gets seven.
+    const platforms = Object.entries(tool).filter(([key]) =>
+      key.startsWith('platforms.'),
+    ) as [string, { url: string }][];
+    assert.notEqual(platforms.length, 0, 'pnpm is locked for no platform');
+    for (const [platform, { url }] of platforms) {
+      assert.match(url, new RegExp(`/v${pinned}/`), `${platform} url: ${url}`);
+    }
+  });
+
+  // The one file read as text: pnpm-lock.yaml is YAML, and node has no parser
+  // for it that does not cost an install. The block is four lines and pnpm
+  // writes it, so scope the scan and match within it.
+  it('pnpm-lock.yaml resolves it', () => {
+    const lock = readFileSync(join(workspaceRoot, 'pnpm-lock.yaml'), 'utf8');
+    const block = /^ {6}pnpm:$\n((?: {8}.*\n)+)/m.exec(lock)?.[1];
+    assert.ok(block, 'no packageManagerDependencies.pnpm block');
+    const found = [...block.matchAll(/^\s+(?:specifier|version): (.+)$/gm)].map(
+      ([, version]) => version,
+    );
+    assert.deepEqual(found, [pinned, pinned]);
+  });
 });

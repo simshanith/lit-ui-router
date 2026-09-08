@@ -64,6 +64,22 @@ change them — and a package-manager change is exactly a branch that needs to. 
 path instead lets the script differ per branch while the declared value stays constant, so
 divergence never reads as drift and never needs an `--apply` to test.
 
+`cloudflare-build.sh` is a two-line shim over
+[`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts), which holds the actual
+steps. The build ran as bash because it runs **before** the install and so cannot import a
+workspace package by name; that turned out not to require bash, because a relative import of
+`tools/shared/src/manifest.ts` reaches only `node:fs`, `node:path` and a type-only sibling,
+and never consults `node_modules`. What the shim buys is the path staying still: the pinned
+value is the same for every branch at once, so renaming it would break the preview build of
+every branch whose checkout predates the rename. Once every open branch carries the `.ts`,
+`build_command` can name it directly and the shim can go.
+
+The one thing the TypeScript version does differently is **derive the pnpm to bootstrap from
+`packageManager`** rather than restate it. A second pin can only ever be wrong, and wrong
+silently — pnpm >=11.10 self-swaps to `packageManager`, so a stale bootstrap still deploys
+green. Deriving is also what makes the per-branch divergence above free: a branch that
+changes the package manager gets the right bootstrap with no edit to this file.
+
 The deploy script takes the trigger as its one argument — `main` runs `npx wrangler
 deploy`, `branch` runs `npx wrangler versions upload`, anything else exits 2 — and both
 add `--config www/lit-ui-router.dev/wrangler.jsonc`, since the deploy runs from the repo

@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { buildSteps } from './cloudflare-build.ts';
 import { DEPLOY_MODES } from './cloudflare-deploy.ts';
 import {
   type Drift,
@@ -96,30 +97,53 @@ describe('desiredStateFromConfig', () => {
   });
 
   // SKIP_DEPENDENCY_INSTALL=1 is only safe while the build command installs.
-  // The command is a repo script now, so follow the path and read the steps —
-  // otherwise the indirection would hide a build command that stopped
-  // installing, which is the one failure this pairing exists to catch.
-  it('pairs the skipped install with an install in every build command', async () => {
+  // The command is a repo script, so follow the path — otherwise the
+  // indirection would hide a build command that stopped installing, which is
+  // the one failure this pairing exists to catch. The script exports its steps
+  // (like the deploy script exports its mode map), so the install is read
+  // rather than grepped out of the source.
+  it('pairs the skipped install with an install in every build command', () => {
+    // the repo root, not cwd: turbo runs this from the package directory
+    const steps = buildSteps(
+      join(import.meta.dirname, '..', '..'),
+      '/nonexistent/bin',
+    );
+    assert.ok(
+      steps.some(
+        ([command, args]) =>
+          command === 'pnpm' &&
+          args[0] === 'install' &&
+          args.includes('--frozen-lockfile'),
+      ),
+      `no frozen pnpm install among the build steps: ${JSON.stringify(steps)}`,
+    );
+
     for (const kind of ['production', 'preview'] as const) {
       assert.equal(
         desired[kind].environment_variables?.SKIP_DEPENDENCY_INSTALL,
         '1',
       );
-      const command = desired[kind].build_command ?? '';
-      assert.match(command, /^\.\/tools\/workers-builds\/[\w-]+\.sh$/);
-      const script = await readFile(
-        join(import.meta.dirname, '..', '..', command),
-        'utf8',
-      );
-      // Prefix-agnostic on purpose: the bootstrap in front of the install is
-      // exactly what a branch is allowed to change (`npx pnpm@…`, a global
-      // install, corepack). What must hold is that pnpm runs a frozen install
-      // at all — matching the flag alone also accepted `echo`.
-      assert.match(
-        script,
-        /^[^#\n]*\bpnpm(@\S+)?\s+install --frozen-lockfile$/m,
+      assert.equal(
+        desired[kind].build_command,
+        './tools/workers-builds/cloudflare-build.sh',
       );
     }
+  });
+
+  // The .sh is a shim over the .ts, kept only because `build_command` is one
+  // dashboard value for every branch at once (see www/DEPLOY.md). Nothing else
+  // ties the pinned path to the steps above, so assert the hop exists: a shim
+  // that stopped exec-ing the script would leave the test above passing while
+  // every build ran nothing.
+  it('execs the TypeScript build script from the pinned shell path', async () => {
+    const shim = await readFile(
+      join(import.meta.dirname, 'cloudflare-build.sh'),
+      'utf8',
+    );
+    assert.match(
+      shim,
+      /^exec \.\/tools\/workers-builds\/cloudflare-build\.ts\b/m,
+    );
   });
 
   // The deploy command is a repo script too, for the same reason: a branch that
