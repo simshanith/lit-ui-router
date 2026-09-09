@@ -435,6 +435,7 @@
     "e2e": {
       "dependsOn": ["^build"],
       "with": ["@www/lit-ui-router.dev#wrangler:dev"],
+      "passThroughEnv": ["DOCS_DEV_PORT"],
       "cache": false,
       "persistent": true
     },
