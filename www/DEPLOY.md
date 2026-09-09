@@ -263,6 +263,9 @@ plaintext only. Secrets, therefore, can never be committed here nor clobbered by
 
 ### Local Development
 
+Both forms bind `DOCS_DEV_PORT`, declared in mise's `[env]`, so run them in an
+activated shell or prefix with `mise exec --`.
+
 With pnpm:
 
 ```bash
