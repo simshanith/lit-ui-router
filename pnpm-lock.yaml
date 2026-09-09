@@ -1265,9 +1265,9 @@ importers:
 
   tools/embed-heights:
     dependencies:
-      '@tools/shared':
+      '@tools/bootstrap':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../bootstrap
     devDependencies:
       '@types/node':
         specifier: 'catalog:'
@@ -1287,6 +1287,9 @@ importers:
 
   tools/eslint:
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@tools/eslint-ts-parser':
         specifier: workspace:*
         version: link:../eslint-ts-parser
@@ -1365,9 +1368,9 @@ importers:
 
   tools/lcov-rebase:
     devDependencies:
-      '@tools/shared':
+      '@tools/bootstrap':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -1606,9 +1609,9 @@ importers:
 
   tools/vue-check:
     dependencies:
-      '@tools/shared':
+      '@tools/bootstrap':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../bootstrap
     devDependencies:
       oxfmt:
         specifier: 'catalog:'

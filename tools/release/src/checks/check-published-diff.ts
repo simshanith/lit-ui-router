@@ -52,11 +52,8 @@ import {
 import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
-import {
-  isPublishable,
-  loadWorkspace,
-  workspaceRoot,
-} from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
 const MAX_BUFFER = 64 * 1024 * 1024;

@@ -36,7 +36,7 @@ import {
 import { defaultExec } from '@tools/shared/exec.ts';
 import { group, logWarning, runMain } from '@tools/shared/gha.ts';
 import { requireEnv } from '../lib/env.core.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 const PACK_TASK = '@tools/release#pack:all';
 

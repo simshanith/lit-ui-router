@@ -13,7 +13,7 @@ import { runMain } from '@tools/shared/gha.ts';
 import { pushTagArgs } from './release-tag-push.core.ts';
 import { isPushed, tagStateMessage } from './release-tag-state.core.ts';
 import { resolveReleaseTagName, resolveTagState } from './release-tag-state.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');

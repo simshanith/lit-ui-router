@@ -11,7 +11,8 @@
 import { requireEnv } from '../lib/env.core.ts';
 import { defaultStream } from '@tools/shared/exec.ts';
 import { runMain } from '@tools/shared/gha.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { loadWorkspace } from '@tools/shared/workspace.ts';
 
 import { gateDecision } from './release-peer-floor-gate.core.ts';
 

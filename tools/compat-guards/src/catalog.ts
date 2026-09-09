@@ -6,10 +6,10 @@ import { join } from 'node:path';
 
 import { readManifest } from '@tools/bootstrap/manifest.ts';
 import type { PackageManifest } from '@tools/bootstrap/types.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   selectCatalogs,
   loadWorkspaceManifest,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 /** A dependency's range in a named catalog; undefined when either is absent. */

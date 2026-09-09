@@ -17,11 +17,8 @@ import {
   packTarballPath,
 } from '../checks/cache-paths.ts';
 import { packPublishTarball } from './pack-staged.ts';
-import {
-  isPublishable,
-  loadWorkspace,
-  workspaceRoot,
-} from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);

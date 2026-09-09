@@ -18,11 +18,8 @@ import {
   type PackResult,
 } from './check-pack.core.ts';
 import { tarballManifest } from './tarball.ts';
-import {
-  isPublishable,
-  loadWorkspace,
-  workspaceRoot,
-} from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);

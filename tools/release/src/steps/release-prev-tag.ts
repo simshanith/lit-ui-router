@@ -21,7 +21,7 @@ import {
   prereleaseChannels,
   rootCommitArgs,
 } from './release-prev-tag.core.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 /**
  * The conventional-changelog range start for a release: the package's
