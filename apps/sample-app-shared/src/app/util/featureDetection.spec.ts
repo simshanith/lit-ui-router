@@ -3,6 +3,7 @@ import {
   canUseNavigationAPI,
   featureFlags,
   isValidLocationPlugin,
+  LOCATION_PLUGIN_AUTO,
   parseFeatureParams,
   resolveLocationPlugin,
   resolveLocationPluginFeature,
@@ -132,6 +133,17 @@ describe('feature detection', () => {
       vi.stubEnv(ENV_KEY, 'memory');
       expect(resolveLocationPluginFeature()).toBe('memory');
     });
+
+    it('reads a default env var as no preference', () => {
+      vi.stubEnv(ENV_KEY, LOCATION_PLUGIN_AUTO);
+      expect(resolveLocationPluginFeature()).toBeUndefined();
+    });
+
+    it('stops at a default URL param instead of reading the env var', () => {
+      vi.stubEnv(ENV_KEY, 'hash');
+      setFeatureParam('location-plugin', LOCATION_PLUGIN_AUTO);
+      expect(resolveLocationPluginFeature()).toBeUndefined();
+    });
   });
 
   describe('resolveLocationPlugin', () => {
@@ -162,6 +174,12 @@ describe('feature detection', () => {
     it('auto-detects past an unrecognized preference', () => {
       vi.stubGlobal('navigation', { navigate: () => undefined });
       vi.stubEnv(ENV_KEY, 'memory');
+      expect(resolveLocationPlugin()).toBe('navigation');
+    });
+
+    it('auto-detects when the env var is default', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, LOCATION_PLUGIN_AUTO);
       expect(resolveLocationPlugin()).toBe('navigation');
     });
 

@@ -77,6 +77,10 @@ shared `router.config.ts`:
 2. Session storage: Set via Feature Flags panel in Prefs
 3. Environment variable: `VITE_SAMPLE_APP_LOCATION_PLUGIN=pushState`
 
+`default` is accepted at every level and means "no preference", so
+`?feature-location-plugin=default` restores the auto-detected plugin without
+clearing the session flag or the env var underneath it.
+
 The Feature Flags panel shows browser compatibility indicators for each plugin
 option.
 
