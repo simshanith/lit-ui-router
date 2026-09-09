@@ -166,17 +166,19 @@ jobs:
           retention-days: 30
           if-no-files-found: warn
       - name: Turbo run summary
-        # Reads the `--summarize` artifact the ci/ci_main step just wrote and
-        # reports it: cache split, slowest tasks and longest dependency chain
-        # every run, plus the failing tasks when the run was red. On a red run
+        # Reads every `--summarize` artifact the ci/ci_main step wrote — the
+        # graph, the docs build, the e2e suites are three turbo runs — and
+        # reports each: cache split, slowest tasks and longest dependency chain
+        # every run, plus the failing tasks when one was red. On a red run
         # it republishes only the tasks that really failed — turbo's stream
         # also prints ELIFECYCLE for every task it CANCELLED, which the run
         # summary omits entirely.
         #
         # `!cancelled()` rather than `always()`: a cancelled job is exactly
         # when the artifact lies, since the tasks turbo killed are missing from
-        # it. Placed before codecov_bundle so no later `turbo run` can be the
-        # newest summary in .turbo/runs, and it fails open: a broken reporter
+        # it. Still placed before codecov_bundle: the session is bounded at its
+        # start, not its end, so a later `turbo run` would join it. It fails
+        # open, as before: a broken reporter
         # warns, never adds a red step of its own.
         if: ${{ !cancelled() }}
         run: mise run //tools/build_and_test:turbo_summary
