@@ -6,9 +6,19 @@ import {
   evidenceFor,
   formatFindings,
   importedPackages,
+  moduleFacts,
   packageOf,
   unusedDeps,
 } from './workspace-deps.core.ts';
+
+/** Modules reach the check parsed, so tests build them the same way. */
+const parsed = (files: Record<string, string>): PackageSources['modules'] =>
+  new Map(
+    Object.entries(files).map(([path, text]) => [
+      path,
+      moduleFacts(text, path),
+    ]),
+  );
 
 const sources = (over: Partial<PackageSources> = {}): PackageSources => ({
   modules: new Map(),
@@ -81,7 +91,7 @@ describe('evidenceFor', () => {
     const found = evidenceFor(
       '@tools/shared',
       [],
-      sources({ modules: new Map([['src/a.ts', "import '@tools/shared';"]]) }),
+      sources({ modules: parsed({ 'src/a.ts': "import '@tools/shared';" }) }),
     );
     assert.deepEqual(found, { kind: 'import', where: 'src/a.ts' });
   });
@@ -102,6 +112,45 @@ describe('evidenceFor', () => {
       }),
     );
     assert.equal(found?.kind, 'reference');
+  });
+
+  // Source has a seam a text file does not: a name in a string is a path
+  // someone resolves, a name in a comment is someone talking about it.
+  it('counts a name in a string literal in source', () => {
+    const found = evidenceFor(
+      '@tools/x',
+      [],
+      sources({
+        modules: parsed({
+          'a.ts': "const p = import.meta.resolve('@tools/x/entry.ts');",
+        }),
+      }),
+    );
+    assert.equal(found?.kind, 'reference');
+  });
+
+  it('counts a name inside a template literal', () => {
+    const found = evidenceFor(
+      '@tools/x',
+      [],
+      sources({
+        modules: parsed({ 'a.ts': 'const p = `node_modules/@tools/x/${f}`;' }),
+      }),
+    );
+    assert.equal(found?.kind, 'reference');
+  });
+
+  it('does not let a comment in source vouch for a dependency', () => {
+    const found = evidenceFor(
+      '@tools/x',
+      [],
+      sources({
+        modules: parsed({
+          'a.ts': '// we dropped @tools/x here\nexport const a = 1;',
+        }),
+      }),
+    );
+    assert.equal(found, undefined);
   });
 
   it('counts a binary invoked from a script', () => {
@@ -145,9 +194,7 @@ describe('evidenceFor', () => {
       evidenceFor(
         '@tools/shared',
         [],
-        sources({
-          modules: new Map([['a.ts', "import '@tools/other';"]]),
-        }),
+        sources({ modules: parsed({ 'a.ts': "import '@tools/other';" }) }),
       ),
       undefined,
     );
@@ -165,7 +212,7 @@ describe('unusedDeps', () => {
       '@tools/probe',
       declared,
       () => [],
-      sources({ modules: new Map([['a.ts', "import '@tools/used';"]]) }),
+      sources({ modules: parsed({ 'a.ts': "import '@tools/used';" }) }),
     );
     assert.deepEqual(findings, [{ pkg: '@tools/probe', dep: declared[1] }]);
   });
@@ -176,9 +223,9 @@ describe('unusedDeps', () => {
       declared,
       () => [],
       sources({
-        modules: new Map([
-          ['a.ts', "import '@tools/used';\nimport '@tools/stale';"],
-        ]),
+        modules: parsed({
+          'a.ts': "import '@tools/used';\nimport '@tools/stale';",
+        }),
       }),
     );
     assert.deepEqual(findings, []);

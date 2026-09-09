@@ -23,8 +23,10 @@ import {
 import {
   type Declaration,
   type Finding,
+  type ModuleFacts,
   type PackageSources,
   formatFindings,
+  moduleFacts,
   unusedDeps,
 } from './workspace-deps.core.ts';
 
@@ -94,7 +96,7 @@ for (const member of members) {
 
 async function sourcesFor(member: Member): Promise<PackageSources> {
   const own = files.get(member.name) ?? [];
-  const modules = new Map<string, string>();
+  const modules = new Map<string, ModuleFacts>();
   const other = new Map<string, string>();
   const miseRuns: string[] = [];
   for (const path of own) {
@@ -105,7 +107,10 @@ async function sourcesFor(member: Member): Promise<PackageSources> {
     // The manifest is where the declaration lives, so reading it as evidence
     // would make every dependency vouch for itself.
     if (relative(dirOf(member), path) === 'package.json') continue;
-    if (MODULE.test(path)) modules.set(path, text);
+    // The lockfile names every workspace package by construction, so it would
+    // vouch for all of them — an alibi that cannot distinguish anything.
+    if (path.endsWith('pnpm-lock.yaml')) continue;
+    if (MODULE.test(path)) modules.set(path, moduleFacts(text, path));
     else other.set(path, text);
     // mise task bodies are shell; whole-file rather than parsed, which can
     // only over-credit, and over-crediting is the safe direction here.

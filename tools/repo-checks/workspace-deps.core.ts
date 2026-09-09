@@ -8,7 +8,9 @@
 //
 // Evidence is gathered permissively on purpose. A gate that cries wolf gets
 // suppressed, so anything that plausibly reads as use counts as use, and the
-// check only fires when a dependency appears nowhere at all.
+// check only fires when a dependency appears nowhere at all. Permissive is not
+// the same as blind: where a file has a parser, the search is narrowed to the
+// strings, since that is where a package is named without being imported.
 
 import ts from 'typescript-6';
 
@@ -17,8 +19,8 @@ export type Declaration = { name: string; block: string };
 
 /** One package's evidence: its own files, already read. */
 export type PackageSources = {
-  /** Sources parsed for import specifiers; keyed by path for the report. */
-  modules: Map<string, string>;
+  /** Parsed sources, keyed by path for the report. */
+  modules: Map<string, ModuleFacts>;
   /** Everything else tracked in the package — configs, manifests, docs. */
   other: Map<string, string>;
   /** `scripts` values from the package's own manifest. */
@@ -62,12 +64,39 @@ export function importedPackages(source: string): Set<string> {
   return found;
 }
 
+/** A parsed module: what it imports, and the text worth searching. */
+export type ModuleFacts = { imports: Set<string>; quoted: string };
+
+/**
+ * A module's import graph plus the contents of its string literals. Only the
+ * literals, because a package reached without an import is reached through a
+ * string — `import.meta.resolve('@tools/x/y.ts')`, a `node_modules/<name>`
+ * path in a bundler config — while a name in a comment is talk, not use. In
+ * source we can tell those apart for the price of a parse we are already
+ * paying, so we do; a text file gets searched whole, having no such seam.
+ */
+export function moduleFacts(source: string, fileName = 'x.ts'): ModuleFacts {
+  const quoted: string[] = [];
+  const tree = ts.createSourceFile(fileName, source, ts.ScriptTarget.Latest);
+  const visit = (node: ts.Node): void => {
+    // Template *spans* are not string-literal-like, so take their text too:
+    // a name can sit either side of a substitution.
+    if (ts.isStringLiteralLike(node) || ts.isTemplateLiteralToken(node)) {
+      quoted.push(node.text);
+    }
+    ts.forEachChild(node, visit);
+  };
+  ts.forEachChild(tree, visit);
+  return { imports: importedPackages(source), quoted: quoted.join('\n') };
+}
+
 // A package is reached by more than an import: `import.meta.resolve`, a
 // `node_modules/<name>/dist` path in a bundler config, a binary in a script.
 // Rather than enumerate those, any occurrence of the name counts, bounded so
-// `foo` does not match `foo-bar`. That credits a bare mention in a comment
-// too, which is the deliberate direction — a check that fires on a package
-// someone does use is a check people learn to override.
+// `foo` does not match `foo-bar`. In a config or a doc that credits a bare
+// mention in prose, which is the deliberate direction — a check that fires on
+// a package someone does use is a check people learn to override. Source is
+// held to the stricter bar it can afford; see `moduleFacts`.
 const mentions = (name: string): RegExp =>
   new RegExp(`(?<![\\w-])${name.replaceAll('/', '\\/')}(?![\\w-])`);
 
@@ -85,12 +114,17 @@ export function evidenceFor(
   bins: readonly string[],
   sources: PackageSources,
 ): Evidence | undefined {
-  for (const [path, text] of sources.modules) {
-    if (importedPackages(text).has(name))
-      return { kind: 'import', where: path };
+  for (const [path, facts] of sources.modules) {
+    if (facts.imports.has(name)) return { kind: 'import', where: path };
   }
   const literal = mentions(name);
-  for (const [path, text] of [...sources.modules, ...sources.other]) {
+  const searchable = [
+    ...[...sources.modules].map(
+      ([path, facts]) => [path, facts.quoted] as const,
+    ),
+    ...sources.other,
+  ];
+  for (const [path, text] of searchable) {
     if (literal.test(text)) return { kind: 'reference', where: path };
   }
   for (const bin of bins) {
