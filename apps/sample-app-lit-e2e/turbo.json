@@ -18,7 +18,7 @@
       "env": ["CI"],
       // CYPRESS_* is pass-through, not env: artifact knobs (video) must not
       // affect cache validity.
-      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*"],
+      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_*", "DOCS_DEV_PORT"],
       // Videos/screenshots stay uncached side effects.
       "outputs": []
     }

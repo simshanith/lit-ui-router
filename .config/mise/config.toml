@@ -21,6 +21,16 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
+# The e2e dev-server port, declared once (#697). Consumers interpolate it with
+# no literal fallback, so running outside mise fails loudly rather than drifting
+# back to a hardcoded copy. Turbo runs in strict env mode, so every task that
+# needs it declares it in passThroughEnv — it is transport only and must not
+# enter a cache key.
+# Templated, not a bare literal: a plain [env] assignment OVERRIDES an inherited
+# value, which would make the port unsettable from outside. This defers to an
+# existing DOCS_DEV_PORT so a second worktree, a CI matrix leg, or the e2e
+# umbrella can pick its own and avoid colliding on one shared port.
+DOCS_DEV_PORT = "{{ env.DOCS_DEV_PORT | default(value='8787') }}"
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
