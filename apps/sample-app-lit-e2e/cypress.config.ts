@@ -3,7 +3,10 @@ import { defineConfig } from 'cypress';
 // Port declared once in .config/mise/config.toml; no literal fallback so an
 // unset value fails loudly instead of drifting (#697).
 const port = process.env.DOCS_DEV_PORT;
-if (!port) throw new Error('DOCS_DEV_PORT is unset — run this through mise');
+if (!port)
+  throw new Error(
+    'DOCS_DEV_PORT is unset — run this through mise, or set it yourself',
+  );
 
 export default defineConfig({
   allowCypressEnv: false,

@@ -32,7 +32,7 @@ export function clampRuns(raw: string | undefined): number {
 export function parsePort(raw: string | undefined): number {
   if (raw === undefined || !/^[0-9]+$/.test(raw))
     throw new Error(
-      'DOCS_DEV_PORT unset or non-numeric — run this through mise',
+      'DOCS_DEV_PORT unset or non-numeric — run this through mise, or set it yourself',
     );
   return Number.parseInt(raw, 10);
 }
