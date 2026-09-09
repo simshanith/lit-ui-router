@@ -8,7 +8,7 @@
 // run on the eventual floor-bump commit re-checks and flips green. Decisions
 // live in ./release-peer-floor-gate.core.ts.
 
-import { requireEnv } from '@tools/shared/env.core.ts';
+import { requireEnv } from '../lib/env.core.ts';
 import { defaultStream } from '@tools/shared/exec.ts';
 import { runMain } from '@tools/shared/gha.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';

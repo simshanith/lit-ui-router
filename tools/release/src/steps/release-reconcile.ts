@@ -35,7 +35,7 @@ import {
 } from './release-reconcile.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { group, logWarning, runMain } from '@tools/shared/gha.ts';
-import { requireEnv } from '@tools/shared/env.core.ts';
+import { requireEnv } from '../lib/env.core.ts';
 import { workspaceRoot } from '@tools/shared/workspace.ts';
 
 const PACK_TASK = '@tools/release#pack:all';

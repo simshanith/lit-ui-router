@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { Exec } from './exec.ts';
+import type { Exec } from '@tools/shared/exec.ts';
 import { createReleasePr, ensureGh, prCreateArgs } from './gh.ts';
 
 // gh pr create prints the new PR's URL, newline-terminated.

@@ -7,7 +7,7 @@
 // (release-it errors on it, #674). argv comes from the engine seam
 // (release-it.core.ts).
 
-import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
+import { boolEnv, requireEnv } from '../lib/env.core.ts';
 import { group, runMain } from '@tools/shared/gha.ts';
 import { tagArgs } from './release-it.core.ts';
 import { releaseItRun } from './release-it.ts';
