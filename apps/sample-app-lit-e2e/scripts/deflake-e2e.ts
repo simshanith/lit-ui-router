@@ -6,8 +6,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 // Sample the sample-app-lit-e2e suites N times serially and report per-attempt
 // flake. Inputs ride the environment (workflow step `env:`), never argv:
 //   DEFLAKE_RUNS  attempts, clamped to 1-10 (non-numeric/empty -> 5)
-//   DEFLAKE_PORT  dev-server port to verify free between attempts
-//                 (defaults to DOCS_DEV_PORT, declared in mise config)
+//   DOCS_DEV_PORT dev-server port to verify free between attempts; the same
+//                 value the suites bind, declared once in mise config
 // Attempts run OUTSIDE turbo so a cached test task can't replay attempt 1.
 
 // The workers-sdk#14926 crash surfaces as the client failing to reach the dev
@@ -32,7 +32,7 @@ export function clampRuns(raw: string | undefined): number {
 export function parsePort(raw: string | undefined): number {
   if (raw === undefined || !/^[0-9]+$/.test(raw))
     throw new Error(
-      'DEFLAKE_PORT/DOCS_DEV_PORT unset or non-numeric — run this through mise',
+      'DOCS_DEV_PORT unset or non-numeric — run this through mise',
     );
   return Number.parseInt(raw, 10);
 }
@@ -135,7 +135,7 @@ async function main(): Promise<void> {
   }
 
   const runs = clampRuns(process.env.DEFLAKE_RUNS);
-  const port = parsePort(process.env.DEFLAKE_PORT ?? process.env.DOCS_DEV_PORT);
+  const port = parsePort(process.env.DOCS_DEV_PORT);
   const crashSignature = crashSignatureFor(port);
 
   let fails = 0;

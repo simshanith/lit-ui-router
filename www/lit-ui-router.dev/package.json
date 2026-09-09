@@ -19,7 +19,7 @@
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
     "typecheck:worker:tests": "tsc -p worker/test/tsconfig.json --noEmit",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
-    "wrangler:dev": "wrangler dev --port ${DOCS_DEV_PORT:?}"
+    "wrangler:dev": "wrangler dev --port ${DOCS_DEV_PORT:?run this through mise}"
   },
   "dependencies": {
     "@spectrum-web-components/icons-workflow": "catalog:",
