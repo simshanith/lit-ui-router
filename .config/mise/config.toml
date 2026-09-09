@@ -253,6 +253,9 @@ run = [
 # it a flake in the first suite to fail cancels the rest, and turbo omits
 # cancelled tasks from the summary — so the report could not say whether the
 # other four passed, which is the question the split exists to answer.
+# Eager cancel also costs more than it saves: the suites fail at unpredictable
+# points, so killing the rest usually saves only the tail of the run, while the
+# four that would have finished stay uncached and the retry pays for all five.
 #
 # =dependencies-successful, not the bare flag: bare --continue means `always`,
 # which would run all five suites even when the build they depend on failed,
