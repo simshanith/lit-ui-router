@@ -21,16 +21,13 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
-# The e2e dev-server port, declared once (#697). Consumers interpolate it with
-# no literal fallback, so running outside mise fails loudly rather than drifting
-# back to a hardcoded copy. Turbo runs in strict env mode, so every task that
-# needs it declares it in passThroughEnv — it is transport only and must not
-# enter a cache key.
-# Templated, not a bare literal: a plain [env] assignment OVERRIDES an inherited
-# value, which would make the port unsettable from outside. This defers to an
-# existing DOCS_DEV_PORT so a second worktree, a CI matrix leg, or the e2e
-# umbrella can pick its own and avoid colliding on one shared port.
-DOCS_DEV_PORT = "{{ env.DOCS_DEV_PORT | default(value='8787') }}"
+# WWW_DEV_PORT is deliberately NOT declared here. Its default lives in code
+# (www/lit-ui-router.dev/dev-port.ts) so entry points that never traverse mise
+# still work; this file evaluates before config.local.toml, so a default here
+# would silently defeat a templated per-worktree override (#697). Set it in a
+# gitignored .config/mise/config.local.toml to move one worktree off the shared
+# port. Turbo runs in strict env mode, so tasks that carry it declare it in
+# passThroughEnv — it is transport only and must not enter a cache key.
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
@@ -261,21 +258,25 @@ run = [
 # which would run all five suites even when the build they depend on failed,
 # turning one build error into five Cypress failures.
 #
-# env: DOCS_DEV_PORT (the [env] declaration above), WRANGLER_LOG and CYPRESS_*
-# reach Cypress through the tasks' passThroughEnv.
+# env: DOCS_DEV_PORT is an override only — the default lives in dev-port.ts, so
+# there is no [env] declaration to interpolate and start-server-and-test is
+# reached through serve-and-test.ts, which resolves the port and builds the
+# readiness URLs from it. WRANGLER_LOG and CYPRESS_* reach Cypress through the
+# tasks' passThroughEnv.
 # Explicit, not inherited: the inner `turbo run` must see the whole workspace,
 # and a task invoked from a package directory would otherwise hand it a
-# silently narrowed plan (deflake-e2e.ts calls this from the e2e app).
+# silently narrowed plan (deflake-e2e.ts calls this from the e2e app). The
+# launcher only spawns start-server-and-test, so cwd stays the repo root.
 dir = "{{config_root}}"
 description = "Run the Cypress e2e suites via turbo, around one shared dev server"
 run = [
   # The suites' own dependsOn cannot start the server, so the site has to be
   # built before start-server-and-test rather than during the inner run.
   "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize",
-  """start-server-and-test \
+  """node ./apps/sample-app-lit-e2e/scripts/serve-and-test.ts \
   "pnpm --filter sample-app-lit-e2e run docs:start-server" \
-  "http://localhost:${DOCS_DEV_PORT:?}/app/|http://localhost:${DOCS_DEV_PORT:?}/app-mobx/" \
-  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue=dependencies-successful --ui=stream --log-order=stream --summarize"""",
+  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue=dependencies-successful --ui=stream --log-order=stream --summarize" \
+  app/ app-mobx/""",
 ]
 
 [tasks.test_e2e.env]

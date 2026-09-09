@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./dev-port.ts": "./dev-port.ts"
+  },
   "scripts": {
     "build": "vitepress build .",
     "bundle:worker": "mkdir -p dist && wrangler deploy --dry-run --outdir=\"$PWD/worker/dist\"",
@@ -19,7 +22,7 @@
     "typecheck:worker": "tsc -p worker/tsconfig.json --noEmit",
     "typecheck:worker:tests": "tsc -p worker/test/tsconfig.json --noEmit",
     "types:worker": "wrangler types worker/worker-configuration.d.ts",
-    "wrangler:dev": "wrangler dev --port ${DOCS_DEV_PORT:?}"
+    "wrangler:dev": "node ./scripts/wrangler-dev.ts"
   },
   "dependencies": {
     "@spectrum-web-components/icons-workflow": "catalog:",

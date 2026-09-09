@@ -2,6 +2,8 @@
 import { execFile as execFileCb } from 'node:child_process';
 import { promisify } from 'node:util';
 
+import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
+
 import { crashSignatureFor } from './deflake-e2e.ts';
 
 // How often the wrangler-dev e2e crash (cloudflare/workers-sdk#14926) fires in
@@ -10,10 +12,12 @@ import { crashSignatureFor } from './deflake-e2e.ts';
 // Turbo cache-hit replays re-print old logs verbatim, so only "cache
 // miss/bypass" executions count as exposures.
 // Usage: mise run measure_deflake --days 7 [--branch mybranch] [--repo …]
-// Every default lives in that task's #USAGE spec, so this script requires its
-// full config: the [days] positional plus MEASURE_DEFLAKE_{REPO,WORKFLOW,
-// MAX_LOG_MB,RUN_LIMIT,PORT}. Direct exec (./scripts/measure-deflake.ts 7
-// [branch]) works only with those five exported.
+// That task's #USAGE spec holds every default except the port, whose default
+// lives in code (@www/lit-ui-router.dev/dev-port.ts) so non-mise entry points
+// work too: this script requires the [days] positional plus
+// MEASURE_DEFLAKE_{REPO,WORKFLOW,MAX_LOG_MB,RUN_LIMIT}. Direct exec
+// (./scripts/measure-deflake.ts 7 [branch]) works only with those four
+// exported.
 // [branch] isolates one branch's runs — e.g. rate a wrangler-bump trial
 // branch (forced dispatches against its ref) without main's runs diluting it.
 const execFile = promisify(execFileCb);
@@ -45,7 +49,9 @@ const MAX_LOG_BYTES = positiveEnv('MEASURE_DEFLAKE_MAX_LOG_MB') * 1024 ** 2;
 // gh returns newest-first and caps silently, so a hit clips the window's old end
 const RUN_LIMIT = positiveEnv('MEASURE_DEFLAKE_RUN_LIMIT');
 // same signature the sampler keys on, so the two can't drift apart
-const CRASH_SIGNATURE = crashSignatureFor(positiveEnv('MEASURE_DEFLAKE_PORT'));
+const CRASH_SIGNATURE = crashSignatureFor(
+  resolveWwwDevPort(process.env.MEASURE_DEFLAKE_PORT, 'MEASURE_DEFLAKE_PORT'),
+);
 
 async function gh(args: string[]): Promise<string> {
   const { stdout } = await execFile('gh', args, { maxBuffer: MAX_LOG_BYTES });

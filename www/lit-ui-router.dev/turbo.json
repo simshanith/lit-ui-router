@@ -39,8 +39,9 @@
     },
     "wrangler:dev": {
       "dependsOn": ["build"],
-      // Transport only — the port must not enter a cache key.
-      "passThroughEnv": ["DOCS_DEV_PORT"],
+      // Override of the default in dev-port.ts; transport only, so the port
+      // must not enter a cache key.
+      "passThroughEnv": ["WWW_DEV_PORT"],
       "cache": false,
       "persistent": true
     },
