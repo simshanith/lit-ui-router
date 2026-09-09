@@ -161,7 +161,7 @@ async function publish(
   const failed = failures.length > 0;
   // The overview leads on both lanes: the counts are the context for whichever
   // task broke, and on a green run they are the whole report.
-  const overview = sessionMarkdown(summaries, context);
+  const overview = sessionMarkdown(runs, context);
   const markdown = failed
     ? `${overview}\n${sessionFailureMarkdown(failures)}`
     : overview;
@@ -172,7 +172,7 @@ async function publish(
   // gets the excerpts inline, and a human scanning the step sees the headline
   // without expanding anything. Grouping is deliberately NOT used — a
   // collapsed group is exactly the problem this step exists to solve.
-  const chunks = [...sessionLines(summaries, context), ''];
+  const chunks = [...sessionLines(runs, context), ''];
   if (failed) chunks.push(...sessionStdoutReport(failures, summaries));
   // The fallback prints the same untrusted excerpts, so it goes inside the guard.
   if (!toFile) chunks.push(`\n${markdown}`);
@@ -218,7 +218,7 @@ async function main(): Promise<void> {
       continue;
     }
     for (const [taskId, log] of await readLogs(summary)) logs.set(taskId, log);
-    runs.push({ summary, reports: [] });
+    runs.push({ summary, fileName: basename(path), reports: [] });
   }
   if (runs.length === 0) {
     warn(`no readable turbo run summary under ${RUNS_DIR}`);
@@ -232,10 +232,11 @@ async function main(): Promise<void> {
     onActions: onActions(),
     warnLanes: warnLaneEntries(logs),
     // Set by the workflow from the upload step's `artifact-url` output; absent
-    // locally, where the files this read are already on disk. Named only when
-    // the session is one run — the artifact holds every summary either way.
+    // locally, where the files this read are already on disk. Every file is
+    // named: the artifact holds them all under one URL, and GitHub gives no
+    // per-file link to hand out instead.
     artifactUrl: process.env.TURBO_SUMMARY_ARTIFACT_URL,
-    fileName: paths.length === 1 ? basename(paths[0] ?? '') : undefined,
+    fileNames: runs.map((run) => run.fileName ?? ''),
   });
 }
 

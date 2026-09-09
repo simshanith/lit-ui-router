@@ -472,10 +472,27 @@ export const MISS_LIST_LIMIT = 25;
 
 /** The counts line. Deliberately ahead of every duration below it: task counts
  *  and cache buckets are what make the timings comparable between runs. */
+/**
+ * Whether the run came out green. Both halves matter: `exitCode` alone misses
+ * nothing here, but `failed` alone would call a run green that turbo killed
+ * outside any task — the case the failure section exists to word.
+ */
+export function runSucceeded(summary: RunSummary): boolean {
+  return summary.execution.exitCode === 0 && summary.execution.failed === 0;
+}
+
+/** The at-a-glance verdict marker. The first thing a reader needs is which. */
+export const PASS_MARK = '✅';
+export const FAIL_MARK = '❌';
+
+export function runMark(summary: RunSummary): string {
+  return runSucceeded(summary) ? PASS_MARK : FAIL_MARK;
+}
+
 function overviewHeadline(summary: RunSummary): string {
   const { command, attempted, cached, success, failed, startTime, endTime } =
     summary.execution;
-  return `${inlineCode(command)} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, in ${humanDuration(endTime - startTime)}.`;
+  return `${runMark(summary)} ${inlineCode(command)} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, in ${humanDuration(endTime - startTime)}.`;
 }
 
 /**
@@ -517,10 +534,15 @@ export function warnLaneReport(
 export interface OverviewContext {
   /** `GITHUB_ACTIONS`; gates the notes that only mean something on a runner. */
   onActions?: boolean;
-  /** The uploaded `--summarize` JSON — the uncapped copy of this report. */
+  /** The uploaded `--summarize` JSONs — the uncapped copy of this report. */
   artifactUrl?: string;
-  /** Which file in that artifact this report read. */
-  fileName?: string;
+  /**
+   * Which files in that artifact this report read, in run order. A GitHub
+   * artifact has one URL for the whole upload — there is no per-file link to
+   * give — so naming every file is as close to "link them all" as the platform
+   * allows, and it beats naming only the first.
+   */
+  fileNames?: readonly string[];
   /**
    * Warn-only lanes and the state each asserted. Not derivable from `summary`:
    * these lanes exit 0, so the artifact cannot tell one carrying warnings from
@@ -538,15 +560,20 @@ export interface OverviewContext {
 export function artifactLink(
   context: OverviewContext,
 ): { markdown: string; line: string } | undefined {
-  const { artifactUrl, fileName } = context;
+  const { artifactUrl, fileNames } = context;
   if (artifactUrl === undefined || !artifactUrl.startsWith('https://')) {
     return undefined;
   }
   if (/[\s<>]/.test(artifactUrl)) return undefined;
+  const names = fileNames ?? [];
   const which =
-    fileName === undefined ? '' : ` (${inlineCode(cell(fileName))})`;
+    names.length === 0
+      ? ''
+      : ` (${names.map((name) => inlineCode(cell(name))).join(', ')})`;
+  const what =
+    names.length > 1 ? 'the untruncated runs' : 'the untruncated run';
   return {
-    markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — the untruncated run, downloadable from this run's artifacts.`,
+    markdown: `[Full \`--summarize\` JSON](<${artifactUrl}>)${which} — ${what}, downloadable from this run's artifacts.`,
     line: `   run summary json: ${artifactUrl}`,
   };
 }
@@ -574,12 +601,24 @@ function overviewNotes(
  * above the failure detail, because "16 of 158 ran" is the context for
  * whichever one of them broke.
  */
+/**
+ * The step-summary section heading. Plural: the section covers the pipeline —
+ * every turbo run the job made — not one invocation of turbo.
+ */
+const SESSION_HEADING = '## Turbo runs summary';
+
+/** A run, plus the `.turbo/runs` file it was read from. */
+export interface SessionRun {
+  summary: RunSummary;
+  fileName?: string;
+}
+
 export function overviewMarkdown(
   summary: RunSummary,
   context: OverviewContext = {},
 ): string {
   return `${[
-    '## Turbo run summary',
+    SESSION_HEADING,
     '',
     ...runBlockMarkdown(summary, context.onActions ?? false),
     ...footerMarkdown(context),
@@ -673,20 +712,68 @@ function footerMarkdown(context: OverviewContext): string[] {
  * line each and say so out loud rather than being silently absent.
  */
 export function sessionMarkdown(
-  runs: readonly RunSummary[],
+  runs: readonly SessionRun[],
   context: OverviewContext = {},
 ): string {
   const onActions = context.onActions ?? false;
-  const out: string[] = ['## Turbo run summary', ''];
-  if (runs.length > 1) {
-    out.push(
-      `${runs.length} turbo runs in this job, in the order they ran.`,
-      '',
-    );
+  const out: string[] = [SESSION_HEADING, ''];
+  if (runs.length > 1) out.push(...pipelineIndex(runs));
+  // A rule between blocks: three runs of tables and lists run together
+  // otherwise, and the reader is scanning for which one is theirs.
+  const blocks = runs.map(({ summary }) =>
+    runBlockMarkdown(summary, onActions),
+  );
+  for (const [at, block] of blocks.entries()) {
+    if (at > 0) out.push('---', '');
+    out.push(...block);
   }
-  for (const run of runs) out.push(...runBlockMarkdown(run, onActions));
   out.push(...footerMarkdown(context));
   return `${out.join('\n')}\n`;
+}
+
+/**
+ * The whole pipeline in one table: did this job succeed, and if not, which run
+ * broke. Everything below it is detail for whichever row the reader picked, so
+ * this leads — and it is the only place the summary JSON filenames appear
+ * alongside the run each belongs to.
+ */
+/**
+ * The index is scanned, not read: the e2e run names all five suites plus its
+ * flags and would otherwise be a 120-character cell that buries the ✅ beside
+ * it. The full command stays on the run's own headline below.
+ */
+const INDEX_COMMAND_CHARS = 56;
+
+function elide(text: string, max: number): string {
+  return text.length <= max ? text : `${text.slice(0, max - 1).trimEnd()}…`;
+}
+
+function pipelineIndex(runs: readonly SessionRun[]): string[] {
+  const failed = runs.filter(({ summary }) => !runSucceeded(summary));
+  const verdict =
+    failed.length === 0
+      ? `**All ${runs.length} turbo runs succeeded.**`
+      : `**${failed.length} of ${runs.length} turbo runs failed** — ${failed
+          .map(({ summary }) =>
+            inlineCode(
+              cell(elide(summary.execution.command, INDEX_COMMAND_CHARS)),
+            ),
+          )
+          .join(', ')}.`;
+  const out = [
+    verdict,
+    '',
+    '| | Run | Tasks | Time | Summary |',
+    '| --- | --- | ---: | ---: | --- |',
+  ];
+  for (const { summary, fileName } of runs) {
+    const { command, attempted, startTime, endTime } = summary.execution;
+    out.push(
+      `| ${runMark(summary)} | ${inlineCode(cell(elide(command, INDEX_COMMAND_CHARS)))} | ${attempted} | ${humanDuration(endTime - startTime)} | ${fileName === undefined ? '—' : inlineCode(cell(fileName))} |`,
+    );
+  }
+  out.push('');
+  return out;
 }
 
 /** The stdout twin of `overviewMarkdown`, kept to a handful of lines: on a
@@ -707,7 +794,7 @@ function runBlockLines(summary: RunSummary, onActions: boolean): string[] {
   const { attempted, cached, success, failed, startTime, endTime } =
     summary.execution;
   const lines = [
-    `── ${summary.execution.command} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, ${humanDuration(endTime - startTime)}`,
+    `── ${runMark(summary)} ${summary.execution.command} — ${attempted} attempted, ${cached} cached, ${success} succeeded, ${failed} failed, ${humanDuration(endTime - startTime)}`,
     `   cache: ${tally.hit} hit (${tally.remote} remote, ${tally.local} local), ${tally.miss} miss${savedClause(tally, ' saved')}`,
   ];
 
@@ -748,12 +835,17 @@ function footerLines(context: OverviewContext): string[] {
 
 /** The stdout twin of `sessionMarkdown`: one block per run, oldest first. */
 export function sessionLines(
-  runs: readonly RunSummary[],
+  runs: readonly SessionRun[],
   context: OverviewContext = {},
 ): string[] {
   const onActions = context.onActions ?? false;
   const lines: string[] = [];
-  for (const run of runs) lines.push(...runBlockLines(run, onActions));
+  for (const [at, { summary }] of runs.entries()) {
+    // One blank line between runs: the per-run lines are indented under their
+    // headline, and without a gap three runs read as one long block.
+    if (at > 0) lines.push('');
+    lines.push(...runBlockLines(summary, onActions));
+  }
   lines.push(...footerLines(context));
   return lines;
 }
@@ -828,9 +920,8 @@ function failureBody(summary: RunSummary, reports: FailureReport[]): string[] {
   return out;
 }
 
-/** One run and what `buildReports` found in it. */
-export interface RunReport {
-  summary: RunSummary;
+/** One run, its source file, and what `buildReports` found in it. */
+export interface RunReport extends SessionRun {
   reports: FailureReport[];
 }
 

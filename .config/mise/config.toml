@@ -249,7 +249,14 @@ run = [
 # run is indistinguishable from one that never happened.
 #
 # --continue so one failing suite still lets the other four report, matching the
-# concurrently-based runner this replaced; turbo still exits non-zero.
+# concurrently-based runner this replaced; turbo still exits non-zero. Without
+# it a flake in the first suite to fail cancels the rest, and turbo omits
+# cancelled tasks from the summary — so the report could not say whether the
+# other four passed, which is the question the split exists to answer.
+#
+# =dependencies-successful, not the bare flag: bare --continue means `always`,
+# which would run all five suites even when the build they depend on failed,
+# turning one build error into five Cypress failures.
 #
 # env: DOCS_DEV_PORT (the [env] declaration above), WRANGLER_LOG and CYPRESS_*
 # reach Cypress through the tasks' passThroughEnv.
@@ -265,7 +272,7 @@ run = [
   """start-server-and-test \
   "pnpm --filter sample-app-lit-e2e run docs:start-server" \
   "http://localhost:${DOCS_DEV_PORT:?}/app/|http://localhost:${DOCS_DEV_PORT:?}/app-mobx/" \
-  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue --ui=stream --log-order=stream --summarize"""",
+  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue=dependencies-successful --ui=stream --log-order=stream --summarize"""",
 ]
 
 [tasks.test_e2e.env]
