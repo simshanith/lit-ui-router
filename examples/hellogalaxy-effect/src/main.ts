@@ -664,15 +664,9 @@ export class FiberLogComponent extends LitElement {
     readonly string[]
   >(this, (value) => value, { ref: (plugin) => plugin.log });
 
-  // <ui-view> rebuilds its routed element on every update (#723), so a
-  // synchronous layout read here can land mid-transition, measure the empty
-  // rebuilt view and let the browser clamp the page scroll. Defer to a frame.
   updated() {
     const list = this.renderRoot.querySelector('ol');
-    if (list)
-      requestAnimationFrame(() => {
-        list.scrollTop = list.scrollHeight;
-      });
+    if (list) list.scrollTop = list.scrollHeight;
   }
 
   render() {
