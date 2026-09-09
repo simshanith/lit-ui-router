@@ -10,9 +10,7 @@
 // The SDK is imported lazily so the pure half of this module costs nothing:
 // `isRootMember`, `isPublishable` and the `Member` type are the whole of what
 // several consumers want, and they don't load ~100ms of pnpm internals to get
-// it. The root path itself is not here at all — it is arithmetic, needs no
-// install, and lives in @tools/bootstrap so that consumers wanting only the
-// path need not depend on the SDK.
+// it.
 
 import { relative } from 'node:path';
 

@@ -3,13 +3,13 @@
 // command: the dashboard holds one value for every branch, so the steps live
 // here (see www/DEPLOY.md).
 //
-// Runs under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own
-// install step is off, so installing is this script's job. That is before
-// `pnpm install`, so no runtime import here may name a workspace package:
-// node_modules does not exist yet. The one non-builtin runtime import is
-// relative and resolves without it — @tools/bootstrap is a zero-dependency
-// package, so resolution never consults node_modules. Type imports are erased
-// before execution, so they name the package instead.
+// Runs under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own install step is off,
+// so installing is this script's job. That is before `pnpm install`, so no
+// runtime import here may name a workspace package: node_modules does not exist
+// yet. The one non-builtin runtime import is relative and resolves without it —
+// @tools/bootstrap is a zero-dependency package, so resolution never consults
+// node_modules. Type imports are erased before execution, so they name the
+// package instead.
 //
 // The image has node and npm; this script installs pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
@@ -85,10 +85,8 @@ const main = (): void => {
   }).trim();
 
   // The root is derived, not inherited: turbo resolves its plan from the cwd it
-  // is spawned in, and a narrowed plan is silently green rather than an error
-  // (a run from a package builds that package's tasks and reports success).
-  // Cloudflare does run this from the root today, so nothing about the dashboard
-  // is load-bearing here — which is the point of not depending on it.
+  // is spawned in, and a narrowed plan is silently green rather than an error —
+  // a run from a package builds that package's tasks and reports success.
   for (const [command, args] of buildSteps(workspaceRoot, `${npmPrefix}/bin`)) {
     execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
