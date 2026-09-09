@@ -9,6 +9,7 @@ import {
   inputPath,
   narrowToGenerated,
   packageFiles,
+  repoIgnored,
   unhashedFiles,
   untrackedInputs,
 } from './task-inputs.core.ts';
@@ -188,6 +189,42 @@ describe('auditTaskInputs', () => {
       audit.failures.map(({ taskId }) => taskId),
       ['a-pkg#test', 'z-pkg#test'],
     );
+  });
+});
+
+describe('repoIgnored', () => {
+  const tracked = new Set(['.gitignore', 'www/.gitignore']);
+
+  it('keeps a verdict from a tracked ignore file', () => {
+    assert.deepEqual(
+      [
+        ...repoIgnored(
+          '.gitignore:8:node_modules\tpkg/node_modules/a.js\n' +
+            'www/.gitignore:2:.temp\twww/.temp/b.js',
+          tracked,
+        ),
+      ],
+      ['pkg/node_modules/a.js', 'www/.temp/b.js'],
+    );
+  });
+
+  it('drops a verdict only this machine would reach', () => {
+    // a global core.excludesFile or info/exclude is absent in CI, so trusting
+    // it would fail the lane locally and pass it there
+    assert.deepEqual(
+      [
+        ...repoIgnored(
+          '/home/dev/.gitignore:32:.idea\tpkg/.idea/workspace.xml\n' +
+            '/repo/.git/info/exclude:4:scratch\tpkg/scratch.ts',
+          tracked,
+        ),
+      ],
+      [],
+    );
+  });
+
+  it('ignores the empty trailing line', () => {
+    assert.deepEqual([...repoIgnored('', tracked)], []);
   });
 });
 

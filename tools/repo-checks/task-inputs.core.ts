@@ -159,6 +159,28 @@ export function formatFailure({ taskId, missing }: InputsFailure): string {
 }
 
 /**
+ * The paths in `git check-ignore -v` output whose verdict came from a rule CI
+ * shares. A match sourced from a global `core.excludesFile` or from
+ * `info/exclude` holds only on the machine configured that way, so trusting one
+ * would fail a lane locally and pass it in CI; a tracked `.gitignore` is the
+ * only source every checkout has.
+ */
+export function repoIgnored(
+  verbose: string,
+  tracked: ReadonlySet<string>,
+): Set<string> {
+  const ignored = new Set<string>();
+  for (const line of verbose.split('\n')) {
+    // <source>:<line>:<pattern>\t<path>
+    const tab = line.indexOf('\t');
+    if (tab < 1) continue;
+    const source = line.slice(0, tab).split(':')[0] ?? '';
+    if (tracked.has(source)) ignored.add(line.slice(tab + 1));
+  }
+  return ignored;
+}
+
+/**
  * Over-hash reports cut down to files the repo actually ignores. An untracked
  * file that is *not* ignored is either the author's work in progress — never a
  * failure — or a generated tree missing from the ignore rules, which is a bug

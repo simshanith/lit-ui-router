@@ -5,7 +5,9 @@
 // and the same input maps are most of the `--dry-run=json` the graph guards
 // parse. The two halves fence each other — a negation wide enough to drop a
 // tracked file trips the first audit. Only ignored files count as generated,
-// so an unstaged new source file never fails the lane.
+// so an unstaged new source file never fails the lane, and only a tracked
+// .gitignore counts as an ignore rule, so no machine's global excludes can
+// reach a verdict CI would not.
 import { defaultExec } from '@tools/shared/exec.ts';
 import {
   auditTaskInputs,
@@ -14,6 +16,7 @@ import {
   type InputsAllowance,
   type InputsExemption,
   narrowToGenerated,
+  repoIgnored,
 } from './task-inputs.core.ts';
 import { plannedTasks } from './turbo.ts';
 import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
@@ -60,18 +63,26 @@ const ALLOWED: InputsAllowance[] = [
 ];
 
 /**
- * Which of `files` the repo's ignore rules cover. Chunked because the suspect
- * list runs to tens of thousands before a lane is fixed, well past the argv
- * limit; check-ignore exits 1 when it matches nothing, which is an answer, not
- * a failure.
+ * Which of `files` the repo's own ignore rules cover. Chunked because the
+ * suspect list runs to tens of thousands before a lane is fixed, well past the
+ * argv limit; check-ignore exits 1 when it matches nothing, which is an answer,
+ * not a failure. `-v` names the rule behind each verdict so `repoIgnored` can
+ * drop the ones only this machine would reach.
  */
-async function ignoredFiles(files: readonly string[]): Promise<Set<string>> {
+async function ignoredFiles(
+  files: readonly string[],
+  tracked: ReadonlySet<string>,
+): Promise<Set<string>> {
   const ignored = new Set<string>();
   for (let at = 0; at < files.length; at += 500) {
     const batch = files.slice(at, at + 500);
-    const read = await defaultExec('git', ['check-ignore', '--', ...batch], {
-      cwd: workspaceRoot,
-    }).catch((error: unknown) => {
+    const read = await defaultExec(
+      'git',
+      ['check-ignore', '-v', '--', ...batch],
+      {
+        cwd: workspaceRoot,
+      },
+    ).catch((error: unknown) => {
       if (
         typeof error === 'object' &&
         error !== null &&
@@ -83,8 +94,8 @@ async function ignoredFiles(files: readonly string[]): Promise<Set<string>> {
       }
       throw error;
     });
-    for (const file of read.stdout.split('\n')) {
-      if (file !== '') ignored.add(file);
+    for (const file of repoIgnored(read.stdout, tracked)) {
+      ignored.add(file);
     }
   }
   return ignored;
@@ -101,6 +112,7 @@ const { stdout } = await defaultExec('git', ['ls-files', '-z'], {
   cwd: workspaceRoot,
 });
 const tracked = stdout.split('\0').filter((file) => file !== '');
+const trackedFiles = new Set(tracked);
 
 const planned = await plannedTasks(names);
 const { failures, overhashing, stale, audited } = auditTaskInputs(
@@ -120,9 +132,10 @@ for (const failure of failures) {
 }
 const generated = narrowToGenerated(
   overhashing,
-  await ignoredFiles([
-    ...new Set(overhashing.flatMap(({ untracked }) => untracked)),
-  ]),
+  await ignoredFiles(
+    [...new Set(overhashing.flatMap(({ untracked }) => untracked))],
+    trackedFiles,
+  ),
 );
 for (const over of generated) {
   console.error(`${CHECK}: ${formatOverhash(over)}`);
