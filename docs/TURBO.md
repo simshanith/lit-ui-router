@@ -102,7 +102,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `@tools/dts-backtest#test:matrix` runs the full TS version matrix; PRs run only the current-TS `test` leg.
 - `build` composes the two own-package passes: `build:js` (JS) and `build:types` (d.ts, self-chaining via `^build:types`).
 - `check:bundle` holds the bundle invariants (size budgets, deps-none probes); `codecov:bundle` uploads bundle analysis, uncached.
-- `dev`, `e2e`, and `docs` are persistent, uncached tasks.
+- `dev`, `e2e`, and `docs` are persistent, uncached tasks. `e2e` is `cypress open`, the interactive lane — not the headless suites, which are the cached `test:e2e:*` tasks under `//:test_e2e`.
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
 **Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
@@ -322,6 +322,12 @@ E2E tasks (`e2e`, `dev`, `docs`) are `persistent: true` and don't cache:
 ```
 
 Run these separately from cached tasks.
+
+`e2e` here is `cypress open`, the interactive lane. The headless suites are the
+five `test:e2e:*` tasks — cached, not persistent, and reached through the
+`//:test_e2e` mise task, which owns the dev server because turbo has no
+lifecycle for one. If those hang, look at the server or the suite, not at a
+persistent task.
 
 ### Root-Level Tasks Not Running
 
