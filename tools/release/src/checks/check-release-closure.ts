@@ -8,11 +8,11 @@ import {
   missingFromClosure,
   selectedNames,
 } from './check-release-closure.core.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   isPublishable,
   loadWorkspace,
   type Member,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-release-closure';

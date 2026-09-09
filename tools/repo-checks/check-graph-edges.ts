@@ -14,11 +14,11 @@ import {
   plannedLanes,
   resolvedTaskDeps,
 } from './turbo.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   isPublishable,
   loadWorkspace,
   type Member,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-graph-edges';

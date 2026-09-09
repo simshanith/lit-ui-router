@@ -3,7 +3,7 @@
 // command: the dashboard holds one value for every branch, so the steps live
 // here (see www/DEPLOY.md).
 //
-// Runs from the repo root under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own
+// Runs under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own
 // install step is off, so installing is this script's job. That is before
 // `pnpm install`, so no runtime import here may name a workspace package:
 // node_modules does not exist yet. The one non-builtin runtime import is
@@ -20,6 +20,7 @@ import { execFileSync } from 'node:child_process';
 
 import type { PackageManifest } from '@tools/bootstrap/types.ts';
 import { requireManifest } from '../bootstrap/src/manifest.ts';
+import { workspaceRoot } from '../bootstrap/src/root.ts';
 
 // Pins the relative import to the package's exported type, so the workspace
 // dependency is what typecheck resolves rather than a name nothing reads.
@@ -83,8 +84,13 @@ const main = (): void => {
     encoding: 'utf8',
   }).trim();
 
-  for (const [command, args] of buildSteps(process.cwd(), `${npmPrefix}/bin`)) {
-    execFileSync(command, [...args], { stdio: 'inherit' });
+  // The root is derived, not inherited: turbo resolves its plan from the cwd it
+  // is spawned in, and a narrowed plan is silently green rather than an error
+  // (a run from a package builds that package's tasks and reports success).
+  // Cloudflare does run this from the root today, so nothing about the dashboard
+  // is load-bearing here — which is the point of not depending on it.
+  for (const [command, args] of buildSteps(workspaceRoot, `${npmPrefix}/bin`)) {
+    execFileSync(command, [...args], { stdio: 'inherit', cwd: workspaceRoot });
   }
 };
 

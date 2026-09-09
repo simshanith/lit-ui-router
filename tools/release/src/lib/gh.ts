@@ -8,7 +8,7 @@
 import type { Exec } from '@tools/shared/exec.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import { withRetry } from './retry.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 /** argv for `gh pr create`, verbatim from bump-version.yml's Create PR step. */
 export function prCreateArgs(base: string, head: string): string[] {

@@ -28,11 +28,8 @@ import {
   type PackageExportsCheck,
   publintGatingMessages,
 } from './check-exports.core.ts';
-import {
-  isPublishable,
-  loadWorkspace,
-  workspaceRoot,
-} from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 /** Run attw + publint over one package's publish-shape tarball. */
 async function checkExports(

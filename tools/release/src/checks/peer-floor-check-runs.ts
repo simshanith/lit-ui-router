@@ -10,7 +10,8 @@
 
 import { defaultExec } from '@tools/shared/exec.ts';
 import { ensureGh } from '../lib/gh.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { loadWorkspace } from '@tools/shared/workspace.ts';
 
 import {
   peerFloorMembers,

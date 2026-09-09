@@ -20,7 +20,7 @@ import {
 import { group, runMain, setOutput } from '@tools/shared/gha.ts';
 import { requireEnv } from '../lib/env.core.ts';
 import { packPublishTarball } from './pack-staged.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE_NAME');

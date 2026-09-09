@@ -7,10 +7,10 @@ import { join } from 'node:path';
 
 import { parsePatch } from 'diff';
 
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   loadWorkspaceManifest,
   selectPatchedDependencies,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 const patchedDependencies = await selectPatchedDependencies(

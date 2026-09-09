@@ -30,7 +30,7 @@ import {
 } from './release-it.core.ts';
 import { releaseItOutput, releaseItRun } from './release-it.ts';
 import { changelogFrom } from './release-prev-tag.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');

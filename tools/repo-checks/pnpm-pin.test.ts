@@ -12,7 +12,7 @@ import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 // `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version
 // ahead of it is what the other files have to match.
