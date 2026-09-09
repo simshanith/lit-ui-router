@@ -3,6 +3,9 @@
   "version": "0.0.0",
   "private": true,
   "type": "module",
+  "exports": {
+    "./embeds": "./embeds.ts"
+  },
   "scripts": {
     "build:embeds": "node build-embeds.ts",
     "example:install:design-system-links": "npm ci --prefix design-system-links",
@@ -18,6 +21,7 @@
     "lint": "concurrently --prefix-colors auto \"npm:lint:oxlint\" \"npm:lint:example:*\"",
     "lint:example:lint-eslint": "npm run lint --prefix lint-eslint",
     "lint:oxlint": "oxlint .",
+    "test": "node --test \"*.test.ts\"",
     "typecheck": "concurrently --prefix-colors auto \"npm:typecheck:*\"",
     "typecheck:design-system-links": "tsc -p design-system-links",
     "typecheck:hellogalaxy": "tsc -p hellogalaxy",

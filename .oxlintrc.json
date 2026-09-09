@@ -345,6 +345,7 @@
     {
       "files": [
         "scripts/**/*.test.ts",
+        "examples/*.test.ts",
         "tools/bootstrap/**/*.test.ts",
         "tools/build_and_test/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
