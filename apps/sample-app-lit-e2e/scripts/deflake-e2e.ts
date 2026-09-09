@@ -8,7 +8,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 //   DEFLAKE_RUNS  attempts, clamped to 1-10 (non-numeric/empty -> 5)
 //   DEFLAKE_PORT  dev-server port to verify free between attempts
 //                 (defaults to DOCS_DEV_PORT, declared in mise config)
-// Attempts run OUTSIDE turbo so a cached test task can't replay attempt 1.
+// Each attempt is a full `mise run test_e2e` — dev server started and torn
+// down around one turbo run of the five suites. TURBO_FORCE is set per
+// attempt because those suites ARE cached tasks now: without it attempt 2
+// onwards would replay attempt 1's log and every sample would agree.
 
 // The workers-sdk#14926 crash surfaces as the client failing to reach the dev
 // server. Exported so measure-deflake.ts can count the same signature.
@@ -109,8 +112,9 @@ let inflight: ChildProcess | undefined;
 
 async function runAttempt(logFile: string): Promise<number> {
   const log = createWriteStream(logFile);
-  const child = spawn('pnpm', ['--filter', 'sample-app-lit-e2e', 'test'], {
+  const child = spawn('mise', ['run', 'test_e2e'], {
     stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, TURBO_FORCE: '1' },
   });
   inflight = child;
   child.stdout.pipe(log);

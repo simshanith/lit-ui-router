@@ -41,8 +41,8 @@ mise run ci_main
 # Run unit tests only
 pnpm --filter lit-ui-router test
 
-# Run E2E tests
-pnpm --filter sample-app-lit-e2e test
+# Run E2E tests (starts the dev server, then the five suites through turbo)
+mise run test_e2e
 ```
 
 `mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.

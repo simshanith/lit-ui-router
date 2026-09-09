@@ -11,15 +11,13 @@
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
-    "test": "start-server-and-test docs:start-server \"http://localhost:${DOCS_DEV_PORT:?}/app/|http://localhost:${DOCS_DEV_PORT:?}/app-mobx/\" test:cypress:all",
-    "test:cypress": "cypress run",
-    "test:cypress:all": "node ./scripts/run-cypress-suites.ts",
-    "test:cypress:docs": "cypress run --config-file cypress.docs.config.ts",
-    "test:cypress:hash": "cypress run --expose LOCATION_PLUGIN=hash --config baseUrl=http://localhost:${DOCS_DEV_PORT:?}/app-hash/,videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
-    "test:cypress:mobx": "cypress run --config baseUrl=http://localhost:${DOCS_DEV_PORT:?}/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
-    "test:cypress:pushstate": "cypress run --expose LOCATION_PLUGIN=pushState --config videosFolder=cypress/videos-pushstate,screenshotsFolder=cypress/screenshots-pushstate",
-    "test:hash": "start-server-and-test docs:start-server http://localhost:${DOCS_DEV_PORT:?}/app/ test:cypress:hash",
-    "test:pushstate": "start-server-and-test docs:start-server http://localhost:${DOCS_DEV_PORT:?}/app/ test:cypress:pushstate"
+    "test:e2e:docs": "cypress run --config-file cypress.docs.config.ts",
+    "test:e2e:hash": "cypress run --expose LOCATION_PLUGIN=hash --config baseUrl=http://localhost:${DOCS_DEV_PORT:?}/app-hash/,videosFolder=cypress/videos-hash,screenshotsFolder=cypress/screenshots-hash",
+    "test:e2e:mobx": "cypress run --config baseUrl=http://localhost:${DOCS_DEV_PORT:?}/app-mobx/,videosFolder=cypress/videos-mobx,screenshotsFolder=cypress/screenshots-mobx",
+    "test:e2e:pushstate": "cypress run --expose LOCATION_PLUGIN=pushState --config videosFolder=cypress/videos-pushstate,screenshotsFolder=cypress/screenshots-pushstate",
+    "test:e2e:vanilla": "cypress run",
+    "test:hash": "start-server-and-test docs:start-server http://localhost:${DOCS_DEV_PORT:?}/app/ test:e2e:hash",
+    "test:pushstate": "start-server-and-test docs:start-server http://localhost:${DOCS_DEV_PORT:?}/app/ test:e2e:pushstate"
   },
   "dependencies": {
     "@www/lit-ui-router.dev": "workspace:*"
@@ -27,7 +25,6 @@
   "devDependencies": {
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
-    "concurrently": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
