@@ -11,6 +11,7 @@ const EMBEDDED_EXAMPLES = [
   'hellosolarsystem',
   'hellosolarsystem-mobx',
   'hellogalaxy',
+  'hellogalaxy-effect',
   'design-system-links',
   'lint-eslint',
 ];

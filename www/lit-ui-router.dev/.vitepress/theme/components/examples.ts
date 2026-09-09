@@ -26,6 +26,13 @@ export const EXAMPLES = {
     height: '920px',
     file: 'src/main.ts',
   },
+  'hellogalaxy-effect': {
+    title: 'Hello Galaxy (Effect)',
+    // Tallest at the astronaut route, whose <model-viewer> mounts a frame
+    // later than hellogalaxy's — re-measure over several runs, not one.
+    height: '1120px',
+    file: 'src/main.ts',
+  },
   'design-system-links': {
     title: 'Design System Links',
     height: '520px',
