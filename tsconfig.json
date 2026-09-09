@@ -9,6 +9,8 @@
   "compilerOptions": {
     "noEmit": true,
     "allowImportingTsExtensions": true,
+    // examples/embeds.test-d.ts reads the example scripts out of package.json
+    "resolveJsonModule": true,
     // Node can only strip types, not transform them: no enums, no namespaces,
     // no parameter properties.
     "erasableSyntaxOnly": true,
@@ -38,6 +40,9 @@
     ".commitlintrc.ts",
     "eslint.config.ts",
     "examples/build-embeds.ts",
+    "examples/embeds.test-d.ts",
+    "examples/embeds.test.ts",
+    "examples/embeds.ts",
     "tools/dts-backtest/run.ts",
     "tools/vue-check/bin.ts"
   ]

@@ -1,20 +1,11 @@
 import { createServerRouter } from 'ui-router-server';
 import { serverRouterPlugin } from 'ui-router-server/vite';
 import { mounts } from 'sample-app-routes';
-import { defineConfig, Plugin } from 'vite';
-import { viteStaticCopy } from 'vite-plugin-static-copy';
-
 // Examples embedded same-origin at /examples/<name>/; built by
 // `examples#build:embeds` (hash routing, so no SPA fallback needed).
-const EMBEDDED_EXAMPLES = [
-  'helloworld',
-  'hellosolarsystem',
-  'hellosolarsystem-mobx',
-  'hellogalaxy',
-  'hellogalaxy-effect',
-  'design-system-links',
-  'lint-eslint',
-];
+import { EXAMPLE_NAMES } from 'examples/embeds';
+import { defineConfig, Plugin } from 'vite';
+import { viteStaticCopy } from 'vite-plugin-static-copy';
 
 // The mount shells as the dev server serves them. Production (worker/)
 // serves each at its bare mount via Cloudflare's html_handling; the dev server
@@ -154,7 +145,7 @@ export default defineConfig({
           rename: { stripBase: 5 },
         },
         // stripBase ignores the leading ../, so 3 = examples/<name>/dist.
-        ...EMBEDDED_EXAMPLES.map((name) => ({
+        ...EXAMPLE_NAMES.map((name) => ({
           src: `../../examples/${name}/dist/**`,
           dest: `examples/${name}`,
           rename: { stripBase: 3 },

@@ -1679,6 +1679,9 @@ importers:
       '@spectrum-web-components/icons-workflow':
         specifier: 'catalog:'
         version: 1.12.2
+      examples:
+        specifier: workspace:*
+        version: link:../../examples
       sample-app-lit-mobx:
         specifier: workspace:*
         version: link:../../apps/sample-app-lit-mobx

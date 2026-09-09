@@ -23,6 +23,7 @@
   },
   "dependencies": {
     "@spectrum-web-components/icons-workflow": "catalog:",
+    "examples": "workspace:*",
     "sample-app-lit-mobx": "workspace:*",
     "sample-app-lit-vanilla": "workspace:*",
     "sample-app-routes": "workspace:*",

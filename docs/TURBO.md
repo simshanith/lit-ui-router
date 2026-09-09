@@ -105,7 +105,7 @@ Exceptions: `www/lit-ui-router.dev/api/**` (generated VitePress content, not a b
 - `dev`, `e2e`, and `docs` are persistent, uncached tasks.
 - Per-task `inputs`/`outputs` live in `turbo.json` itself — see [Cache Control](#cache-control).
 
-**Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `www/lit-ui-router.dev/.vitepress/theme/components/examples.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
+**Deliberately outside both ci graphs:** `@www/lit-ui-router.dev#check:embeds` measures every built example in headless Chromium and checks the heights `examples/embeds.ts` reserves for their embeds. Text wraps at engine-specific metrics, so the measurement is host-dependent — a Linux runner and a macOS laptop do not have to agree — and gating on it would make the docs' reserved space a property of whoever ran it. Run it locally when an example's content changes.
 
 That host-dependence is also why the task is uncached: the Chromium build and the font set decide the numbers, neither is nameable in `inputs`, and a cache hit would replay a measurement the current machine never took. Being uncacheable, it is not audited by `check-task-inputs` either — a task turbo will not hash-and-skip has no stale-cache failure mode.
 
