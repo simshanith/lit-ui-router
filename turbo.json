@@ -117,9 +117,11 @@
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
       // explicit globs hash gitignored files too, and oxlint reads none of
-      // these: dist/ and .cache/ mutate mid-graph (build:js, pack:all
-      // staging), coverage/ and .turbo/ are written by sibling lanes, and
-      // examples/* carry their own un-hoisted npm installs
+      // these: dist/, .cache/ and .probe-scratch/ mutate mid-graph (build:js,
+      // pack:all staging, dts-backtest#test writing and deleting a probe under
+      // its own package while this lane hashes), coverage/ and .turbo/ are
+      // written by sibling lanes, and examples/* carry their own un-hoisted
+      // npm installs
       "inputs": [
         "**/*.ts",
         "**/*.js",
@@ -127,6 +129,7 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/.turbo/**",
+        "!**/.probe-scratch/**",
         "!.cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
@@ -398,6 +401,7 @@
         "!**/dist/**",
         "!**/coverage/**",
         "!**/.turbo/**",
+        "!**/.probe-scratch/**",
         "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
