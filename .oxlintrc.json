@@ -473,7 +473,8 @@
             "patterns": [
               {
                 "group": ["*", "!node:*", "!node:*/*", "!../bootstrap/src/*"],
-                "message": "runs under SKIP_DEPENDENCY_INSTALL=1, before `pnpm install`, so every specifier has to resolve with no node_modules: node builtins plus the relative paths listed here. A bare specifier has nothing to resolve against. Same-package siblings are excluded too — this rule is per-file and cannot see what a sibling imports (workers-builds-triggers.core.ts pulls valibot and jsonc-parser). @tools/bootstrap is exempt because its own zero-dependency guard makes it node builtins all the way down; see www/DEPLOY.md."
+                "allowTypeImports": true,
+                "message": "runs under SKIP_DEPENDENCY_INSTALL=1, before `pnpm install`, so every specifier has to resolve with no node_modules: node builtins plus the relative paths listed here. A bare specifier has nothing to resolve against; type-only imports are exempt because they are erased before execution. Same-package siblings are excluded too — this rule is per-file and cannot see what a sibling imports (workers-builds-triggers.core.ts pulls valibot and jsonc-parser). @tools/bootstrap is exempt because its own zero-dependency guard makes it node builtins all the way down; see www/DEPLOY.md."
               }
             ]
           }
