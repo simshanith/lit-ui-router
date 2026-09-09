@@ -264,7 +264,8 @@ plaintext only. Secrets, therefore, can never be committed here nor clobbered by
 ### Local Development
 
 Both forms bind `DOCS_DEV_PORT`, declared in mise's `[env]`, so run them in an
-activated shell or prefix with `mise exec --`.
+activated shell or prefix with `mise exec --`. Exporting `DOCS_DEV_PORT`
+yourself works too, and takes precedence over the mise default.
 
 With pnpm:
 
