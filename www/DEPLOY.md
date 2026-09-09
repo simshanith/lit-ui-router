@@ -67,9 +67,9 @@ divergence never reads as drift and never needs an `--apply` to test.
 `cloudflare-build.sh` is a two-line shim over
 [`cloudflare-build.ts`](../tools/workers-builds/cloudflare-build.ts), which holds the actual
 steps. The script runs **before** the install, so it cannot import a workspace package by
-name; its one non-builtin import is a relative reach into `tools/shared/src/manifest.ts`,
-which pulls only `node:fs`, `node:path` and a type-only sibling and so never consults
-`node_modules`. The shim keeps the path still: the pinned value is the same for every branch
+name; its one non-builtin import is a relative reach into
+[`@tools/bootstrap`](../tools/bootstrap), whose own lint rule holds it to node builtins and
+its own files, so resolution never consults `node_modules`. The shim keeps the path still: the pinned value is the same for every branch
 at once, so renaming it would break the preview build of every branch whose checkout does not
 carry the new name. Once every open branch carries the `.ts`, `build_command` can name it
 directly and the shim can go.
@@ -80,7 +80,8 @@ builtins plus an explicit list of relative paths. Bare specifiers are refused be
 resolves them at that point, and same-package siblings are refused because the rule is
 per-file and cannot see what a sibling imports — `workers-builds-triggers.core.ts` pulls
 `valibot` and `jsonc-parser`. Adding a relative import means adding it to that list, and it
-has to be a file whose own imports are node builtins all the way down.
+has to be a file whose own imports are node builtins all the way down — which for
+`@tools/bootstrap` is its package's own structural guarantee rather than a case-by-case read.
 
 The build image is Ubuntu with node and npm; the script installs pnpm, and `pnpm install`
 provides everything after that. There is no mise, so none of the repo's mise-managed tools —

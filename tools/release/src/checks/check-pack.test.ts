@@ -1,7 +1,7 @@
 import assert from 'node:assert/strict';
 import { describe, it } from 'node:test';
 
-import type { PackageManifest } from '@tools/shared/types.ts';
+import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
 import {
   findPackedManifestViolations,

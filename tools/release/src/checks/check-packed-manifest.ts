@@ -15,7 +15,7 @@ import {
   formatPackedManifestReport,
 } from './check-pack.core.ts';
 import { tarballManifest } from './tarball.ts';
-import type { PackageManifest } from '@tools/shared/types.ts';
+import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
 const [tarball, ...extra] = process.argv.slice(2);
 if (!tarball || extra.length > 0) {

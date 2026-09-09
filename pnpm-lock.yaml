@@ -1107,6 +1107,21 @@ importers:
         specifier: 'catalog:'
         version: 8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0)
 
+  tools/bootstrap:
+    devDependencies:
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.67.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.82.0(oxlint-tsgolint@7.0.2001)
+      typescript:
+        specifier: 'catalog:'
+        version: 7.0.2
+
   tools/build_and_test:
     devDependencies:
       '@codecov/bundle-analyzer':
@@ -1145,6 +1160,9 @@ importers:
 
   tools/bundle-probe:
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@tools/build_and_test':
         specifier: workspace:*
         version: link:../build_and_test
@@ -1172,6 +1190,9 @@ importers:
 
   tools/compat-guards:
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1456,6 +1477,9 @@ importers:
       '@pnpm/workspace.project-manifest-reader':
         specifier: 'catalog:'
         version: 1100.0.27(@pnpm/logger@1100.0.0)
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1501,6 +1525,9 @@ importers:
 
   tools/repo-checks:
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@tools/shared':
         specifier: workspace:*
         version: link:../shared
@@ -1537,6 +1564,9 @@ importers:
       '@pnpm/workspace.workspace-manifest-reader':
         specifier: 'catalog:'
         version: 1100.1.9
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -1622,9 +1652,9 @@ importers:
 
   tools/workers-builds:
     devDependencies:
-      '@tools/shared':
+      '@tools/bootstrap':
         specifier: workspace:*
-        version: link:../shared
+        version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3

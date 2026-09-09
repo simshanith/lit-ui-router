@@ -1,11 +1,11 @@
-// Type-level pin on how ./types.ts relates to @pnpm/types. There is no runtime
+// Type-level pin on how @tools/bootstrap/types.ts relates to @pnpm/types. There is no runtime
 // here and nothing to execute — `tsc --noEmit` IS the assertion, so this file
 // rides the package's existing `typecheck` task. The `.test-d.ts` suffix keeps
 // it out of `node --test "src/**/*.test.ts"`.
 //
 // Why pin it at all: tools/release hands pnpm-SDK manifests to helpers typed
 // with ours (release-pack.core.ts takes a ProjectManifest and imports
-// @tools/shared), so the assignability below is load-bearing. An expect-error
+// @tools/bootstrap), so the assignability below is load-bearing. An expect-error
 // directive that stops erroring fails this file, so pnpm narrowing OR widening
 // its types shows up here rather than at a call site. (Never let a prose line
 // start with the directive's name -- TS reads it as the real thing.)
@@ -16,7 +16,7 @@ import type {
   ProjectManifest,
 } from '@pnpm/types';
 
-import type { DependencyMap, PackageManifest } from './types.ts';
+import type { DependencyMap, PackageManifest } from '@tools/bootstrap/types.ts';
 
 /** Assignability probe: the call typechecks iff the argument satisfies T. */
 declare function accepts<T>(value: T): T;

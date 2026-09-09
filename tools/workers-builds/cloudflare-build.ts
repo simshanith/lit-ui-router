@@ -5,10 +5,11 @@
 //
 // Runs from the repo root under SKIP_DEPENDENCY_INSTALL=1 — Cloudflare's own
 // install step is off, so installing is this script's job. That is before
-// `pnpm install`, so nothing here may import a workspace package by name:
-// node_modules does not exist yet. The one non-builtin import is relative and
-// resolves without it — ../shared/src/manifest.ts imports only node:fs,
-// node:path and a type-only sibling, so resolution never consults node_modules.
+// `pnpm install`, so no runtime import here may name a workspace package:
+// node_modules does not exist yet. The one non-builtin runtime import is
+// relative and resolves without it — @tools/bootstrap is a zero-dependency
+// package, so resolution never consults node_modules. Type imports are erased
+// before execution, so they name the package instead.
 //
 // The image has node and npm; this script installs pnpm; everything past that
 // comes from `pnpm install`. It has no mise, so none of the repo's mise-managed
@@ -17,7 +18,12 @@
 // commands, all workspace binaries.
 import { execFileSync } from 'node:child_process';
 
-import { requireManifest } from '../shared/src/manifest.ts';
+import type { PackageManifest } from '@tools/bootstrap/types.ts';
+import { requireManifest } from '../bootstrap/src/manifest.ts';
+
+// Pins the relative import to the package's exported type, so the workspace
+// dependency is what typecheck resolves rather than a name nothing reads.
+requireManifest satisfies (dir: string) => PackageManifest;
 
 /** A command and its argv tail, run from the repo root. */
 export type Step = readonly [command: string, args: readonly string[]];

@@ -11,13 +11,15 @@
     "test": {
       // The root test task's src/** inputs would stale-cache this src-less
       // package; over-approximate instead. cloudflare-build.ts reaches into
-      // tools/shared by relative path — it runs before `pnpm install`, so it
-      // cannot name the package — and that source has to be in the hash.
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/shared/src/**"]
+      // tools/bootstrap by relative path — it runs before `pnpm install`, so it
+      // cannot name the package — and that source has to be in the hash. An
+      // explicit input is not gitignore-pruned, so the glob names src/ rather
+      // than the package root, which would hash its node_modules.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/bootstrap/src/**"]
     },
     "typecheck": {
       // same relative reach as `test` above
-      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/shared/src/**"]
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tools/bootstrap/src/**"]
     }
   }
 }
