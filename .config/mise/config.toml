@@ -210,14 +210,67 @@ run = 'turbo run "${usage_package_name?}#build"'
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
+# The e2e suites are a SECOND step, not part of turbo's ci graph: they need a
+# dev server, and turbo owns no server lifecycle (see test_e2e). Kept inside
+# this task rather than added as a workflow step so `mise run ci` remains the
+# one entry point that means "the PR gate" — a split across two steps would
+# leave a local `mise run ci` silently short of CI. Second, so a lint or
+# typecheck failure short-circuits the expensive lane.
 description = "Run the pull-request CI pipeline via turbo"
-run = "turbo run ci --ui=stream --log-order=stream --summarize"
+run = [
+  "turbo run ci --ui=stream --log-order=stream --summarize",
+  "mise run test_e2e",
+]
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
-run = "turbo run ci:main --ui=stream --log-order=stream --summarize"
+run = [
+  "turbo run ci:main --ui=stream --log-order=stream --summarize",
+  "mise run test_e2e",
+]
+
+[tasks.test_e2e]
+# The e2e umbrella. turbo schedules and caches the five Cypress suites; the dev
+# server they share is started around them by start-server-and-test, which is
+# the lifecycle primitive turbo lacks — a `with:` sidecar is started but never
+# reaped, so a non-persistent run that used one would hang.
+#
+# Only the SERVER leaves the graph. The suites stay first-class turbo tasks with
+# real cache keys, which is what makes a single-suite rerun cheap.
+#
+# Deliberately NOT --summarize: build-test-run.yml's turbo_summary step reports
+# the newest .turbo/runs/*.json, and it is placed before codecov_bundle so no
+# later run can displace the ci one. A summarizing run here would take that slot
+# and the step would report the e2e lane instead of the build.
+#
+# --continue so one failing suite still lets the other four report, matching the
+# concurrently-based runner this replaced; turbo still exits non-zero.
+#
+# env: DOCS_DEV_PORT (the [env] declaration above), WRANGLER_LOG and CYPRESS_*
+# reach Cypress through the tasks' passThroughEnv.
+# Explicit, not inherited: the inner `turbo run` must see the whole workspace,
+# and a task invoked from a package directory would otherwise hand it a
+# silently narrowed plan (deflake-e2e.ts calls this from the e2e app).
+dir = "{{config_root}}"
+description = "Run the Cypress e2e suites via turbo, around one shared dev server"
+run = [
+  # The suites' own dependsOn cannot start the server, so the site has to be
+  # built before start-server-and-test rather than during the inner run.
+  "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream",
+  """start-server-and-test \
+  "pnpm --filter sample-app-lit-e2e run docs:start-server" \
+  "http://localhost:${DOCS_DEV_PORT:?}/app/|http://localhost:${DOCS_DEV_PORT:?}/app-mobx/" \
+  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue --ui=stream --log-order=stream"""",
+]
+
+[tasks.test_e2e.env]
+# start-server-and-test is a devDependency of the e2e app, and pnpm's isolated
+# node_modules keeps it out of the root .bin. Put that package's bin dir on PATH
+# rather than running under `pnpm --filter … exec`, which would move cwd into the
+# package and hand the inner `turbo run` a narrowed plan.
+_.path = ["{{config_root}}/apps/sample-app-lit-e2e/node_modules/.bin"]
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

@@ -58,7 +58,9 @@ const { members } = await loadWorkspace(workspaceRoot);
 // rejects an invalid edge — `dependsOn` onto a persistent task — for the whole
 // run before any task starts, but it validates only the subgraph a run names,
 // so a lane CI never invokes is checked nowhere: `turbo run e2e` was unusable
-// until #695 because CI drives Cypress through the test:cypress* scripts.
+// until #695 because CI never named it. The test:e2e:* suites are in this set
+// too — CI reaches them through the //:test_e2e mise umbrella, which starts
+// their dev server, so no ci:* graph names them.
 // Derived rather than listed, so a lane added to turbo.json and not to CI joins
 // this set on its own instead of waiting for someone to remember it.
 

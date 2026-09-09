@@ -500,9 +500,6 @@ importers:
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
-      concurrently:
-        specifier: 'catalog:'
-        version: 10.0.5
       cypress:
         specifier: 'catalog:'
         version: 15.21.1

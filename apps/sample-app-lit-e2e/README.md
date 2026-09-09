@@ -7,12 +7,12 @@ published location strategy exercised.
 ## The full run
 
 ```bash
-pnpm --filter sample-app-lit-e2e test
+mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds both apps'
-builds), serves it with wrangler on `$DOCS_DEV_PORT`, and runs five Cypress suites
-concurrently (`test:cypress:all`):
+builds), serves it with wrangler on `$DOCS_DEV_PORT`, and runs five Cypress
+suites concurrently:
 
 | Suite       | Target        | Covers                                                                                                              |
 | ----------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -22,7 +22,21 @@ concurrently (`test:cypress:all`):
 | `hash`      | `/app/`       | vanilla app under the `hash` location plugin                                                                        |
 | `pushState` | `/app/`       | vanilla app under the `pushState` fallback                                                                          |
 
-The same run executes in CI via the `ci` turbo task.
+Each suite is its own turbo task (`test:e2e:<suite>`) with its own cache key,
+so rerunning one after a flake costs that suite alone rather than all five:
+
+```bash
+mise run test_e2e   # then, to redo just one:
+turbo run test:e2e:hash   # requires a server already on $DOCS_DEV_PORT
+```
+
+The server is deliberately outside the turbo graph. turbo has no lifecycle for
+one — a `with:` sidecar is started but never reaped — so `start-server-and-test`
+owns starting it, waiting on readiness, and tearing it down even on failure.
+Only the server leaves the graph; the suites stay first-class cached tasks.
+
+The same run executes in CI: `mise run ci` runs the turbo graph and then this
+umbrella, so `test:e2e:*` appear in no `ci:*` turbo task.
 
 ## Location plugin suites
 
