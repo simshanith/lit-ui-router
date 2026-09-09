@@ -218,6 +218,7 @@ run = 'turbo run "${usage_package_name?}#build"'
 # typecheck failure short-circuits the expensive lane.
 description = "Run the pull-request CI pipeline via turbo"
 run = [
+  "mise run //tools/build_and_test:mark_session",
   "turbo run ci --ui=stream --log-order=stream --summarize",
   "mise run test_e2e",
 ]
@@ -227,6 +228,7 @@ run = [
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
 run = [
+  "mise run //tools/build_and_test:mark_session",
   "turbo run ci:main --ui=stream --log-order=stream --summarize",
   "mise run test_e2e",
 ]
@@ -240,10 +242,11 @@ run = [
 # Only the SERVER leaves the graph. The suites stay first-class turbo tasks with
 # real cache keys, which is what makes a single-suite rerun cheap.
 #
-# Deliberately NOT --summarize: build-test-run.yml's turbo_summary step reports
-# the newest .turbo/runs/*.json, and it is placed before codecov_bundle so no
-# later run can displace the ci one. A summarizing run here would take that slot
-# and the step would report the e2e lane instead of the build.
+# Both runs --summarize. The reporter reports every summary written since
+# `mark_session`, so these join the ci run rather than displacing it, which is
+# what the omission here used to buy. The build-filter run is fully cached
+# almost every time and says so in a line or two — cheap, and a silently absent
+# run is indistinguishable from one that never happened.
 #
 # --continue so one failing suite still lets the other four report, matching the
 # concurrently-based runner this replaced; turbo still exits non-zero.
@@ -258,11 +261,11 @@ description = "Run the Cypress e2e suites via turbo, around one shared dev serve
 run = [
   # The suites' own dependsOn cannot start the server, so the site has to be
   # built before start-server-and-test rather than during the inner run.
-  "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream",
+  "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize",
   """start-server-and-test \
   "pnpm --filter sample-app-lit-e2e run docs:start-server" \
   "http://localhost:${DOCS_DEV_PORT:?}/app/|http://localhost:${DOCS_DEV_PORT:?}/app-mobx/" \
-  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue --ui=stream --log-order=stream"""",
+  "turbo run test:e2e:docs test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue --ui=stream --log-order=stream --summarize"""",
 ]
 
 [tasks.test_e2e.env]

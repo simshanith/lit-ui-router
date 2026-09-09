@@ -25,6 +25,11 @@ import {
   parseRunSummary,
   remoteCacheAnomaly,
   savedClause,
+  sessionFailureMarkdown,
+  sessionHeadline,
+  sessionLines,
+  sessionMarkdown,
+  sessionStdoutReport,
   slowestTasks,
   stdoutReport,
   stripAnsi,
@@ -868,5 +873,142 @@ describe('warn-only lanes', () => {
 
   it('is absent entirely when no warn lane was passed in', () => {
     assert.ok(!overviewMarkdown(summary([task()])).includes('Warn-only lanes'));
+  });
+});
+
+describe('sessionMarkdown', () => {
+  const ci = () =>
+    summary([ran('lit-ui-router#build', 4_000)], 0, {
+      command: 'turbo run ci',
+      attempted: 1,
+      cached: 0,
+      success: 1,
+      failed: 0,
+    });
+  const docs = () =>
+    summary([hit({ taskId: '@www/lit-ui-router.dev#build' })], 0, {
+      command: 'turbo run build --filter=@www/lit-ui-router.dev',
+      attempted: 1,
+      cached: 1,
+      success: 0,
+      failed: 0,
+    });
+  const e2e = () =>
+    summary([ran('sample-app-lit-e2e#test:e2e:hash', 27_000)], 0, {
+      command: 'turbo run test:e2e:docs test:e2e:hash',
+      attempted: 1,
+      cached: 0,
+      success: 1,
+      failed: 0,
+    });
+
+  it('reports every run of the session, in the order given', () => {
+    const md = sessionMarkdown([ci(), docs(), e2e()]);
+    const at = (needle: string) => md.indexOf(needle);
+    assert.ok(at('turbo run ci') > 0, 'the graph run is reported');
+    assert.ok(
+      at('turbo run build --filter=@www/lit-ui-router.dev') >
+        at('turbo run ci'),
+      'the docs build follows it',
+    );
+    assert.ok(
+      at('turbo run test:e2e:docs') >
+        at('turbo run build --filter=@www/lit-ui-router.dev'),
+      'the e2e suites come last',
+    );
+  });
+
+  it('carries one heading however many runs there were', () => {
+    const md = sessionMarkdown([ci(), docs(), e2e()]);
+    assert.equal(md.split('## Turbo run summary').length - 1, 1);
+    assert.match(md, /3 turbo runs in this job/);
+  });
+
+  it('is the single-run report, unchanged, for a session of one', () => {
+    assert.equal(sessionMarkdown([ci()]), overviewMarkdown(ci()));
+    assert.ok(!sessionMarkdown([ci()]).includes('turbo runs in this job'));
+  });
+
+  it('keeps the job-level footer out of the per-run blocks', () => {
+    const warnLanes = warnLaneEntries(new Map());
+    const md = sessionMarkdown([ci(), docs()], { warnLanes });
+    assert.equal(md.split('**Warn-only lanes**').length - 1, 1);
+  });
+});
+
+describe('sessionLines', () => {
+  it('gives each run its own headline on the stdout lane', () => {
+    const runs = [
+      summary([ran('a', 10)], 0, { command: 'turbo run ci', attempted: 1 }),
+      summary([hit()], 0, {
+        command: 'turbo run build --filter=@www/lit-ui-router.dev',
+        attempted: 1,
+        cached: 1,
+        success: 0,
+        failed: 0,
+      }),
+    ];
+    const headlines = sessionLines(runs).filter((line) =>
+      line.startsWith('──'),
+    );
+    assert.equal(headlines.length, 2);
+    assert.match(headlines[1] ?? '', /--filter=@www\/lit-ui-router\.dev/);
+  });
+});
+
+describe('sessionHeadline', () => {
+  const red = () =>
+    summary([task()], 1, { command: 'turbo run ci', attempted: 2, cached: 1 });
+  const green = () =>
+    summary([hit()], 0, {
+      command: 'turbo run build',
+      attempted: 3,
+      cached: 3,
+      success: 0,
+      failed: 0,
+    });
+
+  it('sums the counts across the session', () => {
+    const reports = buildReports(red(), new Map());
+    assert.match(sessionHeadline([red(), green()], reports), /5 attempted/);
+    assert.match(sessionHeadline([red(), green()], reports), /4 cached/);
+  });
+
+  it('says how many runs only when there was more than one', () => {
+    assert.match(sessionHeadline([red(), green()], []), /across 2 turbo runs/);
+    assert.ok(!sessionHeadline([red()], []).includes('across'));
+  });
+});
+
+describe('sessionFailureMarkdown', () => {
+  it('names only the run that actually failed', () => {
+    const red = summary([task()], 1, { command: 'turbo run ci' });
+    const md = sessionFailureMarkdown([
+      { summary: red, reports: buildReports(red, new Map()) },
+    ]);
+    assert.equal(md.split('## CI failure summary').length - 1, 1);
+    assert.match(md, /`turbo run ci` — \*\*1 failing\*\*/);
+  });
+
+  it('reports each failing run under the one heading', () => {
+    const a = summary([task()], 1, { command: 'turbo run ci' });
+    const b = summary([task({ taskId: 'other#test' })], 1, {
+      command: 'turbo run test:e2e:hash',
+    });
+    const md = sessionFailureMarkdown([
+      { summary: a, reports: buildReports(a, new Map()) },
+      { summary: b, reports: buildReports(b, new Map()) },
+    ]);
+    assert.equal(md.split('## CI failure summary').length - 1, 1);
+    assert.match(md, /`turbo run ci`/);
+    assert.match(md, /`turbo run test:e2e:hash`/);
+  });
+
+  it('keeps the stdout twin in step, verdict last', () => {
+    const red = summary([task()], 1, { command: 'turbo run ci' });
+    const failures = [{ summary: red, reports: buildReports(red, new Map()) }];
+    const lines = sessionStdoutReport(failures, [red]);
+    assert.match(lines[0] ?? '', /^── lit-ui-router#typecheck:src/);
+    assert.match(lines.at(-1) ?? '', /^1 failing task:/);
   });
 });
