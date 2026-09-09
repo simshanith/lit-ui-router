@@ -9,7 +9,8 @@
 
 import { runMain, setOutput } from '@tools/shared/gha.ts';
 import { memberDir, resolvePackageName } from './release-package-info.core.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { loadWorkspace } from '@tools/shared/workspace.ts';
 
 runMain(async () => {
   const name = resolvePackageName({

@@ -51,8 +51,9 @@ import {
 } from './check-published-diff.core.ts';
 import { fetchTarball, tarballManifest } from './tarball.ts';
 import { readPublishedVersions } from './published-versions.ts';
-import { requireManifest } from '@tools/shared/manifest.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 const run = promisify(execFile);
 const MAX_BUFFER = 64 * 1024 * 1024;
@@ -114,12 +115,7 @@ async function main() {
 
   const published = await readPublishedVersions();
   const { members } = await loadWorkspace(workspaceRoot);
-  const publishable = members.filter(
-    (member) =>
-      member.dir !== '<root>' &&
-      member.manifest &&
-      member.manifest.private !== true,
-  );
+  const publishable = members.filter(isPublishable);
 
   // PUBLISHED_DIFF_PACKAGES scopes dispatch re-runs; empty/unset = all.
   const scoped = scopePackages(

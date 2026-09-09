@@ -5,7 +5,7 @@
 // A bump commit's rerun flips green once the floor bump lands. The IO
 // (workspace discovery, turbo, gh) lives in ./peer-floor-check-runs.ts.
 
-import type { Member } from '@tools/shared/workspace.ts';
+import { isRootMember, type Member } from '@tools/shared/workspace.ts';
 
 import type { CheckRunPayload } from './publish-check-runs.core.ts';
 import { releaseWorkflowUrl } from './publish-check-runs.core.ts';
@@ -26,7 +26,7 @@ export function peerFloorCheckRunName(packageName: string): string {
 export function peerFloorMembers(members: Member[]): Member[] {
   return members.filter(
     (member) =>
-      member.dir !== '<root>' &&
+      !isRootMember(member) &&
       typeof member.manifest?.scripts?.[PEER_FLOOR_SCRIPT] === 'string',
   );
 }

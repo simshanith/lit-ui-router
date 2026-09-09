@@ -1,6 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
-import { customElement } from 'lit/decorators.js';
+import { customElement, state } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
@@ -57,6 +57,88 @@ class TestParamsComponent extends LitElement implements UiOnParamsChanged {
   }
 }
 
+/** Instance/connection counters, reset per test by `resetCounts`. */
+const counts: Record<
+  string,
+  { constructed: number; connected: number; disconnected: number }
+> = {};
+
+function countsFor(tag: string) {
+  return (counts[tag] ??= { constructed: 0, connected: 0, disconnected: 0 });
+}
+
+function resetCounts() {
+  for (const key of Object.keys(counts)) delete counts[key];
+}
+
+/** Base fixture that records its own lifecycle, so specs can assert churn. */
+class CountedElement extends LitElement {
+  static tag = 'counted-element';
+  declare _uiViewProps?: UIViewInjectedProps;
+
+  constructor() {
+    super();
+    countsFor((this.constructor as typeof CountedElement).tag).constructed++;
+  }
+
+  createRenderRoot() {
+    return this;
+  }
+
+  connectedCallback() {
+    super.connectedCallback();
+    countsFor((this.constructor as typeof CountedElement).tag).connected++;
+  }
+
+  disconnectedCallback() {
+    super.disconnectedCallback();
+    countsFor((this.constructor as typeof CountedElement).tag).disconnected++;
+  }
+}
+
+@customElement('test-retained-shell')
+class TestRetainedShell extends CountedElement {
+  static tag = 'test-retained-shell';
+  render() {
+    return html`<div class="shell"><ui-view></ui-view></div>`;
+  }
+}
+
+@customElement('test-retained-leaf')
+class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
+  static tag = 'test-retained-leaf';
+  @state() accessor starId = '';
+  readonly propsSeen: (UIViewInjectedProps | undefined)[] = [];
+
+  uiOnParamsChanged(params: { [key: string]: unknown }) {
+    if (typeof params.starId === 'string') {
+      this.starId = params.starId;
+    }
+  }
+
+  render() {
+    this.propsSeen.push(this._uiViewProps);
+    return html`<div class="leaf">${this.starId}</div>`;
+  }
+}
+
+@customElement('test-retained-other')
+class TestRetainedOther extends CountedElement {
+  static tag = 'test-retained-other';
+  render() {
+    return html`<div class="other">Other</div>`;
+  }
+}
+
+@customElement('test-sticky-component')
+class TestStickyComponent extends CountedElement {
+  static tag = 'test-sticky-component';
+  static sticky = true;
+  render() {
+    return html`<div class="sticky">Sticky</div>`;
+  }
+}
+
 @customElement('test-params-receive-component')
 class TestParamsReceiveComponent
   extends LitElement
@@ -78,6 +160,10 @@ declare global {
     'test-block-exit-component': TestBlockExitComponent;
     'test-params-component': TestParamsComponent;
     'test-params-receive-component': TestParamsReceiveComponent;
+    'test-retained-shell': TestRetainedShell;
+    'test-retained-leaf': TestRetainedLeaf;
+    'test-retained-other': TestRetainedOther;
+    'test-sticky-component': TestStickyComponent;
   }
 }
 
@@ -92,6 +178,7 @@ describe('UiView', () => {
     canExit = () => true;
     paramsChanged = () => {};
     receiveParams = () => {};
+    resetCounts();
   });
 
   afterEach(() => {
@@ -625,6 +712,129 @@ describe('UiView', () => {
       } finally {
         warn.mockRestore();
       }
+    });
+  });
+  // https://github.com/simshanith/lit-ui-router/issues/723
+  describe('routed element identity', () => {
+    const nestedStates: LitStateDeclaration[] = [
+      { name: 'galaxy', url: '/galaxy', component: TestRetainedShell },
+      {
+        name: 'galaxy.star',
+        url: '/star/:starId',
+        component: TestRetainedLeaf,
+      },
+      { name: 'other', url: '/other', component: TestRetainedOther },
+    ];
+
+    // A dynamic param leaves the state in `retained`, which is the case this
+    // gate is about. A non-dynamic param re-enters the state, and rebuilding
+    // the element there is correct — see the nested spec below.
+    const dynamicStar: LitStateDeclaration = {
+      name: 'star',
+      url: '/star/:starId',
+      params: { starId: { dynamic: true } },
+      component: TestRetainedLeaf,
+    };
+
+    it('should keep the same element when only params change', async () => {
+      const { uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      const first = uiView.firstElementChild;
+      expect(first).toBeInstanceOf(TestRetainedLeaf);
+
+      await routerGo(router, 'star', { starId: 'rigel' });
+
+      expect(uiView.firstElementChild).toBe(first);
+      expect(countsFor('test-retained-leaf').constructed).toBe(1);
+      expect(countsFor('test-retained-leaf').disconnected).toBe(0);
+    });
+
+    it('should deliver fresh props and params to the retained element', async () => {
+      const { uiView } = await setupRouter([dynamicStar]);
+
+      await routerGo(router, 'star', { starId: 'sun' });
+      const leaf = uiView.firstElementChild as TestRetainedLeaf;
+      const firstProps = leaf._uiViewProps;
+      expect(firstProps?.router).toBe(router);
+
+      await routerGo(router, 'star', { starId: 'rigel' });
+      await waitForUpdate(leaf);
+
+      // Same element, new props object, and `uiOnParamsChanged` observed on the
+      // instance that held the previous params — which only reuse makes true.
+      expect(uiView.firstElementChild).toBe(leaf);
+      expect(leaf._uiViewProps).not.toBe(firstProps);
+      expect(leaf._uiViewProps?.router).toBe(router);
+      expect(leaf.starId).toBe('rigel');
+      expect(leaf.textContent).toContain('rigel');
+      expect(leaf.propsSeen.length).toBeGreaterThan(1);
+    });
+
+    it('should not rebuild a retained parent when a child param changes', async () => {
+      const { uiView } = await setupRouter(nestedStates);
+
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      const shell = uiView.firstElementChild as TestRetainedShell;
+      expect(shell).toBeInstanceOf(TestRetainedShell);
+      const nestedView = shell.querySelector('ui-view');
+      expect(nestedView).toBeTruthy();
+
+      await routerGo(router, 'galaxy.star', { starId: 'rigel' });
+
+      // The retained shell, its nested <ui-view>, and the leaf all survive: the
+      // rebuild cascade that clamped scroll position in #723 never starts.
+      expect(uiView.firstElementChild).toBe(shell);
+      expect(shell.querySelector('ui-view')).toBe(nestedView);
+      expect(countsFor('test-retained-shell').constructed).toBe(1);
+      expect(countsFor('test-retained-shell').disconnected).toBe(0);
+      // The leaf's own param is not dynamic, so `galaxy.star` really re-enters
+      // and a fresh leaf is correct. Only the retained ancestor must survive.
+      expect(countsFor('test-retained-leaf').constructed).toBe(2);
+    });
+
+    it('should mint a new element when the state changes', async () => {
+      const { uiView } = await setupRouter(nestedStates);
+
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      const shell = uiView.firstElementChild;
+
+      await routerGo(router, 'other');
+
+      expect(uiView.firstElementChild).toBeInstanceOf(TestRetainedOther);
+      expect(uiView.firstElementChild).not.toBe(shell);
+      expect(countsFor('test-retained-shell').disconnected).toBe(1);
+    });
+
+    it('should build a fresh element when a non-sticky state is re-entered', async () => {
+      const { uiView } = await setupRouter(nestedStates);
+
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+      const first = uiView.firstElementChild;
+
+      await routerGo(router, 'other');
+      await routerGo(router, 'galaxy.star', { starId: 'sun' });
+
+      expect(uiView.firstElementChild).toBeInstanceOf(TestRetainedShell);
+      expect(uiView.firstElementChild).not.toBe(first);
+      expect(countsFor('test-retained-shell').constructed).toBe(2);
+    });
+
+    it('should reuse a sticky instance across exit and re-entry', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'sticky', url: '/sticky', component: TestStickyComponent },
+        { name: 'other', url: '/other', component: TestRetainedOther },
+      ]);
+
+      await routerGo(router, 'sticky');
+      const first = uiView.firstElementChild;
+      expect(first).toBeInstanceOf(TestStickyComponent);
+
+      await routerGo(router, 'other');
+      await routerGo(router, 'sticky');
+
+      expect(uiView.firstElementChild).toBe(first);
+      expect(countsFor('test-sticky-component').constructed).toBe(1);
     });
   });
 });

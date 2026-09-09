@@ -2,7 +2,7 @@
  * Documentation urls for the rules, pinned to the version that reports them.
  */
 
-import packageJson from '../package.json' with { type: 'json' };
+import { packageJson } from './package-json.ts';
 import type { RuleName } from './rules.ts';
 
 const REPO = 'https://github.com/simshanith/lit-ui-router';

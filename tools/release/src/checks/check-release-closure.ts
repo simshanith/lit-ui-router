@@ -1,5 +1,5 @@
 // Every member a release lane runs in must be inside the closure `setup --release` installs.
-import { requireEnv } from '@tools/shared/env.core.ts';
+import { requireEnv } from '../lib/env.core.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
 import {
   type ClosureRule,
@@ -8,10 +8,11 @@ import {
   missingFromClosure,
   selectedNames,
 } from './check-release-closure.core.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
+  isPublishable,
   loadWorkspace,
   type Member,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 const CHECK = 'check-release-closure';
@@ -21,10 +22,6 @@ const hasScript = (task: string) => (member: Member) =>
   member.manifest?.scripts?.[task] !== undefined;
 const hasDevDep = (dep: string) => (member: Member) =>
   member.manifest?.devDependencies?.[dep] !== undefined;
-const publishable = (member: Member) =>
-  member.dir !== '<root>' &&
-  member.manifest !== undefined &&
-  member.manifest.private !== true;
 
 const RULES: (ClosureRule & { select: (member: Member) => boolean })[] = [
   {
@@ -34,7 +31,7 @@ const RULES: (ClosureRule & { select: (member: Member) => boolean })[] = [
   },
   {
     need: 'publishable packages',
-    select: publishable,
+    select: isPublishable,
     why: `release-signals builds and packs them through @tools/release#pack:all, and only a remote-cache hit hides a missing toolchain; ${FIX}`,
   },
   {

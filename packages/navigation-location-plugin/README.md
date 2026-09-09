@@ -53,6 +53,43 @@ window.navigation.addEventListener('navigate', (event) => {
 });
 ```
 
+## What Else Observes Navigation
+
+`navigation.navigate()` does not call `history.pushState`, does not call `history.replaceState`, and does not fire `popstate`. Anything that watches for navigation by patching those methods — Google Analytics' enhanced measurement is the common case, and most session-replay and RUM shims do the same — is blind to router-driven navigation under this plugin. Nothing throws; the events simply stop arriving.
+
+The gap is narrower than it first looks. Taking gtag as the worked example:
+
+| Navigation                | Who sees it                     |
+| ------------------------- | ------------------------------- |
+| Cold load                 | gtag, via its own `config` call |
+| Router transition         | **nobody** — this is the gap    |
+| Back/forward (`traverse`) | gtag, via `popstate`            |
+
+So the fix is not "switch the integration off and send everything by hand" — that double-counts traversals. Send exactly what the observer cannot see, by reading the navigation kind off a second `navigate` listener:
+
+```typescript
+let lastNavigationType = '';
+
+// records only — a `navigate` listener is an interception boundary
+// solely when it calls `event.intercept()`
+window.navigation.addEventListener('navigate', (event) => {
+  lastNavigationType = event.navigationType;
+});
+
+router.transitionService.onSuccess({}, () => {
+  // read once per transition: a transition with no `navigate` event of its
+  // own must not reuse the previous one's kind
+  const navigationType = lastNavigationType;
+  lastNavigationType = '';
+
+  if (navigationType === 'push' || navigationType === 'replace') {
+    gtag('event', 'page_view', { page_location: location.href });
+  }
+});
+```
+
+See [What else observes navigation](https://lit-ui-router.dev/packages/navigation-plugin#what-else-observes-navigation) for the full walkthrough.
+
 ## API
 
 ### `navigationLocationPlugin`

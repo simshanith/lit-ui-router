@@ -11,7 +11,8 @@ import pacote from 'pacote';
 
 import type { PublishedVersions } from './published-versions.core.ts';
 import { writePublishedVersions } from './published-versions.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 /** The `latest` dist-tag for `name`, or null when never published. */
 async function publishedLatest(name: string): Promise<string | null> {
@@ -28,12 +29,7 @@ async function publishedLatest(name: string): Promise<string | null> {
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
-  const publishable = members.filter(
-    (member) =>
-      member.dir !== '<root>' &&
-      member.manifest &&
-      member.manifest.private !== true,
-  );
+  const publishable = members.filter(isPublishable);
   const versions: PublishedVersions = {};
   for (const { name } of publishable) {
     versions[name] = await publishedLatest(name);

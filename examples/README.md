@@ -95,6 +95,7 @@ Three links to two states, printing each element's live `href` attribute: an [`<
 A Vite project that lints itself: the same small lit app as **helloworld**, an `eslint.config.js` wired the way the [plugin README](../packages/eslint-plugin-lit-ui-router/README.md) documents, and a `<lint-report>` panel under the nav showing what ESLint found.
 
 - `litA11y.configs.recommended` first, then `...litUiRouter.configs.recommended` — ours turns `lit-a11y/anchor-is-valid` off and enables `lit-ui-router/anchor-is-valid`
+- `settings.linkElements: ['sp-link']` — the design system's link element declared once for both rules that ask whether a tag is a link, with its own ✓/✗ pair in the gallery
 - `typescript-eslint` over `src/**/*.ts`, syntax-only: the rule reads the template AST, never type information
 - `typescript` pinned to the 6 line, because typescript-eslint needs the TypeScript JS API that TS 7 no longer ships
 - A local Vite plugin in `vite.config.ts` (no extra dependency) serving a `virtual:lint-report` module: `ESLint#lintFiles()` in its `load` hook, re-run on save via `server.reloadModule`, baked into `dist` by `vite build`
@@ -128,12 +129,12 @@ pnpm --filter examples example:install:<example-name>
 
 ## Docs Embeds
 
-Each example is also built for the docs site (`turbo run build:embeds --filter=examples`) and embedded same-origin at `/examples/<example-name>/`. The docs reserve the embed's height up front — before the iframe loads, so the page doesn't shift when the example paints — from the `EXAMPLES` map in `docs/.vitepress/theme/components/examples.ts`.
+Each example is also built for the docs site (`turbo run build:embeds --filter=examples`) and embedded same-origin at `/examples/<example-name>/`. The docs reserve the embed's height up front — before the iframe loads, so the page doesn't shift when the example paints — from the `EXAMPLES` map in `www/lit-ui-router.dev/.vitepress/theme/components/examples.ts`.
 
 Changing what an example renders can outgrow that reservation, which shows up as a scrollbar inside the embed. Measure it:
 
 ```bash
-turbo run check:embeds --filter=docs
+turbo run check:embeds --filter=@www/lit-ui-router.dev
 ```
 
 It drives every state each built example's own links reach, in headless Chromium at the docs content column, and reports the tallest against the declared height — with the value to use when one no longer fits. Text wraps at engine-specific metrics, so the numbers are host-dependent by a percent or so; that is why the reservations carry slack and why this is a local check rather than a CI gate.

@@ -36,4 +36,4 @@ jobs:
           persist-credentials: false
       - uses: wagoid/commitlint-github-action@v6
         with:
-          configFile: commitlint.config.ts
+          configFile: .commitlintrc.ts

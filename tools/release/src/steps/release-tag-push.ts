@@ -8,12 +8,12 @@
 // Decisions live in ./release-tag-push.core.ts and ./release-tag-state.core.ts.
 
 import { defaultStream } from '@tools/shared/exec.ts';
-import { boolEnv, requireEnv } from '@tools/shared/env.core.ts';
+import { boolEnv, requireEnv } from '../lib/env.core.ts';
 import { runMain } from '@tools/shared/gha.ts';
 import { pushTagArgs } from './release-tag-push.core.ts';
 import { isPushed, tagStateMessage } from './release-tag-state.core.ts';
 import { resolveReleaseTagName, resolveTagState } from './release-tag-state.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 runMain(async () => {
   const packageName = requireEnv(process.env, 'PACKAGE');

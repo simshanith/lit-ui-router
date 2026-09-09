@@ -28,7 +28,8 @@ import {
   type PackageExportsCheck,
   publintGatingMessages,
 } from './check-exports.core.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 /** Run attw + publint over one package's publish-shape tarball. */
 async function checkExports(
@@ -67,12 +68,7 @@ async function checkExports(
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
-  const publishable = members.filter(
-    (member) =>
-      member.dir !== '<root>' &&
-      member.manifest &&
-      member.manifest.private !== true,
-  );
+  const publishable = members.filter(isPublishable);
   const results: PackageExportsCheck[] = [];
   for (const { name, dir } of publishable) {
     results.push(await checkExports(name, dir));

@@ -1,6 +1,6 @@
 # lit-ui-router
 
-<img src="docs/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
+<img src="www/lit-ui-router.dev/public/images/lit-ui-router.svg" alt="Lit UI Router" width="120" height="120">
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
 [![Main Branch CI](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml/badge.svg?branch=main)](https://github.com/simshanith/lit-ui-router/actions/workflows/build-test.yml?query=branch%3Amain)
@@ -28,8 +28,8 @@
 
 The `workers-builds` badge at the top is the same kind of signal for the deploy pipeline that ships
 [lit-ui-router.dev](https://lit-ui-router.dev) — see
-[CD-pipeline verification signal](./DEPLOY.md#cd-pipeline-verification-signal) for what it diffs and
-what each colour means.
+[CD-pipeline verification signal](./www/DEPLOY.md#cd-pipeline-verification-signal) for what it diffs and
+what each color means.
 
 ---
 
@@ -66,7 +66,7 @@ The UI-Router package is distributed using [npm](https://www.npmjs.com/), the no
 npm install lit-ui-router
 ```
 
-Import `UIRouterLit` into your project, register some states and you're good to go!
+Import `UIRouterLit` into your project, register some states, and you're good to go!
 
 ```ts
 import { render, html } from 'lit';

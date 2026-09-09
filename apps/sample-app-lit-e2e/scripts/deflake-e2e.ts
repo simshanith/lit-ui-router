@@ -17,9 +17,14 @@ export const crashSignatureFor = (port: number): string =>
 // Bounded wait for the port to drain after a sweep (seconds).
 const PORT_WAIT_TRIES = 20;
 
+// Tolerant of what Actions actually delivers: a `type: number` input arrives
+// as a float string (`10.0`), so parse then truncate rather than demanding
+// digits. Anything unparseable or empty falls back to 5.
 export function clampRuns(raw: string | undefined): number {
-  if (raw === undefined || !/^[0-9]+$/.test(raw)) return 5;
-  return Math.min(10, Math.max(1, Number.parseInt(raw, 10)));
+  const parsed = Number(raw?.trim());
+  if (raw === undefined || raw.trim() === '' || !Number.isFinite(parsed))
+    return 5;
+  return Math.min(10, Math.max(1, Math.trunc(parsed)));
 }
 
 export function parsePort(raw: string | undefined): number {

@@ -11,17 +11,17 @@ import {
   ViewService,
   _ViewDeclaration,
 } from '@uirouter/core';
-import { html, LitElement } from 'lit';
+import { LitElement } from 'lit';
 
 import {
   RoutedLitElement,
   LitViewDeclaration,
   LitViewDeclarationTemplate,
   NormalizedLitViewDeclaration,
-  UIViewInjectedProps,
   LitViewDeclarationElement,
   DefaultResolvesType,
 } from './interface.js';
+import { routedLitElementRenderer } from './routed-element.js';
 
 /**
  * `@uirouter/core` types `forEach` as `any` because it resolves to
@@ -133,9 +133,9 @@ export function litViewsBuilder<
       let normalizedConfig: NormalizedLitViewDeclaration<T>;
       name = name || '$default'; // Account for views: { "": { template... } }
       if (isLitViewDeclarationTemplate<T>(config)) {
-        normalizedConfig = { component: config as LitViewDeclarationTemplate };
+        normalizedConfig = { component: config };
       } else {
-        normalizedConfig = config as NormalizedLitViewDeclaration<T>;
+        normalizedConfig = config;
       }
       if (Object.keys(normalizedConfig || {}).length === 0) return;
 
@@ -151,14 +151,16 @@ export function litViewsBuilder<
       normalizedConfig.$uiViewContextAnchor =
         normalizedTarget.uiViewContextAnchor;
 
-      if (isRoutedLitElement<T>(normalizedConfig.component)) {
-        const Component = normalizedConfig.component;
-        let component: InstanceType<RoutedLitElement<T>>;
-        normalizedConfig.component = (props: UIViewInjectedProps<T>) => {
-          component = (Component.sticky && component) || new Component(props);
-          component._uiViewProps = props;
-          return html`${component}`;
-        };
+      // The declaration outlives every `<ui-view>` that renders it, so a renderer
+      // held here makes a `sticky` class survive exits. Other classes are left for
+      // `<ui-view>` to bind, which resets them when the view config changes.
+      if (
+        isRoutedLitElement<T>(normalizedConfig.component) &&
+        normalizedConfig.component.sticky
+      ) {
+        normalizedConfig.component = routedLitElementRenderer<T>(
+          normalizedConfig.component,
+        );
       }
 
       views[name] = viewsObject[name] = normalizedConfig;
