@@ -75,9 +75,9 @@ router.plugin(
 );
 ```
 
-This is the strategy the <a href="/app" target="_self">sample app</a> uses —
-its Preferences → Feature Flags panel lets you switch between all three
-plugins and shows browser compatibility for each.
+This is the strategy the <a href="/app" target="_self">sample app</a> uses by
+default — its Preferences → Feature Flags panel lets you switch between all
+three plugins and shows browser compatibility for each.
 
 ## Navigation event interception
 

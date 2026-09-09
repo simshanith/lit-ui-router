@@ -5,12 +5,17 @@ import { concurrently, type CloseEvent } from 'concurrently';
 // concurrently already fails the run when any suite exits non-zero; this wrapper
 // adds a per-suite timing table and an unambiguous PASS/FAIL banner on top, and
 // propagates the failure through process.exitCode.
+// `vanilla` and `mobx` seed no location plugin, so they resolve the app's
+// default — the Navigation API, with pushState only where the browser lacks it
+// (location_plugin.cy.js asserts which one they actually got). Every other
+// strategy needs its own lane, or it rides the default and loses coverage the
+// moment the default moves.
 const suites = [
   { name: 'vanilla', command: 'pnpm run test:cypress' },
   { name: 'mobx', command: 'pnpm run test:cypress:mobx' },
   { name: 'docs', command: 'pnpm run test:cypress:docs' },
   { name: 'hash', command: 'pnpm run test:cypress:hash' },
-  { name: 'navigation', command: 'pnpm run test:cypress:navigation' },
+  { name: 'pushState', command: 'pnpm run test:cypress:pushstate' },
 ];
 
 const passed = (event: CloseEvent) => event.exitCode === 0;

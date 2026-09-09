@@ -65,8 +65,7 @@ shared `router.config.ts`:
 | `pushState`  | `/path`    | Modern browsers                              |
 | `navigation` | `/path`    | Chrome/Edge 102+, Firefox 147+, Safari 26.2+ |
 
-**Auto-detection**: When `navigation` preference is set, the app automatically
-selects the best available plugin:
+**Default**: with no preference set, the app selects the best available plugin:
 
 1. Navigation API when supported, via the 🧑‍🔬 _experimental_
    [navigation plugin](../packages/navigation-location-plugin/)
@@ -77,6 +76,10 @@ selects the best available plugin:
 1. URL parameter: `?feature-location-plugin=hash`
 2. Session storage: Set via Feature Flags panel in Prefs
 3. Environment variable: `VITE_SAMPLE_APP_LOCATION_PLUGIN=pushState`
+
+`default` is accepted at every level and means "no preference", so
+`?feature-location-plugin=default` restores the auto-detected plugin without
+clearing the session flag or the env var underneath it.
 
 The Feature Flags panel shows browser compatibility indicators for each plugin
 option.
