@@ -3,9 +3,15 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      "with": ["build:custom-elements"],
-      // `with` is unordered: without the negation, build's archive captures
-      // custom-elements.json only when the manifest task finishes first
+      // ordered, not `with`: consumers reach the manifest through `^build`, and
+      // an unordered sidecar let them start bundling before it was written
+      "dependsOn": [
+        "^build",
+        "build:js",
+        "build:types",
+        "build:custom-elements"
+      ],
+      // the manifest is the other task's output, so keep it out of this archive
       "outputs": ["dist/**", "!dist/custom-elements.json"]
     },
     "build:custom-elements": {
