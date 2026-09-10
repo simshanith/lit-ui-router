@@ -68,6 +68,8 @@ lit-ui-router-*.tgz
 # vitest failure artifacts for colocated specs (apps/sample-app-shared)
 **/src/**/__screenshots__
 .vitest-attachments/
+# the path vitest writes today; .vitest-attachments/ predates the rename
+**/.vitest/
 coverage
 .wrangler
 .dev.vars
