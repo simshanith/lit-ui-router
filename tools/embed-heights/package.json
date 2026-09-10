@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "dependencies": {
-    "@tools/shared": "workspace:*"
+    "@tools/bootstrap": "workspace:*"
   },
   "devDependencies": {
     "@types/node": "catalog:",

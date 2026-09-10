@@ -4,7 +4,7 @@
 // pulling ui-router-server's source types across the tsconfig boundary that the
 // `mounts` table in routes.ts sits behind. configureRouter matches
 // location.pathname against these at boot to recover its <base href>, so one
-// build per app deep-links under every prefix (see routes.ts and docs/worker).
+// build per app deep-links under every prefix (see routes.ts and www/lit-ui-router.dev/worker).
 //
 // `/not-found-naive` has no MountConfig — the worker serves it with routing
 // turned OFF, on purpose — so it is listed here alongside the routed mounts.

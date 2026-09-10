@@ -5,7 +5,7 @@
 
 import type { Exec, Stream } from '@tools/shared/exec.ts';
 import { defaultExec, defaultStream } from '@tools/shared/exec.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 /** Full pnpm argv wrapping a release-it invocation for one package. */
 export function pnpmReleaseItArgs(

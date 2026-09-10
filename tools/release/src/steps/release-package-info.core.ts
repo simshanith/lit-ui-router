@@ -8,7 +8,7 @@
 // workspace member before anything uses it. The IO (reading env, loading the
 // workspace) lives in release-package-info.ts.
 
-import type { Member } from '@tools/shared/workspace.ts';
+import { isRootMember, type Member } from '@tools/shared/workspace.ts';
 
 /**
  * The package name embedded in a release tag ref: everything before the LAST
@@ -55,7 +55,7 @@ export function resolvePackageName(options: {
  */
 export function memberDir(name: string, members: readonly Member[]): string {
   const member = members.find(
-    (candidate) => candidate.name === name && candidate.dir !== '<root>',
+    (candidate) => candidate.name === name && !isRootMember(candidate),
   );
   if (member === undefined) {
     throw new Error(

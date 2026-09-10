@@ -1,0 +1,128 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "bundle:worker": {
+      // --dry-run only bundles worker src (the script stubs an empty dist:
+      // assets ship via the binding, never inside index.js), so docs content
+      // can't affect the artifact; workspace deps ride the transit chain.
+      "dependsOn": ["transit"],
+      "inputs": [
+        "package.json",
+        "worker/**",
+        "!worker/dist/**",
+        // types:worker output; esbuild bundles, it never typechecks, so
+        // regenerating the d.ts must not bust this key
+        "!worker/worker-configuration.d.ts",
+        "wrangler.jsonc",
+        "$TURBO_ROOT$/pnpm-lock.yaml"
+      ],
+      "outputs": ["worker/dist/**"]
+    },
+    "check:embeds": {
+      // Reader of the built examples: measures each in Chromium and checks the
+      // heights examples.ts reserves for them. Uncached because the result is a
+      // property of the host — its Chromium build and its installed fonts —
+      // and no `inputs` glob can name either, so a hit would replay a
+      // measurement this machine never took.
+      "dependsOn": ["examples#build:embeds"],
+      "cache": false
+    },
+    "codecov:bundle": {
+      // Upload-only: ships the (possibly cache-replayed) dry-run artifact.
+      "dependsOn": ["bundle:worker"]
+    },
+    "docs:preview": {
+      "dependsOn": ["build"],
+      "cache": false,
+      "persistent": true
+    },
+    "wrangler:dev": {
+      "dependsOn": ["build"],
+      // Override of the default in dev-port.ts; transport only, so the port
+      // must not enter a cache key.
+      "passThroughEnv": ["WWW_DEV_PORT"],
+      "cache": false,
+      "persistent": true
+    },
+    "build": {
+      // @www/lit-ui-router.dev imports no producer, so `^` cannot reach the docs:api tasks
+      "dependsOn": [
+        "^build",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-server#docs:api",
+        "examples#build:embeds",
+        "types:worker"
+      ],
+      "env": ["VITE_GOOGLE_ANALYTICS_TRACKING_ID"]
+    },
+    "typecheck": {
+      "dependsOn": [
+        "^build:types",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-server#docs:api"
+      ],
+      "with": ["typecheck:vue", "typecheck:worker", "typecheck:worker:tests"]
+    },
+    "test": {
+      // The worker contract tests run the worker module in node; workspace
+      // sources resolve directly (no build), but the root task's src/**
+      // inputs would miss worker/**, so over-approximate.
+      "inputs": ["$TURBO_DEFAULT$"]
+    },
+    "typecheck:worker": {
+      "dependsOn": ["^build:types", "types:worker"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    "typecheck:worker:tests": {
+      // The worker module rides into the test graph, so the generated
+      // worker-configuration.d.ts must exist here too.
+      "dependsOn": ["^build:types", "types:worker"],
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/tsconfig.base.json"]
+    },
+    "lint": {
+      // Type-aware oxlint reads worker/tsconfig.json, which needs the d.ts.
+      "dependsOn": ["^build:types", "types:worker"]
+    },
+    "format:check": {
+      // api/ is typedoc output: gitignored, so oxfmt skips it, but the root
+      // task's explicit glob would hash it and re-key on every docs:api run.
+      // $TURBO_DEFAULT$ over-approximates the extension list and is the only
+      // input form turbo gitignore-prunes.
+      "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/.oxfmtrc.json"]
+    },
+    "types:worker": {
+      "inputs": ["$TURBO_DEFAULT$", "wrangler.jsonc"],
+      "outputs": ["worker/worker-configuration.d.ts"]
+    },
+    "docs": {
+      "dependsOn": [
+        "^build",
+        "lit-ui-router#docs:api",
+        "lit-ui-router-mobx#docs:api",
+        "ui-router-navigation-location-plugin#docs:api",
+        "ui-router-server#docs:api",
+        "examples#build:embeds"
+      ],
+      "cache": false,
+      "persistent": true,
+      // dev-server browser open toggle (vite.config.ts server.open)
+      "env": ["E2E_TEST"]
+    },
+    "typecheck:vue": {
+      "dependsOn": ["^build:types"],
+      // vue-tsc follows what the components import, not just the component glob
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        ".vitepress/env.d.ts",
+        ".vitepress/theme/components/*.vue",
+        "tsconfig.json",
+        "tsconfig.vue.json"
+      ]
+    }
+  }
+}

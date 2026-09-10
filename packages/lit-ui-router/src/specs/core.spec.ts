@@ -15,6 +15,7 @@ import {
   LitStateDeclaration,
   LitViewDeclaration,
   NormalizedLitViewDeclaration,
+  RoutedLitTemplate,
 } from '../interface.js';
 
 @customElement('test-element-guard-1')
@@ -33,12 +34,18 @@ class TestRoutedElement extends LitElement {
   }
 }
 
+@customElement('test-element-sticky-1')
+class TestElementSticky extends LitElement {
+  static sticky = true;
+}
+
 declare global {
   interface HTMLElementTagNameMap {
     'test-element-guard-1': TestElementGuard;
     'test-element-routed-1': TestElementRouted;
     'test-element-argless-1': TestElementArgless;
     'test-routed-element': TestRoutedElement;
+    'test-element-sticky-1': TestElementSticky;
   }
 }
 
@@ -427,7 +434,7 @@ describe('litViewsBuilder', () => {
     expect(state?.views?.empty).toBeUndefined();
   });
 
-  it('should wrap LitElement class component', async () => {
+  it('should leave a non-sticky LitElement class on the declaration', async () => {
     const stateDecl: LitStateDeclaration = {
       name: 'test',
       url: '/test',
@@ -456,9 +463,42 @@ describe('litViewsBuilder', () => {
       | Record<string, NormalizedLitViewDeclaration>
       | undefined;
 
-    // The component should be wrapped to return a template
-    expect(views?.$default.component).toBeDefined();
-    expect(typeof views?.$default.component).toBe('function');
+    // The class is preserved verbatim: `<ui-view>` owns instance identity and
+    // only mints a new element when the view config changes (#723).
+    expect(views?.$default.component).toBe(TestRoutedElement);
+  });
+
+  it('should wrap a sticky LitElement class in a declaration-scoped closure', () => {
+    const stateDecl: LitStateDeclaration = {
+      name: 'sticky',
+      url: '/sticky',
+      component: TestElementSticky,
+    };
+
+    router.stateRegistry.register(stateDecl);
+
+    const state = router.stateRegistry.get('sticky').$$state?.();
+    // litViewsBuilder normalizes views; core's StateObject.views typing cannot express it
+    const views = state?.views as
+      | Record<string, NormalizedLitViewDeclaration>
+      | undefined;
+    const component = views?.$default.component;
+
+    // A sticky instance must outlive the `<ui-view>` elements that render it,
+    // so it stays cached on the declaration rather than on the view.
+    expect(component).not.toBe(TestElementSticky);
+    expect(isRoutedLitElement(component)).toBe(false);
+
+    const first = (component as RoutedLitTemplate)({} as UIViewInjectedProps);
+    const props = {} as UIViewInjectedProps;
+    const second = (component as RoutedLitTemplate)(props);
+    const instance = second.values[0] as TestElementSticky & {
+      _uiViewProps?: UIViewInjectedProps;
+    };
+
+    expect(instance).toBeInstanceOf(TestElementSticky);
+    expect(first.values[0]).toBe(instance);
+    expect(instance._uiViewProps).toBe(props);
   });
 
   it('should register a bare argless LitElement class and deliver props via property', async () => {
@@ -495,14 +535,8 @@ describe('litViewsBuilder', () => {
     // Previously the guard rejected argless classes and the builder silently
     // dropped the view as an empty object config.
     expect(views?.$default).toBeDefined();
-
-    const props = {} as UIViewInjectedProps;
-    const result = views?.$default.component(props);
-    const instance = result?.values[0] as TestElementArgless & {
-      _uiViewProps?: UIViewInjectedProps;
-    };
-    expect(instance).toBeInstanceOf(TestElementArgless);
-    expect(instance._uiViewProps).toBe(props);
+    expect(views?.$default.component).toBe(TestElementArgless);
+    // Prop delivery for argless classes is asserted end-to-end in ui-view.spec.
   });
 });
 

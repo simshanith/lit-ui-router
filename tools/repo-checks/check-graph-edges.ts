@@ -1,0 +1,128 @@
+// Each rule's consumer task must order on `<member>#<producerTask>` for every
+// member the selector picks, or a new member silently falls out of the graph.
+import { readFile } from 'node:fs/promises';
+import { join } from 'node:path';
+
+import {
+  type EdgeRule,
+  formatMissing,
+  missingEdges,
+} from './graph-edges.core.ts';
+import {
+  declaredLanes,
+  planFailure,
+  plannedLanes,
+  resolvedTaskDeps,
+} from './turbo.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import {
+  isPublishable,
+  loadWorkspace,
+  type Member,
+} from '@tools/shared/workspace.ts';
+
+const CHECK = 'check-graph-edges';
+
+const hasScript = (task: string) => (member: Member) =>
+  member.manifest?.scripts?.[task] !== undefined;
+
+const RULES: (EdgeRule & { select: (member: Member) => boolean })[] = [
+  ...[
+    '@www/lit-ui-router.dev#build',
+    '@www/lit-ui-router.dev#typecheck',
+    '@www/lit-ui-router.dev#docs',
+  ].map((consumer) => ({
+    consumer,
+    producerTask: 'docs:api',
+    select: hasScript('docs:api'),
+    why: 'every docs:api producer writes into www/lit-ui-router.dev/api and @www/lit-ui-router.dev imports none of them, so add the line to www/lit-ui-router.dev/turbo.json',
+  })),
+  {
+    consumer: '@tools/release#pack:all',
+    producerTask: 'build',
+    select: isPublishable,
+    why: 'check:pack, check:exports and check:published-diff hash packed packages through this edge, so an unlisted publishable package gets stale cached verdicts; add the line to tools/release/turbo.json',
+  },
+  {
+    consumer: '//#lint:templates',
+    producerTask: 'build:types',
+    select: (member) =>
+      isPublishable(member) && hasScript('build:types')(member),
+    why: 'lit-analyzer resolves cross-package imports to dist d.ts, so an unbuilt package hides template errors against its elements; add the line to turbo.json',
+  },
+];
+
+const { members } = await loadWorkspace(workspaceRoot);
+
+// Every declared lane the ci:* graphs never reach must still plan. turbo
+// rejects an invalid edge — `dependsOn` onto a persistent task — for the whole
+// run before any task starts, but it validates only the subgraph a run names,
+// so a lane CI never invokes is checked nowhere: `turbo run e2e` was unusable
+// until #695 because CI never named it. The test:e2e:* suites are in this set
+// too — CI reaches them through the //:test_e2e mise umbrella, which starts
+// their dev server, so no ci:* graph names them.
+// Derived rather than listed, so a lane added to turbo.json and not to CI joins
+// this set on its own instead of waiting for someone to remember it.
+
+// turbo's CI graph entry points — build-test-run.yml runs these through mise's
+// `ci` / `ci_main`, and `ci` is turbo's back-compat alias of ci:pull_request, so
+// naming it covers both. Deliberately not every turbo call CI makes: a few mise
+// tasks invoke a lane directly (release-signals drives resolve:published and
+// check:published-diff). That only errs by leaving those lanes in the derived
+// set, where they get plan-checked anyway — the direction that costs nothing. A
+// name that is not a task fails the dry run instead of shrinking the set.
+const CI_LANES = ['ci', 'ci:main'];
+
+const configs = await Promise.all(
+  ['<root>', ...members.map((member) => member.dir)]
+    .filter((dir, at, dirs) => dirs.indexOf(dir) === at)
+    .map((dir) =>
+      readFile(
+        join(workspaceRoot, dir === '<root>' ? '.' : dir, 'turbo.json'),
+        'utf8',
+      ).catch(() => undefined),
+    ),
+);
+const declared = declaredLanes(configs.filter((text) => text !== undefined));
+const covered = await plannedLanes(CI_LANES);
+const unrun = [...declared].filter((lane) => !covered.has(lane)).sort();
+if (unrun.length === 0) {
+  // the ci:* graphs cannot reach every lane; an empty set means the derivation
+  // broke, not that everything is covered
+  console.error(`${CHECK}: no unrun lanes found — the derivation is wrong`);
+  process.exit(1);
+}
+
+const failure = await planFailure(unrun);
+if (failure !== undefined) {
+  console.error(`${CHECK}: turbo cannot plan ${unrun.join(', ')}:\n${failure}`);
+  process.exit(1);
+}
+console.log(`${CHECK}: ${unrun.length} lanes outside ci:* plan`);
+
+let failed = false;
+for (const rule of RULES) {
+  const selected = members.filter(rule.select).map((member) => member.name);
+  if (selected.length === 0) {
+    // the invariant is vacuous if nothing matches; that's a wiring bug, not a pass
+    console.error(
+      `${CHECK}: ${rule.consumer}: no member selects for ${rule.producerTask}`,
+    );
+    failed = true;
+    continue;
+  }
+  const missing = missingEdges(
+    selected,
+    rule.producerTask,
+    await resolvedTaskDeps(rule.consumer),
+  );
+  if (missing.length > 0) {
+    console.error(`${CHECK}: ${formatMissing(rule, missing)}`);
+    failed = true;
+    continue;
+  }
+  console.log(
+    `${CHECK}: ${rule.consumer} orders on ${selected.length} ${rule.producerTask} producers`,
+  );
+}
+if (failed) process.exit(1);

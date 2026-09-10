@@ -67,8 +67,7 @@ shared `router.config.ts`:
 | `pushState`  | `/path`    | Modern browsers                              |
 | `navigation` | `/path`    | Chrome/Edge 102+, Firefox 147+, Safari 26.2+ |
 
-**Auto-detection**: When `navigation` preference is set, the app automatically
-selects the best available plugin:
+**Default**: with no preference set, the app selects the best available plugin:
 
 1. Navigation API when supported, via the 🧑‍🔬 _experimental_
    [navigation plugin](../packages/navigation-location-plugin/)
@@ -79,6 +78,10 @@ selects the best available plugin:
 1. URL parameter: `?feature-location-plugin=hash`
 2. Session storage: Set via Feature Flags panel in Prefs
 3. Environment variable: `VITE_SAMPLE_APP_LOCATION_PLUGIN=pushState`
+
+`default` is accepted at every level and means "no preference", so
+`?feature-location-plugin=default` restores the auto-detected plugin without
+clearing the session flag or the env var underneath it.
 
 The Feature Flags panel shows browser compatibility indicators for each plugin
 option.
@@ -106,7 +109,7 @@ and every published location strategy. See the
 
 The docs site runs the sample app behind several mounts — `/app`,
 `/not-found-naive`, `/not-found-spa`, `/simulated-routing` — to exhibit points
-on the [server-support spectrum](../docs/guides/server-route-matching.md). All
+on the [server-support spectrum](../www/lit-ui-router.dev/guides/server-route-matching.md). All
 four share a **single vanilla build**: the client recovers its base prefix at
 boot rather than having one baked in, so one build deep-links correctly under
 every mount. Assets emit at absolute `/assets/…`, so nothing else varies by

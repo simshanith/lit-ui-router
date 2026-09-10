@@ -14,7 +14,8 @@ import {
   warningCommand,
 } from './gha.core.ts';
 
-function onActions(): boolean {
+/** Whether this process is running on a GitHub Actions runner. */
+export function onActions(): boolean {
   return process.env.GITHUB_ACTIONS === 'true';
 }
 

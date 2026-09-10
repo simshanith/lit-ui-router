@@ -20,7 +20,10 @@
       "outputs": ["dist/**/*.d.ts", "dist/**/*.d.ts.map"]
     },
     "test": {
-      "dependsOn": ["^test"],
+      // Suites import workspace deps by their published entry (dist), so the
+      // upstream build is a real precondition — it was previously supplied by
+      // accident, via the timing cushion of the old `^test` chain.
+      "dependsOn": ["^build"],
       // $TURBO_DEFAULT$ is the key; the globs only document what the lane reads
       "inputs": [
         "$TURBO_DEFAULT$",
@@ -55,7 +58,7 @@
       ]
     },
     "test:coverage": {
-      "dependsOn": ["^build", "^test:coverage"],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**/*.ts",
@@ -109,19 +112,28 @@
         "//#lint:markdown",
         "//#lint:workflows",
         "//#lint:templates",
-        "//#check:patches",
-        "//#check:graph-edges",
-        "//#check:task-inputs",
+        "@tools/repo-checks#check:patches",
+        "@tools/repo-checks#check:graph-edges",
+        "@tools/repo-checks#check:task-inputs",
+        "@tools/repo-checks#check:workspace-deps",
         "@tools/release#check:release-closure"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
       "dependsOn": ["^build:types"],
-      // explicit globs hash gitignored files too; dist/ and .cache/ mutate
-      // mid-graph (build:js, pack:all staging) and oxlint never reads them
+      // explicit globs hash gitignored files too, and oxlint reads none of
+      // these: dist/, .cache/ and .probe-scratch/ mutate mid-graph (build:js,
+      // pack:all staging, dts-backtest#test writing and deleting a probe under
+      // its own package while this lane hashes), coverage/ and .turbo/ are
+      // written by sibling lanes, and examples/* carry their own un-hoisted
+      // npm installs
       "inputs": [
         "**/*.ts",
         "**/*.js",
-        "!dist/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.turbo/**",
+        "!**/.probe-scratch/**",
         "!.cache/**",
         "$TURBO_ROOT$/.oxlintrc.json",
         "$TURBO_DEFAULT$"
@@ -139,7 +151,7 @@
       // type-incompatible binding against it goes unreported (the run only
       // fails on unrelated no-missing-import noise). Root has
       // no workspace dep on the packages, so `^build:types` cannot reach
-      // them; these are package-qualified for that reason (//#check:graph-edges
+      // them; these are package-qualified for that reason (check:graph-edges
       // holds the list to every publishable package with a build:types script).
       "dependsOn": [
         "eslint-plugin-lit-ui-router#build:types",
@@ -178,8 +190,11 @@
         "apps/*/src/**",
         "examples/*/src/**",
         "eslint.config.ts",
-        "eslint.oxlint-directives.ts",
-        "eslint-rules/**/*.ts",
+        "tools/eslint/**",
+        // the glob above is explicit, so it is not gitignore-pruned and would
+        // otherwise hash that package's own run logs and .bin shims
+        "!**/.turbo/**",
+        "!**/node_modules/**",
         "tools/lint-elements/src/**",
         // the committed warning floor: raising or lowering it re-runs the lane
         "tools/lint-elements/warnings.json",
@@ -189,44 +204,17 @@
         "tools/eslint-ts-parser/src/**"
       ]
     },
-    "//#check:patches": {
-      // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
-      // could rotate a patch target re-runs the check
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-patches.ts",
-        "patches/**",
-        "pnpm-workspace.yaml",
-        "pnpm-lock.yaml",
-        "tools/shared/src/**"
-      ]
-    },
-    "//#check:graph-edges": {
-      // any manifest can gain or lose a selecting script, any turbo.json an edge
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-graph-edges.ts",
-        "**/turbo.json",
-        "**/package.json",
-        "pnpm-workspace.yaml",
-        "tools/shared/src/**"
-      ]
-    },
-    "//#check:task-inputs": {
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "check-task-inputs.ts",
-        "tools/shared/src/**"
-      ]
-    },
     "//#lint:package-json": {
       // $TURBO_DEFAULT$ so the list can't go stale into a false cache hit;
       // the globs stay as documentation of what the lane actually reads
       "inputs": [
         "$TURBO_DEFAULT$",
         "**/package.json",
+        "!**/node_modules/**",
+        "!.claude/**",
         "eslint.config.ts",
-        "eslint-rules/**/*.ts",
+        "tools/eslint/**",
+        "!**/.turbo/**",
         "packages/eslint-plugin-lit-ui-router/src/**",
         "pnpm-workspace.yaml",
         ".oxlintrc.json"
@@ -239,6 +227,10 @@
       "inputs": [
         "**/*.md",
         "!**/node_modules/**",
+        // rumdl lints tracked .md only, and this glob is not gitignore-pruned:
+        // the sample apps stage READMEs into dist, typedoc writes www api/
+        "!**/dist/**",
+        "!www/lit-ui-router.dev/api/**",
         "$TURBO_ROOT$/.config/rumdl.toml",
         "$TURBO_ROOT$/.config/mise/tasks/rumdl",
         "$TURBO_ROOT$/.config/mise/mise.lock"
@@ -268,10 +260,8 @@
       ]
     },
     "//#lint:zizmor": {
-      // zizmor also reads its own config (zizmor.yml).
       "inputs": [
         ".github/**",
-        "zizmor.yml",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock"
       ]
@@ -407,9 +397,15 @@
     },
     "format:check": {
       "with": ["//#format:check:root", "//#format:check:toml"],
+      // oxfmt skips gitignored files but this glob does not, so the generated
+      // trees have to come off by hand (same set as `lint` above)
       "inputs": [
         "**/*.{ts,js,mjs,cjs,json,jsonc,md,yml,yaml,html,vue}",
-        "!dist/**",
+        "!**/node_modules/**",
+        "!**/dist/**",
+        "!**/coverage/**",
+        "!**/.turbo/**",
+        "!**/.probe-scratch/**",
         "!.cache/**",
         ".oxfmtrc.json",
         "$TURBO_ROOT$/.oxfmtrc.json"
@@ -439,7 +435,10 @@
     },
     "e2e": {
       "dependsOn": ["^build"],
-      "with": ["docs#wrangler:dev"],
+      "with": ["@www/lit-ui-router.dev#wrangler:dev"],
+      // Override of the default in www/lit-ui-router.dev/dev-port.ts; both the
+      // server and the Cypress config read it, so it must reach both.
+      "passThroughEnv": ["WWW_DEV_PORT"],
       "cache": false,
       "persistent": true
     },

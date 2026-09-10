@@ -22,6 +22,7 @@
     "@pnpm/logger": "catalog:",
     "@pnpm/types": "catalog:",
     "@pnpm/workspace.project-manifest-reader": "catalog:",
+    "@tools/bootstrap": "workspace:*",
     "@tools/shared": "workspace:*",
     "@tools/workers-builds": "workspace:*",
     "@types/node": "catalog:",

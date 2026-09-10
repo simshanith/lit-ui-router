@@ -16,9 +16,13 @@ on:
   workflow_dispatch:
     inputs:
       runs:
-        description: 'Number of e2e attempts (1-10)'
-        type: number
-        default: 5
+        description: 'Number of e2e attempts'
+        # `type: number` renders the value back as a float (`5.0`), which the
+        # sampler's integer parse rejected — the dispatch silently sampled the
+        # default. A choice submits the exact string shown in the dropdown.
+        type: choice
+        default: '5'
+        options: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
   pull_request:
     types: [opened, labeled, synchronize, reopened]
 
@@ -67,7 +71,7 @@ jobs:
       - name: Start shared Xvfb display
         run: mise run //tools/build_and_test:xvfb
       - name: Build the served site
-        # The e2e server serves docs/dist; the filter pulls the app's full
+        # The e2e server serves www/lit-ui-router.dev/dist; the filter pulls the app's full
         # dependency closure. Remote cache makes this a restore when secrets
         # are present; dependabot/fork PRs (no secrets) build locally.
         run: turbo run build --filter=sample-app-lit-e2e...
@@ -79,9 +83,9 @@ jobs:
       - name: Run e2e attempts
         env:
           # Dispatch chooses; label runs sample the default. Inputs ride env,
-          # never `${{ }}` inside run lines. A non-numeric or 0 value falls
-          # back to the same default inside the script.
-          DEFLAKE_RUNS: ${{ inputs.runs || 5 }}
+          # never `${{ }}` inside run lines. The script re-clamps to 1-10 and
+          # falls back to the same default on an unparseable value.
+          DEFLAKE_RUNS: ${{ inputs.runs || '5' }}
           WRANGLER_LOG: warn
           CYPRESS_video: false
         run: pnpm --filter sample-app-lit-e2e run deflake

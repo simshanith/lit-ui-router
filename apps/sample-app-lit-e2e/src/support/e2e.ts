@@ -26,6 +26,7 @@ function seedLocationPlugin(win: Cypress.AUTWindow) {
 export function visitWithFeatures(
   path: string,
   features: Record<string, string> = {},
+  onBeforeLoad?: (win: Cypress.AUTWindow) => void,
 ) {
   const { query, isHashMode } = featureQuery(features);
   // Hash-mode visits target the bare mount (`/app-hash`, not `/app-hash/`):
@@ -42,7 +43,12 @@ export function visitWithFeatures(
     : isHashMode
       ? `${root}#${path}`
       : path;
-  return cy.visit(url, { onBeforeLoad: seedLocationPlugin });
+  return cy.visit(url, {
+    onBeforeLoad(win) {
+      seedLocationPlugin(win);
+      onBeforeLoad?.(win);
+    },
+  });
 }
 
 /**

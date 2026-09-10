@@ -1,4 +1,4 @@
-# One version authority per tool — see the toolchain table in CONTRIBUTING.md.
+# One version authority per tool — see the toolchain table in docs/CONTRIBUTING.md.
 
 # Monorepo task addressing (`mise run '//tools/release:pack'`): task defs live
 # beside the code they run. Root trust covers every config_root below, so the
@@ -21,6 +21,13 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
+# WWW_DEV_PORT is deliberately NOT declared here. Its default lives in code
+# (www/lit-ui-router.dev/dev-port.ts) so entry points that never traverse mise
+# still work; this file evaluates before config.local.toml, so a default here
+# would silently defeat a templated per-worktree override (#697). Set it in a
+# gitignored .config/mise/config.local.toml to move one worktree off the shared
+# port. Turbo runs in strict env mode, so tasks that carry it declare it in
+# passThroughEnv — it is transport only and must not enter a cache key.
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
@@ -69,7 +76,7 @@ idiomatic_version_file_enable_tools = ["node"]
 # optional platform dep, which mise's aube installer does not run.
 # Held equal to `packageManager`, so the bootstrap is already the version that
 # runs and the self-swap is a no-op.
-"aqua:pnpm/pnpm" = "12.2.1"
+"aqua:pnpm/pnpm" = "12.3.4"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
@@ -200,14 +207,84 @@ run = 'turbo run "${usage_package_name?}#build"'
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
+# The e2e suites are a SECOND step, not part of turbo's ci graph: they need a
+# dev server, and turbo owns no server lifecycle (see test_e2e). Kept inside
+# this task rather than added as a workflow step so `mise run ci` remains the
+# one entry point that means "the PR gate" — a split across two steps would
+# leave a local `mise run ci` silently short of CI. Second, so a lint or
+# typecheck failure short-circuits the expensive lane.
 description = "Run the pull-request CI pipeline via turbo"
-run = "turbo run ci --ui=stream --log-order=stream --summarize"
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "turbo run ci --ui=stream --log-order=stream --summarize",
+  "mise run test_e2e",
+]
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
-run = "turbo run ci:main --ui=stream --log-order=stream --summarize"
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "turbo run ci:main --ui=stream --log-order=stream --summarize",
+  "mise run test_e2e",
+]
+
+[tasks.test_e2e]
+# The e2e umbrella. turbo schedules and caches the six Cypress suites; the dev
+# server they share is started around them by start-server-and-test, which is
+# the lifecycle primitive turbo lacks — a `with:` sidecar is started but never
+# reaped, so a non-persistent run that used one would hang.
+#
+# Only the SERVER leaves the graph. The suites stay first-class turbo tasks with
+# real cache keys, which is what makes a single-suite rerun cheap.
+#
+# Both runs --summarize. The reporter reports every summary written since
+# `mark_session`, so these join the ci run rather than displacing it, which is
+# what the omission here used to buy. The build-filter run is fully cached
+# almost every time and says so in a line or two — cheap, and a silently absent
+# run is indistinguishable from one that never happened.
+#
+# --continue so one failing suite still lets the other five report, matching the
+# concurrently-based runner this replaced; turbo still exits non-zero. Without
+# it a flake in the first suite to fail cancels the rest, and turbo omits
+# cancelled tasks from the summary — so the report could not say whether the
+# other five passed, which is the question the split exists to answer.
+# Eager cancel also costs more than it saves: the suites fail at unpredictable
+# points, so killing the rest usually saves only the tail of the run, while the
+# five that would have finished stay uncached and the retry pays for all six.
+#
+# =dependencies-successful, not the bare flag: bare --continue means `always`,
+# which would run all six suites even when the build they depend on failed,
+# turning one build error into six Cypress failures.
+#
+# env: WWW_DEV_PORT is an override only — the default lives in dev-port.ts, so
+# there is no [env] declaration to interpolate and start-server-and-test is
+# reached through serve-and-test.ts, which resolves the port and builds the
+# readiness URLs from it. WRANGLER_LOG and CYPRESS_* reach Cypress through the
+# tasks' passThroughEnv.
+# Explicit, not inherited: the inner `turbo run` must see the whole workspace,
+# and a task invoked from a package directory would otherwise hand it a
+# silently narrowed plan (deflake-e2e.ts calls this from the e2e app). The
+# launcher only spawns start-server-and-test, so cwd stays the repo root.
+dir = "{{config_root}}"
+description = "Run the Cypress e2e suites via turbo, around one shared dev server"
+run = [
+  # The suites' own dependsOn cannot start the server, so the site has to be
+  # built before start-server-and-test rather than during the inner run.
+  "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize",
+  """node ./apps/sample-app-lit-e2e/scripts/serve-and-test.ts \
+  "pnpm --filter sample-app-lit-e2e run docs:start-server" \
+  "turbo run test:e2e:docs test:e2e:effect test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue=dependencies-successful --ui=stream --log-order=stream --summarize" \
+  app/ app-mobx/ app-effect/""",
+]
+
+[tasks.test_e2e.env]
+# start-server-and-test is a devDependency of the e2e app, and pnpm's isolated
+# node_modules keeps it out of the root .bin. Put that package's bin dir on PATH
+# rather than running under `pnpm --filter … exec`, which would move cwd into the
+# package and hand the inner `turbo run` a narrowed plan.
+_.path = ["{{config_root}}/apps/sample-app-lit-e2e/node_modules/.bin"]
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

@@ -13,9 +13,9 @@
 import { fileURLToPath } from 'node:url';
 
 import { defaultExec } from '@tools/shared/exec.ts';
-import { ensureGh } from '@tools/shared/gh.ts';
+import { ensureGh } from '../lib/gh.ts';
 import { logWarning } from '@tools/shared/gha.ts';
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import { checkRunApiArgs } from './publish-check-runs.core.ts';
 import {

@@ -2,15 +2,16 @@
 #MISE description="Report the CI wrangler-dev crash rate from build-test run logs (needs an authenticated gh)"
 #
 # Thin wrapper over apps/sample-app-lit-e2e/scripts/measure-deflake.ts. This
-# spec is the single source of defaults: the script requires every value and
-# fails loudly without them, so nothing drifts between the two files.
+# spec is the single source of defaults for everything but the port, whose
+# default lives in code (@www/lit-ui-router.dev/dev-port.ts) so the script works
+# outside mise too; every other value is required and fails loudly without it.
 #USAGE flag "--days <days>" help="Window size in days" default="7"
 #USAGE flag "--branch <branch>" help="Only this branch's runs — rate a trial branch without main diluting it"
 #USAGE flag "--repo <slug>" help="owner/name to scan" default="simshanith/lit-ui-router"
 #USAGE flag "--workflow <file>" help="Workflow whose runs carry the e2e task" default="build-test.yml"
 #USAGE flag "--max-log-mb <mb>" help="Per-attempt log buffer; an over-cap log aborts rather than undercounting" default="512"
 #USAGE flag "--run-limit <n>" help="gh run list cap; gh caps silently, so a hit clips the window's old end" default="1000"
-#USAGE flag "--port <n>" help="e2e dev-server port the crash signature keys on" default="8787"
+#USAGE flag "--port <n>" help="e2e dev-server port the crash signature keys on; defaults to WWW_DEV_PORT, then the dev-port.ts default"
 set -euo pipefail
 
 # File-based tasks are raw scripts: mise's {{config_root}} template does NOT
@@ -28,6 +29,7 @@ export MEASURE_DEFLAKE_REPO="${usage_repo:?}"
 export MEASURE_DEFLAKE_WORKFLOW="${usage_workflow:?}"
 export MEASURE_DEFLAKE_MAX_LOG_MB="${usage_max_log_mb:?}"
 export MEASURE_DEFLAKE_RUN_LIMIT="${usage_run_limit:?}"
-export MEASURE_DEFLAKE_PORT="${usage_port:?}"
+# Empty is a real answer here: the script falls back to its own default.
+export MEASURE_DEFLAKE_PORT="${usage_port:-${WWW_DEV_PORT:-}}"
 
 exec node "$script" "${args[@]}"

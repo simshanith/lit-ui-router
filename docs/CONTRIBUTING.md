@@ -1,0 +1,181 @@
+# Contributing to lit-ui-router
+
+## Development
+
+This repo uses [mise](https://mise.jdx.dev) to provision the toolchain used by contributors and CI. Each tool has exactly one version authority — one place to bump, no drift between duplicate pins:
+
+| Tool       | Provided by                                     | Pinned in                                                                 |
+| ---------- | ----------------------------------------------- | ------------------------------------------------------------------------- |
+| node       | mise                                            | [`.nvmrc`](../.nvmrc)                                                     |
+| npm        | mise (shadows node's bundled npm)               | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+| pnpm       | mise bootstraps, `packageManager` decides       | `packageManager` in [`package.json`](../package.json) (+sha512 integrity) |
+| turbo      | pnpm (`node_modules/.bin` on `PATH` via mise)   | [`pnpm-workspace.yaml`](../pnpm-workspace.yaml) catalog                   |
+| actionlint | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+| zizmor     | mise (aqua backend, checksummed in `mise.lock`) | [`.config/mise/config.toml`](../.config/mise/config.toml)                 |
+
+```bash
+# Install mise: https://mise.jdx.dev/getting-started.html
+mise trust
+mise install     # provisions node, pnpm, npm, actionlint, zizmor
+mise run setup   # pnpm install
+turbo build
+```
+
+`mise install` provisions the pinned Node and a bootstrap pnpm. `mise run setup` is the bootstrap layer pnpm scripts can't own (there is no `node_modules` yet): `pnpm install` runs — frozen-lockfile automatically in CI.
+
+The mise pin is a **bootstrap floor, not the version that runs**: pnpm ≥ 11.10 reads `packageManager` and swaps itself to it, so that field stays the single version authority for contributors, CI, and [Cloudflare Workers Builds](../www/DEPLOY.md) alike. corepack used to fill this role, could not for the first pnpm 12 prereleases, and can again as of 12.0.0-rc.6 — the published package ships a `bin/pnpm.mjs` that fetches the pinned native binary on first use. The aqua backend is still what this repo provisions with: it needs no Node, makes no first-use network fetch, and records a checksum **per platform** in `mise.lock` plus GitHub artifact attestations, against corepack's single `+sha512`. That `+sha512` is carried in `packageManager` anyway, so a contributor whose environment reaches for corepack still gets an integrity-checked binary — it is enforced there and ignored by pnpm's own self-swap, which resolves through the lockfile instead. No separate `nvm use`, `pnpm add --global`, or global turbo needed. With mise active, `node_modules/.bin` is on `PATH`, so bare `turbo` (and every other workspace binary) runs the workspace-pinned version; everything after bootstrap belongs to turbo/pnpm scripts. mise-owned binaries (actionlint, zizmor) are invoked via mise tasks; package.json scripts delegate with `mise run`, never `mise exec`.
+
+pnpm's isolated `node_modules` means a workspace member's devDep binaries (`vitest`, `typedoc`, `vitepress`, …) live in that member's own `node_modules/.bin`, not the root one. When your shell is cd'd into a member directory, mise also puts that member's `.bin` first on `PATH`, so bare invocations resolve exactly as the member's own pnpm scripts would — including a member-local version shadowing the root one (e.g. `tools/vue-check`'s TypeScript 6 `tsc`). This only applies at the member's root directory, not its subdirectories; `pnpm run` inside the member works everywhere regardless. See [TURBO.md](./TURBO.md) for detailed turbo commands and workflows.
+
+## Running Tests
+
+```bash
+# Run the PR CI pipeline (build, tests, coverage, lint, typecheck,
+# format check, bundle checks) — what every PR runs
+mise run ci
+
+# PR pipeline plus the main-only guards (Firefox/WebKit vitest engines pass,
+# pack check, dts-backtest TS matrix) — what a push to main runs
+mise run ci_main
+
+# Run unit tests only
+pnpm --filter lit-ui-router test
+
+# Run E2E tests (starts the dev server, then the five suites through turbo)
+mise run test_e2e
+```
+
+`mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
+
+## TypeScript authoring
+
+The published packages support consumers on **TypeScript 5.0+**, while the
+repo itself builds with a newer TypeScript (pinned in the pnpm catalog).
+The floor constrains only the **public API surface**: whatever appears in
+the emitted `dist/*.d.ts` (exported types, signatures) must be valid under
+TypeScript 5.0. Implementation code may freely use features of the repo's
+current TypeScript — they only matter if they leak into a declaration
+(e.g. `NoInfer<T>` in an exported signature breaks 5.0 consumers; the same
+type inside a function body emits nothing and is fine).
+
+This is enforced in CI by [`tools/dts-backtest`](../tools/dts-backtest/README.md),
+which typechecks the built declarations in `bundler` and `NodeNext`
+resolution modes. PRs run the current-TS leg (`@tools/dts-backtest#test`);
+pushes to `main` run the full TypeScript version matrix down to 5.0.4
+(`@tools/dts-backtest#test:matrix`, part of the `ci:main` graph). If
+`@tools/dts-backtest#test` fails on your change, keep the newer-TS construct out
+of the public surface — or raise the floor, which is a semver-major
+discussion (see the tool README).
+
+## Pull Requests
+
+- Fork PRs won't run CI automatically (secrets aren't available to forks)
+- A maintainer will review and run CI on your behalf
+- Ensure your changes pass local tests before submitting
+
+### Automated review
+
+[CodeRabbit](https://docs.coderabbit.ai) reviews by request, not by default —
+the free OSS tier meters reviews, so they are worth spending deliberately. Label
+a PR `coderabbit:review` to ask for one; it is one-shot, and
+[`coderabbit-oneshot.yml`](../.github/workflows/coderabbit-oneshot.yml) strips
+the label again once the review lands, so pushing more commits does not spend a
+second review. Re-label to ask for another pass, or comment
+`@coderabbitai review`, which works on any PR without touching a label. Label a
+PR `coderabbit:skip` to record that it is reviewed by hand: that veto wins even
+if `coderabbit:review` is also on. Drafts are not reviewed — work here sits in
+draft a long time and a WIP push is not a review request — but the label
+survives the flip, so labelling a draft queues the review up for the moment it
+is marked ready. It is advisory either way: no required status check, nothing it says blocks a
+merge. `mise run ci` remains the gate.
+
+The older `no-coderabbit` opt-out and the `release` exclusion still sit in the
+config. Neither does anything now that a review has to be asked for; they stay
+until the new labels have proven out.
+
+Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
+PR's own branch, so a PR may adjust its own review — and a long-lived branch
+keeps the rules it was cut with until it picks up `main`. The static analysers this
+repo already gates (oxlint, ESLint, actionlint, zizmor, shellcheck, rumdl,
+yamllint) are switched off there to avoid a second, weaker copy of CI; secret
+scanning is left on because nothing else covers it.
+
+Because the config is read from the PR branch, a PR can also disable its own
+review — including the `gitleaks` secret scan. Treat CodeRabbit as defence in
+depth, never as the secret-scanning floor: that belongs to GitHub's own secret
+scanning and push protection, which no PR can reach.
+
+Useful comment commands: `@coderabbitai review` for an incremental pass,
+`@coderabbitai full review` to re-review from scratch, `@coderabbitai pause` and
+`resume`, and `@coderabbitai configuration` to print the resolved settings.
+Replying to a review comment in plain English teaches it a durable convention.
+
+## Commit conventions
+
+Every change lands on `main` as a **squash merge**, and the squash commit is
+built from the PR itself:
+
+- **PR title → commit subject.** Must be a [Conventional Commit](https://www.conventionalcommits.org/)
+  header, e.g. `fix(navigation-location-plugin): handle hash-only URLs`.
+  Allowed types: `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`,
+  `build`, `ci`, `chore`, `revert`. Scope is optional; `!` after the
+  type/scope marks a breaking change.
+- **Branch commit messages → commit body.** The squash body is assembled from
+  the PR's individual commit messages (GitHub's `COMMIT_MESSAGES` setting), so
+  write branch commits as conventional commits too — a `BREAKING CHANGE:`
+  footer in a commit message (or `!` in the PR title) is what signals a major.
+- **PR description → review artifact only.** It never lands in git history;
+  write whatever helps reviewers, HTML comments and all.
+
+The `Semantic PR` workflow (`.github/workflows/semantic-pr.yml`) enforces the
+title on every PR. The `Commitlint` workflow
+(`.github/workflows/commitlint.yml`) lints the PR's individual commits — the
+messages that become the squash body — with
+[commitlint](https://commitlint.js.org/) via
+`wagoid/commitlint-github-action`. The rules live in `.commitlintrc.ts`:
+`@commitlint/config-conventional` plus its default ignores (GitHub's
+`Merge branch '…'` wordings, reverts, `fixup!`/`squash!`) and one extra ignore
+for hand-typed `merge <x> into <y>` freshens. To check a message locally:
+
+```sh
+echo "feat(scope): my subject" | pnpm exec commitlint
+```
+
+Commits are also checked at commit time: `mise run setup` (pnpm install) installs a
+[husky](https://typicode.github.io/husky/) `commit-msg` hook (via the root
+`prepare` script) that runs commitlint locally, and CI re-checks the same
+messages via the `lint_pr_commits` job. If the hook is missing — pnpm 11
+skips lifecycle scripts on "Already up to date" installs — run
+`pnpm run prepare`. To skip the hook for one commit (`git commit -n`) or
+disable husky entirely (`HUSKY=0`, which CI sets), see
+[husky's how-to](https://typicode.github.io/husky/how-to.html).
+
+### Enforcement gaps
+
+Honest limits of this setup:
+
+- The merge dialog lets whoever merges overwrite the pre-filled message;
+  auto-merge (`gh pr merge --squash --auto`) avoids that edit entirely.
+- Repository admins (including the release automation's PAT) bypass the
+  `main` ruleset and can push non-conventional commits directly.
+- Release PRs from the "Bump version" workflow are titled `Release X.Y.Z`
+  and rely on the `release` label (or admin bypass) to skip the title lint.
+- Merge commits are exempt from the commit lint, so refreshing a branch via
+  merge adds `Merge branch 'main' into …` noise bullets to the squash body —
+  prefer rebase to refresh.
+
+## Releases
+
+Releases are handled by maintainers using GitHub Actions. See [RELEASE.md](./RELEASE.md) for the complete release workflow documentation.
+
+**Quick overview:**
+
+1. Maintainer triggers "Bump version" workflow
+2. Release PR is created and reviewed
+3. Merge runs main CI; a green run tags the release automatically (manual
+   dispatch of "Tag & push" is the escape hatch)
+4. Tag triggers NPM publish and GitHub Release
+
+## Deployment
+
+The [Cloudflare Github integration](https://developers.cloudflare.com/workers/ci-cd/builds/git-integration/github-integration/) deploys documentation on push. See [`www/DEPLOY.md`](../www/DEPLOY.md) for details.

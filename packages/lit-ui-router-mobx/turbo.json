@@ -3,7 +3,7 @@
   "extends": ["//"],
   "tasks": {
     "docs:api": {
-      "outputs": ["../../docs/api/lit-ui-router-mobx/**"]
+      "outputs": ["../../www/lit-ui-router.dev/api/lit-ui-router-mobx/**"]
     }
   }
 }

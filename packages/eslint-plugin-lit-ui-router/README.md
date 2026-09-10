@@ -167,11 +167,11 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 
 ## Semver policy
 
-Following ESLint core's own policy: a change that makes `recommended` or an existing rule stricter — new reports on code that previously passed — ships as a **major**. The option-aware tier (`sref-assign-href`, `sref-active-aria-current`, `directive-position`) widened `recommended` before 1.0.0, while the package is still a release candidate and a widening costs nobody a major. The remaining roadmap (a state-aware tier) is the same trajectory, so expect majors, not silent tightening.
+Following ESLint core's own policy: a change that makes `recommended` or an existing rule stricter — new reports on code that previously passed — ships as a **major**. The option-aware tier (`sref-assign-href`, `sref-active-aria-current`, `directive-position`) widened `recommended` during the 1.0.0 release candidates, where a widening cost nobody a major. The remaining roadmap (a state-aware tier) is the same trajectory, so expect majors, not silent tightening.
 
 ## Module format and Node support
 
-Published as ESM only. Flat config loads ESM natively; a CommonJS config can `require()` this package on Node `^20.19.0` or `>=22.12.0`. The `engines` range mirrors what the ESLint peer range itself supports, not this repository's own Node version.
+Published as ESM only. Flat config loads ESM natively; a CommonJS config can `require()` this package on Node `^20.19.0` or `>=22.12.0`; the call returns the module namespace, so read the plugin from its `.default`. The `engines` range mirrors what the ESLint peer range itself supports, not this repository's own Node version.
 
 ## The template-analyzer deep import
 
