@@ -1546,6 +1546,9 @@ importers:
       typescript:
         specifier: 'catalog:'
         version: 7.0.2
+      typescript-6:
+        specifier: catalog:typescript6
+        version: typescript@6.0.3
 
   tools/shared:
     devDependencies:

@@ -13,6 +13,7 @@
     "check:release-closure": "turbo run @tools/release#check:release-closure",
     "check:task-inputs": "turbo run @tools/repo-checks#check:task-inputs",
     "check:workers-builds": "turbo run @tools/workers-builds#check",
+    "check:workspace-deps": "turbo run @tools/repo-checks#check:workspace-deps",
     "ci": "turbo run ci",
     "dev": "turbo run dev",
     "format": "turbo run format",
