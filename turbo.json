@@ -435,7 +435,9 @@
     "e2e": {
       "dependsOn": ["^build"],
       "with": ["@www/lit-ui-router.dev#wrangler:dev"],
-      "passThroughEnv": ["DOCS_DEV_PORT"],
+      // Override of the default in www/lit-ui-router.dev/dev-port.ts; both the
+      // server and the Cypress config read it, so it must reach both.
+      "passThroughEnv": ["WWW_DEV_PORT"],
       "cache": false,
       "persistent": true
     },

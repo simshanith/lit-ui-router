@@ -275,4 +275,11 @@ With turbo:
 turbo @www/lit-ui-router.dev#wrangler:dev
 ```
 
+Both serve on port 8787. That default lives in `dev-port.ts` beside the worker,
+not in any environment, so neither form needs mise. Export `WWW_DEV_PORT` to
+move it — for a second worktree, put it in a gitignored
+`.config/mise/config.local.toml`; the e2e app's
+[README](../apps/sample-app-lit-e2e/README.md#the-port) covers why the port is
+contended.
+
 See Cloudflare Workers Testing Docs: [Local Development](https://developers.cloudflare.com/workers/testing/local-development/)

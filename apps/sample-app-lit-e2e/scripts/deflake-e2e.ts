@@ -1,3 +1,4 @@
+import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { appendFileSync, createWriteStream, readFileSync } from 'node:fs';
 import { connect } from 'node:net';
@@ -6,8 +7,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 // Sample the sample-app-lit-e2e suites N times serially and report per-attempt
 // flake. Inputs ride the environment (workflow step `env:`), never argv:
 //   DEFLAKE_RUNS  attempts, clamped to 1-10 (non-numeric/empty -> 5)
-//   DEFLAKE_PORT  dev-server port to verify free between attempts
-//                 (defaults to DOCS_DEV_PORT, declared in mise config)
+//   WWW_DEV_PORT  dev-server port to verify free between attempts; unset means
+//                 the default in @www/lit-ui-router.dev/dev-port.ts
 // Each attempt is a full `mise run test_e2e` — dev server started and torn
 // down around one turbo run of the five suites. TURBO_FORCE is set per
 // attempt because those suites ARE cached tasks now: without it attempt 2
@@ -29,15 +30,6 @@ export function clampRuns(raw: string | undefined): number {
   if (raw === undefined || raw.trim() === '' || !Number.isFinite(parsed))
     return 5;
   return Math.min(10, Math.max(1, Math.trunc(parsed)));
-}
-
-// No literal fallback: the port is declared once, in mise config (#697).
-export function parsePort(raw: string | undefined): number {
-  if (raw === undefined || !/^[0-9]+$/.test(raw))
-    throw new Error(
-      'DEFLAKE_PORT/DOCS_DEV_PORT unset or non-numeric — run this through mise',
-    );
-  return Number.parseInt(raw, 10);
 }
 
 // True when something answers a TCP connect on 127.0.0.1:port. Connection
@@ -139,7 +131,7 @@ async function main(): Promise<void> {
   }
 
   const runs = clampRuns(process.env.DEFLAKE_RUNS);
-  const port = parsePort(process.env.DEFLAKE_PORT ?? process.env.DOCS_DEV_PORT);
+  const port = resolveWwwDevPort();
   const crashSignature = crashSignatureFor(port);
 
   let fails = 0;
