@@ -258,7 +258,7 @@ run = [
 # which would run all five suites even when the build they depend on failed,
 # turning one build error into five Cypress failures.
 #
-# env: DOCS_DEV_PORT is an override only — the default lives in dev-port.ts, so
+# env: WWW_DEV_PORT is an override only — the default lives in dev-port.ts, so
 # there is no [env] declaration to interpolate and start-server-and-test is
 # reached through serve-and-test.ts, which resolves the port and builds the
 # readiness URLs from it. WRANGLER_LOG and CYPRESS_* reach Cypress through the
