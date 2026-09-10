@@ -321,6 +321,24 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   _deregisterOnStatesChanged: deregisterFn | undefined;
 
+  /**
+   * The part's element, kept across a disconnect so {@link reconnected} can
+   * re-arm. `element` itself is nulled on disconnect and stays the "live
+   * element or nothing" signal.
+   *
+   * @internal
+   */
+  private _partElement: Element | null = null;
+
+  /**
+   * The last `targetStates` argument. `firstUpdated` branches on it — seeded
+   * targets, a literal `state`, or listening for a child uiSref — so a
+   * reconnect has to replay the same one to re-arm the same way.
+   *
+   * @internal
+   */
+  private _lastTargetStates: TargetState[] | undefined = undefined;
+
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
@@ -533,6 +551,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.options = options;
 
     const { element } = part;
+    this._partElement = element;
+    this._lastTargetStates = targetStates;
 
     if (this.element !== element) {
       this.element = element;
@@ -625,6 +645,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   /** @internal */
   disconnected(): void {
+    // re-arming is what `reconnected` does; without this it would no-op
+    this._firstUpdated = false;
     if (!this.element) {
       return;
     }
@@ -638,7 +660,31 @@ export class UiSrefActiveDirective extends AsyncDirective {
     );
     this.element = null;
     this._deregisterOnStart?.();
+    this._deregisterOnStart = undefined;
     this._deregisterOnStatesChanged?.();
+    this._deregisterOnStatesChanged = undefined;
+  }
+
+  /**
+   * Re-arms after the host element is re-attached. `update` re-arms only when
+   * the part's ELEMENT changes, and a detach/re-attach reuses the same one, so
+   * without this the directive comes back with no transition subscription and
+   * freezes on whatever classes it last applied.
+   *
+   * @internal
+   */
+  reconnected(): void {
+    this.element = this._partElement;
+    if (!this.element) {
+      return;
+    }
+    // when the targets come from a child uiSref, hold them across the re-arm:
+    // firstUpdated clears them, and a uiSref on the SAME element reconnects
+    // FIRST, re-dispatching its target before our listener is back
+    const listening = !this._lastTargetStates && !this.state;
+    const retained = listening ? [...this.targetStates] : [];
+    this.firstUpdated({ targetStates: this._lastTargetStates });
+    retained.forEach((targetState) => this.targetStates.add(targetState));
   }
 
   /** @internal */
