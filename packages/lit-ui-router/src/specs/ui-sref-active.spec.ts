@@ -390,6 +390,130 @@ describe('uiSrefActive directive', () => {
     });
   });
 
+  // The nav-bar shape the sample apps use: uiSrefActive on a wrapper with no
+  // state of its own, discovering its target from a child uiSref, while the
+  // router sits on a DESCENDANT of that target. The two halves are covered
+  // separately above ('active but not exact when child state is active' puts
+  // both directives on one element; 'child sref is active' uses a leaf state)
+  // — these pin them together, which is the combination a nav item is.
+  describe('watching child uiSref elements, under a nested state', () => {
+    it('should stay active on the wrapper when a child state is entered', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'parent', url: '/parent' },
+        { name: 'parent.child', url: '/child' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      render(
+        html`<li
+          ${uiSrefActive({ activeClasses: ['active'], exactClasses: ['exact'] })}
+        >
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'active on the parent').toBe(
+        true,
+      );
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      expect(li.classList.contains('active'), 'still active on the child').toBe(
+        true,
+      );
+      expect(li.classList.contains('exact'), 'no longer the exact match').toBe(
+        false,
+      );
+    });
+
+    it('should go active when a child state is entered directly', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'parent', url: '/parent' },
+        { name: 'parent.child', url: '/child' },
+        { name: 'elsewhere', url: '/elsewhere' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'elsewhere');
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'inactive elsewhere').toBe(false);
+
+      // never visiting `parent` first: the wrapper has to match the ancestor
+      // in the destination path, not remember a previous exact hit
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      expect(li.classList.contains('active'), 'active on the child').toBe(true);
+    });
+  });
+
+  // Neither uiSref nor uiSrefActive implements lit's `reconnected()`, and
+  // `disconnected()` drops the onStart subscription and the child-sref
+  // listener. update() re-arms only when the part's element CHANGES, so a part
+  // that is disconnected and reconnected as the same element has nothing to
+  // bring its subscriptions back. A nav bar behind a conditional does exactly
+  // this.
+  describe('after a disconnect and reconnect', () => {
+    it('should keep tracking transitions on the same element', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<a
+          ${uiSref('about')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >About</a
+        >`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'about');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active'), 'active before').toBe(true);
+
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+
+      await routerGo(router, 'home');
+      await tick(100);
+      expect(anchor.classList.contains('active'), 'cleared after leaving').toBe(
+        false,
+      );
+
+      await routerGo(router, 'about');
+      await tick(100);
+      expect(
+        anchor.classList.contains('active'),
+        'active again after returning',
+      ).toBe(true);
+    });
+  });
+
   describe('transition state tracking', () => {
     it('should update on state changes', async () => {
       const states: LitStateDeclaration[] = [
