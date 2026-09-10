@@ -11,8 +11,8 @@ mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds both apps'
-builds), serves it with wrangler on `$DOCS_DEV_PORT`, and runs five Cypress
-suites concurrently:
+builds), serves it with wrangler on port 8787, and runs five Cypress suites
+concurrently:
 
 | Suite       | Target        | Covers                                                                                                              |
 | ----------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -27,7 +27,7 @@ so rerunning one after a flake costs that suite alone rather than all five:
 
 ```bash
 mise run test_e2e   # then, to redo just one:
-turbo run test:e2e:hash   # requires a server already on $DOCS_DEV_PORT
+turbo run test:e2e:hash   # requires a server already on the dev-server port
 ```
 
 The server is deliberately outside the turbo graph. turbo has no lifecycle for
@@ -37,6 +37,32 @@ Only the server leaves the graph; the suites stay first-class cached tasks.
 
 The same run executes in CI: `mise run ci` runs the turbo graph and then this
 umbrella, so `test:e2e:*` appear in no `ci:*` turbo task.
+
+### The port
+
+8787 is a default, not a fixture. It lives in code —
+`www/lit-ui-router.dev/dev-port.ts`, beside the server that binds it — so every
+entry point resolves it the same way, mise or no mise. Setting `WWW_DEV_PORT`
+overrides it, and the server, both Cypress configs, and the deflake sampler all
+read the override.
+
+That matters because the port is contended: a second checkout running the suite
+on 8787 tests the _first_ one's build, silently. To move a worktree off the
+shared port, give it a gitignored `.config/mise/config.local.toml`:
+
+```toml
+[env]
+WWW_DEV_PORT = "8801"
+```
+
+`config_root` resolves per worktree, so the file binds only that checkout — the
+same shape `turbo.local.env` and `cloudflare.local.env` already use. A plain
+`export WWW_DEV_PORT=8801` works identically for a one-off run.
+
+The checked-in `.config/mise/config.toml` deliberately does **not** declare
+`WWW_DEV_PORT`. It evaluates before `config.local.toml`, so a default there
+would already be in the environment when the local file rendered, and the local
+override would silently defer to it.
 
 ## Location plugin suites
 
@@ -87,12 +113,13 @@ repo-specific config as flags with defaults — `mise run measure_deflake
 | `--workflow`   | `build-test.yml`           | Workflow whose runs carry the e2e task                |
 | `--max-log-mb` | `512`                      | Per-attempt log buffer; an over-cap log aborts loudly |
 | `--run-limit`  | `1000`                     | `gh run list` cap; a hit clips the window's old end   |
-| `--port`       | `$DOCS_DEV_PORT`           | e2e dev-server port the crash signature keys on       |
+| `--port`       | `WWW_DEV_PORT`, then 8787  | e2e dev-server port the crash signature keys on       |
 
-That spec is the _only_ place defaults live. The task passes `--days` (and
-`--branch`, when given) as positionals and the rest as `MEASURE_DEFLAKE_*`
-env vars; the script requires all of them and exits pointing back at
-`mise run measure_deflake` if any is missing. Direct exec works — the file
+That spec is the only place defaults live, save the port — its default lives in
+code (see [The port](#the-port)) so the script works outside mise too. The task
+passes `--days` (and `--branch`, when given) as positionals and the rest as
+`MEASURE_DEFLAKE_*` env vars; the script requires all but the port and exits
+pointing back at `mise run measure_deflake` if any is missing. Direct exec works — the file
 is `0755` with a `#!/usr/bin/env node` shebang — but you own the contract:
 
 ```bash
@@ -100,7 +127,6 @@ MEASURE_DEFLAKE_REPO=simshanith/lit-ui-router \
   MEASURE_DEFLAKE_WORKFLOW=build-test.yml \
   MEASURE_DEFLAKE_MAX_LOG_MB=512 \
   MEASURE_DEFLAKE_RUN_LIMIT=1000 \
-  MEASURE_DEFLAKE_PORT="$DOCS_DEV_PORT" \
   ./scripts/measure-deflake.ts 2 my-branch
 ```
 
