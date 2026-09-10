@@ -741,26 +741,18 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   /** @internal */
   onTransitionStart = (trans: Transition): void => {
-    this.element!.dispatchEvent(
-      this.createTransitionStateChangeEvent(TransitionStateChange.start, trans),
-    );
+    // a transition in flight outlives a disconnect: deregistering stops the
+    // next `onStart`, not the settlement already subscribed to below, and
+    // `element` is null until a reconnect restores it
+    const dispatch = (evt: TransitionStateChange): void => {
+      this.element?.dispatchEvent(
+        this.createTransitionStateChangeEvent(evt, trans),
+      );
+    };
+    dispatch(TransitionStateChange.start);
     trans.promise.then(
-      () => {
-        this.element!.dispatchEvent(
-          this.createTransitionStateChangeEvent(
-            TransitionStateChange.success,
-            trans,
-          ),
-        );
-      },
-      () => {
-        this.element!.dispatchEvent(
-          this.createTransitionStateChangeEvent(
-            TransitionStateChange.error,
-            trans,
-          ),
-        );
-      },
+      () => dispatch(TransitionStateChange.success),
+      () => dispatch(TransitionStateChange.error),
     );
   };
 

@@ -1577,6 +1577,33 @@ describe('UiSrefActiveDirective methods', () => {
       directive.onTransitionStart(trans);
       expect(dispatchEventSpy).toHaveBeenCalled();
     });
+
+    // deregistering stops the next onStart, not a settlement already subscribed
+    it('should stay quiet when the transition settles after a disconnect', async () => {
+      let settle!: () => void;
+      const trans = {
+        treeChanges: () => ({}),
+        promise: new Promise<void>((resolve) => (settle = resolve)),
+      } as unknown as Transition;
+
+      directive.onTransitionStart(trans);
+      const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+      // the settlement reaches for `element` to dispatch on; without the guard
+      // it builds the event, then throws on the null. Watching the build is
+      // what separates "skipped" from "threw on the way".
+      const buildEventSpy = vi.spyOn(
+        directive,
+        'createTransitionStateChangeEvent',
+      );
+
+      directive.disconnected();
+      settle();
+      await expect(trans.promise).resolves.toBeUndefined();
+      await tick();
+
+      expect(buildEventSpy).not.toHaveBeenCalled();
+      expect(dispatchEventSpy).not.toHaveBeenCalled();
+    });
   });
 
   describe('onTransitionStateChange', () => {
