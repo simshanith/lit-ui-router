@@ -3,15 +3,14 @@
   "extends": ["//"],
   "tasks": {
     "build": {
-      // ordered, not `with`: consumers reach the manifest through `^build`, and
-      // an unordered sidecar let them start bundling before it was written
+      // the manifest is a published output: `build` is not done without it
       "dependsOn": [
         "^build",
         "build:js",
         "build:types",
         "build:custom-elements"
       ],
-      // the manifest is the other task's output, so keep it out of this archive
+      // but it belongs to the task that writes it, not to both archives
       "outputs": ["dist/**", "!dist/custom-elements.json"]
     },
     "build:custom-elements": {
