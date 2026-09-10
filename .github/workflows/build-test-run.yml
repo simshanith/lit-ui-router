@@ -206,6 +206,20 @@ jobs:
           path: apps/sample-app-lit-e2e/cypress/videos*/
           retention-days: 5
           if-no-files-found: warn
+      - name: Upload vitest attachments
+        if: ${{ failure() }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: vitest-attachments
+          path: |
+            apps/*/.vitest/
+            packages/*/.vitest/
+            tools/*/.vitest/
+          # `.vitest` is below the search root here, so the hidden-basename
+          # check drops it without this.
+          include-hidden-files: true
+          retention-days: 5
+          if-no-files-found: ignore
       - name: Upload wrangler logs
         # The e2e dev server (wrangler dev) intermittently crashes mid-suite
         # with an empty error; its crash log lands only in the runner's
