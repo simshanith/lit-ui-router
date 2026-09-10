@@ -1578,6 +1578,22 @@ describe('UiSrefActiveDirective methods', () => {
       expect(dispatchEventSpy).toHaveBeenCalled();
     });
 
+    it('should dispatch an error event when the transition rejects', async () => {
+      const trans = {
+        treeChanges: () => ({}),
+        promise: Promise.reject(new Error('aborted')),
+      } as unknown as Transition;
+      // the directive handles it; this keeps the spec's own read handled too
+      trans.promise.catch(() => {});
+
+      directive.onTransitionStart(trans);
+      const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+      await tick();
+
+      const [event] = dispatchEventSpy.mock.calls[0] as [CustomEvent];
+      expect(event.detail.evt).toBe(TransitionStateChange.error);
+    });
+
     // deregistering stops the next onStart, not a settlement already subscribed
     it('should stay quiet when the transition settles after a disconnect', async () => {
       let settle!: () => void;
