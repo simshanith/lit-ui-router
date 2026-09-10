@@ -1437,4 +1437,12 @@ describe('UiSrefDirective', () => {
       new UiSrefDirective({ type: 6 } as any);
     }).not.toThrow();
   });
+
+  // update() never ran, so there is no part element to re-arm against
+  it('should reconnect harmlessly when no part element was ever seen', () => {
+    const directive = new UiSrefDirective({ type: 6 } as any);
+    directive.disconnected();
+    expect(() => directive.reconnected()).not.toThrow();
+    expect(directive.element).toBeNull();
+  });
 });

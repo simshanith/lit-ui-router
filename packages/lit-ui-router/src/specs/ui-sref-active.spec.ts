@@ -514,6 +514,41 @@ describe('uiSrefActive directive', () => {
     });
   });
 
+  // The other branch of reconnected(): an explicit `state` resolves its own
+  // target, so there is nothing to hold across the re-arm.
+  it('should keep tracking when the target comes from an explicit state', async () => {
+    const states: LitStateDeclaration[] = [
+      { name: 'home', url: '/home' },
+      { name: 'about', url: '/about' },
+    ];
+    const { wrapper } = await setupWithStates(states);
+
+    const part = render(
+      html`<span ${uiSrefActive({ activeClasses: ['active'], state: 'about' })}
+        >About</span
+      >`,
+      wrapper,
+    );
+    await tick(100);
+
+    await routerGo(router, 'about');
+    await tick(100);
+
+    const span = wrapper.querySelector('span')!;
+    expect(span.classList.contains('active'), 'active before').toBe(true);
+
+    part.setConnected(false);
+    await tick(50);
+    part.setConnected(true);
+    await tick(50);
+
+    await routerGo(router, 'home');
+    await tick(100);
+    expect(span.classList.contains('active'), 'cleared after leaving').toBe(
+      false,
+    );
+  });
+
   describe('transition state tracking', () => {
     it('should update on state changes', async () => {
       const states: LitStateDeclaration[] = [
@@ -1519,6 +1554,16 @@ describe('UiSrefActiveDirective methods', () => {
     it('should set element to null', () => {
       directive.disconnected();
       expect(directive.element).toBeNull();
+    });
+  });
+
+  describe('reconnected', () => {
+    // update() never ran, so there is no part element to re-arm against
+    it('should do nothing when no part element was ever seen', () => {
+      directive.disconnected();
+      directive.reconnected();
+      expect(directive.element).toBeNull();
+      expect(directive._firstUpdated).toBe(false);
     });
   });
 
