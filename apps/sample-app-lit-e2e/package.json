@@ -15,14 +15,13 @@
     "test:e2e:hash": "node ./scripts/cypress-suite.ts hash",
     "test:e2e:mobx": "node ./scripts/cypress-suite.ts mobx",
     "test:e2e:pushstate": "cypress run --expose LOCATION_PLUGIN=pushState --config videosFolder=cypress/videos-pushstate,screenshotsFolder=cypress/screenshots-pushstate",
-    "test:e2e:vanilla": "cypress run",
-    "test:hash": "node ./scripts/serve-and-test.ts docs:start-server test:e2e:hash app/",
-    "test:pushstate": "node ./scripts/serve-and-test.ts docs:start-server test:e2e:pushstate app/"
+    "test:e2e:vanilla": "cypress run"
   },
   "dependencies": {
     "@www/lit-ui-router.dev": "workspace:*"
   },
   "devDependencies": {
+    "@tools/bootstrap": "workspace:*",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",
     "cypress": "catalog:",

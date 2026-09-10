@@ -5,23 +5,30 @@ import { spawn } from 'node:child_process';
 // built from the resolved port. A launcher rather than a shell interpolation:
 // shell can fail on an unset var but cannot supply one (#697).
 //
-// `server` and `test` pass straight through, so either can be a package script
-// (from this package) or a whole command — the //:test_e2e mise task runs from
-// the repo root, where no script name of this package resolves.
-// Usage: serve-and-test.ts <server> <test> <ready path>...
-const [server, test, ...paths] = process.argv.slice(2);
-if (server === undefined || test === undefined || paths.length === 0) {
-  console.error('usage: serve-and-test.ts <server> <test> <ready-path>...');
-  process.exit(1);
+// A function rather than a CLI: the one caller is run-e2e.ts, which builds the
+// `turbo run` from the selected suites and would otherwise have to quote a
+// whole command through argv.
+
+/**
+ * Serve the docs site, wait for every `paths` entry to answer, run `test`, and
+ * tear the server down — on failure too. Resolves to the test command's exit
+ * code; a signal is re-raised on this process instead.
+ */
+export function serveAndTest(
+  server: string,
+  test: string,
+  paths: readonly string[],
+): void {
+  const port = resolveWwwDevPort();
+  const ready = paths
+    .map((path) => `http://localhost:${port}/${path}`)
+    .join('|');
+
+  const child = spawn('start-server-and-test', [server, ready, test], {
+    stdio: 'inherit',
+  });
+  child.on('exit', (code, signal) => {
+    if (signal) process.kill(process.pid, signal);
+    process.exitCode = code ?? 1;
+  });
 }
-
-const port = resolveWwwDevPort();
-const ready = paths.map((path) => `http://localhost:${port}/${path}`).join('|');
-
-const child = spawn('start-server-and-test', [server, ready, test], {
-  stdio: 'inherit',
-});
-child.on('exit', (code, signal) => {
-  if (signal) process.kill(process.pid, signal);
-  process.exitCode = code ?? 1;
-});

@@ -494,6 +494,9 @@ importers:
         specifier: workspace:*
         version: link:../../www/lit-ui-router.dev
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../../tools/bootstrap
       '@types/lodash-es':
         specifier: 'catalog:'
         version: 4.17.12
