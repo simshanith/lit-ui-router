@@ -148,6 +148,46 @@ describe('authenticated sample app', () => {
     cy.get('input#subject').should('have.value', 'Half-written subject');
   });
 
+  // The counterpart to the retention guard above: an UNSENT draft is kept, but
+  // once it is saved the compose state is finished. Entering compose from
+  // outside `mymessages` is what exposes it — `save()` returns to where the
+  // user came from (contacts), so `mymessages.messagelist` is never activated
+  // and compose stays the deepest previously-active child DSR remembers.
+  it('does not reopen a saved draft when returning to messages', () => {
+    visitWithFeatures('/contacts');
+    cy.url().should('include', '/contacts');
+
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').type('Saved from contacts');
+    cy.get('button').contains('Draft').click();
+
+    // save() goes back where compose was entered from
+    cy.url().should('include', '/contacts');
+
+    cy.get('li a').contains('Messages').click();
+    cy.url().should('not.include', '/compose');
+  });
+
+  // Compose is a sticky component, so the instance outlives the visit. Saving
+  // the draft leaves `message` populated, and the reset on re-entry compares
+  // only the PRISTINE copies — both empty here — so it returns early and the
+  // finished draft bleeds into the next one.
+  it('starts a fresh draft after the previous one was saved', () => {
+    visitWithFeatures('/mymessages');
+    cy.url().should('include', '/mymessages/inbox');
+
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').type('Saved subject');
+    cy.get('button').contains('Draft').click();
+    cy.url().should('include', '/mymessages/inbox');
+
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').should('have.value', '');
+  });
+
   it('prompts to save a message being composed', () => {
     visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');
