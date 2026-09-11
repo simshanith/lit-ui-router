@@ -536,8 +536,34 @@ The two axes take DIFFERENT physics, and the difference is the point:
 So they must not share a snap function. Azimuth's live target is what gives a
 fling real detent feel; elevation's is fixed.
 
-Open before building: the touch gesture (see above — `pan-y` leaves nothing for
-tilt, and two-finger contends with pinch-zoom) and whether a fling may cross
-more than one detent. Reduced motion needs no new work: `reduce.matches`
+**Touch: two localized control areas, not full-canvas drags** (user,
+2026-09-10). The twin-stick convention, with the note that this scene has no
+locomotion — so the left area is PAN, not movement:
+
+| area | drives |
+|---|---|
+| right | orbit — azimuth + elevation |
+| left | pan — translate the camera target |
+| the rest of the canvas | unchanged: tap a mass to read it |
+
+This dissolves the `pan-y` blocker rather than working around it. Localized
+areas mean the canvas never claims the vertical drag, so the page stays
+scrollable and tap-to-select survives — the conflict only existed while both
+axes were assumed to be full-canvas gestures. It also lands pan, which was
+otherwise parked.
+
+It composes with the spring instead of fighting it: a stick is VELOCITY input,
+so deflection feeds omega directly, release re-centres the stick, and the
+damper settles into a detent. Same physics, different source. Desktop keeps the
+direct drag, which is displacement input into the same omega.
+
+Draw them in house vocabulary — a jog dial and a cross-slide in the key's line
+weights, the way a drafting machine or a survey instrument carries its
+controls. A glossy game HUD would be the first thing in the set that reads as a
+game rather than a plate, and the conceit is that these are plates.
+
+Open before building: whether a fling may cross more than one detent, and
+whether pan wants the fit's bounds as a hard clamp or a sprung edge (a sprung
+edge is the snow-globe-consistent answer). Reduced motion needs no new work: `reduce.matches`
 already cuts straight to rest and should keep doing so, since momentum is
 motion.
