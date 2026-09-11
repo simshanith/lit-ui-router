@@ -170,24 +170,56 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
-/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
-   the title face is unicase — no small cap, no alternate, nothing to demote it
-   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
-   of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
-   title's line box. */
-sup.art {
+/* THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11). Every sheet
+   title begins with THE and the title face is unicase — no small cap, no
+   alternate, nothing to demote it with. So the article is SET APART rather than
+   shrunk: lowercase in the DATA face at 0.8em of its title, soft ink, on the
+   baseline, so it reads as a word and not as a footnote. ONE rule set for every
+   site the atlas has — sheet heads, sheet titles, the title block's PROJECT and
+   SHEET TITLE, the cover, the cards, the rail.
+   The word carries its own no-break space, so a title never breaks after it. */
+.art {
   font-family: var(--data);
-  font-size: 0.6em;
+  font-size: 0.8em;
   font-weight: 400;
   font-variant-numeric: normal;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: lowercase;
-  line-height: 0;
   color: var(--ink-soft);
-  /* the sup carries its own no-break space (so the title reads "the MEASURED
-     CITY" to a reader and never breaks after the article); this is the rest */
-  margin-right: 0.1em;
+  margin-right: 0.04em;
+}
+/* THE CATCHWORD. On a host that DECLARES the kit's hwt-catchwords (the guard
+   script sets data-catchwords), the word steps aside and catchword key e is
+   drawn in its place — one face, no GSUB, every THE keyed, key e the plainest
+   of the ten. Off the kit (the artifact, any host without it) none of this
+   applies and the word above draws; the bare key e in the title face is the
+   failure the guard prevents. The scale is the cap-matched 1.08em the type
+   specimen measured, so the size is the title's, not the article's. */
+html[data-catchwords="on"] .art {
+  font-size: inherit;
+  letter-spacing: 0;
+  margin-right: 0;
+}
+html[data-catchwords="on"] .art .w {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-catchwords="on"] .art::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* the cap-matched 1.08em, with a 15px floor: the catchword draws THE as two
+     lines inside one cap height, so at ledger sizes the measured scale is a
+     smudge — the floor is the size below which the mark stops reading */
+  font-size: max(1.08em, 15px);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.2em;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -433,9 +465,24 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
+<script>(function () {
+  var armed = function () {
+    for (var f of document.fonts) {
+      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+        document.documentElement.dataset.catchwords = 'on';
+        return true;
+      }
+    }
+    return false;
+  };
+  if (armed()) return;
+  addEventListener('DOMContentLoaded', function () {
+    if (!armed()) document.fonts.ready.then(armed);
+  });
+})();</script>
 <section class="sheet" id="sheet-5" aria-label="Sheet 5: THE DESIGN SPACE">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 5 / 14</span></div>
-  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>DESIGN SPACE</h2>
+  <div class="sheet-head"><span class="proj"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 5 / 14</span></div>
+  <h2 class="sheet-title"><span class="art"><span class="w">the&nbsp;</span></span>DESIGN SPACE</h2>
   <p class="sheet-sub">ALTITUDE 5 — ten routers placed by where matching happens and who owns navigation, shape marking the source of truth · positions are editorial, argued in the notes</p>
   <figure>
     <div class="plate" style="--plate-ar:1.6875"><div class="figure-wrap"><svg viewBox="0 0 1080 640" role="img" aria-label="A positioned chart of the JavaScript router design space: horizontal axis runs from build-time to server-runtime to client-runtime route matching; vertical bands separate platform, framework, and library ownership of navigation. Ten routers are plotted as labeled points. ui-router and lit-ui-router sit alone as the only state-first router, marked with a square, in an otherwise URL-first field.">
@@ -546,12 +593,12 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" class="skr fnone" stroke-dasharray="4 3"/></svg></td><td>editorial callout</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="2" y1="9" x2="40" y2="9" class="skf" stroke-dasharray="4 4"/></svg></td><td>column boundary (soft)</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>DESIGN SPACE</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art"><span class="w">the&nbsp;</span></span>DESIGN SPACE</span></div>
   <div><span class="fld">SCALE</span>JS ECOSYSTEM</div>
   <div><span class="fld">FORM</span>POSITIONED CHART</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-06 · B</div>
+  <div><span class="fld">DATE / REV</span>2026-09-11 · B</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>5 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>

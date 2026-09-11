@@ -1,7 +1,7 @@
 <meta charset="utf-8">
 <title>THE WEATHERING MAP — Sheet 13 of 14</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<meta name="description" content="Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.">
+<meta name="description" content="Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 87% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.">
 <style>
 :root {
   --ground: #E6E6DA;
@@ -170,24 +170,56 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
-/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
-   the title face is unicase — no small cap, no alternate, nothing to demote it
-   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
-   of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
-   title's line box. */
-sup.art {
+/* THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11). Every sheet
+   title begins with THE and the title face is unicase — no small cap, no
+   alternate, nothing to demote it with. So the article is SET APART rather than
+   shrunk: lowercase in the DATA face at 0.8em of its title, soft ink, on the
+   baseline, so it reads as a word and not as a footnote. ONE rule set for every
+   site the atlas has — sheet heads, sheet titles, the title block's PROJECT and
+   SHEET TITLE, the cover, the cards, the rail.
+   The word carries its own no-break space, so a title never breaks after it. */
+.art {
   font-family: var(--data);
-  font-size: 0.6em;
+  font-size: 0.8em;
   font-weight: 400;
   font-variant-numeric: normal;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: lowercase;
-  line-height: 0;
   color: var(--ink-soft);
-  /* the sup carries its own no-break space (so the title reads "the MEASURED
-     CITY" to a reader and never breaks after the article); this is the rest */
-  margin-right: 0.1em;
+  margin-right: 0.04em;
+}
+/* THE CATCHWORD. On a host that DECLARES the kit's hwt-catchwords (the guard
+   script sets data-catchwords), the word steps aside and catchword key e is
+   drawn in its place — one face, no GSUB, every THE keyed, key e the plainest
+   of the ten. Off the kit (the artifact, any host without it) none of this
+   applies and the word above draws; the bare key e in the title face is the
+   failure the guard prevents. The scale is the cap-matched 1.08em the type
+   specimen measured, so the size is the title's, not the article's. */
+html[data-catchwords="on"] .art {
+  font-size: inherit;
+  letter-spacing: 0;
+  margin-right: 0;
+}
+html[data-catchwords="on"] .art .w {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-catchwords="on"] .art::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* the cap-matched 1.08em, with a 15px floor: the catchword draws THE as two
+     lines inside one cap height, so at ledger sizes the measured scale is a
+     smudge — the floor is the size below which the mark stops reading */
+  font-size: max(1.08em, 15px);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.2em;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -433,12 +465,27 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
+<script>(function () {
+  var armed = function () {
+    for (var f of document.fonts) {
+      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+        document.documentElement.dataset.catchwords = 'on';
+        return true;
+      }
+    }
+    return false;
+  };
+  if (armed()) return;
+  addEventListener('DOMContentLoaded', function () {
+    if (!armed()) document.fonts.ready.then(armed);
+  });
+})();</script>
 <section class="sheet" id="sheet-13" aria-label="Sheet 13: THE WEATHERING MAP">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 13 / 14</span></div>
-  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>WEATHERING MAP</h2>
-  <p class="sheet-sub">ALTITUDE t — the same city as sheet 7, surveyed in time · 319 files dated from the whole history · three construction seasons, 10 silent months · counted at origin/main @ 185d414</p>
+  <div class="sheet-head"><span class="proj"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 13 / 14</span></div>
+  <h2 class="sheet-title"><span class="art"><span class="w">the&nbsp;</span></span>WEATHERING MAP</h2>
+  <p class="sheet-sub">ALTITUDE t — the same city as sheet 7, surveyed in time · 347 files dated from the whole history · three construction seasons, 10 silent months · counted at origin/main @ 65e2843</p>
   <figure>
-    <div class="plate" style="--plate-ar:0.8378"><div class="figure-wrap"><svg viewBox="0 0 1560 1862" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built 275 of the 319 files since July fourth. Under each building a tick gauge counts touches per file; 6 buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal the typedoc plugin and three example slabs, untouched for over two hundred days. A 15-month timeline below shows all activity concentrated in 5 months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from 10.1 for the port cohort to 2.4 for the summer cohort — the oldest walls are the most chiselled.">
+    <div class="plate" style="--plate-ar:0.8228"><div class="figure-wrap"><svg viewBox="0 0 1560 1896" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built 303 of the 347 files since July fourth. Under each building a tick gauge counts touches per file; 6 buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal the typedoc plugin and three example slabs, untouched for over two hundred days. A 15-month timeline below shows all activity concentrated in 5 months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from 10.5 for the port cohort to 2.7 for the summer cohort — the oldest walls are the most chiselled.">
 <defs>
   <marker id="s13-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -479,26 +526,26 @@ a { color: var(--accent); }
 <text x="52" y="58" class="lblf" text-anchor="start" >same city, same footprints as sheet 7 · fills date the stone · edges and ticks carry the churn</text>
 
 <text x="1520" y="34" class="lbls" text-anchor="end" >DATING — first-commit and last-touch per file from one pass over the history behind the measured ref, renames followed</text>
-<text x="1520" y="48" class="lblf" text-anchor="end" >footprints reused from sheet 7's plate as pure geometry (side = 1.6·√sloc) · TODAY = 2026-09-06 · counted at origin/main @ 185d414</text>
+<text x="1520" y="48" class="lblf" text-anchor="end" >footprints reused from sheet 7's plate as pure geometry (side = 1.6·√sloc) · TODAY = 2026-09-11 · counted at origin/main @ 65e2843</text>
 <text x="1520" y="62" class="lblf" text-anchor="end" >AGE IS FILL, CHURN IS EDGE — the two disagree: the oldest stone carries the hottest edges</text>
 
-<rect x="26.0" y="74.0" width="581.8" height="352.6" class="skf fnone" stroke-dasharray="5 4"/>
-<rect x="938.0" y="92.0" width="333.6" height="324.2" class="skf fnone" stroke-dasharray="5 4"/>
-<rect x="1084.0" y="622.0" width="161.7" height="327.7" class="skf fnone" stroke-dasharray="5 4"/>
-<rect x="36.8" y="634.0" width="817.3" height="444.8" class="skf fnone" stroke-dasharray="5 4"/>
-<rect x="46.0" y="142.0" width="95.2" height="95.2" class="fp"/>
-<rect x="46.0" y="185.9" width="95.2" height="51.3" fill="url(#s13-w1)"/>
-<line x1="46.0" y1="185.9" x2="141.2" y2="185.9" class="skf"/>
-<rect x="46.0" y="142.0" width="95.2" height="95.2" class="skr fnone"/>
-<line x1="47.0" y1="241.20309238674972" x2="47.0" y2="249.20309238674972" class="skr"/><line x1="52.0" y1="241.20309238674972" x2="52.0" y2="249.20309238674972" class="skr"/><line x1="57.0" y1="241.20309238674972" x2="57.0" y2="249.20309238674972" class="skr"/><line x1="62.0" y1="241.20309238674972" x2="62.0" y2="249.20309238674972" class="skr"/><line x1="67.0" y1="241.20309238674972" x2="67.0" y2="249.20309238674972" class="skr"/><line x1="72.0" y1="241.20309238674972" x2="72.0" y2="249.20309238674972" class="skr"/><line x1="77.0" y1="241.20309238674972" x2="77.0" y2="249.20309238674972" class="skr"/><rect x="157.2" y="108.0" width="163.3" height="163.3" class="fp"/>
-<rect x="157.2" y="260.4" width="163.3" height="10.9" fill="url(#s13-w1)"/>
-<line x1="157.2" y1="260.4" x2="320.5" y2="260.4" class="skf"/>
-<rect x="157.2" y="205.9" width="163.3" height="54.4" fill="url(#s13-w2)"/>
-<line x1="157.2" y1="205.9" x2="320.5" y2="205.9" class="skf"/>
-<rect x="157.2" y="108.0" width="163.3" height="163.3" class="sks fnone"/>
+<rect x="26.0" y="72.4" width="581.8" height="354.3" class="skf fnone" stroke-dasharray="5 4"/>
+<rect x="938.0" y="92.0" width="334.3" height="327.8" class="skf fnone" stroke-dasharray="5 4"/>
+<rect x="1084.0" y="622.0" width="226.0" height="356.8" class="skf fnone" stroke-dasharray="5 4"/>
+<rect x="36.8" y="630.4" width="888.7" height="443.9" class="skf fnone" stroke-dasharray="5 4"/>
+<rect x="46.0" y="142.0" width="95.8" height="95.8" class="fp"/>
+<rect x="46.0" y="189.9" width="95.8" height="47.9" fill="url(#s13-w1)"/>
+<line x1="46.0" y1="189.9" x2="141.8" y2="189.9" class="skf"/>
+<rect x="46.0" y="142.0" width="95.8" height="95.8" class="skr fnone"/>
+<line x1="47.0" y1="241.75221355143702" x2="47.0" y2="249.75221355143702" class="skr"/><line x1="52.0" y1="241.75221355143702" x2="52.0" y2="249.75221355143702" class="skr"/><line x1="57.0" y1="241.75221355143702" x2="57.0" y2="249.75221355143702" class="skr"/><line x1="62.0" y1="241.75221355143702" x2="62.0" y2="249.75221355143702" class="skr"/><line x1="67.0" y1="241.75221355143702" x2="67.0" y2="249.75221355143702" class="skr"/><line x1="72.0" y1="241.75221355143702" x2="72.0" y2="249.75221355143702" class="skr"/><line x1="77.0" y1="241.75221355143702" x2="77.0" y2="249.75221355143702" class="skr"/><rect x="157.8" y="106.4" width="166.9" height="166.9" class="fp"/>
+<rect x="157.8" y="262.2" width="166.9" height="11.1" fill="url(#s13-w1)"/>
+<line x1="157.8" y1="262.2" x2="324.6" y2="262.2" class="skf"/>
+<rect x="157.8" y="206.6" width="166.9" height="55.6" fill="url(#s13-w2)"/>
+<line x1="157.8" y1="206.6" x2="324.6" y2="206.6" class="skf"/>
+<rect x="157.8" y="106.4" width="166.9" height="166.9" class="sks fnone"/>
 
-<circle cx="93.6" cy="130.0" r="9" class="skr fp"/>
-<text x="93.6" y="133.4" class="lblr" text-anchor="middle" >1</text>
+<circle cx="93.9" cy="130.0" r="9" class="skr fp"/>
+<text x="93.9" y="133.4" class="lblr" text-anchor="middle" >1</text>
 <rect x="366.0" y="142.0" width="86.5" height="86.5" class="fp"/>
 <rect x="366.0" y="142.0" width="86.5" height="86.5" class="sk fnone"/>
 <line x1="367.0" y1="232.47345026075925" x2="367.0" y2="238.47345026075925" class="sks"/><line x1="372.0" y1="232.47345026075925" x2="372.0" y2="238.47345026075925" class="sks"/><line x1="377.0" y1="232.47345026075925" x2="377.0" y2="238.47345026075925" class="sks"/><rect x="468.5" y="125.6" width="119.4" height="119.4" class="fp"/>
@@ -523,27 +570,27 @@ a { color: var(--accent); }
 
 <circle cx="475.1" cy="306.0" r="9" class="skr fp"/>
 <text x="475.1" y="309.4" class="lblr" text-anchor="middle" >4</text>
-<rect x="958.0" y="126.0" width="120.4" height="120.4" class="fp"/>
-<rect x="958.0" y="220.3" width="120.4" height="26.0" fill="url(#s13-w1)"/>
-<line x1="958.0" y1="220.3" x2="1078.4" y2="220.3" class="skf"/>
-<rect x="958.0" y="126.0" width="120.4" height="120.4" class="sk fnone"/>
-<line x1="959.0" y1="250.37445576200957" x2="959.0" y2="256.3744557620096" class="sks"/><line x1="964.0" y1="250.37445576200957" x2="964.0" y2="256.3744557620096" class="sks"/><line x1="969.0" y1="250.37445576200957" x2="969.0" y2="256.3744557620096" class="sks"/><line x1="974.0" y1="250.37445576200957" x2="974.0" y2="256.3744557620096" class="sks"/><line x1="979.0" y1="250.37445576200957" x2="979.0" y2="256.3744557620096" class="sks"/><rect x="1094.4" y="163.7" width="45.0" height="45.0" class="fp"/>
-<rect x="1094.4" y="163.7" width="45.0" height="45.0" class="sks fnone"/>
+<rect x="958.0" y="126.0" width="121.7" height="121.7" class="fp"/>
+<rect x="958.0" y="222.1" width="121.7" height="25.6" fill="url(#s13-w1)"/>
+<line x1="958.0" y1="222.1" x2="1079.7" y2="222.1" class="skf"/>
+<rect x="958.0" y="126.0" width="121.7" height="121.7" class="sk fnone"/>
+<line x1="959.0" y1="251.72793270239993" x2="959.0" y2="257.7279327023999" class="sks"/><line x1="964.0" y1="251.72793270239993" x2="964.0" y2="257.7279327023999" class="sks"/><line x1="969.0" y1="251.72793270239993" x2="969.0" y2="257.7279327023999" class="sks"/><line x1="974.0" y1="251.72793270239993" x2="974.0" y2="257.7279327023999" class="sks"/><line x1="979.0" y1="251.72793270239993" x2="979.0" y2="257.7279327023999" class="sks"/><rect x="1095.7" y="160.3" width="53.1" height="53.1" class="fp"/>
+<rect x="1095.7" y="160.3" width="53.1" height="53.1" class="sks fnone"/>
 
-<circle cx="1018.2" cy="114.0" r="9" class="sk fp"/>
-<text x="1018.2" y="117.4" class="lbl" text-anchor="middle" >5</text>
-<rect x="1198.0" y="126.0" width="51.1" height="51.1" class="fp"/>
-<rect x="1198.0" y="138.8" width="51.1" height="38.4" fill="url(#s13-w1)"/>
-<line x1="1198.0" y1="138.8" x2="1249.1" y2="138.8" class="skf"/>
-<rect x="1198.0" y="126.0" width="51.1" height="51.1" class="skr fnone"/>
-<line x1="1199.0" y1="181.13595994992176" x2="1199.0" y2="189.13595994992176" class="skr"/><line x1="1204.0" y1="181.13595994992176" x2="1204.0" y2="189.13595994992176" class="skr"/><line x1="1209.0" y1="181.13595994992176" x2="1209.0" y2="189.13595994992176" class="skr"/><line x1="1214.0" y1="181.13595994992176" x2="1214.0" y2="189.13595994992176" class="skr"/><line x1="1219.0" y1="181.13595994992176" x2="1219.0" y2="189.13595994992176" class="skr"/><line x1="1224.0" y1="181.13595994992176" x2="1224.0" y2="189.13595994992176" class="skr"/>
-<circle cx="1223.6" cy="112.0" r="9" class="skr fp"/>
-<text x="1223.6" y="115.4" class="lblr" text-anchor="middle" >6</text>
-<rect x="1198.0" y="254.0" width="53.6" height="53.6" class="fp"/>
-<rect x="1198.0" y="254.0" width="53.6" height="53.6" class="sk fnone"/>
-<line x1="1199.0" y1="311.57683081332823" x2="1199.0" y2="317.57683081332823" class="sks"/><line x1="1204.0" y1="311.57683081332823" x2="1204.0" y2="317.57683081332823" class="sks"/><line x1="1209.0" y1="311.57683081332823" x2="1209.0" y2="317.57683081332823" class="sks"/><line x1="1214.0" y1="311.57683081332823" x2="1214.0" y2="317.57683081332823" class="sks"/>
-<circle cx="1224.8" cy="242.0" r="9" class="sk fp"/>
-<text x="1224.8" y="245.4" class="lbl" text-anchor="middle" >7</text>
+<circle cx="1018.9" cy="114.0" r="9" class="sk fp"/>
+<text x="1018.9" y="117.4" class="lbl" text-anchor="middle" >5</text>
+<rect x="1198.0" y="126.0" width="51.8" height="51.8" class="fp"/>
+<rect x="1198.0" y="138.9" width="51.8" height="38.8" fill="url(#s13-w1)"/>
+<line x1="1198.0" y1="138.9" x2="1249.8" y2="138.9" class="skf"/>
+<rect x="1198.0" y="126.0" width="51.8" height="51.8" class="skr fnone"/>
+<line x1="1199.0" y1="181.7727959453611" x2="1199.0" y2="189.7727959453611" class="skr"/><line x1="1204.0" y1="181.7727959453611" x2="1204.0" y2="189.7727959453611" class="skr"/><line x1="1209.0" y1="181.7727959453611" x2="1209.0" y2="189.7727959453611" class="skr"/><line x1="1214.0" y1="181.7727959453611" x2="1214.0" y2="189.7727959453611" class="skr"/><line x1="1219.0" y1="181.7727959453611" x2="1219.0" y2="189.7727959453611" class="skr"/><line x1="1224.0" y1="181.7727959453611" x2="1224.0" y2="189.7727959453611" class="skr"/>
+<circle cx="1223.9" cy="112.0" r="9" class="skr fp"/>
+<text x="1223.9" y="115.4" class="lblr" text-anchor="middle" >6</text>
+<rect x="1198.0" y="254.0" width="54.3" height="54.3" class="fp"/>
+<rect x="1198.0" y="254.0" width="54.3" height="54.3" class="sk fnone"/>
+<line x1="1199.0" y1="312.30580079512686" x2="1199.0" y2="318.30580079512686" class="sks"/><line x1="1204.0" y1="312.30580079512686" x2="1204.0" y2="318.30580079512686" class="sks"/><line x1="1209.0" y1="312.30580079512686" x2="1209.0" y2="318.30580079512686" class="sks"/><line x1="1214.0" y1="312.30580079512686" x2="1214.0" y2="318.30580079512686" class="sks"/>
+<circle cx="1225.2" cy="242.0" r="9" class="sk fp"/>
+<text x="1225.2" y="245.4" class="lbl" text-anchor="middle" >7</text>
 <rect x="1166.0" y="350.0" width="19.2" height="19.2" class="fp"/>
 <rect x="1166.0" y="350.0" width="19.2" height="19.2" class="sk fnone"/>
 <line x1="1167.0" y1="373.2" x2="1167.0" y2="379.2" class="sks"/><line x1="1172.0" y1="373.2" x2="1172.0" y2="379.2" class="sks"/><rect x="1201.2" y="342.2" width="34.8" height="34.8" class="fp"/>
@@ -551,42 +598,44 @@ a { color: var(--accent); }
 
 <circle cx="1175.6" cy="338.0" r="9" class="sk fp"/>
 <text x="1175.6" y="341.4" class="lbl" text-anchor="middle" >8</text>
-<rect x="974.0" y="350.0" width="19.3" height="19.3" class="fp"/>
-<rect x="974.0" y="350.0" width="19.3" height="19.3" fill="url(#s13-w1)"/>
-<rect x="974.0" y="350.0" width="19.3" height="19.3" class="skr fnone"/>
-<line x1="975.0" y1="373.3275761542931" x2="975.0" y2="381.3275761542931" class="skr"/><line x1="980.0" y1="373.3275761542931" x2="980.0" y2="381.3275761542931" class="skr"/><line x1="985.0" y1="373.3275761542931" x2="985.0" y2="381.3275761542931" class="skr"/><line x1="990.0" y1="373.3275761542931" x2="990.0" y2="381.3275761542931" class="skr"/><line x1="995.0" y1="373.3275761542931" x2="995.0" y2="381.3275761542931" class="skr"/><line x1="1000.0" y1="373.3275761542931" x2="1000.0" y2="381.3275761542931" class="skr"/><line x1="1005.0" y1="373.3275761542931" x2="1005.0" y2="381.3275761542931" class="skr"/><rect x="1009.3" y="331.2" width="57.0" height="57.0" class="fp"/>
-<rect x="1009.3" y="378.7" width="57.0" height="9.5" fill="url(#s13-w1)"/>
-<line x1="1009.3" y1="378.7" x2="1066.3" y2="378.7" class="skf"/>
-<rect x="1009.3" y="331.2" width="57.0" height="57.0" class="sks fnone"/>
+<rect x="974.0" y="350.0" width="20.3" height="20.3" class="fp"/>
+<rect x="974.0" y="350.0" width="20.3" height="20.3" fill="url(#s13-w1)"/>
+<rect x="974.0" y="350.0" width="20.3" height="20.3" class="skr fnone"/>
+<line x1="975.0" y1="374.31937006897607" x2="975.0" y2="382.31937006897607" class="skr"/><line x1="980.0" y1="374.31937006897607" x2="980.0" y2="382.31937006897607" class="skr"/><line x1="985.0" y1="374.31937006897607" x2="985.0" y2="382.31937006897607" class="skr"/><line x1="990.0" y1="374.31937006897607" x2="990.0" y2="382.31937006897607" class="skr"/><line x1="995.0" y1="374.31937006897607" x2="995.0" y2="382.31937006897607" class="skr"/><line x1="1000.0" y1="374.31937006897607" x2="1000.0" y2="382.31937006897607" class="skr"/><line x1="1005.0" y1="374.31937006897607" x2="1005.0" y2="382.31937006897607" class="skr"/><line x1="1010.0" y1="374.31937006897607" x2="1010.0" y2="382.31937006897607" class="skr"/><rect x="1010.3" y="328.5" width="63.3" height="63.3" class="fp"/>
+<rect x="1010.3" y="383.9" width="63.3" height="7.9" fill="url(#s13-w1)"/>
+<line x1="1010.3" y1="383.9" x2="1073.6" y2="383.9" class="skf"/>
+<rect x="1010.3" y="328.5" width="63.3" height="63.3" class="sks fnone"/>
 
-<circle cx="983.7" cy="338.0" r="9" class="skr fp"/>
-<text x="983.7" y="341.4" class="lblr" text-anchor="middle" >9</text>
-<rect x="1102.0" y="654.0" width="68.4" height="68.4" class="fp"/>
-<rect x="1102.0" y="705.3" width="68.4" height="17.1" fill="url(#s13-w1)"/>
-<line x1="1102.0" y1="705.3" x2="1170.4" y2="705.3" class="skf"/>
-<rect x="1102.0" y="696.7" width="68.4" height="8.5" fill="url(#s13-w2)"/>
-<line x1="1102.0" y1="696.7" x2="1170.4" y2="696.7" class="skf"/>
-<rect x="1102.0" y="654.0" width="68.4" height="68.4" class="skr fnone"/>
-<line x1="1103.0" y1="726.3572732048317" x2="1103.0" y2="734.3572732048317" class="skr"/><line x1="1108.0" y1="726.3572732048317" x2="1108.0" y2="734.3572732048317" class="skr"/><line x1="1113.0" y1="726.3572732048317" x2="1113.0" y2="734.3572732048317" class="skr"/><line x1="1118.0" y1="726.3572732048317" x2="1118.0" y2="734.3572732048317" class="skr"/><line x1="1123.0" y1="726.3572732048317" x2="1123.0" y2="734.3572732048317" class="skr"/><line x1="1128.0" y1="726.3572732048317" x2="1128.0" y2="734.3572732048317" class="skr"/><line x1="1133.0" y1="726.3572732048317" x2="1133.0" y2="734.3572732048317" class="skr"/><line x1="1138.0" y1="726.3572732048317" x2="1138.0" y2="734.3572732048317" class="skr"/><line x1="1143.0" y1="726.3572732048317" x2="1143.0" y2="734.3572732048317" class="skr"/><line x1="1148.0" y1="726.3572732048317" x2="1148.0" y2="734.3572732048317" class="skr"/><rect x="1186.4" y="671.0" width="34.4" height="34.4" class="fp"/>
-<rect x="1186.4" y="671.0" width="34.4" height="34.4" class="sks fnone"/>
+<circle cx="984.2" cy="338.0" r="9" class="skr fp"/>
+<text x="984.2" y="341.4" class="lblr" text-anchor="middle" >9</text>
+<rect x="1102.0" y="654.0" width="67.0" height="67.0" class="fp"/>
+<rect x="1102.0" y="706.1" width="67.0" height="14.9" fill="url(#s13-w1)"/>
+<line x1="1102.0" y1="706.1" x2="1169.0" y2="706.1" class="skf"/>
+<rect x="1102.0" y="698.7" width="67.0" height="7.4" fill="url(#s13-w2)"/>
+<line x1="1102.0" y1="698.7" x2="1169.0" y2="698.7" class="skf"/>
+<rect x="1102.0" y="654.0" width="67.0" height="67.0" class="skr fnone"/>
+<line x1="1103.0" y1="725.0016119209083" x2="1103.0" y2="733.0016119209083" class="skr"/><line x1="1108.0" y1="725.0016119209083" x2="1108.0" y2="733.0016119209083" class="skr"/><line x1="1113.0" y1="725.0016119209083" x2="1113.0" y2="733.0016119209083" class="skr"/><line x1="1118.0" y1="725.0016119209083" x2="1118.0" y2="733.0016119209083" class="skr"/><line x1="1123.0" y1="725.0016119209083" x2="1123.0" y2="733.0016119209083" class="skr"/><line x1="1128.0" y1="725.0016119209083" x2="1128.0" y2="733.0016119209083" class="skr"/><line x1="1133.0" y1="725.0016119209083" x2="1133.0" y2="733.0016119209083" class="skr"/><line x1="1138.0" y1="725.0016119209083" x2="1138.0" y2="733.0016119209083" class="skr"/><line x1="1143.0" y1="725.0016119209083" x2="1143.0" y2="733.0016119209083" class="skr"/><rect x="1185.0" y="667.9" width="39.2" height="39.2" class="fp"/>
+<rect x="1185.0" y="667.9" width="39.2" height="39.2" class="sks fnone"/>
 
-<circle cx="1136.2" cy="642.0" r="9" class="skr fp"/>
-<text x="1136.2" y="645.4" class="lblr" text-anchor="middle" >10</text>
-<rect x="1102.0" y="798.0" width="125.7" height="125.7" class="fp"/>
-<rect x="1102.0" y="881.8" width="125.7" height="41.9" fill="url(#s13-w2)"/>
-<line x1="1102.0" y1="881.8" x2="1227.7" y2="881.8" class="skf"/>
-<rect x="1102.0" y="798.0" width="125.7" height="125.7" class="sk fnone"/>
-<line x1="1103.0" y1="927.7270185759609" x2="1103.0" y2="933.7270185759609" class="sks"/><line x1="1108.0" y1="927.7270185759609" x2="1108.0" y2="933.7270185759609" class="sks"/><line x1="1113.0" y1="927.7270185759609" x2="1113.0" y2="933.7270185759609" class="sks"/><line x1="1102.0" y1="798.0" x2="1227.7" y2="923.7" class="sks" stroke-dasharray="4 3"/>
-<line x1="1227.7" y1="798.0" x2="1102.0" y2="923.7" class="sks" stroke-dasharray="4 3"/>
-<circle cx="1164.9" cy="786.0" r="9" class="sk fp"/>
-<text x="1164.9" y="789.4" class="lbl" text-anchor="middle" >11</text>
-<rect x="78.0" y="798.0" width="118.4" height="118.4" class="fp"/>
-<rect x="78.0" y="798.0" width="118.4" height="118.4" class="sk fnone"/>
-<line x1="79.0" y1="920.4259431036967" x2="79.0" y2="926.4259431036967" class="sks"/><line x1="84.0" y1="920.4259431036967" x2="84.0" y2="926.4259431036967" class="sks"/><rect x="212.4" y="796.8" width="120.8" height="120.8" class="fp"/>
-<rect x="212.4" y="796.8" width="120.8" height="120.8" class="sks fnone"/>
+<circle cx="1135.5" cy="642.0" r="9" class="skr fp"/>
+<text x="1135.5" y="645.4" class="lblr" text-anchor="middle" >10</text>
+<rect x="1102.0" y="798.0" width="154.8" height="154.8" class="fp"/>
+<rect x="1102.0" y="912.4" width="154.8" height="40.4" fill="url(#s13-w2)"/>
+<line x1="1102.0" y1="912.4" x2="1256.8" y2="912.4" class="skf"/>
+<rect x="1102.0" y="798.0" width="154.8" height="154.8" class="sk fnone"/>
+<line x1="1103.0" y1="956.7688857619645" x2="1103.0" y2="962.7688857619645" class="sks"/><line x1="1108.0" y1="956.7688857619645" x2="1108.0" y2="962.7688857619645" class="sks"/><rect x="1272.8" y="865.8" width="19.2" height="19.2" class="fp"/>
+<rect x="1272.8" y="865.8" width="19.2" height="19.2" class="sks fnone"/>
+<line x1="1102.0" y1="798.0" x2="1256.8" y2="952.8" class="sks" stroke-dasharray="4 3"/>
+<line x1="1256.8" y1="798.0" x2="1102.0" y2="952.8" class="sks" stroke-dasharray="4 3"/>
+<circle cx="1179.4" cy="786.0" r="9" class="sk fp"/>
+<text x="1179.4" y="789.4" class="lbl" text-anchor="middle" >11</text>
+<rect x="78.0" y="798.0" width="121.7" height="121.7" class="fp"/>
+<rect x="78.0" y="798.0" width="121.7" height="121.7" class="sk fnone"/>
+<line x1="79.0" y1="923.7010106778083" x2="79.0" y2="929.7010106778083" class="sks"/><line x1="84.0" y1="923.7010106778083" x2="84.0" y2="929.7010106778083" class="sks"/><line x1="89.0" y1="923.7010106778083" x2="89.0" y2="929.7010106778083" class="sks"/><rect x="215.7" y="795.1" width="127.4" height="127.4" class="fp"/>
+<rect x="215.7" y="795.1" width="127.4" height="127.4" class="sks fnone"/>
 
-<circle cx="137.2" cy="786.0" r="9" class="sk fp"/>
-<text x="137.2" y="789.4" class="lbl" text-anchor="middle" >12</text>
+<circle cx="138.9" cy="786.0" r="9" class="sk fp"/>
+<text x="138.9" y="789.4" class="lbl" text-anchor="middle" >12</text>
 <rect x="414.0" y="798.0" width="70.5" height="70.5" class="fp"/>
 <rect x="414.0" y="812.1" width="70.5" height="56.4" fill="url(#s13-w2)"/>
 <line x1="414.0" y1="812.1" x2="484.5" y2="812.1" class="skf"/>
@@ -600,27 +649,27 @@ a { color: var(--accent); }
 <line x1="59.8" y1="717.6703285996339" x2="59.8" y2="725.6703285996339" class="skr"/><line x1="64.8" y1="717.6703285996339" x2="64.8" y2="725.6703285996339" class="skr"/><line x1="69.8" y1="717.6703285996339" x2="69.8" y2="725.6703285996339" class="skr"/><line x1="74.8" y1="717.6703285996339" x2="74.8" y2="725.6703285996339" class="skr"/><line x1="79.8" y1="717.6703285996339" x2="79.8" y2="725.6703285996339" class="skr"/><line x1="84.8" y1="717.6703285996339" x2="84.8" y2="725.6703285996339" class="skr"/>
 <circle cx="80.6" cy="658.0" r="9" class="skr fp"/>
 <text x="80.6" y="661.4" class="lblr" text-anchor="middle" >14</text>
-<rect x="526.0" y="798.0" width="86.0" height="86.0" class="fp"/>
-<rect x="526.0" y="798.0" width="86.0" height="86.0" class="sk fnone"/>
-<line x1="527.0" y1="887.9794207935829" x2="527.0" y2="893.9794207935829" class="sks"/><line x1="532.0" y1="887.9794207935829" x2="532.0" y2="893.9794207935829" class="sks"/><line x1="537.0" y1="887.9794207935829" x2="537.0" y2="893.9794207935829" class="sks"/><rect x="628.0" y="797.3" width="87.3" height="87.3" class="fp"/>
-<rect x="628.0" y="797.3" width="87.3" height="87.3" class="sks fnone"/>
+<rect x="526.0" y="798.0" width="93.4" height="93.4" class="fp"/>
+<rect x="526.0" y="798.0" width="93.4" height="93.4" class="sk fnone"/>
+<line x1="527.0" y1="895.4312324653806" x2="527.0" y2="901.4312324653806" class="sks"/><line x1="532.0" y1="895.4312324653806" x2="532.0" y2="901.4312324653806" class="sks"/><line x1="537.0" y1="895.4312324653806" x2="537.0" y2="901.4312324653806" class="sks"/><rect x="635.4" y="796.2" width="97.1" height="97.1" class="fp"/>
+<rect x="635.4" y="796.2" width="97.1" height="97.1" class="sks fnone"/>
 
-<circle cx="569.0" cy="786.0" r="9" class="sk fp"/>
-<text x="569.0" y="789.4" class="lbl" text-anchor="middle" >15</text>
-<rect x="78.0" y="990.0" width="56.8" height="56.8" class="fp"/>
-<rect x="78.0" y="990.0" width="56.8" height="56.8" class="sk fnone"/>
-<line x1="79.0" y1="1050.8412244766068" x2="79.0" y2="1056.8412244766068" class="sks"/><line x1="84.0" y1="1050.8412244766068" x2="84.0" y2="1056.8412244766068" class="sks"/><rect x="150.8" y="988.1" width="60.7" height="60.7" class="fp"/>
-<rect x="150.8" y="988.1" width="60.7" height="60.7" class="sks fnone"/>
+<circle cx="572.7" cy="786.0" r="9" class="sk fp"/>
+<text x="572.7" y="789.4" class="lbl" text-anchor="middle" >15</text>
+<rect x="78.0" y="990.0" width="37.6" height="37.6" class="fp"/>
+<rect x="78.0" y="990.0" width="37.6" height="37.6" class="sk fnone"/>
+<line x1="79.0" y1="1031.6241624491497" x2="79.0" y2="1037.6241624491497" class="sks"/><line x1="84.0" y1="1031.6241624491497" x2="84.0" y2="1037.6241624491497" class="sks"/><line x1="89.0" y1="1031.6241624491497" x2="89.0" y2="1037.6241624491497" class="sks"/><line x1="94.0" y1="1031.6241624491497" x2="94.0" y2="1037.6241624491497" class="sks"/><rect x="131.6" y="996.9" width="23.9" height="23.9" class="fp"/>
+<rect x="131.6" y="996.9" width="23.9" height="23.9" class="sks fnone"/>
 
-<circle cx="106.4" cy="978.0" r="9" class="sk fp"/>
-<text x="106.4" y="981.4" class="lbl" text-anchor="middle" >16</text>
-<rect x="398.0" y="990.0" width="52.3" height="52.3" class="fp"/>
-<rect x="398.0" y="990.0" width="52.3" height="52.3" class="sk fnone"/>
-<line x1="399.0" y1="1046.339323648668" x2="399.0" y2="1052.339323648668" class="sks"/><line x1="404.0" y1="1046.339323648668" x2="404.0" y2="1052.339323648668" class="sks"/><line x1="409.0" y1="1046.339323648668" x2="409.0" y2="1052.339323648668" class="sks"/><rect x="466.3" y="992.3" width="47.8" height="47.8" class="fp"/>
-<rect x="466.3" y="992.3" width="47.8" height="47.8" class="sks fnone"/>
+<circle cx="96.8" cy="978.0" r="9" class="sk fp"/>
+<text x="96.8" y="981.4" class="lbl" text-anchor="middle" >16</text>
+<rect x="398.0" y="990.0" width="54.3" height="54.3" class="fp"/>
+<rect x="398.0" y="990.0" width="54.3" height="54.3" class="sk fnone"/>
+<line x1="399.0" y1="1048.3058007951267" x2="399.0" y2="1054.3058007951267" class="sks"/><line x1="404.0" y1="1048.3058007951267" x2="404.0" y2="1054.3058007951267" class="sks"/><line x1="409.0" y1="1048.3058007951267" x2="409.0" y2="1054.3058007951267" class="sks"/><rect x="468.3" y="990.2" width="53.9" height="53.9" class="fp"/>
+<rect x="468.3" y="990.2" width="53.9" height="53.9" class="sks fnone"/>
 
-<circle cx="424.2" cy="978.0" r="9" class="sk fp"/>
-<text x="424.2" y="981.4" class="lbl" text-anchor="middle" >17</text>
+<circle cx="425.2" cy="978.0" r="9" class="sk fp"/>
+<text x="425.2" y="981.4" class="lbl" text-anchor="middle" >17</text>
 <rect x="574.0" y="990.0" width="40.2" height="40.2" class="fp"/>
 <rect x="574.0" y="990.0" width="40.2" height="40.2" class="sk fnone"/>
 <line x1="575.0" y1="1034.2335581324844" x2="575.0" y2="1040.2335581324844" class="sks"/><line x1="580.0" y1="1034.2335581324844" x2="580.0" y2="1040.2335581324844" class="sks"/><line x1="585.0" y1="1034.2335581324844" x2="585.0" y2="1040.2335581324844" class="sks"/>
@@ -628,7 +677,7 @@ a { color: var(--accent); }
 <text x="594.1" y="981.4" class="lbl" text-anchor="middle" >18</text>
 <rect x="254.0" y="990.0" width="35.2" height="35.2" class="fp"/>
 <rect x="254.0" y="990.0" width="35.2" height="35.2" class="skf fnone"/>
-<line x1="255.0" y1="1029.194181337261" x2="255.0" y2="1033.194181337261" class="skf"/><rect x="305.2" y="994.1" width="27.1" height="27.1" class="fp"/>
+<line x1="255.0" y1="1029.194181337261" x2="255.0" y2="1033.194181337261" class="skf"/><line x1="260.0" y1="1029.194181337261" x2="260.0" y2="1033.194181337261" class="skf"/><rect x="305.2" y="994.1" width="27.1" height="27.1" class="fp"/>
 <rect x="305.2" y="994.1" width="27.1" height="27.1" class="sks fnone"/>
 
 <circle cx="271.6" cy="978.0" r="9" class="sk fp"/>
@@ -657,12 +706,12 @@ a { color: var(--accent); }
 <text x="191.6" y="659.4" class="lbl" text-anchor="middle" >23</text>
 <rect x="638.0" y="670.0" width="19.2" height="19.2" class="fp"/>
 <rect x="638.0" y="670.0" width="19.2" height="19.2" class="sk fnone"/>
-<line x1="639.0" y1="693.2" x2="639.0" y2="699.2" class="sks"/><line x1="644.0" y1="693.2" x2="644.0" y2="699.2" class="sks"/><line x1="649.0" y1="693.2" x2="649.0" y2="699.2" class="sks"/>
+<line x1="639.0" y1="693.2" x2="639.0" y2="699.2" class="sks"/><line x1="644.0" y1="693.2" x2="644.0" y2="699.2" class="sks"/><line x1="649.0" y1="693.2" x2="649.0" y2="699.2" class="sks"/><line x1="654.0" y1="693.2" x2="654.0" y2="699.2" class="sks"/>
 <circle cx="647.6" cy="656.0" r="9" class="sk fp"/>
 <text x="647.6" y="659.4" class="lbl" text-anchor="middle" >24</text>
 <rect x="710.0" y="670.0" width="19.2" height="19.2" class="fp"/>
 <rect x="710.0" y="670.0" width="19.2" height="19.2" class="skf fnone"/>
-<line x1="711.0" y1="693.2" x2="711.0" y2="697.2" class="skf"/><rect x="745.2" y="670.0" width="19.2" height="19.2" class="fp"/>
+<line x1="711.0" y1="693.2" x2="711.0" y2="697.2" class="skf"/><line x1="716.0" y1="693.2" x2="716.0" y2="697.2" class="skf"/><rect x="745.2" y="670.0" width="19.2" height="19.2" class="fp"/>
 <rect x="745.2" y="670.0" width="19.2" height="19.2" class="sks fnone"/>
 
 <circle cx="719.6" cy="658.0" r="9" class="sk fp"/>
@@ -696,18 +745,37 @@ a { color: var(--accent); }
 <text x="142.0" y="661.4" class="lbl" text-anchor="middle" >30</text>
 <rect x="94.0" y="318.0" width="71.1" height="71.1" class="fp"/>
 <rect x="94.0" y="318.0" width="71.1" height="71.1" class="sk fnone"/>
-<line x1="95.0" y1="393.0832300898039" x2="95.0" y2="399.0832300898039" class="sks"/><line x1="100.0" y1="393.0832300898039" x2="100.0" y2="399.0832300898039" class="sks"/><line x1="105.0" y1="393.0832300898039" x2="105.0" y2="399.0832300898039" class="sks"/><rect x="181.1" y="308.5" width="90.0" height="90.0" class="fp"/>
-<rect x="181.1" y="308.5" width="90.0" height="90.0" class="sks fnone"/>
+<line x1="95.0" y1="393.0832300898039" x2="95.0" y2="399.0832300898039" class="sks"/><line x1="100.0" y1="393.0832300898039" x2="100.0" y2="399.0832300898039" class="sks"/><line x1="105.0" y1="393.0832300898039" x2="105.0" y2="399.0832300898039" class="sks"/><rect x="181.1" y="308.3" width="90.4" height="90.4" class="fp"/>
+<rect x="181.1" y="308.3" width="90.4" height="90.4" class="sks fnone"/>
 
 <circle cx="129.5" cy="306.0" r="9" class="sk fp"/>
 <text x="129.5" y="309.4" class="lbl" text-anchor="middle" >31</text>
-<rect x="750.0" y="798.0" width="46.9" height="46.9" class="fp"/>
-<rect x="750.0" y="798.0" width="46.9" height="46.9" class="skf fnone"/>
-<line x1="751.0" y1="848.9255751163478" x2="751.0" y2="852.9255751163478" class="skf"/><line x1="756.0" y1="848.9255751163478" x2="756.0" y2="852.9255751163478" class="skf"/><rect x="812.9" y="811.9" width="19.2" height="19.2" class="fp"/>
-<rect x="812.9" y="811.9" width="19.2" height="19.2" class="sks fnone"/>
+<rect x="764.4" y="849.2" width="46.4" height="46.4" class="fp"/>
+<rect x="764.4" y="849.2" width="46.4" height="46.4" class="sk fnone"/>
+<line x1="765.4" y1="899.6341942968756" x2="765.4" y2="905.6341942968756" class="sks"/><line x1="770.4" y1="899.6341942968756" x2="770.4" y2="905.6341942968756" class="sks"/><rect x="826.8" y="862.8" width="19.2" height="19.2" class="fp"/>
+<rect x="826.8" y="862.8" width="19.2" height="19.2" class="sks fnone"/>
 
-<circle cx="773.5" cy="786.0" r="9" class="sk fp"/>
-<text x="773.5" y="789.4" class="lbl" text-anchor="middle" >32</text>
+<circle cx="787.6" cy="837.2" r="9" class="sk fp"/>
+<text x="787.6" y="840.6" class="lbl" text-anchor="middle" >32</text>
+<rect x="830.0" y="670.0" width="19.2" height="19.2" class="fp"/>
+<rect x="830.0" y="670.0" width="19.2" height="19.2" class="sk fnone"/>
+<line x1="831.0" y1="693.2" x2="831.0" y2="699.2" class="sks"/><line x1="836.0" y1="693.2" x2="836.0" y2="699.2" class="sks"/><rect x="865.2" y="666.4" width="26.5" height="26.5" class="fp"/>
+<rect x="865.2" y="666.4" width="26.5" height="26.5" class="sks fnone"/>
+
+<circle cx="839.6" cy="658.0" r="9" class="sk fp"/>
+<text x="839.6" y="661.4" class="lbl" text-anchor="middle" >33</text>
+<rect x="868.4" y="958.0" width="34.3" height="34.3" class="fp"/>
+<rect x="868.4" y="958.0" width="34.3" height="34.3" class="sk fnone"/>
+<line x1="869.4" y1="996.2504656902647" x2="869.4" y2="1002.2504656902647" class="sks"/><line x1="874.4" y1="996.2504656902647" x2="874.4" y2="1002.2504656902647" class="sks"/><line x1="879.4" y1="996.2504656902647" x2="879.4" y2="1002.2504656902647" class="sks"/>
+<circle cx="885.5" cy="946.0" r="9" class="sk fp"/>
+<text x="885.5" y="949.4" class="lbl" text-anchor="middle" >34</text>
+<rect x="764.4" y="726.0" width="62.1" height="62.1" class="fp"/>
+<rect x="764.4" y="726.0" width="62.1" height="62.1" class="sk fnone"/>
+<line x1="765.4" y1="792.1294648294994" x2="765.4" y2="798.1294648294994" class="sks"/><line x1="770.4" y1="792.1294648294994" x2="770.4" y2="798.1294648294994" class="sks"/><line x1="775.4" y1="792.1294648294994" x2="775.4" y2="798.1294648294994" class="sks"/><line x1="780.4" y1="792.1294648294994" x2="780.4" y2="798.1294648294994" class="sks"/><line x1="785.4" y1="792.1294648294994" x2="785.4" y2="798.1294648294994" class="sks"/><rect x="842.5" y="726.6" width="61.0" height="61.0" class="fp"/>
+<rect x="842.5" y="726.6" width="61.0" height="61.0" class="sks fnone"/>
+
+<circle cx="795.5" cy="714.0" r="9" class="sk fp"/>
+<text x="795.5" y="717.4" class="lbl" text-anchor="middle" >35</text>
 
 <rect x="620" y="188" width="330" height="332" class="sk fp"/>
 <text x="638" y="212" class="lbls" text-anchor="start" >READING THE WEATHER</text>
@@ -718,37 +786,37 @@ a { color: var(--accent); }
 <rect x="638" y="280" width="30" height="14" class="fp"/><rect x="638" y="280" width="30" height="14" fill="url(#s13-w2)"/><rect x="638" y="280" width="30" height="14" class="sk fnone"/>
 <text x="680" y="291" class="lbls" text-anchor="start" >SEASON II · WINTER · 2026-01 · 18f</text>
 <rect x="638" y="304" width="30" height="14" class="fp"/><rect x="638" y="304" width="30" height="14" class="sk fnone"/>
-<text x="680" y="315" class="lbls" text-anchor="start" >SEASON III · SUMMER · 07-04 on · 275f</text>
+<text x="680" y="315" class="lbls" text-anchor="start" >SEASON III · SUMMER · 07-04 on · 303f</text>
 <text x="638" y="350" class="lbl" text-anchor="start" >CHURN — ticks: one per touch per file</text>
 <line x1="640" y1="362" x2="640" y2="370" class="skr"/><line x1="645" y1="362" x2="645" y2="370" class="skr"/><line x1="650" y1="362" x2="650" y2="370" class="skr"/><line x1="655" y1="362" x2="655" y2="370" class="skr"/><line x1="660" y1="362" x2="660" y2="370" class="skr"/><line x1="665" y1="362" x2="665" y2="370" class="skr"/><line x1="670" y1="362" x2="670" y2="370" class="skr"/><text x="680" y="371" class="lblr" text-anchor="start" >HOT · ≥6/file · red edge · 6 blocks</text>
 <line x1="640" y1="386" x2="640" y2="392" class="sks"/><line x1="645" y1="386" x2="645" y2="392" class="sks"/><line x1="650" y1="386" x2="650" y2="392" class="sks"/><text x="680" y="395" class="lbls" text-anchor="start" >MID · 2–5 · the working stock</text>
 <line x1="640" y1="410" x2="640" y2="414" class="skf"/><text x="680" y="419" class="lbls" text-anchor="start" >COLD · &lt;2 · touched once, left</text>
 <text x="638" y="448" class="lbl" text-anchor="start" >THE GRADIENT THE MAP ARGUES</text>
 <text x="638" y="466" class="lbls" text-anchor="start" >mean touches per file, by birth season:</text>
-<text x="638" y="482" class="lbla" text-anchor="start" >I ×10.1 · II ×5.9 · III ×2.4</text>
+<text x="638" y="482" class="lbla" text-anchor="start" >I ×10.5 · II ×5.9 · III ×2.7</text>
 <text x="638" y="500" class="lbls" text-anchor="start" >the older the wall, the more it is chiselled</text>
 
 <text x="60" y="456" class="lbla" text-anchor="start" >lit-ui-router — THE ORIGINAL MASONRY</text>
-<text x="60" y="470" class="lblf" text-anchor="start" >7 of 13 src walls laid 2025-07-21, the first day —</text>
-<text x="60" y="482" class="lblf" text-anchor="start" >mean ×11.7 touches each, and still under the chisel:</text>
+<text x="60" y="470" class="lblf" text-anchor="start" >7 of 14 src walls laid 2025-07-21, the first day —</text>
+<text x="60" y="482" class="lblf" text-anchor="start" >mean ×12.1 touches each, and still under the chisel:</text>
 <text x="60" y="494" class="lblf" text-anchor="start" >ui-sref.ts ×18, last touched 2026-09-02</text>
 <line x1="80" y1="446" x2="72" y2="242" class="skf"/>
 
-<text x="1250" y="700" class="lblr" text-anchor="start" >www/lit-ui-router.dev/.vitepress/config.ts ×28</text>
+<text x="1250" y="700" class="lblr" text-anchor="start" >www/lit-ui-router.dev/.vitepress/config.ts ×29</text>
 <text x="1250" y="714" class="lblf" text-anchor="start" >the most-weathered wall in the city —</text>
-<text x="1250" y="726" class="lblf" text-anchor="start" >411 days old, repainted 28 times, idle 1d</text>
+<text x="1250" y="726" class="lblf" text-anchor="start" >416 days old, repainted 29 times, idle 5d</text>
 <line x1="1246" y1="710" x2="1188" y2="702" class="skf"/>
 
 <text x="1250" y="780" class="lbls" text-anchor="start" >examples/ — THE OLDEST UNTOUCHED STONE</text>
-<text x="1250" y="794" class="lblf" text-anchor="start" >two vite configs sealed 249 days,</text>
-<text x="1250" y="806" class="lblf" text-anchor="start" >helloworld/main.ts sealed 231 — all winter-built</text>
+<text x="1250" y="794" class="lblf" text-anchor="start" >two vite configs sealed 254 days,</text>
+<text x="1250" y="806" class="lblf" text-anchor="start" >helloworld/main.ts sealed 236 — all winter-built</text>
 <line x1="1246" y1="790" x2="1178" y2="800" class="skf"/>
 
 <text x="560" y="1078" class="lbls" text-anchor="start" >@tools/typedoc-plugin — SEALED WING</text>
-<text x="560" y="1092" class="lblf" text-anchor="start" >symbols/ untouched 241 days, since 2026-01-09</text>
+<text x="560" y="1092" class="lblf" text-anchor="start" >symbols/ untouched 246 days, since 2026-01-09</text>
 <line x1="556" y1="1080" x2="470" y2="1058" class="skf"/>
 
-<text x="60" y="1078" class="lbl" text-anchor="start" >@tools/release — 66 walls, every one summer-built</text>
+<text x="60" y="1078" class="lbl" text-anchor="start" >@tools/release — 72 walls, every one summer-built</text>
 <text x="60" y="1092" class="lblf" text-anchor="start" >the yard’s largest building did not exist two months ago</text>
 <line x1="130" y1="1064" x2="146" y2="1044" class="skf"/>
 
@@ -777,13 +845,13 @@ a { color: var(--accent); }
 <rect x="240" y="1190.8" width="50" height="5.2" class="ska fnone"/>
 <text x="265" y="1186.8" class="lblf" text-anchor="middle" >69</text><line x1="322" y1="1196" x2="372" y2="1196" class="skf"/><line x1="404" y1="1196" x2="454" y2="1196" class="skf"/><line x1="486" y1="1196" x2="536" y2="1196" class="skf"/><line x1="568" y1="1196" x2="618" y2="1196" class="skf"/><line x1="650" y1="1196" x2="700" y2="1196" class="skf"/><rect x="732" y="1188.6" width="50" height="7.4" class="fa"/>
 <rect x="732" y="1188.6" width="50" height="7.4" class="ska fnone"/>
-<text x="757" y="1184.6" class="lblf" text-anchor="middle" >99</text><line x1="814" y1="1196" x2="864" y2="1196" class="skf"/><line x1="896" y1="1196" x2="946" y2="1196" class="skf"/><line x1="978" y1="1196" x2="1028" y2="1196" class="skf"/><line x1="1060" y1="1196" x2="1110" y2="1196" class="skf"/><line x1="1142" y1="1196" x2="1192" y2="1196" class="skf"/><rect x="1224" y="1157.1" width="50" height="38.9" class="fa"/>
-<rect x="1224" y="1157.1" width="50" height="38.9" class="ska fnone"/>
-<text x="1249" y="1153.1" class="lblf" text-anchor="middle" >519</text><rect x="1306" y="1183.0" width="50" height="13.0" class="fa"/>
-<rect x="1306" y="1183.0" width="50" height="13.0" class="ska fnone"/>
-<text x="1331" y="1179.0" class="lblf" text-anchor="middle" >173</text><rect x="1388" y="1183.8" width="50" height="12.2" class="fa"/>
-<rect x="1388" y="1183.8" width="50" height="12.2" class="ska fnone"/>
-<text x="1413" y="1179.8" class="lblf" text-anchor="middle" >162</text>
+<text x="757" y="1184.6" class="lblf" text-anchor="middle" >99</text><line x1="814" y1="1196" x2="864" y2="1196" class="skf"/><line x1="896" y1="1196" x2="946" y2="1196" class="skf"/><line x1="978" y1="1196" x2="1028" y2="1196" class="skf"/><line x1="1060" y1="1196" x2="1110" y2="1196" class="skf"/><line x1="1142" y1="1196" x2="1192" y2="1196" class="skf"/><rect x="1224" y="1156.9" width="50" height="39.1" class="fa"/>
+<rect x="1224" y="1156.9" width="50" height="39.1" class="ska fnone"/>
+<text x="1249" y="1152.9" class="lblf" text-anchor="middle" >521</text><rect x="1306" y="1182.9" width="50" height="13.1" class="fa"/>
+<rect x="1306" y="1182.9" width="50" height="13.1" class="ska fnone"/>
+<text x="1331" y="1178.9" class="lblf" text-anchor="middle" >175</text><rect x="1388" y="1170.5" width="50" height="25.5" class="fa"/>
+<rect x="1388" y="1170.5" width="50" height="25.5" class="ska fnone"/>
+<text x="1413" y="1166.5" class="lblf" text-anchor="middle" >340</text>
 <text x="60" y="1250" class="lbls" text-anchor="start" >packages/</text><rect x="240" y="1248.2" width="50" height="3.8" class="fp2"/>
 <rect x="240" y="1248.2" width="50" height="3.8" class="sks fnone"/>
 <text x="265" y="1244.2" class="lblf" text-anchor="middle" >20</text><line x1="322" y1="1252" x2="372" y2="1252" class="skf"/><line x1="404" y1="1252" x2="454" y2="1252" class="skf"/><line x1="486" y1="1252" x2="536" y2="1252" class="skf"/><line x1="568" y1="1252" x2="618" y2="1252" class="skf"/><line x1="650" y1="1252" x2="700" y2="1252" class="skf"/><rect x="732" y="1245.2" width="50" height="6.8" class="fp2"/>
@@ -792,9 +860,9 @@ a { color: var(--accent); }
 <rect x="1224" y="1226.9" width="50" height="25.1" class="sks fnone"/>
 <text x="1249" y="1222.9" class="lblf" text-anchor="middle" >132</text><rect x="1306" y="1242.9" width="50" height="9.1" class="fp2"/>
 <rect x="1306" y="1242.9" width="50" height="9.1" class="sks fnone"/>
-<text x="1331" y="1238.9" class="lblf" text-anchor="middle" >48</text><rect x="1388" y="1239.7" width="50" height="12.3" class="fp2"/>
-<rect x="1388" y="1239.7" width="50" height="12.3" class="sks fnone"/>
-<text x="1413" y="1235.7" class="lblf" text-anchor="middle" >65</text>
+<text x="1331" y="1238.9" class="lblf" text-anchor="middle" >48</text><rect x="1388" y="1238.1" width="50" height="13.9" class="fp2"/>
+<rect x="1388" y="1238.1" width="50" height="13.9" class="sks fnone"/>
+<text x="1413" y="1234.1" class="lblf" text-anchor="middle" >73</text>
 <text x="60" y="1306" class="lbls" text-anchor="start" >apps/</text><rect x="240" y="1300.6" width="50" height="7.4" class="fp2"/>
 <rect x="240" y="1300.6" width="50" height="7.4" class="sks fnone"/>
 <text x="265" y="1296.6" class="lblf" text-anchor="middle" >39</text><line x1="322" y1="1308" x2="372" y2="1308" class="skf"/><line x1="404" y1="1308" x2="454" y2="1308" class="skf"/><line x1="486" y1="1308" x2="536" y2="1308" class="skf"/><line x1="568" y1="1308" x2="618" y2="1308" class="skf"/><line x1="650" y1="1308" x2="700" y2="1308" class="skf"/><rect x="732" y="1302.5" width="50" height="5.5" class="fp2"/>
@@ -803,9 +871,9 @@ a { color: var(--accent); }
 <rect x="1224" y="1275.1" width="50" height="32.9" class="sks fnone"/>
 <text x="1249" y="1271.1" class="lblf" text-anchor="middle" >173</text><rect x="1306" y="1299.6" width="50" height="8.4" class="fp2"/>
 <rect x="1306" y="1299.6" width="50" height="8.4" class="sks fnone"/>
-<text x="1331" y="1295.6" class="lblf" text-anchor="middle" >44</text><rect x="1388" y="1305.0" width="50" height="3.0" class="fp2"/>
-<rect x="1388" y="1305.0" width="50" height="3.0" class="sks fnone"/>
-<text x="1413" y="1301.0" class="lblf" text-anchor="middle" >13</text>
+<text x="1331" y="1295.6" class="lblf" text-anchor="middle" >44</text><rect x="1388" y="1302.9" width="50" height="5.1" class="fp2"/>
+<rect x="1388" y="1302.9" width="50" height="5.1" class="sks fnone"/>
+<text x="1413" y="1298.9" class="lblf" text-anchor="middle" >27</text>
 <text x="60" y="1362" class="lbls" text-anchor="start" >www+examples</text><rect x="240" y="1361.0" width="50" height="3.0" class="fp2"/>
 <rect x="240" y="1361.0" width="50" height="3.0" class="sks fnone"/>
 <text x="265" y="1357.0" class="lblf" text-anchor="middle" >10</text><line x1="322" y1="1364" x2="372" y2="1364" class="skf"/><line x1="404" y1="1364" x2="454" y2="1364" class="skf"/><line x1="486" y1="1364" x2="536" y2="1364" class="skf"/><line x1="568" y1="1364" x2="618" y2="1364" class="skf"/><line x1="650" y1="1364" x2="700" y2="1364" class="skf"/><rect x="732" y="1358.5" width="50" height="5.5" class="fp2"/>
@@ -814,102 +882,108 @@ a { color: var(--accent); }
 <rect x="1224" y="1356.4" width="50" height="7.6" class="sks fnone"/>
 <text x="1249" y="1352.4" class="lblf" text-anchor="middle" >40</text><rect x="1306" y="1360.4" width="50" height="3.6" class="fp2"/>
 <rect x="1306" y="1360.4" width="50" height="3.6" class="sks fnone"/>
-<text x="1331" y="1356.4" class="lblf" text-anchor="middle" >19</text><rect x="1388" y="1358.3" width="50" height="5.7" class="fp2"/>
-<rect x="1388" y="1358.3" width="50" height="5.7" class="sks fnone"/>
-<text x="1413" y="1354.3" class="lblf" text-anchor="middle" >30</text>
+<text x="1331" y="1356.4" class="lblf" text-anchor="middle" >19</text><rect x="1388" y="1354.9" width="50" height="9.1" class="fp2"/>
+<rect x="1388" y="1354.9" width="50" height="9.1" class="sks fnone"/>
+<text x="1413" y="1350.9" class="lblf" text-anchor="middle" >48</text>
 <text x="60" y="1418" class="lbls" text-anchor="start" >tools/</text><line x1="240" y1="1420" x2="290" y2="1420" class="skf"/><line x1="322" y1="1420" x2="372" y2="1420" class="skf"/><line x1="404" y1="1420" x2="454" y2="1420" class="skf"/><line x1="486" y1="1420" x2="536" y2="1420" class="skf"/><line x1="568" y1="1420" x2="618" y2="1420" class="skf"/><line x1="650" y1="1420" x2="700" y2="1420" class="skf"/><rect x="732" y="1417.0" width="50" height="3.0" class="fp2"/>
 <rect x="732" y="1417.0" width="50" height="3.0" class="sks fnone"/>
-<text x="757" y="1413.0" class="lblf" text-anchor="middle" >5</text><line x1="814" y1="1420" x2="864" y2="1420" class="skf"/><line x1="896" y1="1420" x2="946" y2="1420" class="skf"/><line x1="978" y1="1420" x2="1028" y2="1420" class="skf"/><line x1="1060" y1="1420" x2="1110" y2="1420" class="skf"/><line x1="1142" y1="1420" x2="1192" y2="1420" class="skf"/><rect x="1224" y="1386.9" width="50" height="33.1" class="fp2"/>
-<rect x="1224" y="1386.9" width="50" height="33.1" class="sks fnone"/>
-<text x="1249" y="1382.9" class="lblf" text-anchor="middle" >174</text><rect x="1306" y="1408.2" width="50" height="11.8" class="fp2"/>
-<rect x="1306" y="1408.2" width="50" height="11.8" class="sks fnone"/>
-<text x="1331" y="1404.2" class="lblf" text-anchor="middle" >62</text><rect x="1388" y="1409.7" width="50" height="10.3" class="fp2"/>
-<rect x="1388" y="1409.7" width="50" height="10.3" class="sks fnone"/>
-<text x="1413" y="1405.7" class="lblf" text-anchor="middle" >54</text>
+<text x="757" y="1413.0" class="lblf" text-anchor="middle" >5</text><line x1="814" y1="1420" x2="864" y2="1420" class="skf"/><line x1="896" y1="1420" x2="946" y2="1420" class="skf"/><line x1="978" y1="1420" x2="1028" y2="1420" class="skf"/><line x1="1060" y1="1420" x2="1110" y2="1420" class="skf"/><line x1="1142" y1="1420" x2="1192" y2="1420" class="skf"/><rect x="1224" y="1386.6" width="50" height="33.4" class="fp2"/>
+<rect x="1224" y="1386.6" width="50" height="33.4" class="sks fnone"/>
+<text x="1249" y="1382.6" class="lblf" text-anchor="middle" >176</text><rect x="1306" y="1407.8" width="50" height="12.2" class="fp2"/>
+<rect x="1306" y="1407.8" width="50" height="12.2" class="sks fnone"/>
+<text x="1331" y="1403.8" class="lblf" text-anchor="middle" >64</text><rect x="1388" y="1383.5" width="50" height="36.5" class="fp2"/>
+<rect x="1388" y="1383.5" width="50" height="36.5" class="sks fnone"/>
+<text x="1413" y="1379.5" class="lblf" text-anchor="middle" >192</text>
 <line x1="232" y1="1432" x2="1446" y2="1432" class="sk"/>
 <text x="240" y="1448" class="lblf" text-anchor="start" >'25-07</text><text x="322" y="1448" class="lblf" text-anchor="start" >'25-08</text><text x="404" y="1448" class="lblf" text-anchor="start" >'25-09</text><text x="486" y="1448" class="lblf" text-anchor="start" >'25-10</text><text x="568" y="1448" class="lblf" text-anchor="start" >'25-11</text><text x="650" y="1448" class="lblf" text-anchor="start" >'25-12</text><text x="732" y="1448" class="lblf" text-anchor="start" >'26-01</text><text x="814" y="1448" class="lblf" text-anchor="start" >'26-02</text><text x="896" y="1448" class="lblf" text-anchor="start" >'26-03</text><text x="978" y="1448" class="lblf" text-anchor="start" >'26-04</text><text x="1060" y="1448" class="lblf" text-anchor="start" >'26-05</text><text x="1142" y="1448" class="lblf" text-anchor="start" >'26-06</text><text x="1224" y="1448" class="lblf" text-anchor="start" >'26-07</text><text x="1306" y="1448" class="lblf" text-anchor="start" >'26-08</text><text x="1388" y="1448" class="lblf" text-anchor="start" >'26-09</text>
 <text x="240" y="1466" class="lbla" text-anchor="start" >THE PORT</text>
 <text x="732" y="1466" class="lbla" text-anchor="start" >WINTER WORKS</text>
 <text x="1224" y="1466" class="lbla" text-anchor="start" >THE SUMMER</text>
-<rect x="40" y="1486" width="1480" height="346" class="sk fp"/>
+<rect x="40" y="1486" width="1480" height="380" class="sk fp"/>
 <text x="58" y="1508" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — weathering per member · files · first-commit date · files born per season I/II/III · touches (per file) · median days since last touch</text>
 <line x1="40" y1="1518" x2="1520" y2="1518" class="skf"/>
 <text x="72" y="1538" class="lbls" text-anchor="end" >1</text>
-<text x="83" y="1538" class="lbls" text-anchor="start" >lit-ui-router — 28f · 2025-07-21 · 8/5/15 · ×161 (5.8/f) · idle 50d · ui-sref.ts×18</text>
+<text x="83" y="1538" class="lbls" text-anchor="start" >lit-ui-router — 29f · 2025-07-21 · 8/5/16 · ×167 (5.8/f) · idle 55d · ui-sref.ts×18</text>
 <text x="72" y="1555" class="lbls" text-anchor="end" >2</text>
-<text x="83" y="1555" class="lbls" text-anchor="start" >ui-router-server — 20f · 2026-07-14 · 0/0/20 · ×45 (2.3/f) · idle 51d · index.ts×4</text>
+<text x="83" y="1555" class="lbls" text-anchor="start" >ui-router-server — 20f · 2026-07-14 · 0/0/20 · ×45 (2.3/f) · idle 56d · index.ts×4</text>
 <text x="72" y="1572" class="lbls" text-anchor="end" >3</text>
-<text x="83" y="1572" class="lbls" text-anchor="start" >lit-ui-router-mobx — 9f · 2026-07-04 · 0/0/9 · ×31 (3.4/f) · idle 3d · specs/router-reaction-controller.spec.ts×6</text>
+<text x="83" y="1572" class="lbls" text-anchor="start" >lit-ui-router-mobx — 9f · 2026-07-04 · 0/0/9 · ×31 (3.4/f) · idle 8d · specs/router-reaction-controller.spec.ts×6</text>
 <text x="72" y="1589" class="lbls" text-anchor="end" >4</text>
-<text x="83" y="1589" class="lbls" text-anchor="start" >navigation-location-plugin — 8f · 2026-01-11 · 0/2/6 · ×20 (2.5/f) · idle 29d · index.ts×10</text>
+<text x="83" y="1589" class="lbls" text-anchor="start" >navigation-location-plugin — 8f · 2026-01-11 · 0/2/6 · ×20 (2.5/f) · idle 34d · index.ts×10</text>
 <text x="72" y="1606" class="lbls" text-anchor="end" >5</text>
-<text x="83" y="1606" class="lbls" text-anchor="start" >sample-app-shared — 40f · 2025-07-21 · 8/0/32 · ×175 (4.4/f) · idle 50d · router.config.ts×14</text>
+<text x="83" y="1606" class="lbls" text-anchor="start" >sample-app-shared — 42f · 2025-07-21 · 8/0/34 · ×180 (4.3/f) · idle 32d · router.config.ts×14</text>
 <text x="72" y="1623" class="lbls" text-anchor="end" >6</text>
-<text x="83" y="1623" class="lbls" text-anchor="start" >sample-app-lit-vanilla — 8f · 2025-07-21 · 6/0/2 · ×50 (6.3/f) · idle 59d · app/main/NavHeader.ts×10</text>
+<text x="83" y="1623" class="lbls" text-anchor="start" >sample-app-lit-vanilla — 8f · 2025-07-21 · 6/0/2 · ×51 (6.4/f) · idle 64d · app/mymessages/Compose.ts×11</text>
 <text x="72" y="1640" class="lbls" text-anchor="end" >7</text>
-<text x="83" y="1640" class="lbls" text-anchor="start" >sample-app-lit-mobx — 8f · 2026-07-04 · 0/0/8 · ×34 (4.3/f) · idle 59d · app/main/NavHeader.ts×7</text>
+<text x="83" y="1640" class="lbls" text-anchor="start" >sample-app-lit-mobx — 8f · 2026-07-04 · 0/0/8 · ×35 (4.4/f) · idle 64d · app/main/NavHeader.ts×7</text>
 <text x="72" y="1657" class="lbls" text-anchor="end" >8</text>
-<text x="83" y="1657" class="lbls" text-anchor="start" >sample-app-routes — 3f · 2026-07-14 · 0/0/3 · ×6 (2.0/f) · idle 54d · routes.ts×2</text>
+<text x="83" y="1657" class="lbls" text-anchor="start" >sample-app-routes — 3f · 2026-07-14 · 0/0/3 · ×6 (2.0/f) · idle 59d · routes.ts×2</text>
 <text x="72" y="1674" class="lbls" text-anchor="end" >9</text>
-<text x="83" y="1674" class="lbls" text-anchor="start" >sample-app-lit-e2e — 7f · 2025-07-21 · 2/0/5 · ×33 (4.7/f) · idle 22d · integration/sample_app.cy.js×8</text>
+<text x="83" y="1674" class="lbls" text-anchor="start" >sample-app-lit-e2e — 9f · 2025-07-21 · 2/0/7 · ×40 (4.4/f) · idle 5d · integration/sample_app.cy.js×10</text>
 <text x="72" y="1691" class="lbls" text-anchor="end" >10</text>
-<text x="83" y="1691" class="lbls" text-anchor="start" >docs — 9f · 2025-07-23 · 2/1/6 · ×79 (8.8/f) · idle 1d · .vitepress/config.ts×28</text>
+<text x="83" y="1691" class="lbls" text-anchor="start" >docs — 11f · 2025-07-23 · 2/1/8 · ×89 (8.1/f) · idle 5d · .vitepress/config.ts×29</text>
 <text x="72" y="1708" class="lbls" text-anchor="end" >11</text>
-<text x="83" y="1708" class="lbls" text-anchor="start" >examples — 18f · 2026-01-01 · 0/6/12 · ×49 (2.7/f) · idle 21d · 3 SEALED · hellosolarsystem/src/main.ts×11</text>
+<text x="83" y="1708" class="lbls" text-anchor="start" >examples — 24f · 2026-01-01 · 0/6/18 · ×57 (2.4/f) · idle 8d · 3 SEALED · hellosolarsystem/src/main.ts×11</text>
 <text x="72" y="1725" class="lbls" text-anchor="end" >12</text>
-<text x="83" y="1725" class="lbls" text-anchor="start" >@tools/release — 66f · 2026-07-06 · 0/0/66 · ×129 (2.0/f) · idle 46d · checks/check-pack.ts×10</text>
+<text x="83" y="1725" class="lbls" text-anchor="start" >@tools/release — 72f · 2026-07-06 · 0/0/72 · ×195 (2.7/f) · idle 6d · checks/check-pack.ts×12</text>
 <text x="72" y="1742" class="lbls" text-anchor="end" >13</text>
-<text x="83" y="1742" class="lbls" text-anchor="start" >@tools/typedoc-plugin — 5f · 2026-01-09 · 0/4/1 · ×15 (3.0/f) · idle 241d · 3 SEALED · index.ts×8</text>
+<text x="83" y="1742" class="lbls" text-anchor="start" >@tools/typedoc-plugin — 5f · 2026-01-09 · 0/4/1 · ×15 (3.0/f) · idle 246d · 3 SEALED · index.ts×8</text>
 <text x="72" y="1759" class="lbls" text-anchor="end" >14</text>
-<text x="83" y="1759" class="lbls" text-anchor="start" >@tools/dts-backtest — 1f · 2026-07-06 · 0/0/1 · ×6 (6.0/f) · idle 24d · run.ts×6</text>
+<text x="83" y="1759" class="lbls" text-anchor="start" >@tools/dts-backtest — 1f · 2026-07-06 · 0/0/1 · ×6 (6.0/f) · idle 29d · run.ts×6</text>
 <text x="72" y="1776" class="lbls" text-anchor="end" >15</text>
-<text x="83" y="1776" class="lbls" text-anchor="start" >@tools/build_and_test — 10f · 2026-07-07 · 0/0/10 · ×26 (2.6/f) · idle 44d · upload-bundle-stats.ts×4</text>
+<text x="83" y="1776" class="lbls" text-anchor="start" >@tools/build_and_test — 11f · 2026-07-07 · 0/0/11 · ×33 (3.0/f) · idle 4d · run-summary.ts×5</text>
 <text x="72" y="1793" class="lbls" text-anchor="end" >16</text>
-<text x="83" y="1793" class="lbls" text-anchor="start" >@tools/shared — 21f · 2026-07-06 · 0/0/21 · ×39 (1.9/f) · idle 5d · workspace.ts×9</text>
-<text x="814" y="1538" class="lbls" text-anchor="end" >17</text>
-<text x="825" y="1538" class="lbls" text-anchor="start" >@tools/workers-builds — 4f · 2026-07-11 · 0/0/4 · ×19 (4.8/f) · idle 1d · workers-builds-triggers.test.ts×9</text>
-<text x="814" y="1555" class="lbls" text-anchor="end" >18</text>
-<text x="825" y="1555" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 2026-07-18 · 0/0/4 · ×12 (3.0/f) · idle 5d · upload-entry-bundles.ts×5</text>
-<text x="814" y="1572" class="lbls" text-anchor="end" >19</text>
-<text x="825" y="1572" class="lbls" text-anchor="start" >@tools/compat-guards — 8f · 2026-08-09 · 0/0/8 · ×10 (1.3/f) · idle 29d · catalog.ts×2</text>
-<text x="814" y="1589" class="lbls" text-anchor="end" >20</text>
-<text x="825" y="1589" class="lbls" text-anchor="start" >@tools/oxc-emit — 6f · 2026-07-17 · 0/0/6 · ×14 (2.3/f) · idle 5d · emit-js.ts×3</text>
-<text x="814" y="1606" class="lbls" text-anchor="end" >21</text>
-<text x="825" y="1606" class="lbls" text-anchor="start" >@tools/release-config — 1f · 2026-07-31 · 0/0/1 · ×2 (2.0/f) · idle 29d · release-it.js×2</text>
-<text x="814" y="1623" class="lbls" text-anchor="end" >22</text>
-<text x="825" y="1623" class="lbls" text-anchor="start" >@tools/lit-template-lint — 1f · 2026-08-11 · 0/0/1 · ×2 (2.0/f) · idle 7d · lint-templates.ts×2</text>
-<text x="814" y="1640" class="lbls" text-anchor="end" >23</text>
-<text x="825" y="1640" class="lbls" text-anchor="start" >@tools/lit-test-env — 1f · 2026-08-09 · 0/0/1 · ×1 (1.0/f) · idle 29d · setup.ts×1</text>
-<text x="814" y="1657" class="lbls" text-anchor="end" >24</text>
-<text x="825" y="1657" class="lbls" text-anchor="start" >@tools/vue-check — 1f · 2026-07-09 · 0/0/1 · ×3 (3.0/f) · idle 55d · bin.ts×3</text>
-<text x="814" y="1674" class="lbls" text-anchor="end" >25</text>
-<text x="825" y="1674" class="lbls" text-anchor="start" >@tools/lcov-rebase — 3f · 2026-07-29 · 0/0/3 · ×3 (1.0/f) · idle 40d · rebase-lcov.ts×1</text>
-<text x="814" y="1691" class="lbls" text-anchor="end" >26</text>
-<text x="825" y="1691" class="lbls" text-anchor="start" >@tools/happy-dom — 2f · 2026-07-19 · 0/0/2 · ×2 (1.0/f) · idle 50d · append.ts×1</text>
-<text x="814" y="1708" class="lbls" text-anchor="end" >27</text>
-<text x="825" y="1708" class="lbls" text-anchor="start" >@tools/wintercg-globals — no dated source (ambient types only)</text>
-<text x="814" y="1725" class="lbls" text-anchor="end" >28</text>
-<text x="825" y="1725" class="lbls" text-anchor="start" >@tools/lint-elements — 1f · 2026-08-31 · 0/0/1 · ×3 (3.0/f) · idle 6d · lint-elements.ts×3</text>
-<text x="814" y="1742" class="lbls" text-anchor="end" >29</text>
-<text x="825" y="1742" class="lbls" text-anchor="start" >@tools/warn-lanes — 2f · 2026-08-31 · 0/0/2 · ×2 (1.0/f) · idle 7d · warn-lanes.core.test.ts×1</text>
-<text x="814" y="1759" class="lbls" text-anchor="end" >30</text>
-<text x="825" y="1759" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 2026-08-16 · 0/0/1 · ×1 (1.0/f) · idle 22d · index.ts×1</text>
-<text x="814" y="1776" class="lbls" text-anchor="end" >31</text>
-<text x="825" y="1776" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 19f · 2026-09-01 · 0/0/19 · ×44 (2.3/f) · idle 3d · anchor-is-valid.ts×7</text>
-<text x="814" y="1793" class="lbls" text-anchor="end" >32</text>
-<text x="825" y="1793" class="lbls" text-anchor="start" >@tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×6 (1.5/f) · idle 3d · check-embed-heights.ts×3</text>
-<text x="58" y="1816" class="lbls" text-anchor="start" >TOTAL — 319 dated files (sheet 7's plate counts the same 319) · 1,022 touches · seasons 26 / 18 / 275 · TODAY = 2026-09-06 · counted at origin/main @ 185d414</text>
+<text x="83" y="1793" class="lbls" text-anchor="start" >@tools/shared — 7f · 2026-07-06 · 0/0/7 · ×26 (3.7/f) · idle 4d · workspace.ts×12</text>
+<text x="72" y="1810" class="lbls" text-anchor="end" >17</text>
+<text x="83" y="1810" class="lbls" text-anchor="start" >@tools/workers-builds — 6f · 2026-07-11 · 0/0/6 · ×25 (4.2/f) · idle 6d · workers-builds-triggers.test.ts×10</text>
+<text x="72" y="1827" class="lbls" text-anchor="end" >18</text>
+<text x="83" y="1827" class="lbls" text-anchor="start" >@tools/bundle-probe — 4f · 2026-07-18 · 0/0/4 · ×13 (3.3/f) · idle 10d · upload-entry-bundles.ts×5</text>
+<text x="814" y="1538" class="lbls" text-anchor="end" >19</text>
+<text x="825" y="1538" class="lbls" text-anchor="start" >@tools/compat-guards — 8f · 2026-08-09 · 0/0/8 · ×13 (1.6/f) · idle 34d · catalog.ts×4</text>
+<text x="814" y="1555" class="lbls" text-anchor="end" >20</text>
+<text x="825" y="1555" class="lbls" text-anchor="start" >@tools/oxc-emit — 6f · 2026-07-17 · 0/0/6 · ×14 (2.3/f) · idle 10d · emit-js.ts×3</text>
+<text x="814" y="1572" class="lbls" text-anchor="end" >21</text>
+<text x="825" y="1572" class="lbls" text-anchor="start" >@tools/release-config — 1f · 2026-07-31 · 0/0/1 · ×2 (2.0/f) · idle 34d · release-it.js×2</text>
+<text x="814" y="1589" class="lbls" text-anchor="end" >22</text>
+<text x="825" y="1589" class="lbls" text-anchor="start" >@tools/lit-template-lint — 1f · 2026-08-11 · 0/0/1 · ×2 (2.0/f) · idle 12d · lint-templates.ts×2</text>
+<text x="814" y="1606" class="lbls" text-anchor="end" >23</text>
+<text x="825" y="1606" class="lbls" text-anchor="start" >@tools/lit-test-env — 1f · 2026-08-09 · 0/0/1 · ×1 (1.0/f) · idle 34d · setup.ts×1</text>
+<text x="814" y="1623" class="lbls" text-anchor="end" >24</text>
+<text x="825" y="1623" class="lbls" text-anchor="start" >@tools/vue-check — 1f · 2026-07-09 · 0/0/1 · ×4 (4.0/f) · idle 4d · bin.ts×4</text>
+<text x="814" y="1640" class="lbls" text-anchor="end" >25</text>
+<text x="825" y="1640" class="lbls" text-anchor="start" >@tools/lcov-rebase — 3f · 2026-07-29 · 0/0/3 · ×4 (1.3/f) · idle 45d · rebase-lcov.ts×2</text>
+<text x="814" y="1657" class="lbls" text-anchor="end" >26</text>
+<text x="825" y="1657" class="lbls" text-anchor="start" >@tools/happy-dom — 2f · 2026-07-19 · 0/0/2 · ×2 (1.0/f) · idle 55d · append.ts×1</text>
+<text x="814" y="1674" class="lbls" text-anchor="end" >27</text>
+<text x="825" y="1674" class="lbls" text-anchor="start" >@tools/wintercg-globals — no dated source (ambient types only)</text>
+<text x="814" y="1691" class="lbls" text-anchor="end" >28</text>
+<text x="825" y="1691" class="lbls" text-anchor="start" >@tools/lint-elements — 1f · 2026-08-31 · 0/0/1 · ×3 (3.0/f) · idle 11d · lint-elements.ts×3</text>
+<text x="814" y="1708" class="lbls" text-anchor="end" >29</text>
+<text x="825" y="1708" class="lbls" text-anchor="start" >@tools/warn-lanes — 2f · 2026-08-31 · 0/0/2 · ×2 (1.0/f) · idle 12d · warn-lanes.core.test.ts×1</text>
+<text x="814" y="1725" class="lbls" text-anchor="end" >30</text>
+<text x="825" y="1725" class="lbls" text-anchor="start" >@tools/eslint-ts-parser — 1f · 2026-08-16 · 0/0/1 · ×1 (1.0/f) · idle 27d · index.ts×1</text>
+<text x="814" y="1742" class="lbls" text-anchor="end" >31</text>
+<text x="825" y="1742" class="lbls" text-anchor="start" >eslint-plugin-lit-ui-router — 19f · 2026-09-01 · 0/0/19 · ×46 (2.4/f) · idle 8d · anchor-is-valid.ts×7</text>
+<text x="814" y="1759" class="lbls" text-anchor="end" >32</text>
+<text x="825" y="1759" class="lbls" text-anchor="start" >@tools/embed-heights — 4f · 2026-09-04 · 0/0/4 · ×8 (2.0/f) · idle 8d · check-embed-heights.ts×5</text>
+<text x="814" y="1776" class="lbls" text-anchor="end" >33</text>
+<text x="825" y="1776" class="lbls" text-anchor="start" >@tools/bootstrap — 6f · 2026-07-14 · 0/0/6 · ×11 (1.8/f) · idle 4d · types.ts×4</text>
+<text x="814" y="1793" class="lbls" text-anchor="end" >34</text>
+<text x="825" y="1793" class="lbls" text-anchor="start" >@tools/eslint — 4f · 2026-07-19 · 0/0/4 · ×11 (2.8/f) · idle 5d · oxlint-directives.ts×4</text>
+<text x="814" y="1810" class="lbls" text-anchor="end" >35</text>
+<text x="825" y="1810" class="lbls" text-anchor="start" >@tools/repo-checks — 10f · 2026-07-19 · 0/0/10 · ×46 (4.6/f) · idle 4d · check-graph-edges.ts×9</text>
+<text x="58" y="1850" class="lbls" text-anchor="start" >TOTAL — 347 dated files (sheet 7's plate counts the same 347) · 1,204 touches · seasons 26 / 18 / 303 · TODAY = 2026-09-11 · counted at origin/main @ 65e2843</text>
 </svg></div></div>
-    <figcaption><span class="figno">FIG. 13</span>Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 86% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.</figcaption>
+    <figcaption><span class="figno">FIG. 13</span>Every sheet so far has drawn the city as it stands; this one dates the stone. Same districts, same footprints as sheet 7 — but the fills now say when each file was first committed and the edges say how often it is touched. The history turns out to be three construction campaigns separated by silent months, and the two encodings disagree on purpose: 87% of the city is summer-built and barely weathered, while the port’s original masonry — 26 files from July 2025 — carries the hottest edges on the map.</figcaption>
   </figure>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>Method — one pass, renames followed.</strong> Every date on this sheet is read at build time from the checked-in plate <code>diagrams/<wbr>data/<wbr>census-weather.json</code>, counted at origin/main @ 185d414. Each file in the shared city universe was dated from a single <code>git log --name-status -M</code> pass over the history behind that ref, walked newest to oldest with rename chains followed backwards — equivalent to per-file <code>--follow</code> (spot-verified against it, including <code>tools/<wbr>shared/<wbr>workspace.ts</code>, which the plain path log mis-dates by a week) but one process instead of 319. Per file: first-commit date, last-touch date, touch count. Merge commits list no files under the default log, so a touch is a non-merge commit — the standard convention. <code>TODAY</code> is not a wall-clock date: it is the measured ref's own commit date, 2026-09-06, so every age and idle figure below is reproducible from the sha rather than from the day the sheet was drawn. Footprints come from sheet 7's plate, <code>diagrams/<wbr>data/<wbr>census-city.json</code>, reused as pure geometry so the two sheets reconcile by eye — and by count: 319 dated files here against the same 319 there.</p>
-<p><strong>The bands are campaigns, not round numbers.</strong> The age histogram is not a slope, it is three spikes: files born around day 413 (July 2025), around day 239 (January 2026), and within the last 65 days — with <em>nothing</em> between them, because the repo has source births or touches in only 5 of its 15 calendar months. So the map bins by season, where the distribution actually cuts: SEASON I, the port — 26 files that arrived 2025-07-21 with the upstream sample-app lineage; SEASON II, the winter works — 18 files including the typedoc plugin and the examples; SEASON III, the summer — 275 files, 86% of the city, none older than 2026-07-04. Churn tiers come from the per-block distribution the same way: touches-per-file has a clean gap between 4.65 and 6.0, so HOT is ≥6; the per-file median is 2, so the COLD tier sits below it. SEALED is idle &gt;180 days — the idle histogram is empty from 65 to 231, and 6 files sit beyond the gap.</p>
-<p><strong>The verdict: age and churn run opposite ways.</strong> Mean touches per file falls monotonically with youth — ×10.1 for the port cohort, ×5.9 for winter, ×2.4 for summer — and 118 of 319 files (37%) have been touched exactly once, ever. The port's masonry is not museum stone: ui-sref.ts is at ×18 with the last chisel-mark dated 2026-09-02, and the two most-weathered walls in the city are the port-era <code>www/<wbr>lit-ui-router.dev/<wbr>.vitepress</code> pair — <code>config.ts</code> at ×28 and <code>vite.config.ts</code> at ×23. What survives from the first day is precisely what keeps being worked.</p>
-<p><strong>What each district's weather says.</strong> The instrument yard — 6,770 sloc, the city's largest district by mass — logged <em>zero</em> touches before 2026 and is almost entirely summer stone: infrastructure arrived late, fast, and mostly settled on the first cut. Its one winter building is also the map's sealed wing: the typedoc plugin's <code>symbols/<wbr></code> trio, untouched 241 days. The shopfront splits in two: <code>docs</code> runs the hottest multi-file block-average in the city (×9.6/f src) while <code>examples</code> holds the oldest untouched stone — two vite configs idle 249 days. And the smallest building on the map has the sharpest weather: <code>navigation-location-plugin</code>'s single January wall has been chiselled 10 times, the highest per-file churn anywhere — matching its history as the extracted plugin that every routing change touches.</p>
+<p><strong>Method — one pass, renames followed.</strong> Every date on this sheet is read at build time from the checked-in plate <code>diagrams/<wbr>data/<wbr>census-weather.json</code>, counted at origin/main @ 65e2843. Each file in the shared city universe was dated from a single <code>git log --name-status -M</code> pass over the history behind that ref, walked newest to oldest with rename chains followed backwards — equivalent to per-file <code>--follow</code> (spot-verified against it, including <code>tools/<wbr>shared/<wbr>workspace.ts</code>, which the plain path log mis-dates by a week) but one process instead of 347. Per file: first-commit date, last-touch date, touch count. Merge commits list no files under the default log, so a touch is a non-merge commit — the standard convention. <code>TODAY</code> is not a wall-clock date: it is the measured ref's own commit date, 2026-09-11, so every age and idle figure below is reproducible from the sha rather than from the day the sheet was drawn. Footprints come from sheet 7's plate, <code>diagrams/<wbr>data/<wbr>census-city.json</code>, reused as pure geometry so the two sheets reconcile by eye — and by count: 347 dated files here against the same 347 there.</p>
+<p><strong>The bands are campaigns, not round numbers.</strong> The age histogram is not a slope, it is three spikes: files born around day 418 (July 2025), around day 244 (January 2026), and within the last 70 days — with <em>nothing</em> between them, because the repo has source births or touches in only 5 of its 15 calendar months. So the map bins by season, where the distribution actually cuts: SEASON I, the port — 26 files that arrived 2025-07-21 with the upstream sample-app lineage; SEASON II, the winter works — 18 files including the typedoc plugin and the examples; SEASON III, the summer — 303 files, 87% of the city, none older than 2026-07-04. Churn tiers come from the per-block distribution the same way: touches-per-file has a clean gap between 4.65 and 6.0, so HOT is ≥6; the per-file median is 2, so the COLD tier sits below it. SEALED is idle &gt;180 days — the idle histogram is empty from 70 to 236, and 6 files sit beyond the gap.</p>
+<p><strong>The verdict: age and churn run opposite ways.</strong> Mean touches per file falls monotonically with youth — ×10.5 for the port cohort, ×5.9 for winter, ×2.7 for summer — and 108 of 347 files (31%) have been touched exactly once, ever. The port's masonry is not museum stone: ui-sref.ts is at ×18 with the last chisel-mark dated 2026-09-02, and the two most-weathered walls in the city are the port-era <code>www/<wbr>lit-ui-router.dev/<wbr>.vitepress</code> pair — <code>config.ts</code> at ×29 and <code>vite.config.ts</code> at ×25. What survives from the first day is precisely what keeps being worked.</p>
+<p><strong>What each district's weather says.</strong> The instrument yard — 7,657 sloc, the city's largest district by mass — logged <em>zero</em> touches before 2026 and is almost entirely summer stone: infrastructure arrived late, fast, and mostly settled on the first cut. Its one winter building is also the map's sealed wing: the typedoc plugin's <code>symbols/<wbr></code> trio, untouched 246 days. The shopfront splits in two: <code>docs</code> runs the hottest multi-file block-average in the city (×9.4/f src) while <code>examples</code> holds the oldest untouched stone — two vite configs idle 254 days. And the smallest building on the map has the sharpest weather: <code>navigation-location-plugin</code>'s single January wall has been chiselled 10 times, the highest per-file churn anywhere — matching its history as the extracted plugin that every routing change touches.</p>
 <p><strong>See also — appendix A1, THE SPRITE STUDY.</strong> This map draws age and churn <em>flat</em>, as fills and edges, so the dating stays readable at city scale. The sprited reading of the same two measurements — wreck &amp; ruin ↔ shine &amp; splendor on the building itself — is the research filed as appendix A1, and its recommendation is what sheet 7B draws.</p>
 <p><strong>Approximations, so the numbers stay honest.</strong> Dates are author dates (<code>%as</code>); on this repo's squash-merge convention they equal the merge day of the PR that landed the change. Rename detection is git's <code>-M</code> heuristic: a file moved <em>and</em> rewritten in one commit can read as a fresh birth — the July 2026 <code>scripts/<wbr> → tools/<wbr></code> graduations are dated to that graduation where git saw no rename, which the yard's notes above already state as its story. Generated and vendored trees were never in the universe (the shared city rules); nothing else was excluded.</p>
     </div>
@@ -925,12 +999,12 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="14" height="12" class="fp2"/><rect x="6" y="3" width="14" height="12" class="sks fnone"/><rect x="24" y="6" width="14" height="9" class="fa"/></svg></td><td>timeline bars — district touches · all four together</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/></svg></td><td>district (sheet 7’s)</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>WEATHERING MAP</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art"><span class="w">the&nbsp;</span></span>WEATHERING MAP</span></div>
   <div><span class="fld">SCALE</span>WORKSPACE × TIME</div>
   <div><span class="fld">FORM</span>WEATHERING MAP</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-06 · F</div>
+  <div><span class="fld">DATE / REV</span>2026-09-11 · F</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>13 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>

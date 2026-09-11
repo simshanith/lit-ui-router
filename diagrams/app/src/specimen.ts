@@ -445,9 +445,9 @@ export const ARTICLES = [
     key: '',
     scale: 1,
     note:
-      'SHIPPED 2026-09-06 — the word kept, set as a superior in the DATA face at 0.6em, ' +
-      'lowercase, soft ink: the one treatment that needs no glyph the title face does not have, ' +
-      'so the site, the flat set and the artifact draw it identically',
+      'The T9 article, 2026-09-06 to 2026-09-11 — the word kept, set as a superior in the DATA ' +
+      'face at 0.6em, lowercase, soft ink. The set now draws that same word at 0.8em ON THE ' +
+      'BASELINE, and the catchword over it wherever the kit is loaded',
   },
   {
     id: 'as-is',

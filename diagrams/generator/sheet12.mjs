@@ -114,7 +114,7 @@ const CHAIN = [
   '@tools/build_and_test#build:types', '@tools/bundle-probe#build:types',
   'ui-router-server#build:types', 'sample-app-routes#build:types',
   'sample-app-routes#build', 'sample-app-shared#build',
-  'sample-app-lit-mobx#build', 'docs#build',
+  'sample-app-lit-mobx#build', '@www/lit-ui-router.dev#build',
   'sample-app-lit-e2e#build', 'sample-app-lit-e2e#test',
   'sample-app-lit-e2e#ci:pull_request', 'sample-app-lit-e2e#ci',
 ].map((id) => {

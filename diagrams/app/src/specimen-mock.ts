@@ -178,7 +178,12 @@ export const SPECIMEN_CSS = `
    catchword rows, --article-key (the ONE keyboard character HWT Catchwords maps
    the chosen THE to: the face has no GSUB, every catchword is keyed) and
    --article-scale (the size that lands its ink height on Exhibition's caps). */
-/* SUP — the SHIPPED article: the word kept, drawn as a lowercase superior in
+/* The bench governs its OWN article: the set's shipped .art rule (and its
+   catchword) is reset here so a knob is judged against nothing but itself. */
+.mock[data-article] .art { font: inherit; letter-spacing: inherit; color: inherit; text-transform: none; vertical-align: baseline; margin: 0; }
+.mock:not([data-article^="cw"]) .art .w { position: static; width: auto; height: auto; overflow: visible; clip-path: none; }
+.mock:not([data-article^="cw"]) .art::before { content: none; }
+/* SUP — the article as it shipped in T9: the word kept, a lowercase superior in
    the data face. No kit glyph is involved, so it draws the same everywhere;
    line-height 0 keeps it out of the title's line box. */
 .mock[data-article="sup"] .art .w { font-family: var(--data); font-size: 0.6em; font-weight: 400; letter-spacing: 0; text-transform: lowercase; vertical-align: super; line-height: 0; color: var(--ink-soft); }

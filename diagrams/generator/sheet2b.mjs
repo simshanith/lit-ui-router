@@ -4,7 +4,7 @@
 // the prose is looked up in census-couplings.json through a THROWING lookup, so
 // a contract that changes ranges changes the sentence or breaks the build.
 import { readFileSync } from 'node:fs';
-import { titleBlock } from './chrome.mjs';
+import { PROJECT_MARK, titleBlock } from './chrome.mjs';
 import { keyRow } from './helpers.mjs';
 import { couplingBenchSection } from './coupling-bench.mjs';
 
@@ -68,7 +68,7 @@ const key = [
 export function sheet2bPage() {
   return `${couplingBenchSection()}
 <section class="sheet" id="sheet-2B" aria-label="Sheet 2B notes: ${sheet2b.title}">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 2B · METHOD &amp; BASIS</span></div>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">SHEET 2B · METHOD &amp; BASIS</span></div>
   <div class="notes-grid">
     <div class="notes">
       <h3>GENERAL NOTES</h3>

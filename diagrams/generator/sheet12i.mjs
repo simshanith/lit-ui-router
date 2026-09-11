@@ -4,7 +4,7 @@
 // the same plate sheet 12 draws — this file holds the frame, the prose and the
 // title block; generator/register-graph.mjs holds the lane and its layout.
 import { readFileSync } from 'node:fs';
-import { PROJECT, TOTAL, articleTitle, titleBlock } from './chrome.mjs';
+import { PROJECT_MARK, TOTAL, articleTitle, titleBlock } from './chrome.mjs';
 import { keyRow } from './helpers.mjs';
 import { REGISTER as R, registerLane } from './register-graph.mjs';
 
@@ -92,7 +92,7 @@ export const sheet12i = {
 
 export function register12iSection() {
   return `<section class="sheet rg" id="sheet-${sheet12i.num}" aria-label="Sheet ${sheet12i.num}: ${sheet12i.title}">
-  <div class="sheet-head"><span class="proj">${PROJECT} — INTERACTIVE PLATE</span><span class="shno">SHEET ${sheet12i.num} / ${TOTAL}</span></div>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">SHEET ${sheet12i.num} / ${TOTAL}</span></div>
   <h2 class="sheet-title">${articleTitle(sheet12i.title)}</h2>
   <p class="sheet-sub">${sheet12i.sub}</p>
   ${registerLane()}

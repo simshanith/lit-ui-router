@@ -15,6 +15,7 @@
 // column and its one tie runs straight.  cytoscape draws it with `preset` — no
 // physics, so the picture is the same on every load.
 import { readFileSync } from 'node:fs';
+import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
@@ -360,8 +361,8 @@ export function couplingBenchSection() {
 
   return `<style>${CSS}</style>
 <section class="sheet cb" id="coupling-bench" aria-label="The Coupling Bench, interactive">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">SHEET 2B · REV ${REV}</span></div>
-  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>COUPLING BENCH</h2>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">SHEET 2B · REV ${REV}</span></div>
+  <h2 class="sheet-title">${articleTitle('THE COUPLING BENCH')}</h2>
   <p class="sheet-sub">EVERY EDGE IS A PUBLISHED CONTRACT · ${C.totals.nodes} NODES · ${C.totals.drawnContracts} DRAWN CONTRACTS OF ${C.totals.contracts} · ${C.totals.peers} PEERS / ${C.totals.deps} DEPENDENCIES · ${C.totals.optional} OPTIONAL</p>
   <div class="cb-bar">
     <div class="cb-legend">

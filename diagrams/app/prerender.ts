@@ -77,10 +77,15 @@ const PLATES = allSheets(manifest);
  * src/views.ts and generator/chrome.mjs. Prerender and client must draw the
  * same markup, so the three stay in lockstep.
  */
+const THE: TemplateResult = html`<span class="art"><span class="w">the&nbsp;</span></span>`;
+
+/** The project name AS DRAWN, and the rail's ditto — twins of views.ts. */
+const PROJECT_MARK: TemplateResult = html`${THE}ALTITUDE ATLAS`;
+const ditto = (title: string): TemplateResult =>
+  html`<span class="d" aria-hidden="true">${ARTICLE.test(title) ? '\u2033' : ''}</span>`;
+
 const articleTitle = (title: string): TemplateResult =>
-  ARTICLE.test(title)
-    ? html`<sup class="art">the&nbsp;</sup>${entryTitle(title)}`
-    : html`${title}`;
+  ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
 
 const router = createServerRouter({
   mounts: mountsFor(PLATES.map((sheet) => sheet.num)),
@@ -98,7 +103,10 @@ const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 
 const sheetEntry = (row: SheetRow, active: string): TemplateResult => html`
   <a class="${active === row.num ? 'is-active' : ''}" href="${href.sheet(row.num)}">
-    <span class="n">${row.num}</span><span class="t">${entryTitle(row.title)}</span>
+    <span class="n">${row.num}</span>${ditto(row.title)}<span
+      class="t"
+      >${entryTitle(row.title)}</span
+    >
   </a>
 `;
 
@@ -108,7 +116,10 @@ const railEntry = (entry: AscentRow, active: string): TemplateResult =>
     ? sheetEntry(entry.row, active)
     : html`
         <a class="${active === 'city' ? 'is-active' : ''}" href="${href.city}">
-          <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
+          <span class="n">7·3D</span>${ditto(entry.row.title)}<span
+            class="t"
+            >${entryTitle(entry.row.title)}</span
+          >
         </a>
       `;
 
@@ -118,7 +129,7 @@ const railTemplate = (active: string): TemplateResult => html`
     <div class="rail-head">
       <div>
         <a class="kicker" href="https://lit-ui-router.dev">A DRAWING SET · lit-ui-router</a>
-        <h1><a href="${href.gallery}">THE ALTITUDE ATLAS</a></h1>
+        <h1><a href="${href.gallery}">${PROJECT_MARK}</a></h1>
       </div>
       <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
     </div>
@@ -128,6 +139,7 @@ const railTemplate = (active: string): TemplateResult => html`
         <a class="${active === 'about' ? 'is-active' : ''}" href="${href.about}">ABOUT</a>
       </div>
       <p class="rail-sec">SHEETS — ASCENT ORDER</p>
+      <p class="rail-the" aria-hidden="true"><span class="n"></span>${THE}</p>
       <div class="rail-links">${ascent(manifest).map((entry) => railEntry(entry, active))}</div>
       ${manifest.appendix.length > 0
         ? html`
@@ -180,11 +192,54 @@ const logEntry = (entry: IssueEntry): TemplateResult => html`
 // every chip here is a plain link to a filtered url and the kv box is a GET
 // form onto the same page. A reader with no JS at all still gets the index and
 // a shareable filter url; the client takes it over on hydration.
-const keyLine = (labels: SheetLabels): TemplateResult => html`
-  <span class="keys">
-    ${LABEL_KEYS.filter((key) => labels[key]).map(
-      (key) => html`<span class="kv"><i>${key}</i>${labels[key]}</span>`,
-    )}
+/**
+ * THE KEY BLOCK, static twin (`keyBlock` in src/views.ts). Same cells, same
+ * classes, plain hrefs — element-part directives do not SSR, and the
+ * prerendered page is the unfiltered index, so no slot is lit.
+ */
+const GLYPHS: Record<string, { d: string; dot?: string }> = {
+  isometric: { d: 'M8 1.8 14 5.3 8 8.8 2 5.3Z M2 5.3v5.4l6 3.5 6-3.5V5.3 M8 8.8v5.4' },
+  plan: { d: 'M2.5 2.5h11v11h-11z M6.2 2.5v11 M9.8 2.5v11 M2.5 6.2h11 M2.5 9.8h11' },
+  graph: { d: 'M8 3.8 3.6 12.2 M8 3.8 12.4 11.6', dot: 'M8 3.8h0 M3.6 12.2h0 M12.4 11.6h0' },
+  chart: { d: 'M2.2 13.5h11.6 M3.8 13.5V8.8h2v4.7 M7 13.5V4.4h2v9.1 M10.2 13.5V6.9h2v6.6' },
+  schematic: { d: 'M5 5h6v6H5z M1.5 8H5 M11 8h3.5' },
+  section: {
+    d: 'M2.5 2.5h11v11h-11z M2.5 8h11 M2.6 11 5.1 8.5 M4.6 13.4 9.5 8.5 M8.4 13.4 13.3 8.5 M12.3 13.4 13.4 12.3',
+  },
+};
+
+const glyph = (projection: string): TemplateResult => {
+  const shape = GLYPHS[projection];
+  return html`<svg class="gl" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="${shape?.d ?? ''}" /><path class="dot" d="${shape?.dot ?? ''}" />
+  </svg>`;
+};
+
+const slotValue = (key: LabelKey, value: string): TemplateResult =>
+  key === 'projection'
+    ? html`${glyph(value)}<span class="w">${value}</span>`
+    : key === 'mode'
+      ? html`<i class="lamp" aria-hidden="true"></i><span class="w">${value}</span>`
+      : html`<span class="w">${value}</span>`;
+
+const keySlot = (key: LabelKey, value: string | undefined, blank = ''): TemplateResult => {
+  if (!value)
+    return html`<span class="ktb-cell ktb-${key} is-empty"><span class="v">${blank}</span></span>`;
+  return html`<a
+    class="ktb-cell ktb-${key}"
+    aria-label="${key} ${value}"
+    href="${href.gallery}${filterQuery({ ...EMPTY_FILTER, [key]: value })}"
+    ><span class="v">${slotValue(key, value)}</span></a
+  >`;
+};
+
+const keyBlock = (labels: SheetLabels): TemplateResult => html`
+  <span class="keytb" aria-label="keys">
+    ${keySlot('subject', labels.subject)}${keySlot('projection', labels.projection)}${keySlot(
+      'basis',
+      labels.basis,
+      '—',
+    )}${keySlot('mode', labels.mode === 'interactive' ? labels.mode : undefined)}
   </span>
 `;
 
@@ -232,9 +287,9 @@ const keyIndex = (): TemplateResult => html`
 `;
 
 const sheetCard = (row: SheetRow): TemplateResult => html`
-  <a class="card" href="${href.sheet(row.num)}">
+  <article class="card">
     <span class="n">${isAppendix(row.num) ? 'APPENDIX' : 'SHEET'} ${row.num} · REV ${row.rev}</span>
-    <h3>${articleTitle(row.title)}</h3>
+    <h3><a class="card-go" href="${href.sheet(row.num)}">${articleTitle(row.title)}</a></h3>
     <span class="alt">${row.scale}</span>
     <p>${unsafeHTML(row.caption)}</p>
     <span class="meta">
@@ -242,19 +297,19 @@ const sheetCard = (row: SheetRow): TemplateResult => html`
         ? `${row.form} · NO CENSUS PLATE — META`
         : `${row.form} · ${String(row.plates.length)} PLATE${row.plates.length === 1 ? '' : 'S'}`}
     </span>
-    ${keyLine(row.labels)}
-  </a>
+    ${keyBlock(row.labels)}
+  </article>
 `;
 
 const cityCard = (extra: ExtraRow): TemplateResult => html`
-  <a class="card" href="${href.city}">
+  <article class="card">
     <span class="n">${extra.shno} · REV ${extra.rev}</span>
-    <h3>${articleTitle(extra.title)}</h3>
+    <h3><a class="card-go" href="${href.city}">${articleTitle(extra.title)}</a></h3>
     <span class="alt">${extra.scale}</span>
     <p>${extra.sub.split(' · REV ')[0]}</p>
     <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
-    ${keyLine(extra.labels)}
-  </a>
+    ${keyBlock(extra.labels)}
+  </article>
 `;
 
 const galleryContent = (): TemplateResult => {
@@ -268,16 +323,10 @@ const galleryContent = (): TemplateResult => {
     )}
     <section class="sheet cover-sheet">
       <div class="sheet-head">
-        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <h2 class="cover-title">
-        <!-- THE ONE CATCHWORD IN THE ATLAS: on a host that declares the kit's
-             hwt-catchwords, the cw span draws catchword key e in its place (the
-             rule is in index.html); off the kit — the artifact, any host without
-             it — the superior every other title uses stays on the page. -->
-        <span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS
-      </h2>
+      <h2 class="cover-title">${PROJECT_MARK}</h2>
       <p class="sheet-sub cover-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
         <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
@@ -341,10 +390,10 @@ const logContent = (): TemplateResult => {
     </div>
     <section class="sheet">
       <div class="sheet-head">
-        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">ISSUE LOG</span>
       </div>
-      <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ISSUE LOG</h2>
+      <h2 class="sheet-title">${THE}ISSUE LOG</h2>
       <p class="sheet-sub">
         EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD ·
         EACH SHEET'S REVISIONS TABLE READS THE OTHER WAY, ASCENDING, AS A DRAWING'S REV
@@ -408,7 +457,7 @@ const sheetContent = (row: SheetRow): TemplateResult => {
         >PLATES READ:
         ${row.plates.length > 0 ? row.plates.join(' · ') : 'NONE — DRAWN FROM PROSE'}</span
       >
-      ${seeAlso(row.refs)}
+      ${seeAlso(row.refs)} ${keyBlock(row.labels)}
     </div>
     ${verdictLine(row.verdict)}
     <atlas-plate>${unsafeHTML(fragment)}</atlas-plate>
@@ -428,7 +477,7 @@ const cityContent = (extra: ExtraRow): TemplateResult => {
     `)}
     <div class="plate-data">
       <span>ALTITUDE · ${extra.scale}</span>
-      ${seeAlso(extra.refs)}
+      ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
     <atlas-city>${unsafeHTML(fragment)}</atlas-city>
@@ -451,10 +500,10 @@ const specimenContent = (): TemplateResult => html`
   </div>
   <section class="sheet">
     <div class="sheet-head">
-      <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+      <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
       <span class="shno">TYPE SPECIMEN</span>
     </div>
-    <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>TYPE SPECIMEN</h2>
+    <h2 class="sheet-title">${THE}TYPE SPECIMEN</h2>
     <p class="sheet-sub">
       FIVE PAIRINGS ON ONE MOCK SHEET · SITE FACES COME FROM ADOBE FONTS WHEN THE KIT
       IS PRESENT, GOOGLE STAND-INS OTHERWISE · THE READOUTS SAY WHICH ONE ACTUALLY
@@ -468,7 +517,7 @@ const proseContent = (title: string, line: string): TemplateResult => html`
   ${utilBar(html`${indexCrumb()}<span class="sh">${title}</span>`)}
   <section class="sheet">
     <div class="sheet-head">
-      <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+      <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
       <span class="shno">${title}</span>
     </div>
     <h2 class="sheet-title">${articleTitle(title)}</h2>

@@ -81,6 +81,8 @@ const RUST = new Map([
   [11, 1], [12, 3], [13, 4], [14, 1], [15, 2], [16, 2], [17, 1], [18, 1], [19, 1],
   [20, 1], [21, 1], [22, 0], [23, 1], [24, 3], [25, 2], [26, 3], [27, null],
   [28, 0], [29, 0], [30, 1], [31, 0], [32, 0],
+  // born 2026-09-07/08 — nothing on these pads has had time to weather
+  [33, 0], [34, 0], [35, 0],
 ]);
 const rustOf = (n) => {
   if (!RUST.has(n)) throw new Error(`plate 7B: member ${n} has no rust step`);

@@ -8,7 +8,7 @@
 // in three dimensions: semi-opaque tinted walls over a girding frame, so the
 // structure behind reads through — a drafting set, not a video game.
 import { readFileSync } from 'node:fs';
-import { articleTitle } from './chrome.mjs';
+import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
 
@@ -796,7 +796,7 @@ export function cityMarkup() {
   return `<style>${CSS}
 ${swatchCss}</style>
 <section class="sheet cs" id="city-scene" aria-label="The City, isometric — sheet 7 in the round, with a second material lane that relights it from sheet 7A's shadow survey">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">${CITY_META.head} · REV ${CITY_META.rev}</span></div>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">${CITY_META.head} · REV ${CITY_META.rev}</span></div>
   <h2 class="sheet-title">${articleTitle(CITY_META.title)}</h2>
   <p class="sheet-sub">${CITY_META.sub}</p>
   <div class="cs-bar">

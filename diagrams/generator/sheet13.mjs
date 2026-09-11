@@ -98,7 +98,12 @@ const PLACED = [
   // --- the fifth published package (#676): sheet 7's plan slot lands under the
   //     reading box, so it takes the free third row of the packages district ----
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 30, 130],
-  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 440, 430],
+  // moved with sheet 7 when the hygiene block took the yard's east end
+  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 449, 462],
+  // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) — sheet 7's slots ---
+  [33, '@tools/bootstrap', 'tools/bootstrap', 'tool', 490, 350],
+  [34, '@tools/eslint', 'tools/eslint', 'tool', 514, 530],
+  [35, '@tools/repo-checks', 'tools/repo-checks', 'tool', 449, 385],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,

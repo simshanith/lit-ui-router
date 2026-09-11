@@ -1,6 +1,6 @@
 import { writeFileSync, mkdirSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { page, sheetSection, TOTAL } from './chrome.mjs';
+import { articleTitle, page, sheetSection, TOTAL } from './chrome.mjs';
 import { sheet1 } from './sheet1.mjs';
 import { loopWalkedSection, sheet1i } from './sheet1i.mjs';
 import { sheet2 } from './sheet2.mjs';
@@ -94,7 +94,7 @@ const megaCss = `
 .sheet { scroll-margin-top: 64px; }`;
 writeFileSync(join(OUT, 'megacanvas.html'), page('The Megacanvas — The Altitude Atlas', `<style>${megaCss}</style>
 <header class="mega-head">
-  <h1>THE MEGACANVAS</h1>
+  <h1>${articleTitle('THE MEGACANVAS')}</h1>
   <p>The full drawing set on one surface, in ascent order: one package, its companions, the monorepo that ships them, the family they belong to, the ecosystem that family competes in, and routing as such — plus a survey quartet: the monorepo by mass, the sample app's node_modules as a delivered city, the docs deploy as a shipped city, and the inside of one bundle after tree-shaking — then the same wire cut the other way, every published entry priced alone, and the same monorepo as its CI reads it — and finally the same city surveyed in time, every wall dated by the commit that laid it — and last, the office that took every one of those measurements, drawn by its own instrument. Fourteen altitudes, ${sheets.length} plates in ascent (the A/B alternates ride beside their parents; the interactive lanes 1i, 2B, 12i and 14i stand alone); the form changes at every altitude because the truth does.</p>
 </header>
 ${rail}
@@ -280,7 +280,7 @@ const galBody = `<div class="gal-body">
 
 const cover = `<header class="cover">
   <span class="kicker">A DRAWING SET · AFTER A FORM SEEN IN THE WILD · lit-ui-router</span>
-  <h1>THE ALTITUDE ATLAS</h1>
+  <h1>${articleTitle('THE ALTITUDE ATLAS')}</h1>
   <span class="set">SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES</span>
   <span class="alt">THIS IS THE FLAT SET · THE SAME DRAWINGS ROUTED AS ONE lit-ui-router APP: <a href="/">THE ROUTED SET ↗</a></span>
   ${statBar}

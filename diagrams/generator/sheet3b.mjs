@@ -55,9 +55,10 @@ const S = (i) => Math.max(6, KS * Math.sqrt(i));
 const H = (m) => Math.max(3, KH * m);
 const fmt = (v) => v.toLocaleString('en-US');
 
+// packages only — @tools/repo-checks is drawn whole as structure 1
 const TERRACE = [
-  '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/embed-heights',
-  '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
+  '@tools/bootstrap', '@tools/build_and_test', '@tools/bundle-probe', '@tools/compat-guards', '@tools/embed-heights',
+  '@tools/eslint', '@tools/eslint-ts-parser', '@tools/happy-dom', '@tools/lcov-rebase', '@tools/lint-elements', '@tools/lit-template-lint',
   '@tools/lit-test-env', '@tools/oxc-emit', '@tools/release-config', '@tools/vue-check',
   '@tools/warn-lanes', '@tools/wintercg-globals', '@tools/workers-builds',
 ];
@@ -66,15 +67,15 @@ const APPS = [
   'sample-app-routes', 'sample-app-shared',
 ];
 const ROOT = BY_PKG.get('//') ?? [];
-const SURFACE = row('//#lint:root').inputs;  // the shared root glob the five slabs watch
+const SURFACE = row('//#lint:root').inputs;  // the shared root glob the six slabs watch
 // the tower's lot is the whole dts-backtest block, not just the task that stands on it
 const TOWER = (BY_PKG.get('@tools/dts-backtest') ?? []).reduce((a, r) => a + r.inputs, 0);
 
 // [n, name, x, y, plate selector (task id, package, or packages), schedule note]
 const M = [
+  // --- the guard house: a package of its own, sited by what it gates -------------
+  [1,  'repo-checks',            10,  155, '@tools/repo-checks', `the guard house — ${cite('@tools/repo-checks#check:task-inputs')}, the tallest one-file guard`],
   // --- the root yard (`//`) — every //# task drawn alone -------------------------
-  [1,  '//#check:graph-edges',    0,   48, '//#check:graph-edges', `${cite('//#check:graph-edges')} — #693, tied with lint:package-json for the widest lot`],
-  [2,  '//#check:patches',      162,   48, '//#check:patches', `${cite('//#check:patches')} — the yard’s tallest one-file guard`],
   [3,  '//#format:check:root',    0,    0, '//#format:check:root', `one oxfmt line · the ${fmt(SURFACE)}-file root glob`],
   [4,  '//#format:check:toml',   88,  110, '//#format:check:toml', `mise run + tasks/${cite('//#format:check:toml')} — plate 3A, seam C`],
   [5,  '//#lint:actionlint',    144,  110, '//#lint:actionlint', 'mise run + config.toml run line'],
@@ -87,13 +88,12 @@ const M = [
   [12, '//#lint:toml',          116,  110, '//#lint:toml', `mise run + tasks/${cite('//#lint:toml')} — chain hop ③`],
   [13, '//#lint:zizmor',        172,  110, '//#lint:zizmor', 'mise run + config.toml run line'],
   [14, '//#typecheck:root',      76,    0, '//#typecheck:root', `one tsc line · the same ${fmt(SURFACE)}-file surface`],
-  [28, '//#check:task-inputs',  122,   48, '//#check:task-inputs', `${cite('//#check:task-inputs')} — #693's twin, over the root surface`],
   // --- the package quarters — one block per published package ---------------------
   [15, 'lit-ui-router',         250,   30, 'lit-ui-router', 'guards + oxc-emit + bundle-probe bins behind every task'],
   [16, 'lit-ui-router-mobx',    292,   30, 'lit-ui-router-mobx', 'heaviest commands: the lit2 and mobx6 guards ride four tasks'],
   [17, 'nav-location-plugin',   360,   30, 'ui-router-navigation-location-plugin', 'the smallest quarter, same block shape'],
   [18, 'ui-router-server',      325,   30, 'ui-router-server', 'node:test + runtime-globals lanes'],
-  [27, 'eslint-plugin',         388,   30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
+  [2,  'eslint-plugin',         388,   30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
   // --- the instrument end of town -------------------------------------------------
   [19, '@tools/release',        600,   15, '@tools/release', `${cite('@tools/release#pack:all')} + ${cite('@tools/release#check:exports')} live here`],
   [20, '@tools/dts-backtest',   700,   40, '@tools/dts-backtest', `${cite('@tools/dts-backtest#test')} on a ${TOWER}-file footprint: THE TOWER`],
@@ -101,7 +101,7 @@ const M = [
   [22, 'typedoc-plugin',        634,   96, '@tools/typedoc-plugin-lit-ui-router', `oxc-emit both passes — ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} nodes wait on build:types`],
   [23, 'instrument terrace',    690,  124, TERRACE, `${TERRACE.length} small tools × their style/test/typecheck rows`],
   // --- south of the river ---------------------------------------------------------
-  [24, 'docs — the harbour',    330,  205, 'docs', `every quarter ships docs:api here — docs#build waits on ${deg('docs#build', 'deps')} nodes`],
+  [24, 'www — the harbour',     330,  205, '@www/lit-ui-router.dev', `every quarter ships docs:api here — its build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes`],
   [25, 'examples — the plain',  420,  250, 'examples', `format:check hashes ${fmt(row('examples#format:check').inputs)}, lint ${fmt(row('examples#lint').inputs)}`],
   [26, `apps (${APPS.length} sample pkgs)`, 150, 210, APPS, `${APPS.length} packages, every command one line`],
 ];
@@ -160,7 +160,7 @@ function massBadge(n) {
   const { x, y, side, h } = g(n);
   // Badge seats: wide caps (side >= 26) carry it on the roof; smalls float it
   // north, south or east — whichever pocket their neighbours leave open.
-  const MODE = { 2: 'S', 4: 'S', 7: 'S', 10: 'S', 16: 'S', 22: 'S', 5: 'E', 12: 'E', 13: 'E' };
+  const MODE = { 4: 'S', 7: 'S', 10: 'S', 16: 'S', 22: 'S', 5: 'E', 12: 'E', 13: 'E' };
   const ADJ = { 6: [-4, 2] };
   const mode = MODE[n] ?? (side >= 26 ? 'C' : 'N');
   let bx, by;
@@ -206,7 +206,7 @@ const roads = [
   leg([[634, 106, 0], [420, 106, 0], [420, 62, 0], [386, 62, 0]], { cls: 'sks' }),            // typedoc -> quarters
   leg([[380, 54, 0], [660, 54, 0], [660, 43, 0], [696, 43, 0]], { cls: 'sks', dash: '5 4' }), // quarters -> dts tower
 ].join('\n');
-const roadLabels = `${txt(572, 430, `${deg('docs#build', 'deps')} ↦ the harbour`, 'lblf')}
+const roadLabels = `${txt(572, 430, `${deg('@www/lit-ui-router.dev#build', 'deps')} ↦ the harbour`, 'lblf')}
 ${txt(740, 530, `${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} ↤ typedoc`, 'lblf')}`;
 
 // ---- the chain: hops ② -> ③ pass through this city (plate 3A traces all six) ----
@@ -248,11 +248,11 @@ ${txt(58, SY + 22, 'STRUCTURE SCHEDULE — tasks (t) · watched files (per-task 
 ${M.slice(0, half).map((r, i) => schedTxt(58, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
 ${M.slice(half).map((r, i) => schedTxt(752, SY + 50 + i * 16, schedRow(r), 'lbls')).join('\n')}
 ${txt(58, SY + 56 + half * 16, `TOTALS — ${M.length} massed structures reconcile all ${CI.real} real tasks · ${fmt(TOT_I)} task-file hashes · ${fmt(TOT_M)} command sloc · +1 vacant twin lot (//#lint:workflows, phantom) · ${fmt(PHANTOM)} phantom plots · ${BASIS}`, 'lbls')}
-${txt(58, SY + 72 + half * 16, `ROADS — five district arteries drawn, the graph's heaviest degrees: docs#build waits on ${deg('docs#build', 'deps')} nodes · typedoc-plugin#build:types unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} · lit-ui-router#build:types ${deg('lit-ui-router#build:types', 'dependents')} · release#check:exports ${deg('@tools/release#check:exports', 'dependents')};`, 'lblf')}
+${txt(58, SY + 72 + half * 16, `ROADS — five district arteries drawn, the graph's heaviest degrees: @www/lit-ui-router.dev#build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes · typedoc-plugin#build:types unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} · lit-ui-router#build:types ${deg('lit-ui-router#build:types', 'dependents')} · release#check:exports ${deg('@tools/release#check:exports', 'dependents')};`, 'lblf')}
 ${txt(58, SY + 86 + half * 16, `${fmt(CI.realEdges)} of the graph's ${fmt(CI.edges)} edges join two real tasks, the rest are local streets itemised in the dry-run JSON`, 'lblf')}`;
 
 // ---- assemble -------------------------------------------------------------------
-const svg = `<svg viewBox="0 0 1400 ${SY + 126 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: ${fmt(PHANTOM)} phantom plots, the ${PHPCT} percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: five equal slabs that each watch the same ${fmt(SURFACE)} root files — one of them, lint:elements, a ${row('//#lint:elements').mass}-sloc spire since its lane began running the repo's own bin — two huge flat pads watching ${fmt(row('//#check:graph-edges').inputs)} and ${fmt(row('//#lint:package-json').inputs)} files, one of them a ${slocOf('//#check:graph-edges')}-line guard and the other a one-line command, two mid-sized guard pads for check:task-inputs and check:patches, and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. The five package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is the eslint plugin, new to this survey. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of ${TERRACE.length} small tools, and the city's landmark — the dts-backtest tower, ${slocOf('@tools/dts-backtest#test')} lines of run dot ts standing on a ${TOWER}-file footprint. South of the river sit the apps block, the docs harbour that every quarter ships API docs into, and the defining horizontal feature: the examples plain, ${fmt(CELL.get(25).inputs)} watched files under ${CELL.get(25).mass} lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all ${CI.real} real tasks, their ${fmt(TOT_I)} task-file hashes and ${fmt(TOT_M)} command sloc.">
+const svg = `<svg viewBox="0 0 1400 ${SY + 126 + half * 16}" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: ${fmt(PHANTOM)} phantom plots, the ${PHPCT} percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: six equal slabs that each watch the same ${fmt(SURFACE)} root files — one of them, lint:elements, a ${row('//#lint:elements').mass}-sloc spire whose lane runs the repo's own bin rather than an external one — and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. Off the yard's west edge stands the guard house: @tools/repo-checks, one block for all ${CELL.get(1).tasks} of its tasks, ${CELL.get(1).mass} sloc of command over ${fmt(CELL.get(1).inputs)} watched files, four of them checks the lint task carries alongside itself. The five package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is the eslint plugin, new to this survey. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of ${TERRACE.length} small tools, and the city's landmark — the dts-backtest tower, ${slocOf('@tools/dts-backtest#test')} lines of run dot ts standing on a ${TOWER}-file footprint. South of the river sit the apps block, the harbour that every quarter ships API docs into, and the defining horizontal feature: the examples plain, ${fmt(CELL.get(25).inputs)} watched files under ${CELL.get(25).mass} lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all ${CI.real} real tasks, their ${fmt(TOT_I)} task-file hashes and ${fmt(TOT_M)} command sloc.">
 ${defs(P)}
 
 <rect x="40" y="24" width="420" height="72" class="skf fnone"/>
@@ -293,10 +293,10 @@ ${txt(1080, 540, `MAIN-LINE ANNEX — ci:main adds ${MAIN.real - CI.real} real`,
 ${txt(1080, 553, `tasks (${MAIN.nodes}/${MAIN.real} nodes) · outside this`, 'lblf')}
 ${txt(1080, 566, 'survey, drawn unmassed · accent tier', 'lblf')}
 
-${txt(60, 130, `THE ROOT YARD — all ${ROOT.length + 1} //# plots`, 'lblb')}
-${txt(60, 143, 'five equal slabs watch the same', 'lblf')}
-${txt(60, 156, `${fmt(SURFACE)} root files (3·9·14·6·11)`, 'lblf')}
-${txt(60, 169, 'flats 1 + 8: thousand-file, one-line', 'lblf')}
+${txt(40, 130, `THE ROOT YARD — ${ROOT.length + 1} //# plots`, 'lblb')}
+${txt(40, 143, 'six equal slabs watch the same', 'lblf')}
+${txt(40, 156, `${fmt(SURFACE)} root files (3·9·14·6·11·8)`, 'lblf')}
+${txt(40, 169, 'the guard house (1) is a package', 'lblf')}
 
 ${txt(40, 348, '①② mise run ci → turbo run ci', 'lbla')}
 ${txt(40, 361, 'enter here — hop ③ lands on', 'lblf')}
@@ -313,7 +313,7 @@ ${txt(1030, 246, 'a plot with no building, even here', 'lblf')}
 ${txt(430, 738, `THE EXAMPLES PLAIN — ${fmt(CELL.get(25).inputs)} files watched by ${CELL.get(25).mass} sloc of command (25):`, 'lblb')}
 ${txt(430, 751, `format:check hashes ${fmt(row('examples#format:check').inputs)} files, lint ${fmt(row('examples#lint').inputs)} — the examples file set, watched as CI surface`, 'lblf')}
 
-${txt(752, 590, `the harbour (24): docs#build waits on ${deg('docs#build', 'deps')} nodes — where the city drains`, 'lblf')}
+${txt(560, 660, `the harbour (24): the site's build waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes — where the city drains`, 'lblf')}
 
 ${schedule}
 </svg>`;
@@ -325,13 +325,13 @@ export const sheet3b = {
   scale: 'THE CI TASK GRAPH',
   form: 'ISOMETRIC GRAPH CITY',
   svg,
-  caption: `The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — ${FLAT} of ${CI.real} blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a ${slocOf('@tools/dts-backtest#test')}-line test tower on a ${TOWER}-file lot, a ${slocOf('//#check:patches')}-line patch check on a ${row('//#check:patches').inputs}-file lot, a ${fmt(CELL.get(25).inputs)}-file plain patrolled by ${CELL.get(25).mass} lines of command, and a ${row('//#lint:elements').mass}-sloc spire over the root lint lane that runs this repo's own bin instead of an external one.`,
+  caption: `The pull-request graph that plate 3A traced as plumbing, surveyed here as ground: every real task massed by what it watches (footprint) and what it actually executes (height). The survey’s verdict is flatness — ${FLAT} of ${CI.real} blocks are a single script line riding an external binary — which makes the exceptions legible at a glance: a ${slocOf('@tools/dts-backtest#test')}-line test tower on a ${TOWER}-file lot, a ${slocOf('@tools/repo-checks#check:task-inputs')}-line task-inputs guard on an ${row('@tools/repo-checks#check:task-inputs').inputs}-file lot, a ${fmt(CELL.get(25).inputs)}-file plain patrolled by ${CELL.get(25).mass} lines of command, and a ${row('//#lint:elements').mass}-sloc spire over the root lint lane that runs this repo's own bin instead of an external one.`,
   notes: `
 <p><strong>Method — the graph, imported.</strong> Every mass and footprint on this plate is read from <code>diagrams/data/census-mass3b.json</code>, the checked-in snapshot <code>census-mass3b.mjs</code> writes from a bare <code>turbo run ci --dry=json</code> on an installed archive of the ref — ${BASIS}, ${TURBO}: ${CI.nodes} nodes, ${CI.real} real, ${fmt(CI.edges)} edges, ${CI.realEdges} real→real. Nothing below is hand-pasted; a structure whose tasks have left the plate throws at build time rather than drawing a stale number, and the schedule totals are the plate's own sums. <em>Footprint</em> is the per-task <code>inputs</code> map — the files whose hashes decide that task's cache key — at 1.2·√files per side. <em>Height</em> is command mass: the package.json script line plus the repo script or bin file it executes, sloc-counted by <code>census-mass3b.mjs</code> on <code>scc</code> 4.0.0's <code>Code</code> basis (guards, emitters and mise task files each cited in the schedule; external binaries like <code>tsc</code> and <code>oxlint</code> contribute only their one line, because that is all this repo wrote). Wall-clock and cache-hit rates are excluded as geometry by design: they are properties of runs, not of the graph.</p>
-<p><strong>The city is flat, and that is the finding.</strong> ${FLAT} of ${CI.real} real tasks have command mass 1 — one script line handing the work to a pinned binary. The whole city executes ${fmt(TOT_M)} sloc of repo-written command while watching ${fmt(TOT_I)} task-file hashes. The skyline is inverted from intuition: <code>@tools/dts-backtest#test</code> is a ${slocOf('@tools/dts-backtest#test')}-line <code>run.ts</code> on a ${TOWER}-file lot — sheet 3 calls it "one 291-line run.ts holds the TS 5.0 floor", and the graph survey agrees to the line — while the largest footprint, the examples plain, watches ${fmt(CELL.get(25).inputs)} files (format:check ${fmt(row('examples#format:check').inputs)} + lint ${fmt(row('examples#lint').inputs)} alone) under ${CELL.get(25).mass} lines of command. The tallest command is the root yard's <code>//#lint:elements</code>, the one root lane that runs a repo-written bin rather than an external one — ${slocOf('//#lint:elements')} sloc over <code>warn-lanes.core.ts</code>'s ${slocOf('//#lint:elements', 1)} — a ${row('//#lint:elements').mass}-sloc spire on a root-surface footprint. The eslint-plugin quarter is flat throughout: <code>eslint-plugin-lit-ui-router</code> brings ${CELL.get(27).tasks} tasks and ${CELL.get(27).mass} sloc, and all but its two <code>oxc-emit</code> build lanes are one line apiece.</p>
-<p><strong>The root yard repays the walk.</strong> All ${ROOT.length + 1} <code>//#</code> plots are drawn individually: five equal slabs — <code>lint:root</code>, <code>typecheck:root</code>, <code>lint:elements</code>, <code>format:check:root</code>, <code>lint:templates</code> — watch one identical root surface of ${fmt(SURFACE)} files; two lots watch over two thousand files apiece — <code>lint:package-json</code> ${fmt(row('//#lint:package-json').inputs)} on one line, and <code>check:graph-edges</code> ${fmt(row('//#check:graph-edges').inputs)} on ${slocOf('//#check:graph-edges')}; <code>check:patches</code> and <code>check:task-inputs</code> are ${slocOf('//#check:patches')}- and ${slocOf('//#check:task-inputs')}-line guards standing on the same ${fmt(row('//#check:patches').inputs)}-file root surface the five slabs watch. Five tasks, one surface, one number: it is the plate's cleanest finding. The taplo pad (12) is where plate 3A's six-hop chain touches ground: hops ①–② arrive from <code>mise run ci</code>, hop ③ is this block, and ④–⑥ leave immediately to run back inside mise through the cache gasket. And one lot in the yard is vacant on purpose — <code>//#lint:workflows</code>, the virtual <code>with</code> twin, has no command even here.</p>
+<p><strong>The city is flat, and that is the finding.</strong> ${FLAT} of ${CI.real} real tasks have command mass 1 — one script line handing the work to a pinned binary. The whole city executes ${fmt(TOT_M)} sloc of repo-written command while watching ${fmt(TOT_I)} task-file hashes. The skyline is inverted from intuition: <code>@tools/dts-backtest#test</code> is a ${slocOf('@tools/dts-backtest#test')}-line <code>run.ts</code> on a ${TOWER}-file lot — sheet 3 calls it "one 291-line run.ts holds the TS 5.0 floor", and the graph survey agrees to the line — while the largest footprint, the examples plain, watches ${fmt(CELL.get(25).inputs)} files (format:check ${fmt(row('examples#format:check').inputs)} + lint ${fmt(row('examples#lint').inputs)} alone) under ${CELL.get(25).mass} lines of command. The tallest command is the root yard's <code>//#lint:elements</code>, the one root lane that runs a repo-written bin rather than an external one — ${slocOf('//#lint:elements')} sloc over <code>warn-lanes.core.ts</code>'s ${slocOf('//#lint:elements', 1)} — a ${row('//#lint:elements').mass}-sloc spire on a root-surface footprint. The eslint-plugin quarter is flat throughout: <code>eslint-plugin-lit-ui-router</code> brings ${CELL.get(2).tasks} tasks and ${CELL.get(2).mass} sloc, and all but its two <code>oxc-emit</code> build lanes are one line apiece.</p>
+<p><strong>The root yard repays the walk.</strong> All ${ROOT.length + 1} <code>//#</code> plots are drawn individually, and six of them — <code>lint:root</code>, <code>typecheck:root</code>, <code>lint:elements</code>, <code>format:check:root</code>, <code>lint:templates</code> and <code>lint:package-json</code> — are equal slabs watching one identical root surface of ${fmt(SURFACE)} files. Six tasks, one surface, one number: it is the plate's cleanest finding. The guards that patrol that surface are not root tasks: <code>@tools/repo-checks</code> is a package, drawn whole as the guard house (1) standing off the yard's west edge, and four of its ${CELL.get(1).tasks} tasks — <code>check:graph-edges</code>, <code>check:task-inputs</code>, <code>check:patches</code> and <code>check:knip</code> — are named in the <code>lint</code> task's <code>with</code> list, so a lint run drags them along wherever it starts. Three of the four are the city's tall one-file guards, ${slocOf('@tools/repo-checks#check:task-inputs')}, ${slocOf('@tools/repo-checks#check:graph-edges')} and ${slocOf('@tools/repo-checks#check:patches')} lines of TypeScript apiece; the fourth is one <code>knip</code> line hashing ${fmt(row('@tools/repo-checks#check:knip').inputs)} files, the widest lot in the block. The taplo pad (12) is where plate 3A's six-hop chain touches ground: hops ①–② arrive from <code>mise run ci</code>, hop ③ is this block, and ④–⑥ leave immediately to run back inside mise through the cache gasket. And one lot in the yard is vacant on purpose — <code>//#lint:workflows</code>, the virtual <code>with</code> twin, has no command even here.</p>
 <p><strong>One tier, uniformly red.</strong> Sheet 3's severity vocabulary survives, but at this altitude it degenerates truthfully: every real node in the <code>ci</code> graph stops the PR when it fails, so every massed block wears the same red hatch, and the drawing spends its information elsewhere. The ${MAIN.real - CI.real} ci:main-only tasks (test:engines ×3, check:pack, test:matrix) sit outside this survey on an unmassed accent annex — ${MAIN.nodes}/${MAIN.real} nodes when they are included; the ${fmt(PHANTOM)} phantom plots — ${PHPCT}% of the graph, transit and ^build hash carriers — are the vacant field behind the city, inventoried hole-by-hole on sheet 12.</p>
-<p><strong>Roads and reach.</strong> Five arteries are drawn, one per district pair, and the plate labels them with degree rather than with an edge tally it cannot cite: <code>docs#build</code> waits on ${deg('docs#build', 'deps')} nodes (every quarter ships <code>docs:api</code> there, plus worker types and app fixtures — it is the city's sink), <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')}, <code>@tools/release#check:exports</code> ${deg('@tools/release#check:exports', 'dependents')} (<code>pack:all</code> and <code>check:exports</code> read every quarter), and the widest fan-out in the graph is <code>lit-ui-router#build:types</code> at ${deg('lit-ui-router#build:types', 'dependents')}. Of the graph's ${fmt(CI.edges)} edges only ${CI.realEdges} join two real tasks; the rest hang off phantom transit nodes, which is why the roads are drawn as districts and not as a wire count.</p>`,
+<p><strong>Roads and reach.</strong> Five arteries are drawn, one per district pair, and the plate labels them with degree rather than with an edge tally it cannot cite: <code>@www/lit-ui-router.dev#build</code> waits on ${deg('@www/lit-ui-router.dev#build', 'deps')} nodes (every quarter ships <code>docs:api</code> there, plus worker types and app fixtures — it is the city's sink), <code>@tools/typedoc-plugin-lit-ui-router#build:types</code> unblocks ${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')}, <code>@tools/release#check:exports</code> ${deg('@tools/release#check:exports', 'dependents')} (<code>pack:all</code> and <code>check:exports</code> read every quarter), and the widest fan-out in the graph is <code>lit-ui-router#build:types</code> at ${deg('lit-ui-router#build:types', 'dependents')}. Of the graph's ${fmt(CI.edges)} edges only ${CI.realEdges} join two real tasks; the rest hang off phantom transit nodes, which is why the roads are drawn as districts and not as a wire count.</p>`,
   key: [
     keyRow(`<polygon points="6,10 24,2 42,10 24,18" class="skr fp"/><polygon points="6,10 24,2 42,10 24,18" fill="url(#${P}-hr)"/>`, 'massed task block — stops the PR (all of them do)'),
     keyRow('<polygon points="6,10 24,2 42,10 24,18" class="sks fnone" stroke-dasharray="4 3"/>', 'vacant plot — phantom node, runs nothing'),

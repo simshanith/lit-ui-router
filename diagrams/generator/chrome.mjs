@@ -178,24 +178,56 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
-/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
-   the title face is unicase — no small cap, no alternate, nothing to demote it
-   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
-   of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
-   title's line box. */
-sup.art {
+/* THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11). Every sheet
+   title begins with THE and the title face is unicase — no small cap, no
+   alternate, nothing to demote it with. So the article is SET APART rather than
+   shrunk: lowercase in the DATA face at 0.8em of its title, soft ink, on the
+   baseline, so it reads as a word and not as a footnote. ONE rule set for every
+   site the atlas has — sheet heads, sheet titles, the title block's PROJECT and
+   SHEET TITLE, the cover, the cards, the rail.
+   The word carries its own no-break space, so a title never breaks after it. */
+.art {
   font-family: var(--data);
-  font-size: 0.6em;
+  font-size: 0.8em;
   font-weight: 400;
   font-variant-numeric: normal;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: lowercase;
-  line-height: 0;
   color: var(--ink-soft);
-  /* the sup carries its own no-break space (so the title reads "the MEASURED
-     CITY" to a reader and never breaks after the article); this is the rest */
-  margin-right: 0.1em;
+  margin-right: 0.04em;
+}
+/* THE CATCHWORD. On a host that DECLARES the kit's hwt-catchwords (the guard
+   script sets data-catchwords), the word steps aside and catchword key e is
+   drawn in its place — one face, no GSUB, every THE keyed, key e the plainest
+   of the ten. Off the kit (the artifact, any host without it) none of this
+   applies and the word above draws; the bare key e in the title face is the
+   failure the guard prevents. The scale is the cap-matched 1.08em the type
+   specimen measured, so the size is the title's, not the article's. */
+html[data-catchwords="on"] .art {
+  font-size: inherit;
+  letter-spacing: 0;
+  margin-right: 0;
+}
+html[data-catchwords="on"] .art .w {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-catchwords="on"] .art::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* the cap-matched 1.08em, with a 15px floor: the catchword draws THE as two
+     lines inside one cap height, so at ledger sizes the measured scale is a
+     smudge — the floor is the size below which the mark stops reading */
+  font-size: max(1.08em, 15px);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.2em;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -473,17 +505,21 @@ export function defs(p) {
 }
 
 /**
- * A title with its leading THE drawn as the article superior (see `sup.art`).
- * The manifest titles stay frozen — this is a RENDER transform, applied
- * wherever a title is printed in full. Twin in the app: `articleTitle` in
- * app/src/views.ts and app/prerender.ts; keep the three in lockstep.
+ * A title with its leading THE drawn as the article (see `.art`: the word in
+ * the data face, the kit's catchword where the face is declared). The manifest
+ * titles stay frozen — this is a RENDER transform, applied wherever a title is
+ * printed in full. Twin in the app: `articleTitle` in app/src/views.ts and
+ * app/prerender.ts; keep the three in lockstep.
  */
 export const articleTitle = (title = '') =>
-  String(title).replace(/^THE\s+/, '<sup class="art">the&nbsp;</sup>');
+  String(title).replace(/^THE\s+/, '<span class="art"><span class="w">the&nbsp;</span></span>');
+
+/** The project name AS DRAWN. Plain `PROJECT` stays for titles and aria names. */
+export const PROJECT_MARK = articleTitle(PROJECT);
 
 export function titleBlock(sheet) {
   return `<div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">${PROJECT}</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">${PROJECT_MARK}</span></div>
   <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl">${articleTitle(sheet.title)}</span></div>
   <div><span class="fld">SCALE</span>${sheet.scale}</div>
   <div><span class="fld">FORM</span>${sheet.form}</div>
@@ -504,7 +540,7 @@ export function plateRatio(svg) {
 export function sheetSection(sheet, { headline = true } = {}) {
   const ar = plateRatio(sheet.svg);
   return `<section class="sheet" id="sheet-${sheet.num}" aria-label="${sheet.appendix ? 'Appendix' : 'Sheet'} ${sheet.num}: ${sheet.title}">
-  <div class="sheet-head"><span class="proj">${PROJECT} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — DRAWING SET</span><span class="shno">${sheet.head ?? `SHEET ${sheet.num} / ${TOTAL}`}</span></div>
   ${headline ? `<h2 class="sheet-title">${articleTitle(sheet.title)}</h2>\n  <p class="sheet-sub">${sheet.sub}</p>` : ''}
   <figure>
     <div class="plate"${ar ? ` style="--plate-ar:${ar}"` : ''}><div class="figure-wrap">${sheet.svg}</div></div>
@@ -539,12 +575,34 @@ export const chipBreaks = (html) =>
   String(html).replace(/(<code\b[^>]*>)([^<]*)(<\/code>)/g, (m, open, text, close) =>
     text.includes('/') ? open + text.replace(/\/(?!<wbr>)/g, '/<wbr>') + close : m);
 
+/* THE CATCHWORD GUARD. The kit <link> is injected at STAGE time, so a page
+   cannot know at build time whether it has the face — it asks the FontFaceSet.
+   TRAP: document.fonts.check() answers "can this be rendered", true for a
+   family nothing declares; only a DECLARED @font-face lands in the set, so that
+   is what is asked. Twin in app/index.html. */
+export const CATCHWORD_SCRIPT = `(function () {
+  var armed = function () {
+    for (var f of document.fonts) {
+      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+        document.documentElement.dataset.catchwords = 'on';
+        return true;
+      }
+    }
+    return false;
+  };
+  if (armed()) return;
+  addEventListener('DOMContentLoaded', function () {
+    if (!armed()) document.fonts.ready.then(armed);
+  });
+})();`;
+
 export function page(title, body, { desc = '' } = {}) {
   return `<meta charset="utf-8">
 <title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
+<script>${CATCHWORD_SCRIPT}</script>
 ${chipBreaks(body)}
 <script>${PLATE_END_SCRIPT}</script>`;
 }

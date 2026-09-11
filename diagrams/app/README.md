@@ -77,6 +77,20 @@ the stager and keeps the Google links: its host allows that origin and no other.
 LOADED FACES readout reports which family actually rendered (ADOBE / STAND-IN / SYSTEM), and its
 GLYPH SIZE readout measures the data face against the mono it replaces.
 
+**One article, one rule.** Almost every title in the set begins with THE, and the atlas's own name
+does too. `.art` in `sheets/atlas.css` (from `generator/chrome.mjs`) is the whole treatment: the word
+lowercase in the data face at 0.8em of whatever it precedes, soft ink, on the baseline — and, on a
+host that DECLARES the kit's `hwt-catchwords`, catchword key `e` drawn over it instead, the word kept
+for readers and search. A guard script asks the FontFaceSet for the family and sets
+`data-catchwords` (`index.html` for the app, `CATCHWORD_SCRIPT` in `chrome.mjs` for the flat pages),
+so the catchword can never degrade to a bare letter. It draws the same way in the sheet head
+(`the ALTITUDE ATLAS — DRAWING SET`), the sheet title, the title block's PROJECT and SHEET TITLE, the
+cover, the cards and the rail head; `titles.ts`, `<title>` and every aria name keep the plain
+`THE ALTITUDE ATLAS`. The rail says the word ONCE, at the head of its list column, and each sheet
+titled "the …" carries a muted `″` under it — a held 20px cell, so no title moves. Below the 900px
+breakpoint the rail is a top bar and its title collapses to the plain wordmark: the article span
+reverts to its own uppercase text and the catchword is switched off.
+
 ## Where it lives
 
 The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`, `/specimen`,
@@ -100,7 +114,16 @@ data and shared with the server, states with `component` and `resolve` (`router.
 the `otherwise` target, the Navigation API location plugin with a `pushState` fallback, document
 titles set on `onSuccess` from `titles.ts` (the same strings the prerender writes), and the cover's
 key index carried as typed query params on `atlas.gallery` — every chip a `uiSref`, every filtered
-index a link. One finding from that: `rules.initial({ state })` targets the state with no params and
+index a link. Every card and every plate page's `.plate-data` strip then draws the same
+`keyBlock`: FORM's keys as a miniature of the plates' own title block (hairline cells, the data
+face, no field names — position is the key), subject and the basis qualifier down the left,
+a drawn projection glyph and the interactive lamp down the right. A carried slot is a `uiSref`
+back into the filtered index and `uiSrefActive` echoes the applied filter on it. Two slots are
+asymmetric on purpose: the mode lamp is drawn only when a plate is interactive (twenty STATIC
+badges in twenty-five is noise) and `basis` holds its slot with an em dash off the city group.
+The card is therefore an `<article>`, not an `<a>`: the `h3`'s link is the one primary link and
+stretches over the card through a `::after`, and the key block sits above it on `z-index`, so
+nothing interactive is nested inside a link. One finding from that: `rules.initial({ state })` targets the state with no params and
 erases a first-load query; the function form hands `url.search` through (`router.ts`). Nothing in
 `src/*.ts` imports anything from `src/experimental/`. This layer is meant to be liftable into
 `examples/` as-is.

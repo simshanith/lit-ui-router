@@ -61,7 +61,7 @@ lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision r
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
-`generator/census-*.mjs` probes at one ref — currently origin/main @ 185d414 — on the scc 4.0.0
+`generator/census-*.mjs` probes at one ref — currently origin/main @ 65e2843 — on the scc 4.0.0
 `Code` basis. Lookups throw on a missing row; nothing is hand-pasted. `INITIATIVES.md` records
 the pipeline's design and the traps of refreshing it.
 

@@ -143,6 +143,44 @@
         letter-spacing: 0.04em;
         color: var(--ink);
       }
+      /* THE ARTICLE COLUMN. The word is said ONCE at the head of the list and
+         every sheet titled "the …" carries a ditto under it. The cell is a
+         fixed 20px whether or not it is marked, so no title ever moves; the
+         head row borrows the entries' own geometry (34px number, 9px gaps) so
+         the word sits directly over the column of marks. */
+      .rail-the {
+        display: flex;
+        gap: 9px;
+        align-items: baseline;
+        margin: 0;
+        padding: 0 16px 2px;
+        font-family: var(--title);
+        font-size: 12px;
+        font-weight: 600;
+        letter-spacing: 0.04em;
+        color: var(--ink);
+      }
+      .rail-the .n {
+        flex: 0 0 34px;
+      }
+      .rail-the .art {
+        flex: 0 0 20px;
+        text-align: center;
+        white-space: nowrap;
+      }
+      /* U+2033 DOUBLE PRIME, not U+3003: the prime is IN the data face, so the
+         mark is the atlas's own type on both hosts; the ditto glyph is not, and
+         falls to whatever the system offers. Nudged down to sit at x-height,
+         where a ledger's ditto sits, instead of at the cap line. */
+      .rail-links .d {
+        flex: 0 0 20px;
+        text-align: center;
+        font-family: var(--data);
+        font-size: 13px;
+        line-height: 1;
+        color: var(--ink-faint);
+        transform: translateY(3px);
+      }
       .rail-sec {
         font-family: var(--data);
         font-size: 10px;
@@ -203,6 +241,26 @@
           font-size: 15px;
           margin: 0;
         }
+        /* COLLAPSED = THE WORDMARK. In the top bar the atlas is named plainly,
+           in one line of the display face: no catchword, no article set apart.
+           The article span reverts to its own text, uppercased with the rest. */
+        .rail .rail-head h1 .art {
+          font: inherit;
+          letter-spacing: inherit;
+          color: inherit;
+          text-transform: uppercase;
+          margin: 0;
+        }
+        .rail .rail-head h1 .art::before {
+          content: none;
+        }
+        .rail .rail-head h1 .art .w {
+          position: static;
+          width: auto;
+          height: auto;
+          overflow: visible;
+          clip-path: none;
+        }
         .rail-toggle {
           display: inline-block;
           flex: 0 0 auto;
@@ -255,6 +313,8 @@
         .rail-head,
         .rail-top,
         .rail-sec,
+        .rail-the,
+        .rail-links .d,
         .rail-links .t {
           opacity: 0;
         }
@@ -265,10 +325,14 @@
         .rail:hover .rail-head,
         .rail:hover .rail-top,
         .rail:hover .rail-sec,
+        .rail:hover .rail-the,
+        .rail:hover .rail-links .d,
         .rail:hover .rail-links .t,
         .rail:focus-within .rail-head,
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
+        .rail:focus-within .rail-the,
+        .rail:focus-within .rail-links .d,
         .rail:focus-within .rail-links .t {
           opacity: 1;
         }
@@ -279,6 +343,8 @@
           .rail-head,
           .rail-top,
           .rail-sec,
+          .rail-the,
+          .rail-links .d,
           .rail-links .t {
             transition: opacity 120ms ease;
           }
@@ -400,6 +466,11 @@
       .plate-data a {
         color: var(--ink-soft);
       }
+      /* the plate's own keys, in the cards' key-block shape */
+      .plate-data .keytb {
+        align-self: start;
+        width: min(320px, 100%);
+      }
       .plate-verdict {
         margin: -6px 0 14px;
         font-family: var(--prose);
@@ -422,34 +493,10 @@
         font-weight: 600;
         margin: 6px 0 6px;
       }
-      /* THE ONE CATCHWORD IN THE ATLAS — the cover's own name, nowhere else.
-         HWT Catchwords is an Adobe-kit face with NO GSUB: every THE in it is
-         keyed to one character, and key `e` is the plainest of the ten (upright
-         block caps over two leaves). It is drawn as a ::before on the `.cw`
-         span, at the cap-matched scale the type specimen measured against the
-         title face (1.08em, ink-height for cap-height), and the superior the
-         rest of the set uses is hidden behind it — but ONLY where the kit
-         declared the face. Off the kit (the artifact, any host without it)
-         nothing here applies and the `sup.art` fallback is what draws; the bare
-         key `e` in the display face is the failure this guard prevents. */
-      html[data-catchwords="on"] .cover-title .cw::before {
-        content: "e";
-        font-family: "hwt-catchwords";
-        font-size: 1.08em;
-        font-weight: 400;
-        letter-spacing: 0;
-        text-transform: none;
-        color: var(--ink-soft);
-        margin-right: 0.16em;
-      }
-      html[data-catchwords="on"] .cover-title .cw sup.art {
-        position: absolute;
-        width: 1px;
-        height: 1px;
-        overflow: hidden;
-        clip-path: inset(50%);
-        white-space: nowrap;
-      }
+      /* The cover title carries the set's ONE article treatment (`.art`, in the
+         generated sheets/atlas.css): the kit's catchword where the face is
+         declared, the word in the data face everywhere else. The rail's title
+         is the same markup, so the two agree on the homepage. */
       /* two lines, not one 141-character rule: the motto, then the stamp */
       .cover-sub .stamp {
         display: block;
@@ -656,15 +703,39 @@
           gap: 16px;
         }
       }
+      /* THE CARD is a container, not a link: `.card-go` (the title) is the one
+         primary link and stretches over the card through a ::after, so the key
+         block's filter links are not nested inside a link. */
       .card {
+        position: relative;
         border: 1.5px solid var(--ink);
         background: var(--paper);
         padding: 14px 16px 15px;
-        text-decoration: none;
         color: inherit;
         display: block;
       }
       .card:hover {
+        background: var(--paper-2);
+      }
+      .card:focus-within {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+      .card .card-go {
+        color: inherit;
+        text-decoration: none;
+      }
+      .card .card-go::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+      }
+      .card .card-go:focus-visible {
+        outline: none;
+      }
+      /* the current sheet's card, marked by uiSrefActive on its title link */
+      .card:has(.card-go.is-active) {
+        border-color: var(--accent);
         background: var(--paper-2);
       }
       .card .n {
@@ -763,8 +834,7 @@
         flex-wrap: wrap;
         gap: 5px;
       }
-      .keyindex .kv,
-      .card .kv {
+      .keyindex .kv {
         font-family: var(--data);
         font-size: 10px;
         letter-spacing: 0.1em;
@@ -841,17 +911,140 @@
         padding: 18px 14px;
         margin: 0;
       }
-      /* the card's data model: its four keys, under the caption */
-      .card .keys {
-        display: flex;
-        flex-wrap: wrap;
-        gap: 4px;
-        margin-top: 8px;
+      /* THE KEY BLOCK — FORM's keys as a miniature title block, in the idiom
+         generator/chrome.mjs draws the plates' own: hairline cells, the data
+         face, tabular figures. NO field names: the slots are fixed and
+         position is the key, the way a tombstone label is read —
+         subject | projection over basis | mode. basis holds its slot with an
+         em dash off the city group; the mode lamp is drawn only when a plate
+         is interactive. Filled slots are filter links and sit above the card's
+         stretched title link. */
+      .keytb {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        border: 1px solid var(--line);
+        margin-top: 10px;
+        position: relative;
+        z-index: 1;
+        font-family: var(--data);
+        font-variant-numeric: tabular-nums;
       }
-      .card .kv i {
-        font-style: normal;
-        color: var(--accent);
-        margin-right: 5px;
+      .keytb .ktb-cell {
+        display: block;
+        padding: 5px 8px 6px;
+        border-top: 1px solid var(--line);
+        border-left: 1px solid var(--line);
+        color: var(--ink-soft);
+        text-decoration: none;
+        min-width: 0;
+      }
+      .keytb .ktb-cell:nth-child(-n + 2) {
+        border-top: none;
+      }
+      .keytb .ktb-cell:nth-child(odd) {
+        border-left: none;
+      }
+      .keytb a.ktb-cell:hover {
+        background: var(--paper-2);
+        color: var(--ink);
+      }
+      .keytb a.ktb-cell:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -2px;
+      }
+      /* the applied gallery filter, echoed on the slot that would set it */
+      .keytb a.ktb-cell.is-on {
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .keytb .v {
+        display: flex;
+        align-items: center;
+        gap: 5px;
+        font-size: 10px;
+        letter-spacing: 0.11em;
+        text-transform: uppercase;
+        min-height: 15px;
+      }
+      .keytb .v .w {
+        overflow-wrap: anywhere;
+      }
+      /* SUBJECT is the block's word: the one value set solid, in the ink */
+      .keytb .ktb-subject .v {
+        font-size: 12px;
+        letter-spacing: 0.08em;
+        font-weight: 600;
+        color: var(--ink);
+      }
+      .keytb a.ktb-subject.is-on .v {
+        color: var(--paper);
+      }
+      /* BASIS is the qualifier under the subject — a lowercase phrase, cities
+         only; every other plate holds the slot with an em dash. */
+      .keytb .ktb-basis .v {
+        text-transform: lowercase;
+        letter-spacing: 0.04em;
+        font-size: 10.5px;
+      }
+      .keytb .ktb-basis.is-empty .v {
+        color: var(--ink-faint);
+      }
+      /* PROJECTION is a glyph: one per value, hairline, in the running colour */
+      .keytb .gl {
+        flex: 0 0 auto;
+        width: 15px;
+        height: 15px;
+        display: block;
+      }
+      .keytb .gl path {
+        fill: none;
+        stroke: currentColor;
+        stroke-width: 1.1;
+        stroke-linejoin: round;
+      }
+      .keytb .gl .dot {
+        stroke-width: 3.2;
+        stroke-linecap: round;
+      }
+      /* MODE is a boolean, drawn asymmetrically: a lit accent lamp and the word
+         when a plate answers a pointer, and NOTHING when it does not. */
+      .keytb .ktb-mode .v {
+        color: var(--ink);
+      }
+      .keytb .lamp {
+        flex: 0 0 auto;
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--accent);
+        border: 1px solid var(--accent);
+        box-shadow: 0 0 0 2px var(--paper-2);
+      }
+      .keytb a.ktb-mode.is-on .v {
+        color: var(--paper);
+      }
+      .keytb a.ktb-mode.is-on .lamp {
+        background: var(--paper);
+        border-color: var(--paper);
+        box-shadow: none;
+      }
+      /* one column under a narrow card: four stacked rows, still ruled */
+      @media (max-width: 420px) {
+        .keytb {
+          grid-template-columns: 1fr;
+        }
+        .keytb .ktb-cell {
+          border-left: none;
+          border-top: 1px solid var(--line);
+        }
+        .keytb .ktb-cell:first-child {
+          border-top: none;
+        }
+        /* stacked, nothing is aligned against it: the unlit lamp's held slot
+           would only be a blank band, so it goes */
+        .keytb .ktb-mode.is-empty {
+          display: none;
+        }
       }
       /* THE WIDE BAND — the numbers and the argument, after the index. Over
          1800 the survey table and the reading column sit side by side, so the

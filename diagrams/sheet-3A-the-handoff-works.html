@@ -170,24 +170,56 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
-/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
-   the title face is unicase — no small cap, no alternate, nothing to demote it
-   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
-   of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
-   title's line box. */
-sup.art {
+/* THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11). Every sheet
+   title begins with THE and the title face is unicase — no small cap, no
+   alternate, nothing to demote it with. So the article is SET APART rather than
+   shrunk: lowercase in the DATA face at 0.8em of its title, soft ink, on the
+   baseline, so it reads as a word and not as a footnote. ONE rule set for every
+   site the atlas has — sheet heads, sheet titles, the title block's PROJECT and
+   SHEET TITLE, the cover, the cards, the rail.
+   The word carries its own no-break space, so a title never breaks after it. */
+.art {
   font-family: var(--data);
-  font-size: 0.6em;
+  font-size: 0.8em;
   font-weight: 400;
   font-variant-numeric: normal;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: lowercase;
-  line-height: 0;
   color: var(--ink-soft);
-  /* the sup carries its own no-break space (so the title reads "the MEASURED
-     CITY" to a reader and never breaks after the article); this is the rest */
-  margin-right: 0.1em;
+  margin-right: 0.04em;
+}
+/* THE CATCHWORD. On a host that DECLARES the kit's hwt-catchwords (the guard
+   script sets data-catchwords), the word steps aside and catchword key e is
+   drawn in its place — one face, no GSUB, every THE keyed, key e the plainest
+   of the ten. Off the kit (the artifact, any host without it) none of this
+   applies and the word above draws; the bare key e in the title face is the
+   failure the guard prevents. The scale is the cap-matched 1.08em the type
+   specimen measured, so the size is the title's, not the article's. */
+html[data-catchwords="on"] .art {
+  font-size: inherit;
+  letter-spacing: 0;
+  margin-right: 0;
+}
+html[data-catchwords="on"] .art .w {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-catchwords="on"] .art::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* the cap-matched 1.08em, with a 15px floor: the catchword draws THE as two
+     lines inside one cap height, so at ledger sizes the measured scale is a
+     smudge — the floor is the size below which the mark stops reading */
+  font-size: max(1.08em, 15px);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.2em;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -433,12 +465,27 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
+<script>(function () {
+  var armed = function () {
+    for (var f of document.fonts) {
+      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+        document.documentElement.dataset.catchwords = 'on';
+        return true;
+      }
+    }
+    return false;
+  };
+  if (armed()) return;
+  addEventListener('DOMContentLoaded', function () {
+    if (!armed()) document.fonts.ready.then(armed);
+  });
+})();</script>
 <section class="sheet" id="sheet-3A" aria-label="Sheet 3A: THE HANDOFF WORKS">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 3A / 14</span></div>
-  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>HANDOFF WORKS</h2>
-  <p class="sheet-sub">ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 11 workflows · 49 mise tasks in 4 homes · turbo ci 605 nodes, 183 real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from diagrams/data/census-handoff.json + census-plate.json · counted at origin/main @ 185d414 (2026-09-07)</p>
+  <div class="sheet-head"><span class="proj"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 3A / 14</span></div>
+  <h2 class="sheet-title"><span class="art"><span class="w">the&nbsp;</span></span>HANDOFF WORKS</h2>
+  <p class="sheet-sub">ALTITUDE 3 · ALTERNATE PLATE — the sheet-3 task-manager inset at full size: 8 of 12 workflows · 51 mise tasks in 4 homes · turbo ci 660 nodes, 195 real · 4 seam types · 3 service doors · every frame sized to the widest DIN line it holds, so the spine is computed rather than hand-set · every count imported from diagrams/data/census-handoff.json + census-plate.json · counted at origin/main @ 65e2843 (2026-09-11)</p>
   <figure>
-    <div class="plate" style="--plate-ar:1.4028"><div class="figure-wrap"><svg viewBox="0 0 1400 998" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists eleven workflows, eight of which call mise for a total of thirty-seven call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing 49 tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 183 tasks inside a hatched phantom shroud representing the 422 nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
+    <div class="plate" style="--plate-ar:1.4028"><div class="figure-wrap"><svg viewBox="0 0 1400 998" role="img" aria-label="Flat coupling schematic of the two task managers in the lit-ui-router monorepo, promoted from the small inset on sheet 3. On the left a GitHub Actions panel lists eleven workflows, eight of which call mise for a total of thirty-seven call sites. A trunk crosses a bolted gasket labeled seam A into the mise machine, drawn as a node-free umbrella housing 51 tasks in four compartments: a tool belt of aqua-pinned binaries, nine build-and-test tasks including one dead task drawn in red, nine file tasks, sixteen release tasks, and fifteen inline tasks. Seven tasks marked with stars shell out to turbo; eight marked with return arrows are re-entered from turbo, and the two sets never overlap. A second gasket, seam B, crosses into the turbo machine, drawn as a real core of 195 tasks inside a hatched phantom shroud representing the 465 nodes that run nothing, cross-referenced to sheet twelve. Six root re-entrant ports at the bottom of the core return through a duct fitted with the featured cache gasket: turbo caches mise, because the lint tasks hash the mise task files and lockfile. The deepest chain, six hops from workflow YAML to the pinned taplo binary, is traced with circled digits and an accent thread. A red dashed service-door route arcs over the umbrella for the one bare-turbo bypass, and a red box catalogues all three deliberate bypasses including the mise-free production docs deploy. A seam schedule at the bottom lists every crossing with counts and citations.">
 <defs>
   <marker id="s3a-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -473,14 +520,14 @@ a { color: var(--accent); }
 
 <text x="1360" y="34" class="lbls" text-anchor="end" >READ LEFT TO RIGHT — every PR enters at a workflow, crosses two gaskets, and returns through the cache gasket</text>
 <text x="1360" y="48" class="lblf" text-anchor="end" >EMPHASIS — circled digits ①–⑥ + accent thread = the deepest chain · red + hatch = the service doors</text>
-<text x="1360" y="62" class="lblf" text-anchor="end" >THE MACHINE IN ONE LINE — mise 49 tasks / 37 call sites, fan-out delegated rather than modelled · turbo 98 definitions in 17 files · ci 605 nodes, 183 real</text>
+<text x="1360" y="62" class="lblf" text-anchor="end" >THE MACHINE IN ONE LINE — mise 51 tasks / 37 call sites, fan-out delegated rather than modelled · turbo 107 definitions in 19 files · ci 660 nodes, 195 real</text>
 
 <rect x="200" y="353" width="8" height="14" rx="0" class="skr fp"/><rect x="200" y="353" width="8" height="14" fill="url(#s3a-hr)"/>
 <path d="M208,360 L236,360 L236,102 L1087,102 L1087,108" class="skr" stroke-dasharray="6 4" marker-end="url(#s3a-ar)"/>
 <text x="661.5" y="94" class="lblr" text-anchor="middle" >DOOR 1 — deflake-e2e.yml:73 · bare `turbo run build --filter=…` — over the umbrella, straight into turbo (PATH still mise)</text>
 <rect x="40" y="110" width="168" height="467" rx="0" class="sk2 fp"/>
 <text x="52" y="130" class="lblb" text-anchor="start" >GITHUB ACTIONS</text>
-<text x="52" y="143" class="lblf" text-anchor="start" >11 workflows · 8 call mise</text>
+<text x="52" y="143" class="lblf" text-anchor="start" >12 workflows · 8 call mise</text>
 <rect x="52" y="162" width="144" height="26" rx="0" class="ska fp"/>
 <text x="60" y="179" class="lbls" text-anchor="start" >build-test-run</text>
 <text x="188" y="179" class="lblf" text-anchor="end" >·11</text>
@@ -507,7 +554,7 @@ a { color: var(--accent); }
 <text x="188" y="438" class="lblf" text-anchor="end" >·1</text>
 <line x1="52" y1="468" x2="196" y2="468" class="skf"/>
 <text x="52" y="482" class="lblf" text-anchor="start" >no mise: build-test,</text>
-<text x="52" y="494" class="lblf" text-anchor="start" >commitlint · semantic-pr</text>
+<text x="52" y="494" class="lblf" text-anchor="start" >coderabbit-oneshot · commitlint · semantic-pr</text>
 <text x="52" y="522" class="lbls" text-anchor="start" >branch_ci_gate needs</text>
 <text x="52" y="534" class="lbls" text-anchor="start" >NO setup — node builtins</text>
 <text x="52" y="546" class="lblf" text-anchor="start" >(build-test-branch.yml:35-36)</text>
@@ -527,13 +574,13 @@ a { color: var(--accent); }
 <text x="276" y="474.5" class="lblf" text-anchor="middle" >node-free bootstrap</text>
 <rect x="344" y="110" width="330" height="467" rx="0" class="sk2 fp"/>
 <text x="356" y="130" class="lblb" text-anchor="start" >MISE — THE NODE-FREE UMBRELLA</text>
-<text x="356" y="143" class="lblf" text-anchor="start" >49 tasks · 4 homes · 2 use depends · 21 with $usage_* specs</text>
+<text x="356" y="143" class="lblf" text-anchor="start" >51 tasks · 4 homes · 2 use depends · 23 with $usage_* specs</text>
 <rect x="356" y="155" width="306" height="48" rx="0" class="sk fp2"/>
 <text x="364" y="169" class="lbls" text-anchor="start" >TOOL BELT — aqua pins, mise.lock checksums</text>
 <text x="364" y="183" class="lblf" text-anchor="start" >⑥ taplo 0.10.0 · rumdl · shellcheck · pnpm (bootstrap)</text>
 <text x="364" y="195" class="lblf" text-anchor="start" >actionlint · zizmor — node never installs these</text>
 <rect x="356" y="212" width="145" height="143" rx="0" class="sk fp"/>
-<text x="364" y="226" class="lbls" text-anchor="start" >tools/build_and_test — 9</text>
+<text x="364" y="226" class="lbls" text-anchor="start" >tools/build_and_test — 10</text>
 <text x="364" y="239" class="lblf" text-anchor="start" >xvfb · branch_ci_gate</text>
 <text x="364" y="252" class="lblf" text-anchor="start" >turbo_summary · cypress</text>
 <text x="364" y="265" class="lblf" text-anchor="start" >playwright_version</text>
@@ -567,7 +614,7 @@ a { color: var(--accent); }
 <text x="364" y="501" class="lblf" text-anchor="start" >   (runs turbo ×2)</text>
 <text x="364" y="514" class="lblf" text-anchor="start" >↩ check_release_closure</text>
 <rect x="511" y="370" width="151" height="195" rx="0" class="sk fp"/>
-<text x="519" y="384" class="lbls" text-anchor="start" >config.toml inline — 15</text>
+<text x="519" y="384" class="lbls" text-anchor="start" >config.toml inline — 16</text>
 <text x="519" y="397" class="lbla" text-anchor="start" >② ★ ci · ★ ci_main</text>
 <text x="519" y="410" class="lbla" text-anchor="start" >★ build</text>
 <text x="519" y="423" class="lbla" text-anchor="start" >★ codecov_bundle</text>
@@ -598,15 +645,15 @@ a { color: var(--accent); }
 <rect x="815" y="111" width="544" height="19" fill="url(#s3a-hd)" opacity="0.45"/><rect x="815" y="558" width="544" height="18" fill="url(#s3a-hd)" opacity="0.45"/><rect x="815" y="130" width="19" height="428" fill="url(#s3a-hd)" opacity="0.45"/><rect x="1340" y="130" width="19" height="428" fill="url(#s3a-hd)" opacity="0.45"/>
 <rect x="834" y="130" width="506" height="427" rx="0" class="sk2 fp"/>
 <text x="848" y="152" class="lblb" text-anchor="start" >TURBO — THE CACHED FAN-OUT</text>
-<text x="848" y="168" class="lblf" text-anchor="start" >ci graph: 605 nodes · 183 real · 1,424 edges · 99 real→real</text>
-<text x="848" y="181" class="lblf" text-anchor="start" >17 turbo.json files · 98 task definitions (47 root + 51 member)</text>
-<text x="848" y="194" class="lblf" text-anchor="start" >ci:main overlay: 639 nodes · 188 real (+5 real tasks)</text>
+<text x="848" y="168" class="lblf" text-anchor="start" >ci graph: 660 nodes · 195 real · 1,544 edges · 73 real→real</text>
+<text x="848" y="181" class="lblf" text-anchor="start" >19 turbo.json files · 107 task definitions (44 root + 63 member)</text>
+<text x="848" y="194" class="lblf" text-anchor="start" >ci:main overlay: 697 nodes · 200 real (+5 real tasks)</text>
 <text x="848" y="207" class="lblf" text-anchor="start" >13 cache:false tasks repo-wide — ZERO reachable from ci</text>
-<text x="848" y="220" class="lblf" text-anchor="start" >counted from bare `turbo run ci --dry=json` · 2026-09-07</text>
+<text x="848" y="220" class="lblf" text-anchor="start" >counted from bare `turbo run ci --dry=json` · 2026-09-11</text>
 <rect x="848" y="244" width="140" height="26" rx="0" class="sk fp2"/><text x="918" y="261" class="lbls" text-anchor="middle" >ci → ci:pull_request</text>
-<rect x="1120" y="244" width="206" height="26" rx="0" class="sk fp2"/><text x="1223" y="261" class="lbls" text-anchor="middle" >ci:main = ci:pr + 34 nodes, 5 real</text>
+<rect x="1120" y="244" width="206" height="26" rx="0" class="sk fp2"/><text x="1223" y="261" class="lbls" text-anchor="middle" >ci:main = ci:pr + 37 nodes, 5 real</text>
 <text x="848" y="291" class="lblf" text-anchor="start" >turbo.json:352-366 — 11 dependsOn lanes under ci:pull_request</text>
-<text x="848" y="315" class="lbls" text-anchor="start" >PHANTOM SHROUD — 422 of 605 nodes run nothing (69.8%)</text>
+<text x="848" y="315" class="lbls" text-anchor="start" >PHANTOM SHROUD — 465 of 660 nodes run nothing (70.5%)</text>
 <text x="848" y="328" class="lblf" text-anchor="start" >transit / ^build hash carriers — punched hole-by-hole on SHEET 12</text>
 <line x1="844" y1="320" x2="828" y2="320" class="skf"/>
 <rect x="848" y="346" width="200" height="26" rx="0" class="ska fp"/><text x="948" y="363" class="lbls" text-anchor="middle" >//#lint:workflows — virtual with ×4</text>
@@ -670,7 +717,7 @@ a { color: var(--accent); }
 <text x="58" y="911" class="lbls" text-anchor="start" >D   mise → pnpm → turbo — 1 (check_workers_builds, manual) · turbo leg is cache:false, so the crossing buys only env passthrough + addressing · tasks file :21</text>
 <text x="58" y="928" class="lbls" text-anchor="start" >D2  mise → mise — 8 edges · 5 depends (setup · lint_workflows ×4, from 2 declaring tasks) + run-line delegations · cutest: turbo_login → $(mise run read_secret) · config.toml:94,143</text>
 <text x="58" y="945" class="lbls" text-anchor="start" >E   bypasses — 3, all deliberate · deflake-e2e.yml:73 (bare turbo) · :87 (pnpm outside turbo) · cloudflare-build.sh:26-38 (npm -g pnpm + npx turbo, no mise — production)</text>
-<text x="58" y="968" class="lblf" text-anchor="start" >TOTALS — 49 mise tasks · 21 with $usage_* specs · 98 turbo definitions · ci 605 nodes / 183 real · 1 dead task (playwright_deps) · counted at origin/main @ 185d414 (2026-09-07) · graph via turbo 2.10.11</text>
+<text x="58" y="968" class="lblf" text-anchor="start" >TOTALS — 51 mise tasks · 23 with $usage_* specs · 107 turbo definitions · ci 660 nodes / 195 real · 1 dead task (playwright_deps) · counted at origin/main @ 65e2843 (2026-09-11) · graph via turbo 2.10.12</text>
 </svg></div></div>
     <figcaption><span class="figno">FIG. 3A</span>The two task managers drawn as the two machines they are — mise the node-free umbrella, turbo the cached fan-out — with the seams as the featured parts: every crossing is a bolted gasket labeled with what crosses it and what the boundary buys. The star fitting is the cache gasket on the return duct: turbo caches mise, because the six re-entrant lint lanes hash the mise task files and mise.lock, so a tool-pin bump invalidates exactly its own lane.</figcaption>
   </figure>
@@ -678,11 +725,11 @@ a { color: var(--accent); }
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>Method — one census, cited throughout.</strong> Every count on this plate is imported: <code>diagrams/<wbr>data/<wbr>census-handoff.json</code> for the workflows, the mise tasks and the turbo definitions, <code>census-plate.json</code> for the graph. Both are written by probes that read a materialized archive of the ref — the 11 workflow files, the 17 <code>turbo.json</code> files, <code>.config/<wbr>mise/<wbr>**</code> and both member <code>mise.toml</code> files — with the graph figures from a bare <code>turbo run ci --dry=json</code> on an installed archive. No mise or turbo runs on this machine to draw it, and nothing numeric here is hand-pasted: the task-name lists, the cited <code>file:line</code>s and this prose are the editorial part. Basis: counted at origin/main @ 185d414 (2026-09-07); graph surveyed at origin/main @ 185d414 (2026-09-07) · turbo 2.10.11.</p>
+<p><strong>Method — one census, cited throughout.</strong> Every count on this plate is imported: <code>diagrams/<wbr>data/<wbr>census-handoff.json</code> for the workflows, the mise tasks and the turbo definitions, <code>census-plate.json</code> for the graph. Both are written by probes that read a materialized archive of the ref — the 12 workflow files, the 19 <code>turbo.json</code> files, <code>.config/<wbr>mise/<wbr>**</code> and both member <code>mise.toml</code> files — with the graph figures from a bare <code>turbo run ci --dry=json</code> on an installed archive. No mise or turbo runs on this machine to draw it, and nothing numeric here is hand-pasted: the task-name lists, the cited <code>file:line</code>s and this prose are the editorial part. Basis: counted at origin/main @ 65e2843 (2026-09-11); graph surveyed at origin/main @ 65e2843 (2026-09-11) · turbo 2.10.12.</p>
 <p><strong>The star fitting: turbo caches mise.</strong> Six root <code>/<wbr>/<wbr>#</code> scripts in the ci graph have <code>mise run …</code> as their literal command, and their turbo <code>inputs</code> explicitly hash <code>.config/<wbr>mise/<wbr>tasks/<wbr>*</code> and <code>.config/<wbr>mise/<wbr>mise.lock</code> (turbo.json:264-268, 281-287, 292-298); a seventh port, <code>@tools/<wbr>release#check:release-closure</code>, re-enters from a member script and hashes <code>config.toml</code> the same way (tools/release/turbo.json:39-50). That is the whole trade drawn as one gasket on the return duct: mise owns the tool versions (taplo, rumdl, shellcheck, actionlint, zizmor — none installable by node), turbo owns the cache, and the gasket hashes one machine against the other, so a taplo pin bump invalidates exactly the taplo lane and nothing else.</p>
-<p><strong>A DAG in a loop costume.</strong> The circuit workflow → mise → turbo → mise looks re-entrant, but the 49 tasks partition cleanly: the seven that shell turbo (★ — <code>ci</code>, <code>ci_main</code>, <code>build</code>, <code>codecov_bundle</code>, <code>dts_backtest_matrix</code>, <code>check_pack</code>, <code>published_diff</code>) are reachable only from workflows and humans, while the eight turbo re-enters (↩ — the lint and format tasks, and <code>check_release_closure</code>) only exec pinned binaries, file tasks or a manifest reader. No edge leads from the second set back to the first. The deepest chain is six hops and runs on every PR, four tool lanes in parallel: workflow YAML → <code>mise run ci</code> → <code>turbo run ci</code> → <code>/<wbr>/<wbr>#lint:toml</code> → <code>mise run lint_toml</code> → the <code>taplo</code> file task → the pinned binary.</p>
+<p><strong>A DAG in a loop costume.</strong> The circuit workflow → mise → turbo → mise looks re-entrant, but the 51 tasks partition cleanly: the seven that shell turbo (★ — <code>ci</code>, <code>ci_main</code>, <code>build</code>, <code>codecov_bundle</code>, <code>dts_backtest_matrix</code>, <code>check_pack</code>, <code>published_diff</code>) are reachable only from workflows and humans, while the eight turbo re-enters (↩ — the lint and format tasks, and <code>check_release_closure</code>) only exec pinned binaries, file tasks or a manifest reader. No edge leads from the second set back to the first. The deepest chain is six hops and runs on every PR, four tool lanes in parallel: workflow YAML → <code>mise run ci</code> → <code>turbo run ci</code> → <code>/<wbr>/<wbr>#lint:toml</code> → <code>mise run lint_toml</code> → the <code>taplo</code> file task → the pinned binary.</p>
 <p><strong>Three service doors, all deliberate.</strong> deflake-e2e.yml:73 runs bare <code>turbo run build --filter=…</code> — over the umbrella, though mise still supplies the PATH; deflake-e2e.yml:87 runs the flake attempts through pnpm <em>outside</em> turbo, because a cached test task would replay attempt 1’s logs; and the production docs deploy never sees mise at all — Cloudflare Workers Builds clears corepack’s shims and installs <code>pnpm@12.2.1</code> globally through npm before <code>npx turbo docs#build</code> (tools/workers-builds/cloudflare-build.sh:26-38), because the hosted image’s corepack shim cannot materialize pnpm 12. The doors are drawn red and hatched because each one gives up something the machines provide — and each was opened on purpose.</p>
-<p><strong>Two curiosities the census surfaced.</strong> One task in the whole machine is dead: <code>/<wbr>/<wbr>tools/<wbr>build_and_test:playwright_deps</code> (mise.toml:72-76) has no caller anywhere, superseded by <code>playwright_deps_engines</code>. And one umbrella exists twice: mise <code>lint_workflows</code> (a 4-leg <code>depends</code>, config.toml:139-143) and turbo <code>/<wbr>/<wbr>#lint:workflows</code> (a virtual <code>with</code> node, turbo.json:251-261) are the same shape maintained by hand in both schedulers — the one place the two machines duplicate rather than delegate. The phantom shroud around turbo’s core — 422 of 605 nodes that exist only to carry hashes — is drawn as wall thickness here; sheet 12 punches it hole by hole.</p>
+<p><strong>Two curiosities the census surfaced.</strong> One task in the whole machine is dead: <code>/<wbr>/<wbr>tools/<wbr>build_and_test:playwright_deps</code> (mise.toml:72-76) has no caller anywhere, superseded by <code>playwright_deps_engines</code>. And one umbrella exists twice: mise <code>lint_workflows</code> (a 4-leg <code>depends</code>, config.toml:139-143) and turbo <code>/<wbr>/<wbr>#lint:workflows</code> (a virtual <code>with</code> node, turbo.json:251-261) are the same shape maintained by hand in both schedulers — the one place the two machines duplicate rather than delegate. The phantom shroud around turbo’s core — 465 of 660 nodes that exist only to carry hashes — is drawn as wall thickness here; sheet 12 punches it hole by hole.</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -692,15 +739,15 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><path d="M2,9 L34,9" class="ska" stroke-dasharray="3 3"/><text x="38" y="13" class="lbla" font-size="11">①</text></svg></td><td>the deepest chain — 6 hops, circled digits</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" class="fp"/><rect x="6" y="3" width="36" height="12" fill="url(#s3a-hr)"/><rect x="6" y="3" width="36" height="12" class="skr fnone"/></svg></td><td>service door — a deliberate bypass</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><text x="4" y="13" class="lbl" font-size="11">★ / ↩</text></svg></td><td>shells turbo / re-entered by turbo — disjoint sets</td></tr>
-<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s3a-hd)" opacity="0.45"/><rect x="6" y="3" width="36" height="12" class="sks fnone" stroke-dasharray="4 3"/></svg></td><td>phantom shroud — 422 nodes that run nothing (sheet 12)</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="6" y="3" width="36" height="12" fill="url(#s3a-hd)" opacity="0.45"/><rect x="6" y="3" width="36" height="12" class="sks fnone" stroke-dasharray="4 3"/></svg></td><td>phantom shroud — 465 nodes that run nothing (sheet 12)</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><text x="4" y="13" class="lblr" font-size="11">✕</text></svg></td><td>dead task — no caller anywhere</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>HANDOFF WORKS</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art"><span class="w">the&nbsp;</span></span>HANDOFF WORKS</span></div>
   <div><span class="fld">SCALE</span>TWO TASK MANAGERS</div>
   <div><span class="fld">FORM</span>COUPLING SCHEMATIC</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-06 · E</div>
+  <div><span class="fld">DATE / REV</span>2026-09-11 · E</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>3A OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>

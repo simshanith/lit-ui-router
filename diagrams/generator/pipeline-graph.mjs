@@ -9,6 +9,7 @@
 // the barycentre of the plates they read.  cytoscape draws it with `preset` —
 // no physics, so the picture is the same on every load.
 import { ATLAS } from './census-atlas.mjs';
+import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
 export const CYTOSCAPE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js';
@@ -372,8 +373,8 @@ export function pipelineSection() {
 
   return `<style>${CSS}</style>
 <section class="sheet pg" id="pipeline-graph" aria-label="The Survey Office, interactive">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — INTERACTIVE PLATE</span><span class="shno">SHEET 14 · REV ${REV}</span></div>
-  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SURVEY OFFICE — INTERACTIVE</h2>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">SHEET 14 · REV ${REV}</span></div>
+  <h2 class="sheet-title">${articleTitle('THE SURVEY OFFICE')} — INTERACTIVE</h2>
   <p class="sheet-sub">${SUB}</p>
   <div class="pg-bar">
     <div class="pg-legend">

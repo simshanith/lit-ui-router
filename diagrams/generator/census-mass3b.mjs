@@ -26,11 +26,12 @@ const ROOT = basis.dir + '/';
 // A judgement table, verified below against the ref's scripts + config.toml;
 // drift prints loudly.
 const CITES = {
-  // #693 replaced //#check:docs-api-deps with these two; the @tools/shared .core.ts
-  // each imports is a library, not a file the command executes — same rule as before
-  '//#check:graph-edges': { files: ['check-graph-edges.ts'] },
-  '//#check:task-inputs': { files: ['check-task-inputs.ts'] },
-  '//#check:patches': { files: ['check-patches.ts'] },
+  // #693 replaced //#check:docs-api-deps with these two; #747–#749 (and knip #809–#811)
+  // moved all three guards out of the root into @tools/repo-checks.  The @tools/shared
+  // .core.ts each imports is a library, not a file the command executes — same rule
+  '@tools/repo-checks#check:graph-edges': { files: ['tools/repo-checks/check-graph-edges.ts'] },
+  '@tools/repo-checks#check:task-inputs': { files: ['tools/repo-checks/check-task-inputs.ts'] },
+  '@tools/repo-checks#check:patches': { files: ['tools/repo-checks/check-patches.ts'] },
   '//#format:check:toml': { mise: true, files: ['.config/mise/tasks/taplo'] },
   '//#lint:actionlint': { mise: true, files: [] },
   '//#lint:elements': {
@@ -49,7 +50,7 @@ const CITES = {
   '@tools/dts-backtest#test': { files: ['tools/dts-backtest/run.ts'] },
   '@tools/release#check:exports': { files: ['tools/release/src/checks/check-exports.ts'] },
   '@tools/release#pack:all': { files: ['tools/release/src/steps/pack-all.ts'] },
-  'docs#typecheck:vue': { files: ['tools/vue-check/bin.ts'] },
+  '@www/lit-ui-router.dev#typecheck:vue': { files: ['tools/vue-check/bin.ts'] },
   'lit-ui-router#check:dev-split': { files: ['tools/oxc-emit/src/check-dev-split.ts'] },
   'ui-router-server#test:coverage': { files: ['tools/lcov-rebase/src/rebase-lcov.ts'] },
   'examples#build:embeds': { files: ['examples/build-embeds.ts'] },
@@ -108,7 +109,7 @@ function sccSloc(files) {
 const EXTERNAL = new Set([
   'oxfmt', 'oxlint', 'tsc', 'eslint', 'vitest', 'node', 'vitepress', 'wrangler', 'typedoc',
   'concurrently', 'cypress', 'vite', 'turbo', 'rimraf', 'cem', 'mkdir', 'mise',
-  'start-server-and-test', 'api-extractor', 'taplo', 'rumdl', 'shellcheck',
+  'start-server-and-test', 'api-extractor', 'taplo', 'rumdl', 'shellcheck', 'knip',
   'eslint-doc-generator',
 ]);
 const MISE_TOML = readFileSync(ROOT + '.config/mise/config.toml', 'utf8');

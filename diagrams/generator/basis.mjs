@@ -51,12 +51,18 @@ export const materialize = (ref) => {
 
 // T3 step (INITIATIVES.md): give a materialized archive its node_modules so
 // execution probes (turbo dry-runs, nm closures) run against the REF, not a
-// checkout.  corepack pnpm honors the archive's own packageManager pin;
-// --frozen-lockfile means the ref's lockfile or nothing.  Returns the turbo
-// binary to use: the tree's own devDep bin invoked DIRECTLY — bare path, never
-// through pnpm, whose relative .bin PATH breaks turbo's spawn.
+// checkout.  pnpm is the mise-provisioned one, resolved from THIS checkout
+// (the tmpdir has no trusted mise config); pnpm >= 11.10 self-swaps to the
+// archive's own packageManager pin.  --frozen-lockfile means the ref's
+// lockfile or nothing.  Returns the turbo binary to use: the tree's own
+// devDep bin invoked DIRECTLY — bare path, never through pnpm, whose
+// relative .bin PATH breaks turbo's spawn.
+const pnpmBin = () => {
+  try { return execFileSync('mise', ['which', 'pnpm'], { encoding: 'utf8' }).trim(); }
+  catch { return 'pnpm'; }
+};
 export const installDeps = (basis) => {
-  execFileSync('corepack', ['pnpm', 'install', '--frozen-lockfile', '--silent'],
+  execFileSync(pnpmBin(), ['install', '--frozen-lockfile', '--silent'],
     { cwd: basis.dir, stdio: ['ignore', 'inherit', 'inherit'] });
   const turbo = join(basis.dir, 'node_modules', '.bin', 'turbo');
   return { turbo: existsSync(turbo) ? turbo : 'turbo' };

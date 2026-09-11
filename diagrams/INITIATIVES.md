@@ -1,8 +1,8 @@
 # Census pipeline rework — design record
 
 **COMPLETE.** Initiatives I1–I8 all landed 2026-09-02/03; the cabinet has since been
-refreshed three times and stands at `origin/main` @ **185d414** (commit
-2026-09-06T20:42-07:00), 17 plates all pinned to the same ref.
+refreshed four times and stands at `origin/main` @ **65e2843** (commit
+2026-09-11T18:51:12Z), 17 plates all pinned to the same ref.
 
 The architecture that came out of it: `generator/basis.mjs` materializes any ref once (`git
 archive` → tmpdir), one `scc --by-file` pass over that archive is the master per-file
@@ -58,8 +58,8 @@ constant. The concrete faults:
   reviewed, committed event — every printed number stays citable to a checked-in file.
 - **Probe tiers.** T1 pure-tree = archive + scc, any ref. T2 history = `historyLog(ref)` +
   the same ref's archive for the file universe. T3 execution (plate/turbo, mass-3b, nm,
-  bundle probes, shadow) needs an INSTALLED tree: `basis.mjs::installDeps` runs `corepack
-  pnpm install --frozen-lockfile` in the tmpdir and returns the tree's OWN
+  bundle probes, shadow) needs an INSTALLED tree: `basis.mjs::installDeps` runs the mise-provisioned
+  `pnpm install --frozen-lockfile` in the tmpdir and returns the tree's OWN
   `node_modules/.bin/turbo`, invoked directly.
 
 ## Pipeline self-portrait
@@ -113,7 +113,7 @@ sitting); order is dependency order.
   name or an app dir. Use `basis.mjs::positionalsFromArgv`, never raw argv (an early run
   filed an EMPTY `census-plate.json` this way).
 - Budget the T3 chain by store warmth, not by a fixed figure: ~35 min cold (each probe pays
-  a full `corepack pnpm install --frozen-lockfile`, the examples' npm installs the long
+  a full `pnpm install --frozen-lockfile`, the examples' npm installs the long
   pole), ~3½ min with the pnpm store warm.
 - A late T3 probe's `generatedAtTime` can land on the next UTC day while `commitDate` stays
   put. That is honest — only `commitDate` drives the title blocks
@@ -125,6 +125,20 @@ sitting); order is dependency order.
   `generator/census-yard.mjs`. The first four THROW when missed; the yard only prints its
   orphans loudly, which is a guard that should probably throw too. A new PLATE (not member)
   needs a key set in `generator/labels.mjs` as well, or `assertLabels()` stops the manifest.
+- 2026-09-11 — THE FOURTH REFRESH, at `origin/main` @ 65e2843 (commit 2026-09-11T18:51:12Z), all
+  17 plates re-run at the one ref. Three members were born since 185d414 — `@tools/bootstrap`
+  (`tools/bootstrap`), `@tools/eslint` (`tools/eslint`) and `@tools/repo-checks`
+  (`tools/repo-checks`) — and each took all five hand tables: sheet 3B's `TERRACE` (with
+  repo-checks additionally drawn whole as its own structure, "the guard house", off the root
+  yard's west edge, absorbing the two former standalone check plots), sheet 7's `PLACED` (33 at
+  490,350 · 34 at 514,530 · 35 at 449,385, pr tier), sheet 13's `PLACED` (the same three), 7B's
+  `RUST` (all three at step 0) and `INSTRUMENTS` in `census-yard.mjs` (repo checks; bootstrap;
+  `tools/eslint/` into the lint & probe fleet). The `docs` member is now
+  `@www/lit-ui-router.dev`, which rekeys every task id cited on 3A, 3B and 12. Harness change:
+  `basis.mjs` installs the materialized checkout with mise-provisioned pnpm — corepack has left
+  the repo, so no probe shells `corepack pnpm install` any more. And the set's no-images rule
+  now has ONE exception: Appendix A1's reference strip, six fair-use thumbnails inlined as data
+  URIs at build, on the one plate whose subject is other people's drawings.
 - Hand placement is asserted, not trusted. Every plate that hand-places a footprint whose SIZE
   comes from the census (3, 3B, 7, 7A, 7B, 9, 10, 11, 13) calls `assertPlots` from
   `generator/iso-hidden.mjs`, which throws when two drawn ground rects intersect, naming the
@@ -259,8 +273,11 @@ sitting); order is dependency order.
   ("the jaunty stamp angle is meh … for now rather have order"); and "reserve monospace" is
   why plate lettering is DIN.
 - The article: "i kinda like the hwt catchwords sparingly but found myself converting `the`
-  to a `<sup>` with .6em din-2014 font, lowercase" — so `the` is a sup everywhere and the
-  catchword is the cover title's alone.
+  to a `<sup>` with .6em din-2014 font, lowercase" — so `the` was a superior everywhere
+  and the catchword the cover title's alone. Since 2026-09-11 one shared rule set in
+  `chrome.mjs` puts it on the BASELINE at 0.8em of the data face and promotes it to the HWT
+  catchword wherever the kit is the host — cover title, rail head, every sheet's header line
+  and its title block's PROJECT field.
 - The sprite study "remains relevant and should be included as a meta appendix in some form
   — roll it in" (Appendix A1). Its pinned note governs every sprite lane, 2D and 3D: walls
   are TRANSLUCENT semi-opaque, never fully opaque, so the girding frame reads through.

@@ -10,11 +10,17 @@
 // so the studies are argued on a block the city could actually contain.
 //
 // The three ladders and their channel tables are re-drawn from the sprite
-// studies artifact; the artifact's reference strip (six fair-use game
-// screenshots) is NOT re-drawn — the atlas is hand-authored SVG with no
-// images — and survives here as the citation list in the notes.
+// studies artifact, and so is that artifact's REFERENCE STRIP: six fair-use
+// game screenshots at thumbnail size, grouped by the study each was cited for,
+// in a band at the foot of the plate. They are the only rasters in the set —
+// the exception is deliberate and it lives on this META plate, because this is
+// the one plate whose subject is the research rather than the codebase, and a
+// study of how other people drew buildings cannot be argued without showing
+// the buildings. Each jpg is inlined as a data URI at build time (see
+// a1-refs.mjs) so the sheet stays one self-contained document.
 import { defs } from './chrome.mjs';
 import { txt, lines, box, keyRow } from './helpers.mjs';
+import { REFS, dataUri } from './a1-refs.mjs';
 
 const P = 'sA1';
 
@@ -399,9 +405,50 @@ ${txt(SX + 14, VY + 148, 'THREE RULES ALL THREE STUDIES OBEY', 'lbls')}
 ${txt(SX + 14, VY + 162, 'massing never lies · house materials only · severity stays where sheet 7 put it', 'lblf')}
 </g>`;
 
-const H_TOTAL = 1216;
+// ---- the reference strip -----------------------------------------------------
+// THE SET'S ONE RASTER BAND. Six thumbnails at reference size, three pairs, in
+// the studies' own order — HZD, then SC2K, then Factorio. Each sits on a paper
+// mat inside a muted hairline frame: the frame is drawn in house tokens and
+// themes with the plate, the photograph inside it is left exactly as it was
+// published — never recoloured, never filtered, never tinted to the palette.
+const RY = 1218;
+const TH_W = 214, TH_H = 134;   // drawn size; the files are 360 px wide
+const GX = [60, 564, 1068];     // group origins — 444 wide, 60 of air between
+const GW = TH_W * 2 + 16;
 
-const svg = `<svg viewBox="0 0 1560 ${H_TOTAL}" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red.">
+function refCard(x, y, r) {
+  const capY = y + TH_H + 16;
+  const card = [
+    box(x - 5, y - 5, TH_W + 10, TH_H + 10, 'skf fp'),
+    `<image href="${dataUri(r.file)}" x="${x}" y="${y}" width="${TH_W}" height="${TH_H}" preserveAspectRatio="xMidYMid slice" role="img" aria-label="${r.alt}"/>`,
+    box(x, y, TH_W, TH_H, 'sks'),
+  ].join('\n');
+  return [
+    `<a href="${r.href}" target="_blank" rel="noreferrer">${card}</a>`,
+    lines(x, capY, wrap(r.teach, 38), 'lblf', 'start', 11),
+    txt(x, capY + 47, r.credit, 'lbls'),
+  ].join('\n');
+}
+
+const refStrip = `<g>
+${box(60, RY, 640, 40, 'skf fnone')}
+${txt(76, RY + 17, 'REFERENCE STRIP — WHAT THE STUDIES WERE ARGUED FROM', 'lbls')}
+${txt(76, RY + 31, 'six thumbnails at reference size, fair use for commentary · full size at the linked source · the only rasters in the set', 'lblf')}
+${txt(1520, RY + 17, 'THE ATLAS DRAWS NO IMAGES — EXCEPT HERE, ON THE ONE PLATE WHOSE SUBJECT IS THE RESEARCH', 'lbls', 'end')}
+${txt(1520, RY + 31, 'frames and mats are house tokens and theme with the plate; the photographs are never recoloured, filtered or tinted', 'lblf', 'end')}
+${GX.map((gx, g) => {
+  const pair = REFS.filter((r) => r.study === g + 1);
+  return [
+    txt(gx, RY + 64, pair[0].group, 'lbls'),
+    `<line x1="${gx}" y1="${RY + 70}" x2="${gx + GW}" y2="${RY + 70}" class="skf"/>`,
+    pair.map((r, i) => refCard(gx + i * (TH_W + 16), RY + 84, r)).join('\n'),
+  ].join('\n');
+}).join('\n')}
+</g>`;
+
+const H_TOTAL = 1530;
+
+const svg = `<svg viewBox="0 0 1560 ${H_TOTAL}" role="img" aria-label="An appendix plate of sprite studies: three rows of five isometric blocks each, showing one demo workspace member drawn from wreck to splendor under three competing sprite treatments. Row one, the reclaimed machine, is Horizon Zero Dawn leaning: the wrecked block has a breached parapet, rubble and green vines climbing both flanks, and each block to the right carries less vegetation until the last stands crisp with a ground halo, an accent trace along its roof edge and a survey flag. Row two, the ledger roof, is SimCity 2000 leaning: every roof is a four by four grid of tiles, one per authored file, collapsing and darkening on the left with a boarded door, clearing tile by tile to the right, with an accent construction crane on the fourth block and air-conditioner cubes, a water tower and an antenna on the last. Row three, the working plant, is Factorio leaning: the left machine is covered in red rust hatch with cracks, its outlet pipes dashed and dripping, its conveyor belt stopped and a red alert triangle floating above it; rightward the rust thins, the pipes reconnect, green module lamps light one by one and a steam plume grows from the roof vent. Beside each row a table maps every visual channel to the git measurement that would drive it, and a cost note prices the treatment across twenty-seven buildings. A recommendation panel at the foot ranks the three: build the working plant first, layer the vines second, park the ledger roof for a close-up plate; beside it a design guard states that rust red must never be confused with gate red. A reference strip across the foot of the plate carries the six photographs the studies were argued from, framed as thumbnails and grouped by study: a Horizon Zero Dawn landscape and an overgrown temple doorway at Angkor; a SimCity 2000 cityscape and a SimCity Urban Renewal Kit tile palette; and two Factorio Friday Facts screenshots, machine remnants and redrawn turrets. Each thumbnail carries the one sentence it teaches and a credit naming its source.">
 ${defs(P)}
 
 <rect x="40" y="26" width="760" height="42" class="skf fnone"/>
@@ -414,6 +461,7 @@ ${txt(1520, 62, 'NO CENSUS PLATE — this appendix measures nothing; it argues a
 
 ${STUDIES.map((s, i) => band(s, i)).join('\n')}
 ${verdictBand}
+${refStrip}
 </svg>`;
 
 export const sheetA1 = {
@@ -424,7 +472,7 @@ export const sheetA1 = {
   // SHEET field becomes APPENDIX.
   appendix: true,
   title: 'THE SPRITE STUDY',
-  sub: 'APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each · the reference strip of game screenshots is cited in the notes rather than drawn, because the atlas draws no images',
+  sub: 'APPENDIX · META — the research behind the building sprites, drawn in the set it argues about · three concepts on one demo member, five states each · and, at the foot, the reference strip itself: six fair-use thumbnails at reference size, credited — the set draws no images anywhere else',
   scale: 'THE ATLAS ITSELF',
   form: 'SPRITE STUDIES',
   svg,
@@ -432,10 +480,10 @@ export const sheetA1 = {
   notes: `
 <p><strong>Why an appendix, and not a sheet.</strong> The set's numbered sheets are ordered by <em>altitude</em> — how far back you stand from lit-ui-router — and every one of them cites a census plate. This plate stands nowhere on that ladder, because its subject is the atlas's own drawing convention rather than the codebase: it carries no <code>diagrams/data/*.json</code> import and no measured number. Filing it as A1 rather than as sheet 15 keeps the ascent honest: fourteen altitudes, and behind them a folder of the research the drawings were made from. Its id is letter-prefixed for the same reason, so nothing that walks the set in ascent order picks it up by accident.</p>
 <p><strong>The brief the studies answer.</strong> The atlas draws workspace members as measured cities — footprint 1.6·√sloc, height 3 px per authored file, gate severity in colour. That is enough to say how <em>big</em> a member is and whether it is currently failing, and nothing at all about how it is <em>doing</em>. The question: whether a general building-sprite treatment can carry the second reading on any building-shaped sheet — the measured city of sheet 7, the delivered city of sheet 8, the bundled city of sheet 10 — hybridising three inspirations that each pull a different way: Horizon's overgrown megastructures, SimCity 2000's dimetric state-tiles, Factorio's broadcast-everything industrial sprites. The weathering-specific application is a single axis, wreck &amp; ruin ↔ shine &amp; splendor, driven by git age × churn — which is exactly the pair of measurements sheet 13 had already made.</p>
-<p><strong>The three rules every study obeys.</strong> <em>Massing never lies</em> — decay and splendor are overlays on the honest block, never a change to its size, so a ruin is exactly as big as its code and the same solid a census would draw. <em>House materials only</em> — the atlas palette tokens, the existing 45° hatches, the same isometric projection, hand-authored inline SVG: no images, no filters, nothing a strict content-security policy would drop. <em>Severity stays where sheet 7 put it</em> — gate tier already owns hue on cap and flank, so the weathering gauge is spent on different channels (vegetation, tile condition, rust overlay) and a red-gated pristine building and a never-gating ruin both stay legible. The demo member is massed under those rules rather than invented: 1,900 sloc gives a 70-unit footprint and 16 files give 48 px of height, so the fifteen blocks on this plate could each stand in the measured city without adjustment.</p>
+<p><strong>The three rules every study obeys.</strong> <em>Massing never lies</em> — decay and splendor are overlays on the honest block, never a change to its size, so a ruin is exactly as big as its code and the same solid a census would draw. <em>House materials only</em> — the atlas palette tokens, the existing 45° hatches, the same isometric projection, hand-authored inline SVG: no filters, no fetched assets, nothing a strict content-security policy would drop. The six reference thumbnails in the foot band are the one exception and they are not part of any sprite &mdash; they are what the sprites were drawn <em>from</em>, inlined at build time so nothing is fetched at view time either. <em>Severity stays where sheet 7 put it</em> — gate tier already owns hue on cap and flank, so the weathering gauge is spent on different channels (vegetation, tile condition, rust overlay) and a red-gated pristine building and a never-gating ruin both stay legible. The demo member is massed under those rules rather than invented: 1,900 sloc gives a 70-unit footprint and 16 files give 48 px of height, so the fifteen blocks on this plate could each stand in the measured city without adjustment.</p>
 <p><strong>What the studies each teach.</strong> Study 1 is the purest reading of the gauge: nature is the only thing that moves, which is what actually happens to unmaintained code — it does not shrink, it gets <em>covered</em>. Study 2 is the most informative and the strictest: the roof grid is not decoration, it is the same census that already sets the height, so the tile count and the block height cannot disagree — and SimCity's own vocabulary keeps construction and abandonment as <em>different</em> sprites rather than as two ends of one axis, which is why RENOVATING sits at the healthy end. Study 3 is the one that survives contact with the repository: rust, steam, lamps and the alert are four independent channels, so <em>old AND running</em> is drawable — and old-and-running is the true state of most stable code, which no single wreck-to-splendor axis can say.</p>
 <p><strong>The verdict, and where it stands.</strong> The studies recommend building the working plant first, layering the vines second, and parking the ledger roof for a close-up. <strong>Sheet 7B, THE WORKING CITY</strong> is that plant, drawn over the whole measured city — every pipe, plume, lamp and alarm on it is a channel from study 3's table — and <strong>sheet 13, THE WEATHERING MAP</strong> is the age-and-churn gauge those studies were commissioned to render, drawn flat rather than sprited so the dating stays readable at city scale. The ledger roof stays parked: a roof grid read tile by tile wants a close-up plate, not a city.</p>
-<p><strong>What is not drawn here.</strong> The original studies cite a reference strip — six annotated screenshots from Horizon Zero Dawn, Angkor's Ta Prohm, SimCity 2000, SCURK and two Factorio Friday Facts posts — and this plate carries none of them. The atlas is hand-authored SVG on the house palette; a fair-use raster would be the only image in the set and the only thing on a plate that a content-security policy could drop. The teaching survives as citations: Guerrilla's GDC talk <em>Between Tech and Art: The Vegetation of Horizon Zero Dawn</em> (vegetation as a systematic, parameterised layer over hard geometry — the generator posture exactly, two numbers per member); Jonathan Benainous's and Miguel Martinez's HZD environment work (overgrowth rides edges and openings while the masonry keeps its silhouette; breached parapets, spalled corners, debris at the base); the SimCity 2000 documentation of construction graphics and darkened abandonment sprites, and SCURK's fixed tile size and fixed palette, which are what make a whole-city re-skin safe; and Factorio's Friday Facts <a href="https://factorio.com/blog/post/fff-355">#355</a> (remnants are a <em>designed</em> sprite, not a missing one), <a href="https://factorio.com/blog/post/fff-269">#269</a> (belts get per-rotation sprites and strict tile-edge rules, so connections never lie), <a href="https://factorio.com/blog/post/fff-228">#228</a> (silhouette first, effects second) and <a href="https://factorio.com/blog/post/fff-348">#348</a> (alert legibility across scales — which is why the alert triangle is the only floating element on study 3).</p>
+<p><strong>The reference strip, and the one exception it makes.</strong> The original studies were argued from six pictures &mdash; Horizon Zero Dawn, Angkor's Ta Prohm, SimCity 2000, SCURK and two Factorio Friday Facts posts &mdash; and the band at the foot of this plate draws all six, at thumbnail size, grouped by the study each was cited for. They are the only rasters in the set, and the exception is deliberate: every other plate measures lit-ui-router and can say what it means in hand-authored marks, while this one plate's subject is a drawing decision taken from other people's drawings &mdash; an argument about how buildings should be drawn cannot be made honestly while hiding the buildings it learned from. The terms are fixed. The thumbnails are reference-size crops used for commentary and credited on the plate, with the full-size picture at the linked source; each is inlined into the sheet as a data URI at build time, so the flat SVG page, the routed app's fragment and the single-file artifact are all still one self-contained document and nothing is fetched at view time; and the mat and hairline frame are house tokens that theme with the plate while the photograph inside is left exactly as published &mdash; never recoloured, filtered or tinted towards the palette. A raster sits on vellum as a raster. The teaching each one carries also survives in prose: Guerrilla's GDC talk <em>Between Tech and Art: The Vegetation of Horizon Zero Dawn</em> (vegetation as a systematic, parameterised layer over hard geometry &mdash; the generator posture exactly, two numbers per member); Jonathan Benainous's and Miguel Martinez's HZD environment work (overgrowth rides edges and openings while the masonry keeps its silhouette; breached parapets, spalled corners, debris at the base); the SimCity 2000 documentation of construction graphics and darkened abandonment sprites, and SCURK's fixed tile size and fixed palette, which are what make a whole-city re-skin safe; and Factorio's Friday Facts <a href="https://factorio.com/blog/post/fff-355">#355</a> (remnants are a <em>designed</em> sprite, not a missing one), <a href="https://factorio.com/blog/post/fff-269">#269</a> (belts get per-rotation sprites and strict tile-edge rules, so connections never lie), <a href="https://factorio.com/blog/post/fff-228">#228</a> (silhouette first, effects second) and <a href="https://factorio.com/blog/post/fff-348">#348</a> (alert legibility across scales &mdash; which is why the alert triangle is the only floating element on study 3).</p>
 <p><strong>Determinism.</strong> Study 1's vines are the only stochastic marks in the set, and they are seeded: a fixed linear-congruential stream per state, so the same plate is drawn byte-for-byte on every build. Nothing here is animated, nothing is rotated, and the fifteen blocks share one projection helper with <code>generator/helpers.mjs</code>'s <code>iso()</code>.</p>`,
   key: [
     keyRow('<polygon points="6,9 16,3 26,9 16,15" class="sk fp"/><polygon points="6,9 16,15 16,18 6,12" class="sk fp2"/><polygon points="26,9 16,15 16,18 26,12" class="sk fp2"/>', 'the honest block — massing never lies'),
@@ -447,5 +495,6 @@ export const sheetA1 = {
     keyRow('<polygon points="16,3 26,15 6,15" class="skr fp"/>', 'STUDY 3 — alert · a gate red at HEAD'),
     keyRow('<ellipse cx="22" cy="12" rx="18" ry="4" class="fhalo"/><line x1="4" y1="12" x2="40" y2="12" class="ska"/>', 'live trace + halo · shipped in the last 90 days'),
     keyRow('<line x1="4" y1="9" x2="40" y2="9" class="sks"/><polygon points="40,9 33,6 33,12" class="fis"/>', 'the gauge — wreck & ruin → shine & splendor'),
+    keyRow('<rect x="5" y="2" width="38" height="14" class="skf fp"/><rect x="9" y="4" width="30" height="10" fill="var(--ink-faint)"/><rect x="9" y="4" width="30" height="10" class="sks"/>', 'reference thumbnail — the set&rsquo;s only raster, credited'),
   ].join('\n'),
 };

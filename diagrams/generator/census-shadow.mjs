@@ -101,7 +101,10 @@ const pkgJson = (dir) => JSON.parse(readFileSync(join(basis.dir, dir, 'package.j
 for (const d of E2E) {
   if (!members.some((m) => m.dir === d)) throw new Error(`census-shadow: E2E names ${d}, absent at this ref — update the table`);
 }
-if (RUNNER(pkgJson('apps/sample-app-lit-e2e').scripts?.test ?? '') !== 'cypress') {
+// the rig has no `test` script: its lanes are `test:e2e:*`, vanilla being bare cypress
+const e2eLanes = (dir) => Object.entries(pkgJson(dir).scripts ?? {}).filter(([k]) => k.startsWith('test:e2e:'));
+const RIG_LANES = e2eLanes('apps/sample-app-lit-e2e');
+if (!RIG_LANES.length || RUNNER(Object.fromEntries(RIG_LANES)['test:e2e:vanilla'] ?? '') !== 'cypress') {
   throw new Error('census-shadow: apps/sample-app-lit-e2e no longer runs a cypress suite — the e2e judgement needs re-reading');
 }
 
@@ -267,7 +270,10 @@ for (const m of members) {
     }
   } else if (runner === 'cypress' || E2E.has(m.dir)) {
     cat = 'e';
-    recipe = cmd ? `cypress (${cmd}) — emits no lcov` : 'driven by the cypress rig — emits no lcov';
+    const lanes = e2eLanes(m.dir).map(([k]) => k);
+    recipe = cmd ? `cypress (${cmd}) — emits no lcov`
+      : lanes.length ? `cypress (${lanes.join(', ')}) — emits no lcov`
+        : 'driven by the cypress rig — emits no lcov';
   } else {
     cat = 'n';
     recipe = cmd ? `\`${cmd}\` is not a self-suite` : 'no test script';

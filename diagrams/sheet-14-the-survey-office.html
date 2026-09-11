@@ -170,24 +170,56 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
-/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
-   the title face is unicase — no small cap, no alternate, nothing to demote it
-   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
-   of the title, soft ink. It needs no kit face, so it is identical on the site,
-   the flat set and the artifact. line-height 0 keeps the superior out of the
-   title's line box. */
-sup.art {
+/* THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11). Every sheet
+   title begins with THE and the title face is unicase — no small cap, no
+   alternate, nothing to demote it with. So the article is SET APART rather than
+   shrunk: lowercase in the DATA face at 0.8em of its title, soft ink, on the
+   baseline, so it reads as a word and not as a footnote. ONE rule set for every
+   site the atlas has — sheet heads, sheet titles, the title block's PROJECT and
+   SHEET TITLE, the cover, the cards, the rail.
+   The word carries its own no-break space, so a title never breaks after it. */
+.art {
   font-family: var(--data);
-  font-size: 0.6em;
+  font-size: 0.8em;
   font-weight: 400;
   font-variant-numeric: normal;
-  letter-spacing: 0;
+  letter-spacing: 0.01em;
   text-transform: lowercase;
-  line-height: 0;
   color: var(--ink-soft);
-  /* the sup carries its own no-break space (so the title reads "the MEASURED
-     CITY" to a reader and never breaks after the article); this is the rest */
-  margin-right: 0.1em;
+  margin-right: 0.04em;
+}
+/* THE CATCHWORD. On a host that DECLARES the kit's hwt-catchwords (the guard
+   script sets data-catchwords), the word steps aside and catchword key e is
+   drawn in its place — one face, no GSUB, every THE keyed, key e the plainest
+   of the ten. Off the kit (the artifact, any host without it) none of this
+   applies and the word above draws; the bare key e in the title face is the
+   failure the guard prevents. The scale is the cap-matched 1.08em the type
+   specimen measured, so the size is the title's, not the article's. */
+html[data-catchwords="on"] .art {
+  font-size: inherit;
+  letter-spacing: 0;
+  margin-right: 0;
+}
+html[data-catchwords="on"] .art .w {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+html[data-catchwords="on"] .art::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* the cap-matched 1.08em, with a 15px floor: the catchword draws THE as two
+     lines inside one cap height, so at ledger sizes the measured scale is a
+     smudge — the floor is the size below which the mark stops reading */
+  font-size: max(1.08em, 15px);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.2em;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -433,12 +465,27 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
+<script>(function () {
+  var armed = function () {
+    for (var f of document.fonts) {
+      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+        document.documentElement.dataset.catchwords = 'on';
+        return true;
+      }
+    }
+    return false;
+  };
+  if (armed()) return;
+  addEventListener('DOMContentLoaded', function () {
+    if (!armed()) document.fonts.ready.then(armed);
+  });
+})();</script>
 <section class="sheet" id="sheet-14" aria-label="Sheet 14: THE SURVEY OFFICE">
-  <div class="sheet-head"><span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 14 / 14</span></div>
-  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>SURVEY OFFICE</h2>
-  <p class="sheet-sub">ALTITUDE 3½ — the atlas measuring itself · 17 probes, 17 plates, 20 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ 185d414 · commit 2026-09-06</p>
+  <div class="sheet-head"><span class="proj"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 14 / 14</span></div>
+  <h2 class="sheet-title"><span class="art"><span class="w">the&nbsp;</span></span>SURVEY OFFICE</h2>
+  <p class="sheet-sub">ALTITUDE 3½ — the atlas measuring itself · 17 probes, 17 plates, 20 drawings · every station, plate and edge on this sheet introspected from diagrams/generator/ at build time · all plates pinned to origin/main @ 65e2843 · commit 2026-09-11</p>
   <figure>
-    <div class="plate" style="--plate-ar:0.7236"><div class="figure-wrap"><svg viewBox="0 20 1160 1603" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at 185d414 extracted to a temporary directory, 646 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 616 rows — the one measurement. An accent bus carries that plate back down the left margin into twelve stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 16 further probe stations are grouped into three tiers — 8 pure-tree, 2 history, 7 execution, the last fed by an install harness running corepack pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 34 thin read curves fan into a rack of 19 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 17 plates with writer, tier, basis and readers.">
+    <div class="plate" style="--plate-ar:0.7236"><div class="figure-wrap"><svg viewBox="0 20 1160 1603" role="img" aria-label="The census pipeline drawn as a left-to-right flow of dataflow, not containment. At far left one basis station: git archive origin/main at 65e2843 extracted to a temporary directory, 688 tracked paths, with a dashed rail down the margin marking that every station re-materializes this same ref. Next to it the master station census-scc.mjs runs one scc pass and files census-files.json, 657 rows — the one measurement. An accent bus carries that plate back down the left margin into twelve stations that are group-by queries over it, and straight right into the gallery cover: the fan-out is the hero of the drawing. Below, 16 further probe stations are grouped into three tiers — 8 pure-tree, 2 history, 7 execution, the last fed by an install harness running corepack pnpm with a frozen lockfile and the tree's own turbo binary. Each station writes exactly one drawer of the plate cabinet in the middle column, so every writes edge is horizontal and none of them cross. From the cabinet, 34 thin read curves fan into a rack of 19 numbered atlas sheets at the right. Two stations file nothing: the overview query, which only prints, and census.mjs, drawn struck through — a working-tree walker imported by nothing, the old regime's last instrument. A plate schedule below lists all 17 plates with writer, tier, basis and readers.">
 <defs>
   <marker id="s14-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
     <path d="M0,0 L10,4 L0,8 z" class="fi"/>
@@ -476,9 +523,9 @@ a { color: var(--accent); }
 <rect x="66" y="96" width="310" height="84" rx="0" class="sk fp2"/>
 <text x="76" y="116" class="lblb" text-anchor="start" >THE ONE BASIS</text>
 <text x="76" y="130" class="lbl" text-anchor="start" >materialize(ref) — basis.mjs</text>
-<text x="76" y="143.5" class="lbl" text-anchor="start" >git archive origin/main @ 185d414</text>
+<text x="76" y="143.5" class="lbl" text-anchor="start" >git archive origin/main @ 65e2843</text>
 <text x="76" y="157" class="lbl" text-anchor="start" >| tar -x → tmpdir, relative walk</text>
-<text x="76" y="170.5" class="lbl" text-anchor="start" >646 tracked paths · 2026-09-06</text>
+<text x="76" y="170.5" class="lbl" text-anchor="start" >688 tracked paths · 2026-09-11</text>
 <path d="M186,180 L186,203" class="sk"  marker-end="url(#s14-ai)"/>
 <rect x="66" y="203" width="310" height="22" rx="0" class="ska fp"/>
 <text x="76" y="218" class="lbla" text-anchor="start" >census-scc.mjs</text>
@@ -487,7 +534,7 @@ a { color: var(--accent); }
 <rect x="440" y="199" width="230" height="30" rx="4" fill="url(#s14-ha)"/>
 <rect x="440" y="199" width="230" height="30" rx="4" class="ska fnone"/>
 <text x="450" y="212" class="lbla" text-anchor="start" >census-files.json</text>
-<text x="450" y="224" class="lbls" text-anchor="start" >616 rows — the one measurement</text>
+<text x="450" y="224" class="lbls" text-anchor="start" >657 rows — the one measurement</text>
 <path d="M670,214 L856,214" class="ska"  marker-end="url(#s14-aa)"/>
 <rect x="860" y="203" width="280" height="22" rx="0" class="ska fp"/>
 <text x="870" y="218" class="lbla" text-anchor="start" >build.mjs — GALLERY COVER SURVEY</text>
@@ -803,9 +850,9 @@ a { color: var(--accent); }
 <text x="870" y="1041" class="lbls" text-anchor="start" >node:zlib gzip level 9</text>
 <text x="870" y="1056" class="lbls" text-anchor="start" >npm</text>
 <text x="870" y="1071" class="lbls" text-anchor="start" >pnpm (corepack)</text>
-<text x="870" y="1086" class="lbls" text-anchor="start" >rolldown@1.2.6</text>
+<text x="870" y="1086" class="lbls" text-anchor="start" >rolldown@1.2.7</text>
 <text x="870" y="1101" class="lbls" text-anchor="start" >scc 4.0.0 (mise x aqua:boyter/scc)</text>
-<text x="870" y="1116" class="lbls" text-anchor="start" >turbo 2.10.11</text>
+<text x="870" y="1116" class="lbls" text-anchor="start" >turbo 2.10.12</text>
 <text x="870" y="1131" class="lbls" text-anchor="start" >vite 8.2.2</text>
 <text x="870" y="1146" class="lbls" text-anchor="start" >vitest (the tree's own)</text>
 
@@ -834,7 +881,7 @@ a { color: var(--accent); }
 <text x="46" y="1504" class="lbl" text-anchor="start" >census-plate.json</text><text x="250" y="1504" class="lbl" text-anchor="start" >T3</text><text x="292" y="1504" class="lbl" text-anchor="start" >census-plate.mjs</text><text x="448" y="1504" class="lbls" text-anchor="start" >installed archive</text><text x="604" y="1504" class="lbls" text-anchor="start" >sheet 3, sheet 3A, sheet 3B, sheet 7B, sheet 12, sheet 12i</text>
 <text x="46" y="1521" class="lbl" text-anchor="start" >census-shadow.json</text><text x="250" y="1521" class="lbl" text-anchor="start" >T3</text><text x="292" y="1521" class="lbl" text-anchor="start" >census-shadow.mjs</text><text x="448" y="1521" class="lbls" text-anchor="start" >installed archive</text><text x="604" y="1521" class="lbls" text-anchor="start" >sheet 7A, sheet 7B</text>
 <text x="46" y="1538" class="lbl" text-anchor="start" >census-shipped.json</text><text x="250" y="1538" class="lbl" text-anchor="start" >T3</text><text x="292" y="1538" class="lbl" text-anchor="start" >census-shipped.mjs</text><text x="448" y="1538" class="lbls" text-anchor="start" >installed archive</text><text x="604" y="1538" class="lbls" text-anchor="start" >sheet 9, sheet 10</text>
-<text x="46" y="1575" class="lblf" text-anchor="start" >TOTALS — 17 plates · 17 probes (T1 8 · T2 2 · T3 7) · 17 writes · 48 reads · 0 plates unread · every plate pinned to origin/main @ 185d414 · commit 2026-09-06 · graph: 69 nodes / 95 edges</text>
+<text x="46" y="1575" class="lblf" text-anchor="start" >TOTALS — 17 plates · 17 probes (T1 8 · T2 2 · T3 7) · 17 writes · 48 reads · 0 plates unread · every plate pinned to origin/main @ 65e2843 · commit 2026-09-11 · graph: 69 nodes / 95 edges</text>
 </svg></div></div>
     <figcaption><span class="figno">FIG. 14</span>The instrument drawn by its own instrument: 17 probe stations over three tiers write 17 filed plates, which 20 drawings read — and the one that matters most is read thirteen times over. Nothing here is hand-listed: the stations are the generator files that write a plate, the tiers are the basis primitive each one calls, and the edges are the plate URLs the sheets construct.</figcaption>
   </figure>
@@ -842,8 +889,8 @@ a { color: var(--accent); }
     <div class="notes">
       <h3>GENERAL NOTES</h3>
       
-<p><strong>Method — the sheet surveys its own drawer.</strong> Every station, drawer, tab and edge on this plate is introspected at build time by <code>diagrams/<wbr>generator/<wbr>census-atlas.mjs</code>: a probe is any <code>census-*.mjs</code> that <em>writes</em> a plate; a shared instrument is one the probes <em>import</em> (there are two — <code>basis.mjs</code> and <code>census-query.mjs</code>); a tier is decided by which basis primitive the source actually calls — <code>materialize</code> alone is T1, <code>historyLog</code> is T2, <code>installDeps</code> is T3; and a reader is any generator file that constructs the plate's URL. The introspection <em>throws</em> rather than draws if a plate has anything but exactly one writer, if a probe names a plate that is not filed, if a drawing reads a plate nothing writes, or — the claim this sheet makes loudest — if the 17 filed plates disagree about the ref they were measured at. They do not: all 17 are pinned to origin/main @ 185d414 · commit 2026-09-06. What is editorial here is what is editorial on every sheet: placement, the short basis labels, and this prose.</p>
-<p><strong>The hero is the fan-out.</strong> One <code>scc --by-file</code> pass over the archive produces <code>census-files.json</code>, 616 rows of per-file measurement, and thirteen things read it: twelve stations that are group-by queries over the same rows — <code>census-bricks.mjs</code>, <code>census-city.mjs</code>, <code>census-couplings.mjs</code>, <code>census-doors.mjs</code>, <code>census-handoff.mjs</code>, <code>census-loop.mjs</code>, <code>census-npm.mjs</code>, <code>census-shadow.mjs</code>, <code>census-steam.mjs</code>, <code>census-weather.mjs</code>, <code>census-yard.mjs</code>, <code>census-overview.mjs</code> — plus the gallery cover. That is the architecture's whole argument in one edge bundle: the city census, the yard census, the brick census, the weather map and the steam channel cannot disagree about how many files there are, because there is only one count. Cross-sheet totals reconcile by construction, not by discipline.</p>
+<p><strong>Method — the sheet surveys its own drawer.</strong> Every station, drawer, tab and edge on this plate is introspected at build time by <code>diagrams/<wbr>generator/<wbr>census-atlas.mjs</code>: a probe is any <code>census-*.mjs</code> that <em>writes</em> a plate; a shared instrument is one the probes <em>import</em> (there are two — <code>basis.mjs</code> and <code>census-query.mjs</code>); a tier is decided by which basis primitive the source actually calls — <code>materialize</code> alone is T1, <code>historyLog</code> is T2, <code>installDeps</code> is T3; and a reader is any generator file that constructs the plate's URL. The introspection <em>throws</em> rather than draws if a plate has anything but exactly one writer, if a probe names a plate that is not filed, if a drawing reads a plate nothing writes, or — the claim this sheet makes loudest — if the 17 filed plates disagree about the ref they were measured at. They do not: all 17 are pinned to origin/main @ 65e2843 · commit 2026-09-11. What is editorial here is what is editorial on every sheet: placement, the short basis labels, and this prose.</p>
+<p><strong>The hero is the fan-out.</strong> One <code>scc --by-file</code> pass over the archive produces <code>census-files.json</code>, 657 rows of per-file measurement, and thirteen things read it: twelve stations that are group-by queries over the same rows — <code>census-bricks.mjs</code>, <code>census-city.mjs</code>, <code>census-couplings.mjs</code>, <code>census-doors.mjs</code>, <code>census-handoff.mjs</code>, <code>census-loop.mjs</code>, <code>census-npm.mjs</code>, <code>census-shadow.mjs</code>, <code>census-steam.mjs</code>, <code>census-weather.mjs</code>, <code>census-yard.mjs</code>, <code>census-overview.mjs</code> — plus the gallery cover. That is the architecture's whole argument in one edge bundle: the city census, the yard census, the brick census, the weather map and the steam channel cannot disagree about how many files there are, because there is only one count. Cross-sheet totals reconcile by construction, not by discipline.</p>
 <p><strong>Three tiers, and what each one costs.</strong> eight stations are T1 — the archive measured once, or a query over that measurement. two are T2: one <code>git log</code> over the same ref, with the window and «today» derived from the ref's own commit date. seven are T3, and they are the expensive half of the office: the archive is not just extracted but <em>installed</em> — <code>corepack pnpm install --frozen-lockfile</code>, then the tree's own <code>node_modules/<wbr>.bin/<wbr>turbo</code> invoked directly — so that turbo dry-runs, node_modules closures, vite and rolldown builds all measure the ref rather than a checkout. The harness bar above the T3 band is the only sub-instrument drawn, because it is the only one that changes what a measurement <em>means</em>.</p>
 <p><strong>Five guarantees the office is built to hold.</strong> The basis is one <code>git archive</code> per ref — the tracked set exactly as git defines it, so no probe keeps a skip list. Members are discovered from the archive's own workspace file, so a package that graduated after a sheet was drawn is still counted rather than silently zero. Numbers travel as filed plates read by lookups that throw on a missing row, never by clipboard. Every date is derived from the measured commit, so a rebuild ages nothing against the day it runs. And every input is scripted: seven execution probes and a registry probe, nothing out of band. One relic sits in the drawer drawn struck through — <code>census.mjs</code>, a working-tree walker imported by nothing and writing no plate.</p>
 <p><strong>What the drawing does not show, and the schedule does.</strong> With 17 drawers and 19 reading sheets, a complete edge render would be unreadable, so the drawing keeps the shape — one horizontal <em>writes</em> edge per station, a bundled accent bus for the master plate, thin curves for the rest — and the plate schedule carries the facts: writer, tier, basis and every reader, for all 17 plates. Two counts are worth reading off it. Zero plates are unread: every filed measurement is on a drawing somewhere. And four of the atlas's 23 sheets have no plate behind them — sheet 5, sheet 6, sheet 14, sheet A1 — because they draw arguments, mechanisms and metering that no census produces. This sheet is honestly among them: it has no plate of its own; it reads the generator.</p>
@@ -861,12 +908,12 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="4" y1="9" x2="40" y2="9" class="sks" stroke-dasharray="4 4"/></svg></td><td>shares the basis — same ref, re-materialized</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="3" width="40" height="12" class="sks fnone"/><line x1="4" y1="3" x2="44" y2="15" class="skr"/></svg></td><td>struck — files no plate and nothing imports it</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp">THE ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><sup class="art">the&nbsp;</sup>SURVEY OFFICE</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art"><span class="w">the&nbsp;</span></span>SURVEY OFFICE</span></div>
   <div><span class="fld">SCALE</span>THE CENSUS PIPELINE</div>
   <div><span class="fld">FORM</span>FLOW GRAPH</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-06 · D</div>
+  <div><span class="fld">DATE / REV</span>2026-09-11 · D</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>14 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>

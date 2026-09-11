@@ -7,6 +7,7 @@
 import type { UIRouter } from '@uirouter/core';
 import { LitElement, html, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
+import { repeat } from 'lit/directives/repeat.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
@@ -47,15 +48,27 @@ import { applyTheme, readTheme } from './theme.ts';
 const ACTIVE = { activeClasses: ['is-active'] };
 
 /**
- * THE ARTICLE (T9, shipped 2026-09-06): a title keeps its THE, drawn as a
- * lowercase superior in the data face (`sup.art`, styled in the generated
- * sheets/atlas.css so the flat set, the app and the artifact draw it alike).
+ * THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11): a title keeps
+ * its THE, drawn as a word in the data face — and as the kit's catchword on a
+ * host that declares one (`.art`, styled in the generated sheets/atlas.css so
+ * the flat set, the app and the artifact draw it alike).
  * Twins: `articleTitle` in generator/chrome.mjs and in prerender.ts.
  */
+const THE: TemplateResult = html`<span class="art"><span class="w">the&nbsp;</span></span>`;
+
+/** The project name AS DRAWN — one treatment wherever the atlas names itself. */
+const PROJECT_MARK: TemplateResult = html`${THE}ALTITUDE ATLAS`;
+
+/**
+ * THE DITTO: the rail says "the" once at the head of the column and every title
+ * under it inherits the word through a ditto mark. The cell is drawn EMPTY for
+ * a title that carries no article, so no entry's title moves.
+ */
+const ditto = (title: string): TemplateResult =>
+  html`<span class="d" aria-hidden="true">${ARTICLE.test(title) ? '\u2033' : ''}</span>`;
+
 const articleTitle = (title: string): TemplateResult =>
-  ARTICLE.test(title)
-    ? html`<sup class="art">the&nbsp;</sup>${entryTitle(title)}`
-    : html`${title}`;
+  ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
 
 /** The live site — the only place the flat set exists for an artifact reader. */
 const SITE = 'https://atlas.lit-ui-router.dev';
@@ -285,7 +298,10 @@ const sheetEntry = (sheet: SheetRow): TemplateResult => html`
     ${uiSref('atlas.sheet', { num: sheet.num })}
     href="${to(href.sheet(sheet.num))}"
   >
-    <span class="n">${sheet.num}</span><span class="t">${entryTitle(sheet.title)}</span>
+    <span class="n">${sheet.num}</span>${ditto(sheet.title)}<span
+      class="t"
+      >${entryTitle(sheet.title)}</span
+    >
   </a>
 `;
 
@@ -294,7 +310,10 @@ const railEntry = (entry: AscentRow): TemplateResult =>
     ? sheetEntry(entry.row)
     : html`
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
-          <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
+          <span class="n">7·3D</span>${ditto(entry.row.title)}<span
+            class="t"
+            >${entryTitle(entry.row.title)}</span
+          >
         </a>
       `;
 
@@ -307,7 +326,9 @@ function rail(manifest: Manifest | undefined): TemplateResult {
       <div class="rail-head">
         <div>
           <a class="kicker" href="https://lit-ui-router.dev">A DRAWING SET · lit-ui-router</a>
-          <h1><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">THE ALTITUDE ATLAS</a></h1>
+          <h1>
+            <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">${PROJECT_MARK}</a>
+          </h1>
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
@@ -317,6 +338,8 @@ function rail(manifest: Manifest | undefined): TemplateResult {
           <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${to(href.about)}">ABOUT</a>
         </div>
         <p class="rail-sec">SHEETS — ASCENT ORDER</p>
+        <!-- The word once, ditto marks under it: every sheet title below is "the …". -->
+        <p class="rail-the" aria-hidden="true"><span class="n"></span>${THE}</p>
         <div class="rail-links">${rows.map(railEntry)}</div>
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
         ${appendixRows.length > 0
@@ -373,16 +396,79 @@ const logEntry = (entry: IssueEntry): TemplateResult => html`
 
 const KEY_ACTIVE = { activeClasses: ['is-on'] };
 
-/** The card's own data model: the plate's keys, in key order. */
-const keyLine = (labels: SheetLabels): TemplateResult => html`
-  <span class="keys">
-    ${LABEL_KEYS.filter((key) => labels[key]).map(
-      (key) => html`<span class="kv"><i>${key}</i>${labels[key]}</span>`,
-    )}
+const filterHref = (filter: Filter): string => `${to(href.gallery)}${filterQuery(filter)}`;
+
+/**
+ * THE KEY BLOCK — FORM's keys as a miniature of the plates' own title block
+ * (generator/chrome.mjs `.titleblock`): hairline-ruled cells, the data face,
+ * and NO field names — position is the key, the way a tombstone label is read.
+ * The grammar is fixed: subject top left, projection top right, the basis
+ * qualifier under the subject, the mode lamp under the projection.
+ *
+ * Two slots are asymmetric on purpose. `mode` is a boolean: the lamp and the
+ * word are drawn only when a plate is interactive — twenty STATIC badges in a
+ * set of twenty-five is noise. `basis` belongs to the city subject alone, so
+ * every other plate prints an em dash and KEEPS the slot rather than letting
+ * the block change shape. A carried slot is a link into the filtered index;
+ * `uiSrefActive` echoes the applied filter on the slot that would set it.
+ * Twin: `keyBlock` in prerender.ts (plain hrefs, no directives).
+ */
+
+/** One 16×16 glyph per projection value; `dot` is drawn with round caps. */
+const GLYPHS: Record<string, { d: string; dot?: string }> = {
+  isometric: { d: 'M8 1.8 14 5.3 8 8.8 2 5.3Z M2 5.3v5.4l6 3.5 6-3.5V5.3 M8 8.8v5.4' },
+  plan: { d: 'M2.5 2.5h11v11h-11z M6.2 2.5v11 M9.8 2.5v11 M2.5 6.2h11 M2.5 9.8h11' },
+  graph: { d: 'M8 3.8 3.6 12.2 M8 3.8 12.4 11.6', dot: 'M8 3.8h0 M3.6 12.2h0 M12.4 11.6h0' },
+  chart: { d: 'M2.2 13.5h11.6 M3.8 13.5V8.8h2v4.7 M7 13.5V4.4h2v9.1 M10.2 13.5V6.9h2v6.6' },
+  schematic: { d: 'M5 5h6v6H5z M1.5 8H5 M11 8h3.5' },
+  section: {
+    d: 'M2.5 2.5h11v11h-11z M2.5 8h11 M2.6 11 5.1 8.5 M4.6 13.4 9.5 8.5 M8.4 13.4 13.3 8.5 M12.3 13.4 13.4 12.3',
+  },
+};
+
+const glyph = (projection: string): TemplateResult => {
+  const shape = GLYPHS[projection];
+  return html`<svg class="gl" viewBox="0 0 16 16" aria-hidden="true">
+    <path d="${shape?.d ?? ''}" /><path class="dot" d="${shape?.dot ?? ''}" />
+  </svg>`;
+};
+
+/** The value in the shape its key asks for — glyph + word, lamp + word, word. */
+const slotValue = (key: LabelKey, value: string): TemplateResult =>
+  key === 'projection'
+    ? html`${glyph(value)}<span class="w">${value}</span>`
+    : key === 'mode'
+      ? html`<i class="lamp" aria-hidden="true"></i><span class="w">${value}</span>`
+      : html`<span class="w">${value}</span>`;
+
+/**
+ * One cell. A carried key is a filter link; an uncarried one is a held slot —
+ * an em dash for basis, blank for the unlit mode lamp. The key name is only in
+ * the accessible name: on the page, position says it.
+ */
+const keySlot = (key: LabelKey, value: string | undefined, blank = ''): TemplateResult => {
+  if (!value)
+    return html`<span class="ktb-cell ktb-${key} is-empty"><span class="v">${blank}</span></span>`;
+  const next: Filter = { ...EMPTY_FILTER, [key]: value };
+  return html`<a
+    class="ktb-cell ktb-${key}"
+    aria-label="${key} ${value}"
+    ${uiSrefActive(KEY_ACTIVE)}
+    ${uiSref('atlas.gallery', { ...next })}
+    href="${filterHref(next)}"
+    ><span class="v">${slotValue(key, value)}</span></a
+  >`;
+};
+
+const keyBlock = (labels: SheetLabels): TemplateResult => html`
+  <span class="keytb" aria-label="keys">
+    ${keySlot('subject', labels.subject)}${keySlot('projection', labels.projection)}${keySlot(
+      'basis',
+      labels.basis,
+      '—',
+    )}${keySlot('mode', labels.mode === 'interactive' ? labels.mode : undefined)}
   </span>
 `;
-
-const filterHref = (filter: Filter): string => `${to(href.gallery)}${filterQuery(filter)}`;
 
 const chip = (label: string, count: number, next: Filter): TemplateResult => html`
   <a
@@ -467,15 +553,25 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
   `;
 };
 
+/**
+ * A cover card. The card is a CONTAINER, not a link: the title carries the one
+ * primary `uiSref` and stretches over the whole card through a `::after`
+ * (the Inclusive Components card pattern), so the key block's own filter links
+ * are valid interactive content rather than links nested inside a link. Tab
+ * order is title, then keys.
+ */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
-  <a
-    class="card"
-    ${uiSrefActive(ACTIVE)}
-    ${uiSref('atlas.sheet', { num: sheet.num })}
-    href="${to(href.sheet(sheet.num))}"
-  >
+  <article class="card">
     <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
-    <h3>${articleTitle(sheet.title)}</h3>
+    <h3>
+      <a
+        class="card-go"
+        ${uiSrefActive(ACTIVE)}
+        ${uiSref('atlas.sheet', { num: sheet.num })}
+        href="${to(href.sheet(sheet.num))}"
+        >${articleTitle(sheet.title)}</a
+      >
+    </h3>
     <span class="alt">${sheet.scale}</span>
     <p>${unsafeHTML(sheet.caption)}</p>
     <span class="meta">
@@ -483,19 +579,23 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
         ? `${sheet.form} · NO CENSUS PLATE — META`
         : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}`}
     </span>
-    ${keyLine(sheet.labels)}
-  </a>
+    ${keyBlock(sheet.labels)}
+  </article>
 `;
 
 const cityCard = (extra: ExtraRow): TemplateResult => html`
-  <a class="card" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
+  <article class="card">
     <span class="n">${extra.shno} · REV ${extra.rev}</span>
-    <h3>${articleTitle(extra.title)}</h3>
+    <h3>
+      <a class="card-go" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}"
+        >${articleTitle(extra.title)}</a
+      >
+    </h3>
     <span class="alt">${extra.scale}</span>
     <p>${extra.sub}</p>
     <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
-    ${keyLine(extra.labels)}
-  </a>
+    ${keyBlock(extra.labels)}
+  </article>
 `;
 
 export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
@@ -520,16 +620,13 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
     )}
     <section class="sheet cover-sheet">
       <div class="sheet-head">
-        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <h2 class="cover-title">
-        <!-- THE ONE CATCHWORD IN THE ATLAS: on a host that declares the kit's
-             hwt-catchwords, the cw span draws catchword key e in its place (the
-             rule is in index.html); off the kit — the artifact, any host without
-             it — the superior every other title uses stays on the page. -->
-        <span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS
-      </h2>
+      <!-- The rail's title and this one are the SAME treatment — the .art rule, drawn
+           as the kit's catchword where the face is declared and as the word in
+           the data face everywhere else (the artifact, any host without it). -->
+      <h2 class="cover-title">${PROJECT_MARK}</h2>
       <p class="sheet-sub cover-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
         <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
@@ -563,15 +660,23 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
     ${keyIndex(manifest, filter, props?.router)}
     ${shownAscent.length > 0
       ? html`<div class="cards">
-          ${shownAscent.map((entry) =>
-            entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),
+          <!-- KEYED. A filter changes the list, and an unkeyed map re-uses a
+               card's DOM for a different plate — which leaves each key slot's
+               uiSrefActive holding the target it first saw, so the filter echo
+               goes stale. A key per plate gives the new row its own parts. -->
+          ${repeat(
+            shownAscent,
+            (entry) => entry.row.id,
+            (entry) => (entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row)),
           )}
         </div>`
       : html`<p class="kempty">NO PLATE IN THE ASCENT CARRIES THAT KEY SET.</p>`}
     ${shownAppendix.length > 0
       ? html`
           <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
-          <div class="cards">${shownAppendix.map(sheetCard)}</div>
+          <div class="cards">
+            ${repeat(shownAppendix, (row) => row.id, sheetCard)}
+          </div>
         `
       : nothing}
     <!-- The wide band: the numbers, then the argument. Side by side over 1800. -->
@@ -600,10 +705,10 @@ export const LogView: RoutedLitTemplate<ManifestResolves> = (props) => {
     </div>
     <section class="sheet">
       <div class="sheet-head">
-        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">ISSUE LOG</span>
       </div>
-      <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ISSUE LOG</h2>
+      <h2 class="sheet-title">${THE}ISSUE LOG</h2>
       <p class="sheet-sub">
         EVERY REV ACROSS EVERY PLATE, LATEST FIRST — THE SET'S OWN REVISION RECORD,
         READ FROM diagrams/HISTORY.md AT BUILD TIME; THE SHEETS THEMSELVES DESCRIBE
@@ -697,7 +802,7 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
         >PLATES READ:
         ${sheet.plates.length > 0 ? sheet.plates.join(' · ') : 'NONE — DRAWN FROM PROSE'}</span
       >
-      ${seeAlso(sheet.refs)}
+      ${seeAlso(sheet.refs)} ${keyBlock(sheet.labels)}
     </div>
     ${verdictLine(sheet.verdict)}
     <atlas-plate
@@ -721,7 +826,7 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
     `)}
     <div class="plate-data">
       <span>ALTITUDE · ${extra.scale}</span>
-      ${seeAlso(extra.refs)}
+      ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
     <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>
@@ -743,10 +848,10 @@ export const SpecimenView: RoutedLitTemplate<SpecimenResolves> = (props) => {
     </div>
     <section class="sheet">
       <div class="sheet-head">
-        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">TYPE SPECIMEN</span>
       </div>
-      <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>TYPE SPECIMEN</h2>
+      <h2 class="sheet-title">${THE}TYPE SPECIMEN</h2>
       <p class="sheet-sub">
         SIX PAIRINGS ON ONE MOCK SHEET — IT OPENS ON THE ONE THE SET SHIPS · SITE FACES
         COME FROM ADOBE FONTS WHEN THE KIT IS STAGED, GOOGLE STAND-INS OTHERWISE · THE
@@ -766,7 +871,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
     ${utilBar(html`${indexCrumb()}<span class="sh">COLOPHON</span>`)}
     <section class="sheet">
       <div class="sheet-head">
-        <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+        <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">COLOPHON</span>
       </div>
       <div class="prose">
@@ -848,7 +953,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
   ${utilBar(html`${indexCrumb()}<span class="sh">NO SUCH SHEET</span>`)}
   <section class="sheet">
     <div class="sheet-head">
-      <span class="proj">THE ALTITUDE ATLAS — DRAWING SET</span>
+      <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
       <span class="shno">NO SUCH SHEET</span>
     </div>
     <h2 class="sheet-title">NOT IN THE SET</h2>
