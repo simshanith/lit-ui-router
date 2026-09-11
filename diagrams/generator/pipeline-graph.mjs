@@ -48,14 +48,15 @@ const place = (id, x, y) => pos.set(id, { x, y });
 
 // stations down the probe column, one band at a time
 const bandY = new Map();
+const BANDGAP = 44;                            // clears the band head off the first station in it
 let cursor = 0;
 for (const b of BANDS) {
   bandY.set(b.key, cursor);
-  cursor += 32;
+  cursor += BANDGAP;
   for (const nd of b.nodes) { place(nd.id, COL.probe, cursor); cursor += PITCH; }
   cursor += 26;
 }
-const SPAN = cursor - 26 - 32;
+const SPAN = cursor - 26 - BANDGAP;
 const SHIFT = -SPAN / 2;                       // centre the whole column on y = 0
 for (const [id, p] of pos) place(id, p.x, p.y + SHIFT);
 for (const [k, y] of bandY) bandY.set(k, y + SHIFT + 4);

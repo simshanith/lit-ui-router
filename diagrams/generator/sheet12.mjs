@@ -164,7 +164,9 @@ const cx = (i) => CX0 + i * CP;
 const OX0 = cx(COLS.length - 1) + 32; // overlay first column centre, clear of the plate
 const ox = (j) => OX0 + j * CP;
 
-const MTOP = 300;
+const HFY = 300;             // column-head foot: every head hangs off its own column
+const HANG = -45;            // …and rises on the slant, punchcard-fashion
+const MTOP = 314;
 const rows = [];             // [name, y, groupIdx, headerY]
 {
   let y = MTOP;
@@ -199,21 +201,25 @@ const RULE = 'stroke="var(--ink-faint)" stroke-width="1" opacity="0.5" stroke-da
 const vrules = COLS.map((_, i) => `<line x1="${cx(i)}" y1="${MTOP + 8}" x2="${cx(i)}" y2="${MBOT}" ${RULE}/>`).join('\n');
 const hrules = rows.map(([, y]) => `<line x1="${CX0 - 12}" y1="${y}" x2="${cx(COLS.length - 1) + 12}" y2="${y}" ${RULE}/>`).join('\n');
 
-// --- column headers, rotated to read upward
-const headers = COLS.map((n, i) => {
-  const cls = ALLP.has(n) ? 'lblr' : SELF.has(n) ? 'lbla' : 'lbls';
-  return txt(cx(i) + 3.5, 288, n, cls, 'start', `transform="rotate(-90 ${cx(i) + 3.5} 288)"`);
-}).join('\n');
+// --- column headers, lettered on the slant like a punchcard's
+// Parallel heads clear each other on the perpendicular (23 px pitch × cos45 =
+// 16 px between baselines), so a name can grow to any length without reaching
+// its neighbour — which is what lets this band carry the set's lettering step.
+const head = (x, n, cls, extra = '') =>
+  txt(x, HFY, n, cls, 'start', `${extra} transform="rotate(${HANG} ${x} ${HFY})"`);
+const headers = COLS.map((n, i) =>
+  head(cx(i) + 3.5, n, SELF.has(n) && !ALLP.has(n) ? 'lbla' : 'lbl',
+    ALLP.has(n) ? 'fill="var(--red)"' : '')).join('\n');
 
 const stages = STAGES.map(([a, b, label]) => {
   const x1 = cx(a) - 9, x2 = cx(b) + 9;
-  return `<path d="M${x1},178 L${x1},172 L${x2},172 L${x2},178" class="sks" opacity="0.7"/>
-${txt((x1 + x2) / 2, 162, label, 'lblf', 'middle')}`;
+  return `<path d="M${x1},192 L${x1},186 L${x2},186 L${x2},192" class="sks" opacity="0.7"/>
+${txt((x1 + x2) / 2, 176, label, 'lbls', 'middle')}`;
 }).join('\n');
 
 // --- row labels + cells
 const body = rows.map(([name, y, gi]) => {
-  const label = txt(LX, y + 3.5, name, 'lbls', 'end', gi === 0 ? 'fill="var(--accent)"' : '');
+  const label = txt(LX, y + 3.5, name, 'lbl', 'end', gi === 0 ? 'fill="var(--accent)"' : '');
   const cells = COLS.map((c, i) => {
     const k = cell(name, c);
     if (!k) return '';
@@ -226,41 +232,44 @@ const body = rows.map(([name, y, gi]) => {
   return label + cells + over;
 }).join('\n');
 
-const sectionHdrs = HDRS.map(([label, y]) => txt(30, y + 3.5, label, 'lblf')).join('\n');
+const sectionHdrs = HDRS.map(([label, y]) => txt(30, y + 3.5, label, 'lbls')).join('\n');
 
 // --- per-column tallies under the plate
 const tallies = COLS.map((c, i) => {
   const { nodes, real } = nm(c);
-  return txt(cx(i), TOTY, String(real), real === 0 ? 'lblr' : 'lbls', 'middle')
-    + txt(cx(i), TOTY + 13, String(nodes), 'lblf', 'middle');
+  return txt(cx(i), TOTY, String(real), 'lbl', 'middle', real === 0 ? 'fill="var(--red)"' : '')
+    + txt(cx(i), TOTY + 14, String(nodes), 'lbls', 'middle');
 }).join('\n');
 
 // --- ci:main overlay frame
 const oFrame = `<rect x="${OX0 - 16}" y="${MTOP + 4}" width="${CP * (OCOLS.length - 1) + 32}" height="${MBOT - MTOP - 4}" class="ska fnone" stroke-dasharray="5 4" opacity="0.75"/>
-${OCOLS.map((n, j) => txt(ox(j) + 3.5, 288, n, 'lbla', 'start', `transform="rotate(-90 ${ox(j) + 3.5} 288)"`)).join('\n')}
-${txt(OX0 - 16, 162, 'ci:main OVERLAY', 'lbla')}
+${OCOLS.map((n, j) => head(ox(j) + 3.5, n, 'lbla')).join('\n')}
+${txt(OX0 - 16, 176, 'ci:main OVERLAY', 'lbla')}
 ${txt(OX0 - 16, TOTY, `+${ODN} nodes · ${OCOLS.length} names · +${ODR} real`, 'lbla')}`;
 
 // --- right column: the phantom share, the deepest chain, the uncacheable tier
-const stat = `${txt(RX, 206, 'THE PHANTOM SHARE', 'lblt')}
-${lines(RX, 226, [
+// starts below the slanted head band, which reaches x≈830 on its way up
+const RY = 340;
+const stat = `${txt(RX, RY, 'THE PHANTOM SHARE', 'lblt')}
+${lines(RX, RY + 20, [
   `${CI.nodes} nodes in the PR graph.`,
   `${CI.nodes - CI.real} of them run nothing at all:`,
   'command "<NONEXISTENT>", a stub',
   'turbo mints so a ^self chain has',
   'somewhere to land an edge.',
 ], 'lbls', 'start', 13)}
-${txt(RX, 300, `${phantomPct(CI)}% PLACEHOLDER`, 'lblr')}`;
+${txt(RX, RY + 94, `${phantomPct(CI)}% PLACEHOLDER`, 'lblr')}`;
 
-const CLY = 352;
+const CLY = RY + 200;
+const CRP = 26;              // rung pitch, opened up for the lettering step
 const CN = CHAIN.length - 1;
-const ladder = `${txt(RX, CLY - 22, `DEEPEST CHAIN IN THE GRAPH — ${CHAIN.length} DEEP`, 'lbls')}
-<line x1="${RX + 8}" y1="${CLY}" x2="${RX + 8}" y2="${CLY + CN * 22}" class="sks" opacity="0.6"/>
+const ladder = `${txt(RX, CLY - 22, `DEEPEST CHAIN IN THE GRAPH — ${CHAIN.length} DEEP`, 'lbl')}
+<line x1="${RX + 8}" y1="${CLY}" x2="${RX + 8}" y2="${CLY + CN * CRP}" class="sks" opacity="0.6"/>
 ${CHAIN.map(([n, r], i) => {
-    const y = CLY + i * 22;
+    const y = CLY + i * CRP;
     return hole(RX + 8, y, r ? 'R' : 'p') + txt(RX + 26, y + 3.5, n, r ? 'lbl' : 'lbls');
   }).join('\n')}
-${lines(RX, CLY + CN * 22 + 26, [
+${lines(RX, CLY + CN * CRP + 26, [
   `${CHAIN_REAL} of those ${CHAIN.length} run a command.`,
   `The longest all-real chain is ${CI.realChain}`,
   `— and it is ${CI.realChain} «test» tasks in a`,
@@ -269,44 +278,44 @@ ${lines(RX, CLY + CN * 22 + 26, [
 ], 'lbls', 'start', 13)}`;
 
 // clears the plate's own tally row: the right column and the plate both grew
-const UY = Math.max(CLY + CN * 22 + 118, TOTY + 40);
-const uncached = `${txt(RX, UY, 'THE UNCACHEABLE THIRTEEN', 'lbls')}
-${txt(RX, UY + 14, 'every cache:false definition in the repo — 7 at', 'lblf')}
-${txt(RX, UY + 25, 'root, 6 in member files (@tools/ scope elided)', 'lblf')}
-${txt(RX, UY + 36, 'none of them reachable from ci', 'lblf')}
+const UY = Math.max(CLY + CN * CRP + 118, TOTY + 40);
+const uncached = `${txt(RX, UY, 'THE UNCACHEABLE THIRTEEN', 'lbl')}
+${txt(RX, UY + 15, 'every cache:false definition in the repo — 7 at', 'lbls')}
+${txt(RX, UY + 27, 'root, 6 in member files (@tools/ scope elided)', 'lbls')}
+${txt(RX, UY + 39, 'none of them reachable from ci', 'lbls')}
 ${UNCACHED.map(([n, why], i) => {
-    const y = UY + 57 + i * 17;
+    const y = UY + 62 + i * 18;
     // The reason column hangs on the plate's right margin: at the data face the
     // longest reason no longer fits a left-set column between the names and 1130.
-    return hole(RX + 8, y, 'c') + txt(RX + 26, y + 3.5, n, 'lbls') + txt(1130, y + 3.5, why, 'lblf', 'end');
+    return hole(RX + 8, y, 'c') + txt(RX + 26, y + 3.5, n, 'lbl') + txt(1130, y + 3.5, why, 'lbls', 'end');
   }).join('\n')}`;
 
 // --- the ragged tail, below the plate
 const TY = MBOT + 90;
 const half = Math.ceil(TAIL.length / 2);
-const tail = `${txt(30, TY, `THE RAGGED TAIL — ${TAIL.length} SINGLETON TASKS, ONE NODE EACH, NO FAN`, 'lbls')}
-${txt(30, TY + 14, `${TAIL_ROOT} of them belong to the root package «//», which appears in no fanned column at all`, 'lblf')}
+const tail = `${txt(30, TY, `THE RAGGED TAIL — ${TAIL.length} SINGLETON TASKS, ONE NODE EACH, NO FAN`, 'lbl')}
+${txt(30, TY + 15, `${TAIL_ROOT} of them belong to the root package «//», which appears in no fanned column at all`, 'lbls')}
 ${TAIL.map(([n, r], i) => {
     const col = i < half ? 0 : 1;
-    const y = TY + 40 + (i - col * half) * 16;
-    const x = 38 + col * 380;
-    return hole(x, y, r ? 'R' : 'p') + txt(x + 18, y + 3.5, n, r ? 'lbls' : 'lblf');
+    const y = TY + 42 + (i - col * half) * 17;
+    const x = 38 + col * 396;
+    return hole(x, y, r ? 'R' : 'p') + txt(x + 18, y + 3.5, n, r ? 'lbl' : 'lbls');
   }).join('\n')}`;
 
 // --- totals ledger
-const SY = TY + 40 + half * 16 + 46;
-const SH = 46 + LEDGER.length * 19 + 34;
-const colx = [46, 300, 380, 462, 546, 634, 720];
+const SY = TY + 42 + half * 17 + 46;
+const SH = 46 + LEDGER.length * 20 + 34;
+const colx = [46, 300, 380, 462, 546, 634, 726];
 const ledger = `<rect x="30" y="${SY}" width="1100" height="${SH}" class="sk fnone"/>
-${txt(46, SY + 22, 'STRUCTURE SCHEDULE — TASK GRAPHS BY PIPELINE', 'lbls')}
+${txt(46, SY + 22, 'STRUCTURE SCHEDULE — TASK GRAPHS BY PIPELINE', 'lbl')}
 <line x1="30" y1="${SY + 32}" x2="1130" y2="${SY + 32}" class="sks" opacity="0.7"/>
-${['PIPELINE', 'NODES', 'REAL', 'PHANTOM', 'EDGES', 'REAL←REAL', 'CHAIN / REAL'].map((h, i) => txt(colx[i], SY + 48, h, 'lblf')).join('\n')}
+${['PIPELINE', 'NODES', 'REAL', 'PHANTOM', 'EDGES', 'REAL←REAL', 'CHAIN / REAL'].map((h, i) => txt(colx[i], SY + 48, h, 'lbls')).join('\n')}
 ${LEDGER.map(([n, note], i) => {
-    const y = SY + 68 + i * 19;
+    const y = SY + 68 + i * 20;
     const p = pipe(n);
     return [n, String(p.nodes), String(p.real), `${phantomPct(p)}%`, String(p.edges), String(p.realEdges), `${p.chain} / ${p.realChain}`]
-      .map((v, k) => txt(colx[k], y, v, k === 0 ? 'lbl' : k === 3 ? 'lblr' : 'lbls')).join('')
-      + txt(830, y, note, 'lblf');
+      .map((v, k) => txt(colx[k], y, v, k === 3 ? 'lblr' : 'lbl')).join('')
+      + txt(842, y, note, 'lbls');
   }).join('\n')}
 ${txt(46, SY + SH - 16, 'No duration is encoded anywhere on this plate: CI wall-clock comparisons in this repo are confounded by cache state and task counts.', 'lblf')}`;
 
@@ -331,17 +340,17 @@ ${sectionHdrs}
 ${body}
 ${oFrame}
 ${tallies}
-${txt(LX, TOTY, 'run a command  →', 'lblf', 'end')}
-${txt(LX, TOTY + 13, 'nodes minted  →', 'lblf', 'end')}
+${txt(LX, TOTY, 'run a command  →', 'lbls', 'end')}
+${txt(LX, TOTY + 14, 'nodes minted  →', 'lbls', 'end')}
 
-${txt(30, 206, `${WORD[ALLP.size] ?? ALLP.size} COLUMNS RUN NOTHING`, 'lblr')}
-${lines(30, 222, [
+${txt(30, 238, `${WORD[ALLP.size] ?? ALLP.size} COLUMNS RUN NOTHING`, 'lblr')}
+${lines(30, 256, [
   [...ALLP].join(' · '),
   'have no implementation in any of',
   `the ${PKGS} packages. They exist only`,
   'so the other columns can depend',
   'on something — pure graph edge.',
-], 'lbls', 'start', 13)}
+], 'lbls', 'start', 14)}
 
 ${stat}
 ${ladder}

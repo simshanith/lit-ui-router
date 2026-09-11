@@ -81,15 +81,15 @@ const TABY = (i) => 272 + i * 36;                   // rack pitch, independent o
 // ---------------------------------------------------------------------------
 const basisBlock = `${box(SX, 96, SW, 84, 'sk fp2')}
 ${txt(SX + 10, 116, 'THE ONE BASIS', 'lblb')}
-${lines(SX + 10, 132, [
+${lines(SX + 10, 130, [
   'materialize(ref) — basis.mjs',
   `git archive ${A.ref} @ ${A.sha}`,
   '| tar -x → tmpdir, relative walk',
   `${fmt(A.tracked)} tracked paths · ${A.commitDate}`,
-], 'lbls', 'start', 13)}`;
+], 'lbl', 'start', 13.5)}`;
 
 const rail = `<path d="M${SX + 4},180 L${RAILX},180 L${RAILX},${RELICY + 6}" class="sks" stroke-dasharray="4 4" opacity="0.65" fill="none"/>
-${txt(RAILX - 6, (180 + RELICY) / 2, 'ONE BASIS — EVERY STATION RE-MATERIALIZES THIS REF', 'lblf', 'middle', `transform="rotate(-90 ${RAILX - 6} ${(180 + RELICY) / 2})"`)}`;
+${txt(RAILX - 6, (180 + RELICY) / 2, 'ONE BASIS — EVERY STATION RE-MATERIALIZES THIS REF', 'lbls', 'middle', `transform="rotate(-90 ${RAILX - 6} ${(180 + RELICY) / 2})"`)}`;
 
 const masterRow = `${arrow(P, `M${SX + 120},180 L${SX + 120},${MY - 11}`)}
 ${box(SX, MY - 11, SW, RH, 'ska fp')}
@@ -99,7 +99,7 @@ ${arrow(P, `M${SX + SW},${MY} L${DX - 4},${MY}`, 'aa', 'ska')}
 <rect x="${DX}" y="${MY - 15}" width="${DW}" height="30" rx="4" fill="url(#${P}-ha)"/>
 <rect x="${DX}" y="${MY - 15}" width="${DW}" height="30" rx="4" class="ska fnone"/>
 ${txt(DX + 10, MY - 2, A.master, 'lbla')}
-${txt(DX + 10, MY + 10, `${fmt(A.masterRows)} rows — the one measurement`, 'lblf')}
+${txt(DX + 10, MY + 10, `${fmt(A.masterRows)} rows — the one measurement`, 'lbls')}
 ${arrow(P, `M${DX + DW},${MY} L${RX - 4},${MY}`, 'aa', 'ska')}
 ${box(RX, MY - 11, RW, RH, 'ska fp')}
 ${txt(RX + 10, MY + 4, 'build.mjs — GALLERY COVER SURVEY', 'lbla')}
@@ -116,21 +116,21 @@ ${txt(SX + 40, BUSY - 10, `reads — ${WORD[MASTER_QUERIES.length + 1]} consumer
 // ---------------------------------------------------------------------------
 // STATIONS + DRAWERS
 // ---------------------------------------------------------------------------
-const bandHeads = BANDS.map(([tier, label]) => txt(SX, HEADY.get(tier), label, 'lblf')).join('\n');
+const bandHeads = BANDS.map(([tier, label]) => txt(SX, HEADY.get(tier), label, 'lbls')).join('\n');
 
 const HARNESS_Y = HEADY.get('T3') + 16;
 const harness = `${box(SX + 18, HARNESS_Y, SW - 18, 32, 'sk fp2')}
-${txt(SX + 28, HARNESS_Y + 14, 'installDeps(basis) — THE INSTALL HARNESS', 'lbls')}
-${txt(SX + 28, HARNESS_Y + 26, 'corepack pnpm --frozen-lockfile → .bin/turbo', 'lblf')}
+${txt(SX + 28, HARNESS_Y + 14, 'installDeps(basis) — THE INSTALL HARNESS', 'lbl')}
+${txt(SX + 28, HARNESS_Y + 26, 'corepack pnpm --frozen-lockfile → .bin/turbo', 'lbls')}
 <path d="M${SX + 26},${HARNESS_Y + 32} L${SX + 26},${ROWY.get(REST.filter((r) => r.tier === 'T3')[0].file) - 11}" class="sks" stroke-dasharray="3 3" fill="none"/>`;
 
 const stations = REST.map((r) => {
   const y = ROWY.get(r.file);
   return `${box(SX, y - 11, SW, RH)}
 ${box(SX, y - 11, 30, RH, 'sk fp2')}
-${txt(SX + 15, y + 4, r.tier, 'lbls', 'middle')}
+${txt(SX + 15, y + 4, r.tier, 'lbl', 'middle')}
 ${txt(SX + 40, y + 4, r.writer, 'lbl')}
-${txt(SX + SW - 8, y + 4, BASIS_SHORT.get(r.basis), 'lblf', 'end')}
+${txt(SX + SW - 8, y + 4, BASIS_SHORT.get(r.basis), 'lbls', 'end')}
 ${arrow(P, `M${SX + SW},${y} L${DX - 4},${y}`)}
 ${box(DX, y - 11, DW, RH, 'sk fp', 4)}
 ${txt(DX + 10, y + 4, r.file, 'lbl')}
@@ -139,11 +139,11 @@ ${txt(DX + DW - 10, y + 4, `×${r.readers.length}`, 'lblf', 'end')}`;
 
 // the two stations that file nothing at all
 const OUT = `${box(SX, OVY - 11, SW, RH, 'sks fp2')}
-${txt(SX + 10, OVY + 4, OVERVIEW.file, 'lbls')}
-${txt(SX + SW - 8, OVY + 4, 'query · files nothing', 'lblf', 'end')}
+${txt(SX + 10, OVY + 4, OVERVIEW.file, 'lbl')}
+${txt(SX + SW - 8, OVY + 4, 'query · files nothing', 'lbls', 'end')}
 ${A.unwired.map((f, i) => `${box(SX, RELICY - 11 + i * 30, SW, RH, 'sks fnone')}
-${txt(SX + 10, RELICY + 4 + i * 30, f, 'lblf')}
-${txt(SX + SW - 8, RELICY + 4 + i * 30, 'imported by nothing', 'lblf', 'end')}
+${txt(SX + 10, RELICY + 4 + i * 30, f, 'lbls')}
+${txt(SX + SW - 8, RELICY + 4 + i * 30, 'imported by nothing', 'lbls', 'end')}
 <line x1="${SX + 4}" y1="${RELICY - 11 + i * 30}" x2="${SX + SW - 4}" y2="${RELICY + 11 + i * 30}" class="skr" opacity="0.8"/>`).join('\n')}`;
 
 // ---------------------------------------------------------------------------
@@ -154,7 +154,7 @@ const rack = SHEETS.map((d, i) => {
   const y = TABY(i);
   return `${box(RX, y - 11, RW, RH, 'sk fp')}
 ${box(RX, y - 11, 40, RH, 'sk fp2')}
-${txt(RX + 20, y + 4, `S${d.num}`, 'lbls', 'middle')}
+${txt(RX + 20, y + 4, `S${d.num}`, 'lbl', 'middle')}
 ${txt(RX + 50, y + 4, d.title, 'lbl')}
 ${txt(RX + RW - 10, y + 4, `×${d.reads.length}`, 'lblf', 'end')}`;
 }).join('\n');
@@ -172,7 +172,7 @@ const readEdges = A.plates.flatMap((p) => p.readers
   .join('\n');
 
 const readsN = A.plates.reduce((s, p) => s + p.readers.filter((d) => TABI.has(d.file)).length, 0);
-const readLabel = `${txt((DX + DW + RX) / 2, 262, `reads — ${readsN} imports`, 'lblf', 'middle')}`;
+const readLabel = `${txt((DX + DW + RX) / 2, 262, `reads — ${readsN} imports`, 'lbls', 'middle')}`;
 
 // ---------------------------------------------------------------------------
 // THE EXTERNAL INSTRUMENT LEDGER (from the plates' own PROV-O fields)
@@ -182,11 +182,11 @@ const TLY = TABY(SHEETS.length - 1) + 26;
 // instrument that carries a version or a source, so ten of the eleven read as
 // ellipses.  The full 260px measure lets all but the tarball URL stand whole.
 const toolHalf = A.tools.length;
-const TOOL_CH = 45;
-const toolsBox = `${box(RX, TLY, RW, 40 + toolHalf * 14, 'sk fnone')}
-${txt(RX + 10, TLY + 18, `EXTERNAL INSTRUMENTS — ${A.tools.length}`, 'lbls')}
+const TOOL_CH = 42;
+const toolsBox = `${box(RX, TLY, RW, 44 + toolHalf * 15, 'sk fnone')}
+${txt(RX + 10, TLY + 18, `EXTERNAL INSTRUMENTS — ${A.tools.length}`, 'lbl')}
 ${txt(RX + 10, TLY + 30, 'from each plate’s wasAssociatedWith', 'lblf')}
-${A.tools.map((t, i) => txt(RX + 10, TLY + 46 + i * 14, t.label.length > TOOL_CH ? `${t.label.slice(0, TOOL_CH - 1)}…` : t.label, 'lblf')).join('\n')}`;
+${A.tools.map((t, i) => txt(RX + 10, TLY + 50 + i * 15, t.label.length > TOOL_CH ? `${t.label.slice(0, TOOL_CH - 1)}…` : t.label, 'lbls')).join('\n')}`;
 
 // ---------------------------------------------------------------------------
 // THE SCHEDULE — plate | tier | writer | basis | readers
@@ -194,8 +194,8 @@ ${A.tools.map((t, i) => txt(RX + 10, TLY + 46 + i * 14, t.label.length > TOOL_CH
 // The schedule starts below the DEEPER of the two columns above it: the rack
 // grew past the station column once the drawing count hit 19, and the tools
 // ledger hangs off the rack — without the max() the table climbs into it.
-const SY = Math.max(RELICY + 70, TLY + 40 + toolHalf * 14 + 26);
-const SCOL = [46, 250, 292, 430, 590];
+const SY = Math.max(RELICY + 70, TLY + 44 + toolHalf * 15 + 26);
+const SCOL = [46, 250, 292, 448, 604];
 // READ BY can outgrow its column (the master plate is read by everything), so
 // long reader lists wrap and the row takes as many 17px lines as it needs.
 const wrapReaders = (s) => {
@@ -219,16 +219,16 @@ const scheduleRows = (() => {
   let y = SY + 68;
   return SROWS.map(({ r, lines }) => {
     const cells = [r.file, r.tier, r.writer, r.basis]
-      .map((v, k) => txt(SCOL[k], y, v, k === 0 && r.file === A.master ? 'lbla' : k < 3 ? 'lbls' : 'lblf')).join('');
-    const readBy = lines.map((ln, j) => txt(SCOL[4], y + j * 17, ln, 'lblf')).join('');
+      .map((v, k) => txt(SCOL[k], y, v, k === 0 && r.file === A.master ? 'lbla' : k < 3 ? 'lbl' : 'lbls')).join('');
+    const readBy = lines.map((ln, j) => txt(SCOL[4], y + j * 17, ln, 'lbls')).join('');
     y += lines.length * 17;
     return cells + readBy;
   }).join('\n');
 })();
 const schedule = `${box(30, SY, 1100, SH, 'sk fnone')}
-${txt(46, SY + 22, 'PLATE SCHEDULE — EVERY FILED PLATE, ITS ONE WRITER, AND EVERY DRAWING THAT READS IT', 'lbls')}
+${txt(46, SY + 22, 'PLATE SCHEDULE — EVERY FILED PLATE, ITS ONE WRITER, AND EVERY DRAWING THAT READS IT', 'lbl')}
 <line x1="30" y1="${SY + 32}" x2="1130" y2="${SY + 32}" class="sks" opacity="0.7"/>
-${['PLATE', 'TIER', 'WRITER', 'BASIS', 'READ BY'].map((h, i) => txt(SCOL[i], SY + 48, h, 'lblf')).join('\n')}
+${['PLATE', 'TIER', 'WRITER', 'BASIS', 'READ BY'].map((h, i) => txt(SCOL[i], SY + 48, h, 'lbls')).join('\n')}
 ${scheduleRows}
 ${txt(46, SY + SH - 18, `TOTALS — ${S.plates} plates · ${S.probes} probes (T1 ${S.byTier.T1} · T2 ${S.byTier.T2} · T3 ${S.byTier.T3}) · ${S.writes} writes · ${S.reads} reads · ${A.unread.length} plates unread · every plate pinned to ${BASIS} · graph: ${S.nodes} nodes / ${S.edges} edges`, 'lblf')}`;
 

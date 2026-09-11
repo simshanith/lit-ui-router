@@ -344,8 +344,8 @@ Moot: T22 (`.revs` retired with the copy re-draft; history is `HISTORY.md` → `
 | T28 | P2 | partial | notes-grid has its 1180 step; the rail has no 900–1180 narrow step (plate half moot after T1) |
 | T37 | P2 | partial | `.gal-body p` measure fixed at 72ch; still flush-left, no col 9–12 insets |
 | T16 | P3 | open | cards carry no picture of the plate |
-| T40 | P3 | open | per-sheet box recomposition backlog; not re-measured since the T39 probe |
-| T41 | P3 | open | 12 and 14 relettered a step larger — after T40 |
+| T40 | P3 | **done 2026-09-11** | the table above was a `getBBox` artifact; 12's head band slanted, all 21 plates and all 4 lanes measured clean — see §9 |
+| T41 | P3 | **done 2026-09-11** | 12 and 14 relettered one class step; both now lead on `lbl` — see §9 |
 | T46 | P3 | open | 12-column model with feature insets; subsumes T37 |
 
 ---
@@ -390,10 +390,82 @@ app before calling T40 done.
 Probe: `collide-flat.mjs` (job tmp), reads the flat set over `file://`, writes per-pair
 detail to `collide-flat.json`.
 
+### T40 + T41 — LANDED 2026-09-11
+
+**First: the remainder above was a measurement artifact, not a drawing fault.**
+`getBBox()` is blind to the element's *own* `transform`, so every rotated label
+reports its unrotated box. All four findings in the table above are that one
+bug: sheet 12's 37 "overlaps" are the 19 vertical column heads measured as if
+they lay flat on a 23 px pitch; sheet 14's banner at x = −124 is the left-margin
+rail label, upright and inside the paper; sheet 5's `WHO OWNS NAVIGATION ↑` is
+its y-axis caption; A1's `!` is a glyph inside a translated `<g>`. A second
+probe (`collide2.mjs`, job tmp) maps each label's four corners through its CTM
+into viewBox space and separates oriented boxes with SAT. Run at HEAD, before
+any edit, it read **0 overlaps and 0 out-of-viewBox on all 21 static plates**.
+Sheets 5 and A1 needed nothing and were not touched.
+
+What was left, then, was the design half of T40 and the whole of T41.
+
+**Sheet 12 — the head band lettered on the slant.** The 19 plate heads and the
+4 overlay heads now rise at −45° from the foot of their own column (`HFY` /
+`HANG`), which is the punchcard's own idiom and the only arrangement whose
+clearance does not depend on name length: parallel heads sit 23 × cos45 = 16 px
+apart on the perpendicular, so `test:mobx6-compat` can grow without ever
+reaching its neighbour. The slant is also *shorter* than the upright band it
+replaces — 79 px of rise against 88 — so the top margin gained room rather than
+spending it. Recomposed around it: the stage brackets dropped 14 px to sit on
+the band they label, the plate top to 314, the `THREE COLUMNS RUN NOTHING` note
+down to 238 so it reads as a caption to the band instead of floating above it,
+and the right annotation column to `RY = 340` — it had to clear the overlay
+heads, which reach x ≈ 830 on their way up. That move also halved the hole the
+right column used to leave: the chain ladder is at `RY + 200` on a 26 px rung
+pitch, and the two gaps above and below it are now 84 and 114 px rather than 30
+and 310.
+
+**T41, both sheets.** The step is one class per role — `lbls` → `lbl`,
+`lblf` → `lbls` — applied to what each plate is *about* and not to its
+footnotes. On 12: row labels, column heads, per-column tallies, the ragged
+tail, the uncacheable names, the section heads and the structure schedule. The
+three all-phantom heads and the zero tallies keep their red as a `fill`
+override rather than the smaller `lblr`, so a head is never a size smaller than
+the head beside it. On 14: the rail banner, the basis block, the tier band
+heads, the install harness, the station tier pips and basis column, the rack
+numbers, the instruments ledger and the whole plate schedule. Column stops
+moved with it (`SCOL` 430 → 448, 590 → 604; `TOOL_CH` 45 → 42; the ledger on a
+15 px line). Measured, dominant class by count: 12 was 158 × 10.5 px and is now
+149 × 11.5 px; 14 was 116 × 10 px and is now 144 × 11.5 px. Neither sheet is
+the smallest-lettered in the set any more.
+
+**The interactive twins.** There is no SVG plate on 1i, 2B, 12i or 14i at any
+host — all four are cytoscape drawing into `<canvas>`, so the `file://` probe's
+"NO PLATE" was never about the file protocol and serving the app does not
+change it. They were measured instead through cytoscape's own
+`renderedBoundingBox({ includeLabels: true })` (`collide-lane.mjs`, job tmp),
+against the built app on :4341. That found one real defect: on 14i each tier
+band head sat 28 px above the first station in its band and overlapped it —
+`BANDGAP` is now 44. Final: 1i 0/22 labels, 2B 0/19, 12i 0/89, 14i 0/75.
+
+12i shares no code with sheet 12's band — its lane is `register-graph.mjs`, a
+cytoscape graph on a 36 px pitch with upright label rotation, already clear —
+so the slant was not carried into it.
+
+| probe | 12 | 14 | 5 | A1 | other 17 | 1i | 2B | 12i | 14i |
+|---|---|---|---|---|---|---|---|---|---|
+| `collide-flat` at HEAD (transform-blind) | 37 | 2 + 1 out | 1 + 1 out | 1 out | 0 | — | — | — | — |
+| `collide2` at HEAD (CTM-aware) | 0 | 0 | 0 | 0 | 0 | — | — | — | — |
+| `collide2` final | 0 | 0 | 0 | 0 | 0 | — | — | — | — |
+| `collide-lane` final | — | — | — | — | — | 0 | 0 | 0 | 0 |
+
+`collide-flat` still reads 44 on 12 and 2 + 1 on 14 after the work, for the
+same reason it read 37 and 2 before it: it cannot see a rotation. Retire it, or
+port its census onto the CTM — a rotated label is a normal thing on these
+plates and any future T40 measured with the old probe will chase ghosts again.
+
 ### T52 — the notes column, next to the sticky rail — LANDED 2026-09-10
 
 Built as asked, with two departures the measurements argued for. The count is
-`round(down, calc((100cqw - 376px) / 28rem), 1)` on `.notes`, with
+`column-count: calc((100cqw - var(--inset) - var(--inset-gap)) / 38rem)` on
+`.notes` (`--inset: 352px`, `--inset-gap: 24px`, declared on `.notes-grid`), with
 `container-type: inline-size` on `.notes-grid` — the query has to hang off an
 ancestor, because an element's own container-type does not feed its own
 properties; declared on `.notes` it resolves against the viewport instead and
@@ -402,16 +474,16 @@ count is simply 1. Gap 44px, `h3` at `column-span: all` and lettered up to
 12.5px with 18px beneath it, paragraphs at 18px / 1.8 / 2em, and the `max-width`
 gone so the text fills the paper.
 
-Rounding down fixes the divisor tighter than it looks: two columns at 1440 needs
-it under 469px, three rather than four at 2560 needs it over 514px, and no one
-number is both. 28rem takes the two-column 1440. Round-to-nearest at 38rem is
-the other resolution of the same conflict and the edit is one line.
+Rounding down cannot satisfy both ends: two columns at 1440 needs the divisor
+under 469px, three rather than four at 2560 needs it over 514px, and no one
+number is both. Round-to-nearest at 38rem resolves it — 4 / 3 / 2 columns at
+3008 / 2560 / 1440, column widths between 447 and 706px across 1200–3400.
 
 Letter-spacing was left alone — at 18px on a serif the size carries it, and 1px
 of tracking on running prose reads as a caps treatment.
 
 Measured, sheet 7 at 3008: one 569px column in 2058px of cell, 1491px tall →
-five filled columns, 656px tall. 21 of 23 sheets roughly halve at 2560. The two
+four filled columns (the cap at 3008), 656px tall. 21 of 23 sheets roughly halve at 2560. The two
 that do not are the standalone interactive pages, whose shell caps the notes
 cell at 878px at every viewport — they take the larger type and get no columns.
 Worth a look: that cap is the only thing keeping 1i, 12i, 14i and 2B off the
@@ -598,13 +670,17 @@ server story has been exercised at all; no example or sample app has tried it
 (user, 2026-09-10: "i hadn't really tried that yet with an example or sample app
 yet ... the gap is starting to bridge"). Two things follow:
 
-- The prerender lane uses `@lit-labs/ssr` directly; `ui-router-server` is not a
-  dependency. The server adapter's own subject matter is being prerendered
-  without it. Decide whether that is the gap to close or a deliberate split.
+- The prerender lane is built on `ui-router-server` (`^0.1.1`; `prerender.ts`
+  drives off `createServerRouter`) and renders with `@lit-labs/ssr` directly —
+  the repo's first `@lit-labs/ssr` attempt, though not the first
+  `ui-router-server` consumer (www/lit-ui-router.dev is).
 - The build's third probe reports `the client ShellView (rail + nested ui-view):
   THREW TypeError: document.createDocumentFragment is not a function`. That is a
-  FINDING, not noise — treat it as the atlas reporting on the server story, and
-  give it a home (an issue, or a line on the plate that draws the pipeline).
+  FINDING, not noise: `document.createDocumentFragment()` is a FIELD INITIALISER
+  in `packages/lit-ui-router/src/ui-view.ts`, so it fires before any lifecycle
+  hook can guard it — which is why the app keeps two template sets and why
+  #348's client-hydration seam cannot land over it. Filed 2026-09-11 as #803;
+  the rest of `SSR-VERDICT.md`'s asks are #804–#808 (with #564 and #750 before).
 
 **The Effect companion, not mobx.** An earlier draft of this note proposed
 `lit-ui-router-mobx` for the sheet 7 city. The better fit is the `-effect`
