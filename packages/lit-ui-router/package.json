@@ -71,8 +71,8 @@
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
-    "test": "VITEST_BROWSER_API_PORT=63320 vitest run --project=happy-dom --project=chrome",
-    "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --project=happy-dom --project=chrome",
+    "test": "VITEST_BROWSER_API_PORT=63320 vitest run --project=happy-dom --project=node --project=chrome",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63325 vitest run --coverage --project=happy-dom --project=node --project=chrome",
     "test:engines": "VITEST_BROWSER_API_PORT=63321 vitest run --project=firefox --project=safari",
     "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63322 vitest run --project=happy-dom --project=chrome",
     "typecheck": "tsc -p tsconfig.json --noEmit",
@@ -84,6 +84,7 @@
   },
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
+    "@lit-labs/ssr": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/compat-guards": "workspace:*",
