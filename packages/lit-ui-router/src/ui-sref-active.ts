@@ -316,6 +316,12 @@ export class UiSrefActiveDirective extends AsyncDirective {
     UiSrefElement
   >();
 
+  /**
+   * The reverse of {@link uiSrefs}, so a re-targeting link retires its old one.
+   * @internal
+   */
+  private readonly _linkTargets = new WeakMap<UiSrefElement, TargetState>();
+
   /** @internal */
   _deregisterOnStart: deregisterFn | undefined;
   /** @internal */
@@ -707,8 +713,18 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
+    // a link re-targets after a lazy load; its earlier target is retired
+    const previous = this._linkTargets.get(event.target);
+    if (previous) {
+      this.targetStates.delete(previous);
+      this.uiSrefs.delete(previous);
+    }
     this.targetStates.add(targetState);
     this.uiSrefs.set(targetState, event.target);
+    this._linkTargets.set(event.target, targetState);
+    if (this._firstUpdated) {
+      this.onStatesChanged();
+    }
   };
 
   /** @internal */

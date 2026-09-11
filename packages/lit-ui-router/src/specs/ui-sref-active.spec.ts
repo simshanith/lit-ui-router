@@ -388,6 +388,37 @@ describe('uiSrefActive directive', () => {
       const nav = wrapper.querySelector('nav')!;
       expect(nav.classList.contains('has-active')).toBe(true);
     });
+
+    // a re-targeted link replaces its old target, and the wrapper reflects it
+    // at once rather than on the next transition
+    it('should follow a child sref that re-targets', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'item', url: '/item/:id' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+      const nav = (id: number) =>
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('item', { id })}>Item</a>
+        </li>`;
+
+      render(nav(1), wrapper);
+      await tick(100);
+      await routerGo(router, 'item', { id: 2 });
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'other item').toBe(false);
+
+      render(nav(2), wrapper);
+      await tick(100);
+      expect(li.classList.contains('active'), 'now targets this item').toBe(
+        true,
+      );
+
+      await routerGo(router, 'item', { id: 1 });
+      await tick(100);
+      expect(li.classList.contains('active'), 'old target retired').toBe(false);
+    });
   });
 
   // the sample apps' nav bar: target from a child uiSref, router on a descendant
@@ -456,6 +487,47 @@ describe('uiSrefActive directive', () => {
       await tick(100);
 
       expect(li.classList.contains('active'), 'active on the child').toBe(true);
+    });
+  });
+
+  // the sample apps' nav bar renders before its lazy modules load, so each
+  // uiSref resolved its target to a `.**` placeholder that lazyLoad replaces
+  describe('targeting a future state', () => {
+    it('should go active once the lazy-loaded state is entered', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        {
+          name: 'contacts.**',
+          url: '/contacts',
+          lazyLoad: () =>
+            Promise.resolve({
+              states: [{ name: 'contacts', url: '/contacts' }],
+            }),
+        },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('contacts')}>Contacts</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'home');
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'inactive at home').toBe(false);
+
+      await routerGo(router, 'contacts');
+      await tick(100);
+
+      expect(router.globals.current.name, 'lazy load landed').toBe('contacts');
+      expect(li.classList.contains('active'), 'active after lazy load').toBe(
+        true,
+      );
     });
   });
 
