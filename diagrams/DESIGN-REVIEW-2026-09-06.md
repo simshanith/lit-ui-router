@@ -575,3 +575,58 @@ whether pan wants the fit's bounds as a hard clamp or a sprung edge (a sprung
 edge is the snow-globe-consistent answer). Reduced motion needs no new work: `reduce.matches`
 already cuts straight to rest and should keep doing so, since momentum is
 motion.
+
+### T56 — the atlas as the dogfooding surface (P2, new)
+
+The atlas has two jobs, and the second outranks the drawing register: the sheets
+are a VISUAL THEME, and the plates are web apps that should show the best of the
+web and dogfood this repo's own inventions (user, 2026-09-10). Recorded so the
+showcase job has a backlog instead of a slogan.
+
+**Already exercised, and better than the dependency list suggests.** `uiSref`
+×22, `uiSrefActive` ×10, nested `ui-view` ×7, `resolve:` ×5, typed `params:`, a
+`Transition` hook — and three location plugins chosen at runtime in
+`router.ts`: `navigationLocationPlugin` where the Navigation API exists,
+`pushStateLocationPlugin` otherwise, `hashLocationPlugin` under the artifact
+host. That third case is real dogfooding: the artifact's constraints forced a
+third location strategy and the plugin architecture absorbed it, with a consumer
+finding written down in the source.
+
+**SSR — the atlas got there first, because it had to.** It prerenders 29 pages
+and runs SSR probes in its own build, which is the first place in this repo the
+server story has been exercised at all; no example or sample app has tried it
+(user, 2026-09-10: "i hadn't really tried that yet with an example or sample app
+yet ... the gap is starting to bridge"). Two things follow:
+
+- The prerender lane uses `@lit-labs/ssr` directly; `ui-router-server` is not a
+  dependency. The server adapter's own subject matter is being prerendered
+  without it. Decide whether that is the gap to close or a deliberate split.
+- The build's third probe reports `the client ShellView (rail + nested ui-view):
+  THREW TypeError: document.createDocumentFragment is not a function`. That is a
+  FINDING, not noise — treat it as the atlas reporting on the server story, and
+  give it a home (an issue, or a line on the plate that draws the pipeline).
+
+**The Effect companion, not mobx.** An earlier draft of this note proposed
+`lit-ui-router-mobx` for the sheet 7 city. The better fit is the `-effect`
+variant underway (user, 2026-09-10). Mobx would only model observable state; the
+city's hard parts are lifecycle and cancellation, which is Effect's actual
+argument:
+
+| the city already does | the Effect concept |
+|---|---|
+| three.js imported only when the plate scrolls in; renders on demand | scoped acquire / release |
+| route exit while a large module is still loading | interruption, not a cleanup flag |
+| TEST LIGHT as a second material lane over the same geometry | a switchable effect over a shared scope |
+| hover raycast → reading panel | a stream, panel as its latest value |
+
+It also lands on a known trap from the Effect work: interrupt on a superseding
+`onStart`, not `onCreate`. A routed 3D scene is exactly where that bites.
+
+**Version floor.** `diagrams/app` pins `lit-ui-router: ^1.11.2`, so the atlas
+does not yet run the ui-view config identity gate (#755) that shipped in 1.12.0
+— the fix for routed elements rebuilding on every update. The atlas is the app
+that would show it off, since the city and register plates are expensive to
+rebuild. Small bump, worth doing before any of the above.
+
+**Later.** When `srefHref` (#689) lands, the atlas's 22 `uiSref` call sites are
+its natural first consumer.
