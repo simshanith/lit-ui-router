@@ -39,8 +39,18 @@ The suite list is derived from this package's `test:e2e:*` scripts by
 to forget an entry there and drop a suite from the PR gate.
 
 `turbo run test:e2e:hash` still works directly when a server is already up on
-the dev-server port; the umbrella is what gets you one. The site it serves
-builds on its own with `mise run build_www`, which `test_e2e` depends on.
+the dev-server port; the umbrella is what gets you one. To bring one up by
+hand:
+
+```bash
+mise run serve_www   # builds the site first, then serves it
+mise run build_www   # just the build
+```
+
+`serve_www` is also what the umbrella hands to `start-server-and-test`, so the
+build edge lives on the server rather than on the suites. Without mise,
+`pnpm --filter @www/lit-ui-router.dev run wrangler:dev` serves an
+already-built site.
 
 The server is deliberately outside the turbo graph. turbo has no lifecycle for
 one — a `with:` sidecar is started but never reaped — so `start-server-and-test`

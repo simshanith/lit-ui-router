@@ -40,7 +40,4 @@ const test = [
 ].join(' ');
 
 // both apps are mounted whichever suites run
-serveAndTest('pnpm --filter sample-app-lit-e2e run docs:start-server', test, [
-  'app/',
-  'app-mobx/',
-]);
+serveAndTest('mise run serve_www', test, ['app/', 'app-mobx/']);

@@ -210,6 +210,17 @@ dir = "{{config_root}}"
 description = "Build the @www sites"
 run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
 
+[tasks.serve_www]
+# depends carries the real edge: this serves the build output, so building is a
+# precondition of serving rather than of whatever runs against it.
+#
+# WWW_DEV_PORT is read by wrangler-dev.ts and inherited, not set here — see the
+# [env] note on why it has no default in this file.
+depends = ["build_www"]
+dir = "{{config_root}}"
+description = "Serve the @www site with wrangler"
+run = "pnpm --filter @www/lit-ui-router.dev run wrangler:dev"
+
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
@@ -247,8 +258,9 @@ run = [
 # for a server). run-e2e.ts derives the suite set and takes suite names; see
 # apps/sample-app-lit-e2e/README.md.
 #
-# build_www first, because the suites' dependsOn cannot start the server they
-# need — and in full whatever the selection, since they share the one site.
+# build_www here too, though serve_www declares the same edge: reaching it only
+# from there would put a cold build inside start-server-and-test's wait-on
+# budget. Pre-built, serve_www's own depends is a cache hit.
 #
 # --summarize here and in build_www: the reporter picks up every summary
 # written since `mark_session`, so these join the ci run rather than displace it.

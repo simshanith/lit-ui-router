@@ -41,9 +41,18 @@ mise run ci_main
 # Run unit tests only
 pnpm --filter lit-ui-router test
 
-# Run E2E tests (starts the dev server, then the five suites through turbo)
+# Run E2E tests (builds the site, serves it, then the suites through turbo)
 mise run test_e2e
+
+# Or hold a server open and drive individual suites against it
+mise run serve_www
+turbo run test:e2e:hash
 ```
+
+The E2E run shells back into mise for its dev server (`serve_www`), so mise
+has to be on `PATH` for the run itself, not just to launch it. See
+[the suite README](../apps/sample-app-lit-e2e/README.md) for suite selection
+and the mise-free way to serve an already-built site.
 
 `mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
 
