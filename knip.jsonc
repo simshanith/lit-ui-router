@@ -25,6 +25,9 @@
     "apps/sample-app-lit-e2e": {
       // reached from root mise tasks and `cypress --config-file`
       "entry": ["scripts/*.ts", "cypress*.config.ts", "src/**/*.cy.{ts,js}"],
+      // exec'd by path out of node_modules/.bin, not imported: serve-and-test.ts
+      // hands the process over with execve, which takes a path, not a name
+      "ignoreDependencies": ["start-server-and-test"],
     },
     "packages/lit-ui-router": {
       "ignoreDependencies": [
