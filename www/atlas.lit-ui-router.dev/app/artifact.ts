@@ -7,14 +7,14 @@
  *  1. The host wraps the file in its OWN doctype/html/head/body, so the file
  *     must carry none of those tags — just `<title>`, `<style>`, markup and
  *     `<script>`. Only the first 8KB is scanned for the title, so it goes first.
- *  2. Nothing may be fetched at runtime — not even same-origin. The manifest
- *     and every generated fragment are baked in as one JSON island that
- *     src/manifest.ts reads instead of fetching, and public/sheets/atlas.css
- *     (which the site links) is inlined as a <style>.
+ *  2. Nothing may be fetched at runtime — not even same-origin. The manifest,
+ *     every generated fragment and every card picture are baked in as one JSON
+ *     island that src/manifest.ts reads instead of fetching, and
+ *     public/sheets/atlas.css (which the site links) is inlined as a <style>.
  *
  * Everything here is a rewrite of the emitted file; the site build never runs it.
  */
-import { readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
+import { existsSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import type { Manifest } from './src/manifest.ts';
@@ -40,6 +40,18 @@ const missing = readdirSync(SHEETS)
 if (missing.length > 0)
   throw new Error(`artifact: sheets not in the manifest: ${missing.join(', ')}`);
 
+// THE CARD PICTURES (T16). On the site each card lazy-loads one WebP; here
+// there is no origin to load it from, so every path a card can ask for is
+// baked as a data: url and `thumbSrc()` resolves against this map instead.
+const thumbs: Record<string, string> = {};
+for (const row of [...manifest.sheets, ...manifest.appendix]) {
+  for (const path of [row.thumb.light, row.thumb.dark]) {
+    const file = join(PUBLIC, path);
+    if (!existsSync(file)) throw new Error(`artifact: no card picture at public/${path}`);
+    thumbs[path] = `data:image/webp;base64,${readFileSync(file).toString('base64')}`;
+  }
+}
+
 const atlasCss = readFileSync(join(SHEETS, 'atlas.css'), 'utf8');
 
 let html = readFileSync(OUT, 'utf8');
@@ -58,7 +70,7 @@ html = `${titleMatch[0]}\n<style>\n${atlasCss}\n</style>\n${html.replace(titleMa
 
 // 3 — the island. Every `<` is escaped as \u003c: valid JSON, and the only way
 // a fragment's own </script> cannot close this one.
-const island = JSON.stringify({ manifest, fragments }).replaceAll('<', '\\u003c');
+const island = JSON.stringify({ manifest, fragments, thumbs }).replaceAll('<', '\\u003c');
 const ROOT = '<div id="root"></div>';
 if (!html.includes(ROOT)) throw new Error('artifact: no empty <div id="root">');
 html = html.replace(
@@ -73,5 +85,6 @@ writeFileSync(OUT, html);
 const bytes = statSync(OUT).size;
 console.log(
   `artifact: ${OUT} · ${bytes.toLocaleString('en-US')} bytes · ` +
-    `${String(Object.keys(fragments).length)} fragments inlined`,
+    `${String(Object.keys(fragments).length)} fragments + ` +
+    `${String(Object.keys(thumbs).length)} card pictures inlined`,
 );

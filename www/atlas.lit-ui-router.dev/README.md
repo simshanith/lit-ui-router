@@ -53,6 +53,24 @@ cd www/atlas.lit-ui-router.dev && mise exec -- node generator/stage-site.mjs   #
 mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch worktree-altitude-atlas --commit-dirty=true
 ```
 
+**The card pictures.** Every card on the cover carries a 259 x 150 crop of its own
+plate — `app/public/thumbs/<id>.webp` and `<id>-dark.webp`, one per theme, tracked
+generated files like the fragments beside them. `generator/thumbs.mjs` draws them by
+photographing the flat set above in headless Chromium (playwright, reached through
+`tools/embed-heights`; the lanes' cytoscape is served from `app/node_modules`, so the
+step needs no network), and `build.mjs` REFUSES to emit a manifest whose card has no
+picture. A new plate therefore takes one extra pass:
+
+```
+node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the flat set, then stops on the missing picture
+node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev  # photographs it
+node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
+```
+
+The window is the plate at the card's own width, sliced to the card's ratio; where the
+default slice lands on a schedule rather than a drawing, the plate gets a row in
+`thumbs.mjs`'s one `TUNING` table (`target`, `focus`) and nothing else changes.
+
 Live at https://atlas.lit-ui-router.dev/ — the app owns the root (`/`, `/sheet/7/`, `/city/`,
 `/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
 sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and

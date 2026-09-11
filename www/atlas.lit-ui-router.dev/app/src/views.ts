@@ -20,6 +20,7 @@ import type {
   Manifest,
   SheetLabels,
   SheetRow,
+  Thumb,
 } from './manifest.ts';
 import {
   ARTICLE,
@@ -37,6 +38,7 @@ import {
   labelledRows,
   matchesFilter,
   readFilter,
+  thumbSrc,
 } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { initCity } from './generated/city-init.js';
@@ -543,6 +545,35 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
 };
 
 /**
+ * THE CARD'S PICTURE (T16) — a 259 x 150 crop of the plate, drawn at build time
+ * by generator/thumbs.mjs. One WebP per theme, and only the one the theme asks
+ * for is ever fetched: `display: none` suppresses a lazy image's request, so
+ * the pair costs a single file. Decorative — the card's title says what it is.
+ */
+const cardPic = (thumb: Thumb): TemplateResult => html`
+  <div class="card-pic">
+    <img
+      class="l"
+      src="${thumbSrc(thumb.light)}"
+      alt=""
+      width="518"
+      height="300"
+      loading="lazy"
+      decoding="async"
+    />
+    <img
+      class="d"
+      src="${thumbSrc(thumb.dark)}"
+      alt=""
+      width="518"
+      height="300"
+      loading="lazy"
+      decoding="async"
+    />
+  </div>
+`;
+
+/**
  * A cover card. The card is a CONTAINER, not a link: the title carries the one
  * primary `uiSref` and stretches over the whole card through a `::after`
  * (the Inclusive Components card pattern), so the key block's own filter links
@@ -551,6 +582,7 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
  */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <article class="card">
+    ${cardPic(sheet.thumb)}
     <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
     <h3>
       <a
@@ -572,8 +604,11 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
   </article>
 `;
 
-const cityCard = (extra: ExtraRow): TemplateResult => html`
+// The city has no raster: `cover.hero` is already a build-time SVG in the
+// manifest, and drawing it again costs the cover nothing but DOM.
+const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
   <article class="card">
+    <div class="card-pic card-pic-svg">${unsafeHTML(hero)}</div>
     <span class="n">${extra.shno} · REV ${extra.rev}</span>
     <h3>
       <a class="card-go" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}"
@@ -657,7 +692,10 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
           ${repeat(
             shownAscent,
             (entry) => entry.row.id,
-            (entry) => (entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row)),
+            (entry) =>
+              entry.kind === 'sheet'
+                ? sheetCard(entry.row)
+                : cityCard(entry.row, manifest.cover.hero),
           )}
         </div>`
       : html`<p class="kempty">NO PLATE IN THE ASCENT CARRIES THAT KEY SET.</p>`}

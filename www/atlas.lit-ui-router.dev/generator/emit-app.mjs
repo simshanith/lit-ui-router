@@ -12,13 +12,16 @@
 //   app/public/sheets/city.html   the gallery-only 3D plate, same treatment
 //   app/public/sheets/atlas.css   the shared sheet chrome, lifted from chrome.mjs
 //   app/public/manifest.json      one row per sheet + the `extras` rows + the cover
+// Read, not written: app/public/thumbs/<id>.webp — generator/thumbs.mjs draws
+// those, and a card with no picture stops the build here.
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
+import { THUMB_DIR, thumbPaths } from './thumb-spec.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
 // absolute so a prerendered page links correctly before any JS runs.
 import { BASE } from '../app/src/routes.ts';
@@ -247,6 +250,27 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
   mkdirSync(sheetsDir, { recursive: true });
   writeFileSync(join(sheetsDir, 'atlas.css'), `${CSS}\n`);
 
+  // EVERY CARD CARRIES A PICTURE. The pictures are drawn by generator/thumbs.mjs
+  // against the flat set this same build just wrote, so a NEW plate needs one
+  // extra pass: build, thumbs, build. Nothing here draws them — this only
+  // refuses to emit a manifest that would leave a card blank.
+  const thumbsDir = join(publicDir, THUMB_DIR);
+  const thumbFor = (id) => {
+    const paths = thumbPaths(id);
+    for (const file of [paths.light, paths.dark]) {
+      if (existsSync(join(publicDir, file))) continue;
+      throw new Error(
+        `${id}: no card picture at app/public/${file} — run ` +
+          `\`node www/atlas.lit-ui-router.dev/generator/thumbs.mjs <outdir>\`, then build.mjs again`,
+      );
+    }
+    return paths;
+  };
+  if (!existsSync(thumbsDir))
+    throw new Error(
+      `no card pictures at ${thumbsDir} — run \`node generator/thumbs.mjs <outdir>\` once, then build.mjs again`,
+    );
+
   const rowFor = ([sheet, render]) => {
     const id = String(sheet.num).toLowerCase();
     const source = render ? render() : sheetSection(sheet);
@@ -272,6 +296,8 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
       interactive: Boolean(render),
       needsCytoscape,
       plates: platesOf(MODULE[String(sheet.num)]),
+      // the card's picture of the plate, one file per theme
+      thumb: thumbFor(id),
       refs,
     };
   };

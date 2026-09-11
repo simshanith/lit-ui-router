@@ -776,6 +776,10 @@
       "plates": [
         "census-files.json"
       ],
+      "thumb": {
+        "light": "thumbs/1.webp",
+        "dark": "thumbs/1-dark.webp"
+      },
       "refs": []
     },
     {
@@ -800,6 +804,10 @@
       "plates": [
         "census-loop.json"
       ],
+      "thumb": {
+        "light": "thumbs/1i.webp",
+        "dark": "thumbs/1i-dark.webp"
+      },
       "refs": [
         "1"
       ]
@@ -826,6 +834,10 @@
       "plates": [
         "census-bricks.json"
       ],
+      "thumb": {
+        "light": "thumbs/2.webp",
+        "dark": "thumbs/2-dark.webp"
+      },
       "refs": [
         "4"
       ]
@@ -852,6 +864,10 @@
       "plates": [
         "census-bricks.json"
       ],
+      "thumb": {
+        "light": "thumbs/2a.webp",
+        "dark": "thumbs/2a-dark.webp"
+      },
       "refs": [
         "2",
         "4"
@@ -880,6 +896,10 @@
         "census-bricks.json",
         "census-couplings.json"
       ],
+      "thumb": {
+        "light": "thumbs/2b.webp",
+        "dark": "thumbs/2b-dark.webp"
+      },
       "refs": [
         "2",
         "2A"
@@ -911,6 +931,10 @@
         "census-plate.json",
         "census-yard.json"
       ],
+      "thumb": {
+        "light": "thumbs/3.webp",
+        "dark": "thumbs/3-dark.webp"
+      },
       "refs": [
         "3A",
         "4"
@@ -939,6 +963,10 @@
         "census-handoff.json",
         "census-plate.json"
       ],
+      "thumb": {
+        "light": "thumbs/3a.webp",
+        "dark": "thumbs/3a-dark.webp"
+      },
       "refs": [
         "12"
       ]
@@ -967,6 +995,10 @@
         "census-mass3b.json",
         "census-plate.json"
       ],
+      "thumb": {
+        "light": "thumbs/3b.webp",
+        "dark": "thumbs/3b-dark.webp"
+      },
       "refs": [
         "3",
         "12"
@@ -996,6 +1028,10 @@
         "census-couplings.json",
         "census-npm.json"
       ],
+      "thumb": {
+        "light": "thumbs/4.webp",
+        "dark": "thumbs/4-dark.webp"
+      },
       "refs": []
     },
     {
@@ -1018,6 +1054,10 @@
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],
+      "thumb": {
+        "light": "thumbs/5.webp",
+        "dark": "thumbs/5-dark.webp"
+      },
       "refs": [
         "1",
         "2"
@@ -1043,6 +1083,10 @@
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],
+      "thumb": {
+        "light": "thumbs/6.webp",
+        "dark": "thumbs/6-dark.webp"
+      },
       "refs": [
         "1"
       ]
@@ -1070,6 +1114,10 @@
       "plates": [
         "census-city.json"
       ],
+      "thumb": {
+        "light": "thumbs/7.webp",
+        "dark": "thumbs/7-dark.webp"
+      },
       "refs": [
         "3"
       ]
@@ -1097,6 +1145,10 @@
         "census-city.json",
         "census-shadow.json"
       ],
+      "thumb": {
+        "light": "thumbs/7a.webp",
+        "dark": "thumbs/7a-dark.webp"
+      },
       "refs": [
         "7"
       ]
@@ -1127,6 +1179,10 @@
         "census-shadow.json",
         "census-steam.json"
       ],
+      "thumb": {
+        "light": "thumbs/7b.webp",
+        "dark": "thumbs/7b-dark.webp"
+      },
       "refs": [
         "7",
         "13"
@@ -1155,6 +1211,10 @@
       "plates": [
         "census-nm.json"
       ],
+      "thumb": {
+        "light": "thumbs/8.webp",
+        "dark": "thumbs/8-dark.webp"
+      },
       "refs": [
         "7",
         "9"
@@ -1183,6 +1243,10 @@
       "plates": [
         "census-shipped.json"
       ],
+      "thumb": {
+        "light": "thumbs/9.webp",
+        "dark": "thumbs/9-dark.webp"
+      },
       "refs": [
         "7",
         "8",
@@ -1214,6 +1278,10 @@
         "census-doors.json",
         "census-shipped.json"
       ],
+      "thumb": {
+        "light": "thumbs/10.webp",
+        "dark": "thumbs/10-dark.webp"
+      },
       "refs": [
         "9",
         "11"
@@ -1242,6 +1310,10 @@
         "census-bundle.json",
         "census-doors.json"
       ],
+      "thumb": {
+        "light": "thumbs/11.webp",
+        "dark": "thumbs/11-dark.webp"
+      },
       "refs": [
         "2",
         "10"
@@ -1269,6 +1341,10 @@
       "plates": [
         "census-plate.json"
       ],
+      "thumb": {
+        "light": "thumbs/12.webp",
+        "dark": "thumbs/12-dark.webp"
+      },
       "refs": [
         "3"
       ]
@@ -1295,6 +1371,10 @@
       "plates": [
         "census-plate.json"
       ],
+      "thumb": {
+        "light": "thumbs/12i.webp",
+        "dark": "thumbs/12i-dark.webp"
+      },
       "refs": [
         "12"
       ]
@@ -1322,6 +1402,10 @@
         "census-city.json",
         "census-weather.json"
       ],
+      "thumb": {
+        "light": "thumbs/13.webp",
+        "dark": "thumbs/13-dark.webp"
+      },
       "refs": [
         "7",
         "7B",
@@ -1348,6 +1432,10 @@
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],
+      "thumb": {
+        "light": "thumbs/14.webp",
+        "dark": "thumbs/14-dark.webp"
+      },
       "refs": [
         "3",
         "5",
@@ -1375,6 +1463,10 @@
       "interactive": true,
       "needsCytoscape": true,
       "plates": [],
+      "thumb": {
+        "light": "thumbs/14i.webp",
+        "dark": "thumbs/14i-dark.webp"
+      },
       "refs": [
         "14"
       ]
@@ -1401,6 +1493,10 @@
       "interactive": false,
       "needsCytoscape": false,
       "plates": [],
+      "thumb": {
+        "light": "thumbs/a1.webp",
+        "dark": "thumbs/a1-dark.webp"
+      },
       "refs": [
         "7",
         "7B",

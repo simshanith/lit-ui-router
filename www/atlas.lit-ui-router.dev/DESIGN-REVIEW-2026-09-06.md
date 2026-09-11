@@ -59,7 +59,7 @@ Settled rules:
 
 - The cover is a **title sheet**: Eaglefeather display title, motto on `.sheet-sub`, and the stamp (CLIENT · PLATES COUNTED) on its own `display: block` `.cover-sub .stamp` line in `--ink-faint`. The survey's language table and the thesis paragraphs live in About, which is the colophon.
 - **Stat bar: `repeat(6, 1fr)` with a 1-px gap on an ink ground.** Three columns still left a cell half-empty at five items; six one-fraction cells do not. The three one-line facts (REPOSITORY · INSTRUMENTS · LATEST SHIPPED) take the top row at a third each, the two roster paragraphs (PUBLISHABLE PACKAGES · SHEETS) a half each below; `statBar` is ordered to match.
-- **Cards** are `minmax(250px, 1fr)`, caption clamped to 3 lines, the verdict dropped (it lives on the sheet). Still no picture of the plate — T16.
+- **Cards** are `minmax(250px, 1fr)`, caption clamped to 3 lines, the verdict dropped (it lives on the sheet). **Each one now leads with a picture of its own plate** (T16): a 259 × 150 crop, drawn at build time by `generator/thumbs.mjs` and tracked under `app/public/thumbs/` — one WebP per theme, and only the theme's own file is ever fetched. The city card draws `cover.hero`, the SVG the cover already carries.
 - **Payload rule: no three.js on `/`.** The cover's city is a build-time still (`cityHero()`); the scene loads only when its plate scrolls in on `/city`.
 - **Nav is a bar, not a floating corner.** The crumb is a sticky 34-px strip spanning the content column: nav left, DOCS / GITHUB / FLAT SET / theme right. The themer is text buttons with an underline for the pressed state, not filled accent blocks.
 - **Rail** at 240: the kicker is a link to lit-ui-router.dev, then the name, `INDEX · ABOUT` as one 10-px DIN line, then the sheets in Exhibition 700 / 12 px / `--ink` with the article stripped. The city is filed under 7B as `7·3D` — it is sheet 7's third plate.
@@ -88,7 +88,7 @@ Breakpoints: **901–1180** gives a 56-px clipped rail with 240 px of inner widt
 
 Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S < 1 h, M half a day, L a day or more.
 
-**Closed:** T1–T15, T17–T21, T23–T36, T38–T41, T47–T54.
+**Closed:** T1–T21, T23–T36, T38–T41, T47–T54.
 
 **Moot:** T22 (`.revs` retired with the copy re-draft; history is `HISTORY.md` → `/log`), T42 (trigger removed by T1), T43 T44 T45 (kit faces reserved by design; the cover's article is HWT + `sup.art`).
 
@@ -96,7 +96,6 @@ Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S <
 
 | id | sev | issue | effort |
 |---|---|---|---|
-| T16 | P3 | cards carry no picture of the plate — emit a 259 × 150 SVG crop or PNG per sheet at build | L |
 | T37 | P2 | `.gal-body p` measure is fixed at 72ch but still flush-left, with no col 9–12 insets; subsumed by T46 | S |
 | T46 | P3 | 12-column model with feature insets — figures/tables floated into cols 9–12 beside the citing paragraph | L |
 | T55 | P3 | the city orbits on one axis; no elevation, no pan, no momentum — the snow-globe camera | L |
@@ -384,8 +383,9 @@ of the morning's ranking (T56 floor, T53, T54) landed the same day and are struc
 | rank | row | what | effort | why here |
 |---|---|---|---|---|
 | 1 | T55 + T56 · Effect | snow-globe camera as Effect code; twin touch areas | L | the user's stated goal — the Effect learning lane and the companion API's first draft. Design converged; the two open calls are made (flings may cross detents, pan edge is sprung) |
-| 2 | T16 | a picture of the plate on every card | L | cover scannability; no dependency, no urgency — and the cards now carry a key line, so the picture is the last thing they lack |
-| 3 | T46 / T37 | 12-column model with feature insets | L | P3; T52 took the pressure off the prose column |
+| 2 | T46 / T37 | 12-column model with feature insets | L | P3; T52 took the pressure off the prose column |
 | — | T56 · later | `srefHref` consumer; hydration over #803 | — | blocked on #689 and a release |
 
 - **2026-09-11, evening — the move.** The atlas now lives at `www/atlas.lit-ui-router.dev/`, promoted out of `diagrams/` as an example that became a site (user's framing). Two rows join the ranking ahead of T16, because the Effect work should land in the atlas's final home rather than be uprooted after: **the merge** — one squash PR of this branch to main, user-reviewed — and **the Worker** — its own PR on main: a small Worker (trailing-slash tolerance on `/sheet/*`, the 404 shell at 404 status), a wrangler config, a site parameter on the shared build and deploy scripts plus one `npm ci` step for the app, a second Workers Builds project (account change, user's), the kit and GA ids as dashboard variables. Branch previews then replace the artifact as the review surface and the artifact lane retires. The deploy stays direct-upload Pages until then.
+
+- **2026-09-11, night — T16, the pictures.** Every card on the cover leads with a 259 × 150 picture of its own plate, so the index reads as a drawing index rather than a wall of type. The mechanism is a RASTER step, `generator/thumbs.mjs`, and the choice was made on bytes: the set's first plates are 1,085,034 bytes of SVG (373,671 gzipped, 402,614 of it appendix A1's data-URI reference strip), against a cover that ships a 104 KB manifest — inlining them would have multiplied the cover's payload for a picture nobody has scrolled to yet. Instead the step photographs the flat set in headless Chromium (playwright, reached through `tools/embed-heights`; the lanes' cytoscape is served out of `app/node_modules`, so it needs no network), re-lays each plate at the card's own width, slices it to the card's ratio and writes `app/public/thumbs/<id>.webp` at 2× — 48 files, 709,666 bytes, tracked exactly as the fragments beside them are. `emit-app.mjs` refuses to write a manifest whose card has no picture, which costs a new plate one extra pass (build, thumbs, build) and is documented in the generated `README.md`. **Two themes, one fetch:** the plates letter in `currentColor` and the theme tokens, so a light crop on a cyanotype card is a lit rectangle; every plate is therefore shot twice and the card carries both `<img>`s, with the three-state rule from `chrome.mjs` showing one. A `display: none` lazy image is never requested — measured, not assumed — so the pair costs a single file, and this is why it is two images rather than a `<picture>`, whose `media` query cannot see a pinned `data-theme`. **Caveats.** The render is offline and the Adobe kit is domain-allow-listed, so the labels fall to the Google stand-in's own fallback; at a sixth of plate scale the lettering is texture and not type, and the decision was to keep the step offline rather than buy a difference nobody can read. The artifact pays the full price — `artifact.ts` bakes all 48 as data URIs and the single file goes 3,307,402 → 4,259,631 bytes (392 KB gzipped) — which the Workers move will retire along with the artifact lane. The window is centred by default, `xMidYMid slice` by layout; where that lands on a schedule rather than a drawing the plate takes a row in `thumbs.mjs`'s one `TUNING` table (`target`, `focus`), and thirteen plates already have one. Weak by default and worth a pass: 2B, 5, 6, 12i and 14i, whose lanes and charts are mostly ground at this size.

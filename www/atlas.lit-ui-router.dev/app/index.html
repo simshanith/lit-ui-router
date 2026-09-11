@@ -674,6 +674,59 @@
         border-color: var(--accent);
         background: var(--paper-2);
       }
+      /* THE CARD'S PICTURE (T16) — a 259 x 150 crop of the plate, drawn at
+         build time by generator/thumbs.mjs. Thin rule, ink ground, square
+         corners, no shadow: an index card carries a plate, not a photograph. */
+      .card-pic {
+        display: block;
+        position: relative;
+        overflow: hidden;
+        aspect-ratio: 259 / 150;
+        width: 100%;
+        margin: 0 0 10px;
+        border: 1px solid var(--line);
+        background: var(--paper-2);
+      }
+      .card-pic img {
+        display: block;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      /* The theme picks ONE of the pair, in the three states atlas.css declares.
+         A `display: none` lazy image is never requested, so the card fetches
+         exactly one file — which is why this is two <img> and not a <picture>
+         (a source's media query cannot see the pinned data-theme). */
+      .card-pic .d {
+        display: none;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root:not([data-theme='light']) .card-pic .l {
+          display: none;
+        }
+        :root:not([data-theme='light']) .card-pic .d {
+          display: block;
+        }
+      }
+      :root[data-theme='dark'] .card-pic .l {
+        display: none;
+      }
+      :root[data-theme='dark'] .card-pic .d {
+        display: block;
+      }
+      /* The city's picture is the cover's own hero SVG, sliced to the same box
+         rather than letterboxed into it — `xMidYMid slice` by layout. */
+      .card-pic-svg {
+        display: grid;
+        place-items: center;
+      }
+      .card-pic-svg svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        min-width: 0;
+        max-width: none;
+      }
       .card .n {
         font-family: var(--data);
         font-size: 10px;

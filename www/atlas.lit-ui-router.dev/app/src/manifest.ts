@@ -20,6 +20,12 @@ export type LabelKey = (typeof LABEL_KEYS)[number];
 /** The one subject `basis` says anything about. */
 export const BASIS_SUBJECT = 'city';
 
+/** The card's picture of the plate — one 259 x 150 WebP per theme. */
+export interface Thumb {
+  light: string;
+  dark: string;
+}
+
 export interface SheetRow {
   id: string;
   num: string;
@@ -41,6 +47,8 @@ export interface SheetRow {
   interactive: boolean;
   needsCytoscape: boolean;
   plates: string[];
+  /** Paths under the app's base, written by generator/thumbs.mjs. */
+  thumb: Thumb;
   refs: string[];
 }
 
@@ -127,13 +135,17 @@ export interface Manifest {
 interface Island {
   manifest: Manifest;
   fragments: Record<string, string>;
+  /** `<id>` and `<id>-dark` to a data: url — the artifact may not fetch a file. */
+  thumbs: Record<string, string>;
 }
 
 let island: Island | null | undefined;
 
 function readIsland(): Island | null {
   if (island !== undefined) return island;
-  const node = typeof document === 'undefined' ? null : document.getElementById('atlas-data');
+  // Optional chaining throughout: prerender.ts runs this under @lit-labs/ssr's
+  // dom shim, where `document` exists but carries no query methods.
+  const node = typeof document === 'undefined' ? null : document.getElementById?.('atlas-data');
   island = node?.textContent ? (JSON.parse(node.textContent) as Island) : null;
   return island;
 }
@@ -149,6 +161,16 @@ export function loadManifest(): Promise<Manifest> {
     return res.json() as Promise<Manifest>;
   });
   return pending;
+}
+
+/**
+ * A card picture's src. On the site it is a file under the base and the card
+ * lazy-loads it; in the artifact the same path resolves to a baked data: url,
+ * because a published Artifact may not fetch anything.
+ */
+export function thumbSrc(path: string): string {
+  const baked = readIsland()?.thumbs?.[path];
+  return baked ?? `${BASE}${path}`;
 }
 
 /** The one extra, by id — `undefined` if an older manifest predates it. */
