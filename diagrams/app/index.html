@@ -233,6 +233,57 @@
           background: var(--paper-2);
         }
       }
+      /* THE NUMBERS-ONLY BAND. Between the ≤900 disclosure and the width that
+         affords a 240px rail, the rail is clipped to its sheet numbers and the
+         sheet takes the freed column. The list keeps its full 240 layout inside
+         the clip, so every title stays in the accessibility tree; hover or a
+         keyboard focus opens the rail OVER the sheet, never reflowing it. */
+      @media (min-width: 901px) and (max-width: 1180px) {
+        .app {
+          grid-template-columns: 56px minmax(0, 1fr);
+        }
+        .rail {
+          width: 56px;
+          overflow-x: clip;
+          z-index: 8;
+        }
+        .rail-head,
+        .rail-body {
+          width: 240px;
+        }
+        /* clipped, not removed: the lettering fades, the links stay focusable */
+        .rail-head,
+        .rail-top,
+        .rail-sec,
+        .rail-links .t {
+          opacity: 0;
+        }
+        .rail:hover,
+        .rail:focus-within {
+          width: 240px;
+        }
+        .rail:hover .rail-head,
+        .rail:hover .rail-top,
+        .rail:hover .rail-sec,
+        .rail:hover .rail-links .t,
+        .rail:focus-within .rail-head,
+        .rail:focus-within .rail-top,
+        .rail:focus-within .rail-sec,
+        .rail:focus-within .rail-links .t {
+          opacity: 1;
+        }
+        @media (prefers-reduced-motion: no-preference) {
+          .rail {
+            transition: width 120ms ease;
+          }
+          .rail-head,
+          .rail-top,
+          .rail-sec,
+          .rail-links .t {
+            transition: opacity 120ms ease;
+          }
+        }
+      }
       /* ---- the content column ---- */
       .content {
         min-width: 0;

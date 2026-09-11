@@ -347,3 +347,85 @@ Moot: T22 (`.revs` retired with the copy re-draft; history is `HISTORY.md` → `
 | T40 | P3 | open | per-sheet box recomposition backlog; not re-measured since the T39 probe |
 | T41 | P3 | open | 12 and 14 relettered a step larger — after T40 |
 | T46 | P3 | open | 12-column model with feature insets; subsumes T37 |
+
+---
+
+## 9. Status, 2026-09-10
+
+T7 and T28 close in source this pass. T40 was re-measured for the first time since the T39
+probe; the remainder is far smaller than section 8 assumed, and section 8's T40 line was
+stale in both directions — the named backlog (3A 33, 2A 6, 1 5, 14 3, 4 3, 5 3, 10 2) is
+clean at HEAD, and so are the seven overlaps the T39 lettering step was blamed for on 12,
+10, 3, 3B and 7B.
+
+Closed in source: T7 (`chipBreaks()` in `chrome.mjs`, wired into `page()` and into
+`emit-app.mjs`'s `linkRefs` + cover fields — 377 slash-bearing chips, all three hosts),
+T28 (the 901–1180 band in `diagrams/app/index.html`: 56 px clipped rail, 240 px inner
+width retained so every title keeps its accessible name, `:hover`/`:focus-within` expansion
+painting over the sheet without reflow).
+
+### T40 — the measured remainder
+
+Playwright `getBBox` census over the 21 static plates, 1440×1000. Overlap = a text pair
+sharing more than 3 px on both axes.
+
+| sheet | overlaps | out of viewBox | what it actually is |
+|---|---|---|---|
+| 12 | 37 | 0 | one band, not 37 — 23 CI task names on a 23 px column pitch at y≈279 |
+| 14 | 2 | 1 | one banner — `ONE BASIS — EVERY STATION RE-MATERIALIZE` originates at x = −124 |
+| 5 | 1 | 1 | `WHO OWNS NAVIGATION ↑` outgrew its gutter, crosses `FRAMEWORK` |
+| A1 | 0 | 1 | a single `!` a hair over an edge |
+| the other 17 | 0 | 0 | |
+
+Sheet 12's band is the whole of its count: names up to 17 characters (`test:mobx6-compat`)
+laid horizontally into a 23 px pitch. A punchcard letters its column heads on the slant;
+rotating that band is both the idiomatic fix and the only one that fits. It is also what
+makes T41 possible on 12 — the plate is lettered small *because* the band is cramped, so
+the recomposition and the relettering are one job per sheet.
+
+The four interactive twins (1i, 2B, 12i, 14i) build their SVG at runtime and were not
+measured — the `file://` probe reports no plate for them. Measure those against the served
+app before calling T40 done.
+
+Probe: `collide-flat.mjs` (job tmp), reads the flat set over `file://`, writes per-pair
+detail to `collide-flat.json`.
+
+### T52 — the notes column, next to the sticky rail (P2, new)
+
+Sheet notes beside the sticky right rail want to stop being one narrow measure and become a
+real multi-column block:
+
+- drop the `max-width`; set `column-count: calc(100cqw / 800px)` (or thereabouts) so the
+  count follows the container rather than a breakpoint
+- widen the grid gap
+- paragraph `line-height` to ~1.8, bottom margin to ~2em
+- size up: 15.5 → 18 px, and either letter-space out ~1px or let the size carry it alone
+- `h3` takes `column-span: all`; consider a larger size and more space around it
+
+Cross-check against T37 and T46 before building — all three are the same prose column.
+
+### T53 — buildings 15 and 32 overlap (P2, new)
+
+Buildings 15 (`@tools/build_and_test`, x = 330) and 32 (`@tools/embed-heights`, x = 430)
+overlap on the city sheets. Diagnosed: there is no plot allocator. `sheet7.mjs`'s `PLACED`
+array carries a hand-written x/y per member, but the footprint drawn at that point is
+data-driven — side ∝ √sloc, with a hatched annex ∝ √specSloc set `AG = 10` beyond it, and
+the isometric projection widens each square's silhouette by about √3. Member 15 now
+measures 1128 src sloc against 1163 spec sloc, so its block *and* an annex slightly larger
+than the block have to fit inside the 100 units to its neighbour, and they no longer do.
+Member 32 is small (336 / 33) and did not move; 15 grew into it.
+
+So it is not a sprite bug and nothing is resolving to the same slot — a census refresh
+walked a fixed coordinate into its neighbour. That makes it the same class of problem as
+T40: hand-placed lettering and hand-placed geometry both silently rot as the data behind
+them grows. Two ways out, and the choice is a design call, not a repair:
+
+- give the district a real allocator that packs from the measured silhouettes, so no
+  coordinate is ever hand-held against live data again; or
+- keep the hand placement (it is deliberate — the districts read as a site plan) and add a
+  build-time assertion that fails when two silhouettes intersect, so the drawing cannot
+  ship overlapped and the coordinate gets re-composed by hand when the census moves it.
+
+The second is cheaper and fits the set's existing "one basis, computed, never guessed"
+posture — the atlas already throws on a missing member. Worth pairing with the T40 probe:
+that census measures `<text>` only, which is exactly why this went unseen.

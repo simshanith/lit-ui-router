@@ -15,7 +15,7 @@
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { CSS, DATE, TOTAL, plateRatio, sheetSection } from './chrome.mjs';
+import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
 import { cityHero } from './sheet7.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
@@ -128,7 +128,7 @@ function linkRefs(html, self, byUpper) {
       return `<a class="xref" data-sheet="${hits[0]}" href="${BASE}sheet/${hits[0]}">${match}</a>`;
     });
   });
-  return { html: out.join(''), refs: [...refs].sort(bySheet) };
+  return { html: chipBreaks(out.join('')), refs: [...refs].sort(bySheet) };
 }
 
 // --- the issue log ----------------------------------------------------------
@@ -311,6 +311,11 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
     },
   ];
 
+  // the fragments get their chip breaks inside linkRefs; the cover bypasses it
+  const coverParts = Object.fromEntries(
+    Object.entries(cover).map(([k, v]) => [k, chipBreaks(v)]),
+  );
+
   const issueLog = issueLogOf([
     ...manifest.map((r) => ({ num: r.num, head: `SHEET ${r.num}`, title: r.title })),
     ...appManifest.map((r) => ({ num: r.num, head: `APPENDIX ${r.num}`, title: r.title })),
@@ -333,7 +338,7 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
         // + the key image: sheet 7's city alone, cropped to its extent
         // the hero carries its own viewBox ratio so the cover's contain cap can be
         // spent on max-width, exactly as a plate's is (see .plate in chrome.mjs)
-        cover: { ...cover, hero: heroPlate() },
+        cover: { ...coverParts, hero: heroPlate() },
         // every REV in diagrams/HISTORY.md, dated newest first, undated after
         issueLog,
         sheets: manifest,

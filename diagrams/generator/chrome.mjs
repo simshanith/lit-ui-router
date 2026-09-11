@@ -495,12 +495,19 @@ export const PLATE_END_SCRIPT = `document.addEventListener('scroll', (e) => {
   w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
 }, true);`;
 
+// HTML only — `<wbr>` is not an SVG element, so this runs over rendered pages
+// and fragments, never over a plate's `<text>`. A path-shaped chip breaks after
+// its slash rather than mid-identifier; the chip's own text is untouched.
+export const chipBreaks = (html) =>
+  String(html).replace(/(<code\b[^>]*>)([^<]*)(<\/code>)/g, (m, open, text, close) =>
+    text.includes('/') ? open + text.replace(/\/(?!<wbr>)/g, '/<wbr>') + close : m);
+
 export function page(title, body, { desc = '' } = {}) {
   return `<meta charset="utf-8">
 <title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
-${body}
+${chipBreaks(body)}
 <script>${PLATE_END_SCRIPT}</script>`;
 }
