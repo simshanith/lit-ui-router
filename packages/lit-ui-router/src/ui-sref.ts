@@ -209,6 +209,12 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   unsubscribe: (() => void) | undefined;
 
+  /**
+   * Kept across a disconnect so {@link reconnected} can re-arm.
+   * @internal
+   */
+  private _partElement: UiSrefElement | null = null;
+
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
@@ -343,6 +349,20 @@ export class UiSrefDirective extends AsyncDirective {
     this.href = null;
     this._ownsHref = false;
     this.unsubscribe?.();
+    this.unsubscribe = undefined;
+    // re-arming is what `reconnected` does; without this it would no-op
+    this._firstUpdated = false;
+  }
+
+  /**
+   * Re-arms after a detach/re-attach; `update` only re-arms on a NEW element.
+   * @internal
+   */
+  reconnected(): void {
+    this.element = this._partElement;
+    if (this.element) {
+      this.firstUpdated();
+    }
   }
 
   onClick = (event: MouseEvent): void => {
@@ -393,6 +413,7 @@ export class UiSrefDirective extends AsyncDirective {
     this.options = transitionOptions;
     this.uiSrefOptions = { assignHref };
     const uiSrefElement = part.element as unknown as UiSrefElement;
+    this._partElement = uiSrefElement;
     if (this.element !== uiSrefElement) {
       this.element = uiSrefElement;
       this._firstUpdated = false;
