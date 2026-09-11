@@ -9,6 +9,8 @@ const browserOnlySpecs = [
   'src/specs/ui-sref.spec.ts',
   'src/specs/ui-view-ssr.spec.ts',
 ];
+// Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
+const nodeOnlySpecs = ['src/specs/ssr-emit.spec.ts'];
 
 // Key caches by the API port so the concurrently running `test` and
 // `test:coverage` turbo tasks never share a Vite dep-optimizer dir.
@@ -48,11 +50,25 @@ export default defineConfig({
           environment: 'happy-dom',
           setupFiles: ['./vitest.setup.ts'],
           include: allSpecs,
-          exclude: [...configDefaults.exclude, ...browserOnlySpecs],
+          exclude: [
+            ...configDefaults.exclude,
+            ...browserOnlySpecs,
+            ...nodeOnlySpecs,
+          ],
           // Per-file isolation is required: register*.spec.ts assert about
           // custom-elements registry state (element not yet defined,
           // duplicate-definition guard), which a shared registry breaks.
           isolate: true,
+        },
+      },
+      {
+        cacheDir: `node_modules/.vite-${cacheKey}-node`,
+        test: {
+          name: 'node',
+          globals: true,
+          environment: 'node',
+          setupFiles: ['./vitest.setup.node.ts'],
+          include: nodeOnlySpecs,
         },
       },
       {
