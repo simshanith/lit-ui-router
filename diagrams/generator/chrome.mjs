@@ -253,13 +253,16 @@ figcaption .figno {
   margin-right: 10px;
 }
 
-/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column at 66ch;
-   the key, the title block and the revisions are one 352px inset strip that
-   rides alongside whatever paragraph is on screen. */
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column; the key,
+   the title block and the revisions are one inset strip that rides alongside
+   whatever paragraph is on screen. The strip and its gutter are named because
+   the notes' column count has to subtract them to know its own width. */
 .notes-grid {
+  --inset: 352px;
+  --inset-gap: 24px;
   display: grid;
-  grid-template-columns: minmax(0, 7fr) 352px;
-  gap: 24px;
+  grid-template-columns: minmax(0, 7fr) var(--inset);
+  gap: var(--inset-gap);
   border-top: 1px solid var(--ink);
   padding-top: 16px;
   align-items: start;
@@ -268,6 +271,27 @@ figcaption .figno {
 @media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
 .keyblock { position: sticky; top: var(--sticky-top); }
 @media (max-width: 720px) { .keyblock { position: static; } }
+/* COLUMNS AT THE WIDTH THE PAPER GIVES. The count is an integer read off the
+   paper itself — one column per 28rem of the notes cell, which is the grid
+   less the inset strip and its gutter, both named above so the subtraction
+   cannot drift from the track it is subtracting. The query hangs off
+   .notes-grid because an element's own container-type does not feed its own
+   properties; declared on .notes it would silently resolve against the
+   viewport. Under 1180 the grid re-proportions and the cell is never wide
+   enough to divide, so the count is simply 1 and no second formula is owed.
+   Rounded down, so a column is never narrower than the target. That fixes the
+   divisor tighter than it looks: two columns at 1440 needs it under 469px,
+   three rather than four at 2560 needs it over 514px, and no single number is
+   both — 28rem takes the two-column 1440 and accepts four columns at 2560.
+   Rounding to nearest at 38rem is the other resolution of the same conflict,
+   and the only edit is this line. No measure cap either way: the count is what
+   holds the measure, and a cap would put back the dead paper this removes. */
+.notes-grid { container-type: inline-size; }
+.notes {
+  column-count: round(down, calc((100cqw - var(--inset) - var(--inset-gap)) / 28rem), 1);
+  column-gap: 44px;
+}
+@media (max-width: 1180px) { .notes { column-count: 1; } }
 .notes h3, .keyblock h3 {
   font-family: var(--data);
   font-size: 11px;
@@ -276,13 +300,22 @@ figcaption .figno {
   color: var(--ink-soft);
   margin-bottom: 8px;
 }
+/* the head rules the whole block, so it spans it — and is lettered to match */
+.notes h3 {
+  column-span: all;
+  font-size: 12.5px;
+  margin-bottom: 18px;
+}
 .notes p {
   font-family: var(--prose);
-  font-size: 15.5px;
-  max-width: 66ch;
-  margin-bottom: 9px;
+  font-size: 18px;
+  line-height: 1.8;
+  margin-bottom: 2em;
 }
 .notes p strong { font-weight: 600; }
+/* a paragraph's opening strong is a run-in head — give it its own line, but
+   only where it opens the paragraph, never a strong caught mid-sentence */
+.notes p > strong:first-child { display: block; }
 /* every inline chip is the code face, not the UA's own monospace default */
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {

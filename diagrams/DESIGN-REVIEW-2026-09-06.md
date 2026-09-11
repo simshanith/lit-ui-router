@@ -390,7 +390,50 @@ app before calling T40 done.
 Probe: `collide-flat.mjs` (job tmp), reads the flat set over `file://`, writes per-pair
 detail to `collide-flat.json`.
 
-### T52 — the notes column, next to the sticky rail (P2, new)
+### T52 — the notes column, next to the sticky rail — LANDED 2026-09-10
+
+Built as asked, with two departures the measurements argued for. The count is
+`round(down, calc((100cqw - 376px) / 28rem), 1)` on `.notes`, with
+`container-type: inline-size` on `.notes-grid` — the query has to hang off an
+ancestor, because an element's own container-type does not feed its own
+properties; declared on `.notes` it resolves against the viewport instead and
+looks plausible while being wrong. Under 1180 the grid re-proportions and the
+count is simply 1. Gap 44px, `h3` at `column-span: all` and lettered up to
+12.5px with 18px beneath it, paragraphs at 18px / 1.8 / 2em, and the `max-width`
+gone so the text fills the paper.
+
+Rounding down fixes the divisor tighter than it looks: two columns at 1440 needs
+it under 469px, three rather than four at 2560 needs it over 514px, and no one
+number is both. 28rem takes the two-column 1440. Round-to-nearest at 38rem is
+the other resolution of the same conflict and the edit is one line.
+
+Letter-spacing was left alone — at 18px on a serif the size carries it, and 1px
+of tracking on running prose reads as a caps treatment.
+
+Measured, sheet 7 at 3008: one 569px column in 2058px of cell, 1491px tall →
+five filled columns, 656px tall. 21 of 23 sheets roughly halve at 2560. The two
+that do not are the standalone interactive pages, whose shell caps the notes
+cell at 878px at every viewport — they take the larger type and get no columns.
+Worth a look: that cap is the only thing keeping 1i, 12i, 14i and 2B off the
+full-width layout the rest of the set uses.
+
+Sticky keyblock verified unaffected by the containment at 1440, 2560 and 3008.
+
+### T54 — the FORM field wants to be a tag index (P2, new)
+
+The FORM value repeats across the set — many sheets are the same kind of drawing
+and say so in prose that has to be read one sheet at a time. Catalogue it: make
+FORM (and the other title-block fields that repeat) structured key/value labels
+in the k8s sense, emitted from one vocabulary rather than typed per sheet, then
+index them and let the routed app's cards filter by tag. The pattern is
+emergent, not designed up front — read what the 23 sheets already say in FORM
+and let the label set fall out of that, rather than inventing a taxonomy and
+fitting sheets to it.
+
+Note the cover INDEX already carries FORM as a column, so the vocabulary has one
+existing home and `build.mjs`'s `verdicts` array is where it is spelled today.
+
+### T52 — original note, as given
 
 Sheet notes beside the sticky right rail want to stop being one narrow measure and become a
 real multi-column block:
