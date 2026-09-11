@@ -49,12 +49,17 @@ mise run build_www   # just the build
 
 That task is also what the umbrella hands to `start-server-and-test`, so the
 build edge lives on the server rather than on the suites. Without mise,
-`pnpm --filter @www/lit-ui-router.dev run wrangler:dev` serves an
-already-built site.
+`turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
+same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server
+through a `pnpm run` hop the mise task does not have. Bare
+`pnpm --filter @www/lit-ui-router.dev run wrangler:dev` skips the build and
+serves whatever is already in `dist`.
 
-The server is deliberately outside the turbo graph. turbo has no lifecycle for
-one — a `with:` sidecar is started but never reaped — so `start-server-and-test`
-owns starting it, waiting on readiness, and tearing it down even on failure.
+The server is deliberately outside the turbo graph. No turbo lifecycle fits it:
+as a `with:` sidecar it is started but never reaped, and a top-level persistent
+run does tear down cleanly on a signal but knows nothing about readiness or
+about stopping once something else finishes. `start-server-and-test` owns all
+three — starting it, waiting on readiness, and tearing it down even on failure.
 Only the server leaves the graph; the suites stay first-class cached tasks.
 
 The same run executes in CI: `mise run ci` runs the turbo graph and then this
