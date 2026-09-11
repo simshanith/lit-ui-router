@@ -12,9 +12,7 @@ import {
   waitForUpdate,
 } from './test-utils.js';
 
-// @lit-labs/ssr wraps every LitElement in a declarative shadow root, so
-// <ui-view> must emit a <slot> or the DSR hides the light DOM the client
-// renders into (#803). This is the verbatim server output for one view.
+// Verbatim @lit-labs/ssr output: an empty declarative shadow root would hide the light DOM (#803).
 const serverMarkup =
   '<ui-router><template shadowroot="open" shadowrootmode="open"><slot></slot></template>' +
   '<ui-view><template shadowroot="open" shadowrootmode="open"><slot></slot></template>' +
@@ -47,9 +45,7 @@ describe('<ui-view> server-rendered shape', () => {
     ];
     router = createTestRouter(states);
 
-    // Element.setHTMLUnsafe (Chrome 124+) is the parsing API that honours
-    // declarative shadow roots; parse detached so the router is assigned
-    // before <ui-router> upgrades and its descendants seek it on connect.
+    // Parse detached so the router is set before <ui-router> upgrades and its views seek it.
     container = document.createElement('div');
     container.setHTMLUnsafe(serverMarkup);
     container.querySelector('ui-router')!.uiRouter = router;
@@ -60,9 +56,7 @@ describe('<ui-view> server-rendered shape', () => {
     router.start();
     await tick();
 
-    // The DSR is what distinguishes the server shape from a normal mount.
     expect(uiView.shadowRoot).not.toBeNull();
-    // An empty DSR would hide everything; assert the slot before comparing to it.
     const slot = uiView.shadowRoot!.querySelector('slot');
     expect(slot).toBeInstanceOf(HTMLSlotElement);
 

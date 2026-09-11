@@ -212,8 +212,7 @@ describe('UiView', () => {
       expect(customElements.get('ui-view')).toBe(UiView);
     });
 
-    // The @lit-labs/ssr DOM shim constructs elements but has no
-    // `createDocumentFragment`, and never connects them (#803).
+    // The @lit-labs/ssr DOM shim has no `createDocumentFragment` and never connects (#803).
     it('should construct and render before connection without a fragment API', () => {
       const createFragment = vi
         .spyOn(document, 'createDocumentFragment')

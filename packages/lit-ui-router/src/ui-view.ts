@@ -89,7 +89,7 @@ export class UiView extends LitElement {
   @state()
   private component: RoutedLitTemplate | null = null;
 
-  /** Created on connect, not construction: the @lit-labs/ssr DOM shim has no `createDocumentFragment`. */
+  /** Created on connect: the @lit-labs/ssr DOM shim has no `createDocumentFragment`. */
   private inner?: DocumentFragment;
 
   /** @internal */
@@ -387,8 +387,7 @@ export class UiView extends LitElement {
   /** @internal */
   render(): Node | TemplateResult {
     if (!this.component || !this.viewAddress) {
-      // Never connected (server render): a slot keeps the light DOM visible
-      // once the client renders into it under the declarative shadow root.
+      // Never connected (server render): an empty declarative shadow root would hide the light DOM.
       return this.inner?.cloneNode(true) ?? html`<slot></slot>`;
     }
 

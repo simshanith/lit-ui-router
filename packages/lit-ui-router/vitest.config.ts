@@ -3,8 +3,7 @@ import { playwright } from '@vitest/browser-playwright';
 
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
-// Real user gestures (modifier/middle/right click via page.elementLocator),
-// and real declarative-shadow-root parsing plus slot composition and layout;
+// Real user gestures (page.elementLocator) and declarative-shadow-root composition;
 // every other spec uses synthetic events that happy-dom supports.
 const browserOnlySpecs = [
   'src/specs/ui-sref.spec.ts',
