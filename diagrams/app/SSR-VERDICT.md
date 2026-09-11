@@ -11,11 +11,15 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
 - **4** patterns are not existence: every `:id` route ships a soft-404 — #804
 - **5** default the bare-mount-base rule, or warn at construction — #805
 - **6** a prerender entry: mounts + `renderShell` — #806
+- **7** "the view has re-rendered" has no documented signal — `onSuccess`
+  settles before `<ui-view>` swaps; the recipe is `transition.promise` then
+  `updateComplete` on every view and its element — #812
 - **9** the Navigation API plugin's interception hazard — #750 (pre-existing)
 - **10** static hosts add a trailing slash; `strict: false` on both sides — #807
 
-Asks 7 (document "the view has re-rendered") and 8 (the resolves generic) are
-unfiled: both are docs-shaped and wait on a docs pass.
+Ask 8 (the resolves generic: a typed `RoutedLitTemplate` rejected at
+`component:` with the error at the wrong site) is a types-ergonomics report,
+being filed small; number to follow.
 
 Written while building `diagrams/app`, a real `lit-ui-router` app prerendered at
 build time for Cloudflare Pages. Everything below is something this app actually

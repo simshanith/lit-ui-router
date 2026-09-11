@@ -335,7 +335,7 @@ example or sample app yet ... the gap is starting to bridge"). Two things follow
   `document.createDocumentFragment()` is a FIELD INITIALISER in
   `packages/lit-ui-router/src/ui-view.ts`, so it fires before any lifecycle hook can guard it —
   which is why the app keeps two template sets and why #348's client-hydration seam cannot land over
-  it. Filed 2026-09-11 as #803; the rest of `SSR-VERDICT.md`'s asks are #804–#808 (with #564 and
+  it. Filed 2026-09-11 as #803; the rest of `SSR-VERDICT.md`'s asks are #804–#808 and #812 (with #564 and
   #750 before).
 
 **The Effect companion, not mobx — and the atlas writes its first draft.** An earlier draft of this
