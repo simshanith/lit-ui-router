@@ -77,10 +77,7 @@ const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
  */
 function sameTarget(a: TargetState | null, b: TargetState): boolean {
   return (
-    !!a &&
-    a.name() === b.name() &&
-    a.$state() === b.$state() &&
-    paramsEqual(a.params(), b.params())
+    !!a && a.$state() === b.$state() && paramsEqual(a.params(), b.params())
   );
 }
 
