@@ -11,8 +11,8 @@ mise run test_e2e
 ```
 
 That production-like flow builds the docs site (which embeds both apps'
-builds), serves it with wrangler on port 8787, and runs five Cypress suites
-concurrently:
+builds), serves it with wrangler on port 8787, and runs every Cypress suite in
+parallel:
 
 | Suite       | Target        | Covers                                                                                                              |
 | ----------- | ------------- | ------------------------------------------------------------------------------------------------------------------- |
@@ -23,16 +23,43 @@ concurrently:
 | `pushState` | `/app/`       | vanilla app under the `pushState` fallback                                                                          |
 
 Each suite is its own turbo task (`test:e2e:<suite>`) with its own cache key,
-so rerunning one after a flake costs that suite alone rather than all five:
+so rerunning one after a flake costs that suite alone rather than the whole
+set. Name the suites you want and the umbrella runs those, around the same
+server, cached and summarized exactly like the full run:
 
 ```bash
-mise run test_e2e   # then, to redo just one:
-turbo run test:e2e:hash   # requires a server already on the dev-server port
+mise run test_e2e hash          # one suite
+mise run test_e2e hash mobx     # an arbitrary set
+mise run test_e2e --help        # the suites this checkout has
 ```
 
-The server is deliberately outside the turbo graph. turbo has no lifecycle for
-one — a `with:` sidecar is started but never reaped — so `start-server-and-test`
-owns starting it, waiting on readiness, and tearing it down even on failure.
+The suite list is derived from this package's `test:e2e:*` scripts by
+`scripts/run-e2e.ts`, so a new suite is one `package.json` entry plus its
+`turbo.json` task — nothing to add to `.config/mise/config.toml`, and no way
+to forget an entry there and drop a suite from the PR gate.
+
+`turbo run test:e2e:hash` still works directly when a server is already up on
+the dev-server port; the umbrella is what gets you one. To bring one up by
+hand:
+
+```bash
+mise run //www/lit-ui-router.dev:serve   # builds the site first, then serves it
+mise run build_www   # just the build
+```
+
+That task is also what the umbrella hands to `start-server-and-test`, so the
+build edge lives on the server rather than on the suites. Without mise,
+`turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
+same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server
+through a `pnpm run` hop the mise task does not have. Bare
+`pnpm --filter @www/lit-ui-router.dev run wrangler:dev` skips the build and
+serves whatever is already in `dist`.
+
+The server is deliberately outside the turbo graph. No turbo lifecycle fits it:
+as a `with:` sidecar it is started but never reaped, and a top-level persistent
+run does tear down cleanly on a signal but knows nothing about readiness or
+about stopping once something else finishes. `start-server-and-test` owns all
+three — starting it, waiting on readiness, and tearing it down even on failure.
 Only the server leaves the graph; the suites stay first-class cached tasks.
 
 The same run executes in CI: `mise run ci` runs the turbo graph and then this
@@ -84,8 +111,8 @@ rides the default and loses coverage the moment the default moves.
 To run a single mode with its own server:
 
 ```bash
-pnpm --filter sample-app-lit-e2e test:hash
-pnpm --filter sample-app-lit-e2e test:pushstate
+mise run test_e2e hash
+mise run test_e2e pushstate
 ```
 
 ## Measuring the wrangler crash rate

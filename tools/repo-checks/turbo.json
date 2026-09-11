@@ -44,28 +44,28 @@
         "$TURBO_ROOT$/tools/shared/src/**"
       ]
     },
-    "check:workspace-deps": {
-      // every manifest can gain or lose a declaration, and the evidence for one
-      // is any tracked file in the declaring package -- so the read-set is the
-      // repo, minus the trees that are not tracked at all
+    "check:knip": {
+      // knip resolves imports from source, so no build edge. Any manifest can
+      // gain a declaration, any source file an import, any config, task file
+      // or workflow a reference -- so the read-set is the repo, minus the
+      // trees that are not tracked at all
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
         "$TURBO_ROOT$/**/*.{ts,tsx,js,jsx,cjs,mjs,cts,mts}",
-        "$TURBO_ROOT$/**/*.{json,jsonc,toml,yaml,yml,md,vue,svelte,html,sh,bash}",
+        "$TURBO_ROOT$/**/*.{json,jsonc,toml,yaml,yml}",
         "!$TURBO_ROOT$/**/node_modules/**",
         "!$TURBO_ROOT$/**/dist/**",
         "!$TURBO_ROOT$/**/coverage/**",
         "!$TURBO_ROOT$/**/.turbo/**",
         "!$TURBO_ROOT$/**/.probe-scratch/**",
         "!$TURBO_ROOT$/**/.rumdl_cache/**",
-        // generated API markdown, and it should not vouch for a dependency
-        // anyway: nothing hand-written names the package there
         "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
         "!$TURBO_ROOT$/.cache/**",
         "!$TURBO_ROOT$/.claude/**",
-        "$TURBO_ROOT$/pnpm-workspace.yaml",
-        "$TURBO_ROOT$/tools/shared/src/**"
+        // ignored by knip.jsonc as standalone installs
+        "!$TURBO_ROOT$/examples/*/**",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
       ]
     },
     "check:task-inputs": {

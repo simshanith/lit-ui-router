@@ -6,7 +6,6 @@
   "scripts": {
     "build": "tsc",
     "deflake": "node ./scripts/deflake-e2e.ts",
-    "docs:start-server": "pnpm --filter @www/lit-ui-router.dev run wrangler:dev",
     "e2e": "cypress open",
     "format": "oxfmt \"**/*.{ts,js,json,md}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
@@ -15,22 +14,20 @@
     "test:e2e:hash": "node ./scripts/cypress-suite.ts hash",
     "test:e2e:mobx": "node ./scripts/cypress-suite.ts mobx",
     "test:e2e:pushstate": "cypress run --expose LOCATION_PLUGIN=pushState --config videosFolder=cypress/videos-pushstate,screenshotsFolder=cypress/screenshots-pushstate",
-    "test:e2e:vanilla": "cypress run",
-    "test:hash": "node ./scripts/serve-and-test.ts docs:start-server test:e2e:hash app/",
-    "test:pushstate": "node ./scripts/serve-and-test.ts docs:start-server test:e2e:pushstate app/"
+    "test:e2e:vanilla": "cypress run"
   },
   "dependencies": {
     "@www/lit-ui-router.dev": "workspace:*"
   },
   "devDependencies": {
-    "@types/lodash-es": "catalog:",
+    "@tools/bootstrap": "workspace:*",
+    "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "start-server-and-test": "catalog:",
     "typescript": "catalog:typescript6-compat",
-    "typescript-7": "catalog:",
-    "vite": "catalog:"
+    "typescript-7": "catalog:"
   }
 }

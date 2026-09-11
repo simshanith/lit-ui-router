@@ -16,6 +16,7 @@ catalog:
   '@commitlint/config-conventional': ^21.2.2
   '@commitlint/types': ^21.2.0
   '@custom-elements-manifest/analyzer': ^0.11.0
+  '@lit-labs/ssr': ^4.1.0
   '@pnpm/logger': 1100.0.0
   '@pnpm/types': 1102.1.0
   '@pnpm/workspace.project-manifest-reader': 1100.0.27
@@ -55,6 +56,7 @@ catalog:
   hono: ^4.13.7
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
+  knip: ^6.35.1
   lit: ^3.3.3
   lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
