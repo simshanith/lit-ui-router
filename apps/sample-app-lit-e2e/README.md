@@ -43,11 +43,11 @@ the dev-server port; the umbrella is what gets you one. To bring one up by
 hand:
 
 ```bash
-mise run serve_www   # builds the site first, then serves it
+mise run //www/lit-ui-router.dev:serve   # builds the site first, then serves it
 mise run build_www   # just the build
 ```
 
-`serve_www` is also what the umbrella hands to `start-server-and-test`, so the
+That task is also what the umbrella hands to `start-server-and-test`, so the
 build edge lives on the server rather than on the suites. Without mise,
 `pnpm --filter @www/lit-ui-router.dev run wrangler:dev` serves an
 already-built site.

@@ -45,12 +45,13 @@ pnpm --filter lit-ui-router test
 mise run test_e2e
 
 # Or hold a server open and drive individual suites against it
-mise run serve_www
+mise run //www/lit-ui-router.dev:serve
 turbo run test:e2e:hash
 ```
 
-The E2E run shells back into mise for its dev server (`serve_www`), so mise
-has to be on `PATH` for the run itself, not just to launch it. See
+The E2E run shells back into mise for its dev server
+(`//www/lit-ui-router.dev:serve`), so mise has to be on `PATH` for the run
+itself, not just to launch it. See
 [the suite README](../apps/sample-app-lit-e2e/README.md) for suite selection
 and the mise-free way to serve an already-built site.
 

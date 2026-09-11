@@ -40,4 +40,7 @@ const test = [
 ].join(' ');
 
 // both apps are mounted whichever suites run
-serveAndTest('mise run serve_www', test, ['app/', 'app-mobx/']);
+serveAndTest('mise run //www/lit-ui-router.dev:serve', test, [
+  'app/',
+  'app-mobx/',
+]);

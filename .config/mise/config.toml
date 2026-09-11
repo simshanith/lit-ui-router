@@ -8,7 +8,7 @@ monorepo_root = true
 [monorepo]
 # Explicit roots — mise deprecated filesystem auto-discovery. A glob only
 # matches directories that actually carry a mise config.
-config_roots = ["tools/*"]
+config_roots = ["tools/*", "www/*"]
 
 [env]
 # Workspace binaries win over mise tools/globals; absolute via config_root
@@ -209,17 +209,6 @@ run = 'turbo run "${usage_package_name?}#build"'
 dir = "{{config_root}}"
 description = "Build the @www sites"
 run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
-
-[tasks.serve_www]
-# depends carries the real edge: this serves the build output, so building is a
-# precondition of serving rather than of whatever runs against it.
-#
-# WWW_DEV_PORT is read by wrangler-dev.ts and inherited, not set here — see the
-# [env] note on why it has no default in this file.
-depends = ["build_www"]
-dir = "{{config_root}}"
-description = "Serve the @www site with wrangler"
-run = "pnpm --filter @www/lit-ui-router.dev run wrangler:dev"
 
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.

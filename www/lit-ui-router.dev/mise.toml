@@ -1,0 +1,24 @@
+# Site tasks — addressed as //www/lit-ui-router.dev:<task> (monorepo task
+# addressing; the root config declares www/* as config_roots). Tasks run from
+# THIS directory, so run lines are package-relative.
+# Tasks assume node_modules exists: run `mise run setup` first.
+
+[env]
+# This package's own devDep binaries (wrangler), which pnpm's isolated
+# node_modules keeps out of the root .bin. Absolute via config_root (this
+# directory); the root config's {{cwd}} entry only covers shells already cd'd
+# in here, not `mise run` from elsewhere — in a worktree that falls through to
+# the owning checkout's .bin.
+_.path = ["{{config_root}}/node_modules/.bin"]
+
+[tasks.serve]
+# depends carries the real edge: this serves the build output, so building is a
+# precondition of serving rather than of whatever runs against it.
+#
+# Runs the launcher rather than wrangler directly: the dev-server port resolves
+# in code (dev-port.ts) so entry points that never traverse mise still get a
+# default, and the launcher is also what rejects a --port that would move the
+# server without moving the URLs built from the same resolver.
+depends = ["//:build_www"]
+description = "Serve this site with wrangler on the dev-server port"
+run = "node ./scripts/wrangler-dev.ts"
