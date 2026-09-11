@@ -5,6 +5,7 @@ import { UIViewInjectedProps } from 'lit-ui-router';
 
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import DialogService from 'sample-app-shared/app/global/dialogService.js';
+import { dsrForgetFinishedState } from 'sample-app-shared/app/util/dsr-forget-finished-state.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
 
 import { RouterRefController } from '../effect/routerRefController.js';
@@ -43,11 +44,11 @@ export class Compose extends LitElement {
   // Resets the draft from the `message` route param on the route ref. Sticky
   // instances survive between visits, so the constructor only runs once;
   // the controller covers the rest of the lifecycle:
-  // - on every (re)connect it fires immediately, starting a fresh draft
-  //   from the current params (a fresh visit to this state);
-  // - while composing, it fires when the param structurally changes
-  //   (Reply/Forward/Edit), so an in-progress draft isn't clobbered by
-  //   unrelated transitions or identity-only param changes.
+  // - it fires immediately on every (re)connect, and again while composing
+  //   when the param structurally changes (Reply/Forward/Edit);
+  // - resetMessage decides whether that is actually a new draft, so an
+  //   in-progress one isn't clobbered by a reconnect or an identity-only
+  //   param change.
   // uiCanExit below still guards against silently discarding unsaved edits.
   // The param is an arbitrary plain object, so `isEqual` compares it — Effect's
   // Equal.equals is reference equality outside Data values.
@@ -60,15 +61,21 @@ export class Compose extends LitElement {
     },
   );
 
-  resetMessage(message: Partial<Message> = {}) {
-    this.pristineMessage = {
+  // `force` for the one caller that means it regardless: a finished draft.
+  // Otherwise an unchanged param is not a new draft — the controller fires
+  // onChange again on every reconnect, and the sticky branch reconnects on
+  // the way back in.
+  resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    const pristineMessage = {
       body: '',
       to: '',
       subject: '',
       ...message,
       from: AppConfig.emailAddress,
     } as Message;
-    this.message = { ...this.pristineMessage };
+    if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
+    this.pristineMessage = pristineMessage;
+    this.message = { ...pristineMessage };
     this.canExit = false;
   }
 
@@ -100,6 +107,29 @@ export class Compose extends LitElement {
     void router.stateService.go(state, params);
   }
 
+  /**
+   * The draft is finished. A sticky Compose outlives the visit, so both halves
+   * of "finished" have to be said out loud:
+   *
+   * - clear the draft, or the next New Message opens with these values. The
+   *   controller only fires onChange when the `message` param structurally
+   *   CHANGES, and a fresh New Message leaves it `{}` — same param, no reset.
+   * - drop the DSR memory, or returning to Messages reopens this state.
+   *
+   * Deliberately NOT part of `uiCanExit` or the controller: the point is
+   * finished vs. in-progress, and an unsent draft must still survive a trip
+   * out of the sticky branch (#723).
+   */
+  finishDraft() {
+    dsrForgetFinishedState(
+      this._uiViewProps.router,
+      'mymessages',
+      'mymessages.compose',
+    );
+    this.resetMessage({}, { force: true });
+    this.canExit = true;
+  }
+
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
   send() {
     const { message } = this;
@@ -109,7 +139,7 @@ export class Compose extends LitElement {
       read: true,
       folder: 'sent',
     })
-      .then(() => (this.canExit = true))
+      .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
 
@@ -129,7 +159,7 @@ export class Compose extends LitElement {
       read: true,
       folder: 'drafts',
     })
-      .then(() => (this.canExit = true))
+      .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
 
@@ -143,7 +173,7 @@ export class Compose extends LitElement {
             type="text"
             id="to"
             name="to"
-            value=${message.to ?? ''}
+            .value=${message.to ?? ''}
             @change=${this.handleChangeMessage('to')}
           />
         </div>
@@ -153,7 +183,7 @@ export class Compose extends LitElement {
             type="text"
             id="subject"
             name="subject"
-            value=${message.subject}
+            .value=${message.subject}
             @change=${this.handleChangeMessage('subject')}
           />
         </div>

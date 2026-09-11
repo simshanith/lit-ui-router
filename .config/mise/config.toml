@@ -231,13 +231,20 @@ run = [
 ]
 
 [tasks.test_e2e]
-# The e2e umbrella. turbo schedules and caches the six Cypress suites; the dev
+# The e2e umbrella. turbo schedules and caches the Cypress suites; the dev
 # server they share is started around them by start-server-and-test, which is
 # the lifecycle primitive turbo lacks — a `with:` sidecar is started but never
 # reaped, so a non-persistent run that used one would hang.
 #
 # Only the SERVER leaves the graph. The suites stay first-class turbo tasks with
-# real cache keys, which is what makes a single-suite rerun cheap.
+# real cache keys, which is what makes a single-suite rerun cheap — and naming
+# suites here is how you spend that: `mise run test_e2e hash mobx` runs those
+# two around the same server, cached and summarized like the full run.
+#
+# WHICH suites exist is run-e2e.ts's answer, derived from the e2e package's own
+# `test:e2e:*` scripts. Deliberately not a list here: a list is an edit every
+# new suite has to remember, and forgetting it drops that suite from the PR
+# gate while the run still reports green.
 #
 # Both runs --summarize. The reporter reports every summary written since
 # `mark_session`, so these join the ci run rather than displacing it, which is
@@ -245,18 +252,19 @@ run = [
 # almost every time and says so in a line or two — cheap, and a silently absent
 # run is indistinguishable from one that never happened.
 #
-# --continue so one failing suite still lets the other five report, matching the
-# concurrently-based runner this replaced; turbo still exits non-zero. Without
-# it a flake in the first suite to fail cancels the rest, and turbo omits
-# cancelled tasks from the summary — so the report could not say whether the
-# other five passed, which is the question the split exists to answer.
-# Eager cancel also costs more than it saves: the suites fail at unpredictable
-# points, so killing the rest usually saves only the tail of the run, while the
-# five that would have finished stay uncached and the retry pays for all six.
+# --continue (passed by run-e2e.ts) so one failing suite still lets the rest
+# report, matching the concurrently-based runner this replaced; turbo still
+# exits non-zero. Without it a flake in the first suite to fail cancels the
+# others, and turbo omits cancelled tasks from the summary — so the report
+# could not say whether they passed, which is the question the split exists to
+# answer. Eager cancel also costs more than it saves: the suites fail at
+# unpredictable points, so killing the rest usually saves only the tail of the
+# run, while the suites that would have finished stay uncached and the retry
+# pays for all of them again.
 #
 # =dependencies-successful, not the bare flag: bare --continue means `always`,
-# which would run all six suites even when the build they depend on failed,
-# turning one build error into six Cypress failures.
+# which would run every suite even when the build they depend on failed,
+# turning one build error into a Cypress failure per suite.
 #
 # env: WWW_DEV_PORT is an override only — the default lives in dev-port.ts, so
 # there is no [env] declaration to interpolate and start-server-and-test is
@@ -269,14 +277,18 @@ run = [
 # launcher only spawns start-server-and-test, so cwd stays the repo root.
 dir = "{{config_root}}"
 description = "Run the Cypress e2e suites via turbo, around one shared dev server"
+usage = '''
+arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
+'''
 run = [
   # The suites' own dependsOn cannot start the server, so the site has to be
-  # built before start-server-and-test rather than during the inner run.
+  # built before start-server-and-test rather than during the inner run. Built
+  # in full whatever the selection: every suite is served by the same site.
   "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize",
-  """node ./apps/sample-app-lit-e2e/scripts/serve-and-test.ts \
-  "pnpm --filter sample-app-lit-e2e run docs:start-server" \
-  "turbo run test:e2e:docs test:e2e:effect test:e2e:hash test:e2e:mobx test:e2e:pushstate test:e2e:vanilla --continue=dependencies-successful --ui=stream --log-order=stream --summarize" \
-  app/ app-mobx/ app-effect/""",
+  # unquoted on purpose: a var arg arrives as one space-separated string and
+  # has to word-split back into argv, the same shape setup's RELEASE_CLOSURE
+  # uses. Tera's arg() would read better but is deprecated out in mise 2027.5.
+  'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}',
 ]
 
 [tasks.test_e2e.env]
