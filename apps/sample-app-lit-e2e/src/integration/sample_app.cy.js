@@ -127,6 +127,111 @@ describe('authenticated sample app', () => {
     cy.get('table').contains('somebody@somewhere.com');
   });
 
+  // `mymessages` is a sticky state, so leaving it inactivates the branch rather
+  // than exiting it: the ui-view stays mounted and must keep the same Compose
+  // element, unsent draft and all. Regression guard for #723, where <ui-view>
+  // rebuilt its routed element on every transition and dropped the draft.
+  it('retains an unsent draft across a trip out of the sticky branch', () => {
+    visitWithFeatures('/mymessages');
+    cy.url().should('include', '/mymessages/inbox');
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').type('Half-written subject');
+
+    cy.get('li a').contains('Contacts').click();
+    cy.url().should('include', '/contacts');
+
+    // Deep state redirect returns to the deepest previously-active child.
+    cy.get('li a').contains('Messages').click();
+    cy.url().should('include', '/mymessages/compose');
+
+    cy.get('input#subject').should('have.value', 'Half-written subject');
+  });
+
+  // The nav bar puts uiSrefActive on the <li> and uiSref on the <a> inside it,
+  // so the wrapper resolves its target from the child link. `contacts.contact`
+  // is a descendant of that target, so the tab must stay lit while a single
+  // contact is open.
+  it('keeps the Contacts tab active on a nested contact', () => {
+    visitWithFeatures('/contacts');
+    cy.url().should('include', '/contacts');
+
+    cy.contains('.nav-tabs li a', 'Contacts')
+      .parent('li')
+      .should('have.class', 'active');
+
+    cy.get('.selectlist li a').contains('Finley').click();
+    cy.url().should('match', /\/contacts\/[\w-]+$/);
+
+    cy.contains('.nav-tabs li a', 'Contacts')
+      .parent('li')
+      .should('have.class', 'active');
+  });
+
+  // Same assertion, after the sticky branch has been inactivated and brought
+  // back. Leaving `contacts` for `mymessages` inactivates it rather than
+  // exiting it, and DSR returns to the open contact — so the tab must still be
+  // lit. This is the path where a directive that does not survive a
+  // disconnect/reconnect would come back frozen.
+  it('keeps the Contacts tab active after a round trip out of the branch', () => {
+    visitWithFeatures('/contacts');
+    cy.get('.selectlist li a').contains('Finley').click();
+    cy.url().should('match', /\/contacts\/[\w-]+$/);
+
+    cy.contains('.nav-tabs li a', 'Messages').click();
+    cy.url().should('include', '/mymessages');
+
+    cy.contains('.nav-tabs li a', 'Contacts').click();
+    cy.url().should('match', /\/contacts\/[\w-]+$/);
+
+    cy.contains('.nav-tabs li a', 'Contacts')
+      .parent('li')
+      .should('have.class', 'active');
+    cy.contains('.nav-tabs li a', 'Messages')
+      .parent('li')
+      .should('not.have.class', 'active');
+  });
+
+  // The counterpart to the retention guard above: an UNSENT draft is kept, but
+  // once it is saved the compose state is finished. Entering compose from
+  // outside `mymessages` is what exposes it — `save()` returns to where the
+  // user came from (contacts), so `mymessages.messagelist` is never activated
+  // and compose stays the deepest previously-active child DSR remembers.
+  it('does not reopen a saved draft when returning to messages', () => {
+    visitWithFeatures('/contacts');
+    cy.url().should('include', '/contacts');
+
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').type('Saved from contacts');
+    cy.get('button').contains('Draft').click();
+
+    // save() goes back where compose was entered from
+    cy.url().should('include', '/contacts');
+
+    cy.get('li a').contains('Messages').click();
+    cy.url().should('not.include', '/compose');
+  });
+
+  // Compose is a sticky component, so the instance outlives the visit. Saving
+  // the draft leaves `message` populated, and the reset on re-entry compares
+  // only the PRISTINE copies — both empty here — so it returns early and the
+  // finished draft bleeds into the next one.
+  it('starts a fresh draft after the previous one was saved', () => {
+    visitWithFeatures('/mymessages');
+    cy.url().should('include', '/mymessages/inbox');
+
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').type('Saved subject');
+    cy.get('button').contains('Draft').click();
+    cy.url().should('include', '/mymessages/inbox');
+
+    cy.contains('New Message').click();
+    cy.url().should('include', '/mymessages/compose');
+    cy.get('input#subject').should('have.value', '');
+  });
+
   it('prompts to save a message being composed', () => {
     visitWithFeatures('/mymessages');
     cy.url().should('include', '/mymessages/inbox');

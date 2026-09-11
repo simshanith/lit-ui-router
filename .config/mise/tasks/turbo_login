@@ -77,7 +77,7 @@ put() { # $1=key $2=value
 if [ -n "${usage_api:-}" ]; then
   put TURBO_API "$usage_api"
 elif ! { [ -f "$env" ] && grep -q '^TURBO_API=' "$env"; }; then
-  echo "turbo_login: first setup needs --api <worker-url> (see REMOTE_CACHE.md)" >&2
+  echo "turbo_login: first setup needs --api <worker-url> (see docs/REMOTE_CACHE.md)" >&2
   exit 1
 fi
 put TURBO_TEAM "${usage_team:?}"

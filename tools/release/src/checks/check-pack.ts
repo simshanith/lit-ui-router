@@ -18,16 +18,12 @@ import {
   type PackResult,
 } from './check-pack.core.ts';
 import { tarballManifest } from './tarball.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { isPublishable, loadWorkspace } from '@tools/shared/workspace.ts';
 
 async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
-  const publishable = members.filter(
-    (member) =>
-      member.dir !== '<root>' &&
-      member.manifest &&
-      member.manifest.private !== true,
-  );
+  const publishable = members.filter(isPublishable);
   const results: PackResult[] = [];
   for (const { name, dir } of publishable) {
     // Malformed manifests reject in tarballManifest — loud, never a silent {}.

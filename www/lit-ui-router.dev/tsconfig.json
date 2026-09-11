@@ -1,0 +1,19 @@
+{
+  "extends": "../../tsconfig.base.json",
+  "compilerOptions": {
+    // esnext for the import attributes in config.ts
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    // The vite config consumes ui-router-server/sample-app-routes as source
+    // (workspace exports point at .ts), whose imports carry .ts extensions —
+    // the same allowance worker/tsconfig.json already makes.
+    "allowImportingTsExtensions": true,
+    "outDir": "dist",
+    "rootDir": ".",
+    "noEmit": true,
+    "declaration": true,
+    "sourceMap": true
+  },
+  "include": [".vitepress/**/*", "dev-port.ts", "scripts/**/*"],
+  "exclude": ["node_modules", "dist", "**/*.spec.ts"]
+}

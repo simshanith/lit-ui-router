@@ -3,6 +3,7 @@ import {
   canUseNavigationAPI,
   featureFlags,
   isValidLocationPlugin,
+  LOCATION_PLUGIN_AUTO,
   parseFeatureParams,
   resolveLocationPlugin,
   resolveLocationPluginFeature,
@@ -132,6 +133,17 @@ describe('feature detection', () => {
       vi.stubEnv(ENV_KEY, 'memory');
       expect(resolveLocationPluginFeature()).toBe('memory');
     });
+
+    it('reads a default env var as no preference', () => {
+      vi.stubEnv(ENV_KEY, LOCATION_PLUGIN_AUTO);
+      expect(resolveLocationPluginFeature()).toBeUndefined();
+    });
+
+    it('stops at a default URL param instead of reading the env var', () => {
+      vi.stubEnv(ENV_KEY, 'hash');
+      setFeatureParam('location-plugin', LOCATION_PLUGIN_AUTO);
+      expect(resolveLocationPluginFeature()).toBeUndefined();
+    });
   });
 
   describe('resolveLocationPlugin', () => {
@@ -159,12 +171,26 @@ describe('feature detection', () => {
       expect(resolveLocationPlugin()).toBe('hash');
     });
 
-    it('falls back to pushState for an unrecognized preference', () => {
+    it('auto-detects past an unrecognized preference', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
       vi.stubEnv(ENV_KEY, 'memory');
-      expect(resolveLocationPlugin()).toBe('pushState');
+      expect(resolveLocationPlugin()).toBe('navigation');
     });
 
-    it('falls back to pushState when nothing is configured', () => {
+    it('auto-detects when the env var is default', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, LOCATION_PLUGIN_AUTO);
+      expect(resolveLocationPlugin()).toBe('navigation');
+    });
+
+    it('defaults to navigation when nothing is configured', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, undefined);
+      expect(resolveLocationPlugin()).toBe('navigation');
+    });
+
+    it('defaults to pushState when the browser lacks the Navigation API', () => {
+      vi.stubGlobal('navigation', undefined);
       vi.stubEnv(ENV_KEY, undefined);
       expect(resolveLocationPlugin()).toBe('pushState');
     });

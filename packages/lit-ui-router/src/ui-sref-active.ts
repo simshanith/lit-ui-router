@@ -321,6 +321,24 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   _deregisterOnStatesChanged: deregisterFn | undefined;
 
+  /**
+   * Kept across a disconnect so {@link reconnected} can re-arm.
+   * @internal
+   */
+  private _partElement: Element | null = null;
+
+  /**
+   * Replayed by {@link reconnected} so it re-arms the way `firstUpdated` did.
+   * @internal
+   */
+  private _lastTargetStates: TargetState[] | undefined = undefined;
+
+  /**
+   * Bumped on disconnect; `reconnected` re-subscribes to what is in flight.
+   * @internal
+   */
+  private _connection = 0;
+
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo);
@@ -533,6 +551,8 @@ export class UiSrefActiveDirective extends AsyncDirective {
     this.options = options;
 
     const { element } = part;
+    this._partElement = element;
+    this._lastTargetStates = targetStates && Array.from(targetStates);
 
     if (this.element !== element) {
       this.element = element;
@@ -625,6 +645,9 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   /** @internal */
   disconnected(): void {
+    // re-arming is what `reconnected` does; without this it would no-op
+    this._firstUpdated = false;
+    this._connection++;
     if (!this.element) {
       return;
     }
@@ -638,7 +661,30 @@ export class UiSrefActiveDirective extends AsyncDirective {
     );
     this.element = null;
     this._deregisterOnStart?.();
+    this._deregisterOnStart = undefined;
     this._deregisterOnStatesChanged?.();
+    this._deregisterOnStatesChanged = undefined;
+  }
+
+  /**
+   * Re-arms after a detach/re-attach; `update` only re-arms on a NEW element.
+   * @internal
+   */
+  reconnected(): void {
+    this.element = this._partElement;
+    if (!this.element) {
+      return;
+    }
+    // a same-element uiSref reconnects first; hold its target across the re-arm
+    const listening = !this._lastTargetStates && !this.state;
+    const retained = listening ? [...this.targetStates] : [];
+    this.firstUpdated({ targetStates: this._lastTargetStates });
+    retained.forEach((targetState) => this.targetStates.add(targetState));
+    // whatever is in flight either started, or was let go, while disconnected
+    const inFlight = this.uiRouter?.globals.transition;
+    if (inFlight) {
+      this.onTransitionStart(inFlight);
+    }
   }
 
   /** @internal */
@@ -695,26 +741,20 @@ export class UiSrefActiveDirective extends AsyncDirective {
 
   /** @internal */
   onTransitionStart = (trans: Transition): void => {
-    this.element!.dispatchEvent(
-      this.createTransitionStateChangeEvent(TransitionStateChange.start, trans),
-    );
+    // a settlement subscribed to before a disconnect stays quiet
+    const connection = this._connection;
+    const dispatch = (evt: TransitionStateChange): void => {
+      if (connection !== this._connection) {
+        return;
+      }
+      this.element?.dispatchEvent(
+        this.createTransitionStateChangeEvent(evt, trans),
+      );
+    };
+    dispatch(TransitionStateChange.start);
     trans.promise.then(
-      () => {
-        this.element!.dispatchEvent(
-          this.createTransitionStateChangeEvent(
-            TransitionStateChange.success,
-            trans,
-          ),
-        );
-      },
-      () => {
-        this.element!.dispatchEvent(
-          this.createTransitionStateChangeEvent(
-            TransitionStateChange.error,
-            trans,
-          ),
-        );
-      },
+      () => dispatch(TransitionStateChange.success),
+      () => dispatch(TransitionStateChange.error),
     );
   };
 

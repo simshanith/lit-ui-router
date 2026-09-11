@@ -1,4 +1,4 @@
-# One version authority per tool — see the toolchain table in CONTRIBUTING.md.
+# One version authority per tool — see the toolchain table in docs/CONTRIBUTING.md.
 
 # Monorepo task addressing (`mise run '//tools/release:pack'`): task defs live
 # beside the code they run. Root trust covers every config_root below, so the
@@ -8,7 +8,7 @@ monorepo_root = true
 [monorepo]
 # Explicit roots — mise deprecated filesystem auto-discovery. A glob only
 # matches directories that actually carry a mise config.
-config_roots = ["tools/*"]
+config_roots = ["tools/*", "www/*"]
 
 [env]
 # Workspace binaries win over mise tools/globals; absolute via config_root
@@ -21,6 +21,13 @@ _.path = ["{{cwd}}/node_modules/.bin", "{{config_root}}/node_modules/.bin"]
 # Relocated taplo.toml out of root into `.config/`
 # https://taplo.tamasfe.dev/cli/usage/configuration.html#configuration-file
 TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
+# WWW_DEV_PORT is deliberately NOT declared here. Its default lives in code
+# (www/lit-ui-router.dev/dev-port.ts) so entry points that never traverse mise
+# still work; this file evaluates before config.local.toml, so a default here
+# would silently defeat a templated per-worktree override (#697). Set it in a
+# gitignored .config/mise/config.local.toml to move one worktree off the shared
+# port. Turbo runs in strict env mode, so tasks that carry it declare it in
+# passThroughEnv — it is transport only and must not enter a cache key.
 # Remote-cache config (all TURBO_*) lives in this gitignored dotenv, written by
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
@@ -69,7 +76,7 @@ idiomatic_version_file_enable_tools = ["node"]
 # optional platform dep, which mise's aube installer does not run.
 # Held equal to `packageManager`, so the bootstrap is already the version that
 # runs and the self-swap is a no-op.
-"aqua:pnpm/pnpm" = "12.2.1"
+"aqua:pnpm/pnpm" = "12.3.4"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
 "npm:npm" = "12.0.1"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
@@ -192,6 +199,17 @@ flag "--package-name <package_name>" help="Package to build (turbo <name>#build)
 '''
 run = 'turbo run "${usage_package_name?}#build"'
 
+[tasks.build_www]
+# Filtered by scope so the task covers what its name says: a package added
+# under @www joins the build without a filter edit here. The glob is quoted
+# because the shell would otherwise try to expand it.
+#
+# dir is explicit: the inner `turbo run` must see the whole workspace, and a
+# task invoked from a package directory gets a silently narrowed plan.
+dir = "{{config_root}}"
+description = "Build the @www sites"
+run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
+
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
@@ -200,14 +218,57 @@ run = 'turbo run "${usage_package_name?}#build"'
 # forces a cache-bypassing rerun, ""/"false" respect the cache.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
+# The e2e suites are a SECOND step, not part of turbo's ci graph: they need a
+# dev server, and turbo owns no server lifecycle (see test_e2e). Kept inside
+# this task rather than added as a workflow step so `mise run ci` remains the
+# one entry point that means "the PR gate" — a split across two steps would
+# leave a local `mise run ci` silently short of CI. Second, so a lint or
+# typecheck failure short-circuits the expensive lane.
 description = "Run the pull-request CI pipeline via turbo"
-run = "turbo run ci --ui=stream --log-order=stream --summarize"
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "turbo run ci --ui=stream --log-order=stream --summarize",
+  "mise run test_e2e",
+]
 
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
 description = "Run the main-push CI pipeline via turbo"
-run = "turbo run ci:main --ui=stream --log-order=stream --summarize"
+run = [
+  "mise run //tools/build_and_test:mark_session",
+  "turbo run ci:main --ui=stream --log-order=stream --summarize",
+  "mise run test_e2e",
+]
+
+[tasks.test_e2e]
+# The e2e umbrella: turbo runs and caches the Cypress suites,
+# start-server-and-test owns the dev server they share (turbo has no lifecycle
+# for a server). run-e2e.ts derives the suite set and takes suite names; see
+# apps/sample-app-lit-e2e/README.md.
+#
+# build_www here too, though //www/lit-ui-router.dev:serve declares the same
+# edge: reaching it only from there would put a cold build inside
+# start-server-and-test's wait-on budget. Pre-built, the serve task's own
+# depends is a cache hit.
+#
+# --summarize here and in build_www: the reporter picks up every summary
+# written since `mark_session`, so these join the ci run rather than displace it.
+#
+# WWW_DEV_PORT overrides the default in dev-port.ts, which serve-and-test.ts
+# resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'
+# passThroughEnv.
+#
+# dir is explicit: the inner `turbo run` must see the whole workspace, and a
+# task invoked from a package directory gets a silently narrowed plan.
+depends = ["build_www"]
+dir = "{{config_root}}"
+description = "Run the Cypress e2e suites via turbo, around one shared dev server"
+usage = '''
+arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
+'''
+# unquoted: a var arg arrives as one string and must word-split back into argv
+run = 'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

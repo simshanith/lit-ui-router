@@ -1,13 +1,13 @@
 {
   "name": "eslint-plugin-lit-ui-router",
-  "version": "1.0.0-rc.2",
+  "version": "1.0.1",
   "private": false,
-  "description": "ESLint rules that understand lit-ui-router directives: a vendored anchor-is-valid where a uiSref element part counts as the href it assigns at runtime",
+  "description": "ESLint rules that understand lit-ui-router directives: hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as the href it assigns at runtime",
   "keywords": [
     "eslint",
     "eslintplugin"
   ],
-  "homepage": "https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router",
+  "homepage": "https://lit-ui-router.dev/packages/eslint-plugin",
   "bugs": {
     "url": "https://github.com/simshanith/lit-ui-router/issues"
   },
@@ -46,7 +46,6 @@
     "build:js": "oxc-emit-js",
     "build:types": "oxc-emit-dts",
     "changelog": "release-it --changelog --git.tagMatch=\"eslint-plugin-lit-ui-router@[0-9]*.[0-9]*.[0-9]*\"",
-    "commit:changelog": "echo \"Release \\${version}\n\n$(pnpm --silent changelog)\"",
     "docs:rules": "eslint-doc-generator",
     "format": "oxfmt \"**/*.{ts,js,json,jsonc}\"",
     "format:check": "oxfmt --check \"**/*.{ts,js,json,jsonc}\"",

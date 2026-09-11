@@ -25,6 +25,11 @@ import {
   parseRunSummary,
   remoteCacheAnomaly,
   savedClause,
+  sessionFailureMarkdown,
+  sessionHeadline,
+  sessionLines,
+  sessionMarkdown,
+  sessionStdoutReport,
   slowestTasks,
   stdoutReport,
   stripAnsi,
@@ -80,6 +85,11 @@ function hit(over: Partial<SummaryTask> = {}): SummaryTask {
     execution: { startTime: 5_000, endTime: 5_000, exitCode: 0 },
     ...over,
   });
+}
+
+/** A run as the session renderers take it: the summary plus its source file. */
+function srun(summary: RunSummary, fileName?: string) {
+  return { summary, fileName };
 }
 
 /** A task that ran and passed, taking `ms`. */
@@ -701,10 +711,21 @@ describe('artifactLink', () => {
   const URL = 'https://github.com/o/r/actions/runs/1/artifacts/2';
 
   it('names the file so a reader can find it inside the zip', () => {
-    const link = artifactLink({ artifactUrl: URL, fileName: 'abc.json' });
+    const link = artifactLink({ artifactUrl: URL, fileNames: ['abc.json'] });
     assert.ok(link?.markdown.includes(`(<${URL}>)`));
     assert.ok(link?.markdown.includes('`abc.json`'));
     assert.equal(link?.line, `   run summary json: ${URL}`);
+  });
+
+  // One artifact, one URL: GitHub has no per-file link inside an upload, so
+  // naming every file is the closest thing to linking them all.
+  it('names every summary the session wrote, not just the first', () => {
+    const link = artifactLink({
+      artifactUrl: URL,
+      fileNames: ['a.json', 'b.json', 'c.json'],
+    });
+    assert.ok(link?.markdown.includes('`a.json`, `b.json`, `c.json`'));
+    assert.ok(link?.markdown.includes('the untruncated runs'));
   });
 
   it('drops the file clause when the name is unknown', () => {
@@ -737,7 +758,7 @@ describe('the artifact link in the overview', () => {
   it('closes the markdown overview, after the capped lists it backs', () => {
     const md = overviewMarkdown(run(), {
       artifactUrl: URL,
-      fileName: 'abc.json',
+      fileNames: ['abc.json'],
     });
     assert.ok(md.includes(URL));
     assert.ok(md.trimEnd().endsWith('artifacts.'));
@@ -868,5 +889,237 @@ describe('warn-only lanes', () => {
 
   it('is absent entirely when no warn lane was passed in', () => {
     assert.ok(!overviewMarkdown(summary([task()])).includes('Warn-only lanes'));
+  });
+});
+
+describe('sessionMarkdown', () => {
+  const ci = () =>
+    summary([ran('lit-ui-router#build', 4_000)], 0, {
+      command: 'turbo run ci',
+      attempted: 1,
+      cached: 0,
+      success: 1,
+      failed: 0,
+    });
+  const docs = () =>
+    summary([hit({ taskId: '@www/lit-ui-router.dev#build' })], 0, {
+      command: 'turbo run build --filter=@www/lit-ui-router.dev',
+      attempted: 1,
+      cached: 1,
+      success: 0,
+      failed: 0,
+    });
+  const e2e = () =>
+    summary([ran('sample-app-lit-e2e#test:e2e:hash', 27_000)], 0, {
+      command: 'turbo run test:e2e:docs test:e2e:hash',
+      attempted: 1,
+      cached: 0,
+      success: 1,
+      failed: 0,
+    });
+
+  it('reports every run of the session, in the order given', () => {
+    const md = sessionMarkdown([srun(ci()), srun(docs()), srun(e2e())]);
+    const at = (needle: string) => md.lastIndexOf(needle);
+    assert.ok(at('turbo run ci') > 0, 'the graph run is reported');
+    assert.ok(
+      at('turbo run build --filter=@www/lit-ui-router.dev') >
+        at('turbo run ci'),
+      'the docs build follows it',
+    );
+    assert.ok(
+      at('turbo run test:e2e:docs') >
+        at('turbo run build --filter=@www/lit-ui-router.dev'),
+      'the e2e suites come last',
+    );
+  });
+
+  it('carries one heading however many runs there were', () => {
+    const md = sessionMarkdown([srun(ci()), srun(docs()), srun(e2e())]);
+    assert.equal(md.split('## Turbo runs summary').length - 1, 1);
+  });
+
+  it('is the single-run report, unchanged, for a session of one', () => {
+    assert.equal(sessionMarkdown([srun(ci())]), overviewMarkdown(ci()));
+    assert.ok(!sessionMarkdown([srun(ci())]).includes('| Run |'));
+  });
+
+  it('separates the run blocks, which are tables and lists run together', () => {
+    const md = sessionMarkdown([srun(ci()), srun(docs()), srun(e2e())]);
+    assert.equal(md.split('\n---\n').length - 1, 2, 'a rule between each pair');
+  });
+
+  it('keeps the job-level footer out of the per-run blocks', () => {
+    const warnLanes = warnLaneEntries(new Map());
+    const md = sessionMarkdown([srun(ci()), srun(docs())], { warnLanes });
+    assert.equal(md.split('**Warn-only lanes**').length - 1, 1);
+  });
+});
+
+// The point of the section: did this job succeed, and if not, which run broke.
+describe('the pipeline index', () => {
+  const green = (command: string) =>
+    summary([hit()], 0, { command, attempted: 1, cached: 1, failed: 0 });
+  const red = (command: string) =>
+    summary([task()], 1, { command, attempted: 1, cached: 0, failed: 1 });
+
+  it('leads with an all-green verdict when every run passed', () => {
+    const md = sessionMarkdown([srun(green('turbo run ci')), srun(green('b'))]);
+    assert.match(md, /\*\*All 2 turbo runs succeeded\.\*\*/);
+    assert.ok(!md.includes('❌'));
+  });
+
+  it('names the run that failed, not just the count', () => {
+    const md = sessionMarkdown([
+      srun(green('turbo run ci')),
+      srun(red('turbo run test:e2e:hash')),
+    ]);
+    assert.match(
+      md,
+      /\*\*1 of 2 turbo runs failed\*\* — `turbo run test:e2e:hash`\./,
+    );
+  });
+
+  it('marks each row, so the failing one is findable without reading', () => {
+    const md = sessionMarkdown([
+      srun(green('turbo run ci')),
+      srun(red('turbo run test:e2e:hash')),
+    ]);
+    assert.match(md, /\| ✅ \| `turbo run ci` \|/);
+    assert.match(md, /\| ❌ \| `turbo run test:e2e:hash` \|/);
+  });
+
+  it('names every summary JSON against the run that wrote it', () => {
+    const md = sessionMarkdown([
+      srun(green('turbo run ci'), 'a.json'),
+      srun(green('turbo run build'), 'b.json'),
+    ]);
+    assert.match(md, /`turbo run ci` \| 1 \| .* \| `a\.json` \|/);
+    assert.match(md, /`turbo run build` \| 1 \| .* \| `b\.json` \|/);
+  });
+
+  // The e2e run names five suites and its flags; in full it buries the mark
+  // beside it. The headline below the table still carries the whole command.
+  it('elides a command too long to scan, keeping it whole in the block', () => {
+    const long = `turbo run ${'test:e2e:suite '.repeat(6)}--continue`;
+    const md = sessionMarkdown([srun(green(long)), srun(green('b'))]);
+    const row = md
+      .split('\n')
+      .find((line) => line.startsWith('| ✅ | `turbo run test:e2e'));
+    assert.ok(
+      (row?.length ?? 0) < long.length,
+      'the row is shorter than the command',
+    );
+    assert.ok(row?.includes('…'), 'and says it was cut');
+    assert.ok(md.includes(long), 'the full command survives in the block');
+  });
+
+  it('is absent for a single run, whose headline already carries the mark', () => {
+    const md = sessionMarkdown([srun(red('turbo run ci'))]);
+    assert.ok(!md.includes('| Run |'));
+    assert.match(md, /❌ `turbo run ci`/);
+  });
+});
+
+describe('sessionLines', () => {
+  it('gives each run its own headline on the stdout lane', () => {
+    const runs = [
+      srun(
+        summary([ran('a', 10)], 0, { command: 'turbo run ci', attempted: 1 }),
+      ),
+      srun(
+        summary([hit()], 0, {
+          command: 'turbo run build --filter=@www/lit-ui-router.dev',
+          attempted: 1,
+          cached: 1,
+          success: 0,
+          failed: 0,
+        }),
+      ),
+    ];
+    const headlines = sessionLines(runs).filter((line) =>
+      line.startsWith('──'),
+    );
+    assert.equal(headlines.length, 2);
+    assert.match(headlines[1] ?? '', /--filter=@www\/lit-ui-router\.dev/);
+  });
+
+  it('marks each headline green or red', () => {
+    const runs = [
+      srun(summary([hit()], 0, { command: 'a', attempted: 1, failed: 0 })),
+      srun(summary([task()], 1, { command: 'b', attempted: 1, failed: 1 })),
+    ];
+    const headlines = sessionLines(runs).filter((line) =>
+      line.startsWith('──'),
+    );
+    assert.match(headlines[0] ?? '', /^── ✅ a —/);
+    assert.match(headlines[1] ?? '', /^── ❌ b —/);
+  });
+
+  it('puts a blank line between runs so three do not read as one block', () => {
+    const runs = [
+      srun(summary([hit()], 0, { command: 'a', attempted: 1, failed: 0 })),
+      srun(summary([hit()], 0, { command: 'b', attempted: 1, failed: 0 })),
+    ];
+    const lines = sessionLines(runs);
+    const second = lines.findIndex((line) => line.startsWith('── ✅ b'));
+    assert.equal(lines[second - 1], '');
+  });
+});
+
+describe('sessionHeadline', () => {
+  const red = () =>
+    summary([task()], 1, { command: 'turbo run ci', attempted: 2, cached: 1 });
+  const green = () =>
+    summary([hit()], 0, {
+      command: 'turbo run build',
+      attempted: 3,
+      cached: 3,
+      success: 0,
+      failed: 0,
+    });
+
+  it('sums the counts across the session', () => {
+    const reports = buildReports(red(), new Map());
+    assert.match(sessionHeadline([red(), green()], reports), /5 attempted/);
+    assert.match(sessionHeadline([red(), green()], reports), /4 cached/);
+  });
+
+  it('says how many runs only when there was more than one', () => {
+    assert.match(sessionHeadline([red(), green()], []), /across 2 turbo runs/);
+    assert.ok(!sessionHeadline([red()], []).includes('across'));
+  });
+});
+
+describe('sessionFailureMarkdown', () => {
+  it('names only the run that actually failed', () => {
+    const red = summary([task()], 1, { command: 'turbo run ci' });
+    const md = sessionFailureMarkdown([
+      { summary: red, reports: buildReports(red, new Map()) },
+    ]);
+    assert.equal(md.split('## CI failure summary').length - 1, 1);
+    assert.match(md, /`turbo run ci` — \*\*1 failing\*\*/);
+  });
+
+  it('reports each failing run under the one heading', () => {
+    const a = summary([task()], 1, { command: 'turbo run ci' });
+    const b = summary([task({ taskId: 'other#test' })], 1, {
+      command: 'turbo run test:e2e:hash',
+    });
+    const md = sessionFailureMarkdown([
+      { summary: a, reports: buildReports(a, new Map()) },
+      { summary: b, reports: buildReports(b, new Map()) },
+    ]);
+    assert.equal(md.split('## CI failure summary').length - 1, 1);
+    assert.match(md, /`turbo run ci`/);
+    assert.match(md, /`turbo run test:e2e:hash`/);
+  });
+
+  it('keeps the stdout twin in step, verdict last', () => {
+    const red = summary([task()], 1, { command: 'turbo run ci' });
+    const failures = [{ summary: red, reports: buildReports(red, new Map()) }];
+    const lines = sessionStdoutReport(failures, [red]);
+    assert.match(lines[0] ?? '', /^── lit-ui-router#typecheck:src/);
+    assert.match(lines.at(-1) ?? '', /^1 failing task:/);
   });
 });

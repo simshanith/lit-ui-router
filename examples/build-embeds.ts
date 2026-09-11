@@ -8,17 +8,11 @@ import { execSync } from 'node:child_process';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
-const root = dirname(fileURLToPath(import.meta.url));
-const EXAMPLES = [
-  'helloworld',
-  'hellosolarsystem',
-  'hellosolarsystem-mobx',
-  'hellogalaxy',
-  'design-system-links',
-  'lint-eslint',
-];
+import { EXAMPLE_NAMES } from './embeds.ts';
 
-for (const name of EXAMPLES) {
+const root = dirname(fileURLToPath(import.meta.url));
+
+for (const name of EXAMPLE_NAMES) {
   const cwd = join(root, name);
   console.log(`[build-embeds] ${name}: vite build --base=/examples/${name}/`);
   execSync(`npm run build -- --base=/examples/${name}/`, {

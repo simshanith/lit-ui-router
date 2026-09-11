@@ -17,19 +17,25 @@ reviews:
   poem: false
 
   auto_review:
-    enabled: true
+    # Opt-in, not opt-out. The free OSS tier meters reviews, so nothing is
+    # reviewed automatically; `enabled: false` plus a positive label match means
+    # a review runs only where one is asked for. `@coderabbitai review` still
+    # works on any PR without touching a label.
+    enabled: false
     # Work here sits in draft for a long time. Review on "ready for review",
-    # not on every WIP push; `@coderabbitai review` pulls one in early.
+    # not on every WIP push.
     drafts: false
-    # Release PRs from bump-version.yml are a version bump plus a generated
-    # changelog — nothing to review. `gh pr create --label release` applies the
-    # label in the same call that opens the PR, so one is never briefly
-    # unlabeled. A negative-only filter excludes; it does not opt everything
-    # else out.
-    # `no-coderabbit` is the manual escape hatch: label a PR to spend the
-    # review budget elsewhere. `@coderabbitai review` still works on a labelled
-    # PR when you change your mind.
+    # `coderabbit:review` asks for one. It is one-shot: coderabbit-oneshot.yml
+    # strips the label once the review lands, so later pushes do not re-review
+    # until the label goes back on.
+    # `coderabbit:skip` is the standing veto — it wins even if `coderabbit:review`
+    # is present, so a PR marked "reviewed by hand" stays that way.
+    # `release` (bump-version.yml) and `no-coderabbit` are held over from the
+    # opt-out era. Both are redundant under an allow-list; they stay until the
+    # new labels have proven out, then go in a follow-up.
     labels:
+      - 'coderabbit:review'
+      - '!coderabbit:skip'
       - '!release'
       - '!no-coderabbit'
     base_branches:

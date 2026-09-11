@@ -3,26 +3,23 @@
 // eslint-plugin-pnpm) and the custom-element lane over src (eslint-plugin-lit /
 // -wc / -lit-a11y). oxlint (.oxlintrc.json) owns general-purpose JS/TS *and*
 // lit-ui-router/anchor-is-valid, which it runs as a jsPlugin.
-import tsParser from '@tools/eslint-ts-parser';
-import { WORKSPACE_SRC_GLOB } from '@tools/shared/globs.ts';
+//
+// This file stays at the root because ESLint resolves the nearest
+// eslint.config.* per file, and the tutorials under examples/ ride it
+// deliberately. It composes; the pieces live in @tools/eslint.
+import elementLane from '@tools/eslint/elements.ts';
+import repoRules from '@tools/eslint/rules/index.ts';
 import { defineConfig, globalIgnores } from 'eslint/config';
-import { configs as litConfigs } from 'eslint-plugin-lit';
-import litA11y, {
-  recommendedRules as litA11yRecommendedRules,
-} from 'eslint-plugin-lit-a11y';
 import oxlint from 'eslint-plugin-oxlint';
 import packageJson from 'eslint-plugin-package-json';
 import { configs as pnpmConfigs } from 'eslint-plugin-pnpm';
-import { configs as wcConfigs } from 'eslint-plugin-wc';
-import oxlintDirectiveStubs from './eslint.oxlint-directives.ts';
-import repoRules from './eslint-rules/index.ts';
 
 export default defineConfig(
   globalIgnores([
     // build outputs (every output lives under a dist/ dir): parallel tasks
     // rewrite these mid-lint, so the **/package.json glob must never traverse them
     '**/dist/**',
-    'docs/api/**',
+    'www/lit-ui-router.dev/api/**',
     'tools/release/.cache/**',
     '**/coverage/**',
     '**/node_modules/**',
@@ -79,7 +76,7 @@ export default defineConfig(
         'error',
         {
           selector:
-            'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +(?:\\.\\u002F)?(?:tools|packages|apps|docs|examples)\\u002F/]',
+            'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +(?:\\.\\u002F)?(?:tools|packages|apps|www|examples)\\u002F/]',
           message:
             "Cross-package execution: root scripts must not run another package's files with node/tsx. Add a script to the owning package and delegate via `turbo run <task>` (cached) or `pnpm --filter <pkg> run <script>` (uncached).",
         },
@@ -124,6 +121,34 @@ export default defineConfig(
     },
   },
   {
+    // @tools/bootstrap is the one package a sibling may import by relative
+    // path, because tooling that runs before `pnpm install` has no
+    // node_modules to resolve a bare specifier against. That only holds while
+    // the package needs nothing installed: no dependencies at all, and
+    // devDependencies limited to the lint/typecheck/format toolchain that
+    // never reaches its runtime. The .oxlintrc.json override on
+    // tools/bootstrap/**/*.ts covers the other escape — a relative import out
+    // of the package — and neither guard subsumes the other.
+    files: ['tools/bootstrap/package.json'],
+    rules: {
+      'no-restricted-syntax': [
+        'error',
+        {
+          selector:
+            'JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"])',
+          message:
+            '@tools/bootstrap must resolve with no node_modules: it takes no dependencies of any kind. Put the helper that needs one in @tools/shared instead.',
+        },
+        {
+          selector:
+            'JSONProperty[key.value="devDependencies"] > JSONObjectExpression > JSONProperty:not([key.value="@types/node"]):not([key.value="oxfmt"]):not([key.value="oxlint"]):not([key.value="typescript"])',
+          message:
+            '@tools/bootstrap devDependencies are limited to @types/node, oxfmt, oxlint and typescript — anything else is a package that has to be installed before this one can be read.',
+        },
+      ],
+    },
+  },
+  {
     // Workspace members advertising dist-resolved types must pass-split their
     // build: turbo typecheck/lint depend on ^build:types only, so a dist-typed
     // package without one leaves dependents typechecking against a missing dist.
@@ -132,7 +157,7 @@ export default defineConfig(
       'packages/*/package.json',
       'apps/*/package.json',
       'tools/*/package.json',
-      'docs/package.json',
+      'www/lit-ui-router.dev/package.json',
       'examples/package.json',
     ],
     plugins: { repo: repoRules },
@@ -157,94 +182,7 @@ export default defineConfig(
       ],
     },
   },
-  {
-    // Custom-element lane. lit-analyzer (//#lint:templates) gates template
-    // *correctness* — unknown tags/attributes/properties/events — and is blind
-    // to lifecycle and reactivity semantics: deleting a @property leaves it
-    // green. These three plugins cover that blind spot from the class AST.
-    files: [WORKSPACE_SRC_GLOB],
-    extends: [
-      litConfigs['flat/recommended'],
-      // best-practice over recommended. Note require-listener-teardown scores
-      // zero coverage here despite being the rule closest to this router's
-      // lifecycle: it only reads addEventListener calls lexically inside
-      // connectedCallback, with a string-literal event name. Every site in
-      // packages/lit-ui-router breaks one of those — the names come from
-      // `this.constructor.*` statics, and seekRouter() adds from a helper. It
-      // is on as a guard against future code written in the shape it can see.
-      wcConfigs['flat/best-practice'],
-      litA11y.configs.recommended,
-    ],
-    languageOptions: {
-      parser: tsParser,
-      // Syntax-only: every rule here is class/template AST, so no project
-      // service and no type information — that keeps the lane seconds, not minutes.
-      parserOptions: { ecmaVersion: 'latest', sourceType: 'module' },
-    },
-    plugins: { ...oxlintDirectiveStubs },
-    linterOptions: {
-      // oxlint owns the inline directives in these files, so ESLint cannot
-      // judge whether one is unused.
-      reportUnusedDisableDirectives: 'off',
-    },
-    settings: {
-      // wc infers element base classes by resolving `lit` from cwd; the root has
-      // no lit dep, so without this every LitElement subclass that registers via
-      // a sibling *.register.ts (rather than a @customElement decorator) —
-      // including <ui-view> and <ui-router> — is invisible to the whole plugin.
-      wc: { elementBaseClasses: ['LitElement'] },
-    },
-    rules: {
-      // Reactivity/lifecycle correctness, beyond flat/recommended.
-      'lit/lifecycle-super': 'error',
-      'lit/no-legacy-imports': 'error',
-      // Owned by lit-analyzer's no-unknown-attribute/-property under
-      // ts-lit-plugin, which resolves against real element types.
-      'lit/attribute-names': 'off',
-      'lit/no-native-attributes': 'off',
-      // Every element here descends from LitElement, which always implements the
-      // lifecycle callbacks and documents the unguarded `super.connectedCallback()`
-      // call as required; the rule's premise (base may not implement them) holds
-      // only for mixins over a bare HTMLElement.
-      'wc/guard-super-call': 'off',
-      // Constructor injection (`new Component(props)`) is a documented
-      // lit-ui-router API — see RoutedLitElement in packages/lit-ui-router.
-      'wc/no-constructor-params': 'off',
-      // Deliberately not adopted (it ships outside best-practice): file
-      // organisation, not element semantics — ~20 hits, no defect behind any.
-      'wc/no-exports-with-element': 'off',
-      // Displaced by lit-ui-router/anchor-is-valid, which oxlint runs via
-      // .oxlintrc.json jsPlugins. eslint-plugin-oxlint's config reader only
-      // knows oxlint's native rule names, so it cannot de-duplicate a JS-plugin
-      // rule — this `off` is the manual half of the split.
-      'lit-a11y/anchor-is-valid': 'off',
-    },
-  },
-  {
-    // Demo/docs surfaces, not shipped UI: a11y findings here are worth seeing
-    // but must not gate the library's lint. packages/* stay at error.
-    files: ['apps/*/src/**/*.ts', 'examples/*/src/**/*.ts'],
-    rules: {
-      ...Object.fromEntries(
-        Object.entries(litA11yRecommendedRules).map(([rule, severity]) => [
-          rule,
-          severity === 'off' ? 'off' : 'warn',
-        ]),
-      ),
-      // The map above would switch the displaced rule back on; oxlint owns it.
-      'lit-a11y/anchor-is-valid': 'off',
-    },
-  },
-  {
-    // Test fixtures: elements exist to be driven, not shipped, and their
-    // templates are assertion inputs rather than UI.
-    files: ['**/*.spec.ts', '**/src/specs/**/*.ts'],
-    rules: {
-      ...Object.fromEntries(
-        Object.keys(litA11yRecommendedRules).map((rule) => [rule, 'off']),
-      ),
-    },
-  },
+  elementLane,
   // Keep last: disables any rules oxlint already enforces.
   oxlint.buildFromOxlintConfigFile('./.oxlintrc.json'),
 );

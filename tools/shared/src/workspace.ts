@@ -1,4 +1,4 @@
-// Shared workspace root and enumeration for the check:* scripts and tools.
+// Shared workspace enumeration for the check:* scripts and tools.
 //
 // Why the SDK (not the lockfile, not hand-parsed YAML): pnpm-lock.yaml has
 // already resolved `catalog:` refs to concrete versions, so it can't distinguish
@@ -7,26 +7,21 @@
 // handling, including that the standalone tutorials under examples/* are NOT
 // members (the glob is `examples`, not `examples/*`).
 //
-// The SDK is imported lazily so that `workspaceRoot` costs nothing to import:
-// consumers that only need the path don't load ~100ms of pnpm internals, and
-// don't depend on the root's devDependencies being installed.
+// The SDK is imported lazily so the pure half of this module costs nothing:
+// `isRootMember`, `isPublishable` and the `Member` type are the whole of what
+// several consumers want, and they don't load ~100ms of pnpm internals to get
+// it.
 
-import { dirname, join, relative } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { relative } from 'node:path';
 
 import type { WorkspaceManifest } from '@pnpm/workspace.workspace-manifest-reader';
 
-import type { PackageManifest } from './types.ts';
+import type { PackageManifest } from '@tools/bootstrap/types.ts';
 
-/** Absolute path to the workspace root. This file lives in <root>/tools/shared/src. */
-export const workspaceRoot = join(
-  dirname(fileURLToPath(import.meta.url)),
-  '..',
-  '..',
-  '..',
-);
+/** The `dir` of the root member; every other member's is a real relative path. */
+export const ROOT_DIR = '<root>';
 
-// `dir` is relative to the workspace root, and is '<root>' for the root itself.
+// `dir` is relative to the workspace root, and is ROOT_DIR for the root itself.
 export type Member = {
   name: string;
   dir: string;
@@ -70,7 +65,7 @@ export async function loadWorkspace(root: string): Promise<{
     includeRoot: true,
   });
   const members: Member[] = projects.map((project) => {
-    const dir = relative(root, project.rootDir) || '<root>';
+    const dir = relative(root, project.rootDir) || ROOT_DIR;
     return {
       name: project.manifest?.name ?? dir,
       dir,
@@ -78,6 +73,22 @@ export async function loadWorkspace(root: string): Promise<{
     };
   });
   return { members, workspaceManifest };
+}
+
+/** The workspace root, which is a member but never a package. */
+export function isRootMember(member: Member): boolean {
+  return member.dir === ROOT_DIR;
+}
+
+/** Members npm would publish: a real package, manifest read, not private. */
+export function isPublishable(
+  member: Member,
+): member is Member & { manifest: PackageManifest } {
+  return (
+    !isRootMember(member) &&
+    member.manifest !== undefined &&
+    member.manifest.private !== true
+  );
 }
 
 /** Catalogs from the manifest; the unnamed `catalog:` is `default`, per pnpm. */

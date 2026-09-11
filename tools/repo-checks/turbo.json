@@ -1,0 +1,84 @@
+{
+  "$schema": "https://turborepo.com/schema.json",
+  "extends": ["//"],
+  "tasks": {
+    "test": {
+      // The root test task's src/** inputs would stale-cache this src-less
+      // package; over-approximate instead. The extra globs are pnpm-pin.test.ts's
+      // read-set: it compares the repo's pnpm version pins against
+      // package.json's `packageManager`, so a bump to any of them must re-run it.
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/package.json",
+        "$TURBO_ROOT$/pnpm-lock.yaml",
+        "$TURBO_ROOT$/.config/mise/config.toml",
+        "$TURBO_ROOT$/.config/mise/mise.lock"
+      ]
+    },
+    // Every check below reads the whole repo, not just this package, so each
+    // names its read-set with $TURBO_ROOT$ globs on top of $TURBO_DEFAULT$
+    // (which covers the shells and cores that live here). $TURBO_ROOT$ globs
+    // are not gitignore-pruned, so a `**` walk has to exclude the untracked
+    // trees by hand or it hashes every installed manifest.
+    "check:patches": {
+      // pnpm-lock.yaml carries the patch hashes, so a dependency bump that
+      // could rotate a patch target re-runs the check
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/patches/**",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/pnpm-lock.yaml",
+        "$TURBO_ROOT$/tools/shared/src/**"
+      ]
+    },
+    "check:graph-edges": {
+      // any manifest can gain or lose a lane, any turbo.json an edge that
+      // selects differently — or stops planning at all
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/turbo.json",
+        "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.claude/**",
+        "$TURBO_ROOT$/pnpm-workspace.yaml",
+        "$TURBO_ROOT$/tools/shared/src/**"
+      ]
+    },
+    "check:knip": {
+      // knip resolves imports from source, so no build edge. Any manifest can
+      // gain a declaration, any source file an import, any config, task file
+      // or workflow a reference -- so the read-set is the repo, minus the
+      // trees that are not tracked at all
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/package.json",
+        "$TURBO_ROOT$/**/*.{ts,tsx,js,jsx,cjs,mjs,cts,mts}",
+        "$TURBO_ROOT$/**/*.{json,jsonc,toml,yaml,yml}",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/**/dist/**",
+        "!$TURBO_ROOT$/**/coverage/**",
+        "!$TURBO_ROOT$/**/.turbo/**",
+        "!$TURBO_ROOT$/**/.probe-scratch/**",
+        "!$TURBO_ROOT$/**/.rumdl_cache/**",
+        "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
+        "!$TURBO_ROOT$/.cache/**",
+        "!$TURBO_ROOT$/.claude/**",
+        // ignored by knip.jsonc as standalone installs
+        "!$TURBO_ROOT$/examples/*/**",
+        "$TURBO_ROOT$/pnpm-workspace.yaml"
+      ]
+    },
+    "check:task-inputs": {
+      // the audit is over every planned task, so any turbo.json or manifest
+      // can change the verdict
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "$TURBO_ROOT$/**/turbo.json",
+        "$TURBO_ROOT$/**/package.json",
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.claude/**",
+        "$TURBO_ROOT$/tools/shared/src/**"
+      ]
+    }
+  }
+}

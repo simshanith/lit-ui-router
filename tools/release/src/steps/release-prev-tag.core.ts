@@ -19,7 +19,10 @@ import semver from 'semver';
  * first tag falls through to the last stable and rolls up the lanes before
  * it. A stable release excludes every prerelease tag, so its notes roll up
  * everything since the last stable: rcs preview feature sets, and the
- * major/minor/patch lists them all.
+ * major/minor/patch lists them all. With no earlier tag in the lane the
+ * driver ranges from the repo root instead (`rootCommitArgs`): left to
+ * itself, release-it's repo-wide describe lands on the nearest tag of ANY
+ * lane — the last rc before a first stable — and the range comes up empty.
  */
 export function describeArgs(
   packageName: string,
@@ -88,6 +91,26 @@ export function prereleaseChannels(
 export function parsePrevTag(stdout: string): string | undefined {
   const tag = stdout.trim();
   return tag === '' ? undefined : tag;
+}
+
+/** `git rev-list` args listing the root commit(s) of HEAD's history. */
+export function rootCommitArgs(): string[] {
+  return ['rev-list', '--max-parents=0', 'HEAD'];
+}
+
+/**
+ * The root commit from `git rev-list --max-parents=0` stdout: the first of
+ * them when unrelated histories were merged — `<root>..HEAD` still spans
+ * everything else, so any root serves as the range start.
+ */
+export function parseRootCommit(stdout: string): string {
+  const [root] = stdout.split('\n').map((line) => line.trim());
+  if (root === undefined || !/^(?:[0-9a-f]{40}|[0-9a-f]{64})$/.test(root)) {
+    throw new Error(
+      `expected a root commit sha, got: ${JSON.stringify(stdout)}`,
+    );
+  }
+  return root;
 }
 
 /**

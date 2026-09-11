@@ -1,0 +1,76 @@
+{
+  "$schema": "https://unpkg.com/knip@6/schema.json",
+  // The types the repo gates on. Unused exports, types and duplicates stay off:
+  // the sample apps export every element twice by design, and the export
+  // surface has not been reviewed against knip yet.
+  "include": [
+    "files",
+    "dependencies",
+    "unlisted",
+    "catalog",
+    "catalogReferences",
+  ],
+  // an ignore that stops matching anything is a finding, not a comfort
+  "treatConfigHintsAsErrors": true,
+  "workspaces": {
+    ".": {
+      // nothing scripts it; kept so `pnpm wrangler` works at the repo root
+      "ignoreDependencies": ["wrangler"],
+    },
+    "examples": {
+      "entry": ["*.test-d.ts"],
+      // the tutorials are standalone npm projects with their own manifests
+      "ignore": ["*/**"],
+    },
+    "apps/sample-app-lit-e2e": {
+      // reached from root mise tasks and `cypress --config-file`
+      "entry": ["scripts/*.ts", "cypress*.config.ts", "src/**/*.cy.{ts,js}"],
+    },
+    "packages/lit-ui-router": {
+      "ignoreDependencies": [
+        // imported by the emitted dist, not by src
+        "@oxc-project/runtime",
+        // exact-pin alias pnpm dedupes the wide range onto (#454)
+        "oxc-project-runtime",
+        // release-it plugin, named in @tools/release-config's config
+        "@release-it/conventional-changelog",
+        // vitest alias target for the lit 2 compat lane
+        "lit-2",
+      ],
+    },
+    "packages/lit-ui-router-mobx": {
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        "lit-2",
+        "mobx-6",
+        "lit-ui-router-floor",
+      ],
+    },
+    "packages/navigation-location-plugin": {
+      "ignoreDependencies": ["@release-it/conventional-changelog"],
+    },
+    "packages/ui-router-server": {
+      "ignoreDependencies": ["@release-it/conventional-changelog"],
+    },
+    "packages/eslint-plugin-lit-ui-router": {
+      "ignoreDependencies": ["@release-it/conventional-changelog"],
+      // oxlint fixture inputs, never imported
+      "ignore": ["test/oxlint/*.js"],
+    },
+    "tools/dts-backtest": {
+      "entry": ["fixtures/*.ts"],
+      // the TS version matrix is imported by computed specifier
+      "ignoreDependencies": ["typescript-5.0", "typescript-6", "typescript-7"],
+    },
+    "tools/oxc-emit": {
+      // reached via createRequire(), which knip does not follow
+      "ignoreDependencies": ["@ampproject/remapping"],
+    },
+    "tools/shared": { "entry": ["src/**/*.test-d.ts"] },
+    "www/lit-ui-router.dev": {
+      "entry": [".vitepress/vite.config.ts"],
+      // copied out of node_modules/<name>/dist by path in the vite config
+      "ignoreDependencies": ["sample-app-lit-vanilla", "sample-app-lit-mobx"],
+    },
+  },
+}

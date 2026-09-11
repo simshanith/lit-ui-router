@@ -1,7 +1,7 @@
 import { existsSync } from 'node:fs';
 import path from 'node:path';
 
-import { requireManifest } from '@tools/shared/manifest.ts';
+import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
 export type PackageEntry = { label: string; file: string };
 

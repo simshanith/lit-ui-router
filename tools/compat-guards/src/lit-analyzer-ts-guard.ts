@@ -10,11 +10,11 @@
 // anchor, so it silently reverts to two pins that still look linked. Hence the
 // duplicate, and hence this guard.
 // Usage (from anywhere): lit-analyzer-ts-guard
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   selectCatalogs,
   loadWorkspaceManifest,
   selectPackageExtensions,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 import { guard } from './guard.ts';

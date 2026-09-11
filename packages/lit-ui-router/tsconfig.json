@@ -14,7 +14,8 @@
     "src/**/*",
     "vitest.config.ts",
     "vitest.env.d.ts",
-    "vitest.setup.ts"
+    "vitest.setup.ts",
+    "vitest.setup.node.ts"
   ],
   "exclude": ["node_modules", "dist"]
 }

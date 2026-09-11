@@ -6,6 +6,7 @@ import { TransitionController, UIViewInjectedProps } from 'lit-ui-router';
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import AppConfig from '../global/appConfig.js';
 import DialogService from 'sample-app-shared/app/global/dialogService.js';
+import { dsrForgetFinishedState } from 'sample-app-shared/app/util/dsr-forget-finished-state.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
 
 interface ComposeResolves {
@@ -98,6 +99,29 @@ export class Compose extends LitElement {
     void router.stateService.go(state, params);
   }
 
+  /**
+   * The draft is finished. A sticky Compose outlives the visit, so both halves
+   * of "finished" have to be said out loud:
+   *
+   * - clear the draft, or the next New Message opens with these values.
+   *   resetMessage compares only the PRISTINE copies — both empty — so without
+   *   `force` it returns early and leaves the edited one alone.
+   * - drop the DSR memory, or returning to Messages reopens this state.
+   *
+   * Deliberately NOT part of `uiCanExit` or the transition hook: the point is
+   * finished vs. in-progress, and an unsent draft must still survive a trip
+   * out of the sticky branch (#723).
+   */
+  finishDraft() {
+    dsrForgetFinishedState(
+      this._uiViewProps.router,
+      'mymessages',
+      'mymessages.compose',
+    );
+    this.resetMessage({}, { force: true });
+    this.canExit = true;
+  }
+
   /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
   send() {
     const { message } = this;
@@ -107,7 +131,7 @@ export class Compose extends LitElement {
       read: true,
       folder: 'sent',
     })
-      .then(() => (this.canExit = true))
+      .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
 
@@ -127,7 +151,7 @@ export class Compose extends LitElement {
       read: true,
       folder: 'drafts',
     })
-      .then(() => (this.canExit = true))
+      .then(() => this.finishDraft())
       .then(() => this.gotoPreviousState());
   }
 
@@ -141,7 +165,7 @@ export class Compose extends LitElement {
             type="text"
             id="to"
             name="to"
-            value=${message.to ?? ''}
+            .value=${message.to ?? ''}
             @change=${this.handleChangeMessage('to')}
           />
         </div>
@@ -151,7 +175,7 @@ export class Compose extends LitElement {
             type="text"
             id="subject"
             name="subject"
-            value=${message.subject}
+            .value=${message.subject}
             @change=${this.handleChangeMessage('subject')}
           />
         </div>

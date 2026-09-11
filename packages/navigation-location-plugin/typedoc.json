@@ -1,8 +1,8 @@
 {
   "$schema": "https://typedoc.org/schema.json",
   "entryPoints": ["src/index.ts"],
-  "out": "../../docs/api/navigation-location-plugin",
-  "docsRoot": "../../docs",
+  "out": "../../www/lit-ui-router.dev/api/navigation-location-plugin",
+  "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
     "typedoc-plugin-markdown",
     "typedoc-vitepress-theme",

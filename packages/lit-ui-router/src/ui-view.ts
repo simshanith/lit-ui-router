@@ -1,4 +1,4 @@
-import { LitElement } from 'lit';
+import { LitElement, html } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
@@ -22,11 +22,13 @@ import {
 
 import {
   RoutedLitTemplate,
+  UIViewInjectedProps,
   UiOnExit,
   UiOnParamsChanged,
   NormalizedLitViewDeclaration,
 } from './interface.js';
-import { LitViewConfig, UIRouterLit } from './core.js';
+import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
+import { routedLitElementRenderer } from './routed-element.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
 
@@ -49,6 +51,10 @@ type deregisterFn = () => void;
 
 /**
  * @hideconstructor
+ *
+ * @slot - <code>&lt;ui-view&gt;</code> renders slotted content as fallback
+ * whenever no routed component is active.
+ *
  * @fires {CustomEvent} ui-router-context
  *
  * This event is fired to obtain the <code>uiRouter</code> instance,
@@ -83,10 +89,12 @@ export class UiView extends LitElement {
   @state()
   private viewAddress!: UiViewAddress;
 
+  /** Replaced only by a real view config change, so a retained view keeps its subtree. */
   @state()
   private component: RoutedLitTemplate | null = null;
 
-  private readonly inner = document.createDocumentFragment();
+  /** Created on connect: the @lit-labs/ssr DOM shim has no `createDocumentFragment`. */
+  private inner?: DocumentFragment;
 
   /** @internal */
   createRenderRoot(): this {
@@ -130,9 +138,12 @@ export class UiView extends LitElement {
     }
 
     this.resolveContext = new ResolveContext(config.path);
-    this.component = (
-      config.viewDecl as NormalizedLitViewDeclaration
-    ).component;
+    // Past the identity gate, so the config genuinely changed: a fresh renderer
+    // here is what drops the old element.
+    const { component } = config.viewDecl as NormalizedLitViewDeclaration;
+    this.component = isRoutedLitElement(component)
+      ? routedLitElementRenderer(component)
+      : component;
     this.requestUpdate();
   }
 
@@ -196,6 +207,7 @@ export class UiView extends LitElement {
   }
 
   private captureContent() {
+    this.inner ??= document.createDocumentFragment();
     this.inner.append(...this.childNodes.values());
   }
 
@@ -292,6 +304,7 @@ export class UiView extends LitElement {
    * For each transition, checks if any param values changed and notify component
    */
   private _invokeUiOnParamsChangedHook($transition$: Transition) {
+    // Fresh resolves need a re-render; `render` reuses the element rather than rebuilding it.
     this.requestUpdate();
 
     const instance = this.firstElementChild as UiOnParamsChanged & Element;
@@ -378,7 +391,8 @@ export class UiView extends LitElement {
   /** @internal */
   render(): Node | TemplateResult {
     if (!this.component || !this.viewAddress) {
-      return this.inner.cloneNode(true);
+      // Never connected (server render): an empty declarative shadow root would hide the light DOM.
+      return this.inner?.cloneNode(true) ?? html`<slot></slot>`;
     }
 
     const { uiRouter: router } = this;
@@ -394,11 +408,9 @@ export class UiView extends LitElement {
       .reduce(applyPairs, {});
     const transition = injector.get(Transition) as Transition;
 
-    return this.component({
-      router,
-      resolves,
-      transition,
-    });
+    const props: UIViewInjectedProps = { router, resolves, transition };
+
+    return this.component(props);
   }
 }
 

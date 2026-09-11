@@ -43,6 +43,10 @@
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/**/package.json",
+        // $TURBO_ROOT$ globs are not gitignore-pruned, so the line above
+        // otherwise hashes every installed dependency's manifest too
+        "!$TURBO_ROOT$/**/node_modules/**",
+        "!$TURBO_ROOT$/.claude/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/tools/shared/src/**"

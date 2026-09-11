@@ -1,3 +1,4 @@
+import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import { execFileSync, spawn, type ChildProcess } from 'node:child_process';
 import { appendFileSync, createWriteStream, readFileSync } from 'node:fs';
 import { connect } from 'node:net';
@@ -6,8 +7,12 @@ import { setTimeout as sleep } from 'node:timers/promises';
 // Sample the sample-app-lit-e2e suites N times serially and report per-attempt
 // flake. Inputs ride the environment (workflow step `env:`), never argv:
 //   DEFLAKE_RUNS  attempts, clamped to 1-10 (non-numeric/empty -> 5)
-//   DEFLAKE_PORT  dev-server port to verify free between attempts (default 8787)
-// Attempts run OUTSIDE turbo so a cached test task can't replay attempt 1.
+//   WWW_DEV_PORT  dev-server port to verify free between attempts; unset means
+//                 the default in @www/lit-ui-router.dev/dev-port.ts
+// Each attempt is a full `mise run test_e2e` — dev server started and torn
+// down around one turbo run of the five suites. TURBO_FORCE is set per
+// attempt because those suites ARE cached tasks now: without it attempt 2
+// onwards would replay attempt 1's log and every sample would agree.
 
 // The workers-sdk#14926 crash surfaces as the client failing to reach the dev
 // server. Exported so measure-deflake.ts can count the same signature.
@@ -17,14 +22,14 @@ export const crashSignatureFor = (port: number): string =>
 // Bounded wait for the port to drain after a sweep (seconds).
 const PORT_WAIT_TRIES = 20;
 
+// Tolerant of what Actions actually delivers: a `type: number` input arrives
+// as a float string (`10.0`), so parse then truncate rather than demanding
+// digits. Anything unparseable or empty falls back to 5.
 export function clampRuns(raw: string | undefined): number {
-  if (raw === undefined || !/^[0-9]+$/.test(raw)) return 5;
-  return Math.min(10, Math.max(1, Number.parseInt(raw, 10)));
-}
-
-export function parsePort(raw: string | undefined): number {
-  if (raw === undefined || !/^[0-9]+$/.test(raw)) return 8787;
-  return Number.parseInt(raw, 10);
+  const parsed = Number(raw?.trim());
+  if (raw === undefined || raw.trim() === '' || !Number.isFinite(parsed))
+    return 5;
+  return Math.min(10, Math.max(1, Math.trunc(parsed)));
 }
 
 // True when something answers a TCP connect on 127.0.0.1:port. Connection
@@ -99,8 +104,9 @@ let inflight: ChildProcess | undefined;
 
 async function runAttempt(logFile: string): Promise<number> {
   const log = createWriteStream(logFile);
-  const child = spawn('pnpm', ['--filter', 'sample-app-lit-e2e', 'test'], {
+  const child = spawn('mise', ['run', 'test_e2e'], {
     stdio: ['ignore', 'pipe', 'pipe'],
+    env: { ...process.env, TURBO_FORCE: '1' },
   });
   inflight = child;
   child.stdout.pipe(log);
@@ -125,7 +131,7 @@ async function main(): Promise<void> {
   }
 
   const runs = clampRuns(process.env.DEFLAKE_RUNS);
-  const port = parsePort(process.env.DEFLAKE_PORT);
+  const port = resolveWwwDevPort();
   const crashSignature = crashSignatureFor(port);
 
   let fails = 0;

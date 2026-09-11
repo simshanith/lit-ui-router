@@ -4,12 +4,12 @@
 // package's node_modules, so guards run from the package dir.
 import { join } from 'node:path';
 
-import { readManifest } from '@tools/shared/manifest.ts';
-import type { PackageManifest } from '@tools/shared/types.ts';
+import { readManifest } from '@tools/bootstrap/manifest.ts';
+import type { PackageManifest } from '@tools/bootstrap/types.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
   selectCatalogs,
   loadWorkspaceManifest,
-  workspaceRoot,
 } from '@tools/shared/workspace.ts';
 
 /** A dependency's range in a named catalog; undefined when either is absent. */
@@ -23,7 +23,7 @@ export async function catalogRange(
 
 /**
  * Manifest of an aliased devDep as installed in the invoking package; undefined
- * when the alias isn't installed there. See @tools/shared/manifest.ts for why
+ * when the alias isn't installed there. See @tools/bootstrap/manifest.ts for why
  * the manifest is read rather than resolved.
  */
 export function installedManifest(alias: string): PackageManifest | undefined {

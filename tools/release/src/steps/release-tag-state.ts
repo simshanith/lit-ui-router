@@ -4,7 +4,8 @@
 
 import type { Exec } from '@tools/shared/exec.ts';
 import { defaultExec } from '@tools/shared/exec.ts';
-import { loadWorkspace, workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { loadWorkspace } from '@tools/shared/workspace.ts';
 import { memberDir } from './release-package-info.core.ts';
 import { releaseTagName } from './release-tag-push.core.ts';
 import type { TagState } from './release-tag-state.core.ts';

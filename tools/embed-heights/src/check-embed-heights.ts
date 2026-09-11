@@ -14,7 +14,7 @@ import { readdir, stat } from 'node:fs/promises';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 
-import { workspaceRoot } from '@tools/shared/workspace.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import { measureExamples, serveExamples, serverOrigin } from './measure.ts';
 import {
@@ -24,10 +24,7 @@ import {
   type Verdict,
 } from './reserve.core.ts';
 
-const MANIFEST = join(
-  workspaceRoot,
-  'docs/.vitepress/theme/components/examples.ts',
-);
+const MANIFEST = join(workspaceRoot, 'examples/embeds.ts');
 const EXAMPLES_DIR = join(workspaceRoot, 'examples');
 
 const args = new Set(process.argv.slice(2));
@@ -63,9 +60,7 @@ const built = await exampleDirs();
 
 const missing = built.filter((name) => !(name in declared));
 if (missing.length > 0) {
-  fail(
-    `no entry in docs/.vitepress/theme/components/examples.ts for: ${missing.join(', ')}`,
-  );
+  fail(`no entry in examples/embeds.ts for: ${missing.join(', ')}`);
 }
 const orphaned = Object.keys(declared).filter((name) => !built.includes(name));
 if (orphaned.length > 0) {
@@ -81,7 +76,7 @@ for (const name of built) {
   } catch {
     fail(
       `examples/${name}/dist is not built — run \`turbo run build:embeds --filter=examples\`` +
-        ` (is ${name} listed in examples/build-embeds.ts?)`,
+        ` (is ${name} listed in examples/embeds.ts?)`,
     );
   }
 }
@@ -158,7 +153,5 @@ if (broken.length > 0) {
         : `${name}: reserves ${value}px for ${required}px of content — stale. Use '${suggested}px'.`,
     );
   }
-  fail(
-    `${broken.length} height(s) out of date in docs/.vitepress/theme/components/examples.ts`,
-  );
+  fail(`${broken.length} height(s) out of date in examples/embeds.ts`);
 }

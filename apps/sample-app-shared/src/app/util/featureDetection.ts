@@ -32,6 +32,9 @@ export function canUseNavigationAPI(): boolean {
   );
 }
 
+/** Explicit "no preference" value: identical to leaving the setting unset. */
+export const LOCATION_PLUGIN_AUTO = 'default';
+
 export function isValidLocationPlugin(
   value: string | undefined,
 ): value is LocationPluginFeatureSymbol {
@@ -39,24 +42,32 @@ export function isValidLocationPlugin(
 }
 
 /**
- * Resolves location plugin with priority:
+ * Reads the configured preference, in priority order:
  * 1. URL param ?feature-location-plugin=...
  * 2. Session storage
  * 3. Env var VITE_SAMPLE_APP_LOCATION_PLUGIN
+ *
+ * `default` at any level means "no preference", so it stops the lookup rather
+ * than falling through to the level below.
  */
 export function resolveLocationPluginFeature(): string | undefined {
-  const feature = featureFlags.get('location-plugin');
+  const feature = featureFlags.get('location-plugin') as string | undefined;
   if (isValidLocationPlugin(feature)) return feature;
+  if (feature === LOCATION_PLUGIN_AUTO) return undefined;
 
-  // Check env var
-  return import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as string | undefined;
+  const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as
+    | string
+    | undefined;
+  return env === LOCATION_PLUGIN_AUTO ? undefined : env;
 }
 
 /**
- * Resolves location plugin with auto-detection:
- * 1. Detect preference (URL param, session storage, env var) when set
- * 2. Navigation API when preferred and available in browser
- * 3. Fallback to pushState
+ * Resolves the location plugin actually handed to the router.
+ *
+ * A preference wins, except that `navigation` downgrades to `pushState` on a
+ * browser without the API. With no preference — unset, `default`, or anything
+ * unrecognized — the app chooses: Navigation API where it exists, `pushState`
+ * everywhere else.
  */
 export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
   let feature = resolveLocationPluginFeature();
@@ -64,7 +75,7 @@ export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
     feature = 'pushState';
   }
   if (isValidLocationPlugin(feature)) return feature;
-  return 'pushState';
+  return canUseNavigationAPI() ? 'navigation' : 'pushState';
 }
 
 export interface FeatureFlagDefinitions {
