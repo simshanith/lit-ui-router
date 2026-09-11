@@ -1,13 +1,13 @@
 import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
-import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import pkg from 'start-server-and-test/package.json' with { type: 'json' };
 
-// exec does no PATH search, and pnpm's isolated node_modules keeps this bin out
-// of the root .bin, so name the shim outright. The shim execs the rest of the
-// way, so the pid stays ours through it.
-const BIN = join(
-  dirname(dirname(fileURLToPath(import.meta.url))),
-  'node_modules/.bin/start-server-and-test',
+// exec does no PATH search, so resolve the bin the way npm links it
+const BIN = fileURLToPath(
+  new URL(
+    pkg.bin['start-server-and-test'],
+    import.meta.resolve('start-server-and-test/package.json'),
+  ),
 );
 
 // execve is POSIX-only, hence optional; the annotation keeps the call terminal
@@ -35,5 +35,5 @@ export function serveAndTest(
     .join('|');
 
   // argv[0] is ours to set; env defaults to process.env
-  execve(BIN, [BIN, server, ready, test]);
+  execve(process.execPath, [process.execPath, BIN, server, ready, test]);
 }
