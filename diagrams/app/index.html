@@ -143,44 +143,6 @@
         letter-spacing: 0.04em;
         color: var(--ink);
       }
-      /* THE ARTICLE COLUMN. The word is said ONCE at the head of the list and
-         every sheet titled "the …" carries a ditto under it. The cell is a
-         fixed 20px whether or not it is marked, so no title ever moves; the
-         head row borrows the entries' own geometry (34px number, 9px gaps) so
-         the word sits directly over the column of marks. */
-      .rail-the {
-        display: flex;
-        gap: 9px;
-        align-items: baseline;
-        margin: 0;
-        padding: 0 16px 2px;
-        font-family: var(--title);
-        font-size: 12px;
-        font-weight: 600;
-        letter-spacing: 0.04em;
-        color: var(--ink);
-      }
-      .rail-the .n {
-        flex: 0 0 34px;
-      }
-      .rail-the .art {
-        flex: 0 0 20px;
-        text-align: center;
-        white-space: nowrap;
-      }
-      /* U+2033 DOUBLE PRIME, not U+3003: the prime is IN the data face, so the
-         mark is the atlas's own type on both hosts; the ditto glyph is not, and
-         falls to whatever the system offers. Nudged down to sit at x-height,
-         where a ledger's ditto sits, instead of at the cap line. */
-      .rail-links .d {
-        flex: 0 0 20px;
-        text-align: center;
-        font-family: var(--data);
-        font-size: 13px;
-        line-height: 1;
-        color: var(--ink-faint);
-        transform: translateY(3px);
-      }
       .rail-sec {
         font-family: var(--data);
         font-size: 10px;
@@ -241,26 +203,6 @@
           font-size: 15px;
           margin: 0;
         }
-        /* COLLAPSED = THE WORDMARK. In the top bar the atlas is named plainly,
-           in one line of the display face: no catchword, no article set apart.
-           The article span reverts to its own text, uppercased with the rest. */
-        .rail .rail-head h1 .art {
-          font: inherit;
-          letter-spacing: inherit;
-          color: inherit;
-          text-transform: uppercase;
-          margin: 0;
-        }
-        .rail .rail-head h1 .art::before {
-          content: none;
-        }
-        .rail .rail-head h1 .art .w {
-          position: static;
-          width: auto;
-          height: auto;
-          overflow: visible;
-          clip-path: none;
-        }
         .rail-toggle {
           display: inline-block;
           flex: 0 0 auto;
@@ -313,8 +255,6 @@
         .rail-head,
         .rail-top,
         .rail-sec,
-        .rail-the,
-        .rail-links .d,
         .rail-links .t {
           opacity: 0;
         }
@@ -325,14 +265,10 @@
         .rail:hover .rail-head,
         .rail:hover .rail-top,
         .rail:hover .rail-sec,
-        .rail:hover .rail-the,
-        .rail:hover .rail-links .d,
         .rail:hover .rail-links .t,
         .rail:focus-within .rail-head,
         .rail:focus-within .rail-top,
         .rail:focus-within .rail-sec,
-        .rail:focus-within .rail-the,
-        .rail:focus-within .rail-links .d,
         .rail:focus-within .rail-links .t {
           opacity: 1;
         }
@@ -343,8 +279,6 @@
           .rail-head,
           .rail-top,
           .rail-sec,
-          .rail-the,
-          .rail-links .d,
           .rail-links .t {
             transition: opacity 120ms ease;
           }
@@ -493,10 +427,12 @@
         font-weight: 600;
         margin: 6px 0 6px;
       }
-      /* The cover title carries the set's ONE article treatment (`.art`, in the
-         generated sheets/atlas.css): the kit's catchword where the face is
-         declared, the word in the data face everywhere else. The rail's title
-         is the same markup, so the two agree on the homepage. */
+      /* TWO NAMES, AND ONLY TWO. The cover title and the rail head both carry
+         the FULL wordmark: plain uppercase THE ALTITUDE ATLAS in the display
+         face, nothing set apart, so the homepage says the name once in one
+         voice. The CONDENSED wordmark — the data face with the kit's catchword
+         for its article (`.cw`, in the generated sheets/atlas.css) — belongs to
+         the ledger: every sheet-head PROJECT line and every title block. */
       /* two lines, not one 141-character rule: the motto, then the stamp */
       .cover-sub .stamp {
         display: block;
@@ -1115,7 +1051,7 @@
       // .check() answers "can this be rendered", which is true for a family
       // nothing declares; only a DECLARED @font-face lands in the set, so that
       // is what is asked. Sets html[data-catchwords="on"] — the only thing the
-      // cover's catchword rule keys on.
+      // condensed wordmark's catchword rule keys on (`.cw`, in sheets/atlas.css).
       (function () {
         var armed = function () {
           for (var f of document.fonts) {

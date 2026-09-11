@@ -170,56 +170,65 @@ body {
   text-wrap: balance;
   margin-bottom: 4px;
 }
-/* THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11). Every sheet
-   title begins with THE and the title face is unicase — no small cap, no
-   alternate, nothing to demote it with. So the article is SET APART rather than
-   shrunk: lowercase in the DATA face at 0.8em of its title, soft ink, on the
-   baseline, so it reads as a word and not as a footnote. ONE rule set for every
-   site the atlas has — sheet heads, sheet titles, the title block's PROJECT and
-   SHEET TITLE, the cover, the cards, the rail.
-   The word carries its own no-break space, so a title never breaks after it. */
-.art {
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
   font-family: var(--data);
-  font-size: 0.8em;
+  font-size: 0.6em;
   font-weight: 400;
   font-variant-numeric: normal;
-  letter-spacing: 0.01em;
-  text-transform: lowercase;
-  color: var(--ink-soft);
-  margin-right: 0.04em;
-}
-/* THE CATCHWORD. On a host that DECLARES the kit's hwt-catchwords (the guard
-   script sets data-catchwords), the word steps aside and catchword key e is
-   drawn in its place — one face, no GSUB, every THE keyed, key e the plainest
-   of the ten. Off the kit (the artifact, any host without it) none of this
-   applies and the word above draws; the bare key e in the title face is the
-   failure the guard prevents. The scale is the cap-matched 1.08em the type
-   specimen measured, so the size is the title's, not the article's. */
-html[data-catchwords="on"] .art {
-  font-size: inherit;
   letter-spacing: 0;
-  margin-right: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-right: 0.1em;
 }
-html[data-catchwords="on"] .art .w {
+/* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
+   is the full uppercase wordmark in the display face, which the rail head and
+   the cover title carry plain. This one is the LEDGER name: the data face, and
+   the article drawn as the kit's catchword. Two sites carry it — every
+   sheet-head PROJECT line and the title block's PROJECT value — and both wrap
+   the superior in .cw, so this is ONE rule set, not two.
+   HWT Catchwords is an Adobe-kit face with NO GSUB: every THE in it is
+   keyed to one character and key e is the plainest of the ten (upright block
+   caps over two leaves). It draws ONLY where the guard script found the face
+   declared; off the kit — the artifact, any host without it — none of this
+   applies and the sup.art superior inside is what draws. The bare key e in the
+   display face is the failure that guard prevents. */
+html[data-catchwords="on"] .cw::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* the cap-matched 1.08em the type specimen measured, with a 24px FLOOR. The
+     catchword draws THE as two stacked lines inside one cap height, so at the
+     ledger sizes these two sites run — 11.5px in a sheet head, 13.5px in a
+     title block — the measured scale is an inkblot. 24px is the size at which
+     the three letters separate again, and the size at which the mark still
+     clears the head band: line-height 0 keeps it out of the line box, so
+     nothing below 26px grows a row or crosses the rule under it. */
+  font-size: max(1.08em, 24px);
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.16em;
+  /* the mark is taller than the 11.5px head line: kept out of the line box so
+     the sheet head does not grow a row around it */
+  line-height: 0;
+  vertical-align: baseline;
+}
+html[data-catchwords="on"] .cw sup.art {
   position: absolute;
   width: 1px;
   height: 1px;
   overflow: hidden;
   clip-path: inset(50%);
   white-space: nowrap;
-}
-html[data-catchwords="on"] .art::before {
-  content: "e";
-  font-family: "hwt-catchwords";
-  /* the cap-matched 1.08em, with a 15px floor: the catchword draws THE as two
-     lines inside one cap height, so at ledger sizes the measured scale is a
-     smudge — the floor is the size below which the mark stops reading */
-  font-size: max(1.08em, 15px);
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink-soft);
-  margin-right: 0.2em;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -395,9 +404,11 @@ code, kbd, samp { font-family: var(--code); }
   color: var(--ink-soft);
   margin-bottom: 2px;
 }
-/* The two values that carry the atlas's own name, and the sheet's. */
+/* The two values that carry the atlas's own name, and the sheet's. PROJECT is
+   the CONDENSED wordmark — the data face, like the sheet-head line it repeats,
+   not the display face the rail and the cover reserve for the full one. */
 .titleblock .dsp {
-  font-family: var(--display);
+  font-family: var(--data);
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.10em;
@@ -407,6 +418,20 @@ code, kbd, samp { font-family: var(--code); }
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.04em;
+}
+/* THE ARTICLE, INLINE — the title block's SHEET TITLE field ALONE. A ledger
+   field is read as a value, not as a headline, so here the word is set at the
+   value's own size on its own baseline in the data face, rather than lifted
+   into a superior. Its own class, so it can never reach sup.art. */
+.titleblock .ttl .art-inline {
+  font-family: var(--data);
+  font-size: inherit;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  vertical-align: baseline;
 }
 /* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
    caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
@@ -481,8 +506,8 @@ a { color: var(--accent); }
   });
 })();</script>
 <section class="sheet" id="sheet-3B" aria-label="Sheet 3B: THE WATCHED CITY">
-  <div class="sheet-head"><span class="proj"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 3B / 14</span></div>
-  <h2 class="sheet-title"><span class="art"><span class="w">the&nbsp;</span></span>WATCHED CITY</h2>
+  <div class="sheet-head"><span class="proj"><span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 3B / 14</span></div>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>WATCHED CITY</h2>
   <p class="sheet-sub">ALTITUDE 3 · ALTERNATE PLATE B — the PR ci graph as a city: 195 real tasks in 26 massed structures · footprint = watched files (9,479 task-file hashes) · height = command sloc (2,212) · 465 phantom plots · every number imported from diagrams/data/census-mass3b.json, surveyed at origin/main @ 65e2843 (2026-09-11)</p>
   <figure>
     <div class="plate" style="--plate-ar:1.2522"><div class="figure-wrap"><svg viewBox="0 0 1400 1118" role="img" aria-label="Isometric city of the lit-ui-router pull-request CI task graph, the second alternate plate at altitude three. Behind the city lies a long hatched vacant field: 465 phantom plots, the 70.5 percent of the graph that runs nothing. The root yard at the north-west holds every root-scoped task as its own pad: six equal slabs that each watch the same 688 root files — one of them, lint:elements, a 401-sloc spire whose lane runs the repo's own bin rather than an external one — and a cluster of small pads including the taplo pad the deepest chain enters. One vacant lot among them is the phantom lint:workflows twin. Off the yard's west edge stands the guard house: @tools/repo-checks, one block for all 8 of its tasks, 299 sloc of command over 763 watched files, four of them checks the lint task carries alongside itself. The five package quarters stand in a center row, massed by their watched files and the guard and emitter scripts behind their tasks; the easternmost is the eslint plugin, new to this survey. To the east, the instrument end of town: the release works, the typedoc plugin annotated with its fan-out, a terrace of 18 small tools, and the city's landmark — the dts-backtest tower, 291 lines of run dot ts standing on a 32-file footprint. South of the river sit the apps block, the harbour that every quarter ships API docs into, and the defining horizontal feature: the examples plain, 303 watched files under 19 lines of command. Every massed block carries the same red hatch because every one stops the PR — severity is uniform by construction. Roads trace the dependency arteries with degree counts; an accent dashed road marks where the six-hop deepest chain of plate 3A passes through. A structure schedule reconciles all 195 real tasks, their 9,479 task-file hashes and 2,212 command sloc.">
@@ -955,8 +980,8 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="6,12 24,4 42,12 24,20" class="skr fp"/><rect x="21" y="1" width="6" height="8" class="skr fp"/></svg></td><td>height = command sloc — script line + the file behind it</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><polygon points="2,14 24,4 46,14 24,24" class="skr fp"/></svg></td><td>footprint = watched files — the task’s hashed inputs</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="art"><span class="w">the&nbsp;</span></span>ALTITUDE ATLAS</span></div>
-  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art"><span class="w">the&nbsp;</span></span>WATCHED CITY</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art-inline">the&nbsp;</span>WATCHED CITY</span></div>
   <div><span class="fld">SCALE</span>THE CI TASK GRAPH</div>
   <div><span class="fld">FORM</span>ISOMETRIC GRAPH CITY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>

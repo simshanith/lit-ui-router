@@ -48,24 +48,22 @@ import { applyTheme, readTheme } from './theme.ts';
 const ACTIVE = { activeClasses: ['is-active'] };
 
 /**
- * THE ARTICLE (T9, 2026-09-06; enlarged and unified 2026-09-11): a title keeps
- * its THE, drawn as a word in the data face — and as the kit's catchword on a
- * host that declares one (`.art`, styled in the generated sheets/atlas.css so
- * the flat set, the app and the artifact draw it alike).
+ * THE ARTICLE (T9, shipped 2026-09-06): a title keeps its THE, drawn as a
+ * lowercase superior in the data face (`sup.art`, styled in the generated
+ * sheets/atlas.css so the flat set, the app and the artifact draw it alike).
  * Twins: `articleTitle` in generator/chrome.mjs and in prerender.ts.
  */
-const THE: TemplateResult = html`<span class="art"><span class="w">the&nbsp;</span></span>`;
-
-/** The project name AS DRAWN — one treatment wherever the atlas names itself. */
-const PROJECT_MARK: TemplateResult = html`${THE}ALTITUDE ATLAS`;
+const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
 
 /**
- * THE DITTO: the rail says "the" once at the head of the column and every title
- * under it inherits the word through a ditto mark. The cell is drawn EMPTY for
- * a title that carries no article, so no entry's title moves.
+ * THE CONDENSED WORDMARK — the atlas's LEDGER name, for the sheet-head PROJECT
+ * line and the plates' title blocks: the data face, with the article drawn as
+ * the kit's catchword (`.cw` in sheets/atlas.css) and as the superior off it.
+ * The rail head and the cover title carry the OTHER name — the full uppercase
+ * wordmark in the display face, plain, with nothing set apart.
+ * Twin: `PROJECT_MARK` in generator/chrome.mjs and in prerender.ts.
  */
-const ditto = (title: string): TemplateResult =>
-  html`<span class="d" aria-hidden="true">${ARTICLE.test(title) ? '\u2033' : ''}</span>`;
+const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span>ALTITUDE ATLAS`;
 
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
@@ -298,10 +296,7 @@ const sheetEntry = (sheet: SheetRow): TemplateResult => html`
     ${uiSref('atlas.sheet', { num: sheet.num })}
     href="${to(href.sheet(sheet.num))}"
   >
-    <span class="n">${sheet.num}</span>${ditto(sheet.title)}<span
-      class="t"
-      >${entryTitle(sheet.title)}</span
-    >
+    <span class="n">${sheet.num}</span><span class="t">${entryTitle(sheet.title)}</span>
   </a>
 `;
 
@@ -310,10 +305,7 @@ const railEntry = (entry: AscentRow): TemplateResult =>
     ? sheetEntry(entry.row)
     : html`
         <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
-          <span class="n">7·3D</span>${ditto(entry.row.title)}<span
-            class="t"
-            >${entryTitle(entry.row.title)}</span
-          >
+          <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
         </a>
       `;
 
@@ -326,9 +318,7 @@ function rail(manifest: Manifest | undefined): TemplateResult {
       <div class="rail-head">
         <div>
           <a class="kicker" href="https://lit-ui-router.dev">A DRAWING SET · lit-ui-router</a>
-          <h1>
-            <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">${PROJECT_MARK}</a>
-          </h1>
+          <h1><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">THE ALTITUDE ATLAS</a></h1>
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
@@ -338,8 +328,6 @@ function rail(manifest: Manifest | undefined): TemplateResult {
           <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${to(href.about)}">ABOUT</a>
         </div>
         <p class="rail-sec">SHEETS — ASCENT ORDER</p>
-        <!-- The word once, ditto marks under it: every sheet title below is "the …". -->
-        <p class="rail-the" aria-hidden="true"><span class="n"></span>${THE}</p>
         <div class="rail-links">${rows.map(railEntry)}</div>
         <!-- The type specimen is a bench, not a plate: reachable at /specimen, off the rail. -->
         ${appendixRows.length > 0
@@ -623,10 +611,11 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <!-- The rail's title and this one are the SAME treatment — the .art rule, drawn
-           as the kit's catchword where the face is declared and as the word in
-           the data face everywhere else (the artifact, any host without it). -->
-      <h2 class="cover-title">${PROJECT_MARK}</h2>
+      <!-- THE FULL WORDMARK — the same plain uppercase name the rail head carries,
+           in the display face, so the two read as one mark. The condensed variant
+           with the kit catchword belongs to the sheet head above and the title
+           blocks, and nowhere else. -->
+      <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
       <p class="sheet-sub cover-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
         <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>

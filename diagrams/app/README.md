@@ -77,19 +77,23 @@ the stager and keeps the Google links: its host allows that origin and no other.
 LOADED FACES readout reports which family actually rendered (ADOBE / STAND-IN / SYSTEM), and its
 GLYPH SIZE readout measures the data face against the mono it replaces.
 
-**One article, one rule.** Almost every title in the set begins with THE, and the atlas's own name
-does too. `.art` in `sheets/atlas.css` (from `generator/chrome.mjs`) is the whole treatment: the word
-lowercase in the data face at 0.8em of whatever it precedes, soft ink, on the baseline — and, on a
-host that DECLARES the kit's `hwt-catchwords`, catchword key `e` drawn over it instead, the word kept
-for readers and search. A guard script asks the FontFaceSet for the family and sets
-`data-catchwords` (`index.html` for the app, `CATCHWORD_SCRIPT` in `chrome.mjs` for the flat pages),
-so the catchword can never degrade to a bare letter. It draws the same way in the sheet head
-(`the ALTITUDE ATLAS — DRAWING SET`), the sheet title, the title block's PROJECT and SHEET TITLE, the
-cover, the cards and the rail head; `titles.ts`, `<title>` and every aria name keep the plain
-`THE ALTITUDE ATLAS`. The rail says the word ONCE, at the head of its list column, and each sheet
-titled "the …" carries a muted `″` under it — a held 20px cell, so no title moves. Below the 900px
-breakpoint the rail is a top bar and its title collapses to the plain wordmark: the article span
-reverts to its own uppercase text and the catchword is switched off.
+**The article, and the two wordmarks.** Almost every title in the set begins with THE. On a sheet
+title and on a cover card it is drawn as `sup.art` (in `sheets/atlas.css`, from
+`generator/chrome.mjs`): the word kept, set as a lowercase superior in the data face at 0.6em, soft
+ink — no kit glyph, so the site, the flat set and the artifact draw it identically. The plates'
+title block is the one exception: its SHEET TITLE field uses `.art-inline` instead, the same word at
+the value's own size on its own baseline, because a ledger field is read as a value, not a headline.
+
+The atlas's own name has exactly TWO variants. The FULL wordmark is plain uppercase
+`THE ALTITUDE ATLAS` in the display face, and it belongs to the rail head and the cover title, so the
+homepage says the name once in one voice. The CONDENSED wordmark is the ledger name — the data face,
+with the article drawn as HWT Catchwords key `e` (`.cw`) on a host that DECLARES the kit, and as the
+same `sup.art` superior off it — and it belongs to every sheet-head PROJECT line
+(`the ALTITUDE ATLAS — DRAWING SET` / `— INTERACTIVE PLATE`) and to the title block's PROJECT value.
+A guard script asks the FontFaceSet for the family and sets `data-catchwords` (`index.html` for the
+app, `CATCHWORD_SCRIPT` in `chrome.mjs` for the flat pages), so the catchword can never degrade to a
+bare letter; its size carries a 15px floor, below which the two-line mark stops reading.
+`titles.ts`, `<title>` and every aria name keep the plain `THE ALTITUDE ATLAS`.
 
 ## Where it lives
 

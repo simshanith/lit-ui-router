@@ -274,10 +274,15 @@ sitting); order is dependency order.
   why plate lettering is DIN.
 - The article: "i kinda like the hwt catchwords sparingly but found myself converting `the`
   to a `<sup>` with .6em din-2014 font, lowercase" — so `the` was a superior everywhere
-  and the catchword the cover title's alone. Since 2026-09-11 one shared rule set in
-  `chrome.mjs` puts it on the BASELINE at 0.8em of the data face and promotes it to the HWT
-  catchword wherever the kit is the host — cover title, rail head, every sheet's header line
-  and its title block's PROJECT field.
+  and the catchword the cover title's alone. A 2026-09-11 attempt at one shared baseline
+  rule (rail article head with ditto marks, catchword on the cover) was rejected the same day:
+  "i miss uppercase THE in THE ALTITUDE ATLAS i prefer that consistency … right so we have two
+  variants -- condensed with wordmark, used in block and sheet header, full uppercase, used in
+  sidebar and homepage". So: CONDENSED = catchword `the` + ALTITUDE ATLAS in the data face on
+  the sheet header line and the title block's PROJECT field; FULL UPPERCASE = THE ALTITUDE
+  ATLAS in the display face on the rail head and the cover title; the superior stays on sheet
+  titles and cards; the title block's SHEET TITLE sets `the` inline, lowercase DIN, same size
+  and baseline. Never re-propose the rail article.
 - The sprite study "remains relevant and should be included as a meta appendix in some form
   — roll it in" (Appendix A1). Its pinned note governs every sprite lane, 2D and 3D: walls
   are TRANSLUCENT semi-opaque, never fully opaque, so the girding frame reads through.

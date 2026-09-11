@@ -77,12 +77,10 @@ const PLATES = allSheets(manifest);
  * src/views.ts and generator/chrome.mjs. Prerender and client must draw the
  * same markup, so the three stay in lockstep.
  */
-const THE: TemplateResult = html`<span class="art"><span class="w">the&nbsp;</span></span>`;
+const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
 
-/** The project name AS DRAWN, and the rail's ditto — twins of views.ts. */
-const PROJECT_MARK: TemplateResult = html`${THE}ALTITUDE ATLAS`;
-const ditto = (title: string): TemplateResult =>
-  html`<span class="d" aria-hidden="true">${ARTICLE.test(title) ? '\u2033' : ''}</span>`;
+/** The CONDENSED wordmark, for sheet heads and title blocks: twin of views.ts. */
+const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span>ALTITUDE ATLAS`;
 
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
@@ -103,10 +101,7 @@ const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 
 const sheetEntry = (row: SheetRow, active: string): TemplateResult => html`
   <a class="${active === row.num ? 'is-active' : ''}" href="${href.sheet(row.num)}">
-    <span class="n">${row.num}</span>${ditto(row.title)}<span
-      class="t"
-      >${entryTitle(row.title)}</span
-    >
+    <span class="n">${row.num}</span><span class="t">${entryTitle(row.title)}</span>
   </a>
 `;
 
@@ -116,10 +111,7 @@ const railEntry = (entry: AscentRow, active: string): TemplateResult =>
     ? sheetEntry(entry.row, active)
     : html`
         <a class="${active === 'city' ? 'is-active' : ''}" href="${href.city}">
-          <span class="n">7·3D</span>${ditto(entry.row.title)}<span
-            class="t"
-            >${entryTitle(entry.row.title)}</span
-          >
+          <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
         </a>
       `;
 
@@ -129,7 +121,7 @@ const railTemplate = (active: string): TemplateResult => html`
     <div class="rail-head">
       <div>
         <a class="kicker" href="https://lit-ui-router.dev">A DRAWING SET · lit-ui-router</a>
-        <h1><a href="${href.gallery}">${PROJECT_MARK}</a></h1>
+        <h1><a href="${href.gallery}">THE ALTITUDE ATLAS</a></h1>
       </div>
       <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
     </div>
@@ -139,7 +131,6 @@ const railTemplate = (active: string): TemplateResult => html`
         <a class="${active === 'about' ? 'is-active' : ''}" href="${href.about}">ABOUT</a>
       </div>
       <p class="rail-sec">SHEETS — ASCENT ORDER</p>
-      <p class="rail-the" aria-hidden="true"><span class="n"></span>${THE}</p>
       <div class="rail-links">${ascent(manifest).map((entry) => railEntry(entry, active))}</div>
       ${manifest.appendix.length > 0
         ? html`
@@ -326,7 +317,7 @@ const galleryContent = (): TemplateResult => {
         <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <h2 class="cover-title">${PROJECT_MARK}</h2>
+      <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
       <p class="sheet-sub cover-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
         <span class="stamp">CLIENT ${manifest.client} · PLATES COUNTED ${manifest.date}</span>
