@@ -14,7 +14,8 @@
   "treatConfigHintsAsErrors": true,
   "workspaces": {
     ".": {
-      // nothing scripts it; kept so `pnpm wrangler` works at the repo root
+      // nothing scripts it; kept so `pnpm wrangler` works at the repo root,
+      // the way the root's knip does (which knip credits by its config file)
       "ignoreDependencies": ["wrangler"],
     },
     "examples": {

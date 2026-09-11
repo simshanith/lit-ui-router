@@ -469,6 +469,9 @@ importers:
       husky:
         specifier: 'catalog:'
         version: 9.1.7
+      knip:
+        specifier: 'catalog:'
+        version: 6.35.1
       oxfmt:
         specifier: 'catalog:'
         version: 0.67.0
