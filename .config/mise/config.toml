@@ -199,6 +199,17 @@ flag "--package-name <package_name>" help="Package to build (turbo <name>#build)
 '''
 run = 'turbo run "${usage_package_name?}#build"'
 
+[tasks.build_www]
+# The site the e2e suites are served from. Built ahead of a run rather than
+# from the suites' dependsOn, which cannot start the server they need, and in
+# full whatever the suite selection, since every suite shares the one site.
+#
+# dir is explicit: the inner `turbo run` must see the whole workspace, and a
+# task invoked from a package directory gets a silently narrowed plan.
+dir = "{{config_root}}"
+description = "Build the docs site the e2e suites are served from"
+run = "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize"
+
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
@@ -236,8 +247,8 @@ run = [
 # for a server). run-e2e.ts derives the suite set and takes suite names; see
 # apps/sample-app-lit-e2e/README.md.
 #
-# Both runs --summarize: the reporter picks up every summary written since
-# `mark_session`, so these join the ci run rather than displace it.
+# --summarize here and in build_www: the reporter picks up every summary
+# written since `mark_session`, so these join the ci run rather than displace it.
 #
 # WWW_DEV_PORT overrides the default in dev-port.ts, which serve-and-test.ts
 # resolves. WRANGLER_LOG and CYPRESS_* reach Cypress through the tasks'
@@ -245,18 +256,14 @@ run = [
 #
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
+depends = ["build_www"]
 dir = "{{config_root}}"
 description = "Run the Cypress e2e suites via turbo, around one shared dev server"
 usage = '''
 arg "[suite]" var=#true help="Suites to run (e.g. hash mobx); none runs them all"
 '''
-run = [
-  # the suites' dependsOn cannot start the server, so build the site first; in
-  # full whatever the selection, since every suite is served by the same site
-  "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize",
-  # unquoted: a var arg arrives as one string and must word-split back into argv
-  'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}',
-]
+# unquoted: a var arg arrives as one string and must word-split back into argv
+run = 'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.

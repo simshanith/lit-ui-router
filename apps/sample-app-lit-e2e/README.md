@@ -39,7 +39,8 @@ The suite list is derived from this package's `test:e2e:*` scripts by
 to forget an entry there and drop a suite from the PR gate.
 
 `turbo run test:e2e:hash` still works directly when a server is already up on
-the dev-server port; the umbrella is what gets you one.
+the dev-server port; the umbrella is what gets you one. The site it serves
+builds on its own with `mise run build_www`, which `test_e2e` depends on.
 
 The server is deliberately outside the turbo graph. turbo has no lifecycle for
 one — a `with:` sidecar is started but never reaped — so `start-server-and-test`
