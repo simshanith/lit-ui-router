@@ -116,6 +116,7 @@
         "@tools/repo-checks#check:graph-edges",
         "@tools/repo-checks#check:task-inputs",
         "@tools/repo-checks#check:workspace-deps",
+        "@tools/repo-checks#check:knip",
         "@tools/release#check:release-closure"
       ],
       // type-aware oxlint resolves cross-package imports to dist d.ts only
