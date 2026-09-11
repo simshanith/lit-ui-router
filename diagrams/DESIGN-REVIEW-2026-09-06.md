@@ -472,3 +472,38 @@ them grows. Two ways out, and the choice is a design call, not a repair:
 The second is cheaper and fits the set's existing "one basis, computed, never guessed"
 posture — the atlas already throws on a missing member. Worth pairing with the T40 probe:
 that census measures `<text>` only, which is exactly why this went unseen.
+
+### T55 — the city's second camera axis, and pan (P3, new)
+
+Sheet 7's 3D city orbits on ONE axis. `city-scene.mjs` fixes elevation at
+`atan(1/√2) ≈ 35.264°` (`var EL`, no input reaches it), leaves azimuth free
+under a horizontal drag, and eases onto the nearest of 45/135/225/315 on
+release. Zoom is orthographic scale, 0.45–4, wheel only — not a dolly. There is
+no pan: the camera target never translates. `touch-action: pan-y` reserves the
+vertical drag for page scroll.
+
+Nothing tracks freeing the second axis. I8 in `INITIATIVES.md` is the closest
+entry and is NOT this: it is the PIPELINE graph's 3D lane (CSS tilt over I7's
+cytoscape, three.js as a stretch). Worth noting the inversion — the city scene
+already did the three.js isometric work I8 describes as a stretch, so I8 should
+reuse it rather than re-derive it.
+
+Three separable pieces, in dependency order:
+
+- **Elevation.** Not a symmetric follow-on to azimuth. True isometric IS
+  elevation = atan(1/√2), and the plate's BASIS text asserts exactly that. Free
+  it and the view is isometric only at rest, so the snap has to become
+  two-dimensional — azimuth to the nearest diagonal AND elevation home. Decide
+  first whether sheet 7's city is an isometric drawing that can be nudged, or a
+  3D viewer that happens to rest at isometric. The answer picks the interaction.
+- **Pan.** Orthogonal to both axes and cheap in isolation, but needs a bounded
+  target — unbounded pan loses the city with no way back — and a re-centre
+  affordance. The natural bound is the same all-four-diagonal fit the camera
+  already computes at init.
+- **Gestures.** The blocker both share on touch. `pan-y` spends the vertical
+  drag on page scroll, so elevation and pan have no gesture left. Options: a
+  modifier on desktop and an explicit mode toggle on touch, or a two-finger
+  drag (which then contends with the existing pinch-zoom path).
+
+Keep the isometric snap in all cases — it is the sheet's signature and the
+reason the model reads as a drawing rather than a scene.
