@@ -64,11 +64,6 @@ mise.*.local.toml
 .rumdl_cache/
 
 lit-ui-router-*.tgz
-# vitest 5 routes every integration's output — html/json/junit reporters,
-# attachmentsDir, failure screenshots, traces — into one .vitest dir per
-# project root, which is why this is a single entry. It replaces
-# .vitest-attachments/ and the two __screenshots__ globs, none of which any
-# current vitest writes to.
 **/.vitest/
 coverage
 .wrangler
