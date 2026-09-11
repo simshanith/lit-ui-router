@@ -55,6 +55,7 @@
     "eslint-plugin-pnpm": "catalog:",
     "eslint-plugin-turbo": "catalog:",
     "husky": "catalog:",
+    "knip": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "oxlint-tsgolint": "catalog:",
