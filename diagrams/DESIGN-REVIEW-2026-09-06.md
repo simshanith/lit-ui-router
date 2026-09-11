@@ -215,8 +215,8 @@ mode static 20 · interactive 5. **Consumer finding, from the first screenshot p
 correctly. Cause, reproduced against bare `@uirouter/core`: `urlService.rules.initial({ state })`
 matches the path alone and targets the state with NO params, and it wins the first sync over the
 state's own url rule. The function form — `initial((_m, url) => ({ state, params: url.search }))` —
-hands the search through. Recorded in `router.ts` beside the navigation-plugin finding; it belongs in
-the location-plugins guide.
+hands the search through. Recorded in `router.ts` beside the navigation-plugin finding; filed as #815
+(docs, this repo); the core report waits behind the #25 outreach.
 
 ### T55 — the city's second camera axis, and pan (P3, new)
 

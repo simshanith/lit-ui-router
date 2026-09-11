@@ -26,10 +26,13 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
   are forced only by a heterogeneous table — two views with different required
   shapes — which is the atlas's case, at the cost of `?.` at every use site.
 
-All ten asks are accounted for. One more, found after the verdict and unfiled:
+All ten asks are accounted for. One more, found after the verdict:
 `urlService.rules.initial({ state })` erases a first-load query string (see
-`src/router.ts`; DESIGN-REVIEW §T54) — a docs line or a params-preserving
-default, the user's call.
+`src/router.ts`; DESIGN-REVIEW §T54) — #815, on this repo as a docs rough
+edge (`location-plugins.md`, `unmatched-urls.md` teach the object form). The
+behaviour is `@uirouter/core`'s alone; that report is held behind the #25
+outreach by the user's call, since the function form is a complete fix — a
+probe showed `go()` runs the search through the state's own param types.
 
 Written while building `diagrams/app`, a real `lit-ui-router` app prerendered at
 build time for Cloudflare Pages. Everything below is something this app actually
