@@ -200,10 +200,6 @@ flag "--package-name <package_name>" help="Package to build (turbo <name>#build)
 run = 'turbo run "${usage_package_name?}#build"'
 
 [tasks.build_www]
-# What the e2e suites are served from. Built ahead of a run rather than from
-# the suites' dependsOn, which cannot start the server they need, and in full
-# whatever the suite selection, since every suite shares the one site.
-#
 # Filtered by scope so the task covers what its name says: a package added
 # under @www joins the build without a filter edit here. The glob is quoted
 # because the shell would otherwise try to expand it.
@@ -211,7 +207,7 @@ run = 'turbo run "${usage_package_name?}#build"'
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
 dir = "{{config_root}}"
-description = "Build the @www sites the e2e suites are served from"
+description = "Build the @www sites"
 run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
 
 [tasks.ci]
@@ -250,6 +246,9 @@ run = [
 # start-server-and-test owns the dev server they share (turbo has no lifecycle
 # for a server). run-e2e.ts derives the suite set and takes suite names; see
 # apps/sample-app-lit-e2e/README.md.
+#
+# build_www first, because the suites' dependsOn cannot start the server they
+# need — and in full whatever the selection, since they share the one site.
 #
 # --summarize here and in build_www: the reporter picks up every summary
 # written since `mark_session`, so these join the ci run rather than displace it.
