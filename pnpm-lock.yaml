@@ -506,6 +506,9 @@ importers:
       '@tools/bootstrap':
         specifier: workspace:*
         version: link:../../tools/bootstrap
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../../tools/shared
       '@types/node':
         specifier: 'catalog:'
         version: 24.13.3
@@ -1710,6 +1713,9 @@ importers:
       '@tools/embed-heights':
         specifier: workspace:*
         version: link:../../tools/embed-heights
+      '@tools/shared':
+        specifier: workspace:*
+        version: link:../../tools/shared
       '@tools/vue-check':
         specifier: workspace:*
         version: link:../../tools/vue-check

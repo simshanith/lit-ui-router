@@ -6,6 +6,7 @@
   "type": "module",
   "exports": {
     "./exec.ts": "./src/exec.ts",
+    "./execve.ts": "./src/execve.ts",
     "./gha.core.ts": "./src/gha.core.ts",
     "./gha.ts": "./src/gha.ts",
     "./globs.ts": "./src/globs.ts",
