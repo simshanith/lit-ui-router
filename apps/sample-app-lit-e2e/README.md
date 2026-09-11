@@ -40,11 +40,27 @@ The suite list is derived from this package's `test:e2e:*` scripts by
 to forget an entry there and drop a suite from the PR gate.
 
 `turbo run test:e2e:hash` still works directly when a server is already up on
-the dev-server port; the umbrella is what gets you one.
+the dev-server port; the umbrella is what gets you one. To bring one up by
+hand:
 
-The server is deliberately outside the turbo graph. turbo has no lifecycle for
-one — a `with:` sidecar is started but never reaped — so `start-server-and-test`
-owns starting it, waiting on readiness, and tearing it down even on failure.
+```bash
+mise run //www/lit-ui-router.dev:serve   # builds the site first, then serves it
+mise run build_www   # just the build
+```
+
+That task is also what the umbrella hands to `start-server-and-test`, so the
+build edge lives on the server rather than on the suites. Without mise,
+`turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
+same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server
+through a `pnpm run` hop the mise task does not have. Bare
+`pnpm --filter @www/lit-ui-router.dev run wrangler:dev` skips the build and
+serves whatever is already in `dist`.
+
+The server is deliberately outside the turbo graph. No turbo lifecycle fits it:
+as a `with:` sidecar it is started but never reaped, and a top-level persistent
+run does tear down cleanly on a signal but knows nothing about readiness or
+about stopping once something else finishes. `start-server-and-test` owns all
+three — starting it, waiting on readiness, and tearing it down even on failure.
 Only the server leaves the graph; the suites stay first-class cached tasks.
 
 The same run executes in CI: `mise run ci` runs the turbo graph and then this

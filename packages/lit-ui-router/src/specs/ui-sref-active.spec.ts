@@ -390,6 +390,277 @@ describe('uiSrefActive directive', () => {
     });
   });
 
+  // the sample apps' nav bar: target from a child uiSref, router on a descendant
+  describe('watching child uiSref elements, under a nested state', () => {
+    it('should stay active on the wrapper when a child state is entered', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'parent', url: '/parent' },
+        { name: 'parent.child', url: '/child' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      render(
+        html`<li
+          ${uiSrefActive({ activeClasses: ['active'], exactClasses: ['exact'] })}
+        >
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'parent');
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'active on the parent').toBe(
+        true,
+      );
+
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      expect(li.classList.contains('active'), 'still active on the child').toBe(
+        true,
+      );
+      expect(li.classList.contains('exact'), 'no longer the exact match').toBe(
+        false,
+      );
+    });
+
+    it('should go active when a child state is entered directly', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'parent', url: '/parent' },
+        { name: 'parent.child', url: '/child' },
+        { name: 'elsewhere', url: '/elsewhere' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      render(
+        html`<li ${uiSrefActive({ activeClasses: ['active'] })}>
+          <a ${uiSref('parent')}>Parent</a>
+        </li>`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'elsewhere');
+      await tick(100);
+
+      const li = wrapper.querySelector('li')!;
+      expect(li.classList.contains('active'), 'inactive elsewhere').toBe(false);
+
+      // never visiting `parent` first: the wrapper has to match the ancestor
+      // in the destination path, not remember a previous exact hit
+      await routerGo(router, 'parent.child');
+      await tick(100);
+
+      expect(li.classList.contains('active'), 'active on the child').toBe(true);
+    });
+  });
+
+  // a nav bar behind a conditional: same element, which update() alone never re-arms
+  describe('after a disconnect and reconnect', () => {
+    it('should keep tracking transitions on the same element', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<a
+          ${uiSref('about')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >About</a
+        >`,
+        wrapper,
+      );
+      await tick(100);
+
+      await routerGo(router, 'about');
+      await tick(100);
+
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active'), 'active before').toBe(true);
+
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+
+      await routerGo(router, 'home');
+      await tick(100);
+      expect(anchor.classList.contains('active'), 'cleared after leaving').toBe(
+        false,
+      );
+
+      await routerGo(router, 'about');
+      await tick(100);
+      expect(
+        anchor.classList.contains('active'),
+        'active again after returning',
+      ).toBe(true);
+    });
+
+    // the re-arm replays what update() was given, not the array as mutated since
+    it('should replay the seeded targets as given', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+      const seeded = [router.stateService.target('about')];
+
+      const part = render(
+        html`<span
+          ${uiSrefActive({ activeClasses: ['active'], targetStates: seeded })}
+          >About</span
+        >`,
+        wrapper,
+      );
+      await tick(100);
+      const span = wrapper.querySelector('span')!;
+
+      await routerGo(router, 'about');
+      await tick(100);
+      expect(span.classList.contains('active'), 'active before').toBe(true);
+
+      seeded.length = 0;
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+
+      await routerGo(router, 'home');
+      await tick(100);
+      expect(span.classList.contains('active'), 'cleared after leaving').toBe(
+        false,
+      );
+    });
+
+    // started while detached, so nothing was subscribed to it
+    it('should pick up a transition that started while disconnected', async () => {
+      let open!: () => void;
+      const gate = new Promise<void>((resolve) => (open = resolve));
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        {
+          name: 'about',
+          url: '/about',
+          resolve: [{ token: 'gate', resolveFn: () => gate }],
+        },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<a
+          ${uiSref('about')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >About</a
+        >`,
+        wrapper,
+      );
+      await tick(100);
+      const anchor = wrapper.querySelector('a')!;
+
+      part.setConnected(false);
+      await tick(50);
+      const pending = router.stateService.go('about');
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+      expect(anchor.classList.contains('active'), 'still in flight').toBe(
+        false,
+      );
+
+      open();
+      await pending;
+      await tick(100);
+      expect(anchor.classList.contains('active'), 'active once it lands').toBe(
+        true,
+      );
+    });
+
+    // the pre-disconnect subscription is dropped, so the settlement lands once
+    it('should report an in-flight settlement once after a reconnect', async () => {
+      let open!: () => void;
+      const gate = new Promise<void>((resolve) => (open = resolve));
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        {
+          name: 'about',
+          url: '/about',
+          resolve: [{ token: 'gate', resolveFn: () => gate }],
+        },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<a
+          ${uiSref('about')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >About</a
+        >`,
+        wrapper,
+      );
+      await tick(100);
+      const anchor = wrapper.querySelector('a')!;
+
+      const pending = router.stateService.go('about');
+      await tick(50);
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+      const settled: TransitionStateChange[] = [];
+      anchor.addEventListener(TRANSITION_STATE_CHANGE_EVENT, (e) => {
+        settled.push((e as CustomEvent).detail.evt);
+      });
+
+      open();
+      await pending;
+      await tick(100);
+
+      expect(settled).toEqual([TransitionStateChange.success]);
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
+  });
+
+  // the other reconnected() branch: an explicit state resolves its own target
+  it('should keep tracking when the target comes from an explicit state', async () => {
+    const states: LitStateDeclaration[] = [
+      { name: 'home', url: '/home' },
+      { name: 'about', url: '/about' },
+    ];
+    const { wrapper } = await setupWithStates(states);
+
+    const part = render(
+      html`<span ${uiSrefActive({ activeClasses: ['active'], state: 'about' })}
+        >About</span
+      >`,
+      wrapper,
+    );
+    await tick(100);
+
+    await routerGo(router, 'about');
+    await tick(100);
+
+    const span = wrapper.querySelector('span')!;
+    expect(span.classList.contains('active'), 'active before').toBe(true);
+
+    part.setConnected(false);
+    await tick(50);
+    part.setConnected(true);
+    await tick(50);
+
+    await routerGo(router, 'home');
+    await tick(100);
+    expect(span.classList.contains('active'), 'cleared after leaving').toBe(
+      false,
+    );
+  });
+
   describe('transition state tracking', () => {
     it('should update on state changes', async () => {
       const states: LitStateDeclaration[] = [
@@ -1377,21 +1648,34 @@ describe('UiSrefActiveDirective methods', () => {
       );
     });
 
+    // hold the spy locally: disconnected() drops the reference after calling it
     it('should call _deregisterOnStart', () => {
-      directive._deregisterOnStart = vi.fn();
+      const deregister = vi.fn();
+      directive._deregisterOnStart = deregister;
       directive.disconnected();
-      expect(directive._deregisterOnStart).toHaveBeenCalled();
+      expect(deregister).toHaveBeenCalled();
     });
 
     it('should call _deregisterOnStatesChanged', () => {
-      directive._deregisterOnStatesChanged = vi.fn();
+      const deregister = vi.fn();
+      directive._deregisterOnStatesChanged = deregister;
       directive.disconnected();
-      expect(directive._deregisterOnStatesChanged).toHaveBeenCalled();
+      expect(deregister).toHaveBeenCalled();
     });
 
     it('should set element to null', () => {
       directive.disconnected();
       expect(directive.element).toBeNull();
+    });
+  });
+
+  describe('reconnected', () => {
+    // update() never ran, so there is no part element to re-arm against
+    it('should do nothing when no part element was ever seen', () => {
+      directive.disconnected();
+      directive.reconnected();
+      expect(directive.element).toBeNull();
+      expect(directive._firstUpdated).toBe(false);
     });
   });
 
@@ -1404,6 +1688,49 @@ describe('UiSrefActiveDirective methods', () => {
       } as unknown as Transition;
       directive.onTransitionStart(trans);
       expect(dispatchEventSpy).toHaveBeenCalled();
+    });
+
+    it('should dispatch an error event when the transition rejects', async () => {
+      const trans = {
+        treeChanges: () => ({}),
+        promise: Promise.reject(new Error('aborted')),
+      } as unknown as Transition;
+      // the directive handles it; this keeps the spec's own read handled too
+      trans.promise.catch(() => {});
+
+      directive.onTransitionStart(trans);
+      const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+      await tick();
+
+      const [event] = dispatchEventSpy.mock.calls[0] as [CustomEvent];
+      expect(event.detail.evt).toBe(TransitionStateChange.error);
+    });
+
+    // deregistering stops the next onStart, not a settlement already subscribed
+    it('should stay quiet when the transition settles after a disconnect', async () => {
+      let settle!: () => void;
+      const trans = {
+        treeChanges: () => ({}),
+        promise: new Promise<void>((resolve) => (settle = resolve)),
+      } as unknown as Transition;
+
+      directive.onTransitionStart(trans);
+      const dispatchEventSpy = vi.spyOn(element, 'dispatchEvent');
+      // the settlement reaches for `element` to dispatch on; without the guard
+      // it builds the event, then throws on the null. Watching the build is
+      // what separates "skipped" from "threw on the way".
+      const buildEventSpy = vi.spyOn(
+        directive,
+        'createTransitionStateChangeEvent',
+      );
+
+      directive.disconnected();
+      settle();
+      await expect(trans.promise).resolves.toBeUndefined();
+      await tick();
+
+      expect(buildEventSpy).not.toHaveBeenCalled();
+      expect(dispatchEventSpy).not.toHaveBeenCalled();
     });
   });
 

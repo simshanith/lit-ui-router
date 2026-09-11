@@ -334,6 +334,41 @@ describe('uiSref directive', () => {
       expect(goSpy).toHaveBeenCalledWith('about', {}, expect.any(Object));
     });
 
+    // a detach/re-attach reuses the element, which update() alone never re-arms
+    it('should still navigate after a disconnect and reconnect', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ];
+      router = createTestRouter(states);
+
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+
+      const part = render(html`<a ${uiSref('about')}>Link</a>`, wrapper);
+      await tick(50);
+      router.start();
+      await tick(50);
+
+      const anchor = wrapper.querySelector('a')!;
+
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+
+      const goSpy = vi.spyOn(router.stateService, 'go');
+      clickElement(anchor);
+      await tick(50);
+
+      expect(goSpy).toHaveBeenCalledWith('about', {}, expect.any(Object));
+    });
+
     it('should prevent default on click', async () => {
       const states: LitStateDeclaration[] = [{ name: 'home', url: '/home' }];
       const { anchor } = await setupWithSref(states, 'home');
@@ -1397,5 +1432,13 @@ describe('UiSrefDirective', () => {
       // Correct element part type (type 6)
       new UiSrefDirective({ type: 6 } as any);
     }).not.toThrow();
+  });
+
+  // update() never ran, so there is no part element to re-arm against
+  it('should reconnect harmlessly when no part element was ever seen', () => {
+    const directive = new UiSrefDirective({ type: 6 } as any);
+    directive.disconnected();
+    expect(() => directive.reconnected()).not.toThrow();
+    expect(directive.element).toBeNull();
   });
 });

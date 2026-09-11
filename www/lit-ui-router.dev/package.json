@@ -38,6 +38,7 @@
   "devDependencies": {
     "@tools/build_and_test": "workspace:*",
     "@tools/embed-heights": "workspace:*",
+    "@tools/shared": "workspace:*",
     "@tools/vue-check": "workspace:*",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",

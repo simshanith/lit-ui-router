@@ -85,6 +85,10 @@ function makeSidebar() {
           text: 'Component Lifecycle Hooks',
           link: '/guides/component-lifecycle',
         },
+        {
+          text: 'View Fallback Content',
+          link: '/guides/view-fallback-content',
+        },
         { text: 'Reactive Components', link: '/guides/reactive-components' },
         { text: 'Design System Links', link: '/guides/design-system-links' },
         {

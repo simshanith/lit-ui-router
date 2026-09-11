@@ -34,6 +34,9 @@ client deployed across every point on the server-support spectrum.
 
 ## Links & Markup
 
+- [View Fallback Content](./view-fallback-content) — what a `<ui-view>`
+  renders when no routed component is active: the capture rules, the
+  master/detail idiom, and what a prerendered shell emits
 - [Design System Links](./design-system-links) — driving a design system's
   link component (`<sp-link>`, `<md-*>`, an in-house one) with `uiSref`:
   `assignHref: true` is the option for a custom element that declares its own
