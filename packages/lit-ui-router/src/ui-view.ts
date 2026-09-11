@@ -1,4 +1,4 @@
-import { LitElement } from 'lit';
+import { LitElement, html } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
@@ -51,6 +51,10 @@ type deregisterFn = () => void;
 
 /**
  * @hideconstructor
+ *
+ * @slot - <code>&lt;ui-view&gt;</code> renders slotted content as fallback
+ * whenever no routed component is active.
+ *
  * @fires {CustomEvent} ui-router-context
  *
  * This event is fired to obtain the <code>uiRouter</code> instance,
@@ -89,7 +93,8 @@ export class UiView extends LitElement {
   @state()
   private component: RoutedLitTemplate | null = null;
 
-  private readonly inner = document.createDocumentFragment();
+  /** Created on connect: the @lit-labs/ssr DOM shim has no `createDocumentFragment`. */
+  private inner?: DocumentFragment;
 
   /** @internal */
   createRenderRoot(): this {
@@ -202,6 +207,7 @@ export class UiView extends LitElement {
   }
 
   private captureContent() {
+    this.inner ??= document.createDocumentFragment();
     this.inner.append(...this.childNodes.values());
   }
 
@@ -385,7 +391,8 @@ export class UiView extends LitElement {
   /** @internal */
   render(): Node | TemplateResult {
     if (!this.component || !this.viewAddress) {
-      return this.inner.cloneNode(true);
+      // Never connected (server render): an empty declarative shadow root would hide the light DOM.
+      return this.inner?.cloneNode(true) ?? html`<slot></slot>`;
     }
 
     const { uiRouter: router } = this;

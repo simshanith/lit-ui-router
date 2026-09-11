@@ -3,9 +3,12 @@ import { playwright } from '@vitest/browser-playwright';
 
 // partition: every spec runs in exactly one project
 const allSpecs = ['src/specs/**/*.spec.ts'];
-// Real user gestures (modifier/middle/right click via page.elementLocator);
+// Real user gestures (page.elementLocator) and declarative-shadow-root composition;
 // every other spec uses synthetic events that happy-dom supports.
-const browserOnlySpecs = ['src/specs/ui-sref.spec.ts'];
+const browserOnlySpecs = [
+  'src/specs/ui-sref.spec.ts',
+  'src/specs/ui-view-ssr.spec.ts',
+];
 
 // Key caches by the API port so the concurrently running `test` and
 // `test:coverage` turbo tasks never share a Vite dep-optimizer dir.
