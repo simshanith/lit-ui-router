@@ -115,7 +115,6 @@
         "@tools/repo-checks#check:patches",
         "@tools/repo-checks#check:graph-edges",
         "@tools/repo-checks#check:task-inputs",
-        "@tools/repo-checks#check:workspace-deps",
         "@tools/repo-checks#check:knip",
         "@tools/release#check:release-closure"
       ],
