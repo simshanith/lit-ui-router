@@ -713,7 +713,6 @@ export class UiSrefActiveDirective extends AsyncDirective {
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     const { targetState } = event.detail;
-    // a link re-targets after a lazy load; its earlier target is retired
     const previous = this._linkTargets.get(event.target);
     if (previous) {
       this.targetStates.delete(previous);

@@ -70,9 +70,7 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
 const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
 
 /**
- * Whether two target states resolve to the same state with the same params.
- * `$state.target()` returns a fresh object every render, so identity is useless;
- * the resolved definition is stable, and a lazy load swaps it under one name.
+ * Whether two target states resolve to the same definition with the same params.
  * @internal
  */
 function sameTarget(a: TargetState | null, b: TargetState): boolean {

@@ -389,8 +389,7 @@ describe('uiSrefActive directive', () => {
       expect(nav.classList.contains('has-active')).toBe(true);
     });
 
-    // a re-targeted link replaces its old target, and the wrapper reflects it
-    // at once rather than on the next transition
+    // a re-targeted link must retire its old target without a transition
     it('should follow a child sref that re-targets', async () => {
       const states: LitStateDeclaration[] = [
         { name: 'item', url: '/item/:id' },
@@ -490,8 +489,7 @@ describe('uiSrefActive directive', () => {
     });
   });
 
-  // the sample apps' nav bar renders before its lazy modules load, so each
-  // uiSref resolved its target to a `.**` placeholder that lazyLoad replaces
+  // the sref resolves to the `.**` placeholder before lazyLoad replaces it
   describe('targeting a future state', () => {
     it('should go active once the lazy-loaded state is entered', async () => {
       const states: LitStateDeclaration[] = [
