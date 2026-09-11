@@ -10,6 +10,15 @@ const BIN = join(
   'node_modules/.bin/start-server-and-test',
 );
 
+// execve is POSIX-only, hence optional; the annotation keeps the call terminal
+const execve: (file: string, args: readonly string[]) => never =
+  process.execve ??
+  (() => {
+    throw new Error(
+      'serve-and-test: process.execve is unavailable (POSIX only)',
+    );
+  });
+
 /**
  * Serve the docs site, wait for every `paths` entry to answer, run `test`, and
  * tear the server down — on failure too. Does not return: this process becomes
@@ -19,18 +28,12 @@ export function serveAndTest(
   server: string,
   test: string,
   paths: readonly string[],
-): void {
+): never {
   const port = resolveWwwDevPort();
   const ready = paths
     .map((path) => `http://localhost:${port}/${path}`)
     .join('|');
 
-  // execve is POSIX-only, hence optional in the types
-  if (process.execve === undefined) {
-    throw new Error(
-      'serve-and-test: process.execve is unavailable (POSIX only)',
-    );
-  }
   // argv[0] is ours to set; env defaults to process.env
-  process.execve(BIN, [BIN, server, ready, test]);
+  execve(BIN, [BIN, server, ready, test]);
 }
