@@ -57,13 +57,14 @@ const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
 
 /**
  * THE CONDENSED WORDMARK — the atlas's LEDGER name, for the sheet-head PROJECT
- * line and the plates' title blocks: the data face, with the article drawn as
- * the kit's catchword (`.cw` in sheets/atlas.css) and as the superior off it.
+ * line and the plates' title blocks: the NAME in the display face (`.mark` in
+ * sheets/atlas.css, so the face travels with the mark, not with the site), with
+ * the article drawn as the kit's catchword (`.cw`) and as the superior off it.
  * The rail head and the cover title carry the OTHER name — the full uppercase
  * wordmark in the display face, plain, with nothing set apart.
  * Twin: `PROJECT_MARK` in generator/chrome.mjs and in prerender.ts.
  */
-const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span>ALTITUDE ATLAS`;
+const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span><span class="mark">ALTITUDE ATLAS</span>`;
 
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;

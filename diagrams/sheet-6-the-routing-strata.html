@@ -74,8 +74,9 @@
    and CSS resolves a 600 request upward to 700, Google serves a real 600, so
    ONE number covers both hosts.
 
-   --display  the atlas name: rail head, cover title, and the title block's
-              PROJECT value
+   --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
+              and the condensed wordmark's own name (.mark) in every
+              sheet-head PROJECT line and title block PROJECT value
    --title    sheet titles, card and prose headings, rail entry titles
    --data     kickers, tracked caps, numbers, schedules, the title block
    --prose    running text, figcaptions, general notes, About. Source Serif
@@ -191,36 +192,55 @@ sup.art {
 }
 /* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
    is the full uppercase wordmark in the display face, which the rail head and
-   the cover title carry plain. This one is the LEDGER name: the data face, and
-   the article drawn as the kit's catchword. Two sites carry it — every
-   sheet-head PROJECT line and the title block's PROJECT value — and both wrap
-   the superior in .cw, so this is ONE rule set, not two.
+   the cover title carry plain. This one is the LEDGER name: the same display
+   face for the name (.mark, below), with the article drawn as the kit's
+   catchword. Two sites carry it — every sheet-head PROJECT line and the title
+   block's PROJECT value — and both wrap the superior in .cw, so this is ONE
+   rule set, not two.
    HWT Catchwords is an Adobe-kit face with NO GSUB: every THE in it is
    keyed to one character and key e is the plainest of the ten (upright block
    caps over two leaves). It draws ONLY where the guard script found the face
    declared; off the kit — the artifact, any host without it — none of this
    applies and the sup.art superior inside is what draws. The bare key e in the
    display face is the failure that guard prevents. */
+/* THE NAME, wherever the wordmark is drawn. The face travels with the MARK,
+   not with the site: the sheet-head ledger line and the title block's PROJECT
+   value both emit PROJECT_MARK, so both set ALTITUDE ATLAS in Eaglefeather at
+   the weight the rail head and the cover title use.
+   1.06em, MEASURED not guessed: Eaglefeather at the resolved 700 caps at 0.651
+   of its em and DIN 2014 at 0.690, so 0.690/0.651 = 1.06 is the size at which
+   the name's cap sits on the ledger's. In a sheet head that is 12.19px of
+   display beside 11.5px of data — both cap at 7.94px — and the tail
+   (" — DRAWING SET") keeps the ledger face at the line's own size. In a title
+   block it is 14.31px inside the 13.5px .dsp, capping at 9.32px: the same cap
+   the ledger face would have drawn there, a tenth under the sheet title's. */
+.mark {
+  font-family: var(--display);
+  font-size: 1.06em;
+  font-weight: 600;
+}
 html[data-catchwords="on"] .cw::before {
   content: "e";
   font-family: "hwt-catchwords";
-  /* the cap-matched 1.08em the type specimen measured, with a 24px FLOOR. The
-     catchword draws THE as two stacked lines inside one cap height, so at the
-     ledger sizes these two sites run — 11.5px in a sheet head, 13.5px in a
-     title block — the measured scale is an inkblot. 24px is the size at which
-     the three letters separate again, and the size at which the mark still
-     clears the head band: line-height 0 keeps it out of the line box, so
-     nothing below 26px grows a row or crosses the rule under it. */
-  font-size: max(1.08em, 24px);
+  /* 20px FLAT, set against the display-face name beside it (user-tuned in the
+     browser, 2026-09-11). The catchword draws THE as two stacked lines inside
+     one cap height, so at the ledger sizes these two sites run — 11.5px in a
+     sheet head, 13.5px in a title block — a cap-matched scale is an inkblot;
+     the earlier rule floored it at 24px, which separated the letters but left
+     the mark floating above the name. 20px is where the three letters still
+     read AND the block sits on the name's own cap band. */
+  font-size: 20px;
   font-weight: 400;
   letter-spacing: 0;
   text-transform: none;
   color: var(--ink-soft);
   margin-right: 0.16em;
   /* the mark is taller than the 11.5px head line: kept out of the line box so
-     the sheet head does not grow a row around it */
+     the sheet head does not grow a row around it. "sub" drops it off the
+     baseline until its two stacked lines centre on the cap band of the
+     display-face name that follows it, rather than floating over it. */
   line-height: 0;
-  vertical-align: baseline;
+  vertical-align: sub;
 }
 html[data-catchwords="on"] .cw sup.art {
   position: absolute;
@@ -405,10 +425,11 @@ code, kbd, samp { font-family: var(--code); }
   margin-bottom: 2px;
 }
 /* The two values that carry the atlas's own name, and the sheet's. PROJECT is
-   the CONDENSED wordmark — the data face, like the sheet-head line it repeats,
-   not the display face the rail and the cover reserve for the full one. */
+   the CONDENSED wordmark, and its NAME is the display face — the same wordmark
+   the sheet-head line above it now carries; only the article beside it is the
+   ledger's. */
 .titleblock .dsp {
-  font-family: var(--data);
+  font-family: var(--display);
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.10em;
@@ -506,7 +527,7 @@ a { color: var(--accent); }
   });
 })();</script>
 <section class="sheet" id="sheet-6" aria-label="Sheet 6: THE ROUTING STRATA">
-  <div class="sheet-head"><span class="proj"><span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS — DRAWING SET</span><span class="shno">SHEET 6 / 14</span></div>
+  <div class="sheet-head"><span class="proj"><span class="cw"><sup class="art">the&nbsp;</sup></span><span class="mark">ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 6 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ROUTING STRATA</h2>
   <p class="sheet-sub">ALTITUDE 6 — routing in general · the altitude where prose outranks pictures</p>
   <figure>
@@ -613,7 +634,7 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="2" y="2" width="40" height="14" fill="url(#s6-hx)"/></svg></td><td>strata below (shared definition only)</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><line x1="22" y1="16" x2="22" y2="2" class="ska"/></svg></td><td>ascent: transitions gain semantics</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="cw"><sup class="art">the&nbsp;</sup></span>ALTITUDE ATLAS</span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="cw"><sup class="art">the&nbsp;</sup></span><span class="mark">ALTITUDE ATLAS</span></span></div>
   <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art-inline">the&nbsp;</span>ROUTING STRATA</span></div>
   <div><span class="fld">SCALE</span>EVERYTHING</div>
   <div><span class="fld">FORM</span>CORE SAMPLE</div>

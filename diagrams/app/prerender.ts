@@ -80,7 +80,7 @@ const PLATES = allSheets(manifest);
 const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
 
 /** The CONDENSED wordmark, for sheet heads and title blocks: twin of views.ts. */
-const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span>ALTITUDE ATLAS`;
+const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span><span class="mark">ALTITUDE ATLAS</span>`;
 
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;

@@ -278,8 +278,10 @@ sitting); order is dependency order.
   rule (rail article head with ditto marks, catchword on the cover) was rejected the same day:
   "i miss uppercase THE in THE ALTITUDE ATLAS i prefer that consistency … right so we have two
   variants -- condensed with wordmark, used in block and sheet header, full uppercase, used in
-  sidebar and homepage". So: CONDENSED = catchword `the` + ALTITUDE ATLAS in the data face on
-  the sheet header line and the title block's PROJECT field; FULL UPPERCASE = THE ALTITUDE
+  sidebar and homepage". So: CONDENSED = catchword `the` (20px, `vertical-align: sub`, the
+  user's own devtools tuning) + ALTITUDE ATLAS in the DISPLAY face ("i do want eaglefeather for
+  altitude atlas everywhere in block and project title etc" — `.mark`, 1.06em so its cap
+  matches the ledger's) on the sheet header line and the title block's PROJECT field; FULL UPPERCASE = THE ALTITUDE
   ATLAS in the display face on the rail head and the cover title; the superior stays on sheet
   titles and cards; the title block's SHEET TITLE sets `the` inline, lowercase DIN, same size
   and baseline. Never re-propose the rail article.

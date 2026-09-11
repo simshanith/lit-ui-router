@@ -16,6 +16,10 @@
 //   /<old flat filename>  → /set/<same file>  301   (every page but index.html)
 //   /app, /app/*          → /, /:splat         301   (the app's old mount)
 //
+// The staged routed pages also get a content hash on their one fixed
+// stylesheet url (sheets/atlas.css?v=<sha>), so a chrome change can never be
+// served from a stale cache.
+//
 // Three <head> injections, all staged-copies-only: the GA tag on every page
 // (env-gated on VITE_GOOGLE_ANALYTICS_TRACKING_ID), the Google Fonts stand-ins
 // on every page that does not already carry them (the flat set — the routed app
@@ -190,6 +194,27 @@ console.log(
     ? `Adobe Fonts kit: ${KIT} → every staged page, Google links stripped (single host) · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`
     : `Adobe Fonts kit: none — the Google stand-ins draw · type <head>s written on ${typed.routed} routed + ${typed.flat} flat pages`,
 );
+
+// --- the stylesheet's cache buster ------------------------------------------
+// Every routed page links ONE fixed url, /sheets/atlas.css (app/index.html; the
+// prerendered pages are all stamped out of the built index). A fixed url with a
+// changed body is the one asset a browser can serve stale forever, so the
+// staged <link> carries a short content hash: the chrome changes, the url
+// changes, the cache misses. The flat set needs none — those pages carry the
+// same CSS inline, in a <style>.
+const cssFile = join(dist, 'sheets', 'atlas.css');
+const cssHash = createHash('sha256').update(readFileSync(cssFile)).digest('hex').slice(0, 8);
+const CSS_LINK = /(<link\b[^>]*\bhref=")([^"]*sheets\/atlas\.css)(")/g;
+let busted = 0;
+for (const p of walkHtml(dist)) {
+  const html = readFileSync(p, 'utf8');
+  const next = html.replace(CSS_LINK, `$1$2?v=${cssHash}$3`);
+  if (next !== html) {
+    writeFileSync(p, next);
+    busted += 1;
+  }
+}
+console.log(`sheets/atlas.css?v=${cssHash} on ${String(busted)} pages`);
 
 const routedPages = walkHtml(dist).filter((p) => !p.startsWith(`${set}/`)).length;
 console.log(`staged the routed app at ${BASE} → dist/ (${routedPages - 1} prerendered pages + 404.html + manifest + fragments)`);
