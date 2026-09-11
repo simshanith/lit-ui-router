@@ -507,3 +507,37 @@ Three separable pieces, in dependency order:
 
 Keep the isometric snap in all cases — it is the sheet's signature and the
 reason the model reads as a drawing rather than a scene.
+
+**Direction (user, 2026-09-10): a snow globe, not a viewer.** Momentum plus a
+magnetic settle, so the city has weight and rights itself. This resolves the
+elevation question above rather than deferring it: if elevation has exactly one
+stable state and always returns to it, the plate's isometric claim survives as
+PHYSICS — the angle stops being a constraint and becomes the rest state, and a
+tilt is only ever borrowed.
+
+Today's release is the opposite of momentum: a fixed 380ms cubic ease from
+wherever the pointer let go (`glide`/`step`, `D.snapMs`), identical for a flick
+and a nudge, with no velocity carried off the drag.
+
+The model is a spring-damper per axis, not a tween:
+
+    target = nearest detent
+    omega += (-k * (angle - target) - c * omega) * dt
+    angle += omega * dt
+    on release: omega = angular velocity sampled from the last few moves
+
+The two axes take DIFFERENT physics, and the difference is the point:
+
+| axis | stable states | feel | target |
+|---|---|---|---|
+| azimuth | 4 diagonals | detent wheel — a fling passes several and settles in one | recomputed each frame as it moves |
+| elevation | 1, atan(1/√2) | righting force — tip it, it falls back | constant |
+
+So they must not share a snap function. Azimuth's live target is what gives a
+fling real detent feel; elevation's is fixed.
+
+Open before building: the touch gesture (see above — `pan-y` leaves nothing for
+tilt, and two-finger contends with pinch-zoom) and whether a fling may cross
+more than one detent. Reduced motion needs no new work: `reduce.matches`
+already cuts straight to rest and should keep doing so, since momentum is
+motion.
