@@ -212,6 +212,27 @@ describe('UiView', () => {
       expect(customElements.get('ui-view')).toBe(UiView);
     });
 
+    // The @lit-labs/ssr DOM shim constructs elements but has no
+    // `createDocumentFragment`, and never connects them (#803).
+    it('should construct and render before connection without a fragment API', () => {
+      const createFragment = vi
+        .spyOn(document, 'createDocumentFragment')
+        .mockImplementation(() => {
+          throw new TypeError(
+            'document.createDocumentFragment is not a function',
+          );
+        });
+      try {
+        const uiView = document.createElement('ui-view');
+        const result = uiView.render();
+
+        expect(createFragment).not.toHaveBeenCalled();
+        expect(result).toMatchObject({ strings: ['<slot></slot>'] });
+      } finally {
+        createFragment.mockRestore();
+      }
+    });
+
     it('should render without router context', async () => {
       // no ancestor provider, so this trips the dev-mode missing-router warning
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
