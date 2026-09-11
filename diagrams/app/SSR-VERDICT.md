@@ -17,9 +17,19 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
 - **9** the Navigation API plugin's interception hazard — #750 (pre-existing)
 - **10** static hosts add a trailing slash; `strict: false` on both sides — #807
 
-Ask 8 (the resolves generic: a typed `RoutedLitTemplate` rejected at
-`component:` with the error at the wrong site) is a types-ergonomics report,
-being filed small; number to follow.
+- **8** the resolves generic: a typed `RoutedLitTemplate` rejected at
+  `component:` with the error pointing away from the generic — #813. Filed
+  with a correction to §5's account (four shapes compiled under `--strict`):
+  threading the generic onto the declaration, `LitStateDeclaration<{ manifest:
+  Manifest }>[]`, is the fix for a homogeneous table, and a bare
+  `RoutedLitTemplate` still drops in beside a typed view. All-optional members
+  are forced only by a heterogeneous table — two views with different required
+  shapes — which is the atlas's case, at the cost of `?.` at every use site.
+
+All ten asks are accounted for. One more, found after the verdict and unfiled:
+`urlService.rules.initial({ state })` erases a first-load query string (see
+`src/router.ts`; DESIGN-REVIEW §T54) — a docs line or a params-preserving
+default, the user's call.
 
 Written while building `diagrams/app`, a real `lit-ui-router` app prerendered at
 build time for Cloudflare Pages. Everything below is something this app actually
@@ -284,8 +294,9 @@ Ordered by how much each would have saved me.
    `LitStateDeclaration`'s default `Record<string, any>` — parameter
    contravariance, and the error points at `component:` rather than at the
    generic. The fix a consumer has to find is "declare the resolves type as an
-   **object type alias with all members optional**". Worth a docs line, or a
-   looser default.
+   **object type alias with all members optional**" — true for a heterogeneous
+   route table; for a homogeneous one, thread the generic onto the declaration
+   instead (see Filed, #813). Worth a docs line, or a looser default.
 9. **`ui-router-navigation-location-plugin@0.3.0`: intercept your own
    navigations, or say in the Quick Start that the app must.** Found by a
    Playwright pass against the deployed site: with the plugin installed per
