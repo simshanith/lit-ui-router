@@ -1,23 +1,13 @@
+import { binPath, execve } from '@tools/shared/execve.ts';
 import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
-import { fileURLToPath } from 'node:url';
 import pkg from 'start-server-and-test/package.json' with { type: 'json' };
 
-// exec does no PATH search, so resolve the bin the way npm links it
-const BIN = fileURLToPath(
-  new URL(
-    pkg.bin['start-server-and-test'],
-    import.meta.resolve('start-server-and-test/package.json'),
-  ),
+// exec does no PATH search, so resolve the bin the way npm links it. The import
+// above is also what keeps the dependency visible to knip.
+const BIN = binPath(
+  pkg,
+  import.meta.resolve('start-server-and-test/package.json'),
 );
-
-// execve is POSIX-only, hence optional; the annotation keeps the call terminal
-const execve: (file: string, args: readonly string[]) => never =
-  process.execve ??
-  (() => {
-    throw new Error(
-      'serve-and-test: process.execve is unavailable (POSIX only)',
-    );
-  });
 
 /**
  * Serve the docs site, wait for every `paths` entry to answer, run `test`, and
@@ -35,5 +25,11 @@ export function serveAndTest(
     .join('|');
 
   // argv[0] is ours to set; env defaults to process.env
-  execve(process.execPath, [process.execPath, BIN, server, ready, test]);
+  execve('serve-and-test', process.execPath, [
+    process.execPath,
+    BIN,
+    server,
+    ready,
+    test,
+  ]);
 }

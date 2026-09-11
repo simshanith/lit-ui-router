@@ -1,4 +1,4 @@
-import { fileURLToPath } from 'node:url';
+import { binPath, execve } from '@tools/shared/execve.ts';
 import wrangler from 'wrangler/package.json' with { type: 'json' };
 
 import { resolveWwwDevPort } from '../dev-port.ts';
@@ -8,16 +8,7 @@ import { resolveWwwDevPort } from '../dev-port.ts';
 // cannot supply one for an unset var.
 
 // exec does no PATH search, so resolve the bin the way npm links it
-const BIN = fileURLToPath(
-  new URL(wrangler.bin.wrangler, import.meta.resolve('wrangler/package.json')),
-);
-
-// execve is POSIX-only, hence optional; the annotation keeps the call terminal
-const execve: (file: string, args: readonly string[]) => never =
-  process.execve ??
-  (() => {
-    throw new Error('wrangler-dev: process.execve is unavailable (POSIX only)');
-  });
+const BIN = binPath(wrangler, import.meta.resolve('wrangler/package.json'));
 
 const args = process.argv.slice(2);
 
@@ -29,7 +20,7 @@ if (args.some((arg) => arg === '--port' || arg.startsWith('--port='))) {
 }
 
 // argv[0] is ours to set; env defaults to process.env
-execve(process.execPath, [
+execve('wrangler-dev', process.execPath, [
   process.execPath,
   BIN,
   'dev',

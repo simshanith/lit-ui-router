@@ -247,9 +247,10 @@ run = [
 # for a server). run-e2e.ts derives the suite set and takes suite names; see
 # apps/sample-app-lit-e2e/README.md.
 #
-# build_www here too, though serve_www declares the same edge: reaching it only
-# from there would put a cold build inside start-server-and-test's wait-on
-# budget. Pre-built, serve_www's own depends is a cache hit.
+# build_www here too, though //www/lit-ui-router.dev:serve declares the same
+# edge: reaching it only from there would put a cold build inside
+# start-server-and-test's wait-on budget. Pre-built, the serve task's own
+# depends is a cache hit.
 #
 # --summarize here and in build_www: the reporter picks up every summary
 # written since `mark_session`, so these join the ci run rather than displace it.
