@@ -2,8 +2,6 @@ import { binPath, execve } from '@tools/shared/execve.ts';
 import { resolveWwwDevPort } from '@www/lit-ui-router.dev/dev-port.ts';
 import pkg from 'start-server-and-test/package.json' with { type: 'json' };
 
-// exec does no PATH search, so resolve the bin the way npm links it. The import
-// above is also what keeps the dependency visible to knip.
 const BIN = binPath(
   pkg,
   import.meta.resolve('start-server-and-test/package.json'),

@@ -7,7 +7,6 @@ import { resolveWwwDevPort } from '../dev-port.ts';
 // interpolation in package.json: the port's default lives in code, and shell
 // cannot supply one for an unset var.
 
-// exec does no PATH search, so resolve the bin the way npm links it
 const BIN = binPath(wrangler, import.meta.resolve('wrangler/package.json'));
 
 const args = process.argv.slice(2);
