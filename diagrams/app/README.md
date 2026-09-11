@@ -1,33 +1,27 @@
 # diagrams/app — The Altitude Atlas, routed
 
-The drawing set in `diagrams/` as one `lit-ui-router` single-page app. Shaped
-like the repo's tutorial examples (`examples/helloworld`, `examples/hellosolarsystem-mobx`):
-plain `npm`, its own `package-lock.json`, and every dependency taken from the
-**published** registry — no workspace links.
+The drawing set in `diagrams/` as one `lit-ui-router` single-page app. Shaped like the repo's
+tutorial examples (`examples/helloworld`, `examples/hellosolarsystem-mobx`): plain `npm`, its own
+`package-lock.json`, and every dependency taken from the **published** registry — no workspace links.
 
 ```bash
 npm install
-npm run dev        # vite, with ui-router-server answering real 302s / 404s
-npm run build      # vite build + node prerender.ts
-npm run build:artifact  # vite build --mode artifact + node artifact.ts
+npm run dev            # vite, with ui-router-server answering real 302s / 404s
+npm run build          # vite build + node prerender.ts
+npm run build:spa      # vite build alone, no prerender
+npm run build:artifact # vite build --mode artifact + node artifact.ts
 npm run preview
 npm run typecheck
 ```
 
-The content is generated, never transcribed: `node generator/build.mjs .` from
-`diagrams/` writes `app/public/sheets/<id>.html` (one chrome-less fragment per
-sheet), `app/public/sheets/atlas.css` (the sheets' own chrome) and
-`app/public/manifest.json` (one row per sheet: title, rev, the gallery index's
-own ALTITUDE wording and FIT VERDICT line, which census plates it reads, the
-cross-sheet references found in its prose, and the sheet's standalone filename
-in the flat set). Twenty-five fragments: the twenty-three sheets, one
-`appendix` row (**A1**, below) and one `extras` row, the 3D city, which has no
-sheet number because the flat set only ever published it inside its gallery. The manifest also carries a `cover`
-object — the flat gallery's stat bar, general survey, prose column and
-colophon line as rendered HTML, plus the CSS they need — so the routed index
-draws the same bytes the flat one does rather than a paraphrase. The same seam writes
-`app/src/generated/city-init.js` (below). The seam is
-`diagrams/generator/emit-app.mjs`.
+The content is generated, never transcribed. `node generator/build.mjs .` from `diagrams/` — the
+seam is `generator/emit-app.mjs` — writes `public/sheets/<id>.html` (one chrome-less fragment per
+plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, and `public/manifest.json`: one row
+per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
+references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
+the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
+draws the same bytes the flat one does. Twenty-five fragments: twenty-three sheets, one `appendix`
+row (A1) and one `extras` row, the 3D city.
 
 ## The routes
 
@@ -38,257 +32,174 @@ draws the same bytes the flat one does rather than a paraphrase. The same seam w
 | `atlas.sheet`    | `/sheet/:num`  | `SheetView`     | `sheet`, `fragment`               |
 | `atlas.city`     | `/city`        | `CityView`      | `extra`, `fragment`, **`three`**  |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
+| `atlas.log`      | `/log`         | `LogView`       | `manifest` (its `issueLog`)       |
 | `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` 14)       |
 | `atlas.about`    | `/about`       | `AboutView`     | —                                 |
 | `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
 
-The twenty-three sheets are the nineteen SVG plates and four interactive lanes
-— 1i, 2B, 12i and **14i**, the survey office as a live cytoscape graph, which
-joins the ascent right after sheet 14 exactly as 12i sits after 12 and carries
-a standalone page of its own in the flat set
-(`sheet-14i-the-survey-office-interactive.html`).
+The twenty-three sheets are the nineteen SVG plates and four interactive lanes (1i, 2B, 12i, 14i).
+`atlas.log` is the set's issue record — every REV across every plate, latest first — read from the
+manifest. The megacanvas is not a state: the flat set publishes the whole reel as one page, so the
+prerender writes `/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`.
 
-The manifest's **`appendix`** array is the third list, beside `sheets` and
-`extras`. An appendix plate's subject is the atlas itself rather than the
-codebase, so it stands at no altitude and carries no census plate; today that is
-**A1 THE SPRITE STUDY**, the design research behind the building sprites sheets
-7B and 13 draw. It is reachable at `/sheet/A1` like any other plate — the id is
-letter-FIRST, which is what marks it — but it is deliberately out of `sheets`,
-so the rail's ascent block, the ← / → walk and the gallery's main card grid
-never pick it up: it rides its own `APPENDIX — ABOUT THE ATLAS` section in the
-rail, after the city, and its own card grid under the index. `mountsFor()` is
-fed BOTH lists, so `/sheet/A1` narrows into the server's `/sheet/{num:…}`
-alternation and `/sheet/a1` 302s to the cased id exactly as `/sheet/2a` does.
-Three helpers in `src/manifest.ts` own the distinction — `allSheets()`,
-`findSheet()` (which searches both) and `isAppendix()`.
+The manifest's **`appendix`** array is the third list, beside `sheets` and `extras`: a plate whose
+subject is the atlas itself, at no altitude and with no census plate — today **A1 THE SPRITE
+STUDY**. Its id is letter-FIRST, which is what marks it, and it is deliberately out of `sheets`, so
+the rail's ascent block, the ← / → walk and the gallery's main card grid never pick it up; it rides
+its own `APPENDIX` section and card grid. `mountsFor()` is fed BOTH lists, so `/sheet/A1` narrows
+into the server's `/sheet/{num:…}` alternation and `/sheet/a1` 302s to the cased id exactly as
+`/sheet/2a` does. `allSheets()`, `findSheet()` and `isAppendix()` in `src/manifest.ts` own it.
 
-`atlas.city` is the 3D plate and the only state that loads a library on entry
-(see **Dependencies on demand**). It is deliberately not a sheet: it carries no
-sheet number, sits in the manifest's `extras` rather than its `sheets`, and so
-is invisible to the ascent order, the ← / → walk and the server's narrowed
+`atlas.city` is the 3D plate and the only state that loads a library on entry (see **Dependencies on
+demand**). It is deliberately not a sheet: no sheet number, in the manifest's `extras` rather than
+its `sheets`, and so invisible to the ascent order, the ← / → walk and the server's narrowed
 `/sheet/{num:…}` — a rail entry and a cover card, nothing more.
 
-`atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE
-mock sheet from the set's own chrome and swaps every role token (`--display`,
-`--title`, `--rail-title`, `--data`, `--prose`, `--hand`, `--code`) on the
-mock's root by inline style, so six candidate pairings — plus eight independent
-knobs (sheet title, rail titles, data face, data size, prose, code, hand, and
-the TITLE ARTICLE — the leading THE as is, muted, small, or one of ten keyed
-HWT Catchwords glyphs, with HEAD INLINE/STACKED, RAIL SAME/OFF and a size
-stepper; the catchword rows are SITE ONLY, the face has no Google stand-in) — can
-be judged on real copy in both themes. It opens on `5 · THE ATLAS SET`, the
-pairing the set ships; the other five are the record of what it was chosen
-against. A pairing is a starting point, not a cage:
-picking one resets the knobs it owns and each knob then overrides it, so the
-SHEET TITLE can differ from the rail head's display face, the rail's entry
-titles can be matched to it or left on the data face, and the PROSE knob's
-three serifs load their Google family only when chosen — the default page pulls
-none of them, and the CODE knob now fetches nothing at all, since both its faces
-ship. It carries no sheet
-number, is not in the manifest at all, and rides at the bottom of the rail as
-`S0·T`. It is the second state to load something on entry: `src/specimen.ts` is
-a `resolve` (`import('./specimen.ts')`), and the element's FIRST KNOB TOUCH
-injects the Google Fonts `<link>` for the CANDIDATE stand-ins (Zilla Slab,
-Barlow, Architects Daughter, …) — so those are fetched by this state, on
-demand, and by no other page. Nothing is fetched on connect: the shipped set is
-drawn by the ONE font host the page already carries (the kit on the site, the
-Google link in the artifact), and the bench is the only page in the atlas that
-ever talks to the other one.
+`atlas.specimen` is a **bench, not a plate**: a type specimen that draws ONE mock sheet from the
+set's own chrome and swaps every role token (`--display`, `--title`, `--rail-title`, `--data`,
+`--prose`, `--hand`, `--code`) on its root by inline style, so six candidate pairings plus eight
+independent knobs can be judged on real copy in both themes. It opens on `5 · THE ATLAS SET`, the
+pairing the set ships; the other five are the record of what it was chosen against. It carries no
+sheet number, is not in the manifest, and rides at the bottom of the rail as `S0·T`. It is the
+second state to load something on entry: `src/specimen.ts` is a `resolve`, and its FIRST KNOB TOUCH
+injects a Google Fonts `<link>` for the CANDIDATE stand-ins, on demand and on no other page.
 
-**One font host per page (2026-09-06).** On the site, `generator/stage-site.mjs`
-injects
-`<link rel="stylesheet" href="https://use.typekit.net/$VITE_ADOBE_FONTS_KIT.css">`
-into **every staged page, routed and flat** when `VITE_ADOBE_FONTS_KIT` is set
-(it sits beside the GA id in the gitignored `.config/mise/cloudflare.local.env`)
-**and strips the three Google Fonts links** `index.html` carries, so a staged
-page never references `fonts.googleapis.com` or `fonts.gstatic.com`. Unset, the
-stage logs `Adobe Fonts kit: none`, the Google links stay and the stand-ins draw
-everywhere. The artifact build never passes through the stager and keeps the
-Google links — its host allows that origin and no other.
-
-Since 2026-09-06 the whole chrome draws on the decided set —
-`atlas.css` declares `--display` / `--title` / `--data` / `--prose` / `--code`
-/ `--hand` with the Adobe family first and the Google stand-in second — the
-prose is `source-serif-pro` from the kit on the site and `Source Serif 4` from
-Google in the artifact, one Slimbach design under two releases, and since
-2026-09-06 **the code face is the same deal**, `source-code-pro` from the kit
-and `Source Code Pro` from Google at the kit's own 400/700 (the PLATES keep
-`--mono`, whose advance every SVG label is hand-placed against). `--hand` is
-P22 FLLW Eaglefeather Informal on the title block's DRAWN BY value, **mixed
-case**, and at most one callout line per sheet; it names no stand-in, so off
-the kit it simply falls to the data face and the artifact loads nothing new for
-it. `index.html`
-carries the Google link for the stand-in families — so the specimen is
-no longer the only page that asks for a webfont; it is the only page that asks
-for the *candidate* ones. Every stack in `src/specimen.ts`
-names the Adobe family first and the Google stand-in second, so the same page
-shows Adobe faces on the site and stand-ins in the artifact, and its LOADED
-FACES readout reports which one actually rendered (ADOBE / STAND-IN / SYSTEM)
-rather than which one was asked for. A GLYPH SIZE readout measures the data
-face's cap-height, x-height and average advance against the mono it would
-replace, so "roughly equivalent glyph sizes" is a number, not a feeling.
-
-`atlas.megacanvas` was **retired from the app on 2026-09-05**. The flat set
-still publishes the whole reel as one page, so the prerender writes
-`/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`
-and the reel's pan/zoom layer is gone from `src/experimental/`.
+**One font host per page.** `atlas.css` declares `--display` / `--title` / `--data` / `--prose` /
+`--code` / `--hand` with the Adobe family first and the Google stand-in second (the PLATES keep
+`--mono`, whose advance every SVG label is hand-placed against), and `index.html` carries the
+Google links. On the site,
+`generator/stage-site.mjs` injects the typekit `<link>` into **every staged page, routed and flat**,
+when `VITE_ADOBE_FONTS_KIT` is set — it sits beside the GA id in the gitignored
+`.config/mise/cloudflare.local.env` — **and strips the Google links**, so a staged page never
+references `fonts.googleapis.com` or `fonts.gstatic.com`. Unset, the stage logs
+`Adobe Fonts kit: none` and the stand-ins draw everywhere. The artifact build never passes through
+the stager and keeps the Google links: its host allows that origin and no other. The specimen's
+LOADED FACES readout reports which family actually rendered (ADOBE / STAND-IN / SYSTEM), and its
+GLYPH SIZE readout measures the data face against the mono it replaces.
 
 ## Where it lives
 
-The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`,
-`/city`, `/specimen`, `/about`, `/office`. The flat drawing set — the pages this
-app was cut from — is staged beside it under `/set/` as the version to compare
-against, and the two link to each other: the rail's THE FLAT SET entry and each
-sheet's STANDALONE PLATE crumb go out; the flat gallery's cover links back to
-THE ROUTED SET. `src/routes.ts` holds the ONE base constant (`MOUNT`, `BASE`,
-`SET`, and the `href` table both template sets use); vite's `base`,
-`<base href>` (via `%BASE_URL%`), the generator's fragment links and the staged
-`_redirects` all derive from it. `diagrams/generator/stage-site.mjs` assembles
-`dist/`: this app's `dist/` at the root, the flat set under `dist/set/`, and one
-merged `_redirects` (the prerender's own lines, every old flat filename → `/set/`,
-and `/app/*` → `/:splat` so links to the app's first home survive).
+The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`, `/specimen`,
+`/log`, `/about`, `/office`. The flat drawing set — the pages this app was cut from — is staged
+beside it under `/set/` as the version to compare against, and the two link to each other: the
+rail's THE FLAT SET entry and each sheet's STANDALONE PLATE crumb go out, the flat gallery's cover
+links back. `src/routes.ts` holds the ONE base constant (`MOUNT`, `BASE`, `SET`, and the `href`
+table both template sets use); vite's `base`, `<base href>` (via `%BASE_URL%`), the generator's
+fragment links and the staged `_redirects` all derive from it. `generator/stage-site.mjs` assembles
+`dist/`: this app at the root, the flat set under `dist/set/`, and one merged `_redirects` (the
+prerender's lines, every old flat filename → `/set/`, and `/app/*` → `/:splat`).
 
 ## Base vs experimental
 
 The app is deliberately two layers, and they do not mix.
 
-**Base — `src/*.ts`.** Exemplary, boring `lit-ui-router`: a route table
-(`routes.ts`) projected as data and shared with the server, states with
-`component` and `resolve` (`router.ts`), an abstract `atlas` shell whose view
-renders the nav rail and a nested `<ui-view>` (`views.ts`), `uiSref` and
-`uiSrefActive` on every link, `redirectTo` for `/office` → sheet 14, a
-url-less `atlas.notFound` as the `otherwise` target, the Navigation API
-location plugin with a `pushState` fallback, and document titles set on
-`onSuccess` from `titles.ts` (the same strings the prerender writes). Nothing
-in `src/*.ts` imports anything from `src/experimental/`. This layer is meant to
-be liftable into `examples/` as-is.
+**Base — `src/*.ts`.** Exemplary, boring `lit-ui-router`: a route table (`routes.ts`) projected as
+data and shared with the server, states with `component` and `resolve` (`router.ts`), an abstract
+`atlas` shell whose view renders the nav rail and a nested `<ui-view>` (`views.ts`), `uiSref` and
+`uiSrefActive` on every link, `redirectTo` for `/office` → sheet 14, a url-less `atlas.notFound` as
+the `otherwise` target, the Navigation API location plugin with a `pushState` fallback, and document
+titles set on `onSuccess` from `titles.ts` (the same strings the prerender writes). Nothing in
+`src/*.ts` imports anything from `src/experimental/`. This layer is meant to be liftable into
+`examples/` as-is.
 
-Three base-layer details a Playwright pass against the deployed site taught,
-each with a comment at the line:
+Three base-layer details a Playwright pass against the deployed site taught, each with a comment at
+the line:
 
-- `router.urlService.config.strictMode(false)` (`router.ts`). Cloudflare Pages
-  serves `dist/sheet/7/index.html` and 308s `/sheet/7` onto `/sheet/7/`; core's
-  default strict matching rejected the slash and booted every deep link into
-  `atlas.notFound`. The server mount is compiled with the same `strict: false`.
-- A `navigate` listener that calls `event.intercept()` for
-  `isUIRouterNavigateEvent(event)` (`router.ts`). The Navigation API plugin
-  calls `navigation.navigate()` and leaves interception to the app; without the
-  listener every click was a cross-document load.
-- Cased ids are canonical (`/sheet/2A`). `/sheet/2a` redirects to it on both
-  sides: an `onBefore` guard in the browser, a redirect rule in the mount, and
-  therefore a `_redirects` line from the prerender.
+- `router.urlService.config.strictMode(false)` (`router.ts`). Cloudflare Pages serves
+  `dist/sheet/7/index.html` and 308s `/sheet/7` onto `/sheet/7/`; core's default strict matching
+  rejected the slash and booted every deep link into `atlas.notFound`. The server mount is compiled
+  with the same `strict: false`.
+- A `navigate` listener that calls `event.intercept()` for `isUIRouterNavigateEvent(event)`
+  (`router.ts`). The Navigation API plugin calls `navigation.navigate()` and leaves interception to
+  the app; without the listener every click was a cross-document load.
+- Cased ids are canonical (`/sheet/2A`). `/sheet/2a` redirects to it on both sides: an `onBefore`
+  guard in the browser, a redirect rule in the mount, and therefore a `_redirects` line from the
+  prerender.
 
-**Experimental — `src/experimental/`.** Optional motion, wired in by a single
-call in `main.ts`. Delete the directory and that one line and the base app is
-unchanged.
+**Experimental — `src/experimental/`.** Optional motion, wired in by a single call in `main.ts`.
+Delete the directory and that one line and the base app is unchanged.
 
 | Module                | What it does                                    | Router hook                                          |
 | --------------------- | ----------------------------------------------- | ---------------------------------------------------- |
 | `view-transitions.ts` | slideshow between sheets (View Transitions API, CSS keyframe fallback) | `onBefore` for the snapshot; `transition.promise` + `viewRendered()` for the release |
 | `view-rendered.ts`    | the missing "view has re-rendered" promise: lit's `updateComplete` on every `<ui-view>`, then on the `<atlas-plate>` it rendered | none — shared by the two below |
 | `keyboard.ts`         | ← / → walk the set; focus lands on the arriving sheet's title | none — reads `router.globals`            |
-| `analytics.ts`        | only the `page_view`s gtag cannot see for itself (below), and only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time, the flagship's own id) | `onSuccess` |
+| `analytics.ts`        | only the `page_view`s gtag cannot see for itself (below), and only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time) | `onSuccess` |
 
-**The analytics rule.** The atlas shares the flagship's GA stream, whose
-enhanced measurement counts "page changes based on browser history events". So
-gtag already owns the initial `page_view` *and* every pushState / replaceState /
-popstate — and the staged tag is now plain `gtag('config', id)` on every page,
-routed and flat alike. The one thing gtag cannot see is
-`navigation.navigate()`, which the Navigation API location plugin uses and
-which touches `history.pushState` never. `analytics.ts` therefore sends on
-`onSuccess` only when the router took that plugin (`NAVIGATION_API`, exported
-from `router.ts` so the flag is not re-derived) AND the `navigate` event behind
-the transition was a `push` or `replace`. A `traverse` is back/forward, which
-fires popstate and is gtag's; under the pushState fallback nothing is sent at
-all. No doubles, no misses — verified in Playwright with a stubbed `gtag`: one
-router `page_view` per rail click, zero on back, zero either way under the
-fallback.
+**The analytics rule.** The atlas shares the flagship's GA stream, whose enhanced measurement counts
+"page changes based on browser history events", so gtag already owns the initial `page_view` *and*
+every pushState / replaceState / popstate. The one thing it cannot see is `navigation.navigate()`,
+which the Navigation API location plugin uses and which never touches `history.pushState`.
+`analytics.ts` therefore sends on `onSuccess` only when the router took that plugin
+(`NAVIGATION_API`, exported from `router.ts`) AND the `navigate` event was a `push` or `replace` — a
+`traverse` is back/forward, which fires popstate and is gtag's, and under the pushState fallback
+nothing is sent. Verified in Playwright with a stubbed `gtag`.
 
-**Dependencies on demand.** `atlas.city` is the one state that loads a library
-when it is entered: `resolve: [{ token: 'three', resolveFn: () => import('three') }]`.
-Vite gives that dynamic import its own chunk (`three.module-*.js`, 675 kB), and
-a Playwright request log confirms `/sheet/7/` never fetches it while `/city/`
-does — the router is the loader, and the view is handed the namespace as a
-resolve like any other value. The scene itself is
-`src/generated/city-init.js`, written by the same generator seam from the flat
-gallery's inline module: the app cannot run an inserted
-`<script type="module">` (see `src/fragment.ts`) and its import must be
-bundled, not a cdnjs url, so the generator emits the identical scene body as
-an ES module `initCity(root, THREE)` that returns a teardown. The flat
-gallery's copy is byte-for-byte unchanged. **`<atlas-city>` (`views.ts`) owns
-that teardown**, not a router hook: the scene holds a WebGL context, two
-observers, a media listener and pending frames, the experimental layer is
-deletable by design and this is not optional, and the element that created the
-scene is the one thing whose lifetime already matches it —
-`disconnectedCallback` disposes, `updated` + the plate's own `updateComplete`
-raises.
+**Dependencies on demand.** `atlas.city` is the one state that loads a library when it is entered:
+`resolve: [{ token: 'three', resolveFn: () => import('three') }]`. Vite gives that dynamic import
+its own chunk (`three.module-*.js`, 675 kB), and a Playwright request log confirms `/sheet/7/` never
+fetches it while `/city/` does — the router is the loader, and the view is handed the namespace as a
+resolve like any other value. The scene itself is `src/generated/city-init.js`, written by the
+generator from the flat gallery's inline module: the app cannot run an inserted
+`<script type="module">` (see `src/fragment.ts`) and its import must be bundled, not a cdnjs url, so
+the generator emits the identical scene body as an ES module `initCity(root, THREE)` returning a
+teardown. **`<atlas-city>` (`views.ts`) owns that teardown**, not a router hook: the scene holds a
+WebGL context, two observers, a media listener and pending frames, the experimental layer is
+deletable by design and this is not optional, and the element that created the scene is the one
+thing whose lifetime matches it.
 
-Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots
-the document at the moment it is called, so it must run **before** any resolve
-starts — `onStart` fires after resolves are already in flight, and a slow
-fetch would then be frozen inside the old snapshot. Why
-`transition.promise` + `updateComplete` for the release: ui-router has no "the
-view has re-rendered" hook. `onSuccess` fires when the *transition* succeeded,
-and `<ui-view>` swaps its component in a lit update after that — releasing on
-`onSuccess` cross-fades to the old content. The first cut released two
-`requestAnimationFrame`s later, and that froze the page for four seconds per
-sheet: rendering is suspended while the snapshot is held, so the frames never
-fire and only the browser's DOM-update timeout lets go. `<ui-view>` is a
-`LitElement`, so its `updateComplete` is the promise that was missing;
-`view-rendered.ts` awaits it (and then the plate's). That gap is written up as
-a package-level ask in [`SSR-VERDICT.md`](./SSR-VERDICT.md).
+Why `onBefore` for the slideshow: `document.startViewTransition()` snapshots the document at the
+moment it is called, so it must run **before** any resolve starts — `onStart` fires after resolves
+are already in flight, and a slow fetch would then be frozen inside the old snapshot. Why
+`transition.promise` + `updateComplete` for the release: ui-router has no "the view has re-rendered"
+hook. `onSuccess` fires when the *transition* succeeded and `<ui-view>` swaps its component in a lit
+update after that, so releasing there cross-fades to the old content; releasing two
+`requestAnimationFrame`s later instead froze the page for four seconds per sheet, because rendering
+is suspended while the snapshot is held and the frames never fire. `<ui-view>` is a `LitElement`, so
+its `updateComplete` is the promise that was missing; `view-rendered.ts` awaits it, then the plate's
+— a package-level ask in [`SSR-VERDICT.md`](./SSR-VERDICT.md).
 
-Every animation is inside `@media (prefers-reduced-motion: no-preference)`,
-and each module also checks `matchMedia('(prefers-reduced-motion: reduce)')`
-before doing any work.
+Every animation is inside `@media (prefers-reduced-motion: no-preference)`, and each module also
+checks `matchMedia('(prefers-reduced-motion: reduce)')` before doing any work.
 
 ## Artifact build
 
-`npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as
-ONE self-contained file (~2.64 MB — three.js is a quarter of it) that can be
-published as a claude.ai Artifact. That host is strict in four ways, and each one is a line in the
-build:
+`npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as ONE self-contained
+file (~2.8 MB; three.js is a quarter of it) that can be published as a claude.ai Artifact. That host
+is strict in four ways, and each one is a line in the build:
 
-- **One file, no fetches — not even same-origin.** `artifact.ts` bakes
-  `public/manifest.json` and all twenty-five generated fragments into a
-  `<script type="application/json" id="atlas-data">` island (every `<` escaped
-  as `\u003c`, so a fragment's own `</script>` cannot close it) and inlines
-  `public/sheets/atlas.css` as a `<style>`. `src/manifest.ts` reads the island
-  when it is present and falls back to the fetches the site uses. The cytoscape
-  and three dynamic imports are folded into the single chunk by
-  `vite-plugin-singlefile` (`useRecommendedBuildConfig`, which sets
-  `output.codeSplitting = false` on vite 8), so `#/city` raises the isometric
-  scene with the network entirely blocked.
+- **One file, no fetches — not even same-origin.** `artifact.ts` bakes `public/manifest.json` and
+  all twenty-five fragments into a `<script type="application/json" id="atlas-data">` island (every
+  `<` escaped, so a fragment's own `</script>` cannot close it) and inlines `atlas.css` as a
+  `<style>`; `src/manifest.ts` reads the island when present and falls back to the fetches the site
+  uses. The cytoscape and three dynamic imports are folded into the single chunk by
+  `vite-plugin-singlefile` (`useRecommendedBuildConfig`, which sets `output.codeSplitting = false`
+  on vite 8), so `#/city` raises the scene with the network entirely blocked.
 - **The host owns the document skeleton.** The published file must carry no
-  `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` of its own, and only its first 8KB is
-  scanned for `<title>`, so `artifact.ts` strips the wrapper and moves the title
-  to byte 0.
-- **The page sits on an opaque origin path**, so path routing is out:
-  `src/router.ts` takes `hashLocationPlugin` instead of the Navigation
-  API/pushState pair, and every url becomes `#/sheet/7`. `uiSref` writes those
-  hrefs itself; `views.ts` prefixes its static `href` attributes to match.
-- **The flat set does not exist offline**, so `THE FLAT SET ↗` and each sheet's
-  `STANDALONE PLATE ↗` point at `https://atlas.lit-ui-router.dev/set/…` in a
-  new tab.
+  `<!DOCTYPE>`/`<html>`/`<head>`/`<body>` of its own, and only its first 8KB is scanned for
+  `<title>`, so `artifact.ts` strips the wrapper and moves the title to byte 0.
+- **The page sits on an opaque origin path**, so path routing is out: `src/router.ts` takes
+  `hashLocationPlugin` instead of the Navigation API/pushState pair, and every url becomes
+  `#/sheet/7`. `uiSref` writes those hrefs itself; `views.ts` prefixes its static `href` attributes.
+- **The flat set does not exist offline**, so `THE FLAT SET ↗` and each sheet's `STANDALONE PLATE ↗`
+  point at `https://atlas.lit-ui-router.dev/set/…` in a new tab.
 
-`src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the three
-readers share. Analytics is skipped in this mode. Nothing above changes the
-site build: `npm run build` prerenders 28 pages + `404.html` and 10 redirects.
+`src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
+is skipped in this mode. Nothing above changes the site build, which prerenders 29 pages +
+`404.html` and 10 redirects.
 
 ## Server side
 
-`src/routes.ts` is the one route table. `ui-router-server` compiles it into a
-mount at the site root and is used twice:
+`src/routes.ts` is the one route table. `ui-router-server` compiles it into a mount at the site root
+and is used twice:
 
-- **`vite.config.ts`** — `serverRouterPlugin`, so `vite dev` and
-  `vite preview` answer the same 302 for `/office` and the same honest 404
-  for `/sheet/99` the deployed site does. Preview also serves the prerendered
-  `dist/<subpath>/index.html` for a shell verdict (with or without the trailing
-  slash), so what you curl is what Pages serves.
-- **`prerender.ts`** — after `vite build`, every route is resolved to a
-  verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered
-  markup, `redirect` becomes a line in `dist/_redirects`, and the `otherwise`
-  projection becomes `dist/404.html`.
+- **`vite.config.ts`** — `serverRouterPlugin`, so `vite dev` and `vite preview` answer the same 302
+  for `/office` and the same honest 404 for `/sheet/99` the deployed site does. Preview also serves
+  the prerendered `dist/<subpath>/index.html` for a shell verdict, slash or no slash, so what you
+  curl is what Pages serves.
+- **`prerender.ts`** — after `vite build`, every route is resolved to a verdict: `shell` writes
+  `dist/<subpath>/index.html` with server-rendered markup, `redirect` becomes a line in
+  `dist/_redirects`, and the `otherwise` projection becomes `dist/404.html`.
 
-What rendered, what did not, and what the package would need to close the gap
-is in [`SSR-VERDICT.md`](./SSR-VERDICT.md).
+What rendered, what did not, and what the package would need to close the gap is in
+[`SSR-VERDICT.md`](./SSR-VERDICT.md).

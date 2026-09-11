@@ -1,11 +1,12 @@
 # diagrams/ — The Altitude Atlas
 
-A drawing set: one subject surveyed at every altitude, fourteen altitudes on 23 plates — the
-numbered sheets, their A/B alternates, and four interactive lanes (sheets 7–10 are a survey
-quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
-wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
-every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. Riffs on an isometric codebase-visualization form seen in the wild; the
-notes on each sheet argue where that form fits and where it lies.
+A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen
+altitudes on 24 plates — the numbered sheets, their A/B alternates, four interactive lanes, a
+3D city and one appendix study — each in the form that altitude earns. Sheets 7–10 are a survey
+quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
+one bundle); 11 prices every published entry alone; 14 draws the census pipeline that measured
+the rest. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
@@ -40,19 +41,32 @@ notes on each sheet argue where that form fits and where it lies.
 | [A1](sheet-A1-the-sprite-study.html) | THE ATLAS ITSELF | SPRITE STUDIES |
 
 - `megacanvas.html` — the 19 SVG plates on one page, ascent order.
-- `gallery.html` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
 
-Static HTML pages, written by `node generator/build.mjs .` from this directory. The SVG sheets need nothing;
-the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and three.js 0.169.0 from cdnjs, which
-`generator/stage-site.mjs` vendors for hosting. `app/` is the same set as a prerendered lit-ui-router
-app; `build.mjs` emits its fragments and manifest. On the published site the app owns the root
-(`/`, `/sheet/7`, `/city`) and this flat set is staged beside it under `/set/` as the version to
-compare against; the two link to each other (the app's rail and crumbs, the gallery's cover).
-Light theme is graphite-on-vellum; dark is cyanotype.
-Since 2026-09-06 every label on the plates draws in the data face (DIN 2014, Barlow Semi Condensed off the kit) rather than the system monospace; mono is reserved for code.
-Generated 2026-08-16 by Fable (Claude, AI).
-Every plate in `data/` — versions, dates and all — was re-counted at origin/main @ 185d414 in one pass,
-plate 7A's test light included: `generator/census-shadow.mjs` re-meters it at the same ref. The cover's general survey — every
-tracked file on the scc 4.0.0 `Code` basis, origin/main @ 185d414 — is imported from
-`data/census-files.json`, the master snapshot `generator/census-scc.mjs` writes;
-`generator/census-overview.mjs` prints the same rollup on the terminal.
+- `megacanvas.html` — the SVG plates on one page, ascent order.
+- `gallery.html` — cover, index and the full set, interactive lanes included.
+
+**Build and host.** From the repo root, in order:
+
+```
+node diagrams/generator/build.mjs diagrams        # the flat set + the app's fragments and manifest
+npm --prefix diagrams/app run build               # the routed app, prerendered
+npm --prefix diagrams/app run build:artifact      # the single-file build published as a claude.ai Artifact
+cd diagrams && mise exec -- node generator/stage-site.mjs   # dist/: app at /, this set at /set/, vendored libs
+mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch worktree-altitude-atlas --commit-dirty=true
+```
+
+Live at https://atlas.lit-ui-router.dev/ — the app owns the root (`/`, `/sheet/7/`, `/city/`,
+`/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
+sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and
+three.js 0.169.0, which the stage step vendors. `app/` is the same set as a prerendered
+lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
+into the app's `/log` at build time.
+
+**The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
+`generator/census-*.mjs` probes at one ref — currently origin/main @ 185d414 — on the scc 4.0.0
+`Code` basis. Lookups throw on a missing row; nothing is hand-pasted. `INITIATIVES.md` records
+the pipeline's design and the traps of refreshing it.
+
+**Type and theme.** Plates letter in the data face (DIN 2014 on the site's kit, Barlow Semi
+Condensed off it); monospace is reserved for code. Light is graphite-on-vellum, dark is
+cyanotype. Drawn by Claude (Anthropic) with the maintainer, 2026-08-16 onward.
