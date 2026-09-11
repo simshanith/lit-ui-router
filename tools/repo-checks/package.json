@@ -6,7 +6,7 @@
   "type": "module",
   "scripts": {
     "check:graph-edges": "node check-graph-edges.ts",
-    "check:knip": "knip --directory ../.. --config tools/repo-checks/knip.jsonc",
+    "check:knip": "knip --directory ../..",
     "check:patches": "node check-patches.ts",
     "check:task-inputs": "node check-task-inputs.ts",
     "check:workspace-deps": "node check-workspace-deps.ts",
