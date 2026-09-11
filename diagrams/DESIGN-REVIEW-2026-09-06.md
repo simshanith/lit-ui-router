@@ -557,10 +557,18 @@ so deflection feeds omega directly, release re-centres the stick, and the
 damper settles into a detent. Same physics, different source. Desktop keeps the
 direct drag, which is displacement input into the same omega.
 
-Draw them in house vocabulary — a jog dial and a cross-slide in the key's line
-weights, the way a drafting machine or a survey instrument carries its
-controls. A glossy game HUD would be the first thing in the set that reads as a
-game rather than a plate, and the conceit is that these are plates.
+Use the convention people already know — sticks that read as sticks. An earlier
+draft of this row argued for drawing them as a jog dial and cross-slide in the
+key's line weights, on the grounds that a game HUD would break the plate
+metaphor. That was wrong, and the correction is worth keeping (user,
+2026-09-10): **the sheets are a delivery medium, not a constraint on
+interaction. The interactive plates are little web apps — states of UI.** The
+drawing register governs how a plate PRESENTS; it does not govern how a control
+behaves. A learned control beats a bespoke one that happens to match the paper,
+and matching the paper is not a reason to make an affordance stranger.
+
+Style them to sit in the palette — the set's inks, weights and type — but do
+not reinvent the affordance.
 
 Open before building: whether a fling may cross more than one detent, and
 whether pan wants the fit's bounds as a hard clamp or a sprung edge (a sprung
