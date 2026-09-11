@@ -200,15 +200,19 @@ flag "--package-name <package_name>" help="Package to build (turbo <name>#build)
 run = 'turbo run "${usage_package_name?}#build"'
 
 [tasks.build_www]
-# The site the e2e suites are served from. Built ahead of a run rather than
-# from the suites' dependsOn, which cannot start the server they need, and in
-# full whatever the suite selection, since every suite shares the one site.
+# What the e2e suites are served from. Built ahead of a run rather than from
+# the suites' dependsOn, which cannot start the server they need, and in full
+# whatever the suite selection, since every suite shares the one site.
+#
+# Filtered by scope so the task covers what its name says: a package added
+# under @www joins the build without a filter edit here. The glob is quoted
+# because the shell would otherwise try to expand it.
 #
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
 dir = "{{config_root}}"
-description = "Build the docs site the e2e suites are served from"
-run = "turbo run build --filter=@www/lit-ui-router.dev --ui=stream --log-order=stream --summarize"
+description = "Build the @www sites the e2e suites are served from"
+run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
 
 [tasks.ci]
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
