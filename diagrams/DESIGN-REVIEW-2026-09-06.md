@@ -505,6 +505,37 @@ fitting sheets to it.
 Note the cover INDEX already carries FORM as a column, so the vocabulary has one
 existing home and `build.mjs`'s `verdicts` array is where it is spelled today.
 
+**Audit, 2026-09-11.** Every one of the 24 FORM values is unique as a string, so
+"FORM repeats" is false at the value level and true at the word level — the
+premise holds, one level down. The words that repeat:
+
+| word | sheets |
+|---|---|
+| CITY | 8 |
+| INTERACTIVE · COUPLING · GRAPH · ISO/ISOMETRIC | 3 each |
+| REGISTER · CIRCUIT · PLAN | 2 each |
+
+So FORM is a compound of orthogonal keys written as one phrase, and the label
+set falls straight out of splitting it:
+
+- **subject** — city, register, circuit, coupling, spine, map, quarters, sample
+- **projection** — isometric, plan, schematic, chart, graph, section (CORE SAMPLE)
+- **mode** — interactive or static (the three INTERACTIVE sheets plus the cytoscape twins)
+- **basis** — the qualifier the eight cities carry: working, shipped, measured,
+  delivered, bundled, isometric, isometric graph — what the same city is counted on
+
+Nothing here is invented; every value above is already on a sheet.
+
+**Indices follow the key's type, not one table for all.** The cover INDEX works
+because ALTITUDE is an ordinal — one ordered list is its right index. The other
+keys are not ordinals: mode is a boolean and wants a toggle; subject is a small
+enum and wants a grouped index (the eight cities together, the two registers
+together); basis is only meaningful within the city group. So the resolution is
+one index per key, each shaped to its key, with the general key/value filter on
+the cards as the fallback for combinations. FORM stays on the title block as the
+readable phrase; the keys are what the app indexes. Direction from the user,
+2026-09-11: "separate indices for special keys".
+
 ### T52 — original note, as given
 
 Sheet notes beside the sticky right rail want to stop being one narrow measure and become a
@@ -682,11 +713,24 @@ yet ... the gap is starting to bridge"). Two things follow:
   #348's client-hydration seam cannot land over it. Filed 2026-09-11 as #803;
   the rest of `SSR-VERDICT.md`'s asks are #804–#808 (with #564 and #750 before).
 
-**The Effect companion, not mobx.** An earlier draft of this note proposed
-`lit-ui-router-mobx` for the sheet 7 city. The better fit is the `-effect`
-variant underway (user, 2026-09-10). Mobx would only model observable state; the
-city's hard parts are lifecycle and cancellation, which is Effect's actual
-argument:
+**The Effect companion, not mobx — and the atlas writes its first draft.** An
+earlier draft of this note proposed `lit-ui-router-mobx` for the sheet 7 city.
+The better fit is Effect (user, 2026-09-10). Mobx would only model observable
+state; the city's hard parts are lifecycle and cancellation, which is Effect's
+actual argument. There is no `lit-ui-router-effect` package yet (2026-09-11: the
+Effect work lives in the galaxy example and the sample-app lane), and that is
+the point rather than a blocker: the atlas is the place that MOTIVATES the
+companion's API. The user is learning Effect on a substantial UI as it is built,
+and every seam where the router's lifecycle and Effect's scope have to meet is
+a note that becomes the package's API sketch and an ecosystem writeup (user,
+2026-09-11: "want a substantial ui to learn as i build, and inform the api of
+any companion package, sharing the learnings with the ecosystem"). The galaxy
+example set the precedent — its interrupt-on-`onStart` finding became a rule.
+
+Concretely this makes T55 and the Effect lane ONE job: the snow-globe camera is
+built as Effect code inside `diagrams/app`, and its spring integrator is the
+fifth row of the table below — a long-lived fiber that a route exit must
+interrupt cleanly. The city's parts, in the Effect vocabulary:
 
 | the city already does | the Effect concept |
 |---|---|
@@ -694,6 +738,7 @@ argument:
 | route exit while a large module is still loading | interruption, not a cleanup flag |
 | TEST LIGHT as a second material lane over the same geometry | a switchable effect over a shared scope |
 | hover raycast → reading panel | a stream, panel as its latest value |
+| T55's spring-damper camera, running between frames | a long-lived fiber, interrupted on route exit |
 
 It also lands on a known trap from the Effect work: interrupt on a superseding
 `onStart`, not `onCreate`. A routed 3D scene is exactly where that bites.
@@ -705,4 +750,19 @@ that would show it off, since the city and register plates are expensive to
 rebuild. Small bump, worth doing before any of the above.
 
 **Later.** When `srefHref` (#689) lands, the atlas's 22 `uiSref` call sites are
-its natural first consumer.
+its natural first consumer. When a release carries #803, drop the app's second
+template set and try real hydration.
+
+### Backlog, ranked 2026-09-11
+
+Everything still open, ordered by actionability × impact. Effort scale as §7.
+
+| rank | row | what | effort | why here |
+|---|---|---|---|---|
+| 1 | T56 · floor | bump `diagrams/app` to `lit-ui-router@^1.12.0` | S | one-line change; the atlas becomes the app that shows #755 (routed elements no longer rebuilt per update), and everything below runs on the current library |
+| 2 | T53 | build-time silhouette assertion + hand recompose of 15/32 | S | a visible overlap is shipping on four city sheets; the assertion is the same posture as the missing-member throw. Pair it with retiring the transform-blind `collide-flat` probe for the CTM-aware one |
+| 3 | T54 | split FORM into subject / projection / mode / basis labels; per-key indices; card filter | M | audit done above, keys known, no design left; the cards get a data model instead of a caption |
+| 4 | T55 + T56 · Effect | snow-globe camera as Effect code; twin touch areas | L | the user's stated goal — the Effect learning lane and the companion API's first draft. Design converged; the two open calls are made (flings may cross detents, pan edge is sprung) |
+| 5 | T16 | a picture of the plate on every card | L | cover scannability; no dependency, no urgency |
+| 6 | T46 / T37 | 12-column model with feature insets | L | P3; T52 took the pressure off the prose column |
+| — | T56 · later | `srefHref` consumer; hydration over #803 | — | blocked on #689 and a release |
