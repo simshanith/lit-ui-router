@@ -24,6 +24,11 @@
 //
 // Only a NEW plate needs the three-pass dance; a re-run over an unchanged set
 // is idempotent, and build.mjs alone stays green.
+//
+// Optional flags, after the outdir:
+//   --only <ids>       comma list of card ids — render only those
+//   --out <dir>        write the webps there instead of app/public/thumbs/
+//   --tuning <file>    a JSON object merged over TUNING, per-id, for scratch runs
 import { createRequire } from 'node:module';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
@@ -31,8 +36,22 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
 import { THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
 
-const OUT = process.argv[2];
-if (!OUT) throw new Error('usage: node thumbs.mjs <outdir>   (the same dir build.mjs was given)');
+const [OUT, ...FLAGS] = process.argv.slice(2);
+if (!OUT)
+  throw new Error(
+    'usage: node thumbs.mjs <outdir> [--only <ids>] [--out <dir>] [--tuning <file.json>]   (outdir is the same dir build.mjs was given)',
+  );
+
+let onlyIds = null;
+let outDir = null;
+let tuningOverride = null;
+for (let i = 0; i < FLAGS.length; i++) {
+  const flag = FLAGS[i];
+  if (flag === '--only') onlyIds = FLAGS[++i].split(',');
+  else if (flag === '--out') outDir = FLAGS[++i];
+  else if (flag === '--tuning') tuningOverride = JSON.parse(readFileSync(FLAGS[++i], 'utf8'));
+  else throw new Error(`thumbs.mjs: unknown flag ${flag}`);
+}
 
 // The atlas is not a pnpm workspace member, so playwright is reached through a
 // member that declares it — @tools/embed-heights, the repo's other renderer.
@@ -60,16 +79,21 @@ const VIEWPORT = { width: 1400, height: 1000 };
  *
  * `target` is the element photographed (default: the plate's SVG). `focus` is
  * where the 259 × 150 window sits down the target's height, 0 top to 1 bottom;
- * the default centres it, exactly as `preserveAspectRatio="xMidYMid slice"`
- * would. A plate whose default crop lands on a schedule rather than a drawing
- * gets a row here — that is the whole per-sheet knob.
+ * `x` is the same, across the target's width, 0 left to 1 right; the default
+ * for both centres the window, exactly as `preserveAspectRatio="xMidYMid
+ * slice"` would. `zoom` enlarges the target that many times before the window
+ * is cut, so the card holds 1/zoom of the drawing at full detail: a plate is
+ * re-laid that many card-widths wide, while a lane is already drawn at stage
+ * width and so has its window narrowed instead. A plate whose default crop
+ * lands on a schedule rather than a drawing gets a row here — that is the whole
+ * per-sheet knob.
  */
 const TUNING = {
   // the four interactive lanes draw into a cytoscape canvas, not an SVG plate
-  '1i': { target: '#lw-cy' },
-  '2b': { target: '#cb-cy' },
-  '12i': { target: '#rg-cy' },
-  '14i': { target: '#pg-cy' },
+  '1i': { target: '#lw-cy', zoom: 1.08 },
+  '2b': { target: '#cb-cy', zoom: 1.47, x: 0, focus: 0.18 },
+  '12i': { target: '#rg-cy', zoom: 2.45, x: 1, focus: 0.02 },
+  '14i': { target: '#pg-cy', zoom: 1.8, x: 0.78 },
   // plates whose drawing sits above a tall schedule
   7: { focus: 0.24 },
   '7a': { focus: 0.26 },
@@ -80,10 +104,23 @@ const TUNING = {
   10: { focus: 0.3 },
   11: { focus: 0.22 },
   12: { focus: 0.12 },
-  13: { focus: 0.3 },
   14: { focus: 0.22 },
   a1: { focus: 0.1 },
+  // plates whose whole figure reads as grey at card size, enlarged into a detail
+  5: { zoom: 1.24, x: 0.62, focus: 0.25 },
+  6: { zoom: 1.45, x: 0, focus: 0.13 },
+  13: { zoom: 2.6, x: 0.01, focus: 0.057 },
 };
+
+// `--tuning` merges a scratch override over TUNING, per id, shallowly.
+const EFFECTIVE_TUNING = tuningOverride
+  ? Object.fromEntries(
+      [...new Set([...Object.keys(TUNING), ...Object.keys(tuningOverride)])].map((id) => [
+        id,
+        { ...TUNING[id], ...tuningOverride[id] },
+      ]),
+    )
+  : TUNING;
 
 const DEFAULT_TARGET = '.plate .figure-wrap svg';
 
@@ -125,13 +162,15 @@ async function serveSet(dir) {
 
 // The plate is re-laid at the card's own width and everything around it is cut,
 // so the window is a slice of the DRAWING and never of the page it sits on.
-const FIT_CSS = `
+// `zoom` lays it out that many card-widths wide instead of one, so the window
+// keeps its 259 × 150 and holds 1/zoom of the drawing at full detail.
+const fitCss = (zoom) => `
   html, body { background: var(--paper) !important; }
   body { padding: 0 !important; }
   .sheet, .sheet-body, .plate, .figure-wrap { margin: 0 !important; padding: 0 !important; border: 0 !important; }
   .plate::after { display: none !important; }
   .figure-wrap svg { min-width: 0 !important; max-width: none !important;
-    width: ${String(THUMB_W)}px !important; height: auto !important; margin: 0 !important; }
+    width: ${String(THUMB_W * zoom)}px !important; height: auto !important; margin: 0 !important; }
 `;
 
 /**
@@ -162,26 +201,29 @@ async function toWebp(page, png) {
 
 /** One card's picture, in one theme. */
 async function shoot(page, { id, standalone, theme, origin }) {
-  const tune = TUNING[id] ?? {};
+  const tune = EFFECTIVE_TUNING[id] ?? {};
   await page.emulateMedia({ colorScheme: theme });
   await page.goto(`${origin}/${standalone}`, { waitUntil: 'load' });
   await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
   const target = tune.target ?? DEFAULT_TARGET;
+  const zoom = Math.max(1, tune.zoom ?? 1);
   const locator = page.locator(target).first();
   await locator.waitFor({ state: 'visible', timeout: 20000 });
   // A cytoscape lane paints on its own schedule; an SVG plate is already there.
   if (tune.target) await page.waitForTimeout(1200);
-  else await page.addStyleTag({ content: FIT_CSS });
+  else await page.addStyleTag({ content: fitCss(zoom) });
   const box = await locator.boundingBox();
   if (!box) throw new Error(`${id}: ${target} has no box`);
-  // The window is the full width of the target, sliced to the card's ratio.
-  const width = Math.min(box.width, tune.target ? box.width : THUMB_W);
+  // The window is the full width of the target, sliced to the card's ratio; a
+  // plate's enlargement is the relayout above, a lane's is this narrowing.
+  const width = tune.target ? box.width / zoom : Math.min(box.width, THUMB_W);
   const height = (width * THUMB_H) / THUMB_W;
   const focus = tune.focus ?? 0.5;
+  const x = tune.x ?? 0.5;
   // clip is in CSS px; the device scale factor is what makes the capture 2×
   return page.screenshot({
     clip: {
-      x: box.x,
+      x: box.x + Math.max(0, box.width - width) * x,
       y: box.y + Math.max(0, box.height - height) * focus,
       width,
       height: Math.min(height, box.height),
@@ -192,12 +234,23 @@ async function shoot(page, { id, standalone, theme, origin }) {
 const manifest = JSON.parse(readFileSync(join(OUT, 'app', 'public', 'manifest.json'), 'utf8'));
 // The city card draws `cover.hero`, an SVG already in the manifest, so it is
 // not photographed here; every other card is.
-const cards = [...manifest.sheets, ...manifest.appendix].map((row) => ({
+const allCards = [...manifest.sheets, ...manifest.appendix].map((row) => ({
   id: row.id,
   standalone: row.standalone,
 }));
 
-const dir = join(OUT, 'app', 'public', THUMB_DIR);
+let cards = allCards;
+if (onlyIds) {
+  const known = new Set(allCards.map((card) => String(card.id)));
+  for (const id of onlyIds) {
+    if (!known.has(id))
+      throw new Error(`thumbs.mjs: --only unknown id "${id}" — valid ids: ${[...known].join(', ')}`);
+  }
+  const wanted = new Set(onlyIds);
+  cards = allCards.filter((card) => wanted.has(String(card.id)));
+}
+
+const dir = outDir ?? join(OUT, 'app', 'public', THUMB_DIR);
 mkdirSync(dir, { recursive: true });
 
 const server = await serveSet(normalize(join(OUT)));

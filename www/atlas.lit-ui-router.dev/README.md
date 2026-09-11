@@ -69,7 +69,9 @@ node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev
 
 The window is the plate at the card's own width, sliced to the card's ratio; where the
 default slice lands on a schedule rather than a drawing, the plate gets a row in
-`thumbs.mjs`'s one `TUNING` table (`target`, `focus`) and nothing else changes.
+`thumbs.mjs`'s one `TUNING` table (`target`, `focus`, `x`, and `zoom` to enlarge the
+target before the window is cut) and nothing else changes. To try a row without touching
+the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>`.
 
 Live at https://atlas.lit-ui-router.dev/ — the app owns the root (`/`, `/sheet/7/`, `/city/`,
 `/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
