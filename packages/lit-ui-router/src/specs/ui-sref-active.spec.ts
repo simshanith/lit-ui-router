@@ -390,12 +390,7 @@ describe('uiSrefActive directive', () => {
     });
   });
 
-  // The nav-bar shape the sample apps use: uiSrefActive on a wrapper with no
-  // state of its own, discovering its target from a child uiSref, while the
-  // router sits on a DESCENDANT of that target. The two halves are covered
-  // separately above ('active but not exact when child state is active' puts
-  // both directives on one element; 'child sref is active' uses a leaf state)
-  // — these pin them together, which is the combination a nav item is.
+  // the sample apps' nav bar: target from a child uiSref, router on a descendant
   describe('watching child uiSref elements, under a nested state', () => {
     it('should stay active on the wrapper when a child state is entered', async () => {
       const states: LitStateDeclaration[] = [
@@ -464,12 +459,7 @@ describe('uiSrefActive directive', () => {
     });
   });
 
-  // Neither uiSref nor uiSrefActive implements lit's `reconnected()`, and
-  // `disconnected()` drops the onStart subscription and the child-sref
-  // listener. update() re-arms only when the part's element CHANGES, so a part
-  // that is disconnected and reconnected as the same element has nothing to
-  // bring its subscriptions back. A nav bar behind a conditional does exactly
-  // this.
+  // a nav bar behind a conditional: same element, which update() alone never re-arms
   describe('after a disconnect and reconnect', () => {
     it('should keep tracking transitions on the same element', async () => {
       const states: LitStateDeclaration[] = [
@@ -512,10 +502,132 @@ describe('uiSrefActive directive', () => {
         'active again after returning',
       ).toBe(true);
     });
+
+    // the re-arm replays what update() was given, not the array as mutated since
+    it('should replay the seeded targets as given', async () => {
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        { name: 'about', url: '/about' },
+      ];
+      const { wrapper } = await setupWithStates(states);
+      const seeded = [router.stateService.target('about')];
+
+      const part = render(
+        html`<span
+          ${uiSrefActive({ activeClasses: ['active'], targetStates: seeded })}
+          >About</span
+        >`,
+        wrapper,
+      );
+      await tick(100);
+      const span = wrapper.querySelector('span')!;
+
+      await routerGo(router, 'about');
+      await tick(100);
+      expect(span.classList.contains('active'), 'active before').toBe(true);
+
+      seeded.length = 0;
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+
+      await routerGo(router, 'home');
+      await tick(100);
+      expect(span.classList.contains('active'), 'cleared after leaving').toBe(
+        false,
+      );
+    });
+
+    // started while detached, so nothing was subscribed to it
+    it('should pick up a transition that started while disconnected', async () => {
+      let open!: () => void;
+      const gate = new Promise<void>((resolve) => (open = resolve));
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        {
+          name: 'about',
+          url: '/about',
+          resolve: [{ token: 'gate', resolveFn: () => gate }],
+        },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<a
+          ${uiSref('about')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >About</a
+        >`,
+        wrapper,
+      );
+      await tick(100);
+      const anchor = wrapper.querySelector('a')!;
+
+      part.setConnected(false);
+      await tick(50);
+      const pending = router.stateService.go('about');
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+      expect(anchor.classList.contains('active'), 'still in flight').toBe(
+        false,
+      );
+
+      open();
+      await pending;
+      await tick(100);
+      expect(anchor.classList.contains('active'), 'active once it lands').toBe(
+        true,
+      );
+    });
+
+    // the pre-disconnect subscription is dropped, so the settlement lands once
+    it('should report an in-flight settlement once after a reconnect', async () => {
+      let open!: () => void;
+      const gate = new Promise<void>((resolve) => (open = resolve));
+      const states: LitStateDeclaration[] = [
+        { name: 'home', url: '/home' },
+        {
+          name: 'about',
+          url: '/about',
+          resolve: [{ token: 'gate', resolveFn: () => gate }],
+        },
+      ];
+      const { wrapper } = await setupWithStates(states);
+
+      const part = render(
+        html`<a
+          ${uiSref('about')}
+          ${uiSrefActive({ activeClasses: ['active'] })}
+          >About</a
+        >`,
+        wrapper,
+      );
+      await tick(100);
+      const anchor = wrapper.querySelector('a')!;
+
+      const pending = router.stateService.go('about');
+      await tick(50);
+      part.setConnected(false);
+      await tick(50);
+      part.setConnected(true);
+      await tick(50);
+      const settled: TransitionStateChange[] = [];
+      anchor.addEventListener(TRANSITION_STATE_CHANGE_EVENT, (e) => {
+        settled.push((e as CustomEvent).detail.evt);
+      });
+
+      open();
+      await pending;
+      await tick(100);
+
+      expect(settled).toEqual([TransitionStateChange.success]);
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
   });
 
-  // The other branch of reconnected(): an explicit `state` resolves its own
-  // target, so there is nothing to hold across the re-arm.
+  // the other reconnected() branch: an explicit state resolves its own target
   it('should keep tracking when the target comes from an explicit state', async () => {
     const states: LitStateDeclaration[] = [
       { name: 'home', url: '/home' },

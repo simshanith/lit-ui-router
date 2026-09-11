@@ -210,10 +210,7 @@ export class UiSrefDirective extends AsyncDirective {
   unsubscribe: (() => void) | undefined;
 
   /**
-   * The part's element, kept across a disconnect so {@link reconnected} can
-   * re-arm. `element` itself is nulled on disconnect and stays the "live
-   * element or nothing" signal the render path guards on.
-   *
+   * Kept across a disconnect so {@link reconnected} can re-arm.
    * @internal
    */
   private _partElement: UiSrefElement | null = null;
@@ -358,11 +355,7 @@ export class UiSrefDirective extends AsyncDirective {
   }
 
   /**
-   * Re-arms after the host element is re-attached. `update` re-arms only when
-   * the part's ELEMENT changes, and a detach/re-attach reuses the same one, so
-   * without this the sref comes back with no click listener and stops
-   * navigating entirely.
-   *
+   * Re-arms after a detach/re-attach; `update` only re-arms on a NEW element.
    * @internal
    */
   reconnected(): void {

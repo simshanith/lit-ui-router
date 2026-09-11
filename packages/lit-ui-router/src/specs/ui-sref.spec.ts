@@ -334,11 +334,7 @@ describe('uiSref directive', () => {
       expect(goSpy).toHaveBeenCalledWith('about', {}, expect.any(Object));
     });
 
-    // disconnected() drops the click listener, and update() re-arms only when
-    // the part's element CHANGES — so a part disconnected and reconnected as
-    // the same element (a host element detached and re-attached, which is what
-    // a retained/sticky view does) comes back with no listener and stops
-    // navigating. There is no reconnected() to restore it.
+    // a detach/re-attach reuses the element, which update() alone never re-arms
     it('should still navigate after a disconnect and reconnect', async () => {
       const states: LitStateDeclaration[] = [
         { name: 'home', url: '/home' },
