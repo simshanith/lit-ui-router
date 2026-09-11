@@ -1,0 +1,53 @@
+{
+  "ref": "origin/main",
+  "sha": "65e2843",
+  "commitDate": "2026-09-11T18:51:12Z",
+  "generatedAtTime": "2026-09-11T19:03:58.434Z",
+  "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-steam.mjs",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 65e2843",
+  "wasAssociatedWith": [
+    "git log (historyLog)"
+  ],
+  "window": {
+    "since": "2026-06-13",
+    "until": "2026-09-11"
+  },
+  "windowCommits": 447,
+  "rows": [
+    {"member":"packages/eslint-plugin-lit-ui-router","commits":9},
+    {"member":"packages/lit-ui-router","commits":36},
+    {"member":"packages/lit-ui-router-mobx","commits":10},
+    {"member":"packages/navigation-location-plugin","commits":8},
+    {"member":"packages/ui-router-server","commits":9},
+    {"member":"apps/sample-app-lit-e2e","commits":23},
+    {"member":"apps/sample-app-lit-mobx","commits":13},
+    {"member":"apps/sample-app-lit-vanilla","commits":10},
+    {"member":"apps/sample-app-routes","commits":3},
+    {"member":"apps/sample-app-shared","commits":29},
+    {"member":"www/lit-ui-router.dev","commits":6},
+    {"member":"examples","commits":19},
+    {"member":"tools/bootstrap","commits":2},
+    {"member":"tools/build_and_test","commits":8},
+    {"member":"tools/bundle-probe","commits":6},
+    {"member":"tools/compat-guards","commits":6},
+    {"member":"tools/dts-backtest","commits":4},
+    {"member":"tools/embed-heights","commits":5},
+    {"member":"tools/eslint","commits":3},
+    {"member":"tools/eslint-ts-parser","commits":1},
+    {"member":"tools/happy-dom","commits":1},
+    {"member":"tools/lcov-rebase","commits":2},
+    {"member":"tools/lint-elements","commits":3},
+    {"member":"tools/lit-template-lint","commits":2},
+    {"member":"tools/lit-test-env","commits":1},
+    {"member":"tools/oxc-emit","commits":4},
+    {"member":"tools/release","commits":26},
+    {"member":"tools/release-config","commits":2},
+    {"member":"tools/repo-checks","commits":10},
+    {"member":"tools/shared","commits":13},
+    {"member":"tools/typedoc-plugin-lit-ui-router","commits":7},
+    {"member":"tools/vue-check","commits":3},
+    {"member":"tools/warn-lanes","commits":1},
+    {"member":"tools/wintercg-globals","commits":0},
+    {"member":"tools/workers-builds","commits":14}
+  ]
+}

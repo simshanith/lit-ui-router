@@ -215,7 +215,7 @@
       }
     },
     {
-      "files": ["diagrams/app/src/mode.ts"],
+      "files": ["www/atlas.lit-ui-router.dev/app/src/mode.ts"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
           "warn",

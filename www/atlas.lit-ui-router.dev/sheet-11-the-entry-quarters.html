@@ -1,0 +1,807 @@
+<meta charset="utf-8">
+<title>THE ENTRY QUARTERS — Sheet 11 of 14</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="description" content="The split view to sheet 10’s unified city: every exported entry of every publishable package bundled alone and priced — 5 package quarters, 16 doors, the codecov bundle-analysis series drawn as skylines.">
+<style>
+:root {
+  --ground: #E6E6DA;
+  --paper: #F1F0E7;
+  --paper-2: #E9E8DD;
+  --ink: #2B302C;
+  --ink-soft: #5C6259;
+  --ink-faint: #9AA091;
+  --line: #C6C8B6;
+  --edge: #A9AB99;
+  --accent: #2E5077;
+  --accent-soft: #6E88A6;
+  --red: #A63D2F;
+  --red-hatch: #A63D2F;
+  --green: #4C6B51;
+  --halo: rgba(46, 80, 119, 0.10);
+  /* Annotation grey and the Cherokee-red chop. Declared for the whole set;
+     read today only by the type specimen (app/src/specimen.ts). */
+  --pencil: #7B8078;
+  --cherokee: #9E3A2B;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --ground: #0A1B34;
+    --paper: #102A50;
+    --paper-2: #0B1F3E;
+    --ink: #D9E6F3;
+    --ink-soft: #93A9C6;
+    --ink-faint: #6E88A8;
+    --line: #23406B;
+    --edge: #2E4C7C;
+    --accent: #8FBCE9;
+    --accent-soft: #5B84B4;
+    /* fills keep the red red; the salmon survives as the hatch stroke */
+    --red: #D96C55;
+    --red-hatch: #E38C6F;
+    --green: #8AB795;
+    --halo: rgba(143, 188, 233, 0.12);
+    --pencil: #7E97B8;
+    --cherokee: #E0705A;
+  }
+}
+:root[data-theme="dark"] {
+  --ground: #0A1B34;
+  --paper: #102A50;
+  --paper-2: #0B1F3E;
+  --ink: #D9E6F3;
+  --ink-soft: #93A9C6;
+  --ink-faint: #6E88A8;
+  --line: #23406B;
+  --edge: #2E4C7C;
+  --accent: #8FBCE9;
+  --accent-soft: #5B84B4;
+  --red: #D96C55;
+  --red-hatch: #E38C6F;
+  --green: #8AB795;
+  --halo: rgba(143, 188, 233, 0.12);
+  --pencil: #7E97B8;
+  --cherokee: #E0705A;
+}
+
+* { box-sizing: border-box; margin: 0; }
+/* ---- THE TYPE ROLES ----
+   Decided 2026-09-05 on the type specimen (app/src/specimen.ts, pairing
+   5 · THE ATLAS SET). Each stack names the ADOBE FONTS family FIRST — it draws
+   on the site, where generator/stage-site.mjs injects the kit — the Google
+   Fonts stand-in SECOND, and a generic last. The artifact, and any host
+   without the kit, resolves the second name; nothing is ever synthesised.
+   Weight 600 is asked for wherever the plan said Demi: Adobe serves 400/700
+   and CSS resolves a 600 request upward to 700, Google serves a real 600, so
+   ONE number covers both hosts.
+
+   --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
+              and the condensed wordmark's own name (.mark) in every
+              sheet-head PROJECT line and title block PROJECT value
+   --title    sheet titles, card and prose headings, rail entry titles
+   --data     kickers, tracked caps, numbers, schedules, the title block
+   --prose    running text, figcaptions, general notes, About. Source Serif
+              is the one role whose two names are the SAME design under two
+              releases: source-serif-pro from the kit on the site, Source
+              Serif 4 from Google in the artifact.
+   --code     code identifiers. Source Code Pro on BOTH hosts (2026-09-06):
+              source-code-pro from the kit on the site, the same Slimbach
+              design from Google in the artifact. Since 2026-09-06 the PLATES
+              draw in --data too (see text.lbl* below): mono is reserved for
+              code, and --mono survives only as the tail of this stack.
+   --hand     P22 FLLW Eaglefeather Informal, MIXED CASE, on the title block's
+              DRAWN BY value and at most one callout line per sheet — nowhere
+              else. No Google stand-in by decision: off the kit it falls to
+              --data, so the artifact loads nothing new.
+   --serif    kept as an alias of --prose so nothing downstream breaks. */
+:root {
+  /* the system stack; since 2026-09-06 nothing reads it but --code's tail */
+  --mono: ui-monospace, "SF Mono", Menlo, Consolas, "Liberation Mono", monospace;
+  --display: "p22-fllw-eaglefeather", "Josefin Sans", sans-serif;
+  --title: "p22-flw-exhibition", "Josefin Sans", sans-serif;
+  --data: "din-2014", "Barlow Semi Condensed", sans-serif;
+  --prose: "source-serif-pro", "Source Serif 4", "Charter", "Bitstream Charter", "Sitka Text", Cambria, Georgia, serif;
+  --code: "source-code-pro", "Source Code Pro", var(--mono);
+  --hand: "p22-fllw-eaglefeather-inf", var(--data);
+  --serif: var(--prose);
+}
+body {
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--prose);
+  padding: clamp(12px, 3vw, 40px);
+  line-height: 1.5;
+  /* what a sticky inset clears: the routed app raises it for its utility bar */
+  --sticky-top: 12px;
+}
+
+/* THE SHEET. Full width at every viewport — no centred cap, so a widescreen
+   shows the plate near its drawn size; the inner rule at 8 and the text at
+   22 keep the double frame reading as one. Only running text keeps a measure. */
+.sheet {
+  position: relative;
+  max-width: none;
+  margin: 0 0 40px;
+  background: var(--paper);
+  border: 1.5px solid var(--ink);
+  padding: 22px;
+  /* paper on a light table casts no soft shadow: the 1px edge only */
+  box-shadow: 0 1px 0 var(--edge);
+}
+.sheet::before {
+  content: "";
+  position: absolute;
+  inset: 8px;
+  border: 1px solid var(--edge);
+  pointer-events: none;
+}
+.sheet > * { position: relative; }
+
+.sheet-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 16px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--ink);
+  padding: 4px 2px 10px;
+  margin-bottom: 18px;
+}
+/* The ledger. 11px of the data face carries the same cap-height as the 10.5px
+   mono it replaces (specimen GLYPH SIZE readout, within 1%), so the sizes here
+   step up by half a pixel rather than by eye. */
+.lettering, .sheet-head, .titleblock, .keyblock, .stat-bar {
+  font-family: var(--data);
+  font-variant-numeric: tabular-nums;
+}
+.sheet-head .proj {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+}
+.sheet-head .shno {
+  font-size: 11.5px;
+  letter-spacing: 0.14em;
+  font-variant-numeric: tabular-nums;
+}
+.sheet-title {
+  font-family: var(--title);
+  font-size: clamp(18px, 2.7vw, 24px);
+  letter-spacing: 0.06em;
+  font-weight: 600;
+  text-wrap: balance;
+  margin-bottom: 4px;
+}
+/* THE ARTICLE (T9, shipped 2026-09-06). Every sheet title begins with THE and
+   the title face is unicase — no small cap, no alternate, nothing to demote it
+   with. So the article is drawn as a superior in the DATA face: lowercase, 0.6em
+   of the title, soft ink. It needs no kit face, so it is identical on the site,
+   the flat set and the artifact. line-height 0 keeps the superior out of the
+   title's line box. */
+sup.art {
+  font-family: var(--data);
+  font-size: 0.6em;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  letter-spacing: 0;
+  text-transform: lowercase;
+  line-height: 0;
+  color: var(--ink-soft);
+  /* the sup carries its own no-break space (so the title reads "the MEASURED
+     CITY" to a reader and never breaks after the article); this is the rest */
+  margin-right: 0.1em;
+}
+/* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
+   is the full uppercase wordmark in the display face, which the rail head and
+   the cover title carry plain. This one is the LEDGER name: the same display
+   face for the name (.mark, below), with the article drawn as the kit's
+   catchword. Two sites carry it — every sheet-head PROJECT line and the title
+   block's PROJECT value — and both wrap the superior in .cw, so this is ONE
+   rule set, not two.
+   HWT Catchwords is an Adobe-kit face with NO GSUB: every THE in it is
+   keyed to one character and key e is the plainest of the ten (upright block
+   caps over two leaves). It draws ONLY where the guard script found the face
+   declared; off the kit — the artifact, any host without it — none of this
+   applies and the sup.art superior inside is what draws. The bare key e in the
+   display face is the failure that guard prevents. */
+/* THE NAME, wherever the wordmark is drawn. The face travels with the MARK,
+   not with the site: the sheet-head ledger line and the title block's PROJECT
+   value both emit PROJECT_MARK, so both set ALTITUDE ATLAS in Eaglefeather at
+   the weight the rail head and the cover title use.
+   1.06em, MEASURED not guessed: Eaglefeather at the resolved 700 caps at 0.651
+   of its em and DIN 2014 at 0.690, so 0.690/0.651 = 1.06 is the size at which
+   the name's cap sits on the ledger's. In a sheet head that is 12.19px of
+   display beside 11.5px of data — both cap at 7.94px — and the tail
+   (" — DRAWING SET") keeps the ledger face at the line's own size. In a title
+   block it is 14.31px inside the 13.5px .dsp, capping at 9.32px: the same cap
+   the ledger face would have drawn there, a tenth under the sheet title's. */
+.mark {
+  font-family: var(--display);
+  font-size: 1.06em;
+  font-weight: 600;
+}
+html[data-catchwords="on"] .cw::before {
+  content: "e";
+  font-family: "hwt-catchwords";
+  /* 20px FLAT, set against the display-face name beside it (user-tuned in the
+     browser, 2026-09-11). The catchword draws THE as two stacked lines inside
+     one cap height, so at the ledger sizes these two sites run — 11.5px in a
+     sheet head, 13.5px in a title block — a cap-matched scale is an inkblot;
+     the earlier rule floored it at 24px, which separated the letters but left
+     the mark floating above the name. 20px is where the three letters still
+     read AND the block sits on the name's own cap band. */
+  font-size: 20px;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--ink-soft);
+  margin-right: 0.16em;
+  /* the mark is taller than the 11.5px head line: kept out of the line box so
+     the sheet head does not grow a row around it. "sub" drops it off the
+     baseline until its two stacked lines centre on the cap band of the
+     display-face name that follows it, rather than floating over it. */
+  line-height: 0;
+  vertical-align: sub;
+}
+html[data-catchwords="on"] .cw sup.art {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+.sheet-sub {
+  font-family: var(--data);
+  font-size: 12px;
+  letter-spacing: 0.08em;
+  color: var(--ink-soft);
+  margin-bottom: 16px;
+}
+
+/* THE PLATE IS THE PAGE. It never shrinks below 1000px — under that width it
+   scrolls in its own wrap like a drawing on a light table, and the wrap says so.
+   Above that it grows with the column but is CONTAINED: the whole plate stays on
+   one screen. An inline SVG letterboxes under max-height instead of shrinking,
+   so the cap reaches it through max-width times the plate's own viewBox ratio
+   (--plate-ar, written per sheet). */
+.plate { position: relative; container-type: inline-size; margin: 20px 0 14px; --plate-cap: min(84vh, 1400px); }
+.figure-wrap { overflow-x: auto; }
+.figure-wrap svg { display: block; width: 100%; max-width: min(100%, calc(var(--plate-cap) * var(--plate-ar, 1.4))); height: auto; min-width: 1000px; margin: 0 auto; }
+.plate::after {
+  content: "SCROLL →";
+  display: none;
+  position: absolute;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 72px;
+  padding: 6px 0 0;
+  text-align: right;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  background: linear-gradient(90deg, transparent, var(--paper) 70%);
+  pointer-events: none;
+  transition: opacity 0.2s;
+}
+@container (width < 1000px) { .plate::after { display: block; } }
+/* at the end of the scroll the affordance steps aside — the plate's right edge is the point */
+.plate[data-end]::after { opacity: 0; }
+figure { margin: 0; }
+figcaption {
+  font-family: var(--prose);
+  font-size: 14.5px;
+  color: var(--ink-soft);
+  max-width: 66ch;
+  margin: 0;
+  font-style: italic;
+}
+figcaption .figno {
+  font-family: var(--data);
+  font-style: normal;
+  font-size: 10px;
+  letter-spacing: 0.14em;
+  color: var(--ink-soft);
+  margin-right: 10px;
+}
+
+/* ONE MEASURE, INSETS TO THE RIGHT. Running text in the left column; the key,
+   the title block and the revisions are one inset strip that rides alongside
+   whatever paragraph is on screen. The strip and its gutter are named because
+   the notes' column count has to subtract them to know its own width. */
+.notes-grid {
+  --inset: 352px;
+  --inset-gap: 24px;
+  display: grid;
+  grid-template-columns: minmax(0, 7fr) var(--inset);
+  gap: var(--inset-gap);
+  border-top: 1px solid var(--ink);
+  padding-top: 16px;
+  align-items: start;
+}
+@media (max-width: 1180px) { .notes-grid { grid-template-columns: minmax(0, 3fr) minmax(260px, 2fr); } }
+@media (max-width: 720px) { .notes-grid { grid-template-columns: 1fr; } }
+.keyblock { position: sticky; top: var(--sticky-top); }
+@media (max-width: 720px) { .keyblock { position: static; } }
+/* COLUMNS AT THE WIDTH THE PAPER GIVES. The count is an integer read off the
+   paper itself — one column per 28rem of the notes cell, which is the grid
+   less the inset strip and its gutter, both named above so the subtraction
+   cannot drift from the track it is subtracting. The query hangs off
+   .notes-grid because an element's own container-type does not feed its own
+   properties; declared on .notes it would silently resolve against the
+   viewport. Under 1180 the grid re-proportions and the cell is never wide
+   enough to divide, so the count is simply 1 and no second formula is owed.
+   Rounded to nearest, not down: rounding down cannot hold both ends at once —
+   two columns at 1440 wants the divisor under 469px, three rather than four at
+   2560 wants it over 514px. Nearest at 38rem takes both, and lands 4 at 3008,
+   3 at 2560, 2 at 1440, with no column narrower than 447px or wider than 706
+   between 1200 and 3400. The measure cap on the paragraph is the one guard the
+   count cannot give: it bites only at a single column. */
+.notes-grid { container-type: inline-size; }
+.notes {
+  column-count: calc((100cqw - var(--inset) - var(--inset-gap)) / 38rem);
+  column-gap: 44px;
+}
+@media (max-width: 1180px) { .notes { column-count: 1; } }
+.notes h3, .keyblock h3 {
+  font-family: var(--data);
+  font-size: 11px;
+  letter-spacing: 0.18em;
+  font-weight: 600;
+  color: var(--ink-soft);
+  margin-bottom: 8px;
+}
+/* the head rules the whole block, so it spans it — and is lettered to match */
+.notes h3 {
+  column-span: all;
+  font-size: 12.5px;
+  margin-bottom: 18px;
+}
+.notes p {
+  font-family: var(--prose);
+  font-size: 18px;
+  line-height: 1.8;
+  /* Only ever bites at one column: the count holds every wider layout under
+     706px on its own, so this is the guard for the 1180–1440 band, where a
+     lone column would otherwise run out to 91ch. */
+  max-width: 74ch;
+  margin-bottom: 2em;
+}
+.notes p strong { font-weight: 600; }
+/* a paragraph's opening strong is a run-in head — give it its own line, but
+   only where it opens the paragraph, never a strong caught mid-sentence. It
+   never ends a column alone: a head is a promise about the text under it. */
+.notes p > strong:first-child { display: block; break-after: avoid; }
+/* every inline chip is the code face, not the UA's own monospace default */
+code, kbd, samp { font-family: var(--code); }
+.notes p code, .gal-body code {
+  font-family: var(--code);
+  font-size: 0.88em;
+  background: var(--paper-2);
+  /* fill only: at 14 chips in 15 lines a border made the paragraph a form */
+  padding: 0 3px;
+  border-radius: 2px;
+  /* A chip breaks only when it would otherwise run off the column, and then at
+     a space, never inside an identifier. */
+  overflow-wrap: break-word;
+  hyphens: none;
+}
+.keyblock table { border-collapse: collapse; width: 100%; }
+.keyblock td {
+  font-size: 11.5px;
+  letter-spacing: 0.03em;
+  padding: 5px 8px 5px 0;
+  border-bottom: 1px solid var(--line);
+  vertical-align: middle;
+}
+.keyblock td:first-child { width: 58px; }
+.keyblock svg { display: block; }
+
+.titleblock {
+  margin-top: 20px;
+  margin-left: auto;
+  width: min(460px, 100%);
+  border: 1.5px solid var(--ink);
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  font-variant-numeric: tabular-nums;
+}
+.titleblock > div {
+  padding: 6px 10px 7px;
+  border-top: 1px solid var(--ink);
+  font-size: 11.5px;
+  letter-spacing: 0.06em;
+}
+.titleblock > div:nth-child(-n+2) { border-top: none; }
+.titleblock > div:nth-child(2n) { border-left: 1px solid var(--ink); }
+.titleblock .span2 { grid-column: 1 / -1; border-left: none !important; }
+.titleblock .fld {
+  display: block;
+  font-family: var(--data);
+  font-size: 9.5px;
+  letter-spacing: 0.16em;
+  color: var(--ink-soft);
+  margin-bottom: 2px;
+}
+/* The two values that carry the atlas's own name, and the sheet's. PROJECT is
+   the CONDENSED wordmark, and its NAME is the display face — the same wordmark
+   the sheet-head line above it now carries; only the article beside it is the
+   ledger's. */
+.titleblock .dsp {
+  font-family: var(--display);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.10em;
+}
+.titleblock .ttl {
+  font-family: var(--title);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+}
+/* THE ARTICLE, INLINE — the title block's SHEET TITLE field ALONE. A ledger
+   field is read as a value, not as a headline, so here the word is set at the
+   value's own size on its own baseline in the data face, rather than lifted
+   into a superior. Its own class, so it can never reach sup.art. */
+.titleblock .ttl .art-inline {
+  font-family: var(--data);
+  font-size: inherit;
+  font-weight: 400;
+  font-variant-numeric: normal;
+  text-transform: lowercase;
+  letter-spacing: 0.02em;
+  color: var(--ink-soft);
+  vertical-align: baseline;
+}
+/* DRAWN BY: the one signed value, in the hand, in mixed case — never tracked
+   caps. Sized up from the .dsp 13.5px because Eaglefeather Informal runs a
+   smaller cap for its em. */
+.titleblock .hand {
+  font-family: var(--hand);
+  font-size: 16px;
+  letter-spacing: 0.02em;
+  text-transform: none;
+}
+/* The chop: a plain square in the Cherokee red, unrotated — the corner stamp,
+   not a jaunty sticker. It sits at the right edge of the SHEET cell. */
+.titleblock .sh { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+.titleblock .chop {
+  flex: 0 0 auto;
+  width: 14px;
+  height: 14px;
+  margin-right: 2px;
+  border: 1.5px solid var(--cherokee);
+  box-shadow: inset 0 0 0 1.5px var(--paper), inset 0 0 0 4px var(--cherokee);
+}
+
+/* ---- SVG drawing classes ---- */
+.sk   { stroke: var(--ink); fill: none; stroke-width: 1.3; }
+.sk2  { stroke: var(--ink); fill: none; stroke-width: 2; }
+.skf  { stroke: var(--line); fill: none; stroke-width: 1; }
+.sks  { stroke: var(--ink-soft); fill: none; stroke-width: 1.1; }
+.ska  { stroke: var(--accent); fill: none; stroke-width: 1.6; }
+.skr  { stroke: var(--red); fill: none; stroke-width: 1.4; }
+.skg  { stroke: var(--green); fill: none; stroke-width: 1.4; }
+.fp   { fill: var(--paper); }
+.fp2  { fill: var(--paper-2); }
+.fi   { fill: var(--ink); }
+.fis  { fill: var(--ink-soft); }
+.fa   { fill: var(--accent); }
+.fr   { fill: var(--red); }
+.fg   { fill: var(--green); }
+.fhalo{ fill: var(--halo); }
+.fnone{ fill: none; }
+/* THE PLATES DRAW IN THE DATA FACE (2026-09-06). Mono is reserved for code.
+   DIN is a strict contraction of the system mono at these sizes — median -26%,
+   nothing grows — and every label is start- or end-anchored, so the lettering
+   only opens air. Sizes, weights, fills and tracking are unchanged. */
+text.lbl   { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; fill: var(--ink); letter-spacing: 0.05em; }
+text.lblb  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11.5px; font-weight: 600; fill: var(--ink); letter-spacing: 0.07em; }
+text.lbls  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10.5px; fill: var(--ink-soft); letter-spacing: 0.05em; }
+text.lblf  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 10px; fill: var(--ink-faint); letter-spacing: 0.05em; }
+text.lbla  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 11px; font-weight: 600; fill: var(--accent); letter-spacing: 0.07em; }
+text.lblr  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 9.5px; fill: var(--red); letter-spacing: 0.05em; }
+text.lblt  { font-family: var(--data); font-variant-numeric: tabular-nums; font-size: 13px; font-weight: 600; fill: var(--ink); letter-spacing: 0.12em; }
+text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
+
+@media (prefers-reduced-motion: no-preference) {
+  .sheet { transition: box-shadow 0.2s; }
+}
+a { color: var(--accent); }
+:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+</style>
+<script>(function () {
+  var armed = function () {
+    for (var f of document.fonts) {
+      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
+        document.documentElement.dataset.catchwords = 'on';
+        return true;
+      }
+    }
+    return false;
+  };
+  if (armed()) return;
+  addEventListener('DOMContentLoaded', function () {
+    if (!armed()) document.fonts.ready.then(armed);
+  });
+})();</script>
+<section class="sheet" id="sheet-11" aria-label="Sheet 11: THE ENTRY QUARTERS">
+  <div class="sheet-head"><span class="proj"><span class="cw"><sup class="art">the&nbsp;</sup></span><span class="mark">ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 11 / 14</span></div>
+  <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ENTRY QUARTERS</h2>
+  <p class="sheet-sub">ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors in 5 package quarters, footprint from minified bytes and height from gzipped, dependencies external — counted at origin/main @ 65e2843 (2026-09-11)</p>
+  <figure>
+    <div class="plate" style="--plate-ar:1.2008"><div class="figure-wrap"><svg viewBox="0 0 1160 966" role="img" aria-label="Every exported entry of the five publishable packages drawn as an isometric city split into five package quarters: 16 door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors; the ui-router-server quarter is an eight-door storefront whose index tower prices 644 gzipped bytes under lit-ui-router's; the mobx and navigation-location plugins stand alone as small one-door quarters; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, the fifth published package, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
+<defs>
+  <marker id="s11-ai" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fi"/>
+  </marker>
+  <marker id="s11-aa" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fa"/>
+  </marker>
+  <marker id="s11-ar" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fr"/>
+  </marker>
+  <marker id="s11-as" viewBox="0 0 10 8" refX="9" refY="4" markerWidth="9" markerHeight="7" orient="auto-start-reverse">
+    <path d="M0,0 L10,4 L0,8 z" class="fis"/>
+  </marker>
+  <pattern id="s11-hx" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" class="skf"/>
+  </pattern>
+  <pattern id="s11-hd" width="5" height="5" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="5" stroke="var(--ink-soft)" stroke-width="1"/>
+  </pattern>
+  <pattern id="s11-hr" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(-45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--red-hatch)" stroke-width="1" opacity="0.55"/>
+  </pattern>
+  <pattern id="s11-ha" width="6" height="6" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+    <line x1="0" y1="0" x2="0" y2="6" stroke="var(--accent)" stroke-width="1" opacity="0.5"/>
+  </pattern>
+</defs>
+
+<polygon points="497.3,205.0 765.8,360.0 592.6,460.0 324.1,305.0" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="36" y="426" class="lblf" text-anchor="start" >lit-ui-router — five doors</text>
+<polygon points="835.1,400.0 1112.2,560.0 930.3,665.0 653.2,505.0" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="1150" y="430" class="lblf" text-anchor="end" >ui-router-server — eight doors</text>
+<polygon points="332.8,400.0 454.0,470.0 376.1,515.0 254.8,445.0" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="240" y="478" class="lblf" text-anchor="end" >lit-ui-router-mobx</text>
+<polygon points="523.3,460.0 618.6,515.0 549.3,555.0 454.0,500.0" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="450" y="528" class="lblf" text-anchor="end" >eslint-plugin-lit-ui-router</text>
+<polygon points="540.6,580.0 670.5,655.0 592.6,700.0 462.7,625.0" class="skf fnone" stroke-dasharray="5 4"/>
+<text x="700" y="672" class="lblf" text-anchor="start" >navigation-location-plugin</text>
+
+<g>
+<polygon points="452.9,100.4 493.0,123.6 493.0,263.8 452.9,240.7" fill="var(--paper-2)"/>
+<polygon points="452.9,100.4 493.0,123.6 493.0,263.8 452.9,240.7" class="sk fnone"/>
+<polygon points="533.1,100.4 493.0,123.6 493.0,263.8 533.1,240.7" fill="var(--paper-2)"/>
+<polygon points="533.1,100.4 493.0,123.6 493.0,263.8 533.1,240.7" fill="url(#s11-hx)"/>
+<polygon points="533.1,100.4 493.0,123.6 493.0,263.8 533.1,240.7" class="sk fnone"/>
+<polygon points="493.0,77.3 533.1,100.4 493.0,123.6 452.9,100.4" class="sk fa"/>
+</g>
+<circle cx="513.1" cy="74.9" r="9" class="ska fp"/>
+<text x="513.1" y="78.3" class="lbls" text-anchor="middle" >1</text>
+<g>
+<polygon points="483.6,149.9 523.3,172.8 523.3,310.8 483.6,287.9" fill="var(--paper-2)"/>
+<polygon points="483.6,149.9 523.3,172.8 523.3,310.8 483.6,287.9" class="sk fnone"/>
+<polygon points="563.0,149.9 523.3,172.8 523.3,310.8 563.0,287.9" fill="var(--paper-2)"/>
+<polygon points="563.0,149.9 523.3,172.8 523.3,310.8 563.0,287.9" fill="url(#s11-hx)"/>
+<polygon points="563.0,149.9 523.3,172.8 523.3,310.8 563.0,287.9" class="sk fnone"/>
+<polygon points="523.3,127.0 563.0,149.9 523.3,172.8 483.6,149.9" class="sk fa"/>
+</g>
+<circle cx="543.1" cy="124.5" r="9" class="ska fp"/>
+<text x="543.1" y="127.9" class="lbls" text-anchor="middle" >2</text>
+<g>
+<polygon points="562.8,269.9 588.3,284.6 588.3,346.9 562.8,332.2" fill="var(--paper-2)"/>
+<polygon points="562.8,269.9 588.3,284.6 588.3,346.9 562.8,332.2" class="sk fnone"/>
+<polygon points="613.7,269.9 588.3,284.6 588.3,346.9 613.7,332.2" fill="var(--paper-2)"/>
+<polygon points="613.7,269.9 588.3,284.6 588.3,346.9 613.7,332.2" fill="url(#s11-hx)"/>
+<polygon points="613.7,269.9 588.3,284.6 588.3,346.9 613.7,332.2" class="sk fnone"/>
+<polygon points="588.3,255.2 613.7,269.9 588.3,284.6 562.8,269.9" class="sk fa"/>
+</g>
+<circle cx="601.0" cy="248.6" r="9" class="ska fp"/>
+<text x="601.0" y="252.0" class="lbls" text-anchor="middle" >3</text>
+<g>
+<polygon points="489.6,307.6 514.6,322.0 514.6,383.9 489.6,369.5" fill="var(--paper-2)"/>
+<polygon points="489.6,307.6 514.6,322.0 514.6,383.9 489.6,369.5" class="sk fnone"/>
+<polygon points="539.7,307.6 514.6,322.0 514.6,383.9 539.7,369.5" fill="var(--paper-2)"/>
+<polygon points="539.7,307.6 514.6,322.0 514.6,383.9 539.7,369.5" fill="url(#s11-hx)"/>
+<polygon points="539.7,307.6 514.6,322.0 514.6,383.9 539.7,369.5" class="sk fnone"/>
+<polygon points="514.6,293.1 539.7,307.6 514.6,322.0 489.6,307.6" class="sk fa"/>
+</g>
+<circle cx="527.2" cy="286.3" r="9" class="ska fp"/>
+<text x="527.2" y="289.7" class="lbls" text-anchor="middle" >5</text>
+<g>
+<polygon points="603.8,348.6 618.6,357.1 618.6,384.0 603.8,375.5" fill="var(--paper-2)"/>
+<polygon points="603.8,348.6 618.6,357.1 618.6,384.0 603.8,375.5" class="sk fnone"/>
+<polygon points="633.3,348.6 618.6,357.1 618.6,384.0 633.3,375.5" fill="var(--paper-2)"/>
+<polygon points="633.3,348.6 618.6,357.1 618.6,384.0 633.3,375.5" fill="url(#s11-hx)"/>
+<polygon points="633.3,348.6 618.6,357.1 618.6,384.0 633.3,375.5" class="sk fnone"/>
+<polygon points="618.6,340.1 633.3,348.6 618.6,357.1 603.8,348.6" class="sk fa"/>
+</g>
+<circle cx="625.9" cy="330.3" r="9" class="ska fp"/>
+<text x="625.9" y="333.7" class="lbls" text-anchor="middle" >4</text>
+<g>
+<polygon points="801.7,310.1 835.1,329.4 835.1,453.5 801.7,434.3" fill="var(--paper-2)"/>
+<polygon points="801.7,310.1 835.1,329.4 835.1,453.5 801.7,434.3" class="sk fnone"/>
+<polygon points="868.4,310.1 835.1,329.4 835.1,453.5 868.4,434.3" fill="var(--paper-2)"/>
+<polygon points="868.4,310.1 835.1,329.4 835.1,453.5 868.4,434.3" fill="url(#s11-hx)"/>
+<polygon points="868.4,310.1 835.1,329.4 835.1,453.5 868.4,434.3" class="sk fnone"/>
+<polygon points="835.1,290.9 868.4,310.1 835.1,329.4 801.7,310.1" class="sk fp"/>
+</g>
+<circle cx="851.7" cy="286.5" r="9" class="sk fp"/>
+<text x="851.7" y="289.9" class="lbls" text-anchor="middle" >8</text>
+<g>
+<polygon points="331.4,413.1 345.8,421.4 345.8,444.1 331.4,435.8" fill="var(--paper-2)"/>
+<polygon points="331.4,413.1 345.8,421.4 345.8,444.1 331.4,435.8" class="sk fnone"/>
+<polygon points="360.1,413.1 345.8,421.4 345.8,444.1 360.1,435.8" fill="var(--paper-2)"/>
+<polygon points="360.1,413.1 345.8,421.4 345.8,444.1 360.1,435.8" fill="url(#s11-hx)"/>
+<polygon points="360.1,413.1 345.8,421.4 345.8,444.1 360.1,435.8" class="sk fnone"/>
+<polygon points="345.8,404.9 360.1,413.1 345.8,421.4 331.4,413.1" class="sk fp"/>
+</g>
+<circle cx="352.9" cy="395.0" r="9" class="sk fp"/>
+<text x="352.9" y="398.4" class="lbls" text-anchor="middle" >6</text>
+<g>
+<polygon points="845.6,389.0 874.0,405.4 874.0,495.3 845.6,478.9" fill="var(--paper-2)"/>
+<polygon points="845.6,389.0 874.0,405.4 874.0,495.3 845.6,478.9" class="sk fnone"/>
+<polygon points="902.4,389.0 874.0,405.4 874.0,495.3 902.4,478.9" fill="var(--paper-2)"/>
+<polygon points="902.4,389.0 874.0,405.4 874.0,495.3 902.4,478.9" fill="url(#s11-hx)"/>
+<polygon points="902.4,389.0 874.0,405.4 874.0,495.3 902.4,478.9" class="sk fnone"/>
+<polygon points="874.0,372.6 902.4,389.0 874.0,405.4 845.6,389.0" class="sk fp"/>
+</g>
+<circle cx="888.2" cy="366.8" r="9" class="sk fp"/>
+<text x="888.2" y="370.2" class="lbls" text-anchor="middle" >9</text>
+<g>
+<polygon points="745.2,449.1 761.5,458.5 761.5,496.2 745.2,486.9" fill="var(--paper-2)"/>
+<polygon points="745.2,449.1 761.5,458.5 761.5,496.2 745.2,486.9" class="sk fnone"/>
+<polygon points="777.7,449.1 761.5,458.5 761.5,496.2 777.7,486.9" fill="var(--paper-2)"/>
+<polygon points="777.7,449.1 761.5,458.5 761.5,496.2 777.7,486.9" fill="url(#s11-hx)"/>
+<polygon points="777.7,449.1 761.5,458.5 761.5,496.2 777.7,486.9" class="sk fnone"/>
+<polygon points="761.5,439.8 777.7,449.1 761.5,458.5 745.2,449.1" class="sk fp"/>
+</g>
+<circle cx="769.6" cy="430.4" r="9" class="sk fp"/>
+<text x="769.6" y="433.8" class="lbls" text-anchor="middle" >12</text>
+<g>
+<polygon points="489.1,432.0 519.0,449.2 519.0,537.0 489.1,519.7" fill="var(--paper-2)"/>
+<polygon points="489.1,432.0 519.0,449.2 519.0,537.0 489.1,519.7" class="sk fnone"/>
+<polygon points="548.8,432.0 519.0,449.2 519.0,537.0 548.8,519.7" fill="var(--paper-2)"/>
+<polygon points="548.8,432.0 519.0,449.2 519.0,537.0 548.8,519.7" fill="url(#s11-hx)"/>
+<polygon points="548.8,432.0 519.0,449.2 519.0,537.0 548.8,519.7" class="sk fnone"/>
+<polygon points="519.0,414.8 548.8,432.0 519.0,449.2 489.1,432.0" class="sk fp"/>
+</g>
+<circle cx="533.9" cy="409.4" r="9" class="sk fp"/>
+<text x="533.9" y="412.8" class="lbls" text-anchor="middle" >16</text>
+<g>
+<polygon points="884.0,455.8 908.7,470.1 908.7,541.0 884.0,526.8" fill="var(--paper-2)"/>
+<polygon points="884.0,455.8 908.7,470.1 908.7,541.0 884.0,526.8" class="sk fnone"/>
+<polygon points="933.4,455.8 908.7,470.1 908.7,541.0 933.4,526.8" fill="var(--paper-2)"/>
+<polygon points="933.4,455.8 908.7,470.1 908.7,541.0 933.4,526.8" fill="url(#s11-hx)"/>
+<polygon points="933.4,455.8 908.7,470.1 908.7,541.0 933.4,526.8" class="sk fnone"/>
+<polygon points="908.7,441.6 933.4,455.8 908.7,470.1 884.0,455.8" class="sk fp"/>
+</g>
+<circle cx="921.0" cy="434.7" r="9" class="sk fp"/>
+<text x="921.0" y="438.1" class="lbls" text-anchor="middle" >10</text>
+<g>
+<polygon points="784.3,491.4 800.4,500.7 800.4,538.7 784.3,529.3" fill="var(--paper-2)"/>
+<polygon points="784.3,491.4 800.4,500.7 800.4,538.7 784.3,529.3" class="sk fnone"/>
+<polygon points="816.6,491.4 800.4,500.7 800.4,538.7 816.6,529.3" fill="var(--paper-2)"/>
+<polygon points="816.6,491.4 800.4,500.7 800.4,538.7 816.6,529.3" fill="url(#s11-hx)"/>
+<polygon points="816.6,491.4 800.4,500.7 800.4,538.7 816.6,529.3" class="sk fnone"/>
+<polygon points="800.4,482.0 816.6,491.4 800.4,500.7 784.3,491.4" class="sk fp"/>
+</g>
+<circle cx="808.5" cy="472.7" r="9" class="sk fp"/>
+<text x="808.5" y="476.1" class="lbls" text-anchor="middle" >13</text>
+<g>
+<polygon points="823.6,535.0 839.4,544.1 839.4,580.7 823.6,571.6" fill="var(--paper-2)"/>
+<polygon points="823.6,535.0 839.4,544.1 839.4,580.7 823.6,571.6" class="sk fnone"/>
+<polygon points="855.2,535.0 839.4,544.1 839.4,580.7 855.2,571.6" fill="var(--paper-2)"/>
+<polygon points="855.2,535.0 839.4,544.1 839.4,580.7 855.2,571.6" fill="url(#s11-hx)"/>
+<polygon points="855.2,535.0 839.4,544.1 839.4,580.7 855.2,571.6" class="sk fnone"/>
+<polygon points="839.4,525.9 855.2,535.0 839.4,544.1 823.6,535.0" class="sk fp"/>
+</g>
+<circle cx="847.3" cy="516.5" r="9" class="sk fp"/>
+<text x="847.3" y="519.9" class="lbls" text-anchor="middle" >14</text>
+<g>
+<polygon points="935.6,533.6 952.0,543.0 952.0,581.4 935.6,572.0" fill="var(--paper-2)"/>
+<polygon points="935.6,533.6 952.0,543.0 952.0,581.4 935.6,572.0" class="sk fnone"/>
+<polygon points="968.4,533.6 952.0,543.0 952.0,581.4 968.4,572.0" fill="var(--paper-2)"/>
+<polygon points="968.4,533.6 952.0,543.0 952.0,581.4 968.4,572.0" fill="url(#s11-hx)"/>
+<polygon points="968.4,533.6 952.0,543.0 952.0,581.4 968.4,572.0" class="sk fnone"/>
+<polygon points="952.0,524.1 968.4,533.6 952.0,543.0 935.6,533.6" class="sk fp"/>
+</g>
+<circle cx="960.2" cy="514.8" r="9" class="sk fp"/>
+<text x="960.2" y="518.2" class="lbls" text-anchor="middle" >11</text>
+<g>
+<polygon points="872.3,606.4 882.7,612.4 882.7,619.5 872.3,613.5" fill="var(--paper-2)"/>
+<polygon points="872.3,606.4 882.7,612.4 882.7,619.5 872.3,613.5" class="sk fnone"/>
+<polygon points="893.1,606.4 882.7,612.4 882.7,619.5 893.1,613.5" fill="var(--paper-2)"/>
+<polygon points="893.1,606.4 882.7,612.4 882.7,619.5 893.1,613.5" fill="url(#s11-hx)"/>
+<polygon points="893.1,606.4 882.7,612.4 882.7,619.5 893.1,613.5" class="sk fnone"/>
+<polygon points="882.7,600.4 893.1,606.4 882.7,612.4 872.3,606.4" class="sk fp"/>
+</g>
+<circle cx="887.9" cy="589.4" r="9" class="sk fp"/>
+<text x="887.9" y="592.8" class="lbls" text-anchor="middle" >15</text>
+<g>
+<polygon points="547.0,599.6 557.9,605.9 557.9,622.7 547.0,616.3" fill="var(--paper-2)"/>
+<polygon points="547.0,599.6 557.9,605.9 557.9,622.7 547.0,616.3" class="sk fnone"/>
+<polygon points="568.9,599.6 557.9,605.9 557.9,622.7 568.9,616.3" fill="var(--paper-2)"/>
+<polygon points="568.9,599.6 557.9,605.9 557.9,622.7 568.9,616.3" fill="url(#s11-hx)"/>
+<polygon points="568.9,599.6 557.9,605.9 557.9,622.7 568.9,616.3" class="sk fnone"/>
+<polygon points="557.9,593.3 568.9,599.6 557.9,605.9 547.0,599.6" class="sk fp"/>
+</g>
+<circle cx="563.4" cy="582.4" r="9" class="sk fp"/>
+<text x="563.4" y="585.8" class="lbls" text-anchor="middle" >7</text>
+
+<text x="150" y="96" class="lbla" text-anchor="start" >«.» and «./pure»: 89 bytes gz apart —</text>
+<text x="150" y="108" class="lbla" text-anchor="start" >the price of registration</text>
+<line x1="368" y1="102" x2="452" y2="128" class="skf"/>
+<text x="1120" y="108" class="lbla" text-anchor="end" >the two flagship doors: 5,609 · 4,965 —</text>
+<text x="1120" y="120" class="lbla" text-anchor="end" >the client door leads the server by 644</text>
+<text x="40" y="340" class="lbls" text-anchor="start" >the one-element doors sum to 3,553 gz —</text>
+<text x="40" y="352" class="lbls" text-anchor="start" >«./register» ships the shared core once, at 2,491</text>
+<text x="250" y="560" class="lbls" text-anchor="start" >the fifth package's one door: 3,510 gz —</text>
+<text x="250" y="572" class="lbls" text-anchor="start" >the only door here no browser ever opens</text>
+<text x="1120" y="695" class="lbla" text-anchor="end" >four adapters within 72 bytes of one</text>
+<text x="1120" y="707" class="lbla" text-anchor="end" >another — thin skins on one server core</text>
+<text x="100" y="665" class="lbls" text-anchor="start" >the two runtime plugins: 906 gz · 670 gz — they price like footnotes</text>
+
+<text x="1120" y="26" class="lbls" text-anchor="end" >SCALE — footprint area ∝ minified bytes · 1 px of height ≈ 40 gz bytes</text>
+<text x="1120" y="40" class="lblf" text-anchor="end" >PROBE — git archive origin/main @ 65e2843 + corepack pnpm install --frozen-lockfile + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)</text>
+
+<g>
+<rect x="40" y="740" width="1080" height="188" class="sk fp"/>
+<text x="56" y="762" class="lbls" text-anchor="start" >STRUCTURE SCHEDULE — minified bytes → gzipped bytes, deps external · note</text>
+<line x1="40" y1="772" x2="1120" y2="772" class="skf"/>
+<text x="56" y="792" class="lbls" text-anchor="start" >1 lit-ui-router . — 17,527 → 5,609 gz · the flagship door</text>
+<text x="56" y="809" class="lbls" text-anchor="start" >2 lit-ui-router ./pure — 17,127 → 5,520 gz · 89 gz cheaper — registration off</text>
+<text x="56" y="826" class="lbls" text-anchor="start" >3 lit-ui-router ./register — 7,040 → 2,491 gz · the umbrella — shared core once</text>
+<text x="56" y="843" class="lbls" text-anchor="start" >4 lit-ui-router ./ui-router.register — 2,366 → 1,077 gz · one element</text>
+<text x="56" y="860" class="lbls" text-anchor="start" >5 lit-ui-router ./ui-view.register — 6,837 → 2,476 gz · one element</text>
+<text x="56" y="877" class="lbls" text-anchor="start" >6 lit-ui-router-mobx . — 2,243 → 906 gz · the whole mobx layer</text>
+<text x="56" y="894" class="lbls" text-anchor="start" >7 ui-router-navigation-location-plugin . — 1,309 → 670 gz · the whole plugin</text>
+<text x="56" y="911" class="lbls" text-anchor="start" >8 ui-router-server . — 12,123 → 4,965 gz · 644 gz shy of the flagship</text>
+<text x="590" y="792" class="lbls" text-anchor="start" >9 ui-router-server ./redirects — 8,781 → 3,597 gz · redirect machinery</text>
+<text x="590" y="809" class="lbls" text-anchor="start" >10 ui-router-server ./matcher — 6,645 → 2,838 gz · standalone matcher</text>
+<text x="590" y="826" class="lbls" text-anchor="start" >11 ui-router-server ./hono — 2,928 → 1,536 gz · adapter</text>
+<text x="590" y="843" class="lbls" text-anchor="start" >12 ui-router-server ./fetch — 2,858 → 1,510 gz · adapter</text>
+<text x="590" y="860" class="lbls" text-anchor="start" >13 ui-router-server ./vite — 2,844 → 1,519 gz · adapter</text>
+<text x="590" y="877" class="lbls" text-anchor="start" >14 ui-router-server ./connect — 2,717 → 1,464 gz · adapter</text>
+<text x="590" y="894" class="lbls" text-anchor="start" >15 ui-router-server ./simulate — 431 → 283 gz · test double — 283 b</text>
+<text x="590" y="911" class="lbls" text-anchor="start" >16 eslint-plugin-lit-ui-router . — 9,703 → 3,510 gz · the lint plugin — editor-side, never shipped</text>
+</g>
+</svg></div></div>
+    <figcaption><span class="figno">FIG. 11</span>The split view to sheet 10’s unified city: every exported entry of every publishable package bundled alone and priced — 5 package quarters, 16 doors, the codecov bundle-analysis series drawn as skylines.</figcaption>
+  </figure>
+  <div class="notes-grid">
+    <div class="notes">
+      <h3>GENERAL NOTES</h3>
+      
+<p><strong>Method:</strong> the same probe as sheet 10's doors strip, run to completion: every exported entry of the 5 publishable packages bundled alone with rolldown — minified, declared dependencies and peers external — which is the price a consumer's bundler pays at that door, and byte-for-byte the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads to codecov. Footprint is minified bytes, height gzipped. Every number is read at build time from the checked-in plate <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr>census-doors.json</code> — counted at origin/main @ 65e2843 (2026-09-11), probed as <code>git archive origin/<wbr>main @ 65e2843 + corepack pnpm install --frozen-lockfile + tools/<wbr>bundle-probe (rolldown, minify, declared deps+peers external, annotations off)</code> — and a door the plate carries that the drawing does not place is a build error, not a stale constant. Sheet 10 is the unified view — one real app's bundle with all of these mixed by the bundler; this sheet cuts the same machinery by published package and entry point. The quarters don't sum and shouldn't: doors overlap (<code>./<wbr>pure</code> is <code>.</code> minus registration), which is exactly what the split view exists to show.</p>
+<p><strong>The twin towers are one building with two doors.</strong> <code>.</code> and <code>./<wbr>pure</code> differ by 89 gzipped bytes — the whole cost of custom-element registration. The register economics run the other way: the two one-element doors sum to 3,553 gz while the umbrella <code>./<wbr>register</code> is 2,491, because each element door carries the shared element core with it. Take the umbrella or one element door; taking two per-element doors ships the core twice.</p>
+<p><strong>The server is a storefront, not a tower.</strong> Eight doors: an index at 4,965 gz, 644 under the client flagship; redirect and matcher wings at 3,597 and 2,838; and four framework adapters — hono, fetch, vite, connect — packed within 72 bytes of one another, which is what thin skins over one core look like priced. <code>./<wbr>simulate</code>, the test double, is 283 bytes, the cheapest door on the sheet.</p>
+<p><strong>Plugins price like footnotes.</strong> The entire mobx reactivity layer enters at 906 gz and the navigation-location plugin at 670 — each cheaper than the gap between <code>./<wbr>register</code> and its two element doors. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's <code>@uirouter/<wbr>core</code>) is external here by design.</p>
+<p><strong>The sixteenth door is not a door a browser opens.</strong> <code>eslint-plugin-lit-ui-router</code> (#676) is the family's fifth published package and the first non-runtime one, so its quarter is drawn but its number means something different: 9,703 minified, 3,510 gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs 63% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers ESLint alone — oxlint loads it as a JS plugin, unpeered — never <code>@uirouter/<wbr>core</code> (sheet 2 leaves it off the plate for the same reason).</p>
+<p><strong>Why both views exist.</strong> The split view is the seller's ledger — what each door costs at the threshold. The unified view is the buyer's receipt — what one app's bundler actually made of them (it paid 4,691 of the flagship's 5,609). Codecov tracks the ledger per commit; sheet 10 audits the receipt.</p>
+    </div>
+    <div class="keyblock">
+      <h3>KEY</h3>
+      <table><tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="8" y="3" width="18" height="12" class="sk fp"/></svg></td><td>exported entry — height = gz, deps external</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="8" y="3" width="18" height="12" class="sk fa"/></svg></td><td>a lit-ui-router door</td></tr>
+<tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/></svg></td><td>quarter = one published package · 16 doors, 5 packages</td></tr></table>
+      <div class="titleblock" aria-label="title block">
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="cw"><sup class="art">the&nbsp;</sup></span><span class="mark">ALTITUDE ATLAS</span></span></div>
+  <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art-inline">the&nbsp;</span>ENTRY QUARTERS</span></div>
+  <div><span class="fld">SCALE</span>FIVE PACKAGES</div>
+  <div><span class="fld">FORM</span>ENTRY QUARTERS</div>
+  <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
+  <div><span class="fld">DATE / REV</span>2026-09-11 · E</div>
+  <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
+  <div class="sh"><span><span class="fld">SHEET</span>11 OF 14</span><span class="chop" aria-hidden="true"></span></div>
+</div>
+    </div>
+  </div>
+</section>
+<script>document.addEventListener('scroll', (e) => {
+  const w = e.target;
+  if (!(w instanceof Element) || !w.classList.contains('figure-wrap')) return;
+  w.parentElement?.toggleAttribute('data-end', w.scrollLeft + w.clientWidth >= w.scrollWidth - 1);
+}, true);</script>

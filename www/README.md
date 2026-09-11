@@ -1,12 +1,13 @@
 # www
 
-The sites this repo publishes, one directory per domain. Each directory is a
-workspace package that owns its own content, its own Cloudflare Worker, and its
-own wrangler config; the pipeline that ships them is shared.
+The sites this repo publishes, one directory per domain. Each directory is
+normally a workspace package that owns its own content, its own Cloudflare
+Worker, and its own wrangler config; the pipeline that ships them is shared.
 
-| Directory                                   | Site                                                                                                              |
-| ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| [`lit-ui-router.dev/`](./lit-ui-router.dev) | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it |
+| Directory                                               | Site                                                                                                                                                   |
+| ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`lit-ui-router.dev/`](./lit-ui-router.dev)             | [lit-ui-router.dev](https://lit-ui-router.dev) — the VitePress docs site and the Cloudflare Worker that serves it                                      |
+| [`atlas.lit-ui-router.dev/`](./atlas.lit-ui-router.dev) | [atlas.lit-ui-router.dev](https://atlas.lit-ui-router.dev) — the Altitude Atlas, the drawing set that surveys this repo; an example promoted to a site |
 
 ## Adding a site
 
@@ -40,6 +41,15 @@ never needs an `--apply` to test. The same package diffs the config against the
 live triggers
 (`pnpm check:workers-builds`) and reports it as the non-gating `workers-builds
 (triggers)` check run.
+
+`atlas.lit-ui-router.dev/` deviates from all of that, and the deviation is the
+point: the atlas began as an example and grew into a site, so it is not an
+`@www/` workspace package at all. Like the tutorials under `examples/`, it
+installs its app with its own npm lockfile against the published
+`lit-ui-router` at a version floor, which is what keeps it honest about the
+package a reader would actually install. It is deployed today by direct upload
+to Cloudflare Pages rather than through the shared trigger config, and moving it
+onto a Worker under Workers Builds is planned.
 
 The current deployment guide for the shared pipeline and
 [`lit-ui-router.dev`](./lit-ui-router.dev) is [`DEPLOY.md`](./DEPLOY.md). Future

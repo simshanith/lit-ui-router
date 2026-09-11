@@ -16,6 +16,8 @@
     ".": {
       // nothing scripts it; kept so `pnpm wrangler` works at the repo root
       "ignoreDependencies": ["wrangler"],
+      // a promoted example: its own npm lockfile, not a pnpm workspace member
+      "ignore": ["www/atlas.lit-ui-router.dev/**"],
     },
     "examples": {
       "entry": ["*.test-d.ts"],

@@ -1,0 +1,38 @@
+{
+  "ref": "origin/main",
+  "sha": "65e2843",
+  "commitDate": "2026-09-11T18:51:12Z",
+  "generatedAtTime": "2026-09-11T19:06:14.090Z",
+  "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bundle.mjs",
+  "used": "git archive origin/main @ 65e2843 + corepack pnpm install --frozen-lockfile + turbo run build + vite build (JS API)",
+  "wasAssociatedWith": [
+    "pnpm (corepack)",
+    "turbo",
+    "vite 8.2.2"
+  ],
+  "app": "apps/sample-app-lit-vanilla",
+  "method": "generateBundle: module renderedLength scaled by its chunk gz/rendered ratio",
+  "totals": {
+    "chunks": 17,
+    "kept": 665308,
+    "emitted": 372660,
+    "gz": 120477
+  },
+  "otherIds": [],
+  "rows": [
+    {"group":"@uirouter/core","rendered":179426,"estGz":26924,"modules":64},
+    {"group":"@uirouter/visualizer","rendered":119488,"estGz":24718,"modules":1},
+    {"group":"lodash-es","rendered":66567,"estGz":7664,"modules":135},
+    {"group":"marked","rendered":59554,"estGz":11308,"modules":1},
+    {"group":"dompurify","rendered":59199,"estGz":11241,"modules":1},
+    {"group":"sample-app-shared","rendered":57213,"estGz":12120,"modules":36},
+    {"group":"lit","rendered":34427,"estGz":8971,"modules":19},
+    {"group":"lit-ui-router","rendered":26676,"estGz":4691,"modules":11},
+    {"group":"@api-viewer","rendered":24979,"estGz":4743,"modules":12},
+    {"group":"router plugins","rendered":18985,"estGz":3827,"modules":4},
+    {"group":"app own src","rendered":10945,"estGz":2356,"modules":8},
+    {"group":"runtime helpers","rendered":4663,"estGz":1226,"modules":4},
+    {"group":"lit-dialog","rendered":2894,"estGz":628,"modules":1},
+    {"group":"sample-app-routes","rendered":292,"estGz":59,"modules":1}
+  ]
+}

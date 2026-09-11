@@ -3,5 +3,11 @@
   "singleQuote": true,
   "printWidth": 80,
   "sortPackageJson": true,
-  "ignorePatterns": []
+  "ignorePatterns": [
+    "www/atlas.lit-ui-router.dev/*.html",
+    "www/atlas.lit-ui-router.dev/README.md",
+    "www/atlas.lit-ui-router.dev/data/*.json",
+    "www/atlas.lit-ui-router.dev/app/public/**",
+    "www/atlas.lit-ui-router.dev/app/src/generated/**"
+  ]
 }

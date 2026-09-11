@@ -1,0 +1,40 @@
+{
+  "ref": "origin/main",
+  "sha": "65e2843",
+  "commitDate": "2026-09-11T18:51:12Z",
+  "generatedAtTime": "2026-09-11T19:05:26.524Z",
+  "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
+  "used": "git archive origin/main @ 65e2843 + corepack pnpm install --frozen-lockfile + turbo run build -> www/lit-ui-router.dev/dist",
+  "wasAssociatedWith": [
+    "pnpm (corepack)",
+    "turbo",
+    "node:zlib gzip level 9"
+  ],
+  "measure": "per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> hash",
+  "seededTrees": [
+    "images/",
+    "static/",
+    "_headers"
+  ],
+  "totals": {
+    "files": 579,
+    "rawBytes": 16353574,
+    "gzBytes": 3670964
+  },
+  "rows": [
+    {"district":"inter fonts","files":16,"gz":868670,"top":{"name":"assets/inter-italic-latin-ext.Dm0n7MN1.woff2","gz":141087}},
+    {"district":"html pages","files":135,"gz":865728,"top":{"name":"guides/server-route-matching.html","gz":34508}},
+    {"district":"examples","files":22,"gz":1059198,"top":{"name":"examples/hellogalaxy/assets/model-viewer-NFY3g8ag.js","gz":281843}},
+    {"district":"page chunks","files":256,"gz":269173,"top":{"name":"assets/guides_server-route-matching.md.BNdcdE4e.js","gz":21347}},
+    {"district":"vp framework","files":13,"gz":183515,"top":{"name":"assets/chunks/@localSearchIndexroot.tnn9QNK-.js","gz":72184}},
+    {"district":"images","files":99,"gz":146010,"top":{"name":"images/lit-ui-router.png","gz":68708}},
+    {"district":"app: vanilla","files":18,"gz":122599,"top":{"name":"assets/dist-DJc3Xlb1.js","gz":29369}},
+    {"district":"app: mobx","files":9,"gz":67293,"top":{"name":"assets/dist-CCixcsPe.js","gz":29369}},
+    {"district":"app: hash","files":4,"gz":15064,"top":{"name":"assets/main-CE1czS_W.js","gz":7506}},
+    {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
+    {"district":"site css","files":3,"gz":22975,"top":{"name":"assets/style.DLA-qYQQ.css","gz":20759}}
+  ],
+  "orphans": [
+
+  ]
+}
