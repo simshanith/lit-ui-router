@@ -51,3 +51,38 @@ export function depthSort(masses) {
   const left = [...masses.keys()].filter((i) => !out.includes(i)).sort((a, b) => key(masses[a]) - key(masses[b]));
   return [...out, ...left].map((i) => masses[i]);
 }
+
+// ---- the plot assertion ---------------------------------------------------------
+//
+// The city sheets hand-place every member, but the FOOTPRINT drawn at that point is
+// data-driven (side ∝ √sloc, spec annex ∝ √specSloc set AG beyond it), so a census
+// refresh can walk a fixed coordinate into its neighbour — T53.  Same posture as the
+// missing-member throws: the drawing may not ship overlapped.
+//
+// The test is on the GROUND rects.  Both projections these sheets use — the isometric
+// of helpers.mjs and 7A's straight-down plan — are affine and invertible, so two
+// ground rects intersect in the drawing exactly when they intersect in plan; what a
+// taller mass hides above the ground is occlusion, drawn on purpose.  depthSort wants
+// the same disjointness: overlapping footprints have no separating plane to sort on.
+const f1 = (v) => v.toFixed(1);
+export function assertPlots(sheet, plots) {
+  for (let i = 0; i < plots.length; i++) {
+    for (let j = i + 1; j < plots.length; j++) {
+      const a = plots[i], b = plots[j];
+      if (a.n === b.n) continue;
+      const ox = Math.min(a.x + a.w, b.x + b.w) - Math.max(a.x, b.x);
+      const oy = Math.min(a.y + a.d, b.y + b.d) - Math.max(a.y, b.y);
+      if (ox <= 0 || oy <= 0) continue;
+      throw new Error(`${sheet}: plots overlap — ${a.n} ${a.name} ${a.part} `
+        + `[${f1(a.x)} ${f1(a.y)} → ${f1(a.x + a.w)} ${f1(a.y + a.d)}] intersects `
+        + `${b.n} ${b.name} ${b.part} [${f1(b.x)} ${f1(b.y)} → ${f1(b.x + b.w)} ${f1(b.y + b.d)}] `
+        + `by ${f1(ox)} × ${f1(oy)} units; recompose this sheet's PLACED table (DESIGN-REVIEW §T53)`);
+    }
+  }
+}
+
+// One member's drawn ground rects: the src block, and the spec annex where it has one.
+export const plotsOf = ({ n, name, x, y, s, sa, ax, ay }) => [
+  { n, name, part: 'block', x, y, w: s, d: s },
+  ...(sa ? [{ n, name, part: 'annex', x: ax, y: ay, w: sa, d: sa }] : []),
+];

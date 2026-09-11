@@ -708,6 +708,151 @@
         margin-top: 9px;
         display: block;
       }
+      /* THE KEY INDEX — FORM split into keys, each key indexed in the shape its
+         type asks for. A chip is a link: every filtered index has its own url. */
+      .keyindex {
+        border: 1.5px solid var(--ink);
+        background: var(--paper);
+        margin: 0 0 14px;
+      }
+      .khead {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 0 14px;
+        padding: 8px 14px 7px;
+        border-bottom: 1.5px solid var(--ink);
+        background: var(--paper-2);
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        color: var(--ink-soft);
+      }
+      .khead .kn {
+        font-variant-numeric: tabular-nums;
+        margin-left: auto;
+      }
+      .khead .kclear {
+        color: var(--accent);
+        text-decoration: none;
+      }
+      .krow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: baseline;
+        gap: 6px 10px;
+        padding: 8px 14px;
+        border-bottom: 1px solid var(--line);
+      }
+      /* basis is meaningful only inside the city group, so it is drawn inside it */
+      .krow-in {
+        padding-left: 34px;
+        border-left: 3px solid var(--accent);
+        background: var(--paper-2);
+      }
+      .krow .kk {
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        min-width: 92px;
+      }
+      .kchips {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 5px;
+      }
+      .keyindex .kv,
+      .card .kv {
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        border: 1px solid var(--line);
+        padding: 2px 7px;
+        color: var(--ink-soft);
+        text-decoration: none;
+        white-space: nowrap;
+      }
+      .keyindex .kv:hover {
+        border-color: var(--ink);
+        background: var(--paper-2);
+      }
+      .keyindex .kv.is-on {
+        border-color: var(--ink);
+        background: var(--ink);
+        color: var(--paper);
+      }
+      .keyindex .kv i {
+        font-style: normal;
+      }
+      .keyindex .kv .c {
+        font-variant-numeric: tabular-nums;
+        margin-left: 6px;
+        opacity: 0.65;
+      }
+      .kvbox {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 14px 10px;
+      }
+      .kvbox label {
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        text-transform: uppercase;
+        color: var(--ink-faint);
+        min-width: 92px;
+      }
+      .kvbox input {
+        font-family: var(--data);
+        font-size: 11px;
+        letter-spacing: 0.06em;
+        color: var(--ink);
+        background: var(--paper-2);
+        border: 1px solid var(--line);
+        padding: 4px 8px;
+        flex: 1 1 22ch;
+        min-width: 0;
+      }
+      .kvbox input:focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: -1px;
+      }
+      .kvbox button {
+        font-family: var(--data);
+        font-size: 10px;
+        letter-spacing: 0.16em;
+        color: var(--paper);
+        background: var(--ink);
+        border: 1.5px solid var(--ink);
+        padding: 4px 12px;
+        cursor: pointer;
+      }
+      .kempty {
+        font-family: var(--data);
+        font-size: 11px;
+        letter-spacing: 0.12em;
+        color: var(--ink-soft);
+        border: 1px dashed var(--line);
+        padding: 18px 14px;
+        margin: 0;
+      }
+      /* the card's data model: its four keys, under the caption */
+      .card .keys {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 4px;
+        margin-top: 8px;
+      }
+      .card .kv i {
+        font-style: normal;
+        color: var(--accent);
+        margin-right: 5px;
+      }
       /* THE WIDE BAND — the numbers and the argument, after the index. Over
          1800 the survey table and the reading column sit side by side, so the
          width is used instead of leaving a canyon beside a 72ch column. */

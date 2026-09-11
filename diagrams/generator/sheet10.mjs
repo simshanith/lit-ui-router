@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, box, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { assertPlots } from './iso-hidden.mjs';
 
 const P = 's10';
 const OX = 480, OY = 210;
@@ -94,6 +95,8 @@ const all = PLACED.map(([name, district, opaque], i) => {
   return { name, district, opaque, x, y, r: p.rendered, gz: p.estGz, mods: p.modules, s: SIDE(p.rendered), h: HT(p.estGz), n: i + 1 };
 });
 const G = (name) => all.find((b) => b.name === name);
+// hand PLAN, data-driven sides: the plan may not ship overlapped
+assertPlots('sheet 10', all.map(({ n, name, x, y, s }) => ({ n, name, part: 'block', x, y, w: s, d: s })));
 
 // the cover index's fit verdict, told from the plate's own wire shares
 export const SHEET10_VERDICT = `tree-shaking’s verdict — core is ${pct(G('@uirouter/core').gz)}, the router ${pct(G('lit-ui-router').gz)} — one lit`;

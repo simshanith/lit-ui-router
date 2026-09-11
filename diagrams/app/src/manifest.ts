@@ -1,6 +1,25 @@
 /** The generated index of the drawing set (diagrams/generator/emit-app.mjs). */
 import { BASE } from './routes.ts';
 
+/**
+ * FORM, split into keys (diagrams/generator/labels.mjs). The title block keeps
+ * the readable phrase; these are what the index and the card filter read.
+ * `basis` qualifies the city subject only — what the same city is counted on.
+ */
+export interface SheetLabels {
+  subject: string;
+  projection: string;
+  mode: 'interactive' | 'static';
+  basis?: string;
+}
+
+/** The key order every index row, chip and card line prints in. */
+export const LABEL_KEYS = ['subject', 'projection', 'mode', 'basis'] as const;
+export type LabelKey = (typeof LABEL_KEYS)[number];
+
+/** The one subject `basis` says anything about. */
+export const BASIS_SUBJECT = 'city';
+
 export interface SheetRow {
   id: string;
   num: string;
@@ -11,6 +30,8 @@ export interface SheetRow {
   /** The gallery index's ALTITUDE wording — canonical, not the sheet's own. */
   scale: string;
   form: string;
+  /** FORM's keys — emitted by the generator, never typed on a sheet. */
+  labels: SheetLabels;
   /** The index's FIT VERDICT line: one editorial sentence per plate. */
   verdict: string;
   rev: string;
@@ -36,6 +57,7 @@ export interface ExtraRow {
   shno: string;
   scale: string;
   verdict: string;
+  labels: SheetLabels;
   file: string;
   /** Where the flat set draws it — a gallery anchor, not a page. */
   standalone: string;
@@ -171,6 +193,128 @@ export function findSheet(manifest: Manifest, num: string): SheetRow | undefined
 
 /** An appendix plate is letter-first: it carries no altitude and no "OF 14". */
 export const isAppendix = (num: string): boolean => /^[A-Za-z]/.test(num);
+
+// --- the key index: FORM's keys as filterable, shareable state --------------
+
+/**
+ * The filter, as the gallery's route params carry it. Four typed keys plus
+ * `kv`, the general `key=value` fallback for a combination the chips cannot
+ * express. Every field is null when that key is off, which is the param
+ * default declared in routes.ts — so the unfiltered index has no query string.
+ */
+export interface Filter {
+  subject: string | null;
+  projection: string | null;
+  mode: string | null;
+  basis: string | null;
+  kv: string | null;
+}
+
+export const EMPTY_FILTER: Filter = {
+  subject: null,
+  projection: null,
+  mode: null,
+  basis: null,
+  kv: null,
+};
+
+const str = (value: unknown): string | null => {
+  const text = typeof value === 'string' ? value.trim().toLowerCase() : '';
+  return text.length > 0 ? text : null;
+};
+
+/** Read the filter out of a transition's params; anything else is ignored. */
+export function readFilter(params: Record<string, unknown> | undefined): Filter {
+  if (!params) return EMPTY_FILTER;
+  return {
+    subject: str(params['subject']),
+    projection: str(params['projection']),
+    mode: str(params['mode']),
+    basis: str(params['basis']),
+    kv: str(params['kv']),
+  };
+}
+
+/** `subject=city projection=plan` — the kv box's own little grammar. */
+export function kvPairs(kv: string | null): Array<[string, string]> {
+  if (!kv) return [];
+  return kv
+    .split(/[\s,]+/)
+    .filter((token) => token.includes('='))
+    .map((token): [string, string] => {
+      const at = token.indexOf('=');
+      return [token.slice(0, at).trim(), token.slice(at + 1).trim()];
+    })
+    .filter(([key, value]) => key.length > 0 && value.length > 0);
+}
+
+export const isFiltered = (filter: Filter): boolean =>
+  Object.values(filter).some((value) => value !== null);
+
+const valueOf = (labels: SheetLabels, key: string): string | undefined =>
+  key === 'subject' || key === 'projection' || key === 'mode' || key === 'basis'
+    ? labels[key]
+    : undefined;
+
+/** Does a plate's key set answer the filter? An unknown kv key matches nothing. */
+export function matchesFilter(labels: SheetLabels, filter: Filter): boolean {
+  for (const key of LABEL_KEYS) {
+    const wanted = filter[key];
+    if (wanted !== null && labels[key] !== wanted) return false;
+  }
+  for (const [key, value] of kvPairs(filter.kv)) {
+    if (valueOf(labels, key) !== value) return false;
+  }
+  return true;
+}
+
+/** The filter with one key cleared — what a facet count is taken against. */
+export const without = (filter: Filter, key: LabelKey): Filter => ({ ...filter, [key]: null });
+
+/** Every value a key takes across the set, commonest first, with facet counts. */
+export function facet(
+  rows: readonly { labels: SheetLabels }[],
+  key: LabelKey,
+  filter: Filter,
+): Array<{ value: string; count: number }> {
+  const base = without(filter, key);
+  const counts = new Map<string, number>();
+  for (const row of rows) {
+    const value = row.labels[key];
+    if (value === undefined) continue;
+    const hit = matchesFilter(row.labels, base) ? 1 : 0;
+    counts.set(value, (counts.get(value) ?? 0) + hit);
+  }
+  return [...counts]
+    .map(([value, count]) => ({ value, count }))
+    .sort((a, b) => b.count - a.count || a.value.localeCompare(b.value));
+}
+
+/** Every `key=value` the set carries — the kv box's suggestion list. */
+export function kvVocabulary(rows: readonly { labels: SheetLabels }[]): string[] {
+  const out = new Set<string>();
+  for (const row of rows) {
+    for (const key of LABEL_KEYS) {
+      const value = row.labels[key];
+      if (value !== undefined) out.add(`${key}=${value}`);
+    }
+  }
+  return [...out].sort();
+}
+
+/** The query string for a filter — empty when nothing is filtered. */
+export function filterQuery(filter: Filter): string {
+  const params = new URLSearchParams();
+  for (const [key, value] of Object.entries(filter)) if (value !== null) params.set(key, value);
+  const query = params.toString();
+  return query.length > 0 ? `?${query}` : '';
+}
+
+/** Every plate the index can show: the ascent, the city, then the appendix. */
+export function labelledRows(manifest: Manifest): Array<{ labels: SheetLabels }> {
+  const city = findExtra(manifest, 'city');
+  return [...manifest.sheets, ...(city ? [city] : []), ...(manifest.appendix ?? [])];
+}
 
 /** Either kind of row carries the two fields a fragment fetch needs. */
 export function loadFragment(sheet: { id: string; file: string }): Promise<string> {

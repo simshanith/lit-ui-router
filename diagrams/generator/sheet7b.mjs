@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, isoBlock, isoPt, keyRow } from './helpers.mjs';
-import { depthSort, solidFaces } from './iso-hidden.mjs';
+import { assertPlots, depthSort, plotsOf, solidFaces } from './iso-hidden.mjs';
 import { PLACED } from './sheet7.mjs';
 
 const P = 's7b';
@@ -116,6 +116,8 @@ const geom = new Map(M.map(([n, name, dist, tier, x, y, sf, sl, pf, pl, rust, st
     x2: pf ? ax + sa : x + s, y1: pf ? Math.min(y, ay) : y, y2: pf ? Math.max(y + s, ay + sa) : y + s }];
 }));
 const g = (n) => geom.get(n);
+// the working city stands on sheet 7's plots: assert them under this plate's name too
+assertPlots('plate 7B', [...geom.values()].flatMap(plotsOf));
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 

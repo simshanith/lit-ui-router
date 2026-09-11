@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, keyRow } from './helpers.mjs';
+import { assertPlots, plotsOf } from './iso-hidden.mjs';
 import { PLACED } from './sheet7.mjs';
 
 const P = 's7a';
@@ -93,6 +94,8 @@ const geom = new Map(M.map((r) => {
   return [n, { n, name, dist, cat, x, y, s, sa, ax, ay, ext, r }];
 }));
 const g = (n) => geom.get(n);
+// the same plots as sheet 7, drawn in plan: assert them here too, under this plate's name
+assertPlots('plate 7A', [...geom.values()].flatMap(plotsOf));
 
 // The lamp sits east (the annex side); its light reaches a strip of the building
 // from the east face inward.  Lit width = side · (sloc the suite loads ÷ src sloc);

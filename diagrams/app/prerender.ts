@@ -29,8 +29,29 @@ import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { createServerRouter } from 'ui-router-server';
 import type { Verdict } from 'ui-router-server';
-import type { AscentRow, ExtraRow, IssueEntry, Manifest, SheetRow } from './src/manifest.ts';
-import { ARTICLE, allSheets, ascent, entryTitle, findExtra, isAppendix } from './src/manifest.ts';
+import type {
+  AscentRow,
+  ExtraRow,
+  IssueEntry,
+  LabelKey,
+  Manifest,
+  SheetLabels,
+  SheetRow,
+} from './src/manifest.ts';
+import {
+  ARTICLE,
+  EMPTY_FILTER,
+  LABEL_KEYS,
+  allSheets,
+  ascent,
+  entryTitle,
+  facet,
+  filterQuery,
+  findExtra,
+  isAppendix,
+  kvVocabulary,
+  labelledRows,
+} from './src/manifest.ts';
 import { BASE, MOUNT, href, mountsFor } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 
@@ -155,6 +176,61 @@ const logEntry = (entry: IssueEntry): TemplateResult => html`
   </li>
 `;
 
+// The key index, prerendered in its OPEN state: `/` is the unfiltered page, so
+// every chip here is a plain link to a filtered url and the kv box is a GET
+// form onto the same page. A reader with no JS at all still gets the index and
+// a shareable filter url; the client takes it over on hydration.
+const keyLine = (labels: SheetLabels): TemplateResult => html`
+  <span class="keys">
+    ${LABEL_KEYS.filter((key) => labels[key]).map(
+      (key) => html`<span class="kv"><i>${key}</i>${labels[key]}</span>`,
+    )}
+  </span>
+`;
+
+const ROWS = labelledRows(manifest);
+
+const staticKeyRow = (key: LabelKey, extraClass = ''): TemplateResult => html`
+  <div class="krow ${extraClass}">
+    <span class="kk">${key}</span>
+    <div class="kchips">
+      <a class="kv is-on" href="${href.gallery}"><i>all</i><span class="c">${ROWS.length}</span></a>
+      ${facet(ROWS, key, EMPTY_FILTER).map(
+        (entry) => html`
+          <a class="kv" href="${href.gallery}${filterQuery({ ...EMPTY_FILTER, [key]: entry.value })}"
+            ><i>${entry.value}</i><span class="c">${entry.count}</span></a
+          >
+        `,
+      )}
+    </div>
+  </div>
+`;
+
+const keyIndex = (): TemplateResult => html`
+  <div class="keyindex" aria-label="key index">
+    <div class="khead">
+      <span class="kt">KEY INDEX — FORM, SPLIT</span>
+      <span class="kn">${ROWS.length} / ${ROWS.length} SHOWN</span>
+    </div>
+    ${staticKeyRow('mode')} ${staticKeyRow('subject')} ${staticKeyRow('projection')}
+    <form class="kvbox" action="${href.gallery}" method="get">
+      <label for="kv-query">key = value</label>
+      <input
+        id="kv-query"
+        name="kv"
+        list="kv-vocab"
+        autocomplete="off"
+        spellcheck="false"
+        placeholder="subject=city projection=isometric"
+      />
+      <datalist id="kv-vocab">
+        ${kvVocabulary(ROWS).map((entry) => html`<option value="${entry}"></option>`)}
+      </datalist>
+      <button type="submit">FILTER</button>
+    </form>
+  </div>
+`;
+
 const sheetCard = (row: SheetRow): TemplateResult => html`
   <a class="card" href="${href.sheet(row.num)}">
     <span class="n">${isAppendix(row.num) ? 'APPENDIX' : 'SHEET'} ${row.num} · REV ${row.rev}</span>
@@ -164,8 +240,9 @@ const sheetCard = (row: SheetRow): TemplateResult => html`
     <span class="meta">
       ${isAppendix(row.num)
         ? `${row.form} · NO CENSUS PLATE — META`
-        : `${row.form} · ${String(row.plates.length)} PLATE${row.plates.length === 1 ? '' : 'S'}${row.interactive ? ' · INTERACTIVE' : ''}`}
+        : `${row.form} · ${String(row.plates.length)} PLATE${row.plates.length === 1 ? '' : 'S'}`}
     </span>
+    ${keyLine(row.labels)}
   </a>
 `;
 
@@ -175,7 +252,8 @@ const cityCard = (extra: ExtraRow): TemplateResult => html`
     <h3>${articleTitle(extra.title)}</h3>
     <span class="alt">${extra.scale}</span>
     <p>${extra.sub.split(' · REV ')[0]}</p>
-    <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
+    <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
+    ${keyLine(extra.labels)}
   </a>
 `;
 
@@ -229,6 +307,7 @@ const galleryContent = (): TemplateResult => {
         : nothing}
     </section>
     <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
+    ${keyIndex()}
     <div class="cards">
       ${ascent(manifest).map((entry) =>
         entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),

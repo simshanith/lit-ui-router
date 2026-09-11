@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
-import { depthSort, solidFaces } from './iso-hidden.mjs';
+import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's3b';
 const OX = 400, OY = 170;
@@ -140,6 +140,8 @@ const geom = new Map(M.map(([n, , x, y]) => {
   return [n, { n, x, y, side, h, cx: x + side / 2, cy: y + side / 2 }];
 }));
 const g = (n) => geom.get(n);
+// hand-placed against data-driven sides: the graph city may not ship overlapped
+assertPlots('sheet 3B', M.map(([n, name]) => ({ n, name, part: 'block', x: g(n).x, y: g(n).y, w: g(n).side, d: g(n).side })));
 const pt = (x, y, z = 0) => isoPt(OX, OY, x, y, z);
 const p2 = (x, y, z = 0) => pt(x, y, z).map((v) => v.toFixed(1)).join(',');
 

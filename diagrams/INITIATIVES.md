@@ -123,7 +123,18 @@ sitting); order is dependency order.
   sheet 7's `PLACED` (`generator/sheet7.mjs`, which 7B imports), sheet 13's `PLACED`
   (`generator/sheet13.mjs`), 7B's `RUST` map (`generator/sheet7b.mjs`) and `INSTRUMENTS` in
   `generator/census-yard.mjs`. The first four THROW when missed; the yard only prints its
-  orphans loudly, which is a guard that should probably throw too.
+  orphans loudly, which is a guard that should probably throw too. A new PLATE (not member)
+  needs a key set in `generator/labels.mjs` as well, or `assertLabels()` stops the manifest.
+- Hand placement is asserted, not trusted. Every plate that hand-places a footprint whose SIZE
+  comes from the census (3, 3B, 7, 7A, 7B, 9, 10, 11, 13) calls `assertPlots` from
+  `generator/iso-hidden.mjs`, which throws when two drawn ground rects intersect, naming the
+  sheet, both members and both parts. A refresh that grows a member into its neighbour stops
+  the build; the fix is to recompose the coordinate by hand, with air, never to shrink the rule.
+- Sheet 13 keeps its OWN copy of the city placements (`sheet13.mjs` `PLACED`; member 31
+  deliberately differs). A coordinate moved on sheet 7 must move there too, or the two plates
+  stop reconciling — the assertion catches an overlap, not the drift.
+- `build.mjs` writes `diagrams/README.md`. Its head, runbook and cabinet paragraphs live in
+  the emitter; edit them there, since any build reverts a hand edit to the output.
 - Expect the build to throw during a refresh — that is the pipeline working. A sheet whose
   subject moved (a task that left the graph, a cited file that left the tree, a district
   that stopped shipping) throws instead of drawing a stale figure, and the fix is a sheet
@@ -153,6 +164,17 @@ sitting); order is dependency order.
   extent 0, not `u`; `u` is awarded only after a second, meter-less run proves the suite
   passes. Error strings have the tmpdir stripped to `<archive>` or the plate never diffs
   clean.
+
+**FORM is a phrase; the keys are the index**
+
+- Every plate's FORM stays on its title block as written; the four keys behind it —
+  `subject`, `projection`, `mode`, `basis` — live in `generator/labels.mjs` and nowhere
+  else. `assertLabels()` runs inside `emitApp()` and throws on a plate with no key set, a
+  value outside `VOCAB`, a vocabulary value no plate uses, a non-city carrying `basis` or a
+  city without one, and a `mode` that disagrees with whether the plate is drawn interactive.
+  The keys ride the manifest to the routed app, where the cover's KEY INDEX is one control
+  per key shaped to its type and the filter is route state (`/?subject=city&basis=measured`
+  is a link); the `key=value` box is the fallback for combinations the chips cannot say.
 
 **Drawing traps**
 

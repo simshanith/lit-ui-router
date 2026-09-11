@@ -41,8 +41,6 @@ each sheet argue where that form fits and where it lies.
 | [A1](sheet-A1-the-sprite-study.html) | THE ATLAS ITSELF | SPRITE STUDIES |
 
 - `megacanvas.html` — the 19 SVG plates on one page, ascent order.
-
-- `megacanvas.html` — the SVG plates on one page, ascent order.
 - `gallery.html` — cover, index and the full set, interactive lanes included.
 
 **Build and host.** From the repo root, in order:
@@ -60,7 +58,7 @@ Live at https://atlas.lit-ui-router.dev/ — the app owns the root (`/`, `/sheet
 sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and
 three.js 0.169.0, which the stage step vendors. `app/` is the same set as a prerendered
 lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
-into the app's `/log` at build time.
+into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
 `generator/census-*.mjs` probes at one ref — currently origin/main @ 185d414 — on the scc 4.0.0

@@ -11,7 +11,7 @@ import {
   navigationLocationPlugin,
 } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
-import { urlOf } from './routes.ts';
+import { FILTER_PARAMS, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
 import { findExtra, findSheet, loadFragment, loadManifest } from './manifest.ts';
 import { titleFor } from './titles.ts';
@@ -35,7 +35,13 @@ export const states: LitStateDeclaration[] = [
     // deps, and loadManifest() memoizes, so the rail costs one fetch.
     resolve: [{ token: 'manifest', resolveFn: loadManifest }],
   },
-  { name: 'atlas.gallery', url: urlOf('atlas.gallery'), component: GalleryView },
+  // The key index's filter rides the url: same params as the server half.
+  {
+    name: 'atlas.gallery',
+    url: urlOf('atlas.gallery'),
+    params: FILTER_PARAMS,
+    component: GalleryView,
+  },
   {
     name: 'atlas.sheet',
     url: urlOf('atlas.sheet'),
@@ -181,7 +187,14 @@ export function createRouter(): UIRouterLit {
     document.title = titleFor(to, sheet);
   });
 
-  router.urlService.rules.initial({ state: 'atlas.gallery' });
+  // CONSUMER FINDING: `initial({ state })` matches the path alone and targets
+  // the state with NO params, so a first load of /?subject=city landed on the
+  // unfiltered gallery with the query erased. The function form hands the
+  // search through; the key index's deep links depend on it.
+  router.urlService.rules.initial((_match, url) => ({
+    state: 'atlas.gallery',
+    params: url?.search ?? {},
+  }));
   router.urlService.rules.otherwise({ state: 'atlas.notFound' });
   return router;
 }

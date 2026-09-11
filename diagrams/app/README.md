@@ -28,7 +28,7 @@ row (A1) and one `extras` row, the 3D city.
 | State            | Url            | View            | Resolves                          |
 | ---------------- | -------------- | --------------- | --------------------------------- |
 | `atlas`          | — (abstract)   | `ShellView`     | `manifest`                        |
-| `atlas.gallery`  | `/`            | `GalleryView`   | —                                 |
+| `atlas.gallery`  | `/?subject&projection&mode&basis&kv` | `GalleryView` | — (the key index's filter, five nullable params) |
 | `atlas.sheet`    | `/sheet/:num`  | `SheetView`     | `sheet`, `fragment`               |
 | `atlas.city`     | `/city`        | `CityView`      | `extra`, `fragment`, **`three`**  |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
@@ -97,8 +97,11 @@ The app is deliberately two layers, and they do not mix.
 data and shared with the server, states with `component` and `resolve` (`router.ts`), an abstract
 `atlas` shell whose view renders the nav rail and a nested `<ui-view>` (`views.ts`), `uiSref` and
 `uiSrefActive` on every link, `redirectTo` for `/office` → sheet 14, a url-less `atlas.notFound` as
-the `otherwise` target, the Navigation API location plugin with a `pushState` fallback, and document
-titles set on `onSuccess` from `titles.ts` (the same strings the prerender writes). Nothing in
+the `otherwise` target, the Navigation API location plugin with a `pushState` fallback, document
+titles set on `onSuccess` from `titles.ts` (the same strings the prerender writes), and the cover's
+key index carried as typed query params on `atlas.gallery` — every chip a `uiSref`, every filtered
+index a link. One finding from that: `rules.initial({ state })` targets the state with no params and
+erases a first-load query; the function form hands `url.search` through (`router.ts`). Nothing in
 `src/*.ts` imports anything from `src/experimental/`. This layer is meant to be liftable into
 `examples/` as-is.
 

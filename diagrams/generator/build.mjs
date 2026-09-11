@@ -30,6 +30,7 @@ import { ATLAS } from './census-atlas.mjs';
 import { LOOP } from './loop-walk.mjs';
 import { citySection } from './city-scene.mjs';
 import { emitApp } from './emit-app.mjs';
+import { KEYS, labelsFor } from './labels.mjs';
 
 const OUT = process.argv[2];
 if (!OUT) throw new Error('usage: node build.mjs <outdir>');
@@ -137,8 +138,13 @@ const verdicts = [
 const appendixIdx = [
   ['A1', 'THE ATLAS ITSELF', 'SPRITE STUDIES', 'meta — the research behind the building sprites, argued on one demo member in fifteen blocks: the working plant wins on cost and independence and shipped as sheet 7B, the vines are its second layer, and the ledger roof stays parked until a sheet wants per-file stories', '#sheet-A1', 'A1'],
 ];
+// FORM's keys under the phrase — the vocabulary's first home is this table
+const keyLine = (n) => {
+  const labels = labelsFor(n);
+  return KEYS.filter((k) => labels[k]).map((k) => `<span class="kv"><i>${k}</i>${labels[k]}</span>`).join('');
+};
 const idxRow = ([n, a, f, v, anchor, label]) =>
-  `<tr><td><a href="${anchor ?? `#sheet-${n}`}">${label ?? `S${n}`}</a></td><td>${a}</td><td>${f}</td><td>${v}</td></tr>`;
+  `<tr><td><a href="${anchor ?? `#sheet-${n}`}">${label ?? `S${n}`}</a></td><td>${a}</td><td>${f}<span class="kvs">${keyLine(n)}</span></td><td>${v}</td></tr>`;
 /** The row for a sheet number — the app reads its altitude and verdict here. */
 const INDEX_BY_NUM = Object.fromEntries([...verdicts, ...appendixIdx].map((row) => [row[0], { scale: row[1], verdict: row[3] }]));
 // The cover's own CSS, split so the routed app can reuse the half it draws.
@@ -203,6 +209,10 @@ ${surveyCss}
 .idx .idx-sec td { font-size: 10px; letter-spacing: 0.16em; color: var(--ink-soft);
   background: var(--paper-2); border-top: 1.5px solid var(--ink); border-bottom: 1.5px solid var(--ink); }
 .idx a { color: inherit; }
+.idx .kvs { display: flex; flex-wrap: wrap; gap: 3px; margin-top: 5px; }
+.idx .kv { font-size: 9px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft);
+  border: 1px solid var(--line); padding: 1px 5px; white-space: nowrap; }
+.idx .kv i { font-style: normal; color: var(--accent); margin-right: 4px; }
 ${provenanceCss}
 .set-sec { font-family: var(--data); font-size: 11px; letter-spacing: 0.2em; font-weight: 600;
   color: var(--ink-soft); margin: 0 0 14px; padding: 10px 4px 0;
@@ -325,11 +335,13 @@ const mdLine = (md) => md.replace(/\n/g, ' ').replace(/`([^`]+)`/g, '<code>$1</c
 
 writeFileSync(join(OUT, 'README.md'), `# diagrams/ — The Altitude Atlas
 
-A drawing set: one subject surveyed at every altitude, fourteen altitudes on ${PLATES} plates — the
-numbered sheets, their A/B alternates, and four interactive lanes (sheets 7–10 are a survey
-quartet — the monorepo by mass, the sample app's node_modules, the docs deploy on the
-wire, and the inside of one bundle — and sheet 11 cuts that wire the other way, pricing
-every published entry alone, and sheet 14 draws the census pipeline that measured most of them), each in the form that altitude earns. ${THESIS}
+A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen
+altitudes on ${PLATES + appendix.length} plates — the numbered sheets, their A/B alternates, four interactive lanes, a
+3D city and one appendix study — each in the form that altitude earns. Sheets 7–10 are a survey
+quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
+one bundle); 11 prices every published entry alone; 14 draws the census pipeline that measured
+the rest. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
 | --- | --- | --- |
@@ -343,9 +355,33 @@ ${[...sheets, ...lanes].sort((a, b) => parseInt(a.num, 10) - parseInt(b.num, 10)
 ${appendix.map((s) => `| [${s.num}](${fname(s)}) | ${s.scale} | ${s.form} |`).join('\n')}
 
 - \`megacanvas.html\` — the ${sheets.length} SVG plates on one page, ascent order.
-- \`gallery.html\` — cover, index, and the full set, the interactive lanes included (also published as an Artifact).
+- \`gallery.html\` — cover, index and the full set, interactive lanes included.
 
-${GEN_NOTES}
+**Build and host.** From the repo root, in order:
+
+\`\`\`
+node diagrams/generator/build.mjs diagrams        # the flat set + the app's fragments and manifest
+npm --prefix diagrams/app run build               # the routed app, prerendered
+npm --prefix diagrams/app run build:artifact      # the single-file build published as a claude.ai Artifact
+cd diagrams && mise exec -- node generator/stage-site.mjs   # dist/: app at /, this set at /set/, vendored libs
+mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch worktree-altitude-atlas --commit-dirty=true
+\`\`\`
+
+Live at https://atlas.lit-ui-router.dev/ — the app owns the root (\`/\`, \`/sheet/7/\`, \`/city/\`,
+\`/log\`) and the flat set sits beside it under \`/set/\`; the two link to each other. The SVG
+sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and
+three.js 0.169.0, which the stage step vendors. \`app/\` is the same set as a prerendered
+lit-ui-router app (see \`app/README.md\`); \`HISTORY.md\` is the verbatim revision record, parsed
+into the app's \`/log\` at build time. This file is written by \`build.mjs\`; edit the emitter, not the output.
+
+**The cabinet.** Every figure on every plate is read from \`data/*.json\`, written by the
+\`generator/census-*.mjs\` probes at one ref — currently ${COUNTED_AT} — on the scc 4.0.0
+\`Code\` basis. Lookups throw on a missing row; nothing is hand-pasted. \`INITIATIVES.md\` records
+the pipeline's design and the traps of refreshing it.
+
+**Type and theme.** Plates letter in the data face (DIN 2014 on the site's kit, Barlow Semi
+Condensed off it); monospace is reserved for code. Light is graphite-on-vellum, dark is
+cyanotype. Drawn by Claude (Anthropic) with the maintainer, 2026-08-16 onward.
 `);
 
 // --- app/ — the same set, cut into fragments for the lit-ui-router SPA ---

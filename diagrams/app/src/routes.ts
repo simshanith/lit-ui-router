@@ -37,11 +37,31 @@ export const href = {
   plate: (file: string): string => `${SET}${file}`,
 };
 
+/**
+ * The gallery's filter params — null by default, so an absent key is an
+ * absent query param rather than an empty one. Deliberately NOT `dynamic`: a
+ * filter change re-enters atlas.gallery, which is what re-renders the index,
+ * and the state has no resolve of its own to pay for (the manifest is the
+ * shell's, and the shell does not re-enter).
+ */
+export const FILTER_KEYS = ['subject', 'projection', 'mode', 'basis', 'kv'] as const;
+export const FILTER_PARAMS: Record<string, unknown> = Object.fromEntries(
+  FILTER_KEYS.map((key) => [key, { value: null }]),
+);
+
 export const routes: RouteDeclaration[] = [
   // Abstract shell: the rail and the content ui-view. Url-less, so it
   // contributes no segment; its children's urls are the whole url.
   { name: 'atlas' },
-  { name: 'atlas.gallery', url: '/' },
+  // THE KEY INDEX, as route state: FORM's four keys plus the general kv
+  // fallback ride the gallery's url as query params, so every filtered index
+  // is a link someone can send. Each defaults to null — the unfiltered index
+  // carries no query string, and the prerendered `/` is that page.
+  {
+    name: 'atlas.gallery',
+    url: '/?subject&projection&mode&basis&kv',
+    params: FILTER_PARAMS,
+  },
   { name: 'atlas.sheet', url: '/sheet/:num' },
   // The 3D city: a plate the flat set only publishes inside its gallery, and
   // the one state whose view loads a library on demand (three, resolved).

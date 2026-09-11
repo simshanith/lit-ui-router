@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { assertPlots } from './iso-hidden.mjs';
 
 const P = 's11';
 const OX = 480, OY = 195;
@@ -82,6 +83,8 @@ const all = ORDER.map(([pkg, name], i) => {
   return { pkg, door: name, m: d.min, gz: d.gz, x, y, s: SIDE(d.min), h: HT(d.gz), n: i + 1 };
 });
 const at = (pkg, name) => all.find((r) => r.pkg === pkg && r.door === name);
+// hand PLAN, data-driven sides: the quarters may not ship overlapped
+assertPlots('sheet 11', all.map(({ n, pkg, door: entry, x, y, s }) => ({ n, name: `${pkg} ${entry}`, part: 'door', x, y, w: s, d: s })));
 
 const bodies = all
   .slice()

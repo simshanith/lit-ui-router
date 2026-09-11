@@ -564,6 +564,7 @@ resolved →
 
 **Record notes**
 
+- 2026-09-11, no rev clause (the copy is present-state): №15 `@tools/build_and_test` moved x 330 → 300 and №32 `@tools/embed-heights` x 430 → 440 on the works row, after 15's spec annex grew across 32's plot; `iso-hidden.mjs::assertPlots` now stops the build on any such overlap (DESIGN-REVIEW §T53).
 - REV A — 2026-08-16 (fed935c) · REV B — 2026-08-16 (8428701 "rework sheet 7 as the measured city"; heights doubled b504dbe the same day) · REV C and REV D — 2026-08-31, dated (053cc87; 8033db3, plate import be01a38 2026-09-02) · REV E — 2026-09-04 (4332b21) · REV F — 2026-09-07 (cf45bb0).
 - Rev B's scale rule: `KS = 1.6` (footprint = 1.6·√sloc), `KH = 3.0` px per authored file — doubled from rev A's 1.5.
 - Superseded figures: rev D changed the ruler as well as the city — over one identical file set (sheet 3 rev B's twenty-five source directories) the old "neither blank nor comment-only" filter reads 11,560 and scc 4.0.0 reads 11,658, about +0.9%, so roughly a hundred lines of that growth is the tape measure. The city went 27 members → 30, the yard 16 members / 4,684 sloc, and `@tools/oxc-emit` had been hand-kept at 3 files / 100 lines.
@@ -1095,6 +1096,7 @@ resolved →
 
 **Record notes**
 
+- 2026-09-11, no rev clause: the same 15 → 300 / 32 → 440 move as sheet 7, applied to this sheet's own `PLACED` table, which had carried the same overlap; asserted by `assertPlots` as well (DESIGN-REVIEW §T53).
 - REV A — 2026-08-17 (bf7593d) · REV B — 2026-09-01 (8033db3) · REV C — 2026-09-02 (5eaabba) · REV D — 2026-09-03 (96f89fe) · REV E — 2026-09-04, dated · REV F — 2026-09-07, dated.
 - `TODAY` is not a wall-clock date: it is the measured ref's own commit date, 2026-09-06. Every idle figure is measured against it, which is why re-dating alone ages the map.
 - Superseded figures: rev C re-dated 272 → 286 files at the plate's ref and drew the fifth published package for the first time; rev D counted 319 dated files at eb32b4e with Season III at 253 files / 85%, and derived the seal's empty stretch at 62–228 where rev C had printed 61–227 [65–231 now]; rev E held the bands a fourth time — 6 hot source blocks, the same 6 files beyond the 180-day seal. The editorial cuts have survived every recount: the touches-per-file gap is still clean between 4.65 and 6.0, so HOT stays ≥6, and the per-file median is still 2, so COLD stays below it.

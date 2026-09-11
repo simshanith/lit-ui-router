@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, isoBlock, isoPt, keyRow } from './helpers.mjs';
-import { depthSort, solidFaces } from './iso-hidden.mjs';
+import { assertPlots, depthSort, solidFaces } from './iso-hidden.mjs';
 
 const P = 's9';
 const OX = 480, OY = 205;
@@ -52,6 +52,9 @@ const all = PLATE.rows.map((r, i) => {
   const [x, y] = at;
   return { name: r.district, f: r.files, gz: r.gz, top: r.top, x, y, s: SIDE(r.files), h: HT(r.gz), n: i + 1 };
 });
+
+// hand PLAN, data-driven sides: the plan may not ship overlapped
+assertPlots('sheet 9', all.map(({ n, name, x, y, s }) => ({ n, name, part: 'block', x, y, w: s, d: s })));
 
 // Back to front, with solid walls: a tenant behind a taller one is hidden, not traced.
 const masses = all.map(({ name, x, y, s, h }) => ({ x, y, w: s, d: s,

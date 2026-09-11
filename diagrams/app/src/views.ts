@@ -4,13 +4,39 @@
  * diagrams/generator/chrome.mjs — styles the plates as it styles the
  * standalone pages.
  */
+import type { UIRouter } from '@uirouter/core';
 import { LitElement, html, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
-import type { AscentRow, ExtraRow, IssueEntry, Manifest, SheetRow } from './manifest.ts';
-import { ARTICLE, ascent, entryTitle, findExtra, isAppendix } from './manifest.ts';
+import type {
+  AscentRow,
+  ExtraRow,
+  Filter,
+  IssueEntry,
+  LabelKey,
+  Manifest,
+  SheetLabels,
+  SheetRow,
+} from './manifest.ts';
+import {
+  ARTICLE,
+  BASIS_SUBJECT,
+  EMPTY_FILTER,
+  LABEL_KEYS,
+  ascent,
+  entryTitle,
+  facet,
+  filterQuery,
+  findExtra,
+  isAppendix,
+  isFiltered,
+  kvVocabulary,
+  labelledRows,
+  matchesFilter,
+  readFilter,
+} from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
@@ -336,6 +362,111 @@ const logEntry = (entry: IssueEntry): TemplateResult => html`
   </li>
 `;
 
+// --- the key index ---------------------------------------------------------
+// FORM's four keys, each indexed in the shape its type asks for: mode is a
+// boolean and gets a toggle, subject and projection are small enums and get
+// grouped chip rows, basis is meaningful only inside the city group and is
+// drawn inside it, and the kv box is the fallback for a combination the chips
+// cannot say. Every chip is a uiSref onto atlas.gallery with the whole filter
+// as params, so the index is a link and the browser's back button undoes a
+// filter. uiSrefActive then lights the chip whose target IS the current url.
+
+const KEY_ACTIVE = { activeClasses: ['is-on'] };
+
+/** The card's own data model: the plate's keys, in key order. */
+const keyLine = (labels: SheetLabels): TemplateResult => html`
+  <span class="keys">
+    ${LABEL_KEYS.filter((key) => labels[key]).map(
+      (key) => html`<span class="kv"><i>${key}</i>${labels[key]}</span>`,
+    )}
+  </span>
+`;
+
+const filterHref = (filter: Filter): string => `${to(href.gallery)}${filterQuery(filter)}`;
+
+const chip = (label: string, count: number, next: Filter): TemplateResult => html`
+  <a
+    class="kv"
+    ${uiSrefActive(KEY_ACTIVE)}
+    ${uiSref('atlas.gallery', { ...next })}
+    href="${filterHref(next)}"
+    ><i>${label}</i><span class="c">${count}</span></a
+  >
+`;
+
+/** One key's row: an ALL chip, then a chip per value the set actually carries. */
+const keyRow = (
+  key: LabelKey,
+  rows: readonly { labels: SheetLabels }[],
+  filter: Filter,
+  extraClass = '',
+): TemplateResult => html`
+  <div class="krow ${extraClass}">
+    <span class="kk">${key}</span>
+    <div class="kchips">
+      ${chip('all', rows.filter((row) => matchesFilter(row.labels, { ...filter, [key]: null })).length, {
+        ...filter,
+        [key]: null,
+      })}
+      ${facet(rows, key, filter).map((entry) =>
+        chip(entry.value, entry.count, { ...filter, [key]: entry.value }),
+      )}
+    </div>
+  </div>
+`;
+
+const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): TemplateResult => {
+  const rows = labelledRows(manifest);
+  const shown = rows.filter((row) => matchesFilter(row.labels, filter)).length;
+  // basis says nothing about a plate that is not a city, so it is drawn inside
+  // the city group rather than as a row of its own
+  const inCity = filter.subject === BASIS_SUBJECT || filter.basis !== null;
+  const submit = (event: Event): void => {
+    event.preventDefault();
+    const form = event.currentTarget as HTMLFormElement;
+    const value = String(new FormData(form).get('kv') ?? '').trim();
+    void router?.stateService.go('atlas.gallery', { ...filter, kv: value.length > 0 ? value : null });
+  };
+  return html`
+    <div class="keyindex" aria-label="key index">
+      <div class="khead">
+        <span class="kt">KEY INDEX — FORM, SPLIT</span>
+        <span class="kn">${shown} / ${rows.length} SHOWN</span>
+        ${isFiltered(filter)
+          ? html`<a
+              class="kclear"
+              ${uiSref('atlas.gallery', { ...EMPTY_FILTER })}
+              href="${filterHref(EMPTY_FILTER)}"
+              >CLEAR ✕</a
+            >`
+          : nothing}
+      </div>
+      ${keyRow('mode', rows, filter)} ${keyRow('subject', rows, filter)}
+      ${inCity ? keyRow('basis', rows, filter, 'krow-in') : nothing}
+      ${keyRow('projection', rows, filter)}
+      <form class="kvbox" action="${to(href.gallery)}" method="get" @submit=${submit}>
+        <label for="kv-query">key = value</label>
+        <input
+          id="kv-query"
+          name="kv"
+          list="kv-vocab"
+          autocomplete="off"
+          spellcheck="false"
+          placeholder="subject=city projection=isometric"
+          .value=${filter.kv ?? ''}
+        />
+        <datalist id="kv-vocab">
+          ${kvVocabulary(rows).map((entry) => html`<option value="${entry}"></option>`)}
+        </datalist>
+        ${LABEL_KEYS.filter((key) => filter[key] !== null).map(
+          (key) => html`<input type="hidden" name="${key}" value="${filter[key] ?? ''}" />`,
+        )}
+        <button type="submit">FILTER</button>
+      </form>
+    </div>
+  `;
+};
+
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <a
     class="card"
@@ -350,8 +481,9 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
     <span class="meta">
       ${isAppendix(sheet.num)
         ? `${sheet.form} · NO CENSUS PLATE — META`
-        : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}${sheet.interactive ? ' · INTERACTIVE' : ''}`}
+        : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}`}
     </span>
+    ${keyLine(sheet.labels)}
   </a>
 `;
 
@@ -361,7 +493,8 @@ const cityCard = (extra: ExtraRow): TemplateResult => html`
     <h3>${articleTitle(extra.title)}</h3>
     <span class="alt">${extra.scale}</span>
     <p>${extra.sub}</p>
-    <span class="meta">3D · WEBGL · INTERACTIVE · LOADED ON DEMAND</span>
+    <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
+    ${keyLine(extra.labels)}
   </a>
 `;
 
@@ -371,6 +504,15 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const city = findExtra(manifest, 'city');
   // ONE line of issue record on the title sheet; the log itself is /log.
   const latest = (manifest.issueLog ?? []).find((entry) => entry.date);
+  // The key index's state is the url's: globals.params is current once the
+  // transition has settled, and the in-flight transition answers before that.
+  const filter = readFilter(
+    (props?.router?.globals.params ?? props?.transition?.params()) as Record<string, unknown>,
+  );
+  const shownAscent = ascent(manifest).filter((entry) => matchesFilter(entry.row.labels, filter));
+  const shownAppendix = (manifest.appendix ?? []).filter((row) =>
+    matchesFilter(row.labels, filter),
+  );
   return html`
     ${utilBar(
       html`<span class="sh">INDEX</span
@@ -418,15 +560,18 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         : nothing}
     </section>
     <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
-    <div class="cards">
-      ${ascent(manifest).map((entry) =>
-        entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),
-      )}
-    </div>
-    ${(manifest.appendix ?? []).length > 0
+    ${keyIndex(manifest, filter, props?.router)}
+    ${shownAscent.length > 0
+      ? html`<div class="cards">
+          ${shownAscent.map((entry) =>
+            entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),
+          )}
+        </div>`
+      : html`<p class="kempty">NO PLATE IN THE ASCENT CARRIES THAT KEY SET.</p>`}
+    ${shownAppendix.length > 0
       ? html`
           <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
-          <div class="cards">${manifest.appendix.map(sheetCard)}</div>
+          <div class="cards">${shownAppendix.map(sheetCard)}</div>
         `
       : nothing}
     <!-- The wide band: the numbers, then the argument. Side by side over 1800. -->

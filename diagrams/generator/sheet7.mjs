@@ -1,7 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
-import { depthSort, solidFaces } from './iso-hidden.mjs';
+import { assertPlots, depthSort, plotsOf, solidFaces } from './iso-hidden.mjs';
 
 const P = 's7';
 const OX = 600, OY = 96;
@@ -69,7 +69,7 @@ export const PLACED = [
   [12, '@tools/release',           'tools/release',                      'tool', 'halt',    20, 430, 'hosts published-diff — the one publish halt'],
   [13, '@tools/typedoc-plugin',    'tools/typedoc-plugin-lit-ui-router', 'tool', 'report', 230, 430, 'builds the API pages, gates nothing'],
   [14, '@tools/dts-backtest',      'tools/dts-backtest',                 'tool', 'pr',       8, 350, 'one 291-line run.ts holds the TS 5.0 floor'],
-  [15, '@tools/build_and_test',    'tools/build_and_test',               'tool', 'report', 330, 430, 'the CI graph helper — and its error summary'],
+  [15, '@tools/build_and_test',    'tools/build_and_test',               'tool', 'report', 300, 430, 'the CI graph helper — and its error summary'],
   [16, '@tools/shared',            'tools/shared',                       'tool', 'report',  20, 550, 'the library under the instruments'],
   [17, '@tools/workers-builds',    'tools/workers-builds',               'tool', 'late',   220, 550, 'the docs deploy watch'],
   [18, '@tools/bundle-probe',      'tools/bundle-probe',                 'tool', 'report', 330, 550, 'size probe, advisory'],
@@ -89,7 +89,7 @@ export const PLACED = [
   // --- the fifth published package (#676) — first drawn here --------------------
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 'line', 350, 170, `vendored uiSref lint rules · annex ${ratio('packages/eslint-plugin-lit-ui-router')}×`],
   // --- born 2026-09-04 (#703) ------------------------------------------------------
-  [32, '@tools/embed-heights',     'tools/embed-heights',                'tool', 'report', 430, 430, 'docs embed heights, measured in Chromium — outside ci'],
+  [32, '@tools/embed-heights',     'tools/embed-heights',                'tool', 'report', 440, 430, 'docs embed heights, measured in Chromium — outside ci'],
 ];
 
 // [n, name, district, tier, x, y, srcFiles, srcSloc, specFiles, specSloc, note]
@@ -115,6 +115,8 @@ const geom = new Map(M.map(([n, name, dist, tier, x, y, sf, sl, pf, pl]) => {
     x2: pf ? ax + sa : x + s, y1: pf ? Math.min(y, ay) : y, y2: pf ? Math.max(y + s, ay + sa) : y + s }];
 }));
 const g = (n) => geom.get(n);
+// hand placement against live footprints: the drawing may not ship overlapped
+assertPlots('sheet 7', [...geom.values()].flatMap(plotsOf));
 
 // exported: the 3D city renders THIS geometry, so a mass can never drift from the sheet
 export const CITY = [...geom.values()];

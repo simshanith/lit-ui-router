@@ -17,6 +17,7 @@ import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
+import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
 // absolute so a prerendered page links correctly before any JS runs.
@@ -263,6 +264,8 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
       scale: index[String(sheet.num)]?.scale ?? sheet.scale ?? '',
       verdict: index[String(sheet.num)]?.verdict ?? '',
       form: sheet.form ?? '',
+      // FORM, split into keys — the phrase stays readable, these are indexed
+      labels: labelsFor(sheet.num),
       rev: sheet.rev ?? 'A',
       file: `sheets/${id}.html`,
       standalone: fname(sheet),
@@ -307,9 +310,17 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
       standalone: CITY_META.standalone,
       scale: index.city?.scale ?? '',
       verdict: index.city?.verdict ?? '',
+      labels: labelsFor(CITY_META.id),
       refs: cityHtml.refs,
     },
   ];
+
+  // every plate labelled, every label in the vocabulary, or the build stops
+  assertLabels([
+    ...rows.map(([sheet, render]) => [String(sheet.num), Boolean(render)]),
+    ...appRows.map(([sheet]) => [String(sheet.num), false]),
+    [CITY_META.id, true],
+  ]);
 
   // the fragments get their chip breaks inside linkRefs; the cover bypasses it
   const coverParts = Object.fromEntries(

@@ -88,7 +88,7 @@ Breakpoints: **901–1180** gives a 56-px clipped rail with 240 px of inner widt
 
 Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S < 1 h, M half a day, L a day or more.
 
-**Closed:** T1–T15, T17–T21, T23–T36, T38–T41, T47–T52.
+**Closed:** T1–T15, T17–T21, T23–T36, T38–T41, T47–T54.
 
 **Moot:** T22 (`.revs` retired with the copy re-draft; history is `HISTORY.md` → `/log`), T42 (trigger removed by T1), T43 T44 T45 (kit faces reserved by design; the cover's article is HWT + `sup.art`).
 
@@ -99,8 +99,6 @@ Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S <
 | T16 | P3 | cards carry no picture of the plate — emit a 259 × 150 SVG crop or PNG per sheet at build | L |
 | T37 | P2 | `.gal-body p` measure is fixed at 72ch but still flush-left, with no col 9–12 insets; subsumed by T46 | S |
 | T46 | P3 | 12-column model with feature insets — figures/tables floated into cols 9–12 beside the citing paragraph | L |
-| T53 | P2 | buildings 15 and 32 overlap on the city sheets; no plot allocator, so hand coordinates rot as the census grows | S |
-| T54 | P2 | FORM wants to be a structured key set (subject / projection / mode / basis) with per-key indices and a card filter | M |
 | T55 | P3 | the city orbits on one axis; no elevation, no pan, no momentum — the snow-globe camera | L |
 | T56 | P2 | the atlas as the dogfooding surface: version floor, SSR findings, the Effect companion's first draft | M |
 
@@ -111,7 +109,8 @@ Severity: **P1** fix now · **P2** next pass · **P3** guiding star. Effort: S <
 - **2026-09-06** — P1 pass (b1c0942) and P2 pass (cf45bb0) closed T1 T2 T3 T4 T5 T6 T8 T9 T10 T11 T12 T13 T14 T15 T17 T18 T19 T20 T21 T23 T24 T25 T26 T27 T29 T30 T31 T32 T33 T34 T35 T36 T38 T39 T47 T48 T49 T50 T51.
 - **2026-09-07** — copy re-draft (6e92017); T22 retired as moot.
 - **2026-09-10** — T7 (`chipBreaks()` in `chrome.mjs`, wired into `page()` and into `emit-app.mjs`'s `linkRefs` + cover fields — 377 slash-bearing chips, all three hosts) and T28 (the 901–1180 band in `diagrams/app/index.html`). **T52 landed**: the notes column became a container-query multi-column block — see §3 for the model and the container-type trap. Sheet 7 at 3008 went from one 569-px column 1,491 px tall to four filled columns 656 px tall, and 21 of 23 sheets roughly halve at 2560. Sticky keyblock verified unaffected at 1440, 2560 and 3008.
-- **2026-09-11** — **T40 and T41 landed.** The per-sheet box backlog (3A 33, 2A 6, 1 5, 14 3, 4 3, 5 3, 10 2) and the seven overlaps blamed on T39's lettering step were a **`getBBox` rotation artifact**: the probe was transform-blind, so every rotated label reported its unrotated box. A CTM-aware probe read **0 overlaps and 0 out-of-viewBox on all 21 static plates at HEAD, before any edit**; sheets 5 and A1 needed nothing and were not touched. The lesson: a rotated label is a normal thing on these plates, and any future census measured with the old probe will chase ghosts again — retire it or port it onto the CTM. What remained was the design half of T40 — sheet 12's head band recomposed on the slant (§5), with the stage brackets, plate top, band caption and right annotation column moved to suit — and the whole of T41's one-class-step relettering on 12 and 14. The four cytoscape twins were measured through `renderedBoundingBox` and turned up one real defect: 14i's tier band heads sat 28 px above the first station in their band, so `BANDGAP` is now 44. Final: 1i 0/22 labels, 2B 0/19, 12i 0/89, 14i 0/75.
+- **2026-09-11** — **T40 and T41 landed.** The per-sheet box backlog (3A 33, 2A 6, 1 5, 14 3, 4 3, 5 3, 10 2) and the seven overlaps blamed on T39's lettering step were a **`getBBox` rotation artifact**: the probe was transform-blind, so every rotated label reported its unrotated box. A CTM-aware probe read **0 overlaps and 0 out-of-viewBox on all 21 static plates at HEAD, before any edit**; sheets 5 and A1 needed nothing and were not touched. The lesson: a rotated label is a normal thing on these plates, and any future census measured with the old probe will chase ghosts again — retire it or port it onto the CTM (later the same day: neither probe was ever checked in — both were one-shot scripts, so there was nothing to retire; the build-path guard is T53's silhouette assertion). What remained was the design half of T40 — sheet 12's head band recomposed on the slant (§5), with the stage brackets, plate top, band caption and right annotation column moved to suit — and the whole of T41's one-class-step relettering on 12 and 14. The four cytoscape twins were measured through `renderedBoundingBox` and turned up one real defect: 14i's tier band heads sat 28 px above the first station in their band, so `BANDGAP` is now 44. Final: 1i 0/22 labels, 2B 0/19, 12i 0/89, 14i 0/75.
+- **2026-09-11, later** — **ranks 1–3 of the backlog landed in one pass.** T56's floor: `diagrams/app` on `lit-ui-router@^1.12.0` (the app carried no #723-era workaround to strip). T53: `assertPlots()` in `iso-hidden.mjs`, wired into every plate that hand-places a census-sized footprint (3, 3B, 7, 7A, 7B, 9, 10, 11, 13); 15 → x 300 and 32 → x 440 on sheets 7 and 13 — sheet 13 keeps its own `PLACED` and carried the same overlap unnoticed. T54: `generator/labels.mjs` is the one vocabulary, `assertLabels()` gates the manifest, and the app's cover gained the key index with filter state in the route. Also: `build.mjs` writes `diagrams/README.md`, and had been silently reverting the hand-written runbook since the 2026-09-11 compaction; the emitter now carries that text.
 
 ### T53 — buildings 15 and 32 overlap (P2, new)
 
@@ -137,6 +136,21 @@ and the choice is a design call, not a repair:
 The second is cheaper and fits the set's existing "one basis, computed, never guessed" posture — the
 atlas already throws on a missing member. Worth pairing with the T40 probe: that census measures
 `<text>` only, which is exactly why this went unseen.
+
+**Landed 2026-09-11 — the second way.** `assertPlots(sheet, plots)` in `iso-hidden.mjs` tests the
+drawn ground rects (block and annex separately) for strict intersection and throws naming the sheet,
+both members, both parts and the overlap in units. Ground rects are the right test because every
+projection in use is affine and invertible, so two footprints intersect on the plate exactly when
+they intersect in plan; what a tall mass hides above ground is occlusion, drawn on purpose. Wired
+module-level in the nine plates that hand-place a census-sized footprint (sheet 8 packs, so it
+needs none). Before the fix it read `15 annex [393.7 429.6 → 448.3 484.2] intersects 32 block
+[430.0 430.0 → 459.3 459.3] by 18.3 × 29.3`. Recomposed for air, not to the minimum: 15 slid west
+into the 56 units it had free on that side (330 → 300) and 32 stepped east (430 → 440), both still on
+the works row at y 430, so the tools district keeps its three site-plan rows and its east edge moves
+1 unit. Sheet 13 carries its own `PLACED` and had the same overlap; both tables moved together.
+Nearest remaining pair is 20's annex against 21's block at 0.7 units — passes, but it is the pair a
+clearance floor would catch first. The `collide-flat` probe this row proposed retiring never
+existed in the tree (see the T40 status line).
 
 ### T54 — the FORM field wants to be a tag index (P2, new)
 
@@ -178,6 +192,31 @@ the two registers together); basis is only meaningful within the city group. So 
 one index per key, each shaped to its key, with the general key/value filter on the cards as the
 fallback for combinations. FORM stays on the title block as the readable phrase; the keys are what
 the app indexes. Direction from the user, 2026-09-11: "separate indices for special keys".
+
+**Landed 2026-09-11.** `generator/labels.mjs` holds the vocabulary and every plate's key set;
+`assertLabels()` runs inside `emitApp()` and throws on an unlabelled plate, a value outside the
+vocabulary, a vocabulary value no plate uses, a non-city with `basis` or a city without one, and a
+`mode` that disagrees with how the plate is actually drawn. The keys ride the manifest to the app
+(and sit as chips under the FORM phrase in the cover INDEX's cell, columns untouched). The app's
+cover gained a KEY INDEX between the ascent heading and the cards: one row per key with faceted
+counts — `mode` as the toggle, `subject` and `projection` as grouped chips, `basis` drawn only
+inside the city group — and a `key=value` box as the fallback. Every chip is `uiSref` +
+`uiSrefActive`; the filter is five nullable params on `atlas.gallery`
+(`/?subject&projection&mode&basis&kv`), so `/?subject=city&basis=measured` is a link, the
+unfiltered cover has no query string and stays the prerendered page, and the static twin degrades
+to plain hrefs and a GET form. Where the landing read differently from the audit: four subjects
+came off the title or ALTITUDE rather than FORM (`pipeline` 14/14i, `space` 5, `survey` 7A,
+`sprite` A1); sheet 2 files under `coupling` with 2A/2B/3A; sheet 12 is `chart`, as its own note
+argues; the 3D plate's basis is `real 3d isometric`; and the params are not `dynamic` — a filter
+change re-enters the state, which is what redraws the view. Facets today: subject city 8 ·
+coupling 4 · circuit/pipeline/register 2; projection isometric 13 · graph 5 · plan 3 · chart 2;
+mode static 20 · interactive 5. **Consumer finding, from the first screenshot pass:** a hard load of
+`/?subject=city` landed on the unfiltered gallery with the query erased, while chip clicks filtered
+correctly. Cause, reproduced against bare `@uirouter/core`: `urlService.rules.initial({ state })`
+matches the path alone and targets the state with NO params, and it wins the first sync over the
+state's own url rule. The function form — `initial((_m, url) => ({ state, params: url.search }))` —
+hands the search through. Recorded in `router.ts` beside the navigation-plugin finding; it belongs in
+the location-plugins guide.
 
 ### T55 — the city's second camera axis, and pan (P3, new)
 
@@ -326,24 +365,22 @@ fiber that a route exit must interrupt cleanly. The city's parts, in the Effect 
 It also lands on a known trap from the Effect work: interrupt on a superseding `onStart`, not
 `onCreate`. A routed 3D scene is exactly where that bites.
 
-**Version floor.** `diagrams/app` pins `lit-ui-router: ^1.11.2`, so the atlas does not yet run the
-ui-view config identity gate (#755) that shipped in 1.12.0 — the fix for routed elements rebuilding
-on every update. The atlas is the app that would show it off, since the city and register plates are
-expensive to rebuild. Small bump, worth doing before any of the above.
+**Version floor — done 2026-09-11.** `diagrams/app` pins `lit-ui-router: ^1.12.0`, so the atlas
+runs the ui-view config identity gate (#755) — routed elements are no longer rebuilt on every
+update, which matters most on the city and register plates. The app carried no #723-era workaround
+to strip; its only `requestAnimationFrame` calls are the city's own render loop.
 
 **Later.** When `srefHref` (#689) lands, the atlas's 22 `uiSref` call sites are its natural first
 consumer. When a release carries #803, drop the app's second template set and try real hydration.
 
 ### Backlog, ranked 2026-09-11
 
-Everything still open, ordered by actionability × impact. Effort scale as §7.
+Everything still open, ordered by actionability × impact. Effort scale as §7. The first three rows
+of the morning's ranking (T56 floor, T53, T54) landed the same day and are struck from the table.
 
 | rank | row | what | effort | why here |
 |---|---|---|---|---|
-| 1 | T56 · floor | bump `diagrams/app` to `lit-ui-router@^1.12.0` | S | one-line change; the atlas becomes the app that shows #755 (routed elements no longer rebuilt per update), and everything below runs on the current library |
-| 2 | T53 | build-time silhouette assertion + hand recompose of 15/32 | S | a visible overlap is shipping on four city sheets; the assertion is the same posture as the missing-member throw. Pair it with retiring the transform-blind `collide-flat` probe for the CTM-aware one |
-| 3 | T54 | split FORM into subject / projection / mode / basis labels; per-key indices; card filter | M | audit done above, keys known, no design left; the cards get a data model instead of a caption |
-| 4 | T55 + T56 · Effect | snow-globe camera as Effect code; twin touch areas | L | the user's stated goal — the Effect learning lane and the companion API's first draft. Design converged; the two open calls are made (flings may cross detents, pan edge is sprung) |
-| 5 | T16 | a picture of the plate on every card | L | cover scannability; no dependency, no urgency |
-| 6 | T46 / T37 | 12-column model with feature insets | L | P3; T52 took the pressure off the prose column |
+| 1 | T55 + T56 · Effect | snow-globe camera as Effect code; twin touch areas | L | the user's stated goal — the Effect learning lane and the companion API's first draft. Design converged; the two open calls are made (flings may cross detents, pan edge is sprung) |
+| 2 | T16 | a picture of the plate on every card | L | cover scannability; no dependency, no urgency — and the cards now carry a key line, so the picture is the last thing they lack |
+| 3 | T46 / T37 | 12-column model with feature insets | L | P3; T52 took the pressure off the prose column |
 | — | T56 · later | `srefHref` consumer; hydration over #803 | — | blocked on #689 and a release |

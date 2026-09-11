@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, arrow, isoBlock, isoPt, keyRow } from './helpers.mjs';
+import { assertPlots } from './iso-hidden.mjs';
 
 const P = 's3';
 const OX = 360, OY = 200;
@@ -92,6 +93,8 @@ const geom = new Map(
   }),
 );
 const g = (n) => geom.get(n);
+// hand-placed against data-driven sides: the yard may not ship overlapped either
+assertPlots('sheet 3', M.map(([n, name]) => ({ n, name, part: 'block', x: g(n).x, y: g(n).y, w: g(n).side, d: g(n).side })));
 
 const BADGE_LEFT = new Set([9, 10, 11]);
 // mass 1 stands under the task-manager inset: its badge takes the far corner so the

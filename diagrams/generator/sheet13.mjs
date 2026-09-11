@@ -1,6 +1,7 @@
 import { readFileSync } from 'node:fs';
 import { defs } from './chrome.mjs';
 import { txt, schedTxt, keyRow } from './helpers.mjs';
+import { assertPlots, plotsOf } from './iso-hidden.mjs';
 
 const P = 's13';
 
@@ -78,7 +79,7 @@ const PLACED = [
   [12, '@tools/release', 'tools/release', 'tool', 20, 430],
   [13, '@tools/typedoc-plugin', 'tools/typedoc-plugin-lit-ui-router', 'tool', 230, 430],
   [14, '@tools/dts-backtest', 'tools/dts-backtest', 'tool', 8, 350],
-  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 330, 430],
+  [15, '@tools/build_and_test', 'tools/build_and_test', 'tool', 300, 430],
   [16, '@tools/shared', 'tools/shared', 'tool', 20, 550],
   [17, '@tools/workers-builds', 'tools/workers-builds', 'tool', 220, 550],
   [18, '@tools/bundle-probe', 'tools/bundle-probe', 'tool', 330, 550],
@@ -97,7 +98,7 @@ const PLACED = [
   // --- the fifth published package (#676): sheet 7's plan slot lands under the
   //     reading box, so it takes the free third row of the packages district ----
   [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 30, 130],
-  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 430, 430],
+  [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 440, 430],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -158,6 +159,8 @@ const geom = new Map(D.map(([n, , , px, py, ssl, psl, src, spec]) => {
     x2: spec ? ax + sa : x + s, y1: spec ? Math.min(y, ay) : y, y2: spec ? Math.max(y + s, ay + sa) : y + s }];
 }));
 const g = (n) => geom.get(n);
+// this sheet keeps its own copy of the placements: assert its plots on their own
+assertPlots('sheet 13', D.flatMap(([n, name]) => plotsOf({ n, name, ...g(n) })));
 
 const BADGE_LIFT = { 2: 12, 6: 14, 21: 14, 23: 14, 24: 14, 27: 14 };
 const bodies = D.map((r) => {
