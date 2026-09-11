@@ -267,16 +267,15 @@ figcaption .figno {
    properties; declared on .notes it would silently resolve against the
    viewport. Under 1180 the grid re-proportions and the cell is never wide
    enough to divide, so the count is simply 1 and no second formula is owed.
-   Rounded down, so a column is never narrower than the target. That fixes the
-   divisor tighter than it looks: two columns at 1440 needs it under 469px,
-   three rather than four at 2560 needs it over 514px, and no single number is
-   both — 28rem takes the two-column 1440 and accepts four columns at 2560.
-   Rounding to nearest at 38rem is the other resolution of the same conflict,
-   and the only edit is this line. No measure cap either way: the count is what
-   holds the measure, and a cap would put back the dead paper this removes. */
+   Rounded to nearest, not down: rounding down cannot hold both ends at once —
+   two columns at 1440 wants the divisor under 469px, three rather than four at
+   2560 wants it over 514px. Nearest at 38rem takes both, and lands 4 at 3008,
+   3 at 2560, 2 at 1440, with no column narrower than 447px or wider than 706
+   between 1200 and 3400. The measure cap on the paragraph is the one guard the
+   count cannot give: it bites only at a single column. */
 .notes-grid { container-type: inline-size; }
 .notes {
-  column-count: round(down, calc((100cqw - var(--inset) - var(--inset-gap)) / 28rem), 1);
+  column-count: calc((100cqw - var(--inset) - var(--inset-gap)) / 38rem);
   column-gap: 44px;
 }
 @media (max-width: 1180px) { .notes { column-count: 1; } }
@@ -298,12 +297,17 @@ figcaption .figno {
   font-family: var(--prose);
   font-size: 18px;
   line-height: 1.8;
+  /* Only ever bites at one column: the count holds every wider layout under
+     706px on its own, so this is the guard for the 1180–1440 band, where a
+     lone column would otherwise run out to 91ch. */
+  max-width: 74ch;
   margin-bottom: 2em;
 }
 .notes p strong { font-weight: 600; }
 /* a paragraph's opening strong is a run-in head — give it its own line, but
-   only where it opens the paragraph, never a strong caught mid-sentence */
-.notes p > strong:first-child { display: block; }
+   only where it opens the paragraph, never a strong caught mid-sentence. It
+   never ends a column alone: a head is a promise about the text under it. */
+.notes p > strong:first-child { display: block; break-after: avoid; }
 /* every inline chip is the code face, not the UA's own monospace default */
 code, kbd, samp { font-family: var(--code); }
 .notes p code, .gal-body code {
