@@ -30,14 +30,13 @@ reviews:
     # until the label goes back on.
     # `coderabbit:skip` is the standing veto — it wins even if `coderabbit:review`
     # is present, so a PR marked "reviewed by hand" stays that way.
-    # `release` (bump-version.yml) and `no-coderabbit` are held over from the
-    # opt-out era. Both are redundant under an allow-list; they stay until the
-    # new labels have proven out, then go in a follow-up.
+    # `release` (bump-version.yml) is inert under an allow-list, but the label is
+    # still applied by automation, so it stays as the standing exclusion should
+    # this ever flip back to opt-out.
     labels:
       - 'coderabbit:review'
       - '!coderabbit:skip'
       - '!release'
-      - '!no-coderabbit'
     # Branches OTHER than the default to review; `main` is already the default,
     # so listing it matched nothing and CodeRabbit refused every stacked PR with
     # "auto reviews are disabled on base branches other than the default". Under
