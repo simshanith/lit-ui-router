@@ -199,11 +199,70 @@ export class UiView extends LitElement {
   };
 
   private seekRouter() {
-    this.uiRouter = this.uiRouter || UIRouterLitElement.seekRouter(this);
+    if (!this.uiRouter) {
+      this.uiRouter = UIRouterLitElement.seekRouter(this)!;
+      // A sought router can be superseded; an app-provided one never is.
+      this.routerFromSeek = !!this.uiRouter;
+    }
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
       this.onUiRouterContextEvent as EventListener,
     );
+  }
+
+  /** Whether `uiRouter` came from the context event rather than the app. */
+  private routerFromSeek = false;
+
+  /** The router this view actually registered with. */
+  private boundRouter?: UIRouterLit;
+
+  /** Seeks past this view's own answer to the context event. */
+  private seekRouterAfresh(): UIRouterLit | undefined {
+    const eventName = UIRouterLitElement.uiRouterContextEventName;
+    this.removeEventListener(
+      eventName,
+      this.onUiRouterContextEvent as EventListener,
+    );
+    const found = UIRouterLitElement.seekRouter(this);
+    this.addEventListener(
+      eventName,
+      this.onUiRouterContextEvent as EventListener,
+    );
+    return found;
+  }
+
+  /**
+   * Re-registers when the router bound at connect turned out not to be the
+   * app's.
+   *
+   * lit replays a property set before upgrade inside the element's first
+   * update, so `<ui-router>` can run `connectedCallback` with `uiRouter` still
+   * undefined and stand up an instance of its own; a `<ui-view>` connecting in
+   * between binds to that instance and never sees a transition. Firefox
+   * upgrades a detached subtree later than Chrome and WebKit, so declarative
+   * shadow DOM parsed off-document reaches this there first.
+   *
+   * `registerUIView` syncs, so the re-registered view picks up the current
+   * state without waiting for the next transition.
+   */
+  private rebindLateRouter(): void {
+    const router = this.routerFromSeek
+      ? this.seekRouterAfresh()
+      : this.uiRouter;
+    if (!router || router === this.boundRouter) {
+      return;
+    }
+
+    this.teardownRouterSubscriptions();
+    this.uiRouter = router;
+    this.setupUiView();
+  }
+
+  private teardownRouterSubscriptions(): void {
+    while (this.disconnectedHandlers.length) {
+      const handler = this.disconnectedHandlers.shift();
+      handler?.();
+    }
   }
 
   private captureContent() {
@@ -253,6 +312,7 @@ export class UiView extends LitElement {
     this.disconnectedHandlers.push(
       router.viewService.registerUIView(this._uiViewData),
     );
+    this.boundRouter = router;
   }
 
   /** @internal */
@@ -263,10 +323,7 @@ export class UiView extends LitElement {
       this.onUiViewContextEvent as EventListener,
     );
 
-    while (this.disconnectedHandlers.length) {
-      const handler = this.disconnectedHandlers.shift();
-      handler?.();
-    }
+    this.teardownRouterSubscriptions();
   }
 
   /**
@@ -383,6 +440,7 @@ export class UiView extends LitElement {
    */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
+    this.rebindLateRouter();
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
