@@ -5,12 +5,12 @@
   "type": "module",
   "scripts": {
     "build": "vite build && node prerender.ts",
+    "build:artifact": "vite build --mode artifact && node artifact.ts",
     "build:spa": "vite build",
     "dev": "vite",
-    "preview": "vite preview",
     "prerender": "node prerender.ts",
-    "typecheck": "tsc --noEmit",
-    "build:artifact": "vite build --mode artifact && node artifact.ts"
+    "preview": "vite preview",
+    "typecheck": "tsc --noEmit"
   },
   "dependencies": {
     "@uirouter/core": "^6.1.2",
