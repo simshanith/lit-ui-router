@@ -184,7 +184,7 @@ export interface AriaCurrentValues {
  * This is `uiSref`'s tag check widened by role. `aria-current` is a property of
  * the role, so `<div role="link">` takes it; `href` is a property of the tag,
  * so the same element must never take one. Sharing the tag half keeps the
- * overlap exact — see {@link isNativeLink} for the other side.
+ * overlap exact — see `isNativeLink` for the other side.
  *
  * @internal
  */

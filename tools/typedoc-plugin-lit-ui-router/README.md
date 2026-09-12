@@ -123,16 +123,9 @@ import { interfaceTemplate, classTemplate, typeTemplate } from './templates.js';
 
 ## Plugin Events
 
-- `Converter.EVENT_RESOLVE_BEGIN`: Processes JSDoc comments and converts `[[SymbolName]]` patterns
-- `Converter.EVENT_RESOLVE_END`: Handles directive wrapper patterns
-- `Converter.EVENT_RESOLVE`: Adds category tags for organization
+- `Converter.EVENT_RESOLVE_END`: Aggregates CEM `@slot` / `@fires` tags and converts `[[SymbolName]]` patterns
+- `RendererEvent.END`: Generates category index files and rewrites `typedoc-sidebar.json`
 
-## Category Tags
+## Categories
 
-The plugin automatically adds `@category` tags to reflections:
-
-- `Core`: UIRouterLit
-- `Components`: UIRouterElement, UIViewElement
-- `Directives`: uiSref, uiSrefActive
-- `Hooks`: UiOnExit, UiOnParamsChanged
-- `Types`: LitStateDeclaration, UIViewInjectedProps, etc.
+Categories come from `@category` tags in source; `router: "category"` in `typedoc.json` groups pages by them.

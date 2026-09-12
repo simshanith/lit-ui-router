@@ -222,6 +222,8 @@ export type RoutedLitTemplate<
  *
  * A {@link RoutedLitTemplate} intersected with the core view declaration
  * metadata (all optional, so plain template functions remain assignable).
+ *
+ * @category types
  */
 export type LitViewDeclarationTemplate<
   T extends DefaultResolvesType = DefaultResolvesType,
@@ -304,6 +306,8 @@ export type RoutedLitComponent<
 
 /**
  * A LitElement class used directly as a view declaration.
+ *
+ * @category types
  */
 export interface LitViewDeclarationElement<
   T extends DefaultResolvesType = DefaultResolvesType,
@@ -312,6 +316,8 @@ export interface LitViewDeclarationElement<
 
 /**
  * A view declaration object with an explicit component property.
+ *
+ * @category types
  */
 export interface LitViewDeclarationObject<
   T extends DefaultResolvesType = DefaultResolvesType,
@@ -326,6 +332,8 @@ export interface LitViewDeclarationObject<
  * - An object with a `component` property ({@link LitViewDeclarationObject})
  * - A LitElement class directly ({@link LitViewDeclarationElement})
  * - A template function directly ({@link LitViewDeclarationTemplate})
+ *
+ * @category types
  */
 export type LitViewDeclaration<
   T extends DefaultResolvesType = DefaultResolvesType,
