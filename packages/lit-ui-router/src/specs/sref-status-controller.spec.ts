@@ -431,6 +431,28 @@ describe('SrefStatusController', () => {
       expect(section.status.active).toBe(false);
     });
 
+    it('drops a link the moment its part leaves', async () => {
+      const uiRouter = await mountRouter();
+      const host = document.createElement('test-sref-status-plain');
+      uiRouter.appendChild(host);
+      const links = (users: boolean) =>
+        html`${users ? html`<a href=${srefHref('users')}>Users</a>` : nothing}`;
+      render(links(true), host);
+      await tick(20);
+
+      await goTo('users');
+      expect(host.status.active).toBe(true);
+
+      const updates = host.updates;
+      render(links(false), host);
+      await tick();
+
+      // at once, without a further transition
+      expect(host.status.active).toBe(false);
+      expect(host.status.targetStates).toEqual([]);
+      expect(host.updates).toBeGreaterThan(updates);
+    });
+
     it('gathers links from a host that has no render root', async () => {
       const uiRouter = await mountRouter();
       const host = document.createElement('test-sref-status-plain');

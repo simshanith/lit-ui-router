@@ -5,7 +5,11 @@ import { warnMissingRouter } from './dev-warn.js';
 import type { SrefTargetParams } from './sref-active.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
 import { UIRouterLitElement } from './ui-router.js';
-import { UI_SREF_TARGET_EVENT, UiSrefTargetEvent } from './ui-sref.js';
+import {
+  UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
+  UiSrefTargetEvent,
+} from './ui-sref.js';
 import {
   AriaCurrentValue,
   AriaCurrentValues,
@@ -254,12 +258,20 @@ export class SrefStatusController implements ReactiveController {
       UI_SREF_TARGET_EVENT,
       this.onUiSrefTargetEvent as EventListener,
     );
-    this.deregisterFns.push(() =>
+    scope.addEventListener(
+      UI_SREF_TARGET_REMOVED_EVENT,
+      this.onUiSrefTargetRemovedEvent,
+    );
+    this.deregisterFns.push(() => {
       scope.removeEventListener(
         UI_SREF_TARGET_EVENT,
         this.onUiSrefTargetEvent as EventListener,
-      ),
-    );
+      );
+      scope.removeEventListener(
+        UI_SREF_TARGET_REMOVED_EVENT,
+        this.onUiSrefTargetRemovedEvent,
+      );
+    });
 
     const router = this.targets.router;
     if (router) {
@@ -316,6 +328,12 @@ export class SrefStatusController implements ReactiveController {
   private readonly onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     this.targets.onLink(event);
     this.refresh();
+  };
+
+  private readonly onUiSrefTargetRemovedEvent = (event: Event): void => {
+    if (this.targets.onLinkRemoved(event)) {
+      this.refresh();
+    }
   };
 
   private readonly onStatesChanged = (): void => {
