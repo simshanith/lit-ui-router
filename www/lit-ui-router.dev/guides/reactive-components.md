@@ -90,6 +90,54 @@ _after_ navigation completed — or that are detached and re-attached, as with
 [sticky states](https://github.com/ui-router/sticky-states) — render fresh
 values immediately instead of waiting for the next transition.
 
+## Active-link status
+
+A nav link needs more than "the router moved": it needs to know whether _its_
+state is the current one.
+[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+exposes exactly that — `active`, `exact`, `entering`, `exiting` — and leaves
+the rendering to you:
+
+```ts
+import { html, LitElement } from 'lit';
+import { classMap } from 'lit/directives/class-map.js';
+import { srefHref, SrefStatusController } from 'lit-ui-router';
+
+class NavLink extends LitElement {
+  private users = new SrefStatusController(this, { state: 'users' });
+
+  render() {
+    return html`<a
+      href=${srefHref('users')}
+      class=${classMap({ 'nav-link': true, active: this.users.active, disabled: this.locked })}
+      aria-current=${this.users.ariaCurrent()}
+      >Users</a
+    >`;
+  }
+}
+```
+
+This is the composition path [`srefActiveClass`](/api/reference/directives/srefActiveClass)
+cannot offer: a `class` attribute holds one toggling directive, so the
+directive and `classMap` cannot share it. Reach for the directive when the
+link's classes are all the component needs; reach for the controller when the
+status is one input among several.
+
+The controller takes the same target as the directives — `state`, `params`,
+`options`, or no `state` at all to watch the `srefHref` links the host
+renders — plus:
+
+- `retarget({ state, params, options })` — point it at another state, for a
+  host that takes the state as a property
+- `ariaCurrent(value?)` — the `aria-current` token for the current status, or
+  `nothing`; `value` accepts a token or `{ exact, active }`
+- `router` — an explicit router instance, skipping context discovery. Passing
+  it also computes the status in the constructor, so it is there for the very
+  first render and needs no DOM at all.
+
+Only a change in one of the four flags requests a host update, so transitions
+that leave the link alone cost nothing.
+
 ## See it live
 
 The same problem, solved with the
