@@ -100,8 +100,10 @@ router, which is still open ([#564](https://github.com/simshanith/lit-ui-router/
   the click navigates, and an enclosing `uiSrefActive` still tracks it. There
   is no `assignHref`: the attribute is the binding. Use one form or the other
   on an element, not both.
-- `srefActiveClass` follows lit's `classMap`: bind it in `class`, alone or
-  beside static classes, and it toggles only the classes it names. Leave
+- `srefActiveClass` follows lit's
+  [`classMap`](https://lit.dev/docs/templates/directives/#classmap): bind it in
+  `class`, alone or beside static classes, and it toggles only the classes it
+  names. Leave
   `state` out on a wrapper to watch the `srefHref` links inside it, as
   `uiSrefActive` does.
 - `srefAriaCurrent` is the one piece a `class` binding cannot reach, so it is

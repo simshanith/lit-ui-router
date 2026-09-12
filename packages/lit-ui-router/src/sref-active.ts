@@ -288,8 +288,10 @@ export interface SrefActiveClassParams extends SrefTargetParams {
 
 /**
  * The attribute-part sibling of {@link UiSrefActiveDirective}'s class
- * handling, with lit's `classMap` contract: bound in `class`, alone or beside
- * static classes, and toggling only the classes it names.
+ * handling, with the contract of lit's
+ * {@link https://lit.dev/docs/templates/directives/#classmap | classMap}:
+ * bound in `class`, alone or beside static classes, and toggling only the
+ * classes it names.
  *
  * The first commit writes the whole class list — statics plus whichever of
  * ours apply — as `classMap` does, which is also what a server rendering
@@ -468,8 +470,10 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
  * Toggles classes in a `class` attribute by the active state: the
  * attribute-part form of {@link uiSrefActive}'s classes.
  *
- * It follows lit's `classMap`: it must be bound in `class`, alone or next to
- * static classes, and it only ever toggles the classes it names. Name the
+ * It follows lit's
+ * {@link https://lit.dev/docs/templates/directives/#classmap | classMap}: it
+ * must be bound in `class`, alone or next to static classes, and it only ever
+ * toggles the classes it names. Name the
  * state to watch, or leave `state` out on a wrapper to watch the
  * {@link srefHref} links inside it.
  *
