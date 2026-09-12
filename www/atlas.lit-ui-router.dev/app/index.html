@@ -649,19 +649,19 @@
         position: relative;
         z-index: 1;
       }
-      /* THE GEOMETRY BEHIND THE GRID — a wireframe cube lattice turning once
-         about the vertical axis every 90 s, drawn by src/lattice.ts on a
-         canvas. `color` is what the script reads for the line's ink, at draw
-         time and again on every theme change. The canvas is ONE VIEWPORT tall
-         and sticky inside the field, so a grid four screens long still costs a
-         screen of pixels.
-         WINDOW-ONLY, and this is the whole trick: the script clips each frame
-         to the union of the cards' `.card-pic` rects, so the lattice paints
-         inside the windows and NOWHERE else — not in the grid's gaps, not in
-         the empty tracks of a short last row. The cards' paper is opaque and
-         the window is the one hole in it. One field, one set of world
-         coordinates, so a line leaving one window enters the next on its true
-         path. Without the script the window is just its tint. */
+      /* THE GEOMETRY BEHIND THE GRID — a wireframe cube lattice of dotted
+         lines, turning once about the vertical axis every 240 s, drawn by
+         src/lattice.ts on a canvas. `color` is what the script reads for the
+         line's ink, at draw time and again on every theme change. The canvas
+         is ONE VIEWPORT tall and sticky inside the field, so a grid four
+         screens long still costs a screen of pixels.
+         CARD-ONLY, and this is the whole trick: the script clips each frame to
+         the union of the whole `.card` rects, so the lattice paints under the
+         cards — window AND text, since the body's paper is translucent — and
+         NOWHERE else: not in the grid's gaps, not in the empty tracks of a
+         short last row. One field, one set of world coordinates, so a line
+         leaving one card enters the next on its true path. Without the script
+         the card is just its two tints. */
       atlas-lattice {
         position: absolute;
         inset: 0;
@@ -683,9 +683,9 @@
       .card {
         position: relative;
         border: 1.5px solid var(--ink);
-        /* TRANSPARENT, with the paper carried by `.card-body`: that is what
-           makes the picture box a hole onto the field rather than a panel on
-           top of it. */
+        /* TRANSPARENT, with the paper carried by `.card-body` and carried
+           TRANSLUCENT: the whole card is a panel laid on the field, the window
+           the thinner pane in it. */
         background: transparent;
         color: inherit;
         display: block;
@@ -712,11 +712,12 @@
         border-color: var(--accent);
       }
       /* THE WINDOW (T16) — a fixed 259 x 150 box across the head of the card,
-         above the text and never moving. It is transparent but for a
-         translucent tint of the paper, so the lattice behind the grid reads
-         through it, and the plate — a crop drawn at build time by
-         generator/thumbs.mjs — fades in OVER the tint when the card is hovered
-         or focused. Nothing in the card moves either way. */
+         above the text and never moving. Its tint is the LIGHTER of the card's
+         two — 28% paper against the body's 76% — so it reads as a window
+         within the panel: the lattice is plainest here, and the plate — a crop
+         drawn at build time by generator/thumbs.mjs — fades in OVER the tint
+         when the card is hovered or focused. Nothing in the card moves either
+         way. */
       .card-pic {
         display: block;
         position: relative;
@@ -792,14 +793,18 @@
         min-height: 0;
         max-width: none;
       }
-      /* THE BODY — the card's paper, and the only opaque part of the card. */
+      /* THE BODY — the card's paper, carried TRANSLUCENT so the lattice reads
+         behind the writing as well as through the window. 76% over `--ground`
+         leaves the caption at `--ink-soft` at 5.36:1 light and 6.24:1 dark
+         (5.07 / 6.91 hovered, 5.03 / 5.64 where a lattice line runs under the
+         letters), so the writing keeps its contrast either theme. */
       .card-body {
-        background: var(--paper);
+        background: color-mix(in oklab, var(--paper) 76%, transparent);
         padding: 14px 16px 15px;
       }
       .card:hover .card-body,
       .card:has(.card-go.is-active) .card-body {
-        background: var(--paper-2);
+        background: color-mix(in oklab, var(--paper-2) 76%, transparent);
       }
       .card .n {
         font-family: var(--data);

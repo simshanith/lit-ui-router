@@ -4,15 +4,16 @@
  * `<atlas-lattice>` fills its field wrapper and draws ONE wireframe cube
  * lattice on a canvas: a lattice of unit cubes on the ground, seen from a
  * projection that is deliberately NOT the plates' 30 degree isometric — a
- * turn about the vertical axis (one full turn every 90 s) under a 21 degree
+ * turn about the vertical axis (one full turn every 240 s) under a 21 degree
  * pitch, orthographic, so the lattice reads as a different space from the
- * drawings it sits behind.
+ * drawings it sits behind. The cubes are wide and the line is dotted, so the
+ * field is a sparse measure rather than a mesh.
  *
- * WINDOW-ONLY. Each frame is clipped to the union of the cards' `.card-pic`
- * rects, so the lattice paints inside the windows and nowhere else — the
- * gaps between cards, and the empty tracks of a short last row, stay ground.
- * One field, one set of world coordinates: a line that leaves one window
- * enters the next on its true path.
+ * CARD-ONLY. Each frame is clipped to the union of the whole `.card` rects,
+ * so the lattice paints under the card — window AND text, the body's paper
+ * being translucent — and nowhere else: the gaps between cards, and the empty
+ * tracks of a short last row, stay ground. One field, one set of world
+ * coordinates: a line that leaves one card enters the next on its true path.
  *
  * THE CANVAS IS ONE VIEWPORT TALL and sticky inside the field (see the CSS in
  * index.html), so a grid four screens long costs one screen of pixels. The
@@ -28,18 +29,20 @@
 const TAG = 'atlas-lattice';
 
 /** one full turn about the vertical axis */
-const TURN_MS = 90_000;
+const TURN_MS = 240_000;
 /** the pitch, well off the plates' isometric */
 const PITCH = (21 * Math.PI) / 180;
 /** the angle the still frame holds under `prefers-reduced-motion: reduce` */
 const REST_YAW = (37 * Math.PI) / 180;
 /** the cube: its footprint on the ground and its height, in css px */
-const CELL = 124;
-const RISE = 96;
+const CELL = 220;
+const RISE = 160;
 /** cubes stacked, so LEVELS + 1 planes of lattice points */
 const LEVELS = 2;
 /** the house line: --ink, this faint, 1px, round joins */
-const INK_ALPHA = 0.22;
+const INK_ALPHA = 0.16;
+/** dotted: a 1px dash under a round cap is a round point, every 4 px */
+const DASH: [number, number] = [1, 3];
 
 const SIN_P = Math.sin(PITCH);
 const COS_P = Math.cos(PITCH);
@@ -159,10 +162,10 @@ class AtlasLattice extends HTMLElement {
     this.#draw(now);
   };
 
-  /** The windows, in the field's own coordinates. */
+  /** The cards, in the field's own coordinates. */
   #measure(): void {
     const field = this.getBoundingClientRect();
-    const boxes = this.parentElement?.querySelectorAll('.card-pic') ?? [];
+    const boxes = this.parentElement?.querySelectorAll('.card') ?? [];
     this.#wins = Array.from(boxes, (box) => {
       const rect = box.getBoundingClientRect();
       return {
@@ -261,6 +264,10 @@ class AtlasLattice extends HTMLElement {
     }
     ctx.globalAlpha = INK_ALPHA;
     ctx.strokeStyle = this.#ink;
+    // The dash phase is fixed, so the dots never crawl frame to frame; they
+    // slide along a segment only as the turn changes its length.
+    ctx.setLineDash(DASH);
+    ctx.lineDashOffset = 0;
     ctx.lineWidth = 1;
     ctx.lineJoin = 'round';
     ctx.lineCap = 'round';

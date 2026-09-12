@@ -605,7 +605,8 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
  * (the Inclusive Components card pattern), so the key block's own filter links
  * are valid interactive content rather than links nested inside a link. Tab
  * order is title, then keys. The text lives in `.card-body`, which carries the
- * card's paper: the card itself is transparent, so its window is a hole.
+ * card's paper, translucent: the lattice reads behind the writing too, and the
+ * window is only the thinner pane of the same panel.
  */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <article class="card">
