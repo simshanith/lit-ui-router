@@ -21,6 +21,7 @@
   "enumMembersFormat": "table",
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
+  "treatWarningsAsErrors": true,
   "externalSymbolLinkMappings": {
     "@uirouter/core": {
       "BaseLocationServices": "https://ui-router.github.io/core/docs/latest/classes/_vanilla_baselocationservice_.baselocationservices.html",

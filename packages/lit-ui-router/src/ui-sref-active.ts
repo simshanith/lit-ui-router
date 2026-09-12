@@ -63,7 +63,7 @@ export enum TransitionStateChange {
  * with links) and the current router state.
  *
  * @see {@link uiSrefActive}
- * @see [[TargetState]]
+ * @see {@link TargetState}
  *
  * @category types
  */
@@ -313,7 +313,7 @@ type deregisterFn = () => void;
  * 2. **Container mode**: Automatically watch nested uiSref directives
  *
  * @see {@link uiSrefActive} for the public API
- * @see [[AsyncDirective]]
+ * @see {@link AsyncDirective}
  * @see {@link SrefStatus}
  *
  * @category directives
@@ -805,7 +805,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * `ariaCurrentValue` explicitly.
  *
  * **Arguments:**
- * - `params` - Configuration object (see [[UiSrefActiveParams]]) with activeClasses, exactClasses, ariaCurrentValue, and optional state/params
+ * - `params` - Configuration object (see {@link UiSrefActiveParams}) with activeClasses, exactClasses, ariaCurrentValue, and optional state/params
  *
  * @example Basic usage with nested uiSref
  * ```ts
@@ -843,7 +843,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  * `
  * ```
  *
- * @example Customizing or disabling `aria-current`
+ * @example Customizing or disabling aria-current
  * ```ts
  * html`
  *   <!-- a step in a multi-step flow -->
@@ -906,7 +906,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
  *
  * @see {@link SrefStatus}
  * @see {@link UiSrefActiveParams}
- * @see [[DirectiveResult]]
+ * @see {@link DirectiveResult}
  *
  * @category directives
  */

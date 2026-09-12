@@ -6,6 +6,8 @@ import {
   isNumber,
   TargetState,
 } from '@uirouter/core';
+// eslint-disable-next-line no-unused-vars -- {@link} doc target
+import type { StateService } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import type { DirectiveResult } from 'lit/directive.js';
@@ -241,8 +243,8 @@ export function clickBelongsToBrowser(
  * by setting the `href` attribute and handling click events.
  *
  * @see {@link uiSref} for the public API
- * @see [[AsyncDirective]]
- * @see [[StateService.go]]
+ * @see {@link AsyncDirective}
+ * @see {@link StateService.go}
  *
  * @category directives
  */
@@ -515,8 +517,8 @@ export class UiSrefDirective extends AsyncDirective {
  *
  * **Arguments:**
  * - `state` - The target state name (can be relative like `.child` or `^.sibling`)
- * - `params` - Optional state parameters (see [[RawParams]])
- * - `options` - Optional transition options (see [[TransitionOptions]]), plus
+ * - `params` - Optional state parameters (see {@link RawParams})
+ * - `options` - Optional transition options (see {@link TransitionOptions}), plus
  *   this directive's own (see {@link UiSrefOptions})
  *
  * @example Basic usage
@@ -553,10 +555,10 @@ export class UiSrefDirective extends AsyncDirective {
  * html`<button ${uiSref('.new', {}, { assignHref: 'auto' })}>New</button>`
  * ```
  *
- * @see [[RawParams]]
- * @see [[TransitionOptions]]
+ * @see {@link RawParams}
+ * @see {@link TransitionOptions}
  * @see {@link UiSrefOptions}
- * @see [[DirectiveResult]]
+ * @see {@link DirectiveResult}
  *
  * @category directives
  */

@@ -1,8 +1,8 @@
 /**
  * TypeDoc plugin for lit-ui-router.
  *
- * This plugin handles Lit-specific patterns, adds cross-links to @uirouter/core documentation,
- * and reorganizes output by category (core, components, directives, hooks, types).
+ * Aggregates custom-elements-manifest tags into rendered Slots/Events lists and
+ * reorganizes the category-router output (index pages, sidebar titles/links).
  *
  * @packageDocumentation
  */
@@ -13,17 +13,12 @@ import {
   Context,
   DeclarationReflection,
   Reflection,
-  ReflectionKind,
   Comment,
   CommentTag,
   RendererEvent,
 } from 'typedoc';
-import { EXTERNAL_SYMBOLS } from './symbols/index.js';
 import * as fs from 'fs';
 import * as path from 'path';
-
-const SYMBOL_LINK_REGEX =
-  /\[\[([A-Z][a-zA-Z0-9]*(?:\.[a-zA-Z_][a-zA-Z0-9_]*)?)\]\]/g;
 
 /** Shape of the entries in typedoc-plugin-markdown's typedoc-sidebar.json. */
 interface SidebarItem {
@@ -32,9 +27,7 @@ interface SidebarItem {
   collapsed?: boolean;
 }
 
-/**
- * Category definitions for organizing output.
- */
+/** Categories the `router: "category"` output is organized into. */
 type Category =
   | 'core'
   | 'components'
@@ -44,71 +37,7 @@ type Category =
   | 'types'
   | 'other';
 
-/** Backs `[[SymbolName]]` local-page links; categories come from @category tags in source. */
-const SYMBOL_CATEGORIES: Record<string, Category> = {
-  // Core
-  UIRouterLit: 'core',
-  // Components
-  UIRouterLitElement: 'components',
-  UiView: 'components',
-  // Directives
-  uiSref: 'directives',
-  uiSrefActive: 'directives',
-  UiSrefDirective: 'directives',
-  UiSrefActiveDirective: 'directives',
-  srefHref: 'directives',
-  srefActiveClass: 'directives',
-  srefAriaCurrent: 'directives',
-  SrefHrefDirective: 'directives',
-  SrefActiveClassDirective: 'directives',
-  SrefAriaCurrentDirective: 'directives',
-  SrefStatusDirective: 'directives',
-  // Controllers
-  TransitionController: 'controllers',
-  TransitionControllerOptions: 'controllers',
-  TransitionEventType: 'controllers',
-  TransitionCallback: 'controllers',
-  TransitionCallbackReason: 'controllers',
-  SrefStatusController: 'controllers',
-  SrefStatusControllerOptions: 'controllers',
-  // Hooks
-  UiOnExit: 'hooks',
-  UiOnParamsChanged: 'hooks',
-  // Types
-  LitStateDeclaration: 'types',
-  LitViewDeclaration: 'types',
-  LitViewDeclarationElement: 'types',
-  LitViewDeclarationObject: 'types',
-  LitViewDeclarationTemplate: 'types',
-  NormalizedLitViewDeclaration: 'types',
-  RoutedLitElement: 'types',
-  RoutedLitComponent: 'types',
-  RoutedLitTemplate: 'types',
-  SrefStatus: 'types',
-  SrefTargetParams: 'types',
-  SrefActiveClassParams: 'types',
-  SrefAriaCurrentParams: 'types',
-  UiSrefActiveParams: 'types',
-  UIViewInjectedProps: 'types',
-  UIViewResolves: 'types',
-  UiViewAddress: 'types',
-  deregisterFn: 'types',
-  DefaultResolvesType: 'types',
-};
-
-/**
- * Mapping of local symbol names to their category-based paths.
- */
-const LOCAL_SYMBOL_PAGES: Record<string, string> = {};
-
-// Build LOCAL_SYMBOL_PAGES from SYMBOL_CATEGORIES
-for (const [symbol, category] of Object.entries(SYMBOL_CATEGORIES)) {
-  LOCAL_SYMBOL_PAGES[symbol] = `${category}/`;
-}
-
-/**
- * Category metadata for index generation.
- */
+/** Titles and blurbs for the generated category index pages. */
 const CATEGORY_META: Record<Category, { title: string; description: string }> =
   {
     core: {
@@ -141,101 +70,13 @@ const CATEGORY_META: Record<Category, { title: string; description: string }> =
     },
   };
 
-/**
- * Build link target URL, handling local vs external links differently.
- */
-function buildLinkTarget(
-  url: string,
-  propertyName: string,
-  symbolName: string,
-): string {
-  const prop = propertyName ? propertyName.substring(1) : '';
-
-  if (url.startsWith('#')) {
-    const folder = LOCAL_SYMBOL_PAGES[symbolName] || '';
-    const basePath = `../${folder}${symbolName}`;
-    return prop ? `${basePath}#${prop}` : basePath;
-  }
-  return prop ? `${url}#${prop}` : url;
-}
-
-/**
- * Generate anchor HTML, omitting target for local links.
- */
-function buildAnchorHtml(href: string, displayName: string): string {
-  const isLocal = !href.startsWith('http://') && !href.startsWith('https://');
-  if (isLocal) {
-    return `<a href="${href}">${displayName}</a>`;
-  }
-  return `<a href="${href}" target="_blank" rel="noreferrer">${displayName}</a>`;
-}
-
-/**
- * Convert flat symbol map to TypeDoc's externalSymbolLinkMappings format.
- */
-function buildExternalSymbolMappings(
-  symbolMap: Record<string, string>,
-): Record<string, Record<string, string>> {
-  const mappings: Record<string, Record<string, string>> = {};
-
-  for (const [symbolName, url] of Object.entries(symbolMap)) {
-    if (!mappings[symbolName]) {
-      mappings[symbolName] = {};
-    }
-    mappings[symbolName][''] = url;
-  }
-
-  return mappings;
-}
-
-/**
- * Flatten an `externalSymbolLinkMappings` map to `symbolName -> url`.
- *
- * Two shapes land in that option: TypeDoc's own `{ package: { symbol: url } }`
- * (what `typedoc.json` declares) and this plugin's `{ symbol: { '': url } }`.
- * Both feed `[[SymbolName]]` resolution, which is keyed by symbol alone.
- */
-function flattenExternalSymbolMappings(
-  mappings: Record<string, Record<string, string>>,
-): Record<string, string> {
-  const flat: Record<string, string> = {};
-
-  for (const [outer, entries] of Object.entries(mappings)) {
-    for (const [inner, url] of Object.entries(entries)) {
-      if (!url || inner === '*') continue;
-      flat[inner === '' ? outer : inner] = url;
-    }
-  }
-
-  return flat;
-}
-
-/**
- * Load the lit-ui-router TypeDoc plugin.
- */
+/** Load the lit-ui-router TypeDoc plugin. */
 export function load(app: Application): void {
   app.logger.info('[lit-ui-router] Plugin loaded');
-
-  // Get any custom symbol mappings from typedoc.json options
-  const customMappings =
-    app.options.getValue('externalSymbolLinkMappings') || {};
-
-  // Merge built-in symbols with custom ones
-  const mergedMappings = {
-    ...buildExternalSymbolMappings(EXTERNAL_SYMBOLS),
-    ...customMappings,
-  };
-
-  app.options.setValue('externalSymbolLinkMappings', mergedMappings);
 
   // Aggregate custom-elements-manifest tags into rendered Slots/Events lists
   app.converter.on(Converter.EVENT_RESOLVE_END, (context: Context) => {
     handleCemTags(context);
-  });
-
-  // Handle [[SymbolName]] link conversion
-  app.converter.on(Converter.EVENT_RESOLVE_END, (context: Context) => {
-    handleSymbolLinks(context, app);
   });
 
   // Post-process output to reorganize by category
@@ -245,21 +86,9 @@ export function load(app: Application): void {
   });
 }
 
-/**
- * Generate index.md files for each category.
- */
+/** Generate an index.md for each category folder. */
 function generateCategoryIndexFiles(outDir: string, app: Application): void {
-  const categories: Category[] = [
-    'core',
-    'components',
-    'directives',
-    'controllers',
-    'hooks',
-    'types',
-    'other',
-  ];
-
-  for (const category of categories) {
+  for (const category of Object.keys(CATEGORY_META) as Category[]) {
     const categoryDir = path.join(outDir, category);
     if (!fs.existsSync(categoryDir)) continue;
 
@@ -389,9 +218,7 @@ function aggregateCemTags(comment: Comment): void {
   }
 }
 
-/**
- * Update typedoc-sidebar.json with new paths.
- */
+/** Retitle and relink the sidebar's category entries. */
 function updateSidebarJson(outDir: string, app: Application): void {
   const sidebarPath = path.join(outDir, 'typedoc-sidebar.json');
   if (!fs.existsSync(sidebarPath)) return;
@@ -414,81 +241,4 @@ function updateSidebarJson(outDir: string, app: Application): void {
 
   fs.writeFileSync(sidebarPath, JSON.stringify(sidebar, null, 2));
   app.logger.verbose('[lit-ui-router] Updated typedoc-sidebar.json');
-}
-
-/**
- * Handle [[SymbolName]] links in JSDoc comments.
- */
-function handleSymbolLinks(context: Context, app: Application): void {
-  const customMappings =
-    app.options.getValue('externalSymbolLinkMappings') || {};
-  const symbolMap: Record<string, string> = {
-    ...EXTERNAL_SYMBOLS,
-    ...flattenExternalSymbolMappings(customMappings),
-  };
-
-  // The project registry holds every reflection, including the ones a
-  // children-only walk misses: accessor get/set signatures, parameters, and
-  // the signatures hanging off a function type alias's declaration.
-  for (const reflection of context.project.getReflectionsByKind(
-    ReflectionKind.All,
-  )) {
-    if (reflection.comment) {
-      processComment(reflection.comment, symbolMap);
-    }
-  }
-}
-
-/**
- * Process a comment object and convert [[SymbolName]] patterns.
- */
-function processComment(
-  comment: Comment,
-  symbolMap: Record<string, string>,
-): void {
-  const processText = (text: string): string => {
-    if (!SYMBOL_LINK_REGEX.test(text)) return text;
-
-    return text.replace(SYMBOL_LINK_REGEX, (_match, symbolName: string) => {
-      const dotIndex = symbolName.indexOf('.');
-      const baseName =
-        dotIndex === -1 ? symbolName : symbolName.substring(0, dotIndex);
-      const propertyName =
-        dotIndex === -1 ? '' : symbolName.substring(dotIndex);
-
-      if (Object.hasOwnProperty.call(symbolMap, baseName)) {
-        const url = symbolMap[baseName];
-        const linkTarget = buildLinkTarget(url, propertyName, baseName);
-        return buildAnchorHtml(linkTarget, symbolName);
-      }
-
-      if (Object.hasOwnProperty.call(LOCAL_SYMBOL_PAGES, baseName)) {
-        const folder = LOCAL_SYMBOL_PAGES[baseName];
-        const prop = propertyName ? propertyName.substring(1) : '';
-        const basePath = `../${folder}${baseName}`;
-        const href = prop ? `${basePath}#${prop}` : basePath;
-        return `<a href="${href}">${symbolName}</a>`;
-      }
-
-      return symbolName;
-    });
-  };
-
-  if (comment.summary) {
-    for (const content of comment.summary) {
-      if (content.text) {
-        content.text = processText(content.text);
-      }
-    }
-  }
-
-  if (comment.blockTags) {
-    for (const blockTag of comment.blockTags) {
-      for (const content of blockTag.content) {
-        if (content.text) {
-          content.text = processText(content.text);
-        }
-      }
-    }
-  }
 }
