@@ -77,22 +77,21 @@ the stager and keeps the Google links: its host allows that origin and no other.
 LOADED FACES readout reports which family actually rendered (ADOBE / STAND-IN / SYSTEM), and its
 GLYPH SIZE readout measures the data face against the mono it replaces.
 
-**The article, and the two wordmarks.** Almost every title in the set begins with THE. On a sheet
+**The article, and the wordmark.** Almost every title in the set begins with THE. On a sheet
 title and on a cover card it is drawn as `sup.art` (in `sheets/atlas.css`, from
 `generator/chrome.mjs`): the word kept, set as a lowercase superior in the data face at 0.6em, soft
 ink — no kit glyph, so the site, the flat set and the artifact draw it identically. The plates'
 title block is the one exception: its SHEET TITLE field uses `.art-inline` instead, the same word at
 the value's own size on its own baseline, because a ledger field is read as a value, not a headline.
 
-The atlas's own name has exactly TWO variants. The FULL wordmark is plain uppercase
-`THE ALTITUDE ATLAS` in the display face, and it belongs to the rail head and the cover title, so the
-homepage says the name once in one voice. The CONDENSED wordmark is the ledger name — the SAME
-display face for the name (`.project-mark`, at a measured 1.06em so its cap sits on the ledger
-line's), with the article as the same `sup.art` superior the sheet titles use — and it belongs to
-every sheet-head PROJECT line (`the ALTITUDE ATLAS — DRAWING SET` / `— INTERACTIVE PLATE`) and to
-the title block's PROJECT value. It needs no kit face, so it draws identically on the site, the flat
-set and the artifact. (An HWT Catchwords glyph was tried for the article and dropped 2026-09-12.)
-`titles.ts`, `<title>` and every aria name keep the plain `THE ALTITUDE ATLAS`.
+The atlas's own name has ONE form: plain uppercase `THE ALTITUDE ATLAS` in the display face, nothing
+set apart. The rail head and the cover title carry it as text. The ledger sites — every sheet-head
+PROJECT line (`THE ALTITUDE ATLAS — DRAWING SET` / `— INTERACTIVE PLATE`) and the title block's
+PROJECT value — draw the same name wrapped in `.project-mark`, at a measured 1.06em so its cap sits
+on the ledger line's; only the size differs by site. The mark needs no kit glyph beyond the display
+face, so it draws alike on the site, the flat set and the artifact. (An HWT Catchwords glyph, and
+then a superior `the`, were both tried for the ledger article and dropped.) `titles.ts`, `<title>`
+and every aria name keep the same plain `THE ALTITUDE ATLAS`.
 
 ## Where it lives
 

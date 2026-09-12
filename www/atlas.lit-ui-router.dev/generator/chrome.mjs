@@ -83,8 +83,8 @@ export const CSS = `
    ONE number covers both hosts.
 
    --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
-              and the condensed wordmark's own name (.project-mark) in every
-              sheet-head PROJECT line and title block PROJECT value
+              and the wordmark (.project-mark) in every sheet-head PROJECT line
+              and title block PROJECT value
    --title    sheet titles, card and prose headings, rail entry titles
    --data     kickers, tracked caps, numbers, schedules, the title block
    --prose    running text, figcaptions, general notes, About. Source Serif
@@ -198,18 +198,16 @@ sup.art {
      CITY" to a reader and never breaks after the article); this is the rest */
   margin-right: 0.1em;
 }
-/* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
-   is the full uppercase wordmark in the display face, which the rail head and
-   the cover title carry plain. This one is the LEDGER name: the article as the
-   data-face superior (sup.art, above) and the name in the display face
-   (.project-mark, below). Two sites carry it — every sheet-head PROJECT line
-   and the title block's PROJECT value — and both emit the same PROJECT_MARK,
-   so it draws identically on every host.
-   A kit catchword was tried for the article and dropped 2026-09-12. */
-/* THE NAME, wherever the wordmark is drawn. The face travels with the MARK,
-   not with the site: the sheet-head ledger line and the title block's PROJECT
-   value both emit PROJECT_MARK, so both set ALTITUDE ATLAS in Eaglefeather at
-   the weight the rail head and the cover title use.
+/* THE WORDMARK — the atlas has ONE name for itself and draws it one way:
+   plain uppercase THE ALTITUDE ATLAS in the display face, nothing set apart.
+   The rail head and the cover title carry it as text; the ledger sites — every
+   sheet-head PROJECT line and the title block's PROJECT value — emit
+   PROJECT_MARK, which wraps the same name in .project-mark so the face travels
+   with the mark. Only the size differs by site. */
+/* THE NAME, wherever the wordmark is drawn in a ledger line. The face travels
+   with the MARK, not with the site: the sheet-head line and the title block's
+   PROJECT value both emit PROJECT_MARK, so both set THE ALTITUDE ATLAS in
+   Eaglefeather at the weight the rail head and the cover title use.
    1.06em, MEASURED not guessed: Eaglefeather at the resolved 700 caps at 0.651
    of its em and DIN 2014 at 0.690, so 0.690/0.651 = 1.06 is the size at which
    the name's cap sits on the ledger's. In a sheet head that is 12.19px of
@@ -397,9 +395,8 @@ code, kbd, samp { font-family: var(--code); }
   margin-bottom: 2px;
 }
 /* The two values that carry the atlas's own name, and the sheet's. PROJECT is
-   the CONDENSED wordmark, and its NAME is the display face — the same wordmark
-   the sheet-head line above it now carries; only the article beside it is the
-   ledger's. */
+   the wordmark, whole and uppercase in the display face — the same wordmark the
+   sheet-head line above it carries, at the size this field asks for. */
 .titleblock .dsp {
   font-family: var(--display);
   font-size: 13.5px;
@@ -531,14 +528,12 @@ export const articleTitleInline = (title = '') =>
   String(title).replace(/^THE\s+/, '<span class="art-inline">the&nbsp;</span>');
 
 /**
- * The project name AS DRAWN — the condensed wordmark (see `.project-mark`).
- * Plain `PROJECT` stays for `<title>`, aria names and the rail's wordmark.
+ * The project name AS DRAWN — the wordmark (see `.project-mark`): the whole
+ * name, uppercase, in the display face. Plain `PROJECT` stays for `<title>`,
+ * aria names and the rail's wordmark, which need no markup.
  * Twins in the app: `PROJECT_MARK` in app/src/views.ts and app/prerender.ts.
  */
-export const PROJECT_MARK = PROJECT.replace(
-  /^THE\s+(.+)$/,
-  '<sup class="art">the&nbsp;</sup><span class="project-mark">$1</span>',
-);
+export const PROJECT_MARK = `<span class="project-mark">${PROJECT}</span>`;
 
 export function titleBlock(sheet) {
   return `<div class="titleblock" aria-label="title block">

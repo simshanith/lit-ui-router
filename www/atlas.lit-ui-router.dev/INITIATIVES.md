@@ -321,13 +321,14 @@ sitting); order is dependency order.
   "i miss uppercase THE in THE ALTITUDE ATLAS i prefer that consistency … right so we have two
   variants -- condensed with wordmark, used in block and sheet header, full uppercase, used in
   sidebar and homepage". The catchword itself was dropped 2026-09-12 — "just isn't dialed in
-  yet" — so: CONDENSED = the superior `the` (0.6em DIN, lowercase) + ALTITUDE ATLAS in the
-  DISPLAY face ("i do want eaglefeather for altitude atlas everywhere in block and project
-  title etc" — `.project-mark`, 1.06em so its cap
-  matches the ledger's) on the sheet header line and the title block's PROJECT field; FULL UPPERCASE = THE ALTITUDE
-  ATLAS in the display face on the rail head and the cover title; the superior stays on sheet
-  titles and cards; the title block's SHEET TITLE sets `the` inline, lowercase DIN, same size
-  and baseline. Never re-propose the rail article.
+  yet", and the superior `the` followed it out of the wordmark on 2026-09-12 ("seems the
+  altitude atlas is back to superior the -- want no special treatment just uppercase everywhere
+  now"). So: ONE wordmark, THE ALTITUDE ATLAS uppercase in the DISPLAY face ("i do want
+  eaglefeather for altitude atlas everywhere in block and project title etc" — `.project-mark`,
+  1.06em so its cap matches the ledger's) at the rail head, the cover title, every sheet header
+  line and the title block's PROJECT field; only the size differs by site. The superior stays on
+  sheet titles and cards; the title block's SHEET TITLE sets `the` inline, lowercase DIN, same
+  size and baseline. Never re-propose the rail article.
 - The sprite study "remains relevant and should be included as a meta appendix in some form
   — roll it in" (Appendix A1). Its pinned note governs every sprite lane, 2D and 3D: walls
   are TRANSLUCENT semi-opaque, never fully opaque, so the girding frame reads through.

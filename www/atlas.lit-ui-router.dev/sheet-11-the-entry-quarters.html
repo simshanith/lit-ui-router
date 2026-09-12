@@ -75,8 +75,8 @@
    ONE number covers both hosts.
 
    --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
-              and the condensed wordmark's own name (.project-mark) in every
-              sheet-head PROJECT line and title block PROJECT value
+              and the wordmark (.project-mark) in every sheet-head PROJECT line
+              and title block PROJECT value
    --title    sheet titles, card and prose headings, rail entry titles
    --data     kickers, tracked caps, numbers, schedules, the title block
    --prose    running text, figcaptions, general notes, About. Source Serif
@@ -190,18 +190,16 @@ sup.art {
      CITY" to a reader and never breaks after the article); this is the rest */
   margin-right: 0.1em;
 }
-/* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
-   is the full uppercase wordmark in the display face, which the rail head and
-   the cover title carry plain. This one is the LEDGER name: the article as the
-   data-face superior (sup.art, above) and the name in the display face
-   (.project-mark, below). Two sites carry it — every sheet-head PROJECT line
-   and the title block's PROJECT value — and both emit the same PROJECT_MARK,
-   so it draws identically on every host.
-   A kit catchword was tried for the article and dropped 2026-09-12. */
-/* THE NAME, wherever the wordmark is drawn. The face travels with the MARK,
-   not with the site: the sheet-head ledger line and the title block's PROJECT
-   value both emit PROJECT_MARK, so both set ALTITUDE ATLAS in Eaglefeather at
-   the weight the rail head and the cover title use.
+/* THE WORDMARK — the atlas has ONE name for itself and draws it one way:
+   plain uppercase THE ALTITUDE ATLAS in the display face, nothing set apart.
+   The rail head and the cover title carry it as text; the ledger sites — every
+   sheet-head PROJECT line and the title block's PROJECT value — emit
+   PROJECT_MARK, which wraps the same name in .project-mark so the face travels
+   with the mark. Only the size differs by site. */
+/* THE NAME, wherever the wordmark is drawn in a ledger line. The face travels
+   with the MARK, not with the site: the sheet-head line and the title block's
+   PROJECT value both emit PROJECT_MARK, so both set THE ALTITUDE ATLAS in
+   Eaglefeather at the weight the rail head and the cover title use.
    1.06em, MEASURED not guessed: Eaglefeather at the resolved 700 caps at 0.651
    of its em and DIN 2014 at 0.690, so 0.690/0.651 = 1.06 is the size at which
    the name's cap sits on the ledger's. In a sheet head that is 12.19px of
@@ -389,9 +387,8 @@ code, kbd, samp { font-family: var(--code); }
   margin-bottom: 2px;
 }
 /* The two values that carry the atlas's own name, and the sheet's. PROJECT is
-   the CONDENSED wordmark, and its NAME is the display face — the same wordmark
-   the sheet-head line above it now carries; only the article beside it is the
-   ledger's. */
+   the wordmark, whole and uppercase in the display face — the same wordmark the
+   sheet-head line above it carries, at the size this field asks for. */
 .titleblock .dsp {
   font-family: var(--display);
   font-size: 13.5px;
@@ -476,7 +473,7 @@ a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 </style>
 <section class="sheet" id="sheet-11" aria-label="Sheet 11: THE ENTRY QUARTERS">
-  <div class="sheet-head"><span class="proj"><sup class="art">the&nbsp;</sup><span class="project-mark">ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 11 / 14</span></div>
+  <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 11 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>ENTRY QUARTERS</h2>
   <p class="sheet-sub">ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · 16 doors in 5 package quarters, footprint from minified bytes and height from gzipped, dependencies external — counted at origin/main @ 2ac53a0 (2026-09-11)</p>
   <figure>
@@ -737,7 +734,7 @@ a { color: var(--accent); }
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="8" y="3" width="18" height="12" class="sk fa"/></svg></td><td>a lit-ui-router door</td></tr>
 <tr><td><svg viewBox="0 0 48 18" width="48" height="18" aria-hidden="true"><rect x="4" y="2" width="26" height="13" class="skf fnone" stroke-dasharray="4 3"/></svg></td><td>quarter = one published package · 16 doors, 5 packages</td></tr></table>
       <div class="titleblock" aria-label="title block">
-  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><sup class="art">the&nbsp;</sup><span class="project-mark">ALTITUDE ATLAS</span></span></div>
+  <div class="span2"><span class="fld">PROJECT</span><span class="dsp"><span class="project-mark">THE ALTITUDE ATLAS</span></span></div>
   <div class="span2"><span class="fld">SHEET TITLE</span><span class="ttl"><span class="art-inline">the&nbsp;</span>ENTRY QUARTERS</span></div>
   <div><span class="fld">SCALE</span>FIVE PACKAGES</div>
   <div><span class="fld">FORM</span>ENTRY QUARTERS</div>

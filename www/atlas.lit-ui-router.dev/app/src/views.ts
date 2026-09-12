@@ -60,16 +60,14 @@ const ACTIVE = { activeClasses: ['is-active'] };
 const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
 
 /**
- * THE CONDENSED WORDMARK — the atlas's LEDGER name, for the sheet-head PROJECT
- * line and the plates' title blocks: the NAME in the display face
- * (`.project-mark` in sheets/atlas.css, so the face travels with the mark, not
- * with the site), with the article drawn as the data-face superior (`sup.art`),
- * the same on every host.
- * The rail head and the cover title carry the OTHER name — the full uppercase
- * wordmark in the display face, plain, with nothing set apart.
+ * THE WORDMARK — the atlas's one name for itself, plain uppercase THE ALTITUDE
+ * ATLAS in the display face. The rail head and the cover title carry it as
+ * text; the ledger sites — the sheet-head PROJECT line and the plates' title
+ * blocks — wrap it in `.project-mark` (styled in sheets/atlas.css, so the face
+ * travels with the mark, not with the site) and only the size differs.
  * Twin: `PROJECT_MARK` in generator/chrome.mjs and in prerender.ts.
  */
-const PROJECT_MARK: TemplateResult = html`${THE}<span class="project-mark">ALTITUDE ATLAS</span>`;
+const PROJECT_MARK: TemplateResult = html`<span class="project-mark">THE ALTITUDE ATLAS</span>`;
 
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
@@ -679,10 +677,9 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <span class="proj">${PROJECT_MARK} — DRAWING SET</span>
         <span class="shno">${manifest.sheets.length} PLATES / ${manifest.total} SHEETS</span>
       </div>
-      <!-- THE FULL WORDMARK — the same plain uppercase name the rail head carries,
-           in the display face, so the two read as one mark. The condensed variant
-           with the superior article belongs to the sheet head above and the title
-           blocks, and nowhere else. -->
+      <!-- THE WORDMARK — the same plain uppercase name the rail head and the
+           sheet-head line above carry, in the display face, so every site reads
+           as one mark; only the size changes. -->
       <h2 class="cover-title">THE ALTITUDE ATLAS</h2>
       <p class="sheet-sub cover-sub">
         SAME SUBJECT AT EVERY SCALE — THE FORM CHANGES BECAUSE THE TRUTH DOES
