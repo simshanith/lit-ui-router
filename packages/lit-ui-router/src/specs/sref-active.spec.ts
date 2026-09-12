@@ -199,6 +199,38 @@ describe('attribute-part active directives', () => {
       expect(anchor.classList.contains('active')).toBe(true);
     });
 
+    it('toggles `classes` by truthiness, as classMap would', async () => {
+      const link = (locked: boolean) =>
+        html`<a
+          class=${srefActiveClass({
+            state: 'users',
+            activeClasses: ['active'],
+            classes: { 'nav-link': true, locked, active: locked },
+          })}
+          >Users</a
+        >`;
+      const wrapper = await mount(link(false));
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.className.split(/\s+/).filter(Boolean)).toEqual([
+        'nav-link',
+      ]);
+
+      render(link(true), wrapper);
+      await tick();
+      expect(anchor.classList.contains('locked')).toBe(true);
+      // either source may turn a shared name on
+      expect(anchor.classList.contains('active')).toBe(true);
+
+      render(link(false), wrapper);
+      await tick();
+      expect(anchor.classList.contains('locked')).toBe(false);
+      expect(anchor.classList.contains('active')).toBe(false);
+
+      await goTo('users');
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.classList.contains('nav-link')).toBe(true);
+    });
+
     describe('part position', () => {
       const at = (partInfo: PartInfo) => () =>
         new SrefActiveClassDirective(partInfo);
