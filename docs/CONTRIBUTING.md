@@ -104,9 +104,10 @@ another branch is reviewable on request like any other; it used to list `main`
 alone, which is the default branch and so matched nothing, and CodeRabbit
 declined every stacked PR whether or not it was labelled.
 
-The older `no-coderabbit` opt-out and the `release` exclusion still sit in the
-config. Neither does anything now that a review has to be asked for; they stay
-until the new labels have proven out.
+The `release` exclusion is still listed. It does nothing while review is opt-in,
+but the label is applied by the release automation, so it stays as the standing
+exclusion if this ever flips back to opt-out. The older `no-coderabbit` opt-out
+is retired.
 
 Its behaviour lives in [`.coderabbit.yaml`](../.coderabbit.yaml), read from the
 PR's own branch, so a PR may adjust its own review — and a long-lived branch
