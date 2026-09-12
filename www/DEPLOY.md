@@ -137,7 +137,19 @@ The private [`tools/workers-builds`](../tools/workers-builds) package owns
 [`workers-builds-triggers.config.jsonc`](../tools/workers-builds/workers-builds-triggers.config.jsonc), which mirrors
 the dashboard values above plus the declared [build environment variables](#build-environment-variables),
 and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
-(exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
+(exit 1 on drift); `pnpm check:workers-builds -- --apply` updates. Both walk every entry by
+default; `--site <key>` (repeatable, or one comma-separated value) limits the diff and the apply to
+the named entries, and an unknown key is a usage error (exit 2) rather than an empty selection.
+
+The config is keyed by site, one entry per Worker the repo deploys, each naming the `wrangler.jsonc`
+the worker is named in and pinning what it pins, the
+[build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)
+among them, which are what let two sites share one repo. Its shape is documented where it is enforced — the
+file's own comments and the schema in
+[`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
+not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
+entry, so a moved file cannot turn the check green.
+
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
 resolves the worker name to the tag the triggers endpoint is keyed by, and **Workers Builds Configuration:
@@ -156,11 +168,11 @@ From 1Password, two mise tasks wrap `op` over gitignored files that hold `op://`
 of values (no secrets, but the vault layout they encode is personal rather than repo config, so they
 stay untracked). A third task creates both files and the item they point at:
 
-| Task                                      | Reads / writes                                                                      | Reference form | Token at rest               |
-| ----------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | --------------------------- |
-| `mise run cloudflare_item_create`         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env`  | both           | no                          |
-| `mise run cloudflare_login`               | reads `.config/mise/cloudflare.local.env.tmpl`                                      | `{{ op://… }}` | yes, `chmod 600`            |
-| `mise run check_workers_builds [--apply]` | reads whichever exists: the dotenv (via mise) else `.config/mise/cloudflare.op.env` | bare `op://…`  | only if it found the dotenv |
+| Task                                                      | Reads / writes                                                                      | Reference form | Token at rest               |
+| --------------------------------------------------------- | ----------------------------------------------------------------------------------- | -------------- | --------------------------- |
+| `mise run cloudflare_item_create`                         | writes `.config/mise/cloudflare.local.env.tmpl` + `.config/mise/cloudflare.op.env`  | both           | no                          |
+| `mise run cloudflare_login`                               | reads `.config/mise/cloudflare.local.env.tmpl`                                      | `{{ op://… }}` | yes, `chmod 600`            |
+| `mise run check_workers_builds [--site <keys>] [--apply]` | reads whichever exists: the dotenv (via mise) else `.config/mise/cloudflare.op.env` | bare `op://…`  | only if it found the dotenv |
 
 `cloudflare_item_create` is the one-time bootstrap: it creates a Secure Note (`--vault Private`,
 `--title lit-ui-router-workers-builds`) whose two fields are named after the variables and left

@@ -12,6 +12,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+
 import { buildSteps } from './cloudflare-build.ts';
 import { DEPLOY_MODES } from './cloudflare-deploy.ts';
 import {
@@ -19,8 +21,10 @@ import {
   type Trigger,
   classifyTrigger,
   desiredStateFromConfig,
+  desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
+  selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 
@@ -39,8 +43,8 @@ const { triggers, driftScenario } = JSON.parse(
 ) as Fixtures;
 
 // The diff tests run against the real source-of-truth config, so they also
-// prove it parses and validates.
-const desired = desiredStateFromConfig(
+// prove it parses and validates. The flagship is the entry they diff against.
+const workers = desiredWorkersFromConfig(
   parseJsonc(
     await readFile(
       join(import.meta.dirname, 'workers-builds-triggers.config.jsonc'),
@@ -48,6 +52,9 @@ const desired = desiredStateFromConfig(
     ),
   ),
 );
+const flagship = workers.find((worker) => worker.site === 'lit-ui-router.dev');
+assert.ok(flagship, 'no lit-ui-router.dev entry in the trigger config');
+const desired = flagship;
 
 const withEnvironment = (
   trigger: Trigger,
@@ -65,17 +72,28 @@ const declaredPreviewLive: NonNullable<Trigger['environment_variables']> =
   );
 
 describe('parseJsonc', () => {
-  it('parses the site wrangler.jsonc (comments + trailing commas)', async () => {
-    const raw = await readFile(
-      join(
-        import.meta.dirname,
-        '..',
-        '..',
-        'www/lit-ui-router.dev/wrangler.jsonc',
-      ),
-      'utf8',
+  // Every entry's wranglerConfig has to name a real file with a real name: the
+  // shell reads the worker name out of it rather than restating it in config.
+  it('resolves every configured wranglerConfig to a worker name', async () => {
+    for (const worker of workers) {
+      const raw = await readFile(
+        join(workspaceRoot, worker.wranglerConfig),
+        'utf8',
+      );
+      assert.ok(workerNameFromConfig(parseJsonc(raw)));
+    }
+    assert.equal(
+      desired.wranglerConfig,
+      'www/lit-ui-router.dev/wrangler.jsonc',
     );
-    assert.equal(workerNameFromConfig(parseJsonc(raw)), 'lit-ui-router');
+    assert.equal(
+      workerNameFromConfig(
+        parseJsonc(
+          await readFile(join(workspaceRoot, desired.wranglerConfig), 'utf8'),
+        ),
+      ),
+      'lit-ui-router',
+    );
   });
 
   it('throws a clear error on malformed input', () => {
@@ -104,10 +122,7 @@ describe('desiredStateFromConfig', () => {
   // rather than grepped out of the source.
   it('pairs the skipped install with an install in every build command', () => {
     // the repo root, not cwd: turbo runs this from the package directory
-    const steps = buildSteps(
-      join(import.meta.dirname, '..', '..'),
-      '/nonexistent/bin',
-    );
+    const steps = buildSteps(workspaceRoot, '/nonexistent/bin');
     assert.ok(
       steps.some(
         ([command, args]) =>
@@ -168,7 +183,7 @@ describe('desiredStateFromConfig', () => {
       assert.equal(path, './tools/workers-builds/cloudflare-deploy.ts');
       assert.equal(arg, mode, `${kind} deploy command names the wrong mode`);
       // The pinned path must name a real file: readFile rejects if it does not.
-      await readFile(join(import.meta.dirname, '..', '..', path), 'utf8');
+      await readFile(join(workspaceRoot, path), 'utf8');
       assert.deepEqual(DEPLOY_MODES[mode], wrangler);
     }
   });
@@ -182,6 +197,22 @@ describe('desiredStateFromConfig', () => {
     assert.throws(
       () => desiredStateFromConfig({ productionBranch: 'main', prod: {} }),
       /prod: Invalid key/,
+    );
+    assert.throws(
+      () => desiredWorkersFromConfig({ sites: {} }),
+      /sites: Invalid key/,
+    );
+  });
+
+  it('requires the wrangler config path that names the worker', () => {
+    assert.throws(
+      () =>
+        desiredStateFromConfig({
+          productionBranch: 'main',
+          production: {},
+          preview: {},
+        }),
+      /wranglerConfig: Invalid key: Expected "wranglerConfig"/,
     );
   });
 
@@ -197,7 +228,11 @@ describe('desiredStateFromConfig', () => {
   });
 
   it('rejects typoed or mistyped pinnable fields', () => {
-    const base = { productionBranch: 'main', preview: {} };
+    const base = {
+      wranglerConfig: 'www/lit-ui-router.dev/wrangler.jsonc',
+      productionBranch: 'main',
+      preview: {},
+    };
     assert.throws(
       () =>
         desiredStateFromConfig({
@@ -214,7 +249,11 @@ describe('desiredStateFromConfig', () => {
   });
 
   it('rejects invalid environment variable keys and values', () => {
-    const base = { productionBranch: 'main', preview: {} };
+    const base = {
+      wranglerConfig: 'www/lit-ui-router.dev/wrangler.jsonc',
+      productionBranch: 'main',
+      preview: {},
+    };
     assert.throws(
       () =>
         desiredStateFromConfig({
@@ -230,6 +269,33 @@ describe('desiredStateFromConfig', () => {
           production: { environment_variables: { OK: 1 } },
         }),
       /production\.environment_variables\.OK: Invalid type/,
+    );
+  });
+});
+
+describe('selectWorkers', () => {
+  const two = [
+    { ...desired, site: 'lit-ui-router.dev' },
+    { ...desired, site: 'atlas.lit-ui-router.dev' },
+  ];
+
+  it('returns every worker when nothing is selected', () => {
+    assert.deepEqual(selectWorkers(two, []), two);
+  });
+
+  it('keeps config order regardless of selection order', () => {
+    assert.deepEqual(
+      selectWorkers(two, ['atlas.lit-ui-router.dev', 'lit-ui-router.dev']),
+      two,
+    );
+    assert.deepEqual(selectWorkers(two, ['atlas.lit-ui-router.dev']), [two[1]]);
+  });
+
+  // A typo must never select nothing: under --apply that reads as in sync.
+  it('throws on an unknown site, naming the configured ones', () => {
+    assert.throws(
+      () => selectWorkers(two, ['lit-ui-router.dev', 'atlas']),
+      /unknown site\(s\): atlas — configured: lit-ui-router\.dev, atlas\.lit-ui-router\.dev/,
     );
   });
 });
@@ -371,6 +437,60 @@ describe('diffTriggers', () => {
     assert.deepEqual(drifts, []);
     assert.match(report.text, /refusing to overwrite/);
     assert.match(report.text, /✗ 1 trigger\(s\) drifted/);
+  });
+
+  // Watch paths are what let a second site share the repo: each worker builds
+  // only on pushes that touch it. The flagship pins neither, so these drive the
+  // diff with a pinned copy of it.
+  it('never drifts on unpinned watch paths, and stays silent when unset', () => {
+    const { report, drifts } = diffTriggers(
+      [triggers.production, triggers.preview],
+      desired,
+    );
+    assert.equal(report.ok, true);
+    assert.deepEqual(drifts, []);
+    assert.doesNotMatch(report.text, /path_includes/);
+  });
+
+  it('shows a live watch path the config does not pin', () => {
+    const watched = {
+      ...triggers.production,
+      path_includes: ['www/lit-ui-router.dev/*'],
+    };
+    const { report, drifts } = diffTriggers(
+      [watched, triggers.preview],
+      desired,
+    );
+    assert.equal(report.ok, true);
+    assert.deepEqual(drifts, []);
+    assert.match(
+      report.text,
+      /path_includes {6}\["www\/lit-ui-router.dev\/\*"\] \(not pinned\)/,
+    );
+  });
+
+  it('patches a pinned watch path whole-list', () => {
+    const pinned = {
+      ...desired,
+      preview: {
+        ...desired.preview,
+        path_includes: ['www/atlas.lit-ui-router.dev/*'],
+      },
+    };
+    const { report, drifts } = diffTriggers(
+      [triggers.production, triggers.preview],
+      pinned,
+    );
+    assert.equal(report.ok, false);
+    assert.deepEqual(drifts, [
+      {
+        trigger_uuid: 'preview-uuid',
+        kind: 'preview',
+        patch: { path_includes: ['www/atlas.lit-ui-router.dev/*'] },
+        environmentPatch: {},
+      },
+    ]);
+    assert.match(report.text, /wanted: \["www\/atlas.lit-ui-router.dev\/\*"\]/);
   });
 
   it('reports a missing trigger kind as unfixable drift', () => {

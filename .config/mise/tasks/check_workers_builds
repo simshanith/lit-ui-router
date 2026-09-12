@@ -10,6 +10,7 @@
 #   otherwise -> op run --env-file, which injects into this process only. The
 #     no-secrets-at-rest path, and the one to prefer for --apply.
 # Deleting cloudflare.local.env is what switches back; the warning below says so.
+#USAGE flag "--site <keys>" help="Only these config keys, comma-separated (default: every entry)"
 #USAGE flag "--apply" help="PATCH drifted triggers — writes production deploy config, needs the Edit scope"
 set -euo pipefail
 
@@ -17,10 +18,18 @@ dir="${MISE_CONFIG_ROOT}/.config/mise"
 dotenv="$dir/cloudflare.local.env"
 openv="$dir/cloudflare.op.env"
 
-# Built as one array so the empty-flag case never expands an empty array.
+# Built as one array so the no-flag case never expands an empty array; the
+# `--` separator is added once, only when a flag follows it.
 cmd=(pnpm check:workers-builds)
+args=()
+if [ -n "${usage_site:-}" ]; then
+  args+=(--site "$usage_site")
+fi
 if [ -n "${usage_apply:-}" ]; then
-  cmd+=(-- --apply)
+  args+=(--apply)
+fi
+if [ "${#args[@]}" -gt 0 ]; then
+  cmd+=(-- "${args[@]}")
 fi
 
 if [ -e "$dotenv" ]; then
