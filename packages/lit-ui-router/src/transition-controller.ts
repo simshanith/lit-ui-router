@@ -8,13 +8,6 @@ import {
   UIRouter,
   UIRouterGlobals,
 } from '@uirouter/core';
-/* eslint-disable no-unused-vars -- {@link} doc targets */
-import type {
-  IHookRegistry,
-  StateService,
-  TransitionService,
-} from '@uirouter/core';
-/* eslint-enable no-unused-vars */
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 
 import { UIRouterLitElement } from './ui-router.js';
@@ -26,7 +19,7 @@ type DeregisterFn = () => void;
  * Transition lifecycle events that a {@link TransitionController} can observe.
  *
  * Each value corresponds to a
- * {@link IHookRegistry | TransitionService hook registry}
+ * {@link "@uirouter/core"!IHookRegistry | TransitionService hook registry}
  * method of the same name.
  *
  * @category controllers
@@ -111,7 +104,7 @@ export interface TransitionControllerOptions {
  * {@link https://lit.dev/docs/composition/controllers/ | ReactiveController}
  * that keeps its host element synchronized with UI-Router transitions.
  *
- * The controller registers {@link TransitionService} hooks (by default
+ * The controller registers {@link "@uirouter/core"!TransitionService | TransitionService} hooks (by default
  * `onSuccess`) when the host connects and calls `host.requestUpdate()`
  * whenever a matching transition event fires — no manual `requestUpdate()`
  * plumbing, no leaked hooks. All registered hooks are deregistered in
@@ -207,7 +200,7 @@ export class TransitionController implements ReactiveController {
   }
 
   /**
-   * Delegates to {@link StateService.includes}: is the state (or glob pattern,
+   * Delegates to {@link "@uirouter/core"!StateService.includes | StateService.includes}: is the state (or glob pattern,
    * e.g. `'admin.**'`) included in the current active state?
    *
    * Returns `false` when no router has been discovered.

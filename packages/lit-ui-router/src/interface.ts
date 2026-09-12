@@ -8,11 +8,6 @@ import {
 } from '@uirouter/core';
 import { TemplateResult, LitElement } from 'lit';
 
-/* eslint-disable no-unused-vars -- {@link} doc targets */
-import type { IHookRegistry, TransitionOptions } from '@uirouter/core';
-import type { UIRouterLit } from './core.js';
-/* eslint-enable no-unused-vars */
-
 /**
  * Interface for components that respond to parameter changes.
  *
@@ -33,7 +28,7 @@ import type { UIRouterLit } from './core.js';
  * }
  * ```
  *
- * @see {@link TransitionOptions}
+ * @see {@link "@uirouter/core"!TransitionOptions | TransitionOptions}
  *
  * @category hooks
  */
@@ -41,7 +36,7 @@ export interface UiOnParamsChanged {
   /**
    * A UI-Router view has a Lit `Component` (see {@link NormalizedLitViewDeclaration.component}).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
-   * These callbacks are similar to Transition Hooks ({@link IHookRegistry}), but are only called if the view/component is currently active.
+   * These callbacks are similar to Transition Hooks ({@link "@uirouter/core"!IHookRegistry | IHookRegistry}), but are only called if the view/component is currently active.
    *
    * The uiOnParamsChanged callback is called when parameter values change.
    *
@@ -89,7 +84,7 @@ export interface UiOnExit {
   /**
    * A UI-Router view has a Lit `Component` (see {@link NormalizedLitViewDeclaration.component}).
    * The `Component` may define component-level hooks which UI-Router will call at the appropriate times.
-   * These callbacks are similar to Transition Hooks ({@link IHookRegistry}), but are only called if the view/component is currently active.
+   * These callbacks are similar to Transition Hooks ({@link "@uirouter/core"!IHookRegistry | IHookRegistry}), but are only called if the view/component is currently active.
    *
    * The uiCanExit callback is called when the routed component's state is about to be exited.
    *
@@ -418,7 +413,7 @@ export interface LitStateDeclaration<
 }
 
 /**
- * The `litViewsBuilder` registered by the {@link UIRouterLit} constructor normalizes config to this internal interface.
+ * The `litViewsBuilder` registered by the {@link !UIRouterLit | UIRouterLit} constructor normalizes config to this internal interface.
  *
  * @category types
  */

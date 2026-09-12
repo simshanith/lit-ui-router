@@ -6,8 +6,6 @@ import {
   isNumber,
   TargetState,
 } from '@uirouter/core';
-// eslint-disable-next-line no-unused-vars -- {@link} doc target
-import type { StateService } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
 import type { DirectiveResult } from 'lit/directive.js';
@@ -244,7 +242,7 @@ export function clickBelongsToBrowser(
  *
  * @see {@link uiSref} for the public API
  * @see {@link AsyncDirective}
- * @see {@link StateService.go}
+ * @see {@link "@uirouter/core"!StateService.go | StateService.go}
  *
  * @category directives
  */
