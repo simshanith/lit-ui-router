@@ -1224,7 +1224,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 ## City — SHEET 7’S CENSUS CITY IN THE ROUND (city-scene.mjs)
 
-- **file** `diagrams/generator/city-scene.mjs` · **id** `city` · **current rev** E
+- **file** `diagrams/generator/city-scene.mjs` · **id** `city` · **current rev** F
 - **basis** (source): `const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;`
 - **subject line / lead** (resolved, present-state — not history):
 
@@ -1252,12 +1252,19 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 > REV E 2026-09-07: THE STAGE IS VIEWPORT-RELATIVE — 80VH, CAPPED AT 1400PX AND FLOORED AT 520 — SO THE MODEL STANDS AS TALL AS A CONTAINED PLATE INSTEAD OF A FIXED 620PX BAND
 
+### REV F — 2026-09-12
+
+**prose paragraph** (`city-scene.mjs`, the basis strip — the `sub` has carried no REV clause since the 2026-09-07 present-state pass):
+
+> The masses are drawn on PAPER, the way the flat plates draw them: faces are opaque and remove what stands behind them, the cap takes the tier's own fill and each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, with the tier's hue pulled 22% of the way in so the tiers still part at a glance.
+
 ### REV (unattributed) — undated in the copy
 
 Two source comments in `city-scene.mjs` describe how `revBlock` files a rev's basis note under its headline. No drawing revision; carried here because the subhead is part of the record.
 
 **Record notes**
 
+- 2026-09-12, REV F: the model takes the plates' own materials. A wall is paper, not a tint — `--paper` (or `--paper-2` where sheet 7's `capCls` is `fp2`) with the tier's hue pulled only `TINT` [0.22] of its old factor, so the tiers still part in the round without the model reading as colour. The right-hand wall (+x/−z, the SVG's right face) carries the tier's hatch over a `--paper-2` stone, the left wall is flat `--paper-2`, and `pr` and `late` take sheet 7's ROOF WASH — the cap hatched like the side; `halt`'s cap stays the red fill and takes none. The hatch is chrome.mjs's four pattern defs in three dimensions (`hx` 6px `--line`, `hd` 5px `--ink-soft`, `hr` 6px `--red-hatch` at .55, `ha` 6px `--accent` at .5) laid in SCREEN space off `gl_FragCoord` through an `onBeforeCompile` hook on the stock `MeshBasicMaterial` — stroke, alpha, rake and spacing all uniforms, one program for the hooked family under a `customProgramCacheKey`, no texture and no new dependency. That is what `patternUnits="userSpaceOnUse"` means: one rake and one spacing on every wall at every azimuth. Severity is the RAKE, `hr` running against the other three, exactly as on the plate; measured on the shot, 5.98 device px across the rake against the defs' 6. Faces are OPAQUE now (`depthWrite`, a hair of polygon offset under the frame), so the model removes hidden surfaces as `iso-hidden.mjs` does flat; only the light lane's slabs and the district plates stay translucent. Frames take sheet 7's edge ladder by COLOUR — `skr` red for halt and pr, `ska` accent for late, `skf` `--line` for report, `sks` soft for off and the annexes, `sk` ink for line — and the shadow slab is 7A's `-sh`: the black wash at .38 with a `--ink` stripe at .30 over it, replacing the old .74 lerp. **Known gap:** the weight half of that ladder (1.3 / 2 / 1 / 1.1 / 1.6 / 1.4) does not travel. A `LineBasicMaterial` carries no width on any desktop GL, and `Line2` would mean a fat-line dependency and a second geometry per frame; the colour alone is the ladder here until that trade is worth taking.
 - 2026-09-12, cabinet refresh at origin/main @ 2ac53a0: the city re-massed off sheet 7's shared universe at the new ref — same 35 members, same placements, new masses.
 - REV A / REV B — not filed. The plate first landed 115e82e 2026-09-03 "city scene — I8 redirected to a three.js isometric city", and no REV A or REV B clause was ever written · REV C — 2026-09-03 (8a4bdc3 "the shadow survey as a TEST LIGHT lane"), undated in the string · REV D — 2026-09-03 (2e72a39), undated in the string · REV E — 2026-09-07, dated.
 - Rev E made the stage viewport-relative — `clamp(520px, 80vh, 1400px)` — retiring a fixed 620px band. Rev D's light is `SURVEY_META.basis` [metered at origin/main @ 185d414 (2026-09-07)] over `SURVEY_META.metered` [17] members, and a mass without a survey row is a build error.

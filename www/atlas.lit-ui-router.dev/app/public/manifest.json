@@ -17,6 +17,14 @@
   },
   "issueLog": [
     {
+      "date": "2026-09-12",
+      "num": "city",
+      "head": "SHEET 7 · 3D",
+      "title": "THE CITY — ISOMETRIC",
+      "rev": "F",
+      "desc": "The masses are drawn on PAPER, the way the flat plates draw them: faces are opaque and remove what stands behind them, the cap takes the tier's own fill and each right-hand wall…"
+    },
+    {
       "date": "2026-09-07",
       "num": "3",
       "head": "SHEET 3",
@@ -1511,12 +1519,12 @@
       "id": "city",
       "title": "THE CITY — ISOMETRIC",
       "sub": "SHEET 7'S CENSUS CITY IN THE ROUND · 35 MEMBERS · 34 MASSED · 22 SPEC ANNEXES · 4 DISTRICTS · ORBIT SNAPS TO THE FOUR TRUE DIAGONALS · A SECOND LANE RELIGHTS THE CITY FROM SHEET 7A'S FILED SHADOW PLATE · THE STAGE IS VIEWPORT-RELATIVE, 80VH BETWEEN 520 AND 1400PX",
-      "rev": "E",
+      "rev": "F",
       "shno": "SHEET 7 · 3D",
       "file": "sheets/city.html",
       "standalone": "gallery.html#city-scene",
       "scale": "MONOREPO, IN THE ROUND",
-      "verdict": "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal",
+      "verdict": "sheet 7's city rebuilt in three.js from the plate's own computed geometry — paper walls hatched in the tier's own rake over a girding frame, and a camera that orbits free and lands on a true diagonal",
       "labels": {
         "subject": "city",
         "projection": "isometric",

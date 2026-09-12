@@ -130,7 +130,7 @@ const verdicts = [
   ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', `the atlas measuring itself — one archive, ${ATLAS.stats.probes} probe stations, ${ATLAS.stats.plates} filed plates, and every station, plate and edge introspected from the generator at build time`],
   ['12i', 'PR CI GRAPH', 'INTERACTIVE REGISTER', `sheet 12's punchcard with a pointer in it — the whole ci graph carried node by node, real subgraph by default, and one checkbox that floods the ${PHANTOM_PCT}% that runs nothing`],
   ['14i', 'THE CENSUS PIPELINE', 'INTERACTIVE GRAPH', PIPELINE_VERDICT, '#pipeline-graph'],
-  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — translucent walls over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
+  ['city', 'MONOREPO, IN THE ROUND', 'REAL 3D ISOMETRIC CITY', "sheet 7's city rebuilt in three.js from the plate's own computed geometry — paper walls hatched in the tier's own rake over a girding frame, and a camera that orbits free and lands on a true diagonal", '#city-scene', 'S7·3D'],
 ];
 // THE APPENDIX INDEX — same four columns, filed under its own heading. These
 // rows are NOT in the ascent: `appendixIdx` is concatenated for the lookup the

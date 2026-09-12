@@ -21,6 +21,8 @@ export async function initCity(root, THREE) {
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
       accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
       paper: tok('--paper'), paper2: tok('--paper-2'), black: '#000000',
+      // the two stroke tokens the plate's pattern defs use and nothing else does
+      line: tok('--line'), redHatch: tok('--red-hatch') || tok('--red'),
       // the ground lettering and the number chips are plate labels, so they take
       // the data face the plates take; mono is reserved for code
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
@@ -61,23 +63,80 @@ export async function initCity(root, THREE) {
     var cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
     var target = new THREE.Vector3(0, maxY / 2, 0);
 
-    // ---- materials: one set per tier, recoloured with the theme ---------------
+    // ---- the hatch: the plate's pattern defs, in the frame buffer --------------
+    // patternUnits="userSpaceOnUse" means the stripes belong to the PAGE, not to
+    // the face they fill: same rake, same spacing on every wall.  The honest way
+    // to say that in three dimensions is gl_FragCoord — device pixels on the
+    // buffer — so the hatch is laid in screen space and nothing is unwrapped, no
+    // texture is allocated and no dependency is added.  Stroke colour, alpha,
+    // rake and spacing all ride UNIFORMS, so one compiled program serves every
+    // hooked material and the theme turn is four numbers, not a recompile.
+    var DPR = renderer.getPixelRatio();
+    var HATCH_PARS = 'uniform vec4 uHatch;\nuniform float uRake;\nuniform float uSpacing;\nuniform float uWidth;\n';
+    var HATCH_MIX = [
+      '#include <color_fragment>',
+      'if (uHatch.a > 0.0) {',
+      // distance across the rake, in device px: the lines are x + rake*y = const
+      '  float p = (gl_FragCoord.x + uRake * gl_FragCoord.y) * 0.70710678;',
+      '  float f = fract(p / uSpacing) * uSpacing;',
+      '  float d = min(f, uSpacing - f);',
+      '  float aa = max(0.5 * fwidth(p), 0.0001);',
+      '  float cov = 1.0 - smoothstep(uWidth * 0.5 - aa, uWidth * 0.5 + aa, d);',
+      '  diffuseColor.rgb = mix(diffuseColor.rgb, uHatch.rgb, cov * uHatch.a);',
+      '}',
+    ].join('\n');
+    function hatched(mat) {
+      var u = { uHatch: { value: new THREE.Vector4(0, 0, 0, 0) }, uRake: { value: 1 },
+        uSpacing: { value: 6 * DPR }, uWidth: { value: Math.max(1, DPR) } };
+      mat.userData.uni = u;
+      mat.onBeforeCompile = function (shader) {
+        shader.uniforms.uHatch = u.uHatch;
+        shader.uniforms.uRake = u.uRake;
+        shader.uniforms.uSpacing = u.uSpacing;
+        shader.uniforms.uWidth = u.uWidth;
+        shader.fragmentShader = HATCH_PARS
+          + shader.fragmentShader.replace('#include <color_fragment>', HATCH_MIX);
+      };
+      // the hooked family gets its OWN cache key, so a hatched material can never
+      // be handed the stock MeshBasic program (or the stock one ours)
+      mat.customProgramCacheKey = function () { return 'cs-hatch-1'; };
+      return mat;
+    }
+
+    // ---- materials: one set per tier, redressed with the theme -----------------
+    // The tier lane is OPAQUE — the plate removes hidden lines, and so does this;
+    // the faces are pushed back a hair so the girding frame is not fought for the
+    // same depth.  The light lane stays translucent: its slabs split a footprint.
     var mats = {}, hot = {}, lines = {};
     var make = function (lift) {
       return ['cap', 'a', 'b'].map(function (k) {
-        return new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false,
-          opacity: Math.min(1, (k === 'cap' ? D.op.cap : D.op.side) + lift) });
+        return hatched(new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false,
+          opacity: Math.min(1, (k === 'cap' ? D.op.cap : D.op.side) + lift) }));
+      });
+    };
+    var solid = function () {
+      return ['cap', 'a', 'b'].map(function () {
+        return hatched(new THREE.MeshBasicMaterial({ polygonOffset: true,
+          polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
       });
     };
     Object.keys(D.tiers).forEach(function (t) {
-      mats[t] = make(0);
-      hot[t] = make(0.1);           // the hover twin: same tint pulled a shade further
+      mats[t] = solid();
+      hot[t] = solid();             // the hover twin: same paper and hatch, tint pulled on
     });
     // the second lane's own materials — same treatment, sheet 7A's polarity
     var lmats = {}, lhot = {};
     Object.keys(D.lit).forEach(function (k) { lmats[k] = make(0); lhot[k] = make(0.1); });
     lines.src = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.92, depthWrite: false });
     lines.off = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.75, depthWrite: false });
+    // sheet 7's edge ladder, by tier: skr red, ska accent, skf --line, sks soft, sk
+    // ink.  Only the COLOUR travels — a LineBasicMaterial carries no width, so the
+    // weight half of the ladder (1.3 / 1.6 / 1.4 / 1.1 / 1) is a known gap here.
+    lines.tier = {};
+    Object.keys(D.tiers).forEach(function (t) {
+      lines.tier[t] = new THREE.LineBasicMaterial({ transparent: true, depthWrite: false,
+        opacity: t === 'off' ? 0.75 : 0.92 });
+    });
     lines.annex = new THREE.LineDashedMaterial({ transparent: true, opacity: 0.9, depthWrite: false,
       dashSize: 5, gapSize: 4 });
     lines.district = new THREE.LineDashedMaterial({ transparent: true, opacity: 0.95, depthWrite: false,
@@ -136,8 +195,9 @@ export async function initCity(root, THREE) {
     }
 
     function mass(n, x, z, s, h, tier, lineMat, dashed) {
-      var t = D.tiers[tier];
-      return box('tier', n, x, z, s, s, h, t.f > 0 ? mats[tier] : null, hot[tier], lineMat, dashed, true);
+      // the off tier is frame-only: types alone, so there is nothing to mass
+      return box('tier', n, x, z, s, s, h, tier === 'off' ? null : mats[tier], hot[tier],
+        lineMat, dashed, true);
     }
     // sheet 7A's brightness ladder, its own thresholds
     function band(line) {
@@ -170,7 +230,7 @@ export async function initCity(root, THREE) {
 
     var tops = {};                  // n -> [x, y, z] of the src mass's cap centre
     rows.forEach(function (b) {
-      var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, b.tier === 'off' ? lines.off : lines.src, false);
+      var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, lines.tier[b.tier], false);
       tops[b.n] = [p[0], b.h, p[1]];
       if (b.sa) mass(b.n, b.ax, b.ay, b.sa, b.ha, 'annex', lines.annex, true);
       relight(b);
@@ -352,10 +412,49 @@ export async function initCity(root, THREE) {
         hm[1].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.5));
         hm[2].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.32));
       };
-      Object.keys(D.tiers).forEach(function (t) {
-        if (D.tiers[t].f) tint(mats[t], hot[t], D.tiers[t]);
+      // the pattern def, onto one material's uniforms.  The SVG's rake is read in
+      // a y-DOWN space and gl_FragCoord's runs UP, so the sign turns over on the
+      // way in and rotate(45) stays the same stripe it is on the plate.
+      var stroke = function (m, key) {
+        var u = m.userData.uni;
+        if (!u) return;
+        if (!key) { u.uHatch.value.set(0, 0, 0, 0); return; }
+        var h = D.hatch[key];
+        var col = new THREE.Color(c[h.tok]);
+        u.uHatch.value.set(col.r, col.g, col.b, h.a);
+        u.uRake.value = -h.rake;
+        u.uSpacing.value = h.sp * DPR;
+      };
+      var STONE = { paper: paper, paper2: new THREE.Color(c.paper2), red: new THREE.Color(c.red) };
+      // A tier's wall is the plate's: the stone its capCls or its face names, a
+      // breath of the tier's hue so the tiers still part in the round, and the
+      // tier's own hatch over it.  Hover pushes the TINT and nothing else — the
+      // paper and the hatch are what the member IS.
+      var accent = new THREE.Color(c.accent);
+      var dress = function (m, hm, spec, fs) {
+        var hue = new THREE.Color(c[spec.hue]);
+        ['cap', 'a', 'b'].forEach(function (k, i) {
+          var f = fs[k];
+          var stone = STONE[f[0]] || paper;
+          var pull = f[0] === 'red' ? 0 : spec.f * D.tint;
+          m[i].color = stone.clone().lerp(hue, pull);
+          hm[i].color = stone.clone().lerp(hue, Math.min(1, pull * 2.4)).lerp(accent, 0.12);
+          stroke(m[i], f[1]);
+          stroke(hm[i], f[1]);
+        });
+      };
+      Object.keys(D.tiers).forEach(function (t) { dress(mats[t], hot[t], D.tiers[t], D.faces[t]); });
+      Object.keys(D.lit).forEach(function (k) {
+        tint(lmats[k], lhot[k], D.lit[k]);
+        // sheet 7A's shadow is a black wash AND a faint ink stripe laid over it
+        [0, 1, 2].forEach(function (i) {
+          stroke(lmats[k][i], D.lit[k].hatch || null);
+          stroke(lhot[k][i], D.lit[k].hatch || null);
+        });
       });
-      Object.keys(D.lit).forEach(function (k) { tint(lmats[k], lhot[k], D.lit[k]); });
+      Object.keys(D.tiers).forEach(function (t) {
+        lines.tier[t].color = new THREE.Color(c[D.tiers[t].edge]);
+      });
       lines.src.color = new THREE.Color(c.ink);
       lines.e2e.color = new THREE.Color(c.accent);
       lines.off.color = new THREE.Color(c.faint);

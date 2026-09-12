@@ -4,30 +4,62 @@
 //
 // Nothing is re-derived: sheet7.mjs exports its COMPUTED geometry (CITY) and this
 // module ships those rows verbatim as a JSON island, so a mass in the scene can
-// never drift from the mass on the plate.  Treatment is the pinned sprite recipe
-// in three dimensions: semi-opaque tinted walls over a girding frame, so the
-// structure behind reads through — a drafting set, not a video game.
+// never drift from the mass on the plate.  Treatment is the PLATES' OWN, in three
+// dimensions: opaque paper faces over a girding frame, the tier's hatch raked
+// across the right wall in SCREEN space — the same rake and the same spacing
+// everywhere, which is what patternUnits="userSpaceOnUse" means on sheet 7.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { CITY, PLACED } from './sheet7.mjs';
 import { SURVEY, SURVEY_META } from './sheet7a.mjs';
 
 export const THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/0.169.0/three.module.min.js';
-export const REV = 'E';
+export const REV = 'F';
 
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
 const BASIS = `${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
 
-// Tier -> wall tint: a hue token and how far the vellum is pulled towards it.
-// Severity is COLOUR here exactly as on the plate; height stays the file count.
+// Tier -> the plate's own treatment: sheet 7's edge class as a stroke token, the
+// hue the paper is pulled a breath towards (TINT below, so the tiers still part at
+// a glance in the round) and the tier's label.  Severity is the HATCH and its rake,
+// exactly as on the plate; height stays the file count.
 const TIERS = {
-  halt: { hue: 'red', f: 0.62, label: 'halts a publish' },
-  pr: { hue: 'red', f: 0.34, label: 'stops the PR line' },
-  late: { hue: 'accent', f: 0.34, label: 'gates a later stage' },
-  report: { hue: 'soft', f: 0.13, label: 'never gates' },
-  line: { hue: 'ink', f: 0.24, label: 'the material' },
-  off: { hue: 'faint', f: 0, label: 'types only — frame, no mass' },
-  annex: { hue: 'accent', f: 0.16, label: 'spec annex — the test mass' },
+  halt: { hue: 'red', f: 0.62, edge: 'red', label: 'halts a publish' },
+  pr: { hue: 'red', f: 0.34, edge: 'red', label: 'stops the PR line' },
+  late: { hue: 'accent', f: 0.34, edge: 'accent', label: 'gates a later stage' },
+  report: { hue: 'soft', f: 0.13, edge: 'line', label: 'never gates' },
+  line: { hue: 'ink', f: 0.24, edge: 'ink', label: 'the material' },
+  off: { hue: 'faint', f: 0, edge: 'soft', label: 'types only — frame, no mass' },
+  annex: { hue: 'accent', f: 0.16, edge: 'soft', label: 'spec annex — the test mass' },
+};
+// How far a tier's hue may pull the paper now that the hatch carries the severity:
+// a quarter of what the tinted walls used, so a wall reads as paper with a hatch
+// on it and not as a colour.
+const TINT = 0.22;
+// chrome.mjs's pattern defs, in three dimensions — stroke token, alpha, spacing in
+// CSS px and the rake as the SVG draws it (+1 = rotate(45), the neutral/accent/annex
+// rake; -1 = rotate(-45), which is what makes severity read as the OPPOSITE rake
+// rather than a redder tint).  `sh` is sheet 7A's shadow stripe.
+const HATCH = {
+  hx: { tok: 'line', a: 1, sp: 6, rake: 1 },
+  hd: { tok: 'soft', a: 1, sp: 5, rake: 1 },
+  hr: { tok: 'redHatch', a: 0.55, sp: 6, rake: -1 },
+  ha: { tok: 'accent', a: 0.5, sp: 6, rake: 1 },
+  sh: { tok: 'ink', a: 0.30, sp: 4, rake: 1 },
+};
+// helpers.mjs's isoBlock, face by face: [stone, hatch].  cap = the plate's capCls
+// (fp -> paper, fp2 -> paper-2, fr -> red); b = the -x/+z wall, the SVG's LEFT face,
+// flat paper-2; a = the +x/-z wall, the SVG's RIGHT face, paper-2 stone under the
+// tier's side hatch.  pr and late carry sheet 7's ROOF WASH — the cap takes the
+// side's own hatch — and halt's red cap takes none, as the plate draws it.
+const FACES = {
+  halt: { cap: ['red', null], a: ['paper2', 'hr'], b: ['paper2', null] },
+  pr: { cap: ['paper', 'hr'], a: ['paper2', 'hr'], b: ['paper2', null] },
+  late: { cap: ['paper', 'ha'], a: ['paper2', 'ha'], b: ['paper2', null] },
+  report: { cap: ['paper2', null], a: ['paper2', 'hx'], b: ['paper2', null] },
+  line: { cap: ['paper', null], a: ['paper2', 'hx'], b: ['paper2', null] },
+  off: { cap: ['paper2', null], a: ['paper2', 'hd'], b: ['paper2', null] },
+  annex: { cap: ['paper2', null], a: ['paper2', 'hd'], b: ['paper2', null] },
 };
 // The SECOND lane — sheet 7A's polarity in three dimensions: covered source is
 // LIT, untested source is SHADOW, and the spec annex is the lamp that throws it.
@@ -38,7 +70,7 @@ const LIT = {
   b2: { hue: 'halo', f: 0.34, label: 'lit 85–95' },
   b3: { hue: 'red', f: 0.38, label: 'lit <85' },
   b4: { hue: 'red', f: 0.58, label: 'lit <85' },
-  sh: { hue: 'black', f: 0.74, label: 'SHADOW — never loaded' },
+  sh: { hue: 'black', f: 0.38, hatch: 'sh', label: 'SHADOW — never loaded' },
   e2e: { hue: 'accent', f: 0.24, label: 'e2e light (accent)' },
   bare: { hue: 'ink', f: 0.05, label: 'no meter attaches' },
   lamp: { hue: 'halo', f: 0.60, label: 'lamp = spec annex' },
@@ -68,6 +100,9 @@ const DATA = {
   three: THREE_URL,
   rows: CITY,
   tiers: TIERS,
+  hatch: HATCH,
+  faces: FACES,
+  tint: TINT,
   districts: DISTRICTS,
   // the schedule's own note line, keyed by member number — the plate's prose, not new prose
   notes: Object.fromEntries(PLACED.map(([n, , , , , , , note]) => [n, note])),
@@ -167,6 +202,8 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     return { ink: tok('--ink'), soft: tok('--ink-soft'), faint: tok('--ink-faint'),
       accent: tok('--accent'), halo: bare(tok('--halo'), tok('--accent')), red: tok('--red'),
       paper: tok('--paper'), paper2: tok('--paper-2'), black: '#000000',
+      // the two stroke tokens the plate's pattern defs use and nothing else does
+      line: tok('--line'), redHatch: tok('--red-hatch') || tok('--red'),
       // the ground lettering and the number chips are plate labels, so they take
       // the data face the plates take; mono is reserved for code
       data: tok('--data') || '"Barlow Semi Condensed", sans-serif' };
@@ -207,23 +244,80 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     var cx = (minX + maxX) / 2, cz = (minZ + maxZ) / 2;
     var target = new THREE.Vector3(0, maxY / 2, 0);
 
-    // ---- materials: one set per tier, recoloured with the theme ---------------
+    // ---- the hatch: the plate's pattern defs, in the frame buffer --------------
+    // patternUnits="userSpaceOnUse" means the stripes belong to the PAGE, not to
+    // the face they fill: same rake, same spacing on every wall.  The honest way
+    // to say that in three dimensions is gl_FragCoord — device pixels on the
+    // buffer — so the hatch is laid in screen space and nothing is unwrapped, no
+    // texture is allocated and no dependency is added.  Stroke colour, alpha,
+    // rake and spacing all ride UNIFORMS, so one compiled program serves every
+    // hooked material and the theme turn is four numbers, not a recompile.
+    var DPR = renderer.getPixelRatio();
+    var HATCH_PARS = 'uniform vec4 uHatch;\\nuniform float uRake;\\nuniform float uSpacing;\\nuniform float uWidth;\\n';
+    var HATCH_MIX = [
+      '#include <color_fragment>',
+      'if (uHatch.a > 0.0) {',
+      // distance across the rake, in device px: the lines are x + rake*y = const
+      '  float p = (gl_FragCoord.x + uRake * gl_FragCoord.y) * 0.70710678;',
+      '  float f = fract(p / uSpacing) * uSpacing;',
+      '  float d = min(f, uSpacing - f);',
+      '  float aa = max(0.5 * fwidth(p), 0.0001);',
+      '  float cov = 1.0 - smoothstep(uWidth * 0.5 - aa, uWidth * 0.5 + aa, d);',
+      '  diffuseColor.rgb = mix(diffuseColor.rgb, uHatch.rgb, cov * uHatch.a);',
+      '}',
+    ].join('\\n');
+    function hatched(mat) {
+      var u = { uHatch: { value: new THREE.Vector4(0, 0, 0, 0) }, uRake: { value: 1 },
+        uSpacing: { value: 6 * DPR }, uWidth: { value: Math.max(1, DPR) } };
+      mat.userData.uni = u;
+      mat.onBeforeCompile = function (shader) {
+        shader.uniforms.uHatch = u.uHatch;
+        shader.uniforms.uRake = u.uRake;
+        shader.uniforms.uSpacing = u.uSpacing;
+        shader.uniforms.uWidth = u.uWidth;
+        shader.fragmentShader = HATCH_PARS
+          + shader.fragmentShader.replace('#include <color_fragment>', HATCH_MIX);
+      };
+      // the hooked family gets its OWN cache key, so a hatched material can never
+      // be handed the stock MeshBasic program (or the stock one ours)
+      mat.customProgramCacheKey = function () { return 'cs-hatch-1'; };
+      return mat;
+    }
+
+    // ---- materials: one set per tier, redressed with the theme -----------------
+    // The tier lane is OPAQUE — the plate removes hidden lines, and so does this;
+    // the faces are pushed back a hair so the girding frame is not fought for the
+    // same depth.  The light lane stays translucent: its slabs split a footprint.
     var mats = {}, hot = {}, lines = {};
     var make = function (lift) {
       return ['cap', 'a', 'b'].map(function (k) {
-        return new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false,
-          opacity: Math.min(1, (k === 'cap' ? D.op.cap : D.op.side) + lift) });
+        return hatched(new THREE.MeshBasicMaterial({ transparent: true, depthWrite: false,
+          opacity: Math.min(1, (k === 'cap' ? D.op.cap : D.op.side) + lift) }));
+      });
+    };
+    var solid = function () {
+      return ['cap', 'a', 'b'].map(function () {
+        return hatched(new THREE.MeshBasicMaterial({ polygonOffset: true,
+          polygonOffsetFactor: 1, polygonOffsetUnits: 1 }));
       });
     };
     Object.keys(D.tiers).forEach(function (t) {
-      mats[t] = make(0);
-      hot[t] = make(0.1);           // the hover twin: same tint pulled a shade further
+      mats[t] = solid();
+      hot[t] = solid();             // the hover twin: same paper and hatch, tint pulled on
     });
     // the second lane's own materials — same treatment, sheet 7A's polarity
     var lmats = {}, lhot = {};
     Object.keys(D.lit).forEach(function (k) { lmats[k] = make(0); lhot[k] = make(0.1); });
     lines.src = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.92, depthWrite: false });
     lines.off = new THREE.LineBasicMaterial({ transparent: true, opacity: 0.75, depthWrite: false });
+    // sheet 7's edge ladder, by tier: skr red, ska accent, skf --line, sks soft, sk
+    // ink.  Only the COLOUR travels — a LineBasicMaterial carries no width, so the
+    // weight half of the ladder (1.3 / 1.6 / 1.4 / 1.1 / 1) is a known gap here.
+    lines.tier = {};
+    Object.keys(D.tiers).forEach(function (t) {
+      lines.tier[t] = new THREE.LineBasicMaterial({ transparent: true, depthWrite: false,
+        opacity: t === 'off' ? 0.75 : 0.92 });
+    });
     lines.annex = new THREE.LineDashedMaterial({ transparent: true, opacity: 0.9, depthWrite: false,
       dashSize: 5, gapSize: 4 });
     lines.district = new THREE.LineDashedMaterial({ transparent: true, opacity: 0.95, depthWrite: false,
@@ -282,8 +376,9 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     }
 
     function mass(n, x, z, s, h, tier, lineMat, dashed) {
-      var t = D.tiers[tier];
-      return box('tier', n, x, z, s, s, h, t.f > 0 ? mats[tier] : null, hot[tier], lineMat, dashed, true);
+      // the off tier is frame-only: types alone, so there is nothing to mass
+      return box('tier', n, x, z, s, s, h, tier === 'off' ? null : mats[tier], hot[tier],
+        lineMat, dashed, true);
     }
     // sheet 7A's brightness ladder, its own thresholds
     function band(line) {
@@ -316,7 +411,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
 
     var tops = {};                  // n -> [x, y, z] of the src mass's cap centre
     rows.forEach(function (b) {
-      var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, b.tier === 'off' ? lines.off : lines.src, false);
+      var p = mass(b.n, b.x, b.y, b.s, b.h, b.tier, lines.tier[b.tier], false);
       tops[b.n] = [p[0], b.h, p[1]];
       if (b.sa) mass(b.n, b.ax, b.ay, b.sa, b.ha, 'annex', lines.annex, true);
       relight(b);
@@ -498,10 +593,49 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
         hm[1].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.5));
         hm[2].color = paper.clone().lerp(hue, Math.min(1, spec.f * 1.32));
       };
-      Object.keys(D.tiers).forEach(function (t) {
-        if (D.tiers[t].f) tint(mats[t], hot[t], D.tiers[t]);
+      // the pattern def, onto one material's uniforms.  The SVG's rake is read in
+      // a y-DOWN space and gl_FragCoord's runs UP, so the sign turns over on the
+      // way in and rotate(45) stays the same stripe it is on the plate.
+      var stroke = function (m, key) {
+        var u = m.userData.uni;
+        if (!u) return;
+        if (!key) { u.uHatch.value.set(0, 0, 0, 0); return; }
+        var h = D.hatch[key];
+        var col = new THREE.Color(c[h.tok]);
+        u.uHatch.value.set(col.r, col.g, col.b, h.a);
+        u.uRake.value = -h.rake;
+        u.uSpacing.value = h.sp * DPR;
+      };
+      var STONE = { paper: paper, paper2: new THREE.Color(c.paper2), red: new THREE.Color(c.red) };
+      // A tier's wall is the plate's: the stone its capCls or its face names, a
+      // breath of the tier's hue so the tiers still part in the round, and the
+      // tier's own hatch over it.  Hover pushes the TINT and nothing else — the
+      // paper and the hatch are what the member IS.
+      var accent = new THREE.Color(c.accent);
+      var dress = function (m, hm, spec, fs) {
+        var hue = new THREE.Color(c[spec.hue]);
+        ['cap', 'a', 'b'].forEach(function (k, i) {
+          var f = fs[k];
+          var stone = STONE[f[0]] || paper;
+          var pull = f[0] === 'red' ? 0 : spec.f * D.tint;
+          m[i].color = stone.clone().lerp(hue, pull);
+          hm[i].color = stone.clone().lerp(hue, Math.min(1, pull * 2.4)).lerp(accent, 0.12);
+          stroke(m[i], f[1]);
+          stroke(hm[i], f[1]);
+        });
+      };
+      Object.keys(D.tiers).forEach(function (t) { dress(mats[t], hot[t], D.tiers[t], D.faces[t]); });
+      Object.keys(D.lit).forEach(function (k) {
+        tint(lmats[k], lhot[k], D.lit[k]);
+        // sheet 7A's shadow is a black wash AND a faint ink stripe laid over it
+        [0, 1, 2].forEach(function (i) {
+          stroke(lmats[k][i], D.lit[k].hatch || null);
+          stroke(lhot[k][i], D.lit[k].hatch || null);
+        });
       });
-      Object.keys(D.lit).forEach(function (k) { tint(lmats[k], lhot[k], D.lit[k]); });
+      Object.keys(D.tiers).forEach(function (t) {
+        lines.tier[t].color = new THREE.Color(c[D.tiers[t].edge]);
+      });
       lines.src.color = new THREE.Color(c.ink);
       lines.e2e.color = new THREE.Color(c.accent);
       lines.off.color = new THREE.Color(c.faint);
@@ -778,7 +912,7 @@ ${fill(APP)}}
 }
 
 // The basis strip: running prose under the stage, present state only.
-const BASIS_TEXT = `BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>www/atlas.lit-ui-router.dev/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. Walls are semi-opaque over a girding frame per the pinned sprite note; gate severity is colour, never height; the <code>off</code> tier is drawn frame-only because there is nothing to mass. Camera is orthographic at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read. <code>TEST LIGHT</code> is a second material lane over the same geometry: the city relit from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, ${SURVEY_META.basis} — the ref the geometry is massed at — with ${SURVEY_META.metered} members read under their own suites' meters, so the model and the flat shadow plate cannot drift either. Polarity is sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint, the lit slab being side \u00d7 the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. Shadow lerps toward BLACK rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow. Every mass in the model has a survey row; one without is a build error.`;
+const BASIS_TEXT = `BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>www/atlas.lit-ui-router.dev/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. The masses are drawn on PAPER, the way the flat plates draw them: faces are opaque and remove what stands behind them, the cap takes the tier's own fill and each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, with the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. The hatch is laid in SCREEN space — one rake, one spacing, on every wall at every angle, which is what <code>patternUnits="userSpaceOnUse"</code> means on the flat set — as a stripe mixed into the fragment colour off <code>gl_FragCoord</code>, so it costs no texture and no dependency. Gate severity is the RAKE: the halt and PR hatch runs the opposite way from the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash — the cap takes the side's hatch — and the <code>off</code> tier is drawn frame-only because there is nothing to mass. Each frame is the tier's edge colour from the same ladder the plates stroke (red, accent, <code>--line</code>, soft, ink); only the colour travels, a WebGL line carrying no width. Camera is orthographic at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read. <code>TEST LIGHT</code> is a second material lane over the same geometry: the city relit from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, ${SURVEY_META.basis} — the ref the geometry is massed at — with ${SURVEY_META.metered} members read under their own suites' meters, so the model and the flat shadow plate cannot drift either. Polarity is sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint, the lit slab being side \u00d7 the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own: a black wash carrying a faint ink stripe, lerped toward BLACK rather than the ink because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow. Every mass in the model has a survey row; one without is a build error.`;
 
 /** The plate: style, section and the JSON island — no init script. */
 export function cityMarkup() {
@@ -790,7 +924,22 @@ export function cityMarkup() {
     const paint = hue.startsWith('--') ? `var(${hue})` : hue;
     return `.cs-legend .sw-${k} { background: color-mix(in srgb, ${paint} ${Math.round(t.f * 100)}%, var(--paper)); }`;
   };
-  const swatchCss = LEGEND.map(([k]) => swatch(k, TIERS[k]))
+  // A tier key draws what a tier's wall draws: the cap's stone with the tier's hue
+  // a breath in, and the side's hatch over it at the side's own rake.  45deg in CSS
+  // rakes the stripes the other way from the SVG's rotate(45), so the sign turns
+  // over here exactly as it does in the shader.
+  const STROKE = { line: '--line', soft: '--ink-soft', redHatch: '--red-hatch', accent: '--accent', ink: '--ink' };
+  const tierSwatch = (k) => {
+    const f = FACES[k];
+    const h = HATCH[f.a[1]];
+    const stone = f.cap[0] === 'red'
+      ? 'var(--red)'
+      : `color-mix(in srgb, var(${HUE[TIERS[k].hue]}) ${Math.round(TIERS[k].f * TINT * 100)}%, var(--${f.cap[0] === 'paper2' ? 'paper-2' : 'paper'}))`;
+    const ink = `color-mix(in srgb, var(${STROKE[h.tok]}) ${Math.round(h.a * 100)}%, transparent)`;
+    const rake = h.rake > 0 ? 135 : 45;
+    return `.cs-legend .sw-${k} { background: repeating-linear-gradient(${rake}deg, ${ink} 0 1px, transparent 1px ${h.sp}px), ${stone}; }`;
+  };
+  const swatchCss = LEGEND.map(([k]) => tierSwatch(k))
     .concat(LIGHT_LEGEND.map(([k]) => swatch(k, LIT[k]))).join('\n');
 
   return `<style>${CSS}
@@ -810,7 +959,7 @@ ${swatchCss}</style>
     </div>
   </div>
   <div class="cs-stage">
-    <div class="cs-canvas" id="cs-canvas" role="img" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each a translucent box with its girding frame showing through, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light."></div>
+    <div class="cs-canvas" id="cs-canvas" role="img" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light."></div>
     <aside class="cs-info" id="cs-info"></aside>
   </div>
   <p class="cs-basis">${BASIS_TEXT}</p>
