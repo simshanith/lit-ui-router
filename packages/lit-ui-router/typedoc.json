@@ -43,6 +43,7 @@
       "TransitionOptions": "https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.transitionoptions.html",
       "TargetState": "https://ui-router.github.io/core/docs/latest/classes/_state_targetstate_.targetstate.html",
       "StateDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html",
+      "_ViewDeclaration": "https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_._viewdeclaration.html",
       "StateOrName": "https://ui-router.github.io/core/docs/latest/modules/_state_interface_.html#stateorname",
       "RawParams": "https://ui-router.github.io/core/docs/latest/interfaces/_params_interface_.rawparams.html",
       "HookMatchCriteria": "https://ui-router.github.io/core/docs/latest/interfaces/_transition_interface_.hookmatchcriteria.html",
