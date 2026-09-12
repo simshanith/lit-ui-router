@@ -21,7 +21,6 @@
         "^build",
         "eslint-plugin-lit-ui-router#build",
         "lit-ui-router#build",
-        "lit-ui-router-effect#build",
         "lit-ui-router-mobx#build",
         "ui-router-navigation-location-plugin#build",
         "ui-router-server#build"

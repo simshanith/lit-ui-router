@@ -56,7 +56,6 @@ jobs:
       matrix:
         package:
           - lit-ui-router
-          - lit-ui-router-effect
           - lit-ui-router-mobx
           - ui-router-navigation-location-plugin
           - ui-router-server

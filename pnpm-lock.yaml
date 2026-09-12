@@ -945,9 +945,6 @@ importers:
 
   packages/lit-ui-router-effect:
     devDependencies:
-      '@release-it/conventional-changelog':
-        specifier: 'catalog:'
-        version: 12.0.0(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.0)(release-it@21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/bundle-probe':
         specifier: workspace:*
         version: link:../../tools/bundle-probe
@@ -963,9 +960,6 @@ importers:
       '@tools/oxc-emit':
         specifier: workspace:*
         version: link:../../tools/oxc-emit
-      '@tools/release-config':
-        specifier: workspace:*
-        version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
         specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
@@ -1002,9 +996,6 @@ importers:
       oxlint:
         specifier: 'catalog:'
         version: 1.82.0(oxlint-tsgolint@7.0.2001)
-      release-it:
-        specifier: 'catalog:'
-        version: 21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2)
       rimraf:
         specifier: 'catalog:'
         version: 6.1.3
