@@ -195,15 +195,82 @@ export class UiView extends LitElement {
   }
 
   private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
+    // Answering our own re-seek would just hand back the router we are replacing.
+    if (this.seekingProvidedRouter) {
+      return;
+    }
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
   private seekRouter() {
-    this.uiRouter = this.uiRouter || UIRouterLitElement.seekRouter(this);
+    if (!this.uiRouter) {
+      this.uiRouter = UIRouterLitElement.seekRouter(this)!;
+      // A sought router can be superseded; an app-provided one never is.
+      this.routerFromProvider = !!this.uiRouter;
+    }
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
       this.onUiRouterContextEvent as EventListener,
     );
+  }
+
+  /** Whether `uiRouter` came from the context event rather than the app. */
+  private routerFromProvider = false;
+
+  /** The router this view registered with; a late upgrade can supersede it. */
+  private registeredRouter?: UIRouterLit;
+
+  /** Set only for the synchronous span of our own re-seek. */
+  private seekingProvidedRouter = false;
+
+  /**
+   * Seeks the provider's router, past our own answer.
+   *
+   * `<ui-view>` answers this event for descendants and stops it, deliberately —
+   * see `listener-identity.spec.ts`. Suppressing that for the span of our own
+   * dispatch keeps the guarantee intact for everyone else.
+   */
+  private seekProvidedRouter(): UIRouterLit | undefined {
+    this.seekingProvidedRouter = true;
+    try {
+      return UIRouterLitElement.seekRouter(this);
+    } finally {
+      this.seekingProvidedRouter = false;
+    }
+  }
+
+  /**
+   * Adopts the router the provider now offers, when this view registered
+   * without it.
+   *
+   * lit replays a pre-upgrade property inside the element's first update, not
+   * at upgrade, so `<ui-router>` can run `connectedCallback` with `uiRouter`
+   * still undefined and provide an instance of its own; a `<ui-view>`
+   * connecting in between registers with that one and never sees a transition.
+   * Firefox upgrades a detached subtree later than Chrome and WebKit, so
+   * declarative shadow DOM parsed off-document reaches this there first.
+   *
+   * `registerUIView` syncs, so the re-registered view picks up the current
+   * state without waiting for the next transition.
+   */
+  private adoptProvidedRouter(): void {
+    const router = this.routerFromProvider
+      ? this.seekProvidedRouter()
+      : this.uiRouter;
+    if (!router || router === this.registeredRouter) {
+      return;
+    }
+
+    this.deregisterAll();
+    this.uiRouter = router;
+    this.setupUiView();
+  }
+
+  private deregisterAll(): void {
+    while (this.disconnectedHandlers.length) {
+      const handler = this.disconnectedHandlers.shift();
+      handler?.();
+    }
   }
 
   private captureContent() {
@@ -253,6 +320,7 @@ export class UiView extends LitElement {
     this.disconnectedHandlers.push(
       router.viewService.registerUIView(this._uiViewData),
     );
+    this.registeredRouter = router;
   }
 
   /** @internal */
@@ -263,10 +331,7 @@ export class UiView extends LitElement {
       this.onUiViewContextEvent as EventListener,
     );
 
-    while (this.disconnectedHandlers.length) {
-      const handler = this.disconnectedHandlers.shift();
-      handler?.();
-    }
+    this.deregisterAll();
   }
 
   /**
@@ -383,6 +448,7 @@ export class UiView extends LitElement {
    */
   protected firstUpdated(changed: PropertyValues): void {
     super.firstUpdated(changed);
+    this.adoptProvidedRouter();
     if (!this.uiRouter) {
       warnMissingRouter(this, '<ui-view>', 'will never render a routed view');
     }
