@@ -44,9 +44,7 @@ type Category =
   | 'types'
   | 'other';
 
-/**
- * Mapping of symbol names to their categories.
- */
+/** Backs `[[SymbolName]]` local-page links; categories come from @category tags in source. */
 const SYMBOL_CATEGORIES: Record<string, Category> = {
   // Core
   UIRouterLit: 'core',
@@ -82,7 +80,6 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   UIViewInjectedProps: 'types',
   UIViewResolves: 'types',
   UiViewAddress: 'types',
-  deregisterFn: 'types',
   DefaultResolvesType: 'types',
 };
 
@@ -227,26 +224,6 @@ export function load(app: Application): void {
   app.converter.on(Converter.EVENT_RESOLVE_END, (context: Context) => {
     handleSymbolLinks(context, app);
   });
-
-  // Handle typed parameter linking
-  app.converter.on(Converter.EVENT_RESOLVE_END, (context: Context) => {
-    handleTypeLinks(context);
-  });
-
-  // Handle directive wrapper patterns
-  app.converter.on(Converter.EVENT_RESOLVE_END, (context: Context) => {
-    handleDirectiveWrappers(context, app);
-  });
-
-  // Add category tags to reflections
-  app.converter.on(
-    Converter.EVENT_RESOLVE,
-    (_context: Context, reflection: Reflection) => {
-      if (reflection instanceof DeclarationReflection) {
-        addCategoryTags(reflection);
-      }
-    },
-  );
 
   // Post-process output to reorganize by category
   app.renderer.on(RendererEvent.END, (event: RendererEvent) => {
@@ -427,121 +404,6 @@ function updateSidebarJson(outDir: string, app: Application): void {
 }
 
 /**
- * Link typed parameters and return types to known external symbols.
- */
-function handleTypeLinks(context: Context): void {
-  const symbolMap: Record<string, string> = EXTERNAL_SYMBOLS;
-
-  const visitReflection = (reflection: Reflection): void => {
-    if (reflection instanceof DeclarationReflection) {
-      linkReflectionTypes(reflection, symbolMap);
-    }
-
-    if ('children' in reflection) {
-      const withChildren = reflection as { children?: Reflection[] };
-      if (withChildren.children) {
-        for (const child of withChildren.children) {
-          visitReflection(child);
-        }
-      }
-    }
-  };
-
-  visitReflection(context.project);
-}
-
-/**
- * Recursively link types and their nested children to external documentation.
- */
-function linkTypeRecursively(
-  type: {
-    type?: string;
-    name?: string;
-    externalUrl?: string;
-    typeArguments?: unknown[];
-    types?: unknown[];
-    elementType?: unknown;
-  },
-  symbolMap: Record<string, string>,
-): void {
-  if (!type) return;
-
-  // Link the type itself if it's a reference
-  if (type.type === 'reference' && type.name && symbolMap[type.name]) {
-    type.externalUrl = symbolMap[type.name];
-  }
-
-  // Recurse into type arguments (for generics like DirectiveResult<T>)
-  if (type.typeArguments) {
-    for (const arg of type.typeArguments) {
-      linkTypeRecursively(arg as typeof type, symbolMap);
-    }
-  }
-
-  // Recurse into union/intersection types
-  if (type.types) {
-    for (const t of type.types) {
-      linkTypeRecursively(t as typeof type, symbolMap);
-    }
-  }
-
-  // Recurse into array element types
-  if (type.elementType) {
-    linkTypeRecursively(type.elementType, symbolMap);
-  }
-}
-
-/**
- * Link types in a reflection to external documentation.
- */
-function linkReflectionTypes(
-  reflection: DeclarationReflection,
-  symbolMap: Record<string, string>,
-): void {
-  // Handle signatures (return types, parameters)
-  if (reflection.signatures) {
-    for (const sig of reflection.signatures) {
-      if (sig.type) {
-        linkTypeRecursively(sig.type, symbolMap);
-      }
-
-      if (sig.parameters) {
-        for (const param of sig.parameters) {
-          if (param.type) {
-            linkTypeRecursively(param.type, symbolMap);
-          }
-        }
-      }
-    }
-  }
-
-  // Handle direct type on reflection
-  if (reflection.type) {
-    linkTypeRecursively(reflection.type, symbolMap);
-  }
-
-  // Handle extends clauses
-  const reflectionWithExtends = reflection as DeclarationReflection & {
-    extendedTypes?: unknown[];
-  };
-  if (reflectionWithExtends.extendedTypes) {
-    for (const extType of reflectionWithExtends.extendedTypes) {
-      linkTypeRecursively(extType, symbolMap);
-    }
-  }
-
-  // Handle implemented interfaces
-  const reflectionWithImpl = reflection as DeclarationReflection & {
-    implementedTypes?: unknown[];
-  };
-  if (reflectionWithImpl.implementedTypes) {
-    for (const implType of reflectionWithImpl.implementedTypes) {
-      linkTypeRecursively(implType, symbolMap);
-    }
-  }
-}
-
-/**
  * Handle [[SymbolName]] links in JSDoc comments.
  */
 function handleSymbolLinks(context: Context, app: Application): void {
@@ -615,60 +477,5 @@ function processComment(
         }
       }
     }
-  }
-}
-
-/**
- * Handle Lit directive wrapper patterns.
- */
-function handleDirectiveWrappers(context: Context, app: Application): void {
-  const project = context.project;
-  const directiveNames = ['uiSref', 'uiSrefActive'];
-
-  for (const name of directiveNames) {
-    const directive = project.getChildByName(name);
-    const directiveClass = project.getChildByName(`${name}Directive`);
-
-    if (
-      directive &&
-      directive instanceof DeclarationReflection &&
-      directiveClass
-    ) {
-      app.logger.verbose(`[lit-ui-router] Linking ${name} to ${name}Directive`);
-    }
-  }
-}
-
-/**
- * Add category tags to reflections for better organization.
- */
-function addCategoryTags(reflection: DeclarationReflection): void {
-  const name = reflection.name;
-  const category = SYMBOL_CATEGORIES[name];
-
-  if (category) {
-    setCategory(reflection, category);
-  }
-}
-
-/**
- * Set the category for a reflection.
- */
-function setCategory(
-  reflection: DeclarationReflection,
-  category: string,
-): void {
-  if (!reflection.comment) {
-    return;
-  }
-
-  const hasCategory = reflection.comment.blockTags?.some(
-    (tag: CommentTag) => tag.tag === '@category',
-  );
-
-  if (!hasCategory) {
-    reflection.comment.blockTags = reflection.comment.blockTags || [];
-    const tag = new CommentTag('@category', [{ kind: 'text', text: category }]);
-    reflection.comment.blockTags.push(tag);
   }
 }

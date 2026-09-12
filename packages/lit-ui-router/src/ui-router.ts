@@ -15,6 +15,7 @@ export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
 
 /**
  * @hideconstructor
+ * @category components
  *
  * @slot - <code>&lt;ui-router&gt;</code> renders slotted content.
  *

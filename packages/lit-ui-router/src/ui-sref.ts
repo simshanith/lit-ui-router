@@ -102,7 +102,7 @@ export interface UiSrefOptions {
    *
    * This option governs the `href` attribute **only**. Whether the click
    * handler defers to native browser behaviour is decided by the element
-   * itself, never by this setting — see {@link isNativeLink}.
+   * itself, never by this setting — see `isNativeLink`.
    */
   assignHref?: boolean | 'auto';
 }
