@@ -138,6 +138,46 @@ The private [`tools/workers-builds`](../tools/workers-builds) package owns
 the dashboard values above plus the declared [build environment variables](#build-environment-variables),
 and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 (exit 1 on drift); `pnpm check:workers-builds -- --apply` updates.
+
+The config is a `workers` map **keyed by site**, one entry per Worker the repo deploys, so a second
+site is an entry rather than a fork of the tool:
+
+```jsonc
+{
+  "workers": {
+    "lit-ui-router.dev": {
+      "wranglerConfig": "www/lit-ui-router.dev/wrangler.jsonc",
+      "productionBranch": "main",
+      "production": {
+        "build_command": "…",
+        "deploy_command": "…",
+        "environment_variables": {},
+      },
+      "preview": {
+        "build_command": "…",
+        "deploy_command": "…",
+        "environment_variables": {},
+      },
+    },
+  },
+}
+```
+
+`wranglerConfig` is repo-relative and is the only place the worker is named: the check reads `name`
+out of that file and resolves it to the tag the triggers endpoint is keyed by, so the config never
+restates a name two files already agree on. A path that names no file is a hard error (exit 2)
+rather than a skipped entry — a missing `wrangler.jsonc` is far more often a moved file than an
+unbuilt site, and silently skipping would turn the flagship's own signal green on a typo. The
+Altitude Atlas (`www/atlas.lit-ui-router.dev/`) sits in the file as a commented-out second entry for
+that reason; uncomment it once its `wrangler.jsonc` lands and its Worker has triggers.
+
+Each trigger spec may pin `build_command`, `deploy_command`, `root_directory`, and the two
+[build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/) —
+`path_includes` and `path_excludes`. Watch paths are what let two sites share one repo: each Worker
+builds only on pushes that touch it. They are array-valued, so they are compared and patched
+whole-list rather than per entry, and like every pinnable field an unpinned one is reported and
+never drifts (a live watch path with nothing pinned prints as `(not pinned)`).
+
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
 resolves the worker name to the tag the triggers endpoint is keyed by, and **Workers Builds Configuration:

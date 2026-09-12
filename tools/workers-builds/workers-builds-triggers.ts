@@ -1,8 +1,8 @@
 #!/usr/bin/env node
-// Dashboard-as-code for the Cloudflare Workers Builds triggers that deploy
-// lit-ui-router.dev. The dashboard config has no PR trail, so the sibling
+// Dashboard-as-code for the Cloudflare Workers Builds triggers that deploy this
+// repo's sites. The dashboard config has no PR trail, so the sibling
 // workers-builds-triggers.config.jsonc is the reviewable source of truth the
-// dashboard should match.
+// dashboard should match — one entry per Worker, keyed by site.
 //
 // Usage:
 //   CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm check:workers-builds [-- --apply]
@@ -27,9 +27,9 @@ import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
 
 import {
-  type DesiredState,
+  type DesiredWorker,
   type Trigger,
-  desiredStateFromConfig,
+  desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
   workerNameFromConfig,
@@ -41,9 +41,11 @@ const DESIRED_CONFIG = join(
   'workers-builds-triggers.config.jsonc',
 );
 
-async function loadDesired(): Promise<DesiredState> {
+const REPO_ROOT = join(import.meta.dirname, '..', '..');
+
+async function loadDesired(): Promise<DesiredWorker[]> {
   try {
-    return desiredStateFromConfig(
+    return desiredWorkersFromConfig(
       parseJsonc(await readFile(DESIRED_CONFIG, 'utf8')),
     );
   } catch (error) {
@@ -146,62 +148,66 @@ async function main() {
     return;
   }
 
-  const desired = await loadDesired();
+  const workers = await loadDesired();
+  let ok = true;
 
-  // The worker name comes from the same config wrangler deploys with.
-  const configPath = join(
-    import.meta.dirname,
-    '..',
-    '..',
-    'www/lit-ui-router.dev/wrangler.jsonc',
-  );
-  const name = workerNameFromConfig(
-    parseJsonc(await readFile(configPath, 'utf8')),
-  );
+  for (const [index, worker] of workers.entries()) {
+    // The worker name comes from the same config wrangler deploys with. A
+    // wranglerConfig that names no file throws, and the run exits 2.
+    const name = workerNameFromConfig(
+      parseJsonc(
+        await readFile(join(REPO_ROOT, worker.wranglerConfig), 'utf8'),
+      ),
+    );
 
-  const tag = await workerTag(token, accountId, name);
-  const { report, drifts } = diffTriggers(
-    await getTriggers(token, accountId, tag),
-    desired,
-  );
-  console.log(`worker: ${name} (${tag})\n`);
-  console.log(report.text);
+    const tag = await workerTag(token, accountId, name);
+    const { report, drifts } = diffTriggers(
+      await getTriggers(token, accountId, tag),
+      worker,
+    );
+    console.log(`${index > 0 ? '\n' : ''}worker: ${name} (${tag})\n`);
+    console.log(report.text);
 
-  if (!apply) {
-    if (!report.ok) {
-      console.log('\nRun with --apply to update the drifted triggers.');
-      process.exitCode = 1;
+    if (!apply) {
+      if (!report.ok) ok = false;
+      continue;
     }
-    return;
+
+    for (const drift of drifts) {
+      if (Object.keys(drift.patch).length > 0) {
+        console.log(
+          `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
+        );
+        await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
+          method: 'PATCH',
+          body: drift.patch,
+        });
+      }
+      // Declared keys only — undeclared live vars are never in this body.
+      if (Object.keys(drift.environmentPatch).length > 0) {
+        console.log(
+          `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
+        );
+        await cf(
+          token,
+          `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
+          { method: 'PATCH', body: drift.environmentPatch },
+        );
+      }
+    }
+
+    // Re-read so the confirmation reflects what the API stored, not what we sent.
+    const after = diffTriggers(
+      await getTriggers(token, accountId, tag),
+      worker,
+    );
+    console.log(`\nAfter --apply:\n\n${after.report.text}`);
+    if (!after.report.ok) ok = false;
   }
 
-  for (const drift of drifts) {
-    if (Object.keys(drift.patch).length > 0) {
-      console.log(
-        `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid}: ${Object.keys(drift.patch).join(', ')}`,
-      );
-      await cf(token, `/${accountId}/builds/triggers/${drift.trigger_uuid}`, {
-        method: 'PATCH',
-        body: drift.patch,
-      });
-    }
-    // Declared keys only — undeclared live vars are never in this body.
-    if (Object.keys(drift.environmentPatch).length > 0) {
-      console.log(
-        `\nPATCHing ${drift.kind} trigger ${drift.trigger_uuid} environment_variables: ${Object.keys(drift.environmentPatch).join(', ')}`,
-      );
-      await cf(
-        token,
-        `/${accountId}/builds/triggers/${drift.trigger_uuid}/environment_variables`,
-        { method: 'PATCH', body: drift.environmentPatch },
-      );
-    }
-  }
-
-  // Re-read so the confirmation reflects what the API stored, not what we sent.
-  const after = diffTriggers(await getTriggers(token, accountId, tag), desired);
-  console.log(`\nAfter --apply:\n\n${after.report.text}`);
-  if (!after.report.ok) process.exitCode = 1;
+  if (ok) return;
+  if (!apply) console.log('\nRun with --apply to update the drifted triggers.');
+  process.exitCode = 1;
 }
 
 main().catch((error: unknown) => {
