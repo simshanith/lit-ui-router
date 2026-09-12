@@ -400,10 +400,10 @@
       .plate-data a {
         color: var(--ink-soft);
       }
-      /* the plate's own keys, in the cards' key-block shape */
-      .plate-data .keytb {
+      /* the plate's own keys, in the cards' key-row shape */
+      .plate-data .keyrow {
         align-self: start;
-        width: min(320px, 100%);
+        margin-top: 0;
       }
       .plate-verdict {
         margin: -6px 0 14px;
@@ -954,6 +954,20 @@
       .keyindex .kv i {
         font-style: normal;
       }
+      /* THE INDEX IS THE LEGEND: the chip draws the card's symbol, at 12, and
+         names it. Values with no drawing — the ALL chip, static, the basis
+         phrases — are words here exactly as they are on the cards. */
+      .keyindex .kv {
+        display: inline-flex;
+        align-items: center;
+        gap: 5px;
+      }
+      .keyindex .kv .gl {
+        flex: 0 0 auto;
+        width: 12px;
+        height: 12px;
+        display: block;
+      }
       .keyindex .kv .c {
         font-variant-numeric: tabular-nums;
         margin-left: 6px;
@@ -1008,140 +1022,89 @@
         padding: 18px 14px;
         margin: 0;
       }
-      /* THE KEY BLOCK — FORM's keys as a miniature title block, in the idiom
-         generator/chrome.mjs draws the plates' own: hairline cells, the data
-         face, tabular figures. NO field names: the slots are fixed and
-         position is the key, the way a tombstone label is read —
-         subject | projection over basis | mode. basis holds its slot with an
-         em dash off the city group; the mode lamp is drawn only when a plate
-         is interactive. Filled slots are filter links and sit above the card's
+      /* The key icons' sprite: inline markup, drawn once a page and never
+         painted. `display: none` would stop a <use> resolving, so it is taken
+         out of flow at no size instead. */
+      .icon-sprite {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+      }
+      /* THE KEY ROW — FORM's keys as ONE LINE OF ICONS, hairline-separated in
+         the idiom generator/chrome.mjs draws the plates' own title block:
+         subject, the basis beside it on a city, projection, and the lamp a
+         plate that answers a pointer carries. NO field names and no words: the
+         icons are named once, in the cover's KEY INDEX, which is their legend.
+         A key the plate does not carry draws nothing, so the row is as long as
+         the plate is. Cells are filter links and sit above the card's
          stretched title link. */
-      .keytb {
-        display: grid;
-        grid-template-columns: 1fr 1fr;
+      .keyrow {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: stretch;
+        width: fit-content;
+        max-width: 100%;
         border: 1px solid var(--line);
         margin-top: 10px;
         position: relative;
         z-index: 1;
         font-family: var(--data);
-        font-variant-numeric: tabular-nums;
+        background: color-mix(in oklab, var(--paper) 70%, transparent);
       }
-      .keytb .ktb-cell {
-        display: block;
-        padding: 5px 8px 6px;
-        border-top: 1px solid var(--line);
+      .keyrow .kr-cell {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        padding: 4px 9px 5px;
         border-left: 1px solid var(--line);
         color: var(--ink-soft);
         text-decoration: none;
         min-width: 0;
       }
-      .keytb .ktb-cell:nth-child(-n + 2) {
-        border-top: none;
-      }
-      .keytb .ktb-cell:nth-child(odd) {
+      .keyrow .kr-cell:first-child {
         border-left: none;
       }
-      .keytb a.ktb-cell:hover {
+      .keyrow a.kr-cell:hover {
         background: var(--paper-2);
         color: var(--ink);
       }
-      .keytb a.ktb-cell:focus-visible {
+      .keyrow a.kr-cell:focus-visible {
         outline: 2px solid var(--accent);
         outline-offset: -2px;
       }
-      /* the applied gallery filter, echoed on the slot that would set it */
-      .keytb a.ktb-cell.is-on {
+      /* the applied gallery filter, echoed on the cell that would set it */
+      .keyrow a.kr-cell.is-on {
         background: var(--ink);
         color: var(--paper);
       }
-      .keytb .v {
-        display: flex;
-        align-items: center;
-        gap: 5px;
+      /* SUBJECT is the row's word, so its drawing is set in the ink */
+      .keyrow .kr-subject {
+        color: var(--ink);
+      }
+      /* An icon draws at 14 on a card: one 16-grid symbol out of the page's
+         one sprite, stroked in the running colour. */
+      .keyrow .gl {
+        flex: 0 0 auto;
+        width: 14px;
+        height: 14px;
+        display: block;
+      }
+      /* BASIS is the detail a city needs and no other key does — the value
+         itself, in the data face, beside the subject it qualifies. */
+      .keyrow .dt {
         font-size: 10px;
         letter-spacing: 0.11em;
         text-transform: uppercase;
-        min-height: 15px;
-      }
-      .keytb .v .w {
         overflow-wrap: anywhere;
       }
-      /* SUBJECT is the block's word: the one value set solid, in the ink */
-      .keytb .ktb-subject .v {
-        font-size: 12px;
-        letter-spacing: 0.08em;
-        font-weight: 600;
-        color: var(--ink);
+      /* MODE is a boolean: the lamp is lit accent when a plate answers a
+         pointer, and nothing at all when it does not. */
+      .keyrow .kr-mode {
+        color: var(--accent);
       }
-      .keytb a.ktb-subject.is-on .v {
+      .keyrow a.kr-mode.is-on {
         color: var(--paper);
-      }
-      /* BASIS is the qualifier under the subject — a lowercase phrase, cities
-         only; every other plate holds the slot with an em dash. */
-      .keytb .ktb-basis .v {
-        text-transform: lowercase;
-        letter-spacing: 0.04em;
-        font-size: 10.5px;
-      }
-      .keytb .ktb-basis.is-empty .v {
-        color: var(--ink-faint);
-      }
-      /* PROJECTION is a glyph: one per value, hairline, in the running colour */
-      .keytb .gl {
-        flex: 0 0 auto;
-        width: 15px;
-        height: 15px;
-        display: block;
-      }
-      .keytb .gl path {
-        fill: none;
-        stroke: currentColor;
-        stroke-width: 1.1;
-        stroke-linejoin: round;
-      }
-      .keytb .gl .dot {
-        stroke-width: 3.2;
-        stroke-linecap: round;
-      }
-      /* MODE is a boolean, drawn asymmetrically: a lit accent lamp and the word
-         when a plate answers a pointer, and NOTHING when it does not. */
-      .keytb .ktb-mode .v {
-        color: var(--ink);
-      }
-      .keytb .lamp {
-        flex: 0 0 auto;
-        width: 8px;
-        height: 8px;
-        border-radius: 50%;
-        background: var(--accent);
-        border: 1px solid var(--accent);
-        box-shadow: 0 0 0 2px var(--paper-2);
-      }
-      .keytb a.ktb-mode.is-on .v {
-        color: var(--paper);
-      }
-      .keytb a.ktb-mode.is-on .lamp {
-        background: var(--paper);
-        border-color: var(--paper);
-        box-shadow: none;
-      }
-      /* one column under a narrow card: four stacked rows, still ruled */
-      @media (max-width: 420px) {
-        .keytb {
-          grid-template-columns: 1fr;
-        }
-        .keytb .ktb-cell {
-          border-left: none;
-          border-top: 1px solid var(--line);
-        }
-        .keytb .ktb-cell:first-child {
-          border-top: none;
-        }
-        /* stacked, nothing is aligned against it: the unlit lamp's held slot
-           would only be a blank band, so it goes */
-        .keytb .ktb-mode.is-empty {
-          display: none;
-        }
       }
       /* THE WIDE BAND — the numbers and the argument, after the index. Over
          1800 the survey table and the reading column sit side by side, so the

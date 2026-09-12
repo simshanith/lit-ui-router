@@ -42,6 +42,7 @@ import {
   without,
 } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
+import { ICON_SPRITE, iconId } from './icons.ts';
 import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
 import { href } from './routes.ts';
@@ -355,6 +356,8 @@ export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => html`
   ${props?.resolves?.manifest
     ? unsafeHTML(`<style>${props.resolves.manifest.cover.css}</style>`)
     : nothing}
+  <!-- The key icons, once a page: every card cell and index chip is a <use>. -->
+  ${unsafeHTML(ICON_SPRITE)}
   <div class="app">
     ${rail(props?.resolves?.manifest)}
     <main class="content"><ui-view></ui-view></main>
@@ -392,74 +395,55 @@ const KEY_ACTIVE = { activeClasses: ['is-on'] };
 const filterHref = (filter: Filter): string => `${to(href.gallery)}${filterQuery(filter)}`;
 
 /**
- * THE KEY BLOCK — FORM's keys as a miniature of the plates' own title block
- * (generator/chrome.mjs `.titleblock`): hairline-ruled cells, the data face,
- * and NO field names — position is the key, the way a tombstone label is read.
- * The grammar is fixed: subject top left, projection top right, the basis
- * qualifier under the subject, the mode lamp under the projection.
+ * THE KEY ROW — FORM's keys as one line of icons, hairline-separated in the
+ * idiom of the plates' own title block (generator/chrome.mjs `.titleblock`):
+ * the data face, no field names. Left to right, the keys the plate carries:
+ * the subject's icon, the basis beside it as detail text on a city, the
+ * projection's glyph, and the interactive lamp. A key the plate does not
+ * carry draws NOTHING — twenty STATIC marks in a set of twenty-five is noise,
+ * and basis says nothing about a plate that is not a city, so absence is the
+ * value and the row is as long as the plate is.
  *
- * Two slots are asymmetric on purpose. `mode` is a boolean: the lamp and the
- * word are drawn only when a plate is interactive — twenty STATIC badges in a
- * set of twenty-five is noise. `basis` belongs to the city subject alone, so
- * every other plate prints an em dash and KEEPS the slot rather than letting
- * the block change shape. A carried slot is a link into the filtered index;
- * `uiSrefActive` echoes the applied filter on the slot that would set it.
- * Twin: `keyBlock` in prerender.ts (plain hrefs, no directives).
+ * Every cell is a link into the filtered index; `uiSrefActive` echoes the
+ * applied filter on the cell that would set it. The icons are named in the
+ * cover's KEY INDEX, which is their legend; here each cell carries the key and
+ * its value as an accessible name and a `title`, so a pointer names it too.
+ * Twins: `keyRowBlock` in prerender.ts (plain hrefs, no directives) and the
+ * chips in `chip()`, which draw the same symbols.
  */
 
-/** One 16×16 glyph per projection value; `dot` is drawn with round caps. */
-const GLYPHS: Record<string, { d: string; dot?: string }> = {
-  isometric: { d: 'M8 1.8 14 5.3 8 8.8 2 5.3Z M2 5.3v5.4l6 3.5 6-3.5V5.3 M8 8.8v5.4' },
-  plan: { d: 'M2.5 2.5h11v11h-11z M6.2 2.5v11 M9.8 2.5v11 M2.5 6.2h11 M2.5 9.8h11' },
-  graph: { d: 'M8 3.8 3.6 12.2 M8 3.8 12.4 11.6', dot: 'M8 3.8h0 M3.6 12.2h0 M12.4 11.6h0' },
-  chart: { d: 'M2.2 13.5h11.6 M3.8 13.5V8.8h2v4.7 M7 13.5V4.4h2v9.1 M10.2 13.5V6.9h2v6.6' },
-  schematic: { d: 'M5 5h6v6H5z M1.5 8H5 M11 8h3.5' },
-  section: {
-    d: 'M2.5 2.5h11v11h-11z M2.5 8h11 M2.6 11 5.1 8.5 M4.6 13.4 9.5 8.5 M8.4 13.4 13.3 8.5 M12.3 13.4 13.4 12.3',
-  },
+/** A symbol from the page's one sprite; nothing where a key has no drawing. */
+const icon = (key: LabelKey, value: string): TemplateResult | typeof nothing => {
+  const id = iconId(key, value);
+  return id
+    ? html`<svg class="gl" aria-hidden="true"><use href="#${id}"></use></svg>`
+    : nothing;
 };
-
-const glyph = (projection: string): TemplateResult => {
-  const shape = GLYPHS[projection];
-  return html`<svg class="gl" viewBox="0 0 16 16" aria-hidden="true">
-    <path d="${shape?.d ?? ''}" /><path class="dot" d="${shape?.dot ?? ''}" />
-  </svg>`;
-};
-
-/** The value in the shape its key asks for — glyph + word, lamp + word, word. */
-const slotValue = (key: LabelKey, value: string): TemplateResult =>
-  key === 'projection'
-    ? html`${glyph(value)}<span class="w">${value}</span>`
-    : key === 'mode'
-      ? html`<i class="lamp" aria-hidden="true"></i><span class="w">${value}</span>`
-      : html`<span class="w">${value}</span>`;
 
 /**
- * One cell. A carried key is a filter link; an uncarried one is a held slot —
- * an em dash for basis, blank for the unlit mode lamp. The key name is only in
- * the accessible name: on the page, position says it.
+ * One cell: the icon, and on the basis the value itself, which is the detail
+ * a city needs (MEASURED, DELIVERED, REAL 3D ISOMETRIC) and no other key does.
  */
-const keySlot = (key: LabelKey, value: string | undefined, blank = ''): TemplateResult => {
-  if (!value)
-    return html`<span class="ktb-cell ktb-${key} is-empty"><span class="v">${blank}</span></span>`;
+const keyCell = (key: LabelKey, value: string | undefined): TemplateResult | typeof nothing => {
+  if (!value) return nothing;
   const next: Filter = { ...EMPTY_FILTER, [key]: value };
   return html`<a
-    class="ktb-cell ktb-${key}"
+    class="kr-cell kr-${key}"
     aria-label="${key} ${value}"
+    title="${key} ${value}"
     ${uiSrefActive(KEY_ACTIVE)}
     ${uiSref('atlas.gallery', { ...next })}
     href="${filterHref(next)}"
-    ><span class="v">${slotValue(key, value)}</span></a
+    >${icon(key, value)}${key === 'basis' ? html`<span class="dt">${value}</span>` : nothing}</a
   >`;
 };
 
 const keyBlock = (labels: SheetLabels): TemplateResult => html`
-  <span class="keytb" aria-label="keys">
-    ${keySlot('subject', labels.subject)}${keySlot('projection', labels.projection)}${keySlot(
-      'basis',
-      labels.basis,
-      '—',
-    )}${keySlot('mode', labels.mode === 'interactive' ? labels.mode : undefined)}
+  <span class="keyrow" aria-label="keys">
+    ${keyCell('subject', labels.subject)}${keyCell('basis', labels.basis)}${keyCell(
+      'projection',
+      labels.projection,
+    )}${keyCell('mode', labels.mode === 'interactive' ? labels.mode : undefined)}
   </span>
 `;
 
@@ -470,16 +454,29 @@ const keyBlock = (labels: SheetLabels): TemplateResult => html`
  * navigation behind, and the ALL chips, whose target is "the filter minus this
  * key", moved on every click. The filter is already in hand here and says the
  * answer outright: a value chip is on when the key holds it, and ALL is on when
- * the key holds nothing. `uiSrefActive` still drives the cards' key slots,
+ * the key holds nothing. `uiSrefActive` still drives the cards' key cells,
  * whose targets are the plate's own fixed labels.
+ *
+ * THE INDEX IS THE LEGEND. A value chip draws the same symbol the cards draw
+ * for that value, ahead of the word, so the filter block names every icon on
+ * the cover. The ALL chip names no value and takes none; `static` and the
+ * basis values are drawn nowhere, and their chips are words, as on the cards.
  */
-const chip = (label: string, count: number, next: Filter, on: boolean): TemplateResult => html`
+const chip = (
+  key: LabelKey,
+  label: string,
+  count: number,
+  next: Filter,
+  on: boolean,
+  withIcon = true,
+): TemplateResult => html`
   <a
     class="kv ${on ? 'is-on' : ''}"
     aria-current="${on ? 'page' : nothing}"
     ${uiSref('atlas.gallery', { ...next })}
     href="${filterHref(next)}"
-    ><i>${label}</i><span class="c">${count}</span></a
+    >${withIcon ? icon(key, label) : nothing}<i>${label}</i
+    ><span class="c">${count}</span></a
   >
 `;
 
@@ -496,13 +493,16 @@ const keyRow = (
       <span class="kk">${key}</span>
       <div class="kchips">
         ${chip(
+          key,
           'all',
           rows.filter((row) => matchesFilter(row.labels, all)).length,
           all,
           filter[key] === null,
+          false,
         )}
         ${facet(rows, key, filter).map((entry) =>
           chip(
+            key,
             entry.value,
             entry.count,
             { ...filter, [key]: entry.value },
@@ -997,6 +997,10 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         </p>
         <h3>HOW THE SET IS DRAWN</h3>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.notes)}</p>` : nothing}
+        <p>
+          Icons: Lucide (ISC), restroked; projection glyphs and the register and spine
+          drawn here.
+        </p>
         <!-- SOURCES is a footnote to the reading column, so it sits in it -->
         ${manifest ? unsafeHTML(manifest.cover.provenance) : nothing}
       </div>

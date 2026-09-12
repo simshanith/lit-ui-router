@@ -54,6 +54,7 @@ import {
   labelledRows,
   thumbSrc,
 } from './src/manifest.ts';
+import { ICON_SPRITE, iconId } from './src/icons.ts';
 import { BASE, MOUNT, href, mountsFor } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 
@@ -167,6 +168,7 @@ const indexCrumb = (): TemplateResult => html`<a href="${href.gallery}">← INDE
 
 const page = (active: string, content: TemplateResult): TemplateResult => html`
   ${unsafeHTML(`<style>${manifest.cover.css}</style>`)}
+  ${unsafeHTML(ICON_SPRITE)}
   <div class="app">${railTemplate(active)}<main class="content">${content}</main></div>
 `;
 
@@ -186,53 +188,32 @@ const logEntry = (entry: IssueEntry): TemplateResult => html`
 // form onto the same page. A reader with no JS at all still gets the index and
 // a shareable filter url; the client takes it over on hydration.
 /**
- * THE KEY BLOCK, static twin (`keyBlock` in src/views.ts). Same cells, same
- * classes, plain hrefs — element-part directives do not SSR, and the
- * prerendered page is the unfiltered index, so no slot is lit.
+ * THE KEY ROW, static twin (`keyBlock` in src/views.ts). Same cells, same
+ * classes, same symbols, plain hrefs — element-part directives do not SSR,
+ * and the prerendered page is the unfiltered index, so no cell is lit.
  */
-const GLYPHS: Record<string, { d: string; dot?: string }> = {
-  isometric: { d: 'M8 1.8 14 5.3 8 8.8 2 5.3Z M2 5.3v5.4l6 3.5 6-3.5V5.3 M8 8.8v5.4' },
-  plan: { d: 'M2.5 2.5h11v11h-11z M6.2 2.5v11 M9.8 2.5v11 M2.5 6.2h11 M2.5 9.8h11' },
-  graph: { d: 'M8 3.8 3.6 12.2 M8 3.8 12.4 11.6', dot: 'M8 3.8h0 M3.6 12.2h0 M12.4 11.6h0' },
-  chart: { d: 'M2.2 13.5h11.6 M3.8 13.5V8.8h2v4.7 M7 13.5V4.4h2v9.1 M10.2 13.5V6.9h2v6.6' },
-  schematic: { d: 'M5 5h6v6H5z M1.5 8H5 M11 8h3.5' },
-  section: {
-    d: 'M2.5 2.5h11v11h-11z M2.5 8h11 M2.6 11 5.1 8.5 M4.6 13.4 9.5 8.5 M8.4 13.4 13.3 8.5 M12.3 13.4 13.4 12.3',
-  },
+const icon = (key: LabelKey, value: string): TemplateResult | typeof nothing => {
+  const id = iconId(key, value);
+  return id ? html`<svg class="gl" aria-hidden="true"><use href="#${id}"></use></svg>` : nothing;
 };
 
-const glyph = (projection: string): TemplateResult => {
-  const shape = GLYPHS[projection];
-  return html`<svg class="gl" viewBox="0 0 16 16" aria-hidden="true">
-    <path d="${shape?.d ?? ''}" /><path class="dot" d="${shape?.dot ?? ''}" />
-  </svg>`;
-};
-
-const slotValue = (key: LabelKey, value: string): TemplateResult =>
-  key === 'projection'
-    ? html`${glyph(value)}<span class="w">${value}</span>`
-    : key === 'mode'
-      ? html`<i class="lamp" aria-hidden="true"></i><span class="w">${value}</span>`
-      : html`<span class="w">${value}</span>`;
-
-const keySlot = (key: LabelKey, value: string | undefined, blank = ''): TemplateResult => {
-  if (!value)
-    return html`<span class="ktb-cell ktb-${key} is-empty"><span class="v">${blank}</span></span>`;
+const keyCell = (key: LabelKey, value: string | undefined): TemplateResult | typeof nothing => {
+  if (!value) return nothing;
   return html`<a
-    class="ktb-cell ktb-${key}"
+    class="kr-cell kr-${key}"
     aria-label="${key} ${value}"
+    title="${key} ${value}"
     href="${href.gallery}${filterQuery({ ...EMPTY_FILTER, [key]: value })}"
-    ><span class="v">${slotValue(key, value)}</span></a
+    >${icon(key, value)}${key === 'basis' ? html`<span class="dt">${value}</span>` : nothing}</a
   >`;
 };
 
 const keyBlock = (labels: SheetLabels): TemplateResult => html`
-  <span class="keytb" aria-label="keys">
-    ${keySlot('subject', labels.subject)}${keySlot('projection', labels.projection)}${keySlot(
-      'basis',
-      labels.basis,
-      '—',
-    )}${keySlot('mode', labels.mode === 'interactive' ? labels.mode : undefined)}
+  <span class="keyrow" aria-label="keys">
+    ${keyCell('subject', labels.subject)}${keyCell('basis', labels.basis)}${keyCell(
+      'projection',
+      labels.projection,
+    )}${keyCell('mode', labels.mode === 'interactive' ? labels.mode : undefined)}
   </span>
 `;
 
@@ -246,7 +227,8 @@ const staticKeyRow = (key: LabelKey, extraClass = ''): TemplateResult => html`
       ${facet(ROWS, key, EMPTY_FILTER).map(
         (entry) => html`
           <a class="kv" href="${href.gallery}${filterQuery({ ...EMPTY_FILTER, [key]: entry.value })}"
-            ><i>${entry.value}</i><span class="c">${entry.count}</span></a
+            >${icon(key, entry.value)}<i>${entry.value}</i
+            ><span class="c">${entry.count}</span></a
           >
         `,
       )}
