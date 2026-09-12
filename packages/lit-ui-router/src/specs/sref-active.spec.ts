@@ -15,6 +15,7 @@ import { UIRouterLit } from '../core.js';
 import { LitStateDeclaration } from '../interface.js';
 import {
   createTestRouter,
+  defer,
   tick,
   waitForUpdate,
   routerGo,
@@ -361,6 +362,45 @@ describe('attribute-part active directives', () => {
       render(link(false), wrapper);
       await tick();
       await goTo('users');
+      expect(anchor.classList.contains('active')).toBe(false);
+
+      render(link(true), wrapper);
+      await tick(20);
+      expect(wrapper.querySelector('a')).toBe(anchor);
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
+
+    // deregistering stops the next start, not a settlement already subscribed
+    it('leaves a cached element alone when a transition settles after its part left', async () => {
+      const link = (show: boolean) =>
+        html`${cache(
+          show
+            ? html`<a
+                class=${srefActiveClass({
+                  state: 'slow',
+                  activeClasses: ['active'],
+                })}
+                >Slow</a
+              >`
+            : nothing,
+        )}`;
+      const wrapper = await mount(link(true));
+      const anchor = wrapper.querySelector('a')!;
+      const gate = defer();
+      router.stateRegistry.register({
+        name: 'slow',
+        url: '/slow',
+        resolve: [{ token: 'gate', resolveFn: () => gate.promise }],
+      });
+
+      const going = router.stateService.go('slow');
+      await tick();
+      render(link(false), wrapper);
+      await tick();
+      gate.resolve();
+      await going;
+      await tick(20);
+      expect(router.stateService.is('slow')).toBe(true);
       expect(anchor.classList.contains('active')).toBe(false);
 
       render(link(true), wrapper);

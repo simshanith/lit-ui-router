@@ -79,6 +79,8 @@ export abstract class SrefStatusDirective<
 
   private _firstUpdated = false;
   private _deregister: deregisterFn[] = [];
+  /** bumped on disconnect, so a settlement subscribed before it stays quiet */
+  private _connection = 0;
 
   /** the attribute this directive is bound in, for warnings */
   private readonly attributeName: string;
@@ -231,10 +233,18 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   onTransitionStart = (trans: Transition): void => {
+    // deregistering stops the next start, not a settlement already subscribed;
+    // past a disconnect the class directive would write a detached element
+    const connection = this._connection;
+    const settled = (evt: TransEvt['evt']): void => {
+      if (connection === this._connection) {
+        this.refresh({ evt, trans });
+      }
+    };
     this.refresh({ evt: 'start', trans });
     trans.promise.then(
-      () => this.refresh({ evt: 'success', trans }),
-      () => this.refresh({ evt: 'error', trans }),
+      () => settled('success'),
+      () => settled('error'),
     );
   };
 
@@ -260,6 +270,7 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   disconnected(): void {
+    this._connection++;
     this._deregister.forEach((deregister) => deregister());
     this._deregister = [];
     this._firstUpdated = false;
