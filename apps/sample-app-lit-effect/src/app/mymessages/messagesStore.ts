@@ -3,12 +3,13 @@ import { Effect, Stream, SubscriptionRef } from 'effect';
 import { appModulesRegistered } from 'sample-app-shared/app/global/appModules.js';
 import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+import { snapshot } from 'sample-app-shared/app/mymessages/snapshot.js';
 
 import { runtime } from '../effect/runtime.js';
 import AppConfig from '../global/appConfig.js';
 
 export interface MessagesSnapshot {
-  messages: Message[];
+  messages: readonly Message[];
 
   /** False until the first fetch resolves; callers may fall back to resolves. */
   loaded: boolean;
@@ -33,7 +34,10 @@ const refresh = Effect.promise<Message[]>(() =>
   MessagesStorage.all((messages: Message[]) => messages),
 ).pipe(
   Effect.flatMap((messages) =>
-    SubscriptionRef.set(messages$, { messages: [...messages], loaded: true }),
+    SubscriptionRef.set(messages$, {
+      messages: snapshot(messages),
+      loaded: true,
+    }),
   ),
 );
 
@@ -56,12 +60,12 @@ void appModulesRegistered.then(() => runtime.runFork(refresh));
  * can derive it from whatever the ref last emitted.
  */
 export function byFolder(
-  snapshot: MessagesSnapshot,
+  cache: MessagesSnapshot,
   folderId: string,
-): Message[] {
+): readonly Message[] {
   const toFromAttr = ['drafts', 'sent'].includes(folderId) ? 'from' : 'to';
   const emailAddress = AppConfig.emailAddress ?? '';
-  return snapshot.messages.filter(
+  return cache.messages.filter(
     (message) =>
       message.folder === folderId &&
       (message[toFromAttr] ?? '').includes(emailAddress),
