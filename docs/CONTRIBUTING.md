@@ -99,6 +99,12 @@ survives the flip, so labelling a draft queues the review up for the moment it
 is marked ready. It is advisory either way: no required status check, nothing it says blocks a
 merge. `mise run ci` remains the gate.
 
+Expect roughly a minute between marking a PR ready and the review appearing,
+with no progress indicator in between: CodeRabbit posts one summary comment when
+the PR opens and rewrites that same comment in place when the review lands, so
+nothing new shows up while it works. Wait it out rather than adjusting labels —
+adding `coderabbit:skip` to a PR whose review is already in flight can cancel it.
+
 Stacked PRs work the same way. `base_branches` is set to `.*`, so a PR based on
 another branch is reviewable on request like any other; it used to list `main`
 alone, which is the default branch and so matched nothing, and CodeRabbit
