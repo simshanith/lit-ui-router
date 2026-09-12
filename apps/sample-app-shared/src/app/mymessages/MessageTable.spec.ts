@@ -3,6 +3,7 @@ import type { AppModules } from '../global/appModules.js';
 import { registerAppModules } from '../global/appModules.js';
 import type { Message } from './interface.js';
 import { MessageTable } from './MessageTable.js';
+import { snapshot } from './snapshot.js';
 
 // MessageTable reads the late-bound AppConfig.sort
 registerAppModules({
@@ -26,13 +27,13 @@ const unreadRows = (table: MessageTable) =>
 
 describe('message table read column', () => {
   let table: MessageTable;
-  let messages: Message[];
+  let rows: Message[];
 
   beforeEach(async () => {
-    messages = [message('a', 'First'), message('b', 'Second')];
+    rows = [message('a', 'First'), message('b', 'Second')];
     table = new MessageTable();
     table.columns = ['read', 'from', 'subject', 'date'];
-    table.messages = messages;
+    table.messages = snapshot(rows);
     document.body.append(table);
     await table.updateComplete;
   });
@@ -45,12 +46,19 @@ describe('message table read column', () => {
     expect(unreadRows(table)).toBe(2);
   });
 
-  // sample-message mutates the shared instance, then the list re-assigns the same array
-  it('drops the dot when a row is marked read in place', async () => {
-    messages[0].read = true;
-    table.messages = messages;
+  // the list re-snapshots off the store commit, so the table sees a new array
+  it('drops the dot when a fresh snapshot marks a row read', async () => {
+    rows[0].read = true;
+    table.messages = snapshot(rows);
     await table.updateComplete;
 
     expect(unreadRows(table)).toBe(1);
+  });
+
+  it('renders no dots once every row is read', async () => {
+    table.messages = snapshot(rows.map((row) => ({ ...row, read: true })));
+    await table.updateComplete;
+
+    expect(unreadRows(table)).toBe(0);
   });
 });

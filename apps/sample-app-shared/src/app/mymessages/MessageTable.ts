@@ -43,9 +43,9 @@ export class MessageTable extends LitElement {
   @property({ attribute: false })
   columns: string[] = [];
 
-  // rows are store instances sample-message mutates in place; no equality gate can see that
-  @property({ hasChanged: () => true, attribute: false })
-  messages: Message[] = [];
+  // a frozen snapshot from the list (see snapshot.ts), never the store's live rows
+  @property({ attribute: false })
+  messages: readonly Message[] = [];
 
   @state()
   sort = AppConfig.sort;
