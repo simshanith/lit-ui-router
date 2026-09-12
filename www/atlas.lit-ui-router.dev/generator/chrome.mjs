@@ -83,7 +83,7 @@ export const CSS = `
    ONE number covers both hosts.
 
    --display  the atlas name, EVERYWHERE it is drawn: rail head, cover title,
-              and the condensed wordmark's own name (.mark) in every
+              and the condensed wordmark's own name (.project-mark) in every
               sheet-head PROJECT line and title block PROJECT value
    --title    sheet titles, card and prose headings, rail entry titles
    --data     kickers, tracked caps, numbers, schedules, the title block
@@ -201,7 +201,7 @@ sup.art {
 /* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
    is the full uppercase wordmark in the display face, which the rail head and
    the cover title carry plain. This one is the LEDGER name: the same display
-   face for the name (.mark, below), with the article drawn as the kit's
+   face for the name (.project-mark, below), with the article drawn as the kit's
    catchword. Two sites carry it — every sheet-head PROJECT line and the title
    block's PROJECT value — and both wrap the superior in .cw, so this is ONE
    rule set, not two.
@@ -222,7 +222,7 @@ sup.art {
    (" — DRAWING SET") keeps the ledger face at the line's own size. In a title
    block it is 14.31px inside the 13.5px .dsp, capping at 9.32px: the same cap
    the ledger face would have drawn there, a tenth under the sheet title's. */
-.mark {
+.project-mark {
   font-family: var(--display);
   font-size: 1.06em;
   font-weight: 600;
@@ -573,7 +573,7 @@ export const articleTitleInline = (title = '') =>
  */
 export const PROJECT_MARK = PROJECT.replace(
   /^THE\s+(.+)$/,
-  '<span class="cw"><sup class="art">the&nbsp;</sup></span><span class="mark">$1</span>',
+  '<span class="cw"><sup class="art">the&nbsp;</sup></span><span class="project-mark">$1</span>',
 );
 
 export function titleBlock(sheet) {

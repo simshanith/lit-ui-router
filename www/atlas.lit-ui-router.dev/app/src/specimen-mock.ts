@@ -32,13 +32,21 @@
  */
 
 export const SPECIMEN_CSS = `
-.specimen { max-width: 1240px; margin: 0 auto; }
+/* The bench takes the content column whole, as every sheet does — no centred cap. */
+.specimen { min-width: 0; }
 
-/* --- the switcher --------------------------------------------------------- */
-.sp-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: center; margin-bottom: 10px; }
-.sp-group { display: flex; align-items: stretch; border: 1px solid var(--ink); background: var(--paper); }
-.sp-group .sp-lbl { display: flex; align-items: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; color: var(--ink-faint); padding: 0 8px; border-right: 1px solid var(--line); }
-.sp-group button { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; color: var(--ink); background: var(--paper); border: 0; border-right: 1px solid var(--line); padding: 6px 10px; cursor: pointer; }
+/* --- the switcher ---------------------------------------------------------
+   A GROUP WRAPS. Its widest row is the fourteen TITLE ARTICLE buttons, whose
+   intrinsic run is 1120px: on a flex row that cannot break, that is 1120px of
+   page at every viewport, and the document scrolled sideways from 1400 down.
+   Wrapping inside the group is the only break point that does not shrink the
+   buttons, whose labels ARE the specimen. The label stays on the first row and
+   the seams are drawn on the buttons, pulled up a pixel so the last row's rule
+   lands on the group's own border rather than beside it. */
+.sp-controls { display: flex; flex-wrap: wrap; gap: 10px 18px; align-items: flex-start; margin-bottom: 10px; }
+.sp-group { display: flex; flex-wrap: wrap; align-items: stretch; max-width: 100%; border: 1px solid var(--ink); background: var(--paper); }
+.sp-group .sp-lbl { display: flex; align-items: center; font-family: var(--mono); font-size: 8.5px; letter-spacing: 0.18em; color: var(--ink-faint); padding: 0 8px; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: -1px; }
+.sp-group button { font-family: var(--mono); font-size: 9.5px; letter-spacing: 0.12em; color: var(--ink); background: var(--paper); border: 0; border-right: 1px solid var(--line); border-bottom: 1px solid var(--line); margin-bottom: -1px; padding: 6px 10px; cursor: pointer; }
 .sp-group button:last-child { border-right: 0; }
 .sp-group button:hover:not(:disabled) { background: var(--paper-2); }
 .sp-group button.on { background: var(--accent); color: var(--paper); font-weight: 600; }

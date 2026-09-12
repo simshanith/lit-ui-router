@@ -39,6 +39,7 @@ import {
   matchesFilter,
   readFilter,
   thumbSrc,
+  without,
 } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
 import { initCity } from './generated/city-init.js';
@@ -59,14 +60,15 @@ const THE: TemplateResult = html`<sup class="art">the&nbsp;</sup>`;
 
 /**
  * THE CONDENSED WORDMARK — the atlas's LEDGER name, for the sheet-head PROJECT
- * line and the plates' title blocks: the NAME in the display face (`.mark` in
- * sheets/atlas.css, so the face travels with the mark, not with the site), with
- * the article drawn as the kit's catchword (`.cw`) and as the superior off it.
+ * line and the plates' title blocks: the NAME in the display face
+ * (`.project-mark` in sheets/atlas.css, so the face travels with the mark, not
+ * with the site), with the article drawn as the kit's catchword (`.cw`) and as
+ * the superior off it.
  * The rail head and the cover title carry the OTHER name — the full uppercase
  * wordmark in the display face, plain, with nothing set apart.
  * Twin: `PROJECT_MARK` in generator/chrome.mjs and in prerender.ts.
  */
-const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span><span class="mark">ALTITUDE ATLAS</span>`;
+const PROJECT_MARK: TemplateResult = html`<span class="cw">${THE}</span><span class="project-mark">ALTITUDE ATLAS</span>`;
 
 const articleTitle = (title: string): TemplateResult =>
   ARTICLE.test(title) ? html`${THE}${entryTitle(title)}` : html`${title}`;
@@ -461,10 +463,20 @@ const keyBlock = (labels: SheetLabels): TemplateResult => html`
   </span>
 `;
 
-const chip = (label: string, count: number, next: Filter): TemplateResult => html`
+/**
+ * A CHIP MARKS ITSELF ACTIVE. `uiSrefActive` caches its status and recomputes
+ * it on transitions only, while a chip's TARGET params are rewritten by the
+ * render that the transition causes — so a chip whose target moved read one
+ * navigation behind, and the ALL chips, whose target is "the filter minus this
+ * key", moved on every click. The filter is already in hand here and says the
+ * answer outright: a value chip is on when the key holds it, and ALL is on when
+ * the key holds nothing. `uiSrefActive` still drives the cards' key slots,
+ * whose targets are the plate's own fixed labels.
+ */
+const chip = (label: string, count: number, next: Filter, on: boolean): TemplateResult => html`
   <a
-    class="kv"
-    ${uiSrefActive(KEY_ACTIVE)}
+    class="kv ${on ? 'is-on' : ''}"
+    aria-current="${on ? 'page' : nothing}"
     ${uiSref('atlas.gallery', { ...next })}
     href="${filterHref(next)}"
     ><i>${label}</i><span class="c">${count}</span></a
@@ -477,20 +489,30 @@ const keyRow = (
   rows: readonly { labels: SheetLabels }[],
   filter: Filter,
   extraClass = '',
-): TemplateResult => html`
-  <div class="krow ${extraClass}">
-    <span class="kk">${key}</span>
-    <div class="kchips">
-      ${chip('all', rows.filter((row) => matchesFilter(row.labels, { ...filter, [key]: null })).length, {
-        ...filter,
-        [key]: null,
-      })}
-      ${facet(rows, key, filter).map((entry) =>
-        chip(entry.value, entry.count, { ...filter, [key]: entry.value }),
-      )}
+): TemplateResult => {
+  const all = without(filter, key);
+  return html`
+    <div class="krow ${extraClass}">
+      <span class="kk">${key}</span>
+      <div class="kchips">
+        ${chip(
+          'all',
+          rows.filter((row) => matchesFilter(row.labels, all)).length,
+          all,
+          filter[key] === null,
+        )}
+        ${facet(rows, key, filter).map((entry) =>
+          chip(
+            entry.value,
+            entry.count,
+            { ...filter, [key]: entry.value },
+            filter[key] === entry.value,
+          ),
+        )}
+      </div>
     </div>
-  </div>
-`;
+  `;
+};
 
 const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): TemplateResult => {
   const rows = labelledRows(manifest);
