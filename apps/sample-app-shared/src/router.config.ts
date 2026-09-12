@@ -21,7 +21,8 @@ import reqAuthHook from './app/global/requiresAuth.hook.js';
 import googleAnalyticsHook from './app/util/ga.js';
 import {
   featureFlags,
-  resolveLocationPlugin,
+  describeLocationPlugin,
+  setBootedLocationPlugin,
   LocationPluginFeatureSymbol,
 } from './app/util/featureDetection.js';
 import { replaceAwareHashLocationPlugin } from './app/util/replaceAwareHashLocation.js';
@@ -68,13 +69,14 @@ export function configureRouter(router = new UIRouterLit()) {
     document.head.appendChild(base);
   }
 
-  const locationPluginKey = resolveLocationPlugin();
+  const booted = describeLocationPlugin();
+  setBootedLocationPlugin(booted);
   const { plugin: locationPlugin, message } =
-    locationPluginConfig[locationPluginKey];
+    locationPluginConfig[booted.plugin];
   router.plugin(locationPlugin);
   console.info(message);
 
-  if (locationPluginKey === 'navigation') {
+  if (booted.plugin === 'navigation') {
     window.navigation.addEventListener('navigate', (event: NavigateEvent) => {
       const url = new URL(event.destination.url);
       console.debug('navigate', event);

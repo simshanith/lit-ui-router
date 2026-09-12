@@ -41,6 +41,16 @@ export function isValidLocationPlugin(
   return value === 'pushState' || value === 'navigation' || value === 'hash';
 }
 
+/** Where a location-plugin preference came from, or `auto` when none applied. */
+export type LocationPluginSource = 'url' | 'session' | 'env' | 'auto';
+
+export interface ResolvedLocationPlugin {
+  plugin: LocationPluginFeatureSymbol;
+  source: LocationPluginSource;
+  /** Set when a `navigation` preference fell back for lack of the API. */
+  downgraded: boolean;
+}
+
 /**
  * Reads the configured preference, in priority order:
  * 1. URL param ?feature-location-plugin=...
@@ -50,32 +60,72 @@ export function isValidLocationPlugin(
  * `default` at any level means "no preference", so it stops the lookup rather
  * than falling through to the level below.
  */
-export function resolveLocationPluginFeature(): string | undefined {
-  const feature = featureFlags.get('location-plugin') as string | undefined;
-  if (isValidLocationPlugin(feature)) return feature;
-  if (feature === LOCATION_PLUGIN_AUTO) return undefined;
+function readLocationPluginPreference(): {
+  value: string | undefined;
+  source: Exclude<LocationPluginSource, 'auto'>;
+} {
+  const flag = featureFlags.get('location-plugin') as string | undefined;
+  if (isValidLocationPlugin(flag) || flag === LOCATION_PLUGIN_AUTO) {
+    const source = featureFlags.isUrlOverridden('location-plugin')
+      ? 'url'
+      : 'session';
+    return { value: flag, source };
+  }
 
   const env = import.meta.env.VITE_SAMPLE_APP_LOCATION_PLUGIN as
     | string
     | undefined;
-  return env === LOCATION_PLUGIN_AUTO ? undefined : env;
+  return { value: env, source: 'env' };
+}
+
+export function resolveLocationPluginFeature(): string | undefined {
+  const { value } = readLocationPluginPreference();
+  return value === LOCATION_PLUGIN_AUTO ? undefined : value;
 }
 
 /**
- * Resolves the location plugin actually handed to the router.
+ * Resolves the location plugin actually handed to the router, and says why.
  *
  * A preference wins, except that `navigation` downgrades to `pushState` on a
  * browser without the API. With no preference — unset, `default`, or anything
  * unrecognized — the app chooses: Navigation API where it exists, `pushState`
- * everywhere else.
+ * everywhere else, and reports `auto`.
  */
-export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
-  let feature = resolveLocationPluginFeature();
-  if (feature === 'navigation' && !canUseNavigationAPI()) {
-    feature = 'pushState';
+export function describeLocationPlugin(): ResolvedLocationPlugin {
+  const { value, source } = readLocationPluginPreference();
+  const preferred =
+    value === LOCATION_PLUGIN_AUTO || !isValidLocationPlugin(value)
+      ? undefined
+      : value;
+
+  if (preferred === 'navigation' && !canUseNavigationAPI()) {
+    return { plugin: 'pushState', source, downgraded: true };
   }
-  if (isValidLocationPlugin(feature)) return feature;
-  return canUseNavigationAPI() ? 'navigation' : 'pushState';
+  if (preferred) return { plugin: preferred, source, downgraded: false };
+
+  return {
+    plugin: canUseNavigationAPI() ? 'navigation' : 'pushState',
+    source: 'auto',
+    downgraded: false,
+  };
+}
+
+export function resolveLocationPlugin(): LocationPluginFeatureSymbol {
+  return describeLocationPlugin().plugin;
+}
+
+let booted: ResolvedLocationPlugin | undefined;
+
+/** Records what the router booted with, so prefs can report it verbatim. */
+export function setBootedLocationPlugin(
+  resolved: ResolvedLocationPlugin | undefined,
+): void {
+  booted = resolved;
+}
+
+/** What the running router booted with, or undefined before it is configured. */
+export function bootedLocationPlugin(): ResolvedLocationPlugin | undefined {
+  return booted;
 }
 
 export interface FeatureFlagDefinitions {

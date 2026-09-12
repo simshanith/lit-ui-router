@@ -1,6 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import {
   canUseNavigationAPI,
+  describeLocationPlugin,
   featureFlags,
   isValidLocationPlugin,
   LOCATION_PLUGIN_AUTO,
@@ -193,6 +194,81 @@ describe('feature detection', () => {
       vi.stubGlobal('navigation', undefined);
       vi.stubEnv(ENV_KEY, undefined);
       expect(resolveLocationPlugin()).toBe('pushState');
+    });
+  });
+
+  describe('describeLocationPlugin', () => {
+    it('reports an auto-detected navigation resolution', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, undefined);
+      expect(describeLocationPlugin()).toEqual({
+        plugin: 'navigation',
+        source: 'auto',
+        downgraded: false,
+      });
+    });
+
+    it('reports the auto fallback without the Navigation API', () => {
+      vi.stubGlobal('navigation', undefined);
+      vi.stubEnv(ENV_KEY, undefined);
+      expect(describeLocationPlugin()).toEqual({
+        plugin: 'pushState',
+        source: 'auto',
+        downgraded: false,
+      });
+    });
+
+    it('names the URL param as the source', () => {
+      setFeatureParam('location-plugin', 'hash');
+      expect(describeLocationPlugin()).toMatchObject({
+        plugin: 'hash',
+        source: 'url',
+      });
+    });
+
+    it('names session storage as the source', () => {
+      featureFlags.set('location-plugin', 'hash');
+      expect(describeLocationPlugin()).toMatchObject({
+        plugin: 'hash',
+        source: 'session',
+      });
+    });
+
+    it('names the env var as the source', () => {
+      vi.stubEnv(ENV_KEY, 'hash');
+      expect(describeLocationPlugin()).toMatchObject({
+        plugin: 'hash',
+        source: 'env',
+      });
+    });
+
+    it('flags a downgrade and keeps the source that asked for it', () => {
+      vi.stubGlobal('navigation', undefined);
+      featureFlags.set('location-plugin', 'navigation');
+      expect(describeLocationPlugin()).toEqual({
+        plugin: 'pushState',
+        source: 'session',
+        downgraded: true,
+      });
+    });
+
+    it('reports auto for the default sentinel, not the env var beneath it', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, 'hash');
+      setFeatureParam('location-plugin', LOCATION_PLUGIN_AUTO);
+      expect(describeLocationPlugin()).toMatchObject({
+        plugin: 'navigation',
+        source: 'auto',
+      });
+    });
+
+    it('reports auto for an unrecognized env value', () => {
+      vi.stubGlobal('navigation', { navigate: () => undefined });
+      vi.stubEnv(ENV_KEY, 'memory');
+      expect(describeLocationPlugin()).toMatchObject({
+        plugin: 'navigation',
+        source: 'auto',
+      });
     });
   });
 
