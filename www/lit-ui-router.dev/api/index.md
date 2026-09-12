@@ -74,6 +74,41 @@ router.start();
 
 - **[`uiSref`](./reference/directives/uiSref)** - Creates navigation links to states
 - **[`uiSrefActive`](./reference/directives/uiSrefActive)** - Adds CSS classes when linked state is active, and sets `aria-current` on active links
+- **[`srefHref`](./reference/directives/srefHref)** - `uiSref` bound in the `href` attribute
+- **[`srefActiveClass`](./reference/directives/srefActiveClass)** - `uiSrefActive`'s classes, bound in the `class` attribute
+- **[`srefAriaCurrent`](./reference/directives/srefAriaCurrent)** - `uiSrefActive`'s `aria-current`, bound in the attribute
+
+#### Attribute-part forms
+
+`uiSref` and `uiSrefActive` are element parts: they sit on the element and
+write to it from the outside, so a reader that is not a live browser — a
+server renderer, an accessibility linter — sees an `<a>` with no `href`.
+The `sref*` directives do the same jobs from inside the attribute they
+affect, so the template says what the browser will show. A linter reads
+that today; server rendering also needs a way to hand the directives a
+router, which is still open ([#564](https://github.com/simshanith/lit-ui-router/issues/564)):
+
+```html
+<a href=${srefHref('users')}
+   class="nav-link ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}"
+   aria-current=${srefAriaCurrent({ state: 'users' })}>Users</a>
+<!-- while at `users`:        <a href="/users" class="nav-link active" aria-current="page"> -->
+<!-- while at `users.detail`: <a href="/users" class="nav-link active"> -->
+```
+
+- `srefHref` takes `uiSref`'s arguments and does everything `uiSref` does —
+  the click navigates, and an enclosing `uiSrefActive` still tracks it. There
+  is no `assignHref`: the attribute is the binding. Use one form or the other
+  on an element, not both.
+- `srefActiveClass` follows lit's `classMap`: bind it in `class`, alone or
+  beside static classes, and it toggles only the classes it names. Leave
+  `state` out on a wrapper to watch the `srefHref` links inside it, as
+  `uiSrefActive` does.
+- `srefAriaCurrent` is the one piece a `class` binding cannot reach, so it is
+  its own directive. Binding the attribute is the opt-in: it writes `'page'`
+  while the exact state is active and removes the attribute otherwise, on any
+  element, with none of `uiSrefActive`'s link detection or takeover rules.
+  `value` picks another token or `{ exact, active }` for ancestors.
 
 #### Accessible active links
 

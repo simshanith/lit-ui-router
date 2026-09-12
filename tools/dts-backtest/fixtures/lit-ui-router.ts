@@ -11,6 +11,9 @@ import {
   UIRouterLitElement,
   UiView,
   mergeSrefStatus,
+  srefActiveClass,
+  srefAriaCurrent,
+  srefHref,
   uiSref,
   uiSrefActive,
   uiSrefTargetEvent,
@@ -42,6 +45,12 @@ export const userTemplate = (props?: UIViewInjectedProps<UserResolves>) => html`
   <nav ${uiSrefActive({ activeClasses: ['active'], exactClasses: ['exact'] })}>
     <a ${uiSref('user.detail')}>detail</a>
   </nav>
+  <a
+    href=${srefHref('user.detail', { id: 1 }, { reload: true })}
+    class="nav-link ${srefActiveClass({ state: 'user.detail', activeClasses: ['active'] })}"
+    aria-current=${srefAriaCurrent({ state: 'user.detail', value: { exact: 'page', active: 'location' } })}
+    >detail</a
+  >
 `;
 
 const onTransition: TransitionCallback = (transition, reason) => {
