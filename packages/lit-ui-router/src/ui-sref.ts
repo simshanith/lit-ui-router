@@ -62,6 +62,31 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
 }
 
 /**
+ * Event name dispatched when a link's part leaves the DOM, so an enclosing
+ * container drops its target at once instead of on the next transition.
+ * @internal
+ */
+export const UI_SREF_TARGET_REMOVED_EVENT = 'uiSrefTargetRemoved';
+
+/** @internal */
+export function uiSrefTargetRemovedEvent(): Event {
+  return new Event(UI_SREF_TARGET_REMOVED_EVENT, {
+    bubbles: true,
+    composed: true,
+  });
+}
+
+/**
+ * The link a composed sref event came from: past a nested shadow root
+ * `target` is the host, not the link.
+ * @internal
+ */
+export function srefEventLink(event: Event): Element {
+  const origin = event.composedPath()[0];
+  return origin instanceof Element ? origin : (event.target as Element);
+}
+
+/**
  * `@uirouter/core` types `equals` as `any` because it resolves to
  * `angular.equals || _equals` at load time. The implementation is a deep
  * structural compare (arrays, Date by `getTime`, RegExp by source, NaN).
@@ -383,6 +408,8 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   disconnected(): void {
     this.element?.removeEventListener('click', this.onClick as EventListener);
+    // lit notifies before it removes the nodes: the container still hears this
+    this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
     this.element = null;
     this.targetState = null;
     this.href = null;

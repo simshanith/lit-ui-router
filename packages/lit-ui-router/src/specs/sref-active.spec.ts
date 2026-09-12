@@ -485,11 +485,54 @@ describe('attribute-part active directives', () => {
       await goTo('users');
       expect(item.classList.contains('active')).toBe(true);
 
+      // at once, not on the next transition
       render(links(false), wrapper);
       await tick();
+      expect(item.classList.contains('active')).toBe(false);
+
       await goTo('home');
       await goTo('users');
       expect(item.classList.contains('active')).toBe(false);
+    });
+
+    it('drops aria-current once the last link has left the container', async () => {
+      const links = (users: boolean) =>
+        html`<li aria-current=${srefAriaCurrent({})}>
+          ${users ? html`<a href=${srefHref('users')}>Users</a>` : nothing}
+        </li>`;
+      const wrapper = await mount(links(true));
+      const item = wrapper.querySelector('li')!;
+
+      await goTo('users');
+      expect(item.getAttribute('aria-current')).toBe('page');
+
+      render(links(false), wrapper);
+      await tick();
+      expect(item.hasAttribute('aria-current')).toBe(false);
+    });
+
+    it('hears a cached link again when it comes back', async () => {
+      const links = (users: boolean) =>
+        html`<li class=${srefActiveClass({ activeClasses: ['active'] })}>
+          ${cache(
+            users ? html`<a href=${srefHref('users')}>Users</a>` : nothing,
+          )}
+        </li>`;
+      const wrapper = await mount(links(true));
+      const item = wrapper.querySelector('li')!;
+      const anchor = wrapper.querySelector('a')!;
+
+      await goTo('users');
+      expect(item.classList.contains('active')).toBe(true);
+
+      render(links(false), wrapper);
+      await tick();
+      expect(item.classList.contains('active')).toBe(false);
+
+      render(links(true), wrapper);
+      await tick(20);
+      expect(wrapper.querySelector('a')).toBe(anchor);
+      expect(item.classList.contains('active')).toBe(true);
     });
 
     it('drops a class a re-render no longer names', async () => {

@@ -12,6 +12,7 @@ import {
   sameTarget,
   srefTransitionOptions,
   uiSrefTargetEvent,
+  uiSrefTargetRemovedEvent,
 } from './ui-sref.js';
 import { UiView } from './ui-view.js';
 
@@ -187,6 +188,10 @@ export class SrefHrefDirective extends AsyncDirective {
   /** @internal */
   disconnected(): void {
     this.element?.removeEventListener('click', this.onClick as EventListener);
+    // lit notifies before it removes the nodes: the container still hears this
+    this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
+    // announce again once reconnected, to a container that forgot the link
+    this.targetState = null;
     this.unsubscribe?.();
     this.unsubscribe = undefined;
     this._firstUpdated = false;

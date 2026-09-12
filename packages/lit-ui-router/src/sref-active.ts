@@ -19,7 +19,12 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
-import { UI_SREF_TARGET_EVENT, UiSrefTargetEvent } from './ui-sref.js';
+import {
+  srefEventLink,
+  UI_SREF_TARGET_EVENT,
+  UI_SREF_TARGET_REMOVED_EVENT,
+  UiSrefTargetEvent,
+} from './ui-sref.js';
 import {
   AriaCurrentValue,
   AriaCurrentValues,
@@ -178,12 +183,20 @@ export abstract class SrefStatusDirective<
       UI_SREF_TARGET_EVENT,
       this.onUiSrefTargetEvent as EventListener,
     );
-    this._deregister.push(() =>
+    element.addEventListener(
+      UI_SREF_TARGET_REMOVED_EVENT,
+      this.onUiSrefTargetRemovedEvent,
+    );
+    this._deregister.push(() => {
       element.removeEventListener(
         UI_SREF_TARGET_EVENT,
         this.onUiSrefTargetEvent as EventListener,
-      ),
-    );
+      );
+      element.removeEventListener(
+        UI_SREF_TARGET_REMOVED_EVENT,
+        this.onUiSrefTargetRemovedEvent,
+      );
+    });
 
     const router = this.uiRouter;
     if (router) {
@@ -207,11 +220,15 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
-    // composed: past a nested shadow root `target` is the host, not the link
-    const origin = event.composedPath()[0];
-    const link = origin instanceof Element ? origin : event.target;
-    this._linkTargets.set(link, event.detail.targetState);
+    this._linkTargets.set(srefEventLink(event), event.detail.targetState);
     this.refresh();
+  };
+
+  /** @internal */
+  onUiSrefTargetRemovedEvent = (event: Event): void => {
+    if (this._linkTargets.delete(srefEventLink(event))) {
+      this.refresh();
+    }
   };
 
   /**
@@ -457,6 +474,9 @@ export interface SrefAriaCurrentParams extends SrefTargetParams {
  * @category directives
  */
 export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurrentParams> {
+  /** whether a status was ever written, so losing every target clears it */
+  private _wrote = false;
+
   /** @internal */
   constructor(partInfo: PartInfo) {
     super(partInfo, 'srefAriaCurrent');
@@ -465,6 +485,15 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
         '`srefAriaCurrent()` must be the only expression in its attribute',
       );
     }
+  }
+
+  /** @internal */
+  protected commit(): unknown {
+    if (!this.status) {
+      return this._wrote ? nothing : noChange;
+    }
+    this._wrote = true;
+    return this.render(this.params!);
   }
 
   /**
