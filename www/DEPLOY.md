@@ -141,44 +141,14 @@ and diffs it against the live triggers: `pnpm check:workers-builds` is read-only
 default; `--site <key>` (repeatable, or one comma-separated value) limits the diff and the apply to
 the named entries, and an unknown key is a usage error (exit 2) rather than an empty selection.
 
-The config is a `workers` map **keyed by site**, one entry per Worker the repo deploys, so a second
-site is an entry rather than a fork of the tool:
-
-```jsonc
-{
-  "workers": {
-    "lit-ui-router.dev": {
-      "wranglerConfig": "www/lit-ui-router.dev/wrangler.jsonc",
-      "productionBranch": "main",
-      "production": {
-        "build_command": "…",
-        "deploy_command": "…",
-        "environment_variables": {},
-      },
-      "preview": {
-        "build_command": "…",
-        "deploy_command": "…",
-        "environment_variables": {},
-      },
-    },
-  },
-}
-```
-
-`wranglerConfig` is repo-relative and is the only place the worker is named: the check reads `name`
-out of that file and resolves it to the tag the triggers endpoint is keyed by, so the config never
-restates a name two files already agree on. A path that names no file is a hard error (exit 2)
-rather than a skipped entry — a missing `wrangler.jsonc` is far more often a moved file than an
-unbuilt site, and silently skipping would turn the flagship's own signal green on a typo. The
-Altitude Atlas (`www/atlas.lit-ui-router.dev/`) sits in the file as a commented-out second entry for
-that reason; uncomment it once its `wrangler.jsonc` lands and its Worker has triggers.
-
-Each trigger spec may pin `build_command`, `deploy_command`, `root_directory`, and the two
-[build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/) —
-`path_includes` and `path_excludes`. Watch paths are what let two sites share one repo: each Worker
-builds only on pushes that touch it. They are array-valued, so they are compared and patched
-whole-list rather than per entry, and like every pinnable field an unpinned one is reported and
-never drifts (a live watch path with nothing pinned prints as `(not pinned)`).
+The config is keyed by site, one entry per Worker the repo deploys, each naming the `wrangler.jsonc`
+the worker is named in and pinning what it pins, the
+[build watch paths](https://developers.cloudflare.com/workers/ci-cd/builds/build-watch-paths/)
+among them, which are what let two sites share one repo. Its shape is documented where it is enforced — the
+file's own comments and the schema in
+[`workers-builds-triggers.core.ts`](../tools/workers-builds/workers-builds-triggers.core.ts) — and
+not repeated here. A `wranglerConfig` that names no file is a hard error (exit 2), never a skipped
+entry, so a moved file cannot turn the check green.
 
 Requires `CLOUDFLARE_API_TOKEN` and `CLOUDFLARE_ACCOUNT_ID`. The token must be **user-scoped** — account-owned
 tokens do not cover the Workers Builds API — and carry two permissions: **Workers Scripts: Read**, which
