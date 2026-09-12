@@ -639,22 +639,55 @@
           gap: 16px;
         }
       }
+      /* THE FIELD — one wrapper per card grid. The lattice lies inside it at
+         inset 0, behind the cards; the grid itself is lifted one layer. */
+      .cards-field {
+        position: relative;
+      }
+      .cards-field .cards {
+        position: relative;
+        z-index: 1;
+      }
+      /* THE GEOMETRY BEHIND THE GRID — a wireframe cube lattice turning once
+         about the vertical axis every 90 s, drawn by src/lattice.ts on a
+         canvas. `color` is what the script reads for the line's ink, at draw
+         time and again on every theme change. The canvas is ONE VIEWPORT tall
+         and sticky inside the field, so a grid four screens long still costs a
+         screen of pixels.
+         WINDOW-ONLY, and this is the whole trick: the script clips each frame
+         to the union of the cards' `.card-pic` rects, so the lattice paints
+         inside the windows and NOWHERE else — not in the grid's gaps, not in
+         the empty tracks of a short last row. The cards' paper is opaque and
+         the window is the one hole in it. One field, one set of world
+         coordinates, so a line leaving one window enters the next on its true
+         path. Without the script the window is just its tint. */
+      atlas-lattice {
+        position: absolute;
+        inset: 0;
+        z-index: 0;
+        display: block;
+        pointer-events: none;
+        color: var(--ink);
+      }
+      atlas-lattice canvas {
+        display: block;
+        position: sticky;
+        top: 0;
+        width: 100%;
+        height: min(100%, 100vh);
+      }
       /* THE CARD is a container, not a link: `.card-go` (the title) is the one
          primary link and stretches over the card through a ::after, so the key
          block's filter links are not nested inside a link. */
       .card {
         position: relative;
         border: 1.5px solid var(--ink);
-        background: var(--paper);
-        padding: 14px 16px 15px;
+        /* TRANSPARENT, with the paper carried by `.card-body`: that is what
+           makes the picture box a hole onto the field rather than a panel on
+           top of it. */
+        background: transparent;
         color: inherit;
         display: block;
-        /* the caption's line, declared once: the clamp and the panel's foot
-           trade exactly this much between them */
-        --cap-line: 21px;
-      }
-      .card:hover {
-        background: var(--paper-2);
       }
       .card:focus-within {
         outline: 2px solid var(--accent);
@@ -664,12 +697,11 @@
         color: inherit;
         text-decoration: none;
       }
-      /* The stretched link still has to cover the CARD, not the body box it
-         now lives in, so the insets are the card's own padding, negated. */
+      /* The stretched link covers the card, which is now its own padding box. */
       .card .card-go::after {
         content: '';
         position: absolute;
-        inset: -14px -16px -15px;
+        inset: 0;
       }
       .card .card-go:focus-visible {
         outline: none;
@@ -677,88 +709,51 @@
       /* the current sheet's card, marked by uiSrefActive on its title link */
       .card:has(.card-go.is-active) {
         border-color: var(--accent);
-        background: var(--paper-2);
       }
-      /* THE CARD'S PICTURE (T16) — a 259 x 150 crop of the plate, drawn at
-         build time by generator/thumbs.mjs. At rest the card is its TEXT; the
-         plate answers a pointer, filling the card behind the body panel. It
-         COVERS rather than stacks, so the card's height is the same resting
-         and revealed and the grid never moves under the hand. */
+      /* THE WINDOW (T16) — a fixed 259 x 150 box across the head of the card,
+         above the text and never moving. It is transparent but for a
+         translucent tint of the paper, so the lattice behind the grid reads
+         through it, and the plate — a crop drawn at build time by
+         generator/thumbs.mjs — fades in OVER the tint when the card is hovered
+         or focused. Nothing in the card moves either way. */
       .card-pic {
         display: block;
-        position: absolute;
-        inset: 0;
-        z-index: 0;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 259 / 150;
         overflow: hidden;
-        opacity: 0;
-        pointer-events: none;
-        background: var(--paper-2);
+        border-bottom: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper) 28%, transparent);
       }
-      .card:hover .card-pic,
-      .card:focus-within .card-pic {
+      .card-pic > img,
+      .card-pic > svg {
+        opacity: 0;
+      }
+      .card:hover .card-pic > img,
+      .card:hover .card-pic > svg,
+      .card:focus-within .card-pic > img,
+      .card:focus-within .card-pic > svg {
         opacity: 1;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .card-pic > img,
+        .card-pic > svg {
+          transition: opacity 160ms ease;
+        }
+      }
+      /* NO POINTER, NO REVEAL: there is no hover to answer, so the plate
+         stands in its window at rest. The field still runs behind it. */
+      @media (hover: none) {
+        .card-pic > img,
+        .card-pic > svg {
+          opacity: 1;
+        }
       }
       .card-pic img {
         display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
-      }
-      /* THE BODY PANEL — the text gathers onto translucent paper, 12 px in
-         from the card on every side and drawn only as far down as the text
-         goes, so the plate is plainly there: a band of it around the panel and
-         the drawing itself through it. The ground is MIXED FROM THE TOKEN, so
-         one rule reads in both themes, and it is a pseudo-element behind the
-         type (`z-index: -1` inside the body's own context) rather than the
-         body's box, which would move the type if it grew. */
-      .card-body {
-        position: relative;
-        z-index: 2;
-      }
-      .card-body::before {
-        content: '';
-        position: absolute;
-        inset: -2px -4px -3px;
-        z-index: -1;
-        opacity: 0;
-        pointer-events: none;
-        border: 1px solid var(--line);
-        background: color-mix(in oklab, var(--paper) 50%, transparent);
-      }
-      @supports (backdrop-filter: blur(3px)) {
-        .card-body::before {
-          background: color-mix(in oklab, var(--paper) 38%, transparent);
-          backdrop-filter: blur(3px);
-        }
-      }
-      .card:hover .card-body::before,
-      .card:focus-within .card-body::before {
-        opacity: 1;
-      }
-      /* THE ONE LINE THE PANEL GIVES BACK — revealed, the caption reads two
-         lines instead of three and the panel ends a line higher, so more of the
-         plate stands below it. The line is not lost from the card: the body
-         takes it back as padding and the panel's foot is pulled up by the same
-         `--cap-line`, so the body's box, the card and the grid row measure the
-         same resting and revealed. Every caption on the cover runs past three
-         lines, so the clamp always bites and the trade is always even. */
-      .card:hover .card-body,
-      .card:focus-within .card-body {
-        padding-bottom: var(--cap-line);
-      }
-      .card:hover .card-body::before,
-      .card:focus-within .card-body::before {
-        bottom: calc(var(--cap-line) - 3px);
-      }
-      .card:hover p,
-      .card:focus-within p {
-        -webkit-line-clamp: 2;
-      }
-      @media (prefers-reduced-motion: no-preference) {
-        .card-pic,
-        .card-body::before {
-          transition: opacity 160ms ease;
-        }
       }
       /* The theme picks ONE of the pair, in the three states atlas.css declares.
          A `display: none` lazy image is never requested, so the card fetches
@@ -783,7 +778,7 @@
       }
       /* The city's picture is the cover's own hero SVG, sliced to the box
          rather than letterboxed into it — `xMidYMid slice` by layout: it is
-         sized off the HEIGHT and allowed to run past the card's sides. */
+         sized off the HEIGHT and allowed to run past the window's sides. */
       .card-pic-svg {
         display: grid;
         place-items: center;
@@ -796,33 +791,14 @@
         min-height: 0;
         max-width: none;
       }
-      /* NO POINTER, NO REVEAL: without hover the plate has nothing to answer,
-         so it keeps its old place above the text and the panel never draws. */
-      @media (hover: none) {
-        .card-pic {
-          position: relative;
-          inset: auto;
-          z-index: auto;
-          opacity: 1;
-          aspect-ratio: 259 / 150;
-          width: 100%;
-          margin: 0 0 10px;
-          border: 1px solid var(--line);
-        }
-        .card-pic-svg svg {
-          width: 100%;
-          height: auto;
-          min-width: 0;
-        }
-        .card-body::before {
-          content: none;
-        }
-        .card-body {
-          position: static;
-        }
-        .card .card-go::after {
-          inset: 0;
-        }
+      /* THE BODY — the card's paper, and the only opaque part of the card. */
+      .card-body {
+        background: var(--paper);
+        padding: 14px 16px 15px;
+      }
+      .card:hover .card-body,
+      .card:has(.card-go.is-active) .card-body {
+        background: var(--paper-2);
       }
       .card .n {
         font-family: var(--data);
@@ -838,11 +814,11 @@
         letter-spacing: 0.04em;
         margin: 5px 0 6px;
       }
-      /* three lines of caption at rest, two revealed; the rest is on the sheet */
+      /* three lines of caption, hovered or not; the rest is on the sheet */
       .card p {
         font-family: var(--prose);
         font-size: 14px;
-        line-height: var(--cap-line);
+        line-height: 21px;
         color: var(--ink-soft);
         margin: 0;
         display: -webkit-box;
@@ -865,16 +841,6 @@
         color: var(--ink-faint);
         margin-top: 9px;
         display: block;
-      }
-      /* The two faintest lines are set for paper, not for a drawing behind
-         them: revealed, they are mixed a step towards the ink so the panel
-         does not have to be any more opaque than it is. The number line is
-         already the accent and keeps it. */
-      .card:hover .alt,
-      .card:hover .meta,
-      .card:focus-within .alt,
-      .card:focus-within .meta {
-        color: color-mix(in oklab, var(--ink-faint) 40%, var(--ink));
       }
       /* THE KEY INDEX — FORM split into keys, each key indexed in the shape its
          type asks for. A chip is a link: every filtered index has its own url. */

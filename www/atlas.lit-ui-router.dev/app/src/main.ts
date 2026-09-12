@@ -2,6 +2,7 @@ import { html, render } from 'lit';
 import 'lit-ui-router';
 import { onXrefClick } from './fragment.ts';
 import type { XrefDetail } from './fragment.ts';
+import { installLattice } from './lattice.ts';
 import { createRouter } from './router.ts';
 import { applyTheme, readTheme } from './theme.ts';
 // --- EXPERIMENTAL LAYER ---------------------------------------------------
@@ -10,6 +11,8 @@ import { applyTheme, readTheme } from './theme.ts';
 import { installExperimental } from './experimental/index.ts';
 
 applyTheme(readTheme());
+// The cover's field: `<atlas-lattice>` is inert markup until this defines it.
+installLattice();
 
 const router = createRouter();
 

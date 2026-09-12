@@ -567,12 +567,14 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
 };
 
 /**
- * THE CARD'S PICTURE (T16) — a 259 x 150 crop of the plate, drawn at build time
- * by generator/thumbs.mjs. One WebP per theme, and only the one the theme asks
- * for is ever fetched: `display: none` suppresses a lazy image's request, so
- * the pair costs a single file. Hidden until the card is hovered or focused,
- * when it fills the card behind the text. Decorative either way — the card's
- * title says what it is.
+ * THE CARD'S WINDOW (T16) — a fixed 259 x 150 box across the head of the card,
+ * holding a crop of the plate drawn at build time by generator/thumbs.mjs. One
+ * WebP per theme, and only the one the theme asks for is ever fetched:
+ * `display: none` suppresses a lazy image's request, so the pair costs a
+ * single file. At rest the image is transparent and the box is a window onto
+ * the lattice behind the grid; hover or focus fades the plate in over it, and
+ * nothing in the card moves. Decorative either way — the card's title says
+ * what it is.
  */
 const cardPic = (thumb: Thumb): TemplateResult => html`
   <div class="card-pic">
@@ -602,8 +604,8 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
  * primary `uiSref` and stretches over the whole card through a `::after`
  * (the Inclusive Components card pattern), so the key block's own filter links
  * are valid interactive content rather than links nested inside a link. Tab
- * order is title, then keys. The text lives in `.card-body` so it can gather
- * into a floating panel over the revealed picture.
+ * order is title, then keys. The text lives in `.card-body`, which carries the
+ * card's paper: the card itself is transparent, so its window is a hole.
  */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <article class="card">
@@ -713,26 +715,35 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
     <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
     ${keyIndex(manifest, filter, props?.router)}
     ${shownAscent.length > 0
-      ? html`<div class="cards">
-          <!-- KEYED. A filter changes the list, and an unkeyed map re-uses a
-               card's DOM for a different plate — which leaves each key slot's
-               uiSrefActive holding the target it first saw, so the filter echo
-               goes stale. A key per plate gives the new row its own parts. -->
-          ${repeat(
-            shownAscent,
-            (entry) => entry.row.id,
-            (entry) =>
-              entry.kind === 'sheet'
-                ? sheetCard(entry.row)
-                : cityCard(entry.row, manifest.cover.hero),
-          )}
+      ? html`<div class="cards-field">
+          <!-- THE FIELD: one turning cube lattice behind the grid, seen only
+               through the cards' windows. src/lattice.ts defines the tag on
+               the client; prerendered, it is an empty element. -->
+          <atlas-lattice aria-hidden="true"></atlas-lattice>
+          <div class="cards">
+            <!-- KEYED. A filter changes the list, and an unkeyed map re-uses a
+                 card's DOM for a different plate — which leaves each key slot's
+                 uiSrefActive holding the target it first saw, so the filter echo
+                 goes stale. A key per plate gives the new row its own parts. -->
+            ${repeat(
+              shownAscent,
+              (entry) => entry.row.id,
+              (entry) =>
+                entry.kind === 'sheet'
+                  ? sheetCard(entry.row)
+                  : cityCard(entry.row, manifest.cover.hero),
+            )}
+          </div>
         </div>`
       : html`<p class="kempty">NO PLATE IN THE ASCENT CARRIES THAT KEY SET.</p>`}
     ${shownAppendix.length > 0
       ? html`
           <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
-          <div class="cards">
-            ${repeat(shownAppendix, (row) => row.id, sheetCard)}
+          <div class="cards-field">
+            <atlas-lattice aria-hidden="true"></atlas-lattice>
+            <div class="cards">
+              ${repeat(shownAppendix, (row) => row.id, sheetCard)}
+            </div>
           </div>
         `
       : nothing}

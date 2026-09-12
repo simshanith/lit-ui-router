@@ -261,7 +261,7 @@ const keyIndex = (): TemplateResult => html`
   </div>
 `;
 
-/** Twin of `cardPic` in src/views.ts — T16's picture of the plate. */
+/** Twin of `cardPic` in src/views.ts — T16's window onto the plate. */
 const cardPic = (thumb: Thumb): TemplateResult => html`
   <div class="card-pic">
     <img
@@ -362,15 +362,21 @@ const galleryContent = (): TemplateResult => {
     </section>
     <h2 class="set-sec">SHEET INDEX — ASCENT ORDER</h2>
     ${keyIndex()}
-    <div class="cards">
-      ${ascent(manifest).map((entry) =>
-        entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),
-      )}
+    <div class="cards-field">
+      <atlas-lattice aria-hidden="true"></atlas-lattice>
+      <div class="cards">
+        ${ascent(manifest).map((entry) =>
+          entry.kind === 'sheet' ? sheetCard(entry.row) : cityCard(entry.row),
+        )}
+      </div>
     </div>
     ${manifest.appendix.length > 0
       ? html`
           <h2 class="set-sec">APPENDIX — PLATES ABOUT THE ATLAS, NOT THE CODEBASE</h2>
-          <div class="cards">${manifest.appendix.map(sheetCard)}</div>
+          <div class="cards-field">
+            <atlas-lattice aria-hidden="true"></atlas-lattice>
+            <div class="cards">${manifest.appendix.map(sheetCard)}</div>
+          </div>
         `
       : nothing}
     <div class="cover-band">
