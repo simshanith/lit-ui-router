@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "65e2843",
-  "commitDate": "2026-09-11T18:51:12Z",
-  "generatedAtTime": "2026-09-11T19:05:32.510Z",
+  "sha": "2ac53a0",
+  "commitDate": "2026-09-11T19:11:23-07:00",
+  "generatedAtTime": "2026-09-12T02:21:57.325Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-nm.mjs",
-  "used": "git archive origin/main @ 65e2843 + corepack pnpm install --frozen-lockfile + turbo run build",
+  "used": "git archive origin/main @ 2ac53a0 + corepack pnpm install --frozen-lockfile + turbo run build",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo"
@@ -24,7 +24,7 @@
     {"name":"preact","version":"10.4.8","ws":false,"measured":"pkg","f":61,"l":3786,"df":11,"dl":1832},
     {"name":"d3-hierarchy","version":"2.0.0","ws":false,"measured":"pkg","f":35,"l":2688,"df":0,"dl":0},
     {"name":"@uirouter/dsr","version":"1.2.0","ws":false,"measured":"pkg","f":45,"l":2053,"df":8,"dl":236},
-    {"name":"lit-ui-router","version":"1.12.0","ws":true,"measured":"dist/","f":28,"l":1535,"df":14,"dl":1514},
+    {"name":"lit-ui-router","version":"1.13.0","ws":true,"measured":"dist/","f":28,"l":1657,"df":14,"dl":1584},
     {"name":"tslib","version":"2.8.1","ws":false,"measured":"pkg","f":6,"l":1363,"df":2,"dl":499},
     {"name":"@uirouter/sticky-states","version":"1.5.1","ws":false,"measured":"pkg","f":18,"l":1354,"df":4,"dl":186},
     {"name":"d3-interpolate","version":"1.4.0","ws":false,"measured":"pkg","f":28,"l":1219,"df":0,"dl":0},

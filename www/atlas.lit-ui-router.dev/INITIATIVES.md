@@ -1,8 +1,8 @@
 # Census pipeline rework — design record
 
 **COMPLETE.** Initiatives I1–I8 all landed 2026-09-02/03; the cabinet has since been
-refreshed four times and stands at `origin/main` @ **65e2843** (commit
-2026-09-11T18:51:12Z), 17 plates all pinned to the same ref.
+refreshed five times and stands at `origin/main` @ **2ac53a0** (commit
+2026-09-11T19:11:23-07:00), 17 plates all pinned to the same ref.
 
 The architecture that came out of it: `generator/basis.mjs` materializes any ref once (`git
 archive` → tmpdir), one `scc --by-file` pass over that archive is the master per-file
@@ -139,6 +139,44 @@ sitting); order is dependency order.
   the repo, so no probe shells `corepack pnpm install` any more. And the set's no-images rule
   now has ONE exception: Appendix A1's reference strip, six fair-use thumbnails inlined as data
   URIs at build, on the one plate whose subject is other people's drawings.
+- 2026-09-12 — THE FIFTH REFRESH, at `origin/main` @ 2ac53a0 (commit 2026-09-11T19:11:23-07:00),
+  all 17 plates re-run at the one ref: the 1.13.0 release (#820, f37cd04),
+  then #821's late-upgrade fix and #823's examples pin bump. The release itself halted once: the
+  main-graph run on f37cd04 failed in `lit-ui-router#test:engines` on the firefox lane
+  (`src/specs/ui-view-ssr.spec.ts`), a spec the chrome-only PR lane had never exercised; the tag
+  was cut at f0f64c1 after #821 and Publish to NPM succeeded on the second attempt
+  (2026-09-12T01:46Z). NO member was born since 65e2843 —
+  checked by diffing `pnpm-workspace.yaml` and every `package.json` between the two shas before
+  the run, and confirmed after it by `census-yard.mjs` printing `orphans 0` — so the five hand
+  tables took no row and the new-member checklist was, for the first time, a no-op. Three things
+  the refresh taught, in the order they bit. (1) THE MOVE BROKE THE BASIS. `basis.mjs`'s `ROOT`
+  was `../../`, which resolved to the repo root while the atlas lived in `diagrams/` and to
+  `www/` after the promotion; `git archive` run from there archives only that subtree, so the
+  first `census-scc` died on a missing `pnpm-workspace.yaml` in the tmpdir. It is `../../../`
+  now, the same depth `thumbs.mjs` already used to reach `tools/embed-heights`. A path sweep
+  that renames a tree has to re-derive every URL-relative constant, not just the literal strings.
+  (2) THE REFRESH CHAIN IS SIXTEEN PROBES, NOT FIFTEEN. `census-loop.mjs` takes `--ref` like a
+  T3 probe but is a pure tree read, and it sits in neither list above; run the T1/T2 queries and
+  the T3 installs and the cabinet still straddles two shas, which is precisely what
+  `census-atlas.mjs` throws on. Run it with the T3 group. (3) THE EVIDENCE GUARDS EARNED THEIR
+  KEEP. #821 rewrote `ui-view.ts` and `census-loop.mjs` stopped on
+  `ui-view.ts:236 does not read «router.transitionService.onBefore({}, (trans) => {»`; the fix is
+  always to RELOCATE the citation, never to widen the expectation — 41 (file, line) pairs
+  re-pinned and one expectation re-texted, `this.uiRouter = this.uiRouter ||
+  UIRouterLitElement.seekRouter(this);` at 197 becoming `this.uiRouter =
+  UIRouterLitElement.seekRouter(this)!;` at 207, because the seek moved inside `seekRouter()`
+  behind the late-upgrade guard. `census-mass3b.mjs`'s CITES and `census-shadow.mjs`'s e2e guard
+  both passed untouched. The honesty sweep found two hand-stated figures the new plates
+  contradicted, both made plate-derived: sheet 10's chrome caption ("5× the router they
+  document", 4.81× at 65e2843 and 4.47× here) and the cover gallery's `297×` / `22.5%` / `3.9%`,
+  which now import `SHEET8_TIMES`, `SHEET10_CORE_SHARE` and `SHEET10_ROUTER_SHARE`. The frozen
+  "has grown" paragraph keeps its own copies of those three, as a rev-history paragraph must.
+- A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
+  `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
+  ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS
+  first ten. At 2ac53a0 — committed 19:11 −07:00 — the title blocks date 2026-09-11 and sheet 7's
+  lead reads "counted at origin/main @ 2ac53a0 (2026-09-12)". Both are honest and both are
+  derived; neither is a figure to hand-correct.
 - Hand placement is asserted, not trusted. Every plate that hand-places a footprint whose SIZE
   comes from the census (3, 3B, 7, 7A, 7B, 9, 10, 11, 13) calls `assertPlots` from
   `generator/iso-hidden.mjs`, which throws when two drawn ground rects intersect, naming the

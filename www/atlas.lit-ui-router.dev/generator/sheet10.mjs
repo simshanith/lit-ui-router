@@ -99,6 +99,8 @@ const G = (name) => all.find((b) => b.name === name);
 assertPlots('sheet 10', all.map(({ n, name, x, y, s }) => ({ n, name, part: 'block', x, y, w: s, d: s })));
 
 // the cover index's fit verdict, told from the plate's own wire shares
+export const SHEET10_CORE_SHARE = pct(G('@uirouter/core').gz);
+export const SHEET10_ROUTER_SHARE = pct(G('lit-ui-router').gz);
 export const SHEET10_VERDICT = `tree-shaking’s verdict — core is ${pct(G('@uirouter/core').gz)}, the router ${pct(G('lit-ui-router').gz)} — one lit`;
 
 const bodies = all
@@ -182,7 +184,7 @@ ${txt(60, 68, `lit-ui-router itself is ${KB(G('lit-ui-router').gz)} (${pct(G('li
 ${txt(1150, 240, `one lit major here: ${KB(G('lit').gz)} across ${G('lit').mods} modules —`, 'lbla', 'end')}
 ${txt(1150, 252, 'no second copy rides in with the chrome', 'lbla', 'end')}
 ${txt(1150, 336, `marked + dompurify: ${KB(CHROME_GZ)}`, 'lbla', 'end')}
-${txt(1150, 348, 'gz — 5× the router they', 'lbla', 'end')}
+${txt(1150, 348, `gz — ${Math.round(CHROME_GZ / G('lit-ui-router').gz)}× the router they`, 'lbla', 'end')}
 ${txt(1150, 360, 'document, now parked in a', 'lbla', 'end')}
 ${txt(1150, 372, 'lazy api-docs chunk', 'lbla', 'end')}
 ${txt(60, 585, `what the swap left: lodash-es ${KB(G('lodash-es').gz)} —`, 'lbla')}

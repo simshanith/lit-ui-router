@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "65e2843",
-  "commitDate": "2026-09-11T18:51:12Z",
-  "generatedAtTime": "2026-09-11T19:04:15.215Z",
+  "sha": "2ac53a0",
+  "commitDate": "2026-09-11T19:11:23-07:00",
+  "generatedAtTime": "2026-09-12T02:20:45.604Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-couplings.mjs",
-  "used": "git archive origin/main @ 65e2843 — packages/*/package.json ranges resolved through pnpm-workspace.yaml catalogs; core and lit versions from pnpm-lock.yaml",
+  "used": "git archive origin/main @ 2ac53a0 — packages/*/package.json ranges resolved through pnpm-workspace.yaml catalogs; core and lit versions from pnpm-lock.yaml",
   "wasAssociatedWith": [
     "git"
   ],
@@ -21,7 +21,7 @@
   },
   "nodes": [
     {"key":"eslint-plugin-lit-ui-router","dir":"packages/eslint-plugin-lit-ui-router","version":"1.0.1","kind":"published","versionFrom":"packages/eslint-plugin-lit-ui-router/package.json"},
-    {"key":"lit-ui-router","dir":"packages/lit-ui-router","version":"1.12.0","kind":"published","versionFrom":"packages/lit-ui-router/package.json"},
+    {"key":"lit-ui-router","dir":"packages/lit-ui-router","version":"1.13.0","kind":"published","versionFrom":"packages/lit-ui-router/package.json"},
     {"key":"lit-ui-router-mobx","dir":"packages/lit-ui-router-mobx","version":"1.0.0","kind":"published","versionFrom":"packages/lit-ui-router-mobx/package.json"},
     {"key":"ui-router-navigation-location-plugin","dir":"packages/navigation-location-plugin","version":"0.3.1","kind":"published","versionFrom":"packages/navigation-location-plugin/package.json"},
     {"key":"ui-router-server","dir":"packages/ui-router-server","version":"0.1.1","kind":"published","versionFrom":"packages/ui-router-server/package.json"},

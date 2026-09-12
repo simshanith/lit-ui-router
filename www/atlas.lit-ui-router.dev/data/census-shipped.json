@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "65e2843",
-  "commitDate": "2026-09-11T18:51:12Z",
-  "generatedAtTime": "2026-09-11T19:05:26.524Z",
+  "sha": "2ac53a0",
+  "commitDate": "2026-09-11T19:11:23-07:00",
+  "generatedAtTime": "2026-09-12T02:23:19.220Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 65e2843 + corepack pnpm install --frozen-lockfile + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 2ac53a0 + corepack pnpm install --frozen-lockfile + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
     "pnpm (corepack)",
     "turbo",
@@ -17,20 +17,20 @@
     "_headers"
   ],
   "totals": {
-    "files": 579,
-    "rawBytes": 16353574,
-    "gzBytes": 3670964
+    "files": 582,
+    "rawBytes": 16570091,
+    "gzBytes": 3693316
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":868670,"top":{"name":"assets/inter-italic-latin-ext.Dm0n7MN1.woff2","gz":141087}},
-    {"district":"html pages","files":135,"gz":865728,"top":{"name":"guides/server-route-matching.html","gz":34508}},
-    {"district":"examples","files":22,"gz":1059198,"top":{"name":"examples/hellogalaxy/assets/model-viewer-NFY3g8ag.js","gz":281843}},
-    {"district":"page chunks","files":256,"gz":269173,"top":{"name":"assets/guides_server-route-matching.md.BNdcdE4e.js","gz":21347}},
-    {"district":"vp framework","files":13,"gz":183515,"top":{"name":"assets/chunks/@localSearchIndexroot.tnn9QNK-.js","gz":72184}},
+    {"district":"html pages","files":136,"gz":870765,"top":{"name":"guides/server-route-matching.html","gz":34415}},
+    {"district":"examples","files":22,"gz":1061464,"top":{"name":"examples/hellogalaxy/assets/model-viewer-Bwy_y6_q.js","gz":281842}},
+    {"district":"page chunks","files":258,"gz":281933,"top":{"name":"assets/guides_server-route-matching.md.BNdcdE4e.js","gz":21347}},
+    {"district":"vp framework","files":13,"gz":185025,"top":{"name":"assets/chunks/@localSearchIndexroot.C6xO85LK.js","gz":73621}},
     {"district":"images","files":99,"gz":146010,"top":{"name":"images/lit-ui-router.png","gz":68708}},
-    {"district":"app: vanilla","files":18,"gz":122599,"top":{"name":"assets/dist-DJc3Xlb1.js","gz":29369}},
-    {"district":"app: mobx","files":9,"gz":67293,"top":{"name":"assets/dist-CCixcsPe.js","gz":29369}},
-    {"district":"app: hash","files":4,"gz":15064,"top":{"name":"assets/main-CE1czS_W.js","gz":7506}},
+    {"district":"app: vanilla","files":18,"gz":123407,"top":{"name":"assets/dist-C3psUzzf.js","gz":29528}},
+    {"district":"app: mobx","files":9,"gz":67455,"top":{"name":"assets/dist-CiN-3Vxo.js","gz":29528}},
+    {"district":"app: hash","files":4,"gz":14873,"top":{"name":"assets/main-CCx4laDc.js","gz":7316}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
     {"district":"site css","files":3,"gz":22975,"top":{"name":"assets/style.DLA-qYQQ.css","gz":20759}}
   ],
