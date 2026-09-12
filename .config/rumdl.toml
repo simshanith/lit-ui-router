@@ -15,6 +15,10 @@
 # would inject partial entries into the VitePress outline and sidebar.
 disable = ["MD013", "MD033", "MD036", "MD057"]
 
+# HISTORY.md is an append-only verbatim revision record, never rewritten (and
+# rumdl's exclude does filter explicitly passed files — verified).
+exclude = ["www/atlas.lit-ui-router.dev/HISTORY.md"]
+
 # rumdl counts a VitePress frontmatter `title:` as an H1, so any page with both
 # `title:` and an `#` heading reads as a duplicate/missing H1. Empty = don't
 # treat frontmatter as the title. Without it the autofix demotes the whole

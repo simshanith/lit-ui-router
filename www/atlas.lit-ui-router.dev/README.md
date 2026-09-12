@@ -34,7 +34,7 @@ each sheet argue where that form fits and where it lies.
 | [14](sheet-14-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
 | [14i](sheet-14i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
-### Appendix — plates about the atlas, not the codebase
+## Appendix — plates about the atlas, not the codebase
 
 | Plate | Subject | Form |
 | --- | --- | --- |
@@ -45,7 +45,7 @@ each sheet argue where that form fits and where it lies.
 
 **Build and host.** From the repo root, in order:
 
-```
+```bash
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev  # the flat set + the app's fragments and manifest
 npm --prefix www/atlas.lit-ui-router.dev/app run build               # the routed app, prerendered
 npm --prefix www/atlas.lit-ui-router.dev/app run build:artifact      # the single-file build published as a claude.ai Artifact
@@ -61,7 +61,7 @@ photographing the flat set above in headless Chromium (playwright, reached throu
 step needs no network), and `build.mjs` REFUSES to emit a manifest whose card has no
 picture. A new plate therefore takes one extra pass:
 
-```
+```bash
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # writes the flat set, then stops on the missing picture
 node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.dev  # photographs it
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
@@ -73,7 +73,7 @@ default slice lands on a schedule rather than a drawing, the plate gets a row in
 target before the window is cut) and nothing else changes. To try a row without touching
 the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>`.
 
-Live at https://atlas.lit-ui-router.dev/ — the app owns the root (`/`, `/sheet/7/`, `/city/`,
+Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (`/`, `/sheet/7/`, `/city/`,
 `/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
 sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and
 three.js 0.169.0, which the stage step vendors. `app/` is the same set as a prerendered

@@ -16,7 +16,6 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
   `updateComplete` on every view and its element — #812
 - **9** the Navigation API plugin's interception hazard — #750 (pre-existing)
 - **10** static hosts add a trailing slash; `strict: false` on both sides — #807
-
 - **8** the resolves generic: a typed `RoutedLitTemplate` rejected at
   `component:` with the error pointing away from the generic — #813. Filed
   with a correction to §5's account (four shapes compiled under `--strict`):
@@ -85,7 +84,7 @@ Good, and small enough to hold in your head.
   the prerendered file for a shell verdict, so the `<title>` of `/sheet/7/` is
   the sheet's, not the shell's):
 
-  ```
+  ```text
   /sheet/7        →  200   (the prerendered page)
   /sheet/7/       →  200   (same page — strict: false on both sides)
   /office         →  302   Location: /sheet/14
@@ -146,7 +145,7 @@ url). **Every `:id` route in every app has the problem by default.** See ask 4.
 
 ### `uiSref` — renders nothing at all, silently
 
-```
+```text
 uiSref on a bare anchor:
   <!--lit-part 0eizGSDDbUw=--><!--lit-node 0--><a >Home</a><!--/lit-part-->
 uiSrefActive + uiSref:
@@ -161,7 +160,7 @@ failure**. `uiSref` is an element-part directive by construction
 (`packages/lit-ui-router/src/ui-sref.ts:382` takes `part: ElementPart`), so this
 is structural. A literal `href` written *alongside* the directive does survive:
 
-```
+```text
 <a href="/home" ${uiSref('home')}>Home</a>
   → <!--lit-node 0--><a href="/home" >Home</a>
 ```
@@ -170,7 +169,7 @@ That is the workaround this app ships (§4), and worth recommending out loud.
 
 ### `<ui-view>` — throws
 
-```
+```text
 the client ShellView (rail + nested ui-view):
   THREW TypeError: document.createDocumentFragment is not a function
 ```
@@ -191,7 +190,7 @@ not the blocker; `<ui-view>` is.
 
 ### A registration trap, reproducible
 
-```
+```text
 before import:          undefined / undefined
 after dynamic import:   function / function
 ```
