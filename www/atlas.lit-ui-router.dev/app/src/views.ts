@@ -570,7 +570,9 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
  * THE CARD'S PICTURE (T16) — a 259 x 150 crop of the plate, drawn at build time
  * by generator/thumbs.mjs. One WebP per theme, and only the one the theme asks
  * for is ever fetched: `display: none` suppresses a lazy image's request, so
- * the pair costs a single file. Decorative — the card's title says what it is.
+ * the pair costs a single file. Hidden until the card is hovered or focused,
+ * when it fills the card behind the text. Decorative either way — the card's
+ * title says what it is.
  */
 const cardPic = (thumb: Thumb): TemplateResult => html`
   <div class="card-pic">
@@ -600,29 +602,32 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
  * primary `uiSref` and stretches over the whole card through a `::after`
  * (the Inclusive Components card pattern), so the key block's own filter links
  * are valid interactive content rather than links nested inside a link. Tab
- * order is title, then keys.
+ * order is title, then keys. The text lives in `.card-body` so it can gather
+ * into a floating panel over the revealed picture.
  */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <article class="card">
     ${cardPic(sheet.thumb)}
-    <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
-    <h3>
-      <a
-        class="card-go"
-        ${uiSrefActive(ACTIVE)}
-        ${uiSref('atlas.sheet', { num: sheet.num })}
-        href="${to(href.sheet(sheet.num))}"
-        >${articleTitle(sheet.title)}</a
-      >
-    </h3>
-    <span class="alt">${sheet.scale}</span>
-    <p>${unsafeHTML(sheet.caption)}</p>
-    <span class="meta">
-      ${isAppendix(sheet.num)
-        ? `${sheet.form} · NO CENSUS PLATE — META`
-        : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}`}
-    </span>
-    ${keyBlock(sheet.labels)}
+    <div class="card-body">
+      <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
+      <h3>
+        <a
+          class="card-go"
+          ${uiSrefActive(ACTIVE)}
+          ${uiSref('atlas.sheet', { num: sheet.num })}
+          href="${to(href.sheet(sheet.num))}"
+          >${articleTitle(sheet.title)}</a
+        >
+      </h3>
+      <span class="alt">${sheet.scale}</span>
+      <p>${unsafeHTML(sheet.caption)}</p>
+      <span class="meta">
+        ${isAppendix(sheet.num)
+          ? `${sheet.form} · NO CENSUS PLATE — META`
+          : `${sheet.form} · ${String(sheet.plates.length)} PLATE${sheet.plates.length === 1 ? '' : 'S'}`}
+      </span>
+      ${keyBlock(sheet.labels)}
+    </div>
   </article>
 `;
 
@@ -631,16 +636,18 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
 const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
   <article class="card">
     <div class="card-pic card-pic-svg">${unsafeHTML(hero)}</div>
-    <span class="n">${extra.shno} · REV ${extra.rev}</span>
-    <h3>
-      <a class="card-go" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}"
-        >${articleTitle(extra.title)}</a
-      >
-    </h3>
-    <span class="alt">${extra.scale}</span>
-    <p>${extra.sub}</p>
-    <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
-    ${keyBlock(extra.labels)}
+    <div class="card-body">
+      <span class="n">${extra.shno} · REV ${extra.rev}</span>
+      <h3>
+        <a class="card-go" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}"
+          >${articleTitle(extra.title)}</a
+        >
+      </h3>
+      <span class="alt">${extra.scale}</span>
+      <p>${extra.sub}</p>
+      <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
+      ${keyBlock(extra.labels)}
+    </div>
   </article>
 `;
 

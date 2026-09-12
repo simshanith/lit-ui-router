@@ -649,6 +649,9 @@
         padding: 14px 16px 15px;
         color: inherit;
         display: block;
+        /* the caption's line, declared once: the clamp and the panel's foot
+           trade exactly this much between them */
+        --cap-line: 21px;
       }
       .card:hover {
         background: var(--paper-2);
@@ -661,10 +664,12 @@
         color: inherit;
         text-decoration: none;
       }
+      /* The stretched link still has to cover the CARD, not the body box it
+         now lives in, so the insets are the card's own padding, negated. */
       .card .card-go::after {
         content: '';
         position: absolute;
-        inset: 0;
+        inset: -14px -16px -15px;
       }
       .card .card-go:focus-visible {
         outline: none;
@@ -675,23 +680,85 @@
         background: var(--paper-2);
       }
       /* THE CARD'S PICTURE (T16) — a 259 x 150 crop of the plate, drawn at
-         build time by generator/thumbs.mjs. Thin rule, ink ground, square
-         corners, no shadow: an index card carries a plate, not a photograph. */
+         build time by generator/thumbs.mjs. At rest the card is its TEXT; the
+         plate answers a pointer, filling the card behind the body panel. It
+         COVERS rather than stacks, so the card's height is the same resting
+         and revealed and the grid never moves under the hand. */
       .card-pic {
         display: block;
-        position: relative;
+        position: absolute;
+        inset: 0;
+        z-index: 0;
         overflow: hidden;
-        aspect-ratio: 259 / 150;
-        width: 100%;
-        margin: 0 0 10px;
-        border: 1px solid var(--line);
+        opacity: 0;
+        pointer-events: none;
         background: var(--paper-2);
+      }
+      .card:hover .card-pic,
+      .card:focus-within .card-pic {
+        opacity: 1;
       }
       .card-pic img {
         display: block;
         width: 100%;
         height: 100%;
         object-fit: cover;
+      }
+      /* THE BODY PANEL — the text gathers onto translucent paper, 12 px in
+         from the card on every side and drawn only as far down as the text
+         goes, so the plate is plainly there: a band of it around the panel and
+         the drawing itself through it. The ground is MIXED FROM THE TOKEN, so
+         one rule reads in both themes, and it is a pseudo-element behind the
+         type (`z-index: -1` inside the body's own context) rather than the
+         body's box, which would move the type if it grew. */
+      .card-body {
+        position: relative;
+        z-index: 2;
+      }
+      .card-body::before {
+        content: '';
+        position: absolute;
+        inset: -2px -4px -3px;
+        z-index: -1;
+        opacity: 0;
+        pointer-events: none;
+        border: 1px solid var(--line);
+        background: color-mix(in oklab, var(--paper) 50%, transparent);
+      }
+      @supports (backdrop-filter: blur(3px)) {
+        .card-body::before {
+          background: color-mix(in oklab, var(--paper) 38%, transparent);
+          backdrop-filter: blur(3px);
+        }
+      }
+      .card:hover .card-body::before,
+      .card:focus-within .card-body::before {
+        opacity: 1;
+      }
+      /* THE ONE LINE THE PANEL GIVES BACK — revealed, the caption reads two
+         lines instead of three and the panel ends a line higher, so more of the
+         plate stands below it. The line is not lost from the card: the body
+         takes it back as padding and the panel's foot is pulled up by the same
+         `--cap-line`, so the body's box, the card and the grid row measure the
+         same resting and revealed. Every caption on the cover runs past three
+         lines, so the clamp always bites and the trade is always even. */
+      .card:hover .card-body,
+      .card:focus-within .card-body {
+        padding-bottom: var(--cap-line);
+      }
+      .card:hover .card-body::before,
+      .card:focus-within .card-body::before {
+        bottom: calc(var(--cap-line) - 3px);
+      }
+      .card:hover p,
+      .card:focus-within p {
+        -webkit-line-clamp: 2;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .card-pic,
+        .card-body::before {
+          transition: opacity 160ms ease;
+        }
       }
       /* The theme picks ONE of the pair, in the three states atlas.css declares.
          A `display: none` lazy image is never requested, so the card fetches
@@ -714,18 +781,48 @@
       :root[data-theme='dark'] .card-pic .d {
         display: block;
       }
-      /* The city's picture is the cover's own hero SVG, sliced to the same box
-         rather than letterboxed into it — `xMidYMid slice` by layout. */
+      /* The city's picture is the cover's own hero SVG, sliced to the box
+         rather than letterboxed into it — `xMidYMid slice` by layout: it is
+         sized off the HEIGHT and allowed to run past the card's sides. */
       .card-pic-svg {
         display: grid;
         place-items: center;
       }
       .card-pic-svg svg {
         display: block;
-        width: 100%;
-        height: auto;
-        min-width: 0;
+        height: 100%;
+        width: auto;
+        min-width: 100%;
+        min-height: 0;
         max-width: none;
+      }
+      /* NO POINTER, NO REVEAL: without hover the plate has nothing to answer,
+         so it keeps its old place above the text and the panel never draws. */
+      @media (hover: none) {
+        .card-pic {
+          position: relative;
+          inset: auto;
+          z-index: auto;
+          opacity: 1;
+          aspect-ratio: 259 / 150;
+          width: 100%;
+          margin: 0 0 10px;
+          border: 1px solid var(--line);
+        }
+        .card-pic-svg svg {
+          width: 100%;
+          height: auto;
+          min-width: 0;
+        }
+        .card-body::before {
+          content: none;
+        }
+        .card-body {
+          position: static;
+        }
+        .card .card-go::after {
+          inset: 0;
+        }
       }
       .card .n {
         font-family: var(--data);
@@ -741,10 +838,11 @@
         letter-spacing: 0.04em;
         margin: 5px 0 6px;
       }
-      /* three lines of caption; the rest is on the sheet */
+      /* three lines of caption at rest, two revealed; the rest is on the sheet */
       .card p {
         font-family: var(--prose);
         font-size: 14px;
+        line-height: var(--cap-line);
         color: var(--ink-soft);
         margin: 0;
         display: -webkit-box;
@@ -767,6 +865,16 @@
         color: var(--ink-faint);
         margin-top: 9px;
         display: block;
+      }
+      /* The two faintest lines are set for paper, not for a drawing behind
+         them: revealed, they are mixed a step towards the ink so the panel
+         does not have to be any more opaque than it is. The number line is
+         already the accent and keeps it. */
+      .card:hover .alt,
+      .card:hover .meta,
+      .card:focus-within .alt,
+      .card:focus-within .meta {
+        color: color-mix(in oklab, var(--ink-faint) 40%, var(--ink));
       }
       /* THE KEY INDEX — FORM split into keys, each key indexed in the shape its
          type asks for. A chip is a link: every filtered index has its own url. */

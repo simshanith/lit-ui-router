@@ -306,28 +306,32 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
 const sheetCard = (row: SheetRow): TemplateResult => html`
   <article class="card">
     ${cardPic(row.thumb)}
-    <span class="n">${isAppendix(row.num) ? 'APPENDIX' : 'SHEET'} ${row.num} · REV ${row.rev}</span>
-    <h3><a class="card-go" href="${href.sheet(row.num)}">${articleTitle(row.title)}</a></h3>
-    <span class="alt">${row.scale}</span>
-    <p>${unsafeHTML(row.caption)}</p>
-    <span class="meta">
-      ${isAppendix(row.num)
-        ? `${row.form} · NO CENSUS PLATE — META`
-        : `${row.form} · ${String(row.plates.length)} PLATE${row.plates.length === 1 ? '' : 'S'}`}
-    </span>
-    ${keyBlock(row.labels)}
+    <div class="card-body">
+      <span class="n">${isAppendix(row.num) ? 'APPENDIX' : 'SHEET'} ${row.num} · REV ${row.rev}</span>
+      <h3><a class="card-go" href="${href.sheet(row.num)}">${articleTitle(row.title)}</a></h3>
+      <span class="alt">${row.scale}</span>
+      <p>${unsafeHTML(row.caption)}</p>
+      <span class="meta">
+        ${isAppendix(row.num)
+          ? `${row.form} · NO CENSUS PLATE — META`
+          : `${row.form} · ${String(row.plates.length)} PLATE${row.plates.length === 1 ? '' : 'S'}`}
+      </span>
+      ${keyBlock(row.labels)}
+    </div>
   </article>
 `;
 
 const cityCard = (extra: ExtraRow): TemplateResult => html`
   <article class="card">
     <div class="card-pic card-pic-svg">${unsafeHTML(manifest.cover.hero)}</div>
-    <span class="n">${extra.shno} · REV ${extra.rev}</span>
-    <h3><a class="card-go" href="${href.city}">${articleTitle(extra.title)}</a></h3>
-    <span class="alt">${extra.scale}</span>
-    <p>${extra.sub.split(' · REV ')[0]}</p>
-    <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
-    ${keyBlock(extra.labels)}
+    <div class="card-body">
+      <span class="n">${extra.shno} · REV ${extra.rev}</span>
+      <h3><a class="card-go" href="${href.city}">${articleTitle(extra.title)}</a></h3>
+      <span class="alt">${extra.scale}</span>
+      <p>${extra.sub.split(' · REV ')[0]}</p>
+      <span class="meta">3D · WEBGL · LOADED ON DEMAND</span>
+      ${keyBlock(extra.labels)}
+    </div>
   </article>
 `;
 
