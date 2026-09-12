@@ -11,7 +11,11 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 
-export const ROOT = fileURLToPath(new URL('../../../', import.meta.url));
+// The atlas is not a workspace member, so the root comes the way the repo's
+// other outside-the-install script takes it: @tools/bootstrap by relative path.
+import { workspaceRoot as ROOT } from '../../../tools/bootstrap/src/root.ts';
+
+export { ROOT };
 export const DATA_DIR = fileURLToPath(new URL('../data/', import.meta.url));
 
 export const refFromArgv = (argv = process.argv.slice(2)) => {

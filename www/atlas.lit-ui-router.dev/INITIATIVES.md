@@ -152,9 +152,12 @@ sitting); order is dependency order.
   the refresh taught, in the order they bit. (1) THE MOVE BROKE THE BASIS. `basis.mjs`'s `ROOT`
   was `../../`, which resolved to the repo root while the atlas lived in `diagrams/` and to
   `www/` after the promotion; `git archive` run from there archives only that subtree, so the
-  first `census-scc` died on a missing `pnpm-workspace.yaml` in the tmpdir. It is `../../../`
-  now, the same depth `thumbs.mjs` already used to reach `tools/embed-heights`. A path sweep
-  that renames a tree has to re-derive every URL-relative constant, not just the literal strings.
+  first `census-scc` died on a missing `pnpm-workspace.yaml` in the tmpdir. The fix was first a
+  recount to `../../../`, then the repo's own helper: `ROOT` is `@tools/bootstrap`'s
+  `workspaceRoot`, imported by relative path the way `tools/workers-builds` does, and
+  `thumbs.mjs` reaches `tools/embed-heights` through the same root, so the generator no longer
+  carries a depth to re-derive. A path sweep that renames a tree has to re-derive every
+  URL-relative constant, not just the literal strings — or, better, have none.
   (2) THE REFRESH CHAIN IS SIXTEEN PROBES, NOT FIFTEEN. `census-loop.mjs` takes `--ref` like a
   T3 probe but is a pure tree read, and it sits in neither list above; run the T1/T2 queries and
   the T3 installs and the cabinet still straddles two shas, which is precisely what

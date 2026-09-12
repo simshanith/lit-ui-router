@@ -34,6 +34,7 @@ import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { extname, join, normalize } from 'node:path';
+import { ROOT } from './basis.mjs';
 import { THUMB_DIR, THUMB_H, THUMB_W, thumbFile } from './thumb-spec.mjs';
 
 const [OUT, ...FLAGS] = process.argv.slice(2);
@@ -55,7 +56,7 @@ for (let i = 0; i < FLAGS.length; i++) {
 
 // The atlas is not a pnpm workspace member, so playwright is reached through a
 // member that declares it — @tools/embed-heights, the repo's other renderer.
-const require = createRequire(new URL('../../../tools/embed-heights/package.json', import.meta.url));
+const require = createRequire(join(ROOT, 'tools/embed-heights/package.json'));
 let chromium;
 try {
   ({ chromium } = require('playwright'));
