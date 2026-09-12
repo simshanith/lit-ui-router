@@ -58,6 +58,13 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   uiSrefActive: 'directives',
   UiSrefDirective: 'directives',
   UiSrefActiveDirective: 'directives',
+  srefHref: 'directives',
+  srefActiveClass: 'directives',
+  srefAriaCurrent: 'directives',
+  SrefHrefDirective: 'directives',
+  SrefActiveClassDirective: 'directives',
+  SrefAriaCurrentDirective: 'directives',
+  SrefStatusDirective: 'directives',
   // Controllers
   TransitionController: 'controllers',
   TransitionControllerOptions: 'controllers',
@@ -78,6 +85,9 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   RoutedLitComponent: 'types',
   RoutedLitTemplate: 'types',
   SrefStatus: 'types',
+  SrefTargetParams: 'types',
+  SrefActiveClassParams: 'types',
+  SrefAriaCurrentParams: 'types',
   UiSrefActiveParams: 'types',
   UIViewInjectedProps: 'types',
   UIViewResolves: 'types',
@@ -623,7 +633,13 @@ function processComment(
  */
 function handleDirectiveWrappers(context: Context, app: Application): void {
   const project = context.project;
-  const directiveNames = ['uiSref', 'uiSrefActive'];
+  const directiveNames = [
+    'uiSref',
+    'uiSrefActive',
+    'srefHref',
+    'srefActiveClass',
+    'srefAriaCurrent',
+  ];
 
   for (const name of directiveNames) {
     const directive = project.getChildByName(name);

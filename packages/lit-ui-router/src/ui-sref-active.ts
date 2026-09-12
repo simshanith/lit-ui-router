@@ -30,7 +30,7 @@ import {
 import { UiView } from './ui-view.js';
 
 /** @internal */
-interface TransEvt {
+export interface TransEvt {
   evt: string;
   trans: Transition;
   status?: SrefStatus;
@@ -135,6 +135,57 @@ export function mergeSrefStatus(
     entering: left.entering || right.entering,
     exiting: left.exiting || right.exiting,
     targetStates: [...left.targetStates, ...right.targetStates],
+  };
+}
+
+/**
+ * The {@link SrefStatus} of one target for a transition event — or, with no
+ * event, against the router's current state. Shared by the element-part
+ * {@link uiSrefActive} and the attribute-part `srefActiveClass` /
+ * `srefAriaCurrent`.
+ *
+ * @internal
+ */
+export function srefStatus(
+  router: UIRouterLit,
+  event: TransEvt | undefined,
+  srefTarget: TargetState,
+): SrefStatus {
+  const pathMatchesTarget = pathMatches(srefTarget);
+  const tc = event?.trans.treeChanges();
+
+  const isStartEvent = event?.evt === 'start';
+  const isSuccessEvent = event?.evt === 'success';
+  const activePath: PathNode[] | undefined = isSuccessEvent ? tc?.to : tc?.from;
+
+  const isActive = () =>
+    activePath
+      ? spreadToSubPaths([], activePath)
+          .map(pathMatchesTarget)
+          .reduce(anyTrueR, false)
+      : router.stateService.includes(srefTarget.name(), srefTarget.params());
+
+  const isExact = () =>
+    activePath
+      ? pathMatchesTarget(activePath)
+      : router.stateService.is(srefTarget.name(), srefTarget.params());
+
+  const isEntering = () =>
+    spreadToSubPaths(tc!.retained, tc!.entering)
+      .map(pathMatchesTarget)
+      .reduce(anyTrueR, false);
+
+  const isExiting = () =>
+    spreadToSubPaths(tc!.retained, tc!.exiting)
+      .map(pathMatchesTarget)
+      .reduce(anyTrueR, false);
+
+  return {
+    active: isActive(),
+    exact: isExact(),
+    entering: isStartEvent ? isEntering() : false,
+    exiting: isStartEvent ? isExiting() : false,
+    targetStates: [srefTarget],
   };
 }
 
@@ -487,51 +538,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
     event: TransEvt | undefined,
     srefTarget: TargetState,
   ): SrefStatus {
-    const pathMatchesTarget = pathMatches(srefTarget);
-    const tc = event?.trans.treeChanges();
-
-    const isStartEvent = event?.evt === 'start';
-    const isSuccessEvent = event?.evt === 'success';
-    const activePath: PathNode[] | undefined = isSuccessEvent
-      ? tc?.to
-      : tc?.from;
-
-    const isActive = () =>
-      activePath
-        ? spreadToSubPaths([], activePath)
-            .map(pathMatchesTarget)
-            .reduce(anyTrueR, false)
-        : this.uiRouter!.stateService.includes(
-            srefTarget.name(),
-            srefTarget.params(),
-          );
-
-    const isExact = () =>
-      activePath
-        ? pathMatchesTarget(activePath)
-        : this.uiRouter!.stateService.is(
-            srefTarget.name(),
-            srefTarget.params(),
-          );
-
-    const isEntering = () =>
-      spreadToSubPaths(tc!.retained, tc!.entering)
-        .map(pathMatchesTarget)
-        .reduce(anyTrueR, false);
-
-    const isExiting = () =>
-      spreadToSubPaths(tc!.retained, tc!.exiting)
-        .map(pathMatchesTarget)
-        .reduce(anyTrueR, false);
-
-    const result: SrefStatus = {
-      active: isActive(),
-      exact: isExact(),
-      entering: isStartEvent ? isEntering() : false,
-      exiting: isStartEvent ? isExiting() : false,
-      targetStates: [srefTarget],
-    };
-    return result;
+    return srefStatus(this.uiRouter!, event, srefTarget);
   }
 
   /** @internal */
