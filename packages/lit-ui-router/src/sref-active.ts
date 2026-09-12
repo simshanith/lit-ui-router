@@ -13,6 +13,7 @@ import {
   PartType,
 } from 'lit/directive.js';
 import type { DirectiveResult } from 'lit/directive.js';
+import type { ClassInfo } from 'lit/directives/class-map.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
@@ -284,6 +285,14 @@ export interface SrefActiveClassParams extends SrefTargetParams {
   activeClasses?: string[];
   /** CSS classes to add only when the exact state is active */
   exactClasses?: string[];
+  /**
+   * Other classes to toggle by their value's truthiness, as
+   * {@link https://lit.dev/docs/templates/directives/#classmap | classMap}
+   * takes them. A `class` attribute holds one toggling directive, so this is
+   * where `classMap`'s argument goes when it shares the attribute with ours.
+   * A name listed here and in `activeClasses` applies when either says so.
+   */
+  classes?: ClassInfo;
 }
 
 /**
@@ -323,11 +332,15 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
   private classInfo({
     activeClasses = [],
     exactClasses = [],
+    classes = {},
   }: SrefActiveClassParams): Record<string, boolean> {
     const info: Record<string, boolean> = {};
     const { active = false, exact = false } = this.status ?? {};
+    for (const name in classes) {
+      info[name] = !!classes[name];
+    }
     for (const name of activeClasses) {
-      info[name] = active;
+      info[name] = info[name] || active;
     }
     for (const name of exactClasses) {
       info[name] = info[name] || exact;
@@ -473,9 +486,12 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
  * It follows lit's
  * {@link https://lit.dev/docs/templates/directives/#classmap | classMap}: it
  * must be bound in `class`, alone or next to static classes, and it only ever
- * toggles the classes it names. Name the
- * state to watch, or leave `state` out on a wrapper to watch the
- * {@link srefHref} links inside it.
+ * toggles the classes it names. Name the state to watch, or leave `state` out
+ * on a wrapper to watch the {@link srefHref} links inside it.
+ *
+ * It cannot share the attribute with `classMap` — lit rewrites the whole
+ * value when either expression changes, so one directive has to own it. Pass
+ * what `classMap` would have taken as `classes` instead.
  *
  * Unlike `uiSrefActive`, this writes no `aria-current` — a `class` binding
  * cannot reach another attribute. Bind {@link srefAriaCurrent} beside it.
@@ -489,6 +505,15 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
  *         class="nav-link ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}">
  *   Users
  * </a>`
+ * ```
+ *
+ * @example In place of classMap
+ * ```ts
+ * html`<a class=${srefActiveClass({
+ *   state: 'users',
+ *   activeClasses: ['active'],
+ *   classes: { 'nav-link': true, disabled: this.locked },
+ * })}>Users</a>`
  * ```
  *
  * @example Container mode

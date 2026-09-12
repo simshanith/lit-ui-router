@@ -103,7 +103,8 @@ router, which is still open ([#564](https://github.com/simshanith/lit-ui-router/
 - `srefActiveClass` follows lit's
   [`classMap`](https://lit.dev/docs/templates/directives/#classmap): bind it in
   `class`, alone or beside static classes, and it toggles only the classes it
-  names. Leave
+  names. It cannot share the attribute with `classMap` itself, so pass those
+  classes as `classes: { 'nav-link': true, disabled: locked }`. Leave
   `state` out on a wrapper to watch the `srefHref` links inside it, as
   `uiSrefActive` does.
 - `srefAriaCurrent` is the one piece a `class` binding cannot reach, so it is
