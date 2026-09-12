@@ -6,3 +6,5 @@ export * from './ui-router.js';
 export * from './ui-view.js';
 export * from './ui-sref.js';
 export * from './ui-sref-active.js';
+export * from './sref-href.js';
+export * from './sref-active.js';
