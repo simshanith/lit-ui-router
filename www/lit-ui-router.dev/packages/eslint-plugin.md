@@ -71,14 +71,14 @@ so the ordering rule costs nothing either way.
 
 ## The rules
 
-| Rule                                                                                                                                                                        | What it catches                                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [`anchor-is-valid`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)                               | an anchor with no `href` — where a `uiSref` element part counts as one                                                                    |
-| [`sref-assign-href`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md)                             | an inert `href` written to a `<button>`, `<tr>` or `<div>`; fix adds `'auto'`                                                             |
-| [`sref-active-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md)             | an authored `aria-current` the directive silently takes over and later removes                                                            |
-| [`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md) | a link `srefActiveClass` paints active with no `aria-current` beside it; fix binds `srefAriaCurrent`                                      |
-| [`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md)             | a link whose classes read a `SrefStatusController` with no `aria-current` beside it; fix binds `ariaCurrent()`                            |
-| [`directive-position`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md)                         | a directive outside the part type it accepts — `uiSref` and `uiSrefActive` are element-part only, and throw on first render anywhere else |
+| Rule                                                                                                                                                                        | What it catches                                                                                                                                                                                                            |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`anchor-is-valid`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)                               | an anchor with no `href` — where a `uiSref` element part counts as one                                                                                                                                                     |
+| [`sref-assign-href`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md)                             | an inert `href` written to a `<button>`, `<tr>` or `<div>`; fix adds `'auto'`                                                                                                                                              |
+| [`sref-active-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md)             | an authored `aria-current` the directive silently takes over and later removes                                                                                                                                             |
+| [`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md) | a link `srefActiveClass` paints active with no `aria-current` beside it; fix binds `srefAriaCurrent`                                                                                                                       |
+| [`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md)             | a link whose classes read a `SrefStatusController` with no `aria-current` beside it; fix binds `ariaCurrent()`                                                                                                             |
+| [`directive-position`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md)                         | a directive outside the part it accepts — `uiSref` and `uiSrefActive` on the element, `srefHref` and `srefAriaCurrent` as a whole attribute value, `srefActiveClass` in `class`; each throws on first render anywhere else |
 
 All six are in `configs.recommended` at `error`. The last five are the
 directives' own runtime development warnings, gaps and throws, said
@@ -87,16 +87,13 @@ production build — where the runtime says nothing at all.
 
 Three of them are one concern seen from three angles. A link can learn it is
 active from the [`uiSrefActive`](/api/reference/directives/uiSrefActive)
-element part, from a
-[`srefActiveClass`](/api/reference/directives/srefActiveClass) attribute part,
-or from a
-[`SrefStatusController`](/api/reference/controllers/SrefStatusController) the
-host composes with `classMap` — and only the first writes `aria-current`
-itself. `sref-active-aria-current` protects the authored attribute from the
-element part's takeover, `sref-active-class-aria-current` asks for the
-attribute the attribute part never writes, and `sref-status-aria-current` asks
-for it where the status never reaches the template as a directive call at
-all.
+element part, from a `srefActiveClass` attribute part, or from a
+`SrefStatusController` the host composes with `classMap` — and only the first
+writes `aria-current` itself. `sref-active-aria-current` protects the authored
+attribute from the element part's takeover, `sref-active-class-aria-current`
+asks for the attribute the attribute part never writes, and
+`sref-status-aria-current` asks for it where the status never reaches the
+template as a directive call at all.
 
 Every rule is syntax-only, with no type information, so they also load into
 [oxlint](https://oxc.rs) as JS plugins.
