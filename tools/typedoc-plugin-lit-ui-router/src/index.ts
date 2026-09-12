@@ -15,6 +15,7 @@ import {
   Reflection,
   Comment,
   CommentTag,
+  ReflectionKind,
   RendererEvent,
 } from 'typedoc';
 import * as fs from 'fs';
@@ -77,6 +78,7 @@ export function load(app: Application): void {
   // Aggregate custom-elements-manifest tags into rendered Slots/Events lists
   app.converter.on(Converter.EVENT_RESOLVE_END, (context: Context) => {
     handleCemTags(context);
+    checkCategoryTags(context, app);
   });
 
   // Post-process output to reorganize by category
@@ -175,6 +177,40 @@ function formatCemTagContent(text: string): string {
   const label = name ? `<code>${name}</code>` : '<em>default</em>';
   const typeSuffix = type ? ` (<code>${type}</code>)` : '';
   return `- ${label}${typeSuffix} — ${description}`;
+}
+
+/** Exported kinds that must carry a `@category` tag. */
+const CATEGORIZED_KINDS =
+  ReflectionKind.Class |
+  ReflectionKind.Interface |
+  ReflectionKind.TypeAlias |
+  ReflectionKind.Function |
+  ReflectionKind.Variable |
+  ReflectionKind.Enum;
+
+/**
+ * Warn on any top-level export missing `@category`; such exports silently fall
+ * into `--defaultCategory` and get their own sidebar group. With
+ * `treatWarningsAsErrors` this fails the build; packages opt out by not setting it.
+ */
+function checkCategoryTags(context: Context, app: Application): void {
+  const visit = (reflection: Reflection): void => {
+    for (const child of (reflection as { children?: Reflection[] }).children ??
+      []) {
+      if (child.kindOf(ReflectionKind.Module)) {
+        visit(child);
+        continue;
+      }
+      if (!child.kindOf(CATEGORIZED_KINDS)) continue;
+      if (!child.comment?.getTag('@category')) {
+        app.logger.warn(
+          `[lit-ui-router] ${child.getFriendlyFullName()} has no @category tag`,
+        );
+      }
+    }
+  };
+
+  visit(context.project);
 }
 
 /**

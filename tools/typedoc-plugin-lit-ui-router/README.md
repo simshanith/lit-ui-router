@@ -12,7 +12,10 @@ For packages using `"router": "category"` (currently `lit-ui-router`).
   one aggregate `@slots` / `@events` tag holding a markdown list, so a class
   page gets a single Slots / Events section. TypeDoc has no renderer for the
   analyzer's `{Type} name - description` syntax, and `@event` is reserved by
-  TypeDoc, hence the `@fires` alias.
+  TypeDoc, hence the `@fires` alias. It also warns on any top-level export
+  whose comment has no `@category` tag, which under the package's
+  `treatWarningsAsErrors` fails the build rather than letting the export drift
+  into `--defaultCategory` and its own sidebar group.
 - `RendererEvent.END` — writes `<category>/index.md` for each category folder
   that has member pages (title and blurb from the plugin's category table,
   plus VitePress `prev`/`next` frontmatter), then retitles each
