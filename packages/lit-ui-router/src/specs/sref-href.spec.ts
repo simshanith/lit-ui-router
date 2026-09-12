@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, render, TemplateResult } from 'lit';
+import { html, nothing, render, TemplateResult } from 'lit';
+import { cache } from 'lit/directives/cache.js';
 import { AttributePartInfo, PartInfo, PartType } from 'lit/directive.js';
 
 import { srefHref, SrefHrefDirective } from '../sref-href.js';
@@ -253,6 +254,40 @@ describe('srefHref directive', () => {
 
     it('accepts an attribute part it has to itself', () => {
       expect(at(attributePart('href'))).not.toThrow();
+    });
+  });
+
+  describe('lifecycle', () => {
+    it('lets go when disconnected and picks up again when reconnected', async () => {
+      const link = (show: boolean) =>
+        html`${cache(
+          show ? html`<a href=${srefHref('users')}>Users</a>` : nothing,
+        )}`;
+      const wrapper = await mount(link(true));
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.getAttribute('href')).toBe('#/users');
+
+      render(link(false), wrapper);
+      await tick();
+      expect(wrapper.querySelector('a')).toBeNull();
+
+      render(link(true), wrapper);
+      await tick(20);
+      expect(wrapper.querySelector('a')).toBe(anchor);
+
+      const go = vi.spyOn(router.stateService, 'go');
+      clickElement(anchor);
+      await tick();
+      expect(go).toHaveBeenCalledTimes(1);
+    });
+
+    it('does nothing when removed before its first seek', async () => {
+      const wrapper = await mount(html``);
+      render(html`<a href=${srefHref('users')}>Users</a>`, wrapper);
+      const anchor = wrapper.querySelector('a')!;
+      render(html``, wrapper);
+      await tick(20);
+      expect(anchor.hasAttribute('href')).toBe(false);
     });
   });
 
