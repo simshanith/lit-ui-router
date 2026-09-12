@@ -1,6 +1,6 @@
 ---
 title: ESLint Plugin
-description: Directive-aware linting with eslint-plugin-lit-ui-router — four rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as the href it assigns at runtime
+description: Directive-aware linting with eslint-plugin-lit-ui-router — rules covering hrefless anchors, inert hrefs, aria-current conflicts and misplaced directives, where a uiSref element part counts as the href it assigns at runtime
 ---
 
 # eslint-plugin-lit-ui-router
@@ -22,10 +22,10 @@ counts as the `href` it assigns, and reports everything the base rule would
 otherwise still catch.
 
 That vendored rule is the origin story rather than the whole package. The
-other three cover the mistakes the directives make _possible_, rather than the
+others cover the mistakes the directives make _possible_, rather than the
 ones they mask: an `href` written to an element that has none, an
-`aria-current` the directive silently takes over, and a directive used outside
-the part type it accepts.
+`aria-current` the directive silently takes over, an `aria-current` nothing
+writes at all, and a directive used outside the part type it accepts.
 
 ## Installation
 
@@ -77,12 +77,26 @@ so the ordering rule costs nothing either way.
 | [`sref-assign-href`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md)                             | an inert `href` written to a `<button>`, `<tr>` or `<div>`; fix adds `'auto'`                                                             |
 | [`sref-active-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md)             | an authored `aria-current` the directive silently takes over and later removes                                                            |
 | [`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md) | a link `srefActiveClass` paints active with no `aria-current` beside it; fix binds `srefAriaCurrent`                                      |
+| [`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md)             | a link whose classes read a `SrefStatusController` with no `aria-current` beside it; fix binds `ariaCurrent()`                            |
 | [`directive-position`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md)                         | a directive outside the part type it accepts — `uiSref` and `uiSrefActive` are element-part only, and throw on first render anywhere else |
 
-All five are in `configs.recommended` at `error`. The last four are the
+All six are in `configs.recommended` at `error`. The last five are the
 directives' own runtime development warnings, gaps and throws, said
 statically: they report at author time, across the whole codebase, and in a
 production build — where the runtime says nothing at all.
+
+Three of them are one concern seen from three angles. A link can learn it is
+active from the [`uiSrefActive`](/api/reference/directives/uiSrefActive)
+element part, from a
+[`srefActiveClass`](/api/reference/directives/srefActiveClass) attribute part,
+or from a
+[`SrefStatusController`](/api/reference/controllers/SrefStatusController) the
+host composes with `classMap` — and only the first writes `aria-current`
+itself. `sref-active-aria-current` protects the authored attribute from the
+element part's takeover, `sref-active-class-aria-current` asks for the
+attribute the attribute part never writes, and `sref-status-aria-current` asks
+for it where the status never reaches the template as a directive call at
+all.
 
 Every rule is syntax-only, with no type information, so they also load into
 [oxlint](https://oxc.rs) as JS plugins.
@@ -162,7 +176,7 @@ expect majors rather than silent tightening, and pin accordingly.
   — `1.0.1` on `latest`.
 - **Source**:
   [`packages/eslint-plugin-lit-ui-router`](https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router)
-  — the four rules, their tests, and the generated rule docs.
+  — the six rules, their tests, and the generated rule docs.
 - **Dogfood**: this repository's own lint run uses the plugin against the
   sample apps, where every navigation anchor is a `uiSref` call site, and
   `examples/lint-eslint` exercises every `recommended` rule from an

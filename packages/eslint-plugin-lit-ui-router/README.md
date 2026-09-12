@@ -9,7 +9,7 @@ ESLint rules that understand [lit-ui-router](https://lit-ui-router.dev) directiv
 
 A lit-ui-router anchor carries no static `href` — the element-part directive assigns one at runtime — so stock accessibility rules report every correct call site. These rules keep the base rules' real coverage while understanding what the directives do.
 
-The rest are the directives' own runtime dev warnings, statically: the inert `href` on a native non-link, the silent `aria-current` takeover, the `aria-current` the class directive never writes, and the constructor throw each directive keeps for the part type it does not accept. Each reports at author time, on the whole codebase, in a production build — where the runtime says nothing.
+The rest are the directives' own runtime dev warnings, statically: the inert `href` on a native non-link, the silent `aria-current` takeover, the `aria-current` neither the class directive nor the status controller ever writes, and the constructor throw each directive keeps for the part type it does not accept. Each reports at author time, on the whole codebase, in a production build — where the runtime says nothing.
 
 ## Install
 
@@ -72,6 +72,7 @@ export default [
 - [`anchor-is-valid`](./docs/rules/anchor-is-valid.md) checks a declared element the way it checks `<a>`: it wants a navigable `href`, static or assigned by a `uiSref` element part.
 - [`sref-assign-href`](./docs/rules/sref-assign-href.md) goes quiet on a declared element, the way it does on `<a>` — it honours the `href` that the `assignHref: true` default writes.
 - [`sref-active-class-aria-current`](./docs/rules/sref-active-class-aria-current.md) asks a declared element for the `aria-current` it asks an `<a>` for.
+- [`sref-status-aria-current`](./docs/rules/sref-status-aria-current.md) asks the same of a declared element whose classes read a `SrefStatusController`.
 
 Undeclared tags are unchanged in every rule, so this is purely additive: with no `linkElements`, each behaves exactly as it did. Each also takes a `linkElements` option of its own, which replaces the setting for that rule.
 
@@ -87,7 +88,8 @@ The rules also load into [oxlint](https://oxc.rs) as JS plugins — every one is
     "lit-ui-router/directive-position": "error",
     "lit-ui-router/sref-active-aria-current": "error",
     "lit-ui-router/sref-active-class-aria-current": "error",
-    "lit-ui-router/sref-assign-href": "error"
+    "lit-ui-router/sref-assign-href": "error",
+    "lit-ui-router/sref-status-aria-current": "error"
   }
 }
 ```
@@ -110,7 +112,8 @@ ESLint-only, oxlint-only and both-at-once are all supported. If you run both, th
     "lit-ui-router/directive-position": "error",
     "lit-ui-router/sref-active-aria-current": "error",
     "lit-ui-router/sref-active-class-aria-current": "error",
-    "lit-ui-router/sref-assign-href": "error"
+    "lit-ui-router/sref-assign-href": "error",
+    "lit-ui-router/sref-status-aria-current": "error"
   }
 }
 ```
@@ -166,6 +169,7 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 | [sref-active-aria-current](docs/rules/sref-active-aria-current.md)             | disallow an authored aria-current on an element a uiSrefActive element part manages                     | ✅  | 🔧 |
 | [sref-active-class-aria-current](docs/rules/sref-active-class-aria-current.md) | require an aria-current binding beside a srefActiveClass binding on a link element                      | ✅  | 🔧 |
 | [sref-assign-href](docs/rules/sref-assign-href.md)                             | require assignHref: 'auto' when a uiSref element part rides a native element with no href               | ✅  | 🔧 |
+| [sref-status-aria-current](docs/rules/sref-status-aria-current.md)             | require an aria-current binding on a link element whose classes read a SrefStatusController             | ✅  | 🔧 |
 
 <!-- end auto-generated rules list -->
 

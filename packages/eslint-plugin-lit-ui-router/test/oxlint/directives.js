@@ -5,6 +5,7 @@ import {
   srefActiveClass,
   srefAriaCurrent,
   srefHref,
+  SrefStatusController,
   uiSref,
   uiSrefActive,
 } from 'lit-ui-router';
@@ -68,3 +69,25 @@ export const spokenActive = html`<a
   aria-current=${srefAriaCurrent({ state: 'home' })}
   >Home</a
 >`;
+
+// the controller channel: classes composed from status, then the same link told
+export class NavBar {
+  users = new SrefStatusController(this, { state: 'users' });
+
+  silent() {
+    return html`<a
+      href=${srefHref('users')}
+      class="nav ${this.users.active ? 'on' : ''}"
+      >Users</a
+    >`;
+  }
+
+  spoken() {
+    return html`<a
+      href=${srefHref('users')}
+      class="nav ${this.users.active ? 'on' : ''}"
+      aria-current=${this.users.ariaCurrent()}
+      >Users</a
+    >`;
+  }
+}

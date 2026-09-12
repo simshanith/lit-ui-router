@@ -10,6 +10,7 @@ import {
   srefActiveClass,
   srefAriaCurrent,
   srefHref,
+  SrefStatusController,
   uiSref,
   uiSrefActive,
 } from 'lit-ui-router';
@@ -86,6 +87,16 @@ void describe('plugin', () => {
     assert.deepEqual(
       messages.map((message) => message.ruleId),
       ['lit-ui-router/sref-active-class-aria-current'],
+    );
+  });
+
+  void it('recommended reports a link painted from controller status', () => {
+    const messages = lint(
+      `${IMPORTS}class Nav {\n  users = new SrefStatusController(this, { state: 'users' });\n  render() {\n    return html\`<a href=\${srefHref('users')} class="nav \${this.users.active ? 'on' : ''}">Users</a>\`;\n  }\n}`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/sref-status-aria-current'],
     );
   });
 

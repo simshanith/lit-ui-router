@@ -81,6 +81,7 @@ void describe('oxlint jsPlugins: the option-aware rules', () => {
         'lit-ui-router(directive-position)',
         'lit-ui-router(directive-position)',
         'lit-ui-router(sref-active-class-aria-current)',
+        'lit-ui-router(sref-status-aria-current)',
       ],
     );
   });
@@ -96,17 +97,21 @@ void describe('oxlint jsPlugins: the option-aware rules', () => {
     );
     assert.match(
       diagnostics[5]?.message ?? '',
-      /^srefActiveClass marks this <a> active for CSS only/,
+      /^srefActiveClass marks this <a> active for CSS only; bind aria-current=\$\{srefAriaCurrent\(\{ state: 'home' \}\)\}/,
+    );
+    assert.match(
+      diagnostics[6]?.message ?? '',
+      /^The classes on this <a> read this\.users's status/,
     );
   });
 
   void it('leaves the documented fixes alone', () => {
-    // Lines 12, 16, 19, 39, 41 and 62 are the offenders; the fixed forms follow.
+    // Lines 13, 17, 20, 40, 42, 63 and 80 are the offenders; the fixes follow.
     const lines = diagnostics.map(
       (diagnostic) =>
         (diagnostic as unknown as { labels: { span: { line: number } }[] })
           .labels[0]?.span.line,
     );
-    assert.deepEqual(lines, [12, 16, 19, 39, 41, 62]);
+    assert.deepEqual(lines, [13, 17, 20, 40, 42, 63, 80]);
   });
 });

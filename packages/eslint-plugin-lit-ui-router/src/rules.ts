@@ -5,6 +5,7 @@ import { ruleUrl } from './rule-url.ts';
 import { srefActiveAriaCurrent } from './sref-active-aria-current.ts';
 import { srefActiveClassAriaCurrent } from './sref-active-class-aria-current.ts';
 import { srefAssignHref } from './sref-assign-href.ts';
+import { srefStatusAriaCurrent } from './sref-status-aria-current.ts';
 
 // Spelled as data rather than read off the rule files, which export their own
 // names: the dist d.ts is emitted by oxc's isolated declarations, which never
@@ -19,6 +20,7 @@ export const RULE_NAMES = [
   'sref-active-aria-current',
   'sref-active-class-aria-current',
   'sref-assign-href',
+  'sref-status-aria-current',
 ] as const;
 
 /** A rule this plugin ships. */
@@ -64,4 +66,5 @@ export const RULES: Registry = registerAll({
   'sref-active-aria-current': srefActiveAriaCurrent,
   'sref-active-class-aria-current': srefActiveClassAriaCurrent,
   'sref-assign-href': srefAssignHref,
+  'sref-status-aria-current': srefStatusAriaCurrent,
 });

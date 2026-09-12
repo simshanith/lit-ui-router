@@ -40,6 +40,9 @@ const DIRECTIVE_NAMES: DirectiveName[] = [
   'srefAriaCurrent',
 ];
 
+/** The reactive controller that hands a host the same status the directives read. */
+const STATUS_CONTROLLER = 'SrefStatusController';
+
 /** The elements HTML gives link semantics with no role of their own. */
 const NATIVE_LINKS = new Set(['a', 'area']);
 
@@ -325,6 +328,10 @@ export interface DirectiveTracker {
   isLitTemplate(tag: Node): boolean;
   /** Which lit-ui-router directive this expression calls, if any. */
   directiveOf(expression: Node): DirectiveName | undefined;
+  /** Whether this expression is `new SrefStatusController(...)`, ours. */
+  isControllerNew(expression: Node | null | undefined): boolean;
+  /** Whether this identifier's scope definition binds it to such a `new`. */
+  isControllerBinding(node: Node): boolean;
 }
 
 /**
@@ -347,6 +354,15 @@ export const createDirectiveTracker = (
   const isOurs = isOurPackage;
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
+
+  const isControllerNew = (expression: Node | null | undefined): boolean =>
+    expression?.type === 'NewExpression' &&
+    importedAs(
+      context,
+      (expression as CallNode).callee,
+      STATUS_CONTROLLER,
+      isOurs,
+    );
 
   return {
     onImport(node) {
@@ -386,6 +402,18 @@ export const createDirectiveTracker = (
       const { callee } = expression as CallNode;
       return DIRECTIVE_NAMES.find((name) =>
         importedAs(context, callee, name, isOurs),
+      );
+    },
+
+    isControllerNew,
+
+    isControllerBinding(node) {
+      const definition = definitionOf(context, node);
+      if (definition?.type !== 'Variable') return false;
+      const declarator = definition.node;
+      return (
+        declarator.type === 'VariableDeclarator' &&
+        isControllerNew(declarator.init as Node | null | undefined)
       );
     },
   };

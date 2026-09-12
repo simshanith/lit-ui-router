@@ -18,6 +18,7 @@ const recommended: Record<`lit-ui-router/${RuleName}`, Linter.RuleEntry> = {
   'lit-ui-router/sref-active-aria-current': 'error',
   'lit-ui-router/sref-active-class-aria-current': 'error',
   'lit-ui-router/sref-assign-href': 'error',
+  'lit-ui-router/sref-status-aria-current': 'error',
 };
 
 const plugin: LitUiRouterPlugin = {
