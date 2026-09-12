@@ -6,6 +6,7 @@ import {
   type Transition,
 } from '@uirouter/core';
 import {
+  SrefStatusController,
   TransitionController,
   UIRouterLit,
   UIRouterLitElement,
@@ -20,6 +21,7 @@ import {
   type LitStateDeclaration,
   type RoutedLitTemplate,
   type SrefStatus,
+  type SrefStatusControllerOptions,
   type TransitionCallback,
   type UIViewInjectedProps,
   type UiOnExit,
@@ -30,10 +32,12 @@ import 'lit-ui-router/register';
 import 'lit-ui-router/ui-router.register';
 import 'lit-ui-router/ui-view.register';
 import {
+  SrefStatusController as PureSrefStatusController,
   TransitionController as PureTransitionController,
   UIRouterLitElement as PureUIRouterLitElement,
   type UIRouterLit as PureUIRouterLit,
 } from 'lit-ui-router/pure';
+import { classMap } from 'lit/directives/class-map.js';
 
 interface UserResolves {
   user: { name: string };
@@ -123,11 +127,32 @@ export function merge(a: SrefStatus, b: SrefStatus): SrefStatus {
   return mergeSrefStatus(a, b);
 }
 
+export class NavLinkElement extends LitElement {
+  private readonly status = new SrefStatusController(this, {
+    state: 'user.detail',
+    params: { id: 1 },
+  } satisfies SrefStatusControllerOptions);
+
+  render(): TemplateResult {
+    return html`<a
+      href=${srefHref('user.detail', { id: 1 })}
+      class=${classMap({ 'nav-link': true, active: this.status.active })}
+      aria-current=${this.status.ariaCurrent({
+        exact: 'page',
+        active: 'location',
+      })}
+      >detail</a
+    >`;
+  }
+}
+
 // Both entries must expose the same declarations.
 TransitionController satisfies typeof PureTransitionController;
+SrefStatusController satisfies typeof PureSrefStatusController;
 
 export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   void new PureTransitionController(host);
+  void new PureSrefStatusController(host, { state: 'home' });
   return PureUIRouterLitElement.seekRouter(host);
 }
 
