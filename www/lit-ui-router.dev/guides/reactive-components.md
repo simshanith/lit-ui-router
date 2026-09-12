@@ -138,6 +138,11 @@ renders — plus:
 Only a change in one of the four flags requests a host update, so transitions
 that leave the link alone cost nothing.
 
+The directives themselves are compared with `uiSref`/`uiSrefActive` in
+[Design System Links](./design-system-links#element-part-or-attribute-part),
+and their server-side story is in
+[Server-Side Routing](./server-route-matching#links-a-server-renderer-can-read).
+
 ## See it live
 
 The same problem, solved with the

@@ -90,6 +90,59 @@ message text is not present in a production bundle at all — see
 the property yourself if you would rather not see it in development.
 :::
 
+## Element part or attribute part
+
+`assignHref` exists because `uiSref` is an **element part**: it sits on the
+element and writes the `href` from the outside, so it needs a rule for where
+to write. [`srefHref`](/api/reference/directives/srefHref) is the same link
+bound as an **attribute part** — it _is_ the `href`, so there is no
+`assignHref` and no rule to pick. The attribute is written wherever it was
+bound:
+
+```ts
+html`<sp-link href=${srefHref('components')}>Components</sp-link>`;
+```
+
+| your case                                                      | form                              |
+| -------------------------------------------------------------- | --------------------------------- |
+| the element takes an `href` you can bind in the template       | `href=${srefHref(...)}`           |
+| the `href` goes somewhere else — a property, a nested slot     | `uiSref` with `assignHref`        |
+| a reader outside the browser must see the link (SSR, a linter) | `href=${srefHref(...)}`           |
+| you are already on `uiSref` and it works                       | leave it — the two are equivalent |
+
+Both navigate on click, both announce their target to an enclosing
+`uiSrefActive`, and both accept the same state, params and transition
+options. Use one or the other on an element, never both. The server-side
+reasons are in
+[Server-Side Routing](./server-route-matching#links-a-server-renderer-can-read).
+
+The active-status pair splits the same way.
+[`srefActiveClass`](/api/reference/directives/srefActiveClass) follows lit's
+[`classMap`](https://lit.dev/docs/templates/directives/#classmap) contract —
+bound in `class`, toggling only the classes it names — and
+[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) covers the
+`aria-current` a `class` binding cannot reach. A `class` attribute holds one
+toggling directive, so `srefActiveClass` cannot share it with `classMap`:
+pass what `classMap` would have taken as `classes` instead.
+
+```ts
+html`<sp-link
+  href=${srefHref('components')}
+  class=${srefActiveClass({
+    state: 'components',
+    activeClasses: ['active'],
+    classes: { 'nav-link': true, disabled: this.locked },
+  })}
+  aria-current=${srefAriaCurrent({ state: 'components' })}
+  >Components</sp-link
+>`;
+```
+
+When a component wants plain `classMap` and its own bindings,
+[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+hands the status to the host instead of writing an attribute — see
+[Active-link status](./reactive-components#active-link-status).
+
 ## Setting up the example
 
 The [example](https://github.com/simshanith/lit-ui-router/tree/main/examples/design-system-links)
