@@ -131,6 +131,37 @@ export const states: LitStateDeclaration[] = [
 export const NAVIGATION_API =
   !ARTIFACT && typeof window !== 'undefined' && 'navigation' in window;
 
+/**
+ * A filter change inside the key index: the same state in and out. The
+ * gallery is deliberately not dynamic (routes.ts), so a chip re-enters it —
+ * a re-render, not a page change. Stated once here because ui-router's hook
+ * criteria have no "every pair but this one" form, so the slideshow tests the
+ * inverse of this same predicate.
+ */
+export function isIndexFilterChange(transition: Transition): boolean {
+  return transition.from().name === 'atlas.gallery' && transition.to().name === 'atlas.gallery';
+}
+
+/**
+ * Keep the reader where they were across an index re-render: a shorter
+ * filtered index can collapse the page and let the browser clamp scrollTop.
+ * The position goes back once lit has finished the ui-view swap — awaited
+ * here rather than through experimental/, which src/*.ts may not import.
+ */
+function holdScroll(): void {
+  const top = window.scrollY;
+  const restore = (): void => {
+    if (window.scrollY !== top) window.scrollTo({ top });
+  };
+  const rendered = (): Promise<unknown> =>
+    Promise.all(
+      [...document.querySelectorAll('ui-view')].map(
+        (host) => (host as unknown as { updateComplete?: Promise<unknown> }).updateComplete,
+      ),
+    );
+  void Promise.resolve().then(rendered).then(restore, restore);
+}
+
 export function createRouter(): UIRouterLit {
   const router = new UIRouterLit();
   if (ARTIFACT) router.plugin(hashLocationPlugin);
@@ -179,7 +210,10 @@ export function createRouter(): UIRouterLit {
   });
 
   router.transitionService.onSuccess({}, (transition) => {
-    window.scrollTo({ top: 0 });
+    // An index filter change stays on the page it re-renders; everything else
+    // is a new page and starts at the top.
+    if (isIndexFilterChange(transition)) holdScroll();
+    else window.scrollTo({ top: 0 });
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;
     const sheet =
