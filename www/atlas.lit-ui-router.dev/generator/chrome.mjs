@@ -200,17 +200,12 @@ sup.art {
 }
 /* THE CONDENSED WORDMARK — one of the atlas's TWO names for itself. The other
    is the full uppercase wordmark in the display face, which the rail head and
-   the cover title carry plain. This one is the LEDGER name: the same display
-   face for the name (.project-mark, below), with the article drawn as the kit's
-   catchword. Two sites carry it — every sheet-head PROJECT line and the title
-   block's PROJECT value — and both wrap the superior in .cw, so this is ONE
-   rule set, not two.
-   HWT Catchwords is an Adobe-kit face with NO GSUB: every THE in it is
-   keyed to one character and key e is the plainest of the ten (upright block
-   caps over two leaves). It draws ONLY where the guard script found the face
-   declared; off the kit — the artifact, any host without it — none of this
-   applies and the sup.art superior inside is what draws. The bare key e in the
-   display face is the failure that guard prevents. */
+   the cover title carry plain. This one is the LEDGER name: the article as the
+   data-face superior (sup.art, above) and the name in the display face
+   (.project-mark, below). Two sites carry it — every sheet-head PROJECT line
+   and the title block's PROJECT value — and both emit the same PROJECT_MARK,
+   so it draws identically on every host.
+   A kit catchword was tried for the article and dropped 2026-09-12. */
 /* THE NAME, wherever the wordmark is drawn. The face travels with the MARK,
    not with the site: the sheet-head ledger line and the title block's PROJECT
    value both emit PROJECT_MARK, so both set ALTITUDE ATLAS in Eaglefeather at
@@ -226,37 +221,6 @@ sup.art {
   font-family: var(--display);
   font-size: 1.06em;
   font-weight: 600;
-}
-html[data-catchwords="on"] .cw::before {
-  content: "e";
-  font-family: "hwt-catchwords";
-  /* 20px FLAT, set against the display-face name beside it (user-tuned in the
-     browser, 2026-09-11). The catchword draws THE as two stacked lines inside
-     one cap height, so at the ledger sizes these two sites run — 11.5px in a
-     sheet head, 13.5px in a title block — a cap-matched scale is an inkblot;
-     the earlier rule floored it at 24px, which separated the letters but left
-     the mark floating above the name. 20px is where the three letters still
-     read AND the block sits on the name's own cap band. */
-  font-size: 20px;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--ink-soft);
-  margin-right: 0.16em;
-  /* the mark is taller than the 11.5px head line: kept out of the line box so
-     the sheet head does not grow a row around it. "sub" drops it off the
-     baseline until its two stacked lines centre on the cap band of the
-     display-face name that follows it, rather than floating over it. */
-  line-height: 0;
-  vertical-align: sub;
-}
-html[data-catchwords="on"] .cw sup.art {
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
 }
 .sheet-sub {
   font-family: var(--data);
@@ -567,13 +531,13 @@ export const articleTitleInline = (title = '') =>
   String(title).replace(/^THE\s+/, '<span class="art-inline">the&nbsp;</span>');
 
 /**
- * The project name AS DRAWN — the catchword site (see `.cw`). Plain `PROJECT`
- * stays for `<title>`, aria names and the rail's wordmark. Twins in the app:
- * `PROJECT_MARK` in app/src/views.ts and app/prerender.ts.
+ * The project name AS DRAWN — the condensed wordmark (see `.project-mark`).
+ * Plain `PROJECT` stays for `<title>`, aria names and the rail's wordmark.
+ * Twins in the app: `PROJECT_MARK` in app/src/views.ts and app/prerender.ts.
  */
 export const PROJECT_MARK = PROJECT.replace(
   /^THE\s+(.+)$/,
-  '<span class="cw"><sup class="art">the&nbsp;</sup></span><span class="project-mark">$1</span>',
+  '<sup class="art">the&nbsp;</sup><span class="project-mark">$1</span>',
 );
 
 export function titleBlock(sheet) {
@@ -634,34 +598,12 @@ export const chipBreaks = (html) =>
   String(html).replace(/(<code\b[^>]*>)([^<]*)(<\/code>)/g, (m, open, text, close) =>
     text.includes('/') ? open + text.replace(/\/(?!<wbr>)/g, '/<wbr>') + close : m);
 
-/* THE CATCHWORD GUARD. The kit <link> is injected at STAGE time, so a page
-   cannot know at build time whether it has the face — it asks the FontFaceSet.
-   TRAP: document.fonts.check() answers "can this be rendered", true for a
-   family nothing declares; only a DECLARED @font-face lands in the set, so that
-   is what is asked. Twin in app/index.html. */
-export const CATCHWORD_SCRIPT = `(function () {
-  var armed = function () {
-    for (var f of document.fonts) {
-      if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
-        document.documentElement.dataset.catchwords = 'on';
-        return true;
-      }
-    }
-    return false;
-  };
-  if (armed()) return;
-  addEventListener('DOMContentLoaded', function () {
-    if (!armed()) document.fonts.ready.then(armed);
-  });
-})();`;
-
 export function page(title, body, { desc = '' } = {}) {
   return `<meta charset="utf-8">
 <title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
-<script>${CATCHWORD_SCRIPT}</script>
 ${chipBreaks(body)}
 <script>${PLATE_END_SCRIPT}</script>`;
 }

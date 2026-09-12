@@ -243,8 +243,8 @@ sitting); order is dependency order.
   in a 14px gutter instead of `padStart`-ing it against a mono advance.
 - `document.fonts.check('12px "no-such-face"')` returns TRUE — the spec asks "can this be
   rendered", and an undeclared family renders fine by fallback. Ask the FontFaceSet whether
-  the family is DECLARED before trusting `check()`; that is what the catchword guard in
-  `app/index.html` does before setting `data-catchwords="on"`.
+  the family is DECLARED before trusting `check()`. The atlas has no kit-gated type left to
+  guard (the catchword was dropped 2026-09-12), but the trap holds for any future kit face.
 - A webfont is only DOWNLOADED when something uses it, so a face readout taken immediately
   after a change reads SYSTEM for ever. Chain `updateComplete` then `document.fonts.ready`
   for a deferred second pass (`app/src/specimen.ts`).
@@ -317,9 +317,10 @@ sitting); order is dependency order.
   rule (rail article head with ditto marks, catchword on the cover) was rejected the same day:
   "i miss uppercase THE in THE ALTITUDE ATLAS i prefer that consistency … right so we have two
   variants -- condensed with wordmark, used in block and sheet header, full uppercase, used in
-  sidebar and homepage". So: CONDENSED = catchword `the` (20px, `vertical-align: sub`, the
-  user's own devtools tuning) + ALTITUDE ATLAS in the DISPLAY face ("i do want eaglefeather for
-  altitude atlas everywhere in block and project title etc" — `.mark`, 1.06em so its cap
+  sidebar and homepage". The catchword itself was dropped 2026-09-12 — "just isn't dialed in
+  yet" — so: CONDENSED = the superior `the` (0.6em DIN, lowercase) + ALTITUDE ATLAS in the
+  DISPLAY face ("i do want eaglefeather for altitude atlas everywhere in block and project
+  title etc" — `.project-mark`, 1.06em so its cap
   matches the ledger's) on the sheet header line and the title block's PROJECT field; FULL UPPERCASE = THE ALTITUDE
   ATLAS in the display face on the rail head and the cover title; the superior stays on sheet
   titles and cards; the title block's SHEET TITLE sets `the` inline, lowercase DIN, same size

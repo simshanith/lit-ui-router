@@ -430,9 +430,10 @@
       /* TWO NAMES, AND ONLY TWO. The cover title and the rail head both carry
          the FULL wordmark: plain uppercase THE ALTITUDE ATLAS in the display
          face, nothing set apart, so the homepage says the name once in one
-         voice. The CONDENSED wordmark — the data face with the kit's catchword
-         for its article (`.cw`, in the generated sheets/atlas.css) — belongs to
-         the ledger: every sheet-head PROJECT line and every title block. */
+         voice. The CONDENSED wordmark — the data-face superior article
+         (`sup.art`) and the display-face name (`.project-mark`, in the
+         generated sheets/atlas.css) — belongs to the ledger: every sheet-head
+         PROJECT line and every title block. */
       /* two lines, not one 141-character rule: the motto, then the stamp */
       .cover-sub .stamp {
         display: block;
@@ -1134,30 +1135,6 @@
     </style>
   </head>
   <body>
-    <script>
-      // THE CATCHWORD GUARD. The kit <link> is injected at stage time, so the
-      // page cannot know at build time whether it has the face — it asks the
-      // FontFaceSet. TRAP (the one the specimen documents): document.fonts
-      // .check() answers "can this be rendered", which is true for a family
-      // nothing declares; only a DECLARED @font-face lands in the set, so that
-      // is what is asked. Sets html[data-catchwords="on"] — the only thing the
-      // condensed wordmark's catchword rule keys on (`.cw`, in sheets/atlas.css).
-      (function () {
-        var armed = function () {
-          for (var f of document.fonts) {
-            if (f.family.replace(/^["']|["']$/g, '').toLowerCase() === 'hwt-catchwords') {
-              document.documentElement.dataset.catchwords = 'on';
-              return true;
-            }
-          }
-          return false;
-        };
-        if (armed()) return;
-        addEventListener('DOMContentLoaded', function () {
-          if (!armed()) document.fonts.ready.then(armed);
-        });
-      })();
-    </script>
     <div id="root"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

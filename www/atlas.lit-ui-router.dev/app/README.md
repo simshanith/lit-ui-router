@@ -87,14 +87,11 @@ the value's own size on its own baseline, because a ledger field is read as a va
 The atlas's own name has exactly TWO variants. The FULL wordmark is plain uppercase
 `THE ALTITUDE ATLAS` in the display face, and it belongs to the rail head and the cover title, so the
 homepage says the name once in one voice. The CONDENSED wordmark is the ledger name — the SAME
-display face for the name (`.mark`, at a measured 1.06em so its cap sits on the ledger line's), with
-the article drawn as HWT Catchwords key `e` (`.cw`) on a host that DECLARES the kit, and as the
-same `sup.art` superior off it — and it belongs to every sheet-head PROJECT line
-(`the ALTITUDE ATLAS — DRAWING SET` / `— INTERACTIVE PLATE`) and to the title block's PROJECT value.
-A guard script asks the FontFaceSet for the family and sets `data-catchwords` (`index.html` for the
-app, `CATCHWORD_SCRIPT` in `chrome.mjs` for the flat pages), so the catchword can never degrade to a
-bare letter; it is drawn at a flat 20px on `vertical-align: sub`, the size at which the two-line
-mark still reads and the height at which it sits on the cap band of the name beside it.
+display face for the name (`.project-mark`, at a measured 1.06em so its cap sits on the ledger
+line's), with the article as the same `sup.art` superior the sheet titles use — and it belongs to
+every sheet-head PROJECT line (`the ALTITUDE ATLAS — DRAWING SET` / `— INTERACTIVE PLATE`) and to
+the title block's PROJECT value. It needs no kit face, so it draws identically on the site, the flat
+set and the artifact. (An HWT Catchwords glyph was tried for the article and dropped 2026-09-12.)
 `titles.ts`, `<title>` and every aria name keep the plain `THE ALTITUDE ATLAS`.
 
 ## Where it lives
