@@ -203,6 +203,7 @@
     {
       "files": [
         "packages/lit-ui-router/src/**/*.ts",
+        "packages/lit-ui-router-effect/src/**/*.ts",
         "packages/lit-ui-router-mobx/src/**/*.ts"
       ],
       "rules": {

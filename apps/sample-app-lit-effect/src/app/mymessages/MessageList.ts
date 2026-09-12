@@ -5,7 +5,7 @@ import { UIViewInjectedProps } from 'lit-ui-router';
 import { MessageListResolves } from 'sample-app-shared/app/mymessages/interface.js';
 import 'sample-app-shared/app/mymessages/MessageTable.js';
 
-import { RefController } from '../effect/refController.js';
+import { RefController } from 'lit-ui-router-effect';
 import { byFolder, messages$, MessagesSnapshot } from './messagesStore.js';
 
 @customElement('sample-message-list')

@@ -11,7 +11,7 @@ import MessageList from './app/mymessages/MessageList.js';
 //
 // No router wiring and no core plugin: app state lives in Effect
 // SubscriptionRefs, and components follow them through the RefController /
-// RouterRefController in src/app/effect/. The router's own ref is attached
+// RouterRefController from lit-ui-router-effect. The router's own ref is attached
 // lazily per router (one onSuccess hook, keyed in a WeakMap) the first time a
 // component asks for it.
 registerAppModules({ AppConfig, AuthService, App, Compose, MessageList });

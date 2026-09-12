@@ -17,6 +17,7 @@
     "effect": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
+    "lit-ui-router-effect": "workspace:*",
     "lodash-es": "catalog:",
     "sample-app-shared": "workspace:*"
   },

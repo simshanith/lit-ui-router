@@ -87,6 +87,7 @@ const CONFIGS = ['tsconfig.fixture.json', 'tsconfig.fixture.nodenext.json'];
 // dist dirs whose .d.ts must check clean (pnpm symlinks resolve to these)
 const PACKAGE_DIRS = [
   'lit-ui-router',
+  'lit-ui-router-effect',
   'lit-ui-router-mobx',
   'navigation-location-plugin',
   'ui-router-server',

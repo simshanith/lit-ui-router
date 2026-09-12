@@ -14,9 +14,11 @@
   "devDependencies": {
     "@types/dom-navigation": "catalog:",
     "@uirouter/core": "catalog:",
+    "effect": "catalog:",
     "hono": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
+    "lit-ui-router-effect": "workspace:*",
     "lit-ui-router-mobx": "workspace:*",
     "mobx": "catalog:",
     "oxfmt": "catalog:",

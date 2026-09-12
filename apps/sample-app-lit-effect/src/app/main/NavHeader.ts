@@ -4,7 +4,7 @@ import { when } from 'lit/directives/when.js';
 import { Data, Equal } from 'effect';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
 
-import { RefController } from '../effect/refController.js';
+import { RefController } from 'lit-ui-router-effect';
 import 'sample-app-shared/app/main/UserMenu.js';
 import AppConfig from '../global/appConfig.js';
 import AuthService from '../global/authService.js';

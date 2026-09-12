@@ -38,6 +38,13 @@
         "lit-2",
       ],
     },
+    "packages/lit-ui-router-effect": {
+      "ignoreDependencies": [
+        "@release-it/conventional-changelog",
+        "lit-2",
+        "lit-ui-router-floor",
+      ],
+    },
     "packages/lit-ui-router-mobx": {
       "ignoreDependencies": [
         "@release-it/conventional-changelog",
