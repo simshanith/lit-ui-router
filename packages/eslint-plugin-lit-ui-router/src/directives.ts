@@ -12,16 +12,40 @@ type ListenerNode<K extends keyof Rule.NodeListener> = Parameters<
 // the index, which addresses the tagged template's own expressions.
 const ELEMENT_PART = /^\{\{__q:(\d+)__\}\}$/i;
 
+// The same placeholder in an attribute *value* (`href=${srefHref('x')}`), which
+// is where an attribute part lands. Global, so a value that mixes text and
+// expressions is counted rather than only matched.
+const ATTRIBUTE_PART = /\{\{__q:(\d+)__\}\}/gi;
+
+// lit's other bindings reach parse5 as attributes too, but a property, event or
+// boolean part is not an attribute part and throws the same way.
+const BINDING_PREFIX = /^[.?@]/;
+
 /** The lit-html packages the base rule's gating accepts before settings. */
 const DEFAULT_LIT_HTML_SOURCES = ['lit-html', 'lit-element', 'lit'];
 
 /** The directives these rules understand. */
-export type DirectiveName = 'uiSref' | 'uiSrefActive';
+export type DirectiveName =
+  | 'uiSref'
+  | 'uiSrefActive'
+  | 'srefHref'
+  | 'srefActiveClass'
+  | 'srefAriaCurrent';
 
-const DIRECTIVE_NAMES: DirectiveName[] = ['uiSref', 'uiSrefActive'];
+const DIRECTIVE_NAMES: DirectiveName[] = [
+  'uiSref',
+  'uiSrefActive',
+  'srefHref',
+  'srefActiveClass',
+  'srefAriaCurrent',
+];
 
 /** The import is what makes a `uiSref` call *ours*. */
 const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
+
+/** Whether an import source is this library's, subpaths included. */
+export const isOurPackage = (source: string): boolean =>
+  LIT_UI_ROUTER.test(source);
 
 // Minimal views of the two ASTs these rules cross; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
@@ -137,6 +161,46 @@ export const elementPartIndex = (attribute: string): number | undefined => {
   return match === null ? undefined : Number(match[1]);
 };
 
+/** The expression index an attribute value addresses, when it is the whole value. */
+export const attributePartIndex = (value: string): number | undefined =>
+  elementPartIndex(value);
+
+/** Where an attribute-part expression sits, as lit's part constructors see it. */
+export interface AttributePart {
+  /** The attribute name, as parse5 reports it (lowercased). */
+  name: string;
+  /** Whether it is the only expression in the attribute (`strings.length <= 2`). */
+  only: boolean;
+  /** Whether it is the whole value, with no static text (`strings === undefined`). */
+  whole: boolean;
+}
+
+/**
+ * Every attribute-part expression of an element, keyed by expression index.
+ * Element parts are attribute *keys*, and `.prop` / `?bool` / `@event` bindings
+ * are their own part types, so neither joins this map.
+ */
+export const attributePartsOf = (
+  element: Parse5Element,
+): Map<number, AttributePart> => {
+  const parts = new Map<number, AttributePart>();
+  for (const [name, value] of Object.entries(element.attribs)) {
+    if (elementPartIndex(name) !== undefined) continue;
+    if (BINDING_PREFIX.test(name)) continue;
+    const indices = [...value.matchAll(ATTRIBUTE_PART)].map((match) =>
+      Number(match[1]),
+    );
+    for (const index of indices) {
+      parts.set(index, {
+        name,
+        only: indices.length === 1,
+        whole: attributePartIndex(value) !== undefined,
+      });
+    }
+  }
+  return parts;
+};
+
 /** Own (non-computed) `Property` nodes of an object literal, keyed by name. */
 export const propertyNamed = (
   object: ObjectNode,
@@ -214,7 +278,7 @@ export const createDirectiveTracker = (
     ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
   ]);
   const isLitSource = (source: string) => sources.has(packageOf(source));
-  const isOurs = (source: string) => LIT_UI_ROUTER.test(source);
+  const isOurs = isOurPackage;
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
 
