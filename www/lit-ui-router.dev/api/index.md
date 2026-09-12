@@ -113,6 +113,23 @@ router, which is still open ([#564](https://github.com/simshanith/lit-ui-router/
   element, with none of `uiSrefActive`'s link detection or takeover rules.
   `value` picks another token or `{ exact, active }` for ancestors.
 
+#### Composing with `classMap`
+
+A `class` attribute holds one toggling directive, so `srefActiveClass` and
+`classMap` cannot share it. When a component wants both — the active flag
+next to its own bindings —
+[`SrefStatusController`](./reference/controllers/SrefStatusController) hands
+the status to the host instead of writing an attribute, and the template
+composes it freely:
+
+```ts
+private users = new SrefStatusController(this, { state: 'users' });
+// class=${classMap({ 'nav-link': true, active: this.users.active, disabled: this.locked })}
+// aria-current=${this.users.ariaCurrent()}
+```
+
+See [Reactive Components](../guides/reactive-components#active-link-status).
+
 #### Accessible active links
 
 `uiSrefActive` conveys active state to assistive technology as well as to CSS. On a

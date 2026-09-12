@@ -11,6 +11,7 @@ import {
   TargetState,
   Transition,
   TransitionOptions,
+  UIRouter,
   unnestR,
 } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
@@ -141,13 +142,13 @@ export function mergeSrefStatus(
 /**
  * The {@link SrefStatus} of one target for a transition event — or, with no
  * event, against the router's current state. Shared by the element-part
- * {@link uiSrefActive} and the attribute-part `srefActiveClass` /
- * `srefAriaCurrent`.
+ * {@link uiSrefActive}, the attribute-part `srefActiveClass` /
+ * `srefAriaCurrent`, and `SrefStatusController`.
  *
  * @internal
  */
 export function srefStatus(
-  router: UIRouterLit,
+  router: UIRouter,
   event: TransEvt | undefined,
   srefTarget: TargetState,
 ): SrefStatus {
