@@ -46,11 +46,25 @@ export const misboundClass = html`<a
 export const fixedHref = html`<a href=${srefHref('home')}>Home</a>`;
 export const fixedClass = html`<a
   class="nav ${srefActiveClass({})}"
+  aria-current=${srefAriaCurrent({})}
   ${uiSref('home')}
   >Home</a
 >`;
 export const fixedAriaCurrent = html`<a
   href=${srefHref('home')}
   aria-current=${srefAriaCurrent({})}
+  >Home</a
+>`;
+
+// painted active, silent to assistive technology, then the documented fix
+export const silentActive = html`<a
+  href=${srefHref('home')}
+  class=${srefActiveClass({ state: 'home' })}
+  >Home</a
+>`;
+export const spokenActive = html`<a
+  href=${srefHref('home')}
+  class=${srefActiveClass({ state: 'home' })}
+  aria-current=${srefAriaCurrent({ state: 'home' })}
   >Home</a
 >`;

@@ -71,17 +71,18 @@ so the ordering rule costs nothing either way.
 
 ## The rules
 
-| Rule                                                                                                                                                            | What it catches                                                                                                                           |
-| --------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| [`anchor-is-valid`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)                   | an anchor with no `href` — where a `uiSref` element part counts as one                                                                    |
-| [`sref-assign-href`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md)                 | an inert `href` written to a `<button>`, `<tr>` or `<div>`; fix adds `'auto'`                                                             |
-| [`sref-active-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md) | an authored `aria-current` the directive silently takes over and later removes                                                            |
-| [`directive-position`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md)             | a directive outside the part type it accepts — `uiSref` and `uiSrefActive` are element-part only, and throw on first render anywhere else |
+| Rule                                                                                                                                                                        | What it catches                                                                                                                           |
+| --------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| [`anchor-is-valid`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/anchor-is-valid.md)                               | an anchor with no `href` — where a `uiSref` element part counts as one                                                                    |
+| [`sref-assign-href`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-assign-href.md)                             | an inert `href` written to a `<button>`, `<tr>` or `<div>`; fix adds `'auto'`                                                             |
+| [`sref-active-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-aria-current.md)             | an authored `aria-current` the directive silently takes over and later removes                                                            |
+| [`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md) | a link `srefActiveClass` paints active with no `aria-current` beside it; fix binds `srefAriaCurrent`                                      |
+| [`directive-position`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/directive-position.md)                         | a directive outside the part type it accepts — `uiSref` and `uiSrefActive` are element-part only, and throw on first render anywhere else |
 
-All four are in `configs.recommended` at `error`. The last three are the
-directives' own runtime development warnings and throw, said statically: they
-report at author time, across the whole codebase, and in a production build —
-where the runtime says nothing at all.
+All five are in `configs.recommended` at `error`. The last four are the
+directives' own runtime development warnings, gaps and throws, said
+statically: they report at author time, across the whole codebase, and in a
+production build — where the runtime says nothing at all.
 
 Every rule is syntax-only, with no type information, so they also load into
 [oxlint](https://oxc.rs) as JS plugins.

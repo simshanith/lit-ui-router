@@ -79,6 +79,16 @@ void describe('plugin', () => {
     );
   });
 
+  void it('recommended reports a link painted active but silent', () => {
+    const messages = lint(
+      `${IMPORTS}html\`<a href=\${srefHref('home')} class=\${srefActiveClass({ state: 'home' })}>Home</a>\`;`,
+    );
+    assert.deepEqual(
+      messages.map((message) => message.ruleId),
+      ['lit-ui-router/sref-active-class-aria-current'],
+    );
+  });
+
   void it('recommended reports a directive outside an element part', () => {
     const messages = lint(
       `${IMPORTS}html\`<a href=\${uiSref('home')}>Home</a>\`;`,

@@ -43,6 +43,10 @@ const DIRECTIVE_NAMES: DirectiveName[] = [
 /** The import is what makes a `uiSref` call *ours*. */
 const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
 
+/** Whether an import source is this library's, subpaths included. */
+export const isOurPackage = (source: string): boolean =>
+  LIT_UI_ROUTER.test(source);
+
 // Minimal views of the two ASTs these rules cross; eslint speaks ESTree and
 // parse5 nodes arrive untyped through the analyzer's visitor.
 export interface Node {
@@ -274,7 +278,7 @@ export const createDirectiveTracker = (
     ...(Array.isArray(litHtmlSources) ? litHtmlSources : []),
   ]);
   const isLitSource = (source: string) => sources.has(packageOf(source));
-  const isOurs = (source: string) => LIT_UI_ROUTER.test(source);
+  const isOurs = isOurPackage;
   // Falsy `litHtmlSources` means analyse every bare `html` tag, imported or not.
   let analyse = !litHtmlSources;
 
