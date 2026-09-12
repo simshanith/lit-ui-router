@@ -1,12 +1,33 @@
-# UI-Router 1.0 Lit Sample Application — vanilla variant
+# UI-Router 1.0 Lit Sample Application — Effect variant
 
-<https://github.simloovoo.com/lit-ui-router/#/mymessages/inbox/5648b50cc586cac4aed6836f>
+This is the [Effect](https://effect.website) variant of the [vanilla sample app](../sample-app-lit-vanilla/): the
+same non-trivial ui-router lit application, with reactivity handled by Effect's
+`SubscriptionRef` instead of the zero-dependency `TransitionController`. The three apps are
+intentionally behaviorally identical (the same Cypress suite runs against all of them) so the
+integration idioms can be compared file-by-file — in the spirit of
+[TodoMVC](https://todomvc.com) and the
+[ui-router sample apps](https://github.com/ui-router/sample-app-react).
 
-This is the zero-dependency variant of the sample app, using `lit-ui-router`'s
-`TransitionController` for reactivity. See [`apps/README.md`](../README.md) for the
-side-by-side comparison with the [MobX](../sample-app-lit-mobx/) and
-[Effect](../sample-app-lit-effect/) variants, and
-[`sample-app-shared`](../sample-app-shared/) for everything the three apps have in common.
+What's different here:
+
+- `RouterRefController` follows the router's route ref in `main/App.ts` and
+  `mymessages/Compose.ts` — no transition-hook plumbing in components
+- `RefController` selectors follow app-state refs in `main/NavHeader.ts` and
+  `mymessages/MessageList.ts`
+- App state lives in `SubscriptionRef`s: `global/appConfig.ts` and
+  `mymessages/messagesStore.ts`
+- `global/authService.ts` runs the simulated login as an Effect (`Effect.sleep`, a
+  `Data.TaggedError` failure) on the app's `ManagedRuntime`
+- No store wiring in the shared `router.config.ts`, and **no core plugin**: the router's
+  route ref attaches lazily on first use, keyed by router in a `WeakMap`
+- The reusable glue lives in `src/app/effect/` (one `ManagedRuntime`, the two controllers,
+  the lazy route ref) — the candidate surface for a future `lit-ui-router-effect` package
+
+Only Effect's stable core (`import { … } from 'effect'`) is used — no `effect/unstable/*`
+and no `@effect/*` packages.
+
+See [`apps/README.md`](../README.md) for the full side-by-side comparison, and
+[`sample-app-shared`](../sample-app-shared/) for everything the apps have in common.
 
 This sample app is intended to demonstrate a non-trivial ui-router lit application.
 

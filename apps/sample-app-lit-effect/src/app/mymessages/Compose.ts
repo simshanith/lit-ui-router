@@ -1,0 +1,218 @@
+import { html, LitElement } from 'lit';
+import { customElement, state, property } from 'lit/decorators.js';
+import { isEqual } from 'lodash-es';
+import { UIViewInjectedProps } from 'lit-ui-router';
+
+import { MessagesStorage } from 'sample-app-shared/app/global/dataSources.js';
+import DialogService from 'sample-app-shared/app/global/dialogService.js';
+import { dsrForgetFinishedState } from 'sample-app-shared/app/util/dsr-forget-finished-state.js';
+import { Message } from 'sample-app-shared/app/mymessages/interface.js';
+
+import { RouterRefController } from '../effect/routerRefController.js';
+import AppConfig from '../global/appConfig.js';
+
+interface ComposeResolves {
+  $stateParams?: { message?: Partial<Message> };
+}
+
+@customElement('sample-compose')
+export class Compose extends LitElement {
+  createRenderRoot() {
+    return this;
+  }
+
+  @state()
+  pristineMessage!: Message;
+
+  @state()
+  message!: Message;
+
+  static sticky = true;
+
+  /** @public — router-assigned; the `_` prefix is convention, not privacy. */
+  @property({ attribute: false })
+  _uiViewProps!: UIViewInjectedProps<ComposeResolves>;
+
+  canExit = false;
+
+  constructor(_uiViewProps: UIViewInjectedProps<ComposeResolves>) {
+    super();
+    this._uiViewProps = _uiViewProps;
+    this.resetMessage(_uiViewProps?.resolves?.$stateParams?.message);
+  }
+
+  // Resets the draft from the `message` route param on the route ref. Sticky
+  // instances survive between visits, so the constructor only runs once;
+  // the controller covers the rest of the lifecycle:
+  // - it fires immediately on every (re)connect, and again while composing
+  //   when the param structurally changes (Reply/Forward/Edit);
+  // - resetMessage decides whether that is actually a new draft, so an
+  //   in-progress one isn't clobbered by a reconnect or an identity-only
+  //   param change.
+  // uiCanExit below still guards against silently discarding unsaved edits.
+  // The param is an arbitrary plain object, so `isEqual` compares it — Effect's
+  // Equal.equals is reference equality outside Data values.
+  messageParam = new RouterRefController(
+    this,
+    (route) => route.params.message as Partial<Message> | undefined,
+    {
+      equals: isEqual,
+      onChange: (message) => this.resetMessage(message),
+    },
+  );
+
+  // `force` for the one caller that means it regardless: a finished draft.
+  // Otherwise an unchanged param is not a new draft — the controller fires
+  // onChange again on every reconnect, and the sticky branch reconnects on
+  // the way back in.
+  resetMessage(message: Partial<Message> = {}, { force = false } = {}) {
+    const pristineMessage = {
+      body: '',
+      to: '',
+      subject: '',
+      ...message,
+      from: AppConfig.emailAddress,
+    } as Message;
+    if (!force && isEqual(this.pristineMessage, pristineMessage)) return;
+    this.pristineMessage = pristineMessage;
+    this.message = { ...pristineMessage };
+    this.canExit = false;
+  }
+
+  /**
+   * Checks if the edited copy and the pristine copy are identical when the state is changing.
+   * If they are not identical, the allows the user to confirm navigating away without saving.
+   */
+  uiCanExit = async () => {
+    if (this.canExit || isEqual(this.pristineMessage, this.message))
+      return true;
+
+    const message = 'You have not saved this message.';
+    const question = 'Navigate away and lose changes?';
+    this.canExit = await DialogService.confirm(message, question, 'Yes', 'No');
+    return this.canExit;
+  };
+
+  /**
+   * Navigates back to the previous state.
+   *
+   * - Checks the transition which activated this controller for a 'from state' that isn't the implicit root state.
+   * - If there is no previous state (because the user deep-linked in, etc), then go to 'mymessages.messagelist'
+   */
+  gotoPreviousState() {
+    const { transition, router } = this._uiViewProps;
+    const hasPrevious = !!transition?.from().name;
+    const state = hasPrevious ? transition.from() : 'mymessages.messagelist';
+    const params = hasPrevious ? transition.params('from') : {};
+    void router.stateService.go(state, params);
+  }
+
+  /**
+   * The draft is finished. A sticky Compose outlives the visit, so both halves
+   * of "finished" have to be said out loud:
+   *
+   * - clear the draft, or the next New Message opens with these values. The
+   *   controller only fires onChange when the `message` param structurally
+   *   CHANGES, and a fresh New Message leaves it `{}` — same param, no reset.
+   * - drop the DSR memory, or returning to Messages reopens this state.
+   *
+   * Deliberately NOT part of `uiCanExit` or the controller: the point is
+   * finished vs. in-progress, and an unsent draft must still survive a trip
+   * out of the sticky branch (#723).
+   */
+  finishDraft() {
+    dsrForgetFinishedState(
+      this._uiViewProps.router,
+      'mymessages',
+      'mymessages.compose',
+    );
+    this.resetMessage({}, { force: true });
+    this.canExit = true;
+  }
+
+  /** "Send" the message (save to the 'sent' folder), and then go to the previous state */
+  send() {
+    const { message } = this;
+    void MessagesStorage.save({
+      ...message,
+      date: new Date(),
+      read: true,
+      folder: 'sent',
+    })
+      .then(() => this.finishDraft())
+      .then(() => this.gotoPreviousState());
+  }
+
+  handleChangeMessage = (detail: string) => (e: Event) => {
+    this.message = {
+      ...this.message,
+      [detail]: (e.target as HTMLInputElement).value,
+    };
+  };
+
+  /** Save the message to the 'drafts' folder, and then go to the previous state */
+  save() {
+    const { message } = this;
+    void MessagesStorage.save({
+      ...message,
+      date: new Date(),
+      read: true,
+      folder: 'drafts',
+    })
+      .then(() => this.finishDraft())
+      .then(() => this.gotoPreviousState());
+  }
+
+  render() {
+    const { message } = this;
+    return html`<div class="compose">
+      <div class="header">
+        <div class="flex-h">
+          <label>Recipient</label>
+          <input
+            type="text"
+            id="to"
+            name="to"
+            .value=${message.to ?? ''}
+            @change=${this.handleChangeMessage('to')}
+          />
+        </div>
+        <div class="flex-h">
+          <label>Subject</label>
+          <input
+            type="text"
+            id="subject"
+            name="subject"
+            .value=${message.subject}
+            @change=${this.handleChangeMessage('subject')}
+          />
+        </div>
+      </div>
+
+      <div class="body">
+        <textarea
+          name="body"
+          id="body"
+          cols="30"
+          rows="20"
+          @change=${this.handleChangeMessage('body')}
+          .value=${message.body}
+        ></textarea>
+
+        <div class="buttons">
+          <button class="btn btn-primary" @click=${this.gotoPreviousState}>
+            <i class="fa fa-times-circle-o"></i><span>Cancel</span>
+          </button>
+          <button class="btn btn-primary" @click=${this.save}>
+            <i class="fa fa-save"></i><span>Save as Draft</span>
+          </button>
+          <button class="btn btn-primary" @click=${this.send}>
+            <i class="fa fa-paper-plane-o"></i><span>Send</span>
+          </button>
+        </div>
+      </div>
+    </div>`;
+  }
+}
+
+export default Compose;

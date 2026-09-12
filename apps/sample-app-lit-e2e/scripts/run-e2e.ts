@@ -39,8 +39,9 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
-// both apps are mounted whichever suites run
+// every app is mounted whichever suites run
 serveAndTest('mise run //www/lit-ui-router.dev:serve', test, [
   'app/',
   'app-mobx/',
+  'app-effect/',
 ]);

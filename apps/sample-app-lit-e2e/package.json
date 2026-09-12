@@ -11,6 +11,7 @@
     "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
     "lint": "oxlint .",
     "test:e2e:docs": "cypress run --config-file cypress.docs.config.ts",
+    "test:e2e:effect": "node ./scripts/cypress-suite.ts effect",
     "test:e2e:hash": "node ./scripts/cypress-suite.ts hash",
     "test:e2e:mobx": "node ./scripts/cypress-suite.ts mobx",
     "test:e2e:pushstate": "cypress run --expose LOCATION_PLUGIN=pushState --config videosFolder=cypress/videos-pushstate,screenshotsFolder=cypress/screenshots-pushstate",

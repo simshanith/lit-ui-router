@@ -1,19 +1,20 @@
 # Sample apps
 
-This workspace holds two behaviorally identical sample applications — the
-same non-trivial ui-router lit app, written twice so the reactivity idioms
-can be compared file-by-file, in the spirit of [TodoMVC](https://todomvc.com)
+This workspace holds three behaviorally identical sample applications — the
+same non-trivial ui-router lit app, written three times so the reactivity
+idioms can be compared file-by-file, in the spirit of [TodoMVC](https://todomvc.com)
 and the [ui-router sample apps](https://github.com/ui-router/sample-app-react)
 — plus the code they share and the test suite that keeps them identical.
 Portions are derived from the ui-router sample apps (MIT); see
 [THIRD_PARTY_NOTICES.md](../THIRD_PARTY_NOTICES.md).
 
-| Package                                               | What it is                                                                                                              |
-| ----------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| [`sample-app-lit-vanilla`](./sample-app-lit-vanilla/) | The zero-dependency idiom: `lit-ui-router`'s `TransitionController`. Served at `/app/` on the docs site.                |
-| [`sample-app-lit-mobx`](./sample-app-lit-mobx/)       | The [MobX](https://mobx.js.org) idiom: `lit-ui-router-mobx`'s reaction controllers. Served at `/app-mobx/`.             |
-| [`sample-app-shared`](./sample-app-shared/)           | Private, source-only package with everything the apps have in common: feature modules, router config, styles, fixtures. |
-| [`sample-app-lit-e2e`](./sample-app-lit-e2e/)         | One Cypress suite, run against both apps — this is what enforces the behavioral identity.                               |
+| Package                                               | What it is                                                                                                                                       |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`sample-app-lit-vanilla`](./sample-app-lit-vanilla/) | The zero-dependency idiom: `lit-ui-router`'s `TransitionController`. Served at `/app/` on the docs site.                                         |
+| [`sample-app-lit-mobx`](./sample-app-lit-mobx/)       | The [MobX](https://mobx.js.org) idiom: `lit-ui-router-mobx`'s reaction controllers. Served at `/app-mobx/`.                                      |
+| [`sample-app-lit-effect`](./sample-app-lit-effect/)   | The [Effect](https://effect.website) idiom: `SubscriptionRef`s and the app-local ref controllers in `src/app/effect/`. Served at `/app-effect/`. |
+| [`sample-app-shared`](./sample-app-shared/)           | Private, source-only package with everything the apps have in common: feature modules, router config, styles, fixtures.                          |
+| [`sample-app-lit-e2e`](./sample-app-lit-e2e/)         | One Cypress suite, run against all three apps — this is what enforces the behavioral identity.                                                   |
 
 ## How an app is assembled
 
@@ -26,14 +27,15 @@ inversion works and how to grow the shared surface.
 
 ## What differs between the apps
 
-| Module                                         | `sample-app-lit-vanilla`                                                                | `sample-app-lit-mobx`                                                                  |
-| ---------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- |
-| `global/appConfig.ts`, `global/authService.ts` | Plain singletons                                                                        | MobX observables (`makeAutoObservable`)                                                |
-| `main/App.ts`                                  | `TransitionController` re-renders on router transitions                                 | `RouterReactionController` observes the router via the observable `RouterStore`        |
-| `main/NavHeader.ts`                            | `TransitionController`                                                                  | `ReactionController` selector over the observable auth state                           |
-| `mymessages/Compose.ts`                        | `TransitionController` reads the `message` param per transition                         | `RouterReactionController` reacts to the observable route param                        |
-| `mymessages/MessageList.ts`                    | `StoreCommitController` re-renders on the fake REST store's `commit` events             | `ReactionController` selector over the observable message cache                        |
-| Store helper                                   | `util/storeCommitController.ts` — a `ReactiveController` wired to store `commit` events | `mymessages/messagesStore.ts` — an observable cache refreshed on store `commit` events |
+| Module                                         | `sample-app-lit-vanilla`                                                                | `sample-app-lit-mobx`                                                                  | `sample-app-lit-effect`                                                                            |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
+| `global/appConfig.ts`, `global/authService.ts` | Plain singletons                                                                        | MobX observables (`makeAutoObservable`)                                                | `SubscriptionRef`s behind the sync contract; login runs as an Effect on a `ManagedRuntime`         |
+| `main/App.ts`                                  | `TransitionController` re-renders on router transitions                                 | `RouterReactionController` observes the router via the observable `RouterStore`        | `RouterRefController` follows the router's `SubscriptionRef<RouteSnapshot>`                        |
+| `main/NavHeader.ts`                            | `TransitionController`                                                                  | `ReactionController` selector over the observable auth state                           | `RefController` selector over the auth ref                                                         |
+| `mymessages/Compose.ts`                        | `TransitionController` reads the `message` param per transition                         | `RouterReactionController` reacts to the observable route param                        | `RouterRefController` selects the `message` param off the route ref                                |
+| `mymessages/MessageList.ts`                    | `StoreCommitController` re-renders on the fake REST store's `commit` events             | `ReactionController` selector over the observable message cache                        | `RefController` selector over the messages ref                                                     |
+| Store helper                                   | `util/storeCommitController.ts` — a `ReactiveController` wired to store `commit` events | `mymessages/messagesStore.ts` — an observable cache refreshed on store `commit` events | `mymessages/messagesStore.ts` — a ref refreshed by a daemon fiber over the store's `commit` stream |
+| Reusable glue                                  | none (the controller ships in `lit-ui-router`)                                          | none (the controllers ship in `lit-ui-router-mobx`)                                    | `src/app/effect/` — one `ManagedRuntime`, the two controllers, the lazily attached route ref       |
 
 Everything else — the contacts/mymessages/prefs features, router
 configuration, transition hooks, data sources, dialogs, styles, and the
@@ -56,7 +58,7 @@ for the full pattern.
 
 ## Location plugin selection
 
-Both apps support three location strategies via `locationPluginConfig` in the
+All three apps support three location strategies via `locationPluginConfig` in the
 shared `router.config.ts`:
 
 | Plugin       | URL Format | Browser Support                              |
@@ -87,10 +89,11 @@ option.
 ## Local development
 
 `turbo dev` starts both apps' Vite dev servers on pinned ports —
-`sample-app-lit-vanilla` on `:5173`, `sample-app-lit-mobx` on `:5174` — with
-`strictPort` set, so a taken port fails loudly instead of silently drifting
-to the next free one. Neither server auto-opens a browser. To run one app on
-a different port, override it on the CLI:
+`sample-app-lit-vanilla` on `:5173`, `sample-app-lit-mobx` on `:5174`,
+`sample-app-lit-effect` on `:5175` — with `strictPort` set, so a taken port
+fails loudly instead of silently drifting to the next free one. No server
+auto-opens a browser. To run one app on a different port, override it on the
+CLI:
 
 ```bash
 pnpm --filter sample-app-lit-vanilla dev --port 5273
@@ -98,7 +101,7 @@ pnpm --filter sample-app-lit-vanilla dev --port 5273
 
 ## End-to-end tests
 
-`sample-app-lit-e2e` runs one Cypress suite against both apps, the docs site,
+`sample-app-lit-e2e` runs one Cypress suite against all three apps, the docs site,
 and every published location strategy. See the
 [`sample-app-lit-e2e` README](./sample-app-lit-e2e/README.md).
 
@@ -112,13 +115,14 @@ boot rather than having one baked in, so one build deep-links correctly under
 every mount. Assets emit at absolute `/assets/…`, so nothing else varies by
 prefix.
 
-Two builds stay separate, because they differ in more than a base prefix — but
-they recover their base the same way, so neither bakes one either:
+Three builds stay separate, because they differ in more than a base prefix —
+but they recover their base the same way, so none bakes one either:
 
 | Build                                   | Serves                                                             | Location  |
 | --------------------------------------- | ------------------------------------------------------------------ | --------- |
 | `sample-app-lit-vanilla` `dist/vanilla` | `/app`, `/not-found-naive`, `/not-found-spa`, `/simulated-routing` | pushState |
 | `sample-app-lit-mobx` `dist`            | `/app-mobx`                                                        | pushState |
+| `sample-app-lit-effect` `dist`          | `/app-effect`                                                      | pushState |
 | `sample-app-lit-vanilla` `dist/hash`    | `/app-hash`                                                        | hash      |
 
 **Recovering the base.** `@uirouter/core`'s pushState location reads its base
@@ -148,7 +152,8 @@ if (BASE_URL) {
 
 The derivation is gated on known entries: an unmatched prefix yields no derived
 base, so the app boots at `/` rather than mis-stripping, and the `+ '/'`
-boundary keeps `/app` from swallowing `/app-hash` or `/app-mobx`. So
+boundary keeps `/app` from swallowing `/app-hash`, `/app-mobx` or
+`/app-effect`. So
 `/app/welcome` → base `/app/` → matches `/welcome`; `/not-found-naive/x` → base
 `/not-found-naive/` → `otherwise` → the in-app 404 (the soft-404 exhibit);
 `/simulated-routing/welcome` → base `/simulated-routing/`. On the serving side
