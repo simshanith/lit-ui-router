@@ -85,15 +85,12 @@ export class SrefTargets {
 
   /** The targets whose statuses merge, pruning links that left the DOM. */
   list(): TargetState[] {
-    if (this.explicit) {
-      return [this.explicit];
-    }
     for (const element of this.links.keys()) {
       if (!element.isConnected) {
         this.links.delete(element);
       }
     }
-    return [...this.links.values()];
+    return this.explicit ? [this.explicit] : [...this.links.values()];
   }
 
   /** The merged status of every target, or `undefined` when there is none. */

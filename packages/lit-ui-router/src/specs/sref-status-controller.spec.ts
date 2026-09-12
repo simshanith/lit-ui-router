@@ -364,6 +364,31 @@ describe('SrefStatusController', () => {
       }
     });
 
+    it('seeks the router again when the host moves to another tree', async () => {
+      const host = await mountHost({ state: 'users' });
+      const controller = host.controller!;
+      expect(controller.router).toBe(router);
+
+      const other = createTestRouter(states);
+      const otherElement = document.createElement('ui-router');
+      otherElement.uiRouter = other;
+      container.appendChild(otherElement);
+      await waitForUpdate(otherElement);
+      other.start();
+      await tick();
+
+      host.remove();
+      await tick();
+      otherElement.appendChild(host);
+      await waitForUpdate(host);
+      expect(controller.router).toBe(other);
+
+      await routerGo(other, 'users');
+      await tick(20);
+      expect(controller.exact).toBe(true);
+      other.dispose();
+    });
+
     it('defaults `relative` to the enclosing view state', async () => {
       const uiRouter = await mountRouter();
       const uiView = document.createElement('ui-view');
@@ -438,6 +463,21 @@ describe('SrefStatusController', () => {
       await goTo('users.detail', { userId: 1 });
       expect(controller.exact).toBe(true);
     });
+
+    it('switches to container mode when the state is dropped', async () => {
+      const host = await mountHost({ state: 'users' });
+      const controller = host.controller!;
+      await goTo('home');
+
+      controller.retarget({});
+      const links = document.createElement('div');
+      host.appendChild(links);
+      render(html`<a href=${srefHref('home')}>Home</a>`, links);
+      await tick(20);
+
+      expect(controller.targetStates.map((t) => t.name())).toEqual(['home']);
+      expect(controller.active).toBe(true);
+    });
   });
 
   describe('ariaCurrent', () => {
@@ -486,6 +526,19 @@ describe('SrefStatusController', () => {
       expect(requestUpdate).toHaveBeenCalled();
       requestUpdate.mockRestore();
     });
+
+    it('re-renders when the watched state changes between two inactive ones', async () => {
+      const host = await mountHost({ state: 'users' });
+      const controller = host.controller!;
+      await goTo('home');
+      const requestUpdate = vi.spyOn(host, 'requestUpdate');
+
+      controller.retarget({ state: 'slow' });
+      expect(requestUpdate).toHaveBeenCalledTimes(1);
+      expect(controller.targetStates[0].name()).toBe('slow');
+      expect(controller.active).toBe(false);
+      requestUpdate.mockRestore();
+    });
   });
 
   describe('lifecycle', () => {
@@ -511,6 +564,32 @@ describe('SrefStatusController', () => {
       await goTo('home');
       await waitForUpdate(host);
       expect(controller.active).toBe(false);
+    });
+
+    // deregistering stops the next start, not a settlement already subscribed
+    it('ignores a transition that settles after the host left', async () => {
+      const host = await mountHost({ state: 'slow' });
+      const controller = host.controller!;
+      const parent = host.parentElement!;
+
+      const going = router.stateService.go('slow');
+      await tick();
+      expect(controller.entering).toBe(true);
+      host.remove();
+      await tick();
+
+      const requestUpdate = vi.spyOn(host, 'requestUpdate');
+      slowGate.resolve();
+      await going;
+      await tick(20);
+      expect(requestUpdate).not.toHaveBeenCalled();
+      expect(controller.active).toBe(false);
+      requestUpdate.mockRestore();
+
+      parent.appendChild(host);
+      await waitForUpdate(host);
+      expect(controller.exact).toBe(true);
+      expect(anchor(host).classList.contains('active')).toBe(true);
     });
 
     it('stops and restarts with a cached fragment', async () => {

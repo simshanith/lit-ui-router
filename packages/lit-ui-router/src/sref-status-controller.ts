@@ -39,16 +39,17 @@ export interface SrefStatusControllerOptions extends SrefTargetParams {
   router?: UIRouter;
 }
 
-/** the four booleans a host renders from */
-type StatusFlags = [boolean, boolean, boolean, boolean];
-
-/** @internal */
-const flagsOf = (status: SrefStatus | undefined): StatusFlags => [
-  status?.active ?? false,
-  status?.exact ?? false,
-  status?.entering ?? false,
-  status?.exiting ?? false,
-];
+/** what a host renders from: the four flags and which states they are about */
+const shapeOf = (status: SrefStatus | undefined): string =>
+  status
+    ? [
+        status.active,
+        status.exact,
+        status.entering,
+        status.exiting,
+        ...status.targetStates.map((target) => target.name()),
+      ].join()
+    : '';
 
 /**
  * A Lit
@@ -65,8 +66,9 @@ const flagsOf = (status: SrefStatus | undefined): StatusFlags => [
  *
  * The controller registers its hooks when the host connects and deregisters
  * them on `hostDisconnected`, so nothing leaks when hosts come and go. It
- * calls `host.requestUpdate()` only when one of the four flags actually
- * changed, so transitions that leave the link alone cost no render.
+ * calls `host.requestUpdate()` only when one of the four flags or the watched
+ * states actually changed, so transitions that leave the link alone cost no
+ * render.
  *
  * @example Composing with classMap and aria-current
  * ```ts
@@ -138,6 +140,9 @@ export class SrefStatusController implements ReactiveController {
 
   /** whether a status has ever been computed, so the first one always renders */
   private computed = false;
+
+  /** bumped on disconnect, so a settlement subscribed before it stays quiet */
+  private _connection = 0;
 
   constructor(
     host: ReactiveControllerHost & Element,
@@ -234,21 +239,20 @@ export class SrefStatusController implements ReactiveController {
     this.targets.relative = UiView.seekParentView(host)?.viewContext?.name;
     this.targets.setExplicit();
 
-    // links announce themselves from inside the render root, if there is one
+    // links announce themselves from inside the render root, if there is one;
+    // listened for in named mode too, since `retarget({})` can drop the name
     const scope: EventTarget =
       (host as { renderRoot?: EventTarget }).renderRoot ?? host;
-    if (!this.options.state) {
-      scope.addEventListener(
+    scope.addEventListener(
+      UI_SREF_TARGET_EVENT,
+      this.onUiSrefTargetEvent as EventListener,
+    );
+    this.deregisterFns.push(() =>
+      scope.removeEventListener(
         UI_SREF_TARGET_EVENT,
         this.onUiSrefTargetEvent as EventListener,
-      );
-      this.deregisterFns.push(() =>
-        scope.removeEventListener(
-          UI_SREF_TARGET_EVENT,
-          this.onUiSrefTargetEvent as EventListener,
-        ),
-      );
-    }
+      ),
+    );
 
     const router = this.targets.router;
     if (router) {
@@ -271,8 +275,13 @@ export class SrefStatusController implements ReactiveController {
 
   /** @internal */
   hostDisconnected(): void {
+    this._connection++;
     while (this.deregisterFns.length) {
       this.deregisterFns.shift()?.();
+    }
+    if (!this.options.router) {
+      // found through context: the host may reconnect under another router
+      this.targets.router = undefined;
     }
   }
 
@@ -290,11 +299,11 @@ export class SrefStatusController implements ReactiveController {
 
   /** the new status, and whether the host needs to see it */
   private compute(event?: TransEvt): boolean {
-    const before = flagsOf(this._status);
+    const before = shapeOf(this._status);
     this._status = this.targets.status(event);
     const first = !this.computed;
     this.computed = true;
-    return first || flagsOf(this._status).some((flag, i) => flag !== before[i]);
+    return first || shapeOf(this._status) !== before;
   }
 
   private readonly onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
@@ -308,10 +317,17 @@ export class SrefStatusController implements ReactiveController {
   };
 
   private readonly onTransitionStart = (trans: Transition): void => {
+    // deregistering stops the next start, not a settlement already subscribed
+    const connection = this._connection;
+    const settled = (evt: TransEvt['evt']): void => {
+      if (connection === this._connection) {
+        this.refresh({ evt, trans });
+      }
+    };
     this.refresh({ evt: 'start', trans });
     trans.promise.then(
-      () => this.refresh({ evt: 'success', trans }),
-      () => this.refresh({ evt: 'error', trans }),
+      () => settled('success'),
+      () => settled('error'),
     );
   };
 }

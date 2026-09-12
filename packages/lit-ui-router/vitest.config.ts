@@ -10,6 +10,7 @@ const browserOnlySpecs = [
   'src/specs/ui-view-ssr.spec.ts',
   // composed-event retargeting at nested shadow roots, which happy-dom skips
   'src/specs/sref-active.browser.spec.ts',
+  'src/specs/sref-status-controller.browser.spec.ts',
 ];
 // Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
 const nodeOnlySpecs = ['src/specs/ssr-emit.spec.ts'];
