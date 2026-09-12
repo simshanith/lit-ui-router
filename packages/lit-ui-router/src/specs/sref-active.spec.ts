@@ -419,6 +419,59 @@ describe('attribute-part active directives', () => {
       expect(anchor.classList.contains('current')).toBe(false);
       expect(anchor.classList.contains('active')).toBe(true);
     });
+    it('starts out active when mounted on the current state', async () => {
+      router = createTestRouter(states);
+      const uiRouter = document.createElement('ui-router');
+      uiRouter.uiRouter = router;
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiRouter);
+      const wrapper = document.createElement('div');
+      uiRouter.appendChild(wrapper);
+      router.start();
+      await goTo('users');
+
+      render(
+        html`<a
+          class="nav ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}"
+          >Users</a
+        >`,
+        wrapper,
+      );
+      await tick(20);
+      const anchor = wrapper.querySelector('a')!;
+      expect(anchor.classList.contains('active')).toBe(true);
+      expect(anchor.classList.contains('nav')).toBe(true);
+
+      await goTo('home');
+      expect(anchor.classList.contains('active')).toBe(false);
+    });
+
+    it('stops listening for links once the container is gone', async () => {
+      const wrapper = await mount(
+        html`<li class=${srefActiveClass({ activeClasses: ['active'] })}>
+          <a href=${srefHref('users')}>Users</a>
+        </li>`,
+      );
+      const item = wrapper.querySelector('li')!;
+      render(html``, wrapper);
+      await tick();
+      await goTo('users');
+      expect(item.classList.contains('active')).toBe(false);
+    });
+
+    it('follows a link whose state registers after the first render', async () => {
+      const wrapper = await mount(
+        html`<li class=${srefActiveClass({ activeClasses: ['active'] })}>
+          <a href=${srefHref('late')}>Late</a>
+        </li>`,
+      );
+      const item = wrapper.querySelector('li')!;
+
+      router.stateRegistry.register({ name: 'late', url: '/late' });
+      await tick();
+      await goTo('late');
+      expect(item.classList.contains('active')).toBe(true);
+    });
   });
 
   describe('missing <ui-router> ancestor', () => {
