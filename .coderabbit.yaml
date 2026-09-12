@@ -38,8 +38,13 @@ reviews:
       - '!coderabbit:skip'
       - '!release'
       - '!no-coderabbit'
+    # Branches OTHER than the default to review; `main` is already the default,
+    # so listing it matched nothing and CodeRabbit refused every stacked PR with
+    # "auto reviews are disabled on base branches other than the default". Under
+    # an allow-list the restriction bought nothing anyway — no label, no review —
+    # while quietly making `coderabbit:review` a no-op on a stacked PR.
     base_branches:
-      - main
+      - '.*'
 
   path_filters:
     - '!pnpm-lock.yaml'

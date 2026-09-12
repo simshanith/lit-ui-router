@@ -99,6 +99,11 @@ survives the flip, so labelling a draft queues the review up for the moment it
 is marked ready. It is advisory either way: no required status check, nothing it says blocks a
 merge. `mise run ci` remains the gate.
 
+Stacked PRs work the same way. `base_branches` is set to `.*`, so a PR based on
+another branch is reviewable on request like any other; it used to list `main`
+alone, which is the default branch and so matched nothing, and CodeRabbit
+declined every stacked PR whether or not it was labelled.
+
 The older `no-coderabbit` opt-out and the `release` exclusion still sit in the
 config. Neither does anything now that a review has to be asked for; they stay
 until the new labels have proven out.
