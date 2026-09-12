@@ -527,6 +527,22 @@ describe('SrefStatusController', () => {
       requestUpdate.mockRestore();
     });
 
+    it('re-renders when only the params of an inactive state change', async () => {
+      const host = await mountHost({
+        state: 'users.detail',
+        params: { userId: 1 },
+      });
+      const controller = host.controller!;
+      await goTo('home');
+      const requestUpdate = vi.spyOn(host, 'requestUpdate');
+
+      controller.retarget({ state: 'users.detail', params: { userId: 2 } });
+      expect(requestUpdate).toHaveBeenCalledTimes(1);
+      expect(controller.targetStates[0].params().userId).toBe(2);
+      expect(controller.active).toBe(false);
+      requestUpdate.mockRestore();
+    });
+
     it('re-renders when the watched state changes between two inactive ones', async () => {
       const host = await mountHost({ state: 'users' });
       const controller = host.controller!;

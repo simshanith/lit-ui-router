@@ -39,17 +39,24 @@ export interface SrefStatusControllerOptions extends SrefTargetParams {
   router?: UIRouter;
 }
 
-/** what a host renders from: the four flags and which states they are about */
-const shapeOf = (status: SrefStatus | undefined): string =>
-  status
-    ? [
-        status.active,
-        status.exact,
-        status.entering,
-        status.exiting,
-        ...status.targetStates.map((target) => target.name()),
-      ].join()
-    : '';
+/**
+ * Whether a host would render the same thing from both: the four flags and
+ * the very targets they are about. Targets are held until a retarget, a link
+ * change or a rebuild replaces them, so identity is the exact test.
+ */
+const sameShape = (
+  a: SrefStatus | undefined,
+  b: SrefStatus | undefined,
+): boolean =>
+  a === b ||
+  (!!a &&
+    !!b &&
+    a.active === b.active &&
+    a.exact === b.exact &&
+    a.entering === b.entering &&
+    a.exiting === b.exiting &&
+    a.targetStates.length === b.targetStates.length &&
+    a.targetStates.every((target, i) => target === b.targetStates[i]));
 
 /**
  * A Lit
@@ -67,7 +74,7 @@ const shapeOf = (status: SrefStatus | undefined): string =>
  * The controller registers its hooks when the host connects and deregisters
  * them on `hostDisconnected`, so nothing leaks when hosts come and go. It
  * calls `host.requestUpdate()` only when one of the four flags or the watched
- * states actually changed, so transitions that leave the link alone cost no
+ * targets actually changed, so transitions that leave the link alone cost no
  * render.
  *
  * @example Composing with classMap and aria-current
@@ -286,8 +293,8 @@ export class SrefStatusController implements ReactiveController {
   }
 
   /**
-   * Recomputes the status and re-renders the host, but only if one of the
-   * four flags moved.
+   * Recomputes the status and re-renders the host, but only if a flag or a
+   * watched target moved.
    *
    * @internal
    */
@@ -299,11 +306,11 @@ export class SrefStatusController implements ReactiveController {
 
   /** the new status, and whether the host needs to see it */
   private compute(event?: TransEvt): boolean {
-    const before = shapeOf(this._status);
+    const before = this._status;
     this._status = this.targets.status(event);
     const first = !this.computed;
     this.computed = true;
-    return first || shapeOf(this._status) !== before;
+    return first || !sameShape(before, this._status);
   }
 
   private readonly onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
