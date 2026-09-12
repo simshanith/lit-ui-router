@@ -127,6 +127,26 @@ export function desiredWorkersFromConfig(config: unknown): DesiredWorker[] {
   return Object.entries(workers).map(([site, worker]) => ({ site, ...worker }));
 }
 
+/**
+ * The workers a `--site` selection names, in config order; no selection means
+ * every worker. An unknown name throws rather than selecting nothing, since a
+ * typo under --apply would otherwise read as "in sync".
+ */
+export function selectWorkers(
+  workers: DesiredWorker[],
+  sites: readonly string[],
+): DesiredWorker[] {
+  if (sites.length === 0) return workers;
+  const known = workers.map((worker) => worker.site);
+  const unknown = sites.filter((site) => !known.includes(site));
+  if (unknown.length > 0) {
+    throw new Error(
+      `unknown site(s): ${unknown.join(', ')} — configured: ${known.join(', ')}`,
+    );
+  }
+  return workers.filter((worker) => sites.includes(worker.site));
+}
+
 // looseObject: wrangler.jsonc has many fields; only `name` matters here.
 const WranglerNameSchema = v.looseObject({ name: nonEmptyString });
 

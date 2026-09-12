@@ -5,13 +5,16 @@
 // dashboard should match — one entry per Worker, keyed by site.
 //
 // Usage:
-//   CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm check:workers-builds [-- --apply]
+//   CLOUDFLARE_API_TOKEN=… CLOUDFLARE_ACCOUNT_ID=… pnpm check:workers-builds [-- [--site <key>]… [--apply]]
 //
-// Default is a read-only diff. --apply PATCHes drifted triggers, then re-GETs
-// to confirm. Exit codes: 0 in sync, 1 drifted (or drift remained after
-// --apply), 2 usage/API error. Token must be USER-scoped (account-owned
-// tokens don't cover the Builds API): "Workers Builds Configuration: Read"
-// suffices for the diff, Edit is only for --apply.
+// Default is a read-only diff of every configured site. --site limits both
+// the diff and --apply to the named config keys (repeatable, or one
+// comma-separated value); an unknown key is a usage error, never an empty
+// selection. --apply PATCHes drifted triggers, then re-GETs to confirm. Exit
+// codes: 0 in sync, 1 drifted (or drift remained after --apply), 2 usage/API
+// error. Token must be USER-scoped (account-owned tokens don't cover the
+// Builds API): "Workers Builds Configuration: Read" suffices for the diff,
+// Edit is only for --apply.
 //
 // Never make this a turbo task-graph dependency: it hits the live API, so no
 // build/test/typecheck task may reach it. Running the default read-only diff
@@ -25,6 +28,9 @@
 
 import { readFile } from 'node:fs/promises';
 import { join } from 'node:path';
+import { parseArgs } from 'node:util';
+
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 
 import {
   type DesiredWorker,
@@ -32,6 +38,7 @@ import {
   desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
+  selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 
@@ -40,8 +47,6 @@ const DESIRED_CONFIG = join(
   import.meta.dirname,
   'workers-builds-triggers.config.jsonc',
 );
-
-const REPO_ROOT = join(import.meta.dirname, '..', '..');
 
 async function loadDesired(): Promise<DesiredWorker[]> {
   try {
@@ -134,7 +139,18 @@ async function getTriggers(
 }
 
 async function main() {
-  const apply = process.argv.includes('--apply');
+  // strict: an unknown flag is a usage error (exit 2 via the catch below), so
+  // a mistyped --apply can never fall through to a read-only run that looks
+  // like it applied.
+  const { values } = parseArgs({
+    options: {
+      apply: { type: 'boolean', default: false },
+      site: { type: 'string', multiple: true, default: [] },
+    },
+    strict: true,
+  });
+  const apply = values.apply;
+  const sites = values.site.flatMap((value) => value.split(','));
 
   const token = process.env.CLOUDFLARE_API_TOKEN;
   const accountId = process.env.CLOUDFLARE_ACCOUNT_ID;
@@ -148,7 +164,7 @@ async function main() {
     return;
   }
 
-  const workers = await loadDesired();
+  const workers = selectWorkers(await loadDesired(), sites);
   let ok = true;
 
   for (const [index, worker] of workers.entries()) {
@@ -156,7 +172,7 @@ async function main() {
     // wranglerConfig that names no file throws, and the run exits 2.
     const name = workerNameFromConfig(
       parseJsonc(
-        await readFile(join(REPO_ROOT, worker.wranglerConfig), 'utf8'),
+        await readFile(join(workspaceRoot, worker.wranglerConfig), 'utf8'),
       ),
     );
 

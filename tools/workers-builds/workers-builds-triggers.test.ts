@@ -12,6 +12,8 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+
 import { buildSteps } from './cloudflare-build.ts';
 import { DEPLOY_MODES } from './cloudflare-deploy.ts';
 import {
@@ -22,6 +24,7 @@ import {
   desiredWorkersFromConfig,
   diffTriggers,
   parseJsonc,
+  selectWorkers,
   workerNameFromConfig,
 } from './workers-builds-triggers.core.ts';
 
@@ -74,7 +77,7 @@ describe('parseJsonc', () => {
   it('resolves every configured wranglerConfig to a worker name', async () => {
     for (const worker of workers) {
       const raw = await readFile(
-        join(import.meta.dirname, '..', '..', worker.wranglerConfig),
+        join(workspaceRoot, worker.wranglerConfig),
         'utf8',
       );
       assert.ok(workerNameFromConfig(parseJsonc(raw)));
@@ -86,10 +89,7 @@ describe('parseJsonc', () => {
     assert.equal(
       workerNameFromConfig(
         parseJsonc(
-          await readFile(
-            join(import.meta.dirname, '..', '..', desired.wranglerConfig),
-            'utf8',
-          ),
+          await readFile(join(workspaceRoot, desired.wranglerConfig), 'utf8'),
         ),
       ),
       'lit-ui-router',
@@ -122,10 +122,7 @@ describe('desiredStateFromConfig', () => {
   // rather than grepped out of the source.
   it('pairs the skipped install with an install in every build command', () => {
     // the repo root, not cwd: turbo runs this from the package directory
-    const steps = buildSteps(
-      join(import.meta.dirname, '..', '..'),
-      '/nonexistent/bin',
-    );
+    const steps = buildSteps(workspaceRoot, '/nonexistent/bin');
     assert.ok(
       steps.some(
         ([command, args]) =>
@@ -186,7 +183,7 @@ describe('desiredStateFromConfig', () => {
       assert.equal(path, './tools/workers-builds/cloudflare-deploy.ts');
       assert.equal(arg, mode, `${kind} deploy command names the wrong mode`);
       // The pinned path must name a real file: readFile rejects if it does not.
-      await readFile(join(import.meta.dirname, '..', '..', path), 'utf8');
+      await readFile(join(workspaceRoot, path), 'utf8');
       assert.deepEqual(DEPLOY_MODES[mode], wrangler);
     }
   });
@@ -272,6 +269,33 @@ describe('desiredStateFromConfig', () => {
           production: { environment_variables: { OK: 1 } },
         }),
       /production\.environment_variables\.OK: Invalid type/,
+    );
+  });
+});
+
+describe('selectWorkers', () => {
+  const two = [
+    { ...desired, site: 'lit-ui-router.dev' },
+    { ...desired, site: 'atlas.lit-ui-router.dev' },
+  ];
+
+  it('returns every worker when nothing is selected', () => {
+    assert.deepEqual(selectWorkers(two, []), two);
+  });
+
+  it('keeps config order regardless of selection order', () => {
+    assert.deepEqual(
+      selectWorkers(two, ['atlas.lit-ui-router.dev', 'lit-ui-router.dev']),
+      two,
+    );
+    assert.deepEqual(selectWorkers(two, ['atlas.lit-ui-router.dev']), [two[1]]);
+  });
+
+  // A typo must never select nothing: under --apply that reads as in sync.
+  it('throws on an unknown site, naming the configured ones', () => {
+    assert.throws(
+      () => selectWorkers(two, ['lit-ui-router.dev', 'atlas']),
+      /unknown site\(s\): atlas — configured: lit-ui-router\.dev, atlas\.lit-ui-router\.dev/,
     );
   });
 });
