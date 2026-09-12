@@ -153,15 +153,14 @@ export abstract class SrefStatusDirective<
 
   /** the targets whose statuses merge into `status` */
   private targets(): TargetState[] {
-    if (this._explicitTarget) {
-      return [this._explicitTarget];
-    }
     for (const element of this._linkTargets.keys()) {
       if (!element.isConnected) {
         this._linkTargets.delete(element);
       }
     }
-    return [...this._linkTargets.values()];
+    return this._explicitTarget
+      ? [this._explicitTarget]
+      : [...this._linkTargets.values()];
   }
 
   /** @internal */
@@ -174,18 +173,17 @@ export abstract class SrefStatusDirective<
     this.parentView = UiView.seekParentView(element);
     this.resolveExplicitTarget();
 
-    if (!this.params!.state) {
-      element.addEventListener(
+    // listened for in named mode too: a re-render may drop the name
+    element.addEventListener(
+      UI_SREF_TARGET_EVENT,
+      this.onUiSrefTargetEvent as EventListener,
+    );
+    this._deregister.push(() =>
+      element.removeEventListener(
         UI_SREF_TARGET_EVENT,
         this.onUiSrefTargetEvent as EventListener,
-      );
-      this._deregister.push(() =>
-        element.removeEventListener(
-          UI_SREF_TARGET_EVENT,
-          this.onUiSrefTargetEvent as EventListener,
-        ),
-      );
-    }
+      ),
+    );
 
     const router = this.uiRouter;
     if (router) {
@@ -209,7 +207,10 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
-    this._linkTargets.set(event.target, event.detail.targetState);
+    // composed: past a nested shadow root `target` is the host, not the link
+    const origin = event.composedPath()[0];
+    const link = origin instanceof Element ? origin : event.target;
+    this._linkTargets.set(link, event.detail.targetState);
     this.refresh();
   };
 

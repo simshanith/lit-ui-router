@@ -180,6 +180,24 @@ describe('attribute-part active directives', () => {
       expect(anchor.classList.contains('active')).toBe(true);
     });
 
+    it('switches to container mode when a re-render drops the state', async () => {
+      const nav = (state: string | undefined, extra: boolean) =>
+        html`<nav
+          class=${srefActiveClass({ state, activeClasses: ['active'] })}
+        >
+          <a href=${srefHref('users')}>Users</a>
+          ${extra ? html`<a href=${srefHref('home')}>Home</a>` : nothing}
+        </nav>`;
+      const wrapper = await mount(nav('users', false));
+      const el = wrapper.querySelector('nav')!;
+      await goTo('home');
+      expect(el.classList.contains('active')).toBe(false);
+
+      render(nav(undefined, true), wrapper);
+      await tick(20);
+      expect(el.classList.contains('active')).toBe(true);
+    });
+
     it('accepts params for the target', async () => {
       const wrapper = await mount(
         html`<a
