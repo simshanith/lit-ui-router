@@ -9,7 +9,7 @@ ESLint rules that understand [lit-ui-router](https://lit-ui-router.dev) directiv
 
 A lit-ui-router anchor carries no static `href` — the element-part directive assigns one at runtime — so stock accessibility rules report every correct call site. These rules keep the base rules' real coverage while understanding what the directives do.
 
-The rest are the directives' own runtime dev warnings, statically: the inert `href` on a native non-link, the silent `aria-current` takeover, and the element-part-only constructor throw. Each reports at author time, on the whole codebase, in a production build — where the runtime says nothing.
+The rest are the directives' own runtime dev warnings, statically: the inert `href` on a native non-link, the silent `aria-current` takeover, the `aria-current` the class directive never writes, and the constructor throw each directive keeps for the part type it does not accept. Each reports at author time, on the whole codebase, in a production build — where the runtime says nothing.
 
 ## Install
 
@@ -60,7 +60,7 @@ export default [
 
 Tags resolve through scope, so a parameter or local named `html` or `uiSref` never counts as the import. This is stricter than lit-a11y in one place: once a file is gated in, lit-a11y also accepts `html` aliases and namespaces from any later import, while these rules only accept them from the listed sources — a wrapper module that re-exports `html` belongs in the array.
 
-`settings.linkElements` names the tags that are link elements — a design system's `<sp-link>`, `<my-link>` — which two rules would otherwise have to guess at:
+`settings.linkElements` names the tags that are link elements — a design system's `<sp-link>`, `<my-link>` — which three rules would otherwise have to guess at:
 
 ```js
 export default [
@@ -71,8 +71,9 @@ export default [
 
 - [`anchor-is-valid`](./docs/rules/anchor-is-valid.md) checks a declared element the way it checks `<a>`: it wants a navigable `href`, static or assigned by a `uiSref` element part.
 - [`sref-assign-href`](./docs/rules/sref-assign-href.md) goes quiet on a declared element, the way it does on `<a>` — it honours the `href` that the `assignHref: true` default writes.
+- [`sref-active-class-aria-current`](./docs/rules/sref-active-class-aria-current.md) asks a declared element for the `aria-current` it asks an `<a>` for.
 
-Undeclared tags are unchanged in both rules, so this is purely additive: with no `linkElements`, every rule behaves exactly as it did. Either rule also takes a `linkElements` option of its own, which replaces the setting for that rule.
+Undeclared tags are unchanged in every rule, so this is purely additive: with no `linkElements`, each behaves exactly as it did. Each also takes a `linkElements` option of its own, which replaces the setting for that rule.
 
 ## oxlint (alpha)
 
@@ -85,6 +86,7 @@ The rules also load into [oxlint](https://oxc.rs) as JS plugins — every one is
     "lit-ui-router/anchor-is-valid": "error",
     "lit-ui-router/directive-position": "error",
     "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-active-class-aria-current": "error",
     "lit-ui-router/sref-assign-href": "error"
   }
 }
@@ -107,6 +109,7 @@ ESLint-only, oxlint-only and both-at-once are all supported. If you run both, th
     "lit-ui-router/anchor-is-valid": "error",
     "lit-ui-router/directive-position": "error",
     "lit-ui-router/sref-active-aria-current": "error",
+    "lit-ui-router/sref-active-class-aria-current": "error",
     "lit-ui-router/sref-assign-href": "error"
   }
 }
@@ -128,7 +131,7 @@ export default [
 ];
 ```
 
-The manual `off` is the whole trick: `eslint-plugin-oxlint` de-duplicates only oxlint's **native** rule names, and has no handling for `jsPlugins` rules at all. Spreading `configs.recommended` on top of the oxlint lane would register all four rules a second time, and every finding would report twice.
+The manual `off` is the whole trick: `eslint-plugin-oxlint` de-duplicates only oxlint's **native** rule names, and has no handling for `jsPlugins` rules at all. Spreading `configs.recommended` on top of the oxlint lane would register every rule a second time, and every finding would report twice.
 
 This repository runs exactly this split — see [`.oxlintrc.json`](../../.oxlintrc.json) and [`eslint.config.ts`](../../eslint.config.ts).
 
@@ -156,12 +159,13 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 ✅ Set in the `recommended` configuration.\
 🔧 Automatically fixable by the [`--fix` CLI option](https://eslint.org/docs/user-guide/command-line-interface#--fix).
 
-| Name                                                               | Description                                                                                             | 💼 | 🔧 |
-| :----------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :- | :- |
-| [anchor-is-valid](docs/rules/anchor-is-valid.md)                   | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  |    |
-| [directive-position](docs/rules/directive-position.md)             | require each lit-ui-router directive to sit in the template position its part type allows               | ✅  |    |
-| [sref-active-aria-current](docs/rules/sref-active-aria-current.md) | disallow an authored aria-current on an element a uiSrefActive element part manages                     | ✅  | 🔧 |
-| [sref-assign-href](docs/rules/sref-assign-href.md)                 | require assignHref: 'auto' when a uiSref element part rides a native element with no href               | ✅  | 🔧 |
+| Name                                                                           | Description                                                                                             | 💼 | 🔧 |
+| :----------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------------ | :- | :- |
+| [anchor-is-valid](docs/rules/anchor-is-valid.md)                               | anchor-is-valid for lit templates, where a uiSref element part counts as the href it assigns at runtime | ✅  |    |
+| [directive-position](docs/rules/directive-position.md)                         | require each lit-ui-router directive to sit in the template position its part type allows               | ✅  |    |
+| [sref-active-aria-current](docs/rules/sref-active-aria-current.md)             | disallow an authored aria-current on an element a uiSrefActive element part manages                     | ✅  | 🔧 |
+| [sref-active-class-aria-current](docs/rules/sref-active-class-aria-current.md) | require an aria-current binding beside a srefActiveClass binding on a link element                      | ✅  | 🔧 |
+| [sref-assign-href](docs/rules/sref-assign-href.md)                             | require assignHref: 'auto' when a uiSref element part rides a native element with no href               | ✅  | 🔧 |
 
 <!-- end auto-generated rules list -->
 

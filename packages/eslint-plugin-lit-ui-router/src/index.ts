@@ -16,6 +16,7 @@ const recommended: Record<`lit-ui-router/${RuleName}`, Linter.RuleEntry> = {
   'lit-ui-router/anchor-is-valid': 'error',
   'lit-ui-router/directive-position': 'error',
   'lit-ui-router/sref-active-aria-current': 'error',
+  'lit-ui-router/sref-active-class-aria-current': 'error',
   'lit-ui-router/sref-assign-href': 'error',
 };
 
