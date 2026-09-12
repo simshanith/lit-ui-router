@@ -195,6 +195,10 @@ export class UiView extends LitElement {
   }
 
   private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
+    // Answering our own re-seek would just hand back the router we are replacing.
+    if (this.seekingProvidedRouter) {
+      return;
+    }
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
@@ -216,19 +220,23 @@ export class UiView extends LitElement {
   /** The router this view registered with; a late upgrade can supersede it. */
   private registeredRouter?: UIRouterLit;
 
-  /** Seeks the provider's router, past this view's own answer to the event. */
+  /** Set only for the synchronous span of our own re-seek. */
+  private seekingProvidedRouter = false;
+
+  /**
+   * Seeks the provider's router, past our own answer.
+   *
+   * `<ui-view>` answers this event for descendants and stops it, deliberately —
+   * see `listener-identity.spec.ts`. Suppressing that for the span of our own
+   * dispatch keeps the guarantee intact for everyone else.
+   */
   private seekProvidedRouter(): UIRouterLit | undefined {
-    const eventName = UIRouterLitElement.uiRouterContextEventName;
-    this.removeEventListener(
-      eventName,
-      this.onUiRouterContextEvent as EventListener,
-    );
-    const found = UIRouterLitElement.seekRouter(this);
-    this.addEventListener(
-      eventName,
-      this.onUiRouterContextEvent as EventListener,
-    );
-    return found;
+    this.seekingProvidedRouter = true;
+    try {
+      return UIRouterLitElement.seekRouter(this);
+    } finally {
+      this.seekingProvidedRouter = false;
+    }
   }
 
   /**
