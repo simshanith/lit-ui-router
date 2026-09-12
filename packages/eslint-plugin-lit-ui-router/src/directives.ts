@@ -40,6 +40,12 @@ const DIRECTIVE_NAMES: DirectiveName[] = [
   'srefAriaCurrent',
 ];
 
+/** The elements HTML gives link semantics with no role of their own. */
+const NATIVE_LINKS = new Set(['a', 'area']);
+
+/** Every `aria-current` spelling lit binds, as parse5 lowercases attribute keys. */
+const ARIA_CURRENT = new Set(['aria-current', '.aria-current', '.ariacurrent']);
+
 /** The import is what makes a `uiSref` call *ours*. */
 const LIT_UI_ROUTER = /^lit-ui-router(\/|$)/;
 
@@ -78,6 +84,10 @@ export interface Parse5Element {
   name: string;
   attribs: Record<string, string>;
   sourceCodeLocation?: { startTag?: Parse5Location };
+}
+/** A node as eslint ranges it; parse5's side of these rules carries no range. */
+export interface Ranged {
+  range?: [number, number];
 }
 
 /** Given `lit-html/lit-html.js`, the package name `lit-html`. */
@@ -200,6 +210,62 @@ export const attributePartsOf = (
   }
   return parts;
 };
+
+/**
+ * Where an attribute's value ends in the raw source, as a fixer range point:
+ * past the closing `}` of its **last** expression, past whatever static text
+ * follows, and past the closing quote when the value carries one.
+ *
+ * The last expression, never the matched one, so `class="nav ${a} ${b}"` lands
+ * after the quote rather than inside the value.
+ */
+export const attributeEnd = (
+  text: string,
+  element: Parse5Element,
+  attribute: string,
+  expressions: Node[],
+): number | undefined => {
+  const value = element.attribs[attribute];
+  if (value === undefined) return undefined;
+  const last = [...value.matchAll(ATTRIBUTE_PART)].at(-1);
+  if (last?.index === undefined) return undefined;
+  const range = (expressions[Number(last[1])] as Ranged | undefined)?.range;
+  if (range === undefined) return undefined;
+  // The expression's own text stops short of the template's `}`.
+  const close = text.indexOf('}', range[1]);
+  if (close === -1) return undefined;
+  // parse5 keeps the static text around the placeholder, so the raw source
+  // resumes with it, and the value's quote (if any) follows.
+  let end = close + 1 + (value.length - last.index - last[0].length);
+  if (text[end] === '"' || text[end] === "'") end += 1;
+  return end;
+};
+
+/**
+ * Whether an element carries link semantics: `<a>`, `<area>`, a literal `role`
+ * with the `link` token, or a tag the host declared. A bound `role` is
+ * unknowable, so it declares nothing.
+ */
+export const isLinkElement = (
+  element: Parse5Element,
+  parts: Map<number, AttributePart>,
+  linkElements: ReadonlySet<string>,
+): boolean => {
+  const bound = [...parts.values()].some((part) => part.name === 'role');
+  const role = bound ? undefined : element.attribs.role;
+  return (
+    NATIVE_LINKS.has(element.name) ||
+    linkElements.has(element.name) ||
+    role?.split(/\s+/).includes('link') === true
+  );
+};
+
+/**
+ * Whether an `aria-current` is authored at all — literal, bound, or bound to
+ * something else entirely. Whether its value is right is nobody's business here.
+ */
+export const hasAriaCurrent = (element: Parse5Element): boolean =>
+  Object.keys(element.attribs).some((key) => ARIA_CURRENT.has(key));
 
 /** Own (non-computed) `Property` nodes of an object literal, keyed by name. */
 export const propertyNamed = (

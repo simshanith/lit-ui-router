@@ -10,7 +10,9 @@
 
 [`uiSrefActive`](https://lit-ui-router.dev/api/reference/directives/uiSrefActive) is an element part, and it writes `aria-current` itself: a link it marks active is active for CSS **and** for assistive technology. [`srefActiveClass`](https://lit-ui-router.dev/api/reference/directives/srefActiveClass) is the attribute-part sibling, and it only writes classes. A link styled active by it says nothing to a screen reader unless the author also binds `aria-current=${srefAriaCurrent(...)}` — a regression nobody sees, because the page still looks right.
 
-This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes.
+This rule is the mirror of [`sref-active-aria-current`](./sref-active-aria-current.md): that one protects an authored `aria-current` from the element part's takeover, this one asks for the attribute the attribute part never writes. [`sref-status-aria-current`](./sref-status-aria-current.md) is the third, for a host that reads the status itself; the three together cover the element part, the attribute part and the controller.
+
+The report names the call the fix would write — `bind aria-current=${srefAriaCurrent({ state: 'home' })} beside it` — so the remedy is the message, not an exercise. When the params cannot be read, it asks for the same `state`, `params` and `options` instead.
 
 ## What is exempt
 
@@ -70,6 +72,12 @@ The fix binds `aria-current` after the `class` attribute, copying the `state`, `
 +html`<a href=${srefHref('home')} class=${srefActiveClass({ state: 'home' })} aria-current=${srefAriaCurrent({ state: 'home' })}>Home</a>`;
 ```
 
-A params argument that is not an object literal, one carrying a spread, and a call with no argument at all have nothing to copy, so they report without a fix.
+A params argument that is not an object literal, one carrying a spread, and a call with no argument at all have nothing to copy, so they report without a fix — and under their own message, which asks for the shared `state`, `params` and `options` rather than naming a call it cannot spell.
+
+The insertion point comes from the **last** expression in the `class` value, so `class="nav ${a} ${b}"` lands after the closing quote rather than inside the value.
+
+## Or hand the status to the host
+
+A component that wants `classMap` rather than a class directive can hold a [`SrefStatusController`](https://lit-ui-router.dev/api/reference/controllers/SrefStatusController) instead, compose `active` and `exact` into its own class object, and bind `aria-current=${this.users.ariaCurrent()}` beside it. That shape is this rule's blind spot — no directive call appears in the template — so [`sref-status-aria-current`](./sref-status-aria-current.md) covers it.
 
 If the element was never meant to be a link, drop its `role` — or move the class binding to the wrapper, which is the container idiom this rule leaves alone.

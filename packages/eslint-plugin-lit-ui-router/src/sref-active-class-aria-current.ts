@@ -6,10 +6,13 @@ import type { Rule } from 'eslint';
 import type { RuleFor } from './rule-shape.ts';
 import { TemplateAnalyzer } from 'eslint-plugin-lit/lib/template-analyzer.js';
 import {
+  attributeEnd,
   attributePartsOf,
   type CallNode,
   createDirectiveTracker,
+  hasAriaCurrent,
   hasSpread,
+  isLinkElement,
   isOurPackage,
   LINK_ELEMENTS_SCHEMA,
   linkElementsOf,
@@ -19,21 +22,10 @@ import {
   propertyNamed,
 } from './directives.ts';
 
-/** The elements HTML gives link semantics with no role of their own. */
-const NATIVE_LINKS = new Set(['a', 'area']);
-
-/** Every `aria-current` spelling lit binds, as parse5 lowercases attribute keys. */
-const ARIA_CURRENT = new Set(['aria-current', '.aria-current', '.ariacurrent']);
-
 /** The params srefAriaCurrent shares with srefActiveClass; the classes are its own. */
 const SHARED_PARAMS = ['state', 'params', 'options'];
 
 const DIRECTIVE = 'srefAriaCurrent';
-
-/** A node as eslint ranges it; parse5's side of these rules carries no range. */
-interface Ranged {
-  range?: [number, number];
-}
 
 /** A named import specifier, structurally. */
 interface SpecifierNode extends Node {
@@ -61,7 +53,9 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
     },
     messages: {
       missingAriaCurrent:
-        'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent(...)} beside it so assistive technology gets the same signal.',
+        'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent({{params}})} beside it so assistive technology gets the same signal.',
+      unknownAriaCurrent:
+        'srefActiveClass marks this <{{tag}}> active for CSS only; bind aria-current=${srefAriaCurrent(...)} with the same state, params and options beside it so assistive technology gets the same signal.',
     },
     schema: [
       {
@@ -106,38 +100,32 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
           return found;
         };
 
+        /** The `state`, `params` and `options` the fix copies, as written. */
+        const paramsLiteral = (object: ObjectNode): string => {
+          const kept = SHARED_PARAMS.map((name) =>
+            propertyNamed(object, name),
+          ).filter((property) => property !== undefined);
+          return kept.length === 0
+            ? '{}'
+            : `{ ${kept
+                .map((property) => source.getText(property as never))
+                .join(', ')} }`;
+        };
+
         /** The `aria-current` binding, plus the import that makes it resolve. */
         const bind = (
           fixer: Rule.RuleFixer,
           call: CallNode,
-          object: ObjectNode,
+          literal: string,
           element: Parse5Element,
-          index: number,
         ): Rule.Fix[] | null => {
-          const text = source.getText();
-          const range = (call as unknown as Ranged).range;
-          if (range === undefined) return null;
-          const close = text.indexOf('}', range[1]);
-          if (close === -1) return null;
-          // parse5 keeps the static text around the placeholder, so the raw
-          // source resumes with it, and the value's quote (if any) follows.
-          const marker = `{{__Q:${index}__}}`;
-          const value = element.attribs.class ?? '';
-          // The analyzer spells the placeholder uppercase; the rest is the author's.
-          const at = value.toUpperCase().indexOf(marker);
-          if (at === -1) return null;
-          let insert = close + 1 + value.slice(at + marker.length).length;
-          if (text[insert] === '"' || text[insert] === "'") insert += 1;
-
-          const kept = SHARED_PARAMS.map((name) =>
-            propertyNamed(object, name),
-          ).filter((property) => property !== undefined);
-          const literal =
-            kept.length === 0
-              ? '{}'
-              : `{ ${kept
-                  .map((property) => source.getText(property as never))
-                  .join(', ')} }`;
+          const insert = attributeEnd(
+            source.getText(),
+            element,
+            'class',
+            expressions,
+          );
+          if (insert === undefined) return null;
 
           const { callee } = call;
           const edits: Rule.Fix[] = [];
@@ -181,18 +169,10 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
             if (element.sourceCodeLocation === undefined) return;
             const tag = element.name;
             const parts = attributePartsOf(element);
-            const bound = new Set([...parts.values()].map((part) => part.name));
-            // A bound role is unknowable, so only a literal one declares a link.
-            const role = bound.has('role') ? undefined : element.attribs.role;
-            const isLink =
-              NATIVE_LINKS.has(tag) ||
-              linkElements.has(tag) ||
-              role?.split(/\s+/).includes('link') === true;
-            if (!isLink) return;
+            if (!isLinkElement(element, parts, linkElements)) return;
             // Any aria-current at all is the author's, and whether its value is
             // right is not this rule's business.
-            const attributes = Object.keys(element.attribs);
-            if (attributes.some((key) => ARIA_CURRENT.has(key))) return;
+            if (hasAriaCurrent(element)) return;
 
             for (const [index, part] of parts) {
               if (part.name !== 'class') continue;
@@ -210,21 +190,23 @@ const srefActiveClassAriaCurrent: RuleFor<typeof RULE_NAME> = {
                 !hasSpread(params as ObjectNode)
                   ? (params as ObjectNode)
                   : undefined;
-              // A missing or unknowable params literal has nothing to copy.
+              // A missing or unknowable params literal has nothing to copy, so
+              // the message cannot name the call the fix would have written.
               if (object === undefined) {
                 context.report({
                   node: call,
-                  messageId: 'missingAriaCurrent',
+                  messageId: 'unknownAriaCurrent',
                   data: { tag },
                 });
                 continue;
               }
 
+              const literal = paramsLiteral(object);
               context.report({
                 node: call,
                 messageId: 'missingAriaCurrent',
-                data: { tag },
-                fix: (fixer) => bind(fixer, call, object, element, index),
+                data: { tag, params: literal },
+                fix: (fixer) => bind(fixer, call, literal, element),
               });
             }
           },

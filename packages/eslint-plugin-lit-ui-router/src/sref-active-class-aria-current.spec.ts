@@ -74,25 +74,45 @@ ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
     {
       name: 'an anchor painted active and silent',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })}>Home</a>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent', data: { tag: 'a' } }],
+      errors: [
+        {
+          messageId: 'missingAriaCurrent',
+          data: { tag: 'a', params: "{ state: 'home' }" },
+        },
+      ],
       output: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
     {
       name: 'an <area> is a link element too',
       code: `${IMPORTS}html\`<map><area href="/home" class=\${srefActiveClass({ state: 'home' })} /></map>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent', data: { tag: 'area' } }],
+      errors: [
+        {
+          messageId: 'missingAriaCurrent',
+          data: { tag: 'area', params: "{ state: 'home' }" },
+        },
+      ],
       output: `${IMPORTS}html\`<map><area href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })} /></map>\`;`,
     },
     {
       name: 'role="link" makes a <div> a link',
       code: `${IMPORTS}html\`<div role="link" class=\${srefActiveClass({ state: 'home' })}>Home</div>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent', data: { tag: 'div' } }],
+      errors: [
+        {
+          messageId: 'missingAriaCurrent',
+          data: { tag: 'div', params: "{ state: 'home' }" },
+        },
+      ],
       output: `${IMPORTS}html\`<div role="link" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</div>\`;`,
     },
     {
       name: 'a role token list containing link counts',
       code: `${IMPORTS}html\`<div role="link button" class=\${srefActiveClass({ state: 'home' })}>Home</div>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent', data: { tag: 'div' } }],
+      errors: [
+        {
+          messageId: 'missingAriaCurrent',
+          data: { tag: 'div', params: "{ state: 'home' }" },
+        },
+      ],
       output: `${IMPORTS}html\`<div role="link button" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</div>\`;`,
     },
     {
@@ -100,6 +120,12 @@ ruleTester.run('sref-active-class-aria-current', srefActiveClassAriaCurrent, {
       code: `${IMPORTS}html\`<a href="/home" class="nav \${srefActiveClass({ state: 'home', activeClasses: ['on'] })}">Home</a>\`;`,
       errors: [{ messageId: 'missingAriaCurrent' }],
       output: `${IMPORTS}html\`<a href="/home" class="nav \${srefActiveClass({ state: 'home', activeClasses: ['on'] })}" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
+    },
+    {
+      name: 'a second expression in the value moves the insert past the quote',
+      code: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} \${theme}">Home</a>\`;`,
+      errors: [{ messageId: 'missingAriaCurrent' }],
+      output: `${IMPORTS}html\`<a href="/home" class="\${srefActiveClass({ state: 'home' })} \${theme}" aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</a>\`;`,
     },
     {
       name: 'params and options ride along; the classes stay behind',
@@ -137,26 +163,31 @@ html\`<a href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=
     {
       name: 'a non-literal params argument is unknowable, so the report carries no fix',
       code: `${IMPORTS}const params = { state: 'home' };\nhtml\`<a href="/home" class=\${srefActiveClass(params)}>Home</a>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent' }],
+      errors: [{ messageId: 'unknownAriaCurrent' }],
       output: null,
     },
     {
       name: 'a spread could carry anything, so it stays unfixed',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass({ ...params })}>Home</a>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent' }],
+      errors: [{ messageId: 'unknownAriaCurrent' }],
       output: null,
     },
     {
       name: 'no argument at all has nothing to copy',
       code: `${IMPORTS}html\`<a href="/home" class=\${srefActiveClass()}>Home</a>\`;`,
-      errors: [{ messageId: 'missingAriaCurrent' }],
+      errors: [{ messageId: 'unknownAriaCurrent' }],
       output: null,
     },
     {
       name: 'a declared link element reports the way an <a> does',
       code: `${IMPORTS}html\`<sp-link href="/home" class=\${srefActiveClass({ state: 'home' })}>Home</sp-link>\`;`,
       options: [{ linkElements: ['sp-link'] }],
-      errors: [{ messageId: 'missingAriaCurrent', data: { tag: 'sp-link' } }],
+      errors: [
+        {
+          messageId: 'missingAriaCurrent',
+          data: { tag: 'sp-link', params: "{ state: 'home' }" },
+        },
+      ],
       output: `${IMPORTS}html\`<sp-link href="/home" class=\${srefActiveClass({ state: 'home' })} aria-current=\${srefAriaCurrent({ state: 'home' })}>Home</sp-link>\`;`,
     },
   ],
@@ -174,10 +205,17 @@ void describe('sref-active-class-aria-current meta', () => {
     );
   });
 
-  void it('names the directive the author is owed', () => {
+  void it('names the directive the author is owed, with the call the fix writes', () => {
     assert.match(
       srefActiveClassAriaCurrent.meta?.messages?.missingAriaCurrent ?? '',
-      /srefAriaCurrent/,
+      /srefAriaCurrent\(\{\{params\}\}\)/,
+    );
+  });
+
+  void it('falls back to naming the params when they are unknowable', () => {
+    assert.match(
+      srefActiveClassAriaCurrent.meta?.messages?.unknownAriaCurrent ?? '',
+      /srefAriaCurrent\(\.\.\.\)} with the same state, params and options/,
     );
   });
 });
