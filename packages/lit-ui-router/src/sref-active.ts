@@ -190,7 +190,7 @@ export abstract class SrefStatusDirective<
         router.transitionService.onStart({}, this.onTransitionStart, {
           priority: -Infinity,
         }) as deregisterFn,
-        router.stateRegistry.onStatesChanged(() => this.refresh()),
+        router.stateRegistry.onStatesChanged(this.onStatesChanged),
       );
     } else {
       warnMissingRouter(
@@ -207,6 +207,24 @@ export abstract class SrefStatusDirective<
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
     this._linkTargets.set(event.target, event.detail.targetState);
+    this.refresh();
+  };
+
+  /**
+   * A `TargetState` pins its definition when built, so one made before its
+   * state was registered stays non-existent: rebuild every target first.
+   *
+   * @internal
+   */
+  onStatesChanged = (): void => {
+    const $state = this.uiRouter!.stateService;
+    this.resolveExplicitTarget();
+    for (const [element, target] of this._linkTargets) {
+      this._linkTargets.set(
+        element,
+        $state.target(target.identifier(), target.params(), target.options()),
+      );
+    }
     this.refresh();
   };
 
@@ -248,7 +266,11 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   reconnected(): void {
-    this.firstUpdated();
+    // lit reconnects while the cached fragment is still detached; seek once
+    // the element is back in the document
+    setTimeout(() => {
+      this.firstUpdated();
+    }, 0);
   }
 }
 

@@ -1,5 +1,6 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, render, TemplateResult } from 'lit';
+import { html, nothing, render, TemplateResult } from 'lit';
+import { cache } from 'lit/directives/cache.js';
 import { AttributePartInfo, PartInfo, PartType } from 'lit/directive.js';
 
 import {
@@ -23,6 +24,11 @@ const states: LitStateDeclaration[] = [
   { name: 'home', url: '/home' },
   { name: 'users', url: '/users' },
   { name: 'users.detail', url: '/:userId' },
+  {
+    name: 'broken',
+    url: '/broken',
+    resolve: [{ token: 'nope', resolveFn: () => Promise.reject(new Error()) }],
+  },
 ];
 
 /** a stand-in for the part info lit hands a directive bound in an attribute */
@@ -300,6 +306,118 @@ describe('attribute-part active directives', () => {
           /only expression/,
         );
       });
+    });
+  });
+
+  describe('lifecycle', () => {
+    it('stops and restarts with its part', async () => {
+      const link = (show: boolean) =>
+        html`${cache(
+          show
+            ? html`<a
+                class=${srefActiveClass({
+                  state: 'users',
+                  activeClasses: ['active'],
+                })}
+                >Users</a
+              >`
+            : nothing,
+        )}`;
+      const wrapper = await mount(link(true));
+      const anchor = wrapper.querySelector('a')!;
+
+      render(link(false), wrapper);
+      await tick();
+      await goTo('users');
+      expect(anchor.classList.contains('active')).toBe(false);
+
+      render(link(true), wrapper);
+      await tick(20);
+      expect(wrapper.querySelector('a')).toBe(anchor);
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
+
+    it('does nothing when removed before its first seek', async () => {
+      const wrapper = await mount(html``);
+      render(
+        html`<a
+          class=${srefActiveClass({ state: 'users', activeClasses: ['active'] })}
+          >Users</a
+        >`,
+        wrapper,
+      );
+      const anchor = wrapper.querySelector('a')!;
+      render(html``, wrapper);
+      await goTo('users');
+      expect(anchor.classList.contains('active')).toBe(false);
+    });
+
+    it('settles again after a transition fails', async () => {
+      const wrapper = await mount(
+        html`<a
+          class=${srefActiveClass({ state: 'users', activeClasses: ['active'] })}
+          >Users</a
+        >`,
+      );
+      const anchor = wrapper.querySelector('a')!;
+      await goTo('users');
+      expect(anchor.classList.contains('active')).toBe(true);
+
+      await router.stateService.go('broken').catch(() => {});
+      await tick(20);
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
+
+    it('follows a state registered after the first render', async () => {
+      const wrapper = await mount(
+        html`<a
+          class=${srefActiveClass({ state: 'late', activeClasses: ['active'] })}
+          >Late</a
+        >`,
+      );
+      const anchor = wrapper.querySelector('a')!;
+
+      router.stateRegistry.register({ name: 'late', url: '/late' });
+      await tick();
+      await goTo('late');
+      expect(anchor.classList.contains('active')).toBe(true);
+    });
+
+    it('forgets a link that left the container', async () => {
+      const links = (users: boolean) =>
+        html`<li class=${srefActiveClass({ activeClasses: ['active'] })}>
+          ${users ? html`<a href=${srefHref('users')}>Users</a>` : nothing}
+          <a href=${srefHref('home')}>Home</a>
+        </li>`;
+      const wrapper = await mount(links(true));
+      const item = wrapper.querySelector('li')!;
+
+      await goTo('users');
+      expect(item.classList.contains('active')).toBe(true);
+
+      render(links(false), wrapper);
+      await tick();
+      await goTo('home');
+      await goTo('users');
+      expect(item.classList.contains('active')).toBe(false);
+    });
+
+    it('drops a class a re-render no longer names', async () => {
+      const link = (classes: string[]) =>
+        html`<a
+          class=${srefActiveClass({ state: 'users', activeClasses: classes })}
+          >Users</a
+        >`;
+      const wrapper = await mount(link(['active', 'current']));
+      const anchor = wrapper.querySelector('a')!;
+
+      await goTo('users');
+      expect(anchor.classList.contains('current')).toBe(true);
+
+      render(link(['active']), wrapper);
+      await tick();
+      expect(anchor.classList.contains('current')).toBe(false);
+      expect(anchor.classList.contains('active')).toBe(true);
     });
   });
 

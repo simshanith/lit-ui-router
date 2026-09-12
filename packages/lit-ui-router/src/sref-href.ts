@@ -194,7 +194,11 @@ export class SrefHrefDirective extends AsyncDirective {
 
   /** @internal */
   reconnected(): void {
-    this.firstUpdated();
+    // lit reconnects while the cached fragment is still detached; seek once
+    // the element is back in the document
+    setTimeout(() => {
+      this.firstUpdated();
+    }, 0);
   }
 }
 
