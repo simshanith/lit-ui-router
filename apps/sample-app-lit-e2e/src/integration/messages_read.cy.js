@@ -39,15 +39,27 @@ describe('unread dots in the message list', () => {
     // the inbox ships three messages, all unread
     unreadRows().should('have.length', 3);
 
+    // the same table element must survive both opens, or the guard proves nothing
+    let table;
+    cy.get('sample-message-table').then(($table) => {
+      table = $table[0];
+    });
+    const sameTable = () =>
+      cy.get('sample-message-table').should(($table) => {
+        expect($table[0]).to.equal(table);
+      });
+
     // open the first unread message
     unreadRows().first().click();
     cy.url().should('match', /\/mymessages\/inbox\/[\w-]+$/);
+    sameTable();
     cy.get('table tbody tr.active td i.fa-circle').should('not.exist');
     unreadRows().should('have.length', 2);
 
     // messageId -> messageId without leaving the list
     unreadRows().first().click();
     cy.url().should('match', /\/mymessages\/inbox\/[\w-]+$/);
+    sameTable();
     cy.get('table tbody tr.active td i.fa-circle').should('not.exist');
     unreadRows().should('have.length', 1);
   });
