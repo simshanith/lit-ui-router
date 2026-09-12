@@ -2,7 +2,6 @@ import { html, LitElement } from 'lit';
 import { customElement, property, state } from 'lit/decorators.js';
 import { repeat } from 'lit/directives/repeat.js';
 import { uiSref, uiSrefActive } from 'lit-ui-router';
-import { isEqual } from 'lodash-es';
 
 import { orderBy } from './messageListUIService.js';
 
@@ -44,12 +43,8 @@ export class MessageTable extends LitElement {
   @property({ attribute: false })
   columns: string[] = [];
 
-  @property({
-    hasChanged(value, oldValue) {
-      return !isEqual(value, oldValue);
-    },
-    attribute: false,
-  })
+  // rows are store instances sample-message mutates in place; no equality gate can see that
+  @property({ hasChanged: () => true, attribute: false })
   messages: Message[] = [];
 
   @state()
