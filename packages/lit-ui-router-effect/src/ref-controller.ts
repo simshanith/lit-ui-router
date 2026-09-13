@@ -53,9 +53,15 @@ export interface RefControllerOptions<T> {
   runtime?: RefRuntime;
 }
 
-/** A tuple of `SubscriptionRef`s holding the given value tuple. */
-export type SubscriptionRefs<Values extends readonly unknown[]> = {
-  readonly [K in keyof Values]: SubscriptionRef.SubscriptionRef<Values[K]>;
+/** Any tuple of `SubscriptionRef`s; `any` because the ref's type is invariant. */
+// oxlint-disable-next-line typescript/no-explicit-any
+export type SubscriptionRefs = readonly SubscriptionRef.SubscriptionRef<any>[];
+
+/** The value tuple a tuple of `SubscriptionRef`s holds. */
+export type RefValues<Refs extends SubscriptionRefs> = {
+  [K in keyof Refs]: Refs[K] extends SubscriptionRef.SubscriptionRef<infer A>
+    ? A
+    : never;
 };
 
 /**
@@ -65,9 +71,9 @@ export type SubscriptionRefs<Values extends readonly unknown[]> = {
  * thunk returning `undefined` leaves the controller idle until the host
  * reconnects.
  */
-export type RefSource<Values extends readonly unknown[]> =
-  | SubscriptionRefs<Values>
-  | (() => SubscriptionRefs<Values> | undefined);
+export type RefSource<Refs extends SubscriptionRefs> =
+  | Refs
+  | (() => Refs | undefined);
 
 /**
  * A ReactiveController that composes Effect's `SubscriptionRef` with the Lit
@@ -89,7 +95,7 @@ export type RefSource<Values extends readonly unknown[]> =
  * The selected value is exposed as `.value` for use in `render()`.
  */
 export class RefController<
-  Values extends readonly unknown[],
+  const Refs extends SubscriptionRefs,
   T,
 > implements ReactiveController {
   /** The selected value, for use in `render()`. */
@@ -101,8 +107,8 @@ export class RefController<
 
   constructor(
     private readonly host: ReactiveControllerHost,
-    private readonly refs: RefSource<Values>,
-    private readonly selector: (...values: Values) => T,
+    private readonly refs: RefSource<Refs>,
+    private readonly selector: (...values: RefValues<Refs>) => T,
     private readonly options: RefControllerOptions<T> = {},
   ) {
     this.runtime = options.runtime ?? defaultRefRuntime;
@@ -135,21 +141,23 @@ export class RefController<
     this.initialized = false;
   }
 
-  private read(refs: SubscriptionRefs<Values>): Values {
-    return refs.map((ref) =>
+  private read(refs: Refs): RefValues<Refs> {
+    return refs.map((ref): unknown =>
       this.runtime.runSync(SubscriptionRef.get(ref)),
-    ) as unknown as Values;
+    ) as unknown as RefValues<Refs>;
   }
 
   /** One stream carrying the latest value of every ref. */
-  private static changes<Values extends readonly unknown[]>(
-    refs: SubscriptionRefs<Values>,
-  ): Stream.Stream<Values> {
+  private static changes<Refs extends SubscriptionRefs>(
+    refs: Refs,
+  ): Stream.Stream<RefValues<Refs>> {
     const streams = refs.map((ref) => ref.changes);
-    return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<Values>;
+    return Stream.zipLatestAll(...streams) as unknown as Stream.Stream<
+      RefValues<Refs>
+    >;
   }
 
-  private emit(values: Values): void {
+  private emit(values: RefValues<Refs>): void {
     const selected = this.selector(...values);
     const equals = this.options.equals ?? Object.is;
     if (this.initialized && equals(selected, this.value)) return;
