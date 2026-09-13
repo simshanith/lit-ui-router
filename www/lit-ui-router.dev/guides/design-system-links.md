@@ -41,8 +41,8 @@ has no way to tell a `<sp-link href>` that means it from a `<div>` that does
 not. `true` is the escape hatch for the elements that do mean it, which is why
 it survives the 2.0 default flip.
 
-The example above stages all three cases side by side and prints each
-element's live `href` attribute:
+The example above stages all three `assignHref` cases side by side and prints
+each element's live `href` attribute:
 
 - `<sp-link>` with `assignHref: true` — carries `href="#/components"`
 - `<sp-link>` with `assignHref: 'auto'` — no `href` attribute at all
@@ -102,6 +102,10 @@ bound:
 ```ts
 html`<sp-link href=${srefHref('components')}>Components</sp-link>`;
 ```
+
+The example's fourth row is that spelling of its first: the same `<sp-link>` to
+the same state, carrying the same `href="#/components"` without an option to
+say so.
 
 | your case                                                      | form                              |
 | -------------------------------------------------------------- | --------------------------------- |
