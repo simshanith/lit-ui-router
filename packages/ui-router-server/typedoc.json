@@ -31,6 +31,9 @@
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
   "treatWarningsAsErrors": true,
+  "validation": {
+    "notDocumented": true
+  },
   "externalSymbolLinkMappings": {
     "ui-router-server": {
       "Request": "https://developer.mozilla.org/en-US/docs/Web/API/Request",
