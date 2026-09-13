@@ -985,7 +985,7 @@ letting a directive own the `class` attribute — see
 A router is easy to build on the server; handing it to the code that renders is
 the hard part. In a browser every binding finds the router by asking its own
 element — `<ui-router>` answers a `ui-router-context` event, or the
-[`context-request`](/guides/reactive-components#finding-the-router-from-anything-else)
+[`context-request`](/guides/reactive-components#router-discovery)
 protocol, on the way up the tree. A server render has no tree to walk: the
 renderer calls a directive's `render()` with no element behind it, so there is
 nothing to dispatch from and nothing to listen on.
