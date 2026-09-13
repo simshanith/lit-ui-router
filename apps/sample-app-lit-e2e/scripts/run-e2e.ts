@@ -1,5 +1,5 @@
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
-import { dirname } from 'node:path';
+import { packageDir } from '@tools/bootstrap/package-dir.ts';
 import { fileURLToPath } from 'node:url';
 
 import { serveAndTest } from './serve-and-test.ts';
@@ -11,8 +11,7 @@ import { serveAndTest } from './serve-and-test.ts';
 
 const PREFIX = 'test:e2e:';
 // the suite set is this package's own `test:e2e:*` scripts, never a list
-const packageDir = dirname(dirname(fileURLToPath(import.meta.url)));
-const scripts = requireManifest(packageDir).scripts ?? {};
+const scripts = requireManifest(packageDir(import.meta.url)).scripts ?? {};
 // sorted to keep the command string stable: it is the run's identity in the
 // summary, and an unstable one reads as a different run each time
 const suites = Object.keys(scripts)
@@ -39,9 +38,18 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
+// The launcher directly, not the //www/lit-ui-router.dev:serve task that wraps
+// it: the umbrella has already built the site (mise `depends`), and the serve
+// task's own build edge under a nested `mise run` would run build_www a second
+// time and write a second run summary. Absolute so start-server-and-test's
+// shell can run it from the repo root; the launcher picks its own cwd.
+// Unquoted: start-server-and-test strips a leading quote from an argument.
+const server = [
+  process.execPath,
+  fileURLToPath(
+    import.meta.resolve('@www/lit-ui-router.dev/scripts/wrangler-dev.ts'),
+  ),
+].join(' ');
+
 // every app is mounted whichever suites run
-serveAndTest('mise run //www/lit-ui-router.dev:serve', test, [
-  'app/',
-  'app-mobx/',
-  'app-effect/',
-]);
+serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);

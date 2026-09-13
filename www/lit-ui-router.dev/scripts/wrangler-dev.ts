@@ -1,3 +1,4 @@
+import { packageDir } from '@tools/bootstrap/package-dir.ts';
 import { binPath, execve } from '@tools/shared/execve.ts';
 import wrangler from 'wrangler/package.json' with { type: 'json' };
 
@@ -8,6 +9,10 @@ import { resolveWwwDevPort } from '../dev-port.ts';
 // cannot supply one for an unset var.
 
 const BIN = binPath(wrangler, import.meta.resolve('wrangler/package.json'));
+
+// wrangler reads wrangler.jsonc from cwd, so the launcher runs from its own
+// package wherever it is invoked from (the e2e umbrella calls it from the root).
+process.chdir(packageDir(import.meta.url));
 
 const args = process.argv.slice(2);
 

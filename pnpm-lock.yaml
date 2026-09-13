@@ -1849,6 +1849,9 @@ importers:
         specifier: 'catalog:'
         version: 3.5.42(typescript@7.0.2)
     devDependencies:
+      '@tools/bootstrap':
+        specifier: workspace:*
+        version: link:../../tools/bootstrap
       '@tools/build_and_test':
         specifier: workspace:*
         version: link:../../tools/build_and_test
