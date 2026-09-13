@@ -53,11 +53,6 @@
       "development": "./dist/development/register.js",
       "default": "./dist/register.js"
     },
-    "./server": {
-      "types": "./dist/server.d.ts",
-      "development": "./dist/development/server.js",
-      "default": "./dist/server.js"
-    },
     "./ui-router.register": {
       "types": "./dist/ui-router.register.d.ts",
       "development": "./dist/development/ui-router.register.js",

@@ -74,6 +74,13 @@ It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
 satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe —
 `<ui-router>` takes its router on connect and does not swap it.
 
+When there is no tree at all to bubble through — a server render, a test — the
+same entry publishes a router directly: `withRouterSync(router, run)` scopes it
+to one synchronous call, and anything that call reaches asks `getScopedRouter()`
+for it. `provideRouter(root, router)` is the event-target side of the same
+hand-off, answering `context-request` on a plain `EventTarget`; see
+[Server-Side Routing](./server-route-matching#the-router-on-the-server).
+
 ## Reading router state
 
 The controller exposes the essentials directly:
@@ -205,11 +212,8 @@ pattern — its
 nav header, and message compose view each use a `TransitionController`. The
 behaviorally identical <a href="/app-mobx" target="_self">MobX sample app</a>
 solves the same problems with the observable store and reaction controllers
-from [`lit-ui-router-mobx`](/packages/mobx), and the
-<a href="/app-effect" target="_self">Effect sample app</a> with the
-`SubscriptionRef`-following controllers from
-[`lit-ui-router-effect`](/packages/effect) — two of the
-[companion packages](/packages/). If your app already uses MobX or Effect,
-prefer those bindings; the
-[three codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+from [`lit-ui-router-mobx`](/packages/), one of the
+[companion packages](/packages/) — if your app already uses MobX, prefer
+[those bindings](/packages/mobx); the
+[two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 compare the idioms file-by-file.
