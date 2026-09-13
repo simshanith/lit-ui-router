@@ -29,12 +29,6 @@ itself. Its `1.0` line is stable, and its
 [semver policy](/packages/eslint-plugin#semver-policy) treats any tightening
 of `recommended` as a major.
 
-`lit-ui-router-effect` is the newest of these and publishes on a `0.1.0-rc`
-line: the surface is live and tested, and it freezes at `0.1.0` once the
-[atlas adoption](https://github.com/simshanith/lit-ui-router/issues/843)
-has exercised it as a second consumer beyond the
-[Effect sample app](/sample-app).
-
 `ui-router-server` is still an early `0.x` line: it
 ships, this site's own Worker runs it in production, and its API can still
 move in a minor. The [package page](/packages/server), the
