@@ -1,6 +1,4 @@
-import { requireManifest } from '@tools/bootstrap/manifest.ts';
-import { dirname } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import manifest from '../package.json' with { type: 'json' };
 
 import { serveAndTest } from './serve-and-test.ts';
 
@@ -11,8 +9,7 @@ import { serveAndTest } from './serve-and-test.ts';
 
 const PREFIX = 'test:e2e:';
 // the suite set is this package's own `test:e2e:*` scripts, never a list
-const packageDir = dirname(dirname(fileURLToPath(import.meta.url)));
-const scripts = requireManifest(packageDir).scripts ?? {};
+const scripts = manifest.scripts;
 // sorted to keep the command string stable: it is the run's identity in the
 // summary, and an unstable one reads as a different run each time
 const suites = Object.keys(scripts)
@@ -39,9 +36,8 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
+// not the serve mise task: its build_www depends would re-run under nested mise
+const server = 'pnpm --filter @www/lit-ui-router.dev run wrangler:dev';
+
 // every app is mounted whichever suites run
-serveAndTest('mise run //www/lit-ui-router.dev:serve', test, [
-  'app/',
-  'app-mobx/',
-  'app-effect/',
-]);
+serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);
