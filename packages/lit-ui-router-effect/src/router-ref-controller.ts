@@ -6,6 +6,7 @@ import { warnMissingRouter } from './dev-warn.js';
 import { RefController, RefControllerOptions } from './ref-controller.js';
 import { routeRef, RouteSnapshot } from './route-ref.js';
 
+/** Options for {@link RouterRefController}. */
 export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
   /**
    * Explicit router instance. When omitted, the controller discovers the

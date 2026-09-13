@@ -1,6 +1,7 @@
 import { ReactiveController, ReactiveControllerHost } from 'lit';
 import { IEqualsComparer, IReactionDisposer, reaction } from 'mobx';
 
+/** Options for {@link ReactionController}. */
 export interface ReactionControllerOptions<T> {
   /**
    * Invoked (before `host.requestUpdate()`) whenever the selected value
@@ -46,6 +47,7 @@ export interface ReactionControllerOptions<T> {
  * The selected value is exposed as `.value` for use in `render()`.
  */
 export class ReactionController<T> implements ReactiveController {
+  /** the selected value as of the last reaction; read it in `render()` */
   value: T;
 
   private dispose?: IReactionDisposer;

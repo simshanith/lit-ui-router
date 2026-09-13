@@ -7,6 +7,7 @@ import { warnMissingRouter } from './dev-warn.js';
 import { RouterStore } from './router-store.js';
 import { ReactionControllerOptions } from './reaction-controller.js';
 
+/** Options for {@link RouterReactionController}. */
 export interface RouterReactionControllerOptions<
   T,
 > extends ReactionControllerOptions<T> {
