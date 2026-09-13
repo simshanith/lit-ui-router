@@ -31,7 +31,7 @@ export class NavElement extends LitElement {
 
   private readonly params = new RefController(
     this,
-    [this.route, this.count],
+    [this.route, this.count] as const,
     (route, count) => ({ id: route.params.id as string | undefined, count }),
     { equals: structuralEquals },
   );
