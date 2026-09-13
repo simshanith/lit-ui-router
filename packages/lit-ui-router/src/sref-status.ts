@@ -7,13 +7,16 @@ import {
 import { nothing } from 'lit';
 
 import type { SrefTargetParams } from './sref-active.js';
-import { srefEventLink, UiSrefTargetEvent } from './ui-sref.js';
+import {
+  mergeSrefStatus,
+  srefEventLink,
+  srefStatus,
+  UiSrefTargetEvent,
+} from './sref-internals.js';
 import {
   AriaCurrentValue,
   AriaCurrentValues,
-  mergeSrefStatus,
   SrefStatus,
-  srefStatus,
   TransEvt,
 } from './ui-sref-active.js';
 

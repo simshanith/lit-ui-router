@@ -7,9 +7,9 @@ import {
   UiSrefDirective,
   UiSrefElement,
   UI_SREF_TARGET_EVENT,
-  uiSrefTargetEvent,
   UiSrefTargetEvent,
 } from '../ui-sref.js';
+import { uiSrefTargetEvent } from '../sref-internals.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';

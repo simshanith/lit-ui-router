@@ -14,7 +14,7 @@ import {
   srefTransitionOptions,
   uiSrefTargetEvent,
   uiSrefTargetRemovedEvent,
-} from './ui-sref.js';
+} from './sref-internals.js';
 import { UiView } from './ui-view.js';
 
 /**
