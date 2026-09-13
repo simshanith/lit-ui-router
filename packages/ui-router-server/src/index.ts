@@ -31,6 +31,7 @@ export type {
 // Transitions settle in microtasks; the timer is only a degrade-to-shell net.
 const SETTLE_TIMEOUT_MS = 100;
 
+/** One mount's routing configuration: its state tree, its redirects, and the tier that resolves them. */
 export interface MountConfig {
   /** The mount's state tree; dotted names nest, urls append (see {@link RouteDeclaration}). */
   routes: RouteDeclaration[];
@@ -58,12 +59,18 @@ export interface MountConfig {
    * own otherwise rule renders the rich notFound state. Redirect rules and
    * route matches take precedence; undeclared keeps the notFound verdict.
    */
-  otherwise?: { state: string };
+  otherwise?: {
+    /** Name of the declared, url-less state unknown paths verdict as. */
+    state: string;
+  };
 }
 
-// Discriminate on `kind`. (Consumer note: under oxlint's
-// switch-exhaustiveness-check + consistent-return combination, an if-chain
-// reads cleaner than a switch over this union.)
+/**
+ * What the caller should serve for a pathname — the one output of
+ * {@link ServerRouter.resolve}. Discriminate on `kind`. (Consumer note: under
+ * oxlint's switch-exhaustiveness-check + consistent-return combination, an
+ * if-chain reads cleaner than a switch over this union.)
+ */
 export type Verdict =
   /**
    * Serve the app shell. Status precedence: when `status` is absent, serve
@@ -76,7 +83,14 @@ export type Verdict =
    * 304 itself: it has no body (a 404 with a null body is malformed) and
    * would let a probe read cache freshness for a path that doesn't exist.
    */
-  | { kind: 'shell'; mount: string; status?: number }
+  | {
+      /** Discriminates the shell verdict. */
+      kind: 'shell';
+      /** Base of the mount that owned the pathname. */
+      mount: string;
+      /** Status to serve the shell as; absent means serve it however you normally would. */
+      status?: number;
+    }
   /**
    * Redirect to `location`: the mount-joined target path, which MAY carry
    * its own query string when the target declares search params. Callers
@@ -85,10 +99,25 @@ export type Verdict =
    * The matcher tier resolves pathnames only: incoming search values never
    * flow into redirect params.
    */
-  | { kind: 'redirect'; mount: string; location: string; status: number }
+  | {
+      /** Discriminates the redirect verdict. */
+      kind: 'redirect';
+      /** Base of the mount that owned the pathname. */
+      mount: string;
+      /** The mount-joined target path; merge the request's search with {@link mergeSearch}. */
+      location: string;
+      /** Redirect status to answer with (302 today). */
+      status: number;
+    }
   /** `mount` is set when a mount owned the pathname but nothing matched (per-mount 404s); absent when no mount matched at all. */
-  | { kind: 'notFound'; mount?: string };
+  | {
+      /** Discriminates the no-route verdict. */
+      kind: 'notFound';
+      /** Base of the mount that owned the pathname, when one did. */
+      mount?: string;
+    };
 
+/** The compiled resolver {@link createServerRouter} returns: a pathname in, a {@link Verdict} out. */
 export interface ServerRouter {
   /** Accepts a pathname, an absolute url string, or anything with a `pathname` (URL, Location). */
   resolve(pathnameOrUrl: string | { pathname: string }): Promise<Verdict>;

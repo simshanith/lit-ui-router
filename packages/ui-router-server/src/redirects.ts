@@ -34,8 +34,11 @@ export interface RouteDeclaration {
   redirectTo?: string | RedirectTarget;
 }
 
+/** A redirect target in state terms; the matcher tier formats it back into a path. */
 export interface RedirectTarget {
+  /** Name of the url-addressable state to redirect to. */
   state: string;
+  /** Params for the target's pattern; when present they replace the matched ones. */
   params?: RawParams;
 }
 
@@ -51,22 +54,31 @@ export interface RedirectTarget {
  * mount root instead.
  */
 export interface RedirectRule {
+  /** Pathnames to redirect: a matcher pattern (whose params carry into the target) or a RegExp. */
   pattern: RegExp | string;
+  /** Where matching pathnames go — a state name, or a {@link RedirectTarget} with params. */
   to: string | RedirectTarget;
 }
 
+/** The input to {@link compileRedirects}: the route set plus the rules evaluated over it. */
 export interface RedirectTable {
+  /** The states whose urls the table redirects between (see {@link RouteDeclaration}). */
   routes: RouteDeclaration[];
+  /** when()-style rules, evaluated in declaration order before per-state redirectTo entries. */
   rules?: RedirectRule[];
   /** Matcher compiler options (defaults: strict, case-sensitive). */
   config?: UrlMatcherCompilerConfig;
 }
 
+/** One url-addressable state, compiled by {@link compileRoutes}. */
 export interface CompiledRoute {
+  /** The state name the pattern came from. */
   name: string;
   /** The full pattern: this state's url appended to its ancestors'. */
   pattern: string;
+  /** The compiled pattern, for {@link matcher!exec | exec} and {@link matcher!format | format}. */
   matcher: CompiledMatcher;
+  /** The state's declared redirect, carried through unresolved (see {@link RouteDeclaration.redirectTo}). */
   redirectTo?: string | RedirectTarget;
 }
 
@@ -124,9 +136,11 @@ export function compileRoutes(
   return compiled;
 }
 
+/** What {@link matchRoute} reports for a matched pathname. */
 export interface RouteMatch {
   /** The route (state) name whose full pattern matched. */
   state: string;
+  /** The params extracted from the pathname, typed and defaulted. */
   params: RawParams;
 }
 

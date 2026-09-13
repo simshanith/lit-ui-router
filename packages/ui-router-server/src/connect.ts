@@ -27,8 +27,11 @@ import type { ServerRouter } from './index.ts';
 
 /** The subset of `http.IncomingMessage` the middleware reads (and rewrites). */
 export interface ConnectRequest {
+  /** The request target (`pathname?search`); the default shell host rewrites it. */
   url?: string;
+  /** The HTTP method, read by the navigation heuristic. */
   method?: string;
+  /** Request headers, lowercase-keyed; the adapter reads `accept` and strips validators. */
   headers: Record<string, string | string[] | undefined>;
 }
 
@@ -38,20 +41,25 @@ export interface ConnectRequest {
  * the relabeling patch must forward whichever shape the downstream used.
  */
 export interface ConnectResponse {
+  /** Writes the status line and headers; patched to relabel a status'd shell. */
   writeHead(statusCode: number, ...rest: unknown[]): unknown;
+  /** Sets one response header (the canonical `Link` on a shell verdict). */
   setHeader(name: string, value: string): unknown;
+  /** Ends the response, optionally with a body. */
   end(body?: string): unknown;
 }
 
 /** Connect's continuation: call with no argument to pass, with an error to fail. */
 export type ConnectNext = (error?: unknown) => void;
 
+/** Connect-shaped middleware: what {@link createConnectMiddleware} returns. */
 export type ConnectMiddleware = (
   req: ConnectRequest,
   res: ConnectResponse,
   next: ConnectNext,
 ) => void;
 
+/** Host hooks for {@link createConnectMiddleware}: asset IO, and which requests get verdicts. */
 export interface ConnectAdapterOptions {
   /**
    * Maps a shell verdict's mount to the path the default {@link ConnectAdapterOptions.serveShell | serveShell}

@@ -40,6 +40,7 @@ import type { ServerRouter } from './index.ts';
 /** The WinterCG handler: a verdict answered, or `null` to pass to the host. */
 export type FetchHandler = (request: Request) => Promise<Response | null>;
 
+/** Host hooks for {@link createFetchHandler}: asset IO, and which requests get verdicts. */
 export interface FetchAdapterOptions {
   /**
    * Maps a shell verdict's mount to the pathname the shell Request is built
