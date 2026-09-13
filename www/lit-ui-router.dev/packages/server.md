@@ -23,7 +23,10 @@ you.
 
 ::: warning Early days
 This package is published and dogfooded — the Worker behind this site runs it
-— but it is still `0.x`. The APIs below are live and covered by tests; they
+in production, serving
+[every level of the spectrum](/guides/server-route-matching#live-on-this-site)
+side by side, and the VitePress dev server runs the same mounts through the
+Vite plugin — but it is still `0.x`. The APIs below are live and covered by tests; they
 can still move in a minor release before `1.0`, so pin what you install.
 :::
 
@@ -308,22 +311,6 @@ same rule to itself, degrading failed or timed-out simulations to the shell
 rather than a wrong redirect or a spurious 404. Trailing slashes are strict
 on both sides; if your client relaxes `strictMode`, pass the same relaxation
 as the mount's `config`.
-
-## Status
-
-- **npm**: [`ui-router-server`](https://npmx.dev/package/ui-router-server) —
-  `0.1.0` on `latest`, an early `0.x` line that can still move in a minor.
-- **Source**:
-  [`packages/ui-router-server`](https://github.com/simshanith/lit-ui-router/tree/main/packages/ui-router-server)
-  — the code, its tests, and the bundle-size probes behind the tier table.
-- **Dogfood**: the Cloudflare Worker behind lit-ui-router.dev runs this
-  package in production today, serving
-  [every level of the spectrum](/guides/server-route-matching#live-on-this-site)
-  side by side; the VitePress dev server runs the same mounts through the
-  Vite plugin.
-- **Next**: content rendering (build-time and server-side) is the roadmap
-  axis; the release itself is tracked in
-  [issue #354](https://github.com/simshanith/lit-ui-router/issues/354).
 
 ## Further reading
 
