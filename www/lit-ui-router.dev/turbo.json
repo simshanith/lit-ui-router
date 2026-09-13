@@ -50,6 +50,7 @@
       "dependsOn": [
         "^build",
         "lit-ui-router#docs:api",
+        "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api",
@@ -62,6 +63,7 @@
       "dependsOn": [
         "^build:types",
         "lit-ui-router#docs:api",
+        "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api"
@@ -103,6 +105,7 @@
       "dependsOn": [
         "^build",
         "lit-ui-router#docs:api",
+        "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api",

@@ -4,7 +4,7 @@ import { customElement, property } from 'lit/decorators.js';
 import { Data, Equal } from 'effect';
 import { UIViewInjectedProps, RoutedLitElement } from 'lit-ui-router';
 
-import { RouterRefController } from '../effect/routerRefController.js';
+import { RouterRefController } from 'lit-ui-router-effect';
 import AuthService from '../global/authService.js';
 import './NavHeader.js';
 

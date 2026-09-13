@@ -1,0 +1,86 @@
+{
+  "name": "lit-ui-router-effect",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Effect bindings for lit-ui-router: a SubscriptionRef of the route and ref-following Lit ReactiveControllers",
+  "homepage": "https://lit-ui-router.dev/packages/effect",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
+  "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/lit-ui-router-effect"
+  },
+  "files": [
+    "dist/**",
+    "!dist/.*/**",
+    "src/*.ts"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
+      "default": "./dist/index.js"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build:js": "oxc-emit-js --development",
+    "build:types": "oxc-emit-dts",
+    "check:bundle": "check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
+    "codecov:bundle": "upload-entry-bundles",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/lit-ui-router-effect && typedoc",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "lint": "oxlint .",
+    "test": "VITEST_BROWSER_API_PORT=63350 vitest run",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63355 vitest run --coverage",
+    "test:lit2-compat": "lit2-compat-guard && VITE_EXPECT_LIT_MAJOR=2 VITEST_BROWSER_API_PORT=63351 vitest run",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:lit2": "lit2-compat-guard && tsc -p tsconfig.lit2-compat.json --noEmit",
+    "typecheck:peer-floor": "peer-floor-guard && tsc -p tsconfig.peer-floor.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
+  },
+  "devDependencies": {
+    "@tools/bundle-probe": "workspace:*",
+    "@tools/compat-guards": "workspace:*",
+    "@tools/happy-dom": "workspace:*",
+    "@tools/lit-test-env": "workspace:*",
+    "@tools/oxc-emit": "workspace:*",
+    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "effect": "catalog:",
+    "happy-dom": "catalog:",
+    "lit": "catalog:",
+    "lit-2": "catalog:lit2-compat",
+    "lit-ui-router": "workspace:*",
+    "lit-ui-router-floor": "catalog:peerFloor",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@uirouter/core": "catalog:publishedPeer",
+    "effect": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer",
+    "lit-ui-router": "catalog:publishedPeer"
+  }
+}

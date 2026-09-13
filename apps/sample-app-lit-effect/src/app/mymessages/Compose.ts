@@ -8,7 +8,7 @@ import DialogService from 'sample-app-shared/app/global/dialogService.js';
 import { dsrForgetFinishedState } from 'sample-app-shared/app/util/dsr-forget-finished-state.js';
 import { Message } from 'sample-app-shared/app/mymessages/interface.js';
 
-import { RouterRefController } from '../effect/routerRefController.js';
+import { RouterRefController } from 'lit-ui-router-effect';
 import AppConfig from '../global/appConfig.js';
 
 interface ComposeResolves {
