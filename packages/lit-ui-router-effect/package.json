@@ -1,7 +1,6 @@
 {
   "name": "lit-ui-router-effect",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0-rc.0",
   "description": "Effect bindings for lit-ui-router: a SubscriptionRef of the route and ref-following Lit ReactiveControllers",
   "homepage": "https://lit-ui-router.dev/packages/effect",
   "bugs": {
@@ -36,6 +35,7 @@
   "scripts": {
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-effect@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
@@ -52,11 +52,13 @@
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "devDependencies": {
+    "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/compat-guards": "workspace:*",
     "@tools/happy-dom": "workspace:*",
     "@tools/lit-test-env": "workspace:*",
     "@tools/oxc-emit": "workspace:*",
+    "@tools/release-config": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
@@ -69,6 +71,7 @@
     "lit-ui-router-floor": "catalog:peerFloor",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-markdown": "catalog:",
