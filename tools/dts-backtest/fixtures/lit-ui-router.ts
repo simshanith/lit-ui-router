@@ -32,21 +32,15 @@ import 'lit-ui-router/register';
 import 'lit-ui-router/ui-router.register';
 import 'lit-ui-router/ui-view.register';
 import {
+  provideRouter,
   requestRouter,
   routerContext,
   RouterContextRequestEvent,
+  getScopedRouter,
+  withRouterSync,
   type ContextType,
   type RouterContext,
 } from 'lit-ui-router/context';
-import {
-  configureServerRouter,
-  currentServerRouter,
-  provideRouter,
-  serverLocationPlugin,
-  ServerLocationConfig,
-  withServerRouter,
-  type ServerRouterOptions,
-} from 'lit-ui-router/server';
 import {
   SrefStatusController as PureSrefStatusController,
   TransitionController as PureTransitionController,
@@ -172,8 +166,8 @@ export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   return PureUIRouterLitElement.seekRouter(host);
 }
 
-// The context entry: the key carries the router type, and the helper takes any
-// EventTarget.
+// The context entry: the key carries the router type, the helper takes any
+// EventTarget, and the hand-off works with no element and no DOM.
 export function contextEntry(target: EventTarget): UIRouterLit | undefined {
   const key: RouterContext = routerContext;
   void key;
@@ -185,16 +179,12 @@ export function contextEntry(target: EventTarget): UIRouterLit | undefined {
   return value;
 }
 
-// The server entry: a router hand-off with no element and no DOM.
-export function serverEntry(root: EventTarget): string {
-  const options: ServerRouterOptions = { url: '/user/1', strictMode: false };
-  const router = configureServerRouter(new UIRouterLit(), options);
-  router.plugin(serverLocationPlugin);
-  void new ServerLocationConfig();
+export function handOff(root: EventTarget): string {
+  const router = setupRouter();
   const uninstall = provideRouter(root, router);
-  const href = withServerRouter(
+  const href = withRouterSync(
     router,
-    () => currentServerRouter()?.stateService.href('user', { id: 1 }) ?? '',
+    () => getScopedRouter()?.stateService.href('user', { id: 1 }) ?? '',
   );
   uninstall();
   return href;

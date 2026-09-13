@@ -16,7 +16,6 @@ const browserOnlySpecs = [
 // Plain node under the @lit-labs/ssr DOM shim; happy-dom would mask the shim's gaps.
 const nodeOnlySpecs = [
   'src/specs/context-ssr.spec.ts',
-  'src/specs/server-ssr.spec.ts',
   'src/specs/ssr-emit.spec.ts',
 ];
 
