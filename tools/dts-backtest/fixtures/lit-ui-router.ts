@@ -39,6 +39,15 @@ import {
   type RouterContext,
 } from 'lit-ui-router/context';
 import {
+  configureServerRouter,
+  currentServerRouter,
+  provideRouter,
+  serverLocationPlugin,
+  ServerLocationConfig,
+  withServerRouter,
+  type ServerRouterOptions,
+} from 'lit-ui-router/server';
+import {
   SrefStatusController as PureSrefStatusController,
   TransitionController as PureTransitionController,
   UIRouterLitElement as PureUIRouterLitElement,
@@ -174,6 +183,21 @@ export function contextEntry(target: EventTarget): UIRouterLit | undefined {
     callback: (router) => void router,
   });
   return value;
+}
+
+// The server entry: a router hand-off with no element and no DOM.
+export function serverEntry(root: EventTarget): string {
+  const options: ServerRouterOptions = { url: '/user/1', strictMode: false };
+  const router = configureServerRouter(new UIRouterLit(), options);
+  router.plugin(serverLocationPlugin);
+  void new ServerLocationConfig();
+  const uninstall = provideRouter(root, router);
+  const href = withServerRouter(
+    router,
+    () => currentServerRouter()?.stateService.href('user', { id: 1 }) ?? '',
+  );
+  uninstall();
+  return href;
 }
 
 // The register import above puts the tag-map augmentation in scope.

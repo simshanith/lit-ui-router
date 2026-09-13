@@ -970,6 +970,76 @@ For the flip side — composing the active flag with `classMap` instead of
 letting a directive own the `class` attribute — see
 [`SrefStatusController`](./reactive-components#active-link-status).
 
+## The router on the server
+
+A router is easy to build on the server; handing it to the code that renders is
+the hard part. In a browser every binding finds the router by asking its own
+element — `<ui-router>` answers a `ui-router-context` event, or the
+[`context-request`](/guides/reactive-components#finding-the-router-from-anything-else)
+protocol, on the way up the tree. A server render has no tree to walk: the
+renderer calls a directive's `render()` with no element behind it, so there is
+nothing to dispatch from and nothing to listen on.
+
+`lit-ui-router/server` is the answer to "where does the router come from here".
+It is a separate entry, not part of the root or `pure`, because it is the one
+surface a browser bundle should never carry — and it imports no DOM itself, so
+Node can load it before `@lit-labs/ssr`'s shim is installed.
+
+```ts
+import '@lit-labs/ssr/lib/install-global-dom-shim.js';
+import { render } from '@lit-labs/ssr';
+import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+
+const { UIRouterLit } = await import('lit-ui-router/pure');
+const { configureServerRouter, withServerRouter } =
+  await import('lit-ui-router/server');
+
+// one router per request, at the url the request asked for
+const router = configureServerRouter(new UIRouterLit(), {
+  url: new URL(request.url).pathname,
+  strictMode: false,
+});
+states.forEach((state) => router.stateRegistry.register(state));
+router.start();
+
+const markup = withServerRouter(router, () =>
+  collectResultSync(render(page())),
+);
+```
+
+**`withServerRouter(router, run)` is a synchronous slot, not an async context.**
+It sets a module-level variable, runs `run`, and restores the previous value in
+a `finally` — that is all. It is enough because `render()` from `@lit-labs/ssr`
+is a _sync generator_: consume it inside `run` with `collectResultSync` and
+every directive's `render()` has already happened by the time `withServerRouter`
+returns, `currentServerRouter()` reading the router each time. Return a promise
+from `run` instead and you get a `TypeError` rather than a router that silently
+went missing — nothing is detected, nothing is upgraded, and an async variant
+would be a separate export.
+
+**`provideRouter(root, router)`** is the other half: it answers the
+`context-request` protocol on any `EventTarget`, which on the server means
+`globalThis.litServerRoot`, the bottom of the renderer's event-target stack. Use
+it for elements that ask for their router by protocol — the same code path that
+`<ui-router>` serves in a browser — and pair it with `withServerRouter` when the
+same render also contains attribute bindings. It returns its own uninstall
+function; call it when the request is done.
+
+**`configureServerRouter`** exists for one reason worth spelling out: hrefs.
+`@uirouter/core`'s `memoryLocationPlugin` — the natural choice with no
+`window.location` — reports `html5Mode()` as `false`, so
+`stateService.href('sheet', { num: '7B' })` returns `#/sheet/7B` while the
+pushState client on the same route writes `/sheet/7B`. Every server-rendered
+link would differ from its hydrated self. `serverLocationPlugin` is the same
+in-memory service with html5 mode on, and `configureServerRouter` installs it,
+applies the mount's `baseHref`, and sets the requested url before any transition
+runs. Ask for the plugin directly if you would rather wire the rest yourself.
+
+What this does **not** yet do is make `srefHref` and the status directives read
+it — they still get `noChange` on the server, as the previous section describes.
+Wiring the directives onto this slot is the next step of
+[#829](https://github.com/simshanith/lit-ui-router/issues/829).
+
 ## What the server can't see
 
 **The fragment.** The server never sees it — which is exactly why a
