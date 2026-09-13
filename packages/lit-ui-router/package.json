@@ -95,6 +95,7 @@
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
     "@lit-labs/ssr": "catalog:",
+    "@lit/context": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/compat-guards": "workspace:*",
