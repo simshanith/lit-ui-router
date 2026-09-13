@@ -52,6 +52,7 @@ application states in a transaction-like manner.
 - **State-based Routing** - Hierarchical states with nested views
 - **Data Resolution** - Fetch data before rendering with built-in resolve system
 - **Navigation Directives** - `uiSref` and `uiSrefActive` for declarative navigation, with `aria-current` on active links out of the box
+- **Attribute-part forms** - `srefHref`, `srefActiveClass` and `srefAriaCurrent` bind the same links from inside the attribute, so the `href` is real markup a static analyser or server renderer can read — see the [API overview](https://lit-ui-router.dev/api/#attribute-part-forms)
 
 ## Get Started
 

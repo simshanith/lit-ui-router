@@ -91,6 +91,10 @@ class UserDetail extends LitElement {
 }
 ```
 
+## Navigation Links
+
+`uiSref` and `uiSrefActive` bind a link from the element; `srefHref`, `srefActiveClass` and `srefAriaCurrent` bind the same link from inside the attribute it writes, so the `href` is real markup a static analyser or server renderer can read — see [Attribute-part forms](https://lit-ui-router.dev/api/#attribute-part-forms).
+
 ## Documentation
 
 Visit [lit-ui-router.dev](https://lit-ui-router.dev) for full documentation, tutorials, and API reference.

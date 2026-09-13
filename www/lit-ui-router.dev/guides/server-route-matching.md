@@ -906,6 +906,70 @@ the path, so the worker can serve that app's own 404 page —
 user a way back into the app they were deep-linked into, instead of the
 site-wide page. Everything the worker needs is already in the verdict.
 
+## Links a server renderer can read
+
+Everything above is the verdict for one URL. The links the page ships are the
+other half, and the two directive forms differ there.
+[`uiSref`](/api/reference/directives/uiSref) and
+[`uiSrefActive`](/api/reference/directives/uiSrefActive) are element parts:
+they sit on the element and write to it from the outside, which only a live
+browser does. A server renderer runs `render()` and never `update()`, so what
+it emits is an `<a>` with no `href` — and a static analyser reading the
+template sees the same thing.
+
+[`srefHref`](/api/reference/directives/srefHref),
+[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) and
+[`srefActiveClass`](/api/reference/directives/srefActiveClass) bind from
+inside the attribute they affect, so the `href` is a real attribute in the
+template. A whole nav:
+
+```ts
+import { html, LitElement } from 'lit';
+import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
+
+class AppNav extends LitElement {
+  render() {
+    return html`<nav>
+      ${['home', 'users', 'about'].map(
+        (state) =>
+          html`<a
+            href=${srefHref(state)}
+            class="nav-link ${srefActiveClass({ state, activeClasses: ['active'] })}"
+            aria-current=${srefAriaCurrent({ state })}
+            >${state}</a
+          >`,
+      )}
+    </nav>`;
+  }
+}
+```
+
+While the router sits at `users`, that link is
+`<a href="/users" class="nav-link active" aria-current="page">`; at
+`users.detail` the `active` class stays and `aria-current` is gone, because
+the token is exact-match only. The three are covered in
+[Attribute-part forms](/api/#attribute-part-forms).
+
+`srefHref`'s `render()` is a function of the router and its arguments alone —
+it returns the `href` string, or `nothing` for a state with no url — and it
+touches no DOM. Everything that needs the element (finding the router, the
+click handler, announcing the target to an enclosing container) lives in
+`update()`.
+
+**What still doesn't work today.** There is no way to hand the directives a
+router without an element, which is the piece server rendering needs and is
+tracked in [#564](https://github.com/simshanith/lit-ui-router/issues/564).
+Until it lands, a server renderer running `render()` gets `noChange` from all
+three: `srefHref` returns it while no router has been found, and the two
+status directives return it before a status exists. That is deliberate — the
+attribute is left exactly as authored rather than cleared, so an `href` a
+server wrote by another route survives hydration untouched and the client
+takes over on the first update that finds a router.
+
+For the flip side — composing the active flag with `classMap` instead of
+letting a directive own the `class` attribute — see
+[`SrefStatusController`](./reactive-components#active-link-status).
+
 ## What the server can't see
 
 **The fragment.** The server never sees it — which is exactly why a
