@@ -87,9 +87,12 @@ production build — where the runtime says nothing at all.
 
 Three of them are one concern seen from three angles. A link can learn it is
 active from the [`uiSrefActive`](/api/reference/directives/uiSrefActive)
-element part, from a `srefActiveClass` attribute part, or from a
-`SrefStatusController` the host composes with `classMap` — and only the first
-writes `aria-current` itself. `sref-active-aria-current` protects the authored
+element part, from a
+[`srefActiveClass`](/api/reference/directives/srefActiveClass) attribute part,
+or from a
+[`SrefStatusController`](/api/reference/controllers/SrefStatusController) the
+host composes with `classMap` — and only the first writes `aria-current`
+itself. `sref-active-aria-current` protects the authored
 attribute from the element part's takeover, `sref-active-class-aria-current`
 asks for the attribute the attribute part never writes, and
 `sref-status-aria-current` asks for it where the status never reaches the
@@ -161,10 +164,30 @@ navigating, which is the whole reason the rule exists.
 
 Following ESLint core's own policy: a change that makes `recommended` or an
 existing rule stricter — new reports on code that previously passed — ships
-as a **major**. The option-aware tier widened `recommended` during the
-1.0.0 release candidates, where a widening cost nobody a major; the remaining
-roadmap (a state-aware tier) is the same trajectory, so
-expect majors rather than silent tightening, and pin accordingly.
+as a **major**.
+
+One carve-out, and it is what the `1.1` line rests on: a rule that can only
+match an API the router did not yet export reports on no code that could have
+been written, so it ships as a **minor**. The attribute-part tier
+([`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md),
+[`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md),
+and `directive-position`'s attribute rows) fires only on
+[`srefHref`](/api/reference/directives/srefHref),
+[`srefActiveClass`](/api/reference/directives/srefActiveClass),
+[`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) and
+[`SrefStatusController`](/api/reference/controllers/SrefStatusController)
+imported from `lit-ui-router`, all new in `lit-ui-router@1.14` — a codebase on
+an earlier router cannot trip any of them. The test is what a rule _can_
+match, not how rare a match would be: a new report reachable through `uiSref`
+or `uiSrefActive`, which have shipped since `1.0`, is a major either way. A
+tightened option default is a major too, and so is a rule for a router API
+that existed but went undocumented — "did not export" is the line, not
+"nobody used it".
+
+The option-aware tier widened `recommended` during the 1.0.0 release
+candidates, where a widening cost nobody a major; the remaining roadmap (a
+state-aware tier) is the same trajectory, so expect majors rather than silent
+tightening, and pin accordingly.
 
 ## Status
 

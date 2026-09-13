@@ -175,7 +175,11 @@ Optionally, exempt test fixtures, whose elements exist to be driven rather than 
 
 ## Semver policy
 
-Following ESLint core's own policy: a change that makes `recommended` or an existing rule stricter — new reports on code that previously passed — ships as a **major**. The option-aware tier (`sref-assign-href`, `sref-active-aria-current`, `directive-position`) widened `recommended` during the 1.0.0 release candidates, where a widening cost nobody a major. The remaining roadmap (a state-aware tier) is the same trajectory, so expect majors, not silent tightening.
+Following ESLint core's own policy: a change that makes `recommended` or an existing rule stricter — new reports on code that previously passed — ships as a **major**.
+
+One carve-out, and it is what the 1.1 line rests on: a rule that can only match an API the router did not yet export reports on no code that could have been written, so it ships as a **minor**. The attribute-part tier (`sref-active-class-aria-current`, `sref-status-aria-current`, and `directive-position`'s attribute rows) fires only on `srefHref`, `srefActiveClass`, `srefAriaCurrent` and `SrefStatusController` imported from `lit-ui-router`, all new in `lit-ui-router@1.14` — a codebase on an earlier router cannot trip any of them. The test is what a rule *can* match, not how rare a match would be: a new report reachable through `uiSref` or `uiSrefActive`, which have shipped since 1.0, is a major either way. A tightened option default is a major too, and so is a rule for a router API that existed but went undocumented — "did not export" is the line, not "nobody used it".
+
+The option-aware tier (`sref-assign-href`, `sref-active-aria-current`, `directive-position`) widened `recommended` during the 1.0.0 release candidates, where a widening cost nobody a major. The remaining roadmap (a state-aware tier) is the same trajectory, so expect majors, not silent tightening.
 
 ## Module format and Node support
 
