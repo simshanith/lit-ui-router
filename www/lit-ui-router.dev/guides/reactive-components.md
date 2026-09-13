@@ -41,7 +41,7 @@ from the nearest `<ui-router>` (or `<ui-view>`) ancestor via the
 them all on `hostDisconnected` — nothing leaks when elements come and go
 from the DOM.
 
-## Finding the router from anything else
+## Router discovery
 
 Controllers do that discovery for you. Anything else — a store, an element
 that is not a Lit host, a third-party component — asks the same provider
