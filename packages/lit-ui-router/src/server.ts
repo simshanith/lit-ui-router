@@ -11,6 +11,7 @@ import {
 
 import { contextRequestEventName, isRouterContextRequest } from './context.js';
 import type { UIRouterLit } from './core.js';
+import { getServerRouter, setServerRouter } from './server-slot.js';
 
 /**
  * Answers `routerContext` requests — `lit-ui-router/context`'s key — that reach
@@ -65,9 +66,6 @@ export const provideRouter: (
   return () => root.removeEventListener(contextRequestEventName, listener);
 };
 
-/** The per-render router. A plain module slot, never an async context. */
-let currentRouter: UIRouterLit | undefined;
-
 /**
  * The router the innermost enclosing
  * {@link withServerRouter | `withServerRouter`} call set, or `undefined`
@@ -84,7 +82,7 @@ let currentRouter: UIRouterLit | undefined;
  */
 export const currentServerRouter: () => UIRouterLit | undefined = ():
   | UIRouterLit
-  | undefined => currentRouter;
+  | undefined => getServerRouter();
 
 /**
  * Runs `run` with `router` in the module slot
@@ -127,13 +125,13 @@ export const withServerRouter: <T>(router: UIRouterLit, run: () => T) => T = <
   router: UIRouterLit,
   run: () => T,
 ): T => {
-  const previous = currentRouter;
-  currentRouter = router;
+  const previous = getServerRouter();
+  setServerRouter(router);
   let result: T;
   try {
     result = run();
   } finally {
-    currentRouter = previous;
+    setServerRouter(previous);
   }
   if (typeof (result as { then?: unknown } | undefined)?.then === 'function') {
     throw new TypeError(

@@ -6,6 +6,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
+import { seekServerRouter } from './server-slot.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
   clickBelongsToBrowser,
@@ -22,11 +23,11 @@ import { UiView } from './ui-view.js';
  *
  * `render()` is a function of the router and the arguments alone — it returns
  * the `href` and touches no DOM — which is the shape a server renderer needs,
- * since it runs `render()` and never `update()`. Everything that needs the
- * element (finding the router, the click handler, the target event for an
- * enclosing `uiSrefActive`) lives in `update()`, which only a live document
- * runs. Handing the directive a router without an element is the remaining
- * server-side piece.
+ * since it runs `render()` and never `update()`. It finds its router from the
+ * element in a document and from the server's render-scoped router under
+ * `@lit-labs/ssr`. Everything else that needs the element (the click handler,
+ * the target event for an enclosing `uiSrefActive`) lives in `update()`, which
+ * only a live document runs.
  *
  * @see {@link srefHref} for the public API
  *
@@ -82,13 +83,16 @@ export class SrefHrefDirective extends AsyncDirective {
    * The `href` for the target state; `nothing` when the state has no url;
    * `noChange` until a router is found, so an attribute a server wrote
    * survives hydration untouched.
+   *
+   * The server router is looked up per render rather than cached: a server
+   * directive instance renders once, and a client one never finds one.
    */
   render(
     state: string,
     params?: RawParams,
     options?: TransitionOptions,
   ): string | typeof nothing | typeof noChange {
-    const $state = this.uiRouter?.stateService;
+    const $state = (this.uiRouter ?? seekServerRouter())?.stateService;
     if (!$state) {
       if (this._seekedRouter) {
         this.warnMissingRouter(state);

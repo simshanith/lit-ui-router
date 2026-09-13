@@ -12,6 +12,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
+import { seekServerRouter } from './server-slot.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
@@ -51,9 +52,10 @@ type deregisterFn = () => void;
  * recompute its {@link SrefStatus}, and the push of each new value into the
  * attribute.
  *
- * `render()` is a function of `status` and the params alone, so a server
- * renderer that runs it without `update()` gets `noChange` — the attribute
- * is left as authored — rather than a crash.
+ * `render()` is a function of `status` and the params alone. A server renderer
+ * runs it without `update()`, so it fills `status` from the render-scoped
+ * server router first; with no router in reach the value stays `noChange` and
+ * the attribute is left as authored.
  *
  * @category directives
  */
@@ -113,6 +115,25 @@ export abstract class SrefStatusDirective<
    * @internal
    */
   protected abstract commit(): unknown;
+
+  /**
+   * Fills `status` in a server render, where `update()` never ran: seek the
+   * server router, build the named target, merge its status. Container mode
+   * has no links to merge on the server and stays `undefined`.
+   *
+   * A server directive instance renders once, so this resolves at most once.
+   *
+   * @internal
+   */
+  protected serverStatus(params: Params): void {
+    if (this.status || this.uiRouter) return;
+    const router = seekServerRouter();
+    if (!router) return;
+    this.targets.router = router;
+    this.targets.params = params;
+    this.targets.setExplicit();
+    this.status = this.targets.status();
+  }
 
   /** @internal */
   update(part: AttributePart, [params]: [Params]): unknown {
@@ -336,6 +357,7 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
    * `noChange` before a status exists.
    */
   render(params: SrefActiveClassParams): string | typeof noChange {
+    this.serverStatus(params);
     if (!this.status) {
       return noChange;
     }
@@ -454,16 +476,14 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
    * The token for the current status, `nothing` to remove the attribute, or
    * `noChange` before a status exists.
    */
-  render({
-    value = 'page',
-  }: SrefAriaCurrentParams):
-    | AriaCurrentValue
-    | typeof nothing
-    | typeof noChange {
+  render(
+    params: SrefAriaCurrentParams,
+  ): AriaCurrentValue | typeof nothing | typeof noChange {
+    this.serverStatus(params);
     if (!this.status) {
       return noChange;
     }
-    return resolveAriaCurrent(this.status, value);
+    return resolveAriaCurrent(this.status, params.value);
   }
 }
 

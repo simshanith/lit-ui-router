@@ -17,6 +17,7 @@ const browserOnlySpecs = [
 const nodeOnlySpecs = [
   'src/specs/context-ssr.spec.ts',
   'src/specs/server-ssr.spec.ts',
+  'src/specs/sref-ssr.spec.ts',
   'src/specs/ssr-emit.spec.ts',
 ];
 

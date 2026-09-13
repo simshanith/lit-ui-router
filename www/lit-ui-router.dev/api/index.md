@@ -86,9 +86,9 @@ router.start();
 write to it from the outside, so a reader that is not a live browser — a
 server renderer, an accessibility linter — sees an `<a>` with no `href`.
 The `sref*` directives do the same jobs from inside the attribute they
-affect, so the template says what the browser will show. A linter reads
-that today; server rendering also needs a way to hand the directives a
-router, which is still open ([#564](https://github.com/simshanith/lit-ui-router/issues/564)):
+affect, so the template says what the browser will show. A linter reads that,
+and so does a server render given a router — see
+[Server Rendering](#server-rendering):
 
 ```html
 <a href=${srefHref('users')}
@@ -303,6 +303,10 @@ before any shim, and it is not re-exported from the root or `pure`.
 - `currentServerRouter()` - reads the router in scope
 - `provideRouter(root, router)` - answers `context-request` on a render root
 - `configureServerRouter(router, options)` - puts a router on the path-shaped plugin at the requested url
+
+`srefHref`, `srefActiveClass` and `srefAriaCurrent` read whichever of the two
+the render set up, so a server-rendered nav carries real hrefs and active
+markup.
 
 See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server).
 

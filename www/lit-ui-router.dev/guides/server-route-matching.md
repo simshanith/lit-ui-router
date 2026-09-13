@@ -952,19 +952,19 @@ the token is exact-match only. The three are covered in
 
 `srefHref`'s `render()` is a function of the router and its arguments alone —
 it returns the `href` string, or `nothing` for a state with no url — and it
-touches no DOM. Everything that needs the element (finding the router, the
-click handler, announcing the target to an enclosing container) lives in
-`update()`.
+touches no DOM. It finds the router from its element in a browser and from the
+render-scoped router described in
+[The router on the server](#the-router-on-the-server) under `@lit-labs/ssr`.
+What is left in `update()` is what genuinely needs the element: the click
+handler and announcing the target to an enclosing container.
 
-**What still doesn't work today.** There is no way to hand the directives a
-router without an element, which is the piece server rendering needs and is
-tracked in [#564](https://github.com/simshanith/lit-ui-router/issues/564).
-Until it lands, a server renderer running `render()` gets `noChange` from all
-three: `srefHref` returns it while no router has been found, and the two
-status directives return it before a status exists. That is deliberate — the
-attribute is left exactly as authored rather than cleared, so an `href` a
-server wrote by another route survives hydration untouched and the client
-takes over on the first update that finds a router.
+**With no router in reach all three return `noChange`**, which leaves the
+attribute exactly as authored rather than clearing it: an `href` a server wrote
+by another route survives hydration untouched, and the client takes over on the
+first update that finds a router. Container mode — `srefActiveClass` with no
+`state` — is the one shape that always lands there on the server, since the
+enclosed links announce themselves through element events a server render has
+no element to fire.
 
 For the flip side — composing the active flag with `classMap` instead of
 letting a directive own the `class` attribute — see
@@ -1035,10 +1035,13 @@ in-memory service with html5 mode on, and `configureServerRouter` installs it,
 applies the mount's `baseHref`, and sets the requested url before any transition
 runs. Ask for the plugin directly if you would rather wire the rest yourself.
 
-What this does **not** yet do is make `srefHref` and the status directives read
-it — they still get `noChange` on the server, as the previous section describes.
-Wiring the directives onto this slot is the next step of
-[#829](https://github.com/simshanith/lit-ui-router/issues/829).
+**The attribute directives read both.** `srefHref`, `srefActiveClass` and
+`srefAriaCurrent` take the router they could not seek from an element: the
+`withServerRouter` slot first, then a `provideRouter` on
+`globalThis.litServerRoot`. A nav rendered inside `withServerRouter` ships the
+real `href`, the `active` and exact classes, and `aria-current` for the state
+the request settled on — the markup the client would paint first, so hydration
+has nothing to correct.
 
 ## What the server can't see
 
