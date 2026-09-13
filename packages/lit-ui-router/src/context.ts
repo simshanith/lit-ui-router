@@ -184,10 +184,8 @@ export interface RequestRouterOptions {
  * Requests the router from whichever provider answers on `target`, and returns
  * the value a provider supplied synchronously.
  *
- * The target is any `EventTarget`, which is what makes this one call work on
- * both sides of the seam: an element passes itself, and a server renderer
- * passes `globalThis.litServerRoot` — `@lit-labs/ssr`'s root event target —
- * where no element exists. Returns `undefined` when nobody answered.
+ * The target is any `EventTarget`, not only an element. Returns `undefined`
+ * when nobody answered.
  *
  * @param target - the event target to dispatch the request from
  * @param options - subscription and callback options
