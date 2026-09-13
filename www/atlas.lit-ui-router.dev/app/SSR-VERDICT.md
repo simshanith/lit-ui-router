@@ -5,17 +5,21 @@
 The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
 
 - **1** `<ui-view>` throws under the DOM shim (`createDocumentFragment` in a
-  field initialiser) — #803
-- **2** an SSR-safe attribute-position `sref` — #564 (pre-existing)
-- **3** document the DOM-shim import order (the static-import finding in §3) — #808
-- **4** patterns are not existence: every `:id` route ships a soft-404 — #804
-- **5** default the bare-mount-base rule, or warn at construction — #805
-- **6** a prerender entry: mounts + `renderShell` — #806
+  field initialiser) — #803. **Closed in 1.13.0 — but server-silent, not
+  server-rendering.** See §5.1.
+- **2** an SSR-safe attribute-position `sref` — #564 (pre-existing). **Shipped
+  as `srefHref`/`srefActiveClass`/`srefAriaCurrent` in 1.14.0 (#827) —
+  half-delivered.** See §5.2.
+- **3** document the DOM-shim import order (the static-import finding in §3) — #808. Open.
+- **4** patterns are not existence: every `:id` route ships a soft-404 — #804. Open.
+- **5** default the bare-mount-base rule, or warn at construction — #805. Open.
+- **6** a prerender entry: mounts + `renderShell` — #806. Open — no `./prerender`
+  export at `ui-router-server@0.1.2`.
 - **7** "the view has re-rendered" has no documented signal — `onSuccess`
   settles before `<ui-view>` swaps; the recipe is `transition.promise` then
-  `updateComplete` on every view and its element — #812
-- **9** the Navigation API plugin's interception hazard — #750 (pre-existing)
-- **10** static hosts add a trailing slash; `strict: false` on both sides — #807
+  `updateComplete` on every view and its element — #812. Open.
+- **9** the Navigation API plugin's interception hazard — #750 (pre-existing). Open.
+- **10** static hosts add a trailing slash; `strict: false` on both sides — #807. Open.
 - **8** the resolves generic: a typed `RoutedLitTemplate` rejected at
   `component:` with the error pointing away from the generic — #813. Filed
   with a correction to §5's account (four shapes compiled under `--strict`):
@@ -23,7 +27,7 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
   Manifest }>[]`, is the fix for a homogeneous table, and a bare
   `RoutedLitTemplate` still drops in beside a typed view. All-optional members
   are forced only by a heterogeneous table — two views with different required
-  shapes — which is the atlas's case, at the cost of `?.` at every use site.
+  shapes — which is the atlas's case, at the cost of `?.` at every use site. Open.
 
 All ten asks are accounted for. One more, found after the verdict:
 `urlService.rules.initial({ state })` erases a first-load query string (see
@@ -42,6 +46,16 @@ did; the probes that produced the quoted output run on every `npm run build`
 `vite@8.2.2`, node 24.18.0. Paths are the current ones — the app sits at the site
 root, the flat set under `/set/` — and a finding that only made sense under the
 app's first `/app/` prefix says so.
+
+**Update, 2026-09-13.** The atlas is now on `lit-ui-router@1.14.1` /
+`ui-router-server@0.1.2` (commit `39e452c2`), and the sref cutover has landed
+(commit `0f4862f9`: 21 `uiSref` sites → `srefHref`, 7 `uiSrefActive` sites →
+`srefActiveClass` + `srefAriaCurrent`). `prerender.ts` still keeps its own
+plain-`href` server template set — `srefHref` returns `noChange` when it
+renders with no router reachable, which is every server render today (see
+§5.2 and §7). Everything below this line is the original measurement, taken
+against `ui-router-server@0.1.1` / `lit-ui-router@1.11.2`; where a finding has
+since shipped or changed, a dated note says so inline.
 
 ---
 
@@ -167,6 +181,17 @@ is structural. A literal `href` written *alongside* the directive does survive:
 
 That is the workaround this app ships (§4), and worth recommending out loud.
 
+**Update, 2026-09-13.** `srefHref`/`srefActiveClass`/`srefAriaCurrent` shipped
+in 1.14.0 (#827) and the atlas has cut its templates over to them (commit
+`0f4862f9`). They still emit nothing server-side, for a different reason than
+`uiSref`'s: they are attribute-part directives, which `@lit-labs/ssr` *can*
+render, but the package patches every directive to call `render()` and never
+`update()` (`@lit-labs/ssr/lib/render-value.js:15-21`), and `update()`
+(`sref-href.ts:115-137`) is the only place `this.uiRouter` is ever set — so
+`render()` sees no router and bails to `noChange` (`sref-href.ts:91-96`).
+`prerender.ts` keeps its own plain-`href` template set for exactly this
+reason. See §5.2 and §7.
+
 ### `<ui-view>` — throws
 
 ```text
@@ -187,6 +212,18 @@ not help: the element is a live view host whose whole job is to swap components
 in response to a running router, and there is no router on the server.
 `<ui-router>` **does** render (shadow root with a `<slot>`), so the wrapper is
 not the blocker; `<ui-view>` is.
+
+**Update, 2026-09-13.** #803 closed in 1.13.0 — but it made `<ui-view>`
+*server-silent*, not server-rendering. `@lit-labs/ssr` doesn't call
+`connectedCallback` by default, so today `<ui-view>` emits exactly
+`<template shadowrootmode="open"><slot></slot></template>` and nothing else;
+the throw above is gone only because the code path that produced it never
+runs. Force `connectedCallback` on (`LitElementRenderer.renderOptions`) and
+`<ui-view>` throws the same `document.createDocumentFragment` error at
+`ui-view.ts:279`, then `Cannot read properties of undefined (reading
+'values')` off `this.childNodes` at `ui-view.ts:280`. A truly SSR-rendering
+`<ui-view>` is still ahead of the package — tracked as part of #829, not a
+reopen of #803. See §5.1.
 
 ### A registration trap, reproducible
 
@@ -254,19 +291,77 @@ Ordered by how much each would have saved me.
    can only ever render an empty shell on the server, *not throwing* is the
    difference between "prerender the shell and let the client fill it" and
    "write a second template set".
+
+   **Status, 2026-09-13.** Shipped as #803, closed in `lit-ui-router@1.13.0`
+   (#814, +#818 tests, #817 docs): `inner` moved out of the field initialiser
+   to `ui-view.ts:99` and content capture moved to `connectedCallback`. The fix
+   holds only because `@lit-labs/ssr` skips `connectedCallback` by default —
+   `<ui-view>` now emits a clean, empty `<template shadowrootmode="open">`
+   shell and nothing throws. Force `connectedCallback` on and it throws the
+   same way it always did, first at `ui-view.ts:279`
+   (`document.createDocumentFragment`), then at `:280` (`this.childNodes`). So
+   the ask is answered exactly as scoped — *don't throw* — and a
+   server-*rendering* `<ui-view>` remains open work, folded into #829.
+
 2. **`lit-ui-router`: an SSR-safe `srefHref` companion.** Repo #689 already
    plans an `srefHref` attribute directive. An **attribute**-part directive can
    be server-rendered, which is the whole game: `<a href=${srefHref('sheet', {num})}>`
    would let one template serve both sides and make hydration possible. This is
    the single highest-value item on the list.
+
+   **Status, 2026-09-13.** Shipped as #564 → #827, closed in
+   `lit-ui-router@1.14.0`: `srefHref`, `srefActiveClass`, and `srefAriaCurrent`
+   all exist and this app has cut its 28 element-part sites over to them
+   (commit `0f4862f9`: 21 `uiSref` → `srefHref`, 7 `uiSrefActive` →
+   `srefActiveClass` + `srefAriaCurrent`). Half-delivered: the directives are
+   attribute-part, so `@lit-labs/ssr` *can* invoke them, but the package
+   patches every directive class to call only `render()`, never `update()`
+   (`@lit-labs/ssr/lib/render-value.js:15-21`) — and `update()`
+   (`sref-href.ts:115-137`) is the only place `this.uiRouter` is ever set, via
+   `UIRouterLitElement.seekRouter(element)` dispatching a `ui-router-context`
+   event from `this.element = part.element` (`sref-href.ts:128`,
+   `ui-router.ts:70-74`). A server-side `AttributePart` carries `{tagName}`
+   only, no element (`render-value.js:538-545`), so there is no element to
+   dispatch from — `render()` finds no router and bails to `noChange`
+   (`sref-href.ts:91-96`). Wrapping the directive in a real `<ui-router
+   .uiRouter=${router}>`, or listening for `ui-router-context` on
+   `globalThis.litServerRoot` or a custom `eventTargetStack` root, all measure
+   **0** events heard. This constraint was handed off to #829 (seconded by
+   #838). The smallest fix found: widen the lookup at `sref-href.ts:91` to
+   `(this.uiRouter ?? this.options.router ?? ambientRouter())?.stateService`,
+   with an optional `router` on the directives' options (mirroring
+   `SrefStatusControllerOptions.router`, the one path that already works
+   pre-connect) and a module-level `provideRouter()`/`clearRouter()` pair on a
+   new side-effect-free `lit-ui-router/server` entry for templates that don't
+   thread options through — the emitter sets it around the render, the
+   browser never calls it. `srefActiveClass`/`srefAriaCurrent` get the same
+   fix for free, since they already route through `SrefStatusController`.
+   Until it lands, `prerender.ts` keeps its own plain-`href` server template
+   set — the workaround this app still ships.
 3. **`lit-ui-router`: document the DOM-shim import order.** One line in the docs
    ("load `lit-ui-router` via dynamic import after installing the shim") would
    save the next person a silent, error-free wrong answer.
+
+   **Status, 2026-09-13.** Open, #808, nothing shipped. Re-confirmed at
+   1.14.1: `customElements.get('ui-view')` is `undefined` before a static
+   import in the same module as the shim, `function` after a dynamic one. The
+   atlas's workaround is unchanged — `prerender.ts` still loads
+   `lit-ui-router` with a dynamic `await import(...)` after installing the
+   shim.
 4. **`ui-router-server`: a "patterns are not existence" section.** With the
    `{num:(?:a|b|c)}` recipe. Every `:id` route ships a soft-404 without it, and
    that is the exact thing the package is for.
+
+   **Status, 2026-09-13.** Open, #804, nothing shipped. The atlas's own
+   workaround still stands: the `/sheet/{num:(?:${alternates.join('|')})}`
+   alternation in `mountsFor()` (`src/routes.ts`).
 5. **`ui-router-server`: default the bare-mount-base redirect**, or warn at
    construction when a mount has no rule for the empty subpath.
+
+   **Status, 2026-09-13.** Open, #805, nothing shipped. No longer live for
+   this app — the site moved off the `/app` mount base to the root — but the
+   atlas keeps its `/^$/` redirect rule as insurance, and the ask stands for
+   other consumers.
 6. **`ui-router-server`: a prerender adapter.** `resolve()` per path is easy, but
    every consumer will then write the same loop: enumerate routes, resolve,
    write `<subpath>/index.html`, emit `_redirects` / `_headers`. An
@@ -274,6 +369,15 @@ Ordered by how much each would have saved me.
    `renderShell(verdict, path) => string` callback would be ~60 lines in the
    package and would delete ~120 from every consumer. It also keeps the
    "verdict engine, not a framework" line intact: the caller still renders.
+
+   **Status, 2026-09-13.** Open, #806, nothing shipped. `ui-router-server@0.1.2`
+   exports `. ./connect ./fetch ./hono ./matcher ./redirects ./simulate
+   ./vite` — still no `./prerender`. The ~120-line emit loop in this app's
+   `prerender.ts` is still hand-written, and active discussion has added a
+   requirement: the entry needs to own or expose the render's root
+   `EventTarget` so a server-side router can be handed to the sref directives
+   (ask 2, above) — plus a server-side location plugin, so hrefs come out as
+   paths and not `#/sheet/...` (see §7).
 7. **`lit-ui-router`: document "the view has re-rendered."** Unrelated to SSR
    but found in the same build. `document.startViewTransition()` needs a promise
    that resolves when the DOM has changed. `onSuccess` fires when the
@@ -291,6 +395,11 @@ Ordered by how much each would have saved me.
    `transition.promise`, then each `<ui-view>`'s `updateComplete`" — and the
    same recipe fixed a second bug in the same layer: polling the DOM by frame
    after `onSuccess` finds the *outgoing* view's element first.
+
+   **Status, 2026-09-13.** Open, #812, nothing shipped — docs-only. The
+   atlas's own `src/experimental/view-rendered.ts` already encodes the
+   recipe; the same await is the one the hydration seam's boot-transition
+   contract will need (see §7).
 8. **Types: `LitStateDeclaration<T>`'s resolves generic is hard to use.** A view
    typed `RoutedLitTemplate<{ manifest: Manifest }>` is not assignable to
    `LitStateDeclaration`'s default `Record<string, any>` — parameter
@@ -299,6 +408,10 @@ Ordered by how much each would have saved me.
    **object type alias with all members optional**" — true for a heterogeneous
    route table; for a homogeneous one, thread the generic onto the declaration
    instead (see Filed, #813). Worth a docs line, or a looser default.
+
+   **Status, 2026-09-13.** Open, #813, nothing shipped — docs-only. The
+   atlas's typed views still pay `?.` at every use site for the heterogeneous
+   table.
 9. **`ui-router-navigation-location-plugin@0.3.0`: intercept your own
    navigations, or say in the Quick Start that the app must.** Found by a
    Playwright pass against the deployed site: with the plugin installed per
@@ -320,12 +433,20 @@ Ordered by how much each would have saved me.
    default (an opt-out for apps that want the cross-document behaviour), or
    move the listener into the Quick Start as required setup. This app wires
    the listener in `src/router.ts`.
+
+   **Status, 2026-09-13.** Open, #750 (pre-existing), nothing shipped. The
+   atlas still wires its own `navigate` interceptor in `src/router.ts`,
+   unchanged, and is cited as a ready-made example for the ask.
 10. **`ui-router-server` docs: a "static hosts add a slash" note.** The
     prerender recipe (`<subpath>/index.html`) is the layout Pages, Netlify and
     S3-style hosts 308 onto a trailing slash, and core's default `strictMode`
     then rejects every deep link. `strict: false` on the mount and
     `strictMode(false)` in the browser is the pairing; the prerender adapter
     from ask 6 should default to it.
+
+    **Status, 2026-09-13.** Open, #807, nothing shipped. The atlas still
+    ships `strict: false` on the mount and `strictMode(false)` in the
+    browser, unchanged.
 
 ## 6. Verdict, in one paragraph
 
@@ -340,3 +461,25 @@ under a DOM shim. Fix those two and this app's server templates collapse into
 its client templates, and hydration becomes possible. Until then, prerendering a
 `lit-ui-router` app means writing the markup twice — which is entirely doable,
 and is what `prerender.ts` does, but should be said out loud in the docs.
+
+## 7. Hydration — update, 2026-09-13
+
+Those two fixes turned out not to be enough on their own, and a follow-on
+spike (against `lit-ui-router@1.14.1`) measured why. `@lit-labs/ssr-client`
+arms hydration by patching `LitElement.prototype.createRenderRoot`; `<ui-view>`
+declares its own `createRenderRoot` (`ui-view.ts:102-104`, returning `this` for
+light DOM) as an **own** prototype method, which shadows that patch entirely —
+so the hydration flag is never set and `<ui-view>` always takes the plain
+`render()` branch, never `hydrate()`, on any update. Driven live in headless
+Chromium against identical server bytes: a plain `<div>` hydrated with lit's
+own `hydrate()` retains the server's node with **0 added, 0 removed**; the same
+bytes rendered inside `<ui-view>` are wholly rebuilt — 7 added / 6 removed in
+natural boot order, 10 added / 12 removed when the router is built before the
+elements are defined — **0 server nodes retained either way**. Separately, a
+server-side router has no path-shaped location to hand a directive even once
+the hand-off above is fixed: `MemoryLocationConfig` hard-assigns
+`html5Mode = () => false` as an own property (shadowing any prototype
+override), so `stateService.href(...)` returns `#/sheet/7B` rather than
+`/sheet/7B` on the server. This app doesn't hit that gap today — `prerender.ts`
+writes its own paths — but it blocks the sref hand-off (ask 2) from being
+useful once it lands, and needs to ship alongside it.
