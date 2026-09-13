@@ -56,7 +56,7 @@ html`<a
   aria-current=${srefAriaCurrent({ state: 'home' })}
   >Home</a
 >`;
-// or let the element part own both
+// container mode on a wrapper: an <li> is not a link, so nothing is owed
 html`<li class=${srefActiveClass({})}><a href="/home">Home</a></li>`;
 ```
 

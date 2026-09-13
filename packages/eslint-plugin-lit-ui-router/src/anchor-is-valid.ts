@@ -61,8 +61,7 @@ const getLiteralAttributeValue = (
     if (expr.type === 'Literal') return expr.value as string | undefined;
     return undefined;
   }
-  // A bare placeholder is a binding the analyzer could not resolve to its
-  // expression, not an authored href; reading it literally would be a lie.
+  // The analyzer returns an unresolved binding as a placeholder, not an href.
   return attributePartIndex(expr) === undefined ? expr : undefined;
 };
 
@@ -140,8 +139,7 @@ const anchorIsValid: RuleFor<typeof RULE_NAME> = {
         );
       });
 
-    // ours: `href=${srefHref('state')}` is the attribute-part sibling, and the
-    // href is the binding itself — there is no `assignHref` to opt out of.
+    // ours: the binding is the href, so there is no `assignHref` to opt out of.
     const bindsHref = (
       element: Parse5Element,
       expressions: Node[],
