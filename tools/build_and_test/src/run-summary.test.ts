@@ -498,36 +498,55 @@ describe('cacheTally', () => {
 
 describe('remoteCacheAnomaly', () => {
   const localOnly = () =>
-    cacheTally(
-      summary([
-        hit({
-          taskId: 'a',
-          cache: { status: 'HIT', source: 'LOCAL', timeSaved: 1 },
-        }),
-      ]),
-    );
+    summary([
+      hit({
+        taskId: 'a',
+        cache: { status: 'HIT', source: 'LOCAL', timeSaved: 1 },
+      }),
+    ]);
 
   it('fires when everything hit but nothing came from the remote', () => {
     assert.match(
-      remoteCacheAnomaly(localOnly(), true) ?? '',
+      remoteCacheAnomaly([localOnly()], true) ?? '',
       /none from the remote/,
     );
   });
 
+  it('words a single run without the across clause', () => {
+    assert.equal(
+      remoteCacheAnomaly([localOnly()], true),
+      '1 cache hit, none from the remote cache — CI restores no local .turbo, so the remote cache is likely misconfigured (check TURBO_TOKEN, TURBO_API, TURBO_TEAM and the signature key)',
+    );
+  });
+
   it('stays quiet off Actions, where local hits are the whole point', () => {
-    assert.equal(remoteCacheAnomaly(localOnly(), false), undefined);
+    assert.equal(remoteCacheAnomaly([localOnly()], false), undefined);
   });
 
   it('stays quiet when a hit came from the remote', () => {
-    assert.equal(
-      remoteCacheAnomaly(cacheTally(summary([hit()])), true),
-      undefined,
-    );
+    assert.equal(remoteCacheAnomaly([summary([hit()])], true), undefined);
   });
 
   it('stays quiet when nothing hit — a full invalidation is not a fault', () => {
     const run = summary([ran('a', 10), ran('b', 20)]);
-    assert.equal(remoteCacheAnomaly(cacheTally(run), true), undefined);
+    assert.equal(remoteCacheAnomaly([run], true), undefined);
+  });
+
+  // The multi-stage job: the first run populates .turbo, so every later run in
+  // the job can only ever report a LOCAL hit. That is health, not a fault.
+  it('stays quiet when an earlier run in the job hit the remote', () => {
+    assert.equal(
+      remoteCacheAnomaly([summary([hit()]), localOnly()], true),
+      undefined,
+    );
+  });
+
+  it('counts across the job when no run anywhere hit the remote', () => {
+    const note = remoteCacheAnomaly([localOnly(), localOnly()], true) ?? '';
+    assert.match(
+      note,
+      /^2 cache hits across 2 turbo runs, none from the remote/,
+    );
   });
 });
 
@@ -892,6 +911,35 @@ describe('warn-only lanes', () => {
   });
 });
 
+/** A run whose only hit came from the remote cache. */
+const remoteHitRun = () =>
+  summary([hit({ taskId: 'remote-hit' })], 0, {
+    command: 'turbo run build',
+    attempted: 1,
+    cached: 1,
+    success: 0,
+    failed: 0,
+  });
+
+/** A run whose only hit came from the on-disk cache a previous run filled. */
+const localHitRun = () =>
+  summary(
+    [
+      hit({
+        taskId: 'local-hit',
+        cache: { status: 'HIT', source: 'LOCAL', timeSaved: 1 },
+      }),
+    ],
+    0,
+    {
+      command: 'turbo run test:e2e:hash',
+      attempted: 1,
+      cached: 1,
+      success: 0,
+      failed: 0,
+    },
+  );
+
 describe('sessionMarkdown', () => {
   const ci = () =>
     summary([ran('lit-ui-router#build', 4_000)], 0, {
@@ -953,6 +1001,27 @@ describe('sessionMarkdown', () => {
     const warnLanes = warnLaneEntries(new Map());
     const md = sessionMarkdown([srun(ci()), srun(docs())], { warnLanes });
     assert.equal(md.split('**Warn-only lanes**').length - 1, 1);
+  });
+
+  // The remote-cache note is a job fact: the job's first run fills .turbo, so
+  // the runs after it hit local only and that is health, not misconfiguration.
+  it('stays quiet about the remote cache when any run in the job hit it', () => {
+    const md = sessionMarkdown(
+      [srun(ci()), srun(remoteHitRun()), srun(localHitRun())],
+      { onActions: true },
+    );
+    assert.ok(!md.includes('none from the remote'));
+  });
+
+  it('warns once for a job whose every hit was local', () => {
+    const md = sessionMarkdown([srun(localHitRun()), srun(localHitRun())], {
+      onActions: true,
+    });
+    assert.equal(md.split('none from the remote').length - 1, 1);
+    assert.match(
+      md,
+      /> 2 cache hits across 2 turbo runs, none from the remote/,
+    );
   });
 });
 
@@ -1064,6 +1133,24 @@ describe('sessionLines', () => {
     const lines = sessionLines(runs);
     const second = lines.findIndex((line) => line.startsWith('── ✅ b'));
     assert.equal(lines[second - 1], '');
+  });
+
+  it('stays quiet about the remote cache when any run in the job hit it', () => {
+    const lines = sessionLines([srun(remoteHitRun()), srun(localHitRun())], {
+      onActions: true,
+    }).join('\n');
+    assert.ok(!lines.includes('none from the remote'));
+  });
+
+  it('warns once for a job whose every hit was local', () => {
+    const notes = sessionLines([srun(localHitRun()), srun(localHitRun())], {
+      onActions: true,
+    }).filter((line) => line.includes('none from the remote'));
+    assert.equal(notes.length, 1);
+    assert.match(
+      notes[0] ?? '',
+      /^ {3}note: 2 cache hits across 2 turbo runs, none from the remote/,
+    );
   });
 });
 
