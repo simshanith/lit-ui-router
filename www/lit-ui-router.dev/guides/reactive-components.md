@@ -187,6 +187,13 @@ unsubscribe — `<ui-router>` takes its router on connect and does not swap it.
 
 `requestRouter` takes any `EventTarget`, not only an element.
 
+When there is no tree at all to bubble through — a server render, a test — the
+same entry publishes a router directly: `withRouterSync(router, run)` scopes it
+to one synchronous call, and anything that call reaches asks `getScopedRouter()`
+for it. `provideRouter(root, router)` is the event-target side of the same
+hand-off, answering `context-request` on a plain `EventTarget`; see
+[Server-Side Routing](./server-route-matching#the-router-on-the-server).
+
 ## See it live
 
 The same problem, solved with the

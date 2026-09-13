@@ -1,5 +1,7 @@
-import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
+import { servicesPlugin, UIRouter } from '@uirouter/core';
 import type { StateDeclaration } from '@uirouter/core';
+
+import { serverLocationPlugin } from './location.ts';
 
 /**
  * Core's own headless recipe: vanilla $q/$injector plus an in-memory location
@@ -12,7 +14,9 @@ import type { StateDeclaration } from '@uirouter/core';
 export function createHeadlessRouter(states: StateDeclaration[]): UIRouter {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
-  router.plugin(memoryLocationPlugin);
+  // Path-shaped, not hash-shaped: a headless router builds the hrefs a
+  // pushState client would.
+  router.plugin(serverLocationPlugin);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
   states.forEach((state) => router.stateRegistry.register(state));

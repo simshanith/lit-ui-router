@@ -1,19 +1,31 @@
-import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import {
+  describe,
+  it,
+  expect,
+  beforeEach,
+  afterEach,
+  expectTypeOf,
+  vi,
+} from 'vitest';
+import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
   contextRequestEventName,
   isRouterContextRequest,
+  provideRouter,
   requestRouter,
   routerContext,
   RouterContextRequestEvent,
+  getScopedRouter,
+  withRouterSync,
   type ContextCallback,
 } from '../context.js';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { createTestRouter, waitForUpdate } from './test-utils.js';
 
-/** A provider written against the protocol alone — no @lit/context, no elements. */
-function provideRouter(
+/** A provider that records subscribers, so later answers can be replayed. */
+function provideRecordingRouter(
   host: EventTarget,
   router: UIRouterLit,
   unsubscribe: () => void = () => {},
@@ -97,7 +109,7 @@ describe('lit-ui-router/context', () => {
     it('returns the value a provider supplies synchronously', () => {
       const host = document.createElement('div');
       container.appendChild(host);
-      provideRouter(container, router);
+      provideRecordingRouter(container, router);
 
       expect(requestRouter(host)).toBe(router);
     });
@@ -111,7 +123,7 @@ describe('lit-ui-router/context', () => {
 
     it('reaches a provider on a plain EventTarget', () => {
       const root = new EventTarget();
-      provideRouter(root, router);
+      provideRecordingRouter(root, router);
 
       expect(requestRouter(root)).toBe(router);
     });
@@ -122,8 +134,8 @@ describe('lit-ui-router/context', () => {
       const leaf = document.createElement('div');
       container.appendChild(inner);
       inner.appendChild(leaf);
-      provideRouter(container, outer);
-      provideRouter(inner, router);
+      provideRecordingRouter(container, outer);
+      provideRecordingRouter(inner, router);
 
       expect(requestRouter(leaf)).toBe(router);
     });
@@ -132,7 +144,11 @@ describe('lit-ui-router/context', () => {
       const host = document.createElement('div');
       container.appendChild(host);
       const unsubscribe = vi.fn();
-      const { subscribers } = provideRouter(container, router, unsubscribe);
+      const { subscribers } = provideRecordingRouter(
+        container,
+        router,
+        unsubscribe,
+      );
       const callback = vi.fn();
 
       const answer = requestRouter(host, { subscribe: true, callback });
@@ -151,7 +167,7 @@ describe('lit-ui-router/context', () => {
     it('asks for no subscription by default, so no unsubscribe is offered', () => {
       const host = document.createElement('div');
       container.appendChild(host);
-      const { subscribers } = provideRouter(container, router);
+      const { subscribers } = provideRecordingRouter(container, router);
       const callback = vi.fn();
 
       requestRouter(host, { callback });
@@ -243,7 +259,7 @@ describe('lit-ui-router/context', () => {
     it('finds a router from a protocol provider ancestor', () => {
       const child = document.createElement('div');
       container.appendChild(child);
-      provideRouter(container, router);
+      provideRecordingRouter(container, router);
 
       expect(UIRouterLitElement.seekRouter(child)).toBe(router);
     });
@@ -254,5 +270,149 @@ describe('lit-ui-router/context', () => {
 
       expect(UIRouterLitElement.seekRouter(orphan)).toBeUndefined();
     });
+  });
+});
+
+describe('provideRouter', () => {
+  it('answers a context request that reaches the root', () => {
+    const root = new EventTarget();
+    const router = new UIRouterLit();
+    const uninstall = provideRouter(root, router);
+
+    expect(requestRouter(root)).toBe(router);
+
+    uninstall();
+    expect(requestRouter(root)).toBeUndefined();
+  });
+
+  it('answers a request that bubbles up from a descendant element', () => {
+    const router = new UIRouterLit();
+    const uninstall = provideRouter(document.body, router);
+    const child = document.createElement('span');
+    document.body.append(child);
+
+    expect(requestRouter(child)).toBe(router);
+
+    uninstall();
+    child.remove();
+  });
+
+  it('hands a subscriber a no-op unsubscribe, and a one-shot caller none', () => {
+    const root = new EventTarget();
+    const router = new UIRouterLit();
+    const uninstall = provideRouter(root, router);
+    const answers: (string | undefined)[] = [];
+
+    requestRouter(root, {
+      subscribe: true,
+      callback: (_router, unsubscribe) => answers.push(typeof unsubscribe),
+    });
+    requestRouter(root, {
+      callback: (_router, unsubscribe) => answers.push(typeof unsubscribe),
+    });
+
+    expect(answers).toEqual(['function', 'undefined']);
+    uninstall();
+  });
+
+  it('answers exactly once when two providers share a root', () => {
+    const root = new EventTarget();
+    const outer = new UIRouterLit();
+    const inner = new UIRouterLit();
+    const uninstallOuter = provideRouter(root, outer);
+    const uninstallInner = provideRouter(root, inner);
+    const seen: UIRouterLit[] = [];
+
+    requestRouter(root, { callback: (router) => seen.push(router) });
+
+    // stopImmediatePropagation: the first listener on the target is the only one
+    expect(seen).toEqual([outer]);
+    uninstallOuter();
+    uninstallInner();
+  });
+
+  it('uninstalls only the listener its own call installed', () => {
+    const root = new EventTarget();
+    const first = new UIRouterLit();
+    const second = new UIRouterLit();
+    const uninstallFirst = provideRouter(root, first);
+    const uninstallSecond = provideRouter(root, second);
+
+    uninstallFirst();
+    expect(requestRouter(root)).toBe(second);
+    uninstallSecond();
+  });
+});
+
+describe('withRouterSync', () => {
+  it('is undefined outside any call', () => {
+    expect(getScopedRouter()).toBeUndefined();
+  });
+
+  it('publishes the router for the duration of run and returns its value', () => {
+    const router = new UIRouterLit();
+
+    const seen = withRouterSync(router, () => getScopedRouter());
+
+    expect(seen).toBe(router);
+    expect(getScopedRouter()).toBeUndefined();
+  });
+
+  it('nests, restoring the outer router on the way out', () => {
+    const outer = new UIRouterLit();
+    const inner = new UIRouterLit();
+    const trace: (UIRouter | undefined)[] = [];
+
+    withRouterSync(outer, () => {
+      trace.push(getScopedRouter());
+      withRouterSync(inner, () => trace.push(getScopedRouter()));
+      trace.push(getScopedRouter());
+    });
+
+    expect(trace).toEqual([outer, inner, outer]);
+    expect(getScopedRouter()).toBeUndefined();
+  });
+
+  it('restores the slot when run throws', () => {
+    const router = new UIRouterLit();
+
+    expect(() =>
+      withRouterSync(router, () => {
+        throw new Error('render failed');
+      }),
+    ).toThrow('render failed');
+    expect(getScopedRouter()).toBeUndefined();
+  });
+
+  it('throws on a thenable, with the slot already restored', () => {
+    const router = new UIRouterLit();
+    const pending = Promise.resolve('markup');
+
+    expect(() => withRouterSync(router, () => pending)).toThrow(TypeError);
+    expect(() => withRouterSync(router, () => pending)).toThrow(
+      /collectResultSync/,
+    );
+    expect(getScopedRouter()).toBeUndefined();
+    return pending;
+  });
+});
+
+describe('the router types the hand-off takes', () => {
+  const coreRouter = (): UIRouter => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    return router;
+  };
+
+  it('scopes a plain @uirouter/core router', () => {
+    const router = coreRouter();
+
+    expectTypeOf(router).toEqualTypeOf<UIRouter>();
+    expectTypeOf(getScopedRouter()).toEqualTypeOf<UIRouter | undefined>();
+    expect(withRouterSync(router, () => getScopedRouter())).toBe(router);
+  });
+
+  it('answers the context key with a UIRouterLit, which is what it promises', () => {
+    expectTypeOf(provideRouter).parameter(1).toEqualTypeOf<UIRouterLit>();
   });
 });

@@ -1,5 +1,8 @@
 // The community `context-request` protocol, spoken rather than imported:
-// the key, the event and a synchronous request helper for the router.
+// the key, the event and a synchronous request helper for the router, plus the
+// two tree-less providers: an event-target provider and a call-scoped slot.
+import type { UIRouter } from '@uirouter/core';
+
 import type { UIRouterLit } from './core.js';
 
 /**
@@ -223,4 +226,142 @@ export const requestRouter: (
     }, options.subscribe),
   );
   return answer;
+};
+
+/**
+ * Answers {@link routerContext} requests that reach `root`, so code with no
+ * element of its own is still handed a router.
+ *
+ * The provider is the element-free twin of `<ui-router>`: it listens for
+ * `context-request`, guards with {@link isRouterContextRequest}, calls
+ * `stopImmediatePropagation()` so an outer provider does not answer twice, and
+ * delivers the router synchronously. A `subscribe: true` request gets a no-op
+ * unsubscribe — the provider holds one router for its whole lifetime.
+ *
+ * `root` is any `EventTarget`. Under `@lit-labs/ssr` that is
+ * `globalThis.litServerRoot`, the bottom of the renderer's event-target stack,
+ * which every element event on the server reaches.
+ *
+ * Installing twice installs two listeners; the first one still wins, because it
+ * stops immediate propagation. Uninstalling is exact — each call's returned
+ * function removes only the listener that call added.
+ *
+ * The parameter is `UIRouterLit`, not `UIRouter`, because the key this answers
+ * is branded with `UIRouterLit`, and a provider may only answer with the value
+ * its key promises. The slot ({@link withRouterSync | `withRouterSync`}) takes
+ * either.
+ *
+ * @param root - the event target requests travel to
+ * @param router - the router to answer with
+ * @returns a function that uninstalls this provider
+ *
+ * @example
+ * ```ts
+ * import { provideRouter } from 'lit-ui-router/context';
+ *
+ * const uninstall = provideRouter(globalThis.litServerRoot, router);
+ * try {
+ *   // …render…
+ * } finally {
+ *   uninstall();
+ * }
+ * ```
+ *
+ * @see {@link withRouterSync} for the slot the same render sets instead
+ *
+ * @category core
+ */
+export const provideRouter: (
+  root: EventTarget,
+  router: UIRouterLit,
+) => () => void = (root: EventTarget, router: UIRouterLit): (() => void) => {
+  const listener = (event: Event): void => {
+    if (!isRouterContextRequest(event)) return;
+    event.stopImmediatePropagation();
+    event.callback(router, event.subscribe ? () => {} : undefined);
+  };
+  root.addEventListener(contextRequestEventName, listener);
+  return () => root.removeEventListener(contextRequestEventName, listener);
+};
+
+/** The call-scoped router. A plain module slot, never an async context. */
+let scoped: UIRouter | undefined;
+
+/**
+ * Returns the router the innermost enclosing
+ * {@link withRouterSync | `withRouterSync`} call scoped, or `undefined`
+ * outside one.
+ *
+ * @returns the router in scope, or `undefined`
+ *
+ * @category core
+ */
+export const getScopedRouter: () => UIRouter | undefined = ():
+  | UIRouter
+  | undefined => scoped;
+
+/**
+ * Runs `run` with `router` published to {@link getScopedRouter | `getScopedRouter`},
+ * restoring whatever was there before — `undefined` included — when it returns
+ * or throws.
+ *
+ * This is the tree-less provider. A `context-request` needs a tree to bubble
+ * through, which is what {@link provideRouter | `provideRouter`} serves;
+ * `withRouterSync` publishes a router for one synchronous call instead, so code
+ * with no element — a server render, a test — asks `getScopedRouter()`.
+ *
+ * The `Sync` suffix names the constraint the thenable guard enforces, in the
+ * convention of `collectResultSync`. `@lit-labs/ssr`'s `render()` returns a
+ * sync generator, so a whole render happens inside `run` as long as the caller
+ * consumes it there: `collectResultSync(render(template))`. Nothing is detected
+ * and nothing is upgraded — if `run` returns a thenable the slot is restored
+ * and a `TypeError` is thrown, because anything that promise does later reads a
+ * slot that is already gone.
+ *
+ * Calls nest: an inner call sees its own router, and the outer one is restored
+ * on the way out.
+ *
+ * The router is any `@uirouter/core` `UIRouter`: the directives that read the
+ * slot want `stateService`, `stateRegistry`, `transitionService` and `globals`,
+ * none of which `UIRouterLit` adds, so a caller that types its router as
+ * `UIRouter` — the type `UIViewInjectedProps.router` declares — passes it here
+ * unchanged.
+ *
+ * @typeParam T - whatever `run` returns
+ * @param router - the router to publish for the duration of `run`
+ * @param run - the call the router is scoped to, consumed synchronously
+ * @returns whatever `run` returned
+ * @throws a `TypeError` if `run` returns a thenable
+ *
+ * @example
+ * ```ts
+ * import { render } from '@lit-labs/ssr';
+ * import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+ * import { withRouterSync } from 'lit-ui-router/context';
+ *
+ * const markup = withRouterSync(router, () =>
+ *   collectResultSync(render(html`<my-page></my-page>`)),
+ * );
+ * ```
+ *
+ * @category core
+ */
+export const withRouterSync: <T>(router: UIRouter, run: () => T) => T = <T>(
+  router: UIRouter,
+  run: () => T,
+): T => {
+  const previous = scoped;
+  scoped = router;
+  let result: T;
+  try {
+    result = run();
+  } finally {
+    scoped = previous;
+  }
+  if (typeof (result as { then?: unknown } | undefined)?.then === 'function') {
+    throw new TypeError(
+      'withRouterSync() is synchronous: `run` returned a thenable, and the router slot is already restored by the time it settles. Consume the render inside `run` — collectResultSync(render(template)) — or read the router before awaiting.',
+    );
+  }
+  return result;
 };

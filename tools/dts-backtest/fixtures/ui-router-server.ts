@@ -21,6 +21,12 @@ import {
 } from 'ui-router-server/fetch';
 import { serverRouterHono } from 'ui-router-server/hono';
 import {
+  installServerLocation,
+  ServerLocationConfig,
+  serverLocationPlugin,
+  type ServerLocationOptions,
+} from 'ui-router-server/location';
+import {
   compare,
   exec,
   format,
@@ -127,6 +133,22 @@ export function redirectFor(pathname: string): string | null {
 // Simulate tier: the headless core router.
 export async function simulate(states: StateDeclaration[]): Promise<boolean> {
   return onceSettled(createHeadlessRouter(states));
+}
+
+// Location tier: the path-shaped memory location a server render installs.
+const locationOptions: ServerLocationOptions = {
+  url: '/app/contacts',
+  baseHref: '/app/',
+  strictMode: false,
+};
+
+export function serverHref(states: StateDeclaration[]): string {
+  const headless = createHeadlessRouter(states);
+  void new ServerLocationConfig().html5Mode();
+  void serverLocationPlugin;
+  return installServerLocation(headless, locationOptions).stateService.href(
+    'app.contacts',
+  );
 }
 
 // Adapters. Each options bag is spelled out so a widened/narrowed callback

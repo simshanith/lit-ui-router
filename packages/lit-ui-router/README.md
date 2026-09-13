@@ -31,15 +31,14 @@ router.start();
 
 ## Entry Points
 
-| Import                                        | Effect                                                                                                                                                           |
-| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `import { ... } from 'lit-ui-router'`         | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                             |
-| `import { ... } from 'lit-ui-router/pure'`    | The same full API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                      |
-| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                          |
-| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                      |
-| `import { ... } from 'lit-ui-router/context'` | The [`context-request`](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md) key, event and request helper, with no elements. |
-| `import { ... } from 'lit-ui-router/server'`  | Server-only: the render-time router hand-off and a path-shaped location plugin. DOM-free, and not re-exported from the root.                                     |
-| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                  |
+| Import                                        | Effect                                                                                                                                                                                                    |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import { ... } from 'lit-ui-router'`         | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                                                                      |
+| `import { ... } from 'lit-ui-router/pure'`    | The same full API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                                                               |
+| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                                                                   |
+| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                                                               |
+| `import { ... } from 'lit-ui-router/context'` | The [`context-request`](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md) key, event and request helper, plus the tree-less router hand-off — all with no elements. |
+| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                                                           |
 
 The root entry is exactly `pure` + `register`: reach for `lit-ui-router/pure`
 when you need the APIs (or the element classes themselves, e.g. for scoped
