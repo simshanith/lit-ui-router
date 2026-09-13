@@ -224,6 +224,10 @@ sitting); order is dependency order.
   every T3 plate now records mise-provisioned pnpm rather than `corepack pnpm` in `used` and
   `wasAssociatedWith`, and sheet 14's harness bar, aria and notes say the same. The T3 chain ran
   3 min 06 s with the pnpm store warm.
+  AND THE RUST CHANNEL NOW DERIVES (7B rev H): the hand `RUST` map is gone, the five steps being
+  re-cut each cabinet from `census-weather.json`'s own idle distribution — 0 ≤13d · R1 ≤35 ·
+  R2 ≤46 · R3 ≤65 · R4 >65 reserved and unoccupied here — so a step label is only good for the
+  plate it is printed on, which the sheet now says.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS

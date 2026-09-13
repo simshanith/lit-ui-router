@@ -216,7 +216,9 @@ const roads = [
   road([[27, 115], [540, 115], [540, 345], [g(10).x, 345]], { ...READS, t0: 0, to: 10 }),
   // 5 · @tools/dts-backtest depends on the four runtime packages and backtests
   //    their emitted d.ts against the TS 5.0 floor (turbo: #test dependsOn ^build).
-  road([[33, g(1).y + g(1).s], [33, g(14).y]], { ...TESTS, from: 1, to: 14 }),
+  //    the lane moved 33 -> 20 when member 37 took the lot at x 30: the old lane ran
+  //    straight through its footprint, and 20 is west of every plot on the way down
+  road([[20, g(1).y + g(1).s], [20, g(14).y]], { ...TESTS, from: 1, to: 14 }),
   // 6 · the harness under the annexes: every vitest package devDepends on
   //    @tools/lit-test-env and @tools/happy-dom (turbo test inputs vitest.setup.ts).
   road([[91, g(23).y], [91, 335], [104, 335]], { ...TESTS, t0: 9, t1: 0, mk: null }),
@@ -253,11 +255,20 @@ const bodies = `${masses}\n${M.map(([n]) => badge(n)).join('\n')}`;
 // The city alone — districts and masses, no roads, badges or lettering — cropped
 // to its own extent: the routed cover's key image, drawn from the same geometry.
 export function cityHero() {
-  const corners = M.flatMap(([n]) => {
-    const b = g(n);
-    const box = (x, y, s, h) => [[x, y, 0], [x + s, y, 0], [x + s, y + s, 0], [x, y + s, 0], [x, y, h], [x + s, y, h], [x + s, y + s, h], [x, y + s, h]];
-    return [...box(b.x, b.y, b.s, b.h), ...(b.sa ? box(b.ax, b.ay, b.sa, b.ha) : [])];
-  }).map(([x, y, z]) => pt(x, y, z));
+  const box = (x, y, s, h) => [[x, y, 0], [x + s, y, 0], [x + s, y + s, 0], [x, y + s, 0], [x, y, h], [x + s, y, h], [x + s, y + s, h], [x, y + s, h]];
+  // The hero draws the district frames as well as the masses, so the extent has to
+  // take their corners too — measuring the masses alone cropped the yard's west
+  // corner off the plate once the frames grew past the blocks they gird.
+  const corners = [
+    ...M.flatMap(([n]) => {
+      const b = g(n);
+      return [...box(b.x, b.y, b.s, b.h), ...(b.sa ? box(b.ax, b.ay, b.sa, b.ha) : [])];
+    }),
+    ...DIST.flatMap(([d, dpad]) => {
+      const [x1, y1, x2, y2] = bounds(d);
+      return [[x1 - dpad, y1 - dpad, 0], [x2 + dpad, y1 - dpad, 0], [x2 + dpad, y2 + dpad, 0], [x1 - dpad, y2 + dpad, 0]];
+    }),
+  ].map(([x, y, z]) => pt(x, y, z));
   const pad = 34;
   const x1 = Math.min(...corners.map((c) => c[0])) - pad, x2 = Math.max(...corners.map((c) => c[0])) + pad;
   const y1 = Math.min(...corners.map((c) => c[1])) - pad, y2 = Math.max(...corners.map((c) => c[1])) + pad;

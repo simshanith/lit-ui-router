@@ -204,9 +204,13 @@ const field = `<polygon points="${[p2(0, -100), p2(460, -100), p2(460, -65), p2(
 const roads = [
   leg([[300, 60, 0], [300, 160, 0], [345, 160, 0], [345, 205, 0]], {}),                       // quarters -> docs
   leg([[264, 60, 0], [264, 190, 0], [164, 190, 0], [164, 210, 0]], {}),                       // quarters -> apps
-  leg([[380, 50, 0], [560, 50, 0], [560, 27, 0], [596, 27, 0]], { cls: 'sks' }),              // quarters -> release
-  leg([[634, 106, 0], [420, 106, 0], [420, 62, 0], [386, 62, 0]], { cls: 'sks' }),            // typedoc -> quarters
-  leg([[380, 54, 0], [660, 54, 0], [660, 43, 0], [696, 43, 0]], { cls: 'sks', dash: '5 4' }), // quarters -> dts tower
+  // the two eastward arteries dropped 50/54 -> 64/68 when the sixth quarter (27) was
+  // founded and the fifth (2) grew: the old lanes ran under both, so each road left
+  // the row from inside a building.  typedoc's return leg drops with them, 62 -> 84,
+  // rather than running two units off the release lane.
+  leg([[380, 64, 0], [560, 64, 0], [560, 27, 0], [596, 27, 0]], { cls: 'sks' }),              // quarters -> release
+  leg([[634, 106, 0], [420, 106, 0], [420, 84, 0], [386, 84, 0]], { cls: 'sks' }),            // typedoc -> quarters
+  leg([[380, 68, 0], [660, 68, 0], [660, 43, 0], [696, 43, 0]], { cls: 'sks', dash: '5 4' }), // quarters -> dts tower
 ].join('\n');
 const roadLabels = `${txt(572, 430, `${deg('@www/lit-ui-router.dev#build', 'deps')} ↦ the harbour`, 'lblf')}
 ${txt(740, 530, `${deg('@tools/typedoc-plugin-lit-ui-router#build:types', 'dependents')} ↤ typedoc`, 'lblf')}`;

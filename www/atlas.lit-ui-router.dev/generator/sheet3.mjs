@@ -73,7 +73,9 @@ const M = [
   // --- instrument yard, row B: the gates that fire later, and the reporters -----
   [12, 'peer-floor tier-2',         'late',    40,   320,    ...C('peer-floor tier-2'), null, null, 'gates version bumps, never a PR'],
   [13, 'peer-floor tier-1',         'report',  90,   320,    ...C('peer-floor tier-1'), null, null, 'reports check runs, never gates'],
-  [14, 'lint & probe fleet',        'report', 175,   320,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · CI gate'],
+  // row B's giant: it outgrows the row's y = 320 top line every refresh (the fleet
+  // took the eslint plugin's growth at 1.14.1), so it sits 22 north of its row mates
+  [14, 'lint & probe fleet',        'report', 175,   298,    ...C('lint & probe fleet'), null, null, 'oxlint · elements · warn-lanes · CI gate'],
   [15, '@tools/shared',             'report', 275,   320,    ...C('@tools/shared'), null, null, 'the library under every instrument'],
   [16, 'typedoc plugin',            'report', 380,   320,    ...C('typedoc plugin'), null, null, 'builds the API pages, gates nothing'],
   // --- proving ground & shopfront (apps/ + www/) --------------------------------
@@ -254,7 +256,7 @@ ${txt(1014, y + 11, label, cls)}`;
 }).join('\n')}
 
 <!-- districts -->
-${district(10, 175, 445, 385)}
+${district(10, 175, 445, 393)}
 
 ${boundary}
 ${conveyor}

@@ -74,7 +74,9 @@ const PLAN = {
   'ui-router-server|./vite': [510, 140],
   'ui-router-server|./connect': [575, 160],
   'ui-router-server|./simulate': [645, 180],
-  'eslint-plugin-lit-ui-router|.': [330, 285],
+  // recentred in its quarter: the door grew 9.7 → 16.9 KB min at the 1.14.1 ref and
+  // its old lot pushed the block's base through the quarter's south-east dashes
+  'eslint-plugin-lit-ui-router|.': [320, 258],
 };
 
 const all = ORDER.map(([pkg, name], i) => {
