@@ -21,6 +21,7 @@
   "enumMembersFormat": "table",
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
+  "treatWarningsAsErrors": true,
   "externalSymbolLinkMappings": {
     "@uirouter/core": {
       "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html",

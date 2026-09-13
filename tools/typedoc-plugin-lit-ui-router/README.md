@@ -1,131 +1,46 @@
 # typedoc-plugin-lit-ui-router
 
-Auto-converts `[[SymbolName]]` JSDoc links to `{@link url | SymbolName}` for external documentation.
+Two TypeDoc 0.28 plugins post-processing the markdown API reference this repo
+publishes with `typedoc-plugin-markdown` + `typedoc-vitepress-theme`.
 
-## Usage
+## `@tools/typedoc-plugin-lit-ui-router`
 
-In JSDoc comments, use the `[[SymbolName]]` shorthand syntax:
+For packages using `"router": "category"` (currently `lit-ui-router`).
 
-```typescript
-/**
- * See [[Transition]] for details.
- * Access [[StateDeclaration.component]] property.
- */
-```
+- `Converter.EVENT_RESOLVE_END` — rewrites the custom-elements-manifest
+  `@slot` / `@fires` block tags (declared in the package's `tsdoc.json`) into
+  one aggregate `@slots` / `@events` tag holding a markdown list, so a class
+  page gets a single Slots / Events section. TypeDoc has no renderer for the
+  analyzer's `{Type} name - description` syntax, and `@event` is reserved by
+  TypeDoc, hence the `@fires` alias. It also warns on any top-level export
+  whose comment has no `@category` tag, which under the package's
+  `treatWarningsAsErrors` fails the build rather than letting the export drift
+  into `--defaultCategory` and its own sidebar group.
+- `RendererEvent.END` — writes `<category>/index.md` for each category folder
+  that has member pages (title and blurb from the plugin's category table,
+  plus VitePress `prev`/`next` frontmatter), then retitles each
+  `typedoc-sidebar.json` entry and points it at `/api/reference/<category>`.
+  An uncharted `@category` value is title-cased rather than dropped.
 
-The plugin automatically converts these to proper TypeDoc links:
+## `@tools/typedoc-plugin-lit-ui-router/kind-indexes`
 
-```typescript
-/**
- * See {@link https://ui-router.github.io/core/docs/latest/classes/_transition_transition_.transition.html | Transition} for details.
- * Access {@link https://ui-router.github.io/core/docs/latest/interfaces/_state_interface_.statedeclaration.html#component | StateDeclaration.component} property.
- */
-```
+For packages on the default kind router (`lit-ui-router-mobx`,
+`navigation-location-plugin`, `ui-router-server`).
 
-## Supported Symbols
+- `RendererEvent.END` — writes an `index.md` into each kind folder
+  (`classes/`, `interfaces/`, `type-aliases/`, …) so the bare folder URL does
+  not 404, links the sidebar group headings at those pages, and retitles a
+  multi-entry package's root `index` module to the package name. Folder links
+  are resolved against the `docsRoot` option.
 
-### UI-Router Core
+## Options read
 
-**Classes:**
+`docsRoot` (vitepress theme) and the output directory TypeDoc reports on the
+render event. Everything else — categories, ordering, sidebar shape — comes
+from each package's `typedoc.json` and the `@category` tags in source.
 
-- `UIRouter`, `StateService`, `StateRegistry`, `StateObject`, `TargetState`
-- `TransitionService`, `Transition`, `UrlService`, `UrlConfig`, `UrlRules`
-- `Trace`, `UrlMatcher`, `Resolvable`, `PathNode`, `Param`, `Rejection`
+## Cross-references
 
-**Interfaces:**
-
-- `StateDeclaration`, `HrefOptions`, `LazyLoadResult`, `TransitionPromise`
-- `IHookRegistry`, `HookMatchCriteria`, `TransitionHookFn`, `TransitionStateHookFn`
-- `TransitionOptions`, `TreeChanges`, `RawParams`, `ParamDeclaration`, `ViewConfig`
-
-**Type Aliases:**
-
-- `HookResult`, `HookFn`, `StateOrName`, `ResolveTypes`
-
-**Enums:**
-
-- `TransitionHookPhase`, `TransitionHookScope`, `RejectType`
-
-### Lit
-
-**Directives:**
-
-- `AsyncDirective`, `Directive`, `Part`, `ChildPart`, `ElementPart`
-- `AttributePart`, `PropertyPart`, `EventPart`
-
-**Types:**
-
-- `LitElement`, `TemplateResult`, `PartInfo`, `PartType`
-- `ReactiveController`, `PropertyDeclaration`
-
-**Values:**
-
-- `noChange`, `directive`
-
-## Custom Symbols
-
-Add custom symbol mappings in your `typedoc.json`:
-
-```json
-{
-  "externalSymbolLinkMappings": {
-    "@uirouter/core": {
-      "CustomType": "https://example.com/docs/customtype.html"
-    }
-  }
-}
-```
-
-TypeDoc's own `{ package: { symbol: url } }` shape and the legacy
-`{ symbol: { "": url } }` shape both feed `[[SymbolName]]` resolution.
-
-## Unknown Symbols
-
-A symbol in neither the predefined map, the custom mappings, nor the local
-symbol pages renders as bare text — the `[[…]]` brackets are stripped but no
-link is emitted.
-
-## URL Templates
-
-| Type       | Template                          |
-| ---------- | --------------------------------- |
-| Class      | `/classes/{module}{name}.html`    |
-| Interface  | `/interfaces/{module}{name}.html` |
-| Type/Alias | `/modules/{module}.html#anchor`   |
-| Enum       | `/enums/{module}{name}.html`      |
-
-## Symbol File Structure
-
-```text
-src/symbols/
-├── index.ts      # Combined exports
-├── ui-router.ts  # UI-Router Core symbols (templated)
-└── lit.ts        # Lit symbols (templated)
-```
-
-### Adding New Symbols
-
-To add a new symbol, use the template functions:
-
-```typescript
-// ui-router.ts
-import { interfaceTemplate, classTemplate, typeTemplate } from './templates.js';
-
-// Add a new interface
-...interfaceTemplate('NewInterface', '_module_'),
-
-// Add a new class
-...classTemplate('NewClass', '_module_'),
-
-// Add a new type alias
-...typeTemplate('NewType', '_module_', 'anchor'),
-```
-
-## Plugin Events
-
-- `Converter.EVENT_RESOLVE_END`: Aggregates CEM `@slot` / `@fires` tags and converts `[[SymbolName]]` patterns
-- `RendererEvent.END`: Generates category index files and rewrites `typedoc-sidebar.json`
-
-## Categories
-
-Categories come from `@category` tags in source; `router: "category"` in `typedoc.json` groups pages by them.
+Doc comments use plain TypeDoc `{@link Symbol}`. Links to symbols outside the
+package resolve through `externalSymbolLinkMappings` in that package's
+`typedoc.json`; add an entry there rather than to this plugin.

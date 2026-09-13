@@ -30,6 +30,7 @@
   "enumMembersFormat": "table",
   "typeDeclarationFormat": "table",
   "sort": ["alphabetical", "source-order"],
+  "treatWarningsAsErrors": true,
   "externalSymbolLinkMappings": {
     "ui-router-server": {
       "Request": "https://developer.mozilla.org/en-US/docs/Web/API/Request",

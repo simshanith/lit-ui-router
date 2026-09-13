@@ -230,7 +230,7 @@ export class SrefHrefDirective extends AsyncDirective {
  * html`<a href=${srefHref('users.detail', { userId: 123 })}>View User</a>`
  * ```
  *
- * @example With `srefActiveClass` and `srefAriaCurrent`
+ * @example With srefActiveClass and srefAriaCurrent
  * ```ts
  * html`<a href=${srefHref('users')}
  *         class="nav-link ${srefActiveClass({ state: 'users', activeClasses: ['active'] })}"
