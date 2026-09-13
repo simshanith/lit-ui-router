@@ -284,6 +284,7 @@ export interface RoutedLitElement<
    * the parameter required, optional, or not at all.
    */
   new (props: UIViewInjectedProps<T>): LitElement & {
+    /** assigned on every render; declare it reactive to re-render when reused */
     _uiViewProps?: UIViewInjectedProps<T>;
   };
 
@@ -322,6 +323,7 @@ export interface LitViewDeclarationElement<
 export interface LitViewDeclarationObject<
   T extends DefaultResolvesType = DefaultResolvesType,
 > extends _ViewDeclaration {
+  /** the routed component: a LitElement class or a template function */
   component: RoutedLitComponent<T>;
 }
 

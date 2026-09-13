@@ -247,19 +247,27 @@ export function clickBelongsToBrowser(
  * @category directives
  */
 export class UiSrefDirective extends AsyncDirective {
+  /** the target state name from the last render */
   state: string | null = null;
+  /** the target state params from the last render */
   params: RawParams = {};
+  /** the transition options from the last render */
   options: TransitionOptions = {};
 
+  /** @internal */
   element: UiSrefElement | null = null;
 
+  /** @internal */
   uiRouter: UIRouterLit | undefined;
+  /** @internal */
   parentView: UiView | null = null;
 
   /** this directive's own options, stripped from the transition options */
   uiSrefOptions: UiSrefOptions = {};
 
+  /** the href computed for the target, or null when there is none */
   href: string | null = null;
+  /** the resolved target, or null until the router is found */
   targetState: TargetState | null = null;
 
   /** whether the href currently on the element was written by us */
@@ -292,10 +300,12 @@ export class UiSrefDirective extends AsyncDirective {
     }
   }
 
+  /** the transition options with `relative` defaulted to the enclosing view */
   getOptions(opts: TransitionOptions = this.options): TransitionOptions {
     return srefTransitionOptions(this.parentView, opts);
   }
 
+  /** @internal */
   render(
     state: string,
     params?: RawParams,
@@ -431,6 +441,7 @@ export class UiSrefDirective extends AsyncDirective {
     }
   }
 
+  /** @internal */
   onClick = (event: MouseEvent): void => {
     const { uiRouter: router, state, params } = this;
     const options = this.getOptions();
@@ -451,6 +462,7 @@ export class UiSrefDirective extends AsyncDirective {
     event.preventDefault();
   };
 
+  /** @internal */
   update(
     part: ElementPart,
     [state, params = {}, options = {}]: [
@@ -478,6 +490,7 @@ export class UiSrefDirective extends AsyncDirective {
     return this.doRender();
   }
 
+  /** @internal */
   doRender = (): typeof noChange => {
     return this.render(this.state!, this.params, this.options);
   };

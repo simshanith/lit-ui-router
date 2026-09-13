@@ -77,6 +77,7 @@ type deregisterFn = () => void;
 
  */
 export class UiView extends LitElement {
+  /** the view name this viewport fills; empty selects the `$default` view */
   @property()
   name = '';
 
