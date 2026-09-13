@@ -7,9 +7,8 @@
 import type { UIRouter } from '@uirouter/core';
 import { LitElement, html, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
-import { repeat } from 'lit/directives/repeat.js';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { uiSref, uiSrefActive } from 'lit-ui-router';
+import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
 import type { RoutedLitTemplate } from 'lit-ui-router';
 import type {
   AscentRow,
@@ -30,7 +29,6 @@ import {
   ascent,
   entryTitle,
   facet,
-  filterQuery,
   findExtra,
   isAppendix,
   isFiltered,
@@ -49,7 +47,13 @@ import { href } from './routes.ts';
 import type { ThemeChoice } from './theme.ts';
 import { applyTheme, readTheme } from './theme.ts';
 
-const ACTIVE = { activeClasses: ['is-active'] };
+/**
+ * The rail's and the cards' active class. `srefActiveClass` writes no
+ * `aria-current` — a `class` binding cannot reach a second attribute — so every
+ * link that takes it takes `srefAriaCurrent` beside it, which is the behaviour
+ * `uiSrefActive` used to supply implicitly on an anchor.
+ */
+const ACTIVE_CLASSES = ['is-active'];
 
 /**
  * THE ARTICLE (T9, shipped 2026-09-06): a title keeps its THE, drawn as a
@@ -78,9 +82,10 @@ const DOCS = 'https://lit-ui-router.dev';
 const GITHUB = 'https://github.com/simshanith/lit-ui-router';
 
 /**
- * An in-app href. Written straight through on the site; hash-prefixed in the
- * artifact build, which is exactly what `uiSref` writes over it there, so the
- * static attribute and the directive agree instead of fighting.
+ * An in-app path for the ONE site that is not a router link: the key box's
+ * `<form action>`, a plain GET target that takes no directive. Every real link
+ * asks the router through `srefHref`, so the artifact build's `#/…` comes from
+ * `hashLocationPlugin` (src/router.ts) and not from a string prefix here.
  */
 const to = (path: string): string => (ARTIFACT ? `#${path}` : path);
 
@@ -272,7 +277,7 @@ function utilBar(crumb: TemplateResult): TemplateResult {
       <div class="crumb">${crumb}</div>
       <nav class="util-links" aria-label="utilities">
         <!-- The set's issue record: its own state since 2026-09-06, not a cover column. -->
-        <a class="util-log" ${uiSref('atlas.log')} href="${to(href.log)}">LOG</a>
+        <a class="util-log" href=${srefHref('atlas.log')}>LOG</a>
         <a class="util-docs" href="${DOCS}" target="_blank" rel="noopener">DOCS ↗</a>
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
         <!-- The flat set is plain pages beside the app, not a state: a real link. -->
@@ -284,7 +289,7 @@ function utilBar(crumb: TemplateResult): TemplateResult {
 }
 
 const indexCrumb = (): TemplateResult =>
-  html`<a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">← INDEX</a>`;
+  html`<a href=${srefHref('atlas.gallery')}>← INDEX</a>`;
 
 // --- the rail --------------------------------------------------------------
 
@@ -296,9 +301,13 @@ const closeRail = (): void => {
 
 const sheetEntry = (sheet: SheetRow): TemplateResult => html`
   <a
-    ${uiSrefActive(ACTIVE)}
-    ${uiSref('atlas.sheet', { num: sheet.num })}
-    href="${to(href.sheet(sheet.num))}"
+    href=${srefHref('atlas.sheet', { num: sheet.num })}
+    class=${srefActiveClass({
+      state: 'atlas.sheet',
+      params: { num: sheet.num },
+      activeClasses: ACTIVE_CLASSES,
+    })}
+    aria-current=${srefAriaCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
   >
     <span class="n">${sheet.num}</span><span class="t">${entryTitle(sheet.title)}</span>
   </a>
@@ -308,7 +317,11 @@ const railEntry = (entry: AscentRow): TemplateResult =>
   entry.kind === 'sheet'
     ? sheetEntry(entry.row)
     : html`
-        <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}">
+        <a
+          href=${srefHref('atlas.city')}
+          class=${srefActiveClass({ state: 'atlas.city', activeClasses: ACTIVE_CLASSES })}
+          aria-current=${srefAriaCurrent({ state: 'atlas.city' })}
+        >
           <span class="n">7·3D</span><span class="t">${entryTitle(entry.row.title)}</span>
         </a>
       `;
@@ -322,14 +335,24 @@ function rail(manifest: Manifest | undefined): TemplateResult {
       <div class="rail-head">
         <div>
           <a class="kicker" href="https://lit-ui-router.dev">A DRAWING SET · lit-ui-router</a>
-          <h1><a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">THE ALTITUDE ATLAS</a></h1>
+          <h1><a href=${srefHref('atlas.gallery')}>THE ALTITUDE ATLAS</a></h1>
         </div>
         <label class="rail-toggle" for="rail-open">SHEETS ▾</label>
       </div>
       <div class="rail-body" @click=${closeRail}>
         <div class="rail-top">
-          <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.gallery')} href="${to(href.gallery)}">INDEX</a>
-          <a ${uiSrefActive(ACTIVE)} ${uiSref('atlas.about')} href="${to(href.about)}">ABOUT</a>
+          <a
+            href=${srefHref('atlas.gallery')}
+            class=${srefActiveClass({ state: 'atlas.gallery', activeClasses: ACTIVE_CLASSES })}
+            aria-current=${srefAriaCurrent({ state: 'atlas.gallery' })}
+            >INDEX</a
+          >
+          <a
+            href=${srefHref('atlas.about')}
+            class=${srefActiveClass({ state: 'atlas.about', activeClasses: ACTIVE_CLASSES })}
+            aria-current=${srefAriaCurrent({ state: 'atlas.about' })}
+            >ABOUT</a
+          >
         </div>
         <p class="rail-sec">SHEETS — ASCENT ORDER</p>
         <div class="rail-links">${rows.map(railEntry)}</div>
@@ -366,10 +389,10 @@ export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => html`
 
 const logLink = (entry: IssueEntry): TemplateResult =>
   entry.num === 'city'
-    ? html`<a class="s" ${uiSref('atlas.city')} href="${to(href.city)}"
+    ? html`<a class="s" href=${srefHref('atlas.city')}
         >${entry.head} · REV ${entry.rev}</a
       >`
-    : html`<a class="s" ${uiSref('atlas.sheet', { num: entry.num })} href="${to(href.sheet(entry.num))}"
+    : html`<a class="s" href=${srefHref('atlas.sheet', { num: entry.num })}
         >${entry.head} · REV ${entry.rev}</a
       >`;
 
@@ -384,13 +407,13 @@ const logEntry = (entry: IssueEntry): TemplateResult => html`
 // boolean and gets a toggle, subject and projection are small enums and get
 // grouped chip rows, basis is meaningful only inside the city group and is
 // drawn inside it, and the kv box is the fallback for a combination the chips
-// cannot say. Every chip is a uiSref onto atlas.gallery with the whole filter
+// cannot say. Every chip is a srefHref onto atlas.gallery with the whole filter
 // as params, so the index is a link and the browser's back button undoes a
-// filter. uiSrefActive then lights the chip whose target IS the current url.
+// filter. `srefActiveClass` then lights the chip whose target IS the current
+// url, and `srefHref` writes the url — query string and all — off the router,
+// so the filter is spelled in exactly one place.
 
-const KEY_ACTIVE = { activeClasses: ['is-on'] };
-
-const filterHref = (filter: Filter): string => `${to(href.gallery)}${filterQuery(filter)}`;
+const ON_CLASSES = ['is-on'];
 
 /**
  * THE KEY ROW — FORM's keys as one line of icons, hairline-separated in the
@@ -402,7 +425,7 @@ const filterHref = (filter: Filter): string => `${to(href.gallery)}${filterQuery
  * and basis says nothing about a plate that is not a city, so absence is the
  * value and the row is as long as the plate is.
  *
- * Every cell is a link into the filtered index; `uiSrefActive` echoes the
+ * Every cell is a link into the filtered index; `srefActiveClass` echoes the
  * applied filter on the cell that would set it. The icons are named in the
  * cover's KEY INDEX, which is their legend; here each cell carries the key and
  * its value as an accessible name and a `title`, so a pointer names it too.
@@ -426,12 +449,19 @@ const keyCell = (key: LabelKey, value: string | undefined): TemplateResult | typ
   if (!value) return nothing;
   const next: Filter = { ...EMPTY_FILTER, [key]: value };
   return html`<a
-    class="kr-cell kr-${key}"
     aria-label="${key} ${value}"
     title="${key} ${value}"
-    ${uiSrefActive(KEY_ACTIVE)}
-    ${uiSref('atlas.gallery', { ...next })}
-    href="${filterHref(next)}"
+    href=${srefHref('atlas.gallery', { ...next })}
+    class=${srefActiveClass({
+      state: 'atlas.gallery',
+      params: { ...next },
+      activeClasses: ON_CLASSES,
+      // CONSUMER FINDING: `class` holds ONE toggling directive, and this
+      // cell's static half is interpolated (`kr-${key}`), so the statics come
+      // in through `classes` — srefActiveClass's stand-in for classMap.
+      classes: { 'kr-cell': true, [`kr-${key}`]: true },
+    })}
+    aria-current=${srefAriaCurrent({ state: 'atlas.gallery', params: { ...next } })}
     >${icon(key, value)}${key === 'basis' ? html`<span class="dt">${value}</span>` : nothing}</a
   >`;
 };
@@ -446,14 +476,14 @@ const keyBlock = (labels: SheetLabels): TemplateResult => html`
 `;
 
 /**
- * A CHIP MARKS ITSELF ACTIVE. `uiSrefActive` caches its status and recomputes
- * it on transitions only, while a chip's TARGET params are rewritten by the
- * render that the transition causes — so a chip whose target moved read one
- * navigation behind, and the ALL chips, whose target is "the filter minus this
- * key", moved on every click. The filter is already in hand here and says the
- * answer outright: a value chip is on when the key holds it, and ALL is on when
- * the key holds nothing. `uiSrefActive` still drives the cards' key cells,
- * whose targets are the plate's own fixed labels.
+ * A CHIP MARKS ITSELF ACTIVE — and since 1.14 the router marks it, not this
+ * file. `uiSrefActive` cached its status and recomputed it on transitions only,
+ * while a chip's TARGET params are rewritten by the render the transition
+ * causes: a chip whose target moved read one navigation behind, and the ALL
+ * chips, whose target is "the filter minus this key", move on every click. The
+ * app answered that by computing activeness by hand from the filter.
+ * `srefActiveClass` re-reads its params on every render, so the hand
+ * computation is gone and the chip's own target is the single source again.
  *
  * THE INDEX IS THE LEGEND. A value chip draws the same symbol the cards draw
  * for that value, ahead of the word, so the filter block names every icon on
@@ -465,14 +495,16 @@ const chip = (
   label: string,
   count: number,
   next: Filter,
-  on: boolean,
   withIcon = true,
 ): TemplateResult => html`
   <a
-    class="kv ${on ? 'is-on' : ''}"
-    aria-current="${on ? 'page' : nothing}"
-    ${uiSref('atlas.gallery', { ...next })}
-    href="${filterHref(next)}"
+    href=${srefHref('atlas.gallery', { ...next })}
+    class="kv ${srefActiveClass({
+      state: 'atlas.gallery',
+      params: { ...next },
+      activeClasses: ON_CLASSES,
+    })}"
+    aria-current=${srefAriaCurrent({ state: 'atlas.gallery', params: { ...next } })}
     >${withIcon ? icon(key, label) : nothing}<i>${label}</i
     ><span class="c">${count}</span></a
   >
@@ -490,22 +522,9 @@ const keyRow = (
     <div class="krow ${extraClass}">
       <span class="kk">${key}</span>
       <div class="kchips">
-        ${chip(
-          key,
-          'all',
-          rows.filter((row) => matchesFilter(row.labels, all)).length,
-          all,
-          filter[key] === null,
-          false,
-        )}
+        ${chip(key, 'all', rows.filter((row) => matchesFilter(row.labels, all)).length, all, false)}
         ${facet(rows, key, filter).map((entry) =>
-          chip(
-            key,
-            entry.value,
-            entry.count,
-            { ...filter, [key]: entry.value },
-            filter[key] === entry.value,
-          ),
+          chip(key, entry.value, entry.count, { ...filter, [key]: entry.value }),
         )}
       </div>
     </div>
@@ -530,10 +549,7 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
         <span class="kt">KEY INDEX — FORM, SPLIT</span>
         <span class="kn">${shown} / ${rows.length} SHOWN</span>
         ${isFiltered(filter)
-          ? html`<a
-              class="kclear"
-              ${uiSref('atlas.gallery', { ...EMPTY_FILTER })}
-              href="${filterHref(EMPTY_FILTER)}"
+          ? html`<a class="kclear" href=${srefHref('atlas.gallery', { ...EMPTY_FILTER })}
               >CLEAR ✕</a
             >`
           : nothing}
@@ -603,7 +619,7 @@ const cardWindow = (): TemplateResult => html`<div class="card-window"></div>`;
 
 /**
  * A cover card. The card is a CONTAINER, not a link: the title carries the one
- * primary `uiSref` and stretches over the whole card through a `::after`
+ * primary `srefHref` and stretches over the whole card through a `::after`
  * (the Inclusive Components card pattern), so the key block's own filter links
  * are valid interactive content rather than links nested inside a link. Tab
  * order is title, then keys. Three layers, back to front: the plate's picture
@@ -619,10 +635,13 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
       <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
       <h3>
         <a
-          class="card-go"
-          ${uiSrefActive(ACTIVE)}
-          ${uiSref('atlas.sheet', { num: sheet.num })}
-          href="${to(href.sheet(sheet.num))}"
+          href=${srefHref('atlas.sheet', { num: sheet.num })}
+          class="card-go ${srefActiveClass({
+            state: 'atlas.sheet',
+            params: { num: sheet.num },
+            activeClasses: ACTIVE_CLASSES,
+          })}"
+          aria-current=${srefAriaCurrent({ state: 'atlas.sheet', params: { num: sheet.num } })}
           >${articleTitle(sheet.title)}</a
         >
       </h3>
@@ -647,7 +666,10 @@ const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
     <div class="card-body">
       <span class="n">${extra.shno} · REV ${extra.rev}</span>
       <h3>
-        <a class="card-go" ${uiSrefActive(ACTIVE)} ${uiSref('atlas.city')} href="${to(href.city)}"
+        <a
+          href=${srefHref('atlas.city')}
+          class="card-go ${srefActiveClass({ state: 'atlas.city', activeClasses: ACTIVE_CLASSES })}"
+          aria-current=${srefAriaCurrent({ state: 'atlas.city' })}
           >${articleTitle(extra.title)}</a
         >
       </h3>
@@ -696,7 +718,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <!-- The key image: sheet 7's city, drawn at build time. three.js loads on /city and nowhere else. -->
         ${city
           ? html`
-              <a class="hero-plate" ${uiSref('atlas.city')} href="${to(href.city)}">
+              <a class="hero-plate" href=${srefHref('atlas.city')}>
                 ${unsafeHTML(manifest.cover.hero)}
                 <span class="hero-cap">
                   <span>${city.shno} · REV ${city.rev}</span>
@@ -709,7 +731,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
       </div>
       ${latest
         ? html`<p class="cover-latest">
-            <a ${uiSref('atlas.log')} href="${to(href.log)}"
+            <a href=${srefHref('atlas.log')}
               ><span class="k">LATEST</span><span class="d">${latest.date}</span
               ><span class="s">${latest.head} · REV ${latest.rev}</span
               ><span class="t">${latest.desc}</span><span class="go">ISSUE LOG ↗</span></a
@@ -726,17 +748,16 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
                the client; prerendered, it is an empty element. -->
           <atlas-lattice aria-hidden="true"></atlas-lattice>
           <div class="cards">
-            <!-- KEYED. A filter changes the list, and an unkeyed map re-uses a
-                 card's DOM for a different plate — which leaves each key slot's
-                 uiSrefActive holding the target it first saw, so the filter echo
-                 goes stale. A key per plate gives the new row its own parts. -->
-            ${repeat(
-              shownAscent,
-              (entry) => entry.row.id,
-              (entry) =>
-                entry.kind === 'sheet'
-                  ? sheetCard(entry.row)
-                  : cityCard(entry.row, manifest.cover.hero),
+            <!-- Unkeyed since 1.14. A filter changes the list and an unkeyed
+                 map re-uses a card's DOM for a different plate; that used to
+                 leave each key cell's uiSrefActive holding the target it first
+                 saw, so the filter echo went stale. srefActiveClass re-reads
+                 its params on every render, so re-use is safe and the keying
+                 (and its DOM moves) is no longer paying for anything. -->
+            ${shownAscent.map((entry) =>
+              entry.kind === 'sheet'
+                ? sheetCard(entry.row)
+                : cityCard(entry.row, manifest.cover.hero),
             )}
           </div>
         </div>`
@@ -747,7 +768,7 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <div class="cards-field">
             <atlas-lattice aria-hidden="true"></atlas-lattice>
             <div class="cards">
-              ${repeat(shownAppendix, (row) => row.id, sheetCard)}
+              ${shownAppendix.map(sheetCard)}
             </div>
           </div>
         `
@@ -830,9 +851,7 @@ const seeAlso = (refs: string[]): TemplateResult | typeof nothing =>
     ? html`<span
         >SEE ALSO
         ${refs.map(
-          (num) =>
-            html`<a ${uiSref('atlas.sheet', { num })} href="${to(href.sheet(num))}">${num}</a
-              >&nbsp;`,
+          (num) => html`<a href=${srefHref('atlas.sheet', { num })}>${num}</a>&nbsp;`,
         )}</span
       >`
     : nothing;
@@ -858,14 +877,10 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
           : `SHEET ${sheet.num} OF ${String(manifest.total)}`}</span
       >
       ${prev
-        ? html`<a ${uiSref('atlas.sheet', { num: prev.num })} href="${to(href.sheet(prev.num))}"
-            >PREV · ${prev.num}</a
-          >`
+        ? html`<a href=${srefHref('atlas.sheet', { num: prev.num })}>PREV · ${prev.num}</a>`
         : nothing}
       ${next
-        ? html`<a ${uiSref('atlas.sheet', { num: next.num })} href="${to(href.sheet(next.num))}"
-            >NEXT · ${next.num}</a
-          >`
+        ? html`<a href=${srefHref('atlas.sheet', { num: next.num })}>NEXT · ${next.num}</a>`
         : nothing}
       <a href="${out(href.plate(sheet.standalone))}" target=${outTarget}>STANDALONE PLATE ↗</a>
     `)}
@@ -962,7 +977,10 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         </p>
         <h3>WHAT IS DOGFOODED</h3>
         <p>
-          <code>uiSref</code> and <code>uiSrefActive</code> on every rail link;
+          <code>srefHref</code>, <code>srefActiveClass</code> and
+          <code>srefAriaCurrent</code> — the attribute-part forms, so the
+          <code>href</code> in the source is the <code>href</code> in the DOM — on every
+          rail link, cover card and key chip;
           <code>resolve</code> for the manifest, the plate, and — on
           <code>atlas.city</code> — three.js itself, so a 600 KB library is
           fetched by the state that needs it and by no other;
@@ -976,7 +994,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <p>
           Every REV across every plate — the set's own revision record, latest first —
           is at
-          <a ${uiSref('atlas.log')} href="${to(href.log)}"><code>${href.log}</code></a>.
+          <a href=${srefHref('atlas.log')}><code>${href.log}</code></a>.
           It is parsed at build time out of <code>www/atlas.lit-ui-router.dev/HISTORY.md</code>, the frozen
           record, and rides the manifest as JSON, so the app fetches no markdown. The
           sheets themselves carry no revision table: each describes its present state,
@@ -1041,7 +1059,7 @@ export const NotFoundView: RoutedLitTemplate = () => html`
     <div class="notes">
       <p>
         No plate is filed under that number.
-        <a ${uiSref('atlas.gallery')} href="${to(href.gallery)}">Back to the index</a>.
+        <a href=${srefHref('atlas.gallery')}>Back to the index</a>.
       </p>
     </div>
   </section>

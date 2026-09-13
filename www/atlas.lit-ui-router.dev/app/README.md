@@ -111,16 +111,17 @@ The app is deliberately two layers, and they do not mix.
 
 **Base — `src/*.ts`.** Exemplary, boring `lit-ui-router`: a route table (`routes.ts`) projected as
 data and shared with the server, states with `component` and `resolve` (`router.ts`), an abstract
-`atlas` shell whose view renders the nav rail and a nested `<ui-view>` (`views.ts`), `uiSref` and
-`uiSrefActive` on every link, `redirectTo` for `/office` → sheet 14, a url-less `atlas.notFound` as
+`atlas` shell whose view renders the nav rail and a nested `<ui-view>` (`views.ts`), the
+attribute-part link forms — `srefHref` in the `href`, `srefActiveClass` in the `class`,
+`srefAriaCurrent` in `aria-current` — on every link, `redirectTo` for `/office` → sheet 14, a url-less `atlas.notFound` as
 the `otherwise` target, the Navigation API location plugin with a `pushState` fallback, document
 titles set on `onSuccess` from `titles.ts` (the same strings the prerender writes), and the cover's
 key index carried as typed query params on `atlas.gallery` — every chip a `uiSref`, every filtered
 index a link. Every card and every plate page's `.plate-data` strip then draws the same
 `keyBlock`: FORM's keys as a miniature of the plates' own title block (hairline cells, the data
 face, no field names — position is the key), subject and the basis qualifier down the left,
-a drawn projection glyph and the interactive lamp down the right. A carried slot is a `uiSref`
-back into the filtered index and `uiSrefActive` echoes the applied filter on it. Two slots are
+a drawn projection glyph and the interactive lamp down the right. A carried slot is a `srefHref`
+back into the filtered index and `srefActiveClass` echoes the applied filter on it. Two slots are
 asymmetric on purpose: the mode lamp is drawn only when a plate is interactive (twenty STATIC
 badges in twenty-five is noise) and `basis` holds its slot with an em dash off the city group.
 The card is therefore an `<article>`, not an `<a>`: the `h3`'s link is the one primary link and
@@ -208,7 +209,10 @@ is strict in four ways, and each one is a line in the build:
   `<title>`, so `artifact.ts` strips the wrapper and moves the title to byte 0.
 - **The page sits on an opaque origin path**, so path routing is out: `src/router.ts` takes
   `hashLocationPlugin` instead of the Navigation API/pushState pair, and every url becomes
-  `#/sheet/7`. `uiSref` writes those hrefs itself; `views.ts` prefixes its static `href` attributes.
+  `#/sheet/7`. Nothing in `views.ts` knows: `srefHref` asks the router for
+  the url, so `#/sheet/7` comes out of the location plugin and not out of a string prefix. The
+  one `to()` left in `views.ts` is for the key box's `<form action>`, which is a plain GET
+  target and takes no directive.
 - **The flat set does not exist offline**, so `THE FLAT SET ↗` and each sheet's `STANDALONE PLATE ↗`
   point at `https://atlas.lit-ui-router.dev/set/…` in a new tab.
 
