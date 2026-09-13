@@ -688,6 +688,10 @@
         background: transparent;
         color: inherit;
         display: block;
+        /* the backdrop sits at z-index -1: isolate so it stays inside THIS card,
+           and clip so it keeps the card's own edges */
+        isolation: isolate;
+        overflow: hidden;
       }
       .card:focus-within {
         outline: 2px solid var(--accent);
@@ -710,19 +714,28 @@
       .card:has(.card-go.is-active) {
         border-color: var(--accent);
       }
-      /* THE WINDOW (T16) — a fixed 259 x 150 box across the head of the card,
-         above the text and never moving. Its tint is the LIGHTER of the card's
-         two — 28% paper against the body's 76% — so it reads as a window
-         within the panel: the lattice is plainest here, and the plate — a crop
-         drawn at build time by generator/thumbs.mjs — fades in OVER the tint
-         when the card is hovered or focused. Nothing in the card moves either
-         way. */
+      /* THE BACKDROP (T16) — the plate's picture, laid over the WHOLE card and
+         behind everything written on it. `z-index: -1` inside the card's own
+         stacking context is what puts it there: a negative layer paints under
+         the in-flow backgrounds of the window and the body, both of which are
+         translucent paper, so the drawing ghosts through the writing and the
+         lattice keeps running through everything the drawing does not cover
+         (the picture is transparent outside the ink — see generator/thumbs.mjs).
+         Top-anchored, so the head window always holds the drawing's top. At
+         rest it is invisible; hover or focus fades it in. Nothing moves. */
       .card-pic {
         display: block;
-        position: relative;
+        position: absolute;
+        inset: 0;
+        z-index: -1;
+      }
+      /* THE WINDOW — a pane across the head of the card, 259 x 150 in ratio,
+         above the backdrop and never moving. Its tint is the LIGHTER of the
+         card's two — 28% paper against the body's 76% — so it reads as a
+         window within the panel: the lattice and the plate are plainest here. */
+      .card-window {
         width: 100%;
         aspect-ratio: 259 / 150;
-        overflow: hidden;
         border-bottom: 1px solid var(--line);
         background: color-mix(in oklab, var(--paper) 28%, transparent);
       }
@@ -755,6 +768,9 @@
         width: 100%;
         height: 100%;
         object-fit: cover;
+        /* top-anchored: the head window holds the drawing's top, and a plate
+           shorter than the card runs out into transparency behind the body */
+        object-position: 50% 0;
       }
       /* The theme picks ONE of the pair, in the three states atlas.css declares.
          A `display: none` lazy image is never requested, so the card fetches
@@ -777,18 +793,14 @@
       :root[data-theme='dark'] .card-pic .d {
         display: block;
       }
-      /* The city's picture is the cover's own hero SVG, sliced to the box
-         rather than letterboxed into it — `xMidYMid slice` by layout: it is
-         sized off the HEIGHT and allowed to run past the window's sides. */
-      .card-pic-svg {
-        display: grid;
-        place-items: center;
-      }
+      /* The city's picture is the cover's own hero SVG — the whole drawing at
+         the card's width, top-anchored, exactly as a plate's raster is, and
+         transparent below where the body's paper takes over. */
       .card-pic-svg svg {
         display: block;
-        height: 100%;
-        width: auto;
-        min-width: 100%;
+        width: 100%;
+        height: auto;
+        min-width: 0;
         min-height: 0;
         max-width: none;
       }

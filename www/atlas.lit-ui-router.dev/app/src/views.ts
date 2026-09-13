@@ -565,14 +565,14 @@ const keyIndex = (manifest: Manifest, filter: Filter, router?: UIRouter): Templa
 };
 
 /**
- * THE CARD'S WINDOW (T16) — a fixed 259 x 150 box across the head of the card,
- * holding a crop of the plate drawn at build time by generator/thumbs.mjs. One
- * WebP per theme, and only the one the theme asks for is ever fetched:
- * `display: none` suppresses a lazy image's request, so the pair costs a
- * single file. At rest the image is transparent and the box is a window onto
- * the lattice behind the grid; hover or focus fades the plate in over it, and
- * nothing in the card moves. Decorative either way — the card's title says
- * what it is.
+ * THE CARD'S BACKDROP (T16) — the whole card's box, holding the whole plate
+ * drawn at build time by generator/thumbs.mjs: transparent outside the ink, so
+ * it lies BEHIND the head window and the text panel with the lattice still
+ * running through it. One WebP per theme, and only the one the theme asks for
+ * is ever fetched: `display: none` suppresses a lazy image's request, so the
+ * pair costs a single file. At rest the image is invisible; hover or focus
+ * fades the plate in, and nothing in the card moves. Decorative either way —
+ * the card's title says what it is.
  */
 const cardPic = (thumb: Thumb): TemplateResult => html`
   <div class="card-pic">
@@ -580,8 +580,8 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
       class="l"
       src="${thumbSrc(thumb.light)}"
       alt=""
-      width="518"
-      height="300"
+      width="600"
+      height="800"
       loading="lazy"
       decoding="async"
     />
@@ -589,26 +589,32 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
       class="d"
       src="${thumbSrc(thumb.dark)}"
       alt=""
-      width="518"
-      height="300"
+      width="600"
+      height="800"
       loading="lazy"
       decoding="async"
     />
   </div>
 `;
 
+/** The pane across the head of the card: paper, thinner than the body's, over
+ *  the backdrop. It holds the card's one fixed proportion and no content. */
+const cardWindow = (): TemplateResult => html`<div class="card-window"></div>`;
+
 /**
  * A cover card. The card is a CONTAINER, not a link: the title carries the one
  * primary `uiSref` and stretches over the whole card through a `::after`
  * (the Inclusive Components card pattern), so the key block's own filter links
  * are valid interactive content rather than links nested inside a link. Tab
- * order is title, then keys. The text lives in `.card-body`, which carries the
- * card's paper, translucent: the lattice reads behind the writing too, and the
- * window is only the thinner pane of the same panel.
+ * order is title, then keys. Three layers, back to front: the plate's picture
+ * over the whole box, the head window's thinner paper, and `.card-body`, which
+ * carries the card's paper translucent — so the lattice and the drawing both
+ * read behind the writing, and the window is only the plainest pane of the
+ * same panel.
  */
 const sheetCard = (sheet: SheetRow): TemplateResult => html`
   <article class="card">
-    ${cardPic(sheet.thumb)}
+    ${cardPic(sheet.thumb)} ${cardWindow()}
     <div class="card-body">
       <span class="n">${isAppendix(sheet.num) ? 'APPENDIX' : 'SHEET'} ${sheet.num} · REV ${sheet.rev}</span>
       <h3>
@@ -637,6 +643,7 @@ const sheetCard = (sheet: SheetRow): TemplateResult => html`
 const cityCard = (extra: ExtraRow, hero: string): TemplateResult => html`
   <article class="card">
     <div class="card-pic card-pic-svg">${unsafeHTML(hero)}</div>
+    ${cardWindow()}
     <div class="card-body">
       <span class="n">${extra.shno} · REV ${extra.rev}</span>
       <h3>

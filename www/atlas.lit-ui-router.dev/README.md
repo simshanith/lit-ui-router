@@ -53,7 +53,7 @@ cd www/atlas.lit-ui-router.dev && mise exec -- node generator/stage-site.mjs   #
 mise exec -- pnpm exec wrangler pages deploy dist --project-name altitude-atlas --branch worktree-altitude-atlas --commit-dirty=true
 ```
 
-**The card pictures.** Every card on the cover carries a 259 x 150 crop of its own
+**The card pictures.** Every card on the cover carries a 300 x 400 picture of its own
 plate — `app/public/thumbs/<id>.webp` and `<id>-dark.webp`, one per theme, tracked
 generated files like the fragments beside them. `generator/thumbs.mjs` draws them by
 photographing the flat set above in headless Chromium (playwright, reached through
@@ -67,10 +67,13 @@ node www/atlas.lit-ui-router.dev/generator/thumbs.mjs www/atlas.lit-ui-router.de
 node www/atlas.lit-ui-router.dev/generator/build.mjs www/atlas.lit-ui-router.dev   # green
 ```
 
-The window is the plate at the card's own width, sliced to the card's ratio; where the
-default slice lands on a schedule rather than a drawing, the plate gets a row in
-`thumbs.mjs`'s one `TUNING` table (`target`, `focus`, `x`, and `zoom` to enlarge the
-target before the window is cut) and nothing else changes. To try a row without touching
+The picture is the card's BACKDROP, not a strip across its head: the whole plate laid at
+the card's width, top-anchored, transparent everywhere the ink is not, so the lattice runs
+through it and the head window and the text panel lie over it. Where the default reads as
+grey at card width, the plate gets a row in `thumbs.mjs`'s one `TUNING` table (`zoom` to
+enlarge it into a detail, `x`/`focus` to place the card box, `fit: 'contain'` to letterbox
+the whole drawing instead, `crop` to fit the drawing band alone, `target` for a lane's
+canvas) and nothing else changes. To try a row without touching
 the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <file.json>`.
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (`/`, `/sheet/7/`, `/city/`,

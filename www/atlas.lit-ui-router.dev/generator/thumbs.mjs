@@ -1,9 +1,15 @@
 // THUMBS — a picture of the plate for every card on the cover.
 //
 // The cards carried four keys, a caption and a verdict and no drawing at all,
-// which made the index a wall of type. This step gives each one a 259 × 150
-// picture of its own plate, rendered at build time and checked in beside
-// `app/public/sheets/*.html` as a tracked generated file.
+// which made the index a wall of type. This step gives each one a 300 × 400
+// picture of its own plate — the card's whole box, not a strip across its head
+// — rendered at build time and checked in beside `app/public/sheets/*.html` as
+// a tracked generated file. The app lays it as the card's BACKDROP: the head
+// window and the translucent text panel sit over it, and everything the
+// drawing does not cover stays transparent, so the lattice behind the grid
+// keeps running through the picture. Hence the capture is transparent too —
+// no paper, no ground, no sheet: the plate's own ink and its own `var(--paper-2)`
+// block faces (the fills that hide an isometric's hidden lines) and nothing else.
 //
 // It is a RASTER step, not an inline-SVG one, and deliberately so: the set's
 // first plates come to 1,085,034 bytes of SVG (373,671 gzipped), and the cover
@@ -74,43 +80,55 @@ const CYTOSCAPE = new URL('../app/node_modules/cytoscape/dist/cytoscape.min.js',
 const SCALE = 2;
 /** Wide enough that a plate's own `min-width: 1000px` never has to bite. */
 const VIEWPORT = { width: 1400, height: 1000 };
+/** WebP's lossy quality. Line art with an alpha channel is the dearest thing
+ *  this codec draws, and turning the knob barely moves it — 0.70 saves 5% on
+ *  the heaviest plate — so the picture keeps the honest setting. */
+const QUALITY = 0.78;
 
 /**
  * PER-SHEET TUNING — the one hand table in this file.
  *
- * `target` is the element photographed (default: the plate's SVG). `focus` is
- * where the 259 × 150 window sits down the target's height, 0 top to 1 bottom;
- * `x` is the same, across the target's width, 0 left to 1 right; the default
- * for both centres the window, exactly as `preserveAspectRatio="xMidYMid
- * slice"` would. `zoom` enlarges the target that many times before the window
- * is cut, so the card holds 1/zoom of the drawing at full detail: a plate is
- * re-laid that many card-widths wide, while a lane is already drawn at stage
- * width and so has its window narrowed instead. A plate whose default crop
- * lands on a schedule rather than a drawing gets a row here — that is the whole
- * per-sheet knob.
+ * `fit` chooses how the drawing meets the 300 × 400 card box:
+ *   'cover'   (the default) lays the plate at the CARD'S WIDTH, top-anchored,
+ *             so the drawing reads at the size the city hero reads at; a plate
+ *             taller than the card runs off the bottom, a shorter one simply
+ *             leaves transparent space below.
+ *   'contain' scales the WHOLE plate to sit inside the box — width or height,
+ *             whichever binds — centred across and top-anchored down, with
+ *             transparent margins. Nearly every plate is landscape, so contain
+ *             is width-bound and reads smaller than cover; it earns its place
+ *             on the portrait plates and wherever the tail of a drawing must
+ *             not be cut.
+ *
+ * `target` is the element photographed (default: the plate's SVG). `crop` is a
+ * `{ top, bottom }` pair of fractions down the target — the band of the plate
+ * that IS the drawing, so contain can fit it without the schedule underneath.
+ * `focus` is where the card box sits down that band, 0 top (the default) to 1
+ * bottom; `x` is the same across it, 0 left to 1 right, 0.5 (the default)
+ * centring. `zoom` enlarges the target that many times before the box is cut,
+ * so the card holds 1/zoom of the drawing at full detail: a plate is re-laid
+ * that many card-widths wide, while a lane is already drawn at stage width and
+ * so has its box narrowed instead.
  */
 const TUNING = {
-  // the four interactive lanes draw into a cytoscape canvas, not an SVG plate
-  '1i': { target: '#lw-cy', zoom: 1.08 },
-  '2b': { target: '#cb-cy', zoom: 1.47, x: 0, focus: 0.18 },
-  '12i': { target: '#rg-cy', zoom: 2.45, x: 1, focus: 0.02 },
-  '14i': { target: '#pg-cy', zoom: 1.8, x: 0.78 },
-  // plates whose drawing sits above a tall schedule
-  7: { focus: 0.24 },
-  '7a': { focus: 0.26 },
-  '7b': { focus: 0.2 },
-  3: { focus: 0.3 },
-  '3b': { focus: 0.3 },
-  8: { focus: 0.3 },
-  10: { focus: 0.3 },
-  11: { focus: 0.22 },
-  12: { focus: 0.12 },
-  14: { focus: 0.22 },
-  a1: { focus: 0.1 },
-  // plates whose whole figure reads as grey at card size, enlarged into a detail
-  5: { zoom: 1.24, x: 0.62, focus: 0.25 },
-  6: { zoom: 1.45, x: 0, focus: 0.13 },
-  13: { zoom: 2.6, x: 0.01, focus: 0.057 },
+  // The four interactive lanes draw into a cytoscape canvas, not an SVG plate:
+  // the canvas is landscape and cannot be re-laid, so the zoom is what narrows
+  // the portrait card box until it sits INSIDE the lane rather than overhanging
+  // it — below about 2× the box runs off the bottom of the stage.
+  '1i': { target: '#lw-cy', zoom: 2.3, focus: 0.45 },
+  '2b': { target: '#cb-cy', zoom: 2.3, x: 0.12, focus: 0.35 },
+  '12i': { target: '#rg-cy', zoom: 2.2, x: 1, focus: 0.05 },
+  '14i': { target: '#pg-cy', zoom: 2, x: 0.72, focus: 0.12 },
+  // plates whose whole figure reads as grey at card width, enlarged into a detail
+  '3a': { zoom: 1.3, x: 0.1 },
+  4: { zoom: 1.2, x: 0.45 },
+  5: { zoom: 1.5, x: 0.55, focus: 0.05 },
+  6: { zoom: 1.5, x: 0 },
+  13: { zoom: 1.8, x: 0.02, focus: 0.02 },
+  // Every other plate takes the default: the whole drawing at the card's width,
+  // top-anchored. They are landscape to a plate, and a landscape drawing laid at
+  // the card's width is already as large as it can be — which is why no row here
+  // asks for `fit: 'contain'`: contain would only make it smaller.
 };
 
 // `--tuning` merges a scratch override over TUNING, per id, shallowly.
@@ -161,28 +179,44 @@ async function serveSet(dir) {
   return server;
 }
 
-// The plate is re-laid at the card's own width and everything around it is cut,
-// so the window is a slice of the DRAWING and never of the page it sits on.
-// `zoom` lays it out that many card-widths wide instead of one, so the window
-// keeps its 259 × 150 and holds 1/zoom of the drawing at full detail.
-const fitCss = (zoom) => `
-  html, body { background: var(--paper) !important; }
+// The plate is re-laid at a width this step picks and everything around it is
+// cut, so the capture is a piece of the DRAWING and never of the page it sits
+// on. Every paper in the stack is nulled as well: the picture is the card's
+// backdrop, and what the ink does not cover has to stay see-through.
+const fitCss = (widthPx) => `
+  html, body { background: transparent !important; }
   body { padding: 0 !important; }
-  .sheet, .sheet-body, .plate, .figure-wrap { margin: 0 !important; padding: 0 !important; border: 0 !important; }
-  .plate::after { display: none !important; }
+  .sheet { background: transparent !important; box-shadow: none !important; border: 0 !important; }
+  .sheet::before, .sheet::after, .plate::after { display: none !important; }
+  .sheet, .sheet-body, .plate, .figure-wrap, figure { margin: 0 !important; padding: 0 !important;
+    border: 0 !important; background: transparent !important; }
+  .figure-wrap { overflow: visible !important; }
   .figure-wrap svg { min-width: 0 !important; max-width: none !important;
-    width: ${String(THUMB_W * zoom)}px !important; height: auto !important; margin: 0 !important; }
+    width: ${String(widthPx)}px !important; height: auto !important; margin: 0 !important; }
 `;
+
+/** Nothing between the target and the page may paint: the capture is alpha. */
+async function stripPaper(page, selector) {
+  await page.evaluate((sel) => {
+    for (let node = document.querySelector(sel); node; node = node.parentElement) {
+      node.style.setProperty('background', 'transparent', 'important');
+      node.style.setProperty('box-shadow', 'none', 'important');
+    }
+    document.documentElement.style.setProperty('background', 'transparent', 'important');
+    document.body.style.setProperty('background', 'transparent', 'important');
+  }, selector);
+}
 
 /**
  * Chromium resizes and encodes the WebP itself — the build needs no image
- * library. Every window lands on the same 518 × 300 grid whatever size it was
- * clipped at, so a lane's native canvas and a plate's re-laid SVG agree.
+ * library. The capture is only the part of the 300 × 400 box the drawing
+ * actually reaches; it is laid on a 600 × 800 canvas that is never filled, so
+ * the rest of the card stays transparent and the lattice runs through it.
  */
-async function toWebp(page, png) {
+async function toWebp(page, { png, dx, dy, dw, dh }) {
   return Buffer.from(
     await page.evaluate(
-      async ([data, w, h]) => {
+      async ([data, w, h, x, y, cw, ch, QUALITY]) => {
         const bitmap = await createImageBitmap(
           await (await fetch(`data:image/png;base64,${data}`)).blob(),
         );
@@ -191,10 +225,21 @@ async function toWebp(page, png) {
         canvas.height = h;
         const ctx = canvas.getContext('2d');
         ctx.imageSmoothingQuality = 'high';
-        ctx.drawImage(bitmap, 0, 0, w, h);
-        return canvas.toDataURL('image/webp', 0.82).slice('data:image/webp;base64,'.length);
+        ctx.drawImage(bitmap, x, y, cw, ch);
+        return canvas
+          .toDataURL('image/webp', Number(QUALITY))
+          .slice('data:image/webp;base64,'.length);
       },
-      [png.toString('base64'), THUMB_W * SCALE, THUMB_H * SCALE],
+      [
+        png.toString('base64'),
+        THUMB_W * SCALE,
+        THUMB_H * SCALE,
+        dx * SCALE,
+        dy * SCALE,
+        dw * SCALE,
+        dh * SCALE,
+        QUALITY,
+      ],
     ),
     'base64',
   );
@@ -208,28 +253,59 @@ async function shoot(page, { id, standalone, theme, origin }) {
   await page.evaluate((t) => document.documentElement.setAttribute('data-theme', t), theme);
   const target = tune.target ?? DEFAULT_TARGET;
   const zoom = Math.max(1, tune.zoom ?? 1);
+  const contain = tune.fit === 'contain';
+  const cropTop = tune.crop?.top ?? 0;
+  const cropBottom = tune.crop?.bottom ?? 1;
   const locator = page.locator(target).first();
   await locator.waitFor({ state: 'visible', timeout: 20000 });
   // A cytoscape lane paints on its own schedule; an SVG plate is already there.
   if (tune.target) await page.waitForTimeout(1200);
-  else await page.addStyleTag({ content: fitCss(zoom) });
-  const box = await locator.boundingBox();
+  else await page.addStyleTag({ content: fitCss(THUMB_W * zoom) });
+  await stripPaper(page, target);
+  let box = await locator.boundingBox();
   if (!box) throw new Error(`${id}: ${target} has no box`);
-  // The window is the full width of the target, sliced to the card's ratio; a
-  // plate's enlargement is the relayout above, a lane's is this narrowing.
-  const width = tune.target ? box.width / zoom : Math.min(box.width, THUMB_W);
-  const height = (width * THUMB_H) / THUMB_W;
-  const focus = tune.focus ?? 0.5;
-  const x = tune.x ?? 0.5;
+  if (!tune.target && contain) {
+    // the plate's own ratio, of the cropped band, decides the fitted width
+    const ratio = box.width / (box.height * (cropBottom - cropTop));
+    await page.addStyleTag({ content: fitCss(Math.min(THUMB_W, THUMB_H * ratio) * zoom) });
+    box = await locator.boundingBox();
+    if (!box) throw new Error(`${id}: ${target} has no box`);
+  }
+  // The card box, in the page's own pixels: a plate is re-laid to the card's
+  // width above, so the box is the card; a lane keeps its native canvas and
+  // has the box narrowed around it instead.
+  const winW = tune.target ? box.width / zoom : THUMB_W;
+  const winH = (winW * THUMB_H) / THUMB_W;
+  // the band of the target that is the drawing — the whole of it by default
+  const region = {
+    x: box.x,
+    y: box.y + box.height * cropTop,
+    width: box.width,
+    height: box.height * (cropBottom - cropTop),
+  };
+  const originX = region.x + (region.width - winW) * (tune.x ?? 0.5);
+  const originY = region.y + (region.height - winH) * (tune.focus ?? 0);
+  // Only where the drawing actually is gets photographed; the rest of the card
+  // box is never captured at all, and so stays alpha on the canvas.
+  const cx = Math.max(originX, region.x);
+  const cy = Math.max(originY, region.y);
+  const cw = Math.min(originX + winW, region.x + region.width) - cx;
+  const ch = Math.min(originY + winH, region.y + region.height) - cy;
+  if (cw <= 0 || ch <= 0) throw new Error(`${id}: the card box misses the drawing entirely`);
   // clip is in CSS px; the device scale factor is what makes the capture 2×
-  return page.screenshot({
-    clip: {
-      x: box.x + Math.max(0, box.width - width) * x,
-      y: box.y + Math.max(0, box.height - height) * focus,
-      width,
-      height: Math.min(height, box.height),
-    },
+  const png = await page.screenshot({
+    fullPage: true,
+    omitBackground: true,
+    clip: { x: cx, y: cy, width: cw, height: ch },
   });
+  const scale = THUMB_W / winW;
+  return {
+    png,
+    dx: (cx - originX) * scale,
+    dy: (cy - originY) * scale,
+    dw: cw * scale,
+    dh: ch * scale,
+  };
 }
 
 const manifest = JSON.parse(readFileSync(join(OUT, 'app', 'public', 'manifest.json'), 'utf8'));
@@ -266,8 +342,8 @@ try {
   );
   for (const card of cards) {
     for (const theme of ['light', 'dark']) {
-      const png = await shoot(page, { ...card, theme, origin });
-      const webp = await toWebp(page, png);
+      const shot = await shoot(page, { ...card, theme, origin });
+      const webp = await toWebp(page, shot);
       const file = join(dir, thumbFile(card.id, theme));
       writeFileSync(file, webp);
       bytes += webp.length;

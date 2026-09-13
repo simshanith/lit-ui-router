@@ -20,7 +20,7 @@ export type LabelKey = (typeof LABEL_KEYS)[number];
 /** The one subject `basis` says anything about. */
 export const BASIS_SUBJECT = 'city';
 
-/** The card's picture of the plate — one 259 x 150 WebP per theme. */
+/** The card's picture of the plate — one 300 x 400 WebP per theme. */
 export interface Thumb {
   light: string;
   dark: string;

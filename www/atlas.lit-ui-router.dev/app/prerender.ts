@@ -261,15 +261,16 @@ const keyIndex = (): TemplateResult => html`
   </div>
 `;
 
-/** Twin of `cardPic` in src/views.ts — T16's window onto the plate. */
+/** Twin of `cardPic` in src/views.ts — T16's backdrop, the whole plate under
+ *  the whole card. */
 const cardPic = (thumb: Thumb): TemplateResult => html`
   <div class="card-pic">
     <img
       class="l"
       src="${thumbSrc(thumb.light)}"
       alt=""
-      width="518"
-      height="300"
+      width="600"
+      height="800"
       loading="lazy"
       decoding="async"
     />
@@ -277,17 +278,20 @@ const cardPic = (thumb: Thumb): TemplateResult => html`
       class="d"
       src="${thumbSrc(thumb.dark)}"
       alt=""
-      width="518"
-      height="300"
+      width="600"
+      height="800"
       loading="lazy"
       decoding="async"
     />
   </div>
 `;
 
+/** Twin of `cardWindow` in src/views.ts — the head pane over the backdrop. */
+const cardWindow = (): TemplateResult => html`<div class="card-window"></div>`;
+
 const sheetCard = (row: SheetRow): TemplateResult => html`
   <article class="card">
-    ${cardPic(row.thumb)}
+    ${cardPic(row.thumb)} ${cardWindow()}
     <div class="card-body">
       <span class="n">${isAppendix(row.num) ? 'APPENDIX' : 'SHEET'} ${row.num} · REV ${row.rev}</span>
       <h3><a class="card-go" href="${href.sheet(row.num)}">${articleTitle(row.title)}</a></h3>
@@ -306,6 +310,7 @@ const sheetCard = (row: SheetRow): TemplateResult => html`
 const cityCard = (extra: ExtraRow): TemplateResult => html`
   <article class="card">
     <div class="card-pic card-pic-svg">${unsafeHTML(manifest.cover.hero)}</div>
+    ${cardWindow()}
     <div class="card-body">
       <span class="n">${extra.shno} · REV ${extra.rev}</span>
       <h3><a class="card-go" href="${href.city}">${articleTitle(extra.title)}</a></h3>
