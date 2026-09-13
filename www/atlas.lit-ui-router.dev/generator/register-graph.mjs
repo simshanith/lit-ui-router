@@ -308,6 +308,10 @@ const INIT = `
 
   var cy = cytoscape({ container: stage, elements: els, style: style(pal()), layout: { name: 'preset' },
     minZoom: 0.12, maxZoom: 3.4, autoungrabify: true });
+  // The stage keeps a handle on its own graph. Nothing on the page reads it;
+  // generator/thumbs.mjs does, to re-lay this lane into the portrait window of
+  // a cover card before photographing it — a landscape slice read as a corner.
+  stage.__cy = cy;
 
   var shroud = false;
   function applyShroud() {

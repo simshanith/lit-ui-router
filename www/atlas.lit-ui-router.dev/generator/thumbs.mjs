@@ -109,16 +109,70 @@ const QUALITY = 0.78;
  * so the card holds 1/zoom of the drawing at full detail: a plate is re-laid
  * that many card-widths wide, while a lane is already drawn at stage width and
  * so has its box narrowed instead.
+ *
+ * A LANE takes a second set, all of them read by `relayLane` below: `stage` is
+ * the [w, h] the graph is re-laid in (three card-widths, so the labels survive
+ * the scaling down; taller than the card's ratio if `focus` should have room to
+ * slide), `layout` a cytoscape layout to run inside it, `turn: 'quarter'` a
+ * quarter turn of the preset positions instead, `hide` a selector for elements
+ * the card has no room for, `fitTo` a selector for the part that IS the
+ * picture, `share` the fraction of that part's width the card keeps when the
+ * whole of it cannot be read (anchored top left, the rest running off the
+ * edge), `font` the label size to restyle to, `padding` the margin `cy.fit`
+ * leaves, and `anchor: 'top'` puts the slack under the graph.
  */
 const TUNING = {
-  // The four interactive lanes draw into a cytoscape canvas, not an SVG plate:
-  // the canvas is landscape and cannot be re-laid, so the zoom is what narrows
-  // the portrait card box until it sits INSIDE the lane rather than overhanging
-  // it — below about 2× the box runs off the bottom of the stage.
-  '1i': { target: '#lw-cy', zoom: 2.3, focus: 0.45 },
-  '2b': { target: '#cb-cy', zoom: 2.3, x: 0.12, focus: 0.35 },
-  '12i': { target: '#rg-cy', zoom: 2.2, x: 1, focus: 0.05 },
-  '14i': { target: '#pg-cy', zoom: 2, x: 0.72, focus: 0.12 },
+  // THE FOUR INTERACTIVE LANES draw into a cytoscape canvas, not an SVG plate,
+  // and each is arranged for a wide stage. A portrait slice of one is a CORNER
+  // of the graph and reads as nothing, so every lane is re-laid instead: the
+  // stage takes the card's own proportion at three times its size, the graph is
+  // laid again inside it and fitted whole, and the capture scales it down.
+  // The circuit takes a ring and the pipeline its rings; the bench is stood up
+  // a quarter turn, so what ran left to right runs top to bottom; the register
+  // keeps its own preset order — its 200 nodes are a punchcard, and a punchcard
+  // is read as a texture, not as labels.
+  '1i': {
+    target: '#lw-cy',
+    stage: [900, 1200],
+    layout: { name: 'circle' },
+    padding: 30,
+    font: 26,
+    anchor: 'top',
+  },
+  '2b': {
+    target: '#cb-cy',
+    stage: [900, 1200],
+    hide: 'node.band',
+    turn: 'quarter',
+    padding: 40,
+    font: 26,
+    anchor: 'top',
+  },
+  // The register is a matrix, not a graph to re-lay: rows are packages and
+  // columns are task names, and moving a cell would be a lie. Fitted whole it
+  // is a thin band of dots under a fan of wires, so the wires and everything
+  // written around the matrix step aside, and the card takes the first half of
+  // the columns at a size that lets their names be read down the head.
+  '12i': {
+    target: '#rg-cy',
+    stage: [900, 1200],
+    hide: 'edge, node.band, node.foot, node.rowlabel',
+    fitTo: 'node.cell, node.head',
+    share: 0.55,
+    font: 26,
+    padding: 18,
+  },
+  // the pipeline is one basis fanning into probes, plates and drawings, and
+  // stood up as tiers it spends the card's head on the lone node at the top:
+  // rung out in rings instead, the fan itself is what the window holds
+  '14i': {
+    target: '#pg-cy',
+    stage: [900, 1200],
+    layout: { name: 'concentric', minNodeSpacing: 18 },
+    padding: 20,
+    font: 20,
+    anchor: 'top',
+  },
   // plates whose whole figure reads as grey at card width, enlarged into a detail
   '3a': { zoom: 1.3, x: 0.1 },
   4: { zoom: 1.2, x: 0.45 },
@@ -195,6 +249,86 @@ const fitCss = (widthPx) => `
     width: ${String(widthPx)}px !important; height: auto !important; margin: 0 !important; }
 `;
 
+/**
+ * A LANE, RE-LAID FOR THE CARD. The four interactive plates are cytoscape
+ * graphs arranged for a wide stage; a portrait window cut out of one is a
+ * corner of it, never the drawing. So the stage is given the card's own
+ * proportion instead (three times its size, then the capture scales it down),
+ * the lane's layout is run again inside that box, and the graph is fitted to
+ * it whole. The handle is `container.__cy`, which each lane's init hangs on
+ * its stage for exactly this — see generator/loop-walk.mjs and its three
+ * siblings. `font` restyles the labels: a graph fitted to a third of the
+ * stage's width would otherwise carry type a third the size.
+ */
+async function relayLane(
+  page,
+  selector,
+  { stage, layout, padding = 24, font, anchor, hide, turn, fitTo, share = 1 },
+) {
+  await page.evaluate(
+    ([sel, w, h, lay, pad, fontSize, top, hidden, quarter, kept, part]) => {
+      const el = document.querySelector(sel);
+      const parent = el.parentElement;
+      // the stage is a two-column grid — the info rail steps aside
+      for (const sibling of parent.children) if (sibling !== el) sibling.style.display = 'none';
+      parent.style.display = 'block';
+      parent.style.width = `${String(w)}px`;
+      parent.style.maxHeight = 'none';
+      el.style.width = `${String(w)}px`;
+      el.style.height = `${String(h)}px`;
+      el.style.maxHeight = 'none';
+      const cy = el.__cy;
+      if (!cy) throw new Error(`${sel} has no __cy handle`);
+      cy.resize();
+      if (fontSize) {
+        cy.style()
+          .selector('node')
+          .style({ 'font-size': fontSize })
+          .selector('edge')
+          .style({ 'font-size': fontSize * 0.8 })
+          .update();
+      }
+      if (hidden) cy.elements(hidden).style('display', 'none');
+      if (lay) cy.layout({ ...lay, boundingBox: { x1: 0, y1: 0, w, h }, fit: true, animate: false }).run();
+      // A quarter turn stands a wide arrangement up: the flow that ran left to
+      // right runs top to bottom, which is the shape a card has room for.
+      if (quarter) cy.nodes().positions((node) => ({ x: -node.position('y'), y: node.position('x') }));
+      // `fitTo` fits the part of the lane that IS the picture; anything else
+      // still visible is allowed to run off the card behind the text panel.
+      const shown = (kept ? cy.elements(kept) : cy.elements()).filter(':visible');
+      if (part < 1) {
+        // Only the first columns of a block too wide to read whole: the card
+        // takes that share of its width, anchored top left, and the rest runs
+        // off the edge — a detail of the register rather than all of it.
+        const bb = shown.boundingBox();
+        const level = (w - 2 * pad) / (bb.w * part);
+        cy.viewport({ zoom: level, pan: { x: pad - bb.x1 * level, y: pad - bb.y1 * level } });
+        return;
+      }
+      cy.fit(shown, pad);
+      if (top) {
+        // the layout left slack: put it all under the graph, so the head of the
+        // card carries the drawing and the text panel covers the empty half
+        const bb = shown.renderedBoundingBox();
+        cy.panBy({ x: 0, y: pad - bb.y1 });
+      }
+    },
+    [
+      selector,
+      stage[0],
+      stage[1],
+      layout ?? null,
+      padding,
+      font ?? 0,
+      anchor === 'top',
+      hide ?? '',
+      turn === 'quarter',
+      fitTo ?? '',
+      share,
+    ],
+  );
+}
+
 /** Nothing between the target and the page may paint: the capture is alpha. */
 async function stripPaper(page, selector) {
   await page.evaluate((sel) => {
@@ -259,8 +393,13 @@ async function shoot(page, { id, standalone, theme, origin }) {
   const locator = page.locator(target).first();
   await locator.waitFor({ state: 'visible', timeout: 20000 });
   // A cytoscape lane paints on its own schedule; an SVG plate is already there.
-  if (tune.target) await page.waitForTimeout(1200);
-  else await page.addStyleTag({ content: fitCss(THUMB_W * zoom) });
+  if (tune.target) {
+    await page.waitForTimeout(1200);
+    if (tune.stage) {
+      await relayLane(page, target, tune);
+      await page.waitForTimeout(1200);
+    }
+  } else await page.addStyleTag({ content: fitCss(THUMB_W * zoom) });
   await stripPaper(page, target);
   let box = await locator.boundingBox();
   if (!box) throw new Error(`${id}: ${target} has no box`);

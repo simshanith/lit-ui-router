@@ -272,6 +272,10 @@ const INIT = `
 
   var cy = cytoscape({ container: stage, elements: els, style: style(pal()), layout: { name: 'preset' },
     minZoom: 0.2, maxZoom: 2.6, autoungrabify: true });
+  // The stage keeps a handle on its own graph. Nothing on the page reads it;
+  // generator/thumbs.mjs does, to re-lay this lane into the portrait window of
+  // a cover card before photographing it — a landscape slice read as a corner.
+  stage.__cy = cy;
 
   function showTools(on) {
     cy.elements('.tool').style('display', on ? 'element' : 'none');
