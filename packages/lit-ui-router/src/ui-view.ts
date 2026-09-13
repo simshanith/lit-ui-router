@@ -51,6 +51,7 @@ type deregisterFn = () => void;
 
 /**
  * @hideconstructor
+ * @category components
  *
  * @slot - <code>&lt;ui-view&gt;</code> renders slotted content as fallback
  * whenever no routed component is active.

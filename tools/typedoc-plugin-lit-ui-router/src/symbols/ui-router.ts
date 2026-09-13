@@ -108,7 +108,6 @@ export const UIROUTER_SYMBOLS: Record<string, string> = {
   ...enumTemplate('TransitionHookPhase', '_transition_interface_'),
   ...enumTemplate('TransitionHookScope', '_transition_interface_'),
   ...enumTemplate('RejectType', '_transition_rejectfactory_'),
-  ...enumTemplate('TransitionEventType', '_transition_transitioneventtype_'),
 
   // Location plugins
   ...classTemplate(
