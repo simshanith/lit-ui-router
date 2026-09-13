@@ -43,7 +43,7 @@ from the DOM.
 
 ## Router discovery
 
-Controllers do that discovery for you. Anything else — a store, an element
+Controllers find the router for you. Anything else — a store, an element
 that is not a Lit host, a third-party component — asks the same provider
 directly, and `<ui-router>` answers both ways in from one listener:
 
