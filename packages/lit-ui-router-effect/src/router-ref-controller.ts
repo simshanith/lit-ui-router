@@ -1,3 +1,4 @@
+import { SubscriptionRef } from 'effect';
 import { ReactiveControllerHost } from 'lit';
 import { UIRouter } from '@uirouter/core';
 import { UIRouterLitElement } from 'lit-ui-router';
@@ -43,7 +44,7 @@ export interface RouterRefControllerOptions<T> extends RefControllerOptions<T> {
  * `options.initialValue`.
  */
 export class RouterRefController<T> extends RefController<
-  readonly [RouteSnapshot],
+  readonly [SubscriptionRef.SubscriptionRef<RouteSnapshot>],
   T
 > {
   constructor(

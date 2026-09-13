@@ -49,11 +49,8 @@ mise run //www/lit-ui-router.dev:serve
 turbo run test:e2e:hash
 ```
 
-`mise run test_e2e` starts its own dev server by calling
-`mise run //www/lit-ui-router.dev:serve`, so mise has to be on `PATH` for the
-whole run — being the command you typed is not enough. See
-[the suite README](../apps/sample-app-lit-e2e/README.md) for suite selection,
-and for serving an already-built site without mise.
+See [the suite README](../apps/sample-app-lit-e2e/README.md) for suite
+selection, and for serving an already-built site without mise.
 
 `mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
 

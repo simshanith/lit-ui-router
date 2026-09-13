@@ -37,7 +37,7 @@ export const EXAMPLES = {
   },
   'design-system-links': {
     title: 'Design System Links',
-    height: '520px',
+    height: '540px',
     file: 'src/main.ts',
   },
   'lint-eslint': {
