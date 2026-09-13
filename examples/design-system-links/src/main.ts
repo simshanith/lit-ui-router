@@ -191,8 +191,9 @@ const componentsState: LitStateDeclaration = {
   component: () =>
     html`<h4>Components</h4>
       <p>
-        The first and last links carried a real href here, so hovering either
-        showed the URL and a middle-click would have opened it in a new tab.
+        The first, third and last links carried a real href here, so hovering
+        any of them showed the URL and a middle-click would have opened it in a
+        new tab.
       </p>`,
 };
 
