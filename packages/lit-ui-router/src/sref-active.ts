@@ -55,7 +55,7 @@ type deregisterFn = () => void;
  * renderer that runs it without `update()` gets `noChange` — the attribute
  * is left as authored — rather than a crash.
  *
- * @internal
+ * @category directives
  */
 export abstract class SrefStatusDirective<
   Params extends SrefTargetParams,

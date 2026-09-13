@@ -22,14 +22,14 @@ import { UiView } from './ui-view.js';
 type DeregisterFn = () => void;
 
 /**
- * Options for [[SrefStatusController]]: which state to watch, plus the
+ * Options for {@link SrefStatusController}: which state to watch, plus the
  * router to watch it in.
  *
  * @category controllers
  */
 export interface SrefStatusControllerOptions extends SrefTargetParams {
   /**
-   * The [[UIRouter]] instance to observe.
+   * The {@link UIRouter} instance to observe.
    *
    * When omitted, the controller discovers the router from an ancestor
    * <code>&lt;ui-router&gt;</code> (or <code>&lt;ui-view&gt;</code>) via the
@@ -65,7 +65,7 @@ const sameShape = (
 /**
  * A Lit
  * {@link https://lit.dev/docs/composition/controllers/ | ReactiveController}
- * that exposes a state's [[SrefStatus]] — `active`, `exact`, `entering`,
+ * that exposes a state's {@link SrefStatus} — `active`, `exact`, `entering`,
  * `exiting` — to its host, so the host's own template decides what to do
  * with it.
  *
@@ -173,10 +173,10 @@ export class SrefStatusController implements ReactiveController {
   }
 
   /**
-   * The observed [[UIRouter]] instance.
+   * The observed {@link UIRouter} instance.
    *
    * `undefined` until provided via
-   * [[SrefStatusControllerOptions.router]] or discovered from an ancestor
+   * {@link SrefStatusControllerOptions.router} or discovered from an ancestor
    * <code>&lt;ui-router&gt;</code> on connect.
    */
   get router(): UIRouter | undefined {
@@ -184,7 +184,7 @@ export class SrefStatusController implements ReactiveController {
   }
 
   /**
-   * The merged [[SrefStatus]] of every watched target, or `undefined` while
+   * The merged {@link SrefStatus} of every watched target, or `undefined` while
    * there is no router or no target.
    */
   get status(): SrefStatus | undefined {
@@ -234,7 +234,7 @@ export class SrefStatusController implements ReactiveController {
    * `'page'` while the exact state is active, nothing otherwise.
    *
    * @param value another token, or `{ exact, active }` to mark an active
-   *   ancestor too. See [[AriaCurrentValues]].
+   *   ancestor too. See {@link AriaCurrentValues}.
    */
   ariaCurrent(
     value?: AriaCurrentValue | AriaCurrentValues,
