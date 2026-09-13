@@ -133,6 +133,6 @@ The plugin automatically adds `@category` tags to reflections:
 
 - `Core`: UIRouterLit
 - `Components`: UIRouterElement, UIViewElement
-- `Directives`: uiSref, uiSrefActive
+- `Directives`: uiSref, uiSrefActive, srefHref, srefActiveClass, srefAriaCurrent
 - `Hooks`: UiOnExit, UiOnParamsChanged
 - `Types`: LitStateDeclaration, UIViewInjectedProps, etc.

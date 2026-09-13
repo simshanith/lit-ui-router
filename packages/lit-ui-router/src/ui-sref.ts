@@ -62,6 +62,31 @@ export function uiSrefTargetEvent(targetState: TargetState): UiSrefTargetEvent {
 }
 
 /**
+ * Event name dispatched when a link's part leaves the DOM, so an enclosing
+ * container drops its target at once instead of on the next transition.
+ * @internal
+ */
+export const UI_SREF_TARGET_REMOVED_EVENT = 'uiSrefTargetRemoved';
+
+/** @internal */
+export function uiSrefTargetRemovedEvent(): Event {
+  return new Event(UI_SREF_TARGET_REMOVED_EVENT, {
+    bubbles: true,
+    composed: true,
+  });
+}
+
+/**
+ * The link a composed sref event came from: past a nested shadow root
+ * `target` is the host, not the link.
+ * @internal
+ */
+export function srefEventLink(event: Event): Element {
+  const origin = event.composedPath()[0];
+  return origin instanceof Element ? origin : (event.target as Element);
+}
+
+/**
  * `@uirouter/core` types `equals` as `any` because it resolves to
  * `angular.equals || _equals` at load time. The implementation is a deep
  * structural compare (arrays, Date by `getTime`, RegExp by source, NaN).
@@ -73,10 +98,28 @@ const paramsEqual = equals as (a: RawParams, b: RawParams) => boolean;
  * Whether two target states resolve to the same definition with the same params.
  * @internal
  */
-function sameTarget(a: TargetState | null, b: TargetState): boolean {
+export function sameTarget(a: TargetState | null, b: TargetState): boolean {
   return (
     !!a && a.$state() === b.$state() && paramsEqual(a.params(), b.params())
   );
+}
+
+/**
+ * Core's transition options as an sref sends them: relative to the enclosing
+ * view's state, inheriting params, attributed to `sref`. Shared by the
+ * element-part {@link uiSref} and the attribute-part `srefHref`.
+ * @internal
+ */
+export function srefTransitionOptions(
+  parentView: UiView | null,
+  opts: TransitionOptions = {},
+): TransitionOptions {
+  const defaultOpts: TransitionOptions = {
+    relative: parentView?.viewContext?.name,
+    inherit: true,
+    source: 'sref',
+  };
+  return extend(defaultOpts, opts || {}) as TransitionOptions;
 }
 
 /**
@@ -166,6 +209,31 @@ function opensOffApp(element: Element): boolean {
 }
 
 /**
+ * Whether a click on an sref element is the browser's to handle, so the
+ * directive must not navigate. Shared by the element-part {@link uiSref} and
+ * the attribute-part `srefHref`, so both answer the same question the same way.
+ *
+ * Author signals (`preventDefault`, `download`) apply whatever the element is.
+ * The modifier and off-app guards are scoped to links with an `href`: they hand
+ * the click back to the browser, and without one it has nothing to act on.
+ *
+ * @internal
+ */
+export function clickBelongsToBrowser(
+  event: MouseEvent,
+  element: Element,
+): boolean {
+  if (event.defaultPrevented || element.hasAttribute('download')) {
+    return true;
+  }
+  return (
+    isNativeLink(element) &&
+    element.hasAttribute('href') &&
+    (isModifiedClick(event) || opensOffApp(element))
+  );
+}
+
+/**
  * Directive class that creates state-based navigation links.
  *
  * This directive is used internally by the {@link uiSref} directive function.
@@ -225,12 +293,7 @@ export class UiSrefDirective extends AsyncDirective {
   }
 
   getOptions(opts: TransitionOptions = this.options): TransitionOptions {
-    const defaultOpts: TransitionOptions = {
-      relative: this.parentView?.viewContext?.name,
-      inherit: true,
-      source: 'sref',
-    };
-    return extend(defaultOpts, opts || {}) as TransitionOptions;
+    return srefTransitionOptions(this.parentView, opts);
   }
 
   render(
@@ -345,6 +408,8 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   disconnected(): void {
     this.element?.removeEventListener('click', this.onClick as EventListener);
+    // lit notifies before it removes the nodes: the container still hears this
+    this.element?.dispatchEvent(uiSrefTargetRemovedEvent());
     this.element = null;
     this.targetState = null;
     this.href = null;
@@ -377,20 +442,7 @@ export class UiSrefDirective extends AsyncDirective {
       return;
     }
 
-    const element = event.currentTarget as Element;
-
-    // author signals, so unscoped: they apply whatever the element is
-    if (event.defaultPrevented || element.hasAttribute('download')) {
-      return;
-    }
-
-    // scoped to links with an href: these guards hand the click back to the
-    // browser, and without one it has nothing to act on
-    if (
-      isNativeLink(element) &&
-      element.hasAttribute('href') &&
-      (isModifiedClick(event) || opensOffApp(element))
-    ) {
+    if (clickBelongsToBrowser(event, event.currentTarget as Element)) {
       return;
     }
 
