@@ -111,15 +111,12 @@ export abstract class SrefStatusDirective<
   abstract render(params: Params): unknown;
 
   /**
-   * What `update()` and a status change hand to the part. The default is
-   * `render()`; a directive that keeps the DOM in sync itself past the first
-   * commit overrides it.
+   * What `update()` and a status change hand to the part: `render()`, or
+   * `noChange` once the directive keeps the DOM in sync itself.
    *
    * @internal
    */
-  protected commit(): unknown {
-    return this.render(this.params!);
-  }
+  protected abstract commit(): unknown;
 
   /** @internal */
   update(part: AttributePart, [params]: [Params]): unknown {

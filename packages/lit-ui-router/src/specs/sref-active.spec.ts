@@ -495,6 +495,25 @@ describe('attribute-part active directives', () => {
       expect(item.classList.contains('active')).toBe(false);
     });
 
+    it("forgets a link removed behind lit's back on the next refresh", async () => {
+      const wrapper = await mount(
+        html`<li class=${srefActiveClass({ activeClasses: ['active'] })}>
+          <a href=${srefHref('users')}>Users</a>
+          <a href=${srefHref('home')}>Home</a>
+        </li>`,
+      );
+      const item = wrapper.querySelector('li')!;
+
+      await goTo('users');
+      expect(item.classList.contains('active')).toBe(true);
+
+      // plain DOM removal: no part leaves, so no uiSrefTargetRemoved
+      wrapper.querySelector('a')!.remove();
+      await goTo('home');
+      await goTo('users');
+      expect(item.classList.contains('active')).toBe(false);
+    });
+
     it('drops aria-current once the last link has left the container', async () => {
       const links = (users: boolean) =>
         html`<li aria-current=${srefAriaCurrent({})}>
