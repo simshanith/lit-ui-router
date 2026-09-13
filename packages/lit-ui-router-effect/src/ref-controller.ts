@@ -9,9 +9,11 @@ import { ReactiveController, ReactiveControllerHost } from 'lit';
  * runtime it already owns.
  */
 export interface RefRuntime {
+  /** starts an effect on a fiber the controller interrupts on disconnect */
   readonly runFork: (
     effect: Effect.Effect<void>,
   ) => Fiber.RuntimeFiber<unknown, unknown>;
+  /** runs a synchronous effect, used to read a ref's current value */
   readonly runSync: <A>(effect: Effect.Effect<A>) => A;
 }
 
@@ -21,6 +23,7 @@ export const defaultRefRuntime: RefRuntime = {
   runSync: (effect) => Effect.runSync(effect),
 };
 
+/** Options for {@link RefController}. */
 export interface RefControllerOptions<T> {
   /**
    * Invoked (before `host.requestUpdate()`) whenever the selected value

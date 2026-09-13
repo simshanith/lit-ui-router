@@ -29,10 +29,12 @@ export interface UIRouterNavigateInfo extends Record<
   uiRouter: UIRouter;
 }
 
+/** A `navigate` event whose `info` marks it as started by this plugin. */
 export interface UIRouterNavigateEvent extends NavigateEvent {
   info: UIRouterNavigateInfo;
 }
 
+/** Whether a `navigate` event was started by this plugin, as opposed to a link or script. */
 export function isUIRouterNavigateEvent(
   event?: NavigateEvent,
 ): event is UIRouterNavigateEvent {
@@ -71,6 +73,7 @@ export function composeNavigateUrl(url: string, baseHref: string): string {
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API
  */
 export class NavigationLocationService extends BaseLocationServices {
+  /** @internal */
   _config: LocationConfig;
 
   private readonly _router: UIRouter;
