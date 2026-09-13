@@ -127,9 +127,7 @@ Two limits are worth stating plainly:
   [issue #564](https://github.com/simshanith/lit-ui-router/issues/564).
 
 Rendering is a separate axis from routing verdicts. See the closing section
-of [Server-Side Routing](./server-route-matching) and the
-[`ui-router-server` status](/packages/server#status) for where that axis
-stands.
+of [Server-Side Routing](./server-route-matching) for where that axis stands.
 
 ## Related
 

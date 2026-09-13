@@ -146,9 +146,9 @@ panel and an iframe of ESLint's own `html` formatter, over the same results.
 
 `src/violations.ts` is a gallery with one deliberate violation per
 `recommended` rule, so the report is not empty: the embed below is that built
-page, and its report is static (`4 problems`, one per rule, each rule id
-linked to its docs). Open it on StackBlitz to edit the sources and watch the
-report re-run.
+page, and its report is static (`7 problems` — one per rule, plus the
+`settings.linkElements` pair on `<sp-link>`, each rule id linked to its docs).
+Open it on StackBlitz to edit the sources and watch the report re-run.
 
 <LiveExample name="lint-eslint" />
 
@@ -156,6 +156,11 @@ For the positive control, delete `${uiSref('eslint-html')}` from the second
 tab in `src/main.ts`: `lit-ui-router/anchor-is-valid` now reports against the
 app itself rather than the gallery, as an error — and the tab stops
 navigating, which is the whole reason the rule exists.
+
+The example is the npm-installed end of a check this repository runs on
+itself: oxlint loads the same six rules as JS plugins and holds the whole repo
+to them at `error`, sample apps included, where every navigation anchor is a
+`uiSref` call site.
 
 - [Open on StackBlitz](https://stackblitz.com/github/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
 - [Source on GitHub](https://github.com/simshanith/lit-ui-router/tree/main/examples/lint-eslint)
@@ -193,22 +198,6 @@ The option-aware tier widened `recommended` during the 1.0.0 release
 candidates, where a widening cost nobody a major; the remaining roadmap (a
 state-aware tier) is the same trajectory, so expect majors rather than silent
 tightening, and pin accordingly.
-
-## Status
-
-- **npm**:
-  [`eslint-plugin-lit-ui-router`](https://npmx.dev/package/eslint-plugin-lit-ui-router)
-  — `1.0.1` on `latest`.
-- **Source**:
-  [`packages/eslint-plugin-lit-ui-router`](https://github.com/simshanith/lit-ui-router/tree/main/packages/eslint-plugin-lit-ui-router)
-  — the six rules, their tests, and the generated rule docs.
-- **Dogfood**: this repository's own lint run uses the plugin against the
-  sample apps, where every navigation anchor is a `uiSref` call site, and
-  `examples/lint-eslint` exercises every `recommended` rule from an
-  npm-installed copy.
-- **Next**: the [1.0 bar](https://github.com/simshanith/lit-ui-router/issues/667)
-  — registry-install verification at both ends of the peer range, and the
-  decision on which rule tiers `recommended` carries at 1.0.
 
 ## Further reading
 
