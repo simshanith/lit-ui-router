@@ -60,8 +60,11 @@ type deregisterFn = () => void;
 export abstract class SrefStatusDirective<
   Params extends SrefTargetParams,
 > extends AsyncDirective {
+  /** @internal */
   element: Element | null = null;
+  /** @internal */
   uiRouter: UIRouterLit | undefined;
+  /** @internal */
   parentView: UiView | null = null;
 
   /** the last params `update()` saw */

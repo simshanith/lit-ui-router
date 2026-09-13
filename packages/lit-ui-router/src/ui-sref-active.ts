@@ -319,21 +319,26 @@ type deregisterFn = () => void;
  * @category directives
  */
 export class UiSrefActiveDirective extends AsyncDirective {
+  /** @internal */
   element: Element | null = null;
 
+  /** @internal */
   uiRouter: UIRouterLit | undefined;
   /** @internal */
   seekRouter(): void {
     this.uiRouter = UIRouterLitElement.seekRouter(this.element!);
   }
 
+  /** @internal */
   parentView: UiView | null = null;
   /** @internal */
   seekParentView(): void {
     this.parentView = UiView.seekParentView(this.element!);
   }
 
+  /** classes applied while any target is active */
   activeClasses: string[] = [];
+  /** classes applied while any target is exactly active */
   exactClasses: string[] = [];
   /** undefined = default (on for link elements) */
   ariaCurrentValue: AriaCurrentValue | false | AriaCurrentValues | undefined;
@@ -353,16 +358,25 @@ export class UiSrefActiveDirective extends AsyncDirective {
    */
   private warnedAriaCurrentTakeover = false;
 
+  /** the explicit target state name, or undefined in container mode */
   state: string | undefined;
+  /** the explicit target state params */
   params: RawParams = {};
+  /** the explicit target transition options */
   options: TransitionOptions = {};
 
+  /** whether any target is active, or undefined before the first status */
   active: boolean | undefined;
+  /** whether any target is exactly active, or undefined before the first status */
   exact: boolean | undefined;
+  /** whether a running transition enters a target */
   entering: boolean | undefined;
+  /** whether a running transition exits a target */
   exiting: boolean | undefined;
 
+  /** every target this directive watches: the explicit one, or the enclosed links' */
   targetStates: Set<TargetState> = new Set<TargetState>();
+  /** @internal */
   uiSrefs: WeakMap<TargetState, UiSrefElement> = new WeakMap<
     TargetState,
     UiSrefElement

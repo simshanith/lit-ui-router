@@ -35,6 +35,7 @@
   },
   "sort": ["alphabetical", "source-order"],
   "treatWarningsAsErrors": true,
+  "validation": { "notDocumented": true },
   "router": "category",
   "externalSymbolLinkMappings": {
     "@uirouter/core": {

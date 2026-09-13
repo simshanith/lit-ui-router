@@ -33,16 +33,24 @@ import { UiView } from './ui-view.js';
  * @category directives
  */
 export class SrefHrefDirective extends AsyncDirective {
+  /** the target state name from the last render */
   state: string | null = null;
+  /** the target state params from the last render */
   params: RawParams = {};
+  /** the transition options from the last render */
   options: TransitionOptions = {};
 
+  /** @internal */
   element: Element | null = null;
 
+  /** @internal */
   uiRouter: UIRouterLit | undefined;
+  /** @internal */
   parentView: UiView | null = null;
 
+  /** the href computed for the target, or null when there is none */
   href: string | null = null;
+  /** the resolved target, or null until the router is found */
   targetState: TargetState | null = null;
 
   /** whether the router seek has run — see {@link UiSrefDirective} */
