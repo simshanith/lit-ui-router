@@ -185,11 +185,7 @@ satisfies `seekRouter` too, so a `<ui-view>` or an `sref*` directive finds a
 router that no `<ui-router>` provided. `subscribe` gets one call and a no-op
 unsubscribe — `<ui-router>` takes its router on connect and does not swap it.
 
-`requestRouter` takes any `EventTarget`, not only an element, which is how it
-will reach the directives during server rendering, where there is no element
-to seek from. That provider is the next piece of the
-[hydration seam](https://github.com/simshanith/lit-ui-router/issues/829) and
-lands separately.
+`requestRouter` takes any `EventTarget`, not only an element.
 
 ## See it live
 
