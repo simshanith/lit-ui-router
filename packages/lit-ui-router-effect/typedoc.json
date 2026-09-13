@@ -13,6 +13,7 @@
   "excludePrivate": true,
   "readme": "none",
   "githubPages": false,
+  "treatWarningsAsErrors": true,
   "entryFileName": "index",
   "useCodeBlocks": true,
   "expandObjects": true,
