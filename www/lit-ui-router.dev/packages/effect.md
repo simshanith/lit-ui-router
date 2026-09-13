@@ -225,6 +225,10 @@ application built on these controllers. It is behaviorally identical to the
 [three codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 can be compared file-by-file to see exactly what the Effect idiom changes.
 
+For a smaller picture, the
+[Hello Galaxy (Effect)](/tutorial/live-examples#hello-galaxy-effect) example
+is the galaxy tutorial rebuilt on these controllers, installed from npm.
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-effect/)
