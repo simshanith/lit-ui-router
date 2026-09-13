@@ -3,7 +3,12 @@ import path from 'node:path';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 
-export type PackageEntry = { label: string; file: string };
+export type PackageEntry = {
+  label: string;
+  file: string;
+  // packages this entry claims to bundle without; see free-of.ts
+  free: string[];
+};
 
 export type PackageProbe = {
   name: string;
@@ -17,6 +22,10 @@ export type PackageProbe = {
 // are skipped; './src/*.ts' targets bundle as-is; './dist/*.js' targets map
 // back to the sibling './src/*.ts'; anything else fails loudly. Labels come
 // from the subpath ('.' labels index), naming the <prefix>-<label>-esm series.
+//
+// The optional `bundleProbe` manifest field carries the per-entry boundary
+// claims, keyed by the same subpath the exports map uses:
+//   "bundleProbe": { "./context": { "free": ["lit"] } }
 export const readPackageProbe = (packageDir: string): PackageProbe => {
   const manifest = requireManifest(packageDir);
   const name = manifest.name;
@@ -27,6 +36,8 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
     ...Object.keys(manifest.dependencies ?? {}),
     ...Object.keys(manifest.peerDependencies ?? {}),
   ];
+  const claims = (manifest as { bundleProbe?: Record<string, unknown> })
+    .bundleProbe;
   const entries: PackageEntry[] = [];
   for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
     if (subpath === './package.json' || subpath.includes('*')) continue;
@@ -52,10 +63,22 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
         `${name}: export '${subpath}' resolves to missing ${source}`,
       );
     }
-    entries.push({ label: subpath === '.' ? 'index' : subpath.slice(2), file });
+    const free = (claims?.[subpath] as { free?: string[] } | undefined)?.free;
+    entries.push({
+      label: subpath === '.' ? 'index' : subpath.slice(2),
+      file,
+      free: free ?? [],
+    });
   }
   if (entries.length === 0) {
     throw new Error(`${name}: no bundleable exports found`);
+  }
+  for (const subpath of Object.keys(claims ?? {})) {
+    if (!Object.hasOwn(manifest.exports ?? {}, subpath)) {
+      throw new Error(
+        `${name}: bundleProbe names '${subpath}', which is not an export`,
+      );
+    }
   }
   return { name, declared, entries };
 };

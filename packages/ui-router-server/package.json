@@ -117,5 +117,12 @@
   },
   "engines": {
     "node": ">=22.12"
+  },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "@uirouter/core"
+      ]
+    }
   }
 }

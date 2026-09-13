@@ -8,8 +8,11 @@ export type Chunk = {
   code: string;
   bytes: number;
   entry: boolean;
+  // sibling chunks only, under both bundlers; externals live in externalImports
   staticImports: string[];
   dynamicImports: string[];
+  // bare specifiers this chunk statically imports from outside the bundle
+  externalImports: string[];
 };
 
 export type BundleResult = { entry: Chunk; chunks: Chunk[]; inputs: string[] };
@@ -93,6 +96,9 @@ const esbuildBundle = async (
       dynamicImports: internal
         .filter((edge) => edge.kind === 'dynamic-import')
         .map((edge) => basename(edge.path)),
+      externalImports: meta.imports
+        .filter((edge) => edge.external && edge.kind === 'import-statement')
+        .map((edge) => edge.path),
     };
   });
   return finish(
@@ -126,17 +132,24 @@ const rolldownBundle = async (
       comments: false,
     });
     const inputs = new Set<string>();
+    const names = new Set<string>();
+    for (const item of output) {
+      if (item.type === 'chunk') names.add(item.fileName);
+    }
     const chunks: Chunk[] = [];
     for (const item of output) {
       if (item.type !== 'chunk') continue;
       for (const id of item.moduleIds) inputs.add(id);
+      // rollup's `imports` mixes sibling chunk names with external ids; split
+      // them so both legs report the same two lists.
       chunks.push({
         name: item.fileName,
         code: item.code,
         bytes: Buffer.byteLength(item.code),
         entry: item.isEntry,
-        staticImports: [...item.imports],
+        staticImports: item.imports.filter((id) => names.has(id)),
         dynamicImports: [...item.dynamicImports],
+        externalImports: item.imports.filter((id) => !names.has(id)),
       });
     }
     return finish(chunks, [...inputs], entryChunkName(entryPath));

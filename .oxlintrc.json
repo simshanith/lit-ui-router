@@ -353,6 +353,7 @@
         "examples/*.test.ts",
         "tools/bootstrap/**/*.test.ts",
         "tools/build_and_test/**/*.test.ts",
+        "tools/bundle-probe/**/*.test.ts",
         "tools/compat-guards/**/*.test.ts",
         "tools/embed-heights/**/*.test.ts",
         "tools/lcov-rebase/**/*.test.ts",
