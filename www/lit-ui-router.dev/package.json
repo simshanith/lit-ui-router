@@ -4,8 +4,7 @@
   "private": true,
   "type": "module",
   "exports": {
-    "./dev-port.ts": "./dev-port.ts",
-    "./scripts/wrangler-dev.ts": "./scripts/wrangler-dev.ts"
+    "./dev-port.ts": "./dev-port.ts"
   },
   "scripts": {
     "build": "vitepress build .",
@@ -37,7 +36,6 @@
     "vue": "catalog:"
   },
   "devDependencies": {
-    "@tools/bootstrap": "workspace:*",
     "@tools/build_and_test": "workspace:*",
     "@tools/embed-heights": "workspace:*",
     "@tools/shared": "workspace:*",

@@ -49,7 +49,7 @@ mise run build_www   # just the build
 ```
 
 The umbrella builds through the same `build_www` and then hands
-`start-server-and-test` the wrangler launcher itself, not the serve task, so the
+`start-server-and-test` the bare `pnpm` form below, not the serve task, so the
 build runs once per `mise run test_e2e`. Without mise,
 `turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
 same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server

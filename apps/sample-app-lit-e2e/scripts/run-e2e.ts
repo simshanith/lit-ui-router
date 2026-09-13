@@ -1,6 +1,4 @@
-import { requireManifest } from '@tools/bootstrap/manifest.ts';
-import { packageDir } from '@tools/bootstrap/package-dir.ts';
-import { fileURLToPath } from 'node:url';
+import manifest from '../package.json' with { type: 'json' };
 
 import { serveAndTest } from './serve-and-test.ts';
 
@@ -11,7 +9,7 @@ import { serveAndTest } from './serve-and-test.ts';
 
 const PREFIX = 'test:e2e:';
 // the suite set is this package's own `test:e2e:*` scripts, never a list
-const scripts = requireManifest(packageDir(import.meta.url)).scripts ?? {};
+const scripts = manifest.scripts;
 // sorted to keep the command string stable: it is the run's identity in the
 // summary, and an unstable one reads as a different run each time
 const suites = Object.keys(scripts)
@@ -38,18 +36,12 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
-// The launcher directly, not the //www/lit-ui-router.dev:serve task that wraps
-// it: the umbrella has already built the site (mise `depends`), and the serve
-// task's own build edge under a nested `mise run` would run build_www a second
-// time and write a second run summary. Absolute so start-server-and-test's
-// shell can run it from the repo root; the launcher picks its own cwd.
-// Unquoted: start-server-and-test strips a leading quote from an argument.
-const server = [
-  process.execPath,
-  fileURLToPath(
-    import.meta.resolve('@www/lit-ui-router.dev/scripts/wrangler-dev.ts'),
-  ),
-].join(' ');
+// The launcher through pnpm, not the //www/lit-ui-router.dev:serve task that
+// wraps it: the umbrella has already built the site (mise `depends`), and the
+// serve task's own build edge under a nested `mise run` would run build_www a
+// second time and write a second run summary. pnpm sets the cwd to the package,
+// which is where wrangler reads wrangler.jsonc from.
+const server = 'pnpm --filter @www/lit-ui-router.dev run wrangler:dev';
 
 // every app is mounted whichever suites run
 serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);

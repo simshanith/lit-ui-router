@@ -248,9 +248,9 @@ run = [
 # apps/sample-app-lit-e2e/README.md.
 #
 # build_www here, not via //www/lit-ui-router.dev:serve: run-e2e.ts hands
-# start-server-and-test the wrangler launcher directly, so the serve task's
-# build edge is off this path (a nested `mise run` would run build_www twice),
-# and a cold build stays out of start-server-and-test's wait-on budget.
+# start-server-and-test `pnpm --filter @www/lit-ui-router.dev run wrangler:dev`,
+# so the serve task's build edge is off this path (a nested `mise run` would run
+# build_www twice), and a cold build stays out of the wait-on budget.
 #
 # --summarize here and in build_www: the reporter picks up every summary
 # written since `mark_session`, so these join the ci run rather than displace it.
