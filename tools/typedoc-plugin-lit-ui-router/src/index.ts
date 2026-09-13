@@ -71,6 +71,8 @@ const SYMBOL_CATEGORIES: Record<string, Category> = {
   TransitionEventType: 'controllers',
   TransitionCallback: 'controllers',
   TransitionCallbackReason: 'controllers',
+  SrefStatusController: 'controllers',
+  SrefStatusControllerOptions: 'controllers',
   // Hooks
   UiOnExit: 'hooks',
   UiOnParamsChanged: 'hooks',

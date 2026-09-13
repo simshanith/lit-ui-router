@@ -1,10 +1,4 @@
-import {
-  extend,
-  RawParams,
-  TargetState,
-  Transition,
-  TransitionOptions,
-} from '@uirouter/core';
+import { RawParams, Transition, TransitionOptions } from '@uirouter/core';
 import { noChange, nothing, AttributePart } from 'lit';
 import {
   AttributePartInfo,
@@ -18,9 +12,9 @@ import { AsyncDirective } from 'lit/async-directive.js';
 
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
+import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
-  srefEventLink,
   UI_SREF_TARGET_EVENT,
   UI_SREF_TARGET_REMOVED_EVENT,
   UiSrefTargetEvent,
@@ -28,9 +22,7 @@ import {
 import {
   AriaCurrentValue,
   AriaCurrentValues,
-  mergeSrefStatus,
   SrefStatus,
-  srefStatus,
   TransEvt,
 } from './ui-sref-active.js';
 import { UiView } from './ui-view.js';
@@ -77,10 +69,11 @@ export abstract class SrefStatusDirective<
   /** merged status of every target, or `undefined` before there is one */
   status: SrefStatus | undefined;
 
-  /** the named target, resolved from `params.state` */
-  private _explicitTarget: TargetState | null = null;
-  /** container mode: each enclosed link's latest target, keyed by its element */
-  private readonly _linkTargets = new Map<Element, TargetState>();
+  /**
+   * the named target, or the enclosed links' targets in container mode
+   * @internal
+   */
+  protected readonly targets: SrefTargets = new SrefTargets();
 
   private _firstUpdated = false;
   private _deregister: deregisterFn[] = [];
@@ -121,6 +114,7 @@ export abstract class SrefStatusDirective<
   /** @internal */
   update(part: AttributePart, [params]: [Params]): unknown {
     this.params = params;
+    this.targets.params = params;
     if (this.element !== part.element) {
       this.element = part.element;
       this._firstUpdated = false;
@@ -130,39 +124,11 @@ export abstract class SrefStatusDirective<
       }, 0);
     } else if (this.uiRouter) {
       // a re-render may name a different state
-      this.resolveExplicitTarget();
+      this.targets.setExplicit();
       this.refresh();
       return noChange;
     }
     return this.commit();
-  }
-
-  /** @internal */
-  getOptions(): TransitionOptions {
-    const defaultOpts: TransitionOptions = {
-      relative: this.parentView?.viewContext?.name,
-    };
-    return extend(defaultOpts, this.params?.options || {}) as TransitionOptions;
-  }
-
-  private resolveExplicitTarget(): void {
-    const { state, params = {} } = this.params!;
-    this._explicitTarget =
-      state && this.uiRouter
-        ? this.uiRouter.stateService.target(state, params, this.getOptions())
-        : null;
-  }
-
-  /** the targets whose statuses merge into `status` */
-  private targets(): TargetState[] {
-    for (const element of this._linkTargets.keys()) {
-      if (!element.isConnected) {
-        this._linkTargets.delete(element);
-      }
-    }
-    return this._explicitTarget
-      ? [this._explicitTarget]
-      : [...this._linkTargets.values()];
   }
 
   /** @internal */
@@ -173,7 +139,9 @@ export abstract class SrefStatusDirective<
     const element = this.element!;
     this.uiRouter = UIRouterLitElement.seekRouter(element);
     this.parentView = UiView.seekParentView(element);
-    this.resolveExplicitTarget();
+    this.targets.router = this.uiRouter;
+    this.targets.relative = this.parentView?.viewContext?.name;
+    this.targets.setExplicit();
 
     // listened for in named mode too: a re-render may drop the name
     element.addEventListener(
@@ -217,13 +185,13 @@ export abstract class SrefStatusDirective<
 
   /** @internal */
   onUiSrefTargetEvent = (event: UiSrefTargetEvent): void => {
-    this._linkTargets.set(srefEventLink(event), event.detail.targetState);
+    this.targets.onLink(event);
     this.refresh();
   };
 
   /** @internal */
   onUiSrefTargetRemovedEvent = (event: Event): void => {
-    if (this._linkTargets.delete(srefEventLink(event))) {
+    if (this.targets.onLinkRemoved(event)) {
       this.refresh();
     }
   };
@@ -235,14 +203,7 @@ export abstract class SrefStatusDirective<
    * @internal
    */
   onStatesChanged = (): void => {
-    const $state = this.uiRouter!.stateService;
-    this.resolveExplicitTarget();
-    for (const [element, target] of this._linkTargets) {
-      this._linkTargets.set(
-        element,
-        $state.target(target.identifier(), target.params(), target.options()),
-      );
-    }
+    this.targets.rebuild();
     this.refresh();
   };
 
@@ -269,14 +230,7 @@ export abstract class SrefStatusDirective<
    * @internal
    */
   refresh(event?: TransEvt): void {
-    const router = this.uiRouter;
-    const targets = this.targets();
-    this.status =
-      router && targets.length
-        ? targets
-            .map((target) => srefStatus(router, event, target))
-            .reduce(mergeSrefStatus)
-        : undefined;
+    this.status = this.targets.status(event);
     const value = this.commit();
     if (value !== noChange && this.isConnected) {
       this.setValue(value);
@@ -506,14 +460,7 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
     if (!this.status) {
       return noChange;
     }
-    const values: AriaCurrentValues =
-      typeof value === 'object' ? value : { exact: value };
-    const resolved = this.status.exact
-      ? (values.exact ?? 'page')
-      : this.status.active
-        ? (values.active ?? false)
-        : false;
-    return resolved || nothing;
+    return resolveAriaCurrent(this.status, value);
   }
 }
 
@@ -529,7 +476,9 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
  *
  * It cannot share the attribute with `classMap` — lit rewrites the whole
  * value when either expression changes, so one directive has to own it. Pass
- * what `classMap` would have taken as `classes` instead.
+ * what `classMap` would have taken as `classes` instead. For a component that
+ * wants plain `classMap` and its own bindings, use
+ * {@link SrefStatusController}.
  *
  * Unlike `uiSrefActive`, this writes no `aria-current` — a `class` binding
  * cannot reach another attribute. Bind {@link srefAriaCurrent} beside it.
@@ -563,6 +512,7 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
  *
  * @see {@link uiSrefActive}
  * @see {@link srefAriaCurrent}
+ * @see {@link SrefStatusController}
  *
  * @category directives
  */
@@ -594,6 +544,7 @@ export const srefActiveClass: (
  *
  * @see {@link uiSrefActive}
  * @see {@link srefActiveClass}
+ * @see {@link SrefStatusController}
  *
  * @category directives
  */
