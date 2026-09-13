@@ -172,8 +172,11 @@ pattern — its
 nav header, and message compose view each use a `TransitionController`. The
 behaviorally identical <a href="/app-mobx" target="_self">MobX sample app</a>
 solves the same problems with the observable store and reaction controllers
-from [`lit-ui-router-mobx`](/packages/), one of the
-[companion packages](/packages/) — if your app already uses MobX, prefer
-[those bindings](/packages/mobx); the
-[two codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
+from [`lit-ui-router-mobx`](/packages/mobx), and the
+<a href="/app-effect" target="_self">Effect sample app</a> with the
+`SubscriptionRef`-following controllers from
+[`lit-ui-router-effect`](/packages/effect) — two of the
+[companion packages](/packages/). If your app already uses MobX or Effect,
+prefer those bindings; the
+[three codebases](https://github.com/simshanith/lit-ui-router/tree/main/apps)
 compare the idioms file-by-file.
