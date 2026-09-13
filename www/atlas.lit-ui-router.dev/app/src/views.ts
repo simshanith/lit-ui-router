@@ -5,7 +5,7 @@
  * standalone pages.
  */
 import type { UIRouter } from '@uirouter/core';
-import { LitElement, html, nothing } from 'lit';
+import { LitElement, html, isServer, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
@@ -372,18 +372,28 @@ function rail(manifest: Manifest | undefined): TemplateResult {
 
 // --- the shell: rail + the nested content view -----------------------------
 
-export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) => html`
+/**
+ * The shell around whatever fills the content column.
+ *
+ * `ShellView` puts `<ui-view>` there and lets the router fill it; the build's
+ * prerender (prerender.ts) puts the routed view's own template there directly,
+ * because `<ui-view>` is server-silent — @lit-labs/ssr never calls the
+ * `connectedCallback` that picks the routed component. Same rail, same sprite,
+ * same cover CSS either way: ONE template set, two fillings of one hole.
+ */
+export const shell = (manifest: Manifest | undefined, content: unknown): TemplateResult => html`
   <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
-  ${props?.resolves?.manifest
-    ? unsafeHTML(`<style>${props.resolves.manifest.cover.css}</style>`)
-    : nothing}
+  ${manifest ? unsafeHTML(`<style>${manifest.cover.css}</style>`) : nothing}
   <!-- The key icons, once a page: every card cell and index chip is a <use>. -->
   ${unsafeHTML(ICON_SPRITE)}
   <div class="app">
-    ${rail(props?.resolves?.manifest)}
-    <main class="content"><ui-view></ui-view></main>
+    ${rail(manifest)}
+    <main class="content">${content}</main>
   </div>
 `;
+
+export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) =>
+  shell(props?.resolves?.manifest, html`<ui-view></ui-view>`);
 
 // --- gallery: the title sheet — key image, issue log, index ----------------
 
@@ -856,6 +866,25 @@ const seeAlso = (refs: string[]): TemplateResult | typeof nothing =>
       >`
     : nothing;
 
+/**
+ * THE PLATE, both sides of the seam.
+ *
+ * In a browser the fragment is a PROPERTY: `<atlas-plate>` renders it into its
+ * own light DOM and then runs the scripts inside it. @lit-labs/ssr emits no
+ * property bindings and calls no `connectedCallback`, so the server writes the
+ * fragment as the element's child instead — the same bytes, in the same place,
+ * inert until the client upgrades the element and replaces them. This is the
+ * one node in the set whose content the server cannot get through the client's
+ * own binding; see the seam notes in SSR-VERDICT.md.
+ */
+const plate = (fragment: string, needsCytoscape: boolean): TemplateResult =>
+  isServer
+    ? html`<atlas-plate>${unsafeHTML(fragment)}</atlas-plate>`
+    : html`<atlas-plate
+        .fragment=${fragment}
+        .needsCytoscape=${needsCytoscape}
+      ></atlas-plate>`;
+
 const verdictLine = (verdict: string): TemplateResult | typeof nothing =>
   verdict
     ? html`<p class="plate-verdict"><span class="lead">FIT VERDICT</span>${verdict}</p>`
@@ -893,10 +922,7 @@ export const SheetView: RoutedLitTemplate<SheetResolves> = (props) => {
       ${seeAlso(sheet.refs)} ${keyBlock(sheet.labels)}
     </div>
     ${verdictLine(sheet.verdict)}
-    <atlas-plate
-      .fragment=${resolves.fragment ?? ''}
-      .needsCytoscape=${sheet.needsCytoscape}
-    ></atlas-plate>
+    ${plate(resolves.fragment ?? '', sheet.needsCytoscape)}
   `;
 };
 
@@ -917,7 +943,9 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>
+    ${isServer
+      ? html`<atlas-city>${unsafeHTML(resolves.fragment)}</atlas-city>`
+      : html`<atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>`}
   `;
 };
 

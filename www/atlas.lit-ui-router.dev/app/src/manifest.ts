@@ -324,14 +324,6 @@ export function kvVocabulary(rows: readonly { labels: SheetLabels }[]): string[]
   return [...out].sort();
 }
 
-/** The query string for a filter — empty when nothing is filtered. */
-export function filterQuery(filter: Filter): string {
-  const params = new URLSearchParams();
-  for (const [key, value] of Object.entries(filter)) if (value !== null) params.set(key, value);
-  const query = params.toString();
-  return query.length > 0 ? `?${query}` : '';
-}
-
 /** Every plate the index can show: the ascent, the city, then the appendix. */
 export function labelledRows(manifest: Manifest): Array<{ labels: SheetLabels }> {
   const city = findExtra(manifest, 'city');
