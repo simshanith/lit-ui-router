@@ -36,11 +36,7 @@ const test = [
   '--continue=dependencies-successful --ui=stream --log-order=stream --summarize',
 ].join(' ');
 
-// The launcher through pnpm, not the //www/lit-ui-router.dev:serve task that
-// wraps it: the umbrella has already built the site (mise `depends`), and the
-// serve task's own build edge under a nested `mise run` would run build_www a
-// second time and write a second run summary. pnpm sets the cwd to the package,
-// which is where wrangler reads wrangler.jsonc from.
+// not the serve mise task: its build_www depends would re-run under nested mise
 const server = 'pnpm --filter @www/lit-ui-router.dev run wrangler:dev';
 
 // every app is mounted whichever suites run
