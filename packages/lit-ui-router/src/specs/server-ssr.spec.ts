@@ -1,4 +1,5 @@
-import { describe, it, expect } from 'vitest';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { servicesPlugin, UIRouter } from '@uirouter/core';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { html } from 'lit';
@@ -72,6 +73,19 @@ describe('the server router under @lit-labs/ssr', () => {
 
     uninstall();
     expect(out).toContain('href="/sheet/7B"');
+  });
+
+  it('renders from a plain @uirouter/core router in the slot', () => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    configureServerRouter(router, { url: '/sheet/7B' });
+    router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
+    expectTypeOf(router).toEqualTypeOf<UIRouter>();
+
+    const out = withServerRouter(router, emit);
+
+    expect(out).toContain('href="/sheet/7B"');
+    expect(currentServerRouter()).toBeUndefined();
   });
 
   it('throws rather than let an unconsumed render outlive the slot', () => {
