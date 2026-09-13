@@ -20,7 +20,9 @@ export default [
       'lit-ui-router/anchor-is-valid': 'warn',
       'lit-ui-router/directive-position': 'warn',
       'lit-ui-router/sref-active-aria-current': 'warn',
+      'lit-ui-router/sref-active-class-aria-current': 'warn',
       'lit-ui-router/sref-assign-href': 'warn',
+      'lit-ui-router/sref-status-aria-current': 'warn',
     },
   },
 ];
