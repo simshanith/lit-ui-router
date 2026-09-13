@@ -166,23 +166,28 @@ Following ESLint core's own policy: a change that makes `recommended` or an
 existing rule stricter — new reports on code that previously passed — ships
 as a **major**.
 
-One carve-out, and it is what the `1.1` line rests on: a rule that can only
-match an API the router did not yet export reports on no code that could have
-been written, so it ships as a **minor**. The attribute-part tier
-([`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md),
-[`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md),
-and `directive-position`'s attribute rows) fires only on
+New router surface is the exception. lit-ui-router keeps adding directives,
+and a rule that can only fire on one of them reports on nothing anybody could
+already have written — the API it matches did not exist yet. Those rules are
+additive, so they ship as a **minor**. The attribute-part tier is the current
+example:
+[`sref-active-class-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-active-class-aria-current.md),
+[`sref-status-aria-current`](https://github.com/simshanith/lit-ui-router/blob/main/packages/eslint-plugin-lit-ui-router/docs/rules/sref-status-aria-current.md)
+and `directive-position`'s attribute rows match only
 [`srefHref`](/api/reference/directives/srefHref),
 [`srefActiveClass`](/api/reference/directives/srefActiveClass),
 [`srefAriaCurrent`](/api/reference/directives/srefAriaCurrent) and
 [`SrefStatusController`](/api/reference/controllers/SrefStatusController)
-imported from `lit-ui-router`, all new in `lit-ui-router@1.14` — a codebase on
-an earlier router cannot trip any of them. The test is what a rule _can_
-match, not how rare a match would be: a new report reachable through `uiSref`
-or `uiSrefActive`, which have shipped since `1.0`, is a major either way. A
-tightened option default is a major too, and so is a rule for a router API
-that existed but went undocumented — "did not export" is the line, not
-"nobody used it".
+imported from `lit-ui-router`, all new in `lit-ui-router@1.14`. A codebase on
+an earlier router cannot trip them, which is why they arrive in `1.1` rather
+than `2.0`.
+
+What bounds the exception is the surface a rule _can_ reach, not how rare a
+report would be in practice. A new report reachable through `uiSref` or
+`uiSrefActive` — shipped since `1.0` — is a major however unlikely it is, as
+is a tightened option default, and so is a rule for router API that shipped
+but went undocumented: the line is that the router did not export it, not that
+nobody used it.
 
 The option-aware tier widened `recommended` during the 1.0.0 release
 candidates, where a widening cost nobody a major; the remaining roadmap (a
