@@ -48,8 +48,9 @@ mise run //www/lit-ui-router.dev:serve   # builds the site first, then serves it
 mise run build_www   # just the build
 ```
 
-That task is also what the umbrella hands to `start-server-and-test`, so the
-build edge lives on the server rather than on the suites. Without mise,
+The umbrella builds through the same `build_www` and then hands
+`start-server-and-test` the bare `pnpm` form below, not the serve task, so the
+build runs once per `mise run test_e2e`. Without mise,
 `turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
 same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server
 through a `pnpm run` hop the mise task does not have. Bare

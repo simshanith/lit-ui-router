@@ -21,7 +21,6 @@
     "@www/lit-ui-router.dev": "workspace:*"
   },
   "devDependencies": {
-    "@tools/bootstrap": "workspace:*",
     "@tools/shared": "workspace:*",
     "@types/node": "catalog:",
     "cypress": "catalog:",
