@@ -31,8 +31,8 @@ The split exists where there is something to strip. A package with a single
 build is not missing a feature.
 
 Every entry point of `lit-ui-router` is covered, not just the root: `pure`,
-`register`, `ui-router.register`, and `ui-view.register` each carry their own
-`development` condition.
+`register`, `ui-router.register`, `ui-view.register`, and `context` each carry
+their own `development` condition.
 
 ## The second gate: lit's own build
 

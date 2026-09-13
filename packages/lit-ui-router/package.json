@@ -36,6 +36,11 @@
       "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
+    "./context": {
+      "types": "./dist/context.d.ts",
+      "development": "./dist/development/context.js",
+      "default": "./dist/context.js"
+    },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json",
     "./pure": {
