@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "2ac53a0",
-  "commitDate": "2026-09-11T19:11:23-07:00",
-  "generatedAtTime": "2026-09-12T02:20:45.323Z",
+  "sha": "9896b3c1",
+  "commitDate": "2026-09-12T22:38:38-07:00",
+  "generatedAtTime": "2026-09-13T05:50:57.951Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 2ac53a0",
+  "used": "git archive origin/main @ 9896b3c1",
   "wasAssociatedWith": [
     "git"
   ],
@@ -22,11 +22,11 @@
     "dependsEdges": 6
   },
   "turbo": {
-    "files": 19,
-    "distinctNames": 76,
-    "definitions": 107,
+    "files": 21,
+    "distinctNames": 77,
+    "definitions": 111,
     "rootDefinitions": 44,
-    "memberDefinitions": 63,
+    "memberDefinitions": 67,
     "cacheFalse": 13,
     "rootCacheFalse": 7,
     "memberCacheFalse": 6
@@ -82,12 +82,14 @@
     {"home":".config/mise/config.toml","label":"config.toml inline","count":17,"withUsage":3,"withDepends":3,"dependsEdges":6,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_main","test_e2e","codecov_bundle","dts_backtest_matrix"]}
   ],
   "turboRows": [
-    {"file":"apps/sample-app-lit-e2e/turbo.json","root":false,"definitions":6,"cacheFalse":0},
+    {"file":"apps/sample-app-lit-e2e/turbo.json","root":false,"definitions":7,"cacheFalse":0},
+    {"file":"apps/sample-app-lit-effect/turbo.json","root":false,"definitions":2,"cacheFalse":0},
     {"file":"apps/sample-app-lit-mobx/turbo.json","root":false,"definitions":2,"cacheFalse":0},
     {"file":"apps/sample-app-lit-vanilla/turbo.json","root":false,"definitions":3,"cacheFalse":0},
     {"file":"apps/sample-app-routes/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"examples/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/eslint-plugin-lit-ui-router/turbo.json","root":false,"definitions":5,"cacheFalse":0},
+    {"file":"packages/lit-ui-router-effect/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/lit-ui-router-mobx/turbo.json","root":false,"definitions":1,"cacheFalse":0},
     {"file":"packages/lit-ui-router/turbo.json","root":false,"definitions":3,"cacheFalse":0},
     {"file":"packages/navigation-location-plugin/turbo.json","root":false,"definitions":1,"cacheFalse":0},

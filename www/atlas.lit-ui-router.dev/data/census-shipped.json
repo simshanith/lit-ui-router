@@ -1,36 +1,37 @@
 {
   "ref": "origin/main",
-  "sha": "2ac53a0",
-  "commitDate": "2026-09-11T19:11:23-07:00",
-  "generatedAtTime": "2026-09-12T02:23:19.220Z",
+  "sha": "9896b3c1",
+  "commitDate": "2026-09-12T22:38:38-07:00",
+  "generatedAtTime": "2026-09-13T06:08:04.790Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-shipped.mjs",
-  "used": "git archive origin/main @ 2ac53a0 + corepack pnpm install --frozen-lockfile + turbo run build -> www/lit-ui-router.dev/dist",
+  "used": "git archive origin/main @ 9896b3c1 + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> www/lit-ui-router.dev/dist",
   "wasAssociatedWith": [
-    "pnpm (corepack)",
+    "pnpm (mise-provisioned)",
     "turbo",
     "node:zlib gzip level 9"
   ],
-  "measure": "per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> hash",
+  "measure": "per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> effect -> hash",
   "seededTrees": [
     "images/",
     "static/",
     "_headers"
   ],
   "totals": {
-    "files": 582,
-    "rawBytes": 16570091,
-    "gzBytes": 3693316
+    "files": 680,
+    "rawBytes": 19875213,
+    "gzBytes": 4097046
   },
   "rows": [
     {"district":"inter fonts","files":16,"gz":868670,"top":{"name":"assets/inter-italic-latin-ext.Dm0n7MN1.woff2","gz":141087}},
-    {"district":"html pages","files":136,"gz":870765,"top":{"name":"guides/server-route-matching.html","gz":34415}},
-    {"district":"examples","files":22,"gz":1061464,"top":{"name":"examples/hellogalaxy/assets/model-viewer-Bwy_y6_q.js","gz":281842}},
-    {"district":"page chunks","files":258,"gz":281933,"top":{"name":"assets/guides_server-route-matching.md.BNdcdE4e.js","gz":21347}},
-    {"district":"vp framework","files":13,"gz":185025,"top":{"name":"assets/chunks/@localSearchIndexroot.C6xO85LK.js","gz":73621}},
+    {"district":"html pages","files":168,"gz":1085269,"top":{"name":"guides/server-route-matching.html","gz":35858}},
+    {"district":"examples","files":22,"gz":1063701,"top":{"name":"examples/hellogalaxy/assets/model-viewer-C3Ky-Tio.js","gz":281843}},
+    {"district":"page chunks","files":318,"gz":341073,"top":{"name":"assets/guides_server-route-matching.md.vreH5N0o.js","gz":22674}},
+    {"district":"vp framework","files":13,"gz":199900,"top":{"name":"assets/chunks/@localSearchIndexroot.CSwPBXlv.js","gz":87634}},
     {"district":"images","files":99,"gz":146010,"top":{"name":"images/lit-ui-router.png","gz":68708}},
-    {"district":"app: vanilla","files":18,"gz":123407,"top":{"name":"assets/dist-C3psUzzf.js","gz":29528}},
-    {"district":"app: mobx","files":9,"gz":67455,"top":{"name":"assets/dist-CiN-3Vxo.js","gz":29528}},
-    {"district":"app: hash","files":4,"gz":14873,"top":{"name":"assets/main-CCx4laDc.js","gz":7316}},
+    {"district":"app: vanilla","files":18,"gz":124057,"top":{"name":"assets/dist-KnYlVvVD.js","gz":29577}},
+    {"district":"app: mobx","files":9,"gz":67875,"top":{"name":"assets/dist-BL5F42F3.js","gz":29578}},
+    {"district":"app: effect","files":6,"gz":111363,"top":{"name":"assets/index-C7z0h3Pm.js","gz":63340}},
+    {"district":"app: hash","files":4,"gz":15414,"top":{"name":"assets/main-DTOmd3oD.js","gz":7340}},
     {"district":"static data","files":4,"gz":50739,"top":{"name":"static/data/messages.json","gz":47757}},
     {"district":"site css","files":3,"gz":22975,"top":{"name":"assets/style.DLA-qYQQ.css","gz":20759}}
   ],

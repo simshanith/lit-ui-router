@@ -30,6 +30,9 @@ const POOL = snap.members
 
 // instrument -> ordered match rules (first match wins, so order matters)
 const INSTRUMENTS = [
+  // the effect bindings are a packages/ member but private at this ref, so they
+  // are matched out FIRST and the label below stays true
+  ['src — lit-ui-router-effect (private)', [/^packages\/lit-ui-router-effect\//]],
   ['src (5 published packages)', [/^packages\//]],
   ['build — @tools/oxc-emit', [/^tools\/oxc-emit\//]],
   ['pack — packPublishTarball', [/^tools\/release\/src\/checks\/(check-pack|check-packed-manifest|tarball|cache-paths)/, /^tools\/release\/src\/steps\/(pack-all|pack-staged|release-pack)/]],

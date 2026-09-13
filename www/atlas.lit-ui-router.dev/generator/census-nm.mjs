@@ -92,8 +92,8 @@ writeData('census-nm.json', {
   commitDate: basis.commitDate,
   generatedAtTime: new Date().toISOString(),
   wasGeneratedBy: 'www/atlas.lit-ui-router.dev/generator/census-nm.mjs',
-  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile + turbo run build`,
-  wasAssociatedWith: ['pnpm (corepack)', 'turbo'],
+  used: `git archive ${basis.ref} @ ${basis.sha} + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build`,
+  wasAssociatedWith: ['pnpm (mise-provisioned)', 'turbo'],
   app: APP_DIR,
   // strip `real` — a tmpdir-absolute path with no life beyond this run
   rows: rows.map(({ real: _real, ...r }) => r),

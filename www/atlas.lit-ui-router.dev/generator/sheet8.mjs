@@ -47,7 +47,8 @@ const item = (name) => {
 const DATA = {
   // The app is what the closure hangs off, so the plate does not carry a row for
   // it; its own src is hand-counted by the same ruler, for scale.
-  consumer: [{ name: 'sample-app-lit-vanilla', label: 'sample-app-lit-vanilla', f: 11, l: 592, df: 0, dl: 0 }],
+  // hand count at 9896b3c1 by census-nm's own ruler (isCode extensions, split('\n').length)
+  consumer: [{ name: 'sample-app-lit-vanilla', label: 'sample-app-lit-vanilla', f: 11, l: 646, df: 0, dl: 0 }],
   workspace: ORDER.workspace.map(item),
   registry: ORDER.registry.map(item),
 };

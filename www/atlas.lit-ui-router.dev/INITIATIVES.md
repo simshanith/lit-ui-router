@@ -1,8 +1,8 @@
 # Census pipeline rework — design record
 
 **COMPLETE.** Initiatives I1–I8 all landed 2026-09-02/03; the cabinet has since been
-refreshed five times and stands at `origin/main` @ **2ac53a0** (commit
-2026-09-11T19:11:23-07:00), 17 plates all pinned to the same ref.
+refreshed six times and stands at `origin/main` @ **9896b3c1** (commit
+2026-09-12T22:38:38-07:00), 17 plates all pinned to the same ref.
 
 The architecture that came out of it: `generator/basis.mjs` materializes any ref once (`git
 archive` → tmpdir), one `scc --by-file` pass over that archive is the master per-file
@@ -123,7 +123,12 @@ sitting); order is dependency order.
   sheet 7's `PLACED` (`generator/sheet7.mjs`, which 7B imports), sheet 13's `PLACED`
   (`generator/sheet13.mjs`), 7B's `RUST` map (`generator/sheet7b.mjs`) and `INSTRUMENTS` in
   `generator/census-yard.mjs`. The first four THROW when missed; the yard only prints its
-  orphans loudly, which is a guard that should probably throw too. A new PLATE (not member)
+  orphans loudly, which is a guard that should probably throw too. THREE more tables are hand
+  tables in fact if not in the list, and the sixth refresh found each of them the hard way:
+  3B's `APPS` and its package quarters (`generator/sheet3b.mjs`, which throws on unclaimed real
+  tasks), `APP_ORDER` in `generator/register-graph.mjs`, and sheet 9's district `PLAN` — whose
+  miss is SILENT, because `census-shipped.mjs` files an unmatched file under `unclassified` and
+  only prints it. A new PLATE (not member)
   needs a key set in `generator/labels.mjs` as well, or `assertLabels()` stops the manifest.
 - 2026-09-11 — THE FOURTH REFRESH, at `origin/main` @ 65e2843 (commit 2026-09-11T18:51:12Z), all
   17 plates re-run at the one ref. Three members were born since 185d414 — `@tools/bootstrap`
@@ -174,6 +179,51 @@ sitting); order is dependency order.
   document", 4.81× at 65e2843 and 4.47× here) and the cover gallery's `297×` / `22.5%` / `3.9%`,
   which now import `SHEET8_TIMES`, `SHEET10_CORE_SHARE` and `SHEET10_ROUTER_SHARE`. The frozen
   "has grown" paragraph keeps its own copies of those three, as a rev-history paragraph must.
+- 2026-09-13 — THE SIXTH REFRESH, at `origin/main` @ 9896b3c1 (commit 2026-09-12T22:38:38-07:00),
+  all 17 plates re-run at the one ref: the 1.14.0 release (#853), then 1.14.1, mobx 1.0.1,
+  nav-location 0.3.2, ui-router-server 0.1.2 and eslint-plugin 1.1.0 (#860–#864, every published
+  member of the family on npm on 2026-09-13), the `srefHref`/`srefActive` attribute directives
+  (#827), the `SrefStatusController` (#830), the plugin's new rules (#828), the typedoc-plugin
+  trims (#831/#832) and its notDocumented work (#850–#852), and the Effect pair — the sample app
+  (#721) and the bindings package (#833/#855). TWO members were born, the first since the fourth
+  refresh, so the new-member checklist ran for real — and it cost more than five rows.
+  №36 `sample-app-lit-effect` (apps/, born 2026-09-11) and №37 `lit-ui-router-effect` (packages/,
+  born 2026-09-12) took: sheet 7's `PLACED` (36 at 660,100 · 37 at 30,210, both `line`), sheet 13's
+  `PLACED` (the same, except 37 at 200,172 — sheet 7's south lot lands under 13's ORIGINAL MASONRY
+  callout, so 13 differs deliberately, as it already does for №31), 7B's `RUST` (both step 0),
+  sheet 3B's `TERRACE` — which took nothing, but its `APPS` list took the app and a SIXTH package
+  quarter had to be cut, 27 `lit-ui-router-effect` at 418,30, after 17 unclaimed real tasks threw —
+  and `INSTRUMENTS` in `census-yard.mjs`, a new rule `src — lit-ui-router-effect (private)`
+  (5f/211 sloc) placed BEFORE the five-published rule so the published slab stays exactly five, plus
+  its row 20 on sheet 3 at -10,140. Two more tables nobody had listed as hand tables also took a row:
+  sheet 12's `register-graph.mjs` `APP_ORDER`, and sheet 9's district PLAN. `lit-ui-router-effect` is
+  `"private": true` at this ref, so bricks, doors, couplings and npm all omit it by the `!m.private`
+  filter and FIVE PUBLISHED PACKAGES stays the true sentence everywhere it is printed.
+  ONE NEIGHBOUR MOVED: №2 `ui-router-server` off 200 to 222 on sheets 7 and 13, because
+  lit-ui-router's annex grew to 126.7 units and `assertPlots` threw on a 12.0 × 54.4 overlap with the
+  server's west wall — the guard doing exactly its job, and the fix a recomposed coordinate, never a
+  shrunk rule. THE LESSON OF THE FOURTH APP SHELL: a new DISTRICT can hide without a throw.
+  `census-shipped.mjs` sorted `app-effect.html` and its chunks into the loud `unclassified`
+  catch-all, which is a PRINT, not a throw — the same shape as the yard's `orphans` line — so sheet 9
+  drew an 11-district deploy with 111,363 gz of app sitting in a bucket nobody read. Every catch-all
+  that only prints is a place a refresh can go quietly wrong; read the run's output, or make it throw.
+  Teaching it the district (`app: effect`, 6f, placed at 660,295, first claim now vanilla → mobx →
+  effect → hash) turned "three routed sample apps" into four and forced the model-viewer comparison
+  to be re-based to vanilla, mobx and hash (207,346 gz), because all four (318,709) would have made
+  it false. THE SEALED WING RELOCATED: `symbols/` left the tree with #831/#832 (the typedoc plugin is
+  2 files / 343 sloc, from 5 / 759), so sheet 13's citation moves to `src/index.ts` and its SEALED
+  WING callout is re-texted as THE YARD'S ONE WINTER WALL; 7B's `RUST[13]` steps 4 → 3 with it,
+  because the ladder cuts R3 at ≤58 and the two surviving files read a median idle of 43 days — so
+  no plant on 7B wears R4 at this ref and the cracked flanks stand unworn. THE LOOP RELOCATED, ONCE BY
+  HAND: `census-loop.mjs` re-pinned 44 of 52 citations, 0 re-texted and 0 loosened, and one pin was
+  chosen against the nearest match — `isNativeLink(element) &&` went 390 → 230, not to 379, because
+  379 is #827's new DEV `assignHref` warning and not the guard the step is about. Nearest-match is a
+  suggestion; the step's meaning decides. `census-mass3b.mjs`'s CITES and `census-shadow.mjs`'s e2e
+  guard both passed untouched; mass3b gained a second DRIFT line, `lit-ui-router-effect#check:dev-split
+  … no cite`, and `@tools/lit-template-lint#test` flipped placeholder → real. Provenance wording:
+  every T3 plate now records mise-provisioned pnpm rather than `corepack pnpm` in `used` and
+  `wasAssociatedWith`, and sheet 14's harness bar, aria and notes say the same. The T3 chain ran
+  3 min 06 s with the pnpm store warm.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS

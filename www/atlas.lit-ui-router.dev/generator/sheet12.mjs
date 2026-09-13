@@ -58,7 +58,7 @@ const ALLP = new Set(COLS.filter((n) => nm(n).real === 0));                     
 const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 10, 'CHECK'], [11, 16, 'PROVE'], [17, 18, 'ROLL-UP']];
 
 // row grouping: a rule per block, so a new member lands in its own block
-const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-e2e'];
+const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-e2e'];
 const BLOCKS = [
   { label: (n) => `PACKAGES/ — PUBLISHABLE ×${n}`, test: (p) => !p.startsWith('@tools/') && !p.startsWith('sample-app-') && p !== 'docs' && p !== 'examples' && p !== '//' },
   { label: (n) => `APPS/ — SAMPLE + E2E ×${n}`, test: (p) => p.startsWith('sample-app-'), order: APP_ORDER },

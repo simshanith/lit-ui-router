@@ -66,7 +66,8 @@ const X = (x) => OX + K * x, Y = (y) => OY + K * y;
 // [n, name, plate member dir, district, x, y] — every number comes from the plates
 const PLACED = [
   [1, 'lit-ui-router', 'packages/lit-ui-router', 'pkg', 0, 20],
-  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 200, 20],
+  // moved east with sheet 7 when lit-ui-router's annex grew into its west wall
+  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 222, 20],
   [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 170, 130],
   [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 260, 130],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
@@ -104,6 +105,11 @@ const PLACED = [
   [33, '@tools/bootstrap', 'tools/bootstrap', 'tool', 490, 350],
   [34, '@tools/eslint', 'tools/eslint', 'tool', 514, 530],
   [35, '@tools/repo-checks', 'tools/repo-checks', 'tool', 449, 385],
+  // --- the effect pair, born 2026-09-11/12 (#721, #833) — sheet 7's slots, except
+  //     that 37's south lot lands under this sheet's masonry callout, so it takes
+  //     the free lot east of the mobx quarter instead (member 31 differs the same way)
+  [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
+  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 200, 172],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -333,7 +339,9 @@ const SREF = file('packages/lit-ui-router/src/ui-sref.ts');
 const DCFG = file('www/lit-ui-router.dev/.vitepress/config.ts');
 const SOLAR = file('examples/hellosolarsystem/vite.config.ts');
 const HELLO = file('examples/helloworld/src/main.ts');
-const SYM = file('tools/typedoc-plugin-lit-ui-router/src/symbols/index.ts');
+// symbols/ — this map's old sealed wing — left the tree with #831/#832; the citation
+// relocates to the plugin's surviving winter wall rather than widening
+const SYM = file('tools/typedoc-plugin-lit-ui-router/src/index.ts');
 const PORT_LUR = (byMember.get('packages/lit-ui-router') ?? []).filter((r) => !r.spec && season(r.first) === 0);
 const callouts = `
 ${txt(60, 456, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
@@ -352,22 +360,22 @@ ${txt(1250, 794, `two vite configs sealed ${days(SOLAR.last)} days,`, 'lblf')}
 ${txt(1250, 806, `helloworld/main.ts sealed ${days(HELLO.last)} — all winter-built`, 'lblf')}
 <line x1="1246" y1="790" x2="1178" y2="800" class="skf"/>
 
-${txt(560, 1078, '@tools/typedoc-plugin — SEALED WING', 'lbls')}
-${txt(560, 1092, `symbols/ untouched ${days(SYM.last)} days, since ${SYM.last}`, 'lblf')}
+${txt(560, 1078, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls')}
+${txt(560, 1092, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf')}
 <line x1="556" y1="1080" x2="470" y2="1058" class="skf"/>
 
 ${txt(60, 1078, `@tools/release — ${filesOf(row(12))} walls, every one summer-built`, 'lbl')}
-${txt(60, 1092, 'the yard’s largest building did not exist two months ago', 'lblf')}
+${txt(60, 1092, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
 <line x1="130" y1="1064" x2="146" y2="1044" class="skf"/>
 
-${txt(196, 265, `navigation-location-plugin — ×${tpf(4)}/f`, 'lblr')}
-${txt(196, 279, 'one January wall, chiselled ten times:', 'lblf')}
-${txt(196, 291, 'the highest churn intensity on the map', 'lblf')}
-<line x1="428" y1="294" x2="456" y2="314" class="skf"/>`;
+${txt(500, 548, `navigation-location-plugin — ×${tpf(4)}/f`, 'lblr')}
+${txt(500, 562, `one January wall, chiselled ${g(4).src[2]} times:`, 'lblf')}
+${txt(500, 574, 'the highest churn intensity on the map', 'lblf')}
+<line x1="496" y1="544" x2="478" y2="350" class="skf"/>`;
 
 // ---- assemble --------------------------------------------------------------------
 const H = SY + 104 + half * 17;
-const svg = `<svg viewBox="0 0 1560 ${H}" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built ${SEASON_N[2]} of the ${TOT_F} files since July fourth. Under each building a tick gauge counts touches per file; ${HOT_BLOCKS} buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal the typedoc plugin and three example slabs, untouched for over two hundred days. A ${MONTHS.length}-month timeline below shows all activity concentrated in ${ALIVE} months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from ${SEASON_TPF[0]} for the port cohort to ${SEASON_TPF[2]} for the summer cohort — the oldest walls are the most chiselled.">
+const svg = `<svg viewBox="0 0 1560 ${H}" role="img" aria-label="A flat plan-view weathering map of the lit-ui-router workspace: the same city as sheet 7, same four dashed districts and same footprints, but every building is now coloured by when its files were first committed and edged by how often they are touched. Each footprint is striped like masonry courses, oldest at the base: dense ink hatch for Season One, the July 2025 port; accent hatch for Season Two, the January 2026 winter works; plain paper for Season Three, the summer campaign that built ${SEASON_N[2]} of the ${TOT_F} files since July fourth. Under each building a tick gauge counts touches per file; ${HOT_BLOCKS} buildings carry red hot edges at six or more touches per file, and buildings touched less than twice are drawn faint. Dashed crosses seal three example slabs, untouched for over two hundred days. A ${MONTHS.length}-month timeline below shows all activity concentrated in ${ALIVE} months separated by silence, and a structure schedule dates every member. The reading box states the verdict: mean touches per file falls from ${SEASON_TPF[0]} for the port cohort to ${SEASON_TPF[2]} for the summer cohort — the oldest walls are the most chiselled.">
 ${defs(P)}
 <defs>
   <pattern id="${P}-w1" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
@@ -420,7 +428,7 @@ export const sheet13 = {
 <p><strong>Method — one pass, renames followed.</strong> Every date on this sheet is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-weather.json</code>, ${BASIS}. Each file in the shared city universe was dated from a single <code>git log --name-status -M</code> pass over the history behind that ref, walked newest to oldest with rename chains followed backwards — equivalent to per-file <code>--follow</code> (spot-verified against it, including <code>tools/shared/workspace.ts</code>, which the plain path log mis-dates by a week) but one process instead of ${TOT_F}. Per file: first-commit date, last-touch date, touch count. Merge commits list no files under the default log, so a touch is a non-merge commit — the standard convention. <code>TODAY</code> is not a wall-clock date: it is the measured ref's own commit date, ${TODAY}, so every age and idle figure below is reproducible from the sha rather than from the day the sheet was drawn. Footprints come from sheet 7's plate, <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, reused as pure geometry so the two sheets reconcile by eye — and by count: ${TOT_F} dated files here against the same ${TOT_F} there.</p>
 <p><strong>The bands are campaigns, not round numbers.</strong> The age histogram is not a slope, it is three spikes: files born around day ${days('2025-07-21')} (July 2025), around day ${days('2026-01-11')} (January 2026), and within the last ${days(SEASON_FIRST[2])} days — with <em>nothing</em> between them, because the repo has source births or touches in only ${ALIVE} of its ${MONTHS.length} calendar months. So the map bins by season, where the distribution actually cuts: SEASON I, the port — ${SEASON_N[0]} files that arrived 2025-07-21 with the upstream sample-app lineage; SEASON II, the winter works — ${SEASON_N[1]} files including the typedoc plugin and the examples; SEASON III, the summer — ${SEASON_N[2]} files, ${Math.round((SEASON_N[2] / TOT_F) * 100)}% of the city, none older than ${SEASON_FIRST[2]}. Churn tiers come from the per-block distribution the same way: touches-per-file has a clean gap between 4.65 and 6.0, so HOT is ≥${HOT}; the per-file median is ${COLD}, so the COLD tier sits below it. SEALED is idle &gt;${SEAL} days — the idle histogram is empty from ${IDLE_GAP[0]} to ${IDLE_GAP[1]}, and ${SEALED_F} files sit beyond the gap.</p>
 <p><strong>The verdict: age and churn run opposite ways.</strong> Mean touches per file falls monotonically with youth — ×${SEASON_TPF[0]} for the port cohort, ×${SEASON_TPF[1]} for winter, ×${SEASON_TPF[2]} for summer — and ${ONCE} of ${TOT_F} files (${Math.round((ONCE / TOT_F) * 100)}%) have been touched exactly once, ever. The port's masonry is not museum stone: ${SREF.path.split('/').pop()} is at ×${SREF.touches} with the last chisel-mark dated ${SREF.last}, and the two most-weathered walls in the city are the port-era <code>www/lit-ui-router.dev/.vitepress</code> pair — <code>config.ts</code> at ×${DCFG.touches} and <code>vite.config.ts</code> at ×${file('www/lit-ui-router.dev/.vitepress/vite.config.ts').touches}. What survives from the first day is precisely what keeps being worked.</p>
-<p><strong>What each district's weather says.</strong> The instrument yard — ${fmt(distSloc('tool'))} sloc, the city's largest district by mass — logged <em>zero</em> touches before 2026 and is almost entirely summer stone: infrastructure arrived late, fast, and mostly settled on the first cut. Its one winter building is also the map's sealed wing: the typedoc plugin's <code>symbols/</code> trio, untouched ${days(SYM.last)} days. The shopfront splits in two: <code>docs</code> runs the hottest multi-file block-average in the city (×${tpf(10)}/f src) while <code>examples</code> holds the oldest untouched stone — two vite configs idle ${days(SOLAR.last)} days. And the smallest building on the map has the sharpest weather: <code>navigation-location-plugin</code>'s single January wall has been chiselled ${g(4).src[2]} times, the highest per-file churn anywhere — matching its history as the extracted plugin that every routing change touches.</p>
+<p><strong>What each district's weather says.</strong> The instrument yard — ${fmt(distSloc('tool'))} sloc, the city's largest district by mass — logged <em>zero</em> touches before 2026 and is almost entirely summer stone: infrastructure arrived late, fast, and mostly settled on the first cut. Its one winter building is the typedoc plugin, whose <code>index.ts</code> was laid ${SYM.first} and is still under the chisel — idle ${days(SYM.last)} days; every sealed file left on this map now stands in <code>examples/</code>. The shopfront splits in two: <code>docs</code> runs the hottest multi-file block-average in the city (×${tpf(10)}/f src) while <code>examples</code> holds the oldest untouched stone — two vite configs idle ${days(SOLAR.last)} days. And the smallest building on the map has the sharpest weather: <code>navigation-location-plugin</code>'s single January wall has been chiselled ${g(4).src[2]} times, the highest per-file churn anywhere — matching its history as the extracted plugin that every routing change touches.</p>
 <p><strong>See also — appendix A1, THE SPRITE STUDY.</strong> This map draws age and churn <em>flat</em>, as fills and edges, so the dating stays readable at city scale. The sprited reading of the same two measurements — wreck &amp; ruin ↔ shine &amp; splendor on the building itself — is the research filed as appendix A1, and its recommendation is what sheet 7B draws.</p>
 <p><strong>Approximations, so the numbers stay honest.</strong> Dates are author dates (<code>%as</code>); on this repo's squash-merge convention they equal the merge day of the PR that landed the change. Rename detection is git's <code>-M</code> heuristic: a file moved <em>and</em> rewritten in one commit can read as a fresh birth — the July 2026 <code>scripts/ → tools/</code> graduations are dated to that graduation where git saw no rename, which the yard's notes above already state as its story. Generated and vendored trees were never in the universe (the shared city rules); nothing else was excluded.</p>`,
   key: [

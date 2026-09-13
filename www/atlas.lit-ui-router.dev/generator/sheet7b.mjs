@@ -57,6 +57,14 @@ const TIER = {
 const CITY = JSON.parse(readFileSync(new URL('../data/census-city.json', import.meta.url), 'utf8'));
 const SHADOW = JSON.parse(readFileSync(new URL('../data/census-shadow.json', import.meta.url), 'utf8'));
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-steam.json', import.meta.url), 'utf8'));
+// the weathering plate, read only for the rust callout's own figures
+const WEATHER = JSON.parse(readFileSync(new URL('../data/census-weather.json', import.meta.url), 'utf8'));
+const wmember = (dir) => {
+  const r = WEATHER.members.find((m) => m.member === dir);
+  if (!r) throw new Error(`plate 7B: census-weather.json carries no member ${dir}`);
+  return r;
+};
+const TDP = wmember('tools/typedoc-plugin-lit-ui-router');
 // PIPES: the build graph, from the same plate sheets 3/3A/12 read — never re-typed
 const BUILD = JSON.parse(readFileSync(new URL('../data/census-plate.json', import.meta.url), 'utf8')).pipelines.build;
 const CITY_ROW = new Map(CITY.rows.map((r) => [r.member, r]));
@@ -75,14 +83,19 @@ const WINDOW = `${PLATE.window.since}..${PLATE.window.until}`;
 const BASIS = `counted at ${PLATE.ref} @ ${PLATE.sha} (${PLATE.generatedAtTime.slice(0, 10)})`;
 
 // RUST step per member — the one editorial channel on this sheet (sheet 13's
-// weathering census).  null = no machine on the pad.
+// weathering census).  null = no machine on the pad.  13, the typedoc plugin,
+// steps down off R4: the trims took symbols/ out of the tree, and the two files
+// left read a median idle of 43 days in census-weather.json, which the ladder
+// cuts at R3 (≤58).  Nothing on the plate reaches R4 now.
 const RUST = new Map([
   [1, 3], [2, 3], [3, 1], [4, 1], [5, 3], [6, 3], [7, 3], [8, 3], [9, 1], [10, 1],
-  [11, 1], [12, 3], [13, 4], [14, 1], [15, 2], [16, 2], [17, 1], [18, 1], [19, 1],
+  [11, 1], [12, 3], [13, 3], [14, 1], [15, 2], [16, 2], [17, 1], [18, 1], [19, 1],
   [20, 1], [21, 1], [22, 0], [23, 1], [24, 3], [25, 2], [26, 3], [27, null],
   [28, 0], [29, 0], [30, 1], [31, 0], [32, 0],
   // born 2026-09-07/08 — nothing on these pads has had time to weather
   [33, 0], [34, 0], [35, 0],
+  // born 2026-09-11/12 — the effect pair is the newest stone in the city
+  [36, 0], [37, 0],
 ]);
 const rustOf = (n) => {
   if (!RUST.has(n)) throw new Error(`plate 7B: member ${n} has no rust step`);
@@ -296,7 +309,7 @@ ${AR}
 <!-- district lettering -->
 ${txt(772, 110, 'packages/ — THE PRODUCT LINE', 'lblb')}
 ${txt(772, 123, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
-${txt(772, 135, `the fifth package stands at R0, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
+${txt(772, 135, `the lint plugin stands at R0, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
 <line x1="766" y1="126" x2="742" y2="168" class="skf"/>
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
@@ -321,9 +334,9 @@ ${txt(60, 144, 'the port’s masonry, at full steam with every lamp lit —', 'l
 ${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
 <line x1="388" y1="127" x2="526" y2="132" class="skf"/>
 
-${txt(440, 650, '@tools/typedoc-plugin — R4 + cracks, 1 puff:', 'lblr')}
-${txt(440, 662, '3 of 5 files sealed 234d, index.ts still live', 'lblf')}
-<line x1="448" y1="636" x2="440" y2="492" class="skf"/>
+${txt(440, 624, `@tools/typedoc-plugin — R3, no cracks, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
+${txt(440, 636, `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d`, 'lblf')}
+<line x1="448" y1="610" x2="440" y2="492" class="skf"/>
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex, and 0 lamps:', 'lblr')}
 ${txt(20, 633, `its canary lights happy-dom upstream, never its own ${g(26).sl} lines`, 'lblf')}
@@ -342,13 +355,13 @@ export const sheet7b = {
   caption: 'Sheet 7 counted the city, sheet 13 dated its stone, plate 7A metered its test light. This plate turns the same city on: every member becomes a Working Plant sprite in the Factorio sense — a machine whose state is broadcast, not implied. Rust speckle for idleness, steam for the last ninety days of commits, module lamps for test light, pipes for the build. The channels are independent on purpose, and the city proves they must be: the flagship runs at full steam under every lamp while wearing rust, and the most-rusted machine in the yard is still quietly steaming. The alert channel is drawn and empty: no gate in the city is red at HEAD.',
   notes: `
 <p><strong>The sprite decorates; the census governs.</strong> Every block is sheet 7's, unchanged: footprint 1.6·√sloc, height 3 px per authored file, spec annexes beside their buildings, gate severity in the same colours with the same uniform hatch including the cap. The Working Plant sprite (concept 3 of the sprite studies) adds four state channels as overlays. The design guard from the study is enforced: rust is a dotted <em>speckle</em> at partial opacity on the flanks only — never the cap, never a 45° line hatch — so a red-gated pristine plant (uniform hatch, cap included) and a rusting never-gating plant cannot be confused, in either theme.</p>
-<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is sheet 13's weathering census: median days since last touch per member, five steps cut where the idle histogram cuts — 0 ≤14d · R1 ≤30 · R2 ≤37 · R3 ≤58 · R4 &gt;180. The top step spans a band nothing occupies (61–180 days), so R4 means genuinely sealed, and only the typedoc plugin wears it. STEAM is distinct commits touching the member in a trailing 90-day window, read from <code>www/atlas.lit-ui-router.dev/data/census-steam.json</code> — window ${WINDOW}, ${BASIS} — banded 0 puffs ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16. Those edges are editorial: 3, 9 and 16 are all occupied on this window, so they sit in traffic rather than in empty air. Six plants steam at three puffs: <code>lit-ui-router</code> (${g(1).steam}), <code>sample-app-shared</code> (${g(5).steam}), <code>docs</code> (${g(10).steam}), <code>@tools/release</code> (${g(12).steam}), <code>sample-app-lit-e2e</code> (${g(9).steam}) and <code>examples</code> (${g(11).steam}). LAMPS compress plate 7A's meter to one number — lit share = extent × line coverage — read from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, metered at ${SHADOW.ref} @ ${SHADOW.sha}: three lamps at ${'≥'}90, two at ${'≥'}50, one above zero, and the accent lamp is 7A's honest category for light no meter reads. PIPES are the <code>turbo run build</code> graph from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>: ${BUILD.real} real tasks in ${BUILD.nodes} nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
-<p><strong>The channels disagree, which is the point.</strong> A single wreck-to-splendor axis would have to average these stories away. <code>lit-ui-router</code> is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. The typedoc plugin is the only R4 rust on the sheet, cracked flanks and all, yet still emits a puff, because <code>index.ts</code> takes commits while <code>symbols/</code> sleeps its 234 days. <code>examples</code> steams at ${PUFFS(g(11).steam)} puffs with zero lamps and only R1 rust — worked on, untested, barely aging — while <code>docs</code> pairs the city's second-hottest steam with its dimmest metered light (${g(10).eff}% lit). And <code>@tools/happy-dom</code> keeps plate 7A's strangest fact: a plant with its own spec annex and no lamp lit, because the spec is a canary pointed upstream.</p>
+<p><strong>Every channel is measured, and every threshold comes from a distribution.</strong> RUST is sheet 13's weathering census: median days since last touch per member, five steps cut where the idle histogram cuts — 0 ≤14d · R1 ≤30 · R2 ≤37 · R3 ≤58 · R4 &gt;180. The top step sits above the 180-day gap, so R4 means genuinely sealed — and at this ref no plant reaches it: the deepest rust in the city is R3, and the cracked flanks the key draws stand unworn. STEAM is distinct commits touching the member in a trailing 90-day window, read from <code>www/atlas.lit-ui-router.dev/data/census-steam.json</code> — window ${WINDOW}, ${BASIS} — banded 0 puffs ≤2 · 1: 3–8 · 2: 9–15 · 3: ≥16. Those edges are editorial: 3, 9 and 16 are all occupied on this window, so they sit in traffic rather than in empty air. Six plants steam at three puffs: <code>lit-ui-router</code> (${g(1).steam}), <code>sample-app-shared</code> (${g(5).steam}), <code>docs</code> (${g(10).steam}), <code>@tools/release</code> (${g(12).steam}), <code>sample-app-lit-e2e</code> (${g(9).steam}) and <code>examples</code> (${g(11).steam}). LAMPS compress plate 7A's meter to one number — lit share = extent × line coverage — read from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, metered at ${SHADOW.ref} @ ${SHADOW.sha}: three lamps at ${'≥'}90, two at ${'≥'}50, one above zero, and the accent lamp is 7A's honest category for light no meter reads. PIPES are the <code>turbo run build</code> graph from <code>www/atlas.lit-ui-router.dev/data/census-plate.json</code>: ${BUILD.real} real tasks in ${BUILD.nodes} nodes, last run green on 2026-08-17 (all cache hits — a replay of green, stated as such), so every pipe on the sheet connects and the key says so rather than inventing a broken one.</p>
+<p><strong>The channels disagree, which is the point.</strong> A single wreck-to-splendor axis would have to average these stories away. <code>lit-ui-router</code> is the oldest masonry in the city <em>and</em> its hottest steam <em>and</em> fully lamped — old and running. The typedoc plugin rusts at R3 on ${TDP.files} files and still steams, because <code>index.ts</code> takes the commits while <code>${TDP.idlestFile.split('/').pop()}</code>, the other half of the plugin, idles its ${TDP.idlestDays} days. <code>examples</code> steams at ${PUFFS(g(11).steam)} puffs with zero lamps and only R1 rust — worked on, untested, barely aging — while <code>docs</code> pairs the city's second-hottest steam with its dimmest metered light (${g(10).eff}% lit). And <code>@tools/happy-dom</code> keeps plate 7A's strangest fact: a plant with its own spec annex and no lamp lit, because the spec is a canary pointed upstream.</p>
 <p><strong>Three channels by import, one by hand.</strong> Placements, districts and gate tiers are <em>imported</em> from sheet 7's own placement table, and the masses from <code>www/atlas.lit-ui-router.dev/data/census-city.json</code>, so the two sheets cannot drift building for building. Steam, lamps and pipes are each looked up by member directory in their own filed plate, and a member this sheet draws that a plate does not carry is a build error rather than a stale number. Rust is the exception: an editorial step per member, keyed by badge off sheet 13's weathering census and labelled as such wherever it is printed. The steam total — ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits — double-counts commits touching several members, as any per-member count must, so the window commit count is printed beside it.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member, massed by sheet 7’s census — unchanged'),
     keyRow(`<rect x="6" y="3" width="36" height="12" class="sk fp"/><rect x="6" y="3" width="36" height="12" fill="url(#${P}-rust)" opacity="0.5"/>`, 'rust speckle (flanks only) — median idle days, 5 steps'),
-    keyRow('<path d="M8,15 L12,10 L10,4" class="skr" fill="none"/><path d="M20,15 L23,11 L21,5" class="skr" fill="none"/>', 'cracks — R4 only: idle past the 180-day gap'),
+    keyRow('<path d="M8,15 L12,10 L10,4" class="skr" fill="none"/><path d="M20,15 L23,11 L21,5" class="skr" fill="none"/>', 'cracks — R4 only: idle past the 180-day gap; unworn at this ref'),
     keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="sks fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="sks fnone" opacity="0.6"/>', 'steam — 0–3 puffs = commits trailing 90 days'),
     keyRow('<ellipse cx="12" cy="12" rx="4" ry="2.5" class="ska fnone"/><ellipse cx="16" cy="7" rx="6" ry="3" class="ska fnone" opacity="0.6"/>', 'accent plume — top steam band (≥16 commits)'),
     keyRow('<rect x="8" y="6" width="5" height="5" class="skg fg"/><rect x="16" y="6" width="5" height="5" class="skg fg"/><rect x="24" y="6" width="5" height="5" class="sks fnone"/>', 'module lamps — lit share of plate 7A’s test light'),

@@ -9,7 +9,7 @@
 // compressed, so gz is the honest wire measure). Files are sorted into the
 // sheet's districts by an explicit editorial pattern table plus a reachability
 // walk; a shared chunk loaded by several apps counts where it is FIRST claimed
-// (vanilla -> mobx -> hash), because the CDN ships it once.
+// (vanilla -> mobx -> effect -> hash), because the CDN ships it once.
 // Writes www/atlas.lit-ui-router.dev/data/census-shipped.json.
 import { existsSync, readFileSync, readdirSync } from 'node:fs';
 import { join, posix } from 'node:path';
@@ -73,7 +73,7 @@ const refsOf = (f) => {
   return [...out];
 };
 
-const isShell = (f) => /^app(-mobx|-hash)?\.html$/.test(f);
+const isShell = (f) => /^app(-mobx|-effect|-hash)?\.html$/.test(f);
 // VitePress ships each page's full chunk under a name only hashmap.json knows
 // (the shells preload the `.lean.js` twin), so the map is a seed, not a leaf.
 // Its keys are lowercased; the emitted filenames are not.
@@ -104,19 +104,22 @@ const bfs = (seeds) => {
 
 const vanilla = bfs(['app.html']);
 const mobx = bfs(['app-mobx.html']);
+const effect = bfs(['app-effect.html']);
 const hash = bfs(['app-hash.html']);
 const site = bfs([
   ...files.filter((f) => f.endsWith('.html') && !isShell(f)),
   ...hashmapSeeds(),
   ...files.filter(SEEDED),
 ]);
-const reached = new Set([...vanilla, ...mobx, ...hash, ...site]);
+const reached = new Set([...vanilla, ...mobx, ...effect, ...hash, ...site]);
 const orphans = files.filter((f) => !reached.has(f));
 
 // --- districts -------------------------------------------------------------
-// Editorial pattern table, first match wins — the thirteen districts sheet 9
-// draws. Everything the table misses lands in a loud `unclassified` district
-// rather than being dropped.
+// Editorial pattern table, first match wins — the districts sheet 9 draws, in
+// the ORDER below (twelve of the fifteen names are occupied at this ref).
+// Everything the table misses lands in a loud `unclassified` district rather
+// than being dropped — a PRINT, not a throw, so a new app shell can hide there
+// until someone reads the run's output.
 const PATTERNS = [
   ['demo corpora', /^static\/data\/corpora\//],
   ['static data', /^static\/data\//],
@@ -130,7 +133,7 @@ const PATTERNS = [
 ];
 const ORDER = [
   'demo corpora', 'inter fonts', 'html pages', 'examples', 'page chunks', 'vp framework',
-  'images', 'app: vanilla', 'app: mobx', 'app: hash', 'static data', 'site css',
+  'images', 'app: vanilla', 'app: mobx', 'app: effect', 'app: hash', 'static data', 'site css',
   'orphans', 'unclassified',
 ];
 
@@ -140,6 +143,7 @@ const district = (f) => {
   // The remainder is hashed app output: shared chunks count where first claimed.
   if (vanilla.has(f)) return 'app: vanilla';
   if (mobx.has(f)) return 'app: mobx';
+  if (effect.has(f)) return 'app: effect';
   if (hash.has(f)) return 'app: hash';
   return 'unclassified';
 };
@@ -174,9 +178,9 @@ writeData('census-shipped.json', {
   commitDate: basis.commitDate,
   generatedAtTime: new Date().toISOString(),
   wasGeneratedBy: 'www/atlas.lit-ui-router.dev/generator/census-shipped.mjs',
-  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile + turbo run build -> ${SITE}/dist`,
-  wasAssociatedWith: ['pnpm (corepack)', 'turbo', 'node:zlib gzip level 9'],
-  measure: 'per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> hash',
+  used: `git archive ${basis.ref} @ ${basis.sha} + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build -> ${SITE}/dist`,
+  wasAssociatedWith: ['pnpm (mise-provisioned)', 'turbo', 'node:zlib gzip level 9'],
+  measure: 'per-file raw bytes + gzip level 9; districts by pattern table, shared app chunks first-claimed vanilla -> mobx -> effect -> hash',
   seededTrees: ['images/', 'static/', '_headers'],
   totals,
   rows,

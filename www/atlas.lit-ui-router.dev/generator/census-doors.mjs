@@ -77,7 +77,7 @@ writeData('census-doors.json', {
   commitDate: basis.commitDate,
   generatedAtTime: new Date().toISOString(),
   wasGeneratedBy: 'www/atlas.lit-ui-router.dev/generator/census-doors.mjs',
-  used: `git archive ${basis.ref} @ ${basis.sha} + corepack pnpm install --frozen-lockfile + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)`,
-  wasAssociatedWith: ['pnpm (corepack)', `rolldown@${rolldownVersion ?? '?'}`, 'node:zlib gzip'],
+  used: `git archive ${basis.ref} @ ${basis.sha} + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)`,
+  wasAssociatedWith: ['pnpm (mise-provisioned)', `rolldown@${rolldownVersion ?? '?'}`, 'node:zlib gzip'],
   rows,
 });
