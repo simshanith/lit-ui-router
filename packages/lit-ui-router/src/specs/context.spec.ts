@@ -223,6 +223,25 @@ describe('lit-ui-router/context', () => {
       expect(outer).not.toHaveBeenCalled();
     });
 
+    it('ignores a context-request for another key, letting it bubble', async () => {
+      const element = document.createElement('ui-router');
+      element.uiRouter = router;
+      container.appendChild(element);
+      await waitForUpdate(element);
+      const child = document.createElement('div');
+      element.appendChild(child);
+      const outer = vi.fn();
+      container.addEventListener(contextRequestEventName, outer);
+
+      const event = Object.assign(
+        new Event(contextRequestEventName, { bubbles: true, composed: true }),
+        { context: { name: 'someone-else' }, callback: () => {} },
+      );
+      child.dispatchEvent(event);
+
+      expect(outer).toHaveBeenCalledTimes(1);
+    });
+
     it('keeps the house ui-router-context path working unchanged', async () => {
       const element = document.createElement('ui-router');
       element.uiRouter = router;
