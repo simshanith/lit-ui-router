@@ -14,7 +14,13 @@ const ruleTester = new RuleTester({
 
 const IMPORTS = `
 import { html } from 'lit';
-import { uiSref, uiSrefActive } from 'lit-ui-router';
+import {
+  srefActiveClass,
+  srefAriaCurrent,
+  srefHref,
+  uiSref,
+  uiSrefActive,
+} from 'lit-ui-router';
 `;
 
 ruleTester.run('directive-position', directivePosition, {
@@ -26,6 +32,30 @@ ruleTester.run('directive-position', directivePosition, {
     {
       name: 'both directives on one element',
       code: `${IMPORTS}html\`<a \${uiSref('home')} \${uiSrefActive({})}>Home</a>\`;`,
+    },
+    {
+      name: 'srefHref is the attribute-part sibling: the href binding is its position',
+      code: `${IMPORTS}html\`<a href=\${srefHref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'a quoted attribute is still the whole value',
+      code: `${IMPORTS}html\`<a href="\${srefHref('home')}">Home</a>\`;`,
+    },
+    {
+      name: 'srefActiveClass keeps the static classes around it, as classMap does',
+      code: `${IMPORTS}html\`<a class="nav-link \${srefActiveClass({ state: 'home' })}" \${uiSref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'srefActiveClass alone in the class attribute',
+      code: `${IMPORTS}html\`<a class=\${srefActiveClass({ state: 'home' })} \${uiSref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'srefAriaCurrent in the attribute it is meant for',
+      code: `${IMPORTS}html\`<a aria-current=\${srefAriaCurrent({ state: 'home' })} \${uiSref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'srefAriaCurrent accepts any attribute name at runtime',
+      code: `${IMPORTS}html\`<a data-current=\${srefAriaCurrent({ state: 'home' })} \${uiSref('home')}>Home</a>\`;`,
     },
     {
       name: 'a call outside any template says nothing about its position',
@@ -98,6 +128,60 @@ ruleTester.run('directive-position', directivePosition, {
       ],
     },
     {
+      name: 'an attribute-part directive as an element part',
+      code: `${IMPORTS}html\`<a \${srefHref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'attributePartOnly', data: { name: 'srefHref' } }],
+    },
+    {
+      name: 'an attribute-part directive in child position',
+      code: `${IMPORTS}html\`<nav>\${srefHref('home')}</nav>\`;`,
+      errors: [{ messageId: 'attributePartOnly', data: { name: 'srefHref' } }],
+    },
+    {
+      name: 'a property binding is not an attribute part',
+      code: `${IMPORTS}html\`<a .href=\${srefHref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'attributePartOnly' }],
+    },
+    {
+      name: 'an event binding is not an attribute part',
+      code: `${IMPORTS}html\`<a @click=\${srefHref('home')}>Home</a>\`;`,
+      errors: [{ messageId: 'attributePartOnly' }],
+    },
+    {
+      name: 'srefHref interpolated beside static text',
+      code: `${IMPORTS}html\`<a href="/app\${srefHref('home')}">Home</a>\`;`,
+      errors: [
+        { messageId: 'soleAttributeExpression', data: { name: 'srefHref' } },
+      ],
+    },
+    {
+      name: 'srefActiveClass sharing the class attribute with another expression',
+      code: `${IMPORTS}html\`<a class="\${'nav'} \${srefActiveClass({})}" \${uiSref('home')}>Home</a>\`;`,
+      errors: [
+        {
+          messageId: 'soleAttributeExpression',
+          data: { name: 'srefActiveClass' },
+        },
+      ],
+    },
+    {
+      name: 'srefActiveClass outside the class attribute',
+      code: `${IMPORTS}html\`<a part=\${srefActiveClass({})} \${uiSref('home')}>Home</a>\`;`,
+      errors: [
+        { messageId: 'classAttributeOnly', data: { name: 'srefActiveClass' } },
+      ],
+    },
+    {
+      name: 'srefAriaCurrent interpolated beside static text',
+      code: `${IMPORTS}html\`<a aria-current="\${srefAriaCurrent({})} page">Home</a>\`;`,
+      errors: [
+        {
+          messageId: 'soleAttributeExpression',
+          data: { name: 'srefAriaCurrent' },
+        },
+      ],
+    },
+    {
       name: 'aliased imports still count',
       code: `import { html as h } from 'lit';\nimport { uiSref as sref } from 'lit-ui-router';\nh\`<a href=\${sref('home')}>Home</a>\`;`,
       errors: [{ messageId: 'elementPartOnly', data: { name: 'uiSref' } }],
@@ -120,6 +204,10 @@ void describe('directive-position meta', () => {
     assert.match(
       directivePosition.meta?.messages?.elementPartOnly ?? '',
       /`\{\{name\}\}` must be used as an element part/,
+    );
+    assert.match(
+      directivePosition.meta?.messages?.attributePartOnly ?? '',
+      /`\{\{name\}\}` must be used as an attribute part/,
     );
   });
 });

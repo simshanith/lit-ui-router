@@ -57,8 +57,8 @@ void describe('oxlint jsPlugins', () => {
     }
   });
 
-  void it('leaves the uiSref anchor alone', () => {
-    // Line 5 is the navigable anchor; only lines 6 and 7 may report.
+  void it('leaves the uiSref and srefHref anchors alone', () => {
+    // Lines 5 and 13 are the navigable anchors; only lines 6 and 7 may report.
     const lines = diagnostics.map(
       (diagnostic) =>
         (diagnostic as unknown as { labels: { span: { line: number } }[] })
@@ -78,17 +78,40 @@ void describe('oxlint jsPlugins: the option-aware rules', () => {
         'lit-ui-router(sref-assign-href)',
         'lit-ui-router(sref-active-aria-current)',
         'lit-ui-router(directive-position)',
+        'lit-ui-router(directive-position)',
+        'lit-ui-router(directive-position)',
+        'lit-ui-router(sref-active-class-aria-current)',
+        'lit-ui-router(sref-status-aria-current)',
       ],
     );
   });
 
+  void it('names the directive and the position it needs', () => {
+    assert.match(
+      diagnostics[3]?.message ?? '',
+      /^`srefHref` must be used as an attribute part/,
+    );
+    assert.match(
+      diagnostics[4]?.message ?? '',
+      /^`srefActiveClass` must be bound in the `class` attribute/,
+    );
+    assert.match(
+      diagnostics[5]?.message ?? '',
+      /^srefActiveClass marks this <a> active for CSS only; bind aria-current=\$\{srefAriaCurrent\(\{ state: 'home' \}\)\}/,
+    );
+    assert.match(
+      diagnostics[6]?.message ?? '',
+      /^The classes on this <a> read this\.users's status/,
+    );
+  });
+
   void it('leaves the documented fixes alone', () => {
-    // Lines 6, 10 and 13 are the three offenders; the fixed forms follow.
+    // Lines 13, 17, 20, 40, 42, 63 and 80 are the offenders; the fixes follow.
     const lines = diagnostics.map(
       (diagnostic) =>
         (diagnostic as unknown as { labels: { span: { line: number } }[] })
           .labels[0]?.span.line,
     );
-    assert.deepEqual(lines, [6, 10, 13]);
+    assert.deepEqual(lines, [13, 17, 20, 40, 42, 63, 80]);
   });
 });

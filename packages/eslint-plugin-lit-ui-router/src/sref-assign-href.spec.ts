@@ -14,7 +14,7 @@ const ruleTester = new RuleTester({
 
 const IMPORTS = `
 import { html } from 'lit';
-import { uiSref } from 'lit-ui-router';
+import { srefHref, uiSref } from 'lit-ui-router';
 `;
 
 ruleTester.run('sref-assign-href', srefAssignHref, {
@@ -22,6 +22,10 @@ ruleTester.run('sref-assign-href', srefAssignHref, {
     {
       name: "<a> is what 'auto' writes to, so the default is right",
       code: `${IMPORTS}html\`<a \${uiSref('home')}>Home</a>\`;`,
+    },
+    {
+      name: 'srefHref is the attribute-part sibling, not uiSref; it has no assignHref',
+      code: `${IMPORTS}html\`<button href=\${srefHref('home')}>Home</button>\`;`,
     },
     {
       name: '<area> is a native link too',
