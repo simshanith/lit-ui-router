@@ -1,5 +1,5 @@
-import { describe, it, expect } from 'vitest';
-import { memoryLocationPlugin } from '@uirouter/core';
+import { describe, it, expect, expectTypeOf } from 'vitest';
+import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
   configureServerRouter,
@@ -105,7 +105,7 @@ describe('withServerRouter', () => {
   it('nests, restoring the outer router on the way out', () => {
     const outer = new UIRouterLit();
     const inner = new UIRouterLit();
-    const trace: (UIRouterLit | undefined)[] = [];
+    const trace: (UIRouter | undefined)[] = [];
 
     withServerRouter(outer, () => {
       trace.push(currentServerRouter());
@@ -211,5 +211,40 @@ describe('configureServerRouter', () => {
     const router = configureServerRouter(new UIRouterLit());
 
     expect(router.urlService.path()).toBe('');
+  });
+});
+
+describe('the router types the server entry takes', () => {
+  const coreRouter = (): UIRouter => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    return router;
+  };
+
+  it('configures a plain @uirouter/core router and returns it unchanged', () => {
+    const router = coreRouter();
+
+    const configured = configureServerRouter(router, { url: '/sheet/7B' });
+
+    expectTypeOf(configured).toEqualTypeOf<UIRouter>();
+    expect(configured).toBe(router);
+    expect(router.urlService.path()).toBe('/sheet/7B');
+  });
+
+  it('returns a UIRouterLit as a UIRouterLit', () => {
+    const configured = configureServerRouter(new UIRouterLit());
+
+    expectTypeOf(configured).toEqualTypeOf<UIRouterLit>();
+  });
+
+  it('publishes a plain @uirouter/core router in the slot', () => {
+    const router = coreRouter();
+
+    expectTypeOf(currentServerRouter()).toEqualTypeOf<UIRouter | undefined>();
+    expect(withServerRouter(router, () => currentServerRouter())).toBe(router);
+  });
+
+  it('answers the context key with a UIRouterLit, which is what it promises', () => {
+    expectTypeOf(provideRouter).parameter(1).toEqualTypeOf<UIRouterLit>();
   });
 });

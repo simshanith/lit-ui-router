@@ -32,6 +32,11 @@ import { getServerRouter, setServerRouter } from './server-slot.js';
  * stops immediate propagation. Uninstalling is exact — each call's returned
  * function removes only the listener that call added.
  *
+ * The parameter is `UIRouterLit`, not `UIRouter`, because the key this answers
+ * — `lit-ui-router/context`'s `routerContext` — is branded with `UIRouterLit`,
+ * and a provider may only answer with the value its key promises. The slot
+ * ({@link withServerRouter | `withServerRouter`}) takes either.
+ *
  * @param root - the event target server-side requests travel to
  * @param router - the router to answer with
  * @returns a function that uninstalls this provider
@@ -80,8 +85,8 @@ export const provideRouter: (
  *
  * @category server
  */
-export const currentServerRouter: () => UIRouterLit | undefined = ():
-  | UIRouterLit
+export const currentServerRouter: () => UIRouter | undefined = ():
+  | UIRouter
   | undefined => getServerRouter();
 
 /**
@@ -99,6 +104,12 @@ export const currentServerRouter: () => UIRouterLit | undefined = ():
  *
  * Calls nest: an inner call sees its own router, and the outer one is restored
  * on the way out.
+ *
+ * The router is any `@uirouter/core` `UIRouter`: the directives that read the
+ * slot want `stateService`, `stateRegistry`, `transitionService` and `globals`,
+ * none of which `UIRouterLit` adds, so a server render that types its router as
+ * `UIRouter` — the type `UIViewInjectedProps.router` declares — passes it here
+ * unchanged.
  *
  * @typeParam T - whatever `run` returns
  * @param router - the router to publish for the duration of `run`
@@ -119,10 +130,8 @@ export const currentServerRouter: () => UIRouterLit | undefined = ():
  *
  * @category server
  */
-export const withServerRouter: <T>(router: UIRouterLit, run: () => T) => T = <
-  T,
->(
-  router: UIRouterLit,
+export const withServerRouter: <T>(router: UIRouter, run: () => T) => T = <T>(
+  router: UIRouter,
   run: () => T,
 ): T => {
   const previous = getServerRouter();
@@ -229,6 +238,9 @@ export interface ServerRouterOptions {
  * The url is set before any transition runs, so `router.start()` (or a
  * `stateService.go()`) settles on the state the request asked for.
  *
+ * Any `UIRouter` is configurable — `UIRouterLit` included — and the router
+ * comes back at the type it went in as.
+ *
  * @typeParam T - the router type, returned unchanged
  * @param router - a freshly constructed router, with no location plugin yet
  * @param options - the request's url and the mount's shape
@@ -250,10 +262,10 @@ export interface ServerRouterOptions {
  *
  * @category server
  */
-export const configureServerRouter: <T extends UIRouterLit>(
+export const configureServerRouter: <T extends UIRouter>(
   router: T,
   options?: ServerRouterOptions,
-) => T = <T extends UIRouterLit>(
+) => T = <T extends UIRouter>(
   router: T,
   options: ServerRouterOptions = {},
 ): T => {

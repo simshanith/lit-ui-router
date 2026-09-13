@@ -1,25 +1,26 @@
 // The per-render router slot, split out of `./server.js` so the sref
 // directives read it without pulling the server entry — and its memory
 // location plugin — into the browser bundle. Not a package export.
+import type { UIRouter } from '@uirouter/core';
+
 import { requestRouter } from './context.js';
-import type { UIRouterLit } from './core.js';
 
 /** The per-render router. A plain module slot, never an async context. */
-let currentRouter: UIRouterLit | undefined;
+let currentRouter: UIRouter | undefined;
 
 /**
  * The router the innermost enclosing `withServerRouter` call set.
  *
  * @internal
  */
-export const getServerRouter = (): UIRouterLit | undefined => currentRouter;
+export const getServerRouter = (): UIRouter | undefined => currentRouter;
 
 /**
  * Publishes `router` in the slot, or clears it with `undefined`.
  *
  * @internal
  */
-export const setServerRouter = (router: UIRouterLit | undefined): void => {
+export const setServerRouter = (router: UIRouter | undefined): void => {
   currentRouter = router;
 };
 
@@ -32,7 +33,7 @@ export const setServerRouter = (router: UIRouterLit | undefined): void => {
  *
  * @internal
  */
-export const seekServerRouter = (): UIRouterLit | undefined => {
+export const seekServerRouter = (): UIRouter | undefined => {
   if (currentRouter) return currentRouter;
   const root = (globalThis as { litServerRoot?: EventTarget }).litServerRoot;
   return root ? requestRouter(root) : undefined;
