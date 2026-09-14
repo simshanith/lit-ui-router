@@ -39,6 +39,7 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
   const claims = (manifest as { bundleProbe?: Record<string, unknown> })
     .bundleProbe;
   const entries: PackageEntry[] = [];
+  const bundled = new Set<string>();
   for (const [subpath, value] of Object.entries(manifest.exports ?? {})) {
     if (subpath === './package.json' || subpath.includes('*')) continue;
     const target =
@@ -64,6 +65,7 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
       );
     }
     const free = (claims?.[subpath] as { free?: string[] } | undefined)?.free;
+    bundled.add(subpath);
     entries.push({
       label: subpath === '.' ? 'index' : subpath.slice(2),
       file,
@@ -73,10 +75,11 @@ export const readPackageProbe = (packageDir: string): PackageProbe => {
   if (entries.length === 0) {
     throw new Error(`${name}: no bundleable exports found`);
   }
+  // A claim on an export the loop skipped would otherwise pass unchecked.
   for (const subpath of Object.keys(claims ?? {})) {
-    if (!Object.hasOwn(manifest.exports ?? {}, subpath)) {
+    if (!bundled.has(subpath)) {
       throw new Error(
-        `${name}: bundleProbe names '${subpath}', which is not an export`,
+        `${name}: bundleProbe names '${subpath}', which is not a bundled export`,
       );
     }
   }
