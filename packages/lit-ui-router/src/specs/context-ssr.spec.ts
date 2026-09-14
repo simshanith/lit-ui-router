@@ -7,15 +7,11 @@ import {
 } from '../context.js';
 import { UIRouterLit } from '../core.js';
 
-// Node under the @lit-labs/ssr DOM shim: no document, no elements — the shape
-// the sref directives meet on the server, where the only thing to ask is an
-// event target. `globalThis.litServerRoot` is the one @lit-labs/ssr puts at the
-// bottom of its event-target stack, so a provider attached there answers every
-// request a server render makes.
+// The @lit-labs/ssr DOM shim: no elements, so a provider on its root answers every request.
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 
-/** The provider a server-side router hand-off will install (#829). */
+/** a provider on the server root, speaking the protocol alone */
 function provideRouter(host: EventTarget, router: UIRouterLit): () => void {
   const listener = (event: Event) => {
     if (!isRouterContextRequest(event)) return;
