@@ -83,6 +83,45 @@ describe('srefHref on the server', () => {
   });
 });
 
+describe('async resolves ahead of the sync render', () => {
+  it('settle in the awaited transition, and the render reads them', async () => {
+    const router = new UIRouterLit();
+    router.plugin(memoryLocationPlugin);
+    router.stateRegistry.register({
+      name: 'sheet',
+      url: '/sheet/:num',
+      resolve: {
+        title: () =>
+          new Promise<string>((resolve) => {
+            setTimeout(() => resolve('Sheet 7B'), 5);
+          }),
+      },
+    });
+    router.urlService.url('/sheet/7B');
+    const settled = new Promise<void>((resolve) =>
+      router.transitionService.onSuccess({}, () => {
+        resolve();
+      }),
+    );
+    router.start();
+    await settled;
+
+    const out = withRouterSync(router, () =>
+      emit(
+        html`<h1>
+          ${router.globals.successfulTransitions
+            .peekTail()
+            .injector()
+            .get('title')}
+        </h1>`,
+      ),
+    );
+
+    expect(router.globals.current.name).toBe('sheet');
+    expect(out).toContain('Sheet 7B');
+  });
+});
+
 describe('the sref status directives on the server', () => {
   it('marks the state the request settled on', async () => {
     const router = await startedRouter();
