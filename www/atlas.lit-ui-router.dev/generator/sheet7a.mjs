@@ -232,6 +232,12 @@ const NOTE = {
   30: 'a one-line parser shim — nothing to light',
   31: 'vendored rules, lit wall to wall',
   32: 'reserve lit — driver + CLI in shadow',
+  33: 'the repo rule plugin — its stubs are unlit',
+  34: 'the flat-config host — config only',
+  35: 'the four lint-lane guards, half lit',
+  36: 'the effect demo — e2e light only',
+  37: 'the bindings lit; the barrel in shadow',
+  38: 'the bridge lit, its own barrel dark',
 };
 const ART_H = 866;
 const SY = ART_H + 16;
@@ -288,32 +294,43 @@ ${txt(1520, 34, 'LIGHT RULE — lit strip = side · (sloc the suite loads ÷ src
 ${txt(1520, 48, 'footprints and annexes are sheet 7’s census, unchanged · a file the suite never imports stays in shadow — darkness is data', 'lblf', 'end')}
 ${txt(1520, 62, 'e2e light (cypress) is drawn, not metered — no lcov leaves the rig · the tests are the light, shadow is what no suite loads', 'lblf', 'end')}
 
-<!-- brightness ladder -->
-<rect x="1128" y="96" width="392" height="214" class="skf fnone"/>
+<!-- brightness ladder: the full-bright band names most of the city, and its roll
+     outgrew the ladder's wall — a row too long for the box carries its numbers on a
+     continuation line, and the ladder is cut to whatever height that leaves -->
+${(() => {
+  const ROWS = [
+    ['var(--halo)', 'sk', '', '≥ 95% — full bright', numList(inBand('b1'))],
+    [`url(#${P}-g2)`, 'sk', '', '85–95% — bright', numList(inBand('b2'))],
+    [`url(#${P}-g3)`, 'skr', '', '70–85% — pale', numList(inBand('b3'))],
+    [`url(#${P}-g4)`, 'skr', '', 'below 70% — guttering', numList(inBand('b4'))],
+    [`url(#${P}-se)`, 'ska', '5 4', 'e2e light — real, unmetered', numList(inCat('e'))],
+    ['none', 'sks', '2 4', 'tests run, no meter attaches', numList(inCat('u'))],
+    [`url(#${P}-sh)`, 'sk', '', 'SHADOW — source no suite ever loads', ''],
+  ];
+  let y = 138;
+  const rows = ROWS.map(([fill, edge, dash, head, list]) => {
+    const cls = edge === 'skr' ? 'lblr' : edge === 'ska' ? 'lbla' : 'lbls';
+    const one = list ? `${head} · ${list}` : head;
+    const wrap = one.length > 52;
+    const top = y;
+    y += wrap ? 34 : 22;
+    return `<rect x="1144" y="${top}" width="34" height="14" fill="${fill}"/><rect x="1144" y="${top}" width="34" height="14" class="${edge} fnone" ${dash ? `stroke-dasharray="${dash}"` : ''}/>
+${txt(1192, top + 11, wrap ? head : one, cls)}${wrap ? `\n${txt(1192, top + 24, list, cls)}` : ''}`;
+  }).join('\n');
+  return `<rect x="1128" y="96" width="392" height="${y - 78}" class="skf fnone"/>
 ${txt(1144, 118, 'BRIGHTNESS — LINE COVERAGE OF WHAT THE SUITE LIGHTS', 'lbls')}
-${[
-  ['var(--halo)', 'sk', '', `≥ 95% — full bright · ${numList(inBand('b1'))}`],
-  [`url(#${P}-g2)`, 'sk', '', `85–95% — bright · ${numList(inBand('b2'))}`],
-  [`url(#${P}-g3)`, 'skr', '', `70–85% — pale · ${numList(inBand('b3'))}`],
-  [`url(#${P}-g4)`, 'skr', '', `below 70% — guttering · ${numList(inBand('b4'))}`],
-  [`url(#${P}-se)`, 'ska', '5 4', `e2e light — real, unmetered · ${numList(inCat('e'))}`],
-  ['none', 'sks', '2 4', `tests run, no meter attaches · ${numList(inCat('u'))}`],
-  [`url(#${P}-sh)`, 'sk', '', 'SHADOW — source no suite ever loads'],
-].map(([fill, edge, dash, label], i) => {
-  const y = 138 + i * 22;
-  return `<rect x="1144" y="${y}" width="34" height="14" fill="${fill}"/><rect x="1144" y="${y}" width="34" height="14" class="${edge} fnone" ${dash ? `stroke-dasharray="${dash}"` : ''}/>
-${txt(1192, y + 11, label, edge === 'skr' ? 'lblr' : edge === 'ska' ? 'lbla' : 'lbls')}`;
-}).join('\n')}
+${rows}`;
+})()}
 
 ${districts}
 ${bodies}
 ${furn}
 
 <!-- district lettering + aggregates -->
-${txt(140, 348, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(140, 360, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc · ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} metered lines`, 'lblf')}
-${txt(140, 372, `branches ${pct1(DP.branchesHit, DP.branches)}% · the annexes sheet 7 drew at 1.5–3.9× bought this glow`, 'lblf')}
-<line x1="150" y1="336" x2="160" y2="326" class="skf"/>
+${txt(140, 316, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(140, 328, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc · ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} metered lines`, 'lblf')}
+${txt(140, 340, `branches ${pct1(DP.branchesHit, DP.branches)}% · the annexes sheet 7 drew at 1.5–3.9× bought this glow`, 'lblf')}
+<line x1="150" y1="304" x2="160" y2="294" class="skf"/>
 
 ${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1096, 385, `${DA.metered} metered member${DA.metered === 1 ? '' : 's'} · two demos + the rig`, 'lblf', 'end')}
@@ -335,10 +352,10 @@ ${txt(620, 94, `in shadow: ${g(1).r[6] - g(1).r[10]} files, ${fmt(g(1).r[7] - g(
 ${txt(620, 106, 'and interface.ts, which is type declarations', 'lblf')}
 <line x1="612" y1="110" x2="305" y2="136" class="skf"/>
 
-${txt(1144, 322, '№5 sample-app-shared — an outline of light:', 'lbls')}
-${txt(1144, 335, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
-${txt(1144, 347, 'load a meter the repo never installed', 'lblf')}
-<line x1="1138" y1="330" x2="1032" y2="270" class="skf"/>
+${txt(1144, 338, '№5 sample-app-shared — an outline of light:', 'lbls')}
+${txt(1144, 351, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
+${txt(1144, 363, 'load a meter the repo never installed', 'lblf')}
+<line x1="1138" y1="346" x2="1032" y2="270" class="skf"/>
 
 ${txt(30, 430, '№26 happy-dom — a lamp, and NO light on itself:', 'lblr')}
 ${txt(30, 442, 'its canary spec lights happy-dom’s ordering', 'lblf')}
@@ -346,11 +363,11 @@ ${txt(30, 454, `bug, never its own append.ts — 0 of ${g(26).r[7]} sloc;`, 'lbl
 ${txt(30, 466, 'those lines are lit from №1’s lamp instead', 'lblf')}
 <line x1="250" y1="474" x2="272" y2="522" class="skf"/>
 
-${txt(863, 724, '№12 @tools/release — the yard in one building:', 'lblr')}
-${txt(863, 737, `${g(12).r[10]} files lit at ${pctS(g(12).r[13])} bright; ${g(12).r[6] - g(12).r[10]} in shadow, ${fmt(g(12).r[7] - g(12).r[11])} sloc —`, 'lblf')}
-${txt(863, 749, 'the publish halt is lit at its core', 'lblf')}
-${txt(863, 761, 'and dark at its process edge', 'lblf')}
-<line x1="857" y1="742" x2="240" y2="700" class="skf"/>
+${txt(863, 748, '№12 @tools/release — the yard in one building:', 'lblr')}
+${txt(863, 761, `${g(12).r[10]} files lit at ${pctS(g(12).r[13])} bright; ${g(12).r[6] - g(12).r[10]} in shadow, ${fmt(g(12).r[7] - g(12).r[11])} sloc —`, 'lblf')}
+${txt(863, 773, 'the publish halt is lit at its core', 'lblf')}
+${txt(863, 785, 'and dark at its process edge', 'lblf')}
+<line x1="857" y1="766" x2="240" y2="700" class="skf"/>
 
 ${txt(700, 852, `№16 @tools/shared — the palest light thrown: ${pctS(g(16).r[13])} line, ${pctS(g(16).r[15])} function`, 'lblr')}
 ${txt(700, 865, 'exec.ts and workspace.ts are the worst-lit things that are lit at all', 'lblf')}

@@ -97,7 +97,7 @@ const bubbleArc = arrow(P, `M${bx.toFixed(1)},${(by - 3).toFixed(1)} C 146,240 1
 // Skybridge tap into a hall bay
 const tap = arrow(P, `M758,326 L735,366`, 'as', 'sks', '4 3');
 
-const svg = `<svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Five entry doors line the bottom edge.">
+const svg = `<svg viewBox="-150 0 1300 790" role="img" aria-label="The lit-ui-router render loop drawn as a spread-out isometric scene, client-side only: a location gatehouse feeds the core matching plant, a transition hall with hook bays, a ui-view building with its child view stacked on its roof, and a Lit render hall that commits onto the document. The loop itself runs as roads on the isometric grid — each leg turns along the grid axes rather than cutting across it, and every arrowhead stops short of the wall it points at — which alone breaks the city metaphor: it is drawn as a browser window whose DOM rises as stacked translucent plates, Firefox-Tilt style, with the uiSref link as the topmost plate. A click on that plate flies back to location as an elevated arc; uiSrefTarget events rise past the plates to a watchtower; a TransitionController skybridge taps the hall from above. Six entry doors line the bottom edge.">
 ${defs(P)}
 
 ${legs.join('\n')}
@@ -164,17 +164,18 @@ ${txt(-140, 451, 'stateService.go()', 'lbla', 'start')}
 ${txt(-140, 464, '→ pushState', 'lbla', 'start')}
 <line x1="-4" y1="396" x2="169" y2="292" class="skf"/>
 
-<!-- five doors -->
+<!-- six doors -->
 <line x1="-140" y1="720" x2="1140" y2="720" class="skf"/>
-${txt(-140, 738, 'FIVE DOORS INTO THE SAME MACHINE', 'lbls')}
+${txt(-140, 738, 'SIX DOORS INTO THE SAME MACHINE', 'lbls')}
 ${[
   ['.', 'registers everything', true],
   ['./pure', 'no side effects', false],
   ['./register', 'all elements', true],
   ['./ui-router.register', 'one element', true],
   ['./ui-view.register', 'one element', true],
+  ['./context', 'the context seam', false],
 ].map(([name, sub, se], i) => {
-  const x = 496 + i * 132;
+  const x = 430 + i * 120;
   return `${box(x, 726, 116, 30, se ? 'sk fp2' : 'ska fp')}
 ${txt(x + 8, 739, name, se ? 'lbls' : 'lbla')}
 ${txt(x + 8, 751, sub, 'lblf')}`;
@@ -182,9 +183,9 @@ ${txt(x + 8, 751, sub, 'lblf')}`;
 </svg>`;
 
 export const sheet1 = {
-  num: 1, id: 'package', rev: 'G',
+  num: 1, id: 'package', rev: 'H',
   title: 'THE RENDER LOOP',
-  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit drawn as one isometric scene: every leg of the loop is a road on the grid, the document a browser window whose DOM rises in plates, and the five package entries a door strip along the footer · version read from census-files.json`,
+  sub: `ALTITUDE 1 — lit-ui-router ${LIT_V} · the client circuit drawn as one isometric scene: every leg of the loop is a road on the grid, the document a browser window whose DOM rises in plates, and the six package entries a door strip along the footer · version read from census-files.json`,
   scale: 'ONE PACKAGE',
   form: 'ISO CIRCUIT',
   svg,
@@ -193,7 +194,7 @@ export const sheet1 = {
 <p><strong>Why redraw a 2D loop in 3D:</strong> the cycle itself is flat, but the third axis is free to carry the relations flat arrows kept fumbling. Containment: the child <code>&lt;ui-view&gt;</code> literally stands on its parent's roof — nesting is stacking, not a box-in-a-box. Propagation: <code>uiSrefTarget</code> events <em>rise</em> past the document's plates to the <code>uiSrefActive</code> perch, which is how link tracking works — no registry, just bubbling. Instrumentation: <code>TransitionController</code> is a skybridge that taps the hall without standing on the route.</p>
 <p><strong>The document breaks the metaphor on purpose.</strong> Every other station is a building; the document is drawn the way Firefox's old Tilt inspector drew it — a browser window whose DOM rises as stacked plates by depth, window → body → app shell → <code>&lt;ui-view&gt;</code> content → the <code>&lt;a&gt;</code> element on top. It is the one structure on this sheet that really is layered, so it alone earns the literal treatment.</p>
 <p><strong>Service discovery is still DOM events.</strong> A nested view finds its parent with a composed context CustomEvent; every <code>uiSref</code> announces its <code>targetState</code> upward. The document tree is the dependency graph — which is exactly why the drawing can stand everything in one window.</p>
-<p><strong>The five doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with registration torn off. <code>sideEffects</code> in the manifest names exactly the four register files.</p>`,
+<p><strong>The six doors are one seam.</strong> The bare entry registers custom elements as a side effect; <code>./pure</code> is the same API with registration torn off. <code>sideEffects</code> in the manifest names exactly the four register files.</p>`,
   key: [
     keyRow('<line x1="2" y1="9" x2="40" y2="9" class="sk2"/>', 'the render loop (roads on the iso grid)'),
     keyRow('<line x1="2" y1="14" x2="40" y2="4" class="ska"/>', 'the click flying back to location'),

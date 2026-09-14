@@ -316,14 +316,15 @@ const ACCENT = M.filter((r) => r[12] === 'e').length;
 export const SHEET7B_VERDICT = `the synthesis plate — rust, steam, lamps and pipes on one city: ${RUNNING} plants run and every pipe connects on ${BUILD.real} green build tasks, ${METERED} carry metered lamps, and the alert register stands drawn and empty — no gate is red at HEAD`;
 const half = Math.ceil(M.length / 2);
 const SY = ART_H + 16;
-const schedule = `<rect x="40" y="${SY}" width="1480" height="${74 + half * 17}" class="sk fp"/>
+const schedule = `<rect x="40" y="${SY}" width="1480" height="${91 + half * 17}" class="sk fp"/>
 ${txt(58, SY + 22, `PLANT SCHEDULE — per member: rust step (median idle, ladder ${LADDER}) · steam (commits ${WINDOW} = puffs) · lamps (lit share from plate 7A) · pipe state`, 'lbls')}
 <line x1="40" y1="${SY + 32}" x2="1520" y2="${SY + 32}" class="skf"/>
 ${M.slice(0, half).map((r, i) => schedTxt(58, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
 ${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls')).join('\n')}
-${txt(58, SY + 58 + half * 17, `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · rust ${[0, 1, 2, 3, 4].map((st) => rustN(st)).join('/')} across 0–R4, idle at ${WEATHER.ref} @ ${WEATHER.sha} · steam ${BASIS}; lamps carry 7A's own base`, 'lbls')}`;
+${txt(58, SY + 58 + half * 17, `TOTAL — ${RUNNING} plants running, 0 seized · steam ${TOT_STEAM} member-touches from ${PLATE.windowCommits} window commits (${WINDOW}) · ${METERED} metered-lamp plants + ${ACCENT} accent · rust ${[0, 1, 2, 3, 4].map((st) => rustN(st)).join('/')} across 0–R4, idle at ${WEATHER.ref} @ ${WEATHER.sha}`, 'lbls')}
+${txt(58, SY + 75 + half * 17, `steam ${BASIS}; lamps carry 7A's own base`, 'lbls')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 104 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} plants stand clean, ${codes(atStep(DEEPEST))} carry the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: the alert register records that no gate task in the workspace is failing at HEAD, and the struck triangle beside the register is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="Sheet 7's isometric census city redrawn as a working industrial plant, every workspace member a machine on the line. Massing is unchanged — footprint proportional to the square root of source lines, height three pixels per authored file, the same four dashed districts. Each machine broadcasts its state the way a Factorio building does: red rust speckle on the flanks where a member has gone untouched, on a five-step ladder the plate cuts from its own idle distribution at build time — ${rustN(0)} plants stand clean, ${codes(atStep(DEEPEST))} carry the deepest rust in the city at ${RUST_T[DEEPEST]}, and the top step stands empty so no flank on the plate is cracked; steam puffs rising from roof vents where commits touched the member in the last ninety days, six accent puffs over lit-ui-router, sample-app-shared, the Cypress host, docs, examples and the release tool; up to three green module lamps low on each front face showing how much of the member its own test suite lights, read straight from plate 7A's own filed snapshot, with accent lamps on the sample apps whose only light is the unmetered end-to-end rig; and outlet pipes that all connect, because the build graph's ${BUILD.real} real tasks last ran green. No alert triangle stands over the city at all: the alert register records that no gate task in the workspace is failing at HEAD, and the struck triangle beside the register is the channel's legend rather than an alarm. A plant schedule lists every member's channel values.">
 ${defs(P)}
 <defs>
   <!-- rust: dotted speckle, deliberately unlike every house line hatch -->
@@ -348,10 +349,10 @@ ${bodies}
 ${AR}
 
 <!-- district lettering -->
-${txt(772, 110, 'packages/ — THE PRODUCT LINE', 'lblb')}
-${txt(772, 123, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
-${txt(772, 135, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
-<line x1="766" y1="126" x2="742" y2="168" class="skf"/>
+${txt(772, 74, 'packages/ — THE PRODUCT LINE', 'lblb')}
+${txt(772, 87, `all metered lamps lit (90–100% light) · ${dsteam('pkg')} commits/90d`, 'lblf')}
+${txt(772, 99, `the lint plugin stands at rust ${RUST_T[g(31).rust]}, fully metered — ${g(31).lamps} lamps (${g(31).eff}% lit)`, 'lblf')}
+<line x1="766" y1="90" x2="742" y2="168" class="skf"/>
 
 ${txt(1540, 388, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
 ${txt(1540, 401, `${dsteam('app')} commits/90d · accent lamps: real e2e light,`, 'lblf', 'end')}
@@ -375,9 +376,9 @@ ${txt(60, 144, `the port’s masonry, idle ${idleOf('packages/lit-ui-router')}d 
 ${txt(60, 156, 'old AND running, which one axis could never draw', 'lblf')}
 <line x1="388" y1="127" x2="526" y2="132" class="skf"/>
 
-${txt(440, 624, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
-${txt(440, 636, `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d`, 'lblf')}
-<line x1="448" y1="610" x2="440" y2="492" class="skf"/>
+${txt(440, 652, `@tools/typedoc-plugin — rust ${RUST_T[g(13).rust]}, ${PUFFS(g(13).steam)} puffs:`, 'lblr')}
+${txt(440, 664, `${TDP.files} files: index.ts live, ${TDP.idlestFile.split('/').pop()} idle ${TDP.idlestDays}d`, 'lblf')}
+<line x1="448" y1="638" x2="440" y2="492" class="skf"/>
 
 ${txt(20, 620, '@tools/happy-dom — a spec annex, and 0 lamps:', 'lblr')}
 ${txt(20, 633, `its canary lights happy-dom upstream, never its own ${g(26).sl} lines`, 'lblf')}

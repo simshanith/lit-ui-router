@@ -13,8 +13,8 @@ each sheet argue where that form fits and where it lies.
 | [1](sheet-1-the-render-loop.html) | ONE PACKAGE | ISO CIRCUIT |
 | [1i](sheet-1i-the-render-loop-walked.html) | ONE PACKAGE | INTERACTIVE CIRCUIT |
 | [2](sheet-2-the-brick-assembly.html) | FOUR PACKAGES | BRICK ASSEMBLY |
-| [2A](sheet-2A-the-coupling-plan.html) | FOUR PACKAGES | COUPLING PLAN |
-| [2B](sheet-2B-the-coupling-bench.html) | SEVEN NODES · TWELVE CONTRACTS | INTERACTIVE COUPLING GRAPH |
+| [2A](sheet-2A-the-coupling-plan.html) | SIX PACKAGES | COUPLING PLAN |
+| [2B](sheet-2B-the-coupling-bench.html) | 9 NODES · 14 DRAWN CONTRACTS | INTERACTIVE COUPLING GRAPH |
 | [3](sheet-3-the-instrument-yard.html) | THE MONOREPO | ISOMETRIC CITY |
 | [3A](sheet-3A-the-handoff-works.html) | TWO TASK MANAGERS | COUPLING SCHEMATIC |
 | [3B](sheet-3B-the-watched-city.html) | THE CI TASK GRAPH | ISOMETRIC GRAPH CITY |
@@ -27,7 +27,7 @@ each sheet argue where that form fits and where it lies.
 | [8](sheet-8-the-delivered-city.html) | ONE CONSUMER | DELIVERED CITY |
 | [9](sheet-9-the-shipped-city.html) | ONE DEPLOY | SHIPPED CITY |
 | [10](sheet-10-the-bundled-city.html) | ONE BUNDLE | BUNDLED CITY |
-| [11](sheet-11-the-entry-quarters.html) | FIVE PACKAGES | ENTRY QUARTERS |
+| [11](sheet-11-the-entry-quarters.html) | SEVEN PACKAGES | ENTRY QUARTERS |
 | [12](sheet-12-the-register-plate.html) | PR CI GRAPH | REGISTER PLATE |
 | [12i](sheet-12i-the-register-walked.html) | PR CI GRAPH | INTERACTIVE REGISTER |
 | [13](sheet-13-the-weathering-map.html) | WORKSPACE × TIME | WEATHERING MAP |
@@ -84,7 +84,7 @@ lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision r
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.
 
 **The cabinet.** Every figure on every plate is read from `data/*.json`, written by the
-`generator/census-*.mjs` probes at one ref — currently origin/main @ 9896b3c1 — on the scc 4.0.0
+`generator/census-*.mjs` probes at one ref — currently origin/main @ 4223ffc7 — on the scc 4.0.0
 `Code` basis. Lookups throw on a missing row; nothing is hand-pasted. `INITIATIVES.md` records
 the pipeline's design and the traps of refreshing it.
 

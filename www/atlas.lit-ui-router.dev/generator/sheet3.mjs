@@ -56,9 +56,7 @@ const TIER_TEXT = {
 // [n, name, tier, x, y, files, sloc, fixed side, fixed height, schedule note]
 const M = [
   // --- the conveyor (packages/), one straight lane at y = 71 --------------------
-  [1,  'src — packages/*/src',      'line',    20,    30.45, ...C('src (5 published packages)'), null, null, 'five published packages — the material'],
-  // born 2026-09-12 (#833): packages/ material that the conveyor does not carry yet
-  [20, 'src — lit-ui-router-effect', 'line',   -10,   140,    ...C('src — lit-ui-router-effect (private)'), null, null, 'the sixth packages/ member — private, nothing packs it'],
+  [1,  'src — packages/*/src',      'line',    20,    30.45, ...C('src (7 published packages)'), null, null, 'seven published packages — the material'],
   [2,  'build — @tools/oxc-emit',   'line',   201.1,  63,    ...C('build — @tools/oxc-emit'), null, null, 'JS pass + d.ts pass, one emitter'],
   [3,  'pack — packPublishTarball', 'line',   296.1,  55.9,  ...C('pack — packPublishTarball'), null, null, 'the one packer (#449), cached'],
   [4,  'THE TARBALL',               'art',    426.8,  53,     0,    0,   36,   26, 'the one artifact every check reads'],
@@ -211,6 +209,7 @@ const ibox = (x, y, w, h, name, count) =>
 ${txt(x + w / 2, count ? y + 15 : y + h / 2 + 3.5, name, 'lbls', 'middle')}${count ? `\n${txt(x + w / 2, y + 26, count, 'lblf', 'middle')}` : ''}`;
 const iflow = (d, cls = 'sk', mk = 'ai') => arrow(P, d, mk, cls);
 
+// mass 1's cap crosses the frame's foot and climbs every refresh: the lines it reaches stand clear of it
 const inset = `<rect x="40" y="26" width="600" height="156" class="skf fnone"/>
 ${txt(52, 43, 'TWO TASK MANAGERS, ONE RE-ENTRANT LOOP', 'lbls')}
 ${txt(52, 55, 'mise — node-free umbrella · turbo — cached fan-out (remote R2) · neither sits above the other', 'lblf')}
@@ -227,10 +226,10 @@ ${iflow('M280,106 L280,144 L258,144', 'sks', 'as')}
 
 ${txt(205, 71, `${HW.callSites} call sites · ${HW.targets} distinct tasks`, 'lblf', 'middle')}
 ${txt(459, 71, '7 tasks shell turbo', 'lblf', 'middle')}
-${txt(430, 139, '7 root scripts shell mise run', 'lbls', 'middle')}
-${txt(430, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
+${txt(520, 139, '7 root scripts shell mise run', 'lbls', 'middle')}
+${txt(520, 151, 'cache key over tools node never installs', 'lblf', 'middle')}
 ${txt(272, 120, 'mise/aqua provisions them', 'lblf', 'end')}
-${txt(52, 172, 'rumdl · taplo · shellcheck · actionlint · zizmor — none installable by node', 'lblf')}`;
+${txt(52, 172, 'rumdl · taplo · shellcheck · actionlint · zizmor', 'lblf')}`;
 
 const svg = `<svg viewBox="0 0 1400 ${SY + 100 + half * 17}" role="img" aria-label="Isometric map of the lit-ui-router monorepo as an industrial site, re-massed from measured source. A build conveyor runs along one straight isometric lane from upper left to lower right: the packages source slab, the oxc-emit build shed, the packer, a green crate that is the one tarball, the publish hall, and the npm registry beyond a dashed boundary. Below and to the left stands the instrument yard in two rows, and below that a proving ground of sample apps, end to end tests and the docs deploy watch. Every structure is massed by its own census — footprint side proportional to the square root of its authored source lines, height one and a half pixels per authored file — so the two heaviest masses on the sheet are material rather than instruments: the sample apps tower at ${nfl(18)}, and the source slab at ${nfl(1)}. Gate severity is carried entirely in colour, never in height: five small red hatched pads stop the pull request line — the vitest harness, compat-guards, dts-backtest, check exports, and Cypress end to end — one solid red block, published-diff, halts publishing outright; two accent hatched blocks gate a later stage, the version bump and the docs deploy; and the faint unhatched blocks never gate at all. A dashed trunk carries the one cached tarball from the green crate to the three checks that read it, and a long accent return runs from the registry around the front of the whole site back into published-diff, closing the loop. A structure schedule lists all ${M.length} structures with exact file and line counts and their gate tier. In the upper left corner, set apart from the isometric site, a small flat schematic shows the two task managers as a loop rather than a stack: GitHub Actions enters mise at thirty-seven call sites across eight workflows, mise holds ${HM.tasks} tasks with only ${HM.withDepends} of them declaring dependencies, seven of those tasks shell turbo whose continuous-integration graph expands to ${CI_NODES} task nodes, and an accent arrow returns from turbo back into mise, where seven root scripts shell mise again for the aqua-provisioned linters — rumdl, taplo, shellcheck, actionlint and zizmor — that node never installs.">
 ${defs(P)}
@@ -267,9 +266,9 @@ ${drive}
 ${bodies}
 
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
-${txt(55, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
-${txt(55, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
-${txt(55, 225, 'five published packages enter here', 'lblf')}
+${txt(50, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
+${txt(50, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
+${txt(50, 225, 'seven published packages enter here', 'lblf')}
 <line x1="250" y1="212" x2="276" y2="238" class="skf"/>
 
 ${txt(742, 398, 'THE TARBALL', 'lblb')}
@@ -302,7 +301,7 @@ ${txt(620, 900, 'the return: published-diff reads the LIVE npm tarball — the r
 <!-- district lettering -->
 ${txt(700, 300, 'packages/ — the conveyor: source in, one tarball out', 'lblf')}
 ${txt(40, 520, 'tools/ — the instrument yard', 'lblf')}
-${txt(40, 532, 'twenty packages, mostly measurement', 'lblf')}
+${txt(40, 532, `${TOOLS} packages, mostly measurement`, 'lblf')}
 ${txt(700, 830, 'apps/ + www/ — proving ground & shopfront', 'lblf')}
 
 ${schedule}

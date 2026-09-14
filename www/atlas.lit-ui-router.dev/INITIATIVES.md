@@ -1,8 +1,8 @@
 # Census pipeline rework — design record
 
 **COMPLETE.** Initiatives I1–I8 all landed 2026-09-02/03; the cabinet has since been
-refreshed six times and stands at `origin/main` @ **9896b3c1** (commit
-2026-09-12T22:38:38-07:00), 17 plates all pinned to the same ref.
+refreshed seven times and stands at `origin/main` @ **4223ffc7** (commit
+2026-09-14T13:24:02-07:00), 17 plates all pinned to the same ref.
 
 The architecture that came out of it: `generator/basis.mjs` materializes any ref once (`git
 archive` → tmpdir), one `scc --by-file` pass over that archive is the master per-file
@@ -130,6 +130,20 @@ sitting); order is dependency order.
   miss is SILENT, because `census-shipped.mjs` files an unmatched file under `unclassified` and
   only prints it. A new PLATE (not member)
   needs a key set in `generator/labels.mjs` as well, or `assertLabels()` stops the manifest.
+- A LABEL THAT COUNTS MUST BE ASSERTED AGAINST THE DATA. The yard's `orphans` line cannot catch a
+  new `packages/` member at all: `INSTRUMENTS`'s last rule is a `/^packages\//` catch-all, so the
+  member is claimed, no orphan prints, and the only thing that goes wrong is the words — the
+  seventh refresh drew `src (5 published packages)` over a slab holding seven. A carve-out placed
+  BEFORE the catch-all rots the same way: `src — lit-ui-router-effect (private)` went on reading
+  true for a day after the package was published, because nothing compares the parenthesis to the
+  plate. Any hand-written count inside a label is a claim the build does not check; derive it, or
+  assert it against `census-files.json`'s own member list.
+- npm's `version` is the `latest` TAG, not the newest version. `census-npm.mjs` records a `tags`
+  map per row for exactly this: a package publishing a release candidate under `rc` leaves `latest`
+  standing at whatever shipped before it, so `lit-ui-router-effect` and `lit-ui-router-ssr` both
+  file latest 0.0.1-alpha.0 against rc 0.1.0-rc.0. A sheet quoting a version has to say which clock
+  it read — sheet 4 prints `0.1.0-rc.0 · rc` when the rc leads latest, and the bare number
+  otherwise.
 - 2026-09-11 — THE FOURTH REFRESH, at `origin/main` @ 65e2843 (commit 2026-09-11T18:51:12Z), all
   17 plates re-run at the one ref. Three members were born since 185d414 — `@tools/bootstrap`
   (`tools/bootstrap`), `@tools/eslint` (`tools/eslint`) and `@tools/repo-checks`
@@ -228,6 +242,60 @@ sitting); order is dependency order.
   re-cut each cabinet from `census-weather.json`'s own idle distribution — 0 ≤13d · R1 ≤35 ·
   R2 ≤46 · R3 ≤65 · R4 >65 reserved and unoccupied here — so a step label is only good for the
   plate it is printed on, which the sheet now says.
+- 2026-09-14 — THE SEVENTH REFRESH, at `origin/main` @ 4223ffc7 (commit 2026-09-14T13:24:02-07:00),
+  all 17 plates re-run at the one ref: the `lit-ui-router` 1.15.0 and `ui-router-server` 0.2.0
+  releases (both on npm 2026-09-14), the six-PR prerender stack behind them (#806), and two release
+  candidates riding npm's `rc` tag — `lit-ui-router-effect` and the new `lit-ui-router-ssr`, both
+  0.1.0-rc.0. ONE member was born: №38 `packages/lit-ui-router-ssr`, the prerender bridge —
+  `ui-router-server` verdicts in, `@lit-labs/ssr` pages out — peering `@uirouter/core`, `lit`,
+  `lit-ui-router` ^1.15.0, `ui-router-server` ^0.2.0 and `@lit-labs/ssr`. It is PUBLIC at this ref,
+  and №37 `lit-ui-router-effect` flipped `"private": true` → public with it, so the district ships
+  SEVEN PUBLISHED PACKAGES where the sixth refresh's true sentence was five — and every sentence
+  that counted five had to be re-derived or re-lettered: sheet 11's altitude reads SEVEN PACKAGES,
+  sheet 2A's SIX PACKAGES, sheet 4's bay gate `all five`, sheet 2 schedules six moulded bricks and
+  draws four, and the cover's own paragraph now derives its quarters and doors from
+  `census-doors.json` (7 quarters, 20 doors). The general survey reads 789 tracked paths, 754 of
+  them classified, 62,036 sloc (was 757 / 723 / 58,995).
+  THE CHECKLIST RAN, AND THE YARD SWALLOWED THE MEMBER WITHOUT A SOUND. №38 took sheet 7's `PLACED`
+  (160,210), sheet 13's (285,175), 7B's `RUST` (step 0) and a seventh package quarter on 3B
+  (445,30); 3B's `TERRACE` and `APPS`, sheet 9's district PLAN and `register-graph.mjs`'s
+  `APP_ORDER` took nothing, no app and no district being born. But `census-yard.mjs` printed
+  `orphans 0` and was telling the truth: `INSTRUMENTS`'s `/^packages\//` catch-all had already
+  eaten the new member, under a label that still read `src (5 published packages)`, while the sixth
+  refresh's `src — lit-ui-router-effect (private)` carve-out went on looking true because it was
+  matched first. LABEL ROT WITH NO GUARD — the count lived in a string, and no assertion held the
+  string to the data. The fix: the carve-out deleted, the label re-lettered `src (7 published
+  packages)` (54 f / 5,657 sloc), sheet 3's row 20 (effect, private) deleted and row 1 re-keyed.
+  THE ANNEXES MOVED THREE NEIGHBOURS AND THE LETTERING. `assertPlots` threw again, and for the same
+  reason it threw at the sixth: `lit-ui-router`'s spec annex reaches 223.3 units, so №2
+  `ui-router-server` goes 222 → 226; №3 `lit-ui-router-mobx` drops y 130 → 136; №28
+  `@tools/lint-elements` goes 380 → 388; `packages/ — THE PRODUCT` moves 772 → 815 to clear the
+  district it letters; sheet 13 follows on all three and drops №31 to y 136. Two lots were tried
+  for №38 and rejected before (160,210) took it — (330,130) and (360,125) both stand inside №31's
+  block. And sheet 3 took a maintainer's bug report the same day: the tool-belt caption ran under
+  mass 1's cap (SAT depth 22.1) and the grown 54-file cap struck `cache key over tools…` as well
+  (depth 9.6), so the caption is shortened, the pair moves x 430 → 520, the
+  `PACKAGES/* — THE MATERIAL` column 55 → 50, and the `twenty packages` district lettering derives
+  from the plate's own tools count (23). A refresh that grows a member moves its neighbours AND the
+  words drawn over them.
+  THE PROBES: `census-npm.mjs` now records a `tags` map per row beside `version`, which stays
+  `latest` — so `lit-ui-router-effect` and `lit-ui-router-ssr` file latest 0.0.1-alpha.0 with
+  rc 0.1.0-rc.0, and sheet 4 quotes `0.1.0-rc.0 · rc` where the rc leads latest. `census-loop.mjs`
+  relocated 16 citations (`ui-sref.ts` −129, `ui-sref-active.ts` −104) and took its first FILE move:
+  `clickBelongsToBrowser`'s `isNativeLink` guard left `ui-sref.ts` for `sref-internals.ts:194`, so
+  the walk reads seven source files where it read six. The nearest-match trap bit once more —
+  `ui-sref-active.ts:437` had two candidates, 333 and 341, and 333 is the one the uniform shift
+  gives. `census-mass3b.mjs` filed no absent-CITES error and carries a THIRD DRIFT line,
+  `lit-ui-router-ssr#check:dev-split`, beside the effect and mobx ones.
+  THE NUMBERS THE NEW MEMBER MOVED: doors 16 → 20 (`lit-ui-router` ./context 1,140/633,
+  `ui-router-server` ./location 614/329, `lit-ui-router-effect` . 2,307/1,135,
+  `lit-ui-router-ssr` . 2,745/1,431; 145,882 min / 52,328 gz across the set); couplings 7 nodes /
+  12 edges → 9 / 21, of which the bench draws 14 (effect's `effect`, ssr's `@lit-labs/ssr` and the
+  plugin's `eslint` stay off-bench), with a FIFTH bench column cut at x 900 because a tie down the
+  680 column would run straight through mobx and `coupling-bench.mjs` throws on exactly that;
+  bricks 6 → 8 rows; the bundle 121,650 gz with the flagship's chunk at 30,786; the deploy 788
+  files / 4,542,847 gz over the same 12 districts; turbo 22 files / 112 definitions; the ci graph
+  716 nodes / 1,897 edges / 225 real tasks; 24 members metered, the new one at 96% lit.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS
@@ -239,6 +307,22 @@ sitting); order is dependency order.
   `generator/iso-hidden.mjs`, which throws when two drawn ground rects intersect, naming the
   sheet, both members and both parts. A refresh that grows a member into its neighbour stops
   the build; the fix is to recompose the coordinate by hand, with air, never to shrink the rule.
+- AND IT FIRES EVERY REFRESH NOW, because the flagship's spec annex grows every refresh. №2
+  `ui-router-server` has moved twice for it (200 → 222 → 226), №3 and №28 once each, and the moves
+  carry sheet 13 with them. The lettering moves too, and nothing asserts THAT: a district label or
+  a callout is a hand coordinate over a measured footprint, so `packages/ — THE PRODUCT` went
+  772 → 815 and sheet 3's tool-belt caption had to be shortened and moved when the yard's own cap
+  grew across it. After a refresh, read the plates for type standing on masonry, not just for the
+  overlaps `assertPlots` names — the guard covers ground rects, not words. The seventh refresh
+  measured how much that costs: a SAT lettering check over all 20 SVG plates, written as tmp
+  tooling and NOT wired into the generator, found hits on NINE of them (2, 3A, 7, 7A, 7B, 9, 11,
+  13, 14) at depths from 6 to 92.9 — label blocks across a brick's studs, a list through a panel
+  wall, a schedule row 74 units past its frame, a group label inside a tower. None of it is
+  something `assertPlots` can see. The same audit found the other shape of the same fault: 7A's
+  hand `NOTE` table was keyed 1–32, so members 33–38 printed `undefined` in the schedule and no
+  guard said a word — a hand table that indexes by member number needs a gate as much as a label
+  that counts needs an assertion. Budget a frame audit into every refresh until one of the two
+  lives in the build.
 - Sheet 13 keeps its OWN copy of the city placements (`sheet13.mjs` `PLACED`; member 31
   deliberately differs). A coordinate moved on sheet 7 must move there too, or the two plates
   stop reconciling — the assertion catches an overlap, not the drift.
@@ -348,11 +432,12 @@ sitting); order is dependency order.
   `p22-flw-exhibition` with two), and the kit serves 400/700 only — a CSS request for 600
   resolves UP to 700 on Adobe and takes 600 from Google, so one weight number serves both
   hosts with nothing synthesised.
-- ui-router-server is a verdict engine, not a renderer: one route table drove dev, preview
-  and the build-time prerender identically. @lit-labs/ssr draws the bytes but needs a SECOND
-  template set with plain hrefs, because `uiSref` is an element-part directive that SSRs to
-  a dead link (#564) and `<ui-view>` throws on construction under the DOM shim (#803). The
-  consumer findings and package-level asks are in `app/SSR-VERDICT.md`.
+- ui-router-server is a verdict engine, not a renderer: one route table drives dev, preview
+  and the build-time prerender identically. `lit-ui-router-ssr` owns the render call, the emit
+  loop and `_redirects`, and it draws the client's OWN views — ONE template set, because
+  `prerender()` scopes the router around each render and the attribute directives (#827) emit
+  real hrefs, `is-active` and `aria-current` for the state the page is. The consumer findings
+  and the package-level asks behind that are in `app/SSR-VERDICT.md`.
 
 **Direction, in the user's own words**
 

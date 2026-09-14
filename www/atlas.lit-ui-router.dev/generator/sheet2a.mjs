@@ -18,7 +18,21 @@ const LIT = brick('lit-ui-router');
 const NAV = brick('ui-router-navigation-location-plugin');
 const MBX = brick('lit-ui-router-mobx');
 const SRV = brick('ui-router-server');
+const EFF = brick('lit-ui-router-effect');
+const SSR = brick('lit-ui-router-ssr');
 const fmt = (v) => v.toLocaleString('en-US');
+
+// census-couplings.json supplies the peer ranges lettered on the two joints that
+// are companion-to-companion rather than companion-to-wall.
+const COUPLINGS = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
+const peerRange = (from, to) => {
+  const r = COUPLINGS.rows.find((x) => x.from === from && x.to === to && x.kind === 'peer');
+  if (!r) throw new Error(`census-couplings.json: no peer row ${from} → ${to}`);
+  return r.range;
+};
+const EFF_LIT = peerRange('lit-ui-router-effect', 'lit-ui-router');
+const SSR_LIT = peerRange('lit-ui-router-ssr', 'lit-ui-router');
+const SSR_SRV = peerRange('lit-ui-router-ssr', 'ui-router-server');
 
 // ---- shallow extrusion ----------------------------------------------------------
 // Blocks get just enough depth to read as solids (constant DX/DY — depth carries no
@@ -145,6 +159,43 @@ ${txt(1075, 398, 'seekRouter(host)', 'lbla')}
 ${txt(1075, 410, 'the ui-router-context event', 'lblf')}
 ${txt(1075, 422, 'the ONE brick-to-brick seat', 'lblf')}`;
 
+// A joint off a COMPANION's face: the same stud-gap-mouth idiom as the wall, at 0.8 scale.
+const jointStud = (x, cy) => `<rect x="${x}" y="${cy - 9}" width="30" height="18" rx="7" class="ska fp"/>
+<line x1="${x + 32}" y1="${cy}" x2="${x + 46}" y2="${cy}" class="ska" stroke-dasharray="3 3"/>`;
+const jointMouth = (x, cy) => `<path d="M${x},${cy - 16} h-22 v7 h15 v18 h-15 v7 h22 z" class="ska fp2"/>`;
+
+// brick 5 — the second reactivity layer, plugged into the flagship's right face
+const effBlock = `${jointStud(1110, 175)}${jointMouth(1180, 175)}
+${slab(1180, 120, 170, 112)}
+${badge(1166, 112, 5)}
+${txt(1192, 148, `${EFF[0]}`, 'lblb')}
+${txt(1192, 162, `${EFF[1]} · ${EFF[2]}f · ${fmt(EFF[3])} sloc`, 'lblf')}
+${txt(1192, 180, 'PLUG  the flagship', 'lbla')}
+${txt(1192, 194, 'peers lit-ui-router', 'lblf')}
+${txt(1192, 206, `${EFF_LIT} — like brick 3`, 'lblf')}
+${txt(1192, 220, 'it never plugs the wall', 'lblf')}`;
+
+// brick 6 — the bridge: one arm to the flagship above the no-DOM line, one to the
+// server below it.  The L is the finding, so it is drawn as one continuous arm.
+const ssrBridge = `${jointStud(1110, 300)}${jointMouth(1178, 300)}
+<rect x="1178" y="292" width="88" height="16" class="ska fp2"/>
+<rect x="1250" y="292" width="16" height="483" class="ska fp2"/>
+${txt(1184, 286, `peers lit-ui-router ${SSR_LIT}`, 'lbla')}
+${txt(1242, 740, 'the bridge crosses the line', 'lbla', 'end')}`;
+
+const ssrBlock = `${slab(1000, 775, 280, 120)}
+${badge(986, 767, 6)}
+${txt(1012, 801, `${SSR[0]} ${SSR[1]}`, 'lblb')}
+${txt(1012, 815, `${SSR[2]}f · ${fmt(SSR[3])} sloc`, 'lblf')}
+${txt(1012, 831, 'PLUGS  BOTH — the flagship and the server', 'lbla')}
+${txt(1012, 845, 'the one part that reaches across', 'lblf')}
+${txt(1012, 857, 'the no-DOM line', 'lblf')}`;
+
+// the server's own face carries the bridge's second stud
+const srvJoint = `${jointStud(590, 790)}${jointMouth(660, 790)}
+<rect x="660" y="782" width="340" height="16" class="ska fp2"/>
+${txt(666, 772, `peers ui-router-server ${SSR_SRV}`, 'lbla')}`;
+
 // ---- context: the browser and DOM slabs, held faint -------------------------------------
 const context = `${slab(120, 48, 360, 44, { edge: 'skf', side: 'var(--paper)' })}
 ${txt(132, 68, 'BROWSER URL / HISTORY', 'lblb')}
@@ -180,7 +231,7 @@ ${txt(600, 703, 'the default ‘matcher’ tier is dependency-free and never loa
 ${txt(600, 716, '‘simulate’ lazy-imports a wall of its own — new UIRouter() per resolution', 'lblf')}
 ${txt(300, 940, 'peerDependenciesMeta: { ‘@uirouter/core’: { optional: true } } — the tie is drawn only to be crossed out', 'lblr')}`;
 
-const svg = `<svg viewBox="0 0 1400 960" role="img" aria-label="A coupling plan in shallow three-quarter view, the alternate plate to sheet 2's exploded brick assembly. A tall shallow block at the left, lettered @uirouter/core — the socket wall, carries six connection points down its right edge, each drawn at reading size: lettered studs B, D, C and E protrude from the wall; an accent rail marked A, router.plugin, spans the middle of the edge with one stud on it; and one keyed recess ringed in red is the location seat. Three companion blocks sit to the right, drawn just short of seated, each with C-shaped plug mouths reaching toward their studs across a small dashed engagement gap, the exact API call lettered on every connection. Block 1, lit-ui-router, holds three plugs — stateRegistry.decorator, urlService.listen and sync, and seat 1 of the plugin rail — and carries one downward stud of its own. Block 2, the navigation location plugin, holds a single red keyed plug approaching the location seat, while a dashed ghost plug labelled pushStateLocation exits the seat below: a router holds exactly one location plugin, so this coupling is a swap, never an addition. Block 3, lit-ui-router-mobx, opens an upward socket under block 1's stud — seekRouter, the ui-router-context event, the one brick-to-brick seat — and plugs studs C and E, transitions observed and globals mirrored, never written. Faint slabs above and below the wall mark the browser and the DOM, and below a dashed no-DOM line block 4, ui-router-server, sits in a request-to-decision lane with a dashed tie back up to the wall crossed out in red: core is an optional peer, its matcher tier never loads the wall, and its simulate tier lazily builds a wall of its own.">
+const svg = `<svg viewBox="0 0 1400 960" role="img" aria-label="A coupling plan in shallow three-quarter view, the alternate plate to sheet 2's exploded brick assembly. A tall shallow block at the left, lettered @uirouter/core — the socket wall, carries six connection points down its right edge, each drawn at reading size: lettered studs B, D, C and E protrude from the wall; an accent rail marked A, router.plugin, spans the middle of the edge with one stud on it; and one keyed recess ringed in red is the location seat. Three companion blocks sit to the right, drawn just short of seated, each with C-shaped plug mouths reaching toward their studs across a small dashed engagement gap, the exact API call lettered on every connection. Block 1, lit-ui-router, holds three plugs — stateRegistry.decorator, urlService.listen and sync, and seat 1 of the plugin rail — and carries one downward stud of its own. Block 2, the navigation location plugin, holds a single red keyed plug approaching the location seat, while a dashed ghost plug labelled pushStateLocation exits the seat below: a router holds exactly one location plugin, so this coupling is a swap, never an addition. Block 3, lit-ui-router-mobx, opens an upward socket under block 1's stud — seekRouter, the ui-router-context event, the one brick-to-brick seat — and plugs studs C and E, transitions observed and globals mirrored, never written. Faint slabs above and below the wall mark the browser and the DOM, and below a dashed no-DOM line block 4, ui-router-server, sits in a request-to-decision lane with a dashed tie back up to the wall crossed out in red: core is an optional peer, its matcher tier never loads the wall, and its simulate tier lazily builds a wall of its own. Two further blocks plug nothing on the wall at all. Block 5, lit-ui-router-effect, hangs off a stud on block 1's right face — it peers the flagship ${EFF_LIT}, the same kind of joint block 3 takes. Block 6, lit-ui-router-ssr, is drawn as a single L-shaped arm: one stud on block 1's right face above, one on block 4's right face below, and a run down the right of the sheet that crosses the no-DOM line — the only part in the family that declares both the flagship ${SSR_LIT} and the server ${SSR_SRV}, so the only one whose drawing spans both halves of the plate.">
 ${defs(P)}
 
 ${txt(1370, 16, `SCALE — front-face area ≈ 35 px² per sloc (census-bricks.json @ ${B.sha}) · the two smallest companions (1×1 and 1×2) are held to a legible minimum · depth is constant and carries no data`, 'lbls', 'end')}
@@ -192,22 +243,27 @@ ${wallCouplings}
 ${litBlock}
 ${navBlock}
 ${mbxBlock}
+${effBlock}
 ${serverLane}
+${srvJoint}
+${ssrBridge}
+${ssrBlock}
 </svg>`;
 
 export const sheet2a = {
-  num: '2A', id: 'companions-couplings', rev: 'D',
+  num: '2A', id: 'companions-couplings', rev: 'E',
   title: 'THE COUPLING PLAN',
-  sub: `ALTITUDE 2 — ALTERNATE PLATE: the same four companions as sheet 2, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ ${B.sha}`,
-  scale: 'FOUR PACKAGES',
+  sub: `ALTITUDE 2 — ALTERNATE PLATE: the four companions sheet 2 seats and the two it only schedules, laid out for reading — core central as a socket wall, companions at its right, the server below the no-DOM line — with every coupling drawn disengaged and lettered to its API call · rows read census-bricks.json @ ${B.sha}`,
+  scale: 'SIX PACKAGES',
   form: 'COUPLING PLAN',
   svg,
-  caption: 'The brick assembly, uncoupled and brought down to one elevation: core as a socket wall, companions as shallow blocks drawn just short of seated, and each of the six connection points — five published studs and one keyed red seat — large enough to letter its API call on the joint itself.',
+  caption: 'The brick assembly, uncoupled and brought down to one elevation: core as a socket wall, companions as shallow blocks drawn just short of seated, and each of the six connection points on the wall — five published studs and one keyed red seat — large enough to letter its API call on the joint itself. Three more joints are companion-to-companion, and one of those spans both halves of the plate.',
   notes: `
 <p><strong>This plate is the legibility companion to sheet 2.</strong> The exploded assembly (sheet 2, THE BRICK ASSEMBLY) shows the whole stack and where every brick falls; this plate isolates the couplings and draws each one at reading size. The arrangement answers to reading rather than to assembly — core central, companions at its right, the server in a request lane below the no-DOM line — and the packages are shallow solids, so the recovered space goes entirely to the joints.</p>
 <p><strong>Every joint is drawn disengaged.</strong> A seated plug hides both mating faces, so nothing here is seated: each stud on the wall stops 18px short of its plug’s mouth, the dashed centreline is the engagement, and the call that makes the coupling — <code>stateRegistry.decorator('views', litViewsBuilder)</code>, <code>urlService.listen()/.sync()</code>, <code>router.plugin(servicesPlugin)</code>, <code>transitionService.onSuccess({}, update)</code>, <code>globals.current/.params</code> — is lettered on the connection itself, not in a schedule at the edge of the sheet.</p>
 <p><strong>One connection point is a seat, not a stud, and it is drawn as a keyed recess.</strong> A router holds exactly <em>one</em> location plugin, so <code>ui-router-navigation-location-plugin</code> does not add to the wall — it <em>swaps</em>: its keyed red plug approaches the LOCATION SEAT while a dashed ghost plug, core’s own <code>pushStateLocation</code>, leaves it. The rail above behaves the opposite way: <code>router.plugin()</code> is one method with any number of seats, which is where <code>visualizer</code>, <code>sticky-states</code>, <code>dsr</code> and <code>rx</code> would queue (sheet 4).</p>
 <p><strong>The one brick-to-brick coupling gets its own axis.</strong> <code>lit-ui-router-mobx</code> is the only companion that touches another companion: its upward socket waits under a stud on <code>lit-ui-router</code>’s underside — <code>seekRouter(host)</code>, the bubbling <code>ui-router-context</code> event — and everything else it does is read-only against the wall: one memoised <code>onSuccess</code> hook on stud C, observations of <code>globals</code> on stud E, never a write.</p>
+<p><strong>Three joints never touch the wall, and the third one spans the sheet.</strong> <code>lit-ui-router-mobx</code> was the first (block 3, the seat under block 1). <code>lit-ui-router-effect</code> (block 5, ${EFF[2]} files, ${fmt(EFF[3])} sloc) takes the same kind of joint from block 1's right face: it peers <code>lit-ui-router</code> ${EFF_LIT} and plugs nothing on the wall. <code>lit-ui-router-ssr</code> (block 6, ${SSR[2]} files, ${fmt(SSR[3])} sloc) is the one that had to change the drawing's shape: it peers <code>lit-ui-router</code> ${SSR_LIT} <em>and</em> <code>ui-router-server</code> ${SSR_SRV}, so its arm leaves block 1 above the no-DOM line, runs down the right edge of the plate, crosses that line, and meets a second stud on block 4's face below it. Nothing else here crosses; a package that prerenders Lit for a server router is exactly the thing that would.</p>
 <p><strong>The missing coupling is drawn only to be crossed out.</strong> <code>ui-router-server</code> takes no stud: <code>@uirouter/core</code> is an <em>optional</em> peer (<code>peerDependenciesMeta</code>), its default <code>'matcher'</code> tier is dependency-free, and its <code>'simulate'</code> tier lazily imports a wall of its own. Blocks are sized roughly by mass — front-face area ≈ 35 px² per sloc, from <code>census-bricks.json</code> counted at ${B.ref} @ ${B.sha}, which puts <code>lit-ui-router</code> at ${fmt(LIT[3])} sloc — with the two smallest companions (1×1 and 1×2) clamped up to a legible minimum, because at true scale they would be postage stamps, and their smallness is already sheet 2’s finding.</p>`,
   key: [
     keyRow('<rect x="2" y="5" width="20" height="8" rx="3" class="ska fp"/>', 'a published stud on the wall — core’s extension surface, lettered A–E'),

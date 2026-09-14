@@ -111,7 +111,7 @@ const busStops = MASTER_QUERIES.map(stationY).sort((a, b) => a - b);
 const BUSEND = busStops[busStops.length - 1];
 const bus = `<path d="M${DX + 20},${MY + 15} L${DX + 20},${BUSY} L${BUSX},${BUSY} L${BUSX},${BUSEND}" class="ska" fill="none"/>
 ${busStops.map((y) => arrow(P, `M${BUSX},${y} L${SX - 4},${y}`, 'aa', 'ska')).join('\n')}
-${txt(SX + 40, BUSY - 10, `reads — ${WORD[MASTER_QUERIES.length + 1]} consumers query the one measurement`, 'lbla')}`;
+${txt(SX + 40, BUSY - 6, `reads — ${WORD[MASTER_QUERIES.length + 1]} consumers query the one measurement`, 'lbla')}`;
 
 // ---------------------------------------------------------------------------
 // STATIONS + DRAWERS

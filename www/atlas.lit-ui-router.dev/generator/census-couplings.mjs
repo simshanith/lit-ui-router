@@ -1,4 +1,4 @@
-// Sheet 2B's census: the COUPLING CONTRACTS between the five published packages
+// Sheet 2B's census: the COUPLING CONTRACTS between the seven published packages
 // and the two things they all reach for — @uirouter/core and lit — read from the
 // ARCHIVE as a T1 tree probe (INITIATIVES.md I5 pattern; census-handoff.mjs is
 // the exemplar).  Nothing is executed and nothing is resolved by a package
@@ -15,7 +15,7 @@
 //     the plate carries BOTH the written spec and the range it stands for;
 //   · a peer is OPTIONAL when `peerDependenciesMeta.<name>.optional` is true —
 //     that is the difference between a coupling and a coupling drawn crossed out;
-//   · `drawn` marks the contracts whose target is one of the seven nodes on the
+//   · `drawn` marks the contracts whose target is one of the nine nodes on the
 //     bench; the rest are filed anyway, because the oxc runtime staying a
 //     `dependency` is half of the deps-to-peers story sheet 2B tells.
 // The version core and lit actually resolve to is taken from the archive's

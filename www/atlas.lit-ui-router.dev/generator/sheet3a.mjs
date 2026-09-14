@@ -91,6 +91,13 @@ const CHAIN_WF = 'build-test-run';
 const WF = HANDOFF.workflowRows.filter((w) => w.callSites)
   .sort((a, b) => b.callSites - a.callSites || (a.name < b.name ? -1 : 1));
 const NO_MISE = HANDOFF.workflowRows.filter((w) => !w.callSites).map((w) => w.name);
+// the no-mise list outgrew the panel wall, so it wraps to the panel's own measure
+const NO_MISE_LINES = NO_MISE.slice(1).reduce((ls, n) => {
+  const i = ls.length - 1;
+  if (`${ls[i]} · ${n}`.length <= 26) ls[i] += ` · ${n}`;
+  else ls.push(n);
+  return ls;
+}, [`no mise: ${NO_MISE[0]}`]);
 const wfRowY = (i) => 162 + i * 37;
 const ghPanel = `${box(GX, 110, GW, MACH_BOT - 110, 'sk2 fp')}
 ${txt(GX + 12, 130, 'GITHUB ACTIONS', 'lblb')}
@@ -102,11 +109,8 @@ ${txt(GX + 20, y + 17, name, 'lbls')}
 ${txt(GX + GW - 20, y + 17, `·${callSites}`, 'lblf', 'end')}`;
 }).join('\n')}
 <line x1="${GX + 12}" y1="468" x2="${GX + GW - 12}" y2="468" class="skf"/>
-${lf(GX + 12, 482, [
-  `no mise: ${NO_MISE[0]},`,
-  NO_MISE.slice(1).join(' · '),
-])}
-${lf(GX + 12, 522, [
+${lf(GX + 12, 482, NO_MISE_LINES)}
+${lf(GX + 12, 532, [
   ['branch_ci_gate needs', 'lbls'],
   ['NO setup — node builtins', 'lbls'],
   '(build-test-branch.yml:35-36)',

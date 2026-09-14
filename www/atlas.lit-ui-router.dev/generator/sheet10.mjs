@@ -154,9 +154,13 @@ ${txt(56, SY + 52 + half * 17, `TOTAL — ${all.length} groups in ${T.chunks} ch
 </g>`;
 
 const DY = 700;
-const DOOR_STRIP = ['.', './pure', './register', './ui-router.register', './ui-view.register'];
+const DOOR_STRIP = ['.', './pure', './register', './ui-router.register', './ui-view.register', './context'];
+// a flagship door the plate carries that the strip does not price is a build error
+for (const d of DOORS.rows.filter((r) => r.pkg === 'lit-ui-router')) {
+  if (!DOOR_STRIP.includes(d.door)) throw new Error(`sheet 10: census-doors.json carries lit-ui-router «${d.door}»; the strip does not price it`);
+}
 const doors = `<g>
-${txt(40, DY - 8, 'THE FIVE DOORS, PRICED — the codecov bundle-analysis series, from the same-ref probe plate (min+gz, deps external)', 'lbls')}
+${txt(40, DY - 8, 'THE SIX DOORS, PRICED — the codecov bundle-analysis series, from the same-ref probe plate (min+gz, deps external)', 'lbls')}
 ${DOOR_STRIP.map((name, i) => {
   const d = door(name);
   const se = name.includes('register');
@@ -165,12 +169,12 @@ ${DOOR_STRIP.map((name, i) => {
 ${txt(x + 8, DY + 13, name, se ? 'lbls' : 'lbla')}
 ${txt(x + 8, DY + 25, `${fmt(d.gz)} gz`, 'lblf')}`;
 }).join('\n')}
-${txt(724, DY + 13, `door "." prices at ${fmt(door('.').gz)} gz — and this app pulls ${fmt(G('lit-ui-router').gz)}:`, 'lbls')}
-${txt(724, DY + 25, `the app leaves ${Math.round((1 - G('lit-ui-router').gz / door('.').gz) * 100)}% of the door on the shelf`, 'lbls')}
+${txt(836, DY + 13, `door "." prices at ${fmt(door('.').gz)} gz — this app pulls ${fmt(G('lit-ui-router').gz)}:`, 'lbls')}
+${txt(836, DY + 25, `the app leaves ${Math.round((1 - G('lit-ui-router').gz / door('.').gz) * 100)}% of the door on the shelf`, 'lbls')}
 </g>`;
 
 const CHROME_GZ = G('marked').gz + G('dompurify').gz;
-const svg = `<svg viewBox="0 0 1160 ${SY + 107 + half * 17}" role="img" aria-label="The inside of one shipped app bundle drawn as an isometric city of fourteen buildings in three districts: footprint from post-tree-shake source bytes kept, height from gzipped wire share. The routing machine district is dominated by @uirouter/core at ${KB(G('@uirouter/core').gz)} while lit-ui-router itself is a small accent building at ${KB(G('lit-ui-router').gz)}; a single lit major stands, with no second copy; the demo-chrome district — visualizer, marked, dompurify, api-viewer, largely deferred to a lazy chunk — outweighs the machine; the app district holds the shared demo code, the ${KB(G('lodash-es').gz)} lodash-es remainder, the app's own source and a tiny building for the shared route table. A priced strip of the five entry doors and a structure schedule give exact counts.">
+const svg = `<svg viewBox="0 0 1160 ${SY + 107 + half * 17}" role="img" aria-label="The inside of one shipped app bundle drawn as an isometric city of fourteen buildings in three districts: footprint from post-tree-shake source bytes kept, height from gzipped wire share. The routing machine district is dominated by @uirouter/core at ${KB(G('@uirouter/core').gz)} while lit-ui-router itself is a small accent building at ${KB(G('lit-ui-router').gz)}; a single lit major stands, with no second copy; the demo-chrome district — visualizer, marked, dompurify, api-viewer, largely deferred to a lazy chunk — outweighs the machine; the app district holds the shared demo code, the ${KB(G('lodash-es').gz)} lodash-es remainder, the app's own source and a tiny building for the shared route table. A priced strip of the flagship's six entry doors and a structure schedule give exact counts.">
 ${defs(P)}
 
 ${groupOutline(20, 0, 395, 200, 'the routing machine', 150, 330)}

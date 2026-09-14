@@ -66,9 +66,10 @@ const X = (x) => OX + K * x, Y = (y) => OY + K * y;
 // [n, name, plate member dir, district, x, y] — every number comes from the plates
 const PLACED = [
   [1, 'lit-ui-router', 'packages/lit-ui-router', 'pkg', 0, 20],
-  // moved east with sheet 7 when lit-ui-router's annex grew into its west wall
-  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 222, 20],
-  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 170, 130],
+  // moved east with sheet 7, twice, as lit-ui-router's annex grew into its west wall
+  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 226, 20],
+  // dropped 6 south with sheet 7, for the same annex
+  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 170, 136],
   [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 260, 130],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
@@ -93,12 +94,14 @@ const PLACED = [
   [25, '@tools/lcov-rebase', 'tools/lcov-rebase', 'tool', 415, 350],
   [26, '@tools/happy-dom', 'tools/happy-dom', 'tool', 125, 350],
   [27, '@tools/wintercg-globals', 'tools/wintercg-globals', 'tool', 185, 350],
-  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 380, 550],
+  // nudged east with sheet 7, off bundle-probe's grown annex
+  [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 388, 550],
   [29, '@tools/warn-lanes', 'tools/warn-lanes', 'tool', 430, 530],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
   // --- the fifth published package (#676): sheet 7's plan slot lands under the
-  //     reading box, so it takes the free third row of the packages district ----
-  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 30, 130],
+  //     reading box, so it takes the free third row of the packages district —
+  //     dropped 6 south at this ref, with member 3, off the flagship's grown annex ----
+  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 30, 136],
   // moved with sheet 7 when the hygiene block took the yard's east end
   [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 449, 462],
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) — sheet 7's slots ---
@@ -110,6 +113,11 @@ const PLACED = [
   //     the free lot east of the mobx quarter instead (member 31 differs the same way)
   [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
   [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 200, 172],
+  // --- the prerender package, born 2026-09-14 (#806): sheet 7's lot at 160,210 lands
+  //     under this sheet's reading box, so it takes the lot east of the effect
+  //     bindings instead — far enough south to clear the plugin, far enough north
+  //     that the district frame still stops short of the box (37 and 31 differ too)
+  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 285, 175],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -355,10 +363,10 @@ ${txt(1250, 714, 'the most-weathered wall in the city —', 'lblf')}
 ${txt(1250, 726, `${days(DCFG.first)} days old, repainted ${DCFG.touches} times, idle ${days(DCFG.last)}d`, 'lblf')}
 <line x1="1246" y1="710" x2="1188" y2="702" class="skf"/>
 
-${txt(1250, 780, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls')}
-${txt(1250, 794, `two vite configs sealed ${days(SOLAR.last)} days,`, 'lblf')}
-${txt(1250, 806, `helloworld/main.ts sealed ${days(HELLO.last)} — all winter-built`, 'lblf')}
-<line x1="1246" y1="790" x2="1178" y2="800" class="skf"/>
+${txt(1262, 780, 'examples/ — THE OLDEST UNTOUCHED STONE', 'lbls')}
+${txt(1262, 794, `two vite configs sealed ${days(SOLAR.last)} days,`, 'lblf')}
+${txt(1262, 806, `helloworld/main.ts sealed ${days(HELLO.last)} — all winter-built`, 'lblf')}
+<line x1="1258" y1="790" x2="1178" y2="800" class="skf"/>
 
 ${txt(560, 1078, '@tools/typedoc-plugin — THE YARD’S ONE WINTER WALL', 'lbls')}
 ${txt(560, 1092, `index.ts laid ${SYM.first}, still under the chisel — ×${SYM.touches}, idle ${days(SYM.last)}d`, 'lblf')}
@@ -399,8 +407,10 @@ ${bodies}
 ${RB}
 ${callouts}
 
-${txt(X(0), Y(20) - 42, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(X(0), Y(20) - 30, 'the only district with stone from all three seasons', 'lblf')}
+<!-- the district's north wall reaches x 187 now, so the note takes two short lines -->
+${txt(X(0), Y(20) - 54, 'packages/ — THE PRODUCT', 'lblb')}
+${txt(X(0), Y(20) - 41, 'the only district with stone', 'lblf')}
+${txt(X(0), Y(20) - 29, 'from all three seasons', 'lblf')}
 
 ${txt(X(570) + 6, 436, 'apps/ — THE PROVING GROUND', 'lblb')}
 ${txt(X(570) + 6, 448, 'port-born shell, summer-rebuilt interior', 'lblf')}

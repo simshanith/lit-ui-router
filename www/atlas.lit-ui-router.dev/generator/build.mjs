@@ -110,7 +110,7 @@ const verdicts = [
   ['1', 'ONE PACKAGE', 'CLOSED LOOP', 'strong fit — the render cycle is a genuine circuit'],
   ['1i', 'ONE PACKAGE', 'INTERACTIVE CIRCUIT', `sheet 1's circuit with a pointer in it — ${LOOP.stations} stations, ${LOOP.legs} legs, and one click walked in ${LOOP.steps} steps, every step standing on the source lines the plate cites verbatim`],
   ['2', 'COMPANIONS', 'BRICK ASSEMBLY', 'exploded: every coupling is a published stud on core — and the server takes none'],
-  ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size; nothing plugs anything but the wall'],
+  ['2A', 'COMPANIONS', 'COUPLING PLAN', 'alternate plate — the same joints at reading size, plus the two companions sheet 2 only schedules: one hangs off the flagship, one bridges the flagship and the server across the no-DOM line'],
   ['2B', 'COMPANIONS, CONTRACTED', 'COUPLING BENCH', SHEET2B_VERDICT],
   ['3', 'MONOREPO', 'ISOMETRIC CITY', 'the yard re-massed from sloc × files — gate severity in colour: the smallest blocks stop the line; the task-manager inset reads the same plates as 3A, so the two cannot disagree'],
   ['3A', 'TWO TASK MANAGERS', 'COUPLING SCHEMATIC', SHEET3A_VERDICT],
@@ -124,7 +124,7 @@ const verdicts = [
   ['8', 'ONE CONSUMER', 'DELIVERED CITY', SHEET8_VERDICT],
   ['9', 'ONE DEPLOY', 'SHIPPED CITY', SHEET9_VERDICT],
   ['10', 'ONE BUNDLE', 'BUNDLED CITY', SHEET10_VERDICT],
-  ['11', 'FIVE PACKAGES', 'ENTRY QUARTERS', SHEET11_VERDICT],
+  ['11', 'SEVEN PACKAGES', 'ENTRY QUARTERS', SHEET11_VERDICT],
   ['12', 'PR CI GRAPH', 'REGISTER PLATE', `the punched inventory — ${PHANTOM_PCT}% of the graph runs nothing, and the real→real edges that remain are a thin core inside a large node count`],
   ['13', 'WORKSPACE × TIME', 'WEATHERING MAP', SHEET13_VERDICT],
   ['14', 'THE CENSUS PIPELINE', 'FLOW GRAPH', `the atlas measuring itself — one archive, ${ATLAS.stats.probes} probe stations, ${ATLAS.stats.plates} filed plates, and every station, plate and edge introspected from the generator at build time`],
@@ -242,6 +242,9 @@ const SUBJECT = PUBLISHED.find((m) => m.name === 'lit-ui-router');
 const COUNTED_AT = `${PLATE.ref} @ ${PLATE.sha}`;
 const COUNTED_ON = PLATE.generatedAtTime.slice(0, 10);
 // the flagship's publish date comes from the registry plate, never a typed day
+const DOORS = JSON.parse(readFileSync(new URL('../data/census-doors.json', import.meta.url), 'utf8'));
+const DOOR_N = DOORS.rows.length;
+const DOOR_PKGS = new Set(DOORS.rows.map((r) => r.pkg)).size;
 const NPM = JSON.parse(readFileSync(new URL('../data/census-npm.json', import.meta.url), 'utf8'));
 const SHIPPED = NPM.rows.find((r) => r.name === 'lit-ui-router');
 if (!SHIPPED || SHIPPED.version !== PLATE.members.find((m) => m.name === 'lit-ui-router')?.version) throw new Error('build: census-npm.json and census-files.json disagree about the lit-ui-router version');
@@ -275,7 +278,7 @@ const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
 const galBody = `<div class="gal-body">
     <p>The source image — an isometric block city over a strategy-breeding harness — works because of three quiet decisions, and only one of them is the city: it maps <em>roles in a mechanism</em> rather than files; it spends its one visual scalar (height) on a true quantity; and it keeps a CONDITION field that says what is currently wrong. This set keeps those three decisions and lets everything else change with altitude.</p>
     <p>The result is an argument about form: a loop where there is a genuine cycle (sheet 1), panels where packages are too small to be cities (sheet 2), the full city where the measurement thesis is actually true (sheet 3), a massed spine where the family shares one core but the limbs never touch (sheet 4), a chart where edges would be fiction (sheet 5), and mostly prose where only a definition survives (sheet 6). Fitness peaks in the middle altitudes and collapses at both ends.</p>
-    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing five package quarters and sixteen doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 turns the instrument on itself: the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings and introspected from the generator at build time. Interactive lanes (1i, 2B, 12i, 14i and the three.js city) walk the plates they sit beside; the appendix files plates whose subject is the atlas rather than the codebase.</p>
+    <p>Above the sixth altitude the set stops arguing about form and starts measuring. Sheets 7–10 are a survey quartet, each counting the same subject at a different boundary: what the repository holds (the monorepo by mass), what npm delivers (the sample app's <code>node_modules</code>, ${SHEET8_TIMES}× the app it serves), what the browser downloads (the docs deploy on the wire, where the prerendered prose tops the skyline and the lettering alone outweighs every routed app the site demonstrates), and who occupies the bytes after tree-shaking (the machine the router wraps is ${SHEET10_CORE_SHARE} of the bundle; the router itself, ${SHEET10_ROUTER_SHARE}). Sheet 11 cuts the same wire the other way, pricing ${DOOR_PKGS} package quarters and ${DOOR_N} doors one at a time. Sheet 12 leaves the wire and draws the monorepo as its own CI reads it, the pull-request task graph punched onto a register plate. Sheet 13 ages the city by commit date, and sheet 14 turns the instrument on itself: the census pipeline behind almost every number here, drawn as archive → probe stations → filed plates → drawings and introspected from the generator at build time. Interactive lanes (1i, 2B, 12i, 14i and the three.js city) walk the plates they sit beside; the appendix files plates whose subject is the atlas rather than the codebase.</p>
   </div>`;
 
 const cover = `<header class="cover">

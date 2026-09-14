@@ -1,6 +1,6 @@
 // SHEET 2B — THE COUPLING BENCH: sheet 2A's interactive sibling.
 //
-// Seven nodes — the five published packages, @uirouter/core and lit — and every
+// Nine nodes — the seven published packages, @uirouter/core and lit — and every
 // EDGE is a real coupling contract read from www/atlas.lit-ui-router.dev/data/census-couplings.json:
 // the declared range as published, the section it lives in, and whether the peer
 // is optional.  Nothing on the bench is hand-listed.
@@ -8,8 +8,9 @@
 // Layout is computed HERE, not in the browser, and it deliberately echoes sheet
 // 2A's arrangement: the socket wall at the left with lit above it, the lit
 // companions in a column at the right in 2A's own order, the server below them
-// with its one coupling drawn to be crossed out, and the eslint plugin in a bay
-// of its own because it touches nothing else on the bench.  The navigation
+// with its one coupling drawn to be crossed out, the two companions that tie the
+// flagship from outside that column in a second column beyond it, and the eslint
+// plugin in a bay of its own because it touches nothing else.  The navigation
 // plugin stands in a middle column of its own, on the wall's own baseline: it
 // declares core and nothing else, so it belongs nearer the wall than the lit
 // column and its one tie runs straight.  cytoscape draws it with `preset` — no
@@ -19,7 +20,7 @@ import { PROJECT_MARK, articleTitle } from './chrome.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
-export const REV = 'C';
+export const REV = 'D';
 
 const C = JSON.parse(readFileSync(new URL('../data/census-couplings.json', import.meta.url), 'utf8'));
 const B = JSON.parse(readFileSync(new URL('../data/census-bricks.json', import.meta.url), 'utf8'));
@@ -28,10 +29,12 @@ const brick = (name) => B.rows.find((r) => r.name === name) ?? null;
 // ---- the bench, in sheet 2A's arrangement -----------------------------------
 // x/y are the preset coordinates; `short` is the label the bench can carry at
 // node size, `band` the note lettered beside it (`halign` says which side).
-// Four columns, read right to left the way the arrows run: the lit companions at
+// Five columns, read right to left the way the arrows run: the lit companions at
 // 680, the navigation plugin alone at 400, the two externals stacked at 120 with
-// lit lifted clear of the wall, and the eslint bay at 900 — a bay, not a
-// basement.  The middle column is the plate's whole argument about that plugin:
+// lit lifted clear of the wall, effect and ssr at 900, and the eslint bay at
+// 1120 — a bay, not a basement.  effect and ssr cannot stand in the 680 column:
+// both tie lit-ui-router, and a tie laid down that column would run straight
+// through mobx, which the guard below throws on.  The middle column is the plate's whole argument about that plugin:
 // it declares @uirouter/core and nothing else, so it sits on the wall's own
 // baseline (y = 0) and its single tie is a straight horizontal run.  Keeping it
 // out of the lit column also leaves that column with nothing standing between
@@ -44,8 +47,10 @@ const BENCH = new Map([
   ['ui-router-navigation-location-plugin', { x: 400, y: 0, short: 'navigation-location-plugin', band: 'A COLUMN OF ITS OWN — CORE ONLY, NO LIT', halign: 'right' }],
   ['lit-ui-router', { x: 680, y: -300, short: 'lit-ui-router' }],
   ['lit-ui-router-mobx', { x: 680, y: -160, short: 'lit-ui-router-mobx' }],
-  ['ui-router-server', { x: 680, y: 200, band: 'OPTIONAL — THE TIE 2A DRAWS CROSSED OUT', short: 'ui-router-server', halign: 'right' }],
-  ['eslint-plugin-lit-ui-router', { x: 900, y: -300, band: 'A BAY OF ITS OWN — COUPLES TO NOTHING HERE', short: 'eslint-plugin-lit-ui-router', halign: 'center' }],
+  ['ui-router-server', { x: 680, y: 260, band: 'OPTIONAL — THE TIE 2A DRAWS CROSSED OUT', short: 'ui-router-server', halign: 'right' }],
+  ['lit-ui-router-effect', { x: 900, y: -160, short: 'lit-ui-router-effect' }],
+  ['lit-ui-router-ssr', { x: 900, y: 120, band: 'THE BRIDGE — IT TIES TWO SIBLINGS', short: 'lit-ui-router-ssr', halign: 'center' }],
+  ['eslint-plugin-lit-ui-router', { x: 1120, y: -300, band: 'A BAY OF ITS OWN — COUPLES TO NOTHING HERE', short: 'eslint-plugin-lit-ui-router', halign: 'center' }],
 ]);
 for (const n of C.nodes) {
   if (!BENCH.has(n.key)) throw new Error(`coupling-bench: ${n.key} is on the plate but has no place on the bench`);
@@ -378,10 +383,10 @@ export function couplingBenchSection() {
     </div>
   </div>
   <div class="cb-stage">
-    <div class="cb-cy" id="cb-cy" role="img" aria-label="Interactive coupling graph: the five published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range."></div>
+    <div class="cb-cy" id="cb-cy" role="img" aria-label="Interactive coupling graph: the ${C.totals.published} published packages, @uirouter/core and lit, with one edge per declared dependency or peer dependency, each labelled with its published range. lit-ui-router-ssr is the one node with a tie to two siblings — the flagship and the server."></div>
     <aside class="cb-info" id="cb-info"></aside>
   </div>
-  <p class="cb-basis">BASIS — ${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in four columns — the lit companions, the navigation plugin alone, the two externals, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.</p>
+  <p class="cb-basis">BASIS — ${C.totals.contracts} contracts read from <code>packages/*/package.json</code> at ${C.ref} @ ${C.sha} · commit ${C.commitDate} · every <code>catalog:</code> spec resolved through the archive's own <code>pnpm-workspace.yaml</code> to the range that ships, and <code>@uirouter/core</code> and <code>lit</code> versions taken from <code>pnpm-lock.yaml</code>, by <code>generator/census-couplings.mjs</code> · massing and storeys from <code>census-bricks.json</code> · layout is sheet 2A's arrangement in five columns — the lit companions, the navigation plugin alone, the two externals, effect and ssr, the eslint bay — computed at build and drawn with cytoscape <code>preset</code> — no physics, and no bowed ties.</p>
 </section>
 <script type="application/json" id="cb-layout">${json(LAYOUT)}</script>
 <script defer src="${CYTOSCAPE_URL}"></script>

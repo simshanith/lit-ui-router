@@ -40,7 +40,10 @@ const ORDER = [
   ['lit-ui-router', './register'],
   ['lit-ui-router', './ui-router.register'],
   ['lit-ui-router', './ui-view.register'],
+  ['lit-ui-router', './context'],
+  ['lit-ui-router-effect', '.'],
   ['lit-ui-router-mobx', '.'],
+  ['lit-ui-router-ssr', '.'],
   ['ui-router-navigation-location-plugin', '.'],
   ['ui-router-server', '.'],
   ['ui-router-server', './redirects'],
@@ -50,6 +53,7 @@ const ORDER = [
   ['ui-router-server', './vite'],
   ['ui-router-server', './connect'],
   ['ui-router-server', './simulate'],
+  ['ui-router-server', './location'],
   ['eslint-plugin-lit-ui-router', '.'],
 ];
 // A door the plate carries but the drawing does not place is a build error.
@@ -64,7 +68,10 @@ const PLAN = {
   'lit-ui-router|./register': [185, 60],
   'lit-ui-router|./ui-router.register': [252, 92],
   'lit-ui-router|./ui-view.register': [180, 140],
+  'lit-ui-router|./context': [305, 105],
+  'lit-ui-router-effect|.': [40, 365],
   'lit-ui-router-mobx|.': [155, 310],
+  'lit-ui-router-ssr|.': [620, 285],
   'ui-router-navigation-location-plugin|.': [460, 370],
   'ui-router-server|.': [425, 15],
   'ui-router-server|./redirects': [495, 40],
@@ -74,6 +81,7 @@ const PLAN = {
   'ui-router-server|./vite': [510, 140],
   'ui-router-server|./connect': [575, 160],
   'ui-router-server|./simulate': [645, 180],
+  'ui-router-server|./location': [690, 195],
   // recentred in its quarter: the door grew 9.7 → 16.9 KB min at the 1.14.1 ref and
   // its old lot pushed the block's base through the quarter's south-east dashes
   'eslint-plugin-lit-ui-router|.': [320, 258],
@@ -120,6 +128,8 @@ const EL2 = at('lit-ui-router', './ui-view.register');
 const SRV = at('ui-router-server', '.');
 const SIM = at('ui-router-server', './simulate');
 const MOBX = at('lit-ui-router-mobx', '.');
+const EFF = at('lit-ui-router-effect', '.');
+const SSR = at('lit-ui-router-ssr', '.');
 const NAV = at('ui-router-navigation-location-plugin', '.');
 const LINT = at('eslint-plugin-lit-ui-router', '.');
 const REG_COST = FLAG.gz - PURE.gz;
@@ -140,7 +150,10 @@ const NOTE = {
   'lit-ui-router|./register': 'the umbrella — shared core once',
   'lit-ui-router|./ui-router.register': 'one element',
   'lit-ui-router|./ui-view.register': 'one element',
+  'lit-ui-router|./context': 'the context seam, split out',
+  'lit-ui-router-effect|.': 'the whole effect layer',
   'lit-ui-router-mobx|.': 'the whole mobx layer',
+  'lit-ui-router-ssr|.': 'the prerender bridge',
   'ui-router-navigation-location-plugin|.': 'the whole plugin',
   'ui-router-server|.': `${SRV_GAP} gz shy of the flagship`,
   'ui-router-server|./redirects': 'redirect machinery',
@@ -150,6 +163,7 @@ const NOTE = {
   'ui-router-server|./vite': 'adapter',
   'ui-router-server|./connect': 'adapter',
   'ui-router-server|./simulate': `test double — ${SIM.gz} b`,
+  'ui-router-server|./location': 'the server location service',
   'eslint-plugin-lit-ui-router|.': 'the lint plugin — editor-side, never shipped',
 };
 const half = Math.ceil(all.length / 2);
@@ -162,14 +176,16 @@ ${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, `${r.n} ${r.pkg} ${
 ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, `${r.n} ${r.pkg} ${r.door} — ${fmt(r.m)} → ${fmt(r.gz)} gz · ${NOTE[`${r.pkg}|${r.door}`]}`, 'lbls')).join('\n')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="Every exported entry of the five publishable packages drawn as an isometric city split into five package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors; the ui-router-server quarter is an eight-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the mobx and navigation-location plugins stand alone as small one-door quarters; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, the fifth published package, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
+const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a nine-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and ssr companions and the navigation-location plugin stand alone as small one-door quarters; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
 ${defs(P)}
 
-${quarter(20, 0, 330, 200, 'lit-ui-router — five doors', 36, 426)}
-${quarter(410, 0, 730, 210, 'ui-router-server — eight doors', 1150, 430, 'end')}
+${quarter(20, 0, 330, 200, 'lit-ui-router — six doors', 162, 426, 'end')}
+${quarter(410, 0, 730, 210, 'ui-router-server — nine doors', 1150, 430, 'end')}
+${quarter(0, 345, 110, 415, 'lit-ui-router-effect', 176, 445, 'end')}
 ${quarter(120, 290, 260, 380, 'lit-ui-router-mobx', 240, 478, 'end')}
 ${quarter(290, 240, 400, 320, 'eslint-plugin-lit-ui-router', 450, 528, 'end')}
-${quarter(420, 350, 570, 440, 'navigation-location-plugin', 700, 672)}
+${quarter(420, 350, 570, 440, 'navigation-location-plugin', 455, 700)}
+${quarter(580, 255, 700, 330, 'lit-ui-router-ssr', 694, 716)}
 
 ${bodies}
 
@@ -180,32 +196,36 @@ ${txt(1120, 108, `the two flagship doors: ${fmt(FLAG.gz)} · ${fmt(SRV.gz)} —`
 ${txt(1120, 120, `the client door leads the server by ${fmt(SRV_GAP)}`, 'lbla', 'end')}
 ${txt(40, 340, `the one-element doors sum to ${fmt(ELEM_SUM)} gz —`, 'lbls')}
 ${txt(40, 352, `«./register» ships the shared core once, at ${fmt(UMB.gz)}`, 'lbls')}
-${txt(250, 560, `the fifth package's one door: ${fmt(LINT.gz)} gz —`, 'lbls')}
+${txt(250, 560, `the lint plugin's one door: ${fmt(LINT.gz)} gz —`, 'lbls')}
 ${txt(250, 572, 'the only door here no browser ever opens', 'lbls')}
 ${txt(1120, 695, `four adapters within ${ADAPTER_SPREAD} bytes of one`, 'lbla', 'end')}
 ${txt(1120, 707, 'another — thin skins on one server core', 'lbla', 'end')}
-${txt(100, 665, `the two runtime plugins: ${fmt(MOBX.gz)} gz · ${fmt(NAV.gz)} gz — they price like footnotes`, 'lbls')}
+${txt(100, 665, 'the four companion doors price like footnotes:', 'lbls')}
+${txt(100, 677, `mobx ${fmt(MOBX.gz)} · effect ${fmt(EFF.gz)} · ssr ${fmt(SSR.gz)} · nav ${fmt(NAV.gz)} gz`, 'lbls')}
 
 ${txt(1120, 26, 'SCALE — footprint area ∝ minified bytes · 1 px of height ≈ 40 gz bytes', 'lbls', 'end')}
-${txt(1120, 40, `PROBE — ${PLATE.used}`, 'lblf', 'end')}
+<!-- the recipe outgrew one line and ran across the tallest door's cap: it reads
+     as its own stages instead, each hung on the plate's right margin -->
+${PLATE.used.split(' + ').map((stage, i) => txt(1120, 40 + i * 14, i ? `+ ${stage}` : `PROBE — ${stage}`, 'lblf', 'end')).join('\n')}
 
 ${schedule}
 </svg>`;
 
 export const sheet11 = {
-  num: 11, id: 'entries', rev: 'E',
+  num: 11, id: 'entries', rev: 'F',
   title: 'THE ENTRY QUARTERS',
   sub: `ALTITUDE 2⅞ — the same wire, cut by published package · every exported entry priced alone · ${DOOR_N} doors in ${PKG_N} package quarters, footprint from minified bytes and height from gzipped, dependencies external — ${BASIS}`,
-  scale: 'FIVE PACKAGES',
+  scale: 'SEVEN PACKAGES',
   form: 'ENTRY QUARTERS',
   svg,
   caption: `The split view to sheet 10’s unified city: every exported entry of every publishable package bundled alone and priced — ${PKG_N} package quarters, ${DOOR_N} doors, the codecov bundle-analysis series drawn as skylines.`,
   notes: `
 <p><strong>Method:</strong> the same probe as sheet 10's doors strip, run to completion: every exported entry of the ${PKG_N} publishable packages bundled alone with rolldown — minified, declared dependencies and peers external — which is the price a consumer's bundler pays at that door, and byte-for-byte the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads to codecov. Footprint is minified bytes, height gzipped. Every number is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-doors.json</code> — ${BASIS}, probed as <code>${PLATE.used}</code> — and a door the plate carries that the drawing does not place is a build error, not a stale constant. Sheet 10 is the unified view — one real app's bundle with all of these mixed by the bundler; this sheet cuts the same machinery by published package and entry point. The quarters don't sum and shouldn't: doors overlap (<code>./pure</code> is <code>.</code> minus registration), which is exactly what the split view exists to show.</p>
 <p><strong>The twin towers are one building with two doors.</strong> <code>.</code> and <code>./pure</code> differ by ${REG_COST} gzipped bytes — the whole cost of custom-element registration. The register economics run the other way: the two one-element doors sum to ${fmt(ELEM_SUM)} gz while the umbrella <code>./register</code> is ${fmt(UMB.gz)}, because each element door carries the shared element core with it. Take the umbrella or one element door; taking two per-element doors ships the core twice.</p>
-<p><strong>The server is a storefront, not a tower.</strong> Eight doors: an index at ${fmt(SRV.gz)} gz, ${fmt(SRV_GAP)} under the client flagship; redirect and matcher wings at ${fmt(at('ui-router-server', './redirects').gz)} and ${fmt(at('ui-router-server', './matcher').gz)}; and four framework adapters — hono, fetch, vite, connect — packed within ${ADAPTER_SPREAD} bytes of one another, which is what thin skins over one core look like priced. <code>./simulate</code>, the test double, is ${SIM.gz} bytes, the cheapest door on the sheet.</p>
-<p><strong>Plugins price like footnotes.</strong> The entire mobx reactivity layer enters at ${fmt(MOBX.gz)} gz and the navigation-location plugin at ${fmt(NAV.gz)} — each cheaper than the gap between <code>./register</code> and its two element doors. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's <code>@uirouter/core</code>) is external here by design.</p>
-<p><strong>The sixteenth door is not a door a browser opens.</strong> <code>eslint-plugin-lit-ui-router</code> (#676) is the family's fifth published package and the first non-runtime one, so its quarter is drawn but its number means something different: ${fmt(LINT.m)} minified, ${fmt(LINT.gz)} gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs ${LINT_SHARE}% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers ESLint alone — oxlint loads it as a JS plugin, unpeered — never <code>@uirouter/core</code> (sheet 2 leaves it off the plate for the same reason).</p>
+<p><strong>The server is a storefront, not a tower.</strong> Nine doors: an index at ${fmt(SRV.gz)} gz, ${fmt(SRV_GAP)} under the client flagship; redirect and matcher wings at ${fmt(at('ui-router-server', './redirects').gz)} and ${fmt(at('ui-router-server', './matcher').gz)}; four framework adapters — hono, fetch, vite, connect — packed within ${ADAPTER_SPREAD} bytes of one another, which is what thin skins over one core look like priced; and two doors that barely register, <code>./simulate</code> at ${SIM.gz} bytes and <code>./location</code> at ${at('ui-router-server', './location').gz}, the cheapest door on the sheet.</p>
+<p><strong>Two more quarters, and one of them sits between the other two.</strong> <code>lit-ui-router-effect</code> enters at ${fmt(EFF.gz)} gz and <code>lit-ui-router-ssr</code> at ${fmt(SSR.gz)} — each a single door, each a quarter of its own. The ssr quarter is drawn in the gap between the client and server quarters because that is where its declarations put it: it is the one package here that peers both <code>lit-ui-router</code> and <code>ui-router-server</code> (sheet 4 draws that bridge). Both packages ship their newest work under npm's <code>rc</code> tag; the plate prices what the repo builds at this ref, not what <code>latest</code> resolves to.</p>
+<p><strong>Plugins price like footnotes.</strong> The entire mobx reactivity layer enters at ${fmt(MOBX.gz)} gz and the navigation-location plugin at ${fmt(NAV.gz)} — each cheaper than the gap between <code>./register</code> and its two element doors, and the effect and ssr doors (${fmt(EFF.gz)} and ${fmt(SSR.gz)}) are not much dearer. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's <code>@uirouter/core</code>) is external here by design.</p>
+<p><strong>Door ${LINT.n} is not a door a browser opens.</strong> <code>eslint-plugin-lit-ui-router</code> (#676) is the family's one non-runtime published package, so its quarter is drawn but its number means something different: ${fmt(LINT.m)} minified, ${fmt(LINT.gz)} gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs ${LINT_SHARE}% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers ESLint alone — oxlint loads it as a JS plugin, unpeered — never <code>@uirouter/core</code> (sheet 2 leaves it off the plate for the same reason).</p>
 <p><strong>Why both views exist.</strong> The split view is the seller's ledger — what each door costs at the threshold. The unified view is the buyer's receipt — what one app's bundler actually made of them (it paid ${fmt(RECEIPT)} of the flagship's ${fmt(FLAG.gz)}). Codecov tracks the ledger per commit; sheet 10 audits the receipt.</p>`,
   key: [
     keyRow('<rect x="8" y="3" width="18" height="12" class="sk fp"/>', 'exported entry — height = gz, deps external'),
