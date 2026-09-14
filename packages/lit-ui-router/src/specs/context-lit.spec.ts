@@ -29,10 +29,7 @@ import {
   waitForUpdate,
 } from './test-utils.js';
 
-// The real library, not the protocol shapes: every case here imports
-// @lit/context, so the guide's claims about it are exercised.
-// Runs in test:lit2-compat too: @lit/context takes @lit/reactive-element
-// ^1.6.2 || ^2.1.0, and only the hosts here follow the lit-2 alias.
+// Imports @lit/context itself; runs under test:lit2-compat too since it accepts @lit/reactive-element ^1.6.2 || ^2.1.0.
 
 /** what a subscribing consumer was handed, call by call */
 type SubscriptionCall = [UIRouterLit, (() => void) | undefined];
