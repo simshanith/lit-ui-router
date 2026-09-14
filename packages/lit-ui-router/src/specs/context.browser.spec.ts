@@ -12,10 +12,8 @@ import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-router.register.js';
 import { createTestRouter, waitForUpdate } from './test-utils.js';
 
-// Browser-only: happy-dom does not retarget composed events at shadow roots,
-// so a request from behind one never exercises the real path there.
+// Browser-only: happy-dom does not retarget composed events at shadow roots.
 
-/** a plain element behind a shadow root, standing in for a consumer */
 @customElement('test-context-shadow-host')
 class ContextShadowHost extends LitElement {
   render() {
