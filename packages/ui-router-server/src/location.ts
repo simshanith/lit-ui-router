@@ -94,7 +94,7 @@ export function serverLocationPlugin(
 
 /** Options for {@link installServerLocation | `installServerLocation`}. */
 export interface ServerLocationOptions extends ServerLocationPluginOptions {
-  /** The requested path, as the server received it — `/sheet/7B`. */
+  /** The requested path, query included, as the server received it — `/sheet/7B?tab=notes`. */
   url?: string;
   /**
    * The prefix the app is mounted under, added to every href. Pass
@@ -131,12 +131,10 @@ export interface ServerLocationOptions extends ServerLocationPluginOptions {
  * import { servicesPlugin, UIRouter } from '@uirouter/core';
  * import { installServerLocation } from 'ui-router-server/location';
  *
+ * const { pathname, search } = new URL(request.url);
  * const router = new UIRouter();
  * router.plugin(servicesPlugin);
- * installServerLocation(router, {
- *   url: new URL(request.url).pathname,
- *   strictMode: false,
- * });
+ * installServerLocation(router, { url: pathname + search, strictMode: false });
  * states.forEach((state) => router.stateRegistry.register(state));
  * const settled = new Promise<void>((resolve) => {
  *   router.transitionService.onSuccess({}, () => resolve());
