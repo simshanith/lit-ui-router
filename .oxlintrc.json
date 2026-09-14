@@ -447,6 +447,73 @@
       }
     },
     {
+      // Mirrors bundleProbe["."].free; the specs are excluded because
+      // @lit-labs/ssr is a devDependency they render against.
+      "files": ["packages/lit-ui-router/src/**/*.ts"],
+      "excludeFiles": ["packages/lit-ui-router/src/specs/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "@lit-labs/ssr",
+                "allowTypeImports": true,
+                "message": "the root entry claims to bundle without @lit-labs/ssr (bundleProbe[\".\"].free); it is a devDependency for the specs only."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["@lit-labs/ssr/**"],
+                "allowTypeImports": true,
+                "message": "the root entry claims to bundle without @lit-labs/ssr (bundleProbe[\".\"].free); it is a devDependency for the specs only."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      // Mirrors bundleProbe["./context"].free in packages/lit-ui-router/package.json.
+      "files": ["packages/lit-ui-router/src/context.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "paths": [
+              {
+                "name": "lit",
+                "allowTypeImports": true,
+                "message": "the lit-ui-router/context entry claims to bundle without lit and @uirouter/core (bundleProbe[\"./context\"].free, gated by check:bundle); a value import here defeats it at the source."
+              },
+              {
+                "name": "@uirouter/core",
+                "allowTypeImports": true,
+                "message": "the lit-ui-router/context entry claims to bundle without lit and @uirouter/core (bundleProbe[\"./context\"].free, gated by check:bundle); a value import here defeats it at the source."
+              },
+              {
+                "name": "@lit-labs/ssr",
+                "allowTypeImports": true,
+                "message": "the root entry claims to bundle without @lit-labs/ssr (bundleProbe[\".\"].free); it is a devDependency for the specs only."
+              }
+            ],
+            "patterns": [
+              {
+                "group": ["lit/**", "@uirouter/core/**"],
+                "allowTypeImports": true,
+                "message": "the lit-ui-router/context entry claims to bundle without lit and @uirouter/core (bundleProbe[\"./context\"].free, gated by check:bundle); a value import here defeats it at the source."
+              },
+              {
+                "group": ["@lit-labs/ssr/**"],
+                "allowTypeImports": true,
+                "message": "the root entry claims to bundle without @lit-labs/ssr (bundleProbe[\".\"].free); it is a devDependency for the specs only."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["tools/release/**/*.ts"],
       "rules": {
         "turbo/no-undeclared-env-vars": [
