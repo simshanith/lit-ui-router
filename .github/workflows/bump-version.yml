@@ -20,6 +20,7 @@ on:
           - ui-router-navigation-location-plugin
           - ui-router-server
           - eslint-plugin-lit-ui-router
+          - lit-ui-router-effect
         default: 'lit-ui-router'
       increment:
         description: 'Increment'
