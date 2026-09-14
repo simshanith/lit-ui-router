@@ -1,13 +1,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
-import {
-  locationPluginFactory,
-  memoryLocationPlugin,
-  MemoryLocationConfig,
-  MemoryLocationService,
-} from '@uirouter/core';
-import type { LocationPlugin, UIRouter } from '@uirouter/core';
+import { memoryLocationPlugin } from '@uirouter/core';
 import { html } from 'lit';
 import type { TemplateResult } from 'lit';
 
@@ -23,27 +17,10 @@ const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
 const emit = (template: TemplateResult): string =>
   collectResultSync(render(template));
 
-// MemoryLocationConfig assigns html5Mode as an own property, so a subclass overrides it by assigning too.
-class PathConfig extends MemoryLocationConfig {
-  constructor() {
-    super();
-    this.html5Mode = () => true;
-  }
-}
-
-// locationPluginFactory types a service's router as optional; MemoryLocationService requires it.
-class PathService extends MemoryLocationService {
-  constructor(router?: UIRouter) {
-    super(router!);
-  }
-}
-
-const pathLocationPlugin: (uiRouter: UIRouter) => LocationPlugin =
-  locationPluginFactory('test.path', true, PathService, PathConfig);
-
+// Core's memory location is hash-shaped; path-shaped hrefs are lit-ui-router-ssr's to assert.
 const sheetRouter = (): UIRouterLit => {
   const router = new UIRouterLit();
-  router.plugin(pathLocationPlugin);
+  router.plugin(memoryLocationPlugin);
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
   router.stateRegistry.register({ name: 'index', url: '/' });
   router.urlService.url('/sheet/7B');
@@ -83,7 +60,7 @@ describe('srefHref on the server', () => {
   it('emits the href from the render-scoped router slot', () => {
     const out = withRouterSync(sheetRouter(), () => emit(sheetLink()));
 
-    expect(out).toContain('href="/sheet/7B"');
+    expect(out).toContain('href="#/sheet/7B"');
   });
 
   it('emits the href from a provider on the render root', () => {
@@ -92,7 +69,7 @@ describe('srefHref on the server', () => {
     const out = emit(sheetLink());
     uninstall();
 
-    expect(out).toContain('href="/sheet/7B"');
+    expect(out).toContain('href="#/sheet/7B"');
   });
 
   it('leaves the attribute off, and stays quiet, with no router in reach', () => {
@@ -104,15 +81,44 @@ describe('srefHref on the server', () => {
     expect(warn).not.toHaveBeenCalled();
     warn.mockRestore();
   });
+});
 
-  it('takes the location plugin the router carries', () => {
+describe('async resolves ahead of the sync render', () => {
+  it('settle in the awaited transition, and the render reads them', async () => {
     const router = new UIRouterLit();
     router.plugin(memoryLocationPlugin);
-    router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
+    router.stateRegistry.register({
+      name: 'sheet',
+      url: '/sheet/:num',
+      resolve: {
+        title: () =>
+          new Promise<string>((resolve) => {
+            setTimeout(() => resolve('Sheet 7B'), 5);
+          }),
+      },
+    });
+    router.urlService.url('/sheet/7B');
+    const settled = new Promise<void>((resolve) =>
+      router.transitionService.onSuccess({}, () => {
+        resolve();
+      }),
+    );
+    router.start();
+    await settled;
 
-    const out = withRouterSync(router, () => emit(sheetLink()));
+    const out = withRouterSync(router, () =>
+      emit(
+        html`<h1>
+          ${router.globals.successfulTransitions
+            .peekTail()
+            .injector()
+            .get('title')}
+        </h1>`,
+      ),
+    );
 
-    expect(out).toContain('href="#/sheet/7B"');
+    expect(router.globals.current.name).toBe('sheet');
+    expect(out).toContain('Sheet 7B');
   });
 });
 
