@@ -158,6 +158,7 @@
         "lit-ui-router#build:types",
         "lit-ui-router-effect#build:types",
         "lit-ui-router-mobx#build:types",
+        "lit-ui-router-ssr#build:types",
         "ui-router-navigation-location-plugin#build:types",
         "ui-router-server#build:types"
       ],

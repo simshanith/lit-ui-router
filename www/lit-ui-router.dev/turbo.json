@@ -52,6 +52,7 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-ssr#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api",
         "examples#build:embeds",
@@ -65,6 +66,7 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-ssr#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api"
       ],
@@ -107,6 +109,7 @@
         "lit-ui-router#docs:api",
         "lit-ui-router-effect#docs:api",
         "lit-ui-router-mobx#docs:api",
+        "lit-ui-router-ssr#docs:api",
         "ui-router-navigation-location-plugin#docs:api",
         "ui-router-server#docs:api",
         "examples#build:embeds"

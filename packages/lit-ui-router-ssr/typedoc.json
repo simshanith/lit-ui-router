@@ -1,0 +1,45 @@
+{
+  "$schema": "https://typedoc.org/schema.json",
+  "entryPoints": ["src/index.ts"],
+  "out": "../../www/lit-ui-router.dev/api/lit-ui-router-ssr",
+  "docsRoot": "../../www/lit-ui-router.dev",
+  "plugin": [
+    "typedoc-plugin-markdown",
+    "typedoc-vitepress-theme",
+    "@tools/typedoc-plugin-lit-ui-router/kind-indexes"
+  ],
+  "excludeExternals": true,
+  "excludeInternal": true,
+  "excludePrivate": true,
+  "readme": "none",
+  "githubPages": false,
+  "treatWarningsAsErrors": true,
+  "validation": { "notDocumented": true },
+  "entryFileName": "index",
+  "useCodeBlocks": true,
+  "expandObjects": true,
+  "parametersFormat": "table",
+  "propertiesFormat": "table",
+  "enumMembersFormat": "table",
+  "typeDeclarationFormat": "table",
+  "sort": ["alphabetical", "source-order"],
+  "externalSymbolLinkMappings": {
+    "@uirouter/core": {
+      "UIRouter": "https://ui-router.github.io/core/docs/latest/classes/_router_.uirouter.html"
+    },
+    "lit": {
+      "TemplateResult": "https://lit.dev/docs/api/templates/#TemplateResult"
+    },
+    "lit-ui-router": {
+      "UIRouterLit": "/api/reference/core/UIRouterLit"
+    },
+    "ui-router-server": {
+      "MountConfig": "/api/ui-router-server/index/interfaces/MountConfig",
+      "ServerRouter": "/api/ui-router-server/index/interfaces/ServerRouter",
+      "Verdict": "/api/ui-router-server/index/type-aliases/Verdict"
+    }
+  },
+  "sidebar": {
+    "pretty": true
+  }
+}

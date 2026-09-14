@@ -38,6 +38,10 @@ component_management:
       name: lit-ui-router-effect
       paths:
         - packages/lit-ui-router-effect/src/**
+    - component_id: lit-ui-router-ssr
+      name: lit-ui-router-ssr
+      paths:
+        - packages/lit-ui-router-ssr/src/**
     - component_id: lit-ui-router-mobx
       name: lit-ui-router-mobx
       paths:

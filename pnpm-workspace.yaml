@@ -110,6 +110,7 @@ catalogs:
     '@oxc-project/runtime': '>=0.50.0'
     eslint-plugin-lit: ^2.0.0
   publishedPeer:
+    '@lit-labs/ssr': ^4.0.0
     '@uirouter/core': ^6.0.8
     effect: ^3.22.0
     eslint: '^9.0.0 || ^10.0.0'
@@ -118,6 +119,7 @@ catalogs:
     lit-ui-router: ^1.7.0
     mobx: '^6.0.0 || ^7.0.0'
     typedoc: ^0.28.0
+    ui-router-server: ^0.1.2
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
   typescript6:
