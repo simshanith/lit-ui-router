@@ -1,5 +1,4 @@
-// Directive plumbing shared by the sref element parts, the attribute parts and
-// the status controller.
+// Directive plumbing shared by the sref element parts, attribute parts and status controller.
 import {
   anyTrueR,
   equals,
