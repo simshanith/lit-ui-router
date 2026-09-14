@@ -320,10 +320,11 @@ the ones the client writes. It is path-shaped by default, for a
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 import { installServerLocation } from 'ui-router-server/location';
 
+const { pathname, search } = new URL(request.url);
 const router = new UIRouter();
 router.plugin(servicesPlugin);
 installServerLocation(router, {
-  url: new URL(request.url).pathname,
+  url: pathname + search,
   baseHref: '/app/',
   strictMode: false,
 });
