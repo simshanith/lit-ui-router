@@ -22,7 +22,9 @@ message strings included. A production bundle cannot be made to print them.
 | Package                       | Two builds | Why                                              |
 | ----------------------------- | ---------- | ------------------------------------------------ |
 | `lit-ui-router`               | yes        | three development warnings                       |
+| `lit-ui-router-effect`        | yes        | one development warning                          |
 | `lit-ui-router-mobx`          | yes        | one development warning                          |
+| `lit-ui-router-ssr`           | yes        | one development warning                          |
 | `navigation-location-plugin`  | no         | no runtime warnings to fold out                  |
 | `ui-router-server`            | no         | no runtime warnings to fold out                  |
 | `eslint-plugin-lit-ui-router` | no         | a lint plugin — it never runs in your app bundle |
