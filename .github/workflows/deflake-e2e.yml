@@ -1,11 +1,11 @@
 # On-demand e2e flake sampler: N fresh serial runs of the Cypress suites
 # against a real dev server, reported per attempt. Two opt-ins:
-#   - `deflake` PR label: every push to a labeled PR gets sampled — the sticky
-#     mode for dependency-trial PRs (label a wrangler bump, read the check).
+#   - `deflake` PR label: one-shot, like `coderabbit:review` — applying it
+#     samples once and the run strips it again, so re-labelling is the re-run
+#     gesture and later pushes don't spend a sample nobody asked for.
 #   - workflow_dispatch: manual sampling against any ref, with a runs input.
 # Attempts run OUTSIDE turbo: a cached test task would replay the first
-# attempt's logs instead of re-executing (apps/sample-app-lit-e2e/scripts/
-# measure-deflake.ts, on draft #489, counts real executions by the same rule).
+# attempt's logs instead of re-executing.
 # This check is informational, never required — a red run means "the flake
 # fired", not "don't merge anything".
 # The sampler loop lives in apps/sample-app-lit-e2e/scripts/deflake-e2e.ts so
@@ -23,8 +23,10 @@ on:
         type: choice
         default: '5'
         options: ['1', '2', '3', '4', '5', '6', '7', '8', '9', '10']
+  # Only `labeled`. The other PR events queued a run on every push that the
+  # `if:` below immediately skipped — 389 of 400 runs were that no-op.
   pull_request:
-    types: [opened, labeled, synchronize, reopened]
+    types: [labeled]
 
 # One sampler per ref; superseded samples are stale, cancel them.
 concurrency:
@@ -37,14 +39,11 @@ env:
 
 jobs:
   attempts:
-    # PR events sample only PRs opted in via the `deflake` label: `labeled`
-    # keys off the label that just landed (so adding any OTHER label to a
-    # sampled PR doesn't re-trigger), every other type reads the PR's current
-    # label set. `${{ }}` in an `if:` is fine — the ban is on `run:` lines.
+    # Keys off the label that just landed, so adding any OTHER label to a PR
+    # doesn't sample it. `${{ }}` in an `if:` is fine — the ban is on `run:`.
     if: >-
       ${{ github.event_name == 'workflow_dispatch'
-      || (github.event.action == 'labeled' && github.event.label.name == 'deflake')
-      || (github.event.action != 'labeled' && contains(github.event.pull_request.labels.*.name, 'deflake')) }}
+      || github.event.label.name == 'deflake' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     permissions:
@@ -109,3 +108,25 @@ jobs:
           path: ~/.config/.wrangler/logs/
           retention-days: 5
           if-no-files-found: warn
+
+  drop_label:
+    # Makes the label one-shot, the same shape as coderabbit-oneshot.yml.
+    # Skipped on cancellation so the duplicate `labeled` webhook GitHub sends
+    # — whose run this workflow's concurrency group cancels — cannot strip the
+    # label out from under the sample that survived.
+    needs: attempts
+    if: >-
+      ${{ !cancelled()
+      && github.event_name == 'pull_request'
+      && needs.attempts.result != 'skipped' }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      pull-requests: write
+    steps:
+      - name: Drop the deflake label
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          GH_REPO: ${{ github.repository }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+        run: gh pr edit "$PR_NUMBER" --remove-label 'deflake'

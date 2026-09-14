@@ -369,7 +369,7 @@ catalogs:
       specifier: ^3.3.11
       version: 3.3.11
     wrangler:
-      specifier: 4.129.1
+      specifier: ^4.129.1
       version: 4.129.1
   lit2-compat:
     lit-2:

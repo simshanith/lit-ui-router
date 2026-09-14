@@ -224,7 +224,7 @@
         "turbo/no-undeclared-env-vars": [
           "warn",
           {
-            "allowList": ["^DEFLAKE_", "^MEASURE_DEFLAKE_"]
+            "allowList": ["^DEFLAKE_"]
           }
         ]
       }
