@@ -1,5 +1,5 @@
 import { describe, it, expect, expectTypeOf } from 'vitest';
-import { memoryLocationPlugin, servicesPlugin, UIRouter } from '@uirouter/core';
+import { servicesPlugin, UIRouter } from '@uirouter/core';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { html } from 'lit';
@@ -17,11 +17,8 @@ import { UIRouterLit } from '../core.js';
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 
-// memoryLocationPlugin is hash-shaped, so its hrefs carry the `#` prefix; the
-// path-shaped server plugin lives in ui-router-server/location.
 const sheetRouter = (): UIRouterLit => {
   const router = new UIRouterLit();
-  router.plugin(memoryLocationPlugin);
   router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
   return router;
 };
@@ -32,7 +29,7 @@ class RouterProbeDirective extends Directive {
     const router =
       getScopedRouter() ??
       (litServerRoot ? requestRouter(litServerRoot) : undefined);
-    return router?.stateService.href('sheet', { num: '7B' }) ?? 'no-router';
+    return router?.stateRegistry.get('sheet')?.url ?? 'no-router';
   }
 }
 
@@ -80,7 +77,7 @@ describe('the router hand-off under @lit-labs/ssr', () => {
 
     const out = withRouterSync(router, emit);
 
-    expect(out).toContain('href="#/sheet/7B"');
+    expect(out).toContain('href="/sheet/:num"');
     expect(getScopedRouter()).toBeUndefined();
   });
 
@@ -91,19 +88,18 @@ describe('the router hand-off under @lit-labs/ssr', () => {
     const out = emit();
 
     uninstall();
-    expect(out).toContain('href="#/sheet/7B"');
+    expect(out).toContain('href="/sheet/:num"');
   });
 
   it('renders from a plain @uirouter/core router in the slot', () => {
     const router = new UIRouter();
     router.plugin(servicesPlugin);
-    router.plugin(memoryLocationPlugin);
     router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
     expectTypeOf(router).toEqualTypeOf<UIRouter>();
 
     const out = withRouterSync(router, emit);
 
-    expect(out).toContain('href="#/sheet/7B"');
+    expect(out).toContain('href="/sheet/:num"');
     expect(getScopedRouter()).toBeUndefined();
   });
 
