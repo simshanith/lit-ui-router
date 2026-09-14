@@ -61,7 +61,13 @@ or renamed on a branch leaves its old emit behind, where `files: ["dist/**"]`
 and `./dist/*` exports still ship it. Turbo hashes inputs, not output
 directories, and never notices. Before a local check that reads `dist/` as
 shipped output (`check:pack`, `npm pack`, a `file:` install into another
-project), clear the ignored files first:
+project), list the ignored files first:
+
+```bash
+git clean -Xdn -- packages/*/dist tools/*/dist
+```
+
+then remove them:
 
 ```bash
 git clean -Xdf -- packages/*/dist tools/*/dist
