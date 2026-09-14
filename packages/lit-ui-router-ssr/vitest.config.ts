@@ -1,8 +1,7 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
-// Plain node under the @lit-labs/ssr DOM shim, the environment a prerender
-// actually runs in; happy-dom would mask the shim's gaps.
+// Plain node under the @lit-labs/ssr DOM shim, where a prerender actually runs; happy-dom would mask the shim's gaps.
 
 const source = (path: string): string =>
   fileURLToPath(new URL(path, import.meta.url));
@@ -10,9 +9,7 @@ const source = (path: string): string =>
 export default defineConfig({
   cacheDir: `node_modules/.vite-${process.env.VITEST_BROWSER_API_PORT ?? 'default'}`,
   resolve: {
-    // Resolve the workspace peers to their sources so tests do not require a
-    // prior build of either. Regex finds, not string prefixes: a string `find`
-    // would rewrite the subpath specifiers too.
+    // Workspace peers resolve to source so tests need no prior build; regex finds, since a string `find` would rewrite the subpath specifiers too.
     alias: [
       {
         find: /^lit-ui-router$/,

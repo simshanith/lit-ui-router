@@ -1,6 +1,4 @@
-// The one place the prerender incantation lives: provideRouter() on a render
-// root, withRouterSync() around a synchronous collectResultSync(render(...)),
-// and a mount table's verdicts turned into files and host rules.
+// provideRouter() on a render root, withRouterSync() around a synchronous render, verdicts turned into files and host rules.
 import { render } from '@lit-labs/ssr';
 import type { RenderInfo } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
@@ -161,8 +159,7 @@ export interface PrerenderResult {
   root: EventTarget;
 }
 
-// Built at runtime so no node: specifier enters the static module graph: the
-// entry stays importable in a runtime without them when `write` is supplied.
+// Built at runtime so no node: specifier enters the static module graph; a supplied `write` needs none.
 const NODE_FS = 'node:fs/promises';
 
 const DEFAULT_NOT_FOUND_FILE = '404.html';
@@ -180,8 +177,7 @@ const dirOf = (file: string): string => {
   return cut === -1 ? '' : file.slice(0, cut);
 };
 
-// The slice of node:fs/promises the default writer uses, typed structurally so
-// src never pulls in @types/node and stays runtime-neutral.
+// Typed structurally so src never pulls in @types/node.
 interface NodeFsPromises {
   mkdir(path: string, options: { recursive: boolean }): Promise<unknown>;
   writeFile(path: string, data: string, encoding: string): Promise<void>;
@@ -208,8 +204,7 @@ const fileFor = (subpath: string): string => {
   return trimmed === '' ? 'index.html' : `${trimmed}/index.html`;
 };
 
-// The same path spelled the other way round, or undefined when there is no
-// other spelling (the host root).
+// The same path spelled the other way round, or undefined at the host root.
 const otherSpelling = (from: string): string | undefined => {
   const paired = from.endsWith('/') ? from.replace(/\/+$/, '') : `${from}/`;
   return paired === '' || paired === from ? undefined : paired;
@@ -227,13 +222,7 @@ const defaultProbe = (
   return `${base === '/' ? '' : base.replace(/\/+$/, '')}/${PROBE_SEGMENT}`;
 };
 
-// The event-target stack a render starts from. `litServerRoot` leads it
-// deliberately: @lit-labs/ssr 4.1 unshifts its own root ahead of any other
-// first entry and then sets that entry's `__eventTargetParent` to *itself*,
-// which makes the shim's composed-path walk recurse forever. Handing it the
-// stack it would have built leaves `root` the parent of every top-level
-// element, so a `context-request` from one reaches the provider installed
-// there. Read per call: the shim installs on import, which may follow ours.
+// litServerRoot must lead: @lit-labs/ssr 4.1 makes any other first entry its own __eventTargetParent and the composed-path walk never ends; read per call because the shim installs on import.
 const rootedStack = (root: EventTarget): EventTarget[] => {
   const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
     .litServerRoot;

@@ -13,9 +13,7 @@ import type { FileWriter, RedirectLine } from '../prerender.js';
 
 // --- fixtures ------------------------------------------------------------
 
-// The root mount projects its otherwise rule, so unmatched paths under it are
-// 404 shells; the /app mount declares none, so unmatched paths there verdict
-// notFound and nothing is emitted for them.
+// The root mount projects an otherwise rule (unmatched paths become 404 shells); the /app mount has none (unmatched paths verdict notFound, nothing emitted).
 const rootMount: MountConfig = {
   routes: [
     { name: 'home', url: '/' },
