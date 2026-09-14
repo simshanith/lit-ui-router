@@ -1,0 +1,93 @@
+{
+  "name": "lit-ui-router-ssr",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
+  "homepage": "https://lit-ui-router.dev/packages/ssr",
+  "bugs": {
+    "url": "https://github.com/simshanith/lit-ui-router/issues"
+  },
+  "license": "MIT",
+  "author": "Shane Daniel",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/simshanith/lit-ui-router.git",
+    "directory": "packages/lit-ui-router-ssr"
+  },
+  "files": [
+    "dist/**",
+    "!dist/.*/**",
+    "src/*.ts"
+  ],
+  "type": "module",
+  "sideEffects": false,
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "development": "./dist/development/index.js",
+      "default": "./dist/index.js"
+    },
+    "./dist/*": "./dist/*",
+    "./package.json": "./package.json"
+  },
+  "scripts": {
+    "build:js": "oxc-emit-js --development",
+    "build:types": "oxc-emit-dts",
+    "check:bundle": "check-bundle-inputs",
+    "check:dev-split": "oxc-emit-check-dev-split",
+    "codecov:bundle": "upload-entry-bundles",
+    "docs:api": "rimraf ../../www/lit-ui-router.dev/api/lit-ui-router-ssr && typedoc",
+    "format": "oxfmt \"**/*.{ts,js,json,md}\"",
+    "format:check": "oxfmt --check \"**/*.{ts,js,json,md}\"",
+    "lint": "oxlint .",
+    "test": "VITEST_BROWSER_API_PORT=63360 vitest run",
+    "test:coverage": "VITEST_BROWSER_API_PORT=63365 vitest run --coverage",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
+    "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
+  },
+  "devDependencies": {
+    "@lit-labs/ssr": "catalog:",
+    "@tools/bundle-probe": "workspace:*",
+    "@tools/lit-test-env": "workspace:*",
+    "@tools/oxc-emit": "workspace:*",
+    "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
+    "@types/node": "catalog:",
+    "@uirouter/core": "catalog:",
+    "@vitest/coverage-v8": "catalog:",
+    "lit": "catalog:",
+    "lit-ui-router": "workspace:*",
+    "oxfmt": "catalog:",
+    "oxlint": "catalog:",
+    "rimraf": "catalog:",
+    "typedoc": "catalog:",
+    "typedoc-plugin-markdown": "catalog:",
+    "typedoc-vitepress-theme": "catalog:",
+    "typescript": "catalog:typescript6-compat",
+    "typescript-7": "catalog:",
+    "ui-router-server": "workspace:*",
+    "vitest": "catalog:"
+  },
+  "peerDependencies": {
+    "@lit-labs/ssr": "catalog:publishedPeer",
+    "@uirouter/core": "catalog:publishedPeer",
+    "lit": "catalog:publishedPeer",
+    "lit-ui-router": "catalog:publishedPeerServer",
+    "ui-router-server": "catalog:publishedPeerServer"
+  },
+  "engines": {
+    "node": ">=22.12"
+  },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    }
+  }
+}

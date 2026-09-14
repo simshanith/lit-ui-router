@@ -4,6 +4,7 @@ dist
 api/reference
 api/lit-ui-router-effect
 api/lit-ui-router-mobx
+api/lit-ui-router-ssr
 api/navigation-location-plugin
 api/ui-router-server
 worker/worker-configuration.d.ts

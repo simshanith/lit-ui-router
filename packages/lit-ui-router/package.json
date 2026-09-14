@@ -127,13 +127,16 @@
   "bundleProbe": {
     ".": {
       "free": [
+        "ui-router-server",
         "@lit-labs/ssr"
       ]
     },
     "./context": {
       "free": [
         "lit",
-        "@uirouter/core"
+        "@uirouter/core",
+        "ui-router-server",
+        "@lit-labs/ssr"
       ]
     }
   },

@@ -1117,6 +1117,69 @@ importers:
         specifier: 'catalog:'
         version: 5.0.0(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(happy-dom@20.14.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
 
+  packages/lit-ui-router-ssr:
+    devDependencies:
+      '@lit-labs/ssr':
+        specifier: 'catalog:'
+        version: 4.1.0(@types/node@24.13.3)
+      '@tools/bundle-probe':
+        specifier: workspace:*
+        version: link:../../tools/bundle-probe
+      '@tools/lit-test-env':
+        specifier: workspace:*
+        version: link:../../tools/lit-test-env
+      '@tools/oxc-emit':
+        specifier: workspace:*
+        version: link:../../tools/oxc-emit
+      '@tools/typedoc-plugin-lit-ui-router':
+        specifier: workspace:*
+        version: link:../../tools/typedoc-plugin-lit-ui-router
+      '@types/node':
+        specifier: 'catalog:'
+        version: 24.13.3
+      '@uirouter/core':
+        specifier: 'catalog:'
+        version: 6.1.2
+      '@vitest/coverage-v8':
+        specifier: 'catalog:'
+        version: 5.0.0(@vitest/browser@5.0.0)(vitest@5.0.0)
+      lit:
+        specifier: 'catalog:'
+        version: 3.3.3
+      lit-ui-router:
+        specifier: workspace:*
+        version: link:../lit-ui-router
+      oxfmt:
+        specifier: 'catalog:'
+        version: 0.67.0
+      oxlint:
+        specifier: 'catalog:'
+        version: 1.82.0(oxlint-tsgolint@7.0.2001)
+      rimraf:
+        specifier: 'catalog:'
+        version: 6.1.3
+      typedoc:
+        specifier: 'catalog:'
+        version: 0.28.20(@typescript/typescript6@6.0.2)
+      typedoc-plugin-markdown:
+        specifier: 'catalog:'
+        version: 4.13.0(typedoc@0.28.20(@typescript/typescript6@6.0.2))
+      typedoc-vitepress-theme:
+        specifier: 'catalog:'
+        version: 1.1.3(typedoc-plugin-markdown@4.13.0(typedoc@0.28.20(@typescript/typescript6@6.0.2)))
+      typescript:
+        specifier: catalog:typescript6-compat
+        version: '@typescript/typescript6@6.0.2'
+      typescript-7:
+        specifier: 'catalog:'
+        version: typescript@7.0.2
+      ui-router-server:
+        specifier: workspace:*
+        version: link:../ui-router-server
+      vitest:
+        specifier: 'catalog:'
+        version: 5.0.0(@types/node@24.13.3)(@vitest/browser-playwright@5.0.0)(@vitest/coverage-v8@5.0.0)(@vitest/ui@5.0.0)(happy-dom@20.14.0)(vite@8.2.2(@types/node@24.13.3)(esbuild@0.28.2)(jiti@2.7.0)(yaml@2.9.0))
+
   packages/navigation-location-plugin:
     devDependencies:
       '@release-it/conventional-changelog':
@@ -1383,6 +1446,9 @@ importers:
       lit-ui-router-mobx:
         specifier: workspace:*
         version: link:../../packages/lit-ui-router-mobx
+      lit-ui-router-ssr:
+        specifier: workspace:*
+        version: link:../../packages/lit-ui-router-ssr
       mobx:
         specifier: 'catalog:'
         version: 7.0.3

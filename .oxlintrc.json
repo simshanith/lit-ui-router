@@ -206,7 +206,8 @@
       "files": [
         "packages/lit-ui-router/src/**/*.ts",
         "packages/lit-ui-router-effect/src/**/*.ts",
-        "packages/lit-ui-router-mobx/src/**/*.ts"
+        "packages/lit-ui-router-mobx/src/**/*.ts",
+        "packages/lit-ui-router-ssr/src/**/*.ts"
       ],
       "rules": {
         "turbo/no-undeclared-env-vars": [
