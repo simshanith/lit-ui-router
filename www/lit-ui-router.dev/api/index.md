@@ -12,14 +12,14 @@ pnpm add lit-ui-router
 
 ## Entry Points
 
-| Import                                        | Effect                                                                                                                                                             |
-| --------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `import { ... } from 'lit-ui-router'`         | Full API. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                               |
-| `import { ... } from 'lit-ui-router/pure'`    | The same full API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                        |
-| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                            |
-| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                        |
-| `import { ... } from 'lit-ui-router/context'` | The `context-request` key, event and request helper, plus the tree-less router hand-off — see [Reactive Components](/guides/reactive-components#router-discovery). |
-| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                    |
+| Import                                        | Effect                                                                                                                                                                                                     |
+| --------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `import { ... } from 'lit-ui-router'`         | The router, the elements, the directives and the controllers. Any value import registers the `<ui-router>`/`<ui-view>` custom elements as a side effect.                                                   |
+| `import { ... } from 'lit-ui-router/pure'`    | The same API — element classes included — with no registration and no `HTMLElementTagNameMap` globals.                                                                                                     |
+| `import 'lit-ui-router/register'`             | Registration only: defines `<ui-router>`/`<ui-view>` and carries their `HTMLElementTagNameMap` entries.                                                                                                    |
+| `import 'lit-ui-router/ui-view.register'`     | Single-element registration: defines just that element with its tag-map entry (`ui-router.register` ditto).                                                                                                |
+| `import { ... } from 'lit-ui-router/context'` | The only home of the `context-request` key, event and request helper, and of the tree-less router hand-off — nothing from `lit` — see [Reactive Components](/guides/reactive-components#router-discovery). |
+| `import type { ... } from 'lit-ui-router'`    | Types are erased at compile time — always free, from any entry.                                                                                                                                            |
 
 ## Quick Start
 
@@ -286,22 +286,6 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 
 - [PushStateLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_pushstatelocationservice_.pushstatelocationservice.html) - HTML5 history API
 - [HashLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_hashlocationservice_.hashlocationservice.html) - Hash-based URLs
-
-On the server, `serverLocationPlugin` from
-[`ui-router-server/location`](/packages/server) is the in-memory plugin whose
-hrefs are paths, so a prerendered link matches what the pushState client writes.
-
-## Server Rendering
-
-`lit-ui-router/context` carries the router hand-off a server render needs and an
-element cannot supply, because on the server a directive has no element to seek
-a router from.
-
-- `provideRouter(root, router)` - answers `context-request` on any event target, `globalThis.litServerRoot` included
-- `withRouterSync(router, run)` - scopes a router to one synchronous call
-- `getScopedRouter()` - reads the router that call scoped
-
-See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server).
 
 ## Companion Packages
 
