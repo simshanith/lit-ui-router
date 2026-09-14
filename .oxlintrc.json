@@ -439,7 +439,7 @@
               {
                 "name": "@uirouter/core",
                 "allowTypeImports": true,
-                "message": "matcher tier stays core-free — a static @uirouter/core import defeats the lazy simulate boundary (treeshake.test.ts enforces the bundle); use `import type` or a dynamic import()."
+                "message": "matcher tier stays core-free — a static @uirouter/core import defeats the lazy simulate boundary (the `bundleProbe.free` claims under check:bundle enforce the bundle); use `import type` or a dynamic import()."
               }
             ]
           }
