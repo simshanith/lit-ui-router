@@ -4,10 +4,8 @@ import type { BundleResult } from './bundle.ts';
  * The package a bare specifier belongs to: `lit/directive.js` is `lit`,
  * `@uirouter/core/lib/index.js` is `@uirouter/core`.
  */
-export const packageOf = (specifier: string): string => {
-  const parts = specifier.split('/');
-  return specifier.startsWith('@') ? parts.slice(0, 2).join('/') : parts[0];
-};
+export const packageOf = (specifier: string): string =>
+  specifier.split('/', specifier.startsWith('@') ? 2 : 1).join('/');
 
 /**
  * The external packages an entry reaches through **static** imports: the entry
