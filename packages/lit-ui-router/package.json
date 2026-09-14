@@ -125,6 +125,11 @@
     "lit": "catalog:publishedPeer"
   },
   "bundleProbe": {
+    ".": {
+      "free": [
+        "@lit-labs/ssr"
+      ]
+    },
     "./context": {
       "free": [
         "lit",
