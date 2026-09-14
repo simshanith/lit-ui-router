@@ -23,7 +23,7 @@ const sheetRouter = (): UIRouterLit => {
   return router;
 };
 
-/** Reads the router the way the sref directives do: slot, then render root. */
+/** Exercises both hand-offs a server render can offer: the slot, then the render root. */
 class RouterProbeDirective extends Directive {
   render(): string {
     const router =

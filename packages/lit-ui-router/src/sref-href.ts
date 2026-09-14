@@ -4,9 +4,9 @@ import { directive, PartInfo, PartType } from 'lit/directive.js';
 import type { DirectiveResult } from 'lit/directive.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
+import { getScopedRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
-import { seekServerRouter } from './server-slot.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
   clickBelongsToBrowser,
@@ -84,15 +84,15 @@ export class SrefHrefDirective extends AsyncDirective {
    * `noChange` until a router is found, so an attribute a server wrote
    * survives hydration untouched.
    *
-   * The server router is looked up per render rather than cached: a server
-   * directive instance renders once, and a client one never finds one.
+   * The scoped slot is read per render rather than cached: a server directive
+   * instance renders once, and a client one never finds a scoped router.
    */
   render(
     state: string,
     params?: RawParams,
     options?: TransitionOptions,
   ): string | typeof nothing | typeof noChange {
-    const $state = (this.uiRouter ?? seekServerRouter())?.stateService;
+    const $state = (this.uiRouter ?? getScopedRouter())?.stateService;
     if (!$state) {
       if (this._seekedRouter) {
         this.warnMissingRouter(state);

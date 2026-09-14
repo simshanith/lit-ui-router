@@ -1041,13 +1041,13 @@ function; call it when the request is done.
 plugin `installServerLocation` installs, for a render that wires the rest by
 hand.
 
-**The attribute directives read both.** `srefHref`, `srefActiveClass` and
-`srefAriaCurrent` take the router they could not seek from an element: the
-`withRouterSync` slot first, then a `provideRouter` on
-`globalThis.litServerRoot`. A nav rendered inside `withRouterSync` ships the
-real `href`, the `active` and exact classes, and `aria-current` for the state
-the request settled on — the markup the client would paint first, so hydration
-has nothing to correct.
+**The attribute directives read the slot.** `srefHref`, `srefActiveClass` and
+`srefAriaCurrent` have no element to seek from, so they take the router
+`withRouterSync` scoped and nothing else: a `provideRouter` on the render root
+serves elements, not attribute parts. A nav rendered inside `withRouterSync`
+ships the real `href`, the `active` and exact classes, and `aria-current` for
+the state the request settled on — the markup the client would paint first, so
+hydration has nothing to correct.
 
 ## What the server can't see
 

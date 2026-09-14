@@ -10,9 +10,9 @@ import type { DirectiveResult } from 'lit/directive.js';
 import type { ClassInfo } from 'lit/directives/class-map.js';
 import { AsyncDirective } from 'lit/async-directive.js';
 
+import { getScopedRouter } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnMissingRouter } from './dev-warn.js';
-import { seekServerRouter } from './server-slot.js';
 import { resolveAriaCurrent, SrefTargets } from './sref-status.js';
 import { UIRouterLitElement } from './ui-router.js';
 import {
@@ -53,9 +53,9 @@ type deregisterFn = () => void;
  * attribute.
  *
  * `render()` is a function of `status` and the params alone. A server renderer
- * runs it without `update()`, so it fills `status` from the render-scoped
- * server router first; with no router in reach the value stays `noChange` and
- * the attribute is left as authored.
+ * runs it without `update()`, so it seeds `status` from the call-scoped router
+ * first; with no router in reach the value stays `noChange` and the attribute
+ * is left as authored.
  *
  * @category directives
  */
@@ -117,22 +117,25 @@ export abstract class SrefStatusDirective<
   protected abstract commit(): unknown;
 
   /**
-   * Fills `status` in a server render, where `update()` never ran: seek the
-   * server router, build the named target, merge its status. Container mode
-   * has no links to merge on the server and stays `undefined`.
+   * The status to render: the one `update()` already computed, or — when
+   * `update()` never ran, as in a server render — one seeded from the router
+   * the enclosing `withRouterSync` scoped, by building the named target and
+   * merging its status. Container mode has no links to merge and stays
+   * `undefined`.
    *
-   * A server directive instance renders once, so this resolves at most once.
+   * A directive instance that only ever renders resolves this at most once.
    *
    * @internal
    */
-  protected serverStatus(params: Params): void {
-    if (this.status || this.uiRouter) return;
-    const router = seekServerRouter();
-    if (!router) return;
+  protected getScopedStatus(params: Params): SrefStatus | undefined {
+    if (this.status || this.uiRouter) return this.status;
+    const router = getScopedRouter();
+    if (!router) return this.status;
     this.targets.router = router;
     this.targets.params = params;
     this.targets.setExplicit();
     this.status = this.targets.status();
+    return this.status;
   }
 
   /** @internal */
@@ -357,8 +360,8 @@ export class SrefActiveClassDirective extends SrefStatusDirective<SrefActiveClas
    * `noChange` before a status exists.
    */
   render(params: SrefActiveClassParams): string | typeof noChange {
-    this.serverStatus(params);
-    if (!this.status) {
+    const status = this.getScopedStatus(params);
+    if (!status) {
       return noChange;
     }
     const info = this.classInfo(params);
@@ -479,11 +482,11 @@ export class SrefAriaCurrentDirective extends SrefStatusDirective<SrefAriaCurren
   render(
     params: SrefAriaCurrentParams,
   ): AriaCurrentValue | typeof nothing | typeof noChange {
-    this.serverStatus(params);
-    if (!this.status) {
+    const status = this.getScopedStatus(params);
+    if (!status) {
       return noChange;
     }
-    return resolveAriaCurrent(this.status, params.value);
+    return resolveAriaCurrent(status, params.value);
   }
 }
 
