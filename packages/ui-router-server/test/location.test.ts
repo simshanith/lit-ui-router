@@ -48,6 +48,19 @@ describe('serverLocationPlugin', () => {
       '#/sheet/7B',
     );
   });
+
+  it('builds hash hrefs under `{ html5Mode: false }`', () => {
+    const router = new UIRouter();
+    router.plugin(servicesPlugin);
+    router.plugin(serverLocationPlugin, { html5Mode: false });
+    router.stateRegistry.register({ name: 'sheet', url: '/sheet/:num' });
+
+    assert.equal(
+      router.stateService.href('sheet', { num: '7B' }),
+      '#/sheet/7B',
+    );
+    assert.equal(router.locationConfig.html5Mode(), false);
+  });
 });
 
 describe('installServerLocation', () => {
@@ -59,6 +72,20 @@ describe('installServerLocation', () => {
     assert.equal(installed, router);
     assert.equal(router.urlService.path(), '/sheet/7B');
     assert.equal(router.locationConfig.html5Mode(), true);
+  });
+
+  it('builds hash hrefs, and reports hash mode, under `{ html5Mode: false }`', () => {
+    const router = installServerLocation(sheetRouter(), {
+      html5Mode: false,
+      url: '/sheet/7B',
+    });
+
+    assert.equal(
+      router.stateService.href('sheet', { num: '7B' }),
+      '#/sheet/7B',
+    );
+    assert.equal(router.locationConfig.html5Mode(), false);
+    assert.equal(router.urlService.path(), '/sheet/7B');
   });
 
   it('routes the requested url once the router starts', async () => {
