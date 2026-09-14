@@ -54,6 +54,27 @@ selection, and for serving an already-built site without mise.
 
 `mise run ci` and `mise run ci_main` are the same invocations CI uses. `pnpm run ci` remains as an alias for the PR pipeline.
 
+They are the same invocations, not the same room: CI builds from a fresh
+checkout, a local run reuses whatever `dist/` already holds. No build here
+empties its `dist/` first, and `dist/` is gitignored, so a source file deleted
+or renamed on a branch leaves its old emit behind, where `files: ["dist/**"]`
+and `./dist/*` exports still ship it. Turbo hashes inputs, not output
+directories, and never notices. Before a local check that reads `dist/` as
+shipped output (`check:pack`, `npm pack`, a `file:` install into another
+project), list the ignored files first:
+
+```bash
+git clean -Xdn -- packages/*/dist tools/*/dist
+```
+
+then remove them:
+
+```bash
+git clean -Xdf -- packages/*/dist tools/*/dist
+```
+
+`-X` removes only ignored files, so untracked work survives.
+
 ## TypeScript authoring
 
 The published packages support consumers on **TypeScript 5.0+**, while the

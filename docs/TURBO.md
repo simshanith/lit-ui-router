@@ -309,6 +309,25 @@ Tasks may cache unexpectedly if:
 TURBO_LOG_VERBOSITY=debug turbo build
 ```
 
+### Stale Files Under `dist/`
+
+Builds emit into `dist/` without emptying it (the vite site builds empty only
+their own `dist/<variant>/`), and turbo hashes inputs, never the output
+directory. Delete or rename a source file and its old `dist/` emit stays on
+disk, invisible to every task, until a fresh checkout. A local `ci_main` can
+therefore pass on a tree whose `dist/server.js` imports a chunk that no longer
+exists. Before trusting `dist/` as shipped output, list the ignored files:
+
+```bash
+git clean -Xdn -- packages/*/dist tools/*/dist
+```
+
+then remove them:
+
+```bash
+git clean -Xdf -- packages/*/dist tools/*/dist
+```
+
 ### E2E Tests Timing Out
 
 E2E tasks (`e2e`, `dev`, `docs`) are `persistent: true` and don't cache:
