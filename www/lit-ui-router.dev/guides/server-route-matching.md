@@ -1005,18 +1005,20 @@ import { installServerLocation } from 'ui-router-server/location';
 const { UIRouterLit } = await import('lit-ui-router/pure');
 const { provideRouter, withRouterSync } = await import('lit-ui-router/context');
 
-// one router per request, at the url the request asked for
+// one router per request, at the url the request asked for, query included
+const { pathname, search } = new URL(request.url);
 const router = new UIRouterLit();
-installServerLocation(router, {
-  url: new URL(request.url).pathname,
-  strictMode: false,
-});
+installServerLocation(router, { url: pathname + search, strictMode: false });
 states.forEach((state) => router.stateRegistry.register(state));
 router.start();
 
 const uninstall = provideRouter(globalThis.litServerRoot, router);
-const markup = withRouterSync(router, () => collectResultSync(render(page())));
-uninstall();
+let markup: string;
+try {
+  markup = withRouterSync(router, () => collectResultSync(render(page())));
+} finally {
+  uninstall();
+}
 ```
 
 `withRouterSync(router, run)` is a synchronous slot, not an async context: it
@@ -1035,7 +1037,8 @@ variant is a separate export.
 it for elements that ask for their router by protocol — the same code path
 `<ui-router>` serves in a browser — and pair it with `withRouterSync` when the
 same render also contains attribute bindings. It returns its own uninstall
-function; call it when the request is done.
+function; call it in a `finally` once the render is done, or a throwing render
+leaves the listener behind for the next request.
 
 `serverLocationPlugin` from the same `ui-router-server/location` entry is the
 plugin `installServerLocation` installs, for a render that wires the rest by
