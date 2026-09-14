@@ -14,8 +14,6 @@ import { serverLocationPlugin } from './location.ts';
 export function createHeadlessRouter(states: StateDeclaration[]): UIRouter {
   const router = new UIRouter();
   router.plugin(servicesPlugin);
-  // Path-shaped, not hash-shaped: a headless router builds the hrefs a
-  // pushState client would.
   router.plugin(serverLocationPlugin);
   // Callers observe outcomes through onceSettled; keep the console quiet.
   router.stateService.defaultErrorHandler(() => {});
