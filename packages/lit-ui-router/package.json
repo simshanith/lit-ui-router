@@ -36,6 +36,11 @@
       "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
+    "./context": {
+      "types": "./dist/context.d.ts",
+      "development": "./dist/development/context.js",
+      "default": "./dist/context.js"
+    },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json",
     "./pure": {
@@ -85,6 +90,7 @@
   "devDependencies": {
     "@custom-elements-manifest/analyzer": "catalog:",
     "@lit-labs/ssr": "catalog:",
+    "@lit/context": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/compat-guards": "workspace:*",

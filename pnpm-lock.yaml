@@ -134,6 +134,9 @@ catalogs:
     '@lit-labs/ssr':
       specifier: ^4.1.0
       version: 4.1.0
+    '@lit/context':
+      specifier: ^1.1.6
+      version: 1.1.6
     '@pnpm/logger':
       specifier: 1100.0.0
       version: 1100.0.0
@@ -855,6 +858,9 @@ importers:
       '@lit-labs/ssr':
         specifier: 'catalog:'
         version: 4.1.0(@types/node@24.13.3)
+      '@lit/context':
+        specifier: 'catalog:'
+        version: 1.1.6
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.0(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.0)(release-it@21.0.2(@types/node@24.13.3)(magicast@0.5.3)(supports-color@10.2.2))
@@ -2925,6 +2931,9 @@ packages:
     peerDependenciesMeta:
       '@types/node':
         optional: true
+
+  '@lit/context@1.1.6':
+    resolution: {integrity: sha512-M26qDE6UkQbZA2mQ3RjJ3Gzd8TxP+/0obMgE5HfkfLhEEyYE3Bui4A5XHiGPjy0MUGAyxB3QgVuw2ciS0kHn6A==}
 
   '@lit/reactive-element@1.6.3':
     resolution: {integrity: sha512-QuTgnG52Poic7uM1AN5yJ09QMe0O28e10XzSvWDz02TJiiKee4stsiownEIadWm8nYzyDAyT+gKzUoZmiWQtsQ==}
@@ -9091,6 +9100,10 @@ snapshots:
       parse5: 7.3.0
     optionalDependencies:
       '@types/node': 24.13.3
+
+  '@lit/context@1.1.6':
+    dependencies:
+      '@lit/reactive-element': 2.1.2
 
   '@lit/reactive-element@1.6.3':
     dependencies:

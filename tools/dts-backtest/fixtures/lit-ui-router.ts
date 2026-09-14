@@ -32,6 +32,13 @@ import 'lit-ui-router/register';
 import 'lit-ui-router/ui-router.register';
 import 'lit-ui-router/ui-view.register';
 import {
+  requestRouter,
+  routerContext,
+  RouterContextRequestEvent,
+  type ContextType,
+  type RouterContext,
+} from 'lit-ui-router/context';
+import {
   SrefStatusController as PureSrefStatusController,
   TransitionController as PureTransitionController,
   UIRouterLitElement as PureUIRouterLitElement,
@@ -154,6 +161,19 @@ export function pureEntry(host: LitElement): PureUIRouterLit | undefined {
   void new PureTransitionController(host);
   void new PureSrefStatusController(host, { state: 'home' });
   return PureUIRouterLitElement.seekRouter(host);
+}
+
+// The context entry: the key carries the router type, and the helper takes any
+// EventTarget.
+export function contextEntry(target: EventTarget): UIRouterLit | undefined {
+  const key: RouterContext = routerContext;
+  void key;
+  void new RouterContextRequestEvent(() => {}, true);
+  const value: ContextType<RouterContext> | undefined = requestRouter(target, {
+    subscribe: true,
+    callback: (router) => void router,
+  });
+  return value;
 }
 
 // The register import above puts the tag-map augmentation in scope.

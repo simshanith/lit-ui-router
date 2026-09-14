@@ -41,6 +41,39 @@ from the nearest `<ui-router>` (or `<ui-view>`) ancestor via the
 them all on `hostDisconnected` — nothing leaks when elements come and go
 from the DOM.
 
+## Router discovery
+
+Controllers find the router. Anything else — a store, an element
+that is not a Lit host, a third-party component — asks the same provider
+directly, and `<ui-router>` answers both ways in from one listener:
+
+- The house event, `ui-router-context`, dispatched by
+  [`UIRouterLitElement.seekRouter(element)`](/api/reference/components/UIRouterLitElement).
+  Every controller and directive in this package calls it.
+- The community
+  [`context-request` protocol](https://github.com/webcomponents-cg/community-protocols/blob/main/proposals/context.md),
+  from the `lit-ui-router/context` entry.
+  [`requestRouter(target)`](/api/reference/core/requestRouter) returns the
+  router a provider answered with synchronously, or `undefined`, and takes any
+  `EventTarget`. [`routerContext`](/api/reference/core/routerContext) is the
+  key, in the protocol's branded shape, so `@lit/context` consumes it with
+  nothing in between:
+
+```ts
+import { consume } from '@lit/context';
+import { routerContext } from 'lit-ui-router/context';
+import type { UIRouterLit } from 'lit-ui-router';
+
+class UserMenu extends LitElement {
+  @consume({ context: routerContext })
+  router!: UIRouterLit;
+}
+```
+
+It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
+satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe —
+`<ui-router>` takes its router on connect and does not swap it.
+
 ## Reading router state
 
 The controller exposes the essentials directly:
