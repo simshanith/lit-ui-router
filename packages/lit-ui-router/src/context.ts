@@ -1,3 +1,7 @@
+/**
+ * @module
+ * @mergeModuleWith <project>
+ */
 // The community `context-request` protocol, spoken rather than imported.
 import type { UIRouterLit } from './core.js';
 
