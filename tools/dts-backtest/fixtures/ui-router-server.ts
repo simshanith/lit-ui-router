@@ -25,6 +25,7 @@ import {
   ServerLocationConfig,
   serverLocationPlugin,
   type ServerLocationOptions,
+  type ServerLocationPluginOptions,
 } from 'ui-router-server/location';
 import {
   compare,
@@ -135,18 +136,28 @@ export async function simulate(states: StateDeclaration[]): Promise<boolean> {
   return onceSettled(createHeadlessRouter(states));
 }
 
-// Location tier: the path-shaped memory location a server render installs.
+// Location tier: the memory location a server render installs, in either shape.
 const locationOptions: ServerLocationOptions = {
   url: '/app/contacts',
   baseHref: '/app/',
   strictMode: false,
+  html5Mode: true,
 };
 
 export function serverHref(states: StateDeclaration[]): string {
   const headless = createHeadlessRouter(states);
-  void new ServerLocationConfig().html5Mode();
+  void new ServerLocationConfig(undefined, false).html5Mode();
   void serverLocationPlugin;
   return installServerLocation(headless, locationOptions).stateService.href(
+    'app.contacts',
+  );
+}
+
+const hashLocationOptions: ServerLocationPluginOptions = { html5Mode: false };
+
+export function serverHashHref(states: StateDeclaration[]): string {
+  const headless = createHeadlessRouter(states);
+  return installServerLocation(headless, hashLocationOptions).stateService.href(
     'app.contacts',
   );
 }
