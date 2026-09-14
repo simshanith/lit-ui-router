@@ -39,7 +39,7 @@ describe('requestRouter without a DOM', () => {
     const router = new UIRouterLit();
     const remove = provideRouter(litServerRoot!, router);
 
-    // the exact call a server-side directive hand-off will make
+    // the exact call a server-side directive hand-off makes
     expect(requestRouter(litServerRoot!)).toBe(router);
 
     remove();

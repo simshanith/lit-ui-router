@@ -1,5 +1,4 @@
-// The community `context-request` protocol, spoken rather than imported:
-// the key, the event and a synchronous request helper for the router.
+// The community `context-request` protocol, spoken rather than imported.
 import type { UIRouterLit } from './core.js';
 
 /**
