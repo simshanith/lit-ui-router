@@ -1,6 +1,8 @@
-// A spike of a future `ui-router-effect` package, inlined in this example so
-// the whole bridge is readable in one file. It consumes `effect` directly and
-// touches only public @uirouter/core API — no core types are augmented.
+// A spike of a future `ui-router-effect` plugin package, inlined in this
+// example so the whole bridge is readable in one file. It consumes `effect`
+// directly and touches only public @uirouter/core API — no core types are
+// augmented. The route ref and the controllers that follow it are the half
+// that already ships, as lit-ui-router-effect.
 import {
   Cause,
   Context,
@@ -23,7 +25,6 @@ import {
   Resolvable,
   ResolvePolicy,
   ResolvableLiteral,
-  StateDeclaration,
   StateObject,
   Transition,
   UIRouter,
@@ -36,13 +37,6 @@ export class CurrentTransition extends Context.Tag('CurrentTransition')<
   CurrentTransition,
   Transition
 >() {}
-
-/** What {@link EffectPlugin.route} holds: the last successful transition's landing. */
-export interface RouteSnapshot {
-  current: StateDeclaration | undefined;
-  params: RawParams;
-  transition: Transition | undefined;
-}
 
 /**
  * A state declaration with a scope that lives exactly as long as the state is
@@ -134,9 +128,6 @@ interface TransitionFibers {
 export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
   readonly name = 'effect';
 
-  /** The last successful transition's landing, as a stream-able ref. */
-  readonly route: SubscriptionRef.SubscriptionRef<RouteSnapshot>;
-
   /** Timestamped lines the demo renders; the plugin writes its own. */
   readonly log: SubscriptionRef.SubscriptionRef<readonly string[]>;
 
@@ -149,13 +140,6 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
     readonly router: UIRouter,
     readonly runtime: ManagedRuntime.ManagedRuntime<R, ER>,
   ) {
-    this.route = runtime.runSync(
-      SubscriptionRef.make<RouteSnapshot>({
-        current: undefined,
-        params: {},
-        transition: undefined,
-      }),
-    );
     this.log = runtime.runSync(SubscriptionRef.make<readonly string[]>([]));
 
     this.installResolvePolicy();
@@ -177,15 +161,10 @@ export class EffectPlugin<R = never, ER = never> implements UIRouterPlugin {
       }) as Deregister,
     );
 
-    // Both the route ref and state scopes key off onSuccess: it is the only
-    // hook that cannot still be superseded.
+    // State scopes key off onSuccess: it is the only hook that cannot still
+    // be superseded.
     this.deregister.push(
       router.transitionService.onSuccess({}, (transition) => {
-        void SubscriptionRef.set(this.route, {
-          current: transition.to(),
-          params: transition.params(),
-          transition,
-        }).pipe(runtime.runPromise);
         runtime.runFork(this.applyScopes(transition));
       }) as Deregister,
     );

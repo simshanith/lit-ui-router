@@ -51,6 +51,16 @@ describe('onceSettled', () => {
   });
 });
 
+describe('createHeadlessRouter', () => {
+  it('builds path-shaped hrefs, as a pushState client does', () => {
+    const router = createHeadlessRouter([
+      { name: 'sheet', url: '/sheet/:num' },
+    ]);
+
+    assert.equal(router.stateService.href('sheet', { num: '7B' }), '/sheet/7B');
+  });
+});
+
 describe('per-call state declarations', () => {
   // The regression this pins: each call builds its router from fresh
   // declaration objects, so concurrent calls cannot observe each other

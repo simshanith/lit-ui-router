@@ -5,6 +5,7 @@
     "src/url-matcher.ts",
     "src/redirects.ts",
     "src/simulate.ts",
+    "src/location.ts",
     "src/connect.ts",
     "src/fetch.ts",
     "src/hono.ts",
