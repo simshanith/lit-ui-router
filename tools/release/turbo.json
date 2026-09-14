@@ -23,6 +23,7 @@
         "lit-ui-router#build",
         "lit-ui-router-effect#build",
         "lit-ui-router-mobx#build",
+        "lit-ui-router-ssr#build",
         "ui-router-navigation-location-plugin#build",
         "ui-router-server#build"
       ],

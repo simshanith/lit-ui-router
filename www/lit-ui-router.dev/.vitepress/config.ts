@@ -7,6 +7,7 @@ import effectSidebarItemsJson from '../api/lit-ui-router-effect/typedoc-sidebar.
 import mobxSidebarItemsJson from '../api/lit-ui-router-mobx/typedoc-sidebar.json' with { type: 'json' };
 import navigationSidebarItemsJson from '../api/navigation-location-plugin/typedoc-sidebar.json' with { type: 'json' };
 import serverSidebarItemsJson from '../api/ui-router-server/typedoc-sidebar.json' with { type: 'json' };
+import ssrSidebarItemsJson from '../api/lit-ui-router-ssr/typedoc-sidebar.json' with { type: 'json' };
 
 const typedocSidebarItems =
   typedocSidebarItemsJson as DefaultTheme.SidebarItem[];
@@ -29,9 +30,11 @@ const effectSidebarItemsRaw =
 const mobxSidebarItemsRaw = mobxSidebarItemsJson as DefaultTheme.SidebarItem[];
 const navigationSidebarItemsRaw =
   navigationSidebarItemsJson as DefaultTheme.SidebarItem[];
+const ssrSidebarItemsRaw = ssrSidebarItemsJson as DefaultTheme.SidebarItem[];
 const effectSidebarItems = flattenGroups(effectSidebarItemsRaw);
 const mobxSidebarItems = flattenGroups(mobxSidebarItemsRaw);
 const navigationSidebarItems = flattenGroups(navigationSidebarItemsRaw);
+const ssrSidebarItems = flattenGroups(ssrSidebarItemsRaw);
 
 // ui-router-server is multi-entry: typedoc emits one module per subpath
 // export, so the module level is the import surface — keep it, retitle each
@@ -156,6 +159,19 @@ function makeSidebar() {
               link: '/api/ui-router-server/',
               collapsed: false,
               items: serverSidebarItems,
+            },
+          ],
+        },
+        {
+          text: 'SSR',
+          link: '/packages/ssr',
+          collapsed: true,
+          items: [
+            {
+              text: 'lit-ui-router-ssr API',
+              link: '/api/lit-ui-router-ssr/',
+              collapsed: false,
+              items: ssrSidebarItems,
             },
           ],
         },

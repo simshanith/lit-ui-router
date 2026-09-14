@@ -53,6 +53,9 @@
         "lit-ui-router-floor",
       ],
     },
+    "packages/lit-ui-router-ssr": {
+      "ignoreDependencies": ["@release-it/conventional-changelog"],
+    },
     "packages/navigation-location-plugin": {
       "ignoreDependencies": ["@release-it/conventional-changelog"],
     },

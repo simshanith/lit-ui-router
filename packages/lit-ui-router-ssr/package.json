@@ -1,7 +1,6 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0-rc.0",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
   "homepage": "https://lit-ui-router.dev/packages/ssr",
   "bugs": {
@@ -36,6 +35,7 @@
   "scripts": {
     "build:js": "oxc-emit-js --development",
     "build:types": "oxc-emit-dts",
+    "changelog": "release-it --changelog --git.tagMatch=\"lit-ui-router-ssr@[0-9]*.[0-9]*.[0-9]*\"",
     "check:bundle": "check-bundle-inputs",
     "check:dev-split": "oxc-emit-check-dev-split",
     "codecov:bundle": "upload-entry-bundles",
@@ -50,9 +50,11 @@
   },
   "devDependencies": {
     "@lit-labs/ssr": "catalog:",
+    "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/lit-test-env": "workspace:*",
     "@tools/oxc-emit": "workspace:*",
+    "@tools/release-config": "workspace:*",
     "@tools/typedoc-plugin-lit-ui-router": "workspace:*",
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
@@ -61,6 +63,7 @@
     "lit-ui-router": "workspace:*",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
+    "release-it": "catalog:",
     "rimraf": "catalog:",
     "typedoc": "catalog:",
     "typedoc-plugin-markdown": "catalog:",

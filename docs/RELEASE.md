@@ -270,8 +270,10 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    ```
 
 4. **Add the package** to the `bump-version.yml`, `publish-gh.yml`, and
-   `publish-npm.yml` package lists, and to `tools/release`'s
-   devDependencies (the self-dependency guard). This lands last:
+   `publish-npm.yml` package lists, and give it the release-it
+   devDependencies and `.release-it.js` the other packages carry;
+   `check:release-closure` in `tools/release` derives the publishable set
+   from `packages/*` and fails on a package missing them. This lands last:
    `publish-gh.yml` tags the current version on the very next push to
    `main`.
 

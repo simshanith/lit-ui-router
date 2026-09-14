@@ -1044,6 +1044,11 @@ leaves the listener behind for the next request.
 plugin `installServerLocation` installs, for a render that wires the rest by
 hand.
 
+[`lit-ui-router-ssr`](/packages/ssr) packages this hand-off: it owns the
+`@lit-labs/ssr` call, the `provideRouter`/`withRouterSync` pairing, and the
+`finally` — so a build that prerenders a whole mount table writes none of the
+above by hand.
+
 **The attribute directives read the slot.** `srefHref`, `srefActiveClass` and
 `srefAriaCurrent` have no element to seek from, so they take the router
 `withRouterSync` scoped and nothing else: a `provideRouter` on the render root
@@ -1082,13 +1087,12 @@ and HTTP stays honest either way.
 
 **The rendered content.** Everything above is the routing verdict — the
 status, redirect, and 404 a URL earns from the same route table the client
-runs — and deliberately not the page body. A crawler that loads a real route
-gets a correct 200, but what comes back is still the empty client shell. That
-is the line between HTTP-semantics SEO, which this guide delivers, and content
-SEO: a rendered body a crawler can read. Rendering is a second, orthogonal
-axis, and today this package sits at its first setting: **client-rendered** —
-the shell hydrates in the browser. Build-time pre-rendering and request-time
-[server-rendering](https://lit.dev/docs/ssr/overview/) are on the roadmap — a
-per-route dial that would ride this same routing spine, which returns the
-identical verdict at every setting. The honest HTTP status is here today;
-content rendering is the next axis to build on top of it.
+runs — and deliberately not the page body. That is the line between
+HTTP-semantics SEO, which this guide delivers, and content SEO: a rendered
+body a crawler can read. Rendering is a second, orthogonal axis on the same
+routing spine, which returns the identical verdict at every setting. Left
+alone, `ui-router-server` sits at that axis's first setting —
+**client-rendered**, the shell hydrating in the browser, so a crawler loading
+a real route gets a correct 200 over an empty shell.
+[`lit-ui-router-ssr`](/packages/ssr) is the next setting: it consumes these
+same verdicts and renders each one to a static html file at build time.

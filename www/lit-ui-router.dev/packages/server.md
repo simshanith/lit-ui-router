@@ -43,8 +43,9 @@ monitoring that everything is fine
 This package closes the gap by giving the server the same route patterns the
 client matches, projected as pure data. That is **HTTP-semantics SEO** — the
 status, redirect, and 404 a URL earns — and deliberately not content SEO:
-the body is still the client-rendered shell. Rendering is a separate,
-roadmap axis.
+the body is still the client-rendered shell. Rendering is a separate axis, and
+[`lit-ui-router-ssr`](/packages/ssr) is what turns these verdicts into
+prerendered html.
 
 The [Server-Side Routing guide](/guides/server-route-matching) is the full
 treatment: the six-level server-support spectrum, the routes-as-data
@@ -356,6 +357,8 @@ as the mount's `config`.
   per subpath import
 - [Server-Side Routing guide](/guides/server-route-matching) — the spectrum,
   the projection, and the live mounts
+- [`lit-ui-router-ssr`](/packages/ssr) — these verdicts prerendered into a
+  static site
 - [Unmatched URLs](/guides/unmatched-urls) — the client-side 404 state this
   pairs with
 - [Location plugins](/guides/location-plugins) — why path-location clients
