@@ -62,6 +62,7 @@ package's own esbuild probe:
 | `ui-router-server/redirects` | no                          | ~3.6 KiB gzip    | given routes and a redirect table, where does this pathname go                         |
 | `ui-router-server` (root)    | only for a `simulate` mount | ~4.7 KiB gzip    | mounts in, verdicts out                                                                |
 | `ui-router-server/simulate`  | yes (optional peer)         | +~27.4 KiB, lazy | what would the real router do                                                          |
+| `ui-router-server/location`  | yes (optional peer)         | ~0.3 KiB gzip    | a path-shaped in-memory location for a server-side router                              |
 
 The dependency-free tiers are a standalone port of core's matching subset,
 type-pinned to core's signatures and differential-tested against its output.
@@ -83,6 +84,11 @@ Picking one:
   actual rules. Both strategies consume the same declaration data and produce
   identical verdicts today (the package tests assert parity), so `strategy`
   is a pure cost knob.
+- **`/location`** — you drive a real `@uirouter/core` router yourself, on the
+  server, and want its `href()`s to match what the client writes: paths by
+  default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
+  or `#` fragments under `html5Mode: false`.
+  `installServerLocation(router, { url, baseHref, strictMode, html5Mode })`.
 
 ## Installation
 
@@ -300,6 +306,38 @@ app.use('*', (c, next) =>
   })(c, next),
 );
 ```
+
+## Server-side hrefs
+
+`installServerLocation` puts a real `@uirouter/core` router on an in-memory
+location whose url shape you pick, so the links a server render emits match
+the ones the client writes. It is path-shaped by default, for a
+[pushState](/guides/location-plugins#html5-pushstate) client, and builds
+`/sheet/7B`; core's own `memoryLocationPlugin` is fixed at `html5Mode()`
+`false` and builds `#/sheet/7B`.
+
+```ts
+import { servicesPlugin, UIRouter } from '@uirouter/core';
+import { installServerLocation } from 'ui-router-server/location';
+
+const { pathname, search } = new URL(request.url);
+const router = new UIRouter();
+router.plugin(servicesPlugin);
+installServerLocation(router, {
+  url: pathname + search,
+  baseHref: '/app/',
+  strictMode: false,
+});
+```
+
+`baseHref` is the mount prefix: it is added to every href, and `url` is
+passed without it, exactly as a `<base href>` client matches. For a
+[hash-location](/guides/location-plugins#hash-urls) client, pass
+`html5Mode: false` and the same router builds `#/sheet/7B`. The plugin itself
+is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
+{ html5Mode: false })` — and its config as `ServerLocationConfig`, for a
+router that installs its own plugins. Simulate mounts run on the same
+location.
 
 ## What the server can't see
 

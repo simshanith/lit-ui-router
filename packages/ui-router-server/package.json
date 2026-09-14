@@ -42,6 +42,10 @@
       "types": "./dist/hono.d.ts",
       "default": "./dist/hono.js"
     },
+    "./location": {
+      "types": "./dist/location.d.ts",
+      "default": "./dist/location.js"
+    },
     "./matcher": {
       "types": "./dist/url-matcher.d.ts",
       "default": "./dist/url-matcher.js"
