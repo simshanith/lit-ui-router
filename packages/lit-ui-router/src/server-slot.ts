@@ -1,6 +1,4 @@
-// The sref directives' server seek. The call-scoped slot itself lives in
-// `./context.js`; this file is the directives' private lookup, kept out of the
-// public entries so the browser bundle carries only the seek. Not a package export.
+// The sref directives' private server-router lookup; not a package export.
 import type { UIRouter } from '@uirouter/core';
 
 import { getScopedRouter, requestRouter } from './context.js';

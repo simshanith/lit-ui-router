@@ -23,8 +23,7 @@ const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
 const emit = (template: TemplateResult): string =>
   collectResultSync(render(template));
 
-// MemoryLocationConfig assigns html5Mode as an own property, so a subclass
-// overrides it by assigning too — path-shaped hrefs, no ui-router-server devDep.
+// MemoryLocationConfig assigns html5Mode as an own property, so a subclass overrides it by assigning too.
 class PathConfig extends MemoryLocationConfig {
   constructor() {
     super();

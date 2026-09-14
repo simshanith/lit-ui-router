@@ -2,9 +2,7 @@
  * @module
  * @mergeModuleWith <project>
  */
-// The community `context-request` protocol, spoken rather than imported:
-// the key, the event and a synchronous request helper for the router, plus the
-// two tree-less providers: an event-target provider and a call-scoped slot.
+// The community `context-request` protocol, spoken rather than imported.
 import type { UIRouter } from '@uirouter/core';
 
 import type { UIRouterLit } from './core.js';
@@ -295,8 +293,6 @@ let scoped: UIRouter | undefined;
  * Returns the router the innermost enclosing
  * {@link withRouterSync | `withRouterSync`} call scoped, or `undefined`
  * outside one.
- *
- * @returns the router in scope, or `undefined`
  *
  * @category core
  */
