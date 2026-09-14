@@ -118,7 +118,7 @@ export class UIRouterLitElement extends LitElement {
     if (!uiRouter || !isRouterContextRequest(event)) {
       return;
     }
-    // before the callback, so a throwing consumer cannot leak the request on
+    // stopped first: a throwing consumer must not leak the request outward
     event.stopImmediatePropagation();
     event.callback(uiRouter, event.subscribe ? noUnsubscribe : undefined);
   };
