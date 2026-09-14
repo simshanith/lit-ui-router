@@ -85,10 +85,10 @@ Picking one:
   identical verdicts today (the package tests assert parity), so `strategy`
   is a pure cost knob.
 - **`/location`** — you drive a real `@uirouter/core` router yourself, on the
-  server, and want its `href()`s to be paths rather than `#` fragments, so a
-  server render's links match what a
-  [pushState](/guides/location-plugins#html5-pushstate) client writes.
-  `installServerLocation(router, { url, baseHref, strictMode })`.
+  server, and want its `href()`s to match what the client writes: paths by
+  default, for a [pushState](/guides/location-plugins#html5-pushstate) client,
+  or `#` fragments under `html5Mode: false`.
+  `installServerLocation(router, { url, baseHref, strictMode, html5Mode })`.
 
 ## Installation
 
@@ -309,11 +309,12 @@ app.use('*', (c, next) =>
 
 ## Server-side hrefs
 
-`installServerLocation` puts a real `@uirouter/core` router on a path-shaped
-in-memory location, so the links a server render emits match the ones a
-[pushState](/guides/location-plugins#html5-pushstate) client writes. Core's
-own `memoryLocationPlugin` reports `html5Mode()` as `false` and builds
-`#/sheet/7B`; this one builds `/sheet/7B`.
+`installServerLocation` puts a real `@uirouter/core` router on an in-memory
+location whose url shape you pick, so the links a server render emits match
+the ones the client writes. It is path-shaped by default, for a
+[pushState](/guides/location-plugins#html5-pushstate) client, and builds
+`/sheet/7B`; core's own `memoryLocationPlugin` is fixed at `html5Mode()`
+`false` and builds `#/sheet/7B`.
 
 ```ts
 import { servicesPlugin, UIRouter } from '@uirouter/core';
@@ -329,10 +330,13 @@ installServerLocation(router, {
 ```
 
 `baseHref` is the mount prefix: it is added to every href, and `url` is
-passed without it, exactly as a `<base href>` client matches. The plugin
-itself is exported as `serverLocationPlugin`, and its config as
-`ServerLocationConfig`, for a router that installs its own plugins.
-Simulate mounts run on the same location.
+passed without it, exactly as a `<base href>` client matches. For a
+[hash-location](/guides/location-plugins#hash-urls) client, pass
+`html5Mode: false` and the same router builds `#/sheet/7B`. The plugin itself
+is exported as `serverLocationPlugin` — `router.plugin(serverLocationPlugin,
+{ html5Mode: false })` — and its config as `ServerLocationConfig`, for a
+router that installs its own plugins. Simulate mounts run on the same
+location.
 
 ## What the server can't see
 

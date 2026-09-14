@@ -1,8 +1,9 @@
 /**
- * A path-shaped in-memory location for a server-side router: the same
- * DOM-free `MemoryLocationService` core ships, paired with an html5-mode
- * config, so `stateService.href()` builds `/sheet/7B` instead of `#/sheet/7B`
- * and a server render's links match what a pushState client writes.
+ * An in-memory location for a server-side router: the same DOM-free
+ * `MemoryLocationService` core ships, paired with a config whose url shape you
+ * choose, so `stateService.href()` builds `/sheet/7B` for a pushState client
+ * and `#/sheet/7B` for a hash one, and a server render's links match what the
+ * client writes.
  *
  * This tier imports `@uirouter/core` eagerly — it is the router's own
  * location machinery. The root entry stays core-free; only a consumer that
@@ -17,17 +18,17 @@ import {
 import type { LocationPlugin, UIRouter } from '@uirouter/core';
 
 /**
- * `@uirouter/core`'s `MemoryLocationConfig` in html5 mode, which it cannot
- * otherwise be asked for: the shipped class assigns `html5Mode` as an own
- * property in its constructor, so a subclass overrides it by assigning too.
+ * `@uirouter/core`'s `MemoryLocationConfig` with the `isHtml5` its location
+ * plugin passes honored, which the shipped class ignores: it assigns
+ * `html5Mode` as an own property in its constructor, so a subclass overrides
+ * it by assigning too.
  */
 export class ServerLocationConfig extends MemoryLocationConfig {
-  /** Takes the router and `isHtml5` a location plugin passes, and needs neither. */
+  /** Takes the router and `isHtml5` a location plugin passes; html5 unless told otherwise. */
   constructor(router?: UIRouter, isHtml5?: boolean) {
     super();
     void router;
-    void isHtml5;
-    this.html5Mode = () => true;
+    this.html5Mode = () => isHtml5 ?? true;
   }
 }
 
@@ -39,21 +40,32 @@ class ServerLocationService extends MemoryLocationService {
   }
 }
 
+/** Options for {@link serverLocationPlugin | `serverLocationPlugin`}. */
+export interface ServerLocationPluginOptions {
+  /**
+   * Whether hrefs are paths (`/sheet/7B`) rather than fragments
+   * (`#/sheet/7B`). Defaults to `true`; pass `false` for a hash client.
+   */
+  html5Mode?: boolean;
+}
+
 /**
- * A memory location plugin whose urls are paths, not fragments.
+ * The memory location plugin a server render installs, in the url shape its
+ * client uses.
  *
- * The router's own `memoryLocationPlugin` is hash-shaped — its `html5Mode()`
- * is `false` — so `stateService.href('sheet', { num: '7B' })` comes back as
- * `#/sheet/7B` on the server while the browser writes `/sheet/7B`, and every
+ * The router's own `memoryLocationPlugin` is hash-shaped and cannot be asked
+ * for anything else — its `html5Mode()` is `false` — so
+ * `stateService.href('sheet', { num: '7B' })` comes back as `#/sheet/7B` on
+ * the server while a pushState browser writes `/sheet/7B`, and every
  * server-rendered link differs from its hydrated self. This plugin pairs the
  * same in-memory `MemoryLocationService` with
- * {@link ServerLocationConfig | `ServerLocationConfig`} and gets the path
- * form.
- *
- * Pair it with a path-location client — `pushStateLocationPlugin`, or the
- * Navigation API plugin.
+ * {@link ServerLocationConfig | `ServerLocationConfig`}, which takes the mode
+ * from {@link ServerLocationPluginOptions.html5Mode | `html5Mode`}: paths by
+ * default, to match `pushStateLocationPlugin` or the Navigation API plugin,
+ * and fragments under `{ html5Mode: false }`, to match `hashLocationPlugin`.
  *
  * @param uiRouter - the router the plugin is installed on
+ * @param options - the url shape the client uses
  * @returns the installed location plugin
  *
  * @example
@@ -63,18 +75,25 @@ class ServerLocationService extends MemoryLocationService {
  *
  * const router = new UIRouter();
  * router.plugin(serverLocationPlugin);
+ * // or, for a hash client:
+ * router.plugin(serverLocationPlugin, { html5Mode: false });
  * ```
  */
-export const serverLocationPlugin: (uiRouter: UIRouter) => LocationPlugin =
-  locationPluginFactory(
-    'server.memoryPathLocation',
-    true,
+// A `function` declaration, not an arrow: core's `plugin()` does `new plugin(router, options)`.
+export function serverLocationPlugin(
+  uiRouter: UIRouter,
+  options?: ServerLocationPluginOptions,
+): LocationPlugin {
+  return locationPluginFactory(
+    'server.memoryLocation',
+    options?.html5Mode ?? true,
     ServerLocationService,
     ServerLocationConfig,
-  );
+  )(uiRouter);
+}
 
 /** Options for {@link installServerLocation | `installServerLocation`}. */
-export interface ServerLocationOptions {
+export interface ServerLocationOptions extends ServerLocationPluginOptions {
   /** The requested path, as the server received it — `/sheet/7B`. */
   url?: string;
   /**
@@ -101,7 +120,7 @@ export interface ServerLocationOptions {
  *
  * @typeParam T - the router type, returned unchanged
  * @param router - a freshly constructed router, with no location plugin yet
- * @param options - the request's url and the mount's shape
+ * @param options - the request's url, the mount's shape, and the url shape
  * @returns `router`, for chaining
  *
  * @example
@@ -126,7 +145,7 @@ export const installServerLocation: <T extends UIRouter>(
   router: T,
   options: ServerLocationOptions = {},
 ): T => {
-  router.plugin(serverLocationPlugin);
+  router.plugin(serverLocationPlugin, { html5Mode: options.html5Mode });
   // `urlService.config.baseHref()` only reads; the memory config holds the value
   if (options.baseHref !== undefined)
     (router.locationConfig as MemoryLocationConfig)._baseHref =
