@@ -126,6 +126,37 @@
         "@lit-labs/ssr",
         "lit-ui-router"
       ]
+    },
+    "./connect": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./fetch": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./hono": {
+      "free": [
+        "@uirouter/core",
+        "hono"
+      ]
+    },
+    "./matcher": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./redirects": {
+      "free": [
+        "@uirouter/core"
+      ]
+    },
+    "./vite": {
+      "free": [
+        "@uirouter/core"
+      ]
     }
   }
 }
