@@ -10,7 +10,7 @@ import { provideRouter, withRouterSync } from '../context.js';
 import { srefActiveClass, srefAriaCurrent } from '../sref-active.js';
 import { srefHref } from '../sref-href.js';
 
-// @lit-labs/ssr's root event target: the only thing a server render can ask.
+// @lit-labs/ssr's root event target: what `provideRouter` serves elements from.
 const litServerRoot = (globalThis as { litServerRoot?: EventTarget })
   .litServerRoot;
 
@@ -63,13 +63,16 @@ describe('srefHref on the server', () => {
     expect(out).toContain('href="#/sheet/7B"');
   });
 
-  it('emits the href from a provider on the render root', () => {
+  it('ignores a provider on the render root: the directive reads the scope, not the tree', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const uninstall = provideRouter(litServerRoot!, sheetRouter());
 
     const out = emit(sheetLink());
     uninstall();
 
-    expect(out).toContain('href="#/sheet/7B"');
+    expect(out).not.toContain('href=');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('leaves the attribute off, and stays quiet, with no router in reach', () => {
@@ -145,14 +148,17 @@ describe('the sref status directives on the server', () => {
     expect(out).not.toContain('aria-current');
   });
 
-  it('reads the router through a provider on the render root', async () => {
+  it('ignores a provider on the render root: the directives read the scope, not the tree', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const uninstall = provideRouter(litServerRoot!, await startedRouter());
 
     const out = emit(navLink('sheet', { num: '7B' }));
     uninstall();
 
-    expect(out).toContain('exact');
-    expect(out).toContain('aria-current="page"');
+    expect(out).toContain('class="nav "');
+    expect(out).not.toContain('aria-current');
+    expect(warn).not.toHaveBeenCalled();
+    warn.mockRestore();
   });
 
   it('leaves the attributes as authored, and stays quiet, with no router', () => {
