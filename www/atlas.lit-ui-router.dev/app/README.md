@@ -100,7 +100,7 @@ The app owns the site root of atlas.lit-ui-router.dev: `/`, `/sheet/7`, `/city`,
 beside it under `/set/` as the version to compare against, and the two link to each other: the
 rail's THE FLAT SET entry and each sheet's STANDALONE PLATE crumb go out, the flat gallery's cover
 links back. `src/routes.ts` holds the ONE base constant (`MOUNT`, `BASE`, `SET`, and the `href`
-table both template sets use); vite's `base`, `<base href>` (via `%BASE_URL%`), the generator's
+table the views and the prerender share); vite's `base`, `<base href>` (via `%BASE_URL%`), the generator's
 fragment links and the staged `_redirects` all derive from it. `generator/stage-site.mjs` assembles
 `dist/`: this app at the root, the flat set under `dist/set/`, and one merged `_redirects` (the
 prerender's lines, every old flat filename → `/set/`, and `/app/*` → `/:splat`).
@@ -218,7 +218,7 @@ is strict in four ways, and each one is a line in the build:
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
 is skipped in this mode. Nothing above changes the site build, which prerenders 29 pages +
-`404.html` and 10 redirects.
+`404.html` and 18 redirects.
 
 ## Server side
 
@@ -229,9 +229,12 @@ and is used twice:
   for `/office` and the same honest 404 for `/sheet/99` the deployed site does. Preview also serves
   the prerendered `dist/<subpath>/index.html` for a shell verdict, slash or no slash, so what you
   curl is what Pages serves.
-- **`prerender.ts`** — after `vite build`, every route is resolved to a verdict: `shell` writes
-  `dist/<subpath>/index.html` with server-rendered markup, `redirect` becomes a line in
-  `dist/_redirects`, and the `otherwise` projection becomes `dist/404.html`.
+- **`prerender.ts`** — after `vite build`, it hands the mount table, one router and the views in
+  `src/views.ts` to `lit-ui-router-ssr`'s `prerender()`, which resolves every listed path to a
+  verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered markup, `redirect`
+  becomes a line in `dist/_redirects` (both spellings of the path), and the `otherwise` projection
+  becomes `dist/404.html`. This file supplies the shell html, the job table of titles and content,
+  and drives the router to each path before its render.
 
 What rendered, what did not, and what the package would need to close the gap is in
 [`SSR-VERDICT.md`](./SSR-VERDICT.md).

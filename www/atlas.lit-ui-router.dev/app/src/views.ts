@@ -1054,8 +1054,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>ui-router-server</code>,
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
           <code>cytoscape</code> (the four interactive plates) and <code>three</code>
-          (the isometric city, imported only by <code>atlas.city</code>). All from npm;
-          no workspace links.
+          (the isometric city, imported only by <code>atlas.city</code>); at build
+          time, <code>lit-ui-router-ssr</code> and <code>@lit-labs/ssr</code>. All from
+          npm; no workspace links.
         </p>
         <h3>HOW THE SET IS DRAWN</h3>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.notes)}</p>` : nothing}

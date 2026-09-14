@@ -13,8 +13,9 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
 - **3** document the DOM-shim import order (the static-import finding in §3) — #808. Open.
 - **4** patterns are not existence: every `:id` route ships a soft-404 — #804. Open.
 - **5** default the bare-mount-base rule, or warn at construction — #805. Open.
-- **6** a prerender entry: mounts + `renderShell` — #806. Open — no `./prerender`
-  export at `ui-router-server@0.1.2`.
+- **6** a prerender entry: mounts + `renderShell` — #806. **Closed at
+  `lit-ui-router-ssr@0.1.0-rc.0`**, which owns the render call, the emit loop
+  and `_redirects`. See §5.6.
 - **7** "the view has re-rendered" has no documented signal — `onSuccess`
   settles before `<ui-view>` swaps; the recipe is `transition.promise` then
   `updateComplete` on every view and its element — #812. Open.
@@ -53,7 +54,16 @@ app's first `/app/` prefix says so.
 `srefActiveClass` + `srefAriaCurrent`). `prerender.ts` still keeps its own
 plain-`href` server template set — `srefHref` returns `noChange` when it
 renders with no router reachable, which is every server render today (see
-§5.2 and §7). Everything below this line is the original measurement, taken
+§5.2 and §7).
+
+**Update, 2026-09-14.** One template set: `prerender.ts` renders `src/views.ts`
+through `lit-ui-router-ssr@0.1.0-rc.0`'s `prerender()`, which scopes the router
+with `withRouterSync` around each render, so the sref directives emit real
+`href`s, `is-active` and `aria-current` for the state the page IS. The atlas is
+on `lit-ui-router@1.15.0` / `ui-router-server@0.2.0`; the emit loop, the tally
+and `_redirects` are the package's.
+
+Everything below this line is the original measurement, taken
 against `ui-router-server@0.1.1` / `lit-ui-router@1.11.2`; where a finding has
 since shipped or changed, a dated note says so inline.
 
@@ -192,6 +202,10 @@ render, but the package patches every directive to call `render()` and never
 `prerender.ts` keeps its own plain-`href` template set for exactly this
 reason. See §5.2 and §7.
 
+**Status, 2026-09-14.** Closed for this app: `lit-ui-router@1.15.0` sets the
+router from a `withRouterSync` scope, which `lit-ui-router-ssr`'s `prerender()`
+opens around every render, and the directives emit from `render()`.
+
 ### `<ui-view>` — throws
 
 ```text
@@ -262,10 +276,17 @@ Everything that is not a router primitive:
    server templates inside `prerender.ts` (plain `href`). They share the manifest
    and the route table, so the *data* never drifts; the markup is written twice.
    This is the real cost of #564 and it is not small.
+
+   **Status, 2026-09-14.** Retired. One template set: `prerender.ts` renders
+   `src/views.ts` inside the `withRouterSync` scope `prerender()` opens, and
+   supplies only the shell html, the titles and the resolves.
 2. **No hydration — takeover.** Because the two template sets differ, the server
    markup can never be `@lit-labs/ssr-client`-hydratable: `main.ts` does
    `root.replaceChildren()` and renders fresh. Correct, but a visible swap on
    load, and it throws away every byte the server rendered.
+
+   **Status, 2026-09-14.** The template sets no longer differ; `main.ts` still
+   takes the DOM over rather than hydrating it.
 3. **Every generated link is a real `<a href>`.** The cross-sheet references the
    generator writes into the prose carry `href` *and* `data-sheet`; a delegated
    click handler turns them into `stateService.go`. The only option anyway, since
@@ -370,14 +391,14 @@ Ordered by how much each would have saved me.
    package and would delete ~120 from every consumer. It also keeps the
    "verdict engine, not a framework" line intact: the caller still renders.
 
-   **Status, 2026-09-13.** Open, #806, nothing shipped. `ui-router-server@0.1.2`
-   exports `. ./connect ./fetch ./hono ./matcher ./redirects ./simulate
-   ./vite` — still no `./prerender`. The ~120-line emit loop in this app's
-   `prerender.ts` is still hand-written, and active discussion has added a
-   requirement: the entry needs to own or expose the render's root
-   `EventTarget` so a server-side router can be handed to the sref directives
-   (ask 2, above) — plus a server-side location plugin, so hrefs come out as
-   paths and not `#/sheet/...` (see §7).
+   **Status, 2026-09-14.** Shipped as `lit-ui-router-ssr@0.1.0-rc.0`'s
+   `prerender()` — its own package, so the `@lit-labs/ssr` peer stays off
+   `ui-router-server`. It owns the render call, the write loop, the tally and
+   `_redirects`, provides the router on the render root and scopes it around
+   each render; the path-shaped location comes from `ui-router-server@0.2.0`'s
+   `installServerLocation`. The atlas is its first consumer: `prerender.ts`
+   supplies the mounts, the router, the paths, the shell html and the job
+   table, and the emit loop is gone.
 7. **`lit-ui-router`: document "the view has re-rendered."** Unrelated to SSR
    but found in the same build. `document.startViewTransition()` needs a promise
    that resolves when the DOM has changed. `onSuccess` fires when the
