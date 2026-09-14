@@ -3,6 +3,7 @@ import { html, nothing, render, TemplateResult } from 'lit';
 import { cache } from 'lit/directives/cache.js';
 import { AttributePartInfo, PartInfo, PartType } from 'lit/directive.js';
 
+import { getScopedRouter } from '../context.js';
 import { srefHref, SrefHrefDirective } from '../sref-href.js';
 import { uiSrefActive } from '../ui-sref-active.js';
 import { UI_SREF_TARGET_EVENT, UiSrefTargetEvent } from '../ui-sref.js';
@@ -73,6 +74,12 @@ describe('srefHref directive', () => {
 
   describe('href', () => {
     it('writes the href once the router is found', async () => {
+      const wrapper = await mount(html`<a href=${srefHref('users')}>Users</a>`);
+      expect(wrapper.querySelector('a')!.getAttribute('href')).toBe('#/users');
+    });
+
+    it('seeks the element with the server router slot empty', async () => {
+      expect(getScopedRouter()).toBeUndefined();
       const wrapper = await mount(html`<a href=${srefHref('users')}>Users</a>`);
       expect(wrapper.querySelector('a')!.getAttribute('href')).toBe('#/users');
     });

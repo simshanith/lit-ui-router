@@ -1,3 +1,4 @@
+// oxlint-disable typescript/no-deprecated -- backtests the published surface, deprecated plumbing included
 import { html, LitElement, type TemplateResult } from 'lit';
 import {
   pushStateLocationPlugin,

@@ -9,8 +9,8 @@ import {
   SrefStatus,
   TransitionStateChange,
   TRANSITION_STATE_CHANGE_EVENT,
-  mergeSrefStatus,
 } from '../ui-sref-active.js';
+import { mergeSrefStatus } from '../sref-internals.js';
 import { uiSref, UI_SREF_TARGET_EVENT } from '../ui-sref.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import '../ui-view.register.js';

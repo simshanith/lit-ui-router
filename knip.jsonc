@@ -64,6 +64,10 @@
       // oxlint fixture inputs, never imported
       "ignore": ["test/oxlint/*.js"],
     },
+    "tools/bundle-probe": {
+      // bundled by path in free-of.test.ts, never imported
+      "entry": ["fixtures/*.ts"],
+    },
     "tools/dts-backtest": {
       "entry": ["fixtures/*.ts"],
       // the TS version matrix is imported by computed specifier

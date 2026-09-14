@@ -85,9 +85,9 @@ router.start();
 write to it from the outside, so a reader that is not a live browser — a
 server renderer, an accessibility linter — sees an `<a>` with no `href`.
 The `sref*` directives do the same jobs from inside the attribute they
-affect, so the template says what the browser will show. A linter reads
-that today; server rendering also needs a way to hand the directives a
-router, which is still open ([#564](https://github.com/simshanith/lit-ui-router/issues/564)):
+affect, so the template says what the browser will show. A linter reads that,
+and so does a server render given a router — see
+[Server Rendering](#server-rendering):
 
 ```html
 <a href=${srefHref('users')}
@@ -286,6 +286,27 @@ See the [@uirouter/core location plugins documentation](https://ui-router.github
 
 - [PushStateLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_pushstatelocationservice_.pushstatelocationservice.html) - HTML5 history API
 - [HashLocationService](https://ui-router.github.io/core/docs/latest/classes/_vanilla_hashlocationservice_.hashlocationservice.html) - Hash-based URLs
+
+On the server, `serverLocationPlugin` from
+[`ui-router-server/location`](/packages/server) is the in-memory plugin whose
+hrefs are paths, so a prerendered link matches what the pushState client writes.
+
+## Server Rendering
+
+`lit-ui-router/context` carries the router hand-off a server render needs and an
+element cannot supply, because on the server a directive has no element to seek
+a router from.
+
+- `provideRouter(root, router)` - answers `context-request` on any event target, `globalThis.litServerRoot` included
+- `withRouterSync(router, run)` - scopes a router to one synchronous call
+- `getScopedRouter()` - reads the router that call scoped
+
+`srefHref`, `srefActiveClass` and `srefAriaCurrent` read the `withRouterSync`
+slot and nothing else, so a nav rendered inside it carries real hrefs and active
+markup; `provideRouter` serves elements that ask by protocol, not attribute
+parts.
+
+See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server).
 
 ## Companion Packages
 

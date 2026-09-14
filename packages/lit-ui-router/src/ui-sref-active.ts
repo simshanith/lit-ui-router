@@ -1,18 +1,9 @@
 import {
-  anyTrueR,
   extend,
-  Param,
-  PathNode,
-  PathUtils,
-  Predicate,
   RawParams,
-  StateObject,
-  tail,
   TargetState,
   Transition,
   TransitionOptions,
-  UIRouter,
-  unnestR,
 } from '@uirouter/core';
 import { noChange, ElementPart } from 'lit';
 import { directive, PartInfo, PartType } from 'lit/directive.js';
@@ -24,11 +15,26 @@ import { UIRouterLitElement } from './ui-router.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import {
   isNativeLink,
+  mergeSrefStatus,
+  srefStatus,
   UiSrefElement,
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
-} from './ui-sref.js';
+} from './sref-internals.js';
 import { UiView } from './ui-view.js';
+
+export {
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  mergeSrefStatus,
+  /**
+   * @internal
+   * @deprecated Directive plumbing, not a supported import.
+   */
+  srefStatus,
+} from './sref-internals.js';
 
 /** @internal */
 export interface TransEvt {
@@ -78,116 +84,6 @@ export interface SrefStatus {
   exiting: boolean;
   /** The enclosed sref(s) target state(s) */
   targetStates: TargetState[];
-}
-
-/**
- * Returns a Predicate<PathNode[]>
- *
- * The predicate returns true when the target state (and param values)
- * match the (tail of) the path, and the path's param values
- *
- * @internal
- */
-const pathMatches = (target: TargetState): Predicate<PathNode[]> => {
-  if (!target.exists()) return () => false;
-  const state: StateObject = target.$state();
-  const targetParamVals = target.params();
-  const targetPath: PathNode[] = PathUtils.buildPath(target);
-  const paramSchema: Param[] = targetPath
-    .map((node) => node.paramSchema)
-    .reduce<Param[]>(unnestR, [])
-    .filter((param: Param) =>
-      Object.prototype.hasOwnProperty.call(targetParamVals, param.id),
-    );
-  return (path: PathNode[] = []) => {
-    const tailNode = tail(path);
-    if (!tailNode || tailNode.state !== state) return false;
-    const paramValues = PathUtils.paramValues(path) as RawParams;
-    return Param.equals(paramSchema, paramValues, targetParamVals);
-  };
-};
-
-/**
- * Given basePath: [a, b], appendPath: [c, d]),
- * Expands the path to [c], [c, d]
- * Then appends each to [a,b,] and returns: [a, b, c], [a, b, c, d]
- *
- * @internal
- */
-function spreadToSubPaths(
-  basePath: PathNode[],
-  appendPath: PathNode[],
-): PathNode[][] {
-  return appendPath.map((node) =>
-    basePath.concat(
-      PathUtils.subPath(appendPath, (n) => n!.state === node.state),
-    ),
-  );
-}
-
-/** @internal */
-export function mergeSrefStatus(
-  left: SrefStatus,
-  right: SrefStatus,
-): SrefStatus {
-  return {
-    active: left.active || right.active,
-    exact: left.exact || right.exact,
-    entering: left.entering || right.entering,
-    exiting: left.exiting || right.exiting,
-    targetStates: [...left.targetStates, ...right.targetStates],
-  };
-}
-
-/**
- * The {@link SrefStatus} of one target for a transition event — or, with no
- * event, against the router's current state. Shared by the element-part
- * {@link uiSrefActive}, the attribute-part `srefActiveClass` /
- * `srefAriaCurrent`, and `SrefStatusController`.
- *
- * @internal
- */
-export function srefStatus(
-  router: UIRouter,
-  event: TransEvt | undefined,
-  srefTarget: TargetState,
-): SrefStatus {
-  const pathMatchesTarget = pathMatches(srefTarget);
-  const tc = event?.trans.treeChanges();
-
-  const isStartEvent = event?.evt === 'start';
-  const isSuccessEvent = event?.evt === 'success';
-  const activePath: PathNode[] | undefined = isSuccessEvent ? tc?.to : tc?.from;
-
-  const isActive = () =>
-    activePath
-      ? spreadToSubPaths([], activePath)
-          .map(pathMatchesTarget)
-          .reduce(anyTrueR, false)
-      : router.stateService.includes(srefTarget.name(), srefTarget.params());
-
-  const isExact = () =>
-    activePath
-      ? pathMatchesTarget(activePath)
-      : router.stateService.is(srefTarget.name(), srefTarget.params());
-
-  const isEntering = () =>
-    spreadToSubPaths(tc!.retained, tc!.entering)
-      .map(pathMatchesTarget)
-      .reduce(anyTrueR, false);
-
-  const isExiting = () =>
-    spreadToSubPaths(tc!.retained, tc!.exiting)
-      .map(pathMatchesTarget)
-      .reduce(anyTrueR, false);
-
-  return {
-    active: isActive(),
-    exact: isExact(),
-    entering: isStartEvent ? isEntering() : false,
-    exiting: isStartEvent ? isExiting() : false,
-    targetStates: [srefTarget],
-  };
 }
 
 /**

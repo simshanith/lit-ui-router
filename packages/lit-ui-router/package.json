@@ -124,5 +124,18 @@
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer"
   },
+  "bundleProbe": {
+    ".": {
+      "free": [
+        "@lit-labs/ssr"
+      ]
+    },
+    "./context": {
+      "free": [
+        "lit",
+        "@uirouter/core"
+      ]
+    }
+  },
   "customElements": "dist/custom-elements.json"
 }
