@@ -1,3 +1,6 @@
+import { mkdtemp, readFile, rm } from 'node:fs/promises';
+import { tmpdir } from 'node:os';
+import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
@@ -276,6 +279,40 @@ describe('dryRun', () => {
     });
     expect(result.rules).toHaveLength(2);
     expect(result.pages.every((page) => page.bytes > 0)).toBe(true);
+  });
+});
+
+describe('the default writer', () => {
+  it('writes through node:fs, creating each page directory', async () => {
+    const outDir = await mkdtemp(path.join(tmpdir(), 'lit-ui-router-ssr-'));
+    try {
+      // `write: undefined` reaches prerender's destructuring default, the node:fs writer.
+      const { result } = await run({
+        write: undefined,
+        outDir,
+        paths: ['/', '/sheet/7B', '/app/legacy'],
+      });
+
+      expect(result.tally).toMatchObject({
+        shell: 2,
+        redirect: 1,
+        document: 1,
+      });
+      const read = (file: string): Promise<string> =>
+        readFile(path.join(outDir, file), 'utf8');
+      expect(await read('index.html')).toBe('<p>page</p>');
+      expect(await read('sheet/7B/index.html')).toBe('<p>page</p>');
+      expect(await read('404.html')).toBe('<p>page</p>');
+      expect(await read('_redirects')).toBe(
+        [
+          '/app/legacy /app/welcome 302',
+          '/app/legacy/ /app/welcome 302',
+          '',
+        ].join('\n'),
+      );
+    } finally {
+      await rm(outDir, { recursive: true, force: true });
+    }
   });
 });
 
