@@ -270,8 +270,9 @@ min+gzip by its own esbuild probe:
 | `ui-router-server/redirects` | no                                    | ~8.7 KiB min / ~3.6 KiB gzip        | given routes and a redirect table, where does this pathname go                         |
 | `ui-router-server` (root)    | only when a `simulate` mount resolves | ~11.5 KiB min / ~4.7 KiB gzip       | mounts in, verdict out                                                                 |
 | `ui-router-server/simulate`  | yes (optional peer)                   | +~92 KiB min / ~27.4 KiB gzip, lazy | what would the real router do                                                          |
+| `ui-router-server/location`  | yes (optional peer)                   | ~0.5 KiB min / ~0.3 KiB gzip        | a path-shaped in-memory location for a server-side router                              |
 
-<svg viewBox="0 0 720 248" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - and simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core" xmlns="http://www.w3.org/2000/svg">
+<svg viewBox="0 0 720 300" width="100%" style="max-width: 720px" role="img" aria-label="Package tiers by size: matcher 2.9 KiB, redirects 3.6 KiB, root 4.7 KiB - all dependency-free - simulate, which adds a lazy 27.4 KiB chunk carrying @uirouter/core, and location, a 0.3 KiB eager import of the same core" xmlns="http://www.w3.org/2000/svg">
   <title>The package tiers, to scale</title>
   <g font-family="var(--vp-font-family-base, ui-sans-serif, system-ui, sans-serif)">
     <!-- dependency-free group -->
@@ -287,16 +288,20 @@ min+gzip by its own esbuild probe:
     <text x="20" y="124" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server</text>
     <rect x="230" y="114" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
     <text x="306" y="127" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">4.7 KiB</tspan> &#183; mounts in, verdicts out &#8212; the default</text>
-    <!-- simulate group -->
-    <rect x="8" y="158" width="704" height="74" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
-    <text x="700" y="171" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
-    <text x="20" y="196" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
-    <rect x="230" y="186" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
-    <rect x="300" y="186" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
-    <text x="498" y="199" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
-    <text x="230" y="222" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
+    <!-- needs-core group: simulate (lazy) and location (eager) -->
+    <rect x="8" y="158" width="704" height="118" rx="8" fill="none" stroke="var(--vp-c-divider, #e2e2e3)" />
+    <text x="700" y="174" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="end">needs @uirouter/core &#8212; optional peer</text>
+    <text x="700" y="187" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">a lazy chunk, or your own eager import</text>
+    <text x="20" y="206" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/simulate</text>
+    <rect x="230" y="196" width="68" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <rect x="300" y="196" width="397" height="16" rx="4" fill="var(--vp-c-purple-soft, rgba(159,122,234,0.14))" stroke="var(--vp-c-purple-1, #8e18aa)" stroke-width="0.75" stroke-dasharray="5 3" />
+    <text x="498" y="209" font-size="11" font-weight="600" fill="var(--vp-c-purple-1, #8e18aa)" text-anchor="middle">+27.4 KiB &#183; lazy chunk &#8212; core, whole</text>
+    <text x="230" y="226" font-size="10" fill="var(--vp-c-text-3, #929295)">loads only when a simulate mount resolves &#8212; a matcher-only configuration never fetches it</text>
+    <text x="20" y="252" font-size="12" font-family="var(--vp-font-family-mono, ui-monospace, monospace)" fill="var(--vp-c-text-1, #3c3c43)">ui-router-server/location</text>
+    <rect x="230" y="242" width="10" height="16" rx="4" fill="var(--vp-c-brand-soft, rgba(100,108,255,0.14))" stroke="var(--vp-c-brand-1, #3451b2)" stroke-width="0.75" />
+    <text x="250" y="255" font-size="11" fill="var(--vp-c-text-2, #67676c)"><tspan font-weight="600" fill="var(--vp-c-text-1, #3c3c43)">0.3 KiB</tspan> own code &#183; eager import, for a server that already runs a real router</text>
     <!-- scale note -->
-    <text x="712" y="244" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
+    <text x="712" y="292" font-size="10" fill="var(--vp-c-text-3, #929295)" text-anchor="end">min+gzip, measured by the package's own esbuild probe &#183; linear scale</text>
   </g>
 </svg>
 
@@ -334,6 +339,11 @@ Picking a tier:
   produce identical verdicts (the package tests assert parity), so
   `strategy` stays a pure cost knob until routing that data cannot express —
   hooks, resolves, `redirectTo` functions — arrives with a wider config.
+- **`/location`** — you drive a real `@uirouter/core` router yourself, on the
+  server, and want its `href()`s to be paths rather than `#` fragments, so a
+  server render's links match what a
+  [pushState](./location-plugins#html5-pushstate) client writes.
+  `installServerLocation(router, { url, baseHref, strictMode })`.
 
 ## The projection: routes as data
 
@@ -969,6 +979,73 @@ takes over on the first update that finds a router.
 For the flip side — composing the active flag with `classMap` instead of
 letting a directive own the `class` attribute — see
 [`SrefStatusController`](./reactive-components#active-link-status).
+
+## The router on the server
+
+A router is easy to build on the server; handing it to the code that renders is
+the hard part. In a browser every binding finds the router by asking its own
+element — `<ui-router>` answers a `ui-router-context` event, or the
+[`context-request`](/guides/reactive-components#router-discovery)
+protocol, on the way up the tree. A server render has no tree to walk: the
+renderer calls a directive's `render()` with no element behind it, so there is
+nothing to dispatch from and nothing to listen on.
+
+`lit-ui-router/context` answers that with two tree-less providers, and
+[`ui-router-server/location`](/packages/server) supplies the location half — a
+memory plugin in html5 mode, so `stateService.href()` builds the same path the
+pushState client writes rather than the `#/…` form `memoryLocationPlugin`
+returns.
+
+```ts
+import '@lit-labs/ssr/lib/install-global-dom-shim.js';
+import { render } from '@lit-labs/ssr';
+import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import { installServerLocation } from 'ui-router-server/location';
+
+const { UIRouterLit } = await import('lit-ui-router/pure');
+const { provideRouter, withRouterSync } = await import('lit-ui-router/context');
+
+// one router per request, at the url the request asked for, query included
+const { pathname, search } = new URL(request.url);
+const router = new UIRouterLit();
+installServerLocation(router, { url: pathname + search, strictMode: false });
+states.forEach((state) => router.stateRegistry.register(state));
+router.start();
+
+const uninstall = provideRouter(globalThis.litServerRoot, router);
+let markup: string;
+try {
+  markup = withRouterSync(router, () => collectResultSync(render(page())));
+} finally {
+  uninstall();
+}
+```
+
+`withRouterSync(router, run)` is a synchronous slot, not an async context: it
+sets a module-level variable, runs `run`, and restores the previous value in a
+`finally`. That is enough because `render()` from `@lit-labs/ssr` is a _sync
+generator_ — consume it inside `run` with `collectResultSync` and every
+directive's `render()` has already happened by the time `withRouterSync`
+returns, `getScopedRouter()` reading the router each time. Return a promise from
+`run` instead and you get a `TypeError` rather than a router that silently went
+missing; the `Sync` suffix names the constraint the guard enforces. An async
+variant is a separate export.
+
+`provideRouter(root, router)` is the other half: it answers the
+`context-request` protocol on any `EventTarget`, which on the server means
+`globalThis.litServerRoot`, the bottom of the renderer's event-target stack. Use
+it for elements that ask for their router by protocol — the same code path
+`<ui-router>` serves in a browser — and pair it with `withRouterSync` when the
+same render also contains attribute bindings. It returns its own uninstall
+function; call it in a `finally` once the render is done, or a throwing render
+leaves the listener behind for the next request.
+
+`serverLocationPlugin` from the same `ui-router-server/location` entry is the
+plugin `installServerLocation` installs, for a render that wires the rest by
+hand.
+
+What this does **not** yet do is make `srefHref` and the status directives read
+it — they still get `noChange` on the server, as the previous section describes.
 
 ## What the server can't see
 
