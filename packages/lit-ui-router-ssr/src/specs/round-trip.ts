@@ -6,13 +6,13 @@ import type { RenderInfo } from '@lit-labs/ssr';
 import type { TemplateResult } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
 import type { UIRouterLit } from 'lit-ui-router/pure';
-import { hydrateRoot, wakeAll } from '../client.js';
+import { hydrateRoot } from '../client.js';
 import { goTo, makeRouter } from './fixture.js';
 
 /** A page template, drawn by the server and re-rendered by the client. */
 export type Page = (router: UIRouterLit) => TemplateResult;
 
-/** The document a build would have emitted for `path`. */
+/** The document a build would have emitted for `path`, with `prerender()`'s own render options. */
 export const draw = async (
   page: Page,
   renderers: RenderInfo['elementRenderers'],
@@ -21,7 +21,12 @@ export const draw = async (
   const router = makeRouter();
   await goTo(router, path);
   return withRouterSync(router, () =>
-    collectResultSync(render(page(router), { elementRenderers: renderers })),
+    collectResultSync(
+      render(page(router), {
+        elementRenderers: renderers,
+        deferHydration: true,
+      }),
+    ),
   );
 };
 
@@ -55,33 +60,62 @@ export const serve = (
   return { container, served };
 };
 
-/** Hydrates `container` and settles a fresh client router on `path`, stopping short of the wake. */
-export const bootInto = async (
-  container: HTMLElement,
-  page: Page,
-  path: string,
-): Promise<UIRouterLit> => {
-  const router = makeRouter();
-  expect(hydrateRoot(container, page(router))).toBe(true);
-  const booted = new Promise<void>((resolve) => {
-    const off = router.transitionService.onSuccess({}, () => {
-      off();
-      resolve();
-    }) as () => void;
+const tick = (): Promise<void> =>
+  new Promise((resolve) => {
+    setTimeout(resolve, 0);
   });
-  router.urlService.url(path);
-  router.start();
-  await booted;
-  return router;
+
+/** Flushes the wakes the root walk starts: each level's update wakes the next. */
+export const settle = async (container: HTMLElement): Promise<void> => {
+  for (let pass = 0; pass < 10; pass += 1) {
+    await tick();
+    if (!container.querySelector('[defer-hydration]')) break;
+  }
+  await tick();
 };
 
-/** The whole trip: {@link bootInto}, then the ordered wake. */
+/** Every comment the walk reads, at any depth, so a spec can pin what is left. */
+export const comments = (container: HTMLElement): string[] => {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
+  const found: string[] = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    found.push((node as Comment).data);
+  }
+  return found;
+};
+
+/**
+ * Drops every `lit-node` marker standing before a `<ui-view>`, leaving the wake
+ * to nothing but the view's own slot part.
+ *
+ * @returns how many were dropped
+ */
+export const dropViewNodeMarkers = (container: HTMLElement): number => {
+  const walker = document.createTreeWalker(container, NodeFilter.SHOW_COMMENT);
+  const doomed: Comment[] = [];
+  for (let node = walker.nextNode(); node; node = walker.nextNode()) {
+    const comment = node as Comment;
+    if (!/^(ui-view:)?lit-node \d+$/.test(comment.data)) continue;
+    if (comment.nextElementSibling?.localName === 'ui-view') {
+      doomed.push(comment);
+    }
+  }
+  for (const comment of doomed) comment.remove();
+  return doomed.length;
+};
+
+/**
+ * The whole trip: settle a fresh client router on `path`, hydrate the served
+ * container, and let every woken view finish.
+ */
 export const boot = async (
   container: HTMLElement,
   page: Page,
   path: string,
 ): Promise<UIRouterLit> => {
-  const router = await bootInto(container, page, path);
-  wakeAll(container);
+  const router = makeRouter();
+  await goTo(router, path);
+  expect(hydrateRoot(container, page(router))).toBe(true);
+  await settle(container);
   return router;
 };
