@@ -141,11 +141,11 @@ catalogs:
       specifier: 1102.1.0
       version: 1102.1.0
     '@pnpm/workspace.project-manifest-reader':
-      specifier: 1100.0.27
-      version: 1100.0.27
+      specifier: 1100.0.28
+      version: 1100.0.28
     '@pnpm/workspace.projects-reader':
-      specifier: 1101.0.26
-      version: 1101.0.26
+      specifier: 1101.0.27
+      version: 1101.0.27
     '@pnpm/workspace.workspace-manifest-reader':
       specifier: 1100.1.9
       version: 1100.1.9
@@ -1621,7 +1621,7 @@ importers:
         version: 1102.1.0
       '@pnpm/workspace.project-manifest-reader':
         specifier: 'catalog:'
-        version: 1100.0.27(@pnpm/logger@1100.0.0)
+        version: 1100.0.28(@pnpm/logger@1100.0.0)
       '@tools/bootstrap':
         specifier: workspace:*
         version: link:../bootstrap
@@ -1711,7 +1711,7 @@ importers:
         version: 1102.1.0
       '@pnpm/workspace.projects-reader':
         specifier: 'catalog:'
-        version: 1101.0.26(@pnpm/logger@1100.0.0)
+        version: 1101.0.27(@pnpm/logger@1100.0.0)
       '@pnpm/workspace.workspace-manifest-reader':
         specifier: 'catalog:'
         version: 1100.1.9
@@ -3909,8 +3909,8 @@ packages:
     resolution: {integrity: sha512-Z1gZQQNNDCR2qX7AcPVG2zcNrLiVZAkOilYdz//0HQQ1TiAZyyjQ2z141sjnRyLkEk6KUx4aQ1XvL0CQfZ8cig==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/cli.utils@1101.0.26':
-    resolution: {integrity: sha512-wGA0YxPkFPJuMVLorInHi+3AwTnVLzNp6qCI5yprD9IAif0PQcdp3gpDpAS/TShZLijljjlTS1d14IM5twDDhg==}
+  '@pnpm/cli.utils@1101.0.27':
+    resolution: {integrity: sha512-F4UWmCDJMibTY3rLlXJ7i1Kqqbb/lJSf1++LjnXiuLw+KPnUgCUkoQgQeriM72ix6rP4YjASPuBdO10wlQZAGQ==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
@@ -3931,8 +3931,8 @@ packages:
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
 
-  '@pnpm/deps.peer-range@1100.1.1':
-    resolution: {integrity: sha512-G3J83gBJ5XCKhoJ7XbnF0uVJw7D5FC2X1T+txoGtEV1e1dFLT98b05zlBjgaMonkbxFCIUCuwHxttyEyKJvXow==}
+  '@pnpm/deps.peer-range@1100.1.2':
+    resolution: {integrity: sha512-PFGNtptMRhqQd7FogcaCsfMpCkvDhFQVuO3+BnMw0PByAUPjXpE7jJMIGduRUSETb2E/zDr2PZ13cXO2OQiAeQ==}
     engines: {node: '>=22.13'}
 
   '@pnpm/engine.runtime.system-version@1100.0.11':
@@ -3943,16 +3943,16 @@ packages:
     resolution: {integrity: sha512-u7sHXD1yw5TDE2lxCnee95WPnBTuqHQvmOVJzy7GLEkju3kSBOiHvCARe7mlDoxvN/HBOKUFyMJtcEgn+OSUDA==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/fs.graceful-fs@1100.2.0':
-    resolution: {integrity: sha512-B66Gh2+U3gQtX84/SXHg+QLWk4FOSYI/jDBE8a0SYyGMDmEVNGL8hP5IWsFNrTFOYjBQgCzuIbnCDDzXi2GYHA==}
+  '@pnpm/fs.graceful-fs@1100.2.1':
+    resolution: {integrity: sha512-pP8pAiE3tW0VC5O44puq2KQWYUHoUrLJVdA1IDhTKvhP/lZD0DNDyWq59tXdN1eADY3BiZO8X5vwWLSmae2UyQ==}
     engines: {node: '>=22.13'}
 
   '@pnpm/logger@1100.0.0':
     resolution: {integrity: sha512-A3bRMTIZ5ptDPAE/KsDeY1J5UqqOiyo66+k/mUvaVjx++OJdMbp9If5kisEq9ljAV5r5TRpkxsJbSdrdJ5WtzQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/pkg-manifest.utils@1100.4.3':
-    resolution: {integrity: sha512-Aw/E54g05jp0mNMN3FQzuKdsp+4UEMk4xdiI1lv0R+sEublYuYrJ7IfLDYK+1fem0xHddkWOlo4W/QhQDYPkAQ==}
+  '@pnpm/pkg-manifest.utils@1100.4.4':
+    resolution: {integrity: sha512-oki/YlBNQ33Qs6JX1LuxWt3Vo6dbTmfiTsIcAWQFzXisoFhYM8k8EwUa+bCYayUCOymUiwG6dGYARIeFemZXqA==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
@@ -3969,8 +3969,8 @@ packages:
     resolution: {integrity: sha512-h8qqbRIueCujntCBRnVpujeGzwWG+D39Z6pnXHsUp17ZZGLFK/W+ClRLSQZxWFBmgv9z7BNCAi7Arrf/exq5/A==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/workspace.project-manifest-reader@1100.0.27':
-    resolution: {integrity: sha512-1edJmoxJ7b1CWtPA3A+Z4D8GuKGPgliCk29yI4ElLlxvH1kR04S3WJHqctr46OXAeGdMaUO0w6ps1jtZ+fuXcA==}
+  '@pnpm/workspace.project-manifest-reader@1100.0.28':
+    resolution: {integrity: sha512-azXknR2bZWxAH6IV9oA64nnCF9w8Es5qjLn27UdU20zD08ulPCeSa0SHLhrnSiAmvFyjW1ulFDnabfiw5WcaWA==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
@@ -3979,8 +3979,8 @@ packages:
     resolution: {integrity: sha512-LtuWRd+FSbdt/n4hzyAG6VxsKpn+s6zoIdRFALSabkHIJ8cdBRT8SxJwW849aqwGn9ZJxKvei15NWlAR0jG0IQ==}
     engines: {node: '>=22.13'}
 
-  '@pnpm/workspace.projects-reader@1101.0.26':
-    resolution: {integrity: sha512-WzG6lyf4/9JaRrug4vgZamSVT/WA+hBBY7aY53QRi3tk2NjT5QpbXHh0enagwFk8xC35LzyH/klItRsGfCvozw==}
+  '@pnpm/workspace.projects-reader@1101.0.27':
+    resolution: {integrity: sha512-HpmfXiWAyvVmhAod5AGjt4syR4DVPnH1uUgK2SqLPh05LOyPSxGcO9fV6isZkOUU9M0jUmiBt9N2ZiUH3u+Y4A==}
     engines: {node: '>=22.13'}
     peerDependencies:
       '@pnpm/logger': ^1100.0.0
@@ -9692,15 +9692,15 @@ snapshots:
       '@pnpm/types': 1102.1.0
       load-json-file: 7.0.1
 
-  '@pnpm/cli.utils@1101.0.26(@pnpm/logger@1100.0.0)':
+  '@pnpm/cli.utils@1101.0.27(@pnpm/logger@1100.0.0)':
     dependencies:
       '@pnpm/cli.meta': 1100.1.0
       '@pnpm/config.package-is-installable': 1100.1.6(@pnpm/logger@1100.0.0)
       '@pnpm/error': 1100.1.4
       '@pnpm/logger': 1100.0.0
-      '@pnpm/pkg-manifest.utils': 1100.4.3(@pnpm/logger@1100.0.0)
+      '@pnpm/pkg-manifest.utils': 1100.4.4(@pnpm/logger@1100.0.0)
       '@pnpm/types': 1102.1.0
-      '@pnpm/workspace.project-manifest-reader': 1100.0.27(@pnpm/logger@1100.0.0)
+      '@pnpm/workspace.project-manifest-reader': 1100.0.28(@pnpm/logger@1100.0.0)
       chalk: 6.0.0
       load-json-file: 7.0.1
 
@@ -9724,7 +9724,7 @@ snapshots:
       '@pnpm/logger': 1100.0.0
       '@pnpm/types': 1102.1.0
 
-  '@pnpm/deps.peer-range@1100.1.1':
+  '@pnpm/deps.peer-range@1100.1.2':
     dependencies:
       semver: 7.8.5
 
@@ -9739,7 +9739,7 @@ snapshots:
     dependencies:
       '@pnpm/constants': 1102.0.0
 
-  '@pnpm/fs.graceful-fs@1100.2.0':
+  '@pnpm/fs.graceful-fs@1100.2.1':
     dependencies:
       graceful-fs: 4.2.11
 
@@ -9748,10 +9748,10 @@ snapshots:
       bole: 5.0.29
       split2: 4.2.0
 
-  '@pnpm/pkg-manifest.utils@1100.4.3(@pnpm/logger@1100.0.0)':
+  '@pnpm/pkg-manifest.utils@1100.4.4(@pnpm/logger@1100.0.0)':
     dependencies:
       '@pnpm/core-loggers': 1100.3.4(@pnpm/logger@1100.0.0)
-      '@pnpm/deps.peer-range': 1100.1.1
+      '@pnpm/deps.peer-range': 1100.1.2
       '@pnpm/error': 1100.1.4
       '@pnpm/logger': 1100.0.0
       '@pnpm/types': 1102.1.0
@@ -9766,12 +9766,12 @@ snapshots:
 
   '@pnpm/types@1102.1.0': {}
 
-  '@pnpm/workspace.project-manifest-reader@1100.0.27(@pnpm/logger@1100.0.0)':
+  '@pnpm/workspace.project-manifest-reader@1100.0.28(@pnpm/logger@1100.0.0)':
     dependencies:
       '@pnpm/error': 1100.1.4
-      '@pnpm/fs.graceful-fs': 1100.2.0
+      '@pnpm/fs.graceful-fs': 1100.2.1
       '@pnpm/logger': 1100.0.0
-      '@pnpm/pkg-manifest.utils': 1100.4.3(@pnpm/logger@1100.0.0)
+      '@pnpm/pkg-manifest.utils': 1100.4.4(@pnpm/logger@1100.0.0)
       '@pnpm/text.comments-parser': 1100.0.1
       '@pnpm/types': 1102.1.0
       '@pnpm/workspace.project-manifest-writer': 1100.0.16
@@ -9792,14 +9792,14 @@ snapshots:
       write-file-atomic: 7.0.1
       write-yaml-file: 6.0.0
 
-  '@pnpm/workspace.projects-reader@1101.0.26(@pnpm/logger@1100.0.0)':
+  '@pnpm/workspace.projects-reader@1101.0.27(@pnpm/logger@1100.0.0)':
     dependencies:
-      '@pnpm/cli.utils': 1101.0.26(@pnpm/logger@1100.0.0)
+      '@pnpm/cli.utils': 1101.0.27(@pnpm/logger@1100.0.0)
       '@pnpm/constants': 1102.0.0
       '@pnpm/logger': 1100.0.0
       '@pnpm/text.ordinal-comparator': 1100.0.0
       '@pnpm/types': 1102.1.0
-      '@pnpm/workspace.project-manifest-reader': 1100.0.27(@pnpm/logger@1100.0.0)
+      '@pnpm/workspace.project-manifest-reader': 1100.0.28(@pnpm/logger@1100.0.0)
       p-filter: 4.1.0
       tinyglobby: 0.2.17
 
