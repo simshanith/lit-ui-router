@@ -2,6 +2,7 @@
 import { ElementRenderer } from '@lit-labs/ssr';
 import type { RenderInfo } from '@lit-labs/ssr';
 import type { ThunkedRenderResult } from '@lit-labs/ssr/lib/render-result.js';
+import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { renderValue } from '@lit-labs/ssr/lib/render-value.js';
 import {
   applyPairs,
@@ -10,7 +11,11 @@ import {
   isString,
 } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
-import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
+import {
+  LitViewConfig,
+  isRoutedLitElement,
+  servedMarkerPrefix,
+} from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
@@ -29,6 +34,27 @@ let viewIdCounter = 0;
 
 // Every `<ui-view>` between the render root and the one now rendering. A render is synchronous and depth-first, so the last entry is the parent view.
 const openViews: UiViewRenderer[] = [];
+
+const PART_CLOSE = '<!--/lit-part-->';
+
+/**
+ * Hides the markers this render wrote inside the view from the walk hydrating
+ * its surroundings, leaving the outer pair plain for that walk to read.
+ */
+const prefixInterior = (markup: string): string => {
+  if (!markup.startsWith('<!--lit-part') || !markup.endsWith(PART_CLOSE)) {
+    return markup;
+  }
+  const open = markup.indexOf('-->') + 3;
+  const close = markup.length - PART_CLOSE.length;
+  // A plain `<!--lit-part` never matches an already-prefixed `<!--ui-view:lit-part`, so a nested run's interior is prefixed once.
+  const interior = markup
+    .slice(open, close)
+    .replaceAll('<!--lit-part', `<!--${servedMarkerPrefix}lit-part`)
+    .replaceAll('<!--/lit-part', `<!--${servedMarkerPrefix}/lit-part`)
+    .replaceAll('<!--lit-node', `<!--${servedMarkerPrefix}lit-node`);
+  return markup.slice(0, open) + interior + markup.slice(close);
+};
 
 const escapeAttribute = (value: string): string =>
   value.replace(/&/g, '&amp;').replace(/"/g, '&quot;');
@@ -61,6 +87,13 @@ const warnElementComponent = (fqn: string): void => {
  *
  * An address no state routes renders nothing between its markers, which is what
  * the client's own first render of that view produces.
+ *
+ * The pair around the component is written plain, so the walk hydrating the
+ * view's surroundings reads it as the `uiViewSlot()` child part and stops
+ * there; every marker between that pair carries `servedMarkerPrefix`, so the
+ * same walk reads past the view's interior and the element reveals it at its
+ * own wake. Collecting the component's markup to prefix it is synchronous, so
+ * a component whose render awaits is not served.
  *
  * @example
  * ```ts
@@ -172,12 +205,17 @@ export class UiViewRenderer extends ElementRenderer {
     }
     const value = component(this.props(router, config));
     return [
-      () => void openViews.push(this),
-      // renderValue writes the `<!--lit-part digest-->` pair the element's own render() hydrates against.
-      () => renderValue(value, renderInfo),
       () => {
-        openViews.pop();
-        deregister();
+        openViews.push(this);
+        try {
+          // renderValue writes the `<!--lit-part digest-->` pair the element's own render() hydrates against; collecting it here is what lets the interior be prefixed.
+          return prefixInterior(
+            collectResultSync(renderValue(value, renderInfo)),
+          );
+        } finally {
+          openViews.pop();
+          deregister();
+        }
       },
     ];
   }

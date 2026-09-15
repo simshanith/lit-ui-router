@@ -258,6 +258,10 @@ const warnUnclaimed = (path: string): void => {
  * run one at a time: the scope is a module slot, so there is nothing to
  * parallelise.
  *
+ * Pages are rendered with `deferHydration`, so every custom element one holds
+ * carries `defer-hydration` and renders nothing until `hydrateRoot()`'s walk
+ * reaches it on the client.
+ *
  * @param options - the mount table, the router, the paths, and the hooks
  * @returns what was emitted, planned or written
  * @throws an `Error` when neither `mounts` nor `resolver` is supplied
@@ -335,6 +339,8 @@ export async function prerender(
                 // a fresh array per render: @lit-labs/ssr mutates the stack
                 eventTargetStack: rootedStack(root),
                 elementRenderers,
+                // every custom element the page holds sleeps until the client's walk reaches it, top-level ones included
+                deferHydration: true,
               }),
             ),
           );

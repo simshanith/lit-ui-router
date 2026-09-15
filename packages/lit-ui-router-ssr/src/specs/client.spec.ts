@@ -1,14 +1,22 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
+import 'lit-ui-router/register';
 
-// ORDER IS THE POINT: arming patches LitElement before `lit-ui-router` defines
-// its tags, so an element upgrading over server markup stays asleep.
-const { armLightDom, hydrateRoot } = await import('../client.js');
-armLightDom();
-await import('lit-ui-router/register');
+import { hydrateRoot } from '../client.js';
+import { UiViewRenderer } from '../ui-view-renderer.js';
+import { makeRouter, rootTemplate } from './fixture.js';
+import {
+  boot,
+  comments,
+  draw,
+  dropViewNodeMarkers,
+  serve,
+} from './round-trip.js';
 
-const { UiViewRenderer } = await import('../ui-view-renderer.js');
-const { makeRouter, rootTemplate } = await import('./fixture.js');
-const { boot, bootInto, draw, serve } = await import('./round-trip.js');
+/** A `<ui-view>`, as the assertions read it. */
+type View = Element & { deferHydration: boolean; hasUpdated: boolean };
+
+const views = (container: HTMLElement): View[] =>
+  [...container.querySelectorAll('ui-view')] as View[];
 
 /** The document a build would have emitted for `path`. */
 const drawShell = (path: string): Promise<string> =>
@@ -38,13 +46,56 @@ describe('the round trip', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
-    for (const view of [...container.querySelectorAll('ui-view')]) {
-      expect(
-        (view as unknown as { deferHydration: boolean }).deferHydration,
-      ).toBe(false);
+    for (const view of views(container)) {
+      expect(view.deferHydration).toBe(false);
     }
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+  });
+
+  it('leaves no prefixed marker behind', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(
+      comments(container).filter((data) => data.startsWith('ui-view:')),
+    ).toEqual([]);
+  });
+
+  it('wakes the nested view from the parent’s own hydrate', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+    // Nothing here removes an attribute: the walk the root hydrate starts does.
+    const nested = [...container.querySelectorAll('ui-view')].at(-1)!;
+    expect(nested.hasAttribute('defer-hydration')).toBe(true);
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(nested.hasAttribute('defer-hydration')).toBe(false);
+    expect(nested.querySelector('.detail')?.textContent).toBe('leaf');
+  });
+
+  it('wakes every view from its own slot part, with no node marker to help', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container, served } = serve(await drawShell('/shell/detail'));
+    // `@lit-labs/ssr` emits these only under a host-stack entry it leaks for light-DOM renderers, so nothing here may depend on them.
+    expect(dropViewNodeMarkers(container)).toBe(2);
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    const woken = views(container);
+    expect(woken).toHaveLength(2);
+    for (const view of woken) {
+      expect(view.deferHydration).toBe(false);
+      expect(view.hasUpdated).toBe(true);
+    }
+    expect(
+      served.filter((element) => container.contains(element)),
+    ).toHaveLength(served.length);
+    expect(warn).not.toHaveBeenCalled();
+    expect(
+      comments(container).filter((data) => data.startsWith('ui-view:')),
+    ).toEqual([]);
   });
 
   it('keeps the routed view live across a later transition', async () => {
@@ -62,35 +113,6 @@ describe('the round trip', () => {
     document.body.append(container);
 
     expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
-  });
-});
-
-describe('a single element', () => {
-  it('wakes when its own `defer-hydration` is removed', async () => {
-    const { container } = serve(await drawShell('/shell/detail'));
-    await bootInto(container, rootTemplate, '/shell/detail');
-
-    container.querySelector('ui-view')?.removeAttribute('defer-hydration');
-
-    expect(container.querySelector('h1')?.textContent).toContain('shell hello');
-    // one level only: the nested view is back in the document, still asleep
-    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(1);
-  });
-
-  it('does nothing beyond the original callback when it was not asleep', () => {
-    // A `<ui-view>` with no `<ui-router>` over it says so, at length.
-    vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const container = document.createElement('div');
-    document.body.append(container);
-    // Connected without the attribute, the way an element that upgraded before arming did.
-    const view = document.createElement('ui-view');
-    container.append(view);
-    view.setAttribute('defer-hydration', '');
-
-    view.removeAttribute('defer-hydration');
-
-    expect(view.isConnected).toBe(true);
-    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
   });
 });
 

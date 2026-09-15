@@ -2,15 +2,13 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { ShadowBadge } from './fixture.js';
 
 // ORDER IS THE POINT: `vitest.setup.coexist.ts` installs lit's own hydrate
-// support before `lit`, so the callbacks arming captures here are already its
-// patched ones, and both patches are live on the same prototype.
-const { armLightDom } = await import('../client.js');
-armLightDom();
-await import('lit-ui-router/register');
+// support before `lit`, so this lane runs with that support live on the same
+// prototype and proves the two mechanisms are independent.
+import 'lit-ui-router/register';
 
-const { UiViewRenderer } = await import('../ui-view-renderer.js');
-const { badgeRootTemplate, ShadowBadgeRenderer } = await import('./fixture.js');
-const { boot, draw, serve } = await import('./round-trip.js');
+import { UiViewRenderer } from '../ui-view-renderer.js';
+import { badgeRootTemplate, ShadowBadgeRenderer } from './fixture.js';
+import { boot, draw, serve } from './round-trip.js';
 
 /** The document a build would have emitted, with both renderers in play. */
 const drawBoth = (path: string): Promise<string> =>

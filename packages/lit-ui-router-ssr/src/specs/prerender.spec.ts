@@ -417,8 +417,18 @@ describe('the render composition', () => {
     });
 
     expect(files.get('dist/index.html')).toBe(
-      '<!--lit-part l2LFYrjnTDM=--><router-probe></router-probe><!--/lit-part-->',
+      '<!--lit-part l2LFYrjnTDM=--><router-probe defer-hydration></router-probe><!--/lit-part-->',
     );
+  });
+
+  it('defers every custom element on the page, the top-level one included', async () => {
+    const { files } = await run({
+      paths: ['/'],
+      notFound: false,
+      renderShell: (): TemplateResult => html`<ui-view></ui-view>`,
+    });
+
+    expect(files.get('dist/index.html')).toContain('<ui-view defer-hydration>');
   });
 });
 
