@@ -1,4 +1,5 @@
-import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { provideUiView } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import 'lit-ui-router/register';
 
@@ -10,7 +11,9 @@ import {
   comments,
   draw,
   dropViewNodeMarkers,
+  hydrateInto,
   serve,
+  settle,
 } from './round-trip.js';
 
 /** A `<ui-view>`, as the assertions read it. */
@@ -169,29 +172,41 @@ const SERVED_SHELL = [
   '<!--/lit-part-->',
 ].join('');
 
+/** Whether core reported dropping a woken view's held nodes for want of a consumer. */
+const dropped = (warn: { mock: { calls: unknown[][] } }): boolean =>
+  warn.mock.calls.some(([message]) =>
+    String(message).includes('no consumer took it'),
+  );
+
 /** A served `<ui-view>`, asleep, holding exactly what the server wrote into it. */
-const servedView = (markup: string): UiView => {
+const servedView = (
+  markup: string,
+  parent: ParentNode = document.body,
+): UiView => {
   const view = document.createElement('ui-view');
   view.setAttribute('defer-hydration', '');
   view.innerHTML = markup;
-  document.body.append(view);
+  parent.append(view);
   return view;
 };
 
-describe('the hydrator core hands each waking view', () => {
-  let adopt: (view: UiView) => void;
+describe('the consumer hydrateRoot installs', () => {
+  let container: HTMLElement;
+  let release: () => void;
 
-  beforeAll(async () => {
-    // `hydrateRoot()` is the only thing that fills core's slot, so a real trip is what puts the hydrator within reach.
-    const { container } = serve(await drawShell('/shell/detail'));
-    await boot(container, rootTemplate, '/shell/detail');
-    container.remove();
-    adopt = UiView.hydrator!;
+  beforeEach(async () => {
+    ({ container } = serve(await drawShell('/shell/detail')));
+    ({ release } = await hydrateInto(container, rootTemplate, '/shell/detail'));
+    await settle(container);
+  });
+
+  afterEach(() => {
+    release();
   });
 
   it('reveals the view’s own markers and leaves a nested view closed', () => {
     vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const view = servedView(SERVED_SHELL);
+    const view = servedView(SERVED_SHELL, container);
     let revealed: string[] = [];
     // The reveal has to be done by the time core's `render()` is read, because that value is what hydrates against these markers.
     view.render = () => {
@@ -199,7 +214,7 @@ describe('the hydrator core hands each waking view', () => {
       return document.createDocumentFragment();
     };
 
-    adopt(view);
+    expect(provideUiView(view)).toBe(true);
 
     expect(revealed).toEqual([
       'lit-part SHELL',
@@ -215,9 +230,9 @@ describe('the hydrator core hands each waking view', () => {
 
   it('drops the pair the server wrote for an address no state routed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const view = servedView('<!--lit-part--><!--/lit-part-->');
+    const view = servedView('<!--lit-part--><!--/lit-part-->', container);
 
-    adopt(view);
+    expect(provideUiView(view)).toBe(true);
 
     expect(comments(view)).toEqual([]);
     expect(view.childNodes).toHaveLength(0);
@@ -226,14 +241,51 @@ describe('the hydrator core hands each waking view', () => {
 
   it('leaves a view the document served no markers for exactly as it is', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const view = servedView('<p class="cold">cold</p>');
+    const view = servedView('<p class="cold">cold</p>', container);
     const render = vi.fn();
     view.render = render;
 
-    adopt(view);
+    expect(provideUiView(view)).toBe(true);
 
     expect(render).not.toHaveBeenCalled();
     expect(view.innerHTML).toBe('<p class="cold">cold</p>');
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('takes nothing offered outside its container', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = servedView(SERVED_SHELL);
+
+    view.removeAttribute('defer-hydration');
+    await view.updateComplete;
+
+    expect(view.querySelector('.detail')).toBeNull();
+    expect(dropped(warn)).toBe(true);
+  });
+
+  it('stops taking once released', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = servedView(SERVED_SHELL, container);
+    release();
+
+    view.removeAttribute('defer-hydration');
+    await view.updateComplete;
+
+    expect(view.querySelector('.detail')).toBeNull();
+    expect(dropped(warn)).toBe(true);
+  });
+
+  it('keeps taking when a second hydrateRoot throws on the same container', () => {
+    expect(() => hydrateRoot(container, rootTemplate(makeRouter()))).toThrow(
+      /live render/,
+    );
+    const view = servedView(SERVED_SHELL, container);
+    const render = vi.fn(() => document.createDocumentFragment());
+    view.render = render;
+
+    expect(provideUiView(view)).toBe(true);
+
+    // One consumer answered: the failed call released its own before rethrowing.
+    expect(render).toHaveBeenCalledTimes(1);
   });
 });

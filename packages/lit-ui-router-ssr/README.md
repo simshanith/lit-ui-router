@@ -116,24 +116,27 @@ const booted = new Promise<void>((resolve) => {
 router.start();
 await booted;
 
-if (!hydrateRoot(root, page(router))) render(page(router), root);
+const release = hydrateRoot(root, page(router));
+if (!release) render(page(router), root);
 ```
 
 - **The sequence is the contract.** `router.start()`, await its first successful transition, then
   `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and each `<ui-view>` re-seeks the
   router before its own first render, so every view finds the settled router rather than the
   placeholder it registered against. Nothing constrains when `lit-ui-router/register` is imported.
-- **`hydrateRoot(container, value, options?)`** installs `UiView.hydrator` and runs one `hydrate()`
-  over `container`. It returns `false` when there is nothing to adopt — a cold client render, a dev
-  server.
+- **`hydrateRoot(container, value, options?)`** installs a consumer with
+  `consumeUiViews(container, …)` and runs one `hydrate()` over `container`. It returns that
+  consumer's release function, or `false` when there is nothing to adopt — a cold client render, a
+  dev server. Release it once the page has settled; a nested view wakes on its parent's own update,
+  after this call returns.
 - **One walk wakes the page.** A served `<ui-view>` sleeps under `defer-hydration` and renders
-  nothing. Removing the attribute wakes it, and core hands the element to the hydrator this package
-  installs on `UiView.hydrator` — once, after the view re-seeks its router and before its first
-  render.
+  nothing. Removing the attribute wakes it: it re-seeks its router and offers itself with
+  `provideUiView()`, and the consumer takes the offer and adopts the nodes the view holds. A view
+  that wakes with no consumer above it drops those nodes, renders cold, and warns in development.
 - **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
   part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
   reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The
-  hydrator renames one view's markers back at that view's wake and hydrates the element's own
+  consumer renames one view's markers back at that view's wake and hydrates the element's own
   `render()` against them, which leaves a nested view's interior hidden until its own wake.
 - **`uiViewSlot()`** is the hole, on both halves: the server reaches the renderer's `renderLight()`
   only through it, and on the client it wakes the `<ui-view>` it sits in, whenever the enclosing
