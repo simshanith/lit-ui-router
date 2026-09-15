@@ -10,6 +10,7 @@ import type { ChildPart, RenderOptions } from 'lit';
 import { Directive, directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
 import { UiView } from 'lit-ui-router/pure';
+import { servedMarkerPrefix } from './served-markers.js';
 
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
@@ -71,12 +72,58 @@ const warnMismatch = (tag: string, error: unknown): void => {
   );
 };
 
-const isPart = (node: Node | null): boolean =>
+const isPart = (node: Node | null | undefined, data: string): boolean =>
   node?.nodeType === Node.COMMENT_NODE &&
-  (node as Comment).data.startsWith('lit-part');
+  (node as Comment).data.startsWith(data);
+
+/** Strips {@link servedMarkerPrefix} from one marker comment, leaving anything else alone. */
+const revealMarker = (node: Node | null): void => {
+  if (!isPart(node, servedMarkerPrefix)) return;
+  const comment = node as Comment;
+  comment.data = comment.data.slice(servedMarkerPrefix.length);
+};
 
 /**
- * Hydrates one `<ui-view>`, or leaves it ready for the cold render that follows.
+ * Renames one view's served markers back to the ones `hydrate()` reads.
+ *
+ * A nested `<ui-view>` is left closed: only the outer pair this view's template
+ * wrote around it is renamed, because everything inside is that view's own
+ * served content and stays hidden until its own wake.
+ */
+const revealServedMarkers = (node: Node): void => {
+  for (const child of node.childNodes) {
+    if (child.nodeType === Node.COMMENT_NODE) {
+      revealMarker(child);
+    } else if (child instanceof UiView) {
+      revealMarker(child.firstChild);
+      revealMarker(child.lastChild);
+    } else if (child instanceof Element) {
+      revealServedMarkers(child);
+    }
+  }
+};
+
+/** Drops the server's nodes, keeping the outer pair the cold render writes into. */
+const clearInterior = (view: UiView): void => {
+  for (const node of [...view.childNodes].slice(1, -1)) node.remove();
+};
+
+/**
+ * Adopts one `<ui-view>`'s served markup, or leaves it ready for the cold
+ * render that follows.
+ *
+ * The element holds what {@link UiViewRenderer} wrote for it: a plain outer
+ * part pair, and every marker between them carrying {@link
+ * servedMarkerPrefix}. Revealing those markers is what makes the interior
+ * readable to `hydrate()`, and it happens here rather than in the enclosing
+ * walk so a nested view's own interior stays hidden until that view wakes.
+ *
+ * An element with no served pair is a cold render — a view the document was
+ * drawn without — and is left exactly as it is.
+ *
+ * An empty pair is the address no state routed. Both comments go, so the
+ * element's own render starts on a clean container; the `<slot>` that render
+ * writes is inert in light DOM.
  *
  * A mismatch is not a bug in every case: one static document answers a family
  * of urls, so a client can boot into a state the document was not drawn for.
@@ -85,16 +132,19 @@ const isPart = (node: Node | null): boolean =>
  * writes into — rather than a half-built page. `hydrate()` claims the container
  * on its last statement, so a walk that threw leaves nothing to undo.
  */
-const adopt = (
-  value: unknown,
-  container: HTMLElement,
-  options?: RenderOptions,
-): void => {
+const adopt = (view: UiView): void => {
+  if (!isPart(view.firstChild, 'lit-part')) return;
+  // Only the pair itself is there, so clearing the element drops exactly those two comments.
+  if (view.childNodes.length === 2 && isPart(view.lastChild, '/lit-part')) {
+    view.replaceChildren();
+    return;
+  }
+  revealServedMarkers(view);
   try {
-    hydrate(value, container, options);
+    hydrate(view.render(), view, view.renderOptions);
   } catch (error) {
-    warnMismatch(container.localName, error);
-    for (const node of [...container.childNodes].slice(1, -1)) node.remove();
+    warnMismatch(view.localName, error);
+    clearInterior(view);
   }
 };
 
@@ -104,10 +154,11 @@ const adopt = (
  *
  * `UiView.hydrator` is installed first, so a view woken by the walk finds it;
  * `hydrate()` then runs over `container`. The walk reaches each `<ui-view>`'s
- * {@link uiViewSlot} part, which wakes that view: it reveals the markers the
- * server prefixed for it and hydrates its own routed component, and that
- * hydrate reaches the slot parts of the views nested inside the component the
- * same way, parent first.
+ * {@link uiViewSlot} part, which wakes that view, and core hands the element
+ * to the hydrator: it reveals the markers the server prefixed for that view
+ * and hydrates the element's own render against them. That hydrate reaches the
+ * slot parts of the views nested inside the routed component the same way,
+ * parent first.
  *
  * The boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
@@ -136,7 +187,10 @@ export function hydrateRoot(
   value: unknown,
   options: RenderOptions = {},
 ): boolean {
-  if (!container.querySelector(`[${DEFER}]`) && !isPart(container.firstChild)) {
+  if (
+    !container.querySelector(`[${DEFER}]`) &&
+    !isPart(container.firstChild, 'lit-part')
+  ) {
     return false;
   }
   UiView.hydrator ??= adopt;
