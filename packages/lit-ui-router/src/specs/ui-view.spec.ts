@@ -4,7 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
-import { consumeUiViews } from '../context.js';
+import { adoptUiViewContext, provideContext } from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { UIRouterLit } from '../core.js';
@@ -633,7 +633,7 @@ describe('UiView', () => {
       expect(router.viewService.available()).toHaveLength(1);
     });
 
-    it('should offer the woken view to a consumer, re-sought and unrendered', async () => {
+    it('should hand the woken view to an adopter, re-sought and unrendered', async () => {
       // No router on <ui-router>, so it provides a placeholder of its own and
       // the view registers against that — the prerendered upgrade order.
       const uiRouterEl = document.createElement('ui-router');
@@ -648,56 +648,56 @@ describe('UiView', () => {
       let seenRouter: unknown;
       let seenHasUpdated: boolean | undefined;
       let seenHeld: Element | null = null;
-      const take = vi.fn((view: UiView) => {
+      const adopt = vi.fn((view: UiView) => {
         seenRouter = view.uiRouter;
         seenHasUpdated = view.hasUpdated;
         seenHeld = view.querySelector('p.held');
       });
-      const release = consumeUiViews(container, take);
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
       } finally {
-        release();
+        uninstall();
       }
 
-      expect(take).toHaveBeenCalledTimes(1);
-      expect(take.mock.calls[0]?.[0]).toBe(uiView);
-      // The re-seek runs first, so the consumer renders against the real router.
+      expect(adopt).toHaveBeenCalledTimes(1);
+      expect(adopt.mock.calls[0]?.[0]).toBe(uiView);
+      // The re-seek runs first, so the adopter renders against the real router.
       expect(seenRouter).toBe(router);
-      // And it runs before this update's render, so the consumer owns that render.
+      // And it runs before this update's render, so the adopter owns that render.
       expect(seenHasUpdated).toBe(false);
-      // The held nodes are still there for the consumer to adopt.
+      // The held nodes are still there for the adopter to take.
       expect(seenHeld).not.toBeNull();
     });
 
-    it('should not offer the view again on a later update', async () => {
+    it('should not request an adopter again on a later update', async () => {
       router = createTestRouter(homeStates);
       const uiView = mountHeld();
-      const take = vi.fn();
-      const release = consumeUiViews(container, take);
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
       try {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
-        expect(take).toHaveBeenCalledTimes(1);
+        expect(adopt).toHaveBeenCalledTimes(1);
 
         router.start();
         await routerGo(router, 'home');
         await waitForUpdate(uiView);
 
-        expect(take).toHaveBeenCalledTimes(1);
+        expect(adopt).toHaveBeenCalledTimes(1);
         expect(uiView.hasUpdated).toBe(true);
       } finally {
-        release();
+        uninstall();
       }
     });
 
-    it('should not be taken by a consumer installed off the path it offers on', async () => {
+    it('should not reach a provider installed off the path it requests on', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       const elsewhere = document.createElement('div');
       container.appendChild(elsewhere);
-      const take = vi.fn();
-      const release = consumeUiViews(elsewhere, take);
+      const adopt = vi.fn();
+      const uninstall = provideContext(elsewhere, adoptUiViewContext, adopt);
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld();
@@ -705,19 +705,19 @@ describe('UiView', () => {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
 
-        expect(take).not.toHaveBeenCalled();
+        expect(adopt).not.toHaveBeenCalled();
         expect(uiView.querySelector('p.held')).toBeNull();
       } finally {
-        release();
+        uninstall();
         warn.mockRestore();
       }
     });
 
-    it('should stop taking views once the consumer is released', async () => {
+    it('should stop being answered once the provider is uninstalled', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      const take = vi.fn();
-      const release = consumeUiViews(container, take);
-      release();
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      uninstall();
       try {
         router = createTestRouter(homeStates);
         const uiView = mountHeld();
@@ -725,14 +725,14 @@ describe('UiView', () => {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
 
-        expect(take).not.toHaveBeenCalled();
+        expect(adopt).not.toHaveBeenCalled();
         expect(uiView.querySelector('p.held')).toBeNull();
       } finally {
         warn.mockRestore();
       }
     });
 
-    it('should drop the held nodes and warn when no consumer takes it', async () => {
+    it('should drop the held nodes and warn when nothing answers', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
         router = createTestRouter(homeStates);
@@ -750,9 +750,10 @@ describe('UiView', () => {
         expect(uiView.querySelector('.home-content')).not.toBeNull();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0]?.[0]).toBe(
-          'lit-ui-router: this <ui-view> woke from defer-hydration and no ' +
-            'consumer took it (consumeUiViews), so its held nodes were ' +
-            'dropped and it rendered cold. Install a consumer before the wake.',
+          'lit-ui-router: this <ui-view> woke from defer-hydration and ' +
+            'nothing answered its adoptUiViewContext request, so its held ' +
+            'nodes were dropped and it rendered cold. Provide an adopter ' +
+            'before the wake.',
         );
       } finally {
         warn.mockRestore();
