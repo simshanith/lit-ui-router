@@ -1,9 +1,12 @@
 import 'lit-ui-router/register';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
+import { html, LitElement } from 'lit';
 import { withRouterSync } from 'lit-ui-router/context';
-import type { UIRouterLit } from 'lit-ui-router/pure';
-import { describe, expect, it } from 'vitest';
+import { UIRouterLit } from 'lit-ui-router/pure';
+import type { LitStateDeclaration } from 'lit-ui-router/pure';
+import { installServerLocation } from 'ui-router-server/location';
+import { describe, expect, it, vi } from 'vitest';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import { goTo, makeRouter, rootTemplate } from './fixture.js';
@@ -21,6 +24,21 @@ const at = async (path: string): Promise<string> => {
   const router = makeRouter();
   await goTo(router, path);
   return draw(router);
+};
+
+/** A view declared as a `RoutedLitElement` class rather than a template function. */
+class BoxedView extends LitElement {}
+
+/** One state whose view is a `RoutedLitElement` class, which the renderer has no server render for. */
+const boxedRouter = (): UIRouterLit => {
+  const router = installServerLocation(new UIRouterLit(), {
+    strictMode: false,
+  });
+  const states: LitStateDeclaration[] = [
+    { name: 'boxed', url: '/boxed', component: BoxedView },
+  ];
+  for (const state of states) router.stateRegistry.register(state);
+  return router;
 };
 
 describe('UiViewRenderer', () => {
@@ -106,5 +124,39 @@ describe('UiViewRenderer', () => {
     draw(router);
 
     expect(router.viewService.available()).toEqual([]);
+  });
+
+  it('writes a valued attribute back escaped, quotes included', () => {
+    const markup = collectResultSync(
+      render(
+        html`<ui-view name=${'detail'} data-note=${'Tom & "Jerry"'}></ui-view>`,
+        { elementRenderers: [UiViewRenderer] },
+      ),
+    );
+
+    expect(markup).toContain('name="detail"');
+    expect(markup).toContain('data-note="Tom &amp; &quot;Jerry&quot;"');
+    // negative control: the raw, unescaped value never reaches the markup
+    expect(markup).not.toContain('data-note="Tom & "Jerry""');
+  });
+
+  it('leaves a RoutedLitElement view empty and warns once', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const router = boxedRouter();
+    await goTo(router, '/boxed');
+
+    const markup = draw(router);
+
+    expect(markup).toContain(
+      '<ui-view defer-hydration><!--lit-part--><!--/lit-part--></ui-view>',
+    );
+    expect(warn).toHaveBeenCalledOnce();
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'lit-ui-router-ssr: this view is a RoutedLitElement class',
+      ),
+      '$default',
+    );
+    warn.mockRestore();
   });
 });
