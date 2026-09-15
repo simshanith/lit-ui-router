@@ -31,7 +31,8 @@
       "TemplateResult": "https://lit.dev/docs/api/templates/#TemplateResult"
     },
     "lit-ui-router": {
-      "UIRouterLit": "/api/reference/core/UIRouterLit"
+      "UIRouterLit": "/api/reference/core/UIRouterLit",
+      "adoptUiViewContext": "/api/reference/core/adoptUiViewContext"
     },
     "ui-router-server": {
       "MountConfig": "/api/ui-router-server/index/interfaces/MountConfig",
