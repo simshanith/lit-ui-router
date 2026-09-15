@@ -483,6 +483,59 @@ export const adoptUiViewContext: AdoptUiViewContext = Object.freeze({
   name: 'lit-ui-router/context#adopt-ui-view',
 }) as AdoptUiViewContext;
 
+/**
+ * The identity of {@link parentUiViewContext}: a plain object, so the key is
+ * unique under `===` and readable in a debugger.
+ *
+ * @category types
+ */
+export interface ParentUiViewContextKey {
+  /** Names the key for a debugger; identity, not this string, is what matches. */
+  readonly name: 'lit-ui-router/context#parent-ui-view';
+}
+
+/**
+ * The parent-view context key's type — {@link ParentUiViewContextKey} branded
+ * with {@link UiView}, so `@consume({ context: parentUiViewContext })` infers
+ * the view.
+ *
+ * @category types
+ */
+export type ParentUiViewContext = Context<ParentUiViewContextKey, UiView>;
+
+/**
+ * The context key every `<ui-view>` answers for, with itself, so a descendant
+ * finds its enclosing view.
+ *
+ * A `<ui-view>` seeks its own parent over the house `ui-view-context` event;
+ * this key is the protocol form of that answer, for everyone else. The nearest
+ * enclosing view wins, and no view answers its own request.
+ *
+ * @example
+ * ```ts
+ * import { consume } from '@lit/context';
+ * import { parentUiViewContext } from 'lit-ui-router/context';
+ * import type { UiView } from 'lit-ui-router';
+ *
+ * class MyElement extends LitElement {
+ *   @consume({ context: parentUiViewContext })
+ *   parentView!: UiView;
+ * }
+ * ```
+ *
+ * @example
+ * ```ts
+ * import { parentUiViewContext, requestContext } from 'lit-ui-router/context';
+ *
+ * const parentView = requestContext(element, parentUiViewContext);
+ * ```
+ *
+ * @category core
+ */
+export const parentUiViewContext: ParentUiViewContext = Object.freeze({
+  name: 'lit-ui-router/context#parent-ui-view',
+}) as ParentUiViewContext;
+
 /** The call-scoped router. A plain module slot, never an async context. */
 let scoped: UIRouter | undefined;
 
