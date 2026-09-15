@@ -170,7 +170,10 @@ export class UiView extends LitElement {
       this.onUiViewContextEvent as EventListener,
     );
     this.setupUiView();
-    this.captureContent();
+    // `defer-hydration` marks server content between part markers, not authored hold content.
+    if (!this.hasAttribute('defer-hydration')) {
+      this.captureContent();
+    }
   }
 
   private static readonly uiViewContextEventName = 'ui-view-context';
@@ -254,8 +257,14 @@ export class UiView extends LitElement {
    *
    * `registerUIView` syncs, so the re-registered view picks up the current
    * state without waiting for the next transition.
+   *
+   * A hydration client calls this before the first update of an element that
+   * woke from `defer-hydration`, because that first update is the hydrate and
+   * `render()` reads the component from the real registration.
+   *
+   * @internal
    */
-  private adoptProvidedRouter(): void {
+  adoptProvidedRouter(): void {
     const router = this.routerFromProvider
       ? this.seekProvidedRouter()
       : this.uiRouter;
@@ -275,6 +284,7 @@ export class UiView extends LitElement {
     }
   }
 
+  /** Sweeps authored hold content aside so the hold render can replay a clone. */
   private captureContent() {
     this.inner ??= document.createDocumentFragment();
     this.inner.append(...this.childNodes.values());
