@@ -39,9 +39,7 @@ const PART_CLOSE = '<!--/lit-part-->';
  * its surroundings, leaving the outer pair plain for that walk to read.
  */
 const prefixInterior = (markup: string): string => {
-  if (!markup.startsWith('<!--lit-part') || !markup.endsWith(PART_CLOSE)) {
-    return markup;
-  }
+  // renderValue always wraps a hydratable value in the pair, so the ends are the pair by construction.
   const open = markup.indexOf('-->') + 3;
   const close = markup.length - PART_CLOSE.length;
   // A plain `<!--lit-part` never matches an already-prefixed `<!--ui-view:lit-part`, so a nested run's interior is prefixed once.
