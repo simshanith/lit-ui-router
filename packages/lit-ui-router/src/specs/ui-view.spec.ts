@@ -485,6 +485,23 @@ describe('UiView', () => {
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
     });
 
+    it('should read the attribute the parser wrote, before connect', async () => {
+      router = createTestRouter([]);
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+      // Parsed with the attribute already on it, the way server output arrives.
+      uiRouterEl.innerHTML =
+        '<ui-view defer-hydration><p class="server">server</p></ui-view>';
+      const uiView = uiRouterEl.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+
+      expect(uiView.deferHydration).toBe(true);
+      // Capture skipped, so the hold render is the bare slot template.
+      expect(uiView.render()).toMatchObject({ strings: ['<slot></slot>'] });
+      expect(uiView.querySelector('p.server')).not.toBeNull();
+    });
+
     it('should not capture server content when the attribute is present', async () => {
       const { uiView } = await setupRouter([], {
         configure: (el) => {
@@ -493,6 +510,8 @@ describe('UiView', () => {
         },
         start: false,
       });
+
+      expect(uiView.deferHydration).toBe(true);
 
       // Never captured, so `inner` was never created and the hold render is the
       // bare slot template rather than a clone.
@@ -507,12 +526,13 @@ describe('UiView', () => {
     });
   });
 
-  describe('adoptProvidedRouter()', () => {
-    it('should re-register when called from outside after the provider gets its router', async () => {
+  describe('waking from defer-hydration', () => {
+    it('should re-register on the provided router when the attribute is removed', async () => {
       // No router on <ui-router>, so it provides a placeholder of its own and
       // the view registers against that — the prerendered upgrade order.
       const uiRouterEl = document.createElement('ui-router');
       const uiView = document.createElement('ui-view');
+      uiView.setAttribute('defer-hydration', '');
       container.appendChild(uiRouterEl);
       uiRouterEl.appendChild(uiView);
       await waitForUpdate(uiView);
@@ -526,7 +546,12 @@ describe('UiView', () => {
       ]);
       uiRouterEl.uiRouter = router;
 
-      uiView.adoptProvidedRouter();
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+
+      expect(uiView.deferHydration).toBe(false);
+      expect(uiView.uiRouter).toBe(router);
+
       router.start();
       await tick();
 
@@ -534,6 +559,22 @@ describe('UiView', () => {
       await waitForUpdate(uiView);
 
       expect(uiView.querySelector('.home-content')).not.toBeNull();
+    });
+
+    it('should leave a view already registered on the real router alone', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
+      ]);
+      const registerUIView = vi.spyOn(router.viewService, 'registerUIView');
+
+      uiView.setAttribute('defer-hydration', '');
+      await waitForUpdate(uiView);
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+
+      expect(registerUIView).not.toHaveBeenCalled();
+      expect(uiView.uiRouter).toBe(router);
+      expect(router.viewService.available()).toHaveLength(1);
     });
   });
 
