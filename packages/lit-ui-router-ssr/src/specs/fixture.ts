@@ -1,6 +1,6 @@
 // The one router and the one template set both halves of the seam render.
-import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
-import { html } from 'lit';
+import { LitElementRenderer } from '@lit-labs/ssr/lib/lit-element-renderer.js';
+import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import type {
@@ -9,30 +9,50 @@ import type {
   UIRouterLit as Router,
 } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
+import { uiViewSlot } from '../client.js';
+import 'lit-ui-router/register';
 
 /** The routed shell: a heading, and the nested `<ui-view>` its children fill. */
 export const ShellView: RoutedLitTemplate = (props) => html`
   <h1>shell ${String(props.resolves.greeting ?? '')}</h1>
-  ${uiViewSlot()}
+  ${uiView()}
 `;
 
 /** A leaf view, drawn from a resolve so the spec can see the resolve arrive. */
 export const DetailView: RoutedLitTemplate = (props) =>
   html`<p class="detail">${String(props.resolves.detail ?? '')}</p>`;
 
-/**
- * The hole a `<ui-view>` fills. `renderLight()` is the use site's opt-in to an
- * element renderer's light-DOM render; on the client it commits nothing and the
- * element hydrates against the markers the part left behind.
- */
-export const uiViewSlot = (name = ''): TemplateResult =>
+/** One `<ui-view>`, with the slot the renderer fills on the server. */
+export const uiView = (name = ''): TemplateResult =>
   name
-    ? html`<ui-view name=${name}>${renderLight()}</ui-view>`
-    : html`<ui-view>${renderLight()}</ui-view>`;
+    ? html`<ui-view name=${name}>${uiViewSlot()}</ui-view>`
+    : html`<ui-view>${uiViewSlot()}</ui-view>`;
+
+/** A shadow-DOM element, the half `@lit-labs/ssr-client`'s own hydrate support arms. */
+export class ShadowBadge extends LitElement {
+  override render(): TemplateResult {
+    return html`<span class="badge">badge</span>`;
+  }
+}
+
+customElements.define('shadow-badge', ShadowBadge);
+
+/** `LitElementRenderer`, narrowed to the badge so every other element renders as it does in the other lane. */
+export class ShadowBadgeRenderer extends LitElementRenderer {
+  static override matchesClass(ctor: typeof HTMLElement): boolean {
+    return ctor === (ShadowBadge as unknown as typeof HTMLElement);
+  }
+}
 
 /** The root both sides render: one `<ui-router>` around one `<ui-view>`. */
 export const rootTemplate = (router: Router): TemplateResult =>
-  html`<ui-router .uiRouter=${router}>${uiViewSlot()}</ui-router>`;
+  html`<ui-router .uiRouter=${router}>${uiView()}</ui-router>`;
+
+/** The same root with one shadow-DOM element beside the view. */
+export const badgeRootTemplate = (router: Router): TemplateResult =>
+  html`<ui-router .uiRouter=${router}
+    ><shadow-badge></shadow-badge>${uiView()}</ui-router
+  >`;
 
 /** Two states: `shell`, and `shell.detail` filling the nested view. */
 export const makeRouter = (): Router => {

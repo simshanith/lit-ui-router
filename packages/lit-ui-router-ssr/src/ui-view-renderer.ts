@@ -64,12 +64,12 @@ const warnElementComponent = (fqn: string): void => {
  *
  * @example
  * ```ts
- * import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
+ * import { uiViewSlot } from 'lit-ui-router-ssr/client';
  *
- * // `renderLight()` is the use site's opt-in: it is what reaches an element
+ * // `uiViewSlot()` is the use site's opt-in: it is what reaches this
  * // renderer's `renderLight()`, and it commits nothing on the client.
  * const page = (router: UIRouterLit) =>
- *   html`<ui-router .uiRouter=${router}><ui-view>${renderLight()}</ui-view></ui-router>`;
+ *   html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
  * ```
  *
  * @category server

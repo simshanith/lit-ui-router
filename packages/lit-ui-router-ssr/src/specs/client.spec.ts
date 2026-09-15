@@ -1,65 +1,18 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { TemplateResult } from 'lit';
-import type { UIRouterLit } from 'lit-ui-router/pure';
 
 // ORDER IS THE POINT: arming patches LitElement before `lit-ui-router` defines
 // its tags, so an element upgrading over server markup stays asleep.
-const { armLightDom, hydrateRoot, wakeAll } = await import('../client.js');
+const { armLightDom, hydrateRoot } = await import('../client.js');
 armLightDom();
 await import('lit-ui-router/register');
 
-const { render } = await import('@lit-labs/ssr');
-const { collectResultSync } =
-  await import('@lit-labs/ssr/lib/render-result.js');
-const { withRouterSync } = await import('lit-ui-router/context');
 const { UiViewRenderer } = await import('../ui-view-renderer.js');
-const { goTo, makeRouter, rootTemplate } = await import('./fixture.js');
+const { makeRouter, rootTemplate } = await import('./fixture.js');
+const { boot, bootInto, draw, serve } = await import('./round-trip.js');
 
 /** The document a build would have emitted for `path`. */
-const draw = async (path: string): Promise<string> => {
-  const router = makeRouter();
-  await goTo(router, path);
-  return withRouterSync(router, () =>
-    collectResultSync(
-      render(rootTemplate(router), { elementRenderers: [UiViewRenderer] }),
-    ),
-  );
-};
-
-/** Parses `markup` into a live container and stamps every element it holds. */
-const serve = (
-  markup: string,
-): { container: HTMLElement; served: Element[] } => {
-  const container = document.createElement('div');
-  document.body.append(container);
-  container.innerHTML = markup;
-  const served = [...container.querySelectorAll('*')];
-  for (const [index, element] of served.entries()) {
-    element.setAttribute('data-served', String(index));
-  }
-  return { container, served };
-};
-
-/** Boots a fresh client router into `path` and wakes what the server deferred. */
-const boot = async (
-  container: HTMLElement,
-  path: string,
-): Promise<UIRouterLit> => {
-  const router = makeRouter();
-  const template: TemplateResult = rootTemplate(router);
-  expect(hydrateRoot(container, template)).toBe(true);
-  const booted = new Promise<void>((resolve) => {
-    const off = router.transitionService.onSuccess({}, () => {
-      off();
-      resolve();
-    });
-  });
-  router.urlService.url(path);
-  router.start();
-  await booted;
-  wakeAll(container);
-  return router;
-};
+const drawShell = (path: string): Promise<string> =>
+  draw(rootTemplate, [UiViewRenderer], path);
 
 afterEach(() => {
   document.body.replaceChildren();
@@ -69,9 +22,9 @@ afterEach(() => {
 describe('the round trip', () => {
   it('adopts the server nodes rather than replacing them', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    const { container, served } = serve(await draw('/shell/detail'));
+    const { container, served } = serve(await drawShell('/shell/detail'));
 
-    await boot(container, '/shell/detail');
+    await boot(container, rootTemplate, '/shell/detail');
 
     const kept = served.filter((element) => container.contains(element));
     expect(kept).toHaveLength(served.length);
@@ -80,9 +33,9 @@ describe('the round trip', () => {
   });
 
   it('leaves no element deferred, and both views live', async () => {
-    const { container } = serve(await draw('/shell/detail'));
+    const { container } = serve(await drawShell('/shell/detail'));
 
-    await boot(container, '/shell/detail');
+    await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
@@ -90,9 +43,9 @@ describe('the round trip', () => {
   });
 
   it('keeps the routed view live across a later transition', async () => {
-    const { container } = serve(await draw('/shell/detail'));
+    const { container } = serve(await drawShell('/shell/detail'));
 
-    const router = await boot(container, '/shell/detail');
+    const router = await boot(container, rootTemplate, '/shell/detail');
     await router.stateService.go('shell');
 
     expect(container.querySelector('.detail')).toBeNull();
@@ -107,14 +60,43 @@ describe('the round trip', () => {
   });
 });
 
+describe('a single element', () => {
+  it('wakes when its own `defer-hydration` is removed', async () => {
+    const { container } = serve(await drawShell('/shell/detail'));
+    await bootInto(container, rootTemplate, '/shell/detail');
+
+    container.querySelector('ui-view')?.removeAttribute('defer-hydration');
+
+    expect(container.querySelector('h1')?.textContent).toContain('shell hello');
+    // one level only: the nested view is back in the document, still asleep
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(1);
+  });
+
+  it('does nothing beyond the original callback when it was not asleep', () => {
+    // A `<ui-view>` with no `<ui-router>` over it says so, at length.
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const container = document.createElement('div');
+    document.body.append(container);
+    // Connected without the attribute, the way an element that upgraded before arming did.
+    const view = document.createElement('ui-view');
+    container.append(view);
+    view.setAttribute('defer-hydration', '');
+
+    view.removeAttribute('defer-hydration');
+
+    expect(view.isConnected).toBe(true);
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+  });
+});
+
 describe('a document drawn for another state', () => {
   it('warns once, renders that view cold, and keeps its ancestors', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     // Drawn with the nested view empty; the client boots into the child state.
-    const { container, served } = serve(await draw('/shell'));
+    const { container, served } = serve(await drawShell('/shell'));
     const shell = container.querySelector('h1');
 
-    await boot(container, '/shell/detail');
+    await boot(container, rootTemplate, '/shell/detail');
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain(
