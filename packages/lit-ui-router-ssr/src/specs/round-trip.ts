@@ -106,7 +106,7 @@ export const dropViewNodeMarkers = (container: HTMLElement): number => {
 
 /**
  * Hydrates `container` with a fresh client router settled on `path`, leaving
- * the consumer `hydrateRoot()` installed live.
+ * the provider `hydrateRoot()` installed live.
  */
 export const hydrateInto = async (
   container: HTMLElement,
@@ -122,7 +122,7 @@ export const hydrateInto = async (
 
 /**
  * The whole trip: settle a fresh client router on `path`, hydrate the served
- * container, let every woken view finish, and release the consumer.
+ * container, let every woken view finish, and release the provider.
  */
 export const boot = async (
   container: HTMLElement,

@@ -1,5 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { provideUiView } from 'lit-ui-router/context';
+import { adoptUiViewContext, requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import 'lit-ui-router/register';
 
@@ -172,10 +172,10 @@ const SERVED_SHELL = [
   '<!--/lit-part-->',
 ].join('');
 
-/** Whether core reported dropping a woken view's held nodes for want of a consumer. */
+/** Whether core reported dropping a woken view's held nodes for want of an adopter. */
 const dropped = (warn: { mock: { calls: unknown[][] } }): boolean =>
   warn.mock.calls.some(([message]) =>
-    String(message).includes('no consumer took it'),
+    String(message).includes('adoptUiViewContext'),
   );
 
 /** A served `<ui-view>`, asleep, holding exactly what the server wrote into it. */
@@ -190,7 +190,14 @@ const servedView = (
   return view;
 };
 
-describe('the consumer hydrateRoot installs', () => {
+/** Requests the adopter and calls it, as a waking view does; false when nobody answered. */
+const wake = (view: UiView): boolean => {
+  const adopt = requestContext(view, adoptUiViewContext);
+  adopt?.(view);
+  return adopt !== undefined;
+};
+
+describe('the adopter hydrateRoot provides', () => {
   let container: HTMLElement;
   let release: () => void;
 
@@ -214,7 +221,7 @@ describe('the consumer hydrateRoot installs', () => {
       return document.createDocumentFragment();
     };
 
-    expect(provideUiView(view)).toBe(true);
+    expect(wake(view)).toBe(true);
 
     expect(revealed).toEqual([
       'lit-part SHELL',
@@ -232,7 +239,7 @@ describe('the consumer hydrateRoot installs', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView('<!--lit-part--><!--/lit-part-->', container);
 
-    expect(provideUiView(view)).toBe(true);
+    expect(wake(view)).toBe(true);
 
     expect(comments(view)).toEqual([]);
     expect(view.childNodes).toHaveLength(0);
@@ -245,14 +252,14 @@ describe('the consumer hydrateRoot installs', () => {
     const render = vi.fn();
     view.render = render;
 
-    expect(provideUiView(view)).toBe(true);
+    expect(wake(view)).toBe(true);
 
     expect(render).not.toHaveBeenCalled();
     expect(view.innerHTML).toBe('<p class="cold">cold</p>');
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('takes nothing offered outside its container', async () => {
+  it('answers nothing outside its container', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView(SERVED_SHELL);
 
@@ -263,7 +270,7 @@ describe('the consumer hydrateRoot installs', () => {
     expect(dropped(warn)).toBe(true);
   });
 
-  it('stops taking once released', async () => {
+  it('stops answering once released', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView(SERVED_SHELL, container);
     release();
@@ -275,7 +282,7 @@ describe('the consumer hydrateRoot installs', () => {
     expect(dropped(warn)).toBe(true);
   });
 
-  it('keeps taking when a second hydrateRoot throws on the same container', () => {
+  it('keeps answering when a second hydrateRoot throws on the same container', () => {
     expect(() => hydrateRoot(container, rootTemplate(makeRouter()))).toThrow(
       /live render/,
     );
@@ -283,9 +290,9 @@ describe('the consumer hydrateRoot installs', () => {
     const render = vi.fn(() => document.createDocumentFragment());
     view.render = render;
 
-    expect(provideUiView(view)).toBe(true);
+    expect(wake(view)).toBe(true);
 
-    // One consumer answered: the failed call released its own before rethrowing.
+    // One provider answered: the failed call released its own before rethrowing.
     expect(render).toHaveBeenCalledTimes(1);
   });
 });

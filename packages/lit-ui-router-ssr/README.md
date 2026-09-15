@@ -124,19 +124,19 @@ if (!release) render(page(router), root);
   `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and each `<ui-view>` re-seeks the
   router before its own first render, so every view finds the settled router rather than the
   placeholder it registered against. Nothing constrains when `lit-ui-router/register` is imported.
-- **`hydrateRoot(container, value, options?)`** installs a consumer with
-  `consumeUiViews(container, …)` and runs one `hydrate()` over `container`. It returns that
-  consumer's release function, or `false` when there is nothing to adopt — a cold client render, a
-  dev server. Release it once the page has settled; a nested view wakes on its parent's own update,
-  after this call returns.
+- **`hydrateRoot(container, value, options?)`** provides `adoptUiViewContext` under `container` with
+  core's `provideContext()` and runs one `hydrate()` over `container`. It returns that provider's
+  release function, or `false` when there is nothing to adopt — a cold client render, a dev server.
+  Release it once the page has settled; a nested view wakes on its parent's own update, after this
+  call returns.
 - **One walk wakes the page.** A served `<ui-view>` sleeps under `defer-hydration` and renders
-  nothing. Removing the attribute wakes it: it re-seeks its router and offers itself with
-  `provideUiView()`, and the consumer takes the offer and adopts the nodes the view holds. A view
-  that wakes with no consumer above it drops those nodes, renders cold, and warns in development.
+  nothing. Removing the attribute wakes it: it re-seeks its router, requests `adoptUiViewContext`
+  and calls the adopter it gets, which adopts the nodes the view holds. A view that wakes with no
+  provider above it drops those nodes, renders cold, and warns in development.
 - **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
   part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
   reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The
-  consumer renames one view's markers back at that view's wake and hydrates the element's own
+  adopter renames one view's markers back at that view's wake and hydrates the element's own
   `render()` against them, which leaves a nested view's interior hidden until its own wake.
 - **`uiViewSlot()`** is the hole, on both halves: the server reaches the renderer's `renderLight()`
   only through it, and on the client it wakes the `<ui-view>` it sits in, whenever the enclosing
