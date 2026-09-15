@@ -1,6 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement, nothing, render } from 'lit';
-import type { RenderOptions } from 'lit';
+import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
@@ -187,31 +186,16 @@ describe('UiView', () => {
     UiView.hydrator = undefined;
   });
 
-  // What the server writes inside a `<ui-view>`: one part pair for the routed
-  // component's template, plain so the enclosing walk finds it, with every
-  // marker between it prefixed so that walk reads straight past them.
-  const nestedServed =
-    '<!--ui-view:lit-node 1-->' +
-    '<ui-view defer-hydration>' +
-    '<!--ui-view:lit-part iNnR-->' +
-    '<!--ui-view:lit-node 0--><p class="nested">nested</p>' +
-    '<!--ui-view:/lit-part-->' +
-    '</ui-view>';
+  // What a deferred view holds: another render's nodes, opaque to core.
+  const heldMarkup =
+    '<div class="wrap"><p class="held">held</p></div>' +
+    '<ui-view defer-hydration><p class="nested">nested</p></ui-view>';
 
-  const servedMarkup = (
-    inner = '<div class="wrap"><!--ui-view:lit-node 0--><p class="served">served</p></div>' +
-      nestedServed,
-  ) => `<!--lit-part yZ9-->${inner}<!--/lit-part-->`;
-
-  /** What the renderer writes for an address no state routes: an empty, digest-less pair. */
-  const unroutedServed = '<!--lit-part--><!--/lit-part-->';
-
-  /** The `data` of the comment at `index`, which is what the walk reads. */
-  const commentAt = (parent: Node, index: number) =>
-    (parent.childNodes[index] as Comment).data;
-
-  /** Parses a served `<ui-view>` inside a connected `<ui-router>`, the way the document arrives. */
-  function mountServed(attributes = '', markup = servedMarkup()): UiView {
+  /** Parses a deferred `<ui-view>` inside a connected `<ui-router>`, the way the document arrives. */
+  function mountHeld(
+    attributes = 'defer-hydration',
+    markup = heldMarkup,
+  ): UiView {
     const uiRouterEl = document.createElement('ui-router');
     uiRouterEl.uiRouter = router;
     container.appendChild(uiRouterEl);
@@ -565,7 +549,7 @@ describe('UiView', () => {
 
     it('should not run any update while the attribute is present', async () => {
       router = createTestRouter([]);
-      const uiView = mountServed('defer-hydration');
+      const uiView = mountHeld();
       const before = [...uiView.childNodes];
 
       await tick();
@@ -649,74 +633,60 @@ describe('UiView', () => {
       expect(router.viewService.available()).toHaveLength(1);
     });
 
-    it('should reveal its own markers and leave a nested view closed', async () => {
-      router = createTestRouter(homeStates);
-      const uiView = mountServed('defer-hydration');
-      router.start();
-      await routerGo(router, 'home');
-      await tick();
-
-      UiView.hydrator = vi.fn();
-      uiView.removeAttribute('defer-hydration');
+    it('should hand the woken element to the hydrator, re-sought and unrendered', async () => {
+      // No router on <ui-router>, so it provides a placeholder of its own and
+      // the view registers against that — the prerendered upgrade order.
+      const uiRouterEl = document.createElement('ui-router');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
+      const uiView = uiRouterEl.querySelector('ui-view')!;
       await waitForUpdate(uiView);
 
-      // The pair around the component's template was never prefixed.
-      expect(commentAt(uiView, 0)).toBe('lit-part yZ9');
-      expect(commentAt(uiView, 4)).toBe('/lit-part');
-      expect(commentAt(uiView, 2)).toBe('lit-node 1');
-      // Plain elements are walked through.
-      expect(commentAt(uiView.querySelector('div.wrap')!, 0)).toBe(
-        'lit-node 0',
-      );
-
-      const nested = uiView.querySelector('ui-view')!;
-      // Its pair is this template's slot part, so this walk reveals it.
-      expect(commentAt(nested, 0)).toBe('lit-part iNnR');
-      expect(commentAt(nested, 3)).toBe('/lit-part');
-      // What sits between that pair is its own to reveal, at its own wake.
-      expect(commentAt(nested, 1)).toBe('ui-view:lit-node 0');
-      // The fake hydrator is lit's `render`, which strips no attribute; a real
-      // one wakes the nested view at the `lit-node` marker just revealed.
-      expect(nested.hasUpdated).toBe(false);
-    });
-
-    it('should hand the served render to an installed hydrator', async () => {
       router = createTestRouter(homeStates);
-      const uiView = mountServed('defer-hydration');
-      router.start();
-      await routerGo(router, 'home');
-      await tick();
+      uiRouterEl.uiRouter = router;
 
-      expect(uiView.hasUpdated).toBe(false);
-
-      // lit's own `render` is a faithful stand-in: it claims the container's
-      // part, so the update that follows reuses it rather than building a
-      // second one.
-      let markersPlain = false;
-      const hydrator = vi.fn(
-        (value: unknown, host: HTMLElement, options?: RenderOptions) => {
-          markersPlain =
-            commentAt(host.querySelector('div.wrap')!, 0) === 'lit-node 0';
-          render(value, host, options);
-        },
-      );
+      let seenRouter: unknown;
+      let seenHasUpdated: boolean | undefined;
+      const hydrator = vi.fn((view: UiView) => {
+        seenRouter = view.uiRouter;
+        seenHasUpdated = view.hasUpdated;
+      });
       UiView.hydrator = hydrator;
 
       uiView.removeAttribute('defer-hydration');
       await waitForUpdate(uiView);
 
       expect(hydrator).toHaveBeenCalledTimes(1);
-      expect(hydrator.mock.calls[0]?.[1]).toBe(uiView);
-      expect(markersPlain).toBe(true);
-      expect(uiView.uiRouter).toBe(router);
-      expect(uiView.querySelector('.home-content')).not.toBeNull();
+      expect(hydrator.mock.calls[0]?.[0]).toBe(uiView);
+      // The re-seek runs first, so the client renders against the real router.
+      expect(seenRouter).toBe(router);
+      // And it runs before this update's render, so the client owns that render.
+      expect(seenHasUpdated).toBe(false);
     });
 
-    it('should drop the served render and warn when no hydrator is installed', async () => {
+    it('should not call the hydrator again on a later update', async () => {
+      router = createTestRouter(homeStates);
+      const uiView = mountHeld();
+      const hydrator = vi.fn();
+      UiView.hydrator = hydrator;
+
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+      expect(hydrator).toHaveBeenCalledTimes(1);
+
+      router.start();
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      expect(hydrator).toHaveBeenCalledTimes(1);
+      expect(uiView.hasUpdated).toBe(true);
+    });
+
+    it('should drop the held nodes and warn when no hydrator is installed', async () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
         router = createTestRouter(homeStates);
-        const uiView = mountServed('defer-hydration');
+        const uiView = mountHeld();
         router.start();
         await routerGo(router, 'home');
         await tick();
@@ -724,68 +694,17 @@ describe('UiView', () => {
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
 
-        // Dropped, not revealed: the cold render writes into the same pair.
-        expect(uiView.querySelector('p.served')).toBeNull();
+        // Dropped, not rendered over: a cold render on top would double them.
+        expect(uiView.querySelector('p.held')).toBeNull();
         expect(uiView.querySelector('ui-view')).toBeNull();
-        expect(commentAt(uiView, 0)).toBe('lit-part yZ9');
-        expect(commentAt(uiView, 1)).toBe('/lit-part');
         expect(uiView.querySelector('.home-content')).not.toBeNull();
         expect(warn).toHaveBeenCalledTimes(1);
         expect(warn.mock.calls[0]?.[0]).toBe(
-          'lit-ui-router: this <ui-view> holds a server render, but no ' +
-            'hydration client installed UiView.hydrator, so it dropped that ' +
-            'markup and rendered cold. Install a hydration client before ' +
-            'registering the elements.',
+          'lit-ui-router: this <ui-view> woke from defer-hydration with no ' +
+            'hydration client installed on UiView.hydrator, so its held nodes ' +
+            'were dropped and it rendered cold. Install a hydration client ' +
+            'before the wake.',
         );
-      } finally {
-        warn.mockRestore();
-      }
-    });
-
-    it('should render nothing for a served view no state routes', async () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      try {
-        router = createTestRouter([]);
-        // The server writes an empty part for an address no state routes.
-        const uiView = mountServed('', unroutedServed);
-        await waitForUpdate(uiView);
-
-        expect(uiView.render()).toBe(nothing);
-        // Hold content does not exist on a prerendered view.
-        expect(uiView.querySelector('slot')).toBeNull();
-      } finally {
-        warn.mockRestore();
-      }
-    });
-
-    it('should cold-render a nested view the server left empty', async () => {
-      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-      try {
-        router = createTestRouter(homeStates);
-        // A bare nested view: the routed component wrote no slot there, so the
-        // server rendered nothing inside it and there is no pair to find.
-        const uiView = mountServed(
-          'defer-hydration',
-          servedMarkup('<ui-view defer-hydration></ui-view>'),
-        );
-        router.start();
-        await routerGo(router, 'home');
-        await tick();
-
-        const hydrator = vi.fn();
-        UiView.hydrator = hydrator;
-        uiView.removeAttribute('defer-hydration');
-        await waitForUpdate(uiView);
-
-        const nested = uiView.querySelector('ui-view')!;
-        nested.removeAttribute('defer-hydration');
-        await waitForUpdate(nested);
-
-        // Nothing served, so the wake is an ordinary first render: no adopt, no warning.
-        expect(hydrator).toHaveBeenCalledTimes(1);
-        expect(hydrator.mock.calls[0]?.[1]).toBe(uiView);
-        expect(nested.hasUpdated).toBe(true);
-        expect(warn).not.toHaveBeenCalled();
       } finally {
         warn.mockRestore();
       }
