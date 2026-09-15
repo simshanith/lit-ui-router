@@ -54,3 +54,24 @@ export function warnMissingRouter(
     element,
   );
 }
+
+/**
+ * Warns that a prerendered `<ui-view>` rendered over the server's markup
+ * because no hydration client installed `UiView.hydrator`.
+ *
+ * Fires at the wake, which happens once per element, so this needs no registry
+ * of its own.
+ *
+ * @param element the view whose served content was dropped
+ *
+ * @internal
+ */
+export function warnColdServedRender(element: Element): void {
+  // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
+  if (!import.meta.env.DEV) return;
+  if (!inLitDevMode()) return;
+  console.warn(
+    'lit-ui-router: this <ui-view> holds a server render, but no hydration client installed UiView.hydrator, so it dropped that markup and rendered cold. Install a hydration client before registering the elements.',
+    element,
+  );
+}
