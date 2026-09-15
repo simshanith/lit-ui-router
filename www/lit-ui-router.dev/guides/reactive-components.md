@@ -74,6 +74,12 @@ It reads both ways: a `ContextProvider` of `routerContext` on any ancestor
 satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe —
 `<ui-router>` takes its router on connect and does not swap it.
 
+`<ui-view>` answers the same way for its own key,
+[`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
+`@consume({ context: parentUiViewContext })` or
+`requestContext(element, parentUiViewContext)` gets the nearest enclosing
+`<ui-view>`, and a nested view gets the view above it rather than itself.
+
 When there is no tree at all to bubble through — a server render, a test — the
 same entry publishes a router directly: `withRouterSync(router, run)` scopes it
 to one synchronous call, and anything that call reaches asks `getScopedRouter()`
