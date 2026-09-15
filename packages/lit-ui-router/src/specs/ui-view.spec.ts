@@ -465,6 +465,78 @@ describe('UiView', () => {
     });
   });
 
+  // `defer-hydration` is lit's own attribute: @lit-labs/ssr writes it on every
+  // nested custom element, and a `<ui-view>` carrying it holds server content
+  // between part markers rather than authored hold content.
+  describe('defer-hydration', () => {
+    it('should capture authored hold content when the attribute is absent', async () => {
+      const { uiView } = await setupRouter([], {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+        start: false,
+      });
+
+      // Swept into `inner`: the authored <p> is gone from the light DOM and the
+      // hold render replays a clone of it.
+      const captured = uiView.render() as DocumentFragment;
+      expect(captured).toBeInstanceOf(DocumentFragment);
+      expect(captured.firstElementChild!.className).toBe('hold');
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
+
+    it('should not capture server content when the attribute is present', async () => {
+      const { uiView } = await setupRouter([], {
+        configure: (el) => {
+          el.setAttribute('defer-hydration', '');
+          el.innerHTML = '<p class="server">server</p>';
+        },
+        start: false,
+      });
+
+      // Never captured, so `inner` was never created and the hold render is the
+      // bare slot template rather than a clone.
+      expect(uiView.render()).toMatchObject({ strings: ['<slot></slot>'] });
+      // Plain lit does not enforce `defer-hydration`, so the first update still
+      // ran; `render()` appends its part after the existing children instead of
+      // clearing them, so the server's nodes survive it.
+      const server = uiView.querySelector('p.server')!;
+      expect(server.parentElement).toBe(uiView);
+      expect(uiView.firstElementChild).toBe(server);
+      expect(uiView.querySelector('slot')).not.toBeNull();
+    });
+  });
+
+  describe('adoptProvidedRouter()', () => {
+    it('should re-register when called from outside after the provider gets its router', async () => {
+      // No router on <ui-router>, so it provides a placeholder of its own and
+      // the view registers against that — the prerendered upgrade order.
+      const uiRouterEl = document.createElement('ui-router');
+      const uiView = document.createElement('ui-view');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      router = createTestRouter([
+        {
+          name: 'home',
+          url: '/home',
+          component: () => html`<div class="home-content">Home</div>`,
+        },
+      ]);
+      uiRouterEl.uiRouter = router;
+
+      uiView.adoptProvidedRouter();
+      router.start();
+      await tick();
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.home-content')).not.toBeNull();
+    });
+  });
+
   describe('uiCanExit hook', () => {
     it('should call uiCanExit on component before exiting', async () => {
       const uiCanExitSpy = vi.fn().mockReturnValue(true);
