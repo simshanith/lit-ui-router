@@ -55,8 +55,10 @@ function portHeld(port: number): Promise<boolean> {
   });
 }
 
-// pkill/pgrep exit non-zero on no match; that's not an error here.
-function signal(cmd: 'pkill' | 'pgrep', args: string[]): boolean {
+// True when the command exits zero, output discarded — every caller here asks a
+// yes/no question. pkill/pgrep exit non-zero on no match; that's not an error.
+// The union stays closed: these are the only commands this script shells out to.
+function exitsZero(cmd: 'pkill' | 'pgrep' | 'mise', args: string[]): boolean {
   try {
     execFileSync(cmd, args, { stdio: 'ignore' });
     return true;
@@ -74,18 +76,18 @@ function signal(cmd: 'pkill' | 'pgrep', args: string[]): boolean {
 // supervisor, `-x workerd` the runtime child. `pkill -f "wrangler dev"` misses
 // the supervisor (its argv is the resolved wrangler.js path) — don't "fix" it.
 async function sweep(phase: string, port: number): Promise<boolean> {
-  signal('pkill', ['-f', 'wrangler']);
-  signal('pkill', ['-x', 'workerd']);
+  exitsZero('pkill', ['-f', 'wrangler']);
+  exitsZero('pkill', ['-x', 'workerd']);
   await sleep(1000);
   if (
-    signal('pgrep', ['-f', 'wrangler']) ||
-    signal('pgrep', ['-x', 'workerd'])
+    exitsZero('pgrep', ['-f', 'wrangler']) ||
+    exitsZero('pgrep', ['-x', 'workerd'])
   ) {
     console.log(
       `[deflake] ${phase}: processes survived SIGTERM, escalating to SIGKILL`,
     );
-    signal('pkill', ['-9', '-f', 'wrangler']);
-    signal('pkill', ['-9', '-x', 'workerd']);
+    exitsZero('pkill', ['-9', '-f', 'wrangler']);
+    exitsZero('pkill', ['-9', '-x', 'workerd']);
     await sleep(1000);
   }
   for (let i = 1; i <= PORT_WAIT_TRIES; i++) {
@@ -112,9 +114,7 @@ let inflight: ChildProcess | undefined;
 // once up front and refuse to sample rather than spend attempts on a harness
 // error. Exit 64 (EX_USAGE) so it cannot be read as a count of failed attempts.
 function assertTaskResolves(): void {
-  try {
-    execFileSync('mise', ['tasks', 'info', E2E_TASK], { stdio: 'ignore' });
-  } catch {
+  if (!exitsZero('mise', ['tasks', 'info', E2E_TASK])) {
     const note = `cannot resolve \`mise run ${E2E_TASK}\` — harness error, not flake. No attempts run.`;
     console.error(`[deflake] ${note}`);
     if (process.env.GITHUB_STEP_SUMMARY) {
