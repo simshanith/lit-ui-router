@@ -9,8 +9,10 @@ import { setTimeout as sleep } from 'node:timers/promises';
 //   DEFLAKE_RUNS  attempts, clamped to 1-10 (non-numeric/empty -> 5)
 //   WWW_DEV_PORT  dev-server port to verify free between attempts; unset means
 //                 the default in @www/lit-ui-router.dev/dev-port.ts
-// Each attempt is a full `mise run test_e2e` — dev server started and torn
-// down around one turbo run of the five suites. TURBO_FORCE is set per
+// Each attempt is a full `mise run //:test_e2e` — dev server started and torn
+// down around one turbo run of the five suites. The task is addressed
+// absolutely: this script's cwd is the package, and a bare `test_e2e` resolves
+// against the cwd's project in a mise monorepo, not the root. TURBO_FORCE is set per
 // attempt because those suites ARE cached tasks now: without it attempt 2
 // onwards would replay attempt 1's log and every sample would agree.
 
@@ -21,6 +23,9 @@ const crashSignatureFor = (port: number): string =>
 
 // Bounded wait for the port to drain after a sweep (seconds).
 const PORT_WAIT_TRIES = 20;
+
+// Absolute monorepo address, so the task resolves from the package cwd.
+const E2E_TASK = '//:test_e2e';
 
 // Tolerant of what Actions actually delivers: a `type: number` input arrives
 // as a float string (`10.0`), so parse then truncate rather than demanding
@@ -50,8 +55,10 @@ function portHeld(port: number): Promise<boolean> {
   });
 }
 
-// pkill/pgrep exit non-zero on no match; that's not an error here.
-function signal(cmd: 'pkill' | 'pgrep', args: string[]): boolean {
+// True when the command exits zero, output discarded — every caller here asks a
+// yes/no question. pkill/pgrep exit non-zero on no match; that's not an error.
+// The union stays closed: these are the only commands this script shells out to.
+function exitsZero(cmd: 'pkill' | 'pgrep' | 'mise', args: string[]): boolean {
   try {
     execFileSync(cmd, args, { stdio: 'ignore' });
     return true;
@@ -69,18 +76,18 @@ function signal(cmd: 'pkill' | 'pgrep', args: string[]): boolean {
 // supervisor, `-x workerd` the runtime child. `pkill -f "wrangler dev"` misses
 // the supervisor (its argv is the resolved wrangler.js path) — don't "fix" it.
 async function sweep(phase: string, port: number): Promise<boolean> {
-  signal('pkill', ['-f', 'wrangler']);
-  signal('pkill', ['-x', 'workerd']);
+  exitsZero('pkill', ['-f', 'wrangler']);
+  exitsZero('pkill', ['-x', 'workerd']);
   await sleep(1000);
   if (
-    signal('pgrep', ['-f', 'wrangler']) ||
-    signal('pgrep', ['-x', 'workerd'])
+    exitsZero('pgrep', ['-f', 'wrangler']) ||
+    exitsZero('pgrep', ['-x', 'workerd'])
   ) {
     console.log(
       `[deflake] ${phase}: processes survived SIGTERM, escalating to SIGKILL`,
     );
-    signal('pkill', ['-9', '-f', 'wrangler']);
-    signal('pkill', ['-9', '-x', 'workerd']);
+    exitsZero('pkill', ['-9', '-f', 'wrangler']);
+    exitsZero('pkill', ['-9', '-x', 'workerd']);
     await sleep(1000);
   }
   for (let i = 1; i <= PORT_WAIT_TRIES; i++) {
@@ -102,9 +109,27 @@ interface Attempt {
 
 let inflight: ChildProcess | undefined;
 
+// A mis-addressed task fails instantly on every attempt and reports as a 100%
+// flake rate — the most misleading number this script could produce. Resolve it
+// once up front and refuse to sample rather than spend attempts on a harness
+// error. Exit 64 (EX_USAGE) so it cannot be read as a count of failed attempts.
+function assertTaskResolves(): void {
+  if (!exitsZero('mise', ['tasks', 'info', E2E_TASK])) {
+    const note = `cannot resolve \`mise run ${E2E_TASK}\` — harness error, not flake. No attempts run.`;
+    console.error(`[deflake] ${note}`);
+    if (process.env.GITHUB_STEP_SUMMARY) {
+      appendFileSync(
+        process.env.GITHUB_STEP_SUMMARY,
+        `### Deflake e2e: harness error\n\n${note}\n\n`,
+      );
+    }
+    process.exit(64);
+  }
+}
+
 async function runAttempt(logFile: string): Promise<number> {
   const log = createWriteStream(logFile);
-  const child = spawn('mise', ['run', 'test_e2e'], {
+  const child = spawn('mise', ['run', E2E_TASK], {
     stdio: ['ignore', 'pipe', 'pipe'],
     env: { ...process.env, TURBO_FORCE: '1' },
   });
@@ -129,6 +154,8 @@ async function main(): Promise<void> {
       process.exit(1);
     });
   }
+
+  assertTaskResolves();
 
   const runs = clampRuns(process.env.DEFLAKE_RUNS);
   const port = resolveWwwDevPort();
