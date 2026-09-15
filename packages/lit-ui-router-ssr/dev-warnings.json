@@ -1,6 +1,8 @@
 {
   "$comment": "Message prefixes that must ship in dist/development/*.js and never in dist/*.js. Gate: check:dev-split (@tools/oxc-emit). Add an entry whenever a warning goes behind the import.meta.env.DEV guard; the gate fails on an undeclared one.",
   "devOnly": [
-    "lit-ui-router-ssr: no route matched this path and its mount declares no otherwise projection, so no page was emitted for it:"
+    "lit-ui-router-ssr: no route matched this path and its mount declares no otherwise projection, so no page was emitted for it:",
+    "lit-ui-router-ssr: this view is a RoutedLitElement class, which has no server render, so the part was left empty for the client to fill:",
+    "lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately."
   ]
 }

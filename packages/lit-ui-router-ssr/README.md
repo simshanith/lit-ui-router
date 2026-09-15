@@ -25,6 +25,8 @@ imports the pre-1.0 renderer or re-derives the incantation.
   matched nothing.
 - **The host rules file.** `_redirects` by default, every generated line paired with and without a
   trailing slash. No SPA catch-all is ever written: one turns every 404 into a 200.
+- **`<ui-view>` on both sides.** `UiViewRenderer` fills the element's light DOM on the server;
+  `lit-ui-router-ssr/client` adopts what it drew.
 
 Path enumeration, the html document, `<title>`, and driving the router to each path stay with the
 caller — `paths`, `document()`, and an async `renderShell()` are the seams for them.
@@ -39,8 +41,9 @@ pnpm add lit-ui-router-ssr
 yarn add lit-ui-router-ssr
 ```
 
-`lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `lit`, and `@uirouter/core` are peer
-dependencies.
+`lit-ui-router`, `ui-router-server`, `@lit-labs/ssr`, `@lit-labs/ssr-client`, `lit`, and
+`@uirouter/core` are peer dependencies. `@lit-labs/ssr` is the server half and `@lit-labs/ssr-client`
+the client half, so a bundle takes one or the other, never both.
 
 ## Quick Start
 
@@ -69,6 +72,73 @@ on. `dryRun: true` plans all of it and writes nothing.
 
 Files land through `node:fs`, imported lazily on first write; pass `write` to emit into memory or a
 virtual fs instead.
+
+## The routed view, drawn on the server
+
+`elementRenderers` defaults to `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`,
+which wraps every custom element in a declarative shadow root it never asked for. `UiViewRenderer`
+answers for `ui-view`: it registers the view at the address its `name` attribute and enclosing
+`<ui-view>`s spell, takes the `ViewConfig` the registration syncs back, and writes the routed
+component into the element's light DOM between the part markers the element's own `render()`
+hydrates against. An address no state routes gets empty markers.
+
+The use site opts in with `renderLight()`, which is what reaches an element renderer's light-DOM
+render and commits nothing on the client:
+
+```typescript
+import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
+
+const page = (router: UIRouterLit) => html`
+  <ui-router .uiRouter=${router}><ui-view>${renderLight()}</ui-view></ui-router>
+`;
+```
+
+One template set, both sides: the server fills the hole through the renderer, the client renders the
+same strings with the hole empty and each `<ui-view>` fills itself.
+
+## The client half
+
+`lit-ui-router-ssr/client` is the adopt side — three calls, no import side effects:
+
+```typescript
+import { armLightDom, hydrateRoot, wakeAll } from 'lit-ui-router-ssr/client';
+
+armLightDom();
+await import('lit-ui-router/register');
+
+if (hydrateRoot(root, page(router))) {
+  const booted = new Promise<void>((resolve) => {
+    const off = router.transitionService.onSuccess({}, () => {
+      off();
+      resolve();
+    });
+  });
+  router.start();
+  void booted.then(() => wakeAll(root));
+} else {
+  router.start();
+  render(page(router), root);
+}
+```
+
+- **`armLightDom()`** patches `LitElement` so an element carrying `defer-hydration` stays asleep at
+  connect — no render root, no update — and hydrates rather than renders when it is woken.
+  `@lit-labs/ssr-client`'s own arming runs in `createRenderRoot` and only for an element with a
+  shadow root, so `<ui-view>`, whose render root is the element itself, is never armed by it.
+- **Import order is the contract.** `armLightDom()` must run before `lit-ui-router` defines its tags:
+  registration upgrades the server's markup, and an element that upgrades unarmed renders over the
+  nodes meant to be adopted. An entry that hydrates therefore imports `lit-ui-router/pure`, which
+  registers nothing, and reaches `lit-ui-router/register` (or the root entry) after the call.
+- **`hydrateRoot(container, value, options?)`** lifts each deferred element's server content out from
+  between its part markers before hydrating the container, and puts it back as that element wakes —
+  light DOM has no `<template>` to shelter nested markers from the host's walk, so this makes one. It
+  returns `false` when there is nothing to adopt.
+- **`wakeAll(container)`** wakes them outermost first, one level per pass. Call it once the boot
+  transition has succeeded: that is the whole of the boot-transition contract, and `defer-hydration`
+  is its handle.
+- **A mismatch falls back.** One static document answers a whole family of urls, so a client can boot
+  into a state the document was not drawn for. `hydrate()` throws on that; the client warns in
+  development, drops that one element's server nodes, and renders — its ancestors keep theirs.
 
 ## Documentation
 
