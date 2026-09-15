@@ -39,7 +39,7 @@ catalog:
   '@vitest/browser-playwright': ^5.0.0
   '@vitest/coverage-v8': ^5.0.0
   concurrently: ^10.0.5
-  cypress: ^15.21.0
+  cypress: ^16.0.0
   diff: ^9.0.0
   effect: ^3.22.1
   esbuild: ^0.28.2
