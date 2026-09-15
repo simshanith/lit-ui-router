@@ -4,6 +4,6 @@
     "lit-ui-router: uiSref wrote href=",
     "lit-ui-router: uiSrefActive is taking over an existing aria-current=",
     "lit-ui-router: ${subject} found no <ui-router> ancestor, so it ",
-    "lit-ui-router: this <ui-view> holds a server render, but no hydration client installed UiView.hydrator, so it dropped that markup and rendered cold. Install a hydration client before registering the elements."
+    "lit-ui-router: this <ui-view> woke from defer-hydration with no hydration client installed on UiView.hydrator, so its held nodes were dropped and it rendered cold. Install a hydration client before the wake."
   ]
 }
