@@ -134,6 +134,9 @@ catalogs:
     '@lit-labs/ssr':
       specifier: ^4.1.0
       version: 4.1.0
+    '@lit-labs/ssr-client':
+      specifier: ^1.1.8
+      version: 1.1.8
     '@lit/context':
       specifier: ^1.1.6
       version: 1.1.6
@@ -1122,6 +1125,9 @@ importers:
       '@lit-labs/ssr':
         specifier: 'catalog:'
         version: 4.1.0(@types/node@24.13.3)
+      '@lit-labs/ssr-client':
+        specifier: 'catalog:'
+        version: 1.1.8
       '@release-it/conventional-changelog':
         specifier: 'catalog:'
         version: 12.0.0(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.0)(release-it@21.0.2(@types/node@24.13.3)(magicast@0.5.4)(supports-color@10.2.2))
@@ -1149,6 +1155,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: 'catalog:'
         version: 5.0.0(@vitest/browser@5.0.0)(vitest@5.0.0)
+      happy-dom:
+        specifier: 'catalog:'
+        version: 20.14.0
       lit:
         specifier: 'catalog:'
         version: 3.3.3

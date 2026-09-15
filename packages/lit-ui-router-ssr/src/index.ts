@@ -1,3 +1,7 @@
+/**
+ * @module
+ * @mergeModuleWith <project>
+ */
 export {
   type EmittedPage,
   type FileWriter,
@@ -8,3 +12,4 @@ export {
   type RedirectLine,
   type RenderContext,
 } from './prerender.js';
+export { UiViewRenderer } from './ui-view-renderer.js';
