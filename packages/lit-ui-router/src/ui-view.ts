@@ -31,6 +31,7 @@ import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
 import { warnDeferredWithoutClient, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
+import { provideUiView } from './context.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -76,9 +77,11 @@ type deregisterFn = () => void;
  *
  * A prerendered view owns its own hydration. It sleeps while
  * <code>defer-hydration</code> is on it, rendering nothing. Removing the
- * attribute wakes it, and it hands itself once to the hydration client
- * installed on <code>UiView.hydrator</code>. With no client installed it drops
- * the nodes it holds and renders cold.
+ * attribute wakes it, and it offers itself once with
+ * <code>provideUiView</code>; a consumer installed with
+ * <code>consumeUiViews</code> takes the offer and adopts the nodes the view
+ * holds. With no consumer the view drops the held nodes and renders cold,
+ * warning in development.
  *
  */
 export class UiView extends LitElement {
@@ -96,22 +99,6 @@ export class UiView extends LitElement {
   /** Written by the server on a prerendered view; while it is present the view renders nothing, and removing it wakes and hydrates the element. */
   @property({ type: Boolean, attribute: 'defer-hydration' })
   deferHydration = false;
-
-  /**
-   * The hole a hydration client fills so a deferred view can adopt its markup.
-   *
-   * Core cannot depend on `@lit-labs/ssr-client`, so the hydrate call is the
-   * one piece of the seam it does not own. Core calls an installed hydrator
-   * once, on the update that wakes a deferred view, after the router re-seek
-   * and before that update's render, with the element as the argument. The
-   * client adopts the element's children as its render — <code>render()</code>
-   * and <code>renderOptions</code> are the surface it reads — or leaves the
-   * element ready for a plain render instead.
-   *
-   * Installed once, before the elements are registered, and shared by every
-   * <code>&lt;ui-view&gt;</code> on the page.
-   */
-  static hydrator?: (view: UiView) => void;
 
   @state()
   private viewAddress!: UiViewAddress;
@@ -285,9 +272,9 @@ export class UiView extends LitElement {
    * `registerUIView` syncs, so the re-registered view picks up the current
    * state without waiting for the next transition.
    *
-   * A wake — `deferHydration` going false — re-seeks before the update it
-   * schedules, because on a prerendered page that update is the hydrate and
-   * `render()` reads the component from the real registration.
+   * A wake re-seeks before the update it schedules, because on a prerendered
+   * page that update is the hydrate and `render()` reads the component from
+   * the real registration.
    */
   private adoptProvidedRouter(): void {
     const router = this.routerFromProvider
@@ -309,7 +296,7 @@ export class UiView extends LitElement {
     }
   }
 
-  /** Set at connect on a deferred view: lit records the class field's own write, so a plain first update reaches `willUpdate` looking like a wake. */
+  /** Set at connect on a deferred view, so the first update that runs is known to be the wake. */
   private deferredAtConnect = false;
 
   /** Sweeps authored hold content aside so the hold render can replay a clone. */
@@ -485,17 +472,15 @@ export class UiView extends LitElement {
   /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
-    if (!changed.has('deferHydration') || this.deferHydration) return;
-    // The first render after waking is the hydrate, so it needs the real router; lit records no old value on a first update.
-    this.adoptProvidedRouter();
-    if (this.hasUpdated || !this.deferredAtConnect) return;
+    if (this.deferredAtConnect) this.adoptHeldNodes();
+  }
+
+  /** The first update after a deferred wake: re-seek the router the hydrate reads, then offer the view or drop the foreign nodes. */
+  private adoptHeldNodes(): void {
     this.deferredAtConnect = false;
-    const { hydrator } = UiView;
-    if (hydrator) {
-      hydrator(this);
-      return;
-    }
-    // A deferred element holds another render's nodes, and rendering over them doubles the markup; the @lit-labs/ssr DOM shim has no `replaceChildren`.
+    this.adoptProvidedRouter();
+    if (provideUiView(this)) return;
+    // Rendering over another render's nodes doubles the markup; the @lit-labs/ssr DOM shim has no `replaceChildren`.
     this.replaceChildren?.();
     warnDeferredWithoutClient(this);
   }

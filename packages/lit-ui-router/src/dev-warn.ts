@@ -56,8 +56,8 @@ export function warnMissingRouter(
 }
 
 /**
- * Warns that a `<ui-view>` woke from `defer-hydration` with no hydration client
- * installed, so it dropped the nodes it held and rendered cold.
+ * Warns that a `<ui-view>` woke from `defer-hydration` and no consumer took it,
+ * so it dropped the nodes it held and rendered cold.
  *
  * Fires at the wake, which happens once per element, so this needs no registry
  * of its own.
@@ -71,7 +71,7 @@ export function warnDeferredWithoutClient(element: Element): void {
   if (!import.meta.env.DEV) return;
   if (!inLitDevMode()) return;
   console.warn(
-    'lit-ui-router: this <ui-view> woke from defer-hydration with no hydration client installed on UiView.hydrator, so its held nodes were dropped and it rendered cold. Install a hydration client before the wake.',
+    'lit-ui-router: this <ui-view> woke from defer-hydration and no consumer took it (consumeUiViews), so its held nodes were dropped and it rendered cold. Install a consumer before the wake.',
     element,
   );
 }
