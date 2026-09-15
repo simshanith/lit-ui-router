@@ -671,6 +671,42 @@ describe('UiView', () => {
       expect(seenHeld).not.toBeNull();
     });
 
+    it('should keep its held nodes for the adopter when it reconnects after the wake is queued', async () => {
+      const uiRouterEl = document.createElement('ui-router');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
+      const uiView = uiRouterEl.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+
+      router = createTestRouter(homeStates);
+      uiRouterEl.uiRouter = router;
+
+      let seenHeld: Element | null = null;
+      let seenNested: Element | null = null;
+      const adopt = vi.fn((view: UiView) => {
+        seenHeld = view.querySelector('p.held');
+        seenNested = view.querySelector('ui-view');
+      });
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        // Detach, wake, re-attach in one task: the connect runs before the queued update.
+        uiView.remove();
+        uiView.removeAttribute('defer-hydration');
+        uiRouterEl.append(uiView);
+        await waitForUpdate(uiView);
+      } finally {
+        uninstall();
+      }
+
+      expect(adopt).toHaveBeenCalledTimes(1);
+      expect(adopt.mock.calls[0]?.[0]).toBe(uiView);
+      // The reconnect must not sweep the served nodes aside as authored hold content.
+      expect(seenHeld).not.toBeNull();
+      expect(seenNested).not.toBeNull();
+      expect(uiView.querySelector('p.held')).not.toBeNull();
+      expect(uiView.querySelector('.home-content')).toBeNull();
+    });
+
     it('should not request an adopter again on a later update', async () => {
       router = createTestRouter(homeStates);
       const uiView = mountHeld();

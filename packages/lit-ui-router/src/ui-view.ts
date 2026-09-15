@@ -183,7 +183,7 @@ export class UiView extends LitElement {
     // A deferred view holds another render's nodes, not authored hold content.
     if (this.deferHydration) {
       this.deferredAtConnect = true;
-    } else {
+    } else if (!this.deferredAtConnect) {
       this.captureContent();
     }
   }
