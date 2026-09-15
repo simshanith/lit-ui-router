@@ -149,11 +149,11 @@ in seven of them.
 
 The signals that do mean the crash class is back:
 
-| Signal                          | Healthy value |
-| ------------------------------- | ------------- |
-| `ECONNREFUSED 127.0.0.1:8787`   | absent        |
-| empty `✘ [ERROR]` line          | absent        |
-| `wrangler dev` starts, per run  | exactly 1     |
+| Signal                         | Healthy value |
+| ------------------------------ | ------------- |
+| `ECONNREFUSED 127.0.0.1:8787`  | absent        |
+| empty `✘ [ERROR]` line         | absent        |
+| `wrangler dev` starts, per run | exactly 1     |
 
 ### Sampling the crash rate
 
