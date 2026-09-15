@@ -29,8 +29,9 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
-import { warnMissingRouter } from './dev-warn.js';
+import { warnDeferredWithoutClient, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
+import { adoptUiViewContext, requestContext } from './context.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -74,7 +75,12 @@ type deregisterFn = () => void;
  * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
  * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
  *
-
+ * A prerendered view owns its own hydration. It sleeps while
+ * <code>defer-hydration</code> is on it, rendering nothing. Removing the
+ * attribute wakes it, and it requests <code>adoptUiViewContext</code> once and
+ * calls the adopter it gets, which adopts the nodes the view holds. With none,
+ * the view drops the held nodes and renders cold, warning in development.
+ *
  */
 export class UiView extends LitElement {
   /** the view name this viewport fills; empty selects the `$default` view */
@@ -87,6 +93,10 @@ export class UiView extends LitElement {
    */
   @property({ attribute: false })
   uiRouter!: UIRouterLit;
+
+  /** Written by the server on a prerendered view; while it is present the view renders nothing, and removing it wakes and hydrates the element. */
+  @property({ type: Boolean, attribute: 'defer-hydration' })
+  deferHydration = false;
 
   @state()
   private viewAddress!: UiViewAddress;
@@ -170,7 +180,12 @@ export class UiView extends LitElement {
       this.onUiViewContextEvent as EventListener,
     );
     this.setupUiView();
-    this.captureContent();
+    // A deferred view holds another render's nodes, not authored hold content.
+    if (this.deferHydration) {
+      this.deferredAtConnect = true;
+    } else if (!this.deferredAtConnect) {
+      this.captureContent();
+    }
   }
 
   private static readonly uiViewContextEventName = 'ui-view-context';
@@ -254,6 +269,10 @@ export class UiView extends LitElement {
    *
    * `registerUIView` syncs, so the re-registered view picks up the current
    * state without waiting for the next transition.
+   *
+   * A wake re-seeks before the update it schedules, because on a prerendered
+   * page that update is the hydrate and `render()` reads the component from
+   * the real registration.
    */
   private adoptProvidedRouter(): void {
     const router = this.routerFromProvider
@@ -275,6 +294,10 @@ export class UiView extends LitElement {
     }
   }
 
+  /** Set at connect on a deferred view, so the first update that runs is known to be the wake. */
+  private deferredAtConnect = false;
+
+  /** Sweeps authored hold content aside so the hold render can replay a clone. */
   private captureContent() {
     this.inner ??= document.createDocumentFragment();
     this.inner.append(...this.childNodes.values());
@@ -438,6 +461,29 @@ export class UiView extends LitElement {
     return (this.viewContext as StateObject).self;
   }
 
+  /** @internal */
+  protected shouldUpdate(changed: PropertyValues<this>): boolean {
+    // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
+    return !this.deferHydration && super.shouldUpdate(changed);
+  }
+
+  /** @internal */
+  protected willUpdate(changed: PropertyValues<this>): void {
+    super.willUpdate(changed);
+    if (this.deferredAtConnect) this.adoptHeldNodes();
+  }
+
+  /** The first update after a deferred wake: re-seek the router the hydrate reads, then hand the view to an adopter or drop the foreign nodes. */
+  private adoptHeldNodes(): void {
+    this.deferredAtConnect = false;
+    this.adoptProvidedRouter();
+    const adopt = requestContext(this, adoptUiViewContext);
+    if (adopt) return adopt(this);
+    // Rendering over another render's nodes doubles the markup; the @lit-labs/ssr DOM shim has no `replaceChildren`.
+    this.replaceChildren?.();
+    warnDeferredWithoutClient(this);
+  }
+
   /**
    * Reports a missing provider once this view has actually rendered nothing.
    *
@@ -456,7 +502,7 @@ export class UiView extends LitElement {
     }
   }
 
-  /** @internal */
+  /** The routed component's template, or the hold content while no component is active. */
   render(): Node | TemplateResult {
     if (!this.component || !this.viewAddress) {
       // Never connected (server render): an empty declarative shadow root would hide the light DOM.

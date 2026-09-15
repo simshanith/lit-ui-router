@@ -4,6 +4,7 @@ import { customElement, state } from 'lit/decorators.js';
 import { Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
+import { adoptUiViewContext, provideContext } from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { UIRouterLit } from '../core.js';
@@ -184,6 +185,31 @@ describe('UiView', () => {
   afterEach(() => {
     container.remove();
   });
+
+  // What a deferred view holds: another render's nodes, opaque to core.
+  const heldMarkup =
+    '<div class="wrap"><p class="held">held</p></div>' +
+    '<ui-view defer-hydration><p class="nested">nested</p></ui-view>';
+
+  /** Parses a deferred `<ui-view>` inside a connected `<ui-router>`, the way the document arrives. */
+  function mountHeld(
+    attributes = 'defer-hydration',
+    markup = heldMarkup,
+  ): UiView {
+    const uiRouterEl = document.createElement('ui-router');
+    uiRouterEl.uiRouter = router;
+    container.appendChild(uiRouterEl);
+    uiRouterEl.innerHTML = `<ui-view ${attributes}>${markup}</ui-view>`;
+    return uiRouterEl.querySelector('ui-view')!;
+  }
+
+  const homeStates: LitStateDeclaration[] = [
+    {
+      name: 'home',
+      url: '/home',
+      component: () => html`<div class="home-content">Home</div>`,
+    },
+  ];
 
   async function setupRouter(
     states: LitStateDeclaration[],
@@ -462,6 +488,312 @@ describe('UiView', () => {
       });
 
       expect(uiView.innerHTML).toContain('fallback');
+    });
+  });
+
+  // `defer-hydration` is lit's own attribute: @lit-labs/ssr writes it on every
+  // nested custom element, and a `<ui-view>` carrying it holds server content
+  // between part markers rather than authored hold content.
+  describe('defer-hydration', () => {
+    it('should capture authored hold content when the attribute is absent', async () => {
+      const { uiView } = await setupRouter([], {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+        start: false,
+      });
+
+      // Swept into `inner`: the authored <p> is gone from the light DOM and the
+      // hold render replays a clone of it.
+      const captured = uiView.render() as DocumentFragment;
+      expect(captured).toBeInstanceOf(DocumentFragment);
+      expect(captured.firstElementChild!.className).toBe('hold');
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
+
+    it('should read the attribute the parser wrote, before connect', async () => {
+      router = createTestRouter([]);
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+      // Parsed with the attribute already on it, the way server output arrives.
+      uiRouterEl.innerHTML =
+        '<ui-view defer-hydration><p class="server">server</p></ui-view>';
+      const uiView = uiRouterEl.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+
+      expect(uiView.deferHydration).toBe(true);
+      // Capture skipped, so the hold render is the bare slot template.
+      expect(uiView.render()).toMatchObject({ strings: ['<slot></slot>'] });
+      expect(uiView.querySelector('p.server')).not.toBeNull();
+    });
+
+    it('should not capture server content when the attribute is present', async () => {
+      const { uiView } = await setupRouter([], {
+        configure: (el) => {
+          el.setAttribute('defer-hydration', '');
+          el.innerHTML = '<p class="server">server</p>';
+        },
+        start: false,
+      });
+
+      expect(uiView.deferHydration).toBe(true);
+
+      // Never captured, so `inner` was never created and the hold render is the
+      // bare slot template rather than a clone: markerless content is not ours.
+      expect(uiView.render()).toMatchObject({ strings: ['<slot></slot>'] });
+      const server = uiView.querySelector('p.server')!;
+      expect(server.parentElement).toBe(uiView);
+      expect(uiView.firstElementChild).toBe(server);
+    });
+
+    it('should not run any update while the attribute is present', async () => {
+      router = createTestRouter([]);
+      const uiView = mountHeld();
+      const before = [...uiView.childNodes];
+
+      await tick();
+
+      expect(uiView.hasUpdated).toBe(false);
+      expect([...uiView.childNodes]).toEqual(before);
+    });
+  });
+
+  describe('waking from defer-hydration', () => {
+    it('should re-register on the provided router when the attribute is removed', async () => {
+      // No router on <ui-router>, so it provides a placeholder of its own and
+      // the view registers against that — the prerendered upgrade order.
+      const uiRouterEl = document.createElement('ui-router');
+      const uiView = document.createElement('ui-view');
+      uiView.setAttribute('defer-hydration', '');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      router = createTestRouter([
+        {
+          name: 'home',
+          url: '/home',
+          component: () => html`<div class="home-content">Home</div>`,
+        },
+      ]);
+      uiRouterEl.uiRouter = router;
+
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+
+      expect(uiView.deferHydration).toBe(false);
+      expect(uiView.uiRouter).toBe(router);
+
+      router.start();
+      await tick();
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelector('.home-content')).not.toBeNull();
+    });
+
+    it('should re-seek before a first update, where lit records no old value', async () => {
+      const uiRouterEl = document.createElement('ui-router');
+      const uiView = document.createElement('ui-view');
+      uiView.setAttribute('defer-hydration', '');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.appendChild(uiView);
+
+      router = createTestRouter([
+        {
+          name: 'home',
+          url: '/home',
+          component: () => html`<div class="home-content">Home</div>`,
+        },
+      ]);
+      uiRouterEl.uiRouter = router;
+      // Same task as the connect: the wake update is the view's first update.
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+
+      expect(uiView.deferHydration).toBe(false);
+      expect(uiView.uiRouter).toBe(router);
+    });
+
+    it('should leave a view already registered on the real router alone', async () => {
+      const { uiView } = await setupRouter([
+        { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
+      ]);
+      const registerUIView = vi.spyOn(router.viewService, 'registerUIView');
+
+      uiView.setAttribute('defer-hydration', '');
+      await waitForUpdate(uiView);
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+
+      expect(registerUIView).not.toHaveBeenCalled();
+      expect(uiView.uiRouter).toBe(router);
+      expect(router.viewService.available()).toHaveLength(1);
+    });
+
+    it('should hand the woken view to an adopter, re-sought and unrendered', async () => {
+      // No router on <ui-router>, so it provides a placeholder of its own and
+      // the view registers against that — the prerendered upgrade order.
+      const uiRouterEl = document.createElement('ui-router');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
+      const uiView = uiRouterEl.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+
+      router = createTestRouter(homeStates);
+      uiRouterEl.uiRouter = router;
+
+      let seenRouter: unknown;
+      let seenHasUpdated: boolean | undefined;
+      let seenHeld: Element | null = null;
+      const adopt = vi.fn((view: UiView) => {
+        seenRouter = view.uiRouter;
+        seenHasUpdated = view.hasUpdated;
+        seenHeld = view.querySelector('p.held');
+      });
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+      } finally {
+        uninstall();
+      }
+
+      expect(adopt).toHaveBeenCalledTimes(1);
+      expect(adopt.mock.calls[0]?.[0]).toBe(uiView);
+      // The re-seek runs first, so the adopter renders against the real router.
+      expect(seenRouter).toBe(router);
+      // And it runs before this update's render, so the adopter owns that render.
+      expect(seenHasUpdated).toBe(false);
+      // The held nodes are still there for the adopter to take.
+      expect(seenHeld).not.toBeNull();
+    });
+
+    it('should keep its held nodes for the adopter when it reconnects after the wake is queued', async () => {
+      const uiRouterEl = document.createElement('ui-router');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
+      const uiView = uiRouterEl.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+
+      router = createTestRouter(homeStates);
+      uiRouterEl.uiRouter = router;
+
+      let seenHeld: Element | null = null;
+      let seenNested: Element | null = null;
+      const adopt = vi.fn((view: UiView) => {
+        seenHeld = view.querySelector('p.held');
+        seenNested = view.querySelector('ui-view');
+      });
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        // Detach, wake, re-attach in one task: the connect runs before the queued update.
+        uiView.remove();
+        uiView.removeAttribute('defer-hydration');
+        uiRouterEl.append(uiView);
+        await waitForUpdate(uiView);
+      } finally {
+        uninstall();
+      }
+
+      expect(adopt).toHaveBeenCalledTimes(1);
+      expect(adopt.mock.calls[0]?.[0]).toBe(uiView);
+      // The reconnect must not sweep the served nodes aside as authored hold content.
+      expect(seenHeld).not.toBeNull();
+      expect(seenNested).not.toBeNull();
+      expect(uiView.querySelector('p.held')).not.toBeNull();
+      expect(uiView.querySelector('.home-content')).toBeNull();
+    });
+
+    it('should not request an adopter again on a later update', async () => {
+      router = createTestRouter(homeStates);
+      const uiView = mountHeld();
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+        expect(adopt).toHaveBeenCalledTimes(1);
+
+        router.start();
+        await routerGo(router, 'home');
+        await waitForUpdate(uiView);
+
+        expect(adopt).toHaveBeenCalledTimes(1);
+        expect(uiView.hasUpdated).toBe(true);
+      } finally {
+        uninstall();
+      }
+    });
+
+    it('should not reach a provider installed off the path it requests on', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const elsewhere = document.createElement('div');
+      container.appendChild(elsewhere);
+      const adopt = vi.fn();
+      const uninstall = provideContext(elsewhere, adoptUiViewContext, adopt);
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld();
+
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(adopt).not.toHaveBeenCalled();
+        expect(uiView.querySelector('p.held')).toBeNull();
+      } finally {
+        uninstall();
+        warn.mockRestore();
+      }
+    });
+
+    it('should stop being answered once the provider is uninstalled', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      uninstall();
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld();
+
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(adopt).not.toHaveBeenCalled();
+        expect(uiView.querySelector('p.held')).toBeNull();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should drop the held nodes and warn when nothing answers', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld();
+        router.start();
+        await routerGo(router, 'home');
+        await tick();
+
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        // Dropped, not rendered over: a cold render on top would double them.
+        expect(uiView.querySelector('p.held')).toBeNull();
+        expect(uiView.querySelector('ui-view')).toBeNull();
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toBe(
+          'lit-ui-router: this <ui-view> woke from defer-hydration and ' +
+            'nothing answered its adoptUiViewContext request, so its held ' +
+            'nodes were dropped and it rendered cold. Provide an adopter ' +
+            'before the wake.',
+        );
+      } finally {
+        warn.mockRestore();
+      }
     });
   });
 

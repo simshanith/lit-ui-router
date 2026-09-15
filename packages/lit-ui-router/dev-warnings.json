@@ -3,6 +3,7 @@
   "devOnly": [
     "lit-ui-router: uiSref wrote href=",
     "lit-ui-router: uiSrefActive is taking over an existing aria-current=",
-    "lit-ui-router: ${subject} found no <ui-router> ancestor, so it "
+    "lit-ui-router: ${subject} found no <ui-router> ancestor, so it ",
+    "lit-ui-router: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake."
   ]
 }

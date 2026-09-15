@@ -54,3 +54,24 @@ export function warnMissingRouter(
     element,
   );
 }
+
+/**
+ * Warns that a `<ui-view>` woke from `defer-hydration` with nothing answering
+ * its adopter request, so it dropped the nodes it held and rendered cold.
+ *
+ * Fires at the wake, which happens once per element, so this needs no registry
+ * of its own.
+ *
+ * @param element the view whose held nodes were dropped
+ *
+ * @internal
+ */
+export function warnDeferredWithoutClient(element: Element): void {
+  // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
+  if (!import.meta.env.DEV) return;
+  if (!inLitDevMode()) return;
+  console.warn(
+    'lit-ui-router: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.',
+    element,
+  );
+}
