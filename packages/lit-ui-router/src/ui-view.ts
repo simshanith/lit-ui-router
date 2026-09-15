@@ -1,5 +1,5 @@
-import { LitElement, html } from 'lit';
-import type { PropertyValues, TemplateResult } from 'lit';
+import { LitElement, html, nothing } from 'lit';
+import type { PropertyValues, RenderOptions, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
   ActiveUIView,
@@ -29,8 +29,25 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
-import { warnMissingRouter } from './dev-warn.js';
+import { warnColdServedRender, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
+
+/**
+ * Prefixes every part marker `UiViewRenderer` writes inside a `<ui-view>`.
+ *
+ * `hydrate()` acts on comments whose data starts with `lit-part`, `/lit-part`
+ * or `lit-node` and reads straight past every other comment, so a prefixed
+ * marker is invisible to the walk hydrating the view's surroundings. The view
+ * renames its own markers back at the wake, immediately before it hydrates
+ * against them.
+ *
+ * @internal
+ */
+export const servedMarkerPrefix = 'ui-view:';
+
+// The @lit-labs/ssr DOM shim has no `Node` global, and `willUpdate` runs there.
+const COMMENT_NODE = 8;
+const ELEMENT_NODE = 1;
 
 /** @internal */
 let viewIdCounter = 0;
@@ -74,7 +91,13 @@ type deregisterFn = () => void;
  * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
  * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
  *
-
+ * A prerendered view owns its own hydration. It sleeps while
+ * <code>defer-hydration</code> is on it, rendering nothing, and its served
+ * markers stay prefixed so the walk hydrating its surroundings reads past
+ * them. Removing the attribute wakes it: it reveals those markers and adopts
+ * the server's render through <code>UiView.hydrator</code>. With no hydrator
+ * installed it drops that render and renders cold.
+ *
  */
 export class UiView extends LitElement {
   /** the view name this viewport fills; empty selects the `$default` view */
@@ -88,9 +111,29 @@ export class UiView extends LitElement {
   @property({ attribute: false })
   uiRouter!: UIRouterLit;
 
-  /** Written by the server on a prerendered view; removing it wakes the element. */
+  /** Written by the server on a prerendered view; while it is present the view renders nothing, and removing it wakes and hydrates the element. */
   @property({ type: Boolean, attribute: 'defer-hydration' })
   deferHydration = false;
+
+  /**
+   * The hole a hydration client fills so a served view can adopt its markup.
+   *
+   * Core cannot depend on `@lit-labs/ssr-client`, so the `hydrate()` call is
+   * the one piece of the seam it does not own. An installed hydrator must
+   * adopt `container`'s children as the rendered `value`, leaving the lit part
+   * it builds on the container so the `render()` that follows reuses it. A
+   * client that cannot adopt — a document drawn for another state, say — must
+   * leave the container ready for a plain render instead; whether that is
+   * worth a warning is the client's call.
+   *
+   * Installed once, before the elements are registered, and shared by every
+   * `<ui-view>` on the page.
+   */
+  static hydrator?: (
+    value: unknown,
+    container: HTMLElement,
+    options?: RenderOptions,
+  ) => void;
 
   @state()
   private viewAddress!: UiViewAddress;
@@ -286,6 +329,84 @@ export class UiView extends LitElement {
     }
   }
 
+  /** Set by the first update on a view that holds server output, and never cleared. */
+  private wasServed = false;
+
+  /** True between that detection and the wake that reveals the server's markers. */
+  private servedPending = false;
+
+  private static isPart(node: Node | undefined, data: string): boolean {
+    return (
+      node?.nodeType === COMMENT_NODE && (node as Comment).data.startsWith(data)
+    );
+  }
+
+  /**
+   * Recognises server output by the plain outer part marker that opens it.
+   *
+   * Every marker the server writes between that pair carries
+   * {@link servedMarkerPrefix}, so nothing inside is mistaken for the pair
+   * itself. The children are there to read: a served view sleeps under
+   * `defer-hydration`, and the wake is long after the document was parsed.
+   */
+  private detectServed(): void {
+    // The @lit-labs/ssr DOM shim has no `firstChild`, and a server render has nothing to detect.
+    if (!UiView.isPart(this.firstChild ?? undefined, 'lit-part')) return;
+    this.wasServed = true;
+    this.servedPending = true;
+  }
+
+  /** Strips the prefix from one marker comment, leaving anything else alone. */
+  private static revealMarker(node: Node | null): void {
+    const comment = node as Comment | null;
+    if (!UiView.isPart(comment ?? undefined, servedMarkerPrefix)) return;
+    comment!.data = comment!.data.slice(servedMarkerPrefix.length);
+  }
+
+  /**
+   * Renames this view's own served markers back to the ones `hydrate()` reads.
+   *
+   * A nested `<ui-view>` is left closed: only the outer pair this template
+   * wrote around it is renamed, because everything inside is that view's own
+   * served content and stays hidden from this walk until its own wake.
+   */
+  private static revealServedMarkers(node: Node): void {
+    for (const child of node.childNodes) {
+      if (child.nodeType === COMMENT_NODE) {
+        UiView.revealMarker(child);
+      } else if (child instanceof UiView) {
+        UiView.revealMarker(child.firstChild);
+        UiView.revealMarker(child.lastChild);
+      } else if (child.nodeType === ELEMENT_NODE) {
+        UiView.revealServedMarkers(child);
+      }
+    }
+  }
+
+  /**
+   * Reveals the server's markers and hands them to the hydrator, once.
+   *
+   * Without a hydrator the server's nodes go instead: the plain render that
+   * follows writes into the same outer pair and would otherwise double them.
+   */
+  private revealServed(): void {
+    if (!this.servedPending) return;
+    this.servedPending = false;
+    const { hydrator } = UiView;
+    if (!hydrator) {
+      this.clearServed();
+      warnColdServedRender(this);
+      return;
+    }
+    UiView.revealServedMarkers(this);
+    hydrator(this.render(), this, this.renderOptions);
+  }
+
+  /** Drops the server's nodes, keeping the outer pair the cold render writes into. */
+  private clearServed(): void {
+    for (const node of [...this.childNodes].slice(1, -1)) node.remove();
+  }
+
   /** Sweeps authored hold content aside so the hold render can replay a clone. */
   private captureContent() {
     this.inner ??= document.createDocumentFragment();
@@ -451,12 +572,24 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
+  protected shouldUpdate(changed: PropertyValues<this>): boolean {
+    // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
+    return !this.deferHydration && super.shouldUpdate(changed);
+  }
+
+  /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
+    // The parser connects this element before its children exist, so detection waits for the first update.
+    if (!this.hasUpdated) this.detectServed();
+    // A document rendered without `deferHydration: true` serves markup with no attribute to remove, so its first update is the wake.
+    const woke =
+      (changed.has('deferHydration') && !this.deferHydration) ||
+      (this.wasServed && !this.hasUpdated);
+    if (!woke) return;
     // The first render after waking is the hydrate, so it needs the real router; lit records no old value on a first update.
-    if (changed.has('deferHydration') && !this.deferHydration) {
-      this.adoptProvidedRouter();
-    }
+    this.adoptProvidedRouter();
+    this.revealServed();
   }
 
   /**
@@ -478,8 +611,10 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
-  render(): Node | TemplateResult {
+  render(): Node | TemplateResult | typeof nothing {
     if (!this.component || !this.viewAddress) {
+      // A prerendered view has no authored hold content; the server wrote empty markers for an unrouted address.
+      if (this.wasServed) return nothing;
       // Never connected (server render): an empty declarative shadow root would hide the light DOM.
       return this.inner?.cloneNode(true) ?? html`<slot></slot>`;
     }
