@@ -31,7 +31,7 @@ import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
 import { warnDeferredWithoutClient, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
-import { provideUiView } from './context.js';
+import { adoptUiViewContext, requestContext } from './context.js';
 
 /** @internal */
 let viewIdCounter = 0;
@@ -77,11 +77,9 @@ type deregisterFn = () => void;
  *
  * A prerendered view owns its own hydration. It sleeps while
  * <code>defer-hydration</code> is on it, rendering nothing. Removing the
- * attribute wakes it, and it offers itself once with
- * <code>provideUiView</code>; a consumer installed with
- * <code>consumeUiViews</code> takes the offer and adopts the nodes the view
- * holds. With no consumer the view drops the held nodes and renders cold,
- * warning in development.
+ * attribute wakes it, and it requests <code>adoptUiViewContext</code> once and
+ * calls the adopter it gets, which adopts the nodes the view holds. With none,
+ * the view drops the held nodes and renders cold, warning in development.
  *
  */
 export class UiView extends LitElement {
@@ -475,11 +473,12 @@ export class UiView extends LitElement {
     if (this.deferredAtConnect) this.adoptHeldNodes();
   }
 
-  /** The first update after a deferred wake: re-seek the router the hydrate reads, then offer the view or drop the foreign nodes. */
+  /** The first update after a deferred wake: re-seek the router the hydrate reads, then hand the view to an adopter or drop the foreign nodes. */
   private adoptHeldNodes(): void {
     this.deferredAtConnect = false;
     this.adoptProvidedRouter();
-    if (provideUiView(this)) return;
+    const adopt = requestContext(this, adoptUiViewContext);
+    if (adopt) return adopt(this);
     // Rendering over another render's nodes doubles the markup; the @lit-labs/ssr DOM shim has no `replaceChildren`.
     this.replaceChildren?.();
     warnDeferredWithoutClient(this);

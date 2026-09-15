@@ -119,30 +119,54 @@ export const routerContext: RouterContext = Object.freeze({
 }) as RouterContext;
 
 /**
- * A `context-request` event for {@link routerContext}: bubbling, composed and
- * shaped as the protocol specifies, so any provider answers it.
+ * A `context-request` event for any key: bubbling, composed and shaped as the
+ * protocol specifies, so any provider answers it.
+ *
+ * @typeParam T - the context key's type, branded with the value it references
  *
  * @category core
  */
-export class RouterContextRequestEvent
+export class ContextRequestEvent<T extends UnknownContext>
   extends Event
-  implements ContextRequest<RouterContext>
+  implements ContextRequest<T>
 {
-  /** Always {@link routerContext}. */
-  readonly context: RouterContext = routerContext;
-  /** Called by the provider with the router. */
-  readonly callback: ContextCallback<UIRouterLit>;
+  /** The key this request is for, matched by identity. */
+  readonly context: T;
+  /** Called by the provider with the value. */
+  readonly callback: ContextCallback<ContextType<T>>;
   /** Whether later values are wanted. */
   readonly subscribe?: boolean;
 
+  /**
+   * @param context - the context key to request
+   * @param callback - receives the value from whichever provider answers
+   * @param subscribe - ask the provider to call back as the value changes
+   */
+  constructor(
+    context: T,
+    callback: ContextCallback<ContextType<T>>,
+    subscribe?: boolean,
+  ) {
+    super(contextRequestEventName, { bubbles: true, composed: true });
+    this.context = context;
+    this.callback = callback;
+    this.subscribe = subscribe;
+  }
+}
+
+/**
+ * A `context-request` event for {@link routerContext} — the router instance of
+ * {@link ContextRequestEvent}.
+ *
+ * @category core
+ */
+export class RouterContextRequestEvent extends ContextRequestEvent<RouterContext> {
   /**
    * @param callback - receives the router from whichever provider answers
    * @param subscribe - ask the provider to call back as the router changes
    */
   constructor(callback: ContextCallback<UIRouterLit>, subscribe?: boolean) {
-    super(contextRequestEventName, { bubbles: true, composed: true });
-    this.callback = callback;
-    this.subscribe = subscribe;
+    super(routerContext, callback, subscribe);
   }
 }
 
@@ -187,27 +211,88 @@ export const isRouterContextRequest: (
   isContextRequest(event, routerContext);
 
 /**
- * Options for {@link requestRouter}.
+ * Options for {@link requestContext}.
+ *
+ * @typeParam T - the context key's type, branded with the value it references
  *
  * @category types
  */
-export interface RequestRouterOptions {
+export interface RequestContextOptions<T extends UnknownContext> {
   /**
-   * Ask the provider to keep calling back as the router changes; pair it with
-   * {@link RequestRouterOptions.callback | callback}. `<ui-router>` answers
-   * once and hands back a no-op unsubscribe, since it does not swap routers.
+   * Ask the provider to keep calling back as the value changes; pair it with
+   * {@link RequestContextOptions.callback | callback}. A provider that holds
+   * one value answers once and hands back a no-op unsubscribe.
    */
   subscribe?: boolean;
   /**
    * Receives every answer, the synchronous first one included, with the
    * provider's `unsubscribe` when one was offered.
    */
-  callback?: ContextCallback<UIRouterLit>;
+  callback?: ContextCallback<ContextType<T>>;
 }
 
 /**
+ * Options for {@link requestRouter} — the router instance of
+ * {@link RequestContextOptions}.
+ *
+ * @category types
+ */
+export type RequestRouterOptions = RequestContextOptions<RouterContext>;
+
+/**
+ * Requests `key` from whichever provider answers on `target`, and returns the
+ * value a provider supplied synchronously.
+ *
+ * The target is any `EventTarget`, not only an element. Returns `undefined`
+ * when nobody answered. Every answer reaches
+ * {@link RequestContextOptions.callback | options.callback}; the return value
+ * is the first one only.
+ *
+ * @typeParam T - the context key's type, branded with the value it references
+ * @param target - the event target to dispatch the request from
+ * @param key - the context key to request, matched by identity
+ * @param options - subscription and callback options
+ *
+ * @example
+ * ```ts
+ * import { requestContext, routerContext } from 'lit-ui-router/context';
+ *
+ * const router = requestContext(element, routerContext);
+ * ```
+ *
+ * @category core
+ */
+export const requestContext: <T extends UnknownContext>(
+  target: EventTarget,
+  key: T,
+  options?: RequestContextOptions<T>,
+) => ContextType<T> | undefined = <T extends UnknownContext>(
+  target: EventTarget,
+  key: T,
+  options: RequestContextOptions<T> = {},
+): ContextType<T> | undefined => {
+  let answer: ContextType<T> | undefined;
+  let answered = false;
+  target.dispatchEvent(
+    new ContextRequestEvent<T>(
+      key,
+      (value, unsubscribe) => {
+        if (!answered) {
+          answered = true;
+          answer = value;
+        }
+        options.callback?.(value, unsubscribe);
+      },
+      options.subscribe,
+    ),
+  );
+  return answer;
+};
+
+/**
  * Requests the router from whichever provider answers on `target`, and returns
- * the value a provider supplied synchronously.
+ * the value a provider supplied synchronously — the router instance of
+ * {@link requestContext}.
  *
  * The target is any `EventTarget`, not only an element. Returns `undefined`
  * when nobody answered.
@@ -235,20 +320,7 @@ export const requestRouter: (
 ) => UIRouterLit | undefined = (
   target: EventTarget,
   options: RequestRouterOptions = {},
-): UIRouterLit | undefined => {
-  let answer: UIRouterLit | undefined;
-  let answered = false;
-  target.dispatchEvent(
-    new RouterContextRequestEvent((router, unsubscribe) => {
-      if (!answered) {
-        answered = true;
-        answer = router;
-      }
-      options.callback?.(router, unsubscribe);
-    }, options.subscribe),
-  );
-  return answer;
-};
+): UIRouterLit | undefined => requestContext(target, routerContext, options);
 
 /**
  * Answers `context-request`s for `key` that reach `root`, so code with no
@@ -342,93 +414,61 @@ export const provideRouter: (
   provideContext(root, routerContext, router);
 
 /**
- * The event name a waking `<ui-view>` offers itself under.
+ * The identity of {@link adoptUiViewContext}: a plain object, so the key is
+ * unique under `===` and readable in a debugger.
  *
  * @category types
  */
-export const uiViewProvidedEventName = 'ui-view-provided' as const;
-
-/**
- * The event a waking `<ui-view>` dispatches to offer itself: bubbling, composed
- * and cancelable, so a consumer under any root above it can take the view by
- * calling `preventDefault()`.
- *
- * @category types
- */
-export class UiViewProvidedEvent extends Event {
-  /** The view offering itself. */
-  readonly view: UiView;
-
-  /**
-   * @param view - the view offering itself
-   */
-  constructor(view: UiView) {
-    super(uiViewProvidedEventName, {
-      bubbles: true,
-      composed: true,
-      cancelable: true,
-    });
-    this.view = view;
-  }
+export interface AdoptUiViewContextKey {
+  /** Names the key for a debugger; identity, not this string, is what matches. */
+  readonly name: 'lit-ui-router/context#adopt-ui-view';
 }
 
 /**
- * Offers `view` to whichever consumer listens above it, and reports whether one
- * took it.
+ * The adopt-view context key's type — {@link AdoptUiViewContextKey} branded
+ * with the adopter function, so `@consume({ context: adoptUiViewContext })`
+ * infers it.
  *
- * @param view - the view offering itself
- * @returns `true` when a consumer took the view
- *
- * @category core
+ * @category types
  */
-export const provideUiView: (view: UiView) => boolean = (
-  view: UiView,
-): boolean => !view.dispatchEvent(new UiViewProvidedEvent(view));
+export type AdoptUiViewContext = Context<
+  AdoptUiViewContextKey,
+  (view: UiView) => void
+>;
 
 /**
- * Takes every `<ui-view>` offered under `root`, so a hydration client adopts
- * the nodes a waking view holds.
+ * The context key a hydration client answers for, under the container it
+ * hydrates, with the function that adopts a waking `<ui-view>`'s held nodes.
  *
- * Each offer is marked taken and stopped, so an outer consumer does not take it
- * a second time. The view is marked taken before `take` runs: a throwing `take`
- * still counts as taken, and the caller owns its fallback.
+ * The view requests it once on its waking update, after re-seeking its router,
+ * and calls what it gets. Unanswered, the view drops the held nodes and warns.
  *
- * @param root - the event target offers travel to
- * @param take - receives each view offered under `root`
- * @returns a function that uninstalls this consumer
+ * A client with no element of its own provides it with
+ * {@link provideContext | `provideContext(container, adoptUiViewContext, adopt)`};
+ * an element provides it with `@provide` from `@lit/context`, since the key is
+ * the one `createContext()` would have produced.
  *
  * @example
  * ```ts
- * import { consumeUiViews } from 'lit-ui-router/context';
+ * import { adoptUiViewContext, provideContext } from 'lit-ui-router/context';
  *
- * const release = consumeUiViews(document, (view) => hydrate(view));
+ * const uninstall = provideContext(container, adoptUiViewContext, (view) =>
+ *   hydrate(view),
+ * );
  * try {
- *   document.querySelectorAll('[defer-hydration]').forEach((el) =>
- *     el.removeAttribute('defer-hydration'),
- *   );
+ *   container
+ *     .querySelectorAll('[defer-hydration]')
+ *     .forEach((el) => el.removeAttribute('defer-hydration'));
  * } finally {
- *   release();
+ *   uninstall();
  * }
  * ```
  *
  * @category core
  */
-export const consumeUiViews: (
-  root: EventTarget,
-  take: (view: UiView) => void,
-) => () => void = (
-  root: EventTarget,
-  take: (view: UiView) => void,
-): (() => void) => {
-  const listener = (event: Event): void => {
-    const offer = event as UiViewProvidedEvent;
-    offer.preventDefault();
-    offer.stopImmediatePropagation();
-    take(offer.view);
-  };
-  root.addEventListener(uiViewProvidedEventName, listener);
-  return () => root.removeEventListener(uiViewProvidedEventName, listener);
-};
+export const adoptUiViewContext: AdoptUiViewContext = Object.freeze({
+  name: 'lit-ui-router/context#adopt-ui-view',
+}) as AdoptUiViewContext;
 
 /** The call-scoped router. A plain module slot, never an async context. */
 let scoped: UIRouter | undefined;

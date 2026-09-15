@@ -10,13 +10,12 @@ import {
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
-  consumeUiViews,
+  adoptUiViewContext,
   contextRequestEventName,
   isRouterContextRequest,
   provideContext,
   provideRouter,
-  provideUiView,
-  uiViewProvidedEventName,
+  requestContext,
   requestRouter,
   routerContext,
   RouterContextRequestEvent,
@@ -440,71 +439,106 @@ describe('provideContext', () => {
   });
 });
 
-describe('provideUiView and consumeUiViews', () => {
-  let container: HTMLElement;
-  let view: UiView;
+describe('requestContext', () => {
+  type SpecKey = Context<{ readonly name: string }, string>;
 
-  beforeEach(() => {
-    container = document.createElement('div');
-    document.body.append(container);
-    view = document.createElement('div') as unknown as UiView;
-    container.append(view);
+  const key = Object.freeze({ name: 'spec#request' }) as SpecKey;
+  const otherKey = Object.freeze({ name: 'spec#request-other' }) as SpecKey;
+
+  it('returns the value a provider answers its key with', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+
+    expect(requestContext(root, key)).toBe('value');
+
+    uninstall();
   });
 
-  afterEach(() => {
-    container.remove();
+  it('returns undefined when nobody answers', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, otherKey, 'value');
+
+    expect(requestContext(root, key)).toBeUndefined();
+
+    uninstall();
   });
 
-  it('reports the offer untaken when nobody listens', () => {
-    expect(provideUiView(view)).toBe(false);
+  it('returns the first answer when several arrive', () => {
+    const root = new EventTarget();
+    const listener = (event: Event) => {
+      const request = event as Event & {
+        callback: ContextCallback<string>;
+        context: SpecKey;
+      };
+      if (request.context !== key) return;
+      request.callback('first');
+      request.callback('second');
+    };
+    root.addEventListener(contextRequestEventName, listener);
+
+    expect(requestContext(root, key)).toBe('first');
+
+    root.removeEventListener(contextRequestEventName, listener);
   });
 
-  it('offers a bubbling, composed, cancelable event carrying the view', () => {
-    const seen: Event[] = [];
-    container.addEventListener(uiViewProvidedEventName, (event) =>
-      seen.push(event),
-    );
+  it('forwards every answer to the callback', () => {
+    const root = new EventTarget();
+    const seen: string[] = [];
+    const listener = (event: Event) => {
+      const request = event as Event & {
+        callback: ContextCallback<string>;
+        context: SpecKey;
+      };
+      if (request.context !== key) return;
+      request.callback('first');
+      request.callback('second');
+    };
+    root.addEventListener(contextRequestEventName, listener);
 
-    provideUiView(view);
+    requestContext(root, key, { callback: (value) => seen.push(value) });
 
-    const [event] = seen;
-    expect(event?.bubbles).toBe(true);
-    expect(event?.composed).toBe(true);
-    expect(event?.cancelable).toBe(true);
-    expect((event as { view?: UiView }).view).toBe(view);
+    expect(seen).toEqual(['first', 'second']);
+    root.removeEventListener(contextRequestEventName, listener);
   });
 
-  it('reports the offer taken, and hands the view to the consumer', () => {
-    const take = vi.fn();
-    const release = consumeUiViews(container, take);
+  it('forwards subscribe to the provider', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+    const unsubscribes: (undefined | (() => void))[] = [];
 
-    expect(provideUiView(view)).toBe(true);
-    expect(take).toHaveBeenCalledWith(view);
+    requestContext(root, key, {
+      subscribe: true,
+      callback: (_value, unsubscribe) => unsubscribes.push(unsubscribe),
+    });
+    requestContext(root, key, {
+      callback: (_value, unsubscribe) => unsubscribes.push(unsubscribe),
+    });
 
-    release();
+    expect(unsubscribes.map((it) => typeof it)).toEqual([
+      'function',
+      'undefined',
+    ]);
+    uninstall();
+  });
+});
+
+describe('adoptUiViewContext', () => {
+  it('is a frozen object, so the key is stable and unique', () => {
+    expect(Object.isFrozen(adoptUiViewContext)).toBe(true);
+    expect(adoptUiViewContext.name).toBe('lit-ui-router/context#adopt-ui-view');
   });
 
-  it('keeps an outer consumer from taking the same offer', () => {
-    const inner = vi.fn();
-    const outer = vi.fn();
-    const releaseInner = consumeUiViews(container, inner);
-    const releaseOuter = consumeUiViews(document.body, outer);
+  it('carries the adopter from a provider to a requester', () => {
+    const root = new EventTarget();
+    const view = document.createElement('div') as unknown as UiView;
+    const adopt = vi.fn();
+    const uninstall = provideContext(root, adoptUiViewContext, adopt);
 
-    provideUiView(view);
+    requestContext(root, adoptUiViewContext)?.(view);
 
-    expect(inner).toHaveBeenCalledTimes(1);
-    expect(outer).not.toHaveBeenCalled();
-    releaseInner();
-    releaseOuter();
-  });
-
-  it('stops taking once released', () => {
-    const take = vi.fn();
-    const release = consumeUiViews(container, take);
-    release();
-
-    expect(provideUiView(view)).toBe(false);
-    expect(take).not.toHaveBeenCalled();
+    expect(adopt).toHaveBeenCalledWith(view);
+    uninstall();
+    expect(requestContext(root, adoptUiViewContext)).toBeUndefined();
   });
 });
 
