@@ -10,16 +10,22 @@ import {
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
+  consumeUiViews,
   contextRequestEventName,
   isRouterContextRequest,
+  provideContext,
   provideRouter,
+  provideUiView,
+  uiViewProvidedEventName,
   requestRouter,
   routerContext,
   RouterContextRequestEvent,
   getScopedRouter,
   withRouterSync,
+  type Context,
   type ContextCallback,
 } from '../context.js';
+import type { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { createTestRouter, waitForUpdate } from './test-utils.js';
@@ -360,6 +366,145 @@ describe('provideRouter', () => {
     uninstallFirst();
     expect(requestRouter(root)).toBe(second);
     uninstallSecond();
+  });
+});
+
+describe('provideContext', () => {
+  type SpecKey = Context<{ readonly name: string }, string>;
+
+  const key = Object.freeze({ name: 'spec#key' }) as SpecKey;
+  const otherKey = Object.freeze({ name: 'spec#other' }) as SpecKey;
+
+  /** A minimal protocol request for `key`, shaped as a provider reads it. */
+  function request(
+    target: EventTarget,
+    requested: SpecKey,
+    options: { subscribe?: boolean } = {},
+  ): { answers: string[]; unsubscribes: (undefined | (() => void))[] } {
+    const answers: string[] = [];
+    const unsubscribes: (undefined | (() => void))[] = [];
+    const event = Object.assign(new Event(contextRequestEventName), {
+      context: requested,
+      callback: (value: string, unsubscribe?: () => void) => {
+        answers.push(value);
+        unsubscribes.push(unsubscribe);
+      },
+      subscribe: options.subscribe,
+    });
+    target.dispatchEvent(event);
+    return { answers, unsubscribes };
+  }
+
+  it('answers requests for its own key and ignores others', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+
+    expect(request(root, key).answers).toEqual(['value']);
+    expect(request(root, otherKey).answers).toEqual([]);
+
+    uninstall();
+    expect(request(root, key).answers).toEqual([]);
+  });
+
+  it('hands a subscriber a no-op unsubscribe, and a one-shot caller none', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+
+    const subscribed = request(root, key, { subscribe: true });
+    const once = request(root, key);
+
+    expect(typeof subscribed.unsubscribes[0]).toBe('function');
+    expect(once.unsubscribes[0]).toBeUndefined();
+    uninstall();
+  });
+
+  it('answers exactly once when two providers share a root', () => {
+    const root = new EventTarget();
+    const uninstallOuter = provideContext(root, key, 'outer');
+    const uninstallInner = provideContext(root, key, 'inner');
+
+    // stopImmediatePropagation: the first listener on the target is the only one
+    expect(request(root, key).answers).toEqual(['outer']);
+    uninstallOuter();
+    uninstallInner();
+  });
+
+  it('uninstalls only the listener its own call installed', () => {
+    const root = new EventTarget();
+    const uninstallFirst = provideContext(root, key, 'first');
+    const uninstallSecond = provideContext(root, key, 'second');
+
+    uninstallFirst();
+    expect(request(root, key).answers).toEqual(['second']);
+    uninstallSecond();
+  });
+});
+
+describe('provideUiView and consumeUiViews', () => {
+  let container: HTMLElement;
+  let view: UiView;
+
+  beforeEach(() => {
+    container = document.createElement('div');
+    document.body.append(container);
+    view = document.createElement('div') as unknown as UiView;
+    container.append(view);
+  });
+
+  afterEach(() => {
+    container.remove();
+  });
+
+  it('reports the offer untaken when nobody listens', () => {
+    expect(provideUiView(view)).toBe(false);
+  });
+
+  it('offers a bubbling, composed, cancelable event carrying the view', () => {
+    const seen: Event[] = [];
+    container.addEventListener(uiViewProvidedEventName, (event) =>
+      seen.push(event),
+    );
+
+    provideUiView(view);
+
+    const [event] = seen;
+    expect(event?.bubbles).toBe(true);
+    expect(event?.composed).toBe(true);
+    expect(event?.cancelable).toBe(true);
+    expect((event as { view?: UiView }).view).toBe(view);
+  });
+
+  it('reports the offer taken, and hands the view to the consumer', () => {
+    const take = vi.fn();
+    const release = consumeUiViews(container, take);
+
+    expect(provideUiView(view)).toBe(true);
+    expect(take).toHaveBeenCalledWith(view);
+
+    release();
+  });
+
+  it('keeps an outer consumer from taking the same offer', () => {
+    const inner = vi.fn();
+    const outer = vi.fn();
+    const releaseInner = consumeUiViews(container, inner);
+    const releaseOuter = consumeUiViews(document.body, outer);
+
+    provideUiView(view);
+
+    expect(inner).toHaveBeenCalledTimes(1);
+    expect(outer).not.toHaveBeenCalled();
+    releaseInner();
+    releaseOuter();
+  });
+
+  it('stops taking once released', () => {
+    const take = vi.fn();
+    const release = consumeUiViews(container, take);
+    release();
+
+    expect(provideUiView(view)).toBe(false);
+    expect(take).not.toHaveBeenCalled();
   });
 });
 
