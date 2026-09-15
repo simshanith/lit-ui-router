@@ -453,12 +453,8 @@ export class UiView extends LitElement {
   /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
-    // The first render after waking is the hydrate, so it needs the real router.
-    if (
-      changed.has('deferHydration') &&
-      changed.get('deferHydration') === true &&
-      !this.deferHydration
-    ) {
+    // The first render after waking is the hydrate, so it needs the real router; lit records no old value on a first update.
+    if (changed.has('deferHydration') && !this.deferHydration) {
       this.adoptProvidedRouter();
     }
   }

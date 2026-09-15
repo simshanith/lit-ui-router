@@ -561,6 +561,29 @@ describe('UiView', () => {
       expect(uiView.querySelector('.home-content')).not.toBeNull();
     });
 
+    it('should re-seek before a first update, where lit records no old value', async () => {
+      const uiRouterEl = document.createElement('ui-router');
+      const uiView = document.createElement('ui-view');
+      uiView.setAttribute('defer-hydration', '');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.appendChild(uiView);
+
+      router = createTestRouter([
+        {
+          name: 'home',
+          url: '/home',
+          component: () => html`<div class="home-content">Home</div>`,
+        },
+      ]);
+      uiRouterEl.uiRouter = router;
+      // Same task as the connect: the wake update is the view's first update.
+      uiView.removeAttribute('defer-hydration');
+      await waitForUpdate(uiView);
+
+      expect(uiView.deferHydration).toBe(false);
+      expect(uiView.uiRouter).toBe(router);
+    });
+
     it('should leave a view already registered on the real router alone', async () => {
       const { uiView } = await setupRouter([
         { name: 'home', url: '/home', component: () => html`<div>Home</div>` },
