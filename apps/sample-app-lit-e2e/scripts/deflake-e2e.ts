@@ -15,8 +15,8 @@ import { setTimeout as sleep } from 'node:timers/promises';
 // onwards would replay attempt 1's log and every sample would agree.
 
 // The workers-sdk#14926 crash surfaces as the client failing to reach the dev
-// server. Exported so measure-deflake.ts can count the same signature.
-export const crashSignatureFor = (port: number): string =>
+// server.
+const crashSignatureFor = (port: number): string =>
   `ECONNREFUSED 127.0.0.1:${port}`;
 
 // Bounded wait for the port to drain after a sweep (seconds).
