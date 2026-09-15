@@ -213,7 +213,7 @@ catalogs:
       specifier: ^0.28.2
       version: 0.28.2
     eslint:
-      specifier: ^10.10.0
+      specifier: 10.10.0
       version: 10.10.0
     eslint-doc-generator:
       specifier: ^3.7.1
