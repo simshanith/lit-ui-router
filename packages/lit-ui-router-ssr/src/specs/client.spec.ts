@@ -38,6 +38,11 @@ describe('the round trip', () => {
     await boot(container, rootTemplate, '/shell/detail');
 
     expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+    for (const view of [...container.querySelectorAll('ui-view')]) {
+      expect(
+        (view as unknown as { deferHydration: boolean }).deferHydration,
+      ).toBe(false);
+    }
     expect(container.querySelector('h1')?.textContent).toContain('shell hello');
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
   });

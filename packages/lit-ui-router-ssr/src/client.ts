@@ -7,7 +7,6 @@ import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import { LitElement, render } from 'lit';
 import type { RenderOptions } from 'lit';
-import { UiView } from 'lit-ui-router/pure';
 
 /**
  * The hole a `<ui-view>` fills, written at the use site.
@@ -160,8 +159,6 @@ const unshelter = (element: Element): void => {
 /** Connects and updates one asleep element, from the attribute callback that saw `defer-hydration` go. */
 const wake = (element: Element): void => {
   unshelter(element);
-  // It upgraded before `<ui-router>` carried the real router, so it registered against the placeholder one.
-  if (element instanceof UiView) element.adoptProvidedRouter();
   const self = asArmable(element);
   litConnected.call(element as LitElement);
   self.requestUpdate();
@@ -255,9 +252,9 @@ export function armLightDom(): void {
       this.setAttribute(DEFER, '');
       return;
     }
-    wake(this);
-    // Not the captured callback: `@lit-labs/ssr-client`'s patch answers this same removal with a second `connectedCallback`, which `wake()` has run already.
+    // Reactive half first (not the captured callback: `@lit-labs/ssr-client`'s patch answers this same removal with a second `connectedCallback`, run below by `wake()`), so `deferHydration` is already false and the pending update it enqueues is the one `wake()`'s `performUpdate` carries out, with `deferHydration` in the changed map for `<ui-view>`'s own re-seek.
     reactiveAttributeChanged.call(this, name, old, value);
+    wake(this);
   };
 
   litProto.update = function update(
