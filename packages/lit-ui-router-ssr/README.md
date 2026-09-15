@@ -82,14 +82,14 @@ answers for `ui-view`: it registers the view at the address its `name` attribute
 component into the element's light DOM between the part markers the element's own `render()`
 hydrates against. An address no state routes gets empty markers.
 
-The use site opts in with `renderLight()`, which is what reaches an element renderer's light-DOM
-render and commits nothing on the client:
+The use site opts in with `uiViewSlot()`, which is what reaches the renderer's light-DOM render and
+commits nothing on the client:
 
 ```typescript
-import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
+import { uiViewSlot } from 'lit-ui-router-ssr/client';
 
 const page = (router: UIRouterLit) => html`
-  <ui-router .uiRouter=${router}><ui-view>${renderLight()}</ui-view></ui-router>
+  <ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>
 `;
 ```
 
@@ -122,20 +122,29 @@ if (hydrateRoot(root, page(router))) {
 ```
 
 - **`armLightDom()`** patches `LitElement` so an element carrying `defer-hydration` stays asleep at
-  connect — no render root, no update — and hydrates rather than renders when it is woken.
-  `@lit-labs/ssr-client`'s own arming runs in `createRenderRoot` and only for an element with a
-  shadow root, so `<ui-view>`, whose render root is the element itself, is never armed by it.
+  connect — no render root, no update — and hydrates rather than renders once the attribute is
+  removed. `@lit-labs/ssr-client`'s own arming runs in `createRenderRoot` and only for an element
+  with a shadow root, so `<ui-view>`, whose render root is the element itself, is never armed by it.
+  Arming observes `defer-hydration` the way that support does, so removal is the wake signal on both
+  halves.
 - **Import order is the contract.** `armLightDom()` must run before `lit-ui-router` defines its tags:
   registration upgrades the server's markup, and an element that upgrades unarmed renders over the
   nodes meant to be adopted. An entry that hydrates therefore imports `lit-ui-router/pure`, which
   registers nothing, and reaches `lit-ui-router/register` (or the root entry) after the call.
+- **`uiViewSlot()`** is the same directive on both halves: the server reaches the renderer's
+  `renderLight()` only through it, and on the client it commits nothing, leaving the empty part whose
+  markers the shelter keeps.
 - **`hydrateRoot(container, value, options?)`** lifts each deferred element's server content out from
   between its part markers before hydrating the container, and puts it back as that element wakes —
   light DOM has no `<template>` to shelter nested markers from the host's walk, so this makes one. It
-  returns `false` when there is nothing to adopt.
-- **`wakeAll(container)`** wakes them outermost first, one level per pass. Call it once the boot
-  transition has succeeded: that is the whole of the boot-transition contract, and `defer-hydration`
-  is its handle.
+  returns `false` when there is nothing to adopt. A sheltered element sleeps through the walk that
+  strips its attribute — lit's own way of waking a shadow-DOM child — and wakes on the next removal.
+- **`wakeAll(container)`** wakes them outermost first, one level per pass, by removing
+  `defer-hydration` from each. Call it once the boot transition has succeeded: that is the whole of
+  the boot-transition contract, and `defer-hydration` is its handle. Removing the attribute by hand
+  wakes that one element just the same; what `wakeAll()` adds is the order, and a parent has to be
+  awake before its children — a child's server content is sheltered out of the document until the
+  parent's hydrate walk has run over the markers standing in its place.
 - **A mismatch falls back.** One static document answers a whole family of urls, so a client can boot
   into a state the document was not drawn for. `hydrate()` throws on that; the client warns in
   development, drops that one element's server nodes, and renders — its ancestors keep theirs.

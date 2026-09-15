@@ -11,6 +11,9 @@ const source = (path: string): string =>
 // Specs that need a browser-shaped document rather than the SSR DOM shim.
 const clientSpecs = ['src/specs/client.spec.ts'];
 
+// One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports.
+const coexistSpecs = ['src/specs/client-coexist.spec.ts'];
+
 const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 
 export default defineConfig({
@@ -61,7 +64,7 @@ export default defineConfig({
           environment: 'node',
           setupFiles: ['./vitest.setup.ts'],
           include: ['src/specs/**/*.spec.ts'],
-          exclude: [...configDefaults.exclude, ...clientSpecs],
+          exclude: [...configDefaults.exclude, ...clientSpecs, ...coexistSpecs],
           isolate: true,
         },
       },
@@ -73,6 +76,29 @@ export default defineConfig({
           environment: 'happy-dom',
           setupFiles: ['./vitest.setup.client.ts'],
           include: clientSpecs,
+          isolate: true,
+        },
+      },
+      {
+        cacheDir: `node_modules/.vite-${cacheKey}-coexist`,
+        test: {
+          name: 'coexist',
+          globals: true,
+          environment: 'happy-dom',
+          // Inlined, so this lane's `lit` is the one the setup file patched: an externalized copy would leave the support on a second instance.
+          server: {
+            deps: {
+              inline: [
+                'lit',
+                'lit-element',
+                'lit-html',
+                '@lit/reactive-element',
+                '@lit-labs/ssr-client',
+              ],
+            },
+          },
+          setupFiles: ['./vitest.setup.coexist.ts'],
+          include: coexistSpecs,
           isolate: true,
         },
       },
