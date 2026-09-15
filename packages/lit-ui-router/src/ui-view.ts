@@ -88,6 +88,10 @@ export class UiView extends LitElement {
   @property({ attribute: false })
   uiRouter!: UIRouterLit;
 
+  /** Written by the server on a prerendered view; removing it wakes the element. */
+  @property({ type: Boolean, attribute: 'defer-hydration' })
+  deferHydration = false;
+
   @state()
   private viewAddress!: UiViewAddress;
 
@@ -170,8 +174,8 @@ export class UiView extends LitElement {
       this.onUiViewContextEvent as EventListener,
     );
     this.setupUiView();
-    // `defer-hydration` marks server content between part markers, not authored hold content.
-    if (!this.hasAttribute('defer-hydration')) {
+    // A deferred view holds server content between part markers, not authored hold content.
+    if (!this.deferHydration) {
       this.captureContent();
     }
   }
@@ -258,13 +262,11 @@ export class UiView extends LitElement {
    * `registerUIView` syncs, so the re-registered view picks up the current
    * state without waiting for the next transition.
    *
-   * A hydration client calls this before the first update of an element that
-   * woke from `defer-hydration`, because that first update is the hydrate and
+   * A wake — `deferHydration` going false — re-seeks before the update it
+   * schedules, because on a prerendered page that update is the hydrate and
    * `render()` reads the component from the real registration.
-   *
-   * @internal
    */
-  adoptProvidedRouter(): void {
+  private adoptProvidedRouter(): void {
     const router = this.routerFromProvider
       ? this.seekProvidedRouter()
       : this.uiRouter;
@@ -446,6 +448,19 @@ export class UiView extends LitElement {
   /** @internal */
   public get state(): StateDeclaration {
     return (this.viewContext as StateObject).self;
+  }
+
+  /** @internal */
+  protected willUpdate(changed: PropertyValues<this>): void {
+    super.willUpdate(changed);
+    // The first render after waking is the hydrate, so it needs the real router.
+    if (
+      changed.has('deferHydration') &&
+      changed.get('deferHydration') === true &&
+      !this.deferHydration
+    ) {
+      this.adoptProvidedRouter();
+    }
   }
 
   /**
