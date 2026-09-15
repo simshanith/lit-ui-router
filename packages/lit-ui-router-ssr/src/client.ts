@@ -2,14 +2,14 @@
  * @module
  * @mergeModuleWith <project>
  */
-// The adopt half: one `hydrate()` on the root, and a consumer that takes every served `<ui-view>` the walk wakes and adopts its markup.
+// The adopt half: one `hydrate()` on the root, and the adopter each served `<ui-view>` the walk wakes requests to take its markup.
 import { hydrate } from '@lit-labs/ssr-client';
 import type { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import { noChange } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { Directive, directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
-import { consumeUiViews } from 'lit-ui-router/context';
+import { adoptUiViewContext, provideContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import { servedMarkerPrefix } from './served-markers.js';
 
@@ -133,9 +133,10 @@ const clearInterior = (view: UiView): void => {
  * writes into — rather than a half-built page. `hydrate()` claims the container
  * on its last statement, so a walk that threw leaves nothing to undo.
  *
- * This is the `take` callback {@link hydrateRoot} installs. A view is marked
- * taken before this runs, so the reveal and the hydrate sit inside the fallback
- * together and no offer escapes back to core's drop-and-warn.
+ * This is the adopter {@link hydrateRoot} provides. The view calls it itself,
+ * inside its own `willUpdate`, so every throw path stays inside the mismatch
+ * guard: the reveal and the hydrate sit in the fallback together, and nothing
+ * escapes into the view's update.
  */
 const adopt = (view: UiView): void => {
   if (!isPart(view.firstChild, 'lit-part')) return;
@@ -154,24 +155,26 @@ const adopt = (view: UiView): void => {
 };
 
 /**
- * Adopts a server-rendered container, and takes every `<ui-view>` that wakes
- * under it.
+ * Adopts a server-rendered container, and the `<ui-view>`s that wake under it.
  *
- * A consumer is installed on `container` with `consumeUiViews()` first, so a
- * view woken by the walk finds it; `hydrate()` then runs over `container`. The
- * walk reaches each `<ui-view>`'s {@link uiViewSlot} part, which wakes that
- * view; the view re-seeks its router and offers itself, and the consumer takes
- * the offer, reveals the markers the server prefixed for that view and hydrates
- * the element's own render against them. That hydrate reaches the slot parts of
- * the views nested inside the routed component the same way, parent first. A
- * view that wakes outside `container`, or after the release, is taken by
- * nobody: core drops its held nodes and warns in development.
+ * {@link adoptUiViewContext} is provided on `container` with core's
+ * `provideContext()` first, so a view woken by the walk finds it; `hydrate()`
+ * then runs over `container`. The walk reaches each `<ui-view>`'s {@link
+ * uiViewSlot} part, which wakes that view; the view re-seeks its router,
+ * requests the adopter and calls it, which reveals the markers the server
+ * prefixed for that view and hydrates the element's own render against them.
+ * That hydrate reaches the slot parts of the views nested inside the routed
+ * component the same way, parent first. A view that wakes outside `container`,
+ * or after the release, is answered by nobody: core drops its held nodes and
+ * warns in development.
  *
- * The consumer outlives this call, because a nested view wakes on its parent's
- * own update rather than inside the root walk. Release it once the page has
- * settled. A second call on the same container throws out of `hydrate()`, which
- * already holds a live render there, and releases its own consumer before
- * rethrowing, so the live one keeps taking.
+ * The provider answers synchronously and stops immediate propagation, so an
+ * outer provider never answers the same request twice. It outlives this call,
+ * because a nested view wakes on its parent's own update rather than inside the
+ * root walk. Release it once the page has settled. A second call on the same
+ * container throws out of `hydrate()`, which already holds a live render there,
+ * and releases its own provider before rethrowing, so the live one keeps
+ * answering.
  *
  * The boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
@@ -192,7 +195,7 @@ const adopt = (view: UiView): void => {
  * @param container - the element the server's markup was written into
  * @param value - the same template the server rendered, with every `<ui-view>` hole empty
  * @param options - lit render options, passed on to `hydrate()`
- * @returns the function that releases the consumer, or `false` when the container holds nothing to adopt — a cold client render, a dev server
+ * @returns the function that releases the provider, or `false` when the container holds nothing to adopt — a cold client render, a dev server
  *
  * @category client
  */
@@ -207,7 +210,7 @@ export function hydrateRoot(
   ) {
     return false;
   }
-  const release = consumeUiViews(container, adopt);
+  const release = provideContext(container, adoptUiViewContext, adopt);
   try {
     hydrate(value, container, options);
   } catch (error) {
