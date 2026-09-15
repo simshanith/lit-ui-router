@@ -11,17 +11,14 @@ import {
   isString,
 } from '@uirouter/core';
 import type { ActiveUIView, UIRouter, ViewConfig } from '@uirouter/core';
-import {
-  LitViewConfig,
-  isRoutedLitElement,
-  servedMarkerPrefix,
-} from 'lit-ui-router/pure';
+import { LitViewConfig, isRoutedLitElement } from 'lit-ui-router/pure';
 import type {
   NormalizedLitViewDeclaration,
   UIViewInjectedProps,
   UIRouterLit,
 } from 'lit-ui-router/pure';
 import { getScopedRouter } from 'lit-ui-router/context';
+import { servedMarkerPrefix } from './served-markers.js';
 
 /** The tag this renderer answers for. */
 const TAG = 'ui-view';
@@ -90,10 +87,10 @@ const warnElementComponent = (fqn: string): void => {
  *
  * The pair around the component is written plain, so the walk hydrating the
  * view's surroundings reads it as the `uiViewSlot()` child part and stops
- * there; every marker between that pair carries `servedMarkerPrefix`, so the
- * same walk reads past the view's interior and the element reveals it at its
- * own wake. Collecting the component's markup to prefix it is synchronous, so
- * a component whose render awaits is not served.
+ * there; every marker between that pair carries the served-marker prefix, so
+ * the same walk reads past the view's interior and `lit-ui-router-ssr/client`
+ * reveals it at that view's own wake. Collecting the component's markup to
+ * prefix it is synchronous, so a component whose render awaits is not served.
  *
  * @example
  * ```ts

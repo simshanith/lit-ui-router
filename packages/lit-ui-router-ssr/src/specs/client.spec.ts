@@ -1,4 +1,5 @@
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
+import { UiView } from 'lit-ui-router/pure';
 import 'lit-ui-router/register';
 
 import { hydrateRoot } from '../client.js';
@@ -119,21 +120,120 @@ describe('the round trip', () => {
 describe('a document drawn for another state', () => {
   it('warns once, renders that view cold, and keeps its ancestors', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
-    // Drawn with the nested view empty; the client boots into the child state.
-    const { container, served } = serve(await drawShell('/shell'));
+    // Drawn with the nested view routed; the client boots into the parent state.
+    const { container, served } = serve(await drawShell('/shell/detail'));
     const shell = container.querySelector('h1');
 
-    await boot(container, rootTemplate, '/shell/detail');
+    await boot(container, rootTemplate, '/shell');
 
     expect(warn).toHaveBeenCalledTimes(1);
     expect(warn.mock.calls[0][0]).toContain(
       'could not adopt the server render',
     );
-    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+    // the view the document was not drawn for dropped the server's nodes
+    expect(container.querySelector('.detail')).toBeNull();
     // the shell's own nodes were hydrated, not thrown away with the mismatch
     expect(container.querySelector('h1')).toBe(shell);
     expect(served.filter((element) => container.contains(element))).toContain(
       shell,
     );
+  });
+
+  it('says nothing when the document drew that view empty', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // The empty pair carries no render to adopt, so the view renders cold in silence.
+    const { container } = serve(await drawShell('/shell'));
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(warn).not.toHaveBeenCalled();
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+  });
+});
+
+/**
+ * The markers `UiViewRenderer` writes around and inside one view, as strings:
+ * the outer pair plain, everything the view owns prefixed, and a nested view
+ * whose own interior the parent's prefixing left alone.
+ */
+const SERVED_SHELL = [
+  '<!--lit-part SHELL-->',
+  '<h1>shell <!--ui-view:lit-part-->hello<!--ui-view:/lit-part--></h1>',
+  '<ui-view defer-hydration>',
+  '<!--ui-view:lit-part DETAIL-->',
+  '<!--ui-view:lit-part-->',
+  '<p class="detail">leaf</p>',
+  '<!--ui-view:/lit-part-->',
+  '<!--ui-view:/lit-part-->',
+  '</ui-view>',
+  '<!--/lit-part-->',
+].join('');
+
+/** A served `<ui-view>`, asleep, holding exactly what the server wrote into it. */
+const servedView = (markup: string): UiView => {
+  const view = document.createElement('ui-view');
+  view.setAttribute('defer-hydration', '');
+  view.innerHTML = markup;
+  document.body.append(view);
+  return view;
+};
+
+describe('the hydrator core hands each waking view', () => {
+  let adopt: (view: UiView) => void;
+
+  beforeAll(async () => {
+    // `hydrateRoot()` is the only thing that fills core's slot, so a real trip is what puts the hydrator within reach.
+    const { container } = serve(await drawShell('/shell/detail'));
+    await boot(container, rootTemplate, '/shell/detail');
+    container.remove();
+    adopt = UiView.hydrator!;
+  });
+
+  it('reveals the view’s own markers and leaves a nested view closed', () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = servedView(SERVED_SHELL);
+    let revealed: string[] = [];
+    // The reveal has to be done by the time core's `render()` is read, because that value is what hydrates against these markers.
+    view.render = () => {
+      revealed = comments(view);
+      return document.createDocumentFragment();
+    };
+
+    adopt(view);
+
+    expect(revealed).toEqual([
+      'lit-part SHELL',
+      'lit-part',
+      '/lit-part',
+      'lit-part DETAIL',
+      'ui-view:lit-part',
+      'ui-view:/lit-part',
+      '/lit-part',
+      '/lit-part',
+    ]);
+  });
+
+  it('drops the pair the server wrote for an address no state routed', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = servedView('<!--lit-part--><!--/lit-part-->');
+
+    adopt(view);
+
+    expect(comments(view)).toEqual([]);
+    expect(view.childNodes).toHaveLength(0);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('leaves a view the document served no markers for exactly as it is', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = servedView('<p class="cold">cold</p>');
+    const render = vi.fn();
+    view.render = render;
+
+    adopt(view);
+
+    expect(render).not.toHaveBeenCalled();
+    expect(view.innerHTML).toBe('<p class="cold">cold</p>');
+    expect(warn).not.toHaveBeenCalled();
   });
 });

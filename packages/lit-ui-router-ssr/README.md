@@ -127,15 +127,21 @@ if (!hydrateRoot(root, page(router))) render(page(router), root);
   over `container`. It returns `false` when there is nothing to adopt — a cold client render, a dev
   server.
 - **One walk wakes the page.** A served `<ui-view>` sleeps under `defer-hydration` and renders
-  nothing; removing it wakes the view, which reveals the markers the server wrote for it and
-  hydrates its own routed component — and that hydrate reaches the views nested in the component the
-  same way, parent first.
+  nothing. Removing the attribute wakes it, and core hands the element to the hydrator this package
+  installs on `UiView.hydrator` — once, after the view re-seeks its router and before its first
+  render.
+- **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
+  part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
+  reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The
+  hydrator renames one view's markers back at that view's wake and hydrates the element's own
+  `render()` against them, which leaves a nested view's interior hidden until its own wake.
 - **`uiViewSlot()`** is the hole, on both halves: the server reaches the renderer's `renderLight()`
   only through it, and on the client it wakes the `<ui-view>` it sits in, whenever the enclosing
   template hydrates, then resolves to `noChange` — so the walk reads that element as a leaf and a
-  later render of the template leaves the view's own nodes alone. The markers inside the view carry
-  a prefix the walk reads straight past; the view renames them back at its wake. On a cold render
-  there is no attribute to remove.
+  later render of the template leaves the view's own nodes alone. On a cold render there is no
+  attribute to remove.
+- **An empty pair is nothing to adopt.** A view the server drew at an address no state routed holds
+  only its two markers. Both go, and the element renders cold and silent.
 - **A mismatch falls back.** One static document answers a whole family of urls, so a client can boot
   into a state the document was not drawn for. `hydrate()` throws on that; the client warns in
   development, drops that one view's server nodes, and the view renders cold — its ancestors keep
