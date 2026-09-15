@@ -8,6 +8,8 @@ import { provideRouter, withRouterSync } from 'lit-ui-router/context';
 import { createServerRouter } from 'ui-router-server';
 import type { MountConfig, ServerRouter, Verdict } from 'ui-router-server';
 
+import { UiViewRenderer } from './ui-view-renderer.js';
+
 /** One emitted artefact, as {@link prerender} planned it. */
 export interface EmittedPage {
   /** The requested path, exactly as the caller listed it. */
@@ -125,7 +127,12 @@ export interface PrerenderOptions {
    * before the call.
    */
   root?: EventTarget;
-  /** Element renderers passed through to `@lit-labs/ssr`. */
+  /**
+   * Element renderers passed through to `@lit-labs/ssr`, verbatim. Defaults to
+   * `[UiViewRenderer]` — not `@lit-labs/ssr`'s `[LitElementRenderer]`, which
+   * wraps every custom element in a declarative shadow root it never asked for.
+   * Pass `[]` for a render with no `<ui-view>` to fill.
+   */
   elementRenderers?: RenderInfo['elementRenderers'];
   /** Writes a file. Defaults to `node:fs`, imported lazily on first write. */
   write?: FileWriter;
@@ -284,7 +291,7 @@ export async function prerender(
     rules = '_redirects',
     extraRules = [],
     trailingSlash = 'both',
-    elementRenderers,
+    elementRenderers = [UiViewRenderer],
     write = nodeWrite,
     dryRun = false,
   } = options;
@@ -327,7 +334,7 @@ export async function prerender(
               render(body, {
                 // a fresh array per render: @lit-labs/ssr mutates the stack
                 eventTargetStack: rootedStack(root),
-                ...(elementRenderers ? { elementRenderers } : {}),
+                elementRenderers,
               }),
             ),
           );

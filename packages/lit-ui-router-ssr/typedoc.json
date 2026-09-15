@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": ["src/index.ts", "src/client.ts"],
   "out": "../../www/lit-ui-router.dev/api/lit-ui-router-ssr",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [

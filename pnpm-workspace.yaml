@@ -17,6 +17,7 @@ catalog:
   '@commitlint/types': ^21.2.0
   '@custom-elements-manifest/analyzer': ^0.11.0
   '@lit-labs/ssr': ^4.1.0
+  '@lit-labs/ssr-client': ^1.1.8
   '@lit/context': ^1.1.6
   '@pnpm/logger': 1100.0.0
   '@pnpm/types': 1102.1.0
@@ -111,6 +112,7 @@ catalogs:
     eslint-plugin-lit: ^2.0.0
   publishedPeer:
     '@lit-labs/ssr': ^4.0.0
+    '@lit-labs/ssr-client': ^1.1.0
     '@uirouter/core': ^6.0.8
     effect: ^3.22.0
     eslint: '^9.0.0 || ^10.0.0'

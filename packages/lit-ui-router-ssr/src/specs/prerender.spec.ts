@@ -2,6 +2,7 @@ import { mkdtemp, readFile, rm } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import path from 'node:path';
 import { describe, expect, it, vi } from 'vitest';
+import { LitElementRenderer } from '@lit-labs/ssr';
 import { html, LitElement } from 'lit';
 import type { TemplateResult } from 'lit';
 import { UIRouterLit } from 'lit-ui-router';
@@ -398,12 +399,26 @@ describe('the render composition', () => {
     const { files } = await run({
       paths: ['/'],
       notFound: false,
+      // LitElementRenderer is not the default here; a shadow render asks for it.
+      elementRenderers: [LitElementRenderer],
       renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
     });
 
     const written = files.get('dist/index.html')!;
     expect(written).toContain('/sheet/7B');
     expect(written).not.toContain('no-router');
+  });
+
+  it('defaults to UiViewRenderer, so no element gets a shadow root it never asked for', async () => {
+    const { files } = await run({
+      paths: ['/'],
+      notFound: false,
+      renderShell: (): TemplateResult => html`<router-probe></router-probe>`,
+    });
+
+    expect(files.get('dist/index.html')).toBe(
+      '<!--lit-part l2LFYrjnTDM=--><router-probe></router-probe><!--/lit-part-->',
+    );
   });
 });
 
