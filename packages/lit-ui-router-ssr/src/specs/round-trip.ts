@@ -105,17 +105,32 @@ export const dropViewNodeMarkers = (container: HTMLElement): number => {
 };
 
 /**
+ * Hydrates `container` with a fresh client router settled on `path`, leaving
+ * the consumer `hydrateRoot()` installed live.
+ */
+export const hydrateInto = async (
+  container: HTMLElement,
+  page: Page,
+  path: string,
+): Promise<{ router: UIRouterLit; release: () => void }> => {
+  const router = makeRouter();
+  await goTo(router, path);
+  const release = hydrateRoot(container, page(router));
+  expect(release).toBeTypeOf('function');
+  return { router, release: release as () => void };
+};
+
+/**
  * The whole trip: settle a fresh client router on `path`, hydrate the served
- * container, and let every woken view finish.
+ * container, let every woken view finish, and release the consumer.
  */
 export const boot = async (
   container: HTMLElement,
   page: Page,
   path: string,
 ): Promise<UIRouterLit> => {
-  const router = makeRouter();
-  await goTo(router, path);
-  expect(hydrateRoot(container, page(router))).toBe(true);
+  const { router, release } = await hydrateInto(container, page, path);
   await settle(container);
+  release();
   return router;
 };
