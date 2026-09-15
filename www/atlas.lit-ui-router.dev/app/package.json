@@ -13,6 +13,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@lit-labs/ssr-client": "^1.1.8",
     "@uirouter/core": "^6.1.2",
     "cytoscape": "^3.34.3",
     "lit": "^3.3.3",

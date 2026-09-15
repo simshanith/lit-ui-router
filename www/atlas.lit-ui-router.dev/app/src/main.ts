@@ -1,10 +1,16 @@
-import { html, render } from 'lit';
+// THE ADOPT HALF FIRST: this patches LitElement and <ui-view> before either is
+// registered, so an element that upgrades over server-rendered light DOM stays
+// asleep instead of rendering over it. See src/hydrate-ui-view.ts — it is the
+// prototype of `lit-ui-router-ssr/client` (spike #898).
+import { hydrateRoot, wakeAll } from './hydrate-ui-view.ts';
+import { render } from 'lit';
 import 'lit-ui-router';
 import { onXrefClick } from './fragment.ts';
 import type { XrefDetail } from './fragment.ts';
 import { installLattice } from './lattice.ts';
 import { createRouter } from './router.ts';
 import { applyTheme, readTheme } from './theme.ts';
+import { rootTemplate } from './views.ts';
 // --- EXPERIMENTAL LAYER ---------------------------------------------------
 // The one line that ties the optional half in. Delete this import, the call
 // below, and src/experimental/, and the base app is untouched.
@@ -28,13 +34,30 @@ document.addEventListener('atlas-xref', (event) => {
 // transition is animated too.
 installExperimental(router);
 
-router.start();
-
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
-// The prerendered shell is replaced wholesale: see SSR-VERDICT.md.
-root.replaceChildren();
-render(
-  html`<ui-router .uiRouter=${router}><ui-view></ui-view></ui-router>`,
-  root,
-);
+
+const template = rootTemplate(router);
+
+// THE SEAM. `hydrateRoot` adopts the prerendered tree when there is one — the
+// deferred elements are already asleep, their content is sheltered from the
+// walk, and the root template is hydrated rather than rendered. The views are
+// woken once the boot transition has succeeded, which is the point at which
+// `<ui-view>` knows its component and can hydrate what the server drew.
+if (hydrateRoot(root, template)) {
+  const booted = new Promise<void>((resolve) => {
+    const off = router.transitionService.onSuccess({}, () => {
+      off();
+      resolve();
+    });
+  });
+  router.start();
+  void booted.then(() => {
+    wakeAll(root);
+  });
+} else {
+  // No prerender (vite dev, the artifact build): the cold client render.
+  router.start();
+  root.replaceChildren();
+  render(template, root);
+}

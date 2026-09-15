@@ -218,15 +218,29 @@ const result = await prerender({
   renderShell: async (_verdict, { path }) => {
     await goTo(path);
     const job = jobs.get(path);
-    return views.shell(
-      manifest,
-      job ? job.content(router) : views.NotFoundView({ router, resolves: {} }),
+    // THE CLIENT'S EXACT TREE (spike #898): `<ui-router>` → `<ui-view>` →
+    // shell → `<ui-view>` → the routed view, through the same template
+    // functions main.ts renders, so every digest matches on the other side.
+    // The job table stands in for the server-side `UiViewRenderer`: it is what
+    // supplies the routed view and its resolves for a path.
+    return views.rootTemplate(
+      router,
+      views.shell(
+        manifest,
+        views.uiViewSlot(
+          job ? job.content(router) : views.NotFoundView({ router, resolves: {} }),
+        ),
+      ),
     );
   },
   document: (body, { path }) => {
     const title = jobs.get(path)?.title ?? TITLES.notFound;
     return shellHtml
       .replace(/<title>[^<]*<\/title>/, `<title>${title}</title>`)
+      // NOTE (spike #898): nothing is added here. @lit-labs/ssr already writes
+      // `defer-hydration` on every custom element it renders below the top
+      // level, which is exactly the attribute the client's arming patch runs
+      // on — so the server half of the contract is already in the box.
       .replace(ROOT_RE, `$1${body}$3`);
   },
 });

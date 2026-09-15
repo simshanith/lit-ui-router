@@ -97,6 +97,20 @@ const outTarget = ARTIFACT ? '_blank' : nothing;
 
 // --- <atlas-plate> — a generated fragment, inserted and brought to life ----
 
+/**
+ * THE ELEMENT'S OWN RENDER, as a shared function (SPIKE #898).
+ *
+ * A light-DOM element's content is what the server cannot draw: there is no
+ * `connectedCallback` on the server and the default `LitElementRenderer` only
+ * knows how to fill a declarative shadow root. So the view template hands the
+ * server the element's own render output to write INSIDE the tag, through a
+ * child part whose value is `nothing` on the client — same template strings on
+ * both sides, so the digests match, and the markers the server emits in that
+ * part are exactly the markers the element's own `hydrate()` expects.
+ */
+export const plateContent = (fragment: string): TemplateResult =>
+  html`${unsafeHTML(fragment)}`;
+
 export class AtlasPlate extends LitElement {
   static override properties = {
     fragment: { attribute: false },
@@ -142,7 +156,7 @@ export class AtlasPlate extends LitElement {
   };
 
   override render(): TemplateResult {
-    return html`${unsafeHTML(this.fragment)}`;
+    return plateContent(this.fragment);
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
@@ -196,7 +210,7 @@ export class AtlasCity extends LitElement {
   }
 
   override render(): TemplateResult {
-    return html`<atlas-plate .fragment=${this.fragment}></atlas-plate>`;
+    return plate(this.fragment, false);
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
@@ -231,6 +245,32 @@ customElements.define('atlas-city', AtlasCity);
 
 // --- <atlas-themer> — the sheets' three-state theme control ----------------
 
+/**
+ * The themer's own render, shared with the server the way `plateContent` is.
+ * The server has no stored choice, so it draws the default one; the element
+ * hydrates against that and reaches for the reader's own in `firstUpdated`,
+ * which is a re-render of three `aria-pressed` attributes and no new node.
+ */
+export const themerContent = (
+  choice: ThemeChoice,
+  pick: (choice: ThemeChoice) => void,
+): TemplateResult => {
+  const button = (value: ThemeChoice, label: string): TemplateResult => html`
+    <button
+      type="button"
+      aria-pressed=${choice === value ? 'true' : 'false'}
+      @click=${() => pick(value)}
+    >
+      ${label}
+    </button>
+  `;
+  return html`
+    <div class="themer" role="group" aria-label="colour scheme">
+      ${button('auto', 'AUTO')}${button('light', 'VELLUM')}${button('dark', 'CYANO')}
+    </div>
+  `;
+};
+
 export class AtlasThemer extends LitElement {
   static override properties = { choice: { state: true } };
 
@@ -238,33 +278,27 @@ export class AtlasThemer extends LitElement {
 
   constructor() {
     super();
-    this.choice = readTheme();
+    // The DEFAULT, not the stored choice: this is what the server drew, and
+    // the first render has to match it. `firstUpdated` reads the real one.
+    this.choice = 'auto';
   }
 
   override createRenderRoot(): HTMLElement {
     return this;
   }
 
-  #pick(choice: ThemeChoice): void {
+  #pick = (choice: ThemeChoice): void => {
     this.choice = choice;
     applyTheme(choice);
+  };
+
+  override firstUpdated(changed: Map<PropertyKey, unknown>): void {
+    super.firstUpdated(changed);
+    this.choice = readTheme();
   }
 
   override render(): TemplateResult {
-    const button = (value: ThemeChoice, label: string): TemplateResult => html`
-      <button
-        type="button"
-        aria-pressed=${this.choice === value ? 'true' : 'false'}
-        @click=${() => this.#pick(value)}
-      >
-        ${label}
-      </button>
-    `;
-    return html`
-      <div class="themer" role="group" aria-label="colour scheme">
-        ${button('auto', 'AUTO')}${button('light', 'VELLUM')}${button('dark', 'CYANO')}
-      </div>
-    `;
+    return themerContent(this.choice, this.#pick);
   }
 }
 customElements.define('atlas-themer', AtlasThemer);
@@ -282,7 +316,7 @@ function utilBar(crumb: TemplateResult): TemplateResult {
         <a class="util-github" href="${GITHUB}" target="_blank" rel="noopener">GITHUB ↗</a>
         <!-- The flat set is plain pages beside the app, not a state: a real link. -->
         <a class="util-set" href="${out(href.set)}" target=${outTarget}>THE FLAT SET ↗</a>
-        <atlas-themer></atlas-themer>
+        <atlas-themer>${isServer ? themerContent('auto', () => {}) : nothing}</atlas-themer>
       </nav>
     </div>
   `;
@@ -373,13 +407,31 @@ function rail(manifest: Manifest | undefined): TemplateResult {
 // --- the shell: rail + the nested content view -----------------------------
 
 /**
+ * THE ROUTED VIEW'S HOLE — one template, both sides (SPIKE #898).
+ *
+ * `<ui-view>` is server-silent: @lit-labs/ssr never calls the
+ * `connectedCallback` that picks the routed component, so the server writes
+ * what the element WOULD have rendered into this slot and the client leaves it
+ * `nothing` — the element hydrates against the markers the slot emitted. The
+ * strings are shared, so the two sides carry the same digest, which is the
+ * whole condition lit's `hydrate()` puts on a template.
+ */
+export const uiViewSlot = (content: unknown = nothing): TemplateResult =>
+  html`<ui-view>${content}</ui-view>`;
+
+/**
+ * THE ROOT, shared by `main.ts` and `prerender.ts`. The server renders the
+ * shell into the outer hole; the client hydrates the same tree with both holes
+ * empty and lets the two `<ui-view>`s fill themselves.
+ */
+export const rootTemplate = (router: UIRouter, content: unknown = nothing): TemplateResult =>
+  html`<ui-router .uiRouter=${router}>${uiViewSlot(content)}</ui-router>`;
+
+/**
  * The shell around whatever fills the content column.
  *
- * `ShellView` puts `<ui-view>` there and lets the router fill it; the build's
- * prerender (prerender.ts) puts the routed view's own template there directly,
- * because `<ui-view>` is server-silent — @lit-labs/ssr never calls the
- * `connectedCallback` that picks the routed component. Same rail, same sprite,
- * same cover CSS either way: ONE template set, two fillings of one hole.
+ * Same rail, same sprite, same cover CSS on both sides: ONE template set, two
+ * fillings of one hole.
  */
 export const shell = (manifest: Manifest | undefined, content: unknown): TemplateResult => html`
   <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
@@ -393,7 +445,7 @@ export const shell = (manifest: Manifest | undefined, content: unknown): Templat
 `;
 
 export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) =>
-  shell(props?.resolves?.manifest, html`<ui-view></ui-view>`);
+  shell(props?.resolves?.manifest, uiViewSlot());
 
 // --- gallery: the title sheet — key image, issue log, index ----------------
 
@@ -867,23 +919,20 @@ const seeAlso = (refs: string[]): TemplateResult | typeof nothing =>
     : nothing;
 
 /**
- * THE PLATE, both sides of the seam.
+ * THE PLATE, both sides of the seam — ONE template now (SPIKE #898).
  *
  * In a browser the fragment is a PROPERTY: `<atlas-plate>` renders it into its
  * own light DOM and then runs the scripts inside it. @lit-labs/ssr emits no
  * property bindings and calls no `connectedCallback`, so the server writes the
- * fragment as the element's child instead — the same bytes, in the same place,
- * inert until the client upgrades the element and replaces them. This is the
- * one node in the set whose content the server cannot get through the client's
- * own binding; see the seam notes in SSR-VERDICT.md.
+ * element's own render output as its child instead — but through the SAME
+ * template as the client's, with `nothing` in the slot where the browser's
+ * copy of the element will draw it for itself. Two templates here (the old
+ * `isServer ? … : …` pair) meant two digests and no hydration at all.
  */
 const plate = (fragment: string, needsCytoscape: boolean): TemplateResult =>
-  isServer
-    ? html`<atlas-plate>${unsafeHTML(fragment)}</atlas-plate>`
-    : html`<atlas-plate
-        .fragment=${fragment}
-        .needsCytoscape=${needsCytoscape}
-      ></atlas-plate>`;
+  html`<atlas-plate .fragment=${fragment} .needsCytoscape=${needsCytoscape}
+    >${isServer ? plateContent(fragment) : nothing}</atlas-plate
+  >`;
 
 const verdictLine = (verdict: string): TemplateResult | typeof nothing =>
   verdict
@@ -943,9 +992,9 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    ${isServer
-      ? html`<atlas-city>${unsafeHTML(resolves.fragment)}</atlas-city>`
-      : html`<atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>`}
+    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}
+      >${isServer ? plate(resolves.fragment, false) : nothing}</atlas-city
+    >
   `;
 };
 
