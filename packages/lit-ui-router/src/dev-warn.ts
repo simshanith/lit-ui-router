@@ -56,6 +56,27 @@ export function warnMissingRouter(
 }
 
 /**
+ * Warns that a `<ui-router>` was handed a different `uiRouter` after its first
+ * update, which the element does not honour: the views already registered stay
+ * on the router they took, and only later connections see the new one.
+ *
+ * @param element the `<ui-router>` whose property changed
+ *
+ * @internal
+ */
+export function warnRouterSwapped(element: Element): void {
+  // DEV folds the whole body out of dist/*.js (check:dev-split); inLitDevMode() is the runtime probe.
+  if (!import.meta.env.DEV) return;
+  if (!inLitDevMode()) return;
+  console.warn(
+    'lit-ui-router: this <ui-router> was given a different uiRouter after its first update. ' +
+      'The views already registered stay on the previous router, so the page is split across two. ' +
+      'Set uiRouter before the element first updates, or replace the element.',
+    element,
+  );
+}
+
+/**
  * Warns that a `<ui-view>` woke from `defer-hydration` with nothing answering
  * its adopter request, so it dropped the nodes it held and rendered cold.
  *

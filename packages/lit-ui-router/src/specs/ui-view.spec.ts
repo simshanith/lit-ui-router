@@ -4,9 +4,16 @@ import { customElement, state } from 'lit/decorators.js';
 import { ActiveUIView, Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
-import { adoptUiViewContext, provideContext } from '../context.js';
+import {
+  adoptUiViewContext,
+  provideContext,
+  provideRouter,
+  requestContext,
+  routerContext,
+} from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
+import type { UiViewContextEvent } from '../ui-router.js';
 import { UIRouterLit } from '../core.js';
 import {
   UIViewInjectedProps,
@@ -186,10 +193,13 @@ describe('UiView', () => {
     container.remove();
   });
 
-  // What a deferred view holds: another render's nodes, opaque to core.
+  // What a deferred view holds: another render's nodes between the part
+  // markers that render wrote, opaque to core.
   const heldMarkup =
+    '<!--lit-part vXOrb1NPBFc=-->' +
     '<div class="wrap"><p class="held">held</p></div>' +
-    '<ui-view defer-hydration><p class="nested">nested</p></ui-view>';
+    '<ui-view defer-hydration><p class="nested">nested</p></ui-view>' +
+    '<!--/lit-part-->';
 
   /** Parses a deferred `<ui-view>` inside a connected `<ui-router>`, the way the document arrives. */
   function mountHeld(
@@ -1129,9 +1139,8 @@ describe('UiView', () => {
       );
     }
 
-    /** The wake's own path: a real router replaces the one the view registered with. */
+    /** The wake's own path: a real router the app assigned replaces the one the view sought. */
     function adoptUpgraded(view: UiView, upgraded: UIRouterLit) {
-      view['routerFromProvider'] = false;
       view.uiRouter = upgraded;
       view['adoptProvidedRouter']();
     }
@@ -1369,6 +1378,228 @@ describe('UiView', () => {
 
       expect(uiView.firstElementChild).toBe(first);
       expect(countsFor('test-sticky-component').constructed).toBe(1);
+    });
+  });
+
+  // Which router a view holds is provenance, not a value: one a seek produced
+  // can be superseded by a provider that upgraded late or by the
+  // `<ui-router>` the view has just been attached under, while one the app
+  // assigned is final.
+  describe('router provenance', () => {
+    function registeredCount(target: UIRouterLit) {
+      return target.viewService['_uiViews'].length;
+    }
+
+    it('should register once a provider answers after it connected', async () => {
+      router = createTestRouter(homeStates);
+      // Connected with nothing to answer the seek: the upgrade-order case.
+      const uiView = document.createElement('ui-view');
+      container.appendChild(uiView);
+      // Installed in the same task, so the provider is there by the first update.
+      const uninstall = provideRouter(container, router);
+      try {
+        await waitForUpdate(uiView);
+
+        expect(uiView.uiRouter).toBe(router);
+        expect(router.viewService.available()).toContain('$default');
+
+        router.start();
+        await routerGo(router, 'home');
+        await waitForUpdate(uiView);
+
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+      } finally {
+        uninstall();
+      }
+    });
+
+    it('should re-register with the <ui-router> it is moved under', async () => {
+      // Its own declarations per router: registering one twice rebinds it to the later registry.
+      const ownHomeStates = (): LitStateDeclaration[] => [
+        {
+          name: 'home',
+          url: '/home',
+          component: () => html`<div class="home-content">Home</div>`,
+        },
+      ];
+      const routerA = createTestRouter(ownHomeStates());
+      const routerB = createTestRouter(ownHomeStates());
+      const elementA = document.createElement('ui-router');
+      elementA.uiRouter = routerA;
+      const elementB = document.createElement('ui-router');
+      elementB.uiRouter = routerB;
+      container.append(elementA, elementB);
+
+      const uiView = document.createElement('ui-view');
+      elementA.appendChild(uiView);
+      routerA.start();
+      routerB.start();
+      await routerGo(routerA, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('.home-content')).not.toBeNull();
+
+      elementB.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      expect(uiView.uiRouter).toBe(routerB);
+      expect(registeredCount(routerA)).toBe(0);
+      expect(registeredCount(routerB)).toBe(1);
+
+      // Views below ask this one for the router, so they must be told the same.
+      const nested = document.createElement('div');
+      uiView.appendChild(nested);
+      expect(UIRouterLitElement.seekRouter(nested)).toBe(routerB);
+    });
+
+    it('should keep the router the app assigned to a sleeping view', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        // No router on <ui-router>, so it provides a placeholder the view latches at connect.
+        const uiRouterEl = document.createElement('ui-router');
+        const uiView = document.createElement('ui-view');
+        uiView.setAttribute('defer-hydration', '');
+        container.appendChild(uiRouterEl);
+        uiRouterEl.appendChild(uiView);
+        await waitForUpdate(uiView);
+        expect(uiView.uiRouter).toBe(uiRouterEl.uiRouter);
+
+        router = createTestRouter(homeStates);
+        // The app hands this view its own router; <ui-router> keeps the placeholder.
+        uiView.uiRouter = router;
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(uiView.uiRouter).toBe(router);
+        expect(router.viewService.available()).toContain('$default');
+
+        router.start();
+        await routerGo(router, 'home');
+        await waitForUpdate(uiView);
+
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+  });
+
+  describe('parent-view seek across a shadow boundary', () => {
+    /** A `ui-view-context` event as a listener outside the source's shadow root sees it: `target` retargeted to the host. */
+    function retargeted(host: UiView, source: Node): UiViewContextEvent {
+      const event = new CustomEvent(UIRouterLitElement.uiViewContextEventName, {
+        bubbles: true,
+        composed: true,
+        detail: { parentView: null },
+      }) as UiViewContextEvent;
+      Object.defineProperty(event, 'target', { value: host });
+      Object.defineProperty(event, 'composedPath', {
+        value: () => [source, host],
+      });
+      return event;
+    }
+
+    it('should answer for a view inside its own shadow root', async () => {
+      const { uiView } = await setupRouter(homeStates);
+      const inner = document.createElement('ui-view');
+
+      const event = retargeted(uiView, inner);
+      uiView['onUiViewContextEvent'](event);
+
+      expect(event.detail.parentView).toBe(uiView);
+    });
+
+    it('should still decline the seek it dispatched itself', async () => {
+      const { uiView } = await setupRouter(homeStates);
+
+      const event = retargeted(uiView, uiView);
+      uiView['onUiViewContextEvent'](event);
+
+      expect(event.detail.parentView).toBeNull();
+    });
+  });
+
+  describe('capturing hold content', () => {
+    const holdStates: LitStateDeclaration[] = [
+      ...homeStates,
+      { name: 'blank', url: '/blank' },
+    ];
+
+    it('should not capture a rendered view’s own nodes from a clone', async () => {
+      const { uiRouter, uiView } = await setupRouter(holdStates);
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('.home-content')).not.toBeNull();
+
+      // A clone carries lit's nodes and part markers with `hasUpdated` false.
+      const clone = uiView.cloneNode(true) as UiView;
+      uiRouter.appendChild(clone);
+      await waitForUpdate(clone);
+
+      expect(clone['inner']).toBeUndefined();
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(clone);
+
+      // Nothing was captured, so the hold render is the bare slot template
+      // rather than a replay of the routed markup the clone carried.
+      expect(clone.render()).toMatchObject({ strings: ['<slot></slot>'] });
+    });
+
+    it('should capture at most once across a re-attach before its first update', async () => {
+      router = createTestRouter(holdStates);
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+
+      const uiView = document.createElement('ui-view');
+      uiView.innerHTML = '<p class="hold">hold</p>';
+      uiRouterEl.appendChild(uiView);
+      // Detached and re-attached in the same task, with content arriving in between.
+      uiView.remove();
+      uiView.innerHTML = '<p class="late">late</p>';
+      uiRouterEl.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      const captured = uiView['inner']!;
+      expect(captured.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(captured.querySelector('p.late')).toBeNull();
+    });
+  });
+
+  describe('waking with authored hold content', () => {
+    it('should keep it when nothing answers', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        router = createTestRouter(homeStates);
+        // Hand-written and markerless: no render put these here, so they are not ours to drop.
+        const uiView = mountHeld(
+          'defer-hydration',
+          '<p class="authored">authored</p>',
+        );
+
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(uiView.querySelector('p.authored')).not.toBeNull();
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+  });
+
+  describe('context-request for the router', () => {
+    it('should answer a descendant of a view fed by .uiRouter alone', async () => {
+      router = createTestRouter(homeStates);
+      const uiView = document.createElement('ui-view');
+      uiView.uiRouter = router;
+      container.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      const child = document.createElement('div');
+      uiView.appendChild(child);
+
+      expect(requestContext(child, routerContext)).toBe(router);
     });
   });
 });

@@ -1,6 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
+import { html } from 'lit';
 
 import { UIRouterLitElement, UiRouterContextEvent } from '../ui-router.js';
+import { UiView } from '../ui-view.js';
+import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';
 import { createTestRouter, tick, waitForUpdate } from './test-utils.js';
 
@@ -226,6 +229,110 @@ describe('UIRouterLitElement', () => {
       // Middle div should find outer router
       const foundRouter = UIRouterLitElement.seekRouter(middleDiv);
       expect(foundRouter).toBe(outerRouter);
+    });
+
+    // A nested <ui-router> is a view boundary: the parent-view seek must stop
+    // at it, or the inner view takes the outer tree's fqn and context and never
+    // matches a config of the router it actually registered with.
+    it('should root a fresh view tree for a <ui-view> inside it', async () => {
+      const innerRouter = createTestRouter([
+        {
+          name: 'inner',
+          url: '/inner',
+          component: () => html`<div class="inner">Inner</div>`,
+        },
+      ]);
+      const outerRouter = createTestRouter([
+        {
+          name: 'outer',
+          url: '/outer',
+          component: () =>
+            html`<ui-router .uiRouter=${innerRouter}
+              ><ui-view></ui-view
+            ></ui-router>`,
+        },
+      ]);
+
+      const outerElement = document.createElement('ui-router');
+      outerElement.uiRouter = outerRouter;
+      const outerView = document.createElement('ui-view');
+      outerElement.appendChild(outerView);
+      container.appendChild(outerElement);
+
+      outerRouter.start();
+      innerRouter.start();
+      await tick();
+      await outerRouter.stateService.go('outer');
+      await tick(50);
+
+      const innerView = outerView.querySelector('ui-view')!;
+      expect(innerView).toBeInstanceOf(UiView);
+      expect(innerView['_uiViewData'].fqn).toBe('$default');
+      expect(innerView['parentView']).toBeNull();
+
+      await innerRouter.stateService.go('inner');
+      await tick(50);
+
+      expect(innerView.querySelector('.inner')).not.toBeNull();
+    });
+  });
+
+  describe('uiRouter swapped after the first update', () => {
+    it('should warn that the page is split', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const element = document.createElement('ui-router');
+        element.uiRouter = createTestRouter();
+        container.appendChild(element);
+        await waitForUpdate(element);
+
+        expect(warn).not.toHaveBeenCalled();
+
+        element.uiRouter = createTestRouter();
+        await waitForUpdate(element);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        expect(warn.mock.calls[0]?.[0]).toContain(
+          'given a different uiRouter after its first update',
+        );
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should stay silent when the placeholder it minted is replaced', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        // The prerender path: the element provides a placeholder, the app hands it the real router.
+        const element = document.createElement('ui-router');
+        container.appendChild(element);
+        await waitForUpdate(element);
+
+        element.uiRouter = createTestRouter();
+        await waitForUpdate(element);
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should stay silent when the same router survives a re-attach', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        const element = document.createElement('ui-router');
+        element.uiRouter = createTestRouter();
+        container.appendChild(element);
+        await waitForUpdate(element);
+
+        element.remove();
+        container.appendChild(element);
+        await waitForUpdate(element);
+
+        expect(warn).not.toHaveBeenCalled();
+      } finally {
+        warn.mockRestore();
+      }
     });
   });
 });

@@ -30,23 +30,28 @@ import {
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
 import { warnDeferredWithoutClient, warnMissingRouter } from './dev-warn.js';
-import { UIRouterLitElement, UiRouterContextEvent } from './ui-router.js';
-import { adoptUiViewContext, requestContext } from './context.js';
+import {
+  UIRouterLitElement,
+  UiRouterContextEvent,
+  UiViewContextEvent,
+} from './ui-router.js';
+import {
+  adoptUiViewContext,
+  contextRequestEventName,
+  requestContext,
+} from './context.js';
 
 /** @internal */
 let viewIdCounter = 0;
+
+/** Spelled out because the @lit-labs/ssr DOM shim has no `Node`. */
+const COMMENT_NODE = 8;
 
 /** @internal */
 export interface UiViewAddress {
   context: ViewContext | StateObject;
   fqn: string;
 }
-
-interface UiViewContextEventDetail {
-  parentView: UiView | null;
-}
-
-type UiViewContextEvent = CustomEvent<UiViewContextEventDetail>;
 
 type deregisterFn = () => void;
 
@@ -165,8 +170,8 @@ export class UiView extends LitElement {
   private parentView!: UiView;
 
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
-    // can't adopt self
-    if (event.target === this) {
+    // can't adopt self; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
+    if (event.composedPath()[0] === this) {
       return;
     }
     // handle event; provide self as parent
@@ -191,10 +196,14 @@ export class UiView extends LitElement {
     } else if (!this.hasUpdated) {
       // Past the first render the children are lit's own nodes and part markers, never authored hold content.
       this.captureContent();
+    } else {
+      // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
+      this.adoptProvidedRouter();
     }
   }
 
-  private static readonly uiViewContextEventName = 'ui-view-context';
+  private static readonly uiViewContextEventName =
+    UIRouterLitElement.uiViewContextEventName;
 
   private static uiViewContextEvent(): UiViewContextEvent {
     return new CustomEvent(this.uiViewContextEventName, {
@@ -225,20 +234,35 @@ export class UiView extends LitElement {
     UIRouterLitElement.onUiRouterContextEvent(this.uiRouter)(event);
   };
 
+  /** Answers `context-request` for the router, so a `@lit/context` consumer under this view is served too. */
+  private readonly onContextRequest = (event: Event) => {
+    if (this.seekingProvidedRouter) {
+      return;
+    }
+    UIRouterLitElement.onContextRequest(this.uiRouter)(event);
+  };
+
   private seekRouter() {
     if (!this.uiRouter) {
-      this.uiRouter = UIRouterLitElement.seekRouter(this)!;
-      // A sought router can be superseded; an app-provided one never is.
-      this.routerFromProvider = !!this.uiRouter;
+      this.soughtRouter = UIRouterLitElement.seekRouter(this);
+      this.uiRouter = this.soughtRouter!;
     }
     this.addEventListener(
       UIRouterLitElement.uiRouterContextEventName,
       this.onUiRouterContextEvent as EventListener,
     );
+    this.addEventListener(contextRequestEventName, this.onContextRequest);
   }
 
-  /** Whether `uiRouter` came from the context event rather than the app. */
-  private routerFromProvider = false;
+  /**
+   * The router a seek last handed this view.
+   *
+   * Provenance, not a cache: `uiRouter` holding anything else means the app
+   * assigned it, and an assignment is final. Equal to `uiRouter` — both
+   * undefined included — means the view is free to seek again, since a
+   * provider that had not upgraded yet may answer now.
+   */
+  private soughtRouter?: UIRouterLit;
 
   /** The router this view registered with; a late upgrade can supersede it. */
   private registeredRouter?: UIRouterLit;
@@ -264,7 +288,11 @@ export class UiView extends LitElement {
 
   /**
    * Adopts the router the provider now offers, when this view registered
-   * without it.
+   * without it or with another.
+   *
+   * Runs whenever the router this view holds is one a seek produced, or none:
+   * a provider that upgraded late, or a different `<ui-router>` this view has
+   * just been attached under, supersedes it. A router the app assigned is kept.
    *
    * lit replays a pre-upgrade property inside the element's first update, not
    * at upgrade, so `<ui-router>` can run `connectedCallback` with `uiRouter`
@@ -286,13 +314,15 @@ export class UiView extends LitElement {
       return;
     }
 
-    const router = this.routerFromProvider
-      ? this.seekProvidedRouter()
-      : this.uiRouter;
+    const assigned = !!this.uiRouter && this.uiRouter !== this.soughtRouter;
+    const router = assigned ? this.uiRouter : this.seekProvidedRouter();
     if (!router || router === this.registeredRouter) {
       return;
     }
 
+    if (!assigned) {
+      this.soughtRouter = router;
+    }
     this.deregisterAll();
     this.uiRouter = router;
     this.setupUiView();
@@ -308,8 +338,29 @@ export class UiView extends LitElement {
   /** Set at connect on a deferred view, so the first update that runs is known to be the wake. */
   private deferredAtConnect = false;
 
+  /** Set by the one capture this element gets, so a re-attach before the first update cannot append a second time. */
+  private captured = false;
+
+  /**
+   * Whether the light DOM holds a render's output rather than authored
+   * content: lit opens a child part with an empty comment, and the server
+   * writes `lit-part` markers. Neither is ours to sweep aside or drop.
+   */
+  private get holdsRenderedNodes(): boolean {
+    const first = this.firstChild;
+    if (!first || first.nodeType !== COMMENT_NODE) {
+      return false;
+    }
+    const { data } = first as Comment;
+    return data === '' || data.startsWith('lit-part');
+  }
+
   /** Sweeps authored hold content aside so the hold render can replay a clone. */
   private captureContent() {
+    if (this.captured || this.holdsRenderedNodes) {
+      return;
+    }
+    this.captured = true;
     this.inner ??= document.createDocumentFragment();
     this.inner.append(...this.childNodes.values());
   }
@@ -472,7 +523,17 @@ export class UiView extends LitElement {
     return (this.viewContext as StateObject).self;
   }
 
-  /** @internal */
+  /**
+   * Declines every update while the view sleeps.
+   *
+   * A declined update still settles: `updateComplete` resolves `true` while
+   * the view is asleep, so awaiting it proves nothing about a render having
+   * happened — `hasUpdated` tells the two states apart. lit also marks the
+   * declined update complete, so the changed-properties map arrives empty at
+   * the wake and carries nothing that changed during a detached sleep.
+   *
+   * @internal
+   */
   protected shouldUpdate(changed: PropertyValues<this>): boolean {
     // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
     if (this.deferHydration) return false;
@@ -493,8 +554,8 @@ export class UiView extends LitElement {
     this.adoptProvidedRouter();
     const adopt = requestContext(this, adoptUiViewContext);
     if (adopt) return adopt(this);
-    // Rendering over another render's nodes doubles the markup; the @lit-labs/ssr DOM shim has no `replaceChildren`.
-    this.replaceChildren?.();
+    // Rendering over another render's nodes doubles the markup; authored hold content is the author's, and the @lit-labs/ssr DOM shim has no `replaceChildren`.
+    if (this.holdsRenderedNodes) this.replaceChildren?.();
     warnDeferredWithoutClient(this);
   }
 
