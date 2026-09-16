@@ -76,6 +76,15 @@ export const fallbackRootTemplate = (router: Router): TemplateResult =>
     ><ui-view><p class="loading">loading</p></ui-view></ui-router
   >`;
 
+/** A root whose view carries authored fallback content ahead of the slot the server fills. */
+export const slottedFallbackRootTemplate = (router: Router): TemplateResult =>
+  html`<ui-router .uiRouter=${router}
+    ><ui-view
+      ><p class="loading">loading</p>
+      ${uiViewSlot()}</ui-view
+    ></ui-router
+  >`;
+
 /** A root with a bindingless custom element standing before the router. */
 export const plainRootTemplate = (router: Router): TemplateResult =>
   html`<plain-mark></plain-mark

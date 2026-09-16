@@ -13,6 +13,7 @@ import {
   makeRouter,
   plainRootTemplate,
   rootTemplate,
+  slottedFallbackRootTemplate,
   tailRootTemplate,
 } from './fixture.js';
 import type { Page } from './round-trip.js';
@@ -256,7 +257,7 @@ describe('the adopter hydrateRoot provides', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('clears a view the document served no markers for, as core would', () => {
+  it('leaves a view the document served no markers for to its own fallback', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView('<p class="cold">cold</p>', container);
     const rendered = vi.fn();
@@ -264,8 +265,9 @@ describe('the adopter hydrateRoot provides', () => {
 
     expect(wake(view)).toBe(true);
 
+    // Nothing here is a render's: the view takes it as its fallback set.
     expect(rendered).not.toHaveBeenCalled();
-    expect(view.innerHTML).toBe('');
+    expect(view.querySelector('.cold')).not.toBeNull();
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -356,8 +358,8 @@ describe('a view the document drew empty', () => {
   });
 });
 
-describe('a view this cannot adopt', () => {
-  it('clears authored fallback content the server left in front', async () => {
+describe('a view the document drew with authored fallback content', () => {
+  it('parks it for the component the boot routes in', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(
       await draw(fallbackRootTemplate, [UiViewRenderer], '/shell'),
@@ -371,6 +373,54 @@ describe('a view this cannot adopt', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it('keeps it across the boot, and brings the same nodes back', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(
+      await draw(fallbackRootTemplate, [UiViewRenderer], '/bare'),
+    );
+    const loading = container.querySelector('.loading');
+    expect(loading).not.toBeNull();
+
+    const router = await boot(container, fallbackRootTemplate, '/bare');
+    expect(container.querySelector('.loading')).toBe(loading);
+
+    await router.stateService.go('shell');
+    await settle(container);
+    expect(container.querySelector('.loading')).toBeNull();
+    expect(container.querySelector('h1')?.textContent).toContain('shell hello');
+
+    await router.stateService.go('bare');
+    await settle(container);
+    expect(container.querySelector('.loading')).toBe(loading);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('parks it around the served render it stands in front of', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container, served } = serve(
+      await draw(slottedFallbackRootTemplate, [UiViewRenderer], '/shell'),
+    );
+    const loading = container.querySelector('.loading');
+    const shell = container.querySelector('h1');
+    expect(loading).not.toBeNull();
+
+    const router = await boot(container, slottedFallbackRootTemplate, '/shell');
+
+    // Adopted, not re-rendered: the server's own heading is the live one.
+    expect(container.querySelector('h1')).toBe(shell);
+    expect(served.filter((element) => container.contains(element))).toContain(
+      shell,
+    );
+    expect(container.querySelector('.loading')).toBeNull();
+
+    await router.stateService.go('bare');
+    await settle(container);
+    expect(container.querySelector('.loading')).toBe(loading);
+    expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('a view this cannot adopt', () => {
   it('adopts past whitespace, a foreign comment and an injected element', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container } = serve(await drawShell('/shell/detail'));

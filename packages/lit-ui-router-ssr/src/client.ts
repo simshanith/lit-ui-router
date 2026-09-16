@@ -187,10 +187,11 @@ const clearInterior = (open: Comment): void => {
  * the enclosing template's own part markers, and the element renders after
  * them, which is also where a cleared interior leaves it.
  *
- * Core counts any answer as handled, so a view with no pair to read is cleared
- * here rather than left for the element's render to land behind — the same
- * thing core does when nobody answers at all. A view still carrying prefixed
- * markers under a pair this cannot find is a mismatch, and says so.
+ * A view with no pair holds no render of ours: what stands in it is what the
+ * author wrote around the hole, and this leaves it alone — the view takes it as
+ * its own fallback set at this wake and parks it for the component it renders.
+ * A view still carrying prefixed markers under a pair this cannot find is a
+ * mismatch, and says so; those nodes are a render's, and they go.
  *
  * A mismatch is not a bug in every case: one static document answers a family
  * of urls, so a client can boot into a state the document was not drawn for.
@@ -208,8 +209,8 @@ const adopt = (view: UiView): void => {
   if (!open) {
     if (hasServedMarkers(view)) {
       warnMismatch(view, 'the served part pair is gone');
+      view.replaceChildren();
     }
-    view.replaceChildren();
     return;
   }
   // The address no state routed: nothing between the pair to adopt, and the element renders after it.
