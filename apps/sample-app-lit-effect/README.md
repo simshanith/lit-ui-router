@@ -20,8 +20,9 @@ What's different here:
   `Data.TaggedError` failure) on the app's `ManagedRuntime`
 - No store wiring in the shared `router.config.ts`, and **no core plugin**: the router's
   route ref attaches lazily on first use, keyed by router in a `WeakMap`
-- The reusable glue lives in `src/app/effect/` (one `ManagedRuntime`, the two controllers,
-  the lazy route ref) — the candidate surface for a future `lit-ui-router-effect` package
+- The controllers and the lazy route ref come from the
+  [`lit-ui-router-effect`](../../packages/lit-ui-router-effect/) package; the app's own
+  glue is one `ManagedRuntime` in `src/app/effect/runtime.ts`
 
 Only Effect's stable core (`import { … } from 'effect'`) is used — no `effect/unstable/*`
 and no `@effect/*` packages.
