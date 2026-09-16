@@ -231,9 +231,9 @@ export class UiView extends LitElement {
    * view of its descendants for as long as it is connected.
    */
   private readonly onParentViewContextRequest = (event: Event) => {
-    // A view's own request must reach the view above it.
+    // A view's own request must reach the view above it; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is.
     if (
-      event.target === this ||
+      event.composedPath()[0] === this ||
       !isContextRequest(event, parentUiViewContext)
     ) {
       return;
