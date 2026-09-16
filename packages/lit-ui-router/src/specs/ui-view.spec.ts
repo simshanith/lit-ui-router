@@ -707,6 +707,52 @@ describe('UiView', () => {
       expect(uiView.querySelector('.home-content')).toBeNull();
     });
 
+    it('should stay asleep when it is detached before the wake update flushes', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const uiRouterEl = document.createElement('ui-router');
+      container.appendChild(uiRouterEl);
+      uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
+      const uiView = uiRouterEl.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+
+      router = createTestRouter(homeStates);
+      uiRouterEl.uiRouter = router;
+      const registerUIView = vi.spyOn(router.viewService, 'registerUIView');
+
+      let seenHeld: Element | null = null;
+      let seenParent: unknown;
+      const adopt = vi.fn((view: UiView) => {
+        seenHeld = view.querySelector('p.held');
+        seenParent = view.parentElement;
+      });
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      const held = uiView.querySelector('p.held');
+      try {
+        // Wake, then detach the enclosing subtree in the same task: the queued update runs detached.
+        uiView.removeAttribute('defer-hydration');
+        uiRouterEl.remove();
+        await waitForUpdate(uiView);
+
+        expect(adopt).not.toHaveBeenCalled();
+        expect(uiView.querySelector('p.held')).toBe(held);
+        expect(uiView.hasUpdated).toBe(false);
+        expect(warn).not.toHaveBeenCalled();
+        expect(registerUIView).not.toHaveBeenCalled();
+
+        container.appendChild(uiRouterEl);
+        await waitForUpdate(uiView);
+      } finally {
+        uninstall();
+        warn.mockRestore();
+      }
+
+      expect(adopt).toHaveBeenCalledTimes(1);
+      expect(adopt.mock.calls[0]?.[0]).toBe(uiView);
+      expect(seenHeld).toBe(held);
+      expect(seenParent).toBe(uiRouterEl);
+      expect(uiView.uiRouter).toBe(router);
+    });
+
     it('should not request an adopter again on a later update', async () => {
       router = createTestRouter(homeStates);
       const uiView = mountHeld();

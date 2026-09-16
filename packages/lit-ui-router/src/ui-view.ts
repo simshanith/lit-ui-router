@@ -79,7 +79,9 @@ type deregisterFn = () => void;
  * <code>defer-hydration</code> is on it, rendering nothing. Removing the
  * attribute wakes it, and it requests <code>adoptUiViewContext</code> once and
  * calls the adopter it gets, which adopts the nodes the view holds. With none,
- * the view drops the held nodes and renders cold, warning in development.
+ * the view drops the held nodes and renders cold, warning in development. A
+ * view detached before that wake update runs stays asleep, holding its nodes,
+ * until it is attached again.
  *
  */
 export class UiView extends LitElement {
@@ -183,7 +185,10 @@ export class UiView extends LitElement {
     // A deferred view holds another render's nodes, not authored hold content.
     if (this.deferHydration) {
       this.deferredAtConnect = true;
-    } else if (!this.deferredAtConnect) {
+    } else if (this.deferredAtConnect) {
+      // Re-attached still asleep: the wake update is this element's to ask for, since a router-less view registers nothing that would.
+      this.requestUpdate();
+    } else {
       this.captureContent();
     }
   }
@@ -469,7 +474,10 @@ export class UiView extends LitElement {
   /** @internal */
   protected shouldUpdate(changed: PropertyValues<this>): boolean {
     // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
-    return !this.deferHydration && super.shouldUpdate(changed);
+    if (this.deferHydration) return false;
+    // Detached before the wake ran: `willUpdate` is skipped too, so the held nodes and `deferredAtConnect` survive until a re-attach.
+    if (this.deferredAtConnect && !this.isConnected) return false;
+    return super.shouldUpdate(changed);
   }
 
   /** @internal */
@@ -478,7 +486,7 @@ export class UiView extends LitElement {
     if (this.deferredAtConnect) this.adoptHeldNodes();
   }
 
-  /** The first update after a deferred wake: re-seek the router the hydrate reads, then hand the view to an adopter or drop the foreign nodes. */
+  /** The first attached update after a deferred wake: re-seek the router the hydrate reads, then hand the view to an adopter or drop the foreign nodes. */
   private adoptHeldNodes(): void {
     this.deferredAtConnect = false;
     this.adoptProvidedRouter();
