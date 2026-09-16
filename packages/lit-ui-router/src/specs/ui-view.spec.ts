@@ -115,7 +115,7 @@ class TestRetainedShell extends CountedElement {
 @customElement('test-retained-leaf')
 class TestRetainedLeaf extends CountedElement implements UiOnParamsChanged {
   static tag = 'test-retained-leaf';
-  @state() accessor starId = '';
+  @state() starId = '';
   readonly propsSeen: (UIViewInjectedProps | undefined)[] = [];
 
   uiOnParamsChanged(params: { [key: string]: unknown }) {
@@ -165,7 +165,7 @@ class TestParamsReceiveComponent
 /** Authors the fallback from an enclosing lit template, so the nodes are a TemplateInstance's own: a `<slot>` plus a live binding. */
 @customElement('test-fallback-host')
 class TestFallbackHost extends LitElement {
-  @state() accessor label = 'first';
+  @state() label = 'first';
   render() {
     return html`<ui-view
       ><slot></slot>
