@@ -48,7 +48,8 @@ Three consequences are worth knowing:
 - **It is not a `<slot>` in the browser.** `<ui-view>` renders to itself
   rather than to a shadow root, so there is no slot assignment and no
   `::slotted()` styling at runtime — style the fallback with ordinary
-  selectors. Server rendering is the one exception; see below.
+  selectors. The one place a `<slot>` appears is a server render without
+  [`lit-ui-router-ssr`](/packages/ssr); see below.
 
 The fallback set stands ahead of the render marker `<ui-view>` writes for
 its own output, so routed content and fallback content never interleave.
@@ -107,12 +108,15 @@ component replaces it.
 
 ## Prerendered shells and server rendering
 
-A prerendered shell containing `<ui-view>` renders, and the client fills it
-in on load. [`@lit-labs/ssr`](https://lit.dev/docs/ssr/overview/) wraps
-every `LitElement`'s output in a declarative shadow root, and a `<ui-view>`
-that was never connected has no fallback set — so it renders a `<slot>`
-rather than an empty shadow root. An empty one would hide the light DOM;
-the slot keeps the server-rendered fallback visible and later projects
+A prerendered shell containing `<ui-view>` renders, and the client fills it in
+on load. What becomes of the fallback content depends on which renderer drew
+the document.
+
+Under plain [`@lit-labs/ssr`](https://lit.dev/docs/ssr/overview/), every
+`LitElement`'s output is wrapped in a declarative shadow root, and a
+`<ui-view>` that was never connected has no fallback set — so it renders a
+`<slot>` rather than an empty shadow root. An empty one would hide the light
+DOM; the slot keeps the server-rendered fallback visible and later projects
 whatever the client renders into the light DOM. For
 `<ui-view><p>fallback</p></ui-view>`, the server emits:
 
@@ -120,16 +124,36 @@ whatever the client renders into the light DOM. For
 <ui-view><template shadowroot="open" shadowrootmode="open"><!--lit-part Pz0gobCCM4E=--><slot></slot><!--/lit-part--></template><p>fallback</p></ui-view>
 ```
 
-Two limits are worth stating plainly:
+[`lit-ui-router-ssr`](/packages/ssr) draws the view itself instead. Its
+renderer writes the routed component into the view's light DOM — no
+declarative shadow root and no `<slot>` — and the served view arrives asleep,
+holding that markup until the client's hydrate wakes it. Three things follow
+for fallback content:
 
-- **Hydration is not supported yet.** `@lit-labs/ssr-client` hydration of a
-  routed tree is tracked in
-  [issue #348](https://github.com/simshanith/lit-ui-router/issues/348). What
-  works today is a server-rendered shell that the client boots into.
-- **`uiSref` emits nothing under SSR.** It is an element-part directive, and
-  `@lit-labs/ssr` skips element parts, so prerendered links carry no `href`
-  until the client attaches —
-  [issue #564](https://github.com/simshanith/lit-ui-router/issues/564).
+- **A served view captures nothing.** The capture on connect is skipped for a
+  view that arrives asleep, because the nodes it holds are the server's render
+  rather than authored children. Such a view has no fallback set at all, so
+  nothing stands back up when it later empties.
+- **Fallback markup in a served view is a paint, not a set.** Content written
+  inside a prerendered `<ui-view>` is emitted as authored and shows while the
+  document loads. At the view's wake the client finds no render of its own to
+  adopt there, clears the view, and it renders from the route with no fallback
+  set to stand back up.
+- **A view the server drew empty is nothing to adopt.** An address no state
+  routes is served as an empty pair of render markers, which is exactly what
+  the client's own first render of that view produces, so the view renders
+  after them, cold and silent.
+
+Fallback content is a client-side mechanism, then: a `<ui-view>` the client
+creates after boot captures and replays its children in the usual way. The
+prerender and hydration model as a whole is on the
+[`lit-ui-router-ssr` page](/packages/ssr).
+
+Prerendered links are a separate question. `uiSref` is an element-part
+directive and `@lit-labs/ssr` skips element parts, so it emits nothing; the
+attribute directive `srefHref` writes a real `href` into the served markup.
+[Design System Links](./design-system-links#element-part-or-attribute-part)
+covers the choice.
 
 Rendering is a separate axis from routing verdicts. See the closing section
 of [Server-Side Routing](./server-route-matching) for where that axis stands.
@@ -139,4 +163,5 @@ of [Server-Side Routing](./server-route-matching) for where that axis stands.
 - [Hello Galaxy: nested ui-view with fallback content](/tutorial/hellogalaxy#nested-ui-view-with-fallback-content)
 - [Component Lifecycle Hooks](./component-lifecycle)
 - [Server-Side Routing](./server-route-matching)
+- [`lit-ui-router-ssr`](/packages/ssr)
 - [`<ui-view>` API reference](/api/reference/components/UiView)
