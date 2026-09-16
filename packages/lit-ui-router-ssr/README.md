@@ -131,9 +131,11 @@ if (!release) render(page(router), root);
   call returns.
 - **One walk wakes the page.** A served `<ui-view>` sleeps under `defer-hydration` and renders
   nothing. Removing the attribute wakes it: it re-seeks its router, requests `adoptUiViewContext`
-  and calls the adopter it gets, which adopts the nodes the view holds. The walk pins that adopter
-  to every served view it passes, so a view the app detaches before its own update is still
-  adopted. A view the walk never reached drops those nodes, renders cold, and warns in development.
+  and calls the adopter it gets, which adopts the nodes the view holds. A view the app detaches
+  before that update stays asleep, holding its nodes, until it is attached again. The walk pins the
+  adopter to every served view it passes, so that view is adopted on its return even once the root
+  provider is released. A view the walk never reached drops those nodes, renders cold, and warns in
+  development.
 - **The prefix is the protocol, and both halves are here.** `UiViewRenderer` writes a plain outer
   part pair around each view's routed markup and prefixes every marker between them; `hydrate()`
   reads past a prefixed comment, so the walk hydrating a view's surroundings stops at that pair. The

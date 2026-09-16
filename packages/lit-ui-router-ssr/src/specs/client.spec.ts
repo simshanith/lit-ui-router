@@ -298,7 +298,7 @@ describe('the adopter hydrateRoot provides', () => {
 });
 
 describe('a view detached before its update flushes', () => {
-  it('is adopted through the pin its wake left on it', async () => {
+  it('sleeps until it is re-attached, then adopts through the pin', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container, served } = serve(await drawShell('/shell'));
     const router = makeRouter();
@@ -313,6 +313,15 @@ describe('a view detached before its update flushes', () => {
     (release as () => void)();
     await view.updateComplete;
 
+    // Asleep while detached: the held nodes are untouched and nothing adopted them.
+    expect(view.querySelector('h1')).toBe(shell);
+    expect(view.hasUpdated).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+
+    container.append(app);
+    await view.updateComplete;
+
+    // The root provider is gone, so only the pin can have answered.
     expect(view.querySelector('h1')).toBe(shell);
     expect(view.querySelector('h1')?.textContent).toContain('shell hello');
     expect(served.filter((element) => view.contains(element))).toContain(shell);

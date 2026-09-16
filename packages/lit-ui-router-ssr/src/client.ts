@@ -54,9 +54,10 @@ class UiViewSlotDirective extends Directive {
  * template first — and resolves to `noChange`, so the walk reads past the
  * interior the server prefixed and a later render of that template leaves the
  * view's own nodes alone. A view holding a served pair is also pinned to {@link
- * hydrateRoot}'s adopter, so it is adopted on its own update even if the app
- * detached it in between; the pin answers once and comes off. On a cold render
- * there is no pair to adopt and no attribute to remove.
+ * hydrateRoot}'s adopter, so a view the app detaches before its own update —
+ * which sleeps until it is attached again — is adopted on its return; the pin
+ * answers once and comes off. On a cold render there is no pair to adopt and no
+ * attribute to remove.
  *
  * @example
  * ```ts
@@ -163,10 +164,10 @@ const adopt = (view: UiView): void => {
  *
  * A view requests the adopter on its own update, which runs after the walk that
  * woke it, and a request only reaches the container's provider while the view
- * is still under the container. This provider sits on the element itself, so
- * the view's own request reaches it at the target phase whether or not the app
- * detached the view in between, and whether or not the root provider is still
- * installed.
+ * is still under the container. A view the app detaches in between sleeps until
+ * it is attached again, and that can be anywhere. This provider sits on the
+ * element itself, so the view's own request reaches it at the target phase
+ * wherever it wakes, and whether or not the root provider is still installed.
  *
  * It answers once and stands down; an element that never wakes carries its
  * listener to the garbage collector.
@@ -190,9 +191,10 @@ const pinAdopter = (view: Element): void => {
  * prefixed for that view and hydrates the element's own render against them.
  * That hydrate reaches the slot parts of the views nested inside the routed
  * component the same way, parent first. The walk also pins the adopter to every
- * served view it passes, so a view the app detaches between the walk and its
- * own update is still adopted. A view the walk never reached — one outside
- * `container`, or one whose attribute the app cleared itself after the
+ * served view it passes: a view the app detaches between the walk and its own
+ * update sleeps until it is attached again, and the pin is what adopts it then,
+ * after this call's provider is released. A view the walk never reached — one
+ * outside `container`, or one whose attribute the app cleared itself after the
  * release — is answered by nobody: core drops its held nodes and warns in
  * development.
  *
