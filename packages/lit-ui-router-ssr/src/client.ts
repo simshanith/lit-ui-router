@@ -21,7 +21,7 @@ class UiViewSlotDirective extends Directive {
   static _$litRenderLight = true;
 
   /**
-   * Wakes the `<ui-view>` this part sits in.
+   * Wakes the `<ui-view>` this part sits in, with the adopter pinned to it.
    *
    * A directive is constructed at its part by the walk rendering the enclosing
    * template — the root template for a top-level view, the parent view's own
@@ -32,9 +32,10 @@ class UiViewSlotDirective extends Directive {
     super(part);
     // The marker lit's walk wakes a custom element on is emitted only under a host-stack entry `@lit-labs/ssr` leaks for light-DOM renderers, so the wake is owned here instead.
     const view = (part as ChildPart).parentNode;
-    if (view instanceof Element && view.hasAttribute(DEFER)) {
-      view.removeAttribute(DEFER);
-    }
+    if (!(view instanceof Element)) return;
+    // The pin keys off the served pair, not the wake below: where that marker is there, lit's own walk cleared the attribute before this part was reached.
+    if (isPart(view.firstChild, 'lit-part')) pinAdopter(view);
+    if (view.hasAttribute(DEFER)) view.removeAttribute(DEFER);
   }
 
   /** The view owns everything between these markers, so the enclosing render leaves them as the view left them. */
@@ -52,7 +53,10 @@ class UiViewSlotDirective extends Directive {
  * in — the enclosing template hydrating is what reaches the directive, parent
  * template first — and resolves to `noChange`, so the walk reads past the
  * interior the server prefixed and a later render of that template leaves the
- * view's own nodes alone. On a cold render there is no attribute to remove.
+ * view's own nodes alone. A view holding a served pair is also pinned to {@link
+ * hydrateRoot}'s adopter, so it is adopted on its own update even if the app
+ * detached it in between; the pin answers once and comes off. On a cold render
+ * there is no pair to adopt and no attribute to remove.
  *
  * @example
  * ```ts
@@ -155,6 +159,27 @@ const adopt = (view: UiView): void => {
 };
 
 /**
+ * Pins {@link adopt} to the one served view the walk is passing.
+ *
+ * A view requests the adopter on its own update, which runs after the walk that
+ * woke it, and a request only reaches the container's provider while the view
+ * is still under the container. This provider sits on the element itself, so
+ * the view's own request reaches it at the target phase whether or not the app
+ * detached the view in between, and whether or not the root provider is still
+ * installed.
+ *
+ * It answers once and stands down; an element that never wakes carries its
+ * listener to the garbage collector.
+ */
+const pinAdopter = (view: Element): void => {
+  let release = (): void => {};
+  release = provideContext(view, adoptUiViewContext, (woken) => {
+    release();
+    adopt(woken);
+  });
+};
+
+/**
  * Adopts a server-rendered container, and the `<ui-view>`s that wake under it.
  *
  * {@link adoptUiViewContext} is provided on `container` with core's
@@ -164,9 +189,12 @@ const adopt = (view: UiView): void => {
  * requests the adopter and calls it, which reveals the markers the server
  * prefixed for that view and hydrates the element's own render against them.
  * That hydrate reaches the slot parts of the views nested inside the routed
- * component the same way, parent first. A view that wakes outside `container`,
- * or after the release, is answered by nobody: core drops its held nodes and
- * warns in development.
+ * component the same way, parent first. The walk also pins the adopter to every
+ * served view it passes, so a view the app detaches between the walk and its
+ * own update is still adopted. A view the walk never reached — one outside
+ * `container`, or one whose attribute the app cleared itself after the
+ * release — is answered by nobody: core drops its held nodes and warns in
+ * development.
  *
  * The provider answers synchronously and stops immediate propagation, so an
  * outer provider never answers the same request twice. It outlives this call,

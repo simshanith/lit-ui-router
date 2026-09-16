@@ -5,7 +5,7 @@ import 'lit-ui-router/register';
 
 import { hydrateRoot } from '../client.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
-import { makeRouter, rootTemplate } from './fixture.js';
+import { goTo, makeRouter, rootTemplate } from './fixture.js';
 import {
   boot,
   comments,
@@ -294,5 +294,30 @@ describe('the adopter hydrateRoot provides', () => {
 
     // One provider answered: the failed call released its own before rethrowing.
     expect(render).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('a view detached before its update flushes', () => {
+  it('is adopted through the pin its wake left on it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container, served } = serve(await drawShell('/shell'));
+    const router = makeRouter();
+    await goTo(router, '/shell');
+    const shell = container.querySelector('h1');
+
+    const release = hydrateRoot(container, rootTemplate(router));
+    // The walk woke the view; the app takes the subtree holding it out of the container, and the root provider down, in the same task — before that wake updates.
+    const app = container.querySelector('ui-router')!;
+    const view = app.querySelector<UiView>('ui-view')!;
+    app.remove();
+    (release as () => void)();
+    await view.updateComplete;
+
+    expect(view.querySelector('h1')).toBe(shell);
+    expect(view.querySelector('h1')?.textContent).toContain('shell hello');
+    expect(served.filter((element) => view.contains(element))).toContain(shell);
+    expect(warn).not.toHaveBeenCalled();
+    // answered once, then off: nothing on the element is left to answer a second request
+    expect(requestContext(view, adoptUiViewContext)).toBeUndefined();
   });
 });
