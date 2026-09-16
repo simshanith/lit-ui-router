@@ -39,7 +39,8 @@ Three consequences are worth knowing:
 - **Captured on connect.** Children appended to a `<ui-view>` _after_ it
   connects are not part of the fallback set, so they never come back once a
   routed component has replaced them. Write the fallback into the markup or
-  template that declares the view.
+  template that declares the view. A prerendered view, which the document parser can fill
+  after connecting it, captures at its wake instead — see below.
 - **The same nodes every time.** The fallback is moved, never copied, so the
   nodes on screen are the authored ones and they keep their identity across
   any number of round trips through a routed component. A reference you hold
@@ -130,23 +131,22 @@ declarative shadow root and no `<slot>` — and the served view arrives asleep,
 holding that markup until the client's hydrate wakes it. Three things follow
 for fallback content:
 
-- **A served view captures nothing.** The capture on connect is skipped for a
-  view that arrives asleep, because the nodes it holds are the server's render
-  rather than authored children. Such a view has no fallback set at all, so
-  nothing stands back up when it later empties.
-- **Fallback markup in a served view is a paint, not a set.** Content written
-  inside a prerendered `<ui-view>` is emitted as authored and shows while the
-  document loads. At the view's wake the client finds no render of its own to
-  adopt there, clears the view, and it renders from the route with no fallback
-  set to stand back up.
+- **Authored content in a served view is that view's fallback set.** It is
+  emitted as written and shows while the document loads. At the wake the view
+  takes the children standing ahead of the render it holds, exactly as a cold
+  view takes its authored children, and parks them when a component occupies
+  the view.
+- **The server's own render is never captured.** Everything from the view's
+  render markers down belongs to the render the client adopts, so a view the
+  server filled and nothing else has no fallback set.
 - **A view the server drew empty is nothing to adopt.** An address no state
   routes is served as an empty pair of render markers, which is exactly what
   the client's own first render of that view produces, so the view renders
   after them, cold and silent.
 
-Fallback content is a client-side mechanism, then: a `<ui-view>` the client
-creates after boot captures and replays its children in the usual way. The
-prerender and hydration model as a whole is on the
+Fallback content reads the same on both sides, then: the nodes an author wrote
+inside a `<ui-view>` are that view's fallback set whether the client created it
+or a prerender drew it. The prerender and hydration model as a whole is on the
 [`lit-ui-router-ssr` page](/packages/ssr).
 
 Prerendered links are a separate question. `uiSref` is an element-part
