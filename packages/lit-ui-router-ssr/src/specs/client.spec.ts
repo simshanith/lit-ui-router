@@ -1,4 +1,4 @@
-import { render } from 'lit';
+import { nothing, render } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adoptUiViewContext, requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
@@ -228,7 +228,7 @@ describe('the adopter hydrateRoot provides', () => {
     // The reveal has to be done by the time core's `render()` is read, because that value is what hydrates against these markers.
     view.render = () => {
       revealed = comments(view);
-      return document.createDocumentFragment();
+      return nothing;
     };
 
     expect(wake(view)).toBe(true);
@@ -297,7 +297,7 @@ describe('the adopter hydrateRoot provides', () => {
       /live render/,
     );
     const view = servedView(SERVED_SHELL, container);
-    const render = vi.fn(() => document.createDocumentFragment());
+    const render = vi.fn((): typeof nothing => nothing);
     view.render = render;
 
     expect(wake(view)).toBe(true);
