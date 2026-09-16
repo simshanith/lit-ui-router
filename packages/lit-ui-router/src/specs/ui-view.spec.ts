@@ -516,7 +516,7 @@ describe('UiView', () => {
 
   // `defer-hydration` is lit's own attribute: @lit-labs/ssr writes it on every
   // nested custom element, and a `<ui-view>` carrying it holds server content
-  // between part markers rather than authored hold content.
+  // between part markers, behind whatever the author wrote ahead of them.
   describe('defer-hydration', () => {
     it('should capture authored hold content when the attribute is absent', async () => {
       const { uiView } = await setupRouter([], {
@@ -545,12 +545,12 @@ describe('UiView', () => {
       await waitForUpdate(uiView);
 
       expect(uiView.deferHydration).toBe(true);
-      // Capture skipped, so the hold render is the bare slot template.
+      // Capture waits for the wake, so nothing is taken while the view sleeps.
       expect(uiView.render()).toMatchObject({ strings: ['<slot></slot>'] });
       expect(uiView.querySelector('p.server')).not.toBeNull();
     });
 
-    it('should not capture server content when the attribute is present', async () => {
+    it('should not capture anything while the attribute is present', async () => {
       const { uiView } = await setupRouter([], {
         configure: (el) => {
           el.setAttribute('defer-hydration', '');
@@ -561,8 +561,9 @@ describe('UiView', () => {
 
       expect(uiView.deferHydration).toBe(true);
 
-      // Never captured, so `inner` was never created and the hold render is the
-      // bare slot template rather than a clone: markerless content is not ours.
+      // A sleeping view holds its children as they stand, whoever wrote them:
+      // the capture is the wake's, and the hold render is the bare slot template.
+      expect(uiView['fallback']).toBeUndefined();
       expect(uiView.render()).toMatchObject({ strings: ['<slot></slot>'] });
       const server = uiView.querySelector('p.server')!;
       expect(server.parentElement).toBe(uiView);
@@ -1690,6 +1691,80 @@ describe('UiView', () => {
       const fallbackNodes = uiView['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
+
+    it('should capture a deferred view’s authored content without parking it', async () => {
+      router = createTestRouter(holdStates);
+      const uiView = mountHeld('defer-hydration', '<p class="hold">hold</p>');
+      const hold = uiView.querySelector('p.hold')!;
+
+      // Asleep: the document keeps showing what the server drew.
+      await uiView.updateComplete;
+      expect(uiView.hasUpdated).toBe(false);
+      expect(uiView.querySelector('p.hold')).toBe(hold);
+
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(adopt).toHaveBeenCalledTimes(1);
+        expect(uiView.querySelector('p.hold')).toBe(hold);
+
+        router.start();
+        await routerGo(router, 'home');
+        await waitForUpdate(uiView);
+
+        expect(uiView.querySelector('p.hold')).toBeNull();
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+
+        await routerGo(router, 'blank');
+        await waitForUpdate(uiView);
+
+        expect(uiView.querySelector('p.hold')).toBe(hold);
+      } finally {
+        uninstall();
+      }
+    });
+
+    /** Wakes a deferred view under an adopter that takes nothing, so what it holds is what the capture saw. */
+    async function wakeHolding(markup: string): Promise<UiView> {
+      router = createTestRouter(holdStates);
+      const uiView = mountHeld('defer-hydration', markup);
+      const uninstall = provideContext(container, adoptUiViewContext, () => {});
+      try {
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+      } finally {
+        uninstall();
+      }
+      return uiView;
+    }
+
+    it('should capture nothing from a deferred view holding a render’s nodes', async () => {
+      const uiView = await wakeHolding(heldMarkup);
+
+      expect(uiView['fallback']).toBeUndefined();
+      expect(uiView['fallbackNodes']).toHaveLength(0);
+      expect(uiView.querySelector('p.held')).not.toBeNull();
+    });
+
+    it('should capture only what stands ahead of the render it holds', async () => {
+      const uiView = await wakeHolding(`<p class="hold">hold</p>${heldMarkup}`);
+
+      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
+      expect(uiView.querySelector('p.held')).not.toBeNull();
+    });
+
+    it('should capture nothing from a view holding another render’s prefixed markers', async () => {
+      const uiView = await wakeHolding(
+        '<!--ui-view:lit-part--><p class="held">held</p><!--ui-view:/lit-part-->',
+      );
+
+      expect(uiView['fallback']).toBeUndefined();
+      expect(uiView['fallbackNodes']).toHaveLength(0);
     });
   });
 

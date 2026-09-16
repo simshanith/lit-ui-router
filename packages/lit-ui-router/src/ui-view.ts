@@ -51,6 +51,18 @@ let viewIdCounter = 0;
 /** Spelled out because the @lit-labs/ssr DOM shim has no `Node`. */
 const COMMENT_NODE = 8;
 
+/**
+ * Whether `node` opens another render's output: lit's own empty child-part
+ * comment, or a part marker a render wrote under whatever prefix.
+ */
+const isRenderMarker = (node: ChildNode | null): boolean => {
+  if (!node || node.nodeType !== COMMENT_NODE) {
+    return false;
+  }
+  const { data } = node as Comment;
+  return data === '' || data.includes('lit-part');
+};
+
 /** @internal */
 export interface UiViewAddress {
   context: ViewContext | StateObject;
@@ -90,7 +102,10 @@ type deregisterFn = () => void;
  * calls the adopter it gets, which adopts the nodes the view holds. With none,
  * the view drops the held nodes and renders cold, warning in development. A
  * view detached before that wake update runs stays asleep, holding its nodes,
- * until it is attached again.
+ * until it is attached again. Whatever the author wrote ahead of that render is
+ * this view's fallback set, as it is on a cold view: it stands in the document
+ * while the view sleeps, parks while a component occupies the view, and comes
+ * back when none does.
  *
  */
 export class UiView extends LitElement {
@@ -202,7 +217,7 @@ export class UiView extends LitElement {
       this.onUiViewContextEvent as EventListener,
     );
     this.setupUiView();
-    // A deferred view holds another render's nodes, not authored hold content.
+    // A deferred view holds another render's nodes behind whatever the author wrote ahead of them.
     if (this.deferHydration) {
       this.deferredAtConnect = true;
       if (import.meta.env.DEV) {
@@ -370,12 +385,7 @@ export class UiView extends LitElement {
    * writes `lit-part` markers. Neither is ours to sweep aside or drop.
    */
   private get holdsRenderedNodes(): boolean {
-    const first = this.firstChild;
-    if (!first || first.nodeType !== COMMENT_NODE) {
-      return false;
-    }
-    const { data } = first as Comment;
-    return data === '' || data.startsWith('lit-part');
+    return isRenderMarker(this.firstChild);
   }
 
   /**
@@ -393,6 +403,37 @@ export class UiView extends LitElement {
     this.fallback ??= document.createDocumentFragment();
     this.fallbackNodes = [...this.childNodes.values()];
     this.fallback.append(...this.fallbackNodes);
+  }
+
+  /**
+   * Takes the authored children of a woken view as its fallback set, leaving
+   * them where they stand.
+   *
+   * They are the children ahead of the render this view holds, so a view
+   * holding nothing else is all fallback and one holding a render from the
+   * first child down has none. Nothing is parked: the nodes stood in the
+   * document while the view slept, and this update parks them only if a
+   * component occupies the view, like any other fallback set.
+   *
+   * It runs at the wake rather than at connect because a deferred view is a
+   * parsed one, and the document parser can connect an element before it fills it.
+   */
+  private captureHeldContent(): void {
+    if (this.captured) {
+      return;
+    }
+    const authored: ChildNode[] = [];
+    for (const child of this.childNodes) {
+      if (isRenderMarker(child)) break;
+      authored.push(child);
+    }
+    if (!authored.length) {
+      return;
+    }
+    this.captured = true;
+    this.fallback ??= document.createDocumentFragment();
+    this.fallbackNodes = authored;
+    this.fallbackParked = false;
   }
 
   /** Whether this render shows the fallback set rather than a routed component. */
@@ -601,7 +642,11 @@ export class UiView extends LitElement {
   /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
-    if (this.deferredAtConnect) this.adoptHeldNodes();
+    if (this.deferredAtConnect) {
+      this.adoptHeldNodes();
+      // The wake is this view's first look at its children: the document parser can connect an element before it fills it.
+      this.captureHeldContent();
+    }
     this.placeFallback();
   }
 
@@ -611,7 +656,7 @@ export class UiView extends LitElement {
     this.adoptProvidedRouter();
     const adopt = requestContext(this, adoptUiViewContext);
     if (adopt) return adopt(this);
-    // Rendering over another render's nodes doubles the markup; authored hold content is the author's, and the @lit-labs/ssr DOM shim has no `replaceChildren`.
+    // Rendering over another render's nodes doubles the markup; what the author wrote is the capture's, and the @lit-labs/ssr DOM shim has no `replaceChildren`.
     if (this.holdsRenderedNodes) this.replaceChildren?.();
     warnDeferredWithoutClient(this);
   }
