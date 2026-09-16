@@ -151,6 +151,27 @@ if (!release) render(page(router), root);
   development, drops that one view's server nodes, and the view renders cold — its ancestors keep
   theirs.
 
+### How this compares
+
+Two axes separate the hydration models in circulation: where the code that wakes the markup comes
+from — imported from the renderer, or provided from outside it — and how much it wakes at once, the
+whole tree or one boundary on demand.
+
+| Model                     | Where the wake code comes from                                                                         | Scope        | Shipped by the framework |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------ | ------------------------ |
+| Whole tree, in-renderer   | imported from the renderer — React `hydrateRoot()`, Vue `createSSRApp().mount()`, Solid `hydrate()`    | the page     | yes                      |
+| Whole tree, provided      | a provider or a global patch — Angular `provideClientHydration()`, Lit's `lit-element-hydrate-support` | the page     | opt-in                   |
+| Per boundary, in-renderer | the renderer schedules it — React Suspense selective hydration, Nuxt `<NuxtIsland>`                    | one boundary | yes                      |
+| Per boundary, provided    | a directive or a context provider — Astro `client:*`, Angular `@defer (hydrate on …)`, this package    | one boundary | opt-in                   |
+
+This package sits in the per-boundary, provided cell. Each `<ui-view>` is an island whose trigger is
+a route match rather than viewport or idle, and the adopter is provided over `context-request`, so
+any provider can scope or replace it. The element side reuses Lit's `defer-hydration` contract
+unchanged, and `lit-ui-router` carries only the gated sleep and wake and one context key — Qwik,
+which resumes rather than hydrates, is off the grid entirely.
+
+The [guide](https://lit-ui-router.dev/packages/ssr#how-this-compares) carries the longer discussion.
+
 ## Documentation
 
 - [Guide](https://lit-ui-router.dev/packages/ssr)
