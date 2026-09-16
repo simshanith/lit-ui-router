@@ -998,6 +998,66 @@ describe('UiView', () => {
     });
   });
 
+  // A re-attached ancestor runs `connectedCallback` again on views that have
+  // already rendered: lit's own nodes and part markers are not hold content.
+  describe('reconnecting a rendered view', () => {
+    const reconnectStates: LitStateDeclaration[] = [
+      {
+        name: 'home',
+        url: '/home',
+        component: () => html`<div class="home">Home</div>`,
+      },
+      {
+        name: 'about',
+        url: '/about',
+        component: () => html`<div class="about">About</div>`,
+      },
+      { name: 'blank', url: '/blank' },
+    ];
+
+    it('should keep rendering its state after its router is re-attached', async () => {
+      const { uiRouter, uiView } = await setupRouter(reconnectStates);
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.innerHTML).toContain('class="home"');
+
+      uiRouter.remove();
+      await tick();
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+
+      expect(uiView.innerHTML).toContain('class="home"');
+
+      await routerGo(router, 'about');
+      await waitForUpdate(uiView);
+      expect(uiView.innerHTML).toContain('class="about"');
+    });
+
+    it('should replay the hold content captured at first connect after a reconnect', async () => {
+      const { uiRouter, uiView } = await setupRouter(reconnectStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('p.hold')).toBeNull();
+
+      uiRouter.remove();
+      await tick();
+      container.appendChild(uiRouter);
+      await waitForUpdate(uiView);
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(uiView.innerHTML).not.toContain('class="home"');
+    });
+  });
+
   describe('seekParentView static method', () => {
     it('should find parent ui-view', async () => {
       const states: LitStateDeclaration[] = [

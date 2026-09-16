@@ -188,7 +188,8 @@ export class UiView extends LitElement {
     } else if (this.deferredAtConnect) {
       // Re-attached still asleep: the wake update is this element's to ask for, since a router-less view registers nothing that would.
       this.requestUpdate();
-    } else {
+    } else if (!this.hasUpdated) {
+      // Past the first render the children are lit's own nodes and part markers, never authored hold content.
       this.captureContent();
     }
   }
