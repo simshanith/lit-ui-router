@@ -1,7 +1,7 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html, LitElement } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
-import { Transition } from '@uirouter/core';
+import { ActiveUIView, Transition } from '@uirouter/core';
 
 import { UiView } from '../ui-view.js';
 import { adoptUiViewContext, provideContext } from '../context.js';
@@ -989,6 +989,82 @@ describe('UiView', () => {
 
       const parentView = UiView.seekParentView(orphan);
       expect(parentView).toBeNull();
+    });
+  });
+  describe('re-registration while detached', () => {
+    const detachedStates: LitStateDeclaration[] = [
+      {
+        name: 'galaxy',
+        url: '/galaxy',
+        component: () => html`<div class="shell"><ui-view></ui-view></div>`,
+      },
+      {
+        name: 'galaxy.star',
+        url: '/star',
+        component: () => html`<div class="star">Star</div>`,
+      },
+    ];
+
+    /** An outer view rendering a state whose component nests a second `<ui-view>`. */
+    async function mountNested() {
+      const { uiRouter, uiView } = await setupRouter(detachedStates);
+      await routerGo(router, 'galaxy.star');
+      await tick(50);
+
+      const nested = uiView.querySelector('ui-view')!;
+      expect(nested).toBeTruthy();
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      return { uiRouter, uiView, nested };
+    }
+
+    function registeredIds(target: UIRouterLit) {
+      return target.viewService['_uiViews'].map(
+        (view: ActiveUIView) => view.id,
+      );
+    }
+
+    /** The wake's own path: a real router replaces the one the view registered with. */
+    function adoptUpgraded(view: UiView, upgraded: UIRouterLit) {
+      view['routerFromProvider'] = false;
+      view.uiRouter = upgraded;
+      view['adoptProvidedRouter']();
+    }
+
+    it('should not re-register a detached nested view at the root context', async () => {
+      const { uiRouter, uiView, nested } = await mountNested();
+      const upgraded = createTestRouter(detachedStates);
+
+      uiRouter.remove();
+      await tick();
+      adoptUpgraded(nested, upgraded);
+
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested['parentView']).toBe(uiView);
+      expect(registeredIds(upgraded)).not.toContain(nested['viewId']);
+    });
+
+    it('should re-register with the parent found once the subtree re-attaches', async () => {
+      const { uiView, nested } = await mountNested();
+      const shell = uiView.querySelector('.shell')!;
+      const upgraded = createTestRouter(detachedStates);
+
+      shell.remove();
+      await tick();
+      expect(registeredIds(router)).not.toContain(nested['viewId']);
+
+      uiView.appendChild(shell);
+      await tick();
+
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested['parentView']).toBe(uiView);
+      expect(registeredIds(router)).toContain(nested['viewId']);
+
+      // Connected, the upgraded router is adopted: same parent, same fqn, registered on the new router.
+      adoptUpgraded(nested, upgraded);
+
+      expect(nested['_uiViewData'].fqn).toBe('$default.$default');
+      expect(nested['parentView']).toBe(uiView);
+      expect(registeredIds(upgraded)).toContain(nested['viewId']);
     });
   });
   describe('missing <ui-router> ancestor', () => {

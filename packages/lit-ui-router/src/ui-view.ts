@@ -275,6 +275,11 @@ export class UiView extends LitElement {
    * the real registration.
    */
   private adoptProvidedRouter(): void {
+    // Detached, the parent-view seek finds nothing and `disconnectedCallback` has run, so the registration would be wrong and permanent.
+    if (!this.isConnected) {
+      return;
+    }
+
     const router = this.routerFromProvider
       ? this.seekProvidedRouter()
       : this.uiRouter;
