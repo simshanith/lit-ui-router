@@ -735,7 +735,8 @@ describe('UiView', () => {
       container.appendChild(uiRouterEl);
       uiRouterEl.innerHTML = `<ui-view defer-hydration>${heldMarkup}</ui-view>`;
       const uiView = uiRouterEl.querySelector('ui-view')!;
-      await waitForUpdate(uiView);
+      // Microtasks only: a task boundary here is the never-woken check, a different case.
+      await uiView.updateComplete;
 
       router = createTestRouter(homeStates);
       uiRouterEl.uiRouter = router;
@@ -840,11 +841,10 @@ describe('UiView', () => {
       const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
       try {
         router = createTestRouter(homeStates);
-        const uiView = mountHeld();
         router.start();
         await routerGo(router, 'home');
-        await tick();
-
+        // Mounted and woken in one task: a task asleep is the never-woken check, a different case.
+        const uiView = mountHeld();
         uiView.removeAttribute('defer-hydration');
         await waitForUpdate(uiView);
 
@@ -860,6 +860,119 @@ describe('UiView', () => {
             'before the wake.',
         );
       } finally {
+        warn.mockRestore();
+      }
+    });
+  });
+
+  describe('never waking from defer-hydration', () => {
+    /** Served output with no nested view, so one sleeping element is one warning. */
+    const servedMarkup =
+      '<!--lit-part vXOrb1NPBFc=-->' +
+      '<p class="held">held</p>' +
+      '<!--/lit-part-->';
+
+    const asleepMessage =
+      'lit-ui-router: this <ui-view> is still asleep after the task it connected in, because nothing removed defer-hydration. ' +
+      'It renders nothing and holds the served markup as it stands. ' +
+      'Usual causes: a clone of a served view, which copies the attribute but not the hydrate walk that clears it, ' +
+      'and a document whose hydrate walk threw before reaching this view or never ran. ' +
+      'Hydrate the document, or remove defer-hydration from the clone.';
+
+    /** The never-woken calls only: waking without an adopter warns on the same channel. */
+    function asleepWarnings(warn: {
+      mock: { calls: unknown[][] };
+    }): unknown[][] {
+      return warn.mock.calls.filter((call) => call[0] === asleepMessage);
+    }
+
+    it('should warn once when nothing ever removes the attribute', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld('defer-hydration', servedMarkup);
+
+        await tick();
+
+        expect(asleepWarnings(warn)).toHaveLength(1);
+        expect(asleepWarnings(warn)[0]?.[1]).toBe(uiView);
+        expect(uiView.hasUpdated).toBe(false);
+
+        await tick();
+
+        expect(asleepWarnings(warn)).toHaveLength(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
+
+    it('should warn for a clone of a served view the walk already passed', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld('defer-hydration', servedMarkup);
+        const clone = uiView.cloneNode(true) as UiView;
+        // The walk wakes the served view in the task it connected in, and never sees the clone.
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        container.appendChild(clone);
+        await tick();
+
+        expect(adopt).toHaveBeenCalledTimes(1);
+        expect(clone.deferHydration).toBe(true);
+        expect(clone.hasUpdated).toBe(false);
+        expect(asleepWarnings(warn)).toHaveLength(1);
+        expect(asleepWarnings(warn)[0]?.[1]).toBe(clone);
+      } finally {
+        uninstall();
+        warn.mockRestore();
+      }
+    });
+
+    it('should not warn for a view the walk wakes in the same task', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld('defer-hydration', servedMarkup);
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(adopt).toHaveBeenCalledTimes(1);
+        expect(asleepWarnings(warn)).toHaveLength(0);
+      } finally {
+        uninstall();
+        warn.mockRestore();
+      }
+    });
+
+    it('should not warn for a view detached at the check and woken on its re-attach', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      const adopt = vi.fn();
+      const uninstall = provideContext(container, adoptUiViewContext, adopt);
+      try {
+        router = createTestRouter(homeStates);
+        const uiView = mountHeld('defer-hydration', servedMarkup);
+        const uiRouterEl = uiView.parentElement!;
+        uiView.remove();
+
+        await tick();
+
+        expect(asleepWarnings(warn)).toHaveLength(0);
+
+        // Back in the document and woken in that same task, the way the pin wakes it.
+        uiRouterEl.appendChild(uiView);
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        expect(adopt).toHaveBeenCalledTimes(1);
+        expect(asleepWarnings(warn)).toHaveLength(0);
+      } finally {
+        uninstall();
         warn.mockRestore();
       }
     });

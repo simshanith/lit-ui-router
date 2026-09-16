@@ -5,6 +5,7 @@
     "lit-ui-router: uiSrefActive is taking over an existing aria-current=",
     "lit-ui-router: ${subject} found no <ui-router> ancestor, so it ",
     "lit-ui-router: this <ui-view> woke from defer-hydration and nothing answered its adoptUiViewContext request, so its held nodes were dropped and it rendered cold. Provide an adopter before the wake.",
-    "lit-ui-router: this <ui-router> was given a different uiRouter after its first update. "
+    "lit-ui-router: this <ui-router> was given a different uiRouter after its first update. ",
+    "lit-ui-router: this <ui-view> is still asleep after the task it connected in, because nothing removed defer-hydration. "
   ]
 }

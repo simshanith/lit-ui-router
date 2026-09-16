@@ -29,7 +29,11 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
-import { warnDeferredWithoutClient, warnMissingRouter } from './dev-warn.js';
+import {
+  warnDeferredNeverWoken,
+  warnDeferredWithoutClient,
+  warnMissingRouter,
+} from './dev-warn.js';
 import {
   UIRouterLitElement,
   UiRouterContextEvent,
@@ -201,6 +205,14 @@ export class UiView extends LitElement {
     // A deferred view holds another render's nodes, not authored hold content.
     if (this.deferHydration) {
       this.deferredAtConnect = true;
+      if (import.meta.env.DEV) {
+        // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
+        setTimeout(() => {
+          if (this.isConnected && this.deferHydration && !this.hasUpdated) {
+            warnDeferredNeverWoken(this);
+          }
+        }, 0);
+      }
     } else if (this.deferredAtConnect) {
       // Re-attached still asleep: the wake update is this element's to ask for, since a router-less view registers nothing that would.
       this.requestUpdate();
