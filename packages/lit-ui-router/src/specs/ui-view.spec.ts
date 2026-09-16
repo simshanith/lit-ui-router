@@ -1,5 +1,5 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
-import { html, LitElement } from 'lit';
+import { html, LitElement, nothing } from 'lit';
 import { customElement, state } from 'lit/decorators.js';
 import { ActiveUIView, Transition } from '@uirouter/core';
 
@@ -162,8 +162,21 @@ class TestParamsReceiveComponent
   }
 }
 
+/** Authors the fallback from an enclosing lit template, so the nodes are a TemplateInstance's own: a `<slot>` plus a live binding. */
+@customElement('test-fallback-host')
+class TestFallbackHost extends LitElement {
+  @state() accessor label = 'first';
+  render() {
+    return html`<ui-view
+      ><slot></slot>
+      <p class="fallback">${this.label}</p></ui-view
+    >`;
+  }
+}
+
 declare global {
   interface HTMLElementTagNameMap {
+    'test-fallback-host': TestFallbackHost;
     'test-exit-component': TestExitComponent;
     'test-block-exit-component': TestBlockExitComponent;
     'test-params-component': TestParamsComponent;
@@ -513,12 +526,11 @@ describe('UiView', () => {
         start: false,
       });
 
-      // Swept into `inner`: the authored <p> is gone from the light DOM and the
-      // hold render replays a clone of it.
-      const captured = uiView.render() as DocumentFragment;
-      expect(captured).toBeInstanceOf(DocumentFragment);
-      expect(captured.firstElementChild!.className).toBe('hold');
+      // Taken as the fallback set: the authored <p> stands in the light DOM as
+      // itself, ahead of lit's marker, and the hold render adds nothing over it.
+      expect(uiView.render()).toBe(nothing);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(uiView.firstElementChild!.className).toBe('hold');
     });
 
     it('should read the attribute the parser wrote, before connect', async () => {
@@ -1535,7 +1547,7 @@ describe('UiView', () => {
       uiRouter.appendChild(clone);
       await waitForUpdate(clone);
 
-      expect(clone['inner']).toBeUndefined();
+      expect(clone['fallback']).toBeUndefined();
 
       await routerGo(router, 'blank');
       await waitForUpdate(clone);
@@ -1560,9 +1572,108 @@ describe('UiView', () => {
       uiRouterEl.appendChild(uiView);
       await waitForUpdate(uiView);
 
-      const captured = uiView['inner']!;
-      expect(captured.querySelectorAll('p.hold')).toHaveLength(1);
-      expect(captured.querySelector('p.late')).toBeNull();
+      // One capture: the fallback set is the first attach's node, taken once,
+      // and `<p class="late">` arrived too late to join it.
+      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
+  });
+
+  // The fallback set is moved, never copied, so the nodes on screen are the
+  // authored ones and any binding inside them stays live.
+  describe('fallback content identity', () => {
+    const fallbackStates: LitStateDeclaration[] = [
+      ...homeStates,
+      { name: 'blank', url: '/blank' },
+    ];
+
+    /** Mounts a host whose shadow template authors the fallback, so the nodes are lit's own. */
+    async function mountFallbackHost() {
+      router = createTestRouter(fallbackStates);
+      const host = document.createElement('test-fallback-host');
+      await mountElementInRouter(host, router, container);
+      router.start();
+      await tick();
+      const uiView = host.shadowRoot!.querySelector('ui-view')!;
+      await waitForUpdate(uiView);
+      return { host, uiView };
+    }
+
+    /** Mounts static fallback markup, present on the element before it connects. */
+    async function mountAuthoredFallback() {
+      const { uiView } = await setupRouter(fallbackStates, {
+        configure: (el) => {
+          el.innerHTML = '<p class="hold">hold</p>';
+        },
+      });
+      await waitForUpdate(uiView);
+      return uiView;
+    }
+
+    async function cycle(uiView: UiView) {
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+    }
+
+    it('should keep the same authored <slot> across component transitions', async () => {
+      const { uiView } = await mountFallbackHost();
+      const slot = uiView.querySelector('slot');
+      expect(slot).not.toBeNull();
+
+      await cycle(uiView);
+      expect(uiView.querySelector('slot')).toBe(slot);
+
+      await cycle(uiView);
+      expect(uiView.querySelector('slot')).toBe(slot);
+    });
+
+    it('should keep a binding inside the fallback live', async () => {
+      const { host, uiView } = await mountFallbackHost();
+      expect(uiView.querySelector('p.fallback')!.textContent).toBe('first');
+
+      host.label = 'second';
+      await waitForUpdate(host);
+      expect(uiView.querySelector('p.fallback')!.textContent).toBe('second');
+
+      await cycle(uiView);
+
+      host.label = 'third';
+      await waitForUpdate(host);
+      expect(uiView.querySelector('p.fallback')!.textContent).toBe('third');
+    });
+
+    it('should show the same static nodes again after a component comes and goes', async () => {
+      const uiView = await mountAuthoredFallback();
+      const hold = uiView.querySelector('p.hold');
+      expect(hold).not.toBeNull();
+
+      await routerGo(router, 'home');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('p.hold')).toBeNull();
+
+      await routerGo(router, 'blank');
+      await waitForUpdate(uiView);
+      expect(uiView.querySelector('p.hold')).toBe(hold);
+    });
+
+    it('should stand ahead of lit’s marker without doubling', async () => {
+      const uiView = await mountAuthoredFallback();
+      const markerAt = () =>
+        [...uiView.childNodes].findIndex((node) => node.nodeType === 8);
+      const holdAt = () =>
+        [...uiView.childNodes].indexOf(uiView.querySelector('p.hold')!);
+
+      expect(markerAt()).toBeGreaterThan(-1);
+      expect(holdAt()).toBeLessThan(markerAt());
+
+      await cycle(uiView);
+      await cycle(uiView);
+
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+      expect(holdAt()).toBeLessThan(markerAt());
     });
   });
 

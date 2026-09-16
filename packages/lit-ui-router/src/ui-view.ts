@@ -1,4 +1,4 @@
-import { LitElement, html } from 'lit';
+import { LitElement, html, nothing } from 'lit';
 import type { PropertyValues, TemplateResult } from 'lit';
 import { property, state } from 'lit/decorators.js';
 import {
@@ -112,8 +112,19 @@ export class UiView extends LitElement {
   @state()
   private component: RoutedLitTemplate | null = null;
 
-  /** Created on connect: the @lit-labs/ssr DOM shim has no `createDocumentFragment`. */
-  private inner?: DocumentFragment;
+  /**
+   * Parks the fallback set while a component occupies the view.
+   *
+   * Created on connect: the @lit-labs/ssr DOM shim has no
+   * `createDocumentFragment`.
+   */
+  private fallback?: DocumentFragment;
+
+  /** The captured nodes, in authored order, wherever they currently sit. */
+  private fallbackNodes: ChildNode[] = [];
+
+  /** Whether those nodes sit in the fragment rather than in the light DOM. */
+  private fallbackParked = true;
 
   /** @internal */
   createRenderRoot(): this {
@@ -355,14 +366,47 @@ export class UiView extends LitElement {
     return data === '' || data.startsWith('lit-part');
   }
 
-  /** Sweeps authored hold content aside so the hold render can replay a clone. */
+  /**
+   * Takes the authored children as this view's fallback set.
+   *
+   * The nodes are moved, never copied, so they keep their identity and any
+   * binding an enclosing template holds on them stays live. The first update
+   * stands them back up when no component occupies the view.
+   */
   private captureContent() {
     if (this.captured || this.holdsRenderedNodes) {
       return;
     }
     this.captured = true;
-    this.inner ??= document.createDocumentFragment();
-    this.inner.append(...this.childNodes.values());
+    this.fallback ??= document.createDocumentFragment();
+    this.fallbackNodes = [...this.childNodes.values()];
+    this.fallback.append(...this.fallbackNodes);
+  }
+
+  /** Whether this render shows the fallback set rather than a routed component. */
+  private get showsFallback(): boolean {
+    return !this.component || !this.viewAddress;
+  }
+
+  /**
+   * Moves the fallback set between the light DOM and the fragment.
+   *
+   * It goes in ahead of everything else, and lit appends its own render marker
+   * at the end of the element, so the two never interleave and the component's
+   * nodes stay the only ones lit owns.
+   */
+  private placeFallback(): void {
+    const fallback = this.fallback;
+    const park = !this.showsFallback;
+    if (!fallback || park === this.fallbackParked) {
+      return;
+    }
+    this.fallbackParked = park;
+    if (park) {
+      fallback.append(...this.fallbackNodes);
+    } else {
+      this.insertBefore(fallback, this.firstChild);
+    }
   }
 
   private readonly disconnectedHandlers: deregisterFn[] = [];
@@ -546,6 +590,7 @@ export class UiView extends LitElement {
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
     if (this.deferredAtConnect) this.adoptHeldNodes();
+    this.placeFallback();
   }
 
   /** The first attached update after a deferred wake: re-seek the router the hydrate reads, then hand the view to an adopter or drop the foreign nodes. */
@@ -577,14 +622,17 @@ export class UiView extends LitElement {
     }
   }
 
-  /** The routed component's template, or the hold content while no component is active. */
-  render(): Node | TemplateResult {
-    if (!this.component || !this.viewAddress) {
-      // Never connected (server render): an empty declarative shadow root would hide the light DOM.
-      return this.inner?.cloneNode(true) ?? html`<slot></slot>`;
+  /**
+   * The routed component's template, or nothing while the fallback set stands
+   * in the light DOM on its own.
+   */
+  render(): TemplateResult | typeof nothing {
+    if (this.showsFallback) {
+      // Nothing captured, so never connected (server render) or holding another render's nodes: an empty declarative shadow root would hide the light DOM.
+      return this.fallback ? nothing : html`<slot></slot>`;
     }
 
-    const { uiRouter: router } = this;
+    const { uiRouter: router, component } = this;
     const injector = this.resolveContext.injector();
     const resolvables = this.resolveContext
       .getTokens()
@@ -599,7 +647,7 @@ export class UiView extends LitElement {
 
     const props: UIViewInjectedProps = { router, resolves, transition };
 
-    return this.component(props);
+    return component!(props);
   }
 }
 
