@@ -23,13 +23,6 @@ elements and adds no routing behavior. If your application already keeps its
 state in Effect refs, these bindings let route state participate in the same
 system, with automatic `requestUpdate()` and no manual refresh plumbing.
 
-::: warning Release candidate
-The package publishes on a `0.1.0-rc` line while the
-[atlas](https://github.com/simshanith/lit-ui-router/issues/843) adopts it as
-its second consumer. The API below is live and covered by tests; the surface
-freezes at `0.1.0` once that adoption has exercised it.
-:::
-
 ::: tip Not using Effect?
 You don't need this package to react to route changes. The core package's
 zero-dependency
