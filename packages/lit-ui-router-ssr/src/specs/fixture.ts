@@ -18,6 +18,14 @@ export const ShellView: RoutedLitTemplate = (props) => html`
   ${uiView()}
 `;
 
+/** A second leaf, so a spec can route one view while the document was drawn for the other. */
+export const OtherView: RoutedLitTemplate = () =>
+  html`<p class="other">other</p>`;
+
+/** A routed view whose one node is a shadow-DOM element, so the reveal has to reach into its shadow root. */
+export const BadgeView: RoutedLitTemplate = () =>
+  html`<shadow-badge></shadow-badge>`;
+
 /** A leaf view, drawn from a resolve so the spec can see the resolve arrive. */
 export const DetailView: RoutedLitTemplate = (props) =>
   html`<p class="detail">${String(props.resolves.detail ?? '')}</p>`;
@@ -44,9 +52,34 @@ export class ShadowBadgeRenderer extends LitElementRenderer {
   }
 }
 
+/** A custom element with nothing bound to it: `@lit-labs/ssr` defers it and writes no marker that would wake it. */
+export class PlainMark extends HTMLElement {}
+
+customElements.define('plain-mark', PlainMark);
+
 /** The root both sides render: one `<ui-router>` around one `<ui-view>`. */
 export const rootTemplate = (router: Router): TemplateResult =>
   html`<ui-router .uiRouter=${router}>${uiView()}</ui-router>`;
+
+/** The same root with a binding standing after the view in the same template. */
+export const tailRootTemplate = (
+  router: Router,
+  tail: string,
+): TemplateResult =>
+  html`<ui-router .uiRouter=${router}
+    >${uiView()}<span class="tail">${tail}</span></ui-router
+  >`;
+
+/** A root whose view carries authored fallback content and no slot for the server to fill. */
+export const fallbackRootTemplate = (router: Router): TemplateResult =>
+  html`<ui-router .uiRouter=${router}
+    ><ui-view><p class="loading">loading</p></ui-view></ui-router
+  >`;
+
+/** A root with a bindingless custom element standing before the router. */
+export const plainRootTemplate = (router: Router): TemplateResult =>
+  html`<plain-mark></plain-mark
+    ><ui-router .uiRouter=${router}>${uiView()}</ui-router>`;
 
 /** The same root with one shadow-DOM element beside the view. */
 export const badgeRootTemplate = (router: Router): TemplateResult =>
@@ -72,6 +105,12 @@ export const makeRouter = (): Router => {
       component: DetailView,
       resolve: { detail: () => 'leaf' },
     },
+    {
+      name: 'shell.other',
+      url: '/other',
+      component: OtherView,
+    },
+    { name: 'badge', url: '/badge', component: BadgeView },
     { name: 'bare', url: '/bare' },
   ];
   for (const state of states) router.stateRegistry.register(state);

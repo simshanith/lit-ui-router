@@ -1,3 +1,4 @@
+import { render } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adoptUiViewContext, requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
@@ -5,7 +6,16 @@ import 'lit-ui-router/register';
 
 import { hydrateRoot } from '../client.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
-import { goTo, makeRouter, rootTemplate } from './fixture.js';
+import {
+  DetailView,
+  fallbackRootTemplate,
+  goTo,
+  makeRouter,
+  plainRootTemplate,
+  rootTemplate,
+  tailRootTemplate,
+} from './fixture.js';
+import type { Page } from './round-trip.js';
 import {
   boot,
   comments,
@@ -235,27 +245,27 @@ describe('the adopter hydrateRoot provides', () => {
     ]);
   });
 
-  it('drops the pair the server wrote for an address no state routed', () => {
+  it('keeps the pair the server wrote for an address no state routed', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView('<!--lit-part--><!--/lit-part-->', container);
 
     expect(wake(view)).toBe(true);
 
-    expect(comments(view)).toEqual([]);
-    expect(view.childNodes).toHaveLength(0);
+    // The pair is the enclosing template's own part marker; the element renders after it.
+    expect(comments(view)).toEqual(['lit-part', '/lit-part']);
     expect(warn).not.toHaveBeenCalled();
   });
 
-  it('leaves a view the document served no markers for exactly as it is', () => {
+  it('clears a view the document served no markers for, as core would', () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView('<p class="cold">cold</p>', container);
-    const render = vi.fn();
-    view.render = render;
+    const rendered = vi.fn();
+    view.render = rendered;
 
     expect(wake(view)).toBe(true);
 
-    expect(render).not.toHaveBeenCalled();
-    expect(view.innerHTML).toBe('<p class="cold">cold</p>');
+    expect(rendered).not.toHaveBeenCalled();
+    expect(view.innerHTML).toBe('');
     expect(warn).not.toHaveBeenCalled();
   });
 
@@ -328,5 +338,229 @@ describe('a view detached before its update flushes', () => {
     expect(warn).not.toHaveBeenCalled();
     // answered once, then off: nothing on the element is left to answer a second request
     expect(requestContext(view, adoptUiViewContext)).toBeUndefined();
+  });
+});
+
+describe('a view the document drew empty', () => {
+  it('keeps the pair the enclosing part is anchored on', async () => {
+    const page: Page = (router) => tailRootTemplate(router, 'first');
+    const { container } = serve(await draw(page, [UiViewRenderer], '/bare'));
+
+    const router = await boot(container, page, '/bare');
+    await router.stateService.go('shell');
+    await router.stateService.go('bare');
+    // The part standing after the view in the same template still commits.
+    render(tailRootTemplate(router, 'second'), container);
+
+    expect(container.querySelector('.tail')?.textContent).toBe('second');
+  });
+});
+
+describe('a view this cannot adopt', () => {
+  it('clears authored fallback content the server left in front', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(
+      await draw(fallbackRootTemplate, [UiViewRenderer], '/shell'),
+    );
+    expect(container.querySelector('.loading')).not.toBeNull();
+
+    await boot(container, fallbackRootTemplate, '/shell');
+
+    expect(container.querySelector('.loading')).toBeNull();
+    expect(container.querySelector('h1')?.textContent).toContain('shell hello');
+    expect(warn).not.toHaveBeenCalled();
+  });
+
+  it('adopts past whitespace, a foreign comment and an injected element', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    for (const view of views(container)) {
+      view.prepend(
+        document.createTextNode('\n  '),
+        document.createComment('ext'),
+        document.createElement('ext-bar'),
+      );
+    }
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(container.querySelectorAll('h1')).toHaveLength(1);
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+    expect(
+      comments(container).filter((data) => data.startsWith('ui-view:')),
+    ).toEqual([]);
+    for (const view of views(container)) {
+      expect(view.deferHydration).toBe(false);
+      expect(view.hasUpdated).toBe(true);
+    }
+    expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+/** The props `DetailView` was drawn with, as the one render a guest view adopts against. */
+const detailProps = { resolves: { detail: 'leaf' } } as unknown as Parameters<
+  typeof DetailView
+>[0];
+
+/** One served view's markup with its outer pair plain: what the walk passes at the top level. */
+const servedDetail = async (): Promise<string> => {
+  const { container } = serve(await drawShell('/shell/detail'));
+  const nested = [...container.querySelectorAll('ui-view')].at(-1)!;
+  const markers = [...nested.childNodes].filter(
+    (node) => node.nodeType === Node.COMMENT_NODE,
+  ) as Comment[];
+  for (const marker of [markers[0], markers.at(-1)!]) {
+    marker.data = marker.data.slice('ui-view:'.length);
+  }
+  const markup = nested.innerHTML;
+  container.remove();
+  return markup;
+};
+
+describe('the pin the walk leaves on a served view', () => {
+  it('is installed once, however many walks reach the element', async () => {
+    const { container: first } = serve(await drawShell('/shell'));
+    const firstRouter = makeRouter();
+    await goTo(firstRouter, '/shell');
+    const release = hydrateRoot(first, rootTemplate(firstRouter)) as () => void;
+    // Detached before its update: the view sleeps, holding its nodes and its pin.
+    const app = first.querySelector('ui-router')!;
+    const view = app.querySelector<UiView>('ui-view')!;
+    app.remove();
+    release();
+
+    const { container: second } = serve(await drawShell('/shell'));
+    const secondRouter = makeRouter();
+    await goTo(secondRouter, '/shell');
+    second.querySelector('ui-router')!.replaceWith(app);
+    const releaseSecond = hydrateRoot(
+      second,
+      rootTemplate(secondRouter),
+    ) as () => void;
+    await settle(second);
+    releaseSecond();
+
+    expect(view.querySelector('h1')?.textContent).toContain('shell hello');
+    // One pin, answered once: nothing is left to re-adopt this live view.
+    expect(requestContext(view, adoptUiViewContext)).toBeUndefined();
+  });
+
+  it('adopts a descendant without being spent by it', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const shell = container.querySelector('h1');
+    const router = makeRouter();
+    await goTo(router, '/shell/detail');
+
+    // Drawn before the walk: everything from here to the guest's request is one task.
+    const markup = await servedDetail();
+
+    const release = hydrateRoot(container, rootTemplate(router)) as () => void;
+    // The view the walk woke has not updated yet, so its pin is still armed.
+    const view = container.querySelector<UiView>('ui-view')!;
+    const guest = document.createElement('ui-view');
+    guest.setAttribute('defer-hydration', '');
+    guest.innerHTML = markup;
+    // The render the served markup was drawn from: a guest registers at an address this document does not fill.
+    guest.render = () => DetailView(detailProps);
+    view.append(guest);
+    const detail = guest.querySelector('.detail');
+
+    const answer = requestContext(guest, adoptUiViewContext);
+    expect(answer).toBeTypeOf('function');
+    answer?.(guest);
+
+    // Adopted: the served nodes are the ones still standing, and nothing is left hidden.
+    expect(guest.querySelector('.detail')).toBe(detail);
+    expect(guest.querySelector('.detail')?.textContent).toBe('leaf');
+    expect(
+      comments(guest).filter((data) => data.startsWith('ui-view:')),
+    ).toEqual([]);
+
+    guest.remove();
+    release();
+    await settle(container);
+
+    // Only the pin is left to answer, and it still belongs to its own view.
+    expect(container.querySelector('h1')).toBe(shell);
+    expect(dropped(warn)).toBe(false);
+    expect(warn).not.toHaveBeenCalled();
+  });
+});
+
+describe('the guard on what there is to adopt', () => {
+  it('reports nothing to adopt when the comments were stripped', async () => {
+    const markup = (await drawShell('/shell/detail')).replaceAll(
+      /<!--[\s\S]*?-->/g,
+      '',
+    );
+    const { container } = serve(markup);
+    // The attributes survived the strip; nothing the walk reads did.
+    expect(container.querySelector('[defer-hydration]')).not.toBeNull();
+
+    expect(hydrateRoot(container, rootTemplate(makeRouter()))).toBe(false);
+  });
+
+  it('hydrates a document whose root marker stands behind whitespace', async () => {
+    const { container } = serve(`\n  ${await drawShell('/shell/detail')}`);
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+  });
+
+  it('leaves the container cold-renderable when the walk throws', async () => {
+    vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+    const router = makeRouter();
+    await goTo(router, '/shell/detail');
+
+    expect(() =>
+      hydrateRoot(container, tailRootTemplate(router, 'first')),
+    ).toThrow();
+
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+    expect(
+      comments(container).filter((data) => data.startsWith('ui-view:')),
+    ).toEqual([]);
+  });
+
+  it('wakes a custom element the render wrote no marker for', async () => {
+    const { container } = serve(
+      await draw(plainRootTemplate, [UiViewRenderer], '/shell'),
+    );
+    expect(
+      container.querySelector('plain-mark')?.hasAttribute('defer-hydration'),
+    ).toBe(true);
+
+    await boot(container, plainRootTemplate, '/shell');
+
+    expect(container.querySelectorAll('[defer-hydration]')).toHaveLength(0);
+  });
+});
+
+/** Every argument of every warning, joined. */
+const warnedText = (warn: { mock: { calls: unknown[][] } }): string =>
+  warn.mock.calls.map((call) => call.map(String).join(' ')).join('\n');
+
+describe('the mismatch warning', () => {
+  it('names router.start() when the view had no routed component', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    await boot(container, rootTemplate, '/shell');
+
+    expect(warnedText(warn)).toContain('router.start()');
+  });
+
+  it('says nothing of the boot when the view is routed elsewhere', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/detail'));
+
+    await boot(container, rootTemplate, '/shell/other');
+
+    expect(warnedText(warn)).toContain('could not adopt the server render');
+    expect(warnedText(warn)).not.toContain('router.start()');
+    expect(container.querySelector('.other')?.textContent).toBe('other');
   });
 });

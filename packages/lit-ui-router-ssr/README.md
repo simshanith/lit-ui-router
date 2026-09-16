@@ -147,11 +147,16 @@ if (!release) render(page(router), root);
   later render of the template leaves the view's own nodes alone. On a cold render there is no
   attribute to remove.
 - **An empty pair is nothing to adopt.** A view the server drew at an address no state routed holds
-  only its two markers. Both go, and the element renders cold and silent.
+  only its two markers. They stay — they are the enclosing template's own part markers — and the
+  element renders after them, cold and silent.
 - **A mismatch falls back.** One static document answers a whole family of urls, so a client can boot
   into a state the document was not drawn for. `hydrate()` throws on that; the client warns in
   development, drops that one view's server nodes, and the view renders cold — its ancestors keep
-  theirs.
+  theirs. A view with no readable pair at all, such as one carrying authored fallback content, is
+  cleared the same way core clears a view nobody answered for.
+- **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
+  first leaves cold-renderable: no element still asleep behind `defer-hydration`, no marker still
+  hidden behind the prefix. The caller renders over the container.
 
 ### How this compares
 

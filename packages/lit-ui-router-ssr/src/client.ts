@@ -34,7 +34,7 @@ class UiViewSlotDirective extends Directive {
     const view = (part as ChildPart).parentNode;
     if (!(view instanceof Element)) return;
     // The pin keys off the served pair, not the wake below: where that marker is there, lit's own walk cleared the attribute before this part was reached.
-    if (isPart(view.firstChild, 'lit-part')) pinAdopter(view);
+    if (servedPair(view)) pinAdopter(view);
     if (view.hasAttribute(DEFER)) view.removeAttribute(DEFER);
   }
 
@@ -56,8 +56,8 @@ class UiViewSlotDirective extends Directive {
  * view's own nodes alone. A view holding a served pair is also pinned to {@link
  * hydrateRoot}'s adopter, so a view the app detaches before its own update —
  * which sleeps until it is attached again — is adopted on its return; the pin
- * answers once and comes off. On a cold render there is no pair to adopt and no
- * attribute to remove.
+ * answers for that one view, once, and comes off. On a cold render there is no
+ * pair to adopt and no attribute to remove.
  *
  * @example
  * ```ts
@@ -68,13 +68,19 @@ class UiViewSlotDirective extends Directive {
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
 
-const warnMismatch = (tag: string, error: unknown): void => {
+const warnMismatch = (view: UiView, error: unknown): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
   console.warn(
     'lit-ui-router-ssr: this element could not adopt the server render, so it rendered over it instead. One static document answers a whole family of urls, so a client that boots into another state reaches this legitimately.',
-    tag,
+    view.localName,
     error,
+    // A view with no routed component of its own is also what an unbooted router looks like.
+    ...(view.viewContext
+      ? []
+      : [
+          'lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: call router.start(), await its first successful transition, then hydrateRoot().',
+        ]),
   );
 };
 
@@ -82,11 +88,44 @@ const isPart = (node: Node | null | undefined, data: string): boolean =>
   node?.nodeType === Node.COMMENT_NODE &&
   (node as Comment).data.startsWith(data);
 
+/**
+ * The opening marker of the pair the server wrote around a view's routed
+ * markup: the first plain `lit-part` comment among the element's children.
+ *
+ * Whitespace the parser kept, a foreign comment and an element an extension
+ * injected all stand in front of it without hiding it, and a marker the server
+ * prefixed is not one — a view's interior is its own until its wake.
+ */
+const servedPair = (view: Element): Comment | undefined => {
+  for (const child of view.childNodes) {
+    if (isPart(child, 'lit-part')) return child as Comment;
+  }
+  return undefined;
+};
+
+/** Whether anything under `node` still carries {@link servedMarkerPrefix}. */
+const hasServedMarkers = (node: Node): boolean => {
+  for (const child of node.childNodes) {
+    if (isPart(child, servedMarkerPrefix)) return true;
+    if (child instanceof Element && hasServedMarkers(child)) return true;
+  }
+  return false;
+};
+
 /** Strips {@link servedMarkerPrefix} from one marker comment, leaving anything else alone. */
-const revealMarker = (node: Node | null): void => {
+const revealMarker = (node: Node | null | undefined): void => {
   if (!isPart(node, servedMarkerPrefix)) return;
   const comment = node as Comment;
   comment.data = comment.data.slice(servedMarkerPrefix.length);
+};
+
+/** The outer pair of a nested view, whatever stands in front of it. */
+const revealNestedPair = (view: Element): void => {
+  const markers = [...view.childNodes].filter((node) =>
+    isPart(node, servedMarkerPrefix),
+  );
+  revealMarker(markers[0]);
+  revealMarker(markers.at(-1));
 };
 
 /**
@@ -94,24 +133,44 @@ const revealMarker = (node: Node | null): void => {
  *
  * A nested `<ui-view>` is left closed: only the outer pair this view's template
  * wrote around it is renamed, because everything inside is that view's own
- * served content and stays hidden until its own wake.
+ * served content and stays hidden until its own wake. A declarative shadow root
+ * is not closed that way — the same render prefixed its markers, and the
+ * element's own hydrate reads them at this wake.
  */
 const revealServedMarkers = (node: Node): void => {
   for (const child of node.childNodes) {
     if (child.nodeType === Node.COMMENT_NODE) {
       revealMarker(child);
     } else if (child instanceof UiView) {
-      revealMarker(child.firstChild);
-      revealMarker(child.lastChild);
+      revealNestedPair(child);
     } else if (child instanceof Element) {
+      if (child.shadowRoot) revealServedMarkers(child.shadowRoot);
       revealServedMarkers(child);
     }
   }
 };
 
-/** Drops the server's nodes, keeping the outer pair the cold render writes into. */
-const clearInterior = (view: UiView): void => {
-  for (const node of [...view.childNodes].slice(1, -1)) node.remove();
+/** Renames every marker under `node`, closed views included, so nothing is left hidden. */
+const revealEveryMarker = (node: Node): void => {
+  for (const child of node.childNodes) {
+    if (child.nodeType === Node.COMMENT_NODE) {
+      revealMarker(child);
+    } else if (child instanceof Element) {
+      if (child.shadowRoot) revealEveryMarker(child.shadowRoot);
+      revealEveryMarker(child);
+    }
+  }
+};
+
+/** Drops the server's nodes from between the pair, which the element renders after. */
+const clearInterior = (open: Comment): void => {
+  for (
+    let node = open.nextSibling;
+    node && !isPart(node, '/lit-part');
+    node = open.nextSibling
+  ) {
+    node.remove();
+  }
 };
 
 /**
@@ -124,18 +183,19 @@ const clearInterior = (view: UiView): void => {
  * readable to `hydrate()`, and it happens here rather than in the enclosing
  * walk so a nested view's own interior stays hidden until that view wakes.
  *
- * An element with no served pair is a cold render — a view the document was
- * drawn without — and is left exactly as it is.
+ * An empty pair is the address no state routed. Both comments stay: they are
+ * the enclosing template's own part markers, and the element renders after
+ * them, which is also where a cleared interior leaves it.
  *
- * An empty pair is the address no state routed. Both comments go, so the
- * element's own render starts on a clean container; the `<slot>` that render
- * writes is inert in light DOM.
+ * Core counts any answer as handled, so a view with no pair to read is cleared
+ * here rather than left for the element's render to land behind — the same
+ * thing core does when nobody answers at all. A view still carrying prefixed
+ * markers under a pair this cannot find is a mismatch, and says so.
  *
  * A mismatch is not a bug in every case: one static document answers a family
  * of urls, so a client can boot into a state the document was not drawn for.
  * `hydrate()` throws on that, and the answer is to drop that one element's
- * server nodes — keeping the outer pair, which the element's own `render()`
- * writes into — rather than a half-built page. `hydrate()` claims the container
+ * server nodes rather than a half-built page. `hydrate()` claims the container
  * on its last statement, so a walk that threw leaves nothing to undo.
  *
  * This is the adopter {@link hydrateRoot} provides. The view calls it itself,
@@ -144,20 +204,27 @@ const clearInterior = (view: UiView): void => {
  * escapes into the view's update.
  */
 const adopt = (view: UiView): void => {
-  if (!isPart(view.firstChild, 'lit-part')) return;
-  // Only the pair itself is there, so clearing the element drops exactly those two comments.
-  if (view.childNodes.length === 2 && isPart(view.lastChild, '/lit-part')) {
+  const open = servedPair(view);
+  if (!open) {
+    if (hasServedMarkers(view)) {
+      warnMismatch(view, 'the served part pair is gone');
+    }
     view.replaceChildren();
     return;
   }
+  // The address no state routed: nothing between the pair to adopt, and the element renders after it.
+  if (isPart(open.nextSibling, '/lit-part')) return;
   try {
     revealServedMarkers(view);
     hydrate(view.render(), view, view.renderOptions);
   } catch (error) {
-    warnMismatch(view.localName, error);
-    clearInterior(view);
+    warnMismatch(view, error);
+    clearInterior(open);
   }
 };
+
+/** The views this walk, or an earlier one, already pinned. */
+const pinned = new WeakSet<Element>();
 
 /**
  * Pins {@link adopt} to the one served view the walk is passing.
@@ -169,15 +236,41 @@ const adopt = (view: UiView): void => {
  * element itself, so the view's own request reaches it at the target phase
  * wherever it wakes, and whether or not the root provider is still installed.
  *
- * It answers once and stands down; an element that never wakes carries its
- * listener to the garbage collector.
+ * It answers its own view once and stands down, and a second walk over that
+ * element adds nothing; an element that never wakes carries its listener to the
+ * garbage collector. A descendant view whose request passes through on its way
+ * out is adopted too, and leaves the pin armed for the view it belongs to.
  */
 const pinAdopter = (view: Element): void => {
+  if (pinned.has(view)) return;
+  pinned.add(view);
   let release = (): void => {};
   release = provideContext(view, adoptUiViewContext, (woken) => {
-    release();
+    // A descendant's request passes through this element and is answered; only this view's own spends the pin.
+    if (woken === view) release();
     adopt(woken);
   });
+};
+
+/** Whether the container's leading nodes open a render `hydrate()` can read. */
+const isServed = (container: HTMLElement): boolean => {
+  for (const child of container.childNodes) {
+    if (isPart(child, 'lit-part')) return true;
+    if (child.nodeType === Node.COMMENT_NODE) continue;
+    if (child.nodeType === Node.TEXT_NODE && !(child as Text).data.trim()) {
+      continue;
+    }
+    return false;
+  }
+  return false;
+};
+
+/** Leaves the container as a cold render finds it: nothing asleep, nothing hidden. */
+const makeCold = (container: HTMLElement): void => {
+  for (const element of container.querySelectorAll(`[${DEFER}]`)) {
+    element.removeAttribute(DEFER);
+  }
+  revealEveryMarker(container);
 };
 
 /**
@@ -196,7 +289,8 @@ const pinAdopter = (view: Element): void => {
  * after this call's provider is released. A view the walk never reached — one
  * outside `container`, or one whose attribute the app cleared itself after the
  * release — is answered by nobody: core drops its held nodes and warns in
- * development.
+ * development. An element the render deferred and wrote no marker for is woken
+ * once the walk has finished, since nothing in the walk reaches it.
  *
  * The provider answers synchronously and stops immediate propagation, so an
  * outer provider never answers the same request twice. It outlives this call,
@@ -205,6 +299,10 @@ const pinAdopter = (view: Element): void => {
  * container throws out of `hydrate()`, which already holds a live render there,
  * and releases its own provider before rethrowing, so the live one keeps
  * answering.
+ *
+ * A `hydrate()` that throws is rethrown, over a container left cold-renderable:
+ * nothing asleep behind `defer-hydration`, no marker still hidden. The caller
+ * renders over it.
  *
  * The boot is the router first: `router.start()`, await its first successful
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
@@ -234,18 +332,18 @@ export function hydrateRoot(
   value: unknown,
   options: RenderOptions = {},
 ): false | (() => void) {
-  if (
-    !container.querySelector(`[${DEFER}]`) &&
-    !isPart(container.firstChild, 'lit-part')
-  ) {
-    return false;
-  }
+  if (!isServed(container)) return false;
   const release = provideContext(container, adoptUiViewContext, adopt);
   try {
     hydrate(value, container, options);
   } catch (error) {
     release();
+    makeCold(container);
     throw error;
+  }
+  // `@lit-labs/ssr` defers a custom element it wrote no marker for, so the walk passed it by; a `<ui-view>` still asleep is a nested one, waiting on its parent's update.
+  for (const element of container.querySelectorAll(`[${DEFER}]`)) {
+    if (!(element instanceof UiView)) element.removeAttribute(DEFER);
   }
   return release;
 }
