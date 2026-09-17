@@ -43,6 +43,8 @@ import type {
 import {
   adoptUiViewContext,
   contextRequestEventName,
+  isContextRequest,
+  parentUiViewContext,
   requestContext,
 } from './context.js';
 
@@ -75,6 +77,9 @@ export interface UiViewAddress {
 
 type deregisterFn = () => void;
 
+/** A view is its descendants' parent for its whole connected life. */
+const noParentViewUnsubscribe = () => {};
+
 /**
  * @hideconstructor
  * @category components
@@ -92,6 +97,12 @@ type deregisterFn = () => void;
  * @fires {CustomEvent} ui-view-context
  *
  * This event is fired to obtain the parent <code>&lt;ui-view&gt;</code>.
+ *
+ * It answers the community <code>context-request</code> protocol for
+ * {@link parentUiViewContext} with itself, from the same listener position, so
+ * an element built on <code>@lit/context</code> finds its enclosing view too.
+ * A view never answers its own request, so a nested
+ * <code>&lt;ui-view&gt;</code> gets the view above it.
  *
  * @summary
  *
@@ -213,12 +224,34 @@ export class UiView extends LitElement {
     event.detail.parentView = this;
   };
 
+  /**
+   * Answers a `context-request` for the parent-view context with itself.
+   *
+   * `subscribe` gets one call and a no-op unsubscribe: a view is the enclosing
+   * view of its descendants for as long as it is connected.
+   */
+  private readonly onParentViewContextRequest = (event: Event) => {
+    // A view's own request must reach the view above it; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is.
+    if (
+      event.composedPath()[0] === this ||
+      !isContextRequest(event, parentUiViewContext)
+    ) {
+      return;
+    }
+    event.stopImmediatePropagation();
+    event.callback(this, event.subscribe ? noParentViewUnsubscribe : undefined);
+  };
+
   /** @internal */
   connectedCallback(): void {
     super.connectedCallback();
     this.addEventListener(
       this.constructor.uiViewContextEventName,
       this.onUiViewContextEvent as EventListener,
+    );
+    this.addEventListener(
+      contextRequestEventName,
+      this.onParentViewContextRequest,
     );
     this.setupUiView();
     // A deferred view holds another render's nodes behind whatever the author wrote ahead of them.
@@ -523,6 +556,10 @@ export class UiView extends LitElement {
     this.removeEventListener(
       this.constructor.uiViewContextEventName,
       this.onUiViewContextEvent as EventListener,
+    );
+    this.removeEventListener(
+      contextRequestEventName,
+      this.onParentViewContextRequest,
     );
 
     this.deregisterAll();

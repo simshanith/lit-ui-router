@@ -6,12 +6,14 @@ import { ActiveUIView, Transition } from '@uirouter/core';
 import { UiView } from '../ui-view.js';
 import {
   adoptUiViewContext,
+  ContextRequestEvent,
+  parentUiViewContext,
   provideContext,
   provideRouter,
   requestContext,
   routerContext,
 } from '../context.js';
-import type { AdoptableView } from '../context.js';
+import type { AdoptableView, ParentUiView } from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import type { UiViewContextEvent } from '../events.js';
@@ -1675,6 +1677,41 @@ describe('UiView', () => {
       uiView['onUiViewContextEvent'](event);
 
       expect(event.detail.parentView).toBeNull();
+    });
+
+    /** A `context-request` for {@link parentUiViewContext} as a listener outside the source's shadow root sees it: `target` retargeted to the host. */
+    function retargetedRequest(
+      host: UiView,
+      source: Node,
+      callback: (value: ParentUiView | undefined) => void,
+    ): Event {
+      const event = new ContextRequestEvent(parentUiViewContext, callback);
+      Object.defineProperty(event, 'target', { value: host });
+      Object.defineProperty(event, 'composedPath', {
+        value: () => [source, host],
+      });
+      return event;
+    }
+
+    it('should answer a request from a view inside its own shadow root', async () => {
+      const { uiView } = await setupRouter(homeStates);
+      const inner = document.createElement('ui-view');
+      const callback = vi.fn();
+
+      const event = retargetedRequest(uiView, inner, callback);
+      uiView['onParentViewContextRequest'](event);
+
+      expect(callback).toHaveBeenCalledWith(uiView, undefined);
+    });
+
+    it('should still decline the request it dispatched itself', async () => {
+      const { uiView } = await setupRouter(homeStates);
+      const callback = vi.fn();
+
+      const event = retargetedRequest(uiView, uiView, callback);
+      uiView['onParentViewContextRequest'](event);
+
+      expect(callback).not.toHaveBeenCalled();
     });
   });
 

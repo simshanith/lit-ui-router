@@ -7,12 +7,15 @@ import {
   expectTypeOf,
   vi,
 } from 'vitest';
+import { html } from 'lit';
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
   adoptUiViewContext,
   contextRequestEventName,
   isRouterContextRequest,
+  parentUiViewContext,
+  type ParentUiView,
   provideContext,
   provideRouter,
   requestContext,
@@ -24,10 +27,16 @@ import {
   type Context,
   type ContextCallback,
 } from '../context.js';
-import type { UiView } from '../ui-view.js';
+import { UiView } from '../ui-view.js';
+import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
-import { createTestRouter, waitForUpdate } from './test-utils.js';
+import {
+  createTestRouter,
+  routerGo,
+  tick,
+  waitForUpdate,
+} from './test-utils.js';
 
 /** A provider that records subscribers, so later answers can be replayed. */
 function provideRecordingRouter(
@@ -293,6 +302,124 @@ describe('lit-ui-router/context', () => {
       container.appendChild(orphan);
 
       expect(UIRouterLitElement.seekRouter(orphan)).toBeUndefined();
+    });
+  });
+
+  describe('<ui-view> as a parent-view provider', () => {
+    /** Mounts a view under a `<ui-router>`, past its own content capture. */
+    async function mountView(deferHydration = false): Promise<UiView> {
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+      const view = document.createElement('ui-view');
+      if (deferHydration) view.setAttribute('defer-hydration', '');
+      uiRouterEl.appendChild(view);
+      await waitForUpdate(uiRouterEl);
+      return view;
+    }
+
+    /** Routes to a nested state, so the inner `<ui-view>` is a real routed child. */
+    async function mountNestedViews(): Promise<{
+      view: UiView;
+      nested: UiView;
+      leaf: HTMLElement;
+    }> {
+      router = createTestRouter([
+        {
+          name: 'parent',
+          url: '/parent',
+          component: () => html`<div class="parent"><ui-view></ui-view></div>`,
+        },
+        {
+          name: 'parent.child',
+          url: '/child',
+          component: () => html`<div class="leaf">leaf</div>`,
+        },
+      ]);
+      const view = await mountView();
+      router.start();
+      await routerGo(router, 'parent.child');
+      await tick(50);
+
+      const nested = view.querySelector('ui-view')!;
+      const leaf = nested.querySelector('.leaf') as HTMLElement;
+      return { view, nested, leaf };
+    }
+
+    it('answers a context-request from a descendant', async () => {
+      const view = await mountView();
+      const child = document.createElement('div');
+      view.appendChild(child);
+
+      expect(requestContext(child, parentUiViewContext)).toBe(view);
+    });
+
+    it('answers a nested view with its parent, never itself', async () => {
+      const { view, nested } = await mountNestedViews();
+
+      expect(requestContext(nested, parentUiViewContext)).toBe(view);
+    });
+
+    it('returns undefined with no enclosing view', async () => {
+      await mountView();
+      const orphan = document.createElement('div');
+      container.appendChild(orphan);
+
+      expect(requestContext(orphan, parentUiViewContext)).toBeUndefined();
+    });
+
+    it('stops the request, so an outer view never answers twice', async () => {
+      const { nested, leaf } = await mountNestedViews();
+      const answers: ParentUiView[] = [];
+
+      requestContext(leaf, parentUiViewContext, {
+        callback: (value) => answers.push(value),
+      });
+
+      expect(answers).toEqual([nested]);
+    });
+
+    it('stops answering once disconnected', async () => {
+      const view = await mountView();
+      const child = document.createElement('div');
+      view.appendChild(child);
+      view.remove();
+      container.appendChild(child);
+
+      expect(requestContext(child, parentUiViewContext)).toBeUndefined();
+    });
+
+    it('answers a subscribing request once, with a no-op unsubscribe', async () => {
+      const view = await mountView();
+      const child = document.createElement('div');
+      view.appendChild(child);
+      const callback = vi.fn();
+
+      requestContext(child, parentUiViewContext, {
+        subscribe: true,
+        callback,
+      });
+
+      expect(callback).toHaveBeenCalledTimes(1);
+      const unsubscribe = callback.mock.calls[0][1];
+      expect(typeof unsubscribe).toBe('function');
+      expect(() => unsubscribe()).not.toThrow();
+    });
+
+    it('answers while asleep under defer-hydration', async () => {
+      const view = await mountView(true);
+      const child = document.createElement('div');
+      view.appendChild(child);
+
+      expect(view.hasUpdated).toBe(false);
+      expect(requestContext(child, parentUiViewContext)).toBe(view);
+    });
+
+    it('keeps the house ui-view-context seek resolving the same parent', async () => {
+      const { view, nested } = await mountNestedViews();
+
+      expect(UiView.seekParentView(nested)).toBe(view);
+      expect(requestContext(nested, parentUiViewContext)).toBe(view);
     });
   });
 });
