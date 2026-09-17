@@ -152,8 +152,9 @@ if (!release) render(page(router), root);
 - **A mismatch falls back.** One static document answers a whole family of urls, so a client can boot
   into a state the document was not drawn for. `hydrate()` throws on that; the client warns in
   development, drops that one view's server nodes, and the view renders cold — its ancestors keep
-  theirs. A view with no readable pair at all holds no render of ours: the adopter leaves it alone,
-  and the view takes what the author wrote there as its fallback content.
+  theirs. Either way the drop starts at the render: what the author wrote ahead of it stays, and the
+  view takes it as its fallback set. A view carrying no served marker at all holds no render of ours:
+  the adopter leaves it alone, and all of it is that view's fallback content.
 - **A mutated document throws.** `hydrateRoot()` rethrows what `hydrate()` threw, over a container it
   first leaves cold-renderable: no element still asleep behind `defer-hydration`, no marker still
   hidden behind the prefix. The caller renders over the container.

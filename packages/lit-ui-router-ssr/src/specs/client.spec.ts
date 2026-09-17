@@ -286,6 +286,23 @@ describe('the adopter hydrateRoot provides', () => {
     expect(view.childNodes).toHaveLength(0);
   });
 
+  it('keeps what the author wrote ahead of a render whose pair is gone', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const view = servedView(
+      '<p class="hold">hold</p><!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+      container,
+    );
+    const hold = view.querySelector('.hold');
+
+    expect(wake(view)).toBe(true);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warnedText(warn)).toContain('the served part pair is gone');
+    // The render goes; the authored prefix stands, and core captures it as this view's fallback set.
+    expect(view.querySelector('.detail')).toBeNull();
+    expect([...view.childNodes]).toEqual([hold]);
+  });
+
   it('answers nothing outside its container', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView(SERVED_SHELL);

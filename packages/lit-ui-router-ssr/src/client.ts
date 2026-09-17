@@ -163,6 +163,24 @@ const revealEveryMarker = (node: Node): void => {
   }
 };
 
+/**
+ * Drops a served render standing under no pair: every child from the first one
+ * that is, or holds, a served marker, down to the end.
+ *
+ * What stands ahead of that is the author's, and core takes it as the view's
+ * fallback set at this wake.
+ */
+const dropServedRender = (view: Element): void => {
+  const children = [...view.childNodes];
+  const from = children.findIndex(
+    (child) =>
+      isPart(child, servedMarkerPrefix) ||
+      (child instanceof Element && hasServedMarkers(child)),
+  );
+  if (from < 0) return;
+  for (const child of children.slice(from)) child.remove();
+};
+
 /** Drops the server's nodes from between the pair, which the element renders after. */
 const clearInterior = (open: Comment): void => {
   for (
@@ -192,7 +210,9 @@ const clearInterior = (open: Comment): void => {
  * author wrote around the hole, and this leaves it alone — the view takes it as
  * its own fallback set at this wake and parks it for the component it renders.
  * A view still carrying prefixed markers under a pair this cannot find is a
- * mismatch, and says so; those nodes are a render's, and they go.
+ * mismatch, and says so; those nodes are a render's, and they go — every child
+ * from the first one that is, or holds, a served marker. What the author wrote
+ * ahead of the render stays, and the view takes it as its fallback set.
  *
  * A mismatch is not a bug in every case: one static document answers a family
  * of urls, so a client can boot into a state the document was not drawn for.
@@ -210,7 +230,7 @@ const adopt = (view: AdoptableView): void => {
   if (!open) {
     if (hasServedMarkers(view)) {
       warnMismatch(view, 'the served part pair is gone');
-      view.replaceChildren();
+      dropServedRender(view);
     }
     return;
   }
