@@ -10,6 +10,7 @@ import type { ChildPart, RenderOptions } from 'lit';
 import { Directive, directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
 import { adoptUiViewContext, provideContext } from 'lit-ui-router/context';
+import type { AdoptableView } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import { servedMarkerPrefix } from './served-markers.js';
 
@@ -68,7 +69,7 @@ class UiViewSlotDirective extends Directive {
  */
 export const uiViewSlot: typeof renderLight = directive(UiViewSlotDirective);
 
-const warnMismatch = (view: UiView, error: unknown): void => {
+const warnMismatch = (view: AdoptableView, error: unknown): void => {
   // DEV folds away in dist/*.js; see check:dev-split and dev-warnings.json.
   if (!import.meta.env.DEV) return;
   console.warn(
@@ -76,7 +77,7 @@ const warnMismatch = (view: UiView, error: unknown): void => {
     view.localName,
     error,
     // A view with no routed component of its own is also what an unbooted router looks like.
-    ...(view.viewContext
+    ...(view instanceof UiView && view.viewContext
       ? []
       : [
           'lit-ui-router-ssr: this view had no routed component to adopt against, which is also what a router that never started, or whose first transition was not awaited, looks like: call router.start(), await its first successful transition, then hydrateRoot().',
@@ -204,7 +205,7 @@ const clearInterior = (open: Comment): void => {
  * guard: the reveal and the hydrate sit in the fallback together, and nothing
  * escapes into the view's update.
  */
-const adopt = (view: UiView): void => {
+const adopt = (view: AdoptableView): void => {
   const open = servedPair(view);
   if (!open) {
     if (hasServedMarkers(view)) {
