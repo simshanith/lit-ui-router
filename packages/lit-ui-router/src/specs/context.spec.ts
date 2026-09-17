@@ -10,16 +10,21 @@ import {
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
+  adoptUiViewContext,
   contextRequestEventName,
   isRouterContextRequest,
+  provideContext,
   provideRouter,
+  requestContext,
   requestRouter,
   routerContext,
   RouterContextRequestEvent,
   getScopedRouter,
   withRouterSync,
+  type Context,
   type ContextCallback,
 } from '../context.js';
+import type { UiView } from '../ui-view.js';
 import { UIRouterLit } from '../core.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import { createTestRouter, waitForUpdate } from './test-utils.js';
@@ -360,6 +365,180 @@ describe('provideRouter', () => {
     uninstallFirst();
     expect(requestRouter(root)).toBe(second);
     uninstallSecond();
+  });
+});
+
+describe('provideContext', () => {
+  type SpecKey = Context<{ readonly name: string }, string>;
+
+  const key = Object.freeze({ name: 'spec#key' }) as SpecKey;
+  const otherKey = Object.freeze({ name: 'spec#other' }) as SpecKey;
+
+  /** A minimal protocol request for `key`, shaped as a provider reads it. */
+  function request(
+    target: EventTarget,
+    requested: SpecKey,
+    options: { subscribe?: boolean } = {},
+  ): { answers: string[]; unsubscribes: (undefined | (() => void))[] } {
+    const answers: string[] = [];
+    const unsubscribes: (undefined | (() => void))[] = [];
+    const event = Object.assign(new Event(contextRequestEventName), {
+      context: requested,
+      callback: (value: string, unsubscribe?: () => void) => {
+        answers.push(value);
+        unsubscribes.push(unsubscribe);
+      },
+      subscribe: options.subscribe,
+    });
+    target.dispatchEvent(event);
+    return { answers, unsubscribes };
+  }
+
+  it('answers requests for its own key and ignores others', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+
+    expect(request(root, key).answers).toEqual(['value']);
+    expect(request(root, otherKey).answers).toEqual([]);
+
+    uninstall();
+    expect(request(root, key).answers).toEqual([]);
+  });
+
+  it('hands a subscriber a no-op unsubscribe, and a one-shot caller none', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+
+    const subscribed = request(root, key, { subscribe: true });
+    const once = request(root, key);
+
+    expect(typeof subscribed.unsubscribes[0]).toBe('function');
+    expect(once.unsubscribes[0]).toBeUndefined();
+    uninstall();
+  });
+
+  it('answers exactly once when two providers share a root', () => {
+    const root = new EventTarget();
+    const uninstallOuter = provideContext(root, key, 'outer');
+    const uninstallInner = provideContext(root, key, 'inner');
+
+    // stopImmediatePropagation: the first listener on the target is the only one
+    expect(request(root, key).answers).toEqual(['outer']);
+    uninstallOuter();
+    uninstallInner();
+  });
+
+  it('uninstalls only the listener its own call installed', () => {
+    const root = new EventTarget();
+    const uninstallFirst = provideContext(root, key, 'first');
+    const uninstallSecond = provideContext(root, key, 'second');
+
+    uninstallFirst();
+    expect(request(root, key).answers).toEqual(['second']);
+    uninstallSecond();
+  });
+});
+
+describe('requestContext', () => {
+  type SpecKey = Context<{ readonly name: string }, string>;
+
+  const key = Object.freeze({ name: 'spec#request' }) as SpecKey;
+  const otherKey = Object.freeze({ name: 'spec#request-other' }) as SpecKey;
+
+  it('returns the value a provider answers its key with', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+
+    expect(requestContext(root, key)).toBe('value');
+
+    uninstall();
+  });
+
+  it('returns undefined when nobody answers', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, otherKey, 'value');
+
+    expect(requestContext(root, key)).toBeUndefined();
+
+    uninstall();
+  });
+
+  it('returns the first answer when several arrive', () => {
+    const root = new EventTarget();
+    const listener = (event: Event) => {
+      const request = event as Event & {
+        callback: ContextCallback<string>;
+        context: SpecKey;
+      };
+      if (request.context !== key) return;
+      request.callback('first');
+      request.callback('second');
+    };
+    root.addEventListener(contextRequestEventName, listener);
+
+    expect(requestContext(root, key)).toBe('first');
+
+    root.removeEventListener(contextRequestEventName, listener);
+  });
+
+  it('forwards every answer to the callback', () => {
+    const root = new EventTarget();
+    const seen: string[] = [];
+    const listener = (event: Event) => {
+      const request = event as Event & {
+        callback: ContextCallback<string>;
+        context: SpecKey;
+      };
+      if (request.context !== key) return;
+      request.callback('first');
+      request.callback('second');
+    };
+    root.addEventListener(contextRequestEventName, listener);
+
+    requestContext(root, key, { callback: (value) => seen.push(value) });
+
+    expect(seen).toEqual(['first', 'second']);
+    root.removeEventListener(contextRequestEventName, listener);
+  });
+
+  it('forwards subscribe to the provider', () => {
+    const root = new EventTarget();
+    const uninstall = provideContext(root, key, 'value');
+    const unsubscribes: (undefined | (() => void))[] = [];
+
+    requestContext(root, key, {
+      subscribe: true,
+      callback: (_value, unsubscribe) => unsubscribes.push(unsubscribe),
+    });
+    requestContext(root, key, {
+      callback: (_value, unsubscribe) => unsubscribes.push(unsubscribe),
+    });
+
+    expect(unsubscribes.map((it) => typeof it)).toEqual([
+      'function',
+      'undefined',
+    ]);
+    uninstall();
+  });
+});
+
+describe('adoptUiViewContext', () => {
+  it('is a frozen object, so the key is stable and unique', () => {
+    expect(Object.isFrozen(adoptUiViewContext)).toBe(true);
+    expect(adoptUiViewContext.name).toBe('lit-ui-router/context#adopt-ui-view');
+  });
+
+  it('carries the adopter from a provider to a requester', () => {
+    const root = new EventTarget();
+    const view = document.createElement('div') as unknown as UiView;
+    const adopt = vi.fn();
+    const uninstall = provideContext(root, adoptUiViewContext, adopt);
+
+    requestContext(root, adoptUiViewContext)?.(view);
+
+    expect(adopt).toHaveBeenCalledWith(view);
+    uninstall();
+    expect(requestContext(root, adoptUiViewContext)).toBeUndefined();
   });
 });
 

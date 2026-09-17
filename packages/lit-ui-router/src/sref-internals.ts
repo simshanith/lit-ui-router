@@ -18,7 +18,7 @@ import {
 } from '@uirouter/core';
 
 import type { SrefStatus, TransEvt } from './ui-sref-active.js';
-import type { UiView } from './ui-view.js';
+import type { ParentView } from './events.js';
 
 /**
  * Event name dispatched when a uiSref target state changes.
@@ -114,7 +114,7 @@ export function sameTarget(a: TargetState | null, b: TargetState): boolean {
  * @internal
  */
 export function srefTransitionOptions(
-  parentView: UiView | null,
+  parentView: ParentView | null,
   opts: TransitionOptions = {},
 ): TransitionOptions {
   const defaultOpts: TransitionOptions = {

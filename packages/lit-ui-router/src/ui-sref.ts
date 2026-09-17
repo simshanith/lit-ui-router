@@ -7,6 +7,7 @@ import { AsyncDirective } from 'lit/async-directive.js';
 import { UIRouterLit } from './core.js';
 import { inLitDevMode, warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
+import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
 import {
@@ -131,7 +132,7 @@ export class UiSrefDirective extends AsyncDirective {
   /** @internal */
   uiRouter: UIRouterLit | undefined;
   /** @internal */
-  parentView: UiView | null = null;
+  parentView: ParentView | null = null;
 
   /** this directive's own options, stripped from the transition options */
   uiSrefOptions: UiSrefOptions = {};
