@@ -495,13 +495,26 @@ export interface ParentUiViewContextKey {
 }
 
 /**
- * The parent-view context key's type — {@link ParentUiViewContextKey} branded
- * with {@link UiView}, so `@consume({ context: parentUiViewContext })` infers
- * the view.
+ * The enclosing `<ui-view>` as a descendant sees it: the element itself, with
+ * the view name it fills and the router it renders for.
  *
  * @category types
  */
-export type ParentUiViewContext = Context<ParentUiViewContextKey, UiView>;
+export interface ParentUiView extends HTMLElement {
+  /** The view name this viewport fills; empty is the `$default` view. */
+  readonly name: string;
+  /** The router the view renders for. */
+  readonly uiRouter: UIRouterLit;
+}
+
+/**
+ * The parent-view context key's type — {@link ParentUiViewContextKey} branded
+ * with {@link ParentUiView}, so `@consume({ context: parentUiViewContext })`
+ * infers the view.
+ *
+ * @category types
+ */
+export type ParentUiViewContext = Context<ParentUiViewContextKey, ParentUiView>;
 
 /**
  * The context key every `<ui-view>` answers for, with itself, so a descendant
@@ -515,11 +528,11 @@ export type ParentUiViewContext = Context<ParentUiViewContextKey, UiView>;
  * ```ts
  * import { consume } from '@lit/context';
  * import { parentUiViewContext } from 'lit-ui-router/context';
- * import type { UiView } from 'lit-ui-router';
+ * import type { ParentUiView } from 'lit-ui-router/context';
  *
  * class MyElement extends LitElement {
  *   @consume({ context: parentUiViewContext })
- *   parentView!: UiView;
+ *   parentView!: ParentUiView;
  * }
  * ```
  *

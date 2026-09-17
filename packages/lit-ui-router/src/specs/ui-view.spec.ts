@@ -13,7 +13,7 @@ import {
   requestContext,
   routerContext,
 } from '../context.js';
-import type { AdoptableView } from '../context.js';
+import type { AdoptableView, ParentUiView } from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
 import type { UiViewContextEvent } from '../events.js';
@@ -1683,7 +1683,7 @@ describe('UiView', () => {
     function retargetedRequest(
       host: UiView,
       source: Node,
-      callback: (value: UiView | undefined) => void,
+      callback: (value: ParentUiView | undefined) => void,
     ): Event {
       const event = new ContextRequestEvent(parentUiViewContext, callback);
       Object.defineProperty(event, 'target', { value: host });

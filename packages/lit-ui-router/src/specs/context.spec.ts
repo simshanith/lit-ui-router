@@ -15,6 +15,7 @@ import {
   contextRequestEventName,
   isRouterContextRequest,
   parentUiViewContext,
+  type ParentUiView,
   provideContext,
   provideRouter,
   requestContext,
@@ -369,7 +370,7 @@ describe('lit-ui-router/context', () => {
 
     it('stops the request, so an outer view never answers twice', async () => {
       const { nested, leaf } = await mountNestedViews();
-      const answers: UiView[] = [];
+      const answers: ParentUiView[] = [];
 
       requestContext(leaf, parentUiViewContext, {
         callback: (value) => answers.push(value),
