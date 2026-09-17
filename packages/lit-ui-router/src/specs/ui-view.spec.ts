@@ -1768,6 +1768,31 @@ describe('UiView', () => {
       expect(uiView['fallback']).toBeUndefined();
       expect(uiView['fallbackNodes']).toHaveLength(0);
     });
+
+    it('should keep the fallback set it captured when it is re-deferred and woken again', async () => {
+      const uiView = await wakeHolding(`<p class="hold">hold</p>${heldMarkup}`);
+      const hold = uiView.querySelector('p.hold')!;
+      const uiRouterEl = uiView.parentElement!;
+
+      // Put back to sleep with content arriving in front of the set it already holds.
+      uiView.remove();
+      uiView.setAttribute('defer-hydration', '');
+      uiView.insertAdjacentHTML('afterbegin', '<p class="late">late</p>');
+      uiRouterEl.appendChild(uiView);
+
+      const uninstall = provideContext(container, adoptUiViewContext, () => {});
+      try {
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+      } finally {
+        uninstall();
+      }
+
+      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      expect(fallbackNodes).toHaveLength(1);
+      expect(fallbackNodes[0]).toBe(hold);
+      expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
   });
 
   // The fallback set is moved, never copied, so the nodes on screen are the
