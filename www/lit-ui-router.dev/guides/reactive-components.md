@@ -78,7 +78,10 @@ satisfies `seekRouter` too. `subscribe` gets one call and a no-op unsubscribe �
 [`parentUiViewContext`](/api/reference/core/parentUiViewContext): a
 `@consume({ context: parentUiViewContext })` or
 `requestContext(element, parentUiViewContext)` gets the nearest enclosing
-`<ui-view>`, and a nested view gets the view above it rather than itself.
+`<ui-view>` as a [`ParentUiView`](/api/reference/types/ParentUiView) — the
+element itself, with the view name it fills and the router it renders for. A
+nested view gets the view above it rather than itself; an element that needs
+more than that surface narrows with `instanceof UiView`.
 
 When there is no tree at all to bubble through — a server render, a test — the
 same entry publishes a router directly: `withRouterSync(router, run)` scopes it
