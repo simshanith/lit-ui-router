@@ -271,6 +271,21 @@ describe('the adopter hydrateRoot provides', () => {
     expect(warn).not.toHaveBeenCalled();
   });
 
+  it('drops the served nodes of a view whose pair the document lost', () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    // Prefixed markers under no plain pair: a render's nodes with nothing left to hydrate against.
+    const view = servedView(
+      '<!--ui-view:lit-part--><p class="detail">leaf</p><!--ui-view:/lit-part-->',
+      container,
+    );
+
+    expect(wake(view)).toBe(true);
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    expect(warnedText(warn)).toContain('the served part pair is gone');
+    expect(view.childNodes).toHaveLength(0);
+  });
+
   it('answers nothing outside its container', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const view = servedView(SERVED_SHELL);
