@@ -122,7 +122,7 @@ catalogs:
     mobx: '^6.0.0 || ^7.0.0'
     typedoc: ^0.28.0
   publishedPeerServer:
-    lit-ui-router: ^1.15.0
+    lit-ui-router: ^1.16.0-rc.0
     ui-router-server: ^0.2.0
   typescript6-compat:
     typescript: npm:@typescript/typescript6@^6.0.2
