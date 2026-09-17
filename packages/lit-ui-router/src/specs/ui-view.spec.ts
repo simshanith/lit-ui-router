@@ -866,6 +866,38 @@ describe('UiView', () => {
         warn.mockRestore();
       }
     });
+
+    it('should drop the held render and keep the authored nodes ahead of it', async () => {
+      const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+      try {
+        router = createTestRouter(homeStates);
+        router.start();
+        await routerGo(router, 'home');
+        const uiView = mountHeld(
+          'defer-hydration',
+          `<p class="hold">hold</p>${heldMarkup}`,
+        );
+        uiView.removeAttribute('defer-hydration');
+        await waitForUpdate(uiView);
+
+        // The held render goes whole: an authored node ahead of it is no reason to keep it.
+        expect(uiView.querySelector('p.held')).toBeNull();
+        expect(uiView.querySelector('ui-view')).toBeNull();
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+
+        // And what stood ahead of it is the fallback set, parked while a component renders.
+        const fallbackNodes = uiView['fallbackNodes'] as Element[];
+        expect(fallbackNodes).toHaveLength(1);
+        expect(fallbackNodes[0].className).toBe('hold');
+        expect(uiView['fallbackParked']).toBe(true);
+        expect(fallbackNodes[0].parentNode).toBe(uiView['fallback']);
+        expect(uiView.querySelectorAll('p.hold')).toHaveLength(0);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+      } finally {
+        warn.mockRestore();
+      }
+    });
   });
 
   describe('never waking from defer-hydration', () => {
@@ -1693,6 +1725,25 @@ describe('UiView', () => {
       const fallbackNodes = uiView['fallbackNodes'] as Element[];
       expect(fallbackNodes.map((node) => node.className)).toEqual(['hold']);
       expect(uiView.querySelectorAll('p.hold')).toHaveLength(1);
+    });
+
+    it('should capture only what stands ahead of a render it connects with', async () => {
+      router = createTestRouter(holdStates);
+      const uiRouterEl = document.createElement('ui-router');
+      uiRouterEl.uiRouter = router;
+      container.appendChild(uiRouterEl);
+
+      const uiView = document.createElement('ui-view');
+      uiView.innerHTML = `<p class="hold">hold</p>${heldMarkup}`;
+      uiRouterEl.appendChild(uiView);
+      await waitForUpdate(uiView);
+
+      // Never deferred, so the capture is the connect's: the render's nodes and
+      // markers behind the authored <p> are no part of the fallback set.
+      const fallbackNodes = uiView['fallbackNodes'] as Element[];
+      expect(fallbackNodes).toHaveLength(1);
+      expect(fallbackNodes[0]).toBe(uiView.querySelector('p.hold'));
+      expect(uiView.querySelector('p.held')).not.toBeNull();
     });
 
     it('should capture a deferred view’s authored content without parking it', async () => {

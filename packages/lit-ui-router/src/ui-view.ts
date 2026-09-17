@@ -49,8 +49,11 @@ import {
 /** @internal */
 let viewIdCounter = 0;
 
-/** Spelled out because the @lit-labs/ssr DOM shim has no `Node`. */
-const COMMENT_NODE = 8;
+/**
+ * Spelled out because the @lit-labs/ssr DOM shim has no `Node`. The type keeps
+ * it the platform's value, checked against `Node` without referencing one.
+ */
+const COMMENT_NODE = 8 satisfies Node['COMMENT_NODE'];
 
 /**
  * Whether `node` opens another render's output: lit's own empty child-part
@@ -381,28 +384,38 @@ export class UiView extends LitElement {
   private captured = false;
 
   /**
-   * Whether the light DOM holds a render's output rather than authored
-   * content: lit opens a child part with an empty comment, and the server
-   * writes `lit-part` markers. Neither is ours to sweep aside or drop.
+   * The children standing ahead of the first render's output: lit opens a
+   * child part with an empty comment, and the server writes `lit-part`
+   * markers. From that marker down the nodes are a render's, never authored.
    */
-  private get holdsRenderedNodes(): boolean {
-    return isRenderMarker(this.firstChild);
+  private authoredPrefix(): ChildNode[] {
+    const authored: ChildNode[] = [];
+    for (const child of this.childNodes) {
+      if (isRenderMarker(child)) break;
+      authored.push(child);
+    }
+    return authored;
   }
 
   /**
-   * Takes the authored children as this view's fallback set.
+   * Takes the authored children ahead of any render as this view's fallback
+   * set.
    *
    * The nodes are moved, never copied, so they keep their identity and any
    * binding an enclosing template holds on them stays live. The first update
    * stands them back up when no component occupies the view.
+   *
+   * A view whose first child is a render marker holds a render's output from
+   * the first child down, so it captures nothing and the nodes stay where they
+   * stand: they are lit's own on a re-attached view, and never ours to move.
    */
   private captureContent() {
-    if (this.captured || this.holdsRenderedNodes) {
+    if (this.captured || isRenderMarker(this.firstChild)) {
       return;
     }
     this.captured = true;
     this.fallback ??= document.createDocumentFragment();
-    this.fallbackNodes = [...this.childNodes.values()];
+    this.fallbackNodes = this.authoredPrefix();
     this.fallback.append(...this.fallbackNodes);
   }
 
@@ -423,11 +436,7 @@ export class UiView extends LitElement {
     if (this.captured) {
       return;
     }
-    const authored: ChildNode[] = [];
-    for (const child of this.childNodes) {
-      if (isRenderMarker(child)) break;
-      authored.push(child);
-    }
+    const authored = this.authoredPrefix();
     if (!authored.length) {
       return;
     }
@@ -662,9 +671,20 @@ export class UiView extends LitElement {
     this.adoptProvidedRouter();
     const adopt = requestContext(this, adoptUiViewContext);
     if (adopt) return adopt(this);
-    // Rendering over another render's nodes doubles the markup; what the author wrote is the capture's, and the @lit-labs/ssr DOM shim has no `replaceChildren`.
-    if (this.holdsRenderedNodes) this.replaceChildren?.();
+    // Rendering over another render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
+    this.dropHeldRender();
     warnDeferredWithoutClient(this);
+  }
+
+  /** Drops the held render: every child from the first render marker down, leaving what the author wrote ahead of it. */
+  private dropHeldRender(): void {
+    const children = [...this.childNodes];
+    const from = children.findIndex((child) => isRenderMarker(child));
+    if (from < 0) {
+      return;
+    }
+    // Optionally called: the @lit-labs/ssr DOM shim gives its nodes no `remove`.
+    for (const child of children.slice(from)) child.remove?.();
   }
 
   /**
