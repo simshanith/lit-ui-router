@@ -21,6 +21,7 @@ import {
   UiSrefTargetEvent,
   UI_SREF_TARGET_EVENT,
 } from './sref-internals.js';
+import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
 export {
@@ -226,7 +227,7 @@ export class UiSrefActiveDirective extends AsyncDirective {
   }
 
   /** @internal */
-  parentView: UiView | null = null;
+  parentView: ParentView | null = null;
   /** @internal */
   seekParentView(): void {
     this.parentView = UiView.seekParentView(this.element!);

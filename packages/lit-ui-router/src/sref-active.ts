@@ -26,6 +26,7 @@ import {
   SrefStatus,
   TransEvt,
 } from './ui-sref-active.js';
+import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
 /**
@@ -67,7 +68,7 @@ export abstract class SrefStatusDirective<
   /** @internal */
   uiRouter: UIRouterLit | undefined;
   /** @internal */
-  parentView: UiView | null = null;
+  parentView: ParentView | null = null;
 
   /** the last params `update()` saw */
   params: Params | undefined;

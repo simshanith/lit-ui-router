@@ -1,7 +1,8 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { html } from 'lit';
 
-import { UIRouterLitElement, UiRouterContextEvent } from '../ui-router.js';
+import { UIRouterLitElement } from '../ui-router.js';
+import type { UiRouterContextEvent } from '../events.js';
 import { UiView } from '../ui-view.js';
 import '../ui-view.register.js';
 import { UIRouterLit } from '../core.js';

@@ -9,25 +9,10 @@ import {
 } from './context.js';
 import { UIRouterLit } from './core.js';
 import { warnRouterSwapped } from './dev-warn.js';
-import type { UiView } from './ui-view.js';
+import { uiRouterContextEventName, uiViewContextEventName } from './events.js';
+import type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
 
-interface UiRouterContextEventDetail {
-  uiRouter?: UIRouterLit;
-}
-
-/**
- * @internal
- */
-export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
-
-interface UiViewContextEventDetail {
-  parentView: UiView | null;
-}
-
-/**
- * @internal
- */
-export type UiViewContextEvent = CustomEvent<UiViewContextEventDetail>;
+export type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
 
 /** The router never changes under a subscriber, so there is nothing to undo. */
 const noUnsubscribe = () => {};
@@ -65,10 +50,10 @@ export class UIRouterLitElement extends LitElement {
   uiRouter: UIRouterLit | undefined;
 
   /** @internal */
-  static uiRouterContextEventName = 'ui-router-context';
+  static uiRouterContextEventName: string = uiRouterContextEventName;
 
   /** @internal */
-  static uiViewContextEventName = 'ui-view-context';
+  static uiViewContextEventName: string = uiViewContextEventName;
 
   /** @internal */
   static uiRouterContextEvent(uiRouter?: UIRouterLit): UiRouterContextEvent {

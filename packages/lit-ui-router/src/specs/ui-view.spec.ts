@@ -11,9 +11,10 @@ import {
   requestContext,
   routerContext,
 } from '../context.js';
+import type { AdoptableView } from '../context.js';
 import '../ui-view.register.js';
 import { UIRouterLitElement } from '../ui-router.js';
-import type { UiViewContextEvent } from '../ui-router.js';
+import type { UiViewContextEvent } from '../events.js';
 import { UIRouterLit } from '../core.js';
 import {
   UIViewInjectedProps,
@@ -671,9 +672,10 @@ describe('UiView', () => {
       let seenRouter: unknown;
       let seenHasUpdated: boolean | undefined;
       let seenHeld: Element | null = null;
-      const adopt = vi.fn((view: UiView) => {
-        seenRouter = view.uiRouter;
-        seenHasUpdated = view.hasUpdated;
+      const adopt = vi.fn((view: AdoptableView) => {
+        const woken = view as UiView;
+        seenRouter = woken.uiRouter;
+        seenHasUpdated = woken.hasUpdated;
         seenHeld = view.querySelector('p.held');
       });
       const uninstall = provideContext(container, adoptUiViewContext, adopt);
@@ -706,7 +708,7 @@ describe('UiView', () => {
 
       let seenHeld: Element | null = null;
       let seenNested: Element | null = null;
-      const adopt = vi.fn((view: UiView) => {
+      const adopt = vi.fn((view: AdoptableView) => {
         seenHeld = view.querySelector('p.held');
         seenNested = view.querySelector('ui-view');
       });
@@ -745,7 +747,7 @@ describe('UiView', () => {
 
       let seenHeld: Element | null = null;
       let seenParent: unknown;
-      const adopt = vi.fn((view: UiView) => {
+      const adopt = vi.fn((view: AdoptableView) => {
         seenHeld = view.querySelector('p.held');
         seenParent = view.parentElement;
       });

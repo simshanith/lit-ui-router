@@ -34,11 +34,12 @@ import {
   warnDeferredWithoutClient,
   warnMissingRouter,
 } from './dev-warn.js';
-import {
-  UIRouterLitElement,
+import { UIRouterLitElement } from './ui-router.js';
+import type {
+  ParentView,
   UiRouterContextEvent,
   UiViewContextEvent,
-} from './ui-router.js';
+} from './events.js';
 import {
   adoptUiViewContext,
   contextRequestEventName,
@@ -197,7 +198,7 @@ export class UiView extends LitElement {
   }
 
   @state()
-  private parentView!: UiView;
+  private parentView!: ParentView | null;
 
   private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
     // can't adopt self; `target` is retargeted to this host for a view inside our shadow root, the path's first entry never is
@@ -254,14 +255,14 @@ export class UiView extends LitElement {
   }
 
   /** @internal */
-  static seekParentView(candidate: Element): UiView | null {
+  static seekParentView(candidate: Element): ParentView | null {
     const uiViewContextEvent = this.uiViewContextEvent();
     candidate.dispatchEvent(uiViewContextEvent);
     return uiViewContextEvent.detail.parentView;
   }
 
   private seekParentView() {
-    this.parentView = this.constructor.seekParentView(this)!;
+    this.parentView = this.constructor.seekParentView(this);
   }
 
   private readonly onUiRouterContextEvent = (event: UiRouterContextEvent) => {
@@ -470,7 +471,7 @@ export class UiView extends LitElement {
     const { viewId, uiRouter: router, parentView } = this;
     const name = this.name || '$default';
 
-    const parentFqn = parentView?._uiViewData?.fqn;
+    const parentFqn = parentView?.fqn;
     const creationContext =
       parentView?.viewContext || router?.stateRegistry.root();
     const fqn = parentFqn ? parentFqn + '.' + name : name;
@@ -608,6 +609,11 @@ export class UiView extends LitElement {
         instance.uiOnParamsChanged(newValues, $transition$);
       }
     }
+  }
+
+  /** @internal */
+  public get fqn(): string | undefined {
+    return this._uiViewData?.fqn;
   }
 
   /** @internal */

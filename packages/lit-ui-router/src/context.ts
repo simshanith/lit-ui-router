@@ -4,9 +4,9 @@
  */
 // The community `context-request` protocol, spoken rather than imported.
 import type { UIRouter } from '@uirouter/core';
+import type { RenderOptions } from 'lit';
 
 import type { UIRouterLit } from './core.js';
-import type { UiView } from './ui-view.js';
 
 /**
  * A context key branded with the type of the value it references, as the
@@ -425,6 +425,19 @@ export interface AdoptUiViewContextKey {
 }
 
 /**
+ * The waking `<ui-view>` as an adopter sees it: the element holding the
+ * served nodes, with the template and render options a hydrate reads.
+ *
+ * @category types
+ */
+export interface AdoptableView extends HTMLElement {
+  /** The routed template the served nodes came from. */
+  render(): unknown;
+  /** The options the view renders with, which the hydrate reads too. */
+  readonly renderOptions: RenderOptions;
+}
+
+/**
  * The adopt-view context key's type — {@link AdoptUiViewContextKey} branded
  * with the adopter function, so `@consume({ context: adoptUiViewContext })`
  * infers it.
@@ -433,7 +446,7 @@ export interface AdoptUiViewContextKey {
  */
 export type AdoptUiViewContext = Context<
   AdoptUiViewContextKey,
-  (view: UiView) => void
+  (view: AdoptableView) => void
 >;
 
 /**
