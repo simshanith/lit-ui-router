@@ -8,11 +8,13 @@ import { after, before, describe, it } from 'node:test';
 import {
   describeArgs,
   isFirstReleaseError,
+  isKnownChannel,
   isPrerelease,
   parsePrevTag,
   parseRootCommit,
   prereleaseChannel,
   prereleaseChannels,
+  PRERELEASE_CHANNELS,
   rootCommitArgs,
 } from './release-prev-tag.core.ts';
 import { changelogFrom, prevReleaseTag } from './release-prev-tag.ts';
@@ -89,6 +91,16 @@ describe('prereleaseChannel', () => {
     assert.equal(prereleaseChannel('1.0.0-alpha.1+build.5'), 'alpha');
     assert.equal(prereleaseChannel('1.0.0'), undefined);
     assert.equal(prereleaseChannel('1.0.0+build.5'), undefined);
+  });
+});
+
+describe('isKnownChannel', () => {
+  it('accepts every allowlisted channel and nothing else', () => {
+    for (const channel of PRERELEASE_CHANNELS) {
+      assert.equal(isKnownChannel(channel), true);
+    }
+    assert.equal(isKnownChannel('bettra'), false);
+    assert.equal(isKnownChannel('next'), false);
   });
 });
 
