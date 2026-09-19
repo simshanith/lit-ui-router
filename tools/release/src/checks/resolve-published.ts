@@ -35,9 +35,9 @@ async function main() {
   for (const { name } of publishable) {
     const tags = await publishedTags(name);
     versions[name] = tags;
-    const specs = Object.entries(tags).map(
-      ([tag, version]) => `${tag}@${version}`,
-    );
+    const specs = Object.entries(tags)
+      .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+      .map(([tag, version]) => `${tag}@${version}`);
     summary.push(
       `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
     );

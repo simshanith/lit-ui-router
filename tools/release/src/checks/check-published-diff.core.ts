@@ -14,7 +14,8 @@ import type { Report } from './types.ts';
  * The dist-tag a publish of `localVersion` would write, resolved against the
  * tags the registry carries: a prerelease answers to its channel, everything
  * else to `latest`; a channel the registry lacks falls back to `latest`. Null
- * when the package carries no dist-tags at all; throws on an unknown channel.
+ * when the package carries no dist-tags at all; throws on an unknown channel,
+ * or when the tags it does carry hold neither target.
  */
 export function selectTarget(
   packageName: string,
@@ -30,7 +31,12 @@ export function selectTarget(
   if (version !== undefined) return { tag: preferred, version };
   const latest = distTags.latest;
   if (latest !== undefined) return { tag: 'latest', version: latest };
-  return null;
+  if (Object.keys(distTags).length === 0) return null;
+  throw new Error(
+    preferred === 'latest'
+      ? `${packageName}: published dist-tags carry no latest tag`
+      : `${packageName}: published dist-tags carry neither ${preferred} nor latest`,
+  );
 }
 
 // `npm diff` exits 0 whether or not the tarballs differ, so the verdict must

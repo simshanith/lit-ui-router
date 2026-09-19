@@ -253,6 +253,18 @@ describe('selectTarget', () => {
     assert.equal(selectTarget('lit-ui-router', undefined, {}), null);
   });
 
+  it('throws when the published tags hold neither target', () => {
+    assert.throws(
+      () => selectTarget('lit-ui-router', '1.0.0', { rc: '1.0.0-rc.0' }),
+      /^Error: lit-ui-router: published dist-tags carry no latest tag$/,
+    );
+    assert.throws(
+      () =>
+        selectTarget('lit-ui-router', '2.0.0-rc.0', { beta: '2.0.0-beta.1' }),
+      /^Error: lit-ui-router: published dist-tags carry neither rc nor latest$/,
+    );
+  });
+
   it('throws on a channel off the allowlist — a manifest typo, never a tag', () => {
     assert.throws(
       () =>
