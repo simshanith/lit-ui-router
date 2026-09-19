@@ -5,36 +5,26 @@
 // check-published-diff.ts.
 
 import {
-  isKnownChannel,
-  PRERELEASE_CHANNELS,
+  assertKnownChannel,
   prereleaseChannel,
 } from '../steps/release-prev-tag.core.ts';
 import type { Report } from './types.ts';
 
 /**
- * The dist-tag a publish of `localVersion` would write, resolved against what
- * the registry actually carries — mirrors release-it's `resolveTag`: a
- * prerelease publishes under its channel, everything else under `latest`.
- * Falls back to `latest` when the channel tag does not exist yet (an rc is
- * owed, so the drift against `latest` is the honest signal). Null when the
- * package carries no dist-tags at all — never published. A prerelease whose
- * channel is off the allowlist throws: that is a typo in the workspace
- * manifest, and a typo must never silently become a dist-tag or a fallback.
+ * The dist-tag a publish of `localVersion` would write, resolved against the
+ * tags the registry carries: a prerelease answers to its channel, everything
+ * else to `latest`; a channel the registry lacks falls back to `latest`. Null
+ * when the package carries no dist-tags at all; throws on an unknown channel.
  */
 export function selectTarget(
+  packageName: string,
   localVersion: string | undefined,
   distTags: Record<string, string>,
-  packageName?: string,
 ): { tag: string; version: string } | null {
-  const channel = prereleaseChannel(localVersion ?? '');
-  if (channel !== undefined && !isKnownChannel(channel)) {
-    const subject = packageName
-      ? `${packageName}@${localVersion}`
-      : localVersion;
-    throw new Error(
-      `${subject}: unknown prerelease channel "${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,
-    );
-  }
+  const channel = assertKnownChannel(
+    localVersion ?? '',
+    `${packageName}@${localVersion}`,
+  );
   const preferred = channel ?? 'latest';
   const version = distTags[preferred];
   if (version !== undefined) return { tag: preferred, version };
@@ -140,7 +130,7 @@ export type DiffResult = {
   /** The dist-tag compared against; absent when unpublished. */
   tag?: string;
   /** Version currently on that dist-tag; absent when unpublished. */
-  latest?: string;
+  version?: string;
   /** Version in the working tree's manifest. */
   localVersion?: string;
   /** `ship-inert` = only src/maps/inert-manifest drift; release not owed. */
@@ -186,14 +176,14 @@ export type PackageSummary = {
 /** Shape results for the --json output; `clean` = no ship-affecting drift. */
 export function summarizeResults(results: DiffResult[]): PackageSummary[] {
   return results.map(
-    ({ name, dir, tag, latest, status, files, shipInertFiles }) => {
+    ({ name, dir, tag, version, status, files, shipInertFiles }) => {
       const shipAffectingFiles = status === 'drift' ? (files ?? []) : [];
       const inert = shipInertFiles ?? [];
       return {
         name,
         dir,
         tag: tag ?? null,
-        version: latest ?? null,
+        version: version ?? null,
         shipAffecting: shipAffectingFiles.length,
         shipInert: inert.length,
         clean: status !== 'drift',
@@ -209,12 +199,8 @@ export function renderSummary(summaries: PackageSummary[]): string {
   return `${JSON.stringify(summaries, null, 2)}\n`;
 }
 
-/**
- * The parenthetical when the local version is not the compared one. A
- * prerelease compared against `latest` fell back: its channel tag does not
- * exist yet, which is the more useful thing to say.
- */
-export function aheadNote(
+/** The parenthetical when the local version is not the compared one. */
+function aheadNote(
   localVersion: string | undefined,
   tag: string | undefined,
   version: string | undefined,
@@ -247,14 +233,14 @@ export function formatReport(
   const drifted = results.filter((result) => result.status === 'drift');
   const lines: string[] = [];
   for (const result of results) {
-    const { name, tag, latest, localVersion, status, files, shipInertFiles } =
+    const { name, tag, version, localVersion, status, files, shipInertFiles } =
       result;
     if (status === 'unpublished') {
       lines.push(`  ${name}: never published — skipped`);
       continue;
     }
-    const target = `${tag} ${latest}`;
-    const ahead = aheadNote(localVersion, tag, latest);
+    const target = `${tag} ${version}`;
+    const ahead = aheadNote(localVersion, tag, version);
     if (status === 'clean') {
       lines.push(`  ${name}: clean vs ${target}${ahead}`);
     } else if (status === 'ship-inert') {

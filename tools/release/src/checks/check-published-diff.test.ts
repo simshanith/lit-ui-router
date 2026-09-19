@@ -204,7 +204,10 @@ describe('classifyFiles (manifest rule interplay)', () => {
 describe('selectTarget', () => {
   it('compares a stable local version against latest', () => {
     assert.deepEqual(
-      selectTarget('1.15.0', { latest: '1.15.0', rc: '1.16.0-rc.0' }),
+      selectTarget('lit-ui-router', '1.15.0', {
+        latest: '1.15.0',
+        rc: '1.16.0-rc.0',
+      }),
       {
         tag: 'latest',
         version: '1.15.0',
@@ -214,14 +217,20 @@ describe('selectTarget', () => {
 
   it('compares a prerelease against its own channel tag', () => {
     assert.deepEqual(
-      selectTarget('0.1.0-rc.0', { latest: '0.0.1-alpha.0', rc: '0.1.0-rc.0' }),
+      selectTarget('lit-ui-router', '0.1.0-rc.0', {
+        latest: '0.0.1-alpha.0',
+        rc: '0.1.0-rc.0',
+      }),
       { tag: 'rc', version: '0.1.0-rc.0' },
     );
   });
 
   it('honours a non-rc channel', () => {
     assert.deepEqual(
-      selectTarget('2.0.0-beta.3', { latest: '1.0.0', beta: '2.0.0-beta.2' }),
+      selectTarget('lit-ui-router', '2.0.0-beta.3', {
+        latest: '1.0.0',
+        beta: '2.0.0-beta.2',
+      }),
       {
         tag: 'beta',
         version: '2.0.0-beta.2',
@@ -230,21 +239,24 @@ describe('selectTarget', () => {
   });
 
   it('falls back to latest when the channel tag does not exist yet', () => {
-    assert.deepEqual(selectTarget('1.16.0-rc.0', { latest: '1.15.0' }), {
-      tag: 'latest',
-      version: '1.15.0',
-    });
+    assert.deepEqual(
+      selectTarget('lit-ui-router', '1.16.0-rc.0', { latest: '1.15.0' }),
+      {
+        tag: 'latest',
+        version: '1.15.0',
+      },
+    );
   });
 
   it('returns null when the package carries no dist-tags', () => {
-    assert.equal(selectTarget('1.0.0', {}), null);
-    assert.equal(selectTarget(undefined, {}), null);
+    assert.equal(selectTarget('lit-ui-router', '1.0.0', {}), null);
+    assert.equal(selectTarget('lit-ui-router', undefined, {}), null);
   });
 
   it('throws on a channel off the allowlist — a manifest typo, never a tag', () => {
     assert.throws(
       () =>
-        selectTarget('1.16.0-bettra.0', { latest: '1.15.0' }, 'lit-ui-router'),
+        selectTarget('lit-ui-router', '1.16.0-bettra.0', { latest: '1.15.0' }),
       /lit-ui-router@1\.16\.0-bettra\.0: unknown prerelease channel "bettra" \(allowed: alpha, beta, rc\)/,
     );
   });
@@ -255,7 +267,7 @@ describe('formatReport', () => {
     name: 'lit-ui-router',
     dir: 'packages/lit-ui-router',
     tag: 'latest',
-    latest: '1.7.0',
+    version: '1.7.0',
     localVersion: '1.7.0',
     status: 'clean' as const,
   };
@@ -263,7 +275,7 @@ describe('formatReport', () => {
     name: 'lit-ui-router-mobx',
     dir: 'packages/lit-ui-router-mobx',
     tag: 'latest',
-    latest: '0.3.2',
+    version: '0.3.2',
     localVersion: '0.3.2',
     status: 'drift' as const,
     files: ['dist/router-store.js', 'package.json'],
@@ -273,7 +285,7 @@ describe('formatReport', () => {
     name: 'lit-ui-router',
     dir: 'packages/lit-ui-router',
     tag: 'latest',
-    latest: '1.7.1',
+    version: '1.7.1',
     localVersion: '1.7.1',
     status: 'ship-inert' as const,
     files: [],
@@ -341,7 +353,7 @@ describe('formatReport', () => {
 
   it('names the missing channel tag when a prerelease fell back to latest', () => {
     const { text } = formatReport([
-      { ...clean, localVersion: '1.16.0-rc.0', latest: '1.15.0' },
+      { ...clean, localVersion: '1.16.0-rc.0', version: '1.15.0' },
     ]);
     assert.match(
       text,
@@ -355,7 +367,7 @@ describe('formatReport', () => {
         ...clean,
         name: 'lit-ui-router-ssr',
         tag: 'rc',
-        latest: '0.1.0-rc.0',
+        version: '0.1.0-rc.0',
         localVersion: '0.1.0-rc.0',
       },
     ]);
@@ -414,7 +426,7 @@ describe('summarizeResults', () => {
           name: 'lit-ui-router',
           dir: 'packages/lit-ui-router',
           tag: 'latest',
-          latest: '1.7.0',
+          version: '1.7.0',
           localVersion: '1.7.0',
           status: 'clean',
         },
@@ -422,7 +434,7 @@ describe('summarizeResults', () => {
           name: 'lit-ui-router-mobx',
           dir: 'packages/lit-ui-router-mobx',
           tag: 'rc',
-          latest: '0.3.2',
+          version: '0.3.2',
           localVersion: '0.3.2',
           status: 'drift',
           files: ['dist/router-store.js', 'package.json'],
@@ -432,7 +444,7 @@ describe('summarizeResults', () => {
           name: 'ui-router-navigation-location-plugin',
           dir: 'packages/navigation-location-plugin',
           tag: 'latest',
-          latest: '0.2.1',
+          version: '0.2.1',
           localVersion: '0.2.1',
           status: 'ship-inert',
           files: [],

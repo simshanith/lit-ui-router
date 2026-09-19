@@ -57,15 +57,28 @@ export function isPrerelease(version: string): boolean {
   return prereleaseChannel(version) !== undefined;
 }
 
-/**
- * The prerelease channels this repo publishes under — the allowlist a
- * version literal is checked against, so a typo cannot become a dist-tag.
- */
+/** The prerelease channels this repo publishes under — each one becomes a dist-tag. */
 export const PRERELEASE_CHANNELS = ['alpha', 'beta', 'rc'] as const;
 
-/** Whether `channel` is one this repo publishes under. */
-export function isKnownChannel(channel: string): boolean {
-  return (PRERELEASE_CHANNELS as readonly string[]).includes(channel);
+/**
+ * The version's prerelease channel, checked against `PRERELEASE_CHANNELS`;
+ * undefined for a stable version, throws for any other channel. `subject`
+ * names the offender in that error.
+ */
+export function assertKnownChannel(
+  version: string,
+  subject: string,
+): string | undefined {
+  const channel = prereleaseChannel(version);
+  if (
+    channel !== undefined &&
+    !(PRERELEASE_CHANNELS as readonly string[]).includes(channel)
+  ) {
+    throw new Error(
+      `${subject}: unknown prerelease channel "${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,
+    );
+  }
+  return channel;
 }
 
 /**

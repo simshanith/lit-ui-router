@@ -5,8 +5,7 @@
 // immutability (and we practice it as publishers: a published version is never
 // mutated), so the only registry state that can move is the dist-tag pointers
 // captured here; with this file in the check task's inputs, its cache key is
-// sound. Which tag each package is compared against is decided downstream,
-// from the local version — no registry lookup needed for that.
+// sound.
 
 import pacote from 'pacote';
 
@@ -32,19 +31,21 @@ async function main() {
   const { members } = await loadWorkspace(workspaceRoot);
   const publishable = members.filter(isPublishable);
   const versions: PublishedVersions = {};
+  const summary: string[] = [];
   for (const { name } of publishable) {
-    versions[name] = await publishedTags(name);
+    const tags = await publishedTags(name);
+    versions[name] = tags;
+    const specs = Object.entries(tags).map(
+      ([tag, version]) => `${tag}@${version}`,
+    );
+    summary.push(
+      `${name}: ${specs.length === 0 ? 'unpublished' : specs.join(' ')}`,
+    );
   }
   await writePublishedVersions(versions);
-  const summary = publishable
-    .map(({ name }) => {
-      const tags = Object.entries(versions[name] ?? {})
-        .map(([tag, version]) => `${tag}@${version}`)
-        .join(' ');
-      return `${name}: ${tags === '' ? 'unpublished' : tags}`;
-    })
-    .join(', ');
-  console.log(`resolved dist-tags → published-versions.json: ${summary}`);
+  console.log(
+    `resolved dist-tags → published-versions.json: ${summary.join(', ')}`,
+  );
 }
 
 main().catch((error: unknown) => {

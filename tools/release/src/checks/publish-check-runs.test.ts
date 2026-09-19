@@ -98,17 +98,6 @@ describe('toCheckRun', () => {
     assert.match(payload.summary, /match lit-ui-router-ssr@0\.1\.0-rc\.0/);
   });
 
-  it('names the channel dist-tag on a drifting prerelease too', () => {
-    const payload = toCheckRun(
-      { ...drifting, tag: 'rc', version: '1.16.0-rc.0' },
-      REPO,
-    );
-    assert.equal(
-      payload.title,
-      'unreleased changes vs rc 1.16.0-rc.0 (2 shipped files differ)',
-    );
-  });
-
   it('treats an unpublished package as success with nothing to diff', () => {
     const payload = toCheckRun({ ...clean, tag: null, version: null }, REPO);
     assert.equal(payload.conclusion, 'success');

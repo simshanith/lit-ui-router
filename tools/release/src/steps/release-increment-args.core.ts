@@ -5,11 +5,7 @@
 // flags. The IO (printing argv for the workflow) lives in
 // release-increment-args.ts.
 
-import {
-  isKnownChannel,
-  PRERELEASE_CHANNELS,
-  prereleaseChannel,
-} from './release-prev-tag.core.ts';
+import { assertKnownChannel } from './release-prev-tag.core.ts';
 
 // Official semver.org version pattern (no leading `v`), anchored.
 const SEMVER_VERSION =
@@ -31,15 +27,11 @@ function validatedOther(other: string): string {
   // The old word-splitting trimmed surrounding whitespace; keep that.
   const value = other.trim();
   if (SEMVER_VERSION.test(value)) {
-    // The channel here becomes the publish dist-tag, so a typo must fail
-    // before `npm publish`, not after.
-    const channel = prereleaseChannel(value);
-    if (channel !== undefined && !isKnownChannel(channel)) {
-      throw new Error(
-        `invalid 'other' increment ${JSON.stringify(other)}: unknown prerelease channel ` +
-          `"${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,
-      );
-    }
+    // The channel becomes the publish dist-tag, so a typo must fail here.
+    assertKnownChannel(
+      value,
+      `invalid 'other' increment ${JSON.stringify(other)}`,
+    );
     return value;
   }
   if (PRE_INCREMENT_KEYWORDS.has(value)) {

@@ -166,16 +166,15 @@ The final release stage:
 [Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
-(does the pack surface differ from the published tarball on the dist-tag this
-package's next publish would write?) and
-`peer-floor (<pkg>)` (is an adapter's published peer floor stale?). The
-README badges read these check runs; `action_required` renders orange,
-meaning a release or floor bump is owed — never a CI failure.
+(does the pack surface differ from the published tarball on the dist-tag the
+next publish would write?) and `peer-floor (<pkg>)` (is an adapter's published
+peer floor stale?). The README badges read these check runs; `action_required`
+renders orange, meaning a release or floor bump is owed — never a CI failure.
 
-Which tag `published-diff` compares against comes from the workspace version,
-the same rule release-it publishes by: a prerelease answers to its own channel
-tag, everything else to `latest`. A channel the registry does not carry yet
-falls back to `latest`, and the run names the missing tag.
+`published-diff` picks that tag from the workspace version by the same rule
+release-it publishes under: a prerelease answers to its own channel tag,
+everything else to `latest`. A channel the registry does not carry yet falls
+back to `latest`, and the run names the missing tag.
 
 ## Step-by-Step Release Process
 

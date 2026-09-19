@@ -16,10 +16,11 @@ function sortKeys<T>(entries: Record<string, T>): Record<string, T> {
 
 /** Canonical manifest text: bytewise-sorted keys, 2-space indent, final newline. */
 export function renderManifest(versions: PublishedVersions): string {
-  const sorted = sortKeys(
-    Object.fromEntries(
-      Object.entries(versions).map(([name, tags]) => [name, sortKeys(tags)]),
-    ),
+  const sorted = Object.fromEntries(
+    Object.entries(sortKeys(versions)).map(([name, tags]) => [
+      name,
+      sortKeys(tags),
+    ]),
   );
   return `${JSON.stringify(sorted, null, 2)}\n`;
 }
