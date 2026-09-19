@@ -1,6 +1,7 @@
 #!/usr/bin/env node
 // Report whether a publish from the working tree would ship different bytes
-// than each package's `latest` on npm. This mechanizes release triage: a
+// than each package's published tarball on the dist-tag its next publish would
+// write (`latest`, or a prerelease's own channel). This mechanizes release triage: a
 // devDependency- or script-only change is provably a no-op (the publish
 // workflow strips those fields before packing), while dist drift from a
 // "cosmetic" refactor is caught even when the git log looks harmless.
@@ -47,6 +48,7 @@ import {
   manifestDriftFields,
   renderSummary,
   scopePackages,
+  selectTarget,
   summarizeResults,
 } from './check-published-diff.core.ts';
 import { fetchTarball, tarballManifest } from './tarball.ts';
@@ -144,15 +146,18 @@ async function main() {
         `${name} missing from published-versions.json — stale manifest; re-run the resolve:published task.`,
       );
     }
-    const latest = published[name];
-    if (!latest) {
+    // Which dist-tag to compare against comes from the local version alone —
+    // a prerelease answers to its channel, everything else to `latest`.
+    const target = selectTarget(localVersion, published[name] ?? {}, name);
+    if (!target) {
       results.push({ name, dir, localVersion, status: 'unpublished' });
       continue;
     }
+    const { tag, version: latest } = target;
     const { diff, localManifest, publishedManifest } =
       await diffAgainstPublished(name, `${name}@${latest}`);
     if (isCleanDiff(diff)) {
-      results.push({ name, dir, latest, localVersion, status: 'clean' });
+      results.push({ name, dir, tag, latest, localVersion, status: 'clean' });
       continue;
     }
     let { shipAffecting, shipInert } = classifyFiles(changedFiles(diff));
@@ -178,6 +183,7 @@ async function main() {
     results.push({
       name,
       dir,
+      tag,
       latest,
       localVersion,
       status: shipAffecting.length > 0 ? 'drift' : 'ship-inert',

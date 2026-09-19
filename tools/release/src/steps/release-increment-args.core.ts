@@ -5,6 +5,12 @@
 // flags. The IO (printing argv for the workflow) lives in
 // release-increment-args.ts.
 
+import {
+  isKnownChannel,
+  PRERELEASE_CHANNELS,
+  prereleaseChannel,
+} from './release-prev-tag.core.ts';
+
 // Official semver.org version pattern (no leading `v`), anchored.
 const SEMVER_VERSION =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
@@ -24,7 +30,19 @@ const PRE_INCREMENT_KEYWORDS = new Set([
 function validatedOther(other: string): string {
   // The old word-splitting trimmed surrounding whitespace; keep that.
   const value = other.trim();
-  if (SEMVER_VERSION.test(value) || PRE_INCREMENT_KEYWORDS.has(value)) {
+  if (SEMVER_VERSION.test(value)) {
+    // The channel here becomes the publish dist-tag, so a typo must fail
+    // before `npm publish`, not after.
+    const channel = prereleaseChannel(value);
+    if (channel !== undefined && !isKnownChannel(channel)) {
+      throw new Error(
+        `invalid 'other' increment ${JSON.stringify(other)}: unknown prerelease channel ` +
+          `"${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,
+      );
+    }
+    return value;
+  }
+  if (PRE_INCREMENT_KEYWORDS.has(value)) {
     return value;
   }
   throw new Error(

@@ -59,7 +59,7 @@ const ALLOWED: InputsAllowance[] = [
   },
   {
     path: 'tools/release/.cache/published-versions.json',
-    why: 'resolve:published writes it immediately before check:published-diff, which hashes it to capture the movable `latest` pointer (see tools/release/turbo.json)',
+    why: 'resolve:published writes it immediately before check:published-diff, which hashes it to capture the movable dist-tag pointers (see tools/release/turbo.json)',
   },
 ];
 

@@ -58,6 +58,17 @@ export function isPrerelease(version: string): boolean {
 }
 
 /**
+ * The prerelease channels this repo publishes under — the allowlist a
+ * version literal is checked against, so a typo cannot become a dist-tag.
+ */
+export const PRERELEASE_CHANNELS = ['alpha', 'beta', 'rc'] as const;
+
+/** Whether `channel` is one this repo publishes under. */
+export function isKnownChannel(channel: string): boolean {
+  return (PRERELEASE_CHANNELS as readonly string[]).includes(channel);
+}
+
+/**
  * The prerelease channel of a version: its first prerelease identifier, so
  * `1.0.0-rc.0` → `rc`, `1.0.0-beta` → `beta`, `1.0.0-1` → `1`. Undefined
  * for a stable version or anything semver cannot parse.
