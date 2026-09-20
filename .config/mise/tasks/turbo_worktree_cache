@@ -1,0 +1,54 @@
+#!/usr/bin/env bash
+#MISE description="Pin turbo in <owner>/.claude/worktrees/* to the shared local cache (gitignored mise.toml)"
+#
+# Agent worktrees live *under* the owning checkout, so mise's parent-config
+# traversal already hands them the owner's turbo.local.env: full TURBO_*, and
+# turbo_link_worktree never fires. That inheritance is the problem. A worktree's
+# edits are content CI has never seen, so its remote reads miss ~99% of the time
+# and spend Worker requests for nothing (2026-09-13: ~117k of 175k daily
+# requests came from worktree runs). The shared cache they actually want is
+# local: turbo keys its filesystem cache off the git common dir, so every
+# worktree already reads and writes <owner>/.turbo/cache.
+#
+# One config at the worktrees directory covers every worktree beneath it, so
+# there is nothing to run per worktree. [env] in a nearer config beats a farther
+# config's _.file, which `mise env` confirms; the owner checkout, above this
+# file, keeps remote:r,local:rw.
+#
+# TURBO_TOKEN as well as TURBO_CACHE: empty reads as unset, and with no token
+# turbo builds no analytics sender. local:rw alone still POSTs
+# /v8/artifacts/events once per run — measured against a local listener.
+set -eu
+
+# Same git question turbo_link_worktree asks: --git-common-dir resolves to the
+# same absolute path from a worktree and from the checkout that owns it.
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir 2>/dev/null)" || exit 0
+owner="$(dirname "$common_dir")"
+
+# No creds, nothing to keep off the network (CI, fresh clone): no-op.
+[ -f "$owner/.config/mise/turbo.local.env" ] || exit 0
+
+dir="$owner/.claude/worktrees"
+cfg="$dir/mise.toml"
+
+# Never overwrite: a real file there is a maintainer's own override, same rule
+# turbo_link_worktree follows. Delete it to regenerate.
+if [ ! -e "$cfg" ]; then
+  mkdir -p "$dir"
+  cat > "$cfg" <<'EOF'
+# Written by `mise run turbo_worktree_cache`. Gitignored, machine-local.
+#
+# Agent worktrees below this directory inherit the owner checkout's TURBO_* by
+# parent-config traversal. Their edits are content CI has never seen, so remote
+# reads miss and only spend Worker requests; the local cache they share with the
+# owner (<owner>/.turbo/cache) is the one that hits. Blank token so turbo skips
+# the analytics sender too.
+[env]
+TURBO_CACHE = "local:rw"
+TURBO_TOKEN = ""
+EOF
+  echo "turbo_worktree_cache: wrote $cfg" >&2
+fi
+
+# Trust is path-based and needs no secrets; -q so a re-run stays silent.
+mise trust -q "$cfg" || echo "turbo_worktree_cache: run \`mise trust $cfg\` once" >&2

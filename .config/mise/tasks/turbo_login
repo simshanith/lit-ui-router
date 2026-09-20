@@ -93,3 +93,9 @@ else
   put TURBO_CACHE "remote:r,local:rw"
 fi
 chmod 600 "$env"
+
+# That posture is for THIS checkout. Agent worktrees under .claude/worktrees/
+# inherit it by parent-config traversal and must not: delegate their local-only
+# pin, which no-ops until the file above exists — so first setup needs it here
+# as well as on `setup`. A child process, so no secret rides its argv.
+mise run turbo_worktree_cache

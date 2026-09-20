@@ -98,7 +98,9 @@ description = "Install workspace dependencies with the pnpm on PATH"
 # turbo_link_worktree no-ops everywhere but a fresh worktree; it rides setup
 # because that is the one step every new checkout already runs. No provisioning
 # leg: `mise install` puts the bootstrap pnpm on PATH by itself.
-depends = ["turbo_link_worktree"]
+# turbo_worktree_cache rides it for the same reason, and no-ops without local
+# remote-cache creds; both are independent, so mise runs them in parallel.
+depends = ["turbo_link_worktree", "turbo_worktree_cache"]
 usage = '''
 flag "--release" help="Install only the release closure (RELEASE_CLOSURE)"
 '''
@@ -169,8 +171,9 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login, read_secret, turbo_link_worktree, cloudflare_item_create and
-# check_workers_builds are file-based tasks under .config/mise/tasks/ — their
+# turbo_login, read_secret, turbo_link_worktree, turbo_worktree_cache,
+# cloudflare_item_create and check_workers_builds are file-based tasks under
+# .config/mise/tasks/ — their
 # shell bodies were too large to sit inline. Every other task here is a one- or
 # two-liner and stays inline.
 
