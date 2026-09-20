@@ -119,8 +119,7 @@ run = "actionlint"
 [tasks.lint_zizmor]
 # --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
 description = "Audit GitHub Actions workflows for security issues"
-# --config: zizmor >=1.30 discovers config from the repository root, which in a
-# git worktree resolves to the owning checkout — pass ours explicitly.
+# --config: explicit relative path, colocated in .github
 run = "zizmor --offline --config .github/zizmor.yml .github/workflows"
 
 [tasks.lint_toml]
