@@ -2,10 +2,11 @@
   "name": "@tools/happy-dom",
   "version": "0.0.1",
   "private": true,
-  "description": "happy-dom conformance knowledge: the parent-first append workaround for its child-before-parent connectedCallback ordering, plus the canary spec that expires it",
+  "description": "happy-dom conformance knowledge: the parent-first append workaround for its child-before-parent connectedCallback ordering, the detached-parse workaround for its innerHTML setter connecting a custom element before its children, plus the canary specs that expire them",
   "type": "module",
   "exports": {
-    "./append.ts": "./src/append.ts"
+    "./append.ts": "./src/append.ts",
+    "./inner-html.ts": "./src/inner-html.ts"
   },
   "scripts": {
     "format": "oxfmt \"**/*.{ts,js,json,jsonc,md}\"",

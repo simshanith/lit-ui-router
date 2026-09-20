@@ -30,23 +30,28 @@ is the reason fallback content exists at all.
 
 ## How the capture works
 
-On connect, `<ui-view>` moves its light-DOM children into a
-`DocumentFragment` and keeps it. Every render that has no active component
-clones that fragment back into the light DOM. Three consequences are worth
-knowing:
+On connect, `<ui-view>` takes its light-DOM children as the view's fallback
+set and parks them in a `DocumentFragment`. From then on the nodes are
+_moved_ between that fragment and the light DOM: they stand in the element
+while no component is active, and go back to the fragment while one is.
+Three consequences are worth knowing:
 
 - **Captured on connect.** Children appended to a `<ui-view>` _after_ it
-  connects are not captured, so they never come back once a routed component
-  has replaced them. Write the fallback into the markup or template that
-  declares the view.
-- **A fresh clone each time.** The nodes on screen are a copy, not the
-  originals, and a new copy is made every time the view goes empty again.
-  Don't hold a reference to an element inside the fallback, and don't expect
-  anything typed into it to survive a round trip through a routed component.
+  connects are not part of the fallback set, so they never come back once a
+  routed component has replaced them. Write the fallback into the markup or
+  template that declares the view.
+- **The same nodes every time.** The fallback is moved, never copied, so the
+  nodes on screen are the authored ones and they keep their identity across
+  any number of round trips through a routed component. A reference you hold
+  stays valid, state inside them survives, and a binding an enclosing lit
+  template owns keeps updating them.
 - **It is not a `<slot>` in the browser.** `<ui-view>` renders to itself
   rather than to a shadow root, so there is no slot assignment and no
   `::slotted()` styling at runtime — style the fallback with ordinary
   selectors. Server rendering is the one exception; see below.
+
+The fallback set stands ahead of the render marker `<ui-view>` writes for
+its own output, so routed content and fallback content never interleave.
 
 ## Master/detail
 
@@ -105,7 +110,7 @@ component replaces it.
 A prerendered shell containing `<ui-view>` renders, and the client fills it
 in on load. [`@lit-labs/ssr`](https://lit.dev/docs/ssr/overview/) wraps
 every `LitElement`'s output in a declarative shadow root, and a `<ui-view>`
-that was never connected has captured nothing — so it renders a `<slot>`
+that was never connected has no fallback set — so it renders a `<slot>`
 rather than an empty shadow root. An empty one would hide the light DOM;
 the slot keeps the server-rendered fallback visible and later projects
 whatever the client renders into the light DOM. For
