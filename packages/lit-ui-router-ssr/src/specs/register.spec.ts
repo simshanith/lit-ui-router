@@ -1,4 +1,9 @@
+import { noChange } from 'lit';
+import { UiView } from 'lit-ui-router/pure';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+
+import { withServedRender } from '../served-view.js';
+import type { ServedUiView } from '../served-view.js';
 
 // The entry defines its tags when the module evaluates, so each case gets a
 // fresh module graph and a registry of its own to define them into.
@@ -52,6 +57,12 @@ describe('lit-ui-router-ssr/register', () => {
     await expect(load()).resolves.toBeUndefined();
 
     expect(defined.get('ui-view')).toBe(first);
+  });
+
+  it('defines a class that answers the slot the enclosing render reaches with noChange', () => {
+    const Served = withServedRender(UiView);
+
+    expect((Served.prototype as ServedUiView).renderLight()).toBe(noChange);
   });
 
   it('throws on a foreign <ui-view>, naming both ways out', async () => {
