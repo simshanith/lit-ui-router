@@ -6,6 +6,7 @@ import path from 'node:path';
 import { after, before, describe, it } from 'node:test';
 
 import {
+  assertKnownChannel,
   describeArgs,
   isFirstReleaseError,
   isPrerelease,
@@ -13,6 +14,7 @@ import {
   parseRootCommit,
   prereleaseChannel,
   prereleaseChannels,
+  PRERELEASE_CHANNELS,
   rootCommitArgs,
 } from './release-prev-tag.core.ts';
 import { changelogFrom, prevReleaseTag } from './release-prev-tag.ts';
@@ -89,6 +91,19 @@ describe('prereleaseChannel', () => {
     assert.equal(prereleaseChannel('1.0.0-alpha.1+build.5'), 'alpha');
     assert.equal(prereleaseChannel('1.0.0'), undefined);
     assert.equal(prereleaseChannel('1.0.0+build.5'), undefined);
+  });
+});
+
+describe('assertKnownChannel', () => {
+  it('returns an allowlisted channel, undefined for a stable version, and throws otherwise', () => {
+    for (const channel of PRERELEASE_CHANNELS) {
+      assert.equal(assertKnownChannel(`1.0.0-${channel}.0`, 'pkg'), channel);
+    }
+    assert.equal(assertKnownChannel('1.0.0', 'pkg'), undefined);
+    assert.throws(
+      () => assertKnownChannel('1.0.0-next.0', 'pkg@1.0.0-next.0'),
+      /pkg@1\.0\.0-next\.0: unknown prerelease channel "next" \(allowed: alpha, beta, rc\)/,
+    );
   });
 });
 

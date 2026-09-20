@@ -57,6 +57,30 @@ export function isPrerelease(version: string): boolean {
   return prereleaseChannel(version) !== undefined;
 }
 
+/** The prerelease channels this repo publishes under — each one becomes a dist-tag. */
+export const PRERELEASE_CHANNELS = ['alpha', 'beta', 'rc'] as const;
+
+/**
+ * The version's prerelease channel, checked against `PRERELEASE_CHANNELS`;
+ * undefined for a stable version, throws for any other channel. `subject`
+ * names the offender in that error.
+ */
+export function assertKnownChannel(
+  version: string,
+  subject: string,
+): string | undefined {
+  const channel = prereleaseChannel(version);
+  if (
+    channel !== undefined &&
+    !(PRERELEASE_CHANNELS as readonly string[]).includes(channel)
+  ) {
+    throw new Error(
+      `${subject}: unknown prerelease channel "${channel}" (allowed: ${PRERELEASE_CHANNELS.join(', ')})`,
+    );
+  }
+  return channel;
+}
+
 /**
  * The prerelease channel of a version: its first prerelease identifier, so
  * `1.0.0-rc.0` → `rc`, `1.0.0-beta` → `beta`, `1.0.0-1` → `1`. Undefined
