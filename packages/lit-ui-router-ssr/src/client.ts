@@ -5,6 +5,7 @@
 // The adopt half: one `hydrate()` on the root, and the adopter each served `<ui-view>` the walk wakes requests to take its markup.
 import { hydrate } from '@lit-labs/ssr-client';
 import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
+import type { RenderLightHost } from '@lit-labs/ssr-client/directives/render-light.js';
 import { noChange } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
@@ -46,9 +47,12 @@ class UiViewSlotDirective extends RenderLightDirective {
     return noChange;
   }
 
-  /** The client behaviour is the render's: a `<ui-view>` has no `renderLight()` for the base class to call. */
-  override update(): typeof noChange {
-    return noChange;
+  /** A host `renderLight()` answers, as it does for ssr-client's own directive; a `<ui-view>` has none and keeps its nodes. */
+  override update(part: ChildPart): unknown {
+    const host = part.parentNode as Partial<RenderLightHost>;
+    return typeof host.renderLight === 'function'
+      ? host.renderLight()
+      : noChange;
   }
 }
 

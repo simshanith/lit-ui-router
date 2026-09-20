@@ -4,7 +4,7 @@ import {
 } from '@lit-labs/ssr-client/directives/render-light.js';
 import { noChange } from 'lit';
 import { PartType } from 'lit/directive.js';
-import type { ChildPart, PartInfo } from 'lit/directive.js';
+import type { ChildPart } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
 import { describe, expect, it, vi } from 'vitest';
 
@@ -24,14 +24,26 @@ describe('the renderLight flag', () => {
   });
 
   // `@lit-labs/ssr` patches a rendered class to resolve through `render()`, so the update lit's own walk calls is reached here by hand.
-  it('commits nothing on the client, where the base class would call the host renderLight()', () => {
-    const Slot = getDirectiveClass(uiViewSlot());
-    if (!Slot) throw new Error('a directive result carried no class');
-    const parentNode = { renderLight: vi.fn() };
-    const part = { type: PartType.CHILD, parentNode } as unknown as PartInfo;
-    const slot = new Slot(part);
-    expect(slot.update(part as unknown as ChildPart, [])).toBe(noChange);
-    expect(slot.render()).toBe(noChange);
-    expect(parentNode.renderLight).not.toHaveBeenCalled();
+  describe('the update lit calls on the client', () => {
+    const slotOn = (parentNode: object) => {
+      const Slot = getDirectiveClass(uiViewSlot());
+      if (!Slot) throw new Error('a directive result carried no class');
+      const part = { type: PartType.CHILD, parentNode } as unknown as ChildPart;
+      return { slot: new Slot(part), part };
+    };
+
+    it('keeps the nodes of a host with no renderLight()', () => {
+      const { slot, part } = slotOn({});
+      expect(slot.update(part, [])).toBe(noChange);
+      expect(slot.render()).toBe(noChange);
+    });
+
+    it('commits what a host renderLight() answers', () => {
+      const answer = Symbol('light');
+      const renderLight = vi.fn(() => answer);
+      const { slot, part } = slotOn({ renderLight });
+      expect(slot.update(part, [])).toBe(answer);
+      expect(renderLight).toHaveBeenCalledOnce();
+    });
   });
 });
