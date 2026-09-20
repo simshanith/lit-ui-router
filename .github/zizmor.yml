@@ -11,6 +11,12 @@ rules:
       - bump-version.yml
       # PAT checkout persists by design: pushes release tags to trigger publish-npm
       - publish-gh.yml
+  self-repository:
+    ignore:
+      # `$/` would break actionlint, which still requires `./` for reusable-workflow calls
+      - build-test-branch.yml
+      - build-test.yml
+      - publish-npm.yml
   unpinned-uses:
     config:
       policies:
