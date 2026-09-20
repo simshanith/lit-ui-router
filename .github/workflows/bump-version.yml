@@ -65,7 +65,7 @@ permissions:
 
 jobs:
   bump_version:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Protected environment adds approval gate before version bumps
     environment: bump-version
     steps:

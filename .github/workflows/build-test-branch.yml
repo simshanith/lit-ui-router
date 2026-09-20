@@ -35,7 +35,7 @@ jobs:
     # `mise run setup` step: paying for an install here would cost more than it
     # saves on the pushes it can't skip. gh is preinstalled on the runner image.
     name: build_and_test (signal gate)
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 5
     permissions:
       contents: read

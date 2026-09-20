@@ -45,7 +45,7 @@ env:
 
 jobs:
   publish_npm:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Ref restriction, not an approval gate: the deployment branch policy
     # admits only main and the release tag globs.
     environment: publish

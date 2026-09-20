@@ -24,7 +24,7 @@ jobs:
     # Release PRs carry "Release X.Y.Z" commits by design - same exemption
     # as the title lint's ignoreLabels.
     if: ${{ !contains(github.event.pull_request.labels.*.name, 'release') }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     permissions:
       contents: read
       pull-requests: read
