@@ -4,11 +4,12 @@
  */
 // The adopt half: one `hydrate()` on the root, and the adopter each served `<ui-view>` the walk wakes requests to take its markup.
 import { hydrate } from '@lit-labs/ssr-client';
-import type { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
+import { renderLight } from '@lit-labs/ssr-client/directives/render-light.js';
 import { noChange } from 'lit';
 import type { ChildPart, RenderOptions } from 'lit';
-import { Directive, directive } from 'lit/directive.js';
+import { directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
+import { getDirectiveClass } from 'lit/directive-helpers.js';
 import { adoptUiViewContext, provideContext } from 'lit-ui-router/context';
 import type { AdoptableView } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
@@ -17,10 +18,16 @@ import { servedMarkerPrefix } from './served-markers.js';
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
 
-class UiViewSlotDirective extends Directive {
-  /** The flag `@lit-labs/ssr` reads to route this part to `UiViewRenderer.renderLight()`. */
-  static _$litRenderLight = true;
+// The class `@lit-labs/ssr` routes to `renderLight()` is not exported; its directive function is, and lit's helper reads the class back off a call.
+const RenderLightDirective = getDirectiveClass(renderLight());
+if (!RenderLightDirective) {
+  throw new Error(
+    'lit-ui-router-ssr: @lit-labs/ssr-client renderLight() carries no directive class',
+  );
+}
 
+// Subclassed rather than re-flagged: the flag is minified to a different name in the production build of `@lit-labs/ssr-client`, and inheritance carries whichever one this build ships.
+class UiViewSlotDirective extends RenderLightDirective {
   /**
    * Wakes the `<ui-view>` this part sits in, with the adopter pinned to it.
    *
@@ -41,6 +48,11 @@ class UiViewSlotDirective extends Directive {
 
   /** The view owns everything between these markers, so the enclosing render leaves them as the view left them. */
   render(): typeof noChange {
+    return noChange;
+  }
+
+  /** The client behaviour is the render's: a `<ui-view>` has no `renderLight()` for the base class to call. */
+  override update(): typeof noChange {
     return noChange;
   }
 }
