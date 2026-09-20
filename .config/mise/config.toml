@@ -82,6 +82,9 @@ idiomatic_version_file_enable_tools = ["node"]
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.
 "aqua:tamasfe/taplo" = "0.10.0"
+# YAML query tool, taplo's counterpart for .yaml: the repo-checks tests shell
+# out to it rather than pay for a YAML parser in node_modules.
+"aqua:mikefarah/yq" = "4.53.6"
 # Markdown linter (markdownlint's rule set, in Rust). Check-only: oxfmt formats
 # .md, rumdl lints it. Pre-1.0, so the pin is load-bearing.
 "aqua:rvben/rumdl" = "0.2.55"
