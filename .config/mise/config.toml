@@ -64,7 +64,7 @@ idiomatic_version_file_enable_tools = ["node"]
 [tools]
 # mise vendors the usage spec parser, so flags work without this; it's pinned
 # for the `usage` CLI that shell completions of our #USAGE tasks shell out to.
-"aqua:jdx/usage" = "3.5.6"
+"aqua:jdx/usage" = "6.10.0"
 "aqua:rhysd/actionlint" = "1.7.12"
 # GitHub Actions security auditor; complements actionlint's syntax checks
 "aqua:zizmorcore/zizmor" = "1.30.1"
