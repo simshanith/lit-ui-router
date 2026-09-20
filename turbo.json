@@ -32,10 +32,12 @@
         "vitest.setup.ts",
         "cypress.config.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
       // CYPRESS_video: CI disables Cypress recording (build-test.yml);
       // strict env mode would scrub the override before it reaches Cypress.
-      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video"]
+      // CI: the vitest configs only pick a reporter from it, so the artifact is
+      // identical either way — hashing it would wall laptops off from CI's cache.
+      "passThroughEnv": ["WRANGLER_LOG", "CYPRESS_video", "CI"]
     },
     "@tools/dts-backtest#test": {
       "dependsOn": ["^build"],
@@ -65,7 +67,8 @@
         "vitest.config.ts",
         "vitest.setup.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"],
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
+      "passThroughEnv": ["CI"],
       "outputs": ["coverage/**"]
     },
     // Firefox+WebKit full-suite pass for the vitest packages; chromium
@@ -79,7 +82,8 @@
         "vitest.config.ts",
         "vitest.setup.ts"
       ],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
+      "passThroughEnv": ["CI"]
     },
     // Same unit suites resolved against the lit-2 alias (the 2.x line the
     // published lit peer range covers); cheap enough for the PR graph — no
@@ -91,7 +95,8 @@
     "test:lit2-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_LIT_MAJOR"],
+      "passThroughEnv": ["CI"]
     },
     // Same unit suites resolved against the mobx-6 alias (the 6.x line the
     // widened mobx peer range still covers). Mirrors test:lit2-compat: no
@@ -102,7 +107,8 @@
     "test:mobx6-compat": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", "$TURBO_ROOT$/pnpm-workspace.yaml"],
-      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR", "CI"]
+      "env": ["VITEST_BROWSER_API_PORT", "VITE_EXPECT_MOBX_MAJOR"],
+      "passThroughEnv": ["CI"]
     },
     "lint": {
       "with": [
