@@ -220,8 +220,9 @@ whole tree or one boundary on demand.
 This package sits in the per-boundary, provided cell. Each `<ui-view>` is an island whose trigger is
 a route match rather than viewport or idle, and the adopter is provided over `context-request`, so
 any provider can scope or replace it. The element side reuses Lit's `defer-hydration` contract
-unchanged, and `lit-ui-router` carries only the gated sleep and wake and one context key — Qwik,
-which resumes rather than hydrates, is off the grid entirely.
+unchanged, and it lives here: `lit-ui-router-ssr/register` defines `<ui-view>` with the served class,
+so an app that never prerenders carries none of it — Qwik, which resumes rather than hydrates, is off
+the grid entirely.
 
 The [guide](https://lit-ui-router.dev/packages/ssr#how-this-compares) carries the longer discussion.
 
