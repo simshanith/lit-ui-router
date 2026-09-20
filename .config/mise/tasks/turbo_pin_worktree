@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-#MISE description="Pin a git worktree's turbo runs to the local cache (gitignored mise.local.toml)"
+#MISE description="Pin a git worktree's turbo runs to the local cache (gitignored conf.d entry)"
 #
 # A worktree nested under the owning checkout inherits every TURBO_* through
 # mise's parent-config traversal; its edits are content CI has never seen, so
@@ -11,9 +11,10 @@
 # analytics sender (local:rw alone still POSTs /v8/artifacts/events once per
 # run) and never reads the inherited TURBO_API/TEAM/signature key.
 #
-# mise.local.toml and not conf.d or config.local.toml: within one config root
-# `_.file` beats conf.d, and config.local.toml is the maintainer's own override
-# slot (see WWW_DEV_PORT in config.toml).
+# conf.d and not config.local.toml, which is the maintainer's own override slot
+# (see WWW_DEV_PORT in config.toml). conf.d loses to `_.file` within one config
+# root, which is fine: the only TURBO_* dotenv is the owner's, a root farther
+# out, and the nearer root wins.
 set -eu
 
 # No .git at all (source tarball, vendored copy): nothing to pin.
@@ -31,8 +32,9 @@ common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
 
 # File-based tasks are raw scripts: {{config_root}} does not render here.
 # Never overwrite: a file there is the maintainer's own override.
-pin="${MISE_CONFIG_ROOT}/mise.local.toml"
+pin="${MISE_CONFIG_ROOT}/.config/mise/conf.d/turbo-worktree.local.toml"
 if [ ! -e "$pin" ]; then
+  mkdir -p "${pin%/*}"
   cat > "$pin" <<'EOF'
 # Written by `mise run turbo_pin_worktree`. Gitignored, machine-local.
 # A worktree's edits are content CI has never seen, so remote reads from here
@@ -46,5 +48,6 @@ EOF
   echo "turbo_pin_worktree: pinned to the local cache ($pin)" >&2
 fi
 
-# mise reads [env] from a config only once that config is trusted.
+# Root trust usually covers it; explicit so a fresh worktree cannot read [env]
+# from an untrusted config and silently fall back.
 mise trust -q "$pin" || echo "turbo_pin_worktree: run \`mise trust $pin\` once" >&2

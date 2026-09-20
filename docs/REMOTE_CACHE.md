@@ -94,10 +94,11 @@ Either way `mise run setup` pins the worktree to the local cache through its
 (`--git-dir` and `--git-common-dir` differ only there) and no-ops in the owning
 checkout and wherever the owner has no credentials, CI included.
 
-To opt one worktree back into remote reads, delete its `mise.local.toml`. A
-nested worktree then has its credentials already; one outside the owner tree
-needs `<owner>/.config/mise/turbo.local.env` symlinked into its own
-`.config/mise/` by hand.
+To opt one worktree back into remote reads, delete its
+`.config/mise/conf.d/turbo-worktree.local.toml`. A nested worktree then has its
+credentials already; one outside the owner tree needs
+`<owner>/.config/mise/turbo.local.env` symlinked into its own `.config/mise/` by
+hand.
 
 ### Local cache posture
 
@@ -109,12 +110,13 @@ owner all read and write one `<owner>/.turbo/cache`; a worktree's own `.turbo/`
 holds task logs only.
 
 `turbo_pin_worktree` writes that pin, per worktree, into the worktree's
-gitignored `mise.local.toml`, and trusts it. Within one config root a
-`config.local.toml` or `mise.local.toml` beats `_.file`, where a `conf.d/*.toml`
-entry loses to it, and `config.local.toml` is left free as the maintainer's own
-override slot. The blank token is load-bearing on its own: empty reads as unset,
-and with no token turbo builds no analytics sender, where `local:rw` alone still
-POSTs `/v8/artifacts/events` once per run.
+gitignored `.config/mise/conf.d/turbo-worktree.local.toml`, and trusts it. A
+`conf.d` entry loses to `_.file` within one config root, which costs nothing
+here: the only `TURBO_*` dotenv is the owning checkout's, a root farther out,
+and the nearer root wins. That leaves `config.local.toml` free as the
+maintainer's own override slot. The blank token is load-bearing on its own:
+empty reads as unset, and with no token turbo builds no analytics sender, where
+`local:rw` alone still POSTs `/v8/artifacts/events` once per run.
 
 The workflow that pairs with it:
 
