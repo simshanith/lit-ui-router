@@ -63,6 +63,37 @@ with `withRouterSync` around each render, so the sref directives emit real
 on `lit-ui-router@1.15.0` / `ui-router-server@0.2.0`; the emit loop, the tally
 and `_redirects` are the package's.
 
+**Update, 2026-09-20.** The hydration seam is adopted. `src/views.ts` exports
+one `page(router)` and every `<ui-view>` in it — the root one and the shell's
+nested one — carries `uiViewSlot()`. `prerender.ts` registers the client's
+components and its own disk-backed resolves on the same route table, so
+`UiViewRenderer` draws each view's routed component into the element's light
+DOM between the part markers the element hydrates against. `src/main.ts` starts
+the router, awaits its first successful transition and calls `hydrateRoot()`;
+a cold container returns `false` and the same template is rendered instead. The
+atlas is on `lit-ui-router@1.16.0-rc.0` / `lit-ui-router-ssr@0.1.0-rc.1`, with
+`@lit-labs/ssr-client@1.1.8` as the client half's peer.
+
+Two things that cutover measured:
+
+- `@lit-labs/ssr` routes a child part to `UiViewRenderer.renderLight()` only
+  when the directive class carries `_$litRenderLight`, and
+  `@lit-labs/ssr-client`'s production build mangles that property name. The
+  shipped `uiViewSlot()` sets it by its literal name, so under node's default
+  export conditions every `<ui-view>` is served with an empty part pair, with no
+  warning and no failed build — the whole page body is gone. `prerender.ts`
+  copies the flag ssr-client's own `renderLight()` carries onto the slot's class
+  before the first render.
+- A view whose server and client templates differ cannot be adopted: `hydrate()`
+  throws, the adopter drops that one view's served nodes, the view renders cold
+  and its ancestors keep theirs. `atlas.sheet` and `atlas.city` are both in that
+  shape, because `plate()` branches on `isServer` and `<atlas-city>` on the
+  `three` resolve — `@lit-labs/ssr` emits no property bindings, and these are
+  light-DOM `LitElement`s whose drawing the served page has to carry. `/`,
+  `/about`, `/log` and `/specimen` adopt node-for-node. A filtered gallery url
+  falls back for the other reason in the contract: one document answers the
+  whole family.
+
 Everything below this line is the original measurement, taken
 against `ui-router-server@0.1.1` / `lit-ui-router@1.11.2`; where a finding has
 since shipped or changed, a dated note says so inline.
@@ -285,8 +316,10 @@ Everything that is not a router primitive:
    `root.replaceChildren()` and renders fresh. Correct, but a visible swap on
    load, and it throws away every byte the server rendered.
 
-   **Status, 2026-09-14.** The template sets no longer differ; `main.ts` still
-   takes the DOM over rather than hydrating it.
+   **Status, 2026-09-20.** Retired. `main.ts` boots the router and calls
+   `hydrateRoot()` from `lit-ui-router-ssr/client`; the served nodes are adopted
+   where the two halves render the same template, and dropped one view at a time
+   where they do not.
 3. **Every generated link is a real `<a href>`.** The cross-sheet references the
    generator writes into the prose carry `href` *and* `data-sheet`; a delegated
    click handler turns them into `stateService.go`. The only option anyway, since

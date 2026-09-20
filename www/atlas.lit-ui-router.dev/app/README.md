@@ -233,8 +233,15 @@ and is used twice:
   `src/views.ts` to `lit-ui-router-ssr`'s `prerender()`, which resolves every listed path to a
   verdict: `shell` writes `dist/<subpath>/index.html` with server-rendered markup, `redirect`
   becomes a line in `dist/_redirects` (both spellings of the path), and the `otherwise` projection
-  becomes `dist/404.html`. This file supplies the shell html, the job table of titles and content,
-  and drives the router to each path before its render.
+  becomes `dist/404.html`. This file supplies the shell html and the titles, registers the same
+  route table with the client's components and its own disk-backed resolves, and drives the router
+  to each path; the render is `views.page(router)`, and `UiViewRenderer` draws each `<ui-view>`'s
+  routed component into the element's light DOM.
+
+**The boot (`src/main.ts`).** `router.start()`, await the first successful transition, then
+`hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk wakes every served
+`<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
+artifact build — returns `false` and the same template is rendered instead.
 
 What rendered, what did not, and what the package would need to close the gap is in
 [`SSR-VERDICT.md`](./SSR-VERDICT.md).

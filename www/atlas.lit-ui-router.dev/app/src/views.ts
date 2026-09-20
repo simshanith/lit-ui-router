@@ -9,7 +9,8 @@ import { LitElement, html, isServer, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
-import type { RoutedLitTemplate } from 'lit-ui-router';
+import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
+import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import type {
   AscentRow,
   ExtraRow,
@@ -375,11 +376,11 @@ function rail(manifest: Manifest | undefined): TemplateResult {
 /**
  * The shell around whatever fills the content column.
  *
- * `ShellView` puts `<ui-view>` there and lets the router fill it; the build's
- * prerender (prerender.ts) puts the routed view's own template there directly,
- * because `<ui-view>` is server-silent — @lit-labs/ssr never calls the
- * `connectedCallback` that picks the routed component. Same rail, same sprite,
- * same cover CSS either way: ONE template set, two fillings of one hole.
+ * `ShellView` puts `<ui-view>` there and lets the router fill it, on both
+ * halves. `uiViewSlot()` is the hole: the build's prerender reaches
+ * `UiViewRenderer` through it and the routed component is written into the
+ * element's light DOM; on the client the same directive wakes the view. Same
+ * rail, same sprite, same cover CSS either way: ONE template set, one hole.
  */
 export const shell = (manifest: Manifest | undefined, content: unknown): TemplateResult => html`
   <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
@@ -393,7 +394,17 @@ export const shell = (manifest: Manifest | undefined, content: unknown): Templat
 `;
 
 export const ShellView: RoutedLitTemplate<ManifestResolves> = (props) =>
-  shell(props?.resolves?.manifest, html`<ui-view></ui-view>`);
+  shell(props?.resolves?.manifest, html`<ui-view>${uiViewSlot()}</ui-view>`);
+
+/**
+ * THE PAGE — the one root template, prerendered and hydrated.
+ *
+ * The build renders it per path and the boot in src/main.ts adopts what it
+ * drew; every `<ui-view>` in the app carries `uiViewSlot()`, this one and the
+ * shell's nested one.
+ */
+export const page = (router: UIRouterLit): TemplateResult =>
+  html`<ui-router .uiRouter=${router}><ui-view>${uiViewSlot()}</ui-view></ui-router>`;
 
 // --- gallery: the title sheet — key image, issue log, index ----------------
 

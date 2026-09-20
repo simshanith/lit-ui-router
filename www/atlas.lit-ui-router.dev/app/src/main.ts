@@ -1,10 +1,12 @@
-import { html, render } from 'lit';
+import { render } from 'lit';
 import 'lit-ui-router';
+import { hydrateRoot } from 'lit-ui-router-ssr/client';
 import { onXrefClick } from './fragment.ts';
 import type { XrefDetail } from './fragment.ts';
 import { installLattice } from './lattice.ts';
 import { createRouter } from './router.ts';
 import { applyTheme, readTheme } from './theme.ts';
+import { page } from './views.ts';
 // --- EXPERIMENTAL LAYER ---------------------------------------------------
 // The one line that ties the optional half in. Delete this import, the call
 // below, and src/experimental/, and the base app is untouched.
@@ -28,13 +30,33 @@ document.addEventListener('atlas-xref', (event) => {
 // transition is animated too.
 installExperimental(router);
 
-router.start();
-
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
-// The prerendered shell is replaced wholesale: see SSR-VERDICT.md.
-root.replaceChildren();
-render(
-  html`<ui-router .uiRouter=${router}><ui-view></ui-view></ui-router>`,
-  root,
-);
+
+// THE BOOT: start, await the first successful transition, then adopt. The
+// walk wakes every served <ui-view> with the settled router already in hand.
+const booted = new Promise<void>((resolve) => {
+  const off = router.transitionService.onSuccess({}, () => {
+    off();
+    resolve();
+  });
+});
+router.start();
+await booted;
+
+/** Resolves once the root view's own update — and the microtask after it — is done. */
+const pageSettled = async (): Promise<void> => {
+  const view = root.querySelector('ui-view');
+  await (view as unknown as { updateComplete?: Promise<unknown> } | null)?.updateComplete;
+  await Promise.resolve();
+};
+
+let release: false | (() => void) = false;
+try {
+  release = hydrateRoot(root, page(router));
+} catch (error) {
+  // A mutated document: the container comes back cold-renderable.
+  if (import.meta.env.DEV) console.warn('atlas: the served page was not adopted', error);
+}
+if (release) void pageSettled().then(release);
+else render(page(router), root);
