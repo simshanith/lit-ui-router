@@ -4,7 +4,7 @@ import type { ShadowBadge } from './fixture.js';
 // ORDER IS THE POINT: `vitest.setup.coexist.ts` installs lit's own hydrate
 // support before `lit`, so this lane runs with that support live on the same
 // prototype and proves the two mechanisms are independent.
-import 'lit-ui-router/register';
+import '../register.js';
 
 import { UiViewRenderer } from '../ui-view-renderer.js';
 import {

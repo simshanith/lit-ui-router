@@ -10,7 +10,7 @@ import type {
 } from 'lit-ui-router/pure';
 import { installServerLocation } from 'ui-router-server/location';
 import { uiViewSlot } from '../client.js';
-import 'lit-ui-router/register';
+import '../register.js';
 
 /** The routed shell: a heading, and the nested `<ui-view>` its children fill. */
 export const ShellView: RoutedLitTemplate = (props) => html`

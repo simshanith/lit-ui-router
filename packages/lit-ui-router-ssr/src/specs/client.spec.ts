@@ -2,7 +2,7 @@ import { nothing, render } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { adoptUiViewContext, requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
-import 'lit-ui-router/register';
+import '../register.js';
 
 import { hydrateRoot } from '../client.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
