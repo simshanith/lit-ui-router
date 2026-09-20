@@ -6,7 +6,6 @@
 // workflow fails its lint.
 import assert from 'node:assert/strict';
 import { execFileSync } from 'node:child_process';
-import { readdirSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
@@ -50,14 +49,20 @@ type JobRunner = {
   runsOn: unknown;
 };
 
-const workflows = readdirSync(join(workspaceRoot, '.github', 'workflows'))
-  .filter((name) => name.endsWith('.yml'))
-  .sort();
+// Tracked files only, the way the taplo task selects its TOML set.
+const workflows = execFileSync(
+  'git',
+  ['ls-files', '--', '.github/workflows/*.yml'],
+  { cwd: workspaceRoot, encoding: 'utf8' },
+)
+  .split('\n')
+  .filter(Boolean);
 
-const jobs = workflows.flatMap((name) =>
-  (yqGet(join('.github', 'workflows', name), JOB_RUNNERS) as JobRunner[]).map(
-    (entry) => ({ ...entry, workflow: name }),
-  ),
+const jobs = workflows.flatMap((workflow) =>
+  (yqGet(workflow, JOB_RUNNERS) as JobRunner[]).map((entry) => ({
+    ...entry,
+    workflow,
+  })),
 );
 
 const labels = jobs
