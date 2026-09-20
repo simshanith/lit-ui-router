@@ -140,7 +140,7 @@ Without the backfill, a worktree computes everything its branch changed and
 hits the shared cache for the rest, never re-probing the remote.
 
 `TURBO_FORCE` outranks all of this: turbo reads it as `--force`, which means
-`--cache=local:w,remote:w` and *replaces* `TURBO_CACHE` rather than narrowing
+`--cache=local:w,remote:w` and _replaces_ `TURBO_CACHE` rather than narrowing
 it, so even `local:rw` uploads once a token is in the environment. Only the
 literal values `true` and `1` turn it on. Every mise task that runs turbo
 depends on `turbo_force_guard`, which fails the run before turbo starts when
