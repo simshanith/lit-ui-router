@@ -32,8 +32,10 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
 # nothing, no error) since the cache is maintainer-only.
-# config_root-scoped, so a git worktree starts with no creds; `mise run setup`
-# links it at the owning checkout's file (see the turbo_link_worktree task).
+# config_root-scoped, so only a worktree nested under the owning checkout
+# inherits it (mise reads a config from every ancestor directory); one outside
+# the owner tree has no creds and is local-only. Either way `mise run setup`
+# pins the worktree to the local cache (see the turbo_pin_worktree task).
 # NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
 # which clobbers a task reading its own stdin — it silently breaks
 # `printf … | mise run turbo_login --token-file -`. Verified on this mise.
@@ -42,10 +44,9 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # same redact trap. Separate from turbo's, not appended to it: `turbo_login`
 # *writes* turbo.local.env and would clobber anything else in it, and the two
 # have different lifecycles (the turbo bearer is shared and static, the CF token
-# is user-scoped and revocable). No task writes this one — hand-create it. It is
-# also NOT linked into git worktrees (see the turbo_link_worktree task, which is
-# turbo-only): `check:workers-builds` is manual-only and never part of CI, so
-# run it from the owning checkout.
+# is user-scoped and revocable). No task writes this one — hand-create it, and
+# in the owning checkout: `check:workers-builds` is manual-only and never part
+# of CI, so run it from there.
 _.file = [
   "{{config_root}}/.config/mise/turbo.local.env",
   "{{config_root}}/.config/mise/cloudflare.local.env",
@@ -95,10 +96,10 @@ idiomatic_version_file_enable_tools = ["node"]
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the pnpm on PATH"
-# turbo_link_worktree no-ops everywhere but a fresh worktree; it rides setup
+# turbo_pin_worktree no-ops everywhere but a linked worktree; it rides setup
 # because that is the one step every new checkout already runs. No provisioning
 # leg: `mise install` puts the bootstrap pnpm on PATH by itself.
-depends = ["turbo_link_worktree"]
+depends = ["turbo_pin_worktree"]
 usage = '''
 flag "--release" help="Install only the release closure (RELEASE_CLOSURE)"
 '''
@@ -169,7 +170,7 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login, read_secret, turbo_link_worktree, cloudflare_item_create and
+# turbo_login, read_secret, turbo_pin_worktree, cloudflare_item_create and
 # check_workers_builds are file-based tasks under .config/mise/tasks/ — their
 # shell bodies were too large to sit inline. Every other task here is a one- or
 # two-liner and stays inline.

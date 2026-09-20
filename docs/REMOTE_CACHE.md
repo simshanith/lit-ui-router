@@ -82,40 +82,39 @@ deliberately, from a gitignored file that reaches one worktree.
 
 ### Worktrees
 
-A worktree **outside** the owning checkout inherits nothing: `_.file` is
-config-root scoped and the dotenv is gitignored, so turbo warns
-`Remote caching disabled (TURBO_TOKEN set without TURBO_TEAM)` and quietly falls
-back to local-only. A worktree **under** the owning checkout inherits
-everything, because mise reads a config from every ancestor directory and picks
-up the owner's `config.toml` and the dotenv its `_.file` names.
+What a worktree inherits depends on where it sits. `_.file` is config-root
+scoped and the dotenv is gitignored, so a worktree **outside** the owning
+checkout has no credentials and is local-only from the start. One **under** the
+owning checkout inherits every `TURBO_*`, because mise reads a config from every
+ancestor directory and picks up the owner's `config.toml` and the dotenv its
+`_.file` names.
 
-`mise run setup` settles both through its `turbo_link_worktree` leg, which asks
-git whether this is a linked worktree (`--git-dir` and `--git-common-dir` differ
-only there) and no-ops in the owning checkout and wherever the owner has no
-credentials, CI included. It symlinks the worktree's
-`.config/mise/turbo.local.env` at the owning checkout's file, found via the git
-common dir (the same absolute path from either side) — a symlink and not a copy,
-so rotating creds in the main checkout reaches every linked worktree at once.
-The task never overwrites: run `turbo_login` inside a worktree and that real
-file wins, which is how a worktree under test can override `TURBO_API` while
-inheriting the rest.
+Either way `mise run setup` pins the worktree to the local cache through its
+`turbo_pin_worktree` leg, which asks git whether this is a linked worktree
+(`--git-dir` and `--git-common-dir` differ only there) and no-ops in the owning
+checkout and wherever the owner has no credentials, CI included.
+
+To opt one worktree back into remote reads, delete its `mise.local.toml`. A
+nested worktree then has its credentials already; one outside the owner tree
+needs `<owner>/.config/mise/turbo.local.env` symlinked into its own
+`.config/mise/` by hand.
 
 ### Local cache posture
 
 The owning checkout runs `remote:r,local:rw`. Every worktree runs `local:rw`
 with a blank `TURBO_TOKEN` — no remote reads, no remote writes, no request of
-any kind. Turbo keys its filesystem cache off the git common dir, so the
-worktrees and the owner all read and write one `<owner>/.turbo/cache`; a
-worktree's own `.turbo/` holds task logs only.
+any kind, and the inherited `TURBO_API`/`TURBO_TEAM`/signature key go unread.
+Turbo keys its filesystem cache off the git common dir, so the worktrees and the
+owner all read and write one `<owner>/.turbo/cache`; a worktree's own `.turbo/`
+holds task logs only.
 
-`turbo_link_worktree` writes that pin, per worktree, into the worktree's
+`turbo_pin_worktree` writes that pin, per worktree, into the worktree's
 gitignored `mise.local.toml`, and trusts it. Within one config root a
 `config.local.toml` or `mise.local.toml` beats `_.file`, where a `conf.d/*.toml`
-entry loses to it — so `conf.d` cannot override the creds dotenv this same task
-links, and `config.local.toml` is left free as the maintainer's own override
-slot. The blank token is load-bearing on its own: empty reads as unset, and with
-no token turbo builds no analytics sender, where `local:rw` alone still POSTs
-`/v8/artifacts/events` once per run.
+entry loses to it, and `config.local.toml` is left free as the maintainer's own
+override slot. The blank token is load-bearing on its own: empty reads as unset,
+and with no token turbo builds no analytics sender, where `local:rw` alone still
+POSTs `/v8/artifacts/events` once per run.
 
 The workflow that pairs with it:
 
