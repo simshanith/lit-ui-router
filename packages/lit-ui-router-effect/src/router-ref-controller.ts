@@ -1,7 +1,7 @@
 import { SubscriptionRef } from 'effect';
 import { ReactiveControllerHost } from 'lit';
 import { UIRouter } from '@uirouter/core';
-import { UIRouterLitElement } from 'lit-ui-router';
+import { UIRouterLitElement } from 'lit-ui-router/pure';
 
 import { warnMissingRouter } from './dev-warn.js';
 import { RefController, RefControllerOptions } from './ref-controller.js';
