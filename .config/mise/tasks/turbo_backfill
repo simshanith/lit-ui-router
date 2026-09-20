@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#MISE description="Pull this branch's CI artifacts from the remote cache into the shared local one"
+# Why, and when to reach for it: docs/REMOTE_CACHE.md.
+set -eu
+
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+owner="$(dirname "$common_dir")"
+env_file="$owner/.config/mise/turbo.local.env"
+
+# Unlike the pin, this task is an explicit request: say so instead of no-opping.
+if [ ! -f "$env_file" ]; then
+  echo "turbo_backfill: no remote-cache credentials to read with — run \`mise run turbo_login\` in $owner" >&2
+  exit 1
+fi
+
+# The dotenv holds raw unquoted values; let mise render it rather than sourcing.
+eval "$(mise -C "$owner" env -s bash)"
+
+# After the load, not before: a laptop never writes the shared cache, whatever
+# the dotenv says.
+export TURBO_CACHE="remote:r,local:rw"
+
+# TURBO_FORCE is `--cache=local:w,remote:w`: it outranks the line above.
+unset TURBO_FORCE
+
+# Direct binary, not `mise run`/`mise exec`: a nested mise re-applies [env] and
+# clobbers the export above.
+exec turbo run "${@:-ci}" --ui=stream --log-order=stream

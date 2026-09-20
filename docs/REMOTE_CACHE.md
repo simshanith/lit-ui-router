@@ -118,15 +118,27 @@ builds no analytics sender, where `local:rw` alone still POSTs
 
 The workflow that pairs with it:
 
-- Owning checkout: after pulling `main`, run the CI graph once (`mise run ci`).
-  main is green, so that run is ~all remote hits — about one request per task,
-  once per pull — and it fills `<owner>/.turbo/cache` with main's artifacts.
-- Worktrees: they branch from main, so everything the branch leaves alone hits
-  that shared cache locally. Only what the branch changes gets computed, and it
-  is never re-probed remotely.
+- CI writes every pushed branch, not just main: no workflow sets `TURBO_CACHE`,
+  so turbo's default `remote:rw,local:rw` applies on branch pushes and on
+  pull-request merge-head runs alike. Once a branch's CI has finished, its
+  build, lint and typecheck artifacts are in the remote cache.
+- From any worktree, `mise run turbo_backfill` makes one deliberate
+  `remote:r,local:rw` pass — about one request per task hash — that lands those
+  artifacts in the shared `<owner>/.turbo/cache`. The task never touches the
+  pin, so every later run in that worktree is back on `local:rw`. It also
+  unsets `TURBO_FORCE`, which is `--cache=local:w,remote:w` and would outrank
+  that posture. Reach for it after a push whose CI has finished, or after
+  pulling `main` into the branch.
+- Owning checkout: after pulling `main`, `mise run ci` still does the job, since
+  that checkout is already `remote:r`; `turbo_backfill` from there is
+  equivalent. Either way the run is all hits except the test tasks.
 
-Worktree edits are content CI has never seen, so remote reads from a worktree
-miss almost every time and buy nothing but Worker requests.
+The `test`, `test:coverage`, `test:engines`, `test:lit2-compat` and
+`test:mobx6-compat` tasks hash `CI` in `turbo.json`, so their artifacts carry a
+key no laptop can produce: those always run locally, backfill or not.
+
+Without the backfill, a worktree computes everything its branch changed and
+hits the shared cache for the rest, never re-probing the remote.
 
 ### Rotation
 
