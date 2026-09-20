@@ -2,8 +2,11 @@ import {
   isRenderLightDirective,
   renderLight,
 } from '@lit-labs/ssr-client/directives/render-light.js';
+import { noChange } from 'lit';
+import { PartType } from 'lit/directive.js';
+import type { ChildPart, PartInfo } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { uiViewSlot } from '../client.js';
 
@@ -18,5 +21,17 @@ describe('the renderLight flag', () => {
 
   it('answers the reader `@lit-labs/ssr` dispatches on', () => {
     expect(isRenderLightDirective(uiViewSlot())).toBeTruthy();
+  });
+
+  // `@lit-labs/ssr` patches a rendered class to resolve through `render()`, so the update lit's own walk calls is reached here by hand.
+  it('commits nothing on the client, where the base class would call the host renderLight()', () => {
+    const Slot = getDirectiveClass(uiViewSlot());
+    if (!Slot) throw new Error('a directive result carried no class');
+    const parentNode = { renderLight: vi.fn() };
+    const part = { type: PartType.CHILD, parentNode } as unknown as PartInfo;
+    const slot = new Slot(part);
+    expect(slot.update(part as unknown as ChildPart, [])).toBe(noChange);
+    expect(slot.render()).toBe(noChange);
+    expect(parentNode.renderLight).not.toHaveBeenCalled();
   });
 });

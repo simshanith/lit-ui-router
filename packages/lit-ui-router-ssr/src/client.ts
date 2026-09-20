@@ -19,12 +19,7 @@ import { servedMarkerPrefix } from './served-markers.js';
 const DEFER = 'defer-hydration';
 
 // The class `@lit-labs/ssr` routes to `renderLight()` is not exported; its directive function is, and lit's helper reads the class back off a call.
-const RenderLightDirective = getDirectiveClass(renderLight());
-if (!RenderLightDirective) {
-  throw new Error(
-    'lit-ui-router-ssr: @lit-labs/ssr-client renderLight() carries no directive class',
-  );
-}
+const RenderLightDirective = getDirectiveClass(renderLight())!;
 
 // Subclassed rather than re-flagged: the flag is minified to a different name in the production build of `@lit-labs/ssr-client`, and inheritance carries whichever one this build ships.
 class UiViewSlotDirective extends RenderLightDirective {
