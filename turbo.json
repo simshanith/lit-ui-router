@@ -1,8 +1,7 @@
 {
   "$schema": "https://turborepo.com/schema.json",
   "ui": "tui",
-  // branch-only: the trial run must neither read nor write the shared cache
-  "remoteCache": { "signature": true, "enabled": false },
+  "remoteCache": { "signature": true },
   "tasks": {
     "transit": {
       "dependsOn": ["^transit"]
