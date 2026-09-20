@@ -1,53 +1,28 @@
 #!/usr/bin/env bash
-#MISE description="Pin a git worktree's turbo runs to the local cache (gitignored conf.d entry)"
-#
-# A worktree nested under the owning checkout inherits every TURBO_* through
-# mise's parent-config traversal; its edits are content CI has never seen, so
-# those remote reads miss almost every time and buy nothing but Worker requests.
-# The pin counteracts that. A worktree outside the owner tree inherits nothing
-# and is local-only already, so the pin overrides nothing there — harmless.
-#
-# Blank token as well as local:rw: empty reads as unset, so turbo builds no
-# analytics sender (local:rw alone still POSTs /v8/artifacts/events once per
-# run) and never reads the inherited TURBO_API/TEAM/signature key.
-#
-# conf.d and not config.local.toml, which is the maintainer's own override slot
-# (see WWW_DEV_PORT in config.toml). conf.d loses to `_.file` within one config
-# root, which is fine: the only TURBO_* dotenv is the owner's, a root farther
-# out, and the nearer root wins.
+#MISE description="Pin a git worktree's turbo runs to the local cache"
+# Why, and how to opt out: docs/REMOTE_CACHE.md.
 set -eu
 
-# No .git at all (source tarball, vendored copy): nothing to pin.
 git_dir="$(git rev-parse --absolute-git-dir 2>/dev/null)" || exit 0
 common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
 
-# git-dir == common-dir ⇔ the checkout that owns the creds, which keeps its
-# remote reads. They diverge (.git/worktrees/<name> vs .git) only in a linked
-# worktree. Git answers the question directly — no path-spelling comparison
-# against MISE_CONFIG_ROOT, which a symlinked home would make lie.
+# The two paths diverge only in a linked worktree; the owning checkout keeps
+# its remote reads.
 [ "$git_dir" != "$common_dir" ] || exit 0
 
 # No remote cache to keep off the network (CI, fresh clone).
 [ -f "$(dirname "$common_dir")/.config/mise/turbo.local.env" ] || exit 0
 
 # File-based tasks are raw scripts: {{config_root}} does not render here.
-# Never overwrite: a file there is the maintainer's own override.
-pin="${MISE_CONFIG_ROOT}/.config/mise/conf.d/turbo-worktree.local.toml"
-if [ ! -e "$pin" ]; then
-  mkdir -p "${pin%/*}"
-  cat > "$pin" <<'EOF'
-# Written by `mise run turbo_pin_worktree`. Gitignored, machine-local.
-# A worktree's edits are content CI has never seen, so remote reads from here
-# miss and only spend Worker requests; <owner>/.turbo/cache, which every
-# worktree shares, is the one that hits. Blank token so turbo skips the
-# analytics sender too. Delete this file to opt back into remote reads.
-[env]
-TURBO_CACHE = "local:rw"
-TURBO_TOKEN = ""
-EOF
-  echo "turbo_pin_worktree: pinned to the local cache ($pin)" >&2
-fi
+mise_dir="${MISE_CONFIG_ROOT}/.config/mise"
+pin="$mise_dir/conf.d/turbo-worktree.local.toml"
 
-# Root trust usually covers it; explicit so a fresh worktree cannot read [env]
-# from an untrusted config and silently fall back.
-mise trust -q "$pin" || echo "turbo_pin_worktree: run \`mise trust $pin\` once" >&2
+# Never clobber a maintainer's own override.
+[ ! -e "$pin" ] || exit 0
+
+mkdir -p "${pin%/*}"
+cp "$mise_dir/templates/turbo-worktree.toml" "$pin"
+
+# mise reads [env] only from a trusted config.
+mise trust -q "$pin"
+echo "turbo_pin_worktree: pinned to the local cache ($pin)" >&2

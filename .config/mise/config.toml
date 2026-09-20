@@ -32,10 +32,8 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
 # nothing, no error) since the cache is maintainer-only.
-# config_root-scoped, so only a worktree nested under the owning checkout
-# inherits it (mise reads a config from every ancestor directory); one outside
-# the owner tree has no creds and is local-only. Either way `mise run setup`
-# pins the worktree to the local cache (see the turbo_pin_worktree task).
+# config_root-scoped; `mise run setup` pins a worktree to the local cache
+# either way (see the turbo_pin_worktree task).
 # NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
 # which clobbers a task reading its own stdin — it silently breaks
 # `printf … | mise run turbo_login --token-file -`. Verified on this mise.

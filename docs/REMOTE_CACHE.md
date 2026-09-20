@@ -82,17 +82,13 @@ deliberately, from a gitignored file that reaches one worktree.
 
 ### Worktrees
 
-What a worktree inherits depends on where it sits. `_.file` is config-root
-scoped and the dotenv is gitignored, so a worktree **outside** the owning
-checkout has no credentials and is local-only from the start. One **under** the
-owning checkout inherits every `TURBO_*`, because mise reads a config from every
-ancestor directory and picks up the owner's `config.toml` and the dotenv its
-`_.file` names.
+`_.file` is config-root scoped and the dotenv is gitignored, so a worktree
+outside the owning checkout has no credentials; one nested under it inherits
+every `TURBO_*`, because mise reads a config from every ancestor directory.
 
 Either way `mise run setup` pins the worktree to the local cache through its
-`turbo_pin_worktree` leg, which asks git whether this is a linked worktree
-(`--git-dir` and `--git-common-dir` differ only there) and no-ops in the owning
-checkout and wherever the owner has no credentials, CI included.
+`turbo_pin_worktree` leg, which no-ops in the owning checkout and wherever there
+are no credentials to begin with, CI included.
 
 To opt one worktree back into remote reads, delete its
 `.config/mise/conf.d/turbo-worktree.local.toml`. A nested worktree then has its
@@ -109,14 +105,16 @@ Turbo keys its filesystem cache off the git common dir, so the worktrees and the
 owner all read and write one `<owner>/.turbo/cache`; a worktree's own `.turbo/`
 holds task logs only.
 
-`turbo_pin_worktree` writes that pin, per worktree, into the worktree's
-gitignored `.config/mise/conf.d/turbo-worktree.local.toml`, and trusts it. A
-`conf.d` entry loses to `_.file` within one config root, which costs nothing
-here: the only `TURBO_*` dotenv is the owning checkout's, a root farther out,
-and the nearer root wins. That leaves `config.local.toml` free as the
-maintainer's own override slot. The blank token is load-bearing on its own:
-empty reads as unset, and with no token turbo builds no analytics sender, where
-`local:rw` alone still POSTs `/v8/artifacts/events` once per run.
+`turbo_pin_worktree` copies `.config/mise/templates/turbo-worktree.toml` into
+the worktree's gitignored `.config/mise/conf.d/turbo-worktree.local.toml` and
+trusts it. The location matters: a `conf.d` entry is beaten by an `_.file` in
+the same config root, so the pin holds because the only `TURBO_*` dotenv belongs
+to the owning checkout, a root farther out. That leaves `config.local.toml` free
+as the maintainer's own override slot.
+
+The blank token is load-bearing on its own: empty reads as unset, so turbo
+builds no analytics sender, where `local:rw` alone still POSTs
+`/v8/artifacts/events` once per run.
 
 The workflow that pairs with it:
 
