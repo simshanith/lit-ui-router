@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+#MISE description="Refuse TURBO_FORCE where it would push artifacts to a remote cache this checkout only reads"
+# Why, and the posture it protects: docs/REMOTE_CACHE.md.
+set -eu
+
+# turbo reads TURBO_FORCE as exactly `true` or `1`; every other value is off.
+case "${TURBO_FORCE:-}" in
+true | 1) ;;
+*) exit 0 ;;
+esac
+
+# An empty or missing token reads as unset: turbo builds no remote client at
+# all, so nothing can leave the machine.
+[ -n "${TURBO_TOKEN:-}" ] && [ -n "${TURBO_API:-}" ] || exit 0
+
+# Unset is turbo's default `remote:rw,local:rw` — CI's posture, where forcing a
+# rerun is the point.
+cache="${TURBO_CACHE:-}"
+[ -n "$cache" ] || exit 0
+
+# `--force` is `--cache=local:w,remote:w` and REPLACES this value rather than
+# narrowing it: even `local:rw` alone uploads once a token is present.
+remote_writes=0
+IFS=,
+for entry in $cache; do
+  case "$entry" in remote:*w*) remote_writes=1 ;; esac
+done
+unset IFS
+[ "$remote_writes" -eq 0 ] || exit 0
+
+echo "turbo_force_guard: TURBO_FORCE would upload to the shared remote cache, which this checkout is only meant to read (TURBO_CACHE=$cache) — unset TURBO_FORCE, or force from a worktree, whose blank TURBO_TOKEN keeps turbo off the network" >&2
+exit 1

@@ -126,9 +126,8 @@ The workflow that pairs with it:
   `remote:r,local:rw` pass — about one request per task hash — that lands those
   artifacts in the shared `<owner>/.turbo/cache`. The task never touches the
   pin, so every later run in that worktree is back on `local:rw`. It also
-  unsets `TURBO_FORCE`, which is `--cache=local:w,remote:w` and would outrank
-  that posture. Reach for it after a push whose CI has finished, or after
-  pulling `main` into the branch.
+  unsets `TURBO_FORCE`. Reach for it after a push whose CI has finished, or
+  after pulling `main` into the branch.
 - Owning checkout: after pulling `main`, `mise run ci` still does the job, since
   that checkout is already `remote:r`; `turbo_backfill` from there is
   equivalent. Either way the run is all hits except the test tasks.
@@ -139,6 +138,16 @@ key no laptop can produce: those always run locally, backfill or not.
 
 Without the backfill, a worktree computes everything its branch changed and
 hits the shared cache for the rest, never re-probing the remote.
+
+`TURBO_FORCE` outranks all of this: turbo reads it as `--force`, which means
+`--cache=local:w,remote:w` and *replaces* `TURBO_CACHE` rather than narrowing
+it, so even `local:rw` uploads once a token is in the environment. Only the
+literal values `true` and `1` turn it on. Every mise task that runs turbo
+depends on `turbo_force_guard`, which fails the run before turbo starts when
+that combination would push from a checkout meant to read — it passes in CI,
+where `TURBO_CACHE` is unset and the write is the point, and in a worktree,
+whose blank token keeps turbo off the network. A bare `turbo` call goes around
+the guard, since mise only wraps its own tasks.
 
 ### Rotation
 
