@@ -131,6 +131,66 @@ projection to fall back on logs a console warning naming that path, because
 nothing was emitted for it. `result.warnings` carries the same list in both
 builds.
 
+## The hydration model
+
+A served `<ui-view>` arrives asleep. The render passes `deferHydration`, so
+every custom element on the page carries Lit's `defer-hydration` attribute,
+and while it is there the view renders nothing and holds the nodes the server
+drew. The client boots the router first, then calls
+[`hydrateRoot`](/api/lit-ui-router-ssr/functions/hydrateRoot), which provides
+an adopter under the container with core's
+[`provideContext`](/api/reference/core/provideContext) and runs one
+`hydrate()` walk over it:
+
+```ts
+import { hydrateRoot } from 'lit-ui-router-ssr/client';
+
+const release = hydrateRoot(root, page(router));
+```
+
+Every [`uiViewSlot`](/api/lit-ui-router-ssr/variables/uiViewSlot) that walk
+reaches wakes the `<ui-view>` it sits in, and the waking view requests
+[`adoptUiViewContext`](/api/reference/core/adoptUiViewContext) over the
+standard `context-request` event and hands itself to whichever provider
+answers. The mechanics — the boot sequence, the marker protocol, and what a
+view with no provider above it does — are in the
+[API reference](/api/lit-ui-router-ssr/) and in
+[the package README](https://github.com/simshanith/lit-ui-router/blob/main/packages/lit-ui-router-ssr/README.md#the-client-half).
+
+## How this compares
+
+Two axes separate the hydration models in circulation: where the code that
+wakes the markup comes from — imported from the renderer, or provided from
+outside it — and how much it wakes at once, the whole tree or one boundary on
+demand.
+
+| Model                     | Where the wake code comes from                                                                         | Scope        | Shipped by the framework |
+| ------------------------- | ------------------------------------------------------------------------------------------------------ | ------------ | ------------------------ |
+| Whole tree, in-renderer   | imported from the renderer — React `hydrateRoot()`, Vue `createSSRApp().mount()`, Solid `hydrate()`    | the page     | yes                      |
+| Whole tree, provided      | a provider or a global patch — Angular `provideClientHydration()`, Lit's `lit-element-hydrate-support` | the page     | opt-in                   |
+| Per boundary, in-renderer | the renderer schedules it — React Suspense selective hydration, Nuxt `<NuxtIsland>`                    | one boundary | yes                      |
+| Per boundary, provided    | a directive or a context provider — Astro `client:*`, Angular `@defer (hydrate on …)`, this package    | one boundary | opt-in                   |
+
+Solid pairs its walk with `data-hk` hydration keys in the markup; Angular's
+provider arrives through DI, while Lit's own `@lit-labs/ssr-client` support is
+a patch of `LitElement`'s prototype — opt-in, but global once imported. Astro
+sits at the far end of the provided column: the island's `client:*` directive
+is the whole contract, and the framework inside the island never sees it.
+
+Qwik is the outlier on both axes. It resumes rather than hydrates, so there is
+no wake pass at all: the served markup and the serialized state both survive
+into the client, and a handler is fetched when its event fires. This package
+keeps only the markup; the router rebuilds its state on the first transition,
+which is what booting before `hydrateRoot()` waits for.
+
+In that grid `lit-ui-router-ssr` sits in the per-boundary, provided cell. Each
+`<ui-view>` is an island whose trigger is a route match rather than viewport
+or idle. The code that wakes it is provided, not imported, so any
+`context-request` provider — an `@lit/context` provider, a test harness, a
+nested app — can scope or replace the adopter, and the element side reuses
+Lit's `defer-hydration` contract unchanged. `lit-ui-router` carries the gated
+sleep and wake and one context key; everything else is in this package.
+
 ## Further reading
 
 - [API reference](/api/lit-ui-router-ssr/)
