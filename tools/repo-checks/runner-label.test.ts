@@ -5,16 +5,16 @@
 // does not ship has to be declared in .github/actionlint.yaml or every
 // workflow fails its lint.
 import assert from 'node:assert/strict';
+import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
+import { parse } from 'yaml';
 
-import { trackedFiles, yqGet } from './cli-query.ts';
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { trackedFiles } from './cli-query.ts';
 
-// Jobs that only `uses:` a reusable workflow name no runner — the callee does.
-// build-test.yml is entirely callers, so it contributes nothing here.
-const JOB_RUNNERS =
-  '.jobs | to_entries | map(select(.value.uses == null) | {"job": .key, "runsOn": .value["runs-on"]})';
-const DECLARED_LABELS = '.self-hosted-runner.labels';
+const load = (file: string): unknown =>
+  parse(readFileSync(join(workspaceRoot, file), 'utf8'));
 
 const actionlintConfig = join('.github', 'actionlint.yaml');
 
@@ -29,30 +29,43 @@ const KNOWN_LABELS = new Set([
 
 const EXPLICIT_LABEL = /^ubuntu-\d{2}\.04$/;
 
-/** One job that runs steps of its own, and the runner it asked for. */
-type JobRunner = {
-  job: string;
-  // `null` when the job names no runner at all; anything but a plain label
-  // (a `${{ }}` expression, a matrix array) arrives as its parsed shape.
-  runsOn: unknown;
+/** As much of a workflow as this check reads. */
+type Workflow = {
+  jobs?: Record<
+    string,
+    {
+      // A job that only `uses:` a reusable workflow names no runner — the
+      // callee does. build-test.yml is entirely callers.
+      uses?: string;
+      // Anything but a plain label (a `${{ }}` expression, a matrix array)
+      // parses to its own shape, so widen and narrow at the assertion.
+      'runs-on'?: unknown;
+    }
+  >;
 };
+
+/** As much of .github/actionlint.yaml as this check reads. */
+type ActionlintConfig = { 'self-hosted-runner'?: { labels?: string[] } };
 
 const workflows = trackedFiles('.github/workflows/*.yml');
 
 const jobs = workflows.flatMap((workflow) =>
-  (yqGet(workflow, JOB_RUNNERS) as JobRunner[]).map((entry) => ({
-    ...entry,
-    workflow,
-  })),
+  Object.entries((load(workflow) as Workflow).jobs ?? {})
+    .filter(([, job]) => job.uses === undefined)
+    .map(([job, { 'runs-on': runsOn }]) => ({ workflow, job, runsOn })),
 );
 
-const labels = jobs
-  .map(({ runsOn }) => runsOn)
-  .filter((runsOn): runsOn is string => typeof runsOn === 'string');
-const used = [...new Set(labels)].sort();
+const used = [
+  ...new Set(
+    jobs
+      .map(({ runsOn }) => runsOn)
+      .filter((runsOn): runsOn is string => typeof runsOn === 'string'),
+  ),
+].sort();
 
 const declared = [
-  ...(yqGet(actionlintConfig, DECLARED_LABELS) as string[]),
+  ...((load(actionlintConfig) as ActionlintConfig)['self-hosted-runner']
+    ?.labels ?? []),
 ].sort();
 
 describe('runner labels', () => {
