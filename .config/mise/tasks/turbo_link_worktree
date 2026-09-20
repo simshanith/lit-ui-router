@@ -1,15 +1,30 @@
 #!/usr/bin/env bash
-#MISE description="Point a git worktree's turbo.local.env at the owning checkout's copy (symlink)"
+#MISE description="Give a git worktree its cache posture: creds symlinked from the owning checkout, turbo pinned local-only"
 #
-# The creds dotenv is gitignored, so `git worktree add` produces a checkout with
-# no remote-cache config at all: turbo warns "TURBO_TOKEN set without TURBO_TEAM"
-# and silently falls back to local-only. config.toml's [env] _.file is
-# {{config_root}}-scoped and cannot reach out of the worktree by itself.
+# Two jobs, both keyed on the same question — is this a linked worktree?
 #
-# So link, once, at setup time: `--git-common-dir` resolves to the SAME absolute
-# path from a worktree and from the checkout that owns it, which names that
-# checkout with nothing machine-specific in the committed config. A symlink and
-# not a copy — rotating creds in the main checkout has to reach every worktree.
+# 1. Creds. For a worktree OUTSIDE the owning checkout the gitignored dotenv is
+#    absent, so turbo warns "TURBO_TOKEN set without TURBO_TEAM" and falls back
+#    to local-only. Link, once, at setup time: `--git-common-dir` resolves to the
+#    SAME absolute path from a worktree and from the checkout that owns it, which
+#    names that checkout with nothing machine-specific in the committed config. A
+#    symlink and not a copy — rotating creds in the main checkout has to reach
+#    every worktree. A worktree nested under the owner already inherits that
+#    dotenv through mise's parent-config traversal; the link is redundant there,
+#    and harmless — it names the same file.
+#
+# 2. Cache posture. A worktree's edits are content CI has never seen, so its
+#    remote reads miss almost every time and buy nothing but Worker requests.
+#    Pin it to the cache that does hit: turbo keys its filesystem cache off the
+#    git common dir, so every worktree already shares <owner>/.turbo/cache.
+#    Blank token as well as local:rw — empty reads as unset, and with no token
+#    turbo builds no analytics sender, where local:rw alone still POSTs
+#    /v8/artifacts/events once per run.
+#
+# The pin goes in mise.local.toml, not .config/mise/config.local.toml or a
+# conf.d entry: within one config root `_.file` beats conf.d, so a conf.d pin
+# would lose to the creds dotenv this same task links, and config.local.toml is
+# the maintainer's own override slot (see WWW_DEV_PORT in config.toml).
 #
 # The resolution deliberately does not live in _.file as {{ exec(...) }}: mise
 # runs template exec under `sh -c -o errexit`, so a copy of the tree without a
@@ -20,16 +35,6 @@
 # already evaluated at that invocation's startup. Fine — install needs no turbo
 # creds; every later mise invocation loads the linked file.
 set -eu
-
-# File-based tasks are raw scripts: {{config_root}} does not render here.
-env="${MISE_CONFIG_ROOT}/.config/mise/turbo.local.env"
-
-# -L as well as -e: a dangling link (owning checkout deleted) is not -e, and
-# relinking it would still point nowhere. Leave whatever is there alone; a real
-# file wins, which is how a worktree overrides one key while inheriting the rest.
-if [ -e "$env" ] || [ -L "$env" ]; then
-  exit 0
-fi
 
 # No .git at all (source tarball, vendored copy): nothing to inherit from.
 git_dir="$(git rev-parse --absolute-git-dir 2>/dev/null)" || exit 0
@@ -42,7 +47,35 @@ common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
 [ "$git_dir" != "$common_dir" ] || exit 0
 
 owner="$(dirname "$common_dir")"
+
+# No remote cache to inherit, and none to keep off the network (CI, fresh clone).
 [ -f "$owner/.config/mise/turbo.local.env" ] || exit 0
 
-ln -s "$owner/.config/mise/turbo.local.env" "$env"
-echo "turbo_link_worktree: linked remote-cache creds from $owner" >&2
+# File-based tasks are raw scripts: {{config_root}} does not render here.
+env="${MISE_CONFIG_ROOT}/.config/mise/turbo.local.env"
+
+# -L as well as -e: a dangling link (owning checkout deleted) is not -e, and
+# relinking it would still point nowhere. Leave whatever is there alone; a real
+# file wins, which is how a worktree overrides one key while inheriting the rest.
+if [ ! -e "$env" ] && [ ! -L "$env" ]; then
+  ln -s "$owner/.config/mise/turbo.local.env" "$env"
+  echo "turbo_link_worktree: linked remote-cache creds from $owner" >&2
+fi
+
+# Same never-overwrite rule: a real file there is the maintainer's own override.
+pin="${MISE_CONFIG_ROOT}/mise.local.toml"
+if [ ! -e "$pin" ]; then
+  cat > "$pin" <<'EOF'
+# Written by `mise run turbo_link_worktree`. Gitignored, machine-local.
+# A worktree's edits are content CI has never seen, so remote reads from here
+# miss and only spend Worker requests; <owner>/.turbo/cache is the one that
+# hits. Blank token so turbo skips the analytics sender too.
+[env]
+TURBO_CACHE = "local:rw"
+TURBO_TOKEN = ""
+EOF
+  echo "turbo_link_worktree: pinned to the local cache ($pin)" >&2
+fi
+
+# mise reads [env] from a config only once that config is trusted.
+mise trust -q "$pin" || echo "turbo_link_worktree: run \`mise trust $pin\` once" >&2
