@@ -5,22 +5,10 @@
 // does not ship has to be declared in .github/actionlint.yaml or every
 // workflow fails its lint.
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
-import { workspaceRoot } from '@tools/bootstrap/root.ts';
-
-// The workflows are YAML, so query them instead of matching their text: yq is
-// this repo's YAML query tool the way taplo is its TOML one (both mise-pinned),
-// and `-o=json` hands back something node can parse. Same shape as
-// pnpm-pin.test.ts's taploGet.
-const yqGet = (file: string, expression: string): unknown =>
-  JSON.parse(
-    execFileSync('yq', ['-o=json', expression, join(workspaceRoot, file)], {
-      encoding: 'utf8',
-    }),
-  );
+import { trackedFiles, yqGet } from './cli-query.ts';
 
 // Jobs that only `uses:` a reusable workflow name no runner — the callee does.
 // build-test.yml is entirely callers, so it contributes nothing here.
@@ -49,14 +37,7 @@ type JobRunner = {
   runsOn: unknown;
 };
 
-// Tracked files only, the way the taplo task selects its TOML set.
-const workflows = execFileSync(
-  'git',
-  ['ls-files', '--', '.github/workflows/*.yml'],
-  { cwd: workspaceRoot, encoding: 'utf8' },
-)
-  .split('\n')
-  .filter(Boolean);
+const workflows = trackedFiles('.github/workflows/*.yml');
 
 const jobs = workflows.flatMap((workflow) =>
   (yqGet(workflow, JOB_RUNNERS) as JobRunner[]).map((entry) => ({
