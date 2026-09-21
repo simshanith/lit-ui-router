@@ -141,8 +141,8 @@ customElements.define('app-view', withServedRender(UiView));
 The result still extends core's `UiView`, so an enclosing view adopts it as a parent.
 `UiViewRenderer` answers for the `ui-view` tag, so a tag of your own needs a renderer of your own.
 
-`lit-ui-router-effect` and `lit-ui-router-mobx` import `lit-ui-router/pure` in their current
-releases, so they register nothing and compose with any of the three.
+`lit-ui-router-effect` from 0.1.1 and `lit-ui-router-mobx` from 1.0.2 import
+`lit-ui-router/pure`, so they register nothing and compose with any of the three.
 
 ## The client half
 
