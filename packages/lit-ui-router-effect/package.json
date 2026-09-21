@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-effect",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Effect bindings for lit-ui-router: a SubscriptionRef of the route and ref-following Lit ReactiveControllers",
   "homepage": "https://lit-ui-router.dev/packages/effect",
   "bugs": {
