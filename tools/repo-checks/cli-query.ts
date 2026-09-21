@@ -21,9 +21,9 @@ export const taploGet = (file: string, pattern: string): unknown =>
     ),
   );
 
-/** Repo-relative paths of the tracked files matching a git pathspec. */
-export const trackedFiles = (pattern: string): string[] =>
-  execFileSync('git', ['ls-files', '--', pattern], {
+/** Repo-relative paths of the tracked files matching any of the pathspecs. */
+export const trackedFiles = (...patterns: string[]): string[] =>
+  execFileSync('git', ['ls-files', '--', ...patterns], {
     cwd: workspaceRoot,
     encoding: 'utf8',
   })

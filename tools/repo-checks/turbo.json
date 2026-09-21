@@ -14,7 +14,7 @@
         "$TURBO_ROOT$/pnpm-lock.yaml",
         "$TURBO_ROOT$/.config/mise/config.toml",
         "$TURBO_ROOT$/.config/mise/mise.lock",
-        "$TURBO_ROOT$/.github/workflows/*.yml",
+        "$TURBO_ROOT$/.github/workflows/**",
         "$TURBO_ROOT$/.github/actionlint.yaml"
       ]
     },

@@ -47,7 +47,11 @@ type Workflow = {
 /** As much of .github/actionlint.yaml as this check reads. */
 type ActionlintConfig = { 'self-hosted-runner'?: { labels?: string[] } };
 
-const workflows = trackedFiles('.github/workflows/*.yml');
+// GitHub reads both extensions, so a .yaml workflow must not slip past.
+const workflows = trackedFiles(
+  '.github/workflows/*.yml',
+  '.github/workflows/*.yaml',
+);
 
 const jobs = workflows.flatMap((workflow) =>
   Object.entries((load(workflow) as Workflow).jobs ?? {})
