@@ -6,6 +6,9 @@
     "noEmit": true,
     "paths": {
       "lit-ui-router": ["./node_modules/lit-ui-router-floor/dist/index.d.ts"],
+      "lit-ui-router/pure": [
+        "./node_modules/lit-ui-router-floor/dist/pure.d.ts"
+      ],
       "lit-ui-router/*": ["./node_modules/lit-ui-router-floor/*"]
     }
   }
