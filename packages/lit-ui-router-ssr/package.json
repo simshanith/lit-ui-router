@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.1.0-rc.0",
+  "version": "0.1.0-rc.1",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
   "homepage": "https://lit-ui-router.dev/packages/ssr",
   "bugs": {
@@ -29,6 +29,11 @@
       "development": "./dist/development/index.js",
       "default": "./dist/index.js"
     },
+    "./client": {
+      "types": "./dist/client.d.ts",
+      "development": "./dist/development/client.js",
+      "default": "./dist/client.js"
+    },
     "./dist/*": "./dist/*",
     "./package.json": "./package.json"
   },
@@ -50,6 +55,7 @@
   },
   "devDependencies": {
     "@lit-labs/ssr": "catalog:",
+    "@lit-labs/ssr-client": "catalog:",
     "@release-it/conventional-changelog": "catalog:",
     "@tools/bundle-probe": "workspace:*",
     "@tools/lit-test-env": "workspace:*",
@@ -59,6 +65,7 @@
     "@types/node": "catalog:",
     "@uirouter/core": "catalog:",
     "@vitest/coverage-v8": "catalog:",
+    "happy-dom": "catalog:",
     "lit": "catalog:",
     "lit-ui-router": "workspace:*",
     "oxfmt": "catalog:",
@@ -75,6 +82,7 @@
   },
   "peerDependencies": {
     "@lit-labs/ssr": "catalog:publishedPeer",
+    "@lit-labs/ssr-client": "catalog:publishedPeer",
     "@uirouter/core": "catalog:publishedPeer",
     "lit": "catalog:publishedPeer",
     "lit-ui-router": "catalog:publishedPeerServer",
@@ -86,6 +94,15 @@
   "bundleProbe": {
     ".": {
       "free": [
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./client": {
+      "free": [
+        "@lit-labs/ssr",
         "hono",
         "vite",
         "node:fs",

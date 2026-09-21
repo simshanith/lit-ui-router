@@ -1,5 +1,5 @@
 import { html, LitElement } from 'lit';
-import type { TemplateResult } from 'lit';
+import type { PropertyValues, TemplateResult } from 'lit';
 import { property } from 'lit/decorators.js';
 
 import {
@@ -8,15 +8,11 @@ import {
   requestRouter,
 } from './context.js';
 import { UIRouterLit } from './core.js';
+import { warnRouterSwapped } from './dev-warn.js';
+import { uiRouterContextEventName, uiViewContextEventName } from './events.js';
+import type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
 
-interface UiRouterContextEventDetail {
-  uiRouter?: UIRouterLit;
-}
-
-/**
- * @internal
- */
-export type UiRouterContextEvent = CustomEvent<UiRouterContextEventDetail>;
+export type { UiRouterContextEvent, UiViewContextEvent } from './events.js';
 
 /** The router never changes under a subscriber, so there is nothing to undo. */
 const noUnsubscribe = () => {};
@@ -54,7 +50,10 @@ export class UIRouterLitElement extends LitElement {
   uiRouter: UIRouterLit | undefined;
 
   /** @internal */
-  static uiRouterContextEventName = 'ui-router-context';
+  static uiRouterContextEventName: string = uiRouterContextEventName;
+
+  /** @internal */
+  static uiViewContextEventName: string = uiViewContextEventName;
 
   /** @internal */
   static uiRouterContextEvent(uiRouter?: UIRouterLit): UiRouterContextEvent {
@@ -112,29 +111,73 @@ export class UIRouterLitElement extends LitElement {
    *
    * `subscribe` gets one call and a no-op unsubscribe: the element takes its
    * router on connect and does not swap it afterwards.
+   *
+   * @internal
    */
+  static onContextRequest(uiRouter?: UIRouterLit): (event: Event) => void {
+    return (event: Event) => {
+      if (!uiRouter || !isRouterContextRequest(event)) {
+        return;
+      }
+      // stopped first: a throwing consumer must not leak the request outward
+      event.stopImmediatePropagation();
+      event.callback(uiRouter, event.subscribe ? noUnsubscribe : undefined);
+    };
+  }
+
   private readonly onContextRequest = (event: Event) => {
-    const { uiRouter } = this;
-    if (!uiRouter || !isRouterContextRequest(event)) {
-      return;
-    }
-    // stopped first: a throwing consumer must not leak the request outward
-    event.stopImmediatePropagation();
-    event.callback(uiRouter, event.subscribe ? noUnsubscribe : undefined);
+    this.constructor.onContextRequest(this.uiRouter)(event);
+  };
+
+  /**
+   * Answers the parent-view seek of every `<ui-view>` below, declining to name
+   * one.
+   *
+   * A nested `<ui-router>` roots its own view tree: an enclosing
+   * `<ui-view>` belongs to the outer router's tree, and its fully qualified
+   * name and `ViewContext` would send the inner view looking for a view config
+   * the inner router never has.
+   */
+  private readonly onUiViewContextEvent = (event: UiViewContextEvent) => {
+    event.stopPropagation();
+    event.detail.parentView = null;
   };
 
   /** @internal */
   connectedCallback(): void {
     super.connectedCallback();
-    this.uiRouter = this.uiRouter || new UIRouterLit();
+    if (!this.uiRouter) {
+      this.ownRouter = new UIRouterLit();
+      this.uiRouter = this.ownRouter;
+    }
 
     this.addEventListener(
       this.constructor.uiRouterContextEventName,
       this.onUiRouterContextEvent as EventListener,
     );
     this.addEventListener(contextRequestEventName, this.onContextRequest);
+    this.addEventListener(
+      this.constructor.uiViewContextEventName,
+      this.onUiViewContextEvent as EventListener,
+    );
 
     this.dispatchEvent(this.constructor.uiRouterContextEvent(this.uiRouter));
+  }
+
+  /** The router this element minted for itself, which the app is expected to replace once it has one. */
+  private ownRouter?: UIRouterLit;
+
+  /** @internal */
+  protected willUpdate(changed: PropertyValues<this>): void {
+    super.willUpdate(changed);
+    // Registered views keep the router they took, so a swap splits the page; replacing the placeholder minted above is the sanctioned upgrade.
+    if (
+      this.hasUpdated &&
+      changed.has('uiRouter') &&
+      changed.get('uiRouter') !== this.ownRouter
+    ) {
+      warnRouterSwapped(this);
+    }
   }
 
   /** @internal */

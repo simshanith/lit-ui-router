@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-mobx",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "MobX bindings for lit-ui-router: an observable router store and reaction-based Lit ReactiveControllers",
   "homepage": "https://lit-ui-router.dev/packages/mobx",
   "bugs": {

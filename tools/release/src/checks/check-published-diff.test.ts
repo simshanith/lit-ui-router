@@ -11,6 +11,7 @@ import {
   manifestDriftFields,
   renderSummary,
   scopePackages,
+  selectTarget,
   summarizeResults,
 } from './check-published-diff.core.ts';
 
@@ -200,18 +201,88 @@ describe('classifyFiles (manifest rule interplay)', () => {
   });
 });
 
+describe('selectTarget', () => {
+  it('compares a stable local version against latest', () => {
+    assert.deepEqual(
+      selectTarget('lit-ui-router', '1.15.0', {
+        latest: '1.15.0',
+        rc: '1.16.0-rc.0',
+      }),
+      {
+        tag: 'latest',
+        version: '1.15.0',
+      },
+    );
+  });
+
+  it('compares a prerelease against its own channel tag', () => {
+    assert.deepEqual(
+      selectTarget('lit-ui-router', '0.1.0-rc.0', {
+        latest: '0.0.1-alpha.0',
+        rc: '0.1.0-rc.0',
+      }),
+      { tag: 'rc', version: '0.1.0-rc.0' },
+    );
+  });
+
+  it('honours a non-rc channel', () => {
+    assert.deepEqual(
+      selectTarget('lit-ui-router', '2.0.0-beta.3', {
+        latest: '1.0.0',
+        beta: '2.0.0-beta.2',
+      }),
+      {
+        tag: 'beta',
+        version: '2.0.0-beta.2',
+      },
+    );
+  });
+
+  it('falls back to latest when the channel tag does not exist yet', () => {
+    assert.deepEqual(
+      selectTarget('lit-ui-router', '1.16.0-rc.0', { latest: '1.15.0' }),
+      {
+        tag: 'latest',
+        version: '1.15.0',
+      },
+    );
+  });
+
+  it('returns null when the package carries no dist-tags', () => {
+    assert.equal(selectTarget('lit-ui-router', '1.0.0', {}), null);
+    assert.equal(selectTarget('lit-ui-router', undefined, {}), null);
+  });
+
+  it('returns null when the published tags hold neither target', () => {
+    assert.equal(
+      selectTarget('lit-ui-router', '1.0.0-rc.0', { next: '1.0.0' }),
+      null,
+    );
+  });
+
+  it('throws on a channel off the allowlist — a manifest typo, never a tag', () => {
+    assert.throws(
+      () =>
+        selectTarget('lit-ui-router', '1.16.0-bettra.0', { latest: '1.15.0' }),
+      /lit-ui-router@1\.16\.0-bettra\.0: unknown prerelease channel "bettra" \(allowed: alpha, beta, rc\)/,
+    );
+  });
+});
+
 describe('formatReport', () => {
   const clean = {
     name: 'lit-ui-router',
     dir: 'packages/lit-ui-router',
-    latest: '1.7.0',
+    tag: 'latest',
+    version: '1.7.0',
     localVersion: '1.7.0',
     status: 'clean' as const,
   };
   const drift = {
     name: 'lit-ui-router-mobx',
     dir: 'packages/lit-ui-router-mobx',
-    latest: '0.3.2',
+    tag: 'latest',
+    version: '0.3.2',
     localVersion: '0.3.2',
     status: 'drift' as const,
     files: ['dist/router-store.js', 'package.json'],
@@ -220,7 +291,8 @@ describe('formatReport', () => {
   const shipInert = {
     name: 'lit-ui-router',
     dir: 'packages/lit-ui-router',
-    latest: '1.7.1',
+    tag: 'latest',
+    version: '1.7.1',
     localVersion: '1.7.1',
     status: 'ship-inert' as const,
     files: [],
@@ -234,14 +306,17 @@ describe('formatReport', () => {
       text,
       /✓ published-diff check passed — 1 packages, no ship-affecting drift/,
     );
-    assert.match(text, /lit-ui-router: clean vs 1\.7\.0/);
+    assert.match(text, /lit-ui-router: clean vs latest 1\.7\.0/);
   });
 
   it('passes with ship-inert drift only — even strict', () => {
     const { ok, text } = formatReport([shipInert], { strict: true });
     assert.equal(ok, true);
     assert.match(text, /\(1 ship-inert\)/);
-    assert.match(text, /ship-inert drift vs 1\.7\.1 — 2 ship-inert file\(s\)/);
+    assert.match(
+      text,
+      /ship-inert drift vs latest 1\.7\.1 — 2 ship-inert file\(s\)/,
+    );
     assert.match(text, /◦ src\/core\.ts/);
   });
 
@@ -251,7 +326,7 @@ describe('formatReport', () => {
     ]);
     assert.match(
       text,
-      /SHIPS CHANGES vs 0\.3\.2 — 2 ship-affecting file\(s\):/,
+      /SHIPS CHANGES vs latest 0\.3\.2 — 2 ship-affecting file\(s\):/,
     );
     assert.match(text, /◦ src\/router-store\.ts \(ship-inert\)/);
   });
@@ -262,7 +337,7 @@ describe('formatReport', () => {
     assert.match(text, /1 of 2 packages would ship changes/);
     assert.match(
       text,
-      /SHIPS CHANGES vs 0\.3\.2 — 2 ship-affecting file\(s\):/,
+      /SHIPS CHANGES vs latest 0\.3\.2 — 2 ship-affecting file\(s\):/,
     );
     assert.match(text, /• dist\/router-store\.js/);
   });
@@ -281,6 +356,29 @@ describe('formatReport', () => {
       text,
       /local 1\.7\.1 ahead of published — release in flight\?/,
     );
+  });
+
+  it('names the missing channel tag when a prerelease fell back to latest', () => {
+    const { text } = formatReport([
+      { ...clean, localVersion: '1.16.0-rc.0', version: '1.15.0' },
+    ]);
+    assert.match(
+      text,
+      /local 1\.16\.0-rc\.0 has no rc tag yet — compared against latest 1\.15\.0/,
+    );
+  });
+
+  it('reports a prerelease against its own channel tag', () => {
+    const { text } = formatReport([
+      {
+        ...clean,
+        name: 'lit-ui-router-ssr',
+        tag: 'rc',
+        version: '0.1.0-rc.0',
+        localVersion: '0.1.0-rc.0',
+      },
+    ]);
+    assert.match(text, /lit-ui-router-ssr: clean vs rc 0\.1\.0-rc\.0/);
   });
 
   it('skips unpublished packages without failing', () => {
@@ -334,14 +432,16 @@ describe('summarizeResults', () => {
         {
           name: 'lit-ui-router',
           dir: 'packages/lit-ui-router',
-          latest: '1.7.0',
+          tag: 'latest',
+          version: '1.7.0',
           localVersion: '1.7.0',
           status: 'clean',
         },
         {
           name: 'lit-ui-router-mobx',
           dir: 'packages/lit-ui-router-mobx',
-          latest: '0.3.2',
+          tag: 'rc',
+          version: '0.3.2',
           localVersion: '0.3.2',
           status: 'drift',
           files: ['dist/router-store.js', 'package.json'],
@@ -350,7 +450,8 @@ describe('summarizeResults', () => {
         {
           name: 'ui-router-navigation-location-plugin',
           dir: 'packages/navigation-location-plugin',
-          latest: '0.2.1',
+          tag: 'latest',
+          version: '0.2.1',
           localVersion: '0.2.1',
           status: 'ship-inert',
           files: [],
@@ -367,6 +468,7 @@ describe('summarizeResults', () => {
         {
           name: 'lit-ui-router',
           dir: 'packages/lit-ui-router',
+          tag: 'latest',
           version: '1.7.0',
           shipAffecting: 0,
           shipInert: 0,
@@ -377,6 +479,7 @@ describe('summarizeResults', () => {
         {
           name: 'lit-ui-router-mobx',
           dir: 'packages/lit-ui-router-mobx',
+          tag: 'rc',
           version: '0.3.2',
           shipAffecting: 2,
           shipInert: 1,
@@ -387,6 +490,7 @@ describe('summarizeResults', () => {
         {
           name: 'ui-router-navigation-location-plugin',
           dir: 'packages/navigation-location-plugin',
+          tag: 'latest',
           version: '0.2.1',
           shipAffecting: 0,
           shipInert: 2,
@@ -397,6 +501,7 @@ describe('summarizeResults', () => {
         {
           name: 'ui-router-server',
           dir: 'packages/ui-router-server',
+          tag: null,
           version: null,
           shipAffecting: 0,
           shipInert: 0,
@@ -415,6 +520,7 @@ describe('renderSummary', () => {
       {
         name: 'lit-ui-router',
         dir: 'packages/lit-ui-router',
+        tag: 'latest',
         version: '1.7.0',
         shipAffecting: 0,
         shipInert: 0,
@@ -428,6 +534,7 @@ describe('renderSummary', () => {
       {
         name: 'lit-ui-router',
         dir: 'packages/lit-ui-router',
+        tag: 'latest',
         version: '1.7.0',
         shipAffecting: 0,
         shipInert: 0,

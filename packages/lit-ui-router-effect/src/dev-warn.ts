@@ -1,4 +1,4 @@
-import { UIRouterLitElement } from 'lit-ui-router';
+import { UIRouterLitElement } from 'lit-ui-router/pure';
 
 // Copy of lit-ui-router's @internal helper; enableWarning exists only in lit's dev build.
 /** @internal */

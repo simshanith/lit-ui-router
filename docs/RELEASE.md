@@ -166,10 +166,15 @@ The final release stage:
 [Actions ▸ Release signals ▸ **Run workflow**](https://github.com/simshanith/lit-ui-router/actions/workflows/release-signals.yml)
 
 Non-gating per-package check runs on main's head — `published-diff (<pkg>)`
-(does the pack surface differ from the published `latest`?) and
-`peer-floor (<pkg>)` (is an adapter's published peer floor stale?). The
-README badges read these check runs; `action_required` renders orange,
-meaning a release or floor bump is owed — never a CI failure.
+(does the pack surface differ from the published tarball on the dist-tag the
+next publish would write?) and `peer-floor (<pkg>)` (is an adapter's published
+peer floor stale?). The README badges read these check runs; `action_required`
+renders orange, meaning a release or floor bump is owed — never a CI failure.
+
+`published-diff` picks that tag from the workspace version by the same rule
+release-it publishes under: a prerelease answers to its own channel tag,
+everything else to `latest`. A channel the registry does not carry yet falls
+back to `latest`, and the run names the missing tag.
 
 ## Step-by-Step Release Process
 
@@ -252,8 +257,10 @@ Break the cycle by hand, once, before adding the package to any workflow list:
    at `1.0.0-rc.0`, say), step 5 does not supersede the seed: release-it
    publishes that version under its own channel tag, so the seed keeps `latest`
    until the first stable release. The channel tag is current for as long as
-   that prerelease line lives, not a fossil. A maintainer who wants `latest` off
-   the stub sooner can move it by hand with
+   that prerelease line lives, not a fossil. `published-diff` compares against
+   that channel tag, so the signal is green against the live prerelease while
+   `latest` still points at the stub. A maintainer who wants `latest` off the
+   stub sooner can move it by hand with
    `npm dist-tag add <package>@<version> latest`.
 
 2. **Configure the trusted publisher** on npmjs.com for the new package,
@@ -303,6 +310,12 @@ version itself (`lib/plugin/npm/npm.js`, `resolveTag`): a non-prerelease gets
 `latest`, and a prerelease gets its own identifier — `1.8.0-canary.0` publishes
 to `canary`, `0.2.0-beta.1` to `beta`. A prerelease with no identifier falls
 back to any existing non-`latest` tag on the package, then to `next`.
+
+Because the identifier becomes the tag, the channels this repo publishes under
+are an allowlist — `alpha`, `beta`, `rc` (`PRERELEASE_CHANNELS` in
+`tools/release/src/steps/release-prev-tag.core.ts`). A bump-version `other`
+input and the `published-diff` check both reject anything else, so a typo fails
+loudly instead of manufacturing a dist-tag.
 
 Two consequences:
 

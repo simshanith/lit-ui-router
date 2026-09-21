@@ -62,7 +62,7 @@
       // Cached: the verdict is a pure function of the pack surface and the
       // resolved published versions. Sound because npm tarballs are immutable
       // per version (and we practice publisher immutability) — the movable
-      // `latest` pointer is captured in .cache/published-versions.json,
+      // dist-tag pointers are captured in .cache/published-versions.json,
       // written by resolve:published just before this task and hashed as an
       // input (explicitly listed gitignored inputs are hashed).
       // pack:all folds fresh dist + manifests into the packed tarballs this

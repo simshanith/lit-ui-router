@@ -15,6 +15,7 @@ import {
   uiSrefTargetEvent,
   uiSrefTargetRemovedEvent,
 } from './sref-internals.js';
+import type { ParentView } from './events.js';
 import { UiView } from './ui-view.js';
 
 /**
@@ -47,7 +48,7 @@ export class SrefHrefDirective extends AsyncDirective {
   /** @internal */
   uiRouter: UIRouterLit | undefined;
   /** @internal */
-  parentView: UiView | null = null;
+  parentView: ParentView | null = null;
 
   /** the href computed for the target, or null when there is none */
   href: string | null = null;

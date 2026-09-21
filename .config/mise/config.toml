@@ -63,10 +63,10 @@ idiomatic_version_file_enable_tools = ["node"]
 [tools]
 # mise vendors the usage spec parser, so flags work without this; it's pinned
 # for the `usage` CLI that shell completions of our #USAGE tasks shell out to.
-"aqua:jdx/usage" = "3.5.6"
+"aqua:jdx/usage" = "6.10.0"
 "aqua:rhysd/actionlint" = "1.7.12"
 # GitHub Actions security auditor; complements actionlint's syntax checks
-"aqua:zizmorcore/zizmor" = "1.26.1"
+"aqua:zizmorcore/zizmor" = "1.30.1"
 # Shell-script static analysis
 "aqua:koalaman/shellcheck" = "0.11.0"
 # Bootstrap pnpm, not the version that runs: `packageManager` is the authority
@@ -75,15 +75,15 @@ idiomatic_version_file_enable_tools = ["node"]
 # optional platform dep, which mise's aube installer does not run.
 # Held equal to `packageManager`, so the bootstrap is already the version that
 # runs and the self-swap is a no-op.
-"aqua:pnpm/pnpm" = "12.3.4"
+"aqua:pnpm/pnpm" = "12.5.1"
 # shadows node's bundled npm; OIDC trusted publishing needs npm >= 11.5.1
-"npm:npm" = "12.0.1"
+"npm:npm" = "12.0.2"
 # TOML formatter; oxfmt handles everything but .toml, so this owns the mise
 # configs and member mise.toml files. Pinned like the other aqua tools.
 "aqua:tamasfe/taplo" = "0.10.0"
 # Markdown linter (markdownlint's rule set, in Rust). Check-only: oxfmt formats
 # .md, rumdl lints it. Pre-1.0, so the pin is load-bearing.
-"aqua:rvben/rumdl" = "0.2.55"
+"aqua:rvben/rumdl" = "0.2.74"
 
 # snake_case names (bazel target convention); no colons in task names — mise
 # monorepo task addressing owns `:` (see the config_roots above).
@@ -118,7 +118,8 @@ run = "actionlint"
 [tasks.lint_zizmor]
 # --offline: keep local and CI runs identical (online audits self-enable when a GH token is in env)
 description = "Audit GitHub Actions workflows for security issues"
-run = "zizmor --offline .github/workflows"
+# --config: explicit relative path, colocated in .github
+run = "zizmor --offline --config .github/zizmor.yml .github/workflows"
 
 [tasks.lint_toml]
 # `taplo lint` = TOML syntax/structure validation, offline by default (taplo only

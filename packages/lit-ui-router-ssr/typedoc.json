@@ -1,6 +1,6 @@
 {
   "$schema": "https://typedoc.org/schema.json",
-  "entryPoints": ["src/index.ts"],
+  "entryPoints": ["src/index.ts", "src/client.ts"],
   "out": "../../www/lit-ui-router.dev/api/lit-ui-router-ssr",
   "docsRoot": "../../www/lit-ui-router.dev",
   "plugin": [
@@ -31,7 +31,8 @@
       "TemplateResult": "https://lit.dev/docs/api/templates/#TemplateResult"
     },
     "lit-ui-router": {
-      "UIRouterLit": "/api/reference/core/UIRouterLit"
+      "UIRouterLit": "/api/reference/core/UIRouterLit",
+      "adoptUiViewContext": "/api/reference/core/adoptUiViewContext"
     },
     "ui-router-server": {
       "MountConfig": "/api/ui-router-server/index/interfaces/MountConfig",
