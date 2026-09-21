@@ -40,6 +40,28 @@ function createTestRouter(baseHref = '/'): UIRouter {
   return router;
 }
 
+/** The `navigate` listener the service registered, as the stub recorded it. */
+function registeredInterceptor(): (event: NavigateEvent) => void {
+  const call = stub.addEventListener.mock.calls.find(
+    (args: unknown[]) => args[0] === 'navigate',
+  ) as [string, (event: NavigateEvent) => void] | undefined;
+  if (!call) throw new Error('no navigate listener registered');
+  return call[1];
+}
+
+interface FakeNavigateEvent {
+  canIntercept: boolean;
+  info?: unknown;
+  intercept: ReturnType<typeof vi.fn>;
+}
+
+function fakeNavigateEvent(
+  info?: unknown,
+  canIntercept = true,
+): FakeNavigateEvent {
+  return { canIntercept, info, intercept: vi.fn() };
+}
+
 describe('NavigationLocationService (stubbed Navigation seam)', () => {
   let router: UIRouter;
   let service: TestableService | null;
@@ -83,6 +105,16 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
         'currententrychange',
         expect.any(Function),
         false,
+      );
+    });
+
+    it('registers navigate listener on the Navigation API', () => {
+      router = createTestRouter();
+      service = new TestableService(router);
+
+      expect(stub.addEventListener).toHaveBeenCalledWith(
+        'navigate',
+        expect.any(Function),
       );
     });
 
@@ -177,6 +209,51 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
     });
   });
 
+  describe('navigate interception', () => {
+    beforeEach(() => {
+      router = createTestRouter();
+      service = new TestableService(router);
+    });
+
+    it('intercepts its own navigation with a resolving handler', async () => {
+      const event = fakeNavigateEvent({ uiRouter: router });
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(event.intercept).toHaveBeenCalledWith({
+        handler: expect.any(Function),
+      });
+      const [{ handler }] = event.intercept.mock.calls[0] as [
+        { handler: () => Promise<void> },
+      ];
+      await expect(handler()).resolves.toBeUndefined();
+    });
+
+    it('leaves a navigation it cannot intercept alone', () => {
+      const event = fakeNavigateEvent({ uiRouter: router }, false);
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(event.intercept).not.toHaveBeenCalled();
+    });
+
+    it('leaves a navigation it did not start alone', () => {
+      const event = fakeNavigateEvent();
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(event.intercept).not.toHaveBeenCalled();
+    });
+
+    it("leaves another router's navigation alone", () => {
+      const event = fakeNavigateEvent({ uiRouter: new UIRouter() });
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(event.intercept).not.toHaveBeenCalled();
+    });
+  });
+
   describe('dispose', () => {
     it('removes the currententrychange event listener', () => {
       router = createTestRouter();
@@ -188,6 +265,20 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       expect(stub.removeEventListener).toHaveBeenCalledWith(
         'currententrychange',
         expect.any(Function),
+      );
+    });
+
+    it('removes the navigate listener it registered', () => {
+      router = createTestRouter();
+      service = new TestableService(router);
+      const interceptor = registeredInterceptor();
+
+      service.dispose(router);
+      service = null;
+
+      expect(stub.removeEventListener).toHaveBeenCalledWith(
+        'navigate',
+        interceptor,
       );
     });
   });

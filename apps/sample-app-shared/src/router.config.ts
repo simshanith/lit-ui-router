@@ -82,13 +82,8 @@ export function configureRouter(router = new UIRouterLit()) {
       console.debug('navigate', event);
 
       if (isUIRouterNavigateEvent(event)) {
-        const { uiRouter } = event.info;
-        event.intercept({
-          handler() {
-            console.debug('intercepted uiRouter navigation', url, uiRouter);
-            return Promise.resolve();
-          },
-        });
+        // the plugin intercepts its own navigations; this only records them
+        console.debug('uiRouter navigation', url, event.info.uiRouter);
       } else {
         console.debug('allowed navigation', url);
       }

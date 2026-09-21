@@ -40,7 +40,7 @@ router.plugin(navigationLocationPlugin);
 
 ## Navigation Event Interception
 
-A key feature of this plugin is exposing the UIRouter instance in navigation events, enabling interception:
+The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. It also exposes the UIRouter instance in each of those navigations' `info`, so an app's own `navigate` listener can tell router-driven navigations apart and hang extra work — view transitions, analytics, progress UI — off them. `intercept()` composes: the extra handler runs alongside the plugin's.
 
 ```typescript
 import { isUIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
@@ -49,6 +49,12 @@ window.navigation.addEventListener('navigate', (event) => {
   if (isUIRouterNavigateEvent(event)) {
     // Access UIRouter during navigation
     const { uiRouter } = event.info;
+    event.intercept({
+      async handler() {
+        // the app's extra work for this transition: view transitions,
+        // analytics, progress UI…
+      },
+    });
   }
 });
 ```
@@ -132,7 +138,7 @@ class StubbedNavigationLocationService extends NavigationLocationService {
 
 ### `isUIRouterNavigateEvent(event)`
 
-Type guard function to check if a `NavigateEvent` was triggered by UIRouter.
+Type guard function to check if a `NavigateEvent` was triggered by UIRouter. Use it in a `navigate` listener to read the router off `event.info`; the plugin has already intercepted its own navigations.
 
 ```typescript
 function isUIRouterNavigateEvent(

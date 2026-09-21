@@ -81,10 +81,15 @@ three plugins and shows browser compatibility for each.
 
 ## Navigation event interception
 
-The plugin's headline feature: it passes the `UIRouter` instance along in each
-navigation's [`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)
+The plugin intercepts the navigations it starts, so a router transition commits
+as a same-document navigation rather than loading the document afresh.
+
+It also passes the `UIRouter` instance along in each of those navigations'
+[`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)
 metadata, so a global `navigate` listener can distinguish router-driven
-navigations from everything else and access the router while handling them:
+navigations from everything else and access the router while handling them. An
+app's `intercept()` composes with the plugin's — it is where the app's extra
+work for the transition goes:
 
 ```ts
 import { isUIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
@@ -95,7 +100,7 @@ window.navigation.addEventListener('navigate', (event) => {
     const { uiRouter } = event.info;
     event.intercept({
       async handler() {
-        // e.g. integrate view transitions, analytics, progress UI…
+        // the app's extra work: view transitions, analytics, progress UI…
       },
     });
   }
@@ -160,7 +165,8 @@ each location plugin.
   the Navigation API, including `<base href>` handling for non-root
   deployments and navigation state/title metadata
 - **`isUIRouterNavigateEvent(event)`** — type guard: was this `NavigateEvent`
-  triggered by UIRouter?
+  triggered by UIRouter? The plugin intercepts those itself; a listener uses
+  the guard to add work of its own
 - **`UIRouterNavigateEvent` / `UIRouterNavigateInfo`** — the extended event
   and `info` types carrying the `uiRouter` instance
 
