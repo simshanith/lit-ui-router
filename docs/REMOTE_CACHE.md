@@ -132,6 +132,27 @@ The workflow that pairs with it:
   that checkout is already `remote:r`; `turbo_backfill` from there is
   equivalent. Either way the run is all hits except the test tasks.
 
+`turbo_backfill` inspects the tree before it spends that pass. Turbo hashes the
+working tree exactly as it stands, so a tree CI never saw — uncommitted edits, an
+unpushed commit, a branch that drifted from `main`, since PR CI hashes the merge
+and not the branch head — misses every lookup, and turbo then rebuilds everything
+into the local cache without saying so:
+
+- A dirty tree is refused outright: _working tree is dirty; CI hashed a
+  committed tree, commit or stash first_.
+- Otherwise a remote-off dry run (`TURBO_CACHE=local:r`, blank token: about a
+  second, zero requests) yields the plan. The five cacheable misses with the
+  longest dependency lists — their hashes fold in everything underneath — go to
+  `turbo_cache_probe`, which `HEAD`s `/v8/artifacts/:id` for each and stops at
+  the first `200`. A hit costs one request, a miss five, against the ~700 the
+  full pass would spend. An empty list means the shared local cache already
+  holds this tree, and the probe is skipped.
+- All five absent, and the task refuses with one diagnostic: _HEAD is not
+  pushed_ when no remote branch contains it, _branch is behind origin/main; PR
+  CI hashes the merge, pull main first_ when `origin/main` is not an ancestor of
+  `HEAD`, and _CI may still be running_ otherwise. Any other status, or a curl
+  failure, propagates instead as a failure naming the status code.
+
 The `test`, `test:coverage`, `test:engines`, `test:lit2-compat` and
 `test:mobx6-compat` tasks hash `CI` in `turbo.json`, so their artifacts carry a
 key no laptop can produce: those always run locally, backfill or not.
