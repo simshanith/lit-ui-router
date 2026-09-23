@@ -4,15 +4,18 @@
   "tasks": {
     "test": {
       // The root test task's src/** inputs would stale-cache this src-less
-      // package; over-approximate instead. The extra globs are pnpm-pin.test.ts's
-      // read-set: it compares the repo's pnpm version pins against
-      // package.json's `packageManager`, so a bump to any of them must re-run it.
+      // package; over-approximate instead. The extra globs are the read-sets of
+      // the tests that look outside this package: pnpm-pin.test.ts compares the
+      // repo's pnpm version pins against package.json's `packageManager`, and
+      // runner-label.test.ts reads every workflow plus the actionlint config.
       "inputs": [
         "$TURBO_DEFAULT$",
         "$TURBO_ROOT$/package.json",
         "$TURBO_ROOT$/pnpm-lock.yaml",
         "$TURBO_ROOT$/.config/mise/config.toml",
-        "$TURBO_ROOT$/.config/mise/mise.lock"
+        "$TURBO_ROOT$/.config/mise/mise.lock",
+        "$TURBO_ROOT$/.github/workflows/**",
+        "$TURBO_ROOT$/.github/actionlint.yaml"
       ]
     },
     // Every check below reads the whole repo, not just this package, so each

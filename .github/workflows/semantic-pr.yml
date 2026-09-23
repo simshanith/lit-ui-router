@@ -27,7 +27,7 @@ jobs:
   lint_pr_title:
     # never run in forks' stale copies of this workflow
     if: ${{ github.repository == 'simshanith/lit-ui-router' }}
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     steps:
       - uses: amannn/action-semantic-pull-request@v6
         env:

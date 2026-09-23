@@ -25,6 +25,7 @@
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
     "typescript": "catalog:",
-    "typescript-6": "catalog:typescript6"
+    "typescript-6": "catalog:typescript6",
+    "yaml": "catalog:"
   }
 }
