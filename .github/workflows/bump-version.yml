@@ -32,7 +32,8 @@ on:
           - major
           - minor
           - patch
-          - other # Use with 'other' input for custom versions (e.g., prereleases)
+          - prerelease # Advance the current prerelease line (1.2.0-rc.0 → 1.2.0-rc.1)
+          - other # Use with 'other' input for custom versions (e.g., a new prerelease line)
           - none # No increment - use current version. No-op unless `other` provided
       other:
         description: 'Other increment'

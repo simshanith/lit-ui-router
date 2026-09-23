@@ -125,7 +125,7 @@ Creates a release PR by:
 
 **Inputs:**
 
-- `increment` - Version bump type: `major`, `minor`, `patch`, `other`, `none`
+- `increment` - Version bump type: `major`, `minor`, `patch`, `prerelease`, `other`, `none`
 - `other` - Custom version string (when using `other`)
 - `prBase` - Target branch (default: `main`)
 - `branchPrefix` - Branch prefix (default: `release/lit-ui-router/v`)
@@ -207,7 +207,10 @@ back to `latest`, and the run names the missing tag.
 
 ### Prerelease / Custom Version
 
-For prereleases like `1.2.3-beta.0`:
+To advance an existing prerelease line (`1.2.3-beta.0` → `1.2.3-beta.1`),
+run "Bump version" with `increment`: `prerelease`.
+
+To start a new line like `1.2.3-beta.0`:
 
 1. Run "Bump version" workflow with:
    - `increment`: `other`
