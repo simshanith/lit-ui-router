@@ -24,13 +24,13 @@
     "@uirouter/visualizer": "catalog:",
     "lit": "catalog:",
     "lit-dialog": "catalog:",
-    "lit-ui-router": "catalog:workspace",
+    "lit-ui-router": "workspace:*",
     "lodash-es": "catalog:",
-    "sample-app-routes": "catalog:workspace",
-    "ui-router-navigation-location-plugin": "catalog:workspace"
+    "sample-app-routes": "workspace:*",
+    "ui-router-navigation-location-plugin": "workspace:*"
   },
   "devDependencies": {
-    "@tools/lit-test-env": "catalog:workspace",
+    "@tools/lit-test-env": "workspace:*",
     "@types/dom-navigation": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",

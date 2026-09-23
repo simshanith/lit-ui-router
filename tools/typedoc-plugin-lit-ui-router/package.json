@@ -25,7 +25,7 @@
     "typecheck:src": "tsc -p tsconfig.src.json --noEmit"
   },
   "devDependencies": {
-    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/oxc-emit": "workspace:*",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

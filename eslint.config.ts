@@ -50,8 +50,8 @@ export default defineConfig(
       'pnpm/json-enforce-catalog': [
         'error',
         {
-          // every spec goes through a catalog, workspace deps included
-          allowedProtocols: [],
+          // non-registry specs stay inline; npm: aliases belong in the catalog
+          allowedProtocols: ['workspace', 'link', 'file', 'portal'],
           // report catalog-version conflicts instead of auto-creating a new catalog
           conflicts: 'error',
           fields: [
@@ -86,7 +86,7 @@ export default defineConfig(
   {
     // The same boundary for every other package: scripts must not reach into
     // a sibling (or the root) by relative parent path. Own files run
-    // directly; another package's entry points come through a workspace
+    // directly; another package's entry points come through a workspace:*
     // dep's bin or a turbo/pnpm delegation.
     files: ['**/package.json'],
     ignores: ['package.json'],
@@ -97,26 +97,25 @@ export default defineConfig(
           selector:
             'JSONProperty[key.value="scripts"] > JSONObjectExpression > JSONProperty > JSONLiteral[value=/\\b(?:node|tsx) +\\.\\.\\u002F/]',
           message:
-            'Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (its bin, as a workspace dep) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.',
+            'Cross-package execution: scripts must not run files outside their own package with node/tsx. Depend on the owning package (workspace:* bin) or delegate via `turbo run <task>` / `pnpm --filter <pkg> run <script>`.',
         },
       ],
     },
   },
   {
-    // Shipped dep fields of publishable packages must not use workspace: refs,
-    // directly or through the `workspace` catalog: pnpm's pack-substitution
-    // re-appends the substituted entry, breaking the sorted published
-    // manifest. devDependencies is exempt (stripped at pack), as are private
-    // manifests (never packed).
+    // Shipped dep fields of publishable packages must not use workspace: refs:
+    // pnpm's pack-substitution re-appends the substituted entry, breaking the
+    // sorted published manifest. devDependencies is exempt (stripped at pack;
+    // workspace:* is correct there), as are private manifests (never packed).
     files: ['packages/*/package.json'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector:
-            'JSONObjectExpression:not(:has(> JSONProperty[key.value="private"][value.value=true])) > JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"]) > JSONObjectExpression > JSONProperty > JSONLiteral[value=/^(?:workspace:|catalog:workspace$)/]',
+            'JSONObjectExpression:not(:has(> JSONProperty[key.value="private"][value.value=true])) > JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"]) > JSONObjectExpression > JSONProperty > JSONLiteral[value=/^workspace:/]',
           message:
-            'workspace: and catalog:workspace refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
+            'workspace: refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
         },
       ],
     },
