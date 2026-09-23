@@ -1,7 +1,7 @@
 {
   "ref": "origin/main",
-  "sha": "4223ffc7",
-  "generatedAtTime": "2026-09-14T22:42:06.376Z",
+  "sha": "38c9fa1c",
+  "generatedAtTime": "2026-09-23T07:22:18.292Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-npm.mjs",
   "used": "npm view <pkg> version time dist-tags (registry.npmjs.org)",
   "wasAssociatedWith": [
@@ -17,10 +17,10 @@
     {"name":"@uirouter/sticky-states","version":"1.5.1","published":"2019-10-08","created":"2017-05-03","tags":{"latest":"1.5.1"}},
     {"name":"@uirouter/dsr","version":"1.2.0","published":"2019-12-26","created":"2017-05-03","tags":{"latest":"1.2.0"}},
     {"name":"eslint-plugin-lit-ui-router","version":"1.1.0","published":"2026-09-13","created":"2026-09-01","tags":{"latest":"1.1.0"}},
-    {"name":"lit-ui-router","version":"1.15.0","published":"2026-09-14","created":"2026-01-01","tags":{"latest":"1.15.0"}},
-    {"name":"lit-ui-router-effect","version":"0.0.1-alpha.0","published":"2026-09-13","created":"2026-09-13","tags":{"latest":"0.0.1-alpha.0","rc":"0.1.0-rc.0"}},
-    {"name":"lit-ui-router-mobx","version":"1.0.1","published":"2026-09-13","created":"2026-07-05","tags":{"latest":"1.0.1"}},
-    {"name":"lit-ui-router-ssr","version":"0.0.1-alpha.0","published":"2026-09-14","created":"2026-09-14","tags":{"latest":"0.0.1-alpha.0","rc":"0.1.0-rc.0"}},
+    {"name":"lit-ui-router","version":"1.15.0","published":"2026-09-14","created":"2026-01-01","tags":{"latest":"1.15.0","rc":"1.16.0-rc.1"}},
+    {"name":"lit-ui-router-effect","version":"0.1.1","published":"2026-09-21","created":"2026-09-13","tags":{"latest":"0.1.1"}},
+    {"name":"lit-ui-router-mobx","version":"1.0.2","published":"2026-09-21","created":"2026-07-05","tags":{"latest":"1.0.2"}},
+    {"name":"lit-ui-router-ssr","version":"0.0.1-alpha.0","published":"2026-09-14","created":"2026-09-14","tags":{"latest":"0.0.1-alpha.0","rc":"0.1.0-rc.2"}},
     {"name":"ui-router-navigation-location-plugin","version":"0.3.2","published":"2026-09-13","created":"2026-01-14","tags":{"latest":"0.3.2"}},
     {"name":"ui-router-server","version":"0.2.0","published":"2026-09-14","created":"2026-07-28","tags":{"latest":"0.2.0"}}
   ]

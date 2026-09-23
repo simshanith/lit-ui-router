@@ -44,6 +44,8 @@ const ORDER = [
   ['lit-ui-router-effect', '.'],
   ['lit-ui-router-mobx', '.'],
   ['lit-ui-router-ssr', '.'],
+  ['lit-ui-router-ssr', './client'],
+  ['lit-ui-router-ssr', './register'],
   ['ui-router-navigation-location-plugin', '.'],
   ['ui-router-server', '.'],
   ['ui-router-server', './redirects'],
@@ -63,15 +65,21 @@ if (ORDER.length !== DOOR_N) {
 
 // Manual plan: one quarter per package, tall doors in back. [pkg + door → x, y]
 const PLAN = {
-  'lit-ui-router|.': [30, 15],
-  'lit-ui-router|./pure': [95, 45],
+  // set back from the plate's top edge: the bare door stands 218 px tall at this
+  // ref and its badge left the viewBox from [30, 15]
+  'lit-ui-router|.': [26, 46],
+  'lit-ui-router|./pure': [98, 45],
   'lit-ui-router|./register': [185, 60],
   'lit-ui-router|./ui-router.register': [252, 92],
   'lit-ui-router|./ui-view.register': [180, 140],
   'lit-ui-router|./context': [305, 105],
   'lit-ui-router-effect|.': [40, 365],
   'lit-ui-router-mobx|.': [155, 310],
-  'lit-ui-router-ssr|.': [620, 285],
+  // three doors in the bridge quarter: the prerender index and client in back, the
+  // served <ui-view> registration in front
+  'lit-ui-router-ssr|.': [592, 262],
+  'lit-ui-router-ssr|./client': [632, 262],
+  'lit-ui-router-ssr|./register': [652, 300],
   'ui-router-navigation-location-plugin|.': [460, 370],
   'ui-router-server|.': [425, 15],
   'ui-router-server|./redirects': [495, 40],
@@ -130,6 +138,8 @@ const SIM = at('ui-router-server', './simulate');
 const MOBX = at('lit-ui-router-mobx', '.');
 const EFF = at('lit-ui-router-effect', '.');
 const SSR = at('lit-ui-router-ssr', '.');
+const SSR_CLIENT = at('lit-ui-router-ssr', './client');
+const SSR_REG = at('lit-ui-router-ssr', './register');
 const NAV = at('ui-router-navigation-location-plugin', '.');
 const LINT = at('eslint-plugin-lit-ui-router', '.');
 const REG_COST = FLAG.gz - PURE.gz;
@@ -154,6 +164,8 @@ const NOTE = {
   'lit-ui-router-effect|.': 'the whole effect layer',
   'lit-ui-router-mobx|.': 'the whole mobx layer',
   'lit-ui-router-ssr|.': 'the prerender bridge',
+  'lit-ui-router-ssr|./client': 'the browser half — hydrateRoot',
+  'lit-ui-router-ssr|./register': 'the served <ui-view>, registered',
   'ui-router-navigation-location-plugin|.': 'the whole plugin',
   'ui-router-server|.': `${SRV_GAP} gz shy of the flagship`,
   'ui-router-server|./redirects': 'redirect machinery',
@@ -176,7 +188,7 @@ ${all.slice(0, half).map((r, i) => txt(56, SY + 52 + i * 17, `${r.n} ${r.pkg} ${
 ${all.slice(half).map((r, i) => txt(590, SY + 52 + i * 17, `${r.n} ${r.pkg} ${r.door} — ${fmt(r.m)} → ${fmt(r.gz)} gz · ${NOTE[`${r.pkg}|${r.door}`]}`, 'lbls')).join('\n')}
 </g>`;
 
-const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a nine-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect, mobx and ssr companions and the navigation-location plugin stand alone as small one-door quarters; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
+const svg = `<svg viewBox="0 0 1160 ${SY + 90 + half * 17}" role="img" aria-label="Every exported entry of the ${PKG_N} publishable packages drawn as an isometric city split into ${PKG_N} package quarters: ${DOOR_N} door-buildings, footprint from minified bytes, height from gzipped bytes with dependencies external. The lit-ui-router quarter shows twin flagship towers for the bare and pure entries plus three register doors and a low context door; the ui-router-server quarter is a nine-door storefront whose index tower prices ${SRV_GAP} gzipped bytes under lit-ui-router's; the effect and mobx companions and the navigation-location plugin stand alone as small one-door quarters; the ssr bridge between the client and server quarters holds three doors, its index, its client half and its register entry; and a one-door quarter in the lower middle holds eslint-plugin-lit-ui-router, whose single door is the only one on the sheet no browser ever loads. A structure schedule lists every entry with exact byte counts.">
 ${defs(P)}
 
 ${quarter(20, 0, 330, 200, 'lit-ui-router — six doors', 162, 426, 'end')}
@@ -185,7 +197,7 @@ ${quarter(0, 345, 110, 415, 'lit-ui-router-effect', 176, 445, 'end')}
 ${quarter(120, 290, 260, 380, 'lit-ui-router-mobx', 240, 478, 'end')}
 ${quarter(290, 240, 400, 320, 'eslint-plugin-lit-ui-router', 450, 528, 'end')}
 ${quarter(420, 350, 570, 440, 'navigation-location-plugin', 455, 700)}
-${quarter(580, 255, 700, 330, 'lit-ui-router-ssr', 694, 716)}
+${quarter(580, 250, 700, 335, 'lit-ui-router-ssr — three doors', 694, 716)}
 
 ${bodies}
 
@@ -200,7 +212,7 @@ ${txt(250, 560, `the lint plugin's one door: ${fmt(LINT.gz)} gz —`, 'lbls')}
 ${txt(250, 572, 'the only door here no browser ever opens', 'lbls')}
 ${txt(1120, 695, `four adapters within ${ADAPTER_SPREAD} bytes of one`, 'lbla', 'end')}
 ${txt(1120, 707, 'another — thin skins on one server core', 'lbla', 'end')}
-${txt(100, 665, 'the four companion doors price like footnotes:', 'lbls')}
+${txt(100, 665, 'the four companion index doors price like footnotes:', 'lbls')}
 ${txt(100, 677, `mobx ${fmt(MOBX.gz)} · effect ${fmt(EFF.gz)} · ssr ${fmt(SSR.gz)} · nav ${fmt(NAV.gz)} gz`, 'lbls')}
 
 ${txt(1120, 26, 'SCALE — footprint area ∝ minified bytes · 1 px of height ≈ 40 gz bytes', 'lbls', 'end')}
@@ -223,8 +235,8 @@ export const sheet11 = {
 <p><strong>Method:</strong> the same probe as sheet 10's doors strip, run to completion: every exported entry of the ${PKG_N} publishable packages bundled alone with rolldown — minified, declared dependencies and peers external — which is the price a consumer's bundler pays at that door, and byte-for-byte the <code>&lt;pkg&gt;-&lt;label&gt;-esm</code> series CI uploads to codecov. Footprint is minified bytes, height gzipped. Every number is read at build time from the checked-in plate <code>www/atlas.lit-ui-router.dev/data/census-doors.json</code> — ${BASIS}, probed as <code>${PLATE.used}</code> — and a door the plate carries that the drawing does not place is a build error, not a stale constant. Sheet 10 is the unified view — one real app's bundle with all of these mixed by the bundler; this sheet cuts the same machinery by published package and entry point. The quarters don't sum and shouldn't: doors overlap (<code>./pure</code> is <code>.</code> minus registration), which is exactly what the split view exists to show.</p>
 <p><strong>The twin towers are one building with two doors.</strong> <code>.</code> and <code>./pure</code> differ by ${REG_COST} gzipped bytes — the whole cost of custom-element registration. The register economics run the other way: the two one-element doors sum to ${fmt(ELEM_SUM)} gz while the umbrella <code>./register</code> is ${fmt(UMB.gz)}, because each element door carries the shared element core with it. Take the umbrella or one element door; taking two per-element doors ships the core twice.</p>
 <p><strong>The server is a storefront, not a tower.</strong> Nine doors: an index at ${fmt(SRV.gz)} gz, ${fmt(SRV_GAP)} under the client flagship; redirect and matcher wings at ${fmt(at('ui-router-server', './redirects').gz)} and ${fmt(at('ui-router-server', './matcher').gz)}; four framework adapters — hono, fetch, vite, connect — packed within ${ADAPTER_SPREAD} bytes of one another, which is what thin skins over one core look like priced; and two doors that barely register, <code>./simulate</code> at ${SIM.gz} bytes and <code>./location</code> at ${at('ui-router-server', './location').gz}, the cheapest door on the sheet.</p>
-<p><strong>Two more quarters, and one of them sits between the other two.</strong> <code>lit-ui-router-effect</code> enters at ${fmt(EFF.gz)} gz and <code>lit-ui-router-ssr</code> at ${fmt(SSR.gz)} — each a single door, each a quarter of its own. The ssr quarter is drawn in the gap between the client and server quarters because that is where its declarations put it: it is the one package here that peers both <code>lit-ui-router</code> and <code>ui-router-server</code> (sheet 4 draws that bridge). Both packages ship their newest work under npm's <code>rc</code> tag; the plate prices what the repo builds at this ref, not what <code>latest</code> resolves to.</p>
-<p><strong>Plugins price like footnotes.</strong> The entire mobx reactivity layer enters at ${fmt(MOBX.gz)} gz and the navigation-location plugin at ${fmt(NAV.gz)} — each cheaper than the gap between <code>./register</code> and its two element doors, and the effect and ssr doors (${fmt(EFF.gz)} and ${fmt(SSR.gz)}) are not much dearer. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's <code>@uirouter/core</code>) is external here by design.</p>
+<p><strong>Two more quarters, and one of them sits between the other two.</strong> <code>lit-ui-router-effect</code> enters at ${fmt(EFF.gz)} gz through its one door. <code>lit-ui-router-ssr</code> has three: the prerender index at ${fmt(SSR.gz)} gz, <code>./client</code> — the browser half that adopts a served render — at ${fmt(SSR_CLIENT.gz)}, and <code>./register</code>, which defines <code>&lt;ui-router&gt;</code> and a served <code>&lt;ui-view&gt;</code> in place of <code>lit-ui-router/register</code>, at ${fmt(SSR_REG.gz)}. The ssr quarter is drawn in the gap between the client and server quarters because that is where its declarations put it: it is the one package here that peers both <code>lit-ui-router</code> and <code>ui-router-server</code> (sheet 4 draws that bridge). It ships its newest work under npm's <code>rc</code> tag, and so does <code>lit-ui-router</code>; the plate prices what the repo builds at this ref, not what <code>latest</code> resolves to.</p>
+<p><strong>Plugins price like footnotes.</strong> The entire mobx reactivity layer enters at ${fmt(MOBX.gz)} gz and the navigation-location plugin at ${fmt(NAV.gz)} — each cheaper than the gap between <code>./register</code> and its two element doors, and the effect and ssr index doors (${fmt(EFF.gz)} and ${fmt(SSR.gz)}) are not much dearer. The expensive thing in this family is never the adapter; it is the state machine they all defer to, and that machine (sheet 10's <code>@uirouter/core</code>) is external here by design.</p>
 <p><strong>Door ${LINT.n} is not a door a browser opens.</strong> <code>eslint-plugin-lit-ui-router</code> (#676) is the family's one non-runtime published package, so its quarter is drawn but its number means something different: ${fmt(LINT.m)} minified, ${fmt(LINT.gz)} gz is what a <em>lint host</em> loads, once, at author time. It is priced here because the probe prices every published entry without exception — the honest thing for a ledger — and it is worth knowing that the plugin costs ${LINT_SHARE}% of the flagship to a tool that already has Node's whole module graph resident. Nothing in it ever reaches a bundle: it peers ESLint alone — oxlint loads it as a JS plugin, unpeered — never <code>@uirouter/core</code> (sheet 2 leaves it off the plate for the same reason).</p>
 <p><strong>Why both views exist.</strong> The split view is the seller's ledger — what each door costs at the threshold. The unified view is the buyer's receipt — what one app's bundler actually made of them (it paid ${fmt(RECEIPT)} of the flagship's ${fmt(FLAG.gz)}). Codecov tracks the ledger per commit; sheet 10 audits the receipt.</p>`,
   key: [

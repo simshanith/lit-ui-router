@@ -128,7 +128,7 @@ ${R(x, y, s, s, 'class="ska fnone" stroke-dasharray="5 4"')}`;
   // metered: lit strip from the lamp side, shadow strip beyond the light's reach
   const e = (b.ext ?? 0) / 100;
   const litW = s * e, shW = s - litW;
-  // happy-dom's lamp is lit but pointed elsewhere — no cone, all shadow
+  // a lamp that lights nothing of its own — no cone, all shadow
   const lamp = b.ext === 0 ? '' : cone;
   const lit = litW > 0 ? R(x + shW, y, litW, s, `fill="${BANDS[BAND(line) ?? 'b1'].fill}"`) : '';
   const sh = shW > 0.01 ? R(x, y, shW, s, `fill="url(#${P}-sh)"`) : '';
@@ -185,6 +185,9 @@ const dAgg = (d) => {
   };
 };
 const DP = dAgg('pkg'), DA = dAgg('app'), DT = dAgg('tool');
+// the spread of spec-to-source ratios across the district, read off the same rows
+const PKG_RATIOS = M.filter((r) => r[2] === 'pkg' && r[7] && r[9]).map((r) => r[9] / r[7]);
+const ANNEX_RANGE = `${Math.min(...PKG_RATIOS).toFixed(1)}–${Math.max(...PKG_RATIOS).toFixed(1)}×`;
 // the yard's habit, counted rather than asserted: source a metered suite never loads
 const wrapperSloc = M.filter((r) => r[2] === 'tool' && r[3] === 'm')
   .reduce((a, r) => a + (r[7] - (r[11] ?? 0)), 0);
@@ -225,7 +228,7 @@ const NOTE = {
   23: 'harness for the vitest suites — borrowed light',
   24: 'wrapper only',
   25: 'rebase.ts lit · CLI wrapper in shadow',
-  26: 'canary lights happy-dom, not append.ts',
+  26: 'canary lights inner-html.ts, not append.ts',
   27: 'ambient types — nothing to light',
   28: 'the element lane — no suite of its own',
   29: 'the ratchet core, metered clean',
@@ -261,7 +264,7 @@ ${M.slice(half).map((r, i) => schedTxt(800, SY + 52 + i * 17, schedRow(r), 'lbls
 ${txt(58, SY + 56 + half * 17, TOTAL_LINE, 'lbls')}
 ${txt(58, SY + 72 + half * 17, `light and footprint are measured at the SAME ref, so no member's meter and its own census can disagree · every figure above is read from www/atlas.lit-ui-router.dev/data/census-shadow.json and www/atlas.lit-ui-router.dev/data/census-city.json`, 'lblf')}`;
 
-const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, has a lit lamp and still stands dark: its canary spec lights happy-dom itself, never its own source. A shadow schedule below gives exact per-member figures.">
+const svg = `<svg viewBox="0 0 1560 ${SY + 121 + half * 17}" role="img" aria-label="A plan view of sheet 7's census city — the same ${M.length} workspace members in the same four dashed districts, seen from straight above — where each member's spec annex is drawn as a lamp and the light of its own test suite falls onto the building. The lit strip of every footprint is the share of the member's source its suite actually loads, glowing from the lamp side; how bright that strip reads is the line coverage of what the suite loaded; everything the suite never imports stays in dense shadow hatch. ${T.metered} members are metered in all. The packages district glows nearly wall to wall. In the instrument yard the light is bright but narrow: release, build_and_test, workers-builds and lcov-rebase light their .core.ts files fully and leave their command-line wrapper files in shadow. Members with no suite at all are marked with red badges and stand entirely dark. The two sample-app demos and the Cypress host carry an accent hatch — real light from the end-to-end rig, which no meter reads. One building, tools/happy-dom, is lit by a canary spec pointed at happy-dom itself, which lights only the workaround it guards and leaves the rest in shadow. A shadow schedule below gives exact per-member figures.">
 ${defs(P)}
 <defs>
   <!-- shadow must darken in BOTH themes: a black wash (never ink, which is light
@@ -328,8 +331,9 @@ ${furn}
 
 <!-- district lettering + aggregates -->
 ${txt(140, 316, 'packages/ — THE PRODUCT', 'lblb')}
-${txt(140, 328, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc · ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} metered lines`, 'lblf')}
-${txt(140, 340, `branches ${pct1(DP.branchesHit, DP.branches)}% · the annexes sheet 7 drew at 1.5–3.9× bought this glow`, 'lblf')}
+<!-- the second line stops short of member 3's halo, which reaches y 328 at this ref -->
+${txt(140, 328, `lit ${pct1(DP.litSloc, DP.meteredSloc)}% of metered district sloc`, 'lblf')}
+${txt(140, 340, `${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines · branches ${pct1(DP.branchesHit, DP.branches)}% — bought by sheet 7's ${ANNEX_RANGE} annexes`, 'lblf')}
 <line x1="150" y1="304" x2="160" y2="294" class="skf"/>
 
 ${txt(1096, 372, 'apps/ — THE PROVING GROUND', 'lblb', 'end')}
@@ -357,10 +361,10 @@ ${txt(1144, 351, 'its unit tests pass, but browser-mode vitest cannot', 'lblf')}
 ${txt(1144, 363, 'load a meter the repo never installed', 'lblf')}
 <line x1="1138" y1="346" x2="1032" y2="270" class="skf"/>
 
-${txt(30, 430, '№26 happy-dom — a lamp, and NO light on itself:', 'lblr')}
-${txt(30, 442, 'its canary spec lights happy-dom’s ordering', 'lblf')}
-${txt(30, 454, `bug, never its own append.ts — 0 of ${g(26).r[7]} sloc;`, 'lblf')}
-${txt(30, 466, 'those lines are lit from №1’s lamp instead', 'lblf')}
+${txt(30, 430, '№26 happy-dom — a lamp with half its light on itself:', 'lblr')}
+${txt(30, 442, 'its canary spec lights happy-dom’s ordering bug and', 'lblf')}
+${txt(30, 454, `the innerHTML workaround it guards — ${g(26).r[11]} of ${g(26).r[7]} sloc;`, 'lblf')}
+${txt(30, 466, 'append.ts is lit from №1’s lamp instead', 'lblf')}
 <line x1="250" y1="474" x2="272" y2="522" class="skf"/>
 
 ${txt(863, 748, '№12 @tools/release — the yard in one building:', 'lblr')}
@@ -395,8 +399,8 @@ export const sheet7a = {
   caption: 'Sheet 7 counted who lives in the city; this plate asks which of them ever stand in test light. Every member’s own suite is run under a coverage meter, and its light drawn to two rules: reach is how much of the member’s source the suite actually loads, brightness is the line coverage of what it loads. What the suite never imports stays in shadow — and the finding is a repo-wide habit visible from the air: the light is bright far more often than it is wide. Where a suite reaches, it burns near-full; what it never touches is simply dark.',
   notes: `
 <p><strong>Method — one meter per member, nothing installed by hand, nothing left behind.</strong> Footprints, annexes and districts are sheet 7's own plate (<code>census-city.json</code>); the light is <code>census-shadow.json</code>, ${BASIS}, so meter and census read one tree at one ref. ${T.metered} of the ${M.length} members carry a meter. The probe never edits a repo file: members that declare <code>test:coverage</code> are metered by the tree's own unmodified <code>turbo run test:coverage</code>; <code>node:test</code> members by their own <code>test</code> script re-run with <code>--experimental-test-coverage</code> and the lcov reporter; the <code>vitest</code> members by their own script with <code>--coverage.enabled --coverage.provider=v8</code>. Each meter reports lines on its own basis (v8 remaps to executable lines; node counts raw lines), so brightness percentages are per-meter and are never summed across meters in the drawing — only the schedule's grand total does, and says so. LIT means a source file the suite actually executed; extent is those files' sloc over the member's src sloc, both from the same ref. One honest wobble found by re-running the probe four times over: <code>node --test</code>'s branch <em>denominator</em> for №31 came back 213 on two runs and 215 on two more, with 191 hit either way — a 0.9-point swing on one member's branch figure and nothing else in the plate moved. Branch discovery under V8 is not perfectly repeatable, and this plate says so rather than pretending the last run is the only one.</p>
-<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> The published packages meter ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines over ${pct1(DP.litSloc, DP.meteredSloc)}% of their metered source. What little stays dark is entry barrels and <code>interface.ts</code> — type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at 1.5–3.9× their buildings turn out to buy near-total light.</p>
-<p><strong>The yard's habit: bright cores, dark wrappers.</strong> The instruments repeat one pattern — <code>@tools/release</code>, <code>build_and_test</code>, <code>workers-builds</code>, <code>lcov-rebase</code>: the <code>.core.ts</code> logic is lit and the command-line file in front of it is not. ${fmt(wrapperSloc)} sloc across ${wrapperFiles} files of process-edge code is never loaded by any suite, while the logic behind it meters ${pct1(DT.linesHit, DT.lines)}%. <code>compat-guards</code> is the pattern at its extreme: only <code>ranges.ts</code> is unit-lit; its guard lanes run for real in CI, where no meter follows. <code>@tools/happy-dom</code> is the survey's one genuine surprise: it owns a lit lamp and still stands dark, because its spec is a conformance canary pointed at happy-dom upstream — its own <code>append.ts</code> is lit only from <code>lit-ui-router</code>'s lamp, as borrowed light.</p>
+<p><strong>The product glows wall to wall — the budget lands where the house says.</strong> The published packages meter ${pct1(DP.linesHit, DP.lines)}% of ${fmt(DP.lines)} lines over ${pct1(DP.litSloc, DP.meteredSloc)}% of their metered source. What little stays dark is entry barrels and <code>interface.ts</code> — type declarations, which no runtime meter can light. This is the priority made visible: library coverage outranks docs coverage, and the annexes sheet 7 drew at ${ANNEX_RANGE} their buildings turn out to buy near-total light.</p>
+<p><strong>The yard's habit: bright cores, dark wrappers.</strong> The instruments repeat one pattern — <code>@tools/release</code>, <code>build_and_test</code>, <code>workers-builds</code>, <code>lcov-rebase</code>: the <code>.core.ts</code> logic is lit and the command-line file in front of it is not. ${fmt(wrapperSloc)} sloc across ${wrapperFiles} files of process-edge code is never loaded by any suite, while the logic behind it meters ${pct1(DT.linesHit, DT.lines)}%. <code>compat-guards</code> is the pattern at its extreme: only <code>ranges.ts</code> is unit-lit; its guard lanes run for real in CI, where no meter follows. <code>@tools/happy-dom</code> splits its light: its spec is a conformance canary pointed at happy-dom upstream, and it lights the one workaround it guards, <code>inner-html.ts</code>, while <code>append.ts</code> is lit only from <code>lit-ui-router</code>'s lamp, as borrowed light.</p>
 <p><strong>What the meter cannot say, the plate refuses to fake.</strong> The two demo apps and the Cypress host are hatched in accent, not banded: e2e light is real — the rig drives the built docs site — but no lcov leaves it, so it is drawn as light of unknowable brightness and labelled unmetered. That judgement is the only one in the probe, and it is verified rather than assumed: the run throws if the rig has stopped being a Cypress suite. <code>sample-app-shared</code> runs its unit tests green, yet browser-mode vitest cannot fetch a coverage provider the repo never installed; its light is an outline, and the probe proves it by running the suite a second time without the meter. The members that are dark are dark because nothing tests them, and two of them (<code>dts-backtest</code>, <code>lit-test-env</code>) spend their working lives inside other members' suites.</p>`,
   key: [
     keyRow('<rect x="6" y="3" width="36" height="12" class="sk fp"/>', 'a member’s footprint — sheet 7’s census, plan view'),

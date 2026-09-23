@@ -34,8 +34,8 @@ const PLAN = {
   'inter fonts': [330, 10],
   'html pages': [430, 20],
   'vp framework': [600, 30],
-  // dropped 6 south when the html-pages slab grew to 162.8 at this ref
-  'page chunks': [330, 166],
+  // dropped south as the html-pages slab grows: it reaches 170.7 at this ref
+  'page chunks': [330, 178],
   'site css': [545, 200],
   'app: vanilla': [560, 300],
   'app: hash': [575, 398],
@@ -142,8 +142,11 @@ ${bodies}
 ${txt(150, 120, `a vacant lot — ${LOT.files} files, ${KB(LOT.gz)} of Dickens,`, 'lbla')}
 ${txt(150, 132, 'Beowulf and an RFC the site no longer ships', 'lbla')}
 <line x1="442" y1="132" x2="502" y2="248" class="skf"/>
-${txt(1120, 60, `${KB(INTER.gz)} of Inter — the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla', 'end')}
-${txt(1120, 72, `on the wire; only ${TALLER_THAN_INTER.join(' and ')} stand taller`, 'lbla', 'end')}
+<!-- off the html-pages cap, which reaches y 38 at this ref: hung beside its east wall -->
+${txt(975, 140, `${KB(INTER.gz)} of Inter —`, 'lbla')}
+${txt(975, 152, `the lettering stands ${ORD[INTER_RANK - 1]}`, 'lbla')}
+${txt(975, 164, `on the wire; only ${TALLER_THAN_INTER[0]}`, 'lbla')}
+${txt(975, 176, TALLER_THAN_INTER.length > 1 ? `${TALLER_THAN_INTER.slice(1).map((t) => `and ${t}`).join(' ')} stand taller` : 'stands taller', 'lbla')}
 ${txt(1120, 715, `all four apps: ${KB(APPS)} —`, 'lbla', 'end')}
 ${txt(1120, 727, `${APP_PCT}% of the deploy they exist to demonstrate`, 'lbla', 'end')}
 <line x1="937" y1="711" x2="878" y2="689" class="skf"/>

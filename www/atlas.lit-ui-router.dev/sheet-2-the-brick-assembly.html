@@ -475,7 +475,7 @@ a { color: var(--accent); }
 <section class="sheet" id="sheet-2" aria-label="Sheet 2: THE BRICK ASSEMBLY">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 2 / 14</span></div>
   <h2 class="sheet-title"><sup class="art">the&nbsp;</sup>BRICK ASSEMBLY</h2>
-  <p class="sheet-sub">ALTITUDE 2 — one baseplate, four bricks, 35 authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · source counted at origin/main @ 4223ffc7 (2026-09-14)</p>
+  <p class="sheet-sub">ALTITUDE 2 — one baseplate, four bricks, 36 authored files · an exploded LEGO assembly with every coupling named to the API call that makes it, brick and stud faces drawn opaque so nothing reads through a mass in front of it · source counted at origin/main @ 38c9fa1c (2026-09-23)</p>
   <figure>
     <div class="plate" style="--plate-ar:1.1364"><div class="figure-wrap"><svg viewBox="0 0 1400 1232" role="img" aria-label="An exploded isometric LEGO assembly. A large flat baseplate lettered @uirouter/core carries a grid of studs; its whole back row is ringed in the accent colour and labelled A, router.plugin — the plugin rail. Four bricks hover above the plate, none of them seated, each with a dashed accent drop line falling onto the exact stud it takes. Brick 1, lit-ui-router, is a two-by-four 7 courses tall and drops onto the rail; brick 2, the navigation location plugin, is a one-by-one one course tall and drops onto a single stud ringed in red, the location seat, of which a router has exactly one — so this brick swaps core's own location plugin rather than adding to it. Brick 3, lit-ui-router-mobx, is a one-by-two two courses tall and is the only brick that does not drop onto the plate at all: its drop line lands on a stud on top of brick 1, and two further named studs on the plate, C transitionService and E globals, carry the hook it registers and the values it reads. Four more named studs along the front of the plate are lettered and explained in a stud schedule at the upper right. At the right of the sheet a second, smaller baseplate is drawn entirely in dashed line: brick 4, ui-router-server, hovers over it, and a dashed tie between the two plates is crossed out with a red circle and slash — the server takes no stud on the client plate, because @uirouter/core is an optional peer for it and its default matcher tier never loads a plate at all. A parts callout at the upper left lists the four bricks with their shapes, and a dashed spare-parts box below it shows four ghost one-by-one bricks — visualizer, sticky-states, dsr and rx — that would register through the very same stud A. A structure schedule beneath the drawing gives every brick its file count, line count, quantized shape and the exact API call it couples through.">
 <defs>
@@ -838,8 +838,8 @@ a { color: var(--accent); }
 <ellipse cx="1060.7" cy="411" rx="14.7" ry="8.49" class="sk fp2"/>
 
 <circle cx="470" cy="108" r="9.5" class="ska fp"/><text x="470" y="111.6" class="lbla" text-anchor="middle" >1</text>
-<text x="560" y="114" class="lblb" text-anchor="start" >lit-ui-router 1.15.0</text>
-<text x="560" y="126" class="lblf" text-anchor="start" >20f · 2,384 sloc · 2×4 · 7 courses</text>
+<text x="560" y="114" class="lblb" text-anchor="start" >lit-ui-router 1.16.0-rc.1</text>
+<text x="560" y="126" class="lblf" text-anchor="start" >21f · 2,596 sloc · 2×4 · 7 courses</text>
 <text x="560" y="138" class="lbla" text-anchor="start" >STUDS  A · B · D — and it extends UIRouter</text>
 
 <circle cx="608.6" cy="216" r="9.5" class="ska fp"/><text x="608.6" y="219.6" class="lbla" text-anchor="middle" >2</text>
@@ -850,7 +850,7 @@ a { color: var(--accent); }
 <text x="660" y="238" class="lblr" text-anchor="start" >a swap, never an addition</text>
 
 <circle cx="360" cy="52" r="9.5" class="ska fp"/><text x="360" y="55.6" class="lbla" text-anchor="middle" >3</text>
-<text x="560" y="42" class="lblb" text-anchor="start" >lit-ui-router-mobx 1.0.1</text>
+<text x="560" y="42" class="lblb" text-anchor="start" >lit-ui-router-mobx 1.0.2</text>
 <text x="560" y="54" class="lblf" text-anchor="start" >5f · 176 sloc · 1×2 · 2 courses</text>
 <text x="560" y="66" class="lbla" text-anchor="start" >SEATS ON BRICK 1 — seekRouter()</text>
 <text x="560" y="78" class="lbla" text-anchor="start" >STUDS  C · E on the plate below</text>
@@ -913,25 +913,25 @@ a { color: var(--accent); }
 <line x1="40" y1="814" x2="1360" y2="814" class="skf"/>
 <text x="58" y="834" class="lbls" text-anchor="start" > 0  @uirouter/core 6.1.2 — THE BASEPLATE · 80f · 5,272 sloc · NOT MASSED (a plate is ground) · studs A–E are its published API</text>
 <text x="58" y="851" class="lbls" text-anchor="start" >    every brick on this sheet declares it as a peerDependency; none of them declares another brick, except 3 → 1</text>
-<text x="58" y="868" class="lbls" text-anchor="start" > 1  lit-ui-router 1.15.0 · 20f · 2,384 sloc · 2×4 · 7 courses · studs A · B · D</text>
+<text x="58" y="868" class="lbls" text-anchor="start" > 1  lit-ui-router 1.16.0-rc.1 · 21f · 2,596 sloc · 2×4 · 7 courses · studs A · B · D</text>
 <text x="58" y="885" class="lbls" text-anchor="start" >    class UIRouterLit extends UIRouter — moulded, not snapped; everything lit-specific enters through published seams:</text>
 <text x="58" y="902" class="lbls" text-anchor="start" >    this.plugin(servicesPlugin) · this.stateRegistry.decorator(‘views’, litViewsBuilder) · urlService.listen()/sync() · viewService._pluginapi._viewConfigFactory(‘lit’, …) (internal)   [src/core.ts]</text>
 <text x="58" y="919" class="lbls" text-anchor="start" > 2  ui-router-navigation-location-plugin 0.3.2 · 1f · 105 sloc · 1×1 · 1 course · stud A (LOCATION SEAT)</text>
 <text x="58" y="936" class="lbls" text-anchor="start" >    navigationLocationPlugin = locationPluginFactory(‘vanilla.navigationLocation’, true, NavigationLocationService, BrowserLocationConfig)</text>
 <text x="58" y="953" class="lbls" text-anchor="start" >    a router holds exactly one location plugin, so this brick SWAPS core’s pushStateLocation; it peers core only — it has never heard of Lit   [src/index.ts]</text>
-<text x="58" y="970" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx 1.0.1 · 5f · 176 sloc · 1×2 · 2 courses · seats on brick 1 · studs C · E</text>
+<text x="58" y="970" class="lbls" text-anchor="start" > 3  lit-ui-router-mobx 1.0.2 · 5f · 176 sloc · 1×2 · 2 courses · seats on brick 1 · studs C · E</text>
 <text x="58" y="987" class="lbls" text-anchor="start" >    RouterStore.attach() → router.transitionService.onSuccess({}, update); update() reads globals.current/.params/.successfulTransitions</text>
 <text x="58" y="1004" class="lbls" text-anchor="start" >    RouterReactionController → UIRouterLitElement.seekRouter(host), the ui-router-context event — the one brick-to-brick coupling in the set   [src/router-store.ts, src/router-reaction-controller.ts]</text>
 <text x="58" y="1021" class="lbls" text-anchor="start" > 4  ui-router-server 0.2.0 · 9f · 1,211 sloc · 2×4 · 3 courses · NO STUD on this plate</text>
 <text x="58" y="1038" class="lbls" text-anchor="start" >    peerDependenciesMeta: { ‘@uirouter/core’: { optional: true } } — the ‘matcher’ tier is dependency-free pattern matching</text>
 <text x="58" y="1055" class="lbls" text-anchor="start" >    the ‘simulate’ tier reaches a plate of its own behind a lazy import(): new UIRouter() + plugin(servicesPlugin) + plugin(memoryLocationPlugin)   [src/index.ts, src/simulate.ts]</text>
-<text x="58" y="1072" class="lbls" text-anchor="start" > 5  lit-ui-router-effect 0.1.0-rc.0 · 5f · 211 sloc · 1×2 · 2 courses · A BRICK, NOT DRAWN IN THIS REV</text>
+<text x="58" y="1072" class="lbls" text-anchor="start" > 5  lit-ui-router-effect 0.1.1 · 5f · 211 sloc · 1×2 · 2 courses · A BRICK, NOT DRAWN IN THIS REV</text>
 <text x="58" y="1089" class="lbls" text-anchor="start" >    peers @uirouter/core ^6.0.8 and lit-ui-router ^1.7.0 — the same two-plate coupling brick 3 takes, over a second reactivity layer</text>
-<text x="58" y="1106" class="lbls" text-anchor="start" > 6  lit-ui-router-ssr 0.1.0-rc.0 · 2f · 253 sloc · 1×2 · 1 course · A BRICK, NOT DRAWN IN THIS REV</text>
-<text x="58" y="1123" class="lbls" text-anchor="start" >    peers lit-ui-router ^1.15.0 AND ui-router-server ^0.2.0 — the one part in the set that would take a drop line onto BOTH plates</text>
+<text x="58" y="1106" class="lbls" text-anchor="start" > 6  lit-ui-router-ssr 0.1.0-rc.2 · 9f · 796 sloc · 2×3 · 3 courses · A BRICK, NOT DRAWN IN THIS REV</text>
+<text x="58" y="1123" class="lbls" text-anchor="start" >    peers lit-ui-router ^1.16.0-rc.1 AND ui-router-server ^0.2.0 — the one part in the set that would take a drop line onto BOTH plates</text>
 <text x="58" y="1140" class="lbls" text-anchor="start" > 7  eslint-plugin-lit-ui-router 1.1.0 · 12f · 1,317 sloc · NOT A BRICK — no stud on any router plate</text>
 <text x="58" y="1157" class="lbls" text-anchor="start" >    a lint package: it plugs into ESLint/oxlint hosts, never into @uirouter/core — the one published part of seven that lives on a different table</text>
-<text x="58" y="1182" class="lbls" text-anchor="start" >TOTAL — 4 bricks drawn of the 6 moulded · 35 authored files · 3,876 sloc, standing on one 80-file, 5,272-line baseplate · counted at origin/main @ 4223ffc7 (2026-09-14), same basis as sheets 3 and 4</text>
+<text x="58" y="1182" class="lbls" text-anchor="start" >TOTAL — 4 bricks drawn of the 6 moulded · 36 authored files · 4,088 sloc, standing on one 80-file, 5,272-line baseplate · counted at origin/main @ 38c9fa1c (2026-09-23), same basis as sheets 3 and 4</text>
 </svg></div></div>
     <figcaption><span class="figno">FIG. 2</span>Every companion drawn here enters through a published stud on @uirouter/core, and no two of them touch. Drawn exploded, the sheet answers the only question that matters about a plugin architecture: pull any brick off and what breaks? Nothing — the studs stay where they are.</figcaption>
   </figure>
@@ -945,7 +945,7 @@ a { color: var(--accent); }
 <p><strong>Brick 3 is the only brick-to-brick coupling in the set, and it is a small one.</strong> <code>lit-ui-router-mobx</code> seats on brick 1 through <code>UIRouterLitElement.seekRouter(host)</code> — a bubbling <code>ui-router-context</code> event, published precisely as the dependency-injection primitive for external reactivity systems — and then reaches the plate directly: one <code>transitionService.onSuccess({}, update)</code> hook, memoised one-per-router by <code>RouterStore.for()</code>, whose <code>update()</code> reads <code>globals.current</code>, <code>globals.params</code> and the last successful transition into MobX observables. It observes; it never writes router state. 176 lines, one stud on the brick above and two on the plate below.</p>
 <p><strong>The fourth brick has no stud here at all, and that is the design.</strong> <code>ui-router-server</code> declares <code>@uirouter/<wbr>core</code> as an <em>optional</em> peer (<code>peerDependenciesMeta</code>); its default <code>'matcher'</code> tier is dependency-free pattern matching and never loads core, and its <code>'simulate'</code> tier reaches a plate of its own behind a lazy <code>import()</code> — <code>new UIRouter()</code> with <code>servicesPlugin</code> and <code>memoryLocationPlugin</code>, built fresh per resolution because core mutates registrations. Drawing it over a dashed second plate is the only truthful placement: it is the same mould, a different assembly, and the tie back to the client plate is crossed out.</p>
 <p><strong>Massing, quantized.</strong> Continuous mass would have made these bricks unbuildable shapes, so the census is rounded to LEGO: <em>plan</em> is one stud per 150 sloc rounded up to the next standard shape (1×1, 1×2, 2×2, 2×3, 2×4), <em>height</em> is one course per three authored files. The result is legible and it is a finding — the two bricks that carry a renderer and a server are 2×4s; the two that plug the router into something are a 1×1 and a 1×2 tile, 105 and 176 lines. A companion that needed to be a 2×4 would be <code>lit-ui-router</code>'s problem to absorb, not a package. The baseplate is deliberately <em>not</em> massed: 80 files and 5,272 lines of core is ground, and ground has no height.</p>
-<p><strong>Seven published packages; four bricks in this assembly.</strong> Two more bricks are moulded and not seated here. <code>lit-ui-router-effect</code> 0.1.0-rc.0 (5 files, 211 sloc) takes the coupling brick 3 takes — <code>@uirouter/<wbr>core</code> ^6.0.8 as a peer and <code>lit-ui-router</code> ^1.7.0 above it — over a second reactivity layer. <code>lit-ui-router-ssr</code> 0.1.0-rc.0 (2 files, 253 sloc) peers <code>lit-ui-router</code> ^1.15.0 <em>and</em> <code>ui-router-server</code> ^0.2.0, which makes it the one part in the family that would take a drop line onto each of this sheet's two plates. Both are scheduled, as rows 5 and 6, rather than crowded into a drawing whose four bricks are lettered and leadered on every side; seating them is a recomposition, not an addition. The seventh package, <code>eslint-plugin-lit-ui-router</code> 1.1.0 (12 files, 1,317 sloc), is not a brick at all: it takes no stud on any router plate, because it couples to ESLint and oxlint, not to <code>@uirouter/<wbr>core</code>. Every number on this sheet is read from <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr>census-bricks.json</code> — counted at origin/main @ 4223ffc7 (2026-09-14).</p>
+<p><strong>Seven published packages; four bricks in this assembly.</strong> Two more bricks are moulded and not seated here. <code>lit-ui-router-effect</code> 0.1.1 (5 files, 211 sloc) takes the coupling brick 3 takes — <code>@uirouter/<wbr>core</code> ^6.0.8 as a peer and <code>lit-ui-router</code> ^1.7.0 above it — over a second reactivity layer. <code>lit-ui-router-ssr</code> 0.1.0-rc.2 (9 files, 796 sloc) peers <code>lit-ui-router</code> ^1.16.0-rc.1 <em>and</em> <code>ui-router-server</code> ^0.2.0, which makes it the one part in the family that would take a drop line onto each of this sheet's two plates. Both are scheduled, as rows 5 and 6, rather than crowded into a drawing whose four bricks are lettered and leadered on every side; seating them is a recomposition, not an addition. The seventh package, <code>eslint-plugin-lit-ui-router</code> 1.1.0 (12 files, 1,317 sloc), is not a brick at all: it takes no stud on any router plate, because it couples to ESLint and oxlint, not to <code>@uirouter/<wbr>core</code>. Every number on this sheet is read from <code>www/<wbr>atlas.lit-ui-router.dev/<wbr>data/<wbr>census-bricks.json</code> — counted at origin/main @ 38c9fa1c (2026-09-23).</p>
     </div>
     <div class="keyblock">
       <h3>KEY</h3>
@@ -962,7 +962,7 @@ a { color: var(--accent); }
   <div><span class="fld">SCALE</span>FOUR PACKAGES</div>
   <div><span class="fld">FORM</span>BRICK ASSEMBLY</div>
   <div><span class="fld">CLIENT</span>lit-ui-router · simshanith</div>
-  <div><span class="fld">DATE / REV</span>2026-09-14 · D</div>
+  <div><span class="fld">DATE / REV</span>2026-09-22 · D</div>
   <div><span class="fld">DRAWN BY</span><span class="hand">Fable (Claude, AI)</span></div>
   <div class="sh"><span><span class="fld">SHEET</span>2 OF 14</span><span class="chop" aria-hidden="true"></span></div>
 </div>

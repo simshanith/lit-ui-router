@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "4223ffc7",
-  "commitDate": "2026-09-14T13:24:02-07:00",
-  "generatedAtTime": "2026-09-14T22:26:07.570Z",
+  "sha": "38c9fa1c",
+  "commitDate": "2026-09-22T22:32:03-07:00",
+  "generatedAtTime": "2026-09-23T07:22:12.037Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-handoff.mjs",
-  "used": "git archive origin/main @ 4223ffc7",
+  "used": "git archive origin/main @ 38c9fa1c",
   "wasAssociatedWith": [
     "git"
   ],
@@ -15,11 +15,11 @@
     "targets": 28
   },
   "mise": {
-    "tasks": 52,
+    "tasks": 54,
     "homes": 4,
-    "withUsage": 23,
-    "withDepends": 3,
-    "dependsEdges": 6
+    "withUsage": 22,
+    "withDepends": 11,
+    "dependsEdges": 15
   },
   "turbo": {
     "files": 22,
@@ -77,9 +77,9 @@
   ],
   "miseHomes": [
     {"home":"tools/build_and_test/mise.toml","label":"tools/build_and_test","count":10,"withUsage":2,"withDepends":0,"dependsEdges":0,"names":["xvfb","branch_ci_gate","mark_session","turbo_summary","playwright_version","cypress_version","playwright","playwright_deps","playwright_deps_engines","cypress"]},
-    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":9,"withUsage":8,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","measure_deflake","read_secret","rumdl","shellcheck","taplo","turbo_link_worktree","turbo_login"]},
-    {"home":"tools/release/mise.toml","label":"tools/release","count":16,"withUsage":10,"withDepends":0,"dependsEdges":0,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","peer_floor_gate","bump","check_release_closure"]},
-    {"home":".config/mise/config.toml","label":"config.toml inline","count":17,"withUsage":3,"withDepends":3,"dependsEdges":6,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_main","test_e2e","codecov_bundle","dts_backtest_matrix"]}
+    {"home":".config/mise/tasks/*","label":".config/mise/tasks/*","count":11,"withUsage":7,"withDepends":0,"dependsEdges":0,"names":["check_workers_builds","cloudflare_item_create","read_secret","rumdl","shellcheck","taplo","turbo_backfill","turbo_cache_probe","turbo_force_guard","turbo_login","turbo_pin_worktree"]},
+    {"home":"tools/release/mise.toml","label":"tools/release","count":16,"withUsage":10,"withDepends":2,"dependsEdges":2,"names":["git_user","package_info","pack","reconcile","check_tarball","tag","tag_push","publish","check_pack","published_diff","publish_check_runs","peer_floor_check_runs","workers_builds_check_runs","peer_floor_gate","bump","check_release_closure"]},
+    {"home":".config/mise/config.toml","label":"config.toml inline","count":17,"withUsage":3,"withDepends":9,"dependsEdges":13,"names":["setup","lint_actionlint","lint_zizmor","lint_toml","lint_shellcheck","lint_markdown","lint_workflows","format_toml","format_check_toml","cloudflare_login","build","build_www","ci","ci_main","test_e2e","codecov_bundle","dts_backtest_matrix"]}
   ],
   "turboRows": [
     {"file":"apps/sample-app-lit-e2e/turbo.json","root":false,"definitions":7,"cacheFalse":0},

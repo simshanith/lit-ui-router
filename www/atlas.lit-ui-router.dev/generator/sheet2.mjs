@@ -358,11 +358,11 @@ const SCHED = [
     '    the ‘simulate’ tier reaches a plate of its own behind a lazy import(): new UIRouter() + plugin(servicesPlugin) + plugin(memoryLocationPlugin)   [src/index.ts, src/simulate.ts]',
   ],
   [
-    ` 5  ${OFF_PLATE[0].name} ${OFF_PLATE[0].version} · ${OFF_PLATE[0].files}f · ${fmt(OFF_PLATE[0].sloc)} sloc · ${OFF_PLATE[0].shape.replace('x', '×')} · ${OFF_PLATE[0].courses} courses · A BRICK, NOT DRAWN IN THIS REV`,
+    ` 5  ${OFF_PLATE[0].name} ${OFF_PLATE[0].version} · ${OFF_PLATE[0].files}f · ${fmt(OFF_PLATE[0].sloc)} sloc · ${OFF_PLATE[0].shape.replace('x', '×')} · ${OFF_PLATE[0].courses} course${OFF_PLATE[0].courses === 1 ? '' : 's'} · A BRICK, NOT DRAWN IN THIS REV`,
     `    peers @uirouter/core ${peerRange('lit-ui-router-effect', '@uirouter/core')} and lit-ui-router ${peerRange('lit-ui-router-effect', 'lit-ui-router')} — the same two-plate coupling brick 3 takes, over a second reactivity layer`,
   ],
   [
-    ` 6  ${OFF_PLATE[1].name} ${OFF_PLATE[1].version} · ${OFF_PLATE[1].files}f · ${fmt(OFF_PLATE[1].sloc)} sloc · ${OFF_PLATE[1].shape.replace('x', '×')} · ${OFF_PLATE[1].courses} course · A BRICK, NOT DRAWN IN THIS REV`,
+    ` 6  ${OFF_PLATE[1].name} ${OFF_PLATE[1].version} · ${OFF_PLATE[1].files}f · ${fmt(OFF_PLATE[1].sloc)} sloc · ${OFF_PLATE[1].shape.replace('x', '×')} · ${OFF_PLATE[1].courses} course${OFF_PLATE[1].courses === 1 ? '' : 's'} · A BRICK, NOT DRAWN IN THIS REV`,
     `    peers lit-ui-router ${peerRange('lit-ui-router-ssr', 'lit-ui-router')} AND ui-router-server ${peerRange('lit-ui-router-ssr', 'ui-router-server')} — the one part in the set that would take a drop line onto BOTH plates`,
   ],
   [

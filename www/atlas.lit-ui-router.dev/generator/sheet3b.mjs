@@ -95,9 +95,9 @@ const M = [
   [18, 'ui-router-server',      325,   30, 'ui-router-server', 'node:test + runtime-globals lanes'],
   [2,  'eslint-plugin',         388,   30, 'eslint-plugin-lit-ui-router', 'the fifth quarter — rules, docs and oxlint lanes'],
   // born 2026-09-12 (#833)
-  [27, 'lit-ui-router-effect',   418,   30, 'lit-ui-router-effect', 'the sixth quarter — published at 0.1.0-rc.0, running every lane'],
+  [27, 'lit-ui-router-effect',   418,   30, 'lit-ui-router-effect', 'the sixth quarter — the effect bindings, running every lane'],
   // born 2026-09-14 (#806): the row's east end, 5.6 units clear of quarter 27
-  [38, 'lit-ui-router-ssr',      445,   30, 'lit-ui-router-ssr', 'the seventh quarter — the prerender bridge, new to this survey'],
+  [38, 'lit-ui-router-ssr',      445,   30, 'lit-ui-router-ssr', 'the seventh quarter — the prerender bridge'],
   // --- the instrument end of town -------------------------------------------------
   [19, '@tools/release',        600,   15, '@tools/release', `${cite('@tools/release#pack:all')} + ${cite('@tools/release#check:exports')} live here`],
   [20, '@tools/dts-backtest',   700,   40, '@tools/dts-backtest', `${cite('@tools/dts-backtest#test')} on a ${TOWER}-file footprint: THE TOWER`],

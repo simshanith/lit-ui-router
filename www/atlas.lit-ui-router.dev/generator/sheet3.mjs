@@ -266,9 +266,9 @@ ${drive}
 ${bodies}
 
 <!-- lettering: every label in its own pocket, leaders where the gap is wide -->
-${txt(50, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
-${txt(50, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
-${txt(50, 225, 'seven published packages enter here', 'lblf')}
+${txt(40, 200, 'PACKAGES/* — THE MATERIAL', 'lblb')}
+${txt(40, 213, `${nf(1)} authored files · ${fmt(nl(1))} sloc`, 'lblf')}
+${txt(40, 225, 'seven published packages enter here', 'lblf')}
 <line x1="250" y1="212" x2="276" y2="238" class="skf"/>
 
 ${txt(742, 398, 'THE TARBALL', 'lblb')}

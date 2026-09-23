@@ -66,11 +66,14 @@ const X = (x) => OX + K * x, Y = (y) => OY + K * y;
 // [n, name, plate member dir, district, x, y] — every number comes from the plates
 const PLACED = [
   [1, 'lit-ui-router', 'packages/lit-ui-router', 'pkg', 0, 20],
-  // moved east with sheet 7, twice, as lit-ui-router's annex grew into its west wall
-  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 226, 20],
-  // dropped 6 south with sheet 7, for the same annex
-  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 170, 136],
-  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 260, 130],
+  // the packages district is recomposed here, not copied: sheet 7's lots for 3, 4,
+  // 31, 37 and 38 land under the reading box or on each other once the flagship's
+  // annex reaches 233.9 × 132.0. Row one: 2 on sheet 7's lot, 3 and 37 in the strip
+  // under its annex, which ends 5.4 short of the box. Row two, west to east: 31, 38,
+  // 4 — the plugin last, so its callout's leader drops straight to the lettering
+  [2, 'ui-router-server', 'packages/ui-router-server', 'pkg', 240, 20],
+  [3, 'lit-ui-router-mobx', 'packages/lit-ui-router-mobx', 'pkg', 240, 104],
+  [4, 'navigation-location-plugin', 'packages/navigation-location-plugin', 'pkg', 303, 150],
   [5, 'sample-app-shared', 'apps/sample-app-shared', 'app', 570, 10],
   [6, 'sample-app-lit-vanilla', 'apps/sample-app-lit-vanilla', 'app', 720, 10],
   [7, 'sample-app-lit-mobx', 'apps/sample-app-lit-mobx', 'app', 720, 90],
@@ -98,26 +101,20 @@ const PLACED = [
   [28, '@tools/lint-elements', 'tools/lint-elements', 'tool', 388, 550],
   [29, '@tools/warn-lanes', 'tools/warn-lanes', 'tool', 430, 530],
   [30, '@tools/eslint-ts-parser', 'tools/eslint-ts-parser', 'tool', 54, 350],
-  // --- the fifth published package (#676): sheet 7's plan slot lands under the
-  //     reading box, so it takes the free third row of the packages district —
-  //     dropped 6 south at this ref, with member 3, off the flagship's grown annex ----
-  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 30, 136],
+  // --- the fifth published package (#676): row two's west lot ---------------------
+  [31, 'eslint-plugin-lit-ui-router', 'packages/eslint-plugin-lit-ui-router', 'pkg', 16, 149],
   // moved with sheet 7 when the hygiene block took the yard's east end
   [32, '@tools/embed-heights', 'tools/embed-heights', 'tool', 449, 462],
   // --- the hygiene block, born 2026-09-07/08 (#738, #741, #771) — sheet 7's slots ---
   [33, '@tools/bootstrap', 'tools/bootstrap', 'tool', 490, 350],
   [34, '@tools/eslint', 'tools/eslint', 'tool', 514, 530],
   [35, '@tools/repo-checks', 'tools/repo-checks', 'tool', 449, 385],
-  // --- the effect pair, born 2026-09-11/12 (#721, #833) — sheet 7's slots, except
-  //     that 37's south lot lands under this sheet's masonry callout, so it takes
-  //     the free lot east of the mobx quarter instead (member 31 differs the same way)
+  // --- the effect pair, born 2026-09-11/12 (#721, #833): the app on sheet 7's slot,
+  //     the bindings in row one east of the mobx quarter ----------------------------
   [36, 'sample-app-lit-effect', 'apps/sample-app-lit-effect', 'app', 660, 100],
-  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 200, 172],
-  // --- the prerender package, born 2026-09-14 (#806): sheet 7's lot at 160,210 lands
-  //     under this sheet's reading box, so it takes the lot east of the effect
-  //     bindings instead — far enough south to clear the plugin, far enough north
-  //     that the district frame still stops short of the box (37 and 31 differ too)
-  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 285, 175],
+  [37, 'lit-ui-router-effect', 'packages/lit-ui-router-effect', 'pkg', 316, 104],
+  // --- the prerender package, born 2026-09-14 (#806): row two, between 31 and 4 ---
+  [38, 'lit-ui-router-ssr', 'packages/lit-ui-router-ssr', 'pkg', 165, 156],
 ];
 
 // [n, name, dist, x, y, srcSloc, specSloc,
@@ -243,34 +240,35 @@ const tpf = (n) => (g(n).src[2] / g(n).src[0]).toFixed(1);
 const row = (n) => D.find((r) => r[0] === n);
 
 // ---- the reading box, in the void sheet 7 spent on roads --------------------------
+// its west wall at 668, not 620: ui-router-server's annex reaches x 655 in row one
 const RB = `
-<rect x="620" y="188" width="330" height="332" class="sk fp"/>
-${txt(638, 212, 'READING THE WEATHER', 'lbls')}
-<line x1="620" y1="222" x2="950" y2="222" class="skf"/>
-${txt(638, 244, 'AGE — masonry courses, oldest at the base', 'lbl')}
+<rect x="668" y="188" width="282" height="332" class="sk fp"/>
+${txt(686, 212, 'READING THE WEATHER', 'lbls')}
+<line x1="668" y1="222" x2="950" y2="222" class="skf"/>
+${txt(686, 244, 'AGE — masonry courses, oldest at the base', 'lbl')}
 ${[
   [`url(#${P}-w1)`, `SEASON I · THE PORT · 2025-07 · ${SEASON_N[0]}f`],
   [`url(#${P}-w2)`, `SEASON II · WINTER · 2026-01 · ${SEASON_N[1]}f`],
   [null, `SEASON III · SUMMER · ${SEASON_FIRST[2].slice(5)} on · ${SEASON_N[2]}f`],
 ].map(([fill, label], i) => {
   const y = 256 + i * 24;
-  return `<rect x="638" y="${y}" width="30" height="14" class="fp"/>${fill ? `<rect x="638" y="${y}" width="30" height="14" fill="${fill}"/>` : ''}<rect x="638" y="${y}" width="30" height="14" class="sk fnone"/>
-${txt(680, y + 11, label, 'lbls')}`;
+  return `<rect x="686" y="${y}" width="30" height="14" class="fp"/>${fill ? `<rect x="686" y="${y}" width="30" height="14" fill="${fill}"/>` : ''}<rect x="686" y="${y}" width="30" height="14" class="sk fnone"/>
+${txt(728, y + 11, label, 'lbls')}`;
 }).join('\n')}
-${txt(638, 350, 'CHURN — ticks: one per touch per file', 'lbl')}
+${txt(686, 350, 'CHURN — ticks: one per touch per file', 'lbl')}
 ${[
   ['skr', 8, 7, `HOT · ≥${HOT}/file · red edge · ${HOT_BLOCKS} blocks`, 'lblr'],
   ['sks', 6, 3, `MID · ${COLD}–${HOT - 1} · the working stock`, 'lbls'],
   ['skf', 4, 1, `COLD · <${COLD} · touched once, left`, 'lbls'],
 ].map(([cls, th, nn, label, lcls], i) => {
   const y = 362 + i * 24;
-  return Array.from({ length: nn }, (_, j) => `<line x1="${640 + j * 5}" y1="${y}" x2="${640 + j * 5}" y2="${y + th}" class="${cls}"/>`).join('')
-    + txt(680, y + 9, label, lcls);
+  return Array.from({ length: nn }, (_, j) => `<line x1="${688 + j * 5}" y1="${y}" x2="${688 + j * 5}" y2="${y + th}" class="${cls}"/>`).join('')
+    + txt(728, y + 9, label, lcls);
 }).join('\n')}
-${txt(638, 448, 'THE GRADIENT THE MAP ARGUES', 'lbl')}
-${txt(638, 466, 'mean touches per file, by birth season:', 'lbls')}
-${txt(638, 482, `I ×${SEASON_TPF[0]} · II ×${SEASON_TPF[1]} · III ×${SEASON_TPF[2]}`, 'lbla')}
-${txt(638, 500, 'the older the wall, the more it is chiselled', 'lbls')}`;
+${txt(686, 448, 'THE GRADIENT THE MAP ARGUES', 'lbl')}
+${txt(686, 466, 'mean touches per file, by birth season:', 'lbls')}
+${txt(686, 482, `I ×${SEASON_TPF[0]} · II ×${SEASON_TPF[1]} · III ×${SEASON_TPF[2]}`, 'lbla')}
+${txt(686, 500, 'the older the wall, the more it is chiselled', 'lbls')}`;
 
 // ---- timeline: every calendar month the plate spans, most of them silent ----------
 const monthRange = () => {
@@ -289,14 +287,18 @@ const MONTHS = monthRange();
 const ALIVE = MONTHS.filter((mo) => PLATE.months[mo]).length;
 const TOUCH = PLATE.months;
 const total = (mo) => (TOUCH[mo] ? TOUCH[mo].pkg + TOUCH[mo].app + TOUCH[mo].site + TOUCH[mo].tool : 0);
-// ROWH clears the tallest bar plus its value label — no bar climbs into the row above
-const TLX = 232, TLW = 82, TLY = 1148, ROWH = 56;
+// ROWH clears the tallest bar plus its value label — no bar climbs into the row above:
+// each scale is capped by the plate's own busiest month, and the four districts share one
+const TLX = 232, TLW = 82, TLY = 1148, ROWH = 56, BAR_MAX = ROWH - 22;
+const DIST_PEAK = Math.max(...MONTHS.flatMap((mo) => ['pkg', 'app', 'site', 'tool'].map((k) => TOUCH[mo]?.[k] ?? 0)));
+const ALL_PEAK = Math.max(...MONTHS.map(total));
+const SC_ALL = Math.min(0.075, BAR_MAX / ALL_PEAK), SC_DIST = Math.min(0.19, BAR_MAX / DIST_PEAK);
 const ROWS = [
-  ['all', 'ALL DISTRICTS', 0.075],
-  ['pkg', 'packages/', 0.19],
-  ['app', 'apps/', 0.19],
-  ['site', 'www+examples', 0.19],
-  ['tool', 'tools/', 0.19],
+  ['all', 'ALL DISTRICTS', SC_ALL],
+  ['pkg', 'packages/', SC_DIST],
+  ['app', 'apps/', SC_DIST],
+  ['site', 'www+examples', SC_DIST],
+  ['tool', 'tools/', SC_DIST],
 ];
 const timeline = `
 ${txt(60, TLY - 18, 'THE FOUR SEASONS — activity by month · a bar is source-file touches in that district; the top row is all four together', 'lbls')}
@@ -352,11 +354,11 @@ const HELLO = file('examples/helloworld/src/main.ts');
 const SYM = file('tools/typedoc-plugin-lit-ui-router/src/index.ts');
 const PORT_LUR = (byMember.get('packages/lit-ui-router') ?? []).filter((r) => !r.spec && season(r.first) === 0);
 const callouts = `
-${txt(60, 456, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
-${txt(60, 470, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
-${txt(60, 482, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
-${txt(60, 494, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
-<line x1="80" y1="446" x2="72" y2="242" class="skf"/>
+${txt(60, 500, 'lit-ui-router — THE ORIGINAL MASONRY', 'lbla')}
+${txt(60, 514, `${PORT_LUR.length} of ${g(1).src[0]} src walls laid ${SREF.first}, the first day —`, 'lblf')}
+${txt(60, 526, `mean ×${(PORT_LUR.reduce((a, r) => a + r.touches, 0) / PORT_LUR.length).toFixed(1)} touches each, and still under the chisel:`, 'lblf')}
+${txt(60, 538, `ui-sref.ts ×${SREF.touches}, last touched ${SREF.last}`, 'lblf')}
+<line x1="58" y1="490" x2="56" y2="242" class="skf"/>
 
 ${txt(1250, 700, `www/lit-ui-router.dev/.vitepress/config.ts ×${DCFG.touches}`, 'lblr')}
 ${txt(1250, 714, 'the most-weathered wall in the city —', 'lblf')}
@@ -376,10 +378,10 @@ ${txt(60, 1078, `@tools/release — ${filesOf(row(12))} walls, every one summer-
 ${txt(60, 1092, `the yard’s largest building is ${days(row(12)[9])} days old`, 'lblf')}
 <line x1="130" y1="1064" x2="146" y2="1044" class="skf"/>
 
-${txt(500, 548, `navigation-location-plugin — ×${tpf(4)}/f`, 'lblr')}
-${txt(500, 562, `one January wall, chiselled ${g(4).src[2]} times:`, 'lblf')}
-${txt(500, 574, 'the highest churn intensity on the map', 'lblf')}
-<line x1="496" y1="544" x2="478" y2="350" class="skf"/>`;
+${txt(526, 548, `navigation-location-plugin — ×${tpf(4)}/f`, 'lblr')}
+${txt(526, 562, `one January wall, chiselled ${g(4).src[2]} times:`, 'lblf')}
+${txt(526, 574, 'the highest churn intensity on the map', 'lblf')}
+<line x1="530" y1="536" x2="${(g(4).x + g(4).s / 2).toFixed(1)}" y2="${(g(4).y + g(4).s + 16).toFixed(1)}" class="skf"/>`;
 
 // ---- assemble --------------------------------------------------------------------
 const H = SY + 104 + half * 17;

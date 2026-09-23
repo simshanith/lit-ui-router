@@ -1,8 +1,8 @@
 # Census pipeline rework — design record
 
 **COMPLETE.** Initiatives I1–I8 all landed 2026-09-02/03; the cabinet has since been
-refreshed seven times and stands at `origin/main` @ **4223ffc7** (commit
-2026-09-14T13:24:02-07:00), 17 plates all pinned to the same ref.
+refreshed eight times and stands at `origin/main` @ **38c9fa1c** (commit
+2026-09-22T22:32:03-07:00), 17 plates all pinned to the same ref.
 
 The architecture that came out of it: `generator/basis.mjs` materializes any ref once (`git
 archive` → tmpdir), one `scc --by-file` pass over that archive is the master per-file
@@ -104,8 +104,9 @@ sitting); order is dependency order.
 **Refreshing the cabinet after a release**
 
 - Probes default to `--ref origin/main` (`basis.mjs::refFromArgv`), but a plate filed
-  mid-refresh must measure the tree its siblings measured — pass the CABINET's sha
-  explicitly, or `census-atlas.mjs` throws on the mismatch.
+  mid-refresh must measure the tree its siblings measured — pass the CABINET's ref by the same
+  STRING its siblings carry (`origin/main` with no fetch in between, or the sha they were
+  filed under), or `census-atlas.mjs` throws on the mismatch.
 - Run `census-scc.mjs` FIRST, then the T1/T2 queries, then the T3 install probes, and never
   re-fetch origin mid-run or the plates split across two shas.
 - A T3 probe taking positional args must be given its ref through `--ref` and nothing else:
@@ -296,6 +297,86 @@ sitting); order is dependency order.
   bricks 6 → 8 rows; the bundle 121,650 gz with the flagship's chunk at 30,786; the deploy 788
   files / 4,542,847 gz over the same 12 districts; turbo 22 files / 112 definitions; the ci graph
   716 nodes / 1,897 edges / 225 real tasks; 24 members metered, the new one at 96% lit.
+- 2026-09-23 — THE EIGHTH REFRESH, at `origin/main` @ 38c9fa1c (commit 2026-09-22T22:32:03-07:00),
+  all 17 plates re-run at the one ref: `lit-ui-router-mobx` 1.0.2 and `lit-ui-router-effect` 0.1.1
+  (both `latest` on 2026-09-21, effect's `rc` tag gone), and two release candidates under `rc` —
+  `lit-ui-router` 1.16.0-rc.1 (latest stays 1.15.0 of 2026-09-14) and `lit-ui-router-ssr`
+  0.1.0-rc.2 (latest still 0.0.1-alpha.0). Behind them on main: the hydration seam lifted out of
+  `ui-view` into the ssr served view (#941) and the ssr register entry (#940), the
+  workspace-catalog experiment merged and reverted (#950, #961), eslint 10, ubuntu-26.04 runners,
+  turbo 2.11.2, pnpm 12.5.1, node 24.21. NO member was born — 38 members, seven published — so the
+  new-member checklist was a no-op again, and every label that counts was asserted and read true:
+  the yard's `src (7 published packages)` (62 f / 6,412 sloc), sheet 11's 22 doors in 7 quarters,
+  sheet 3's seven published, sheet 7's `7 members, 7 published`. The general survey reads 818
+  tracked paths, 783 classified, 66,257 sloc (was 789 / 754 / 62,036).
+  NO MEMBER BORN, AND SIX THINGS STILL BROKE. (1) THE COVER'S VERSION GUARD held the repo's
+  `lit-ui-router` version against npm's `version` — the `latest` tag — and main carries
+  1.16.0-rc.1 against a latest of 1.15.0; the guard now asks that the repo version be served under
+  SOME tag in `census-npm.json`'s `tags` map, still a hard throw, and LATEST SHIPPED reads
+  `1.15.0 · 2026-09-14 · main at 1.16.0-rc.1 · rc`. (2) THE LOOP threw on `ui-view.ts:311`, and the
+  file had not shifted — #941 REWROTE it, and it came back longer, 698 lines. 39 citations
+  relocated by content and 4 re-texted (`seekParentView`'s signature at 266, `render()` at 670,
+  `seekRouter`'s span of 2 at 294, the `parentView` assignment at 273, which lost its `!`);
+  `ui-sref.ts` and `ui-sref-active.ts` moved a uniform +1, and 333 offered two candidates, 334 and
+  342, where the shift gives 334. The walk's narration was re-read against the new file and holds.
+  (3) `assertPlots` ON SHEET 7, a third refresh running on the same cause: the flagship's annex
+  stands 233.9 × 132.0, so №2 `ui-router-server` goes 226 → 240 and №3 `lit-ui-router-mobx`
+  y 136 → 146 — and a SECOND annex grew, №38 `lit-ui-router-ssr` 2 → 9 src files and 1 → 9 spec
+  files, spanning x 215–288 across the oxc-emit road's old x 238 lane, so road 3 now ends at №38.
+  (4) SHEET 13 could no longer copy sheet 7 and is RECOMPOSED: row one №2 240,20 · №3 240,104 ·
+  №37 316,104; row two №31 16,149 · №38 165,156 · №4 303,150; the reading box's west wall
+  620 → 668 because the server's annex reaches x 655. (5) SHEET 11's door-count guard threw at 22:
+  ssr's `./client` (5,341 / 2,196 gz) and `./register` (3,109 / 1,408) seated, the quarter
+  lettered "three doors", and the flagship's `.` door set back 30,15 → 26,46 because its 218 px
+  tower put its badge outside the viewBox. (6) SHEET 13's FOUR SEASONS bars: 2026-09 took 245
+  package touches and the bar ran out of its row, because each row's scale was a hand constant;
+  both scales are capped from the plate's busiest month now.
+  AND ONE SENTENCE WENT FALSE WITH NOTHING TO CATCH IT. The seventh cabinet's hand claim that №26
+  `@tools/happy-dom` "owns a lit lamp and still stands dark — its canary lights happy-dom upstream,
+  never its own source" stopped being true at this ref: the tool gained `src/inner-html.ts`
+  (`setInnerHTMLDetached`) and its canary spec imports it, so 7A meters 1 of 2 files, 6 of 14 sloc
+  lit (42.9% extent, lines 100%), `append.ts` still borrowed light from the flagship's lamp. 7B's
+  lamp drawing derived correctly off the plate — one lamp — while its hand caption said "0 lamps".
+  Both sheets' callouts derive from the row now, and their aria, schedule note and notes are
+  re-written.
+  THE WORDS FOLLOWED. Sheet 9's `page chunks` y 166 → 178 and its Inter caption re-hung as four
+  lines beside the html-pages tower (170.7 units, cap at y 38), №1 inter fonts left nearly occluded
+  on purpose; sheet 3's `PACKAGES/* — THE MATERIAL` x 50 → 40 off the 62-file slab; 7A's packages
+  lettering rewrapped clear of №3's halo, its "1.5–3.9×" annex range DERIVED from the plate (still
+  1.5–3.9×); sheet 2's `course` plural derived, since ssr's 3-course brick would have printed
+  "3 course"; 3B and sheet 4 re-texted present-state for effect's `latest` and ssr's rc. The frame
+  audit ran before and after: 0 viewBox escapes, 0 lettering hits above 1 px, one 7B piece 0.6 px
+  into a mass, inside tolerance.
+  THE NUMBERS: city 278 src files / 22,321 sloc and 145 spec / 23,672 (was 267 / 21,404 and
+  132 / 20,900); doors 20 → 22, 166,259 min / 59,307 gz (was 145,882 / 52,328), the flagship `.`
+  8,206 → 8,719 gz and ssr `.` 1,431 → 2,273; couplings 9 nodes / 22 contracts, the new one ssr →
+  `@lit-labs/ssr-client` ^1.1.0, off-bench; bricks — the flagship 18 studs, ssr 2×3 over 3
+  courses; the bundle 122,052 gz in 17 chunks, the flagship's group 34,211 rendered over 14
+  modules; the deploy 857 files / 4,823,157 gz over the same 12 districts; mise 54 tasks · 15
+  `depends` edges (was 52 · 6), turbo and the ci graph unmoved (716 / 1,897 / 225); steam 546
+  commits; weather 423 dated files; 24 members metered, ssr at 98.6% over 8 of 9 files.
+  `@tools/repo-checks`' new `runner-label.test.ts` shells git and fails "not a git repository"
+  inside the `git archive` tmpdir; the member still meters from the turbo run.
+- A PLATE'S `ref` IS THE ARGV STRING. `basis.mjs` resolves the sha to archive the tree, but the
+  plate files the ref as it was typed, and every title block prints that field — pass the full
+  sha and 20 title blocks print forty characters. Run the chain with `--ref origin/main` and keep
+  the no-re-fetch rule above; that, not a pasted sha, is what holds the cabinet on one commit.
+- A VERSION GUARD READS THE TAGS MAP, NEVER `latest`. npm's `version` is the `latest` tag, so a
+  guard that holds the repo's version against it throws the moment main carries a release
+  candidate. Ask whether the repo version is served under SOME tag (`census-npm.json` `tags`),
+  and print which one.
+- A REWRITTEN FILE RELOCATES BY CONTENT, NOT BY SHIFT. When a cited file is rewritten rather than
+  edited around, no uniform offset exists; find each expectation's new line by its text, and
+  expect re-texts to follow — the eighth refresh took 39 relocations and 4 re-texts off one
+  `ui-view.ts`. A uniform shift is only a tie-breaker for files that did merely shift.
+- A HAND-TYPED PLURAL OR RATIO IS A HAND COUNT. `3 course` and `1.5–3.9×` rot exactly like
+  `5 published`: the number moves under the word. Derive the inflection and the range from the
+  plate the same way the count is derived.
+- A CHART'S SCALE IS A HAND CONSTANT TOO. A bar scale fixed at the busiest month the author saw
+  overflows its row the first month that outgrows it; cap the scale from the plate's own maximum.
+- A SENTENCE ABOUT ONE MEMBER'S SHAPE IS A HAND COUNT IN DISGUISE. "stands dark" and "0 lamps"
+  are figures written as prose, and they rot the moment the member gains a file; derive the
+  figure from the plate row and let the sentence read it.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS

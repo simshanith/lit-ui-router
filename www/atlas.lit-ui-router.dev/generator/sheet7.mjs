@@ -53,11 +53,11 @@ const TIER_TEXT = {
 export const PLACED = [
   // --- packages/ — the product -------------------------------------------------
   [1,  'lit-ui-router',            'packages/lit-ui-router',             'pkg',  'line',     0,  20, `the subject of this set · annex ${ratio('packages/lit-ui-router')}× the source`],
-  // moved east off 200, then off 222, each time lit-ui-router's annex grew into its
-  // west wall: the annex reaches 223.3 at this ref, so 226 is the first clear lot
-  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   226,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
-  // dropped 6 south of the 130 row: the flagship's annex reaches 126.7 at this ref
-  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 136, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
+  // moved east off 200, 222 and 226, each time lit-ui-router's annex grew into its
+  // west wall: the annex reaches 233.9 at this ref, so 240 is the first lot with air
+  [2,  'ui-router-server',         'packages/ui-router-server',          'pkg',  'line',   240,  20, `the server adapter · annex ${ratio('packages/ui-router-server')}×`],
+  // dropped south of the 130 row: the flagship's annex reaches 132.0 at this ref
+  [3,  'lit-ui-router-mobx',       'packages/lit-ui-router-mobx',        'pkg',  'line',   170, 146, `the mobx companion · annex ${ratio('packages/lit-ui-router-mobx')}×`],
   [4,  'navigation-location-plugin','packages/navigation-location-plugin','pkg', 'line',   260, 130, 'one 105-line file, seven spec files'],
   // --- apps/ — the proving ground ----------------------------------------------
   [5,  'sample-app-shared',        'apps/sample-app-shared',             'app',  'line',   570,  10, 'the routes + views every sample app mounts'],
@@ -107,7 +107,7 @@ export const PLACED = [
   [37, 'lit-ui-router-effect',     'packages/lit-ui-router-effect',      'pkg',  'line',    30, 210, `the effect bindings · annex ${ratio('packages/lit-ui-router-effect')}×`],
   // --- the prerender package, born 2026-09-14 (#806) -------------------------------
   // the district's south row, east of the effect bindings: a lot with nothing tall
-  // in front of it, 9.7 units west of the oxc-emit lane and clear of road tag D
+  // in front of it; its annex spans x 215–288, so the oxc-emit lane ends here
   [38, 'lit-ui-router-ssr',        'packages/lit-ui-router-ssr',         'pkg',  'line',   160, 210, `the prerender bridge · verdicts in, @lit-labs/ssr pages out · annex ${ratio('packages/lit-ui-router-ssr')}×`],
 ];
 
@@ -211,8 +211,9 @@ const roads = [
   //    -mobx and -routes (and on ui-router-server).  turbo: docs dependsOn ^build.
   road([[680, g(8).y2], [680, g(10).y]], { ...BUILDS, t0: 9, to: 10 }),
   // 3 · @tools/oxc-emit is a devDependency of every packages/ member and runs both
-  //    build passes (turbo build:js / build:types); drawn to the nearest of them.
-  road([[238, g(20).y], [238, 180], [268, 180], [268, g(4).y + g(4).s]], { ...BUILDS, t0: 9, to: 4 }),
+  //    build passes (turbo build:js / build:types); drawn to the nearest of them,
+  //    the prerender bridge, turning west under its annex to reach the src block.
+  road([[238, g(20).y], [238, 335], [g(38).x + g(38).s / 2, 335], [g(38).x + g(38).s / 2, g(38).y + g(38).s]], { ...BUILDS, t0: 0, to: 38 }),
   // 4 · typecheck reads BOTH series: turbo typecheck dependsOn ^build:types, and
   //    its inputs are $TURBO_DEFAULT$ — every tracked file of the package, src and
   //    specs alike.  Two stubs, one trunk, into the consumer that reads the types.

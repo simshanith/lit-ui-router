@@ -247,7 +247,11 @@ const DOOR_N = DOORS.rows.length;
 const DOOR_PKGS = new Set(DOORS.rows.map((r) => r.pkg)).size;
 const NPM = JSON.parse(readFileSync(new URL('../data/census-npm.json', import.meta.url), 'utf8'));
 const SHIPPED = NPM.rows.find((r) => r.name === 'lit-ui-router');
-if (!SHIPPED || SHIPPED.version !== PLATE.members.find((m) => m.name === 'lit-ui-router')?.version) throw new Error('build: census-npm.json and census-files.json disagree about the lit-ui-router version');
+// npm's `version` is the latest TAG: main may sit on a release candidate that `rc`
+// carries, so the repo's version has to be one the registry serves under SOME tag
+const MAIN_TAG = SHIPPED && Object.entries(SHIPPED.tags ?? {}).find(([, v]) => v === SUBJECT?.version)?.[0];
+if (!SHIPPED || !MAIN_TAG) throw new Error('build: census-files.json carries a lit-ui-router version census-npm.json serves under no dist-tag');
+const MAIN_AHEAD = MAIN_TAG === 'latest' ? '' : ` · main at ${SUBJECT.version} · ${MAIN_TAG}`;
 const num = (v) => v.toLocaleString('en-US');
 const TOP_CODE = SURVEY_LANGS[0].code;
 const survey = `<section class="survey" aria-label="general survey of the repository">
@@ -270,7 +274,7 @@ const survey = `<section class="survey" aria-label="general survey of the reposi
 const statBar = `<div class="stat-bar" role="group" aria-label="set statistics">
     <div><span class="k">REPOSITORY</span><span class="v">lit-ui-router · simshanith</span></div>
     <div><span class="k">INSTRUMENTS (tools/*)</span><span class="v">${INSTRUMENTS}</span></div>
-    <div><span class="k">LATEST SHIPPED</span><span class="v">${SUBJECT.version} · ${SHIPPED.published}</span></div>
+    <div><span class="k">LATEST SHIPPED</span><span class="v">${SHIPPED.version} · ${SHIPPED.published}${MAIN_AHEAD}</span></div>
     <div><span class="k">PUBLISHABLE PACKAGES</span><span class="v">${PUBLISHED.length} · ${PUBLISHED.map((m) => `${m.name} ${m.version}`).join(' · ')}</span></div>
     <div><span class="k">SHEETS</span><span class="v">14 altitudes · ${PLATES} plates · whole plate cabinet counted at ${COUNTED_AT}</span></div>
   </div>`;
