@@ -1,7 +1,7 @@
 /// <reference types="vitest/globals" />
 /// <reference types="@types/dom-navigation" />
 
-import { UIRouter } from '@uirouter/core';
+import { type LocationPlugin, UIRouter } from '@uirouter/core';
 import {
   NavigationLocationService,
   navigationLocationPlugin,
@@ -301,7 +301,7 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
   });
 
   describe('navigationLocationPlugin', () => {
-    it('passes its options to the service it installs', () => {
+    it('passes its options to the service when router.plugin() installs it', () => {
       const addEventListener = vi.fn();
       vi.spyOn(
         NavigationLocationService.prototype as unknown as {
@@ -315,7 +315,9 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       router = createTestRouter();
       const interceptOptions = { handler: async () => {} };
       const intercept = vi.fn(() => interceptOptions);
-      const plugin = navigationLocationPlugin(router, { intercept });
+      const plugin = router.plugin<LocationPlugin>(navigationLocationPlugin, {
+        intercept,
+      });
       const event = fakeNavigateEvent({ uiRouter: router });
 
       const call = addEventListener.mock.calls.find(

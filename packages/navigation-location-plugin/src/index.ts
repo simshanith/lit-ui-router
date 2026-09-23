@@ -260,10 +260,11 @@ export class NavigationLocationService extends BaseLocationServices {
 }
 
 /** A [UIRouterPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html) that gets/sets the current location using the browser's `location` and `navigation` apis */
-export const navigationLocationPlugin = (
+// A function declaration: router.plugin() installs it with `new`.
+export function navigationLocationPlugin(
   router: UIRouter,
   options: NavigationLocationPluginOptions = {},
-): LocationPlugin => {
+): LocationPlugin {
   const service = (router.locationService = new NavigationLocationService(
     router,
     options,
@@ -281,4 +282,4 @@ export const navigationLocationPlugin = (
       r.dispose(configuration);
     },
   };
-};
+}
