@@ -16,9 +16,9 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/bootstrap": "workspace:*",
-    "@tools/eslint-ts-parser": "workspace:*",
-    "@tools/shared": "workspace:*",
+    "@tools/bootstrap": "catalog:",
+    "@tools/eslint-ts-parser": "catalog:",
+    "@tools/shared": "catalog:",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "eslint-plugin-lit": "catalog:",

@@ -13,7 +13,7 @@
     "lint": "oxlint ."
   },
   "dependencies": {
-    "@tools/bootstrap": "workspace:*"
+    "@tools/bootstrap": "catalog:"
   },
   "devDependencies": {
     "oxfmt": "catalog:",

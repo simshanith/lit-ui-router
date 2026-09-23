@@ -18,8 +18,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/bootstrap": "workspace:*",
-    "@tools/shared": "workspace:*",
+    "@tools/bootstrap": "catalog:",
+    "@tools/shared": "catalog:",
     "@types/node": "catalog:",
     "@types/semver": "catalog:",
     "oxfmt": "catalog:",
