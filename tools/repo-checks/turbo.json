@@ -66,6 +66,7 @@
         "!$TURBO_ROOT$/www/lit-ui-router.dev/api/**",
         "!$TURBO_ROOT$/.cache/**",
         "!$TURBO_ROOT$/.claude/**",
+        "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         // ignored by knip.jsonc as standalone installs
         "!$TURBO_ROOT$/examples/*/**",
         "$TURBO_ROOT$/pnpm-workspace.yaml"
