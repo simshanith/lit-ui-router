@@ -32,7 +32,7 @@ The type declarations reference the global `Navigation` and `NavigateEvent` type
 
 ## Quick Start
 
-Register `@uirouter/core`'s `servicesPlugin` first; the router's transitions need it. `UIRouterLit` from `lit-ui-router` registers it in its constructor.
+Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings) set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs `servicesPlugin` registered before the location plugin:
 
 ```typescript
 import { UIRouter, servicesPlugin } from '@uirouter/core';

@@ -64,9 +64,9 @@ const router = new UIRouterLit();
 router.plugin(navigationLocationPlugin);
 ```
 
-`UIRouterLit` registers `@uirouter/core`'s `servicesPlugin` in its constructor.
-With a plain `UIRouter`, call `router.plugin(servicesPlugin)` before the
-location plugin; the router's transitions need it.
+Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings)
+set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs
+`router.plugin(servicesPlugin)` registered before the location plugin.
 
 ### Feature-detect with a fallback
 
