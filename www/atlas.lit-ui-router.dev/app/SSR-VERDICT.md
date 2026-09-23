@@ -348,7 +348,6 @@ Ordered by how much each would have saved me.
    (`document.createDocumentFragment`), then at `:280` (`this.childNodes`). So
    the ask is answered exactly as scoped — *don't throw* — and a
    server-*rendering* `<ui-view>` remains open work, folded into #829.
-
 2. **`lit-ui-router`: an SSR-safe `srefHref` companion.** Repo #689 already
    plans an `srefHref` attribute directive. An **attribute**-part directive can
    be server-rendered, which is the whole game: `<a href=${srefHref('sheet', {num})}>`
