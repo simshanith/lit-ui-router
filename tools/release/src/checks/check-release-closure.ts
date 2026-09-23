@@ -7,6 +7,7 @@ import {
   formatMissing,
   missingFromClosure,
   selectedNames,
+  unselectedWorkspaceEdges,
 } from './check-release-closure.core.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import {
@@ -73,5 +74,17 @@ for (const rule of RULES) {
     continue;
   }
   console.log(`${CHECK}: ${rule.need}: ${required.length} selected`);
+}
+
+const edges = unselectedWorkspaceEdges(members, selected);
+if (edges.length > 0) {
+  console.error(
+    `${CHECK}: workspace dependencies outside RELEASE_CLOSURE: ${edges.join(', ')}: a selected member cannot resolve them; ${FIX}`,
+  );
+  failed = true;
+} else {
+  console.log(
+    `${CHECK}: workspace dependencies: ${selected.length} selected, none outside`,
+  );
 }
 if (failed) process.exit(1);
