@@ -50,9 +50,8 @@ export default defineConfig(
       'pnpm/json-enforce-catalog': [
         'error',
         {
-          // workspace deps go through the default catalog's workspace:* entries;
-          // other non-registry specs stay inline; npm: aliases belong in the catalog
-          allowedProtocols: ['link', 'file', 'portal'],
+          // every spec goes through a catalog, workspace deps included
+          allowedProtocols: [],
           // report catalog-version conflicts instead of auto-creating a new catalog
           conflicts: 'error',
           fields: [
