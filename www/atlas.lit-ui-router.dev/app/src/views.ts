@@ -8,7 +8,7 @@ import type { UIRouter } from '@uirouter/core';
 import { LitElement, html, isServer, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
-import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router';
+import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
 import type {

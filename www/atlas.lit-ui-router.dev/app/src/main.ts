@@ -1,5 +1,5 @@
 import { render } from 'lit';
-import 'lit-ui-router';
+import 'lit-ui-router-ssr/register';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
 import { onXrefClick } from './fragment.ts';
 import type { XrefDetail } from './fragment.ts';

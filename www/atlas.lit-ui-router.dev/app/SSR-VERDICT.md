@@ -71,19 +71,11 @@ components and its own disk-backed resolves on the same route table, so
 DOM between the part markers the element hydrates against. `src/main.ts` starts
 the router, awaits its first successful transition and calls `hydrateRoot()`;
 a cold container returns `false` and the same template is rendered instead. The
-atlas is on `lit-ui-router@1.16.0-rc.0` / `lit-ui-router-ssr@0.1.0-rc.1`, with
+atlas is on `lit-ui-router@1.16.0-rc.1` / `lit-ui-router-ssr@0.1.0-rc.2`, with
 `@lit-labs/ssr-client@1.1.8` as the client half's peer.
 
-Two things that cutover measured:
+One thing that cutover measured:
 
-- `@lit-labs/ssr` routes a child part to `UiViewRenderer.renderLight()` only
-  when the directive class carries `_$litRenderLight`, and
-  `@lit-labs/ssr-client`'s production build mangles that property name. The
-  shipped `uiViewSlot()` sets it by its literal name, so under node's default
-  export conditions every `<ui-view>` is served with an empty part pair, with no
-  warning and no failed build — the whole page body is gone. `prerender.ts`
-  copies the flag ssr-client's own `renderLight()` carries onto the slot's class
-  before the first render.
 - A view whose server and client templates differ cannot be adopted: `hydrate()`
   throws, the adopter drops that one view's served nodes, the view renders cold
   and its ancestors keep theirs. `atlas.sheet` and `atlas.city` are both in that

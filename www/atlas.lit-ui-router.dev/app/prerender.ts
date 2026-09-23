@@ -55,28 +55,13 @@ const PLATES = allSheets(manifest);
 // render as inert unknown elements with no error at all (repo #808).
 // `lit-ui-router-ssr` reaches only `lit-ui-router/context` and a static import
 // of it measured byte-identical here; it rides with the family all the same.
+// The elements come from the register entry src/main.ts uses; src/views.ts
+// imports `lit-ui-router/pure`, which registers nothing.
+await import('lit-ui-router-ssr/register');
 const { UIRouterLit } = await import('lit-ui-router/pure');
 const { installServerLocation } = await import('ui-router-server/location');
 const { prerender } = await import('lit-ui-router-ssr');
 const views = await import('./src/views.ts');
-
-// CONSUMER FINDING, WORKED AROUND HERE — see SSR-VERDICT.md.
-// `@lit-labs/ssr` routes a child part to `UiViewRenderer.renderLight()` only
-// when the directive class carries `_$litRenderLight`, and
-// `@lit-labs/ssr-client`'s PRODUCTION build mangles that property name.
-// `uiViewSlot()` sets it by its literal name, so under node's default
-// conditions the flag `isRenderLightDirective()` reads is absent and every
-// `<ui-view>` is served with an empty part pair, silently. The flag
-// ssr-client's own `renderLight()` carries is copied onto the slot's class.
-const { getDirectiveClass } = await import('lit/directive-helpers.js');
-const { renderLight } = await import('@lit-labs/ssr-client/directives/render-light.js');
-const { uiViewSlot } = await import('lit-ui-router-ssr/client');
-const RESERVED = new Set(['length', 'name', 'prototype']);
-const litRenderLight = Object.getOwnPropertyNames(
-  getDirectiveClass(renderLight()) ?? {},
-).find((key) => !RESERVED.has(key));
-const slotClass = getDirectiveClass(uiViewSlot()) as unknown as Record<string, unknown>;
-if (litRenderLight) slotClass[litRenderLight] = true;
 
 /**
  * ONE router, driven from page to page.

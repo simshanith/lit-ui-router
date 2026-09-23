@@ -4,7 +4,7 @@
  */
 import { hashLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
-import { UIRouterLit } from 'lit-ui-router';
+import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router';
 import {
   isUIRouterNavigateEvent,
