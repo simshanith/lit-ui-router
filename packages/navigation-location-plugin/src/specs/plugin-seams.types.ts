@@ -6,6 +6,10 @@ import type {
   UIRouterPlugin,
 } from '@uirouter/core';
 
+import type {
+  NavigationLocationPluginOptions,
+  UIRouterNavigateEvent,
+} from '../index.js';
 import { navigationLocationPlugin } from '../index.js';
 
 // The upstream contract the plugin must keep with @uirouter/core: it has to be
@@ -36,4 +40,14 @@ export const seams: [
   AssignableTo<LocationPlugin, UIRouterPlugin>,
   AssignableTo<LocationPlugin['service'], LocationServices>,
   AssignableTo<LocationPlugin['configuration'], LocationConfig>,
-] = [true, true, true, true, true];
+  // router.plugin(navigationLocationPlugin, options) — options reach the factory.
+  AssignableTo<
+    NavigationLocationPluginOptions,
+    Parameters<typeof navigationLocationPlugin>[1]
+  >,
+  // The intercept option maps the plugin's own event to intercept() options.
+  AssignableTo<
+    NavigationLocationPluginOptions['intercept'],
+    ((event: UIRouterNavigateEvent) => NavigationInterceptOptions) | undefined
+  >,
+] = [true, true, true, true, true, true, true];
