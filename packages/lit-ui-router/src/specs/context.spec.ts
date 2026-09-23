@@ -11,7 +11,6 @@ import { html } from 'lit';
 import { servicesPlugin, UIRouter } from '@uirouter/core';
 
 import {
-  adoptUiViewContext,
   contextRequestEventName,
   isRouterContextRequest,
   parentUiViewContext,
@@ -307,12 +306,11 @@ describe('lit-ui-router/context', () => {
 
   describe('<ui-view> as a parent-view provider', () => {
     /** Mounts a view under a `<ui-router>`, past its own content capture. */
-    async function mountView(deferHydration = false): Promise<UiView> {
+    async function mountView(): Promise<UiView> {
       const uiRouterEl = document.createElement('ui-router');
       uiRouterEl.uiRouter = router;
       container.appendChild(uiRouterEl);
       const view = document.createElement('ui-view');
-      if (deferHydration) view.setAttribute('defer-hydration', '');
       uiRouterEl.appendChild(view);
       await waitForUpdate(uiRouterEl);
       return view;
@@ -404,15 +402,6 @@ describe('lit-ui-router/context', () => {
       const unsubscribe = callback.mock.calls[0][1];
       expect(typeof unsubscribe).toBe('function');
       expect(() => unsubscribe()).not.toThrow();
-    });
-
-    it('answers while asleep under defer-hydration', async () => {
-      const view = await mountView(true);
-      const child = document.createElement('div');
-      view.appendChild(child);
-
-      expect(view.hasUpdated).toBe(false);
-      expect(requestContext(child, parentUiViewContext)).toBe(view);
     });
 
     it('keeps the house ui-view-context seek resolving the same parent', async () => {
@@ -646,26 +635,6 @@ describe('requestContext', () => {
       'undefined',
     ]);
     uninstall();
-  });
-});
-
-describe('adoptUiViewContext', () => {
-  it('is a frozen object, so the key is stable and unique', () => {
-    expect(Object.isFrozen(adoptUiViewContext)).toBe(true);
-    expect(adoptUiViewContext.name).toBe('lit-ui-router/context#adopt-ui-view');
-  });
-
-  it('carries the adopter from a provider to a requester', () => {
-    const root = new EventTarget();
-    const view = document.createElement('div') as unknown as UiView;
-    const adopt = vi.fn();
-    const uninstall = provideContext(root, adoptUiViewContext, adopt);
-
-    requestContext(root, adoptUiViewContext)?.(view);
-
-    expect(adopt).toHaveBeenCalledWith(view);
-    uninstall();
-    expect(requestContext(root, adoptUiViewContext)).toBeUndefined();
   });
 });
 

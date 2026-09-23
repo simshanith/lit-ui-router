@@ -9,7 +9,11 @@ const source = (path: string): string =>
   fileURLToPath(new URL(path, import.meta.url));
 
 // Specs that need a browser-shaped document rather than the SSR DOM shim.
-const clientSpecs = ['src/specs/client.spec.ts', 'src/specs/register.spec.ts'];
+const clientSpecs = [
+  'src/specs/client.spec.ts',
+  'src/specs/register.spec.ts',
+  'src/specs/served-view.spec.ts',
+];
 
 // One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports.
 const coexistSpecs = ['src/specs/client-coexist.spec.ts'];

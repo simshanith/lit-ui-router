@@ -127,9 +127,9 @@ whatever the client renders into the light DOM. For
 
 [`lit-ui-router-ssr`](/packages/ssr) draws the view itself instead. Its
 renderer writes the routed component into the view's light DOM — no
-declarative shadow root and no `<slot>` — and the served view arrives asleep,
-holding that markup until the client's hydrate wakes it. Three things follow
-for fallback content:
+declarative shadow root and no `<slot>` — and the served view, the `<ui-view>`
+that `lit-ui-router-ssr/register` defines, arrives asleep, holding that markup
+until the client's hydrate wakes it. Three things follow for fallback content:
 
 - **Authored content in a served view is that view's fallback set.** It is
   emitted as written and shows while the document loads. At the wake the view

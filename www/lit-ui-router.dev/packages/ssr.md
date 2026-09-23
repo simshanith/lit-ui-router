@@ -182,7 +182,8 @@ so they register nothing and compose with any of the three.
 
 ## The hydration model
 
-A served `<ui-view>` arrives asleep. The render passes `deferHydration`, so
+A served `<ui-view>` — the class `lit-ui-router-ssr/register` defines the tag
+with — arrives asleep. The render passes `deferHydration`, so
 every custom element on the page carries Lit's `defer-hydration` attribute,
 and while it is there the view renders nothing and holds the nodes the server
 drew. The client boots the router first, then calls
@@ -199,8 +200,8 @@ const release = hydrateRoot(root, page(router));
 
 Every [`uiViewSlot`](/api/lit-ui-router-ssr/variables/uiViewSlot) that walk
 reaches wakes the `<ui-view>` it sits in, and the waking view requests
-[`adoptUiViewContext`](/api/reference/core/adoptUiViewContext) over the
-standard `context-request` event and hands itself to whichever provider
+[`adoptUiViewContext`](/api/lit-ui-router-ssr/variables/adoptUiViewContext)
+over the standard `context-request` event and hands itself to whichever provider
 answers. The mechanics — the boot sequence, the marker protocol, and what a
 view with no provider above it does — are in the
 [API reference](/api/lit-ui-router-ssr/) and in
@@ -237,8 +238,9 @@ In that grid `lit-ui-router-ssr` sits in the per-boundary, provided cell. Each
 or idle. The code that wakes it is provided, not imported, so any
 `context-request` provider — an `@lit/context` provider, a test harness, a
 nested app — can scope or replace the adopter, and the element side reuses
-Lit's `defer-hydration` contract unchanged. `lit-ui-router` carries the gated
-sleep and wake and one context key; everything else is in this package.
+Lit's `defer-hydration` contract unchanged. All of it is in this package:
+`lit-ui-router-ssr/register` defines `<ui-view>` with the served class, so an
+app that never prerenders carries none of it.
 
 ## Further reading
 

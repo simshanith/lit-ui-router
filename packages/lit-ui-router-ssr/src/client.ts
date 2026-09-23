@@ -11,11 +11,18 @@ import type { ChildPart, RenderOptions } from 'lit';
 import { directive } from 'lit/directive.js';
 import type { PartInfo } from 'lit/directive.js';
 import { getDirectiveClass } from 'lit/directive-helpers.js';
-import { adoptUiViewContext, provideContext } from 'lit-ui-router/context';
-import type { AdoptableView } from 'lit-ui-router/context';
+import { provideContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
+import { adoptUiViewContext } from './adopt-context.js';
+import type { AdoptableView } from './adopt-context.js';
 import { servedMarkerPrefix } from './served-markers.js';
 
+export {
+  adoptUiViewContext,
+  type AdoptableView,
+  type AdoptUiViewContext,
+  type AdoptUiViewContextKey,
+} from './adopt-context.js';
 export {
   isServedViewClass,
   type ServedUiView,
