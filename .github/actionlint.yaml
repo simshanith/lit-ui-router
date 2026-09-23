@@ -1,0 +1,5 @@
+# actionlint 1.7.12 (its newest release) does not know the ubuntu-26.04 label
+# -- upstream support is rhysd/actionlint#682 -- so declare it here.
+self-hosted-runner:
+  labels:
+    - ubuntu-26.04

@@ -51,7 +51,7 @@ jobs:
   # Named for what it does, not for the role one of its callers plays: the
   # UI's own "Required" badge already says which composite gates merging.
   run:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     timeout-minutes: 30
     permissions:
       contents: read
@@ -75,11 +75,12 @@ jobs:
         id: cypress-version
         run: mise run //tools/build_and_test:cypress_version
       - name: Cache Playwright browsers
+        # The runner image is in the key: browser builds are per-Ubuntu-release.
         id: playwright-cache
         uses: actions/cache@v6
         with:
           path: ~/.cache/ms-playwright
-          key: ${{ runner.os }}-playwright-${{ steps.playwright-version.outputs.playwright }}
+          key: ${{ runner.os }}-${{ steps.playwright-version.outputs.image }}-playwright-${{ steps.playwright-version.outputs.playwright }}
       - name: Cache Cypress binary
         uses: actions/cache@v6
         with:

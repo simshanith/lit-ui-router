@@ -32,8 +32,8 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # `mise run turbo_login`. A dotenv, not [env] here, so the sensitive worker
 # domain never lands in a checked-in file; a missing file is fine (mise loads
 # nothing, no error) since the cache is maintainer-only.
-# config_root-scoped, so a git worktree starts with no creds; `mise run setup`
-# links it at the owning checkout's file (see the turbo_link_worktree task).
+# config_root-scoped; `mise run setup` pins a worktree to the local cache
+# either way (see the turbo_pin_worktree task).
 # NOT `{ …, redact = true }`: redaction wraps the task's stdio to mask secrets,
 # which clobbers a task reading its own stdin — it silently breaks
 # `printf … | mise run turbo_login --token-file -`. Verified on this mise.
@@ -42,10 +42,9 @@ TAPLO_CONFIG = "{{config_root}}/.config/taplo.toml"
 # same redact trap. Separate from turbo's, not appended to it: `turbo_login`
 # *writes* turbo.local.env and would clobber anything else in it, and the two
 # have different lifecycles (the turbo bearer is shared and static, the CF token
-# is user-scoped and revocable). No task writes this one — hand-create it. It is
-# also NOT linked into git worktrees (see the turbo_link_worktree task, which is
-# turbo-only): `check:workers-builds` is manual-only and never part of CI, so
-# run it from the owning checkout.
+# is user-scoped and revocable). No task writes this one — hand-create it, and
+# in the owning checkout: `check:workers-builds` is manual-only and never part
+# of CI, so run it from there.
 _.file = [
   "{{config_root}}/.config/mise/turbo.local.env",
   "{{config_root}}/.config/mise/cloudflare.local.env",
@@ -95,10 +94,10 @@ idiomatic_version_file_enable_tools = ["node"]
 # pnpm auto-enables --frozen-lockfile when CI is set (ci-info detection),
 # so one task serves local (plain) and CI (frozen) alike.
 description = "Install workspace dependencies with the pnpm on PATH"
-# turbo_link_worktree no-ops everywhere but a fresh worktree; it rides setup
+# turbo_pin_worktree no-ops everywhere but a linked worktree; it rides setup
 # because that is the one step every new checkout already runs. No provisioning
 # leg: `mise install` puts the bootstrap pnpm on PATH by itself.
-depends = ["turbo_link_worktree"]
+depends = ["turbo_pin_worktree"]
 usage = '''
 flag "--release" help="Install only the release closure (RELEASE_CLOSURE)"
 '''
@@ -170,10 +169,10 @@ run = "mise run taplo fmt --check"
 # invocation, not release logic, and at the root config_root turbo already
 # runs from the workspace root.
 
-# turbo_login, read_secret, turbo_link_worktree, cloudflare_item_create and
-# check_workers_builds are file-based tasks under .config/mise/tasks/ — their
-# shell bodies were too large to sit inline. Every other task here is a one- or
-# two-liner and stays inline.
+# turbo_login, read_secret, turbo_pin_worktree, turbo_backfill,
+# turbo_force_guard, cloudflare_item_create and check_workers_builds are
+# file-based tasks under .config/mise/tasks/ — their shell bodies were too large
+# to sit inline. Every other task here is a one- or two-liner and stays inline.
 
 # The Cloudflare tasks wrap `op` over gitignored files whose paths are the only
 # thing worth memorizing; none is required, since the check reads plain env.
@@ -194,6 +193,7 @@ chmod 600 "{{config_root}}/.config/mise/cloudflare.local.env"
 [tasks.build]
 # env: TURBO_TOKEN/TURBO_API/TURBO_TEAM for remote cache (ambient turbo
 # config, not a flag).
+depends = ["turbo_force_guard"]
 description = "Build one package and its workspace deps via turbo"
 usage = '''
 flag "--package-name <package_name>" help="Package to build (turbo <name>#build)" required=#true env="PACKAGE_NAME"
@@ -207,6 +207,7 @@ run = 'turbo run "${usage_package_name?}#build"'
 #
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
+depends = ["turbo_force_guard"]
 dir = "{{config_root}}"
 description = "Build the @www sites"
 run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summarize"
@@ -215,8 +216,10 @@ run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summar
 # turbo's `ci` is the back-compat alias of `ci:pull_request`.
 # env: TURBO_FORCE + TURBO_TOKEN/TURBO_API/TURBO_TEAM, which turbo reads from
 # the env itself (no CLI flags), plus WRANGLER_LOG for the underlying
-# tasks. TURBO_FORCE is the build-test deflake input: a truthy value
-# forces a cache-bypassing rerun, ""/"false" respect the cache.
+# tasks. TURBO_FORCE is the build-test deflake input: exactly `true` or `1`
+# forces a cache-bypassing rerun, every other value respects the cache. It also
+# outranks TURBO_CACHE — `--force` means `--cache=local:w,remote:w` — which is
+# what the turbo_force_guard leg refuses outside CI.
 # --summarize writes .turbo/runs/<id>.json (gitignored), which the
 # turbo_summary task reports on every run. It changes nothing about what runs.
 # The e2e suites are a SECOND step, not part of turbo's ci graph: they need a
@@ -225,6 +228,7 @@ run = "turbo run build --filter='@www/*' --ui=stream --log-order=stream --summar
 # one entry point that means "the PR gate" — a split across two steps would
 # leave a local `mise run ci` silently short of CI. Second, so a lint or
 # typecheck failure short-circuits the expensive lane.
+depends = ["turbo_force_guard"]
 description = "Run the pull-request CI pipeline via turbo"
 run = [
   "mise run //tools/build_and_test:mark_session",
@@ -235,6 +239,7 @@ run = [
 [tasks.ci_main]
 # Superset of `ci` (same env contract): adds the main-only guard tasks
 # (@tools/release#check:pack, @tools/dts-backtest#test:matrix) to the graph.
+depends = ["turbo_force_guard"]
 description = "Run the main-push CI pipeline via turbo"
 run = [
   "mise run //tools/build_and_test:mark_session",
@@ -262,7 +267,7 @@ run = [
 #
 # dir is explicit: the inner `turbo run` must see the whole workspace, and a
 # task invoked from a package directory gets a silently narrowed plan.
-depends = ["build_www"]
+depends = ["build_www", "turbo_force_guard"]
 dir = "{{config_root}}"
 description = "Run the Cypress e2e suites via turbo, around one shared dev server"
 usage = '''
@@ -273,10 +278,12 @@ run = 'node ./apps/sample-app-lit-e2e/scripts/run-e2e.ts ${usage_suite:-}'
 
 [tasks.codecov_bundle]
 # env: CODECOV_TOKEN plus the ambient TURBO_* remote-cache config.
+depends = ["turbo_force_guard"]
 description = "Upload bundle-analysis stats to Codecov via turbo"
 run = "turbo run codecov:bundle --ui=stream --log-order=stream"
 
 [tasks.dts_backtest_matrix]
 # Ad-hoc alias for the full dts-backtest TS matrix; CI runs it via ci_main.
+depends = ["turbo_force_guard"]
 description = "Run the full dts-backtest TypeScript version matrix via turbo"
 run = "turbo run test:matrix --ui=stream --log-order=stream"

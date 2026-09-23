@@ -6,31 +6,22 @@
 // version from `packageManager` rather than restating it, so there is nothing
 // here to compare (tools/workers-builds/cloudflare-build.ts).
 import assert from 'node:assert/strict';
-import { execFileSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, it } from 'node:test';
 
 import { requireManifest } from '@tools/bootstrap/manifest.ts';
 import { workspaceRoot } from '@tools/bootstrap/root.ts';
+import { taploGet } from './cli-query.ts';
 
 // `pnpm@<version>+sha512.<hash>` — the integrity hash rides along, the version
 // ahead of it is what the other files have to match.
 const packageManager = requireManifest(workspaceRoot).packageManager ?? '';
 const pinned = /^pnpm@([^+]+)\+sha512\./.exec(packageManager)?.[1];
 
-// The mise files are TOML, so query them instead of matching their text:
-// taplo is already this repo's TOML linter and formatter, and its `get` takes
-// a jq-like path. `aqua:pnpm/pnpm` needs quoting — it carries a `:` and a `/`.
+// The mise files are TOML, so query them instead of matching their text (see
+// cli-query.ts). `aqua:pnpm/pnpm` needs quoting — it carries a `:` and a `/`.
 const MISE_TOOL = 'tools."aqua:pnpm/pnpm"';
-const taploGet = (file: string, pattern: string): unknown =>
-  JSON.parse(
-    execFileSync(
-      'taplo',
-      ['get', '-f', join(workspaceRoot, file), '-o', 'json', pattern],
-      { encoding: 'utf8' },
-    ),
-  );
 
 // One locked tool: the requested version, plus a per-platform table each of
 // whose download URLs carries that version in its path.

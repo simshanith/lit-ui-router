@@ -1,8 +1,9 @@
 import { nothing, render } from 'lit';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { adoptUiViewContext, requestContext } from 'lit-ui-router/context';
+import { requestContext } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
-import 'lit-ui-router/register';
+import { adoptUiViewContext } from '../adopt-context.js';
+import '../register.js';
 
 import { hydrateRoot } from '../client.js';
 import { UiViewRenderer } from '../ui-view-renderer.js';
@@ -31,7 +32,7 @@ import {
 type View = Element & { deferHydration: boolean; hasUpdated: boolean };
 
 const views = (container: HTMLElement): View[] =>
-  [...container.querySelectorAll('ui-view')] as View[];
+  [...container.querySelectorAll('ui-view')] as unknown as View[];
 
 /** The document a build would have emitted for `path`. */
 const drawShell = (path: string): Promise<string> =>

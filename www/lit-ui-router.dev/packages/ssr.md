@@ -131,9 +131,59 @@ projection to fall back on logs a console warning naming that path, because
 nothing was emitted for it. `result.warnings` carries the same list in both
 builds.
 
+## Registering the elements
+
+A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register`
+is the one import that defines it. Three shapes cover every app.
+
+### A cold app
+
+It imports `lit-ui-router` and changes nothing. It never draws a document on the
+server, so it never needs this package on the client.
+
+### A prerendered app
+
+It imports `lit-ui-router-ssr/register` in place of `lit-ui-router`, ahead of
+anything else that registers `<ui-view>`. That entry defines `<ui-router>` from
+core and `<ui-view>` with
+[`withServedRender`](/api/lit-ui-router-ssr/functions/withServedRender) applied
+to core's `UiView`. Then the router boots and one call adopts the page:
+
+```ts
+import 'lit-ui-router-ssr/register';
+import { hydrateRoot } from 'lit-ui-router-ssr/client';
+
+router.start();
+await booted; // the first successful transition
+const release = hydrateRoot(root, page(router));
+```
+
+A `<ui-view>` another class already defined throws, naming both ways out.
+
+### An app with its own registry
+
+It imports `lit-ui-router/pure`, which registers nothing, and defines the served
+class under a tag of its own:
+
+```ts
+import { UiView } from 'lit-ui-router/pure';
+import { withServedRender } from 'lit-ui-router-ssr/client';
+
+customElements.define('app-view', withServedRender(UiView));
+```
+
+The result extends core's `UiView`, so an enclosing view adopts it as a parent.
+`UiViewRenderer` answers for the `ui-view` tag, so a tag of your own needs a
+renderer of your own.
+
+[`lit-ui-router-effect`](/packages/effect) from 0.1.1 and
+[`lit-ui-router-mobx`](/packages/mobx) from 1.0.2 import `lit-ui-router/pure`,
+so they register nothing and compose with any of the three.
+
 ## The hydration model
 
-A served `<ui-view>` arrives asleep. The render passes `deferHydration`, so
+A served `<ui-view>` — the class `lit-ui-router-ssr/register` defines the tag
+with — arrives asleep. The render passes `deferHydration`, so
 every custom element on the page carries Lit's `defer-hydration` attribute,
 and while it is there the view renders nothing and holds the nodes the server
 drew. The client boots the router first, then calls
@@ -150,8 +200,8 @@ const release = hydrateRoot(root, page(router));
 
 Every [`uiViewSlot`](/api/lit-ui-router-ssr/variables/uiViewSlot) that walk
 reaches wakes the `<ui-view>` it sits in, and the waking view requests
-[`adoptUiViewContext`](/api/reference/core/adoptUiViewContext) over the
-standard `context-request` event and hands itself to whichever provider
+[`adoptUiViewContext`](/api/lit-ui-router-ssr/variables/adoptUiViewContext)
+over the standard `context-request` event and hands itself to whichever provider
 answers. The mechanics — the boot sequence, the marker protocol, and what a
 view with no provider above it does — are in the
 [API reference](/api/lit-ui-router-ssr/) and in
@@ -188,8 +238,9 @@ In that grid `lit-ui-router-ssr` sits in the per-boundary, provided cell. Each
 or idle. The code that wakes it is provided, not imported, so any
 `context-request` provider — an `@lit/context` provider, a test harness, a
 nested app — can scope or replace the adopter, and the element side reuses
-Lit's `defer-hydration` contract unchanged. `lit-ui-router` carries the gated
-sleep and wake and one context key; everything else is in this package.
+Lit's `defer-hydration` contract unchanged. All of it is in this package:
+`lit-ui-router-ssr/register` defines `<ui-view>` with the served class, so an
+app that never prerenders carries none of it.
 
 ## Further reading
 

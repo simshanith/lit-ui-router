@@ -1,4 +1,4 @@
-import 'lit-ui-router/register';
+import '../register.js';
 import { render } from '@lit-labs/ssr';
 import { collectResultSync } from '@lit-labs/ssr/lib/render-result.js';
 import { html, LitElement } from 'lit';

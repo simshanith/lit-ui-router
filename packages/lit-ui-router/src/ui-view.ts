@@ -29,11 +29,7 @@ import {
 } from './interface.js';
 import { LitViewConfig, UIRouterLit, isRoutedLitElement } from './core.js';
 import { routedLitElementRenderer } from './routed-element.js';
-import {
-  warnDeferredNeverWoken,
-  warnDeferredWithoutClient,
-  warnMissingRouter,
-} from './dev-warn.js';
+import { warnMissingRouter } from './dev-warn.js';
 import { UIRouterLitElement } from './ui-router.js';
 import type {
   ParentView,
@@ -41,11 +37,9 @@ import type {
   UiViewContextEvent,
 } from './events.js';
 import {
-  adoptUiViewContext,
   contextRequestEventName,
   isContextRequest,
   parentUiViewContext,
-  requestContext,
 } from './context.js';
 
 /** @internal */
@@ -111,16 +105,12 @@ const noParentViewUnsubscribe = () => {};
  * The <code>&lt;ui-view&gt;</code> component is a viewport for routed components.
  * Routed components will be rendered inside the <code>&lt;ui-view&gt;</code> viewport.
  *
- * A prerendered view owns its own hydration. It sleeps while
- * <code>defer-hydration</code> is on it, rendering nothing. Removing the
- * attribute wakes it, and it requests <code>adoptUiViewContext</code> once and
- * calls the adopter it gets, which adopts the nodes the view holds. With none,
- * the view drops the held nodes and renders cold, warning in development. A
- * view detached before that wake update runs stays asleep, holding its nodes,
- * until it is attached again. Whatever the author wrote ahead of that render is
- * this view's fallback set, as it is on a cold view: it stands in the document
- * while the view sleeps, parks while a component occupies the view, and comes
- * back when none does.
+ * Whatever the author wrote inside the element, ahead of any render, is this
+ * view's fallback set: it stands in the document while no component occupies
+ * the view, parks while one does, and comes back when none does.
+ *
+ * A prerendered page needs the served variant this element is the base of —
+ * <code>lit-ui-router-ssr/register</code> defines <code>ui-view</code> with it.
  *
  */
 export class UiView extends LitElement {
@@ -134,10 +124,6 @@ export class UiView extends LitElement {
    */
   @property({ attribute: false })
   uiRouter!: UIRouterLit;
-
-  /** Written by the server on a prerendered view; while it is present the view renders nothing, and removing it wakes and hydrates the element. */
-  @property({ type: Boolean, attribute: 'defer-hydration' })
-  deferHydration = false;
 
   @state()
   private viewAddress!: UiViewAddress;
@@ -254,26 +240,12 @@ export class UiView extends LitElement {
       this.onParentViewContextRequest,
     );
     this.setupUiView();
-    // A deferred view holds another render's nodes behind whatever the author wrote ahead of them.
-    if (this.deferHydration) {
-      this.deferredAtConnect = true;
-      if (import.meta.env.DEV) {
-        // A macrotask: the hydrate walk clears the attribute within this task, and a pin answers on the wake update queued inside it.
-        setTimeout(() => {
-          if (this.isConnected && this.deferHydration && !this.hasUpdated) {
-            warnDeferredNeverWoken(this);
-          }
-        }, 0);
-      }
-    } else if (this.deferredAtConnect) {
-      // Re-attached still asleep: the wake update is this element's to ask for, since a router-less view registers nothing that would.
-      this.requestUpdate();
-    } else if (!this.hasUpdated) {
-      // Past the first render the children are lit's own nodes and part markers, never authored hold content.
-      this.captureContent();
-    } else {
+    if (this.hasUpdated) {
       // Re-attached under another provider: the seek above was skipped, the router it holds may no longer be the enclosing one.
       this.adoptProvidedRouter();
+    } else {
+      // Past the first render the children are lit's own nodes and part markers, never authored content.
+      this.captureContent();
     }
   }
 
@@ -379,11 +351,10 @@ export class UiView extends LitElement {
    * `registerUIView` syncs, so the re-registered view picks up the current
    * state without waiting for the next transition.
    *
-   * A wake re-seeks before the update it schedules, because on a prerendered
-   * page that update is the hydrate and `render()` reads the component from
-   * the real registration.
+   * A subclass that renders against a registration made elsewhere calls it
+   * before the update that reads the component.
    */
-  private adoptProvidedRouter(): void {
+  protected adoptProvidedRouter(): void {
     // Detached, the parent-view seek finds nothing and `disconnectedCallback` has run, so the registration would be wrong and permanent.
     if (!this.isConnected) {
       return;
@@ -409,9 +380,6 @@ export class UiView extends LitElement {
       handler?.();
     }
   }
-
-  /** Set at connect on a deferred view, so the first update that runs is known to be the wake. */
-  private deferredAtConnect = false;
 
   /** Set by the one capture this element gets, so a re-attach before the first update cannot append a second time. */
   private captured = false;
@@ -442,7 +410,7 @@ export class UiView extends LitElement {
    * the first child down, so it captures nothing and the nodes stay where they
    * stand: they are lit's own on a re-attached view, and never ours to move.
    */
-  private captureContent() {
+  protected captureContent(): void {
     if (this.captured || isRenderMarker(this.firstChild)) {
       return;
     }
@@ -453,19 +421,18 @@ export class UiView extends LitElement {
   }
 
   /**
-   * Takes the authored children of a woken view as its fallback set, leaving
-   * them where they stand.
+   * Takes the authored children standing ahead of any render as this view's
+   * fallback set, leaving them where they are.
    *
-   * They are the children ahead of the render this view holds, so a view
-   * holding nothing else is all fallback and one holding a render from the
-   * first child down has none. Nothing is parked: the nodes stood in the
-   * document while the view slept, and this update parks them only if a
-   * component occupies the view, like any other fallback set.
+   * The nodes are not parked: they already stand in the document, and the
+   * update that follows parks them only if a component occupies the view, like
+   * any other fallback set. A view whose children are a render's from the first
+   * one down captures nothing.
    *
-   * It runs at the wake rather than at connect because a deferred view is a
-   * parsed one, and the document parser can connect an element before it fills it.
+   * This is the capture for a subclass that fills the element before its first
+   * render, where {@link captureContent} at connect would be too early.
    */
-  private captureHeldContent(): void {
+  protected captureContentInPlace(): void {
     if (this.captured) {
       return;
     }
@@ -672,56 +639,10 @@ export class UiView extends LitElement {
     return (this.viewContext as StateObject).self;
   }
 
-  /**
-   * Declines every update while the view sleeps.
-   *
-   * A declined update still settles: `updateComplete` resolves `true` while
-   * the view is asleep, so awaiting it proves nothing about a render having
-   * happened — `hasUpdated` tells the two states apart. lit also marks the
-   * declined update complete, so the changed-properties map arrives empty at
-   * the wake and carries nothing that changed during a detached sleep.
-   *
-   * @internal
-   */
-  protected shouldUpdate(changed: PropertyValues<this>): boolean {
-    // Asleep: nothing renders, and `hasUpdated` stays false, so `firstUpdated` still fires on the real first render.
-    if (this.deferHydration) return false;
-    // Detached before the wake ran: `willUpdate` is skipped too, so the held nodes and `deferredAtConnect` survive until a re-attach.
-    if (this.deferredAtConnect && !this.isConnected) return false;
-    return super.shouldUpdate(changed);
-  }
-
   /** @internal */
   protected willUpdate(changed: PropertyValues<this>): void {
     super.willUpdate(changed);
-    if (this.deferredAtConnect) {
-      this.adoptHeldNodes();
-      // The wake is this view's first look at its children: the document parser can connect an element before it fills it.
-      this.captureHeldContent();
-    }
     this.placeFallback();
-  }
-
-  /** The first attached update after a deferred wake: re-seek the router the hydrate reads, then hand the view to an adopter or drop the foreign nodes. */
-  private adoptHeldNodes(): void {
-    this.deferredAtConnect = false;
-    this.adoptProvidedRouter();
-    const adopt = requestContext(this, adoptUiViewContext);
-    if (adopt) return adopt(this);
-    // Rendering over another render's nodes doubles the markup; what the author wrote ahead of them is the capture's.
-    this.dropHeldRender();
-    warnDeferredWithoutClient(this);
-  }
-
-  /** Drops the held render: every child from the first render marker down, leaving what the author wrote ahead of it. */
-  private dropHeldRender(): void {
-    const children = [...this.childNodes];
-    const from = children.findIndex((child) => isRenderMarker(child));
-    if (from < 0) {
-      return;
-    }
-    // Optionally called: the @lit-labs/ssr DOM shim gives its nodes no `remove`.
-    for (const child of children.slice(from)) child.remove?.();
   }
 
   /**
@@ -748,7 +669,7 @@ export class UiView extends LitElement {
    */
   render(): TemplateResult | typeof nothing {
     if (this.showsFallback) {
-      // Nothing captured, so never connected (server render) or holding another render's nodes: an empty declarative shadow root would hide the light DOM.
+      // Nothing captured, so never connected (server render) or holding a render's nodes: an empty declarative shadow root would hide the light DOM.
       return this.fallback ? nothing : html`<slot></slot>`;
     }
 

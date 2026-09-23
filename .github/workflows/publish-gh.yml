@@ -33,7 +33,7 @@ env:
 
 jobs:
   publish_gh:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-26.04
     # Serialize per package across runs (call path and dispatch path share
     # these groups): a run that checks out before a sibling run pushes its tag
     # will re-create that tag, get its push rejected, and release-it's

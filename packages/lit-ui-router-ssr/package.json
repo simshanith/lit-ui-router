@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
   "homepage": "https://lit-ui-router.dev/packages/ssr",
   "bugs": {
@@ -19,7 +19,10 @@
     "src/*.ts"
   ],
   "type": "module",
-  "sideEffects": false,
+  "sideEffects": [
+    "./dist/register.js",
+    "./dist/development/register.js"
+  ],
   "main": "./dist/index.js",
   "module": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -35,7 +38,12 @@
       "default": "./dist/client.js"
     },
     "./dist/*": "./dist/*",
-    "./package.json": "./package.json"
+    "./package.json": "./package.json",
+    "./register": {
+      "types": "./dist/register.d.ts",
+      "development": "./dist/development/register.js",
+      "default": "./dist/register.js"
+    }
   },
   "scripts": {
     "build:js": "oxc-emit-js --development",
@@ -101,6 +109,15 @@
       ]
     },
     "./client": {
+      "free": [
+        "@lit-labs/ssr",
+        "hono",
+        "vite",
+        "node:fs",
+        "node:path"
+      ]
+    },
+    "./register": {
       "free": [
         "@lit-labs/ssr",
         "hono",

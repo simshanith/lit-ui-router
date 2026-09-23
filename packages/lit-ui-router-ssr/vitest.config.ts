@@ -9,44 +9,63 @@ const source = (path: string): string =>
   fileURLToPath(new URL(path, import.meta.url));
 
 // Specs that need a browser-shaped document rather than the SSR DOM shim.
-const clientSpecs = ['src/specs/client.spec.ts'];
+const clientSpecs = [
+  'src/specs/client.spec.ts',
+  'src/specs/register.spec.ts',
+  'src/specs/served-view.spec.ts',
+];
 
 // One more client lane, with its own setup: lit's hydrate support has to be imported before `lit`, which the shared client setup already imports.
 const coexistSpecs = ['src/specs/client-coexist.spec.ts'];
+
+// Specs that must also hold against the published build of `@lit-labs/ssr-client`.
+const prodSpecs = ['src/specs/render-light-flag.spec.ts'];
+
+// Workspace peers resolve to source so tests need no prior build; regex finds, since a string `find` would rewrite the subpath specifiers too.
+const peerAliases = [
+  {
+    find: /^lit-ui-router$/,
+    replacement: source('../lit-ui-router/src/index.ts'),
+  },
+  {
+    find: /^lit-ui-router\/pure$/,
+    replacement: source('../lit-ui-router/src/pure.ts'),
+  },
+  {
+    find: /^lit-ui-router\/register$/,
+    replacement: source('../lit-ui-router/src/register.ts'),
+  },
+  {
+    find: /^lit-ui-router\/ui-router\.register$/,
+    replacement: source('../lit-ui-router/src/ui-router.register.ts'),
+  },
+  {
+    find: /^lit-ui-router\/context$/,
+    replacement: source('../lit-ui-router/src/context.ts'),
+  },
+  {
+    find: /^ui-router-server$/,
+    replacement: source('../ui-router-server/src/index.ts'),
+  },
+  {
+    find: /^ui-router-server\/location$/,
+    replacement: source('../ui-router-server/src/location.ts'),
+  },
+];
+
+// Vitest resolves the `development` condition, so the published build is reached by path.
+const renderLightProd = {
+  find: /^@lit-labs\/ssr-client\/directives\/render-light\.js$/,
+  replacement: source(
+    './node_modules/@lit-labs/ssr-client/directives/render-light.js',
+  ),
+};
 
 const cacheKey = process.env.VITEST_BROWSER_API_PORT ?? 'default';
 
 export default defineConfig({
   cacheDir: `node_modules/.vite-${cacheKey}`,
-  resolve: {
-    // Workspace peers resolve to source so tests need no prior build; regex finds, since a string `find` would rewrite the subpath specifiers too.
-    alias: [
-      {
-        find: /^lit-ui-router$/,
-        replacement: source('../lit-ui-router/src/index.ts'),
-      },
-      {
-        find: /^lit-ui-router\/pure$/,
-        replacement: source('../lit-ui-router/src/pure.ts'),
-      },
-      {
-        find: /^lit-ui-router\/register$/,
-        replacement: source('../lit-ui-router/src/register.ts'),
-      },
-      {
-        find: /^lit-ui-router\/context$/,
-        replacement: source('../lit-ui-router/src/context.ts'),
-      },
-      {
-        find: /^ui-router-server$/,
-        replacement: source('../ui-router-server/src/index.ts'),
-      },
-      {
-        find: /^ui-router-server\/location$/,
-        replacement: source('../ui-router-server/src/location.ts'),
-      },
-    ],
-  },
+  resolve: { alias: peerAliases },
   test: {
     // hanging-process logs the open handles in CI
     reporters: process.env.CI ? ['default', 'hanging-process'] : ['default'],
@@ -65,6 +84,19 @@ export default defineConfig({
           setupFiles: ['./vitest.setup.ts'],
           include: ['src/specs/**/*.spec.ts'],
           exclude: [...configDefaults.exclude, ...clientSpecs, ...coexistSpecs],
+          isolate: true,
+        },
+      },
+      {
+        cacheDir: `node_modules/.vite-${cacheKey}-prod`,
+        // The lane that reads the published build of `@lit-labs/ssr-client`, where the renderLight flag carries a minified name.
+        resolve: { alias: [renderLightProd, ...peerAliases] },
+        test: {
+          name: 'prod-conditions',
+          globals: true,
+          environment: 'node',
+          setupFiles: ['./vitest.setup.ts'],
+          include: prodSpecs,
           isolate: true,
         },
       },

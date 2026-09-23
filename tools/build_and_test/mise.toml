@@ -66,8 +66,12 @@ run = 'TURBO_RUNS_DIR="${usage_runs_dir?}" TURBO_SUMMARY_SESSION="${usage_sessio
 [tasks.playwright_version]
 # env: GITHUB_OUTPUT (step-output target). One task per browser tool so each
 # cache step derives its key alone.
-description = "Emit the installed playwright version to GITHUB_OUTPUT"
-run = "node -p \"'playwright=' + require('playwright/package.json').version\" >> \"$GITHUB_OUTPUT\""
+# The runner image rides along because Playwright ships per-Ubuntu-release browser builds.
+description = "Emit the installed playwright version and runner image to GITHUB_OUTPUT"
+run = [
+  "node -p \"'playwright=' + require('playwright/package.json').version\" >> \"$GITHUB_OUTPUT\"",
+  "echo \"image=${ImageOS:-unknown}\" >> \"$GITHUB_OUTPUT\"",
+]
 
 [tasks.cypress_version]
 # env: GITHUB_OUTPUT (step-output target).

@@ -279,6 +279,8 @@
       "inputs": [
         "**/*.toml",
         "!**/node_modules/**",
+        // gitignored mise overrides (setup writes one per worktree)
+        "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
         "$TURBO_ROOT$/.config/mise/tasks/taplo",
         "$TURBO_ROOT$/.config/mise/mise.lock"
@@ -436,6 +438,8 @@
       "inputs": [
         "**/*.toml",
         "!**/node_modules/**",
+        // gitignored mise overrides (setup writes one per worktree)
+        "!$TURBO_ROOT$/.config/mise/**/*.local.toml",
         "$TURBO_ROOT$/.config/taplo.toml",
         "$TURBO_ROOT$/.config/mise/tasks/taplo",
         "$TURBO_ROOT$/.config/mise/mise.lock"
