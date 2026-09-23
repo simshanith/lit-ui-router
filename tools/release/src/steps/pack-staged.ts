@@ -4,25 +4,17 @@
 // resolves `catalog:`/`workspace:` against the real workspace, upward), the
 // COPY's manifest is stripped, and pnpm packs there. The source tree is never
 // touched — no strip-in-place, no restore, so a crash can't leave a dirty
-// working tree. Field decisions and the tarball-pick live in ./release-pack.core.ts.
+// working tree. Field decisions and the tarball-pick live in ./release-pack.core.ts,
+// the copy filter in ./pack-staged.core.ts.
 
 import { cp, mkdir, readdir, rename, rm } from 'node:fs/promises';
-import { basename, dirname, join } from 'node:path';
+import { dirname, join } from 'node:path';
 
 import { readProjectManifest } from '@pnpm/workspace.project-manifest-reader';
 
 import { defaultStream } from '@tools/shared/exec.ts';
+import { keepEntry } from './pack-staged.core.ts';
 import { pickTarball, strippedManifest } from './release-pack.core.ts';
-
-// Never copy these into staging: node_modules is huge and irrelevant to pack
-// (scripts are stripped, so no lifecycle install is needed), and a stale
-// *.tgz or nested .cache would confuse pickTarball / bloat the copy.
-const STAGING_SKIP = new Set(['node_modules', '.cache']);
-
-function keepEntry(source: string): boolean {
-  const name = basename(source);
-  return !STAGING_SKIP.has(name) && !name.endsWith('.tgz');
-}
 
 /**
  * Pack `packageDir` publish-shape into `outTarball` (an absolute path). Uses
