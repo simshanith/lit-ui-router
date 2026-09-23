@@ -12,6 +12,8 @@ import {
   UIRouter,
 } from '@uirouter/core';
 
+import { composeNavigateUrl } from './compose-navigate-url.js';
+
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
 
 // @uirouter/core types `root` as `any`; it is the global object in browsers.
@@ -43,30 +45,6 @@ export function isUIRouterNavigateEvent(
   event?: NavigateEvent,
 ): event is UIRouterNavigateEvent {
   return (event as UIRouterNavigateEvent)?.info?.uiRouter instanceof UIRouter;
-}
-
-/**
- * Composes the absolute URL handed to `navigation.navigate()` from a
- * router-relative `url` and the document's `baseHref`.
- *
- * Pure string math — no DOM, no Navigation API.
- *
- * - `''` and `'/'` resolve to `baseHref` itself (so `<base href='/app/'>`
- *   navigates to `/app/`, not `/app`).
- * - anything else is prefixed with the base prefix
- *   ({@link stripLastPathElement} of `baseHref`), inserting the leading slash
- *   the caller may have omitted.
- *
- * Exported from the barrel for its specs; not part of the public API.
- *
- * @internal
- */
-export function composeNavigateUrl(url: string, baseHref: string): string {
-  if (url === '' || url === '/') {
-    return baseHref;
-  }
-  const slash = url.startsWith('/') ? '' : '/';
-  return stripLastPathElement(baseHref) + slash + url;
 }
 
 /**
