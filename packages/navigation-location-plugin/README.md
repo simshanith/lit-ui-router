@@ -7,8 +7,6 @@
 [![codecov](https://codecov.io/gh/simshanith/lit-ui-router/graph/badge.svg?component=navigation-location-plugin)](https://app.codecov.io/gh/simshanith/lit-ui-router?components%5B0%5D=navigation-location-plugin)
 [![Can I Use Navigation API](https://img.shields.io/badge/caniuse-Navigation%20API-orange)](https://caniuse.com/mdn-api_navigation)
 
-> **Experimental**: this plugin is a new implementation without the production mileage of the battle-tested `pushState`/`hash` location services. The underlying [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API) is also only recently cross-engine (Firefox 147+, Safari 26.2+), so non-Chromium behavior is lightly exercised.
-
 A UI-Router location plugin that uses the modern browser Navigation API for URL management.
 
 ## Features
@@ -167,6 +165,8 @@ The Navigation API is supported in all modern engines:
 
 Check [caniuse.com](https://caniuse.com/mdn-api_navigation) for current support status.
 
+The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where navigations actually commit and events actually fire — run on Chromium on every pull request via `test`/`test:coverage`, and on Firefox and WebKit on every push to `main` via `test:engines` (on demand through a `ci-main/` branch or the `mainGraph` dispatch). The Cypress end-to-end suite runs in Electron only.
+
 For older browsers, consider using:
 
 - `pushStateLocationPlugin` - History API based (wide support)
@@ -179,7 +179,6 @@ For older browsers, consider using:
 | Modern standard    | Yes            | No        | No        |
 | Event interception | Yes            | No        | No        |
 | Browser support    | Modern engines | Wide      | Universal |
-| Production mileage | New            | Wide      | Wide      |
 | SEO friendly       | Yes            | Yes       | No        |
 | Clean URLs         | Yes            | Yes       | No        |
 

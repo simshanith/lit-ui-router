@@ -34,7 +34,7 @@ export const UNLISTED_NESTED_HOME = 'home.unlisted';
 const locationPluginConfig = {
   navigation: {
     plugin: navigationLocationPlugin,
-    message: '🧑‍🔬 *experimental* navigationLocationPlugin enabled',
+    message: 'navigationLocationPlugin enabled',
   },
   pushState: {
     plugin: pushStateLocationPlugin,

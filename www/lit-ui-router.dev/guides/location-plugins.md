@@ -60,7 +60,7 @@ correctly:
 
 ## Navigation API
 
-[`ui-router-navigation-location-plugin`](/packages/) is an experimental
+[`ui-router-navigation-location-plugin`](/packages/) is a
 [companion package](/packages/) that produces the same clean URLs as
 `pushState`, but drives them with the modern
 [Navigation API](https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API)
