@@ -11,7 +11,7 @@ import { assertKnownChannel } from './release-prev-tag.core.ts';
 const SEMVER_VERSION =
   /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)(?:-(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*)(?:\.(?:0|[1-9]\d*|\d*[a-zA-Z-][0-9a-zA-Z-]*))*)?(?:\+[0-9a-zA-Z-]+(?:\.[0-9a-zA-Z-]+)*)?$/;
 
-// The workflow's choice list already offers major/minor/patch, so `other`
+// The workflow's choice list already offers major/minor/patch/prerelease, so `other`
 // only ever carries what the list can't express: an exact version literal
 // (the historical use — alpha prereleases like 1.0.3-alpha.0) or a semver
 // pre-increment keyword. Anything else — in particular anything with
@@ -46,7 +46,7 @@ function validatedOther(other: string): string {
 
 /**
  * The release-it args for a bump-version run:
- * - major/minor/patch → `--increment <value>`
+ * - major/minor/patch/prerelease → `--increment <value>`
  * - other → `--increment <other>` (validated custom version / pre-keyword)
  * - none → no args, unless `other` is provided — then `other` is passed as
  *   release-it's POSITIONAL increment, preserving the workflow's historical
@@ -57,6 +57,7 @@ export function incrementArgs(increment: string, other: string): string[] {
     case 'major':
     case 'minor':
     case 'patch':
+    case 'prerelease':
       return ['--increment', increment];
     case 'other':
       return ['--increment', validatedOther(other)];
@@ -67,7 +68,7 @@ export function incrementArgs(increment: string, other: string): string[] {
       // than pass an unknown value through to release-it.
       throw new Error(
         `unknown increment ${JSON.stringify(increment)}: expected ` +
-          `major|minor|patch|other|none`,
+          `major|minor|patch|prerelease|other|none`,
       );
   }
 }

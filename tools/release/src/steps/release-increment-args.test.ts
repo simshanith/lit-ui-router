@@ -27,6 +27,10 @@ describe('incrementArgs', () => {
     assert.deepEqual(incrementArgs('major', ''), ['--increment', 'major']);
     assert.deepEqual(incrementArgs('minor', ''), ['--increment', 'minor']);
     assert.deepEqual(incrementArgs('patch', ''), ['--increment', 'patch']);
+    assert.deepEqual(incrementArgs('prerelease', ''), [
+      '--increment',
+      'prerelease',
+    ]);
   });
 
   it('ignores a stray `other` value alongside a standard increment', () => {
