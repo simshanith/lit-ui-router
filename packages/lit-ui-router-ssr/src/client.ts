@@ -16,6 +16,14 @@ import type { AdoptableView } from 'lit-ui-router/context';
 import { UiView } from 'lit-ui-router/pure';
 import { servedMarkerPrefix } from './served-markers.js';
 
+export {
+  isServedViewClass,
+  type ServedUiView,
+  type ServedUiViewConstructor,
+  servedViewBrand,
+  withServedRender,
+} from './served-view.js';
+
 /** The attribute `@lit-labs/ssr` writes on a server-rendered custom element. */
 const DEFER = 'defer-hydration';
 
@@ -341,7 +349,7 @@ const makeCold = (container: HTMLElement): void => {
  * transition, then this call. The walk commits `.uiRouter` onto `<ui-router>`
  * and each woken `<ui-view>` re-seeks the router before its own first render,
  * so the views find the settled router rather than the placeholder they
- * registered against. Nothing constrains when `lit-ui-router/register` is
+ * registered against. Nothing constrains when `lit-ui-router-ssr/register` is
  * imported.
  *
  * @example

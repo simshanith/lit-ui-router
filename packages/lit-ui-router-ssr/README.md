@@ -99,9 +99,54 @@ const page = (router: UIRouterLit) => html`
 One template set, both sides: the server fills the hole through the renderer, the client renders the
 same strings with the hole empty and each `<ui-view>` fills itself.
 
+## Registering the elements
+
+A prerendered page needs the served `<ui-view>`, and `lit-ui-router-ssr/register` is the one import
+that defines it. Three shapes cover every app.
+
+### A cold app
+
+It imports `lit-ui-router`, or `lit-ui-router/register`, and changes nothing. It never draws a
+document on the server, so it never needs this package on the client.
+
+### A prerendered app
+
+It imports `lit-ui-router-ssr/register` in place of `lit-ui-router`, ahead of anything else that
+registers `<ui-view>`. That entry defines `<ui-router>` from core and `<ui-view>` with
+`withServedRender(UiView)`. Then the router boots and one call adopts the page:
+
+```typescript
+import 'lit-ui-router-ssr/register';
+import { hydrateRoot } from 'lit-ui-router-ssr/client';
+
+router.start();
+await booted; // the first successful transition
+const release = hydrateRoot(root, page(router));
+```
+
+A `<ui-view>` another class already defined throws, naming both ways out.
+
+### An app with its own registry
+
+It imports `lit-ui-router/pure`, which registers nothing, and defines the served class under a tag
+of its own:
+
+```typescript
+import { UiView } from 'lit-ui-router/pure';
+import { withServedRender } from 'lit-ui-router-ssr/client';
+
+customElements.define('app-view', withServedRender(UiView));
+```
+
+The result still extends core's `UiView`, so an enclosing view adopts it as a parent.
+`UiViewRenderer` answers for the `ui-view` tag, so a tag of your own needs a renderer of your own.
+
+`lit-ui-router-effect` from 0.1.1 and `lit-ui-router-mobx` from 1.0.2 import
+`lit-ui-router/pure`, so they register nothing and compose with any of the three.
+
 ## The client half
 
-`lit-ui-router-ssr/client` is the adopt side — two exports, no import side effects. The router boots
+`lit-ui-router-ssr/client` is the adopt side — no import side effects. The router boots
 first, and one call adopts the page:
 
 ```typescript
@@ -123,7 +168,7 @@ if (!release) render(page(router), root);
 - **The sequence is the contract.** `router.start()`, await its first successful transition, then
   `hydrateRoot()`. The walk commits `.uiRouter` onto `<ui-router>` and each `<ui-view>` re-seeks the
   router before its own first render, so every view finds the settled router rather than the
-  placeholder it registered against. Nothing constrains when `lit-ui-router/register` is imported.
+  placeholder it registered against. Nothing constrains when `lit-ui-router-ssr/register` is imported.
 - **`hydrateRoot(container, value, options?)`** provides `adoptUiViewContext` under `container` with
   core's `provideContext()` and runs one `hydrate()` over `container`. It returns that provider's
   release function, or `false` when there is nothing to adopt — a cold client render, a dev server.
