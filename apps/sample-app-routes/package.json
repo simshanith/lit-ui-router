@@ -15,10 +15,10 @@
     "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
   },
   "dependencies": {
-    "ui-router-server": "workspace:*"
+    "ui-router-server": "catalog:workspace"
   },
   "devDependencies": {
-    "@tools/wintercg-globals": "workspace:*",
+    "@tools/wintercg-globals": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",

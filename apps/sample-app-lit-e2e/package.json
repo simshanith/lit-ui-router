@@ -18,10 +18,10 @@
     "test:e2e:vanilla": "cypress run"
   },
   "dependencies": {
-    "@www/lit-ui-router.dev": "workspace:*"
+    "@www/lit-ui-router.dev": "catalog:workspace"
   },
   "devDependencies": {
-    "@tools/shared": "workspace:*",
+    "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "cypress": "catalog:",
     "oxfmt": "catalog:",

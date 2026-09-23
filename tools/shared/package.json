@@ -24,7 +24,7 @@
     "@pnpm/types": "catalog:",
     "@pnpm/workspace.projects-reader": "catalog:",
     "@pnpm/workspace.workspace-manifest-reader": "catalog:",
-    "@tools/bootstrap": "workspace:*",
+    "@tools/bootstrap": "catalog:workspace",
     "@types/node": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
