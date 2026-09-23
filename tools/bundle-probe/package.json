@@ -20,8 +20,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/bootstrap": "catalog:",
-    "@tools/build_and_test": "catalog:",
+    "@tools/bootstrap": "catalog:workspace",
+    "@tools/build_and_test": "catalog:workspace",
     "@types/node": "catalog:",
     "esbuild": "catalog:",
     "oxfmt": "catalog:",

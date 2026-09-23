@@ -104,19 +104,19 @@ export default defineConfig(
   },
   {
     // Shipped dep fields of publishable packages must not use workspace: refs,
-    // nor the default catalog, which maps every workspace package to
-    // workspace:*: pnpm's pack-substitution re-appends the substituted entry,
-    // breaking the sorted published manifest. devDependencies is exempt (stripped at pack), as are
-    // private manifests (never packed).
+    // directly or through the `workspace` catalog: pnpm's pack-substitution
+    // re-appends the substituted entry, breaking the sorted published
+    // manifest. devDependencies is exempt (stripped at pack), as are private
+    // manifests (never packed).
     files: ['packages/*/package.json'],
     rules: {
       'no-restricted-syntax': [
         'error',
         {
           selector:
-            'JSONObjectExpression:not(:has(> JSONProperty[key.value="private"][value.value=true])) > JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"]) > JSONObjectExpression > JSONProperty > JSONLiteral[value=/^(?:workspace:|catalog:$)/]',
+            'JSONObjectExpression:not(:has(> JSONProperty[key.value="private"][value.value=true])) > JSONProperty:matches([key.value="dependencies"], [key.value="peerDependencies"], [key.value="optionalDependencies"]) > JSONObjectExpression > JSONProperty > JSONLiteral[value=/^(?:workspace:|catalog:workspace$)/]',
           message:
-            'workspace: and default catalog: refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
+            'workspace: and catalog:workspace refs in shipped fields get pack-substituted with re-appended key order, breaking published-manifest sorting — use catalog:publishedPeer (or a version range) instead.',
         },
       ],
     },

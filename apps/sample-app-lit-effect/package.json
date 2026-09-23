@@ -16,13 +16,13 @@
     "@uirouter/core": "catalog:",
     "effect": "catalog:",
     "lit": "catalog:",
-    "lit-ui-router": "catalog:",
-    "lit-ui-router-effect": "catalog:",
+    "lit-ui-router": "catalog:workspace",
+    "lit-ui-router-effect": "catalog:workspace",
     "lodash-es": "catalog:",
-    "sample-app-shared": "catalog:"
+    "sample-app-shared": "catalog:workspace"
   },
   "devDependencies": {
-    "@tools/build_and_test": "catalog:",
+    "@tools/build_and_test": "catalog:workspace",
     "@types/dom-navigation": "catalog:",
     "@types/lodash-es": "catalog:",
     "@types/node": "catalog:",

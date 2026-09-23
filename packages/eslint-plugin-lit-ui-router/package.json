@@ -61,9 +61,9 @@
   },
   "devDependencies": {
     "@release-it/conventional-changelog": "catalog:",
-    "@tools/eslint-ts-parser": "catalog:",
-    "@tools/oxc-emit": "catalog:",
-    "@tools/release-config": "catalog:",
+    "@tools/eslint-ts-parser": "catalog:workspace",
+    "@tools/oxc-emit": "catalog:workspace",
+    "@tools/release-config": "catalog:workspace",
     "@types/node": "catalog:",
     "eslint": "catalog:peerFloor",
     "eslint-doc-generator": "catalog:",

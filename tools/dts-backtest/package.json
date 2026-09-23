@@ -17,10 +17,10 @@
     "effect": "catalog:",
     "hono": "catalog:",
     "lit": "catalog:",
-    "lit-ui-router": "catalog:",
-    "lit-ui-router-effect": "catalog:",
-    "lit-ui-router-mobx": "catalog:",
-    "lit-ui-router-ssr": "catalog:",
+    "lit-ui-router": "catalog:workspace",
+    "lit-ui-router-effect": "catalog:workspace",
+    "lit-ui-router-mobx": "catalog:workspace",
+    "lit-ui-router-ssr": "catalog:workspace",
     "mobx": "catalog:",
     "oxfmt": "catalog:",
     "oxlint": "catalog:",
@@ -28,7 +28,7 @@
     "typescript-5.9": "catalog:",
     "typescript-6": "catalog:typescript6",
     "typescript-7": "catalog:",
-    "ui-router-navigation-location-plugin": "catalog:",
-    "ui-router-server": "catalog:"
+    "ui-router-navigation-location-plugin": "catalog:workspace",
+    "ui-router-server": "catalog:workspace"
   }
 }
