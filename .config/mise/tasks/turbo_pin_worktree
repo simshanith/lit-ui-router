@@ -1,0 +1,28 @@
+#!/usr/bin/env bash
+#MISE description="Pin a git worktree's turbo runs to the local cache"
+# Why, and how to opt out: docs/REMOTE_CACHE.md.
+set -eu
+
+git_dir="$(git rev-parse --absolute-git-dir 2>/dev/null)" || exit 0
+common_dir="$(git rev-parse --path-format=absolute --git-common-dir)"
+
+# The two paths diverge only in a linked worktree; the owning checkout keeps
+# its remote reads.
+[ "$git_dir" != "$common_dir" ] || exit 0
+
+# No remote cache to keep off the network (CI, fresh clone).
+[ -f "$(dirname "$common_dir")/.config/mise/turbo.local.env" ] || exit 0
+
+# File-based tasks are raw scripts: {{config_root}} does not render here.
+mise_dir="${MISE_CONFIG_ROOT}/.config/mise"
+pin="$mise_dir/conf.d/turbo-worktree.local.toml"
+
+# Never clobber a maintainer's own override.
+[ ! -e "$pin" ] || exit 0
+
+mkdir -p "${pin%/*}"
+cp "$mise_dir/templates/turbo-worktree.toml" "$pin"
+
+# mise reads [env] only from a trusted config.
+mise trust -q "$pin"
+echo "turbo_pin_worktree: pinned to the local cache ($pin)" >&2

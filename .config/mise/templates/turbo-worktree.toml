@@ -1,0 +1,5 @@
+# Copied into a worktree's .config/mise/conf.d/ by `mise run turbo_pin_worktree`
+# — see docs/REMOTE_CACHE.md.
+[env]
+TURBO_CACHE = "local:rw"
+TURBO_TOKEN = ""
