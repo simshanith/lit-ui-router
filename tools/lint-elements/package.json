@@ -14,8 +14,8 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/shared": "catalog:workspace",
-    "@tools/warn-lanes": "catalog:workspace",
+    "@tools/shared": "workspace:*",
+    "@tools/warn-lanes": "workspace:*",
     "@types/node": "catalog:",
     "eslint": "catalog:",
     "oxfmt": "catalog:",

@@ -503,16 +503,16 @@ importers:
         specifier: 'catalog:'
         version: 21.2.3
       '@tools/compat-guards':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:tools/compat-guards
       '@tools/eslint':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:tools/eslint
       '@tools/lint-elements':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:tools/lint-elements
       '@tools/lit-template-lint':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:tools/lit-template-lint
       '@types/node':
         specifier: 'catalog:'
@@ -524,7 +524,7 @@ importers:
         specifier: 'catalog:'
         version: 9.0.1
       eslint-plugin-lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:packages/eslint-plugin-lit-ui-router
       eslint-plugin-oxlint:
         specifier: 'catalog:'
@@ -569,11 +569,11 @@ importers:
   apps/sample-app-lit-e2e:
     dependencies:
       '@www/lit-ui-router.dev':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../www/lit-ui-router.dev
     devDependencies:
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/shared
       '@types/node':
         specifier: 'catalog:'
@@ -609,20 +609,20 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router
       lit-ui-router-effect:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router-effect
       lodash-es:
         specifier: 'catalog:'
         version: 4.18.1
       sample-app-shared:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../sample-app-shared
     devDependencies:
       '@tools/build_and_test':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/build_and_test
       '@types/dom-navigation':
         specifier: 'catalog:'
@@ -661,10 +661,10 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router
       lit-ui-router-mobx:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router-mobx
       lodash-es:
         specifier: 'catalog:'
@@ -673,11 +673,11 @@ importers:
         specifier: 'catalog:'
         version: 7.0.3
       sample-app-shared:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../sample-app-shared
     devDependencies:
       '@tools/build_and_test':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/build_and_test
       '@types/dom-navigation':
         specifier: 'catalog:'
@@ -713,17 +713,17 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router
       lodash-es:
         specifier: 'catalog:'
         version: 4.18.1
       sample-app-shared:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../sample-app-shared
     devDependencies:
       '@tools/build_and_test':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/build_and_test
       '@types/dom-navigation':
         specifier: 'catalog:'
@@ -753,11 +753,11 @@ importers:
   apps/sample-app-routes:
     dependencies:
       ui-router-server:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/ui-router-server
     devDependencies:
       '@tools/wintercg-globals':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/wintercg-globals
       '@types/node':
         specifier: 'catalog:'
@@ -796,20 +796,20 @@ importers:
         specifier: 'catalog:'
         version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router
       lodash-es:
         specifier: 'catalog:'
         version: 4.18.1
       sample-app-routes:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../sample-app-routes
       ui-router-navigation-location-plugin:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
     devDependencies:
       '@tools/lit-test-env':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/lit-test-env
       '@types/dom-navigation':
         specifier: 'catalog:'
@@ -876,13 +876,13 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/eslint-ts-parser':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/eslint-ts-parser
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@types/node':
         specifier: 'catalog:'
@@ -928,25 +928,25 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/bundle-probe':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/compat-guards':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/compat-guards
       '@tools/happy-dom':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/happy-dom
       '@tools/lit-test-env':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/node':
         specifier: 'catalog:'
@@ -1015,25 +1015,25 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.4)(supports-color@10.2.2))
       '@tools/bundle-probe':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/compat-guards':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/compat-guards
       '@tools/happy-dom':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/happy-dom
       '@tools/lit-test-env':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/node':
         specifier: 'catalog:'
@@ -1057,7 +1057,7 @@ importers:
         specifier: catalog:lit2-compat
         version: lit@2.8.0
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../lit-ui-router
       lit-ui-router-floor:
         specifier: catalog:peerFloor
@@ -1099,25 +1099,25 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/bundle-probe':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/compat-guards':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/compat-guards
       '@tools/happy-dom':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/happy-dom
       '@tools/lit-test-env':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/node':
         specifier: 'catalog:'
@@ -1138,7 +1138,7 @@ importers:
         specifier: catalog:lit2-compat
         version: lit@2.8.0
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../lit-ui-router
       lit-ui-router-floor:
         specifier: catalog:peerFloor
@@ -1192,19 +1192,19 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.4)(supports-color@10.2.2))
       '@tools/bundle-probe':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/lit-test-env':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/lit-test-env
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/node':
         specifier: 'catalog:'
@@ -1222,7 +1222,7 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../lit-ui-router
       oxfmt:
         specifier: 'catalog:'
@@ -1252,7 +1252,7 @@ importers:
         specifier: 'catalog:'
         version: typescript@7.0.2
       ui-router-server:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../ui-router-server
       vitest:
         specifier: 'catalog:'
@@ -1264,16 +1264,16 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/bundle-probe':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
       '@types/dom-navigation':
         specifier: 'catalog:'
@@ -1336,22 +1336,22 @@ importers:
         specifier: 'catalog:'
         version: 12.0.2(conventional-commits-filter@6.0.1)(conventional-commits-parser@7.1.2)(release-it@21.1.0(@types/node@24.13.6)(magicast@0.5.3)(supports-color@10.2.2))
       '@tools/bundle-probe':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/bundle-probe
       '@tools/lcov-rebase':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/lcov-rebase
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/oxc-emit
       '@tools/release-config':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/release-config
       '@tools/typedoc-plugin-lit-ui-router':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/typedoc-plugin-lit-ui-router
       '@tools/wintercg-globals':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/wintercg-globals
       '@types/node':
         specifier: 'catalog:'
@@ -1414,10 +1414,10 @@ importers:
         specifier: 'catalog:'
         version: 2.0.1
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@tools/warn-lanes':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../warn-lanes
       '@types/node':
         specifier: 'catalog:'
@@ -1447,10 +1447,10 @@ importers:
   tools/bundle-probe:
     devDependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@tools/build_and_test':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../build_and_test
       '@types/node':
         specifier: 'catalog:'
@@ -1474,10 +1474,10 @@ importers:
   tools/compat-guards:
     devDependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@types/node':
         specifier: 'catalog:'
@@ -1516,16 +1516,16 @@ importers:
         specifier: 'catalog:'
         version: 3.3.3
       lit-ui-router:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router
       lit-ui-router-effect:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router-effect
       lit-ui-router-mobx:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router-mobx
       lit-ui-router-ssr:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/lit-ui-router-ssr
       mobx:
         specifier: 'catalog:'
@@ -1549,16 +1549,16 @@ importers:
         specifier: 'catalog:'
         version: typescript@7.0.2
       ui-router-navigation-location-plugin:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/navigation-location-plugin
       ui-router-server:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/ui-router-server
 
   tools/embed-heights:
     dependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
     devDependencies:
       '@types/node':
@@ -1580,13 +1580,13 @@ importers:
   tools/eslint:
     devDependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@tools/eslint-ts-parser':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../eslint-ts-parser
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@types/node':
         specifier: 'catalog:'
@@ -1661,7 +1661,7 @@ importers:
   tools/lcov-rebase:
     devDependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
@@ -1679,10 +1679,10 @@ importers:
   tools/lint-elements:
     devDependencies:
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@tools/warn-lanes':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../warn-lanes
       '@types/node':
         specifier: 'catalog:'
@@ -1703,7 +1703,7 @@ importers:
   tools/lit-template-lint:
     devDependencies:
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@types/node':
         specifier: 'catalog:'
@@ -1773,13 +1773,13 @@ importers:
         specifier: 'catalog:'
         version: 1100.0.29(@pnpm/logger@1100.0.0)
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@tools/workers-builds':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../workers-builds
       '@types/node':
         specifier: 'catalog:'
@@ -1821,10 +1821,10 @@ importers:
   tools/repo-checks:
     devDependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../shared
       '@types/node':
         specifier: 'catalog:'
@@ -1869,7 +1869,7 @@ importers:
         specifier: 'catalog:'
         version: 1100.1.9
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
@@ -1887,7 +1887,7 @@ importers:
   tools/typedoc-plugin-lit-ui-router:
     devDependencies:
       '@tools/oxc-emit':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../oxc-emit
       '@types/node':
         specifier: 'catalog:'
@@ -1911,7 +1911,7 @@ importers:
   tools/vue-check:
     dependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
     devDependencies:
       oxfmt:
@@ -1957,7 +1957,7 @@ importers:
   tools/workers-builds:
     devDependencies:
       '@tools/bootstrap':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../bootstrap
       '@types/node':
         specifier: 'catalog:'
@@ -1984,41 +1984,41 @@ importers:
         specifier: 'catalog:'
         version: 1.12.2
       examples:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../examples
       sample-app-lit-effect:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../apps/sample-app-lit-effect
       sample-app-lit-mobx:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../apps/sample-app-lit-mobx
       sample-app-lit-vanilla:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../apps/sample-app-lit-vanilla
       sample-app-routes:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../apps/sample-app-routes
       screenfull:
         specifier: 'catalog:'
         version: 6.0.2
       ui-router-server:
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../packages/ui-router-server
       vue:
         specifier: 'catalog:'
         version: 3.5.43(typescript@7.0.2)
     devDependencies:
       '@tools/build_and_test':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/build_and_test
       '@tools/embed-heights':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/embed-heights
       '@tools/shared':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/shared
       '@tools/vue-check':
-        specifier: catalog:workspace
+        specifier: workspace:*
         version: link:../../tools/vue-check
       '@types/node':
         specifier: 'catalog:'
