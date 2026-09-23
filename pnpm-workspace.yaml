@@ -11,7 +11,7 @@ catalog:
   '@arethetypeswrong/core': ^0.18.5
   '@codecov/bundle-analyzer': ^2.0.1
 
-  oxc-project-runtime: 'npm:@oxc-project/runtime@0.150.0'
+  oxc-project-runtime: 'npm:@oxc-project/runtime@0.151.0'
   '@commitlint/cli': ^21.2.3
   '@commitlint/config-conventional': ^21.2.3
   '@commitlint/types': ^21.2.3
@@ -50,7 +50,7 @@ catalog:
   eslint-plugin-eslint-plugin: ^7.6.2
   eslint-plugin-lit: ^2.3.1
   eslint-plugin-lit-a11y: ^5.1.1
-  eslint-plugin-oxlint: 1.83.0
+  eslint-plugin-oxlint: 1.85.0
   eslint-plugin-package-json: ^1.9.0
   eslint-plugin-pnpm: ^1.9.1
   eslint-plugin-turbo: ^2.11.2
@@ -59,23 +59,23 @@ catalog:
   hono: ^4.13.8
   husky: ^9.1.7
   jsonc-parser: ^3.3.1
-  knip: ^6.35.1
+  knip: ^6.37.0
   lit: ^3.3.3
   lit-analyzer: ^2.0.3
   lit-dialog: ^2.0.1
   lodash-es: ^4.18.1
   mobx: ^7.0.3
-  oxc-minify: 0.150.0
-  oxc-transform: 0.150.0
-  oxfmt: 0.68.0
-  oxlint: 1.83.0
-  oxlint-tsgolint: 7.0.2001
+  oxc-minify: 0.151.0
+  oxc-transform: 0.151.0
+  oxfmt: 0.70.0
+  oxlint: 1.85.0
+  oxlint-tsgolint: 7.0.2002
   pacote: ^22.0.0
   playwright: ^1.63.0
   publint: ^0.3.24
   release-it: ^21.1.0
   rimraf: ^6.1.3
-  rolldown: ^1.2.8
+  rolldown: ^1.2.9
   screenfull: ^6.0.2
   semver: ^7.8.5
   start-server-and-test: ^3.0.12
@@ -177,7 +177,6 @@ allowBuilds:
 overrides:
   '@api-viewer/common>lit': ^3.3.3
   '@api-viewer/docs>lit': ^3.3.3
-  '@oxc-project/types': 0.149.0
   'brace-expansion@5': 5.0.9
   d3-color: 3.1.0
   dompurify: 3.4.13
@@ -208,5 +207,8 @@ linkWorkspacePackages: true
 patchedDependencies:
   '@api-viewer/docs': patches/@api-viewer__docs.patch
   lit-dialog: patches/lit-dialog.patch
+
+minimumReleaseAgeExclude:
+  - eslint-plugin-oxlint@1.85.0
 
 minimumReleaseAgeStrict: true
