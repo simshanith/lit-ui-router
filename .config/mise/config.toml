@@ -52,9 +52,10 @@ _.file = [
 
 [vars]
 # What `setup --release` installs; release-it and the peer-floor scripts live in
-# packages/*, not @tools/release. Task-scoped as RELEASE_CLOSURE, not global [env]:
-# setup here, and //tools/release:check_release_closure, which guards it.
-release_closure = "--filter @tools/release... --filter {packages/*}..."
+# packages/*; tools/* is listed whole since `...` skips `catalog:workspace` edges.
+# Task-scoped as RELEASE_CLOSURE, not global [env]: setup here, and
+# //tools/release:check_release_closure, which guards it.
+release_closure = "--filter {packages/*}... --filter {tools/*}..."
 
 [settings]
 # read the node version from .nvmrc instead of pinning it here
