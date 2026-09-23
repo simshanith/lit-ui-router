@@ -2,7 +2,11 @@
 /// <reference types="@types/dom-navigation" />
 
 import { UIRouter } from '@uirouter/core';
-import { NavigationLocationService } from '../index.js';
+import {
+  NavigationLocationService,
+  navigationLocationPlugin,
+  type NavigationLocationPluginOptions,
+} from '../index.js';
 
 // These specs assert what this plugin *passes to* the Navigation API — the
 // listener registration, and the arguments of `navigation.navigate()`. They
@@ -251,6 +255,77 @@ describe('NavigationLocationService (stubbed Navigation seam)', () => {
       registeredInterceptor()(event as unknown as NavigateEvent);
 
       expect(event.intercept).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('intercept option', () => {
+    let interceptOptions: NavigationInterceptOptions;
+    let intercept: ReturnType<
+      typeof vi.fn<Required<NavigationLocationPluginOptions>['intercept']>
+    >;
+
+    beforeEach(() => {
+      router = createTestRouter();
+      interceptOptions = { handler: async () => {}, scroll: 'manual' };
+      intercept = vi.fn(() => interceptOptions);
+      service = new TestableService(router, { intercept });
+    });
+
+    it('hands what the option returns to event.intercept', () => {
+      const event = fakeNavigateEvent({ uiRouter: router });
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(intercept).toHaveBeenCalledExactlyOnceWith(event);
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith(interceptOptions);
+    });
+
+    it.each([
+      [
+        'it cannot intercept',
+        () => fakeNavigateEvent({ uiRouter: router }, false),
+      ],
+      ['it did not start', () => fakeNavigateEvent()],
+      [
+        "another router's",
+        () => fakeNavigateEvent({ uiRouter: new UIRouter() }),
+      ],
+    ])('is not called for a navigation %s', (_, makeEvent) => {
+      const event = makeEvent();
+
+      registeredInterceptor()(event as unknown as NavigateEvent);
+
+      expect(intercept).not.toHaveBeenCalled();
+      expect(event.intercept).not.toHaveBeenCalled();
+    });
+  });
+
+  describe('navigationLocationPlugin', () => {
+    it('passes its options to the service it installs', () => {
+      const addEventListener = vi.fn();
+      vi.spyOn(
+        NavigationLocationService.prototype as unknown as {
+          _navigation(): Navigation;
+        },
+        '_navigation',
+      ).mockReturnValue({
+        addEventListener,
+        removeEventListener: vi.fn(),
+      } as unknown as Navigation);
+      router = createTestRouter();
+      const interceptOptions = { handler: async () => {} };
+      const intercept = vi.fn(() => interceptOptions);
+      const plugin = navigationLocationPlugin(router, { intercept });
+      const event = fakeNavigateEvent({ uiRouter: router });
+
+      const call = addEventListener.mock.calls.find(
+        (args: unknown[]) => args[0] === 'navigate',
+      ) as [string, (event: NavigateEvent) => void];
+      call[1](event as unknown as NavigateEvent);
+
+      expect(plugin.service).toBe(router.locationService);
+      expect(event.intercept).toHaveBeenCalledExactlyOnceWith(interceptOptions);
+      plugin.dispose?.(router);
     });
   });
 

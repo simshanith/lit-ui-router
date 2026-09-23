@@ -180,6 +180,35 @@ describe.skipIf(!hasNavigationAPI)(
       });
       expect(holder.__sameDocumentMarker).toBe(marker);
     });
+
+    it('lets the intercept option govern when the navigation finishes', async () => {
+      service?.dispose(router);
+      service = null;
+      const marker = {};
+      const holder = window as unknown as { __sameDocumentMarker?: object };
+      holder.__sameDocumentMarker = marker;
+      let handled = false;
+      const plugin = navigationLocationPlugin(router, {
+        intercept: () => ({
+          async handler() {
+            await Promise.resolve();
+            handled = true;
+          },
+        }),
+      });
+      try {
+        plugin.service.url('/option-intercepted');
+        const finished = window.navigation.transition?.finished;
+        expect(finished).toBeDefined();
+        await finished;
+
+        expect(handled).toBe(true);
+        expect(window.location.pathname).toBe('/option-intercepted');
+        expect(holder.__sameDocumentMarker).toBe(marker);
+      } finally {
+        plugin.dispose?.(router);
+      }
+    });
   },
 );
 
