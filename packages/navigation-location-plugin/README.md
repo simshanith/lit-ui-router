@@ -28,13 +28,18 @@ pnpm add ui-router-navigation-location-plugin
 yarn add ui-router-navigation-location-plugin
 ```
 
+The type declarations reference the global `Navigation` and `NavigateEvent` types, which TypeScript ships from 6.0. On TypeScript 5.x, also install `@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.
+
 ## Quick Start
 
+Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings) set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs `servicesPlugin` registered before the location plugin:
+
 ```typescript
-import { UIRouter } from '@uirouter/core';
+import { UIRouter, servicesPlugin } from '@uirouter/core';
 import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
 const router = new UIRouter();
+router.plugin(servicesPlugin);
 router.plugin(navigationLocationPlugin);
 ```
 
