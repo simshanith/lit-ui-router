@@ -164,6 +164,20 @@ describe('a document drawn for another state', () => {
     expect(warn).not.toHaveBeenCalled();
     expect(container.querySelector('.detail')?.textContent).toBe('leaf');
   });
+
+  it('renders once over a served view that opens on a nested part', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+    const { container } = serve(await drawShell('/shell/lead'));
+    expect(container.querySelectorAll('#plate')).toHaveLength(1);
+
+    await boot(container, rootTemplate, '/shell/detail');
+
+    expect(warn).toHaveBeenCalledTimes(1);
+    // Every served sibling after the nested pair went with it, not only that pair.
+    expect(container.querySelector('#plate')).toBeNull();
+    expect(container.querySelectorAll('.detail')).toHaveLength(1);
+    expect(container.querySelector('.detail')?.textContent).toBe('leaf');
+  });
 });
 
 /**
@@ -256,6 +270,47 @@ describe('the adopter hydrateRoot provides', () => {
     // The pair is the enclosing template's own part marker; the element renders after it.
     expect(comments(view)).toEqual(['lit-part', '/lit-part']);
     expect(warn).not.toHaveBeenCalled();
+  });
+
+  describe('on a mismatch', () => {
+    // The pair's interior as the renderer writes it: the view's template pair plain, everything inside prefixed.
+    const interiors = {
+      'opens on a nested part':
+        '<!--ui-view:lit-part--><div class="util" id="util">util</div><!--ui-view:/lit-part-->' +
+        '<p class="plate" id="plate">plate</p><p class="caption">caption</p>',
+      'holds a nested part in the middle':
+        '<p class="lead">lead</p><!--ui-view:lit-part--><span>mid</span><!--ui-view:/lit-part-->' +
+        '<p class="plate" id="plate">plate</p>',
+      'holds no nested part': '<p class="plate" id="plate">plate</p>',
+    };
+
+    for (const [shape, interior] of Object.entries(interiors)) {
+      it(`clears everything up to the matching close when the view ${shape}`, () => {
+        const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+        const view = servedView(
+          `<!--lit-part VIEW-->${interior}<!--/lit-part--><p class="after">after</p>`,
+          container,
+        );
+        const [open, close] = [
+          view.firstChild,
+          view.lastChild!.previousSibling,
+        ];
+        view.render = () => {
+          throw new Error('drawn for another state');
+        };
+
+        expect(wake(view)).toBe(true);
+
+        expect(warn).toHaveBeenCalledTimes(1);
+        // The pair itself stays, and so does what the enclosing template wrote after it.
+        expect([...view.childNodes]).toEqual([
+          open,
+          close,
+          view.querySelector('.after'),
+        ]);
+        expect(comments(view)).toEqual(['lit-part VIEW', '/lit-part']);
+      });
+    }
   });
 
   it('leaves a view the document served no markers for to its own fallback', () => {
