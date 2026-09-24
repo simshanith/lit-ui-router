@@ -15,7 +15,7 @@
     "@uirouter/visualizer": "^7.2.1",
     "effect": "^3.22.1",
     "lit": "^3.3.3",
-    "lit-ui-router": "^1.15.0",
+    "lit-ui-router": "^1.16.0-rc.1",
     "lit-ui-router-effect": "^0.1.0"
   },
   "devDependencies": {
@@ -23,7 +23,10 @@
     "vite": "^8.2.1"
   },
   "overrides": {
-    "d3-color": "3.1.0"
+    "d3-color": "3.1.0",
+    "lit-ui-router-effect": {
+      "lit-ui-router": "$lit-ui-router"
+    }
   },
   "devEngines": {
     "packageManager": {
