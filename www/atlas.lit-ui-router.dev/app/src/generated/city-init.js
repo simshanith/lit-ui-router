@@ -510,9 +510,8 @@ export async function initCity(root, THREE) {
     var ndc = new THREE.Vector2();
     var byN = {};
     rows.forEach(function (b) { byN[b.n] = b; });
-    var IDLE = '<h4>THE CITY — ISOMETRIC</h4><p class="hint">Hover or tap any mass to read its member — '
-      + 'district, gate tier, authored source and the spec annex beside it. The number on each chip is '
-      + 'the number sheet 7 gives that member.</p>';
+    var IDLE = '<p class="hint">Hover or tap any mass to read its member: district, gate tier, '
+      + "authored source and the spec annex beside it. Each chip carries the member's number on sheet 7.</p>";
     function fmt(v) { return String(v).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
     function plural(n) { return n === 1 ? ' file' : ' files'; }
     // the light lane's sentence — sheet 7A's own numbers, unrounded
@@ -533,7 +532,7 @@ export async function initCity(root, THREE) {
         + (b.sf ? fmt(b.sl) + ' src sloc in ' + b.sf + plural(b.sf) : 'no authored source');
       if (b.pf) line += ' · spec annex ' + fmt(b.pl) + ' sloc in ' + b.pf + plural(b.pf);
       var tail = lane === 'light' ? '<p>' + survey(b) + '</p>' : '';
-      return '<h4>' + b.n + ' · ' + b.name + '</h4><p>' + line + '</p><p>'
+      return '<h3>' + b.n + ' · ' + b.name + '</h3><p>' + line + '</p><p>'
         + (D.notes[b.n] || '') + '</p>' + tail;
     }
     var litN = null;

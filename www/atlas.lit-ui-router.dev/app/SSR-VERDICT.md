@@ -78,11 +78,12 @@ One thing that cutover measured:
 
 - A view whose server and client templates differ cannot be adopted: `hydrate()`
   throws, the adopter drops that one view's served nodes, the view renders cold
-  and its ancestors keep theirs. `atlas.sheet` and `atlas.city` are both in that
-  shape, because `plate()` branches on `isServer` and `<atlas-city>` on the
-  `three` resolve — `@lit-labs/ssr` emits no property bindings, and these are
-  light-DOM `LitElement`s whose drawing the served page has to carry. `/`,
-  `/about`, `/log` and `/specimen` adopt node-for-node. A filtered gallery url
+  and its ancestors keep theirs. `atlas.sheet` and `atlas.city` render one
+  template on both sides: the fragment is `<atlas-plate>`'s child, written by
+  the view, and the properties `@lit-labs/ssr` does not emit sit beside it for
+  hydration to commit, so `<atlas-plate>` and `<atlas-city>` are
+  `ReactiveElement`s that draw nothing of their own. Every route adopts
+  node-for-node. A filtered gallery url
   falls back for the other reason in the contract: one document answers the
   whole family.
 

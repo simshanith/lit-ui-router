@@ -160,18 +160,35 @@ const CSS = `
 .cs-canvas.grabbing { cursor: grabbing; }
 .cs-canvas canvas { display: block; }
 .cs-canvas .cs-note { position: absolute; inset: 0; display: grid; place-items: center; text-align: center;
-  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-faint); padding: 20px; }
+  font-family: var(--data); font-size: 10.5px; letter-spacing: 0.08em; color: var(--ink-soft); padding: 20px; }
 .cs-info { border-top: 1.5px solid var(--ink); background: var(--paper-2); padding: 9px 14px 10px;
   font-family: var(--data); font-size: 10.5px; letter-spacing: 0.04em; color: var(--ink); min-height: 52px; }
 /* the mass name is a bare identifier — the one place the code face earns its keep */
-.cs-info h4 { font-family: var(--code); font-size: 13px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
+.cs-info h3 { font-family: var(--code); font-size: 13px; letter-spacing: 0.08em; margin: 0 0 3px; word-break: break-all; }
 .cs-info p { margin: 0; color: var(--ink-soft); word-break: break-word; }
-.cs-info .hint { color: var(--ink-faint); }
-/* the basis is running text, so it is set as prose; the frame stays full width and the
-   right padding holds the measure to 68ch — a note strip, not a 228ch wall of data face */
-.cs-basis { font-family: var(--prose); font-size: 13.5px; line-height: 1.5; color: var(--ink-soft);
+.cs-info .hint { color: var(--ink-soft); }
+/* the plate's general notes, set to the flat set's notes measure: 18/1.8 prose in columns
+   no narrower than 24em (48ch) and, because the next column lands first, never past 74ch */
+.cs-basis { font-family: var(--prose); font-size: 18px; line-height: 1.8; color: var(--ink);
   border: 1.5px solid var(--ink); border-top: none; background: var(--paper-2);
-  padding: 12px max(14px, calc(100% - 68ch - 14px)) 14px 14px; }
+  padding: 16px 22px 4px; column-width: 24em; column-gap: 44px; column-rule: 1px solid var(--line); }
+/* a note never splits across columns; the cap only bites in the single-column band */
+.cs-basis p { margin: 0 0 1.1em; max-width: 70ch; break-inside: avoid; }
+/* the label is a key, not a sentence: data face, tracked caps, its own line */
+.cs-basis p > strong:first-child { display: block; font-family: var(--data); font-size: 11.5px;
+  font-weight: 600; letter-spacing: 0.16em; line-height: 1.4; text-transform: uppercase;
+  color: var(--ink-soft); margin: 0 0 4px; }
+/* chip on --paper because the strip is --paper-2; a chip never breaks at desktop */
+.cs-basis code { font-family: var(--code); font-size: 0.88em; color: var(--ink); background: var(--paper);
+  padding: 0 3px; border-radius: 2px; white-space: nowrap; }
+/* nowrap does not hold the <wbr> chipBreaks writes after a slash */
+.cs-basis code wbr { display: none; }
+@media (max-width: 560px) {
+  .cs-basis { font-size: 16px; line-height: 1.65; padding: 14px 14px 2px; }
+  .cs-basis code { white-space: normal; overflow-wrap: anywhere;
+    -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .cs-basis code wbr { display: inline; }
+}
 /* below 1100 the legend and the controls each take a row: one bar, two lines */
 @media (max-width: 1100px) {
   .cs-bar { flex-direction: column; align-items: stretch; gap: 8px; }
@@ -691,9 +708,8 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
     var ndc = new THREE.Vector2();
     var byN = {};
     rows.forEach(function (b) { byN[b.n] = b; });
-    var IDLE = '<h4>THE CITY — ISOMETRIC</h4><p class="hint">Hover or tap any mass to read its member — '
-      + 'district, gate tier, authored source and the spec annex beside it. The number on each chip is '
-      + 'the number sheet 7 gives that member.</p>';
+    var IDLE = '<p class="hint">Hover or tap any mass to read its member: district, gate tier, '
+      + "authored source and the spec annex beside it. Each chip carries the member's number on sheet 7.</p>";
     function fmt(v) { return String(v).replace(/\\B(?=(\\d{3})+(?!\\d))/g, ','); }
     function plural(n) { return n === 1 ? ' file' : ' files'; }
     // the light lane's sentence — sheet 7A's own numbers, unrounded
@@ -714,7 +730,7 @@ const BODY = `  var stage = document.getElementById('cs-canvas');
         + (b.sf ? fmt(b.sl) + ' src sloc in ' + b.sf + plural(b.sf) : 'no authored source');
       if (b.pf) line += ' · spec annex ' + fmt(b.pl) + ' sloc in ' + b.pf + plural(b.pf);
       var tail = lane === 'light' ? '<p>' + survey(b) + '</p>' : '';
-      return '<h4>' + b.n + ' · ' + b.name + '</h4><p>' + line + '</p><p>'
+      return '<h3>' + b.n + ' · ' + b.name + '</h3><p>' + line + '</p><p>'
         + (D.notes[b.n] || '') + '</p>' + tail;
     }
     var litN = null;
@@ -911,8 +927,16 @@ ${fill(APP)}}
 `;
 }
 
-// The basis strip: running prose under the stage, present state only.
-const BASIS_TEXT = `BASIS — the same geometry sheet 7 draws: every footprint, height and position here is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON, massed from <code>www/atlas.lit-ui-router.dev/data/census-city.json</code> — ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. The masses are drawn on PAPER, the way the flat plates draw them: faces are opaque and remove what stands behind them, the cap takes the tier's own fill and each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, with the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. The hatch is laid in SCREEN space — one rake, one spacing, on every wall at every angle, which is what <code>patternUnits="userSpaceOnUse"</code> means on the flat set — as a stripe mixed into the fragment colour off <code>gl_FragCoord</code>, so it costs no texture and no dependency. Gate severity is the RAKE: the halt and PR hatch runs the opposite way from the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash — the cap takes the side's hatch — and the <code>off</code> tier is drawn frame-only because there is nothing to mass. Each frame is the tier's edge colour from the same ladder the plates stroke (red, accent, <code>--line</code>, soft, ink); only the colour travels, a WebGL line carrying no width. Camera is orthographic at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0; the azimuth is free under the pointer and eased onto the nearest diagonal on release — instantly under <code>prefers-reduced-motion</code>. Each src mass carries a billboarded number chip — sheet 7's own numbering, drawn at runtime into a canvas in the page's own mono stack and redrawn when the theme turns, dropped below zoom ${DATA.chip.min} so a pulled-back plan stays a plan. District names are lettered FLAT on their ground plates, turned onto the opening diagonal so they read level at rest and foreshorten with the ground as a site plan's lettering does. Hovering or tapping a mass lights that member and fills the reading panel from the same row the schedule prints. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand — nothing runs while you read. <code>TEST LIGHT</code> is a second material lane over the same geometry: the city relit from <code>www/atlas.lit-ui-router.dev/data/census-shadow.json</code>, ${SURVEY_META.basis} — the ref the geometry is massed at — with ${SURVEY_META.metered} members read under their own suites' meters, so the model and the flat shadow plate cannot drift either. Polarity is sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint, the lit slab being side \u00d7 the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own: a black wash carrying a faint ink stripe, lerped toward BLACK rather than the ink because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow. Every mass in the model has a survey row; one without is a build error.`;
+// The basis notes: running prose under the stage, present state only, one note per concern.
+const BASIS_NOTES = [
+  ['BASIS', `The model masses sheet 7's own geometry: every footprint, height and position is <code>generator/sheet7.mjs</code>'s computed <code>CITY</code> export, embedded verbatim as JSON and massed from <code>data/census-city.json</code>, ${BASIS}. Nothing is re-derived, so a mass in the model cannot drift from the mass on the plate. three.js ${THREE_URL.match(/three\.js\/([\d.]+)\//)[1]} is imported only once the plate scrolls into view, and the scene renders on demand: nothing runs while you read.`],
+  ['PAPER', `The masses are drawn the way the flat plates draw them. Faces are opaque and remove what stands behind them. The cap takes the tier's own fill; each right-hand wall takes the tier's hatch over a <code>--paper-2</code> stone, the tier's hue pulled ${Math.round(TINT * 100)}% of the way in so the tiers still part at a glance. Each frame strokes the tier's edge colour from the ladder the plates use (red, accent, <code>--line</code>, soft, ink). Only the colour travels; a WebGL line carries no width.`],
+  ['HATCH', `Laid in screen space: one rake, one spacing, on every wall at every angle, which is what <code>patternUnits="userSpaceOnUse"</code> means on the flat set. It is a stripe mixed into the fragment colour off <code>gl_FragCoord</code>, so it costs no texture and no dependency. Gate severity is the rake: the halt and PR hatch runs opposite to the neutral one, and the halt cap is filled red. The <code>pr</code> and <code>late</code> tiers carry sheet 7's roof wash, the cap taking the side's hatch. The <code>off</code> tier is drawn frame-only, because there is nothing to mass.`],
+  ['CAMERA', `Orthographic, at the true isometric elevation, atan(1/\u221a2) \u2248 35.264\u00b0. The azimuth is free under the pointer and eases onto the nearest diagonal on release, instantly under <code>prefers-reduced-motion</code>.`],
+  ['LETTERING', `Each src mass carries a billboarded chip with sheet 7's own number, drawn at runtime into a canvas in the page's mono stack and redrawn when the theme turns. Chips drop out below zoom ${DATA.chip.min}, so a pulled-back plan stays a plan. District names lie flat on their ground plates, turned onto the opening diagonal: level at rest, foreshortened with the ground as a site plan's lettering is. The reading panel prints the same row the schedule does.`],
+  ['TEST LIGHT', `A second material lane over the same geometry: the city relit from <code>data/census-shadow.json</code>, ${SURVEY_META.basis}, the ref the geometry is massed at, with ${SURVEY_META.metered} members read under their own suites' meters. The model and the flat shadow plate cannot drift either. Every mass in the model has a survey row; one without is a build error.`],
+  ['POLARITY', `Sheet 7A's: covered source is LIT, source no suite loads is SHADOW, and the spec annex is the LAMP that throws the light. A metered member's mass splits along its footprint. The lit slab is side \u00d7 the extent the meter records, taken from the annex (east) side, its tint stepping down through the line-coverage bands. The shadow slab is sheet 7A's own black wash with a faint ink stripe, lerped toward black rather than the ink, because <code>--ink</code> is light in the cyanotype theme and a shadow that brightens in the dark is not a shadow.`],
+];
 
 /** The plate: style, section and the JSON island — no init script. */
 export function cityMarkup() {
@@ -962,7 +986,9 @@ ${swatchCss}</style>
     <div class="cs-canvas" id="cs-canvas" role="img" aria-label="A real three-dimensional isometric model of the census city: ${MASSED} massed workspace members, each an opaque paper box inside its girding frame, its right-hand wall hatched in the rake its gate tier is hatched in on the flat plate, footprint proportional to the square root of its authored lines and height three units per authored file, with ${ANNEXES} dashed spec annexes beside them and four district plates on the ground. The camera orbits and lands on one of the four isometric diagonals. Each mass carries a numbered chip matching sheet 7's schedule, and each district plate carries its name lettered flat on the ground. A TEST LIGHT switch relights the same city from sheet 7A's shadow survey: each metered member's mass splits along its footprint, the share its own suite loads glowing from the annex side and the rest washed toward black, with the spec annexes burning as the lamps that throw the light."></div>
     <aside class="cs-info" id="cs-info"></aside>
   </div>
-  <p class="cs-basis">${BASIS_TEXT}</p>
+  <div class="cs-basis">
+${BASIS_NOTES.map(([k, v]) => `    <p><strong>${k}</strong> ${v}</p>`).join('\n')}
+  </div>
 </section>
 <script type="application/json" id="cs-city">${json(DATA)}</script>`;
 }

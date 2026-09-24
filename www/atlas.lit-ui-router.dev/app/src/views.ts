@@ -5,7 +5,7 @@
  * standalone pages.
  */
 import type { UIRouter } from '@uirouter/core';
-import { LitElement, html, isServer, nothing } from 'lit';
+import { LitElement, ReactiveElement, html, nothing } from 'lit';
 import type { TemplateResult } from 'lit';
 import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
@@ -98,7 +98,9 @@ const outTarget = ARTIFACT ? '_blank' : nothing;
 
 // --- <atlas-plate> — a generated fragment, inserted and brought to life ----
 
-export class AtlasPlate extends LitElement {
+// The view template writes the fragment as the element's children, so the
+// element renders nothing of its own: it runs the fragment's scripts.
+export class AtlasPlate extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
     needsCytoscape: { attribute: false },
@@ -142,10 +144,6 @@ export class AtlasPlate extends LitElement {
     );
   };
 
-  override render(): TemplateResult {
-    return html`${unsafeHTML(this.fragment)}`;
-  }
-
   override updated(changed: Map<PropertyKey, unknown>): void {
     if (!changed.has('fragment') || !this.fragment) return;
     const seq = (this.#seq += 1);
@@ -175,7 +173,7 @@ customElements.define('atlas-plate', AtlasPlate);
  * `experimental/view-rendered.ts` chains, owned locally so `src/*.ts` stays
  * free of that directory.
  */
-export class AtlasCity extends LitElement {
+export class AtlasCity extends ReactiveElement {
   static override properties = {
     fragment: { attribute: false },
     three: { attribute: false },
@@ -194,10 +192,6 @@ export class AtlasCity extends LitElement {
 
   override createRenderRoot(): HTMLElement {
     return this;
-  }
-
-  override render(): TemplateResult {
-    return html`<atlas-plate .fragment=${this.fragment}></atlas-plate>`;
   }
 
   override updated(changed: Map<PropertyKey, unknown>): void {
@@ -878,23 +872,19 @@ const seeAlso = (refs: string[]): TemplateResult | typeof nothing =>
     : nothing;
 
 /**
- * THE PLATE, both sides of the seam.
+ * THE PLATE, one template on both sides of the seam.
  *
- * In a browser the fragment is a PROPERTY: `<atlas-plate>` renders it into its
- * own light DOM and then runs the scripts inside it. @lit-labs/ssr emits no
- * property bindings and calls no `connectedCallback`, so the server writes the
- * fragment as the element's child instead — the same bytes, in the same place,
- * inert until the client upgrades the element and replaces them. This is the
- * one node in the set whose content the server cannot get through the client's
- * own binding; see the seam notes in SSR-VERDICT.md.
+ * The fragment is the element's CHILD, written by this template: @lit-labs/ssr
+ * emits it into the served page, and the client's `hydrate()` adopts it as the
+ * same child part. The properties are what the served page cannot carry —
+ * @lit-labs/ssr emits no property bindings — and hydration commits them, so
+ * `<atlas-plate>` runs the adopted fragment's scripts exactly as it runs a
+ * cold render's.
  */
 const plate = (fragment: string, needsCytoscape: boolean): TemplateResult =>
-  isServer
-    ? html`<atlas-plate>${unsafeHTML(fragment)}</atlas-plate>`
-    : html`<atlas-plate
-        .fragment=${fragment}
-        .needsCytoscape=${needsCytoscape}
-      ></atlas-plate>`;
+  html`<atlas-plate .fragment=${fragment} .needsCytoscape=${needsCytoscape}
+    >${unsafeHTML(fragment)}</atlas-plate
+  >`;
 
 const verdictLine = (verdict: string): TemplateResult | typeof nothing =>
   verdict
@@ -954,9 +944,9 @@ export const CityView: RoutedLitTemplate<CityResolves> = (props) => {
       ${seeAlso(extra.refs)} ${keyBlock(extra.labels)}
     </div>
     ${verdictLine(extra.verdict)}
-    ${isServer
-      ? html`<atlas-city>${unsafeHTML(resolves.fragment)}</atlas-city>`
-      : html`<atlas-city .fragment=${resolves.fragment} .three=${resolves.three}></atlas-city>`}
+    <atlas-city .fragment=${resolves.fragment} .three=${resolves.three}
+      >${plate(resolves.fragment, false)}</atlas-city
+    >
   `;
 };
 
