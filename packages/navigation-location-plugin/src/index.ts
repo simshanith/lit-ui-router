@@ -10,6 +10,8 @@ import {
   UIRouter,
 } from '@uirouter/core';
 
+import { composeNavigateUrl } from './compose-navigate-url.js';
+
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
 const NAVIGATE_EVENT = 'navigate';
 
@@ -18,13 +20,17 @@ const globalRoot = root as typeof globalThis;
 
 /**
  * Shape of the `info` payload this plugin passes to `navigation.navigate()`,
- * used by {@link isUIRouterNavigateEvent} to recognize its own navigations.
- * @internal
+ * and the type of {@link UIRouterNavigateEvent.info}.
+ *
+ * {@link isUIRouterNavigateEvent} checks for it to recognize the plugin's own
+ * navigations; read `uiRouter` off a narrowed event to reach the router that
+ * started it.
  */
 export interface UIRouterNavigateInfo extends Record<
   string | number | symbol,
   unknown
 > {
+  /** The router whose location service started the navigation. */
   uiRouter: UIRouter;
 }
 
@@ -72,28 +78,6 @@ export interface NavigationLocationPluginOptions {
    * ```
    */
   intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
-}
-
-/**
- * Composes the absolute URL handed to `navigation.navigate()` from a
- * router-relative `url` and the document's `baseHref`.
- *
- * Pure string math — no DOM, no Navigation API.
- *
- * - `''` and `'/'` resolve to `baseHref` itself (so `<base href='/app/'>`
- *   navigates to `/app/`, not `/app`).
- * - anything else is prefixed with the base prefix
- *   ({@link stripLastPathElement} of `baseHref`), inserting the leading slash
- *   the caller may have omitted.
- *
- * @internal
- */
-export function composeNavigateUrl(url: string, baseHref: string): string {
-  if (url === '' || url === '/') {
-    return baseHref;
-  }
-  const slash = url.startsWith('/') ? '' : '/';
-  return stripLastPathElement(baseHref) + slash + url;
 }
 
 /**
