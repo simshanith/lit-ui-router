@@ -207,13 +207,27 @@ const dropServedRender = (view: Element): void => {
   for (const child of children.slice(from)) child.remove();
 };
 
-/** Drops the server's nodes from between the pair, which the element renders after. */
+/** How far `node` moves the part depth, prefixed or not: 1 opens, -1 closes, 0 is anything else. */
+const partStep = (node: Node): number => {
+  if (node.nodeType !== Node.COMMENT_NODE) return 0;
+  const { data } = node as Comment;
+  const marker = data.startsWith(servedMarkerPrefix)
+    ? data.slice(servedMarkerPrefix.length)
+    : data;
+  if (marker.startsWith('lit-part')) return 1;
+  return marker.startsWith('/lit-part') ? -1 : 0;
+};
+
+/**
+ * Drops the server's nodes from between the pair, which the element renders
+ * after: everything up to the close matching `open`, nested parts included.
+ */
 const clearInterior = (open: Comment): void => {
-  for (
-    let node = open.nextSibling;
-    node && !isPart(node, '/lit-part');
-    node = open.nextSibling
-  ) {
+  let depth = 0;
+  for (let node = open.nextSibling; node; node = open.nextSibling) {
+    const step = partStep(node);
+    if (step < 0 && depth === 0) return;
+    depth += step;
     node.remove();
   }
 };
