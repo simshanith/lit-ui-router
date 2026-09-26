@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "38c9fa1c",
-  "commitDate": "2026-09-22T22:32:03-07:00",
-  "generatedAtTime": "2026-09-23T07:24:06.200Z",
+  "sha": "fe44598e",
+  "commitDate": "2026-09-25T21:07:00-07:00",
+  "generatedAtTime": "2026-09-26T04:53:49.705Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-doors.mjs",
-  "used": "git archive origin/main @ 38c9fa1c + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
+  "used": "git archive origin/main @ fe44598e + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + tools/bundle-probe (rolldown, minify, declared deps+peers external, annotations off)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "rolldown@1.2.9",
@@ -23,7 +23,7 @@
     {"pkg":"lit-ui-router-ssr","door":".","min":4729,"gz":2273},
     {"pkg":"lit-ui-router-ssr","door":"./client","min":5341,"gz":2196},
     {"pkg":"lit-ui-router-ssr","door":"./register","min":3109,"gz":1408},
-    {"pkg":"ui-router-navigation-location-plugin","door":".","min":1309,"gz":670},
+    {"pkg":"ui-router-navigation-location-plugin","door":".","min":1699,"gz":798},
     {"pkg":"ui-router-server","door":".","min":12369,"gz":5079},
     {"pkg":"ui-router-server","door":"./connect","min":2963,"gz":1577},
     {"pkg":"ui-router-server","door":"./fetch","min":3104,"gz":1623},

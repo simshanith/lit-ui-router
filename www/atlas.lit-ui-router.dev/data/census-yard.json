@@ -1,16 +1,16 @@
 {
   "ref": "origin/main",
-  "sha": "38c9fa1c",
-  "commitDate": "2026-09-22T22:32:03-07:00",
-  "generatedAtTime": "2026-09-23T07:22:10.008Z",
+  "sha": "fe44598e",
+  "commitDate": "2026-09-25T21:07:00-07:00",
+  "generatedAtTime": "2026-09-26T04:51:42.867Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-yard.mjs",
-  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ 38c9fa1c",
+  "used": "www/atlas.lit-ui-router.dev/data/census-files.json @ fe44598e",
   "wasAssociatedWith": [],
   "orphans": [
 
   ],
   "rows": [
-    {"instrument":"src (7 published packages)","files":62,"sloc":6412},
+    {"instrument":"src (7 published packages)","files":63,"sloc":6448},
     {"instrument":"build — @tools/oxc-emit","files":5,"sloc":228},
     {"instrument":"pack — packPublishTarball","files":12,"sloc":353},
     {"instrument":"published-diff","files":5,"sloc":456},
@@ -28,6 +28,6 @@
     {"instrument":"@tools/shared","files":6,"sloc":244},
     {"instrument":"typedoc plugin","files":2,"sloc":343},
     {"instrument":"e2e — cypress","files":10,"sloc":753},
-    {"instrument":"sample apps","files":66,"sloc":3760}
+    {"instrument":"sample apps","files":66,"sloc":3763}
   ]
 }

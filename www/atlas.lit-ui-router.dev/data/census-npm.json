@@ -1,7 +1,7 @@
 {
   "ref": "origin/main",
-  "sha": "38c9fa1c",
-  "generatedAtTime": "2026-09-23T07:22:18.292Z",
+  "sha": "fe44598e",
+  "generatedAtTime": "2026-09-26T04:51:51.459Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-npm.mjs",
   "used": "npm view <pkg> version time dist-tags (registry.npmjs.org)",
   "wasAssociatedWith": [
@@ -21,7 +21,7 @@
     {"name":"lit-ui-router-effect","version":"0.1.1","published":"2026-09-21","created":"2026-09-13","tags":{"latest":"0.1.1"}},
     {"name":"lit-ui-router-mobx","version":"1.0.2","published":"2026-09-21","created":"2026-07-05","tags":{"latest":"1.0.2"}},
     {"name":"lit-ui-router-ssr","version":"0.0.1-alpha.0","published":"2026-09-14","created":"2026-09-14","tags":{"latest":"0.0.1-alpha.0","rc":"0.1.0-rc.2"}},
-    {"name":"ui-router-navigation-location-plugin","version":"0.3.2","published":"2026-09-13","created":"2026-01-14","tags":{"latest":"0.3.2"}},
+    {"name":"ui-router-navigation-location-plugin","version":"1.0.0","published":"2026-09-26","created":"2026-01-14","tags":{"latest":"1.0.0"}},
     {"name":"ui-router-server","version":"0.2.0","published":"2026-09-14","created":"2026-07-28","tags":{"latest":"0.2.0"}}
   ]
 }

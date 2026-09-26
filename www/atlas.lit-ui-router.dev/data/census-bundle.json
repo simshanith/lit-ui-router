@@ -1,10 +1,10 @@
 {
   "ref": "origin/main",
-  "sha": "38c9fa1c",
-  "commitDate": "2026-09-22T22:32:03-07:00",
-  "generatedAtTime": "2026-09-23T07:23:48.620Z",
+  "sha": "fe44598e",
+  "commitDate": "2026-09-25T21:07:00-07:00",
+  "generatedAtTime": "2026-09-26T04:53:30.666Z",
   "wasGeneratedBy": "www/atlas.lit-ui-router.dev/generator/census-bundle.mjs",
-  "used": "git archive origin/main @ 38c9fa1c + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
+  "used": "git archive origin/main @ fe44598e + pnpm install --frozen-lockfile --silent (mise-provisioned pnpm) + turbo run build + vite build (JS API)",
   "wasAssociatedWith": [
     "pnpm (mise-provisioned)",
     "turbo",
@@ -14,9 +14,9 @@
   "method": "generateBundle: module renderedLength scaled by its chunk gz/rendered ratio",
   "totals": {
     "chunks": 17,
-    "kept": 677318,
-    "emitted": 378267,
-    "gz": 122052
+    "kept": 677950,
+    "emitted": 378532,
+    "gz": 122101
   },
   "otherIds": [],
   "rows": [
@@ -24,12 +24,12 @@
     {"group":"@uirouter/visualizer","rendered":119495,"estGz":24714,"modules":1},
     {"group":"lodash-es","rendered":67512,"estGz":7670,"modules":135},
     {"group":"marked","rendered":59561,"estGz":11300,"modules":1},
-    {"group":"sample-app-shared","rendered":59473,"estGz":12594,"modules":37},
     {"group":"dompurify","rendered":59206,"estGz":11233,"modules":1},
+    {"group":"sample-app-shared","rendered":59192,"estGz":12503,"modules":37},
     {"group":"lit","rendered":34560,"estGz":8977,"modules":19},
-    {"group":"lit-ui-router","rendered":34211,"estGz":5742,"modules":14},
+    {"group":"lit-ui-router","rendered":34211,"estGz":5741,"modules":14},
     {"group":"@api-viewer","rendered":25063,"estGz":4755,"modules":12},
-    {"group":"router plugins","rendered":19013,"estGz":3828,"modules":4},
+    {"group":"router plugins","rendered":19926,"estGz":3970,"modules":5},
     {"group":"app own src","rendered":11436,"estGz":2429,"modules":8},
     {"group":"runtime helpers","rendered":4698,"estGz":1235,"modules":4},
     {"group":"lit-dialog","rendered":2901,"estGz":628,"modules":1},

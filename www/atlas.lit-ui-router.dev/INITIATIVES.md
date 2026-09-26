@@ -1,8 +1,8 @@
 # Census pipeline rework — design record
 
 **COMPLETE.** Initiatives I1–I8 all landed 2026-09-02/03; the cabinet has since been
-refreshed eight times and stands at `origin/main` @ **38c9fa1c** (commit
-2026-09-22T22:32:03-07:00), 17 plates all pinned to the same ref.
+refreshed nine times and stands at `origin/main` @ **fe44598e** (commit
+2026-09-25T21:07:00-07:00), 17 plates all pinned to the same ref.
 
 The architecture that came out of it: `generator/basis.mjs` materializes any ref once (`git
 archive` → tmpdir), one `scc --by-file` pass over that archive is the master per-file
@@ -357,6 +357,39 @@ sitting); order is dependency order.
   commits; weather 423 dated files; 24 members metered, ssr at 98.6% over 8 of 9 files.
   `@tools/repo-checks`' new `runner-label.test.ts` shells git and fails "not a git repository"
   inside the `git archive` tmpdir; the member still meters from the turbo run.
+- 2026-09-26 — THE NINTH REFRESH, at `origin/main` @ fe44598e (commit 2026-09-25T21:07:00-07:00),
+  all 17 plates re-run at the one ref: `ui-router-navigation-location-plugin` 1.0.0, on npm
+  2026-09-26 under `latest` with no `rc` tag (was 0.3.2 of 2026-09-13), released through
+  1.0.0-rc.0 (#973) and 1.0.0 (#976). The six commits since 38c9fa1c are all the plugin's: the
+  service intercepts the navigations it starts (#946), the public surface settled (#965, which moved
+  `composeNavigateUrl` out of `index.ts` into `src/compose-navigate-url.ts` and out of the barrel),
+  two README passes (#968, #967). NO member born or renamed, no core file changed — the new-member
+  checklist was a no-op a third time, every counting label read true, and the cover's version guard
+  (the `lit-ui-router` version under some dist-tag) passed untouched. The general survey reads 819
+  tracked paths, 784 classified, 66,533 sloc (was 818 / 783 / 66,257).
+  THE LOOP RELOCATED NOTHING: no file under `packages/lit-ui-router/src` changed, so all 30
+  evidence lines held. `census-mass3b.mjs` carries the same three DRIFT lines.
+  ONE FILE BROKE FOUR SENTENCES AND NO GATE. The plugin went from one src file to two, and every
+  claim that had leaned on "one" went false silently: sheet 7's PLACED note for №4 was the hand
+  string "one 105-line file, seven spec files"; sheet 7's annex paragraph interpolated the sloc but
+  typed "is one … -line file"; sheet 13's callout interpolated the BLOCK's touch total into "one
+  January wall, chiselled N times" (it would have printed 14 for a wall touched 13); and sheet 13's
+  "the highest churn intensity on the map" / "the highest per-file churn anywhere" were typed
+  superlatives — at this ref the block averages ×7.0/f, sixth on the map behind `docs`' ×10.1.
+  Sheet 7's note is now the plugin's role plus its derived annex ratio, like its neighbours', and
+  the paragraph derives count and plural; sheet 13 names the plugin's walls off the weather rows
+  (month, touches, the younger wall beside it), derives the block's rank, and asserts the "smallest
+  package" claim the notes keep, throwing if the plate says otherwise. The audit read 0 escapes and
+  0 hits above 1 px before and after; 7B's 0.6 px piece is unchanged.
+  THE NUMBERS: city 279 src files / 22,360 sloc and 145 spec / 23,874 (was 278 / 22,321 and
+  145 / 23,672), the plugin 2 / 141 under 7 / 612, annex 3.9× → 4.3× — which also widens 7A's
+  derived annex range to 1.5–4.3×; doors 166,649 min / 59,435 gz (was 166,259 / 59,307), only the
+  plugin's `.` door moving, 1,309 / 670 → 1,699 / 798; bricks — the plugin 2 files / 141 sloc,
+  still a 1×1 of one course; couplings unmoved at 9 nodes / 22 contracts; the bundle 122,101 gz in
+  17 chunks, `router plugins` 4 → 5 modules; the deploy 860 files / 4,839,949 gz; nm 179,288 lines /
+  41,637 d.ts; mass3b 11,718 task-file hashes over the same 225 real tasks; turbo, mise and the ci
+  graph unmoved (716 / 1,897 / 225); steam 552 commits; weather 424 dated files; 7A 10,363 of 17,496
+  metered sloc lit, the plugin 2 of 2 files at 100% on all three meters; 7B's plugin rust R2 → 0.
 - A PLATE'S `ref` IS THE ARGV STRING. `basis.mjs` resolves the sha to archive the tree, but the
   plate files the ref as it was typed, and every title block prints that field — pass the full
   sha and 20 title blocks print forty characters. Run the chain with `--ref origin/main` and keep
@@ -377,6 +410,10 @@ sitting); order is dependency order.
 - A SENTENCE ABOUT ONE MEMBER'S SHAPE IS A HAND COUNT IN DISGUISE. "stands dark" and "0 lamps"
   are figures written as prose, and they rot the moment the member gains a file; derive the
   figure from the plate row and let the sentence read it.
+- "ONE" AND "THE HIGHEST" ARE HAND COUNTS TOO. A typed "one" beside an interpolated number, or a
+  block total interpolated into a one-file sentence, reads true only while the member has one file;
+  a typed superlative reads true only while nothing overtakes it. Derive the count and its plural,
+  name the file by path, compute the rank — or assert the superlative and let the build throw.
 - A plate's two dates are read from two clocks and can disagree by a day. `commitDate` is
   `git show -s --format=%cI`, the committer's LOCAL time, and `chrome.mjs::DATE` takes its first
   ten characters; `generatedAtTime` is a UTC ISO string, and sheet 7's `BASIS` line takes ITS
