@@ -64,6 +64,24 @@ urlService.rules.when(/^\/?$/, () => ({
 with and without a trailing slash on the base href. `location: 'replace'` makes
 Back from `/welcome` leave the app, rather than bouncing off the root.
 
+### A landing state that reads the query
+
+The object form `initial({ state: 'welcome' })` targets the state with no
+params, so a first load of `/?subject=city` lands on `welcome` with the query
+dropped. A landing state that takes any query param needs the function form,
+which receives the url:
+
+```ts
+urlService.rules.initial((_match, url) => ({
+  state: 'welcome',
+  params: url?.search ?? {},
+}));
+```
+
+The search is run through the state's declared param types: numbers and
+booleans are coerced, and undeclared keys are dropped. The `when` handler above
+receives the same `url` and carries the query with the same `params` line.
+
 ### `replace` under the hash plugin
 
 `location: 'replace'` is a no-op with the stock `hashLocationPlugin`:
