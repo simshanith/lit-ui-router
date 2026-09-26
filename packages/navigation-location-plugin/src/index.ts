@@ -3,8 +3,6 @@ import {
   BrowserLocationConfig,
   LocationConfig,
   LocationPlugin,
-  locationPluginFactory,
-  LocationServices,
   root,
   splitHash,
   splitQuery,
@@ -12,20 +10,27 @@ import {
   UIRouter,
 } from '@uirouter/core';
 
+import { composeNavigateUrl } from './compose-navigate-url.js';
+
 const CURRENT_ENTRY_CHANGE_EVENT = 'currententrychange';
+const NAVIGATE_EVENT = 'navigate';
 
 // @uirouter/core types `root` as `any`; it is the global object in browsers.
 const globalRoot = root as typeof globalThis;
 
 /**
  * Shape of the `info` payload this plugin passes to `navigation.navigate()`,
- * used by {@link isUIRouterNavigateEvent} to recognize its own navigations.
- * @internal
+ * and the type of {@link UIRouterNavigateEvent.info}.
+ *
+ * {@link isUIRouterNavigateEvent} checks for it to recognize the plugin's own
+ * navigations; read `uiRouter` off a narrowed event to reach the router that
+ * started it.
  */
 export interface UIRouterNavigateInfo extends Record<
   string | number | symbol,
   unknown
 > {
+  /** The router whose location service started the navigation. */
   uiRouter: UIRouter;
 }
 
@@ -34,41 +39,58 @@ export interface UIRouterNavigateEvent extends NavigateEvent {
   info: UIRouterNavigateInfo;
 }
 
-/** Whether a `navigate` event was started by this plugin, as opposed to a link or script. */
+/**
+ * Whether a `navigate` event was started by this plugin, as opposed to a link
+ * or script.
+ *
+ * Use it in a `navigate` listener that observes navigations to read the router
+ * off `event.info`. The service intercepts these events itself; extra work on
+ * them goes through {@link NavigationLocationPluginOptions.intercept}.
+ */
 export function isUIRouterNavigateEvent(
   event?: NavigateEvent,
 ): event is UIRouterNavigateEvent {
   return (event as UIRouterNavigateEvent)?.info?.uiRouter instanceof UIRouter;
 }
 
-/**
- * Composes the absolute URL handed to `navigation.navigate()` from a
- * router-relative `url` and the document's `baseHref`.
- *
- * Pure string math — no DOM, no Navigation API.
- *
- * - `''` and `'/'` resolve to `baseHref` itself (so `<base href='/app/'>`
- *   navigates to `/app/`, not `/app`).
- * - anything else is prefixed with the base prefix
- *   ({@link stripLastPathElement} of `baseHref`), inserting the leading slash
- *   the caller may have omitted.
- *
- * @internal
- */
-export function composeNavigateUrl(url: string, baseHref: string): string {
-  if (url === '' || url === '/') {
-    return baseHref;
-  }
-  const slash = url.startsWith('/') ? '' : '/';
-  return stripLastPathElement(baseHref) + slash + url;
+/** Options for {@link navigationLocationPlugin}. */
+export interface NavigationLocationPluginOptions {
+  /**
+   * Called for each navigation the service itself starts, after the router
+   * transition has committed.
+   *
+   * What it returns is handed to `event.intercept()`: `handler` decides what
+   * `navigation.transition.finished` waits on and when the browser runs focus
+   * reset and scroll restoration, and `focusReset` and `scroll` pass through.
+   * The router is available as `event.info.uiRouter`.
+   *
+   * Absent, the service intercepts with an immediately resolving handler.
+   *
+   * @example
+   * ```ts
+   * router.plugin(navigationLocationPlugin, {
+   *   intercept: (event) => ({
+   *     async handler() {
+   *       // view transitions, analytics, progress UI
+   *     },
+   *   }),
+   * });
+   * ```
+   */
+  intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
 }
 
 /**
  * Location service implementation using the Navigation API.
  *
  * Uses the browser's Navigation API for URL management instead of the
- * History API, providing better integration with browser navigation
- * and enabling interception of navigation events.
+ * History API, providing better integration with browser navigation.
+ *
+ * The service intercepts the navigations it starts, so a router transition
+ * commits as a same-document navigation instead of loading the document
+ * afresh. An application's extra work on those navigations — view
+ * transitions, analytics, progress UI — goes through the
+ * {@link NavigationLocationPluginOptions.intercept | intercept} option.
  *
  * @see https://developer.mozilla.org/en-US/docs/Web/API/Navigation_API
  */
@@ -78,24 +100,46 @@ export class NavigationLocationService extends BaseLocationServices {
 
   private readonly _router: UIRouter;
 
+  private readonly _options: NavigationLocationPluginOptions;
+
   /**
    * Creates a new NavigationLocationService instance.
    * @param router - The UIRouter instance (required despite optional type signature)
+   * @param options - How the service intercepts its own navigations
    * @throws Error if router is not provided
    */
-  constructor(router?: UIRouter) {
+  constructor(
+    router?: UIRouter,
+    options: NavigationLocationPluginOptions = {},
+  ) {
     if (!router) {
       throw new Error('NavigationLocationService requires a UIRouter instance');
     }
     super(router, false);
     this._router = router;
+    this._options = options;
     this._config = router.urlService.config;
     this._navigation().addEventListener(
       CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
       false,
     );
+    this._navigation().addEventListener(NAVIGATE_EVENT, this._intercept);
   }
+
+  // Keeps this service's own navigations same-document; another router's are not ours.
+  private readonly _intercept = (event: NavigateEvent): void => {
+    if (
+      !event.canIntercept ||
+      !isUIRouterNavigateEvent(event) ||
+      event.info.uiRouter !== this._router
+    ) {
+      return;
+    }
+    event.intercept(
+      this._options.intercept?.(event) ?? { handler: () => Promise.resolve() },
+    );
+  };
 
   /**
    * The Navigation API object this service drives.
@@ -186,7 +230,7 @@ export class NavigationLocationService extends BaseLocationServices {
   }
 
   /**
-   * Cleans up the location service by removing the navigation event listener.
+   * Cleans up the location service by removing its Navigation API listeners.
    * @param router - The UIRouter instance
    */
   public dispose(router: UIRouter): void {
@@ -195,16 +239,31 @@ export class NavigationLocationService extends BaseLocationServices {
       CURRENT_ENTRY_CHANGE_EVENT,
       this._listener,
     );
+    this._navigation().removeEventListener(NAVIGATE_EVENT, this._intercept);
   }
 }
 
 /** A [UIRouterPlugin](https://ui-router.github.io/core/docs/latest/interfaces/_interface_.uirouterplugin.html) that gets/sets the current location using the browser's `location` and `navigation` apis */
-export const navigationLocationPlugin: (router: UIRouter) => LocationPlugin =
-  locationPluginFactory(
-    'vanilla.navigationLocation',
+// A function declaration: router.plugin() installs it with `new`.
+export function navigationLocationPlugin(
+  router: UIRouter,
+  options: NavigationLocationPluginOptions = {},
+): LocationPlugin {
+  const service = (router.locationService = new NavigationLocationService(
+    router,
+    options,
+  ));
+  const configuration = (router.locationConfig = new BrowserLocationConfig(
+    router,
     true,
-    NavigationLocationService satisfies {
-      new (uiRouter?: UIRouter): LocationServices;
+  ));
+  return {
+    name: 'vanilla.navigationLocation',
+    service,
+    configuration,
+    dispose(r: UIRouter) {
+      r.dispose(service);
+      r.dispose(configuration);
     },
-    BrowserLocationConfig,
-  );
+  };
+}

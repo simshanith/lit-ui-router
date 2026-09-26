@@ -1,6 +1,6 @@
 {
   "name": "lit-ui-router-ssr",
-  "version": "0.1.0-rc.1",
+  "version": "0.1.0-rc.2",
   "description": "Static prerendering for lit-ui-router: mount verdicts in, an emitted site out",
   "homepage": "https://lit-ui-router.dev/packages/ssr",
   "bugs": {

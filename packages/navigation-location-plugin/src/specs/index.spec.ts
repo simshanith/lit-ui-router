@@ -145,6 +145,73 @@ describe.skipIf(!hasNavigationAPI)('NavigationLocationService', () => {
   });
 });
 
+describe.skipIf(!hasNavigationAPI)(
+  'NavigationLocationService self-interception',
+  () => {
+    let router: UIRouter;
+    let service: NavigationLocationService | null;
+    let originalHref: string;
+
+    // No interceptNavigations() here on purpose: the service's own `navigate`
+    // listener is the only thing keeping this page alive across the
+    // navigation. A cross-document load would replace the document — and the
+    // window marker with it.
+    beforeEach(() => {
+      originalHref = window.location.href;
+      router = createTestRouter('/');
+      service = new NavigationLocationService(router);
+    });
+
+    afterEach(async () => {
+      service?.dispose(router);
+      service = null;
+      await restoreUrl(originalHref);
+    });
+
+    it('commits its own navigation same-document', async () => {
+      const marker = {};
+      const holder = window as unknown as { __sameDocumentMarker?: object };
+      holder.__sameDocumentMarker = marker;
+
+      service!.url('/self-intercepted');
+
+      await vi.waitFor(() => {
+        expect(window.location.pathname).toBe('/self-intercepted');
+      });
+      expect(holder.__sameDocumentMarker).toBe(marker);
+    });
+
+    it('lets the intercept option govern when the navigation finishes', async () => {
+      service?.dispose(router);
+      service = null;
+      const marker = {};
+      const holder = window as unknown as { __sameDocumentMarker?: object };
+      holder.__sameDocumentMarker = marker;
+      let handled = false;
+      const plugin = navigationLocationPlugin(router, {
+        intercept: () => ({
+          async handler() {
+            await Promise.resolve();
+            handled = true;
+          },
+        }),
+      });
+      try {
+        plugin.service.url('/option-intercepted');
+        const finished = window.navigation.transition?.finished;
+        expect(finished).toBeDefined();
+        await finished;
+
+        expect(handled).toBe(true);
+        expect(window.location.pathname).toBe('/option-intercepted');
+        expect(holder.__sameDocumentMarker).toBe(marker);
+      } finally {
+        plugin.dispose?.(router);
+      }
+    });
+  },
+);
+
 describe.skipIf(!hasNavigationAPI)('navigationLocationPlugin', () => {
   let stopIntercepting: () => void;
   let originalHref: string;

@@ -48,6 +48,10 @@ npm install ui-router-navigation-location-plugin
 pnpm add ui-router-navigation-location-plugin
 ```
 
+The type declarations reference the global `Navigation` and `NavigateEvent`
+types, which TypeScript ships from 6.0. On TypeScript 5.x, also install
+`@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.
+
 ## Quick start
 
 ```ts
@@ -57,6 +61,10 @@ import { UIRouterLit } from 'lit-ui-router';
 const router = new UIRouterLit();
 router.plugin(navigationLocationPlugin);
 ```
+
+Framework bindings (`UIRouterLit`, and likewise the React and Angular bindings)
+set up the router's services for you. A plain `@uirouter/core` `UIRouter` needs
+`router.plugin(servicesPlugin)` registered before the location plugin.
 
 ### Feature-detect with a fallback
 
@@ -79,26 +87,37 @@ three plugins and shows browser compatibility for each.
 
 ## Navigation event interception
 
-The plugin's headline feature: it passes the `UIRouter` instance along in each
-navigation's [`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)
-metadata, so a global `navigate` listener can distinguish router-driven
-navigations from everything else and access the router while handling them:
+The plugin intercepts the navigations it starts, so a router transition commits
+as a same-document navigation rather than loading the document afresh.
+
+The `intercept` option returns the
+[`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options)
+for each of those navigations, with the router available as
+`event.info.uiRouter`. It is where the app's extra work goes:
 
 ```ts
-import { isUIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
+import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
 
-window.navigation.addEventListener('navigate', (event) => {
-  if (isUIRouterNavigateEvent(event)) {
-    // A UIRouter transition drove this navigation
-    const { uiRouter } = event.info;
-    event.intercept({
-      async handler() {
-        // e.g. integrate view transitions, analytics, progress UI…
-      },
-    });
-  }
+router.plugin(navigationLocationPlugin, {
+  intercept: (event) => ({
+    async handler() {
+      // the app's extra work: view transitions, analytics, progress UI…
+    },
+  }),
 });
 ```
+
+The function runs after the router transition has committed, so `handler`
+governs when `navigation.transition.finished` settles and when the browser
+resets focus and restores scroll, not the transition itself. `focusReset` and
+`scroll` pass through. Without the option, the plugin intercepts with a handler
+that resolves immediately.
+
+The plugin passes the `UIRouter` instance along in each of its navigations'
+[`info`](https://developer.mozilla.org/en-US/docs/Web/API/Navigation/navigate#info)
+metadata, so a listener that observes navigations can tell router-driven ones
+apart with `isUIRouterNavigateEvent`, which narrows `event.info` to carry the
+router.
 
 ## What else observes navigation
 
@@ -152,13 +171,17 @@ each location plugin.
 ## API summary
 
 - **`navigationLocationPlugin`** — the plugin factory; pass it to
-  `router.plugin(...)`
+  `router.plugin(...)`, with `NavigationLocationPluginOptions` as the second
+  argument
+- **`NavigationLocationPluginOptions`** — `intercept`, which returns the
+  `NavigationInterceptOptions` for each navigation the plugin starts
 - **`NavigationLocationService`** — the location service class (extends
   `BaseLocationServices` from `@uirouter/core`); handles URL reads/writes via
   the Navigation API, including `<base href>` handling for non-root
   deployments and navigation state/title metadata
 - **`isUIRouterNavigateEvent(event)`** — type guard: was this `NavigateEvent`
-  triggered by UIRouter?
+  triggered by UIRouter? The plugin intercepts those itself; a listener that
+  observes navigations uses the guard to read the router off `event.info`
 - **`UIRouterNavigateEvent` / `UIRouterNavigateInfo`** — the extended event
   and `info` types carrying the `uiRouter` instance
 

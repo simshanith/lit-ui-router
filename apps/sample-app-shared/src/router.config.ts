@@ -11,8 +11,8 @@ import { DSRPlugin } from '@uirouter/dsr';
 
 import { UIRouterLit, LitStateDeclaration } from 'lit-ui-router';
 import {
-  isUIRouterNavigateEvent,
   navigationLocationPlugin,
+  type NavigationLocationPluginOptions,
 } from 'ui-router-navigation-location-plugin';
 import { shellMounts } from 'sample-app-routes/shell-mounts';
 
@@ -31,10 +31,31 @@ export const HOME = 'home';
 export const NESTED_HOME = 'home.nested';
 export const UNLISTED_NESTED_HOME = 'home.unlisted';
 
+interface LocationPluginEntry {
+  plugin: (
+    router: UIRouter,
+    options?: NavigationLocationPluginOptions,
+  ) => LocationPlugin;
+  options?: NavigationLocationPluginOptions;
+  message: string;
+}
+
 const locationPluginConfig = {
   navigation: {
     plugin: navigationLocationPlugin,
     message: 'navigationLocationPlugin enabled',
+    options: {
+      intercept: (event) => ({
+        handler() {
+          console.debug(
+            'uiRouter navigation',
+            event.destination.url,
+            event.info.uiRouter,
+          );
+          return Promise.resolve();
+        },
+      }),
+    },
   },
   pushState: {
     plugin: pushStateLocationPlugin,
@@ -44,10 +65,7 @@ const locationPluginConfig = {
     plugin: replaceAwareHashLocationPlugin,
     message: 'hashLocationPlugin enabled',
   },
-} satisfies Record<
-  LocationPluginFeatureSymbol,
-  { plugin: (router: UIRouter) => LocationPlugin; message: string }
->;
+} satisfies Record<LocationPluginFeatureSymbol, LocationPluginEntry>;
 
 export function configureRouter(router = new UIRouterLit()) {
   // Mount-agnostic shell: recover the base from where we were served — the
@@ -71,29 +89,13 @@ export function configureRouter(router = new UIRouterLit()) {
 
   const booted = describeLocationPlugin();
   setBootedLocationPlugin(booted);
-  const { plugin: locationPlugin, message } =
-    locationPluginConfig[booted.plugin];
-  router.plugin(locationPlugin);
+  const {
+    plugin: locationPlugin,
+    options,
+    message,
+  }: LocationPluginEntry = locationPluginConfig[booted.plugin];
+  router.plugin(locationPlugin, options);
   console.info(message);
-
-  if (booted.plugin === 'navigation') {
-    window.navigation.addEventListener('navigate', (event: NavigateEvent) => {
-      const url = new URL(event.destination.url);
-      console.debug('navigate', event);
-
-      if (isUIRouterNavigateEvent(event)) {
-        const { uiRouter } = event.info;
-        event.intercept({
-          handler() {
-            console.debug('intercepted uiRouter navigation', url, uiRouter);
-            return Promise.resolve();
-          },
-        });
-      } else {
-        console.debug('allowed navigation', url);
-      }
-    });
-  }
 
   if (featureFlags.get('enable-visualizer')) {
     void import('@uirouter/visualizer').then(({ Visualizer }) =>
