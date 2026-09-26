@@ -19,12 +19,11 @@ something the classic plugins cannot do.
 
 It works with **any** `@uirouter/core`-based router, not just lit-ui-router.
 
-::: warning Experimental
-This plugin is a new implementation without the production mileage of the
-battle-tested `pushState`/`hash` location services. The Navigation API itself
-is also only recently cross-engine (Firefox 147+, Safari 26.2+), so
-non-Chromium behavior is lightly exercised.
-:::
+The real round-trip specs — `index.spec.ts` and `url-shape.spec.ts`, where
+navigations actually commit and events actually fire — run on Chromium on every
+pull request via `test`/`test:coverage`, and on Firefox and WebKit on every
+push to `main` via `test:engines` (on demand through a `ci-main/` branch or the
+`mainGraph` dispatch). The Cypress end-to-end suite runs in Electron only.
 
 ## How location plugins fit in
 
@@ -38,7 +37,6 @@ strategy with the same clean URLs as `pushState`:
 | Modern standard    | Yes            | No        | No        |
 | Event interception | Yes            | No        | No        |
 | Browser support    | Modern engines | Wide      | Universal |
-| Production mileage | New            | Wide      | Wide      |
 | SEO friendly       | Yes            | Yes       | No        |
 | Clean URLs         | Yes            | Yes       | No        |
 

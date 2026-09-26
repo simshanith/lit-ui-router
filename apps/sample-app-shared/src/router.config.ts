@@ -43,6 +43,7 @@ interface LocationPluginEntry {
 const locationPluginConfig = {
   navigation: {
     plugin: navigationLocationPlugin,
+    message: 'navigationLocationPlugin enabled',
     options: {
       intercept: (event) => ({
         handler() {
@@ -55,7 +56,6 @@ const locationPluginConfig = {
         },
       }),
     },
-    message: '🧑‍🔬 *experimental* navigationLocationPlugin enabled',
   },
   pushState: {
     plugin: pushStateLocationPlugin,
