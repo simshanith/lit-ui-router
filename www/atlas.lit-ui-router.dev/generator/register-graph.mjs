@@ -13,6 +13,7 @@
 // them.  Tick the box and the placeholders flood in faint — the 70% of this
 // graph that runs nothing, drawn rather than asserted.
 import { readFileSync } from 'node:fs';
+import { glyph } from './icons.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -322,7 +323,7 @@ const INIT = `
   }
   applyShroud();
 
-  var IDLE = '\\u003ch4\\u003eTHE REGISTER\\u003c/h4\\u003e\\u003cp class="hint"\\u003e' + L.idle + '\\u003c/p\\u003e';
+  var IDLE = '\\u003ch4\\u003e' + L.glyphs.rest + 'THE REGISTER\\u003c/h4\\u003e\\u003cp class="hint"\\u003e' + L.idle + '\\u003c/p\\u003e';
   function field(k, v) { return '\\u003cspan class="f"\\u003e' + k + '\\u003c/span\\u003e' + v; }
   function list(k, arr, cap) {
     if (!arr.length) return '';
@@ -343,10 +344,10 @@ const INIT = `
     h += field('KIND', n.real ? 'command-bearing — this runs'
       : '\\u003cspan class="red"\\u003ephantom placeholder — command "&lt;NONEXISTENT&gt;"\\u003c/span\\u003e');
     h += field('CACHE', n.cacheFalse ? 'cache: false — a hit would be wrong' : 'cacheable');
-    h += field('DEGREE', 'in ' + deps[i].length + ' · out ' + uses[i].length
+    h += field(L.glyphs.degree + 'DEGREE', 'in ' + deps[i].length + ' · out ' + uses[i].length
       + '  (real: in ' + inR.length + ' · out ' + outR.length + ')');
-    h += list('DEPENDS ON', deps[i].map(nid).sort(), 14);
-    h += list('REQUIRED BY', uses[i].map(nid).sort(), 8);
+    h += list(L.glyphs.waits + 'DEPENDS ON', deps[i].map(nid).sort(), 14);
+    h += list(L.glyphs.out + 'REQUIRED BY', uses[i].map(nid).sort(), 8);
     return h;
   }
 
@@ -375,7 +376,7 @@ const INIT = `
     clear();
     applyShroud();
     box.parentNode.classList.toggle('on', shroud);
-    document.getElementById('rg-hint').textContent = shroud ? L.hintShroud : L.hintReal;
+    document.getElementById('rg-hint').innerHTML = shroud ? L.hintShroud : L.hintReal;
   });
 
   function repaint() {
@@ -413,15 +414,26 @@ export const REGISTER = {
 
 // ---------------------------------------------------------------------------
 export function registerLane() {
+  // Lucide: move on DRAG TO PAN, mouse on SCROLL TO ZOOM
+  const HINT_REAL = `REAL SUBGRAPH · ${glyph('move')}DRAG TO PAN · ${glyph('mouse')}SCROLL TO ZOOM`;
   const island = {
     ...LAYOUT,
     skins: SKINS,
+    // Lucide on the panel heads: the card's own subject (register) at rest,
+    // arrow-down-up on DEGREE, hourglass on DEPENDS ON — what the task waits
+    // on — and arrow-up-from-line on REQUIRED BY
+    glyphs: {
+      rest: glyph('ic-register'),
+      degree: glyph('arrow-down-up'),
+      waits: glyph('hourglass'),
+      out: glyph('arrow-up-from-line'),
+    },
     footLabel: `${fmt(NODES.length)} NODES · ${REAL_N} RUN A COMMAND · ${fmt(EDGES.length)} EDGES · ${REAL_E} JOIN TWO REAL TASKS`,
     idle: 'Hover or tap any building for its package, its task, whether it runs anything, and everything it '
       + 'waits on. What you are looking at is the REAL subgraph alone — the '
       + `${REAL_N} tasks that run a command and the ${REAL_E} edges that join two of them. Tick PHANTOM `
       + `SHROUD to flood the other ${NODES.length - REAL_N} in.`,
-    hintReal: 'REAL SUBGRAPH · DRAG TO PAN · SCROLL TO ZOOM',
+    hintReal: HINT_REAL,
     hintShroud: `PHANTOM SHROUD — ALL ${fmt(NODES.length)} NODES · ${PHANTOM_PCT.toFixed(1)}% RUN NOTHING`,
   };
   const swatch = (k) => `<span class="sw sw-light">${skinSvg(k, 'light')}</span><span class="sw sw-dark">${skinSvg(k, 'dark')}</span>`;
@@ -440,9 +452,9 @@ export function registerLane() {
     ${legend}
   </div>
   <div class="rg-ctl">
-    <span id="rg-hint">REAL SUBGRAPH · DRAG TO PAN · SCROLL TO ZOOM</span>
-    <label><input type="checkbox" id="rg-shroud"> PHANTOM SHROUD</label>
-    <button type="button" id="rg-fit">FIT</button>
+    <span id="rg-hint">${HINT_REAL}</span>
+    <label><input type="checkbox" id="rg-shroud"> <span>${glyph('ghost')}PHANTOM SHROUD</span></label>
+    <button type="button" id="rg-fit">${glyph('scan')}FIT</button>
   </div>
 </div>
 <div class="rg-stage">

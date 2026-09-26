@@ -75,7 +75,7 @@ this graph are <code>cache:false</code> — the repo's uncacheable tier is outsi
 design, which is sheet 12's finding, here as an empty field), its in and out degree in both readings, and the
 full list of what it waits on.</p>
 <p><strong>What is editorial.</strong> The row blocks and their order; the pitch, the sprite drawing and the
-colours; this prose. The nodes, the edges, the column ranking, every count and every name are the plate's.</p>`;
+colours; the Lucide glyphs (ISC, restroked) that mark the lane's controls and panel heads; this prose. The nodes, the edges, the column ranking, every count and every name are the plate's.</p>`;
 
 export const sheet12i = {
   num: '12i',

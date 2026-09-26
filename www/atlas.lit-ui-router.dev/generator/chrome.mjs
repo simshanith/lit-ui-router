@@ -2,6 +2,7 @@
 // Light = graphite on vellum; dark = cyanotype. Three-state theming per artifact rules.
 
 import { readFileSync } from 'node:fs';
+import { spriteFor } from './icons.mjs';
 
 // Title-block date = the census basis ref's commit date, never a hard-coded day
 const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', import.meta.url), 'utf8'));
@@ -479,6 +480,15 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The icon table's sprite (icons.mjs): never painted, but not display:none,
+   which would stop a <use> resolving. */
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* A lane glyph: 12px in the running colour, centred on the cap height of the
+   tracked caps it leads, a small gap before its label. */
+.gl.lane { display: inline-block; width: 12px; height: 12px; flex: none;
+  vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
+.gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 `;
 
 // Marker defs (per-sheet id prefix keeps the gallery collision-free).
@@ -594,11 +604,13 @@ export const chipBreaks = (html) =>
     text.includes('/') ? open + text.replace(/\/(?!<wbr>)/g, '/<wbr>') + close : m);
 
 export function page(title, body, { desc = '' } = {}) {
+  // the icon symbols this page's markup references, once; nothing when none
+  const sprite = spriteFor(body);
   return `<meta charset="utf-8">
 <title>${title}</title>
 <meta name="viewport" content="width=device-width, initial-scale=1">
 ${desc ? `<meta name="description" content="${desc}">` : ''}
 <style>${CSS}</style>
-${chipBreaks(body)}
+${sprite && `${sprite}\n`}${chipBreaks(body)}
 <script>${PLATE_END_SCRIPT}</script>`;
 }

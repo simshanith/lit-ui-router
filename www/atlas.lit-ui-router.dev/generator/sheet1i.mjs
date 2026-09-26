@@ -74,7 +74,7 @@ does. The two overlays never light a loop leg at all, in ${R.steps} steps. And t
 one leg this package does not own: core writes the url; lit-ui-router's part of that wire is the
 <code>listen()</code> that carries the next back-button press in.</p>
 <p><strong>What is editorial.</strong> The ring and where the overlays stand; the sprite drawings and the colours;
-the narration sentences and this prose. The stations, the legs, the order of the steps, every line number, every
+the Lucide glyphs (ISC, restroked) that mark the lane's controls and panel heads; the narration sentences and this prose. The stations, the legs, the order of the steps, every line number, every
 excerpt and every count are the plate's.</p>`;
 
 export const sheet1i = {

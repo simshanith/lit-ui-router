@@ -9,11 +9,12 @@
 // they are not on the route, and cytoscape draws the result with `preset` —
 // no physics, so the picture is identical on every load.
 //
-// The hero interaction is the WALK: ◀ PREV · NEXT ▶ (and ← → while the lane
+// The hero interaction is the WALK: PREV · NEXT (and ← → while the lane
 // has focus) step the pointer through the navigation; the current step's legs
 // burn in accent, the legs already walked stay in ink, the rest wait faint,
 // and the panel reads the narration and the evidence out of the plate.
 import { readFileSync } from 'node:fs';
+import { glyph } from './icons.mjs';
 import { PALETTES } from './sprites.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 
@@ -347,8 +348,8 @@ const INIT = `
   }
   function describeStep() {
     if (!step) {
-      return '\\u003ch4\\u003eTHE RENDER LOOP \\u00b7 AT REST\\u003c/h4\\u003e\\u003cp\\u003e' + esc(L.idle) + '\\u003c/p\\u003e'
-        + field('THE WALK', esc(P.walkOf) + ' \\u00b7 ' + W.length + ' steps');
+      return '\\u003ch4\\u003e' + L.glyphs.rest + 'THE RENDER LOOP \\u00b7 AT REST\\u003c/h4\\u003e\\u003cp\\u003e' + esc(L.idle) + '\\u003c/p\\u003e'
+        + field(L.glyphs.walk + 'THE WALK', esc(P.walkOf) + ' \\u00b7 ' + W.length + ' steps');
     }
     var s = W[step - 1];
     var h = '\\u003ch4\\u003e\\u003cspan class="n"\\u003eSTEP ' + s.step + ' / ' + W.length + '\\u003c/span\\u003e \\u00b7 ' + esc(s.title) + '\\u003c/h4\\u003e';
@@ -397,8 +398,8 @@ const INIT = `
     var h = '\\u003ch4\\u003e' + esc(n.label) + '\\u003c/h4\\u003e';
     h += field('WHAT', esc(n.sub));
     h += field('ANCHOR', evidence([n]));
-    if (outs.length) h += field('LEGS OUT', '\\u003cul\\u003e' + outs.map(function (e) { return legLine(e.id, false); }).join('') + '\\u003c/ul\\u003e');
-    if (ins.length) h += field('LEGS IN', '\\u003cul\\u003e' + ins.map(function (e) { return legLine(e.id, false); }).join('') + '\\u003c/ul\\u003e');
+    if (outs.length) h += field(L.glyphs.out + 'LEGS OUT', '\\u003cul\\u003e' + outs.map(function (e) { return legLine(e.id, false); }).join('') + '\\u003c/ul\\u003e');
+    if (ins.length) h += field(L.glyphs.in + 'LEGS IN', '\\u003cul\\u003e' + ins.map(function (e) { return legLine(e.id, false); }).join('') + '\\u003c/ul\\u003e');
     return h;
   }
   function describeLeg(id) {
@@ -479,6 +480,14 @@ export function loopWalkLane() {
     edges: EDGES,
     skins: SKINS,
     kinds: KIND_WORDS,
+    // Lucide: the card's own subject (circuit) on the at-rest head, footprints
+    // on THE WALK, arrow-up-from-line / arrow-down-to-line on LEGS OUT / IN
+    glyphs: {
+      rest: glyph('ic-circuit'),
+      walk: glyph('footprints'),
+      out: glyph('arrow-up-from-line'),
+      in: glyph('arrow-down-to-line'),
+    },
     idle: `Sheet 1's circuit, stood up: ${T.stations} stations and the ${T.legs} legs between them, every leg carrying the call or event that moves it. Press NEXT (or → with the lane focused) to walk one navigation — ${PLATE.walkOf} — ${T.steps} steps, each one standing on the source lines it cites. Hover any building for its file and anchor line, any leg for what carries it.`,
   };
   const swatch = (k) => `<span class="sw sw-light">${skinSvg(k, 'light')}</span><span class="sw sw-dark">${skinSvg(k, 'dark')}</span>`;
@@ -499,10 +508,10 @@ export function loopWalkLane() {
     ${legend}
   </div>
   <div class="lw-ctl" role="group" aria-label="walk controls">
-    <button type="button" id="lw-prev" aria-label="previous step">◀ PREV</button>
+    <button type="button" id="lw-prev" aria-label="previous step">${glyph('chevron-left')}PREV</button>
     <span class="lw-step" id="lw-step" aria-live="polite">STEP 0 / ${T.steps}</span>
-    <button type="button" id="lw-next" aria-label="next step">NEXT ▶</button>
-    <button type="button" id="lw-reset">RESET</button>
+    <button type="button" id="lw-next" aria-label="next step">NEXT${glyph('chevron-right', { after: true })}</button>
+    <button type="button" id="lw-reset">${glyph('rotate-ccw')}RESET</button>
   </div>
 </div>
 <div class="lw-stage" id="lw-stage" tabindex="0" aria-label="the render loop, walkable — arrow keys step the walk while this lane has focus">

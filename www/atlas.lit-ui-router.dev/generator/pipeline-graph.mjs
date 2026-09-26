@@ -10,6 +10,7 @@
 // no physics, so the picture is the same on every load.
 import { ATLAS } from './census-atlas.mjs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
+import { glyph } from './icons.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
 export const CYTOSCAPE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/cytoscape/3.31.0/cytoscape.min.js';
@@ -135,6 +136,10 @@ const LAYOUT = {
     ...BANDS.map((b) => ({ id: `band-${b.key}`, label: b.label, x: COL.probe - NODE.probe / 2, y: bandY.get(b.key) })),
     { id: 'band-annex', label: ANNEX_LABEL, x: COL.station - NODE.probe / 2, y: ANNEX_Y - 40 },
   ],
+  // Lucide on the panel heads: the card's own subject (pipeline) at rest;
+  // arrow-down-to-line on the ties that come in, arrow-up-from-line on the
+  // ties that go out
+  glyphs: { rest: glyph('ic-pipeline'), in: glyph('arrow-down-to-line'), out: glyph('arrow-up-from-line') },
   ledger: { y: LEDGER_Y - 62, x: COL.station - NODE.tool / 2, label: `TOOLS LEDGER — ${A.stats.instruments} shared instruments · ${A.stats.tools} external` },
 };
 
@@ -284,7 +289,7 @@ const INIT = `
   showTools(false);
 
   var info = document.getElementById('pg-info');
-  var IDLE = '<h4>THE SURVEY OFFICE</h4><p class="hint">Hover or tap any building to light its neighbourhood: '
+  var IDLE = '<h4>' + L.glyphs.rest + 'THE SURVEY OFFICE</h4><p class="hint">Hover or tap any building to light its neighbourhood: '
     + 'what wrote it, what reads it, what it imports. The wide accent fan leaving the master plate is the '
     + 'one-measurement-many-views claim, drawn.</p>';
   function field(k, v) { return '<span class="f">' + k + '</span>' + v; }
@@ -303,12 +308,12 @@ const INIT = `
     if (n.basis) h += field('BASIS', n.basis);
     if (n.title) h += field('DRAWING', (n.num ? 'sheet ' + n.num + ' — ' : '') + n.title);
     if (n.importedBy) h += field('IMPORTED BY', n.importedBy + ' stations');
-    h += list('WRITTEN BY', ins.filter(function (e) { return e.rel === 'writes'; }).map(function (e) { return nameOf(e.from); }));
-    h += list('WRITES', outs.filter(function (e) { return e.rel === 'writes'; }).map(function (e) { return nameOf(e.to); }));
-    h += list('READS', ins.filter(function (e) { return e.rel === 'reads'; }).map(function (e) { return nameOf(e.from); }));
-    h += list('READ BY', outs.filter(function (e) { return e.rel === 'reads'; }).map(function (e) { return nameOf(e.to); }));
-    h += list('IMPORTS', outs.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.to); }));
-    h += list('IMPORTED BY', ins.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.from); }));
+    h += list(L.glyphs.in + 'WRITTEN BY', ins.filter(function (e) { return e.rel === 'writes'; }).map(function (e) { return nameOf(e.from); }));
+    h += list(L.glyphs.out + 'WRITES', outs.filter(function (e) { return e.rel === 'writes'; }).map(function (e) { return nameOf(e.to); }));
+    h += list(L.glyphs.in + 'READS', ins.filter(function (e) { return e.rel === 'reads'; }).map(function (e) { return nameOf(e.from); }));
+    h += list(L.glyphs.out + 'READ BY', outs.filter(function (e) { return e.rel === 'reads'; }).map(function (e) { return nameOf(e.to); }));
+    h += list(L.glyphs.out + 'IMPORTS', outs.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.to); }));
+    h += list(L.glyphs.in + 'IMPORTED BY', ins.filter(function (e) { return e.rel === 'imports'; }).map(function (e) { return nameOf(e.from); }));
     return h;
   }
 
@@ -387,9 +392,9 @@ export function pipelineSection() {
     ${legend}
     </div>
     <div class="pg-ctl">
-      <span id="pg-hint">DRAG TO PAN · SCROLL TO ZOOM</span>
-      <label><input type="checkbox" id="pg-tools"> TOOLS LEDGER</label>
-      <button type="button" id="pg-fit">FIT</button>
+      <span id="pg-hint">${glyph('move')}DRAG TO PAN · ${glyph('mouse')}SCROLL TO ZOOM</span>
+      <label><input type="checkbox" id="pg-tools"> <span>${glyph('wrench')}TOOLS LEDGER</span></label>
+      <button type="button" id="pg-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
   <div class="pg-stage">

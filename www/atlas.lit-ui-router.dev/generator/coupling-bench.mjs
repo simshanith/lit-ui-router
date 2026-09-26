@@ -17,6 +17,7 @@
 // physics, so the picture is the same on every load.
 import { readFileSync } from 'node:fs';
 import { PROJECT_MARK, articleTitle } from './chrome.mjs';
+import { glyph } from './icons.mjs';
 import { CYTOSCAPE_URL } from './pipeline-graph.mjs';
 import { SPRITES, spriteSvg } from './sprites.mjs';
 
@@ -131,7 +132,10 @@ const BANDS = [...BENCH].filter(([, b]) => b.band).map(([key, b]) => {
   };
 });
 
-const LAYOUT = { sprites: SPRITES, nodes: NODES, edges: EDGES, offstage: OFFSTAGE, bands: BANDS, totals: C.totals };
+// Lucide on the panel heads: the card's own subject (coupling) at rest,
+// arrow-up-from-line on DECLARES, arrow-down-to-line on DECLARED BY.
+const GLYPHS = { rest: glyph('ic-coupling'), out: glyph('arrow-up-from-line'), in: glyph('arrow-down-to-line') };
+const LAYOUT = { sprites: SPRITES, nodes: NODES, edges: EDGES, offstage: OFFSTAGE, bands: BANDS, totals: C.totals, glyphs: GLYPHS };
 
 const json = (v) => JSON.stringify(v).replace(/</g, '\\u003c');
 
@@ -268,7 +272,7 @@ const INIT = `
   cy.fit(cy.elements(), 40);
 
   var info = document.getElementById('cb-info');
-  var IDLE = '\\u003ch4\\u003eTHE COUPLING BENCH\\u003c/h4\\u003e\\u003cp class="hint"\\u003eEvery line on this bench is a '
+  var IDLE = '\\u003ch4\\u003e' + L.glyphs.rest + 'THE COUPLING BENCH\\u003c/h4\\u003e\\u003cp class="hint"\\u003eEvery line on this bench is a '
     + 'published contract. Hover or tap an EDGE for the range it declares and the section it lives in; hover a '
     + 'BUILDING for its version, what it declares, and what declares it. '
     + L.totals.drawnContracts + ' contracts are drawn; ' + (L.totals.contracts - L.totals.drawnContracts)
@@ -308,8 +312,8 @@ const INIT = `
     h += field('VERSION', esc(n.version) + ' \\u00b7 ' + esc(n.versionFrom));
     if (n.sloc !== null) h += field('MASS', n.files + 'f \\u00b7 ' + n.sloc.toLocaleString('en-US')
       + ' sloc \\u00b7 ' + n.courses + ' courses');
-    h += list('DECLARES', outs.map(contract));
-    h += list('DECLARED BY', ins.map(function (e) {
+    h += list(L.glyphs.out + 'DECLARES', outs.map(contract));
+    h += list(L.glyphs.in + 'DECLARED BY', ins.map(function (e) {
       return esc(e.from) + ' \\u003cspan class="rng"\\u003e' + esc(e.range) + '\\u003c/span\\u003e · '
         + (e.optional ? '\\u003cspan class="opt"\\u003eoptional ' + e.section + '\\u003c/span\\u003e' : e.section);
     }));
@@ -378,8 +382,8 @@ export function couplingBenchSection() {
     ${legend}
     </div>
     <div class="cb-ctl">
-      <span>HOVER AN EDGE FOR ITS RANGE · DRAG TO PAN</span>
-      <button type="button" id="cb-fit">FIT</button>
+      <span>HOVER AN EDGE FOR ITS RANGE · ${glyph('move')}DRAG TO PAN</span>
+      <button type="button" id="cb-fit">${glyph('scan')}FIT</button>
     </div>
   </div>
   <div class="cb-stage">

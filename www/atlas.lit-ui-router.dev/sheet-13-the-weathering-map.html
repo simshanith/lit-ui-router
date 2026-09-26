@@ -471,6 +471,15 @@ text.serif { font-family: var(--serif); font-size: 13px; fill: var(--ink); }
 }
 a { color: var(--accent); }
 :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+/* The icon table's sprite (icons.mjs): never painted, but not display:none,
+   which would stop a <use> resolving. */
+.icon-sprite { position: absolute; width: 0; height: 0; overflow: hidden; }
+/* A lane glyph: 12px in the running colour, centred on the cap height of the
+   tracked caps it leads, a small gap before its label. */
+.gl.lane { display: inline-block; width: 12px; height: 12px; flex: none;
+  vertical-align: calc(0.5cap - 6px); margin-right: 0.45em; }
+.gl.lane.after { margin-right: 0; margin-left: 0.45em; }
 </style>
 <section class="sheet" id="sheet-13" aria-label="Sheet 13: THE WEATHERING MAP">
   <div class="sheet-head"><span class="proj"><span class="project-mark">THE ALTITUDE ATLAS</span> — DRAWING SET</span><span class="shno">SHEET 13 / 13</span></div>

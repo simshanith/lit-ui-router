@@ -15,10 +15,12 @@
 // Read, not written: app/public/thumbs/<id>.webp — generator/thumbs.mjs draws
 // those, and a card with no picture stops the build here.
 //   app/src/generated/city-init.js  the 3D scene as a module (three is bundled)
+//   app/src/generated/icons.js      the icon sprite and key-id table (icons.mjs)
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { CSS, DATE, TOTAL, chipBreaks, plateRatio, sheetSection } from './chrome.mjs';
 import { CITY_META, cityInitModule, cityMarkup } from './city-scene.mjs';
+import { ICONS_DTS, iconsModule } from './icons.mjs';
 import { assertLabels, labelsFor } from './labels.mjs';
 import { cityHero } from './sheet7.mjs';
 import { THUMB_DIR, thumbPaths } from './thumb-spec.mjs';
@@ -333,6 +335,8 @@ export function emitApp({ sheets, appendix = [], interactive, appendixInteractiv
       '  THREE: unknown,\n' +
       '): Promise<(() => void) | undefined>;\n',
   );
+  writeFileSync(join(generatedDir, 'icons.js'), iconsModule());
+  writeFileSync(join(generatedDir, 'icons.d.ts'), ICONS_DTS);
   const extras = [
     {
       id: CITY_META.id,

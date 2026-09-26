@@ -41,7 +41,7 @@ import {
   without,
 } from './manifest.ts';
 import { loadCytoscape, runScripts } from './fragment.ts';
-import { ICON_SPRITE, iconId } from './icons.ts';
+import { ICON_SPRITE, iconId } from './generated/icons.js';
 import { initCity } from './generated/city-init.js';
 import { ARTIFACT } from './mode.ts';
 import { href } from './routes.ts';
@@ -379,7 +379,7 @@ function rail(manifest: Manifest | undefined): TemplateResult {
 export const shell = (manifest: Manifest | undefined, content: unknown): TemplateResult => html`
   <!-- lit cannot bind inside <style>, so the whole tag rides unsafeHTML. -->
   ${manifest ? unsafeHTML(`<style>${manifest.cover.css}</style>`) : nothing}
-  <!-- The key icons, once a page: every card cell and index chip is a <use>. -->
+  <!-- The icon table, once a page (generator/icons.mjs): every card cell, index chip and lane glyph is a <use>. -->
   ${unsafeHTML(ICON_SPRITE)}
   <div class="app">
     ${rail(manifest)}
@@ -1062,8 +1062,9 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <h3>HOW THE SET IS DRAWN</h3>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.notes)}</p>` : nothing}
         <p>
-          Icons: Lucide (ISC), restroked; projection glyphs and the register and spine
-          drawn here.
+          Icons: Lucide (ISC), restroked — the card keys, and the glyphs that mark the
+          interactive plates' controls and panel heads; projection glyphs and the
+          register and spine drawn here.
         </p>
         <!-- SOURCES is a footnote to the reading column, so it sits in it -->
         ${manifest ? unsafeHTML(manifest.cover.provenance) : nothing}
