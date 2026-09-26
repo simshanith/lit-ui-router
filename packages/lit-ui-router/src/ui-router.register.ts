@@ -7,11 +7,17 @@ declare global {
   }
 }
 
-// Guarded so a duplicate package copy degrades to first-definition-wins instead of a define() throw.
-if (!customElements.get('ui-router')) {
+// Guarded so another definition of the tag degrades to first-definition-wins instead of a define() throw; a subclass is a deliberate extension and passes silently.
+const defined = customElements.get('ui-router');
+
+if (!defined) {
   customElements.define('ui-router', UIRouterLitElement);
-} else {
+} else if (
+  defined !== UIRouterLitElement &&
+  !(defined.prototype instanceof UIRouterLitElement)
+) {
   console.warn(
-    'lit-ui-router: <ui-router> is already defined; skipping registration. Multiple copies of lit-ui-router may be loaded.',
+    `lit-ui-router: <ui-router> is already defined by ${defined.name || 'an anonymous class'}; lit-ui-router did not register its own. ` +
+      'Import names from lit-ui-router/pure if another package is meant to own the tag, otherwise two copies of lit-ui-router may be loaded.',
   );
 }
