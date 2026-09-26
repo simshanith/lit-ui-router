@@ -74,9 +74,9 @@ const colIndex = new Map(COLS.map((c, i) => [c.name, i]));
 // ---- rows: sheet 12's own block rule, so the two plates read the same way --
 const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-e2e'];
 const BLOCKS = [
-  { label: 'PACKAGES/ — PUBLISHABLE', test: (p) => !p.startsWith('@tools/') && !p.startsWith('sample-app-') && p !== 'docs' && p !== 'examples' && p !== '//' },
+  { label: 'PACKAGES/ — PUBLISHABLE', test: (p) => !p.startsWith('@tools/') && !p.startsWith('@www/') && !p.startsWith('sample-app-') && p !== 'examples' && p !== '//' },
   { label: 'APPS/ — SAMPLE + E2E', test: (p) => p.startsWith('sample-app-'), order: APP_ORDER },
-  { label: 'DOCS + EXAMPLES', test: (p) => p === 'docs' || p === 'examples' },
+  { label: 'DOCS + EXAMPLES', test: (p) => p.startsWith('@www/') || p === 'examples' },
   { label: 'TOOLS/ — INSTRUMENTS', test: (p) => p.startsWith('@tools/') },
   { label: 'ROOT //', test: (p) => p === '//' },
 ];

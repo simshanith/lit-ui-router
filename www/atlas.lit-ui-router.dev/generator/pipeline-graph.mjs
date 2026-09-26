@@ -1,4 +1,4 @@
-// I7 — THE SURVEY OFFICE, INTERACTIVE: sheet 14's cytoscape sibling.
+// I7 — THE SURVEY OFFICE, INTERACTIVE: appendix A2's cytoscape sibling.
 //
 // The data model is census-atlas.mjs's NODES/EDGES arrays, embedded VERBATIM in
 // the page as JSON (nothing here is hand-listed; every label, tier, basis and
@@ -81,7 +81,7 @@ const sheets = A.nodes.filter((nd) => nd.kind === 'sheet').map((nd) => {
   const src = READS.filter((e) => e.to === nd.id).map((e) => pos.get(e.from).y);
   return { nd, bary: src.reduce((a, v) => a + v, 0) / (src.length || 1) };
 });
-// the cover is not a sheet; like the rack in sheet 14, it leads
+// the cover is not a sheet; like the rack in appendix A2, it leads
 sheets.sort((a, b) => Number(b.nd.num === null) - Number(a.nd.num === null) || a.bary - b.bary);
 const sheetTop = -((sheets.length - 1) * PITCH) / 2;
 sheets.forEach((s, i) => place(s.nd.id, COL.sheet, sheetTop + i * PITCH));
@@ -349,14 +349,16 @@ const INIT = `
 
 const SUB = `THE CENSUS PIPELINE AS A LIVE GRAPH · ${A.stats.nodes} NODES · ${A.stats.edges} EDGES · ${A.stats.writes} WRITES / ${A.stats.reads} READS / ${A.stats.imports} IMPORTS`;
 // The gallery index's own FIT VERDICT line for this lane — one wording, two places.
-export const PIPELINE_VERDICT = "sheet 14's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero";
+export const PIPELINE_VERDICT = "appendix A2's cytoscape sibling — the same introspected nodes and edges, hoverable; the master plate's fan-out is the hero";
 const VERDICT = PIPELINE_VERDICT;
 
 // The sheet meta, in the shape build.mjs's sheet objects have: this lane is
-// S14i, drawn here and mounted in the gallery, on its own standalone page and
-// as the app's 14i fragment. `sub` and `caption` are the section's own strings.
-export const sheet14i = {
-  num: '14i',
+// A2i, the appendix's one lane: drawn here and mounted in the gallery's appendix,
+// on its own standalone page and as the app's a2i fragment. `sub` and `caption`
+// are the section's own strings.
+export const sheetA2i = {
+  num: 'A2i',
+  appendix: true,
   id: 'pipeline-interactive',
   rev: REV,
   title: 'THE SURVEY OFFICE — INTERACTIVE',
@@ -377,7 +379,7 @@ export function pipelineSection() {
 
   return `<style>${CSS}</style>
 <section class="sheet pg" id="pipeline-graph" aria-label="The Survey Office, interactive">
-  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">SHEET 14 · REV ${REV}</span></div>
+  <div class="sheet-head"><span class="proj">${PROJECT_MARK} — INTERACTIVE PLATE</span><span class="shno">APPENDIX ${sheetA2i.num} · META · REV ${REV}</span></div>
   <h2 class="sheet-title">${articleTitle('THE SURVEY OFFICE')} — INTERACTIVE</h2>
   <p class="sheet-sub">${SUB}</p>
   <div class="pg-bar">

@@ -855,7 +855,7 @@ type SpecimenResolves = { specimen?: unknown };
 
 const neighbours = (manifest: Manifest, sheet: SheetRow): [SheetRow?, SheetRow?] => {
   // The ← / → walk stays inside the ascent; an appendix plate walks its own
-  // (currently one-plate) list, so A1 never appears as "next" after sheet 14.
+  // list (A1, A2, A2i), so A1 never appears as "next" after sheet 13.
   const list = isAppendix(sheet.num) ? (manifest.appendix ?? []) : manifest.sheets;
   const index = list.findIndex((row) => row.id === sheet.id);
   return [list[index - 1], list[index + 1]];
@@ -995,7 +995,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
         <h2>THE SET, ROUTED</h2>
         ${manifest ? html`<p>${unsafeHTML(manifest.cover.thesis)}</p>` : nothing}
         <p>
-          The atlas is ${manifest?.total ?? 14} sheets of static HTML. This is the same
+          The atlas is ${manifest?.total ?? 13} sheets of static HTML. This is the same
           set as one <code>lit-ui-router</code> application: an abstract
           <code>atlas</code> state renders the rail and a nested
           <code>&lt;ui-view&gt;</code>, and <code>atlas.sheet</code> resolves one
@@ -1013,7 +1013,7 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>resolve</code> for the manifest, the plate, and — on
           <code>atlas.city</code> — three.js itself, so a 600 KB library is
           fetched by the state that needs it and by no other;
-          <code>redirectTo</code> for <code>/office</code> → sheet 14; a url-less
+          <code>redirectTo</code> for <code>/office</code> → appendix A2; a url-less
           <code>atlas.notFound</code> as the <code>otherwise</code> target, so an unknown
           sheet keeps its own url in the address bar; nested
           <code>&lt;ui-view&gt;</code>; and the Navigation API location plugin with a

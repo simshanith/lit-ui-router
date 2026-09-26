@@ -135,8 +135,8 @@ Good, and small enough to hold in your head.
   ```text
   /sheet/7        →  200   (the prerendered page)
   /sheet/7/       →  200   (same page — strict: false on both sides)
-  /office         →  302   Location: /sheet/14
-  /sheet/14i      →  200   (a sheet id like any other: adding a lane costs
+  /office         →  302   Location: /sheet/A2
+  /sheet/12i      →  200   (a sheet id like any other: adding a lane costs
                             nothing beyond its manifest row)
   /sheet/2a       →  302   Location: /sheet/2A
   /sheet/99       →  404   (url kept; the shell, at 404)

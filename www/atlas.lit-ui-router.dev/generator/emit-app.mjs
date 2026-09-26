@@ -24,7 +24,7 @@ import { cityHero } from './sheet7.mjs';
 import { THUMB_DIR, thumbPaths } from './thumb-spec.mjs';
 // The app's one base constant (node strips the types). Fragment hrefs are
 // absolute so a prerendered page links correctly before any JS runs.
-import { BASE } from '../app/src/routes.ts';
+import { BASE, SHEET_ALIASES } from '../app/src/routes.ts';
 
 const GEN = new URL('.', import.meta.url).pathname;
 
@@ -37,8 +37,8 @@ const MODULE = {
   '5': 'sheet5.mjs', '6': 'sheet6.mjs', '7': 'sheet7.mjs', '7A': 'sheet7a.mjs',
   '7B': 'sheet7b.mjs', '8': 'sheet8.mjs', '9': 'sheet9.mjs', '10': 'sheet10.mjs',
   '11': 'sheet11.mjs', '12': 'sheet12.mjs', '12i': 'sheet12i.mjs',
-  '13': 'sheet13.mjs', '14': 'sheet14.mjs', '14i': 'pipeline-graph.mjs',
-  A1: 'sheetA1.mjs',
+  '13': 'sheet13.mjs',
+  A1: 'sheetA1.mjs', A2: 'sheetA2.mjs', A2i: 'pipeline-graph.mjs',
 };
 
 // chrome.mjs is read by every sheet (the title block dates itself off
@@ -63,7 +63,7 @@ function platesOf(entry) {
   return [...plates].sort();
 }
 
-// --- altitude order: 1, 1i, 2, 2A, 2B, 3, 3A, ... 12, 12i, 13, 14 ----------
+// --- altitude order: 1, 1i, 2, 2A, 2B, 3, 3A, ... 12, 12i, 13, then A1, A2 --
 export function bySheet(a, b) {
   const na = Number.parseInt(a, 10);
   const nb = Number.parseInt(b, 10);
@@ -150,10 +150,14 @@ function firstClause(desc) {
   return `${text.slice(0, text.lastIndexOf(' ', 180))}…`;
 }
 
-/** `## Sheet 3B — THE WATCHED CITY` → `3B`; the city plate files under `city`. */
+/**
+ * `## Sheet 3B — THE WATCHED CITY` → `3B`; the city plate files under `city`.
+ * A record heading under an aliased id (routes.ts `SHEET_ALIASES`) files
+ * under the plate it resolves to.
+ */
 function historySheetNum(heading) {
-  const sheet = /^Sheet\s+([0-9]+[A-Za-z]?|[A-Z][0-9]+)\s+—/.exec(heading);
-  if (sheet) return sheet[1];
+  const sheet = /^Sheet\s+([0-9]+[A-Za-z]?|[A-Z][0-9]+[A-Za-z]?)\s+—/.exec(heading);
+  if (sheet) return SHEET_ALIASES[sheet[1]] ?? sheet[1];
   if (/^City\b/.test(heading)) return 'city';
   return '';
 }
@@ -227,6 +231,8 @@ function heroPlate() {
  * @param {Array<object>} args.appendix    the appendix plates — letter-prefixed
  *        ids, OUTSIDE the ascent, emitted into `manifest.appendix`
  * @param {Array<[object, () => string]>} args.interactive sheet + its own renderer
+ * @param {Array<[object, () => string]>} args.appendixInteractive the same, for
+ *        an appendix lane — emitted into `manifest.appendix` beside its plate
  * @param {string} args.outDir             build.mjs's OUT argument
  * @param {(sheet: object) => string} args.fname  build.mjs's standalone filename rule
  * @param {Record<string, {scale: string, verdict: string}>} args.index the gallery
@@ -234,11 +240,13 @@ function heroPlate() {
  * @param {Record<string, string>} args.cover the cover's own rendered HTML
  * @returns {number} fragments written (sheets + extras)
  */
-export function emitApp({ sheets, appendix = [], interactive, outDir, fname, index, cover }) {
+export function emitApp({ sheets, appendix = [], interactive, appendixInteractive = [], outDir, fname, index, cover }) {
   const rows = [...sheets.map((s) => [s, null]), ...interactive].sort(([a], [b]) =>
     bySheet(a.num, b.num),
   );
-  const appRows = appendix.map((s) => [s, null]);
+  const appRows = [...appendix.map((s) => [s, null]), ...appendixInteractive].sort(([a], [b]) =>
+    bySheet(a.num, b.num),
+  );
   // Cross-references resolve across BOTH sets: sheet 13's notes may point at A1,
   // and A1's notes point back at 7, 7B and 13.
   const byUpper = new Map(
@@ -344,7 +352,7 @@ export function emitApp({ sheets, appendix = [], interactive, outDir, fname, ind
   // every plate labelled, every label in the vocabulary, or the build stops
   assertLabels([
     ...rows.map(([sheet, render]) => [String(sheet.num), Boolean(render)]),
-    ...appRows.map(([sheet]) => [String(sheet.num), false]),
+    ...appRows.map(([sheet, render]) => [String(sheet.num), Boolean(render)]),
     [CITY_META.id, true],
   ]);
 

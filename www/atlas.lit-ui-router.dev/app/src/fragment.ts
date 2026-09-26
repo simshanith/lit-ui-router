@@ -5,7 +5,7 @@
  *
  *  1. Inserted markup never executes a <script>. `innerHTML` (and lit's
  *     `unsafeHTML`, which uses it) marks scripts "already started", so the four
- *     interactive sheets (1i, 2B, 12i, 14i) would mount their JSON islands and their
+ *     interactive sheets (1i, 2B, 12i, A2i) would mount their JSON islands and their
  *     `<div id="cb-cy">` and then sit there dead. The fix is to REPLACE each
  *     script node with a freshly created one — the only way a parser-less
  *     insertion runs code. `<style>` DOES apply through innerHTML; only

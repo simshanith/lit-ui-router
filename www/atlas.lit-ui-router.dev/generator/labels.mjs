@@ -63,9 +63,9 @@ export const LABELS = {
   '12': S('register', 'chart', 'static'),
   '12i': S('register', 'graph', 'interactive'),
   '13': S('map', 'plan', 'static'),
-  '14': S('pipeline', 'graph', 'static'),
-  '14i': S('pipeline', 'graph', 'interactive'),
   A1: S('sprite', 'isometric', 'static'),
+  A2: S('pipeline', 'graph', 'static'),
+  A2i: S('pipeline', 'graph', 'interactive'),
   city: S('city', 'isometric', 'interactive', 'real 3d isometric'),
 };
 

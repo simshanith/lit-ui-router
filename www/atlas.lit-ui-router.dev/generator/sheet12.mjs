@@ -60,9 +60,9 @@ const STAGES = [[0, 0, 'GATHER'], [1, 4, 'EMIT'], [5, 10, 'CHECK'], [11, 16, 'PR
 // row grouping: a rule per block, so a new member lands in its own block
 const APP_ORDER = ['sample-app-shared', 'sample-app-routes', 'sample-app-lit-vanilla', 'sample-app-lit-mobx', 'sample-app-lit-effect', 'sample-app-lit-e2e'];
 const BLOCKS = [
-  { label: (n) => `PACKAGES/ — PUBLISHABLE ×${n}`, test: (p) => !p.startsWith('@tools/') && !p.startsWith('sample-app-') && p !== 'docs' && p !== 'examples' && p !== '//' },
+  { label: (n) => `PACKAGES/ — PUBLISHABLE ×${n}`, test: (p) => !p.startsWith('@tools/') && !p.startsWith('@www/') && !p.startsWith('sample-app-') && p !== 'examples' && p !== '//' },
   { label: (n) => `APPS/ — SAMPLE + E2E ×${n}`, test: (p) => p.startsWith('sample-app-'), order: APP_ORDER },
-  { label: (n) => `DOCS + EXAMPLES ×${n}`, test: (p) => p === 'docs' || p === 'examples' },
+  { label: (n) => `DOCS + EXAMPLES ×${n}`, test: (p) => p.startsWith('@www/') || p === 'examples' },
   { label: (n) => `TOOLS/ — INSTRUMENTS ×${n}`, test: (p) => p.startsWith('@tools/') },
   { label: () => 'ROOT // — NO FANNED TASKS', test: (p) => p === '//' },
 ];
@@ -136,12 +136,12 @@ const UNCACHED = [
   ['dev', 'persistent server'],
   ['docs', 'persistent server'],
   ['e2e', 'persistent server'],
-  ['docs#docs:preview', 'persistent server'],
-  ['docs#wrangler:dev', 'persistent server'],
-  ['docs#docs', 'persistent server'],
+  ['lit-ui-router.dev#docs:preview', 'persistent server'],
+  ['lit-ui-router.dev#wrangler:dev', 'persistent server'],
+  ['lit-ui-router.dev#docs', 'persistent server'],
   ['release#resolve:published', 'reads the LIVE registry'],
   ['workers-builds#check', 'reads the LIVE deploy API'],
-  ['docs#check:embeds', 'measures the HOST browser'],
+  ['lit-ui-router.dev#check:embeds', 'reads the HOST'],
 ];
 
 const LEDGER = [
@@ -281,7 +281,7 @@ ${lines(RX, CLY + CN * CRP + 26, [
 const UY = Math.max(CLY + CN * CRP + 118, TOTY + 40);
 const uncached = `${txt(RX, UY, 'THE UNCACHEABLE THIRTEEN', 'lbl')}
 ${txt(RX, UY + 15, 'every cache:false definition in the repo — 7 at', 'lbls')}
-${txt(RX, UY + 27, 'root, 6 in member files (@tools/ scope elided)', 'lbls')}
+${txt(RX, UY + 27, 'root, 6 in member files (@tools/ and @www/ elided)', 'lbls')}
 ${txt(RX, UY + 39, 'none of them reachable from ci', 'lbls')}
 ${UNCACHED.map(([n, why], i) => {
     const y = UY + 62 + i * 18;
@@ -321,7 +321,7 @@ ${txt(46, SY + SH - 16, 'No duration is encoded anywhere on this plate: CI wall-
 
 const H = SY + SH + 30;
 
-const svg = `<svg viewBox="0 78 1160 ${H - 78}" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the ${PKGS} workspace packages plus the root, grouped into publishable packages, sample apps, docs and examples, tools, and root. Columns are the ${COLS.length} task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the ${ALLP.size} task names that are one hundred percent placeholder by design — ${[...ALLP].join(', ')}. Of ${CI.nodes} nodes only ${CI.real} run a command and only ${CI.realEdges} of ${CI.edges} dependency edges connect two real tasks. A ghosted ${OCOLS.length}-column overlay to the right shows the ${ODN} extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a ${CHAIN.length}-rung ladder of which ${CHAIN_REAL} rungs are real, and the ${UNCACHED.length} uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, ${TAIL.length} singleton tasks form a ragged tail, and a structure schedule totals ${LEDGER.length} pipelines.">
+const svg = `<svg viewBox="0 78 1160 ${H - 78}" role="img" aria-label="A punchcard register plate of the pull-request CI task graph. Rows are the ${PKGS} workspace packages plus the root, grouped into publishable packages, sample apps, the docs site and examples, tools, and root. Columns are the ${COLS.length} task names that fan across packages, ordered by pipeline stage: gather, emit, check, prove, roll-up. A filled accent card-hole marks a command-bearing task node; a faintly hatched hole marks a placeholder node that runs nothing; a red crossed hole marks the ${ALLP.size} task names that are one hundred percent placeholder by design — ${[...ALLP].join(', ')}. Of ${CI.nodes} nodes only ${CI.real} run a command and only ${CI.realEdges} of ${CI.edges} dependency edges connect two real tasks. A ghosted ${OCOLS.length}-column overlay to the right shows the ${ODN} extra nodes the ci:main pipeline adds. Beside the plate, the deepest chain in the graph is drawn as a ${CHAIN.length}-rung ladder of which ${CHAIN_REAL} rungs are real, and the ${UNCACHED.length} uncacheable task definitions in the repository are listed as a tier that never appears in this graph. Below, ${TAIL.length} singleton tasks form a ragged tail, and a structure schedule totals ${LEDGER.length} pipelines.">
 ${defs(P)}
 <defs><pattern id="${P}-hp" width="4" height="4" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
   <line x1="0" y1="0" x2="0" y2="4" stroke="var(--ink-faint)" stroke-width="0.9" opacity="0.75"/>
@@ -372,9 +372,9 @@ export const sheet12 = {
 <p><strong>Why an inventory and not a city.</strong> Sheet 3 argues that a task manager is not a place; drawing this graph in isometric would smuggle back the geography that sheet's note denies. What a CI graph actually is, is a register: a fixed set of names crossed against a fixed set of packages, with most of the intersections empty. The honest form is the plate that shape already implies — a punchcard, read by column.</p>
 <p><strong>The finding.</strong> ${CI.nodes} nodes; ${CI.real} run a command. ${fmt(CI.edges)} dependency edges; ${CI.realEdges} join two real tasks. Of the ${COLS.length} fanned names, ${SELF.size} carry a <code>^self</code> chain — <code>build</code>, <code>build:types</code>, <code>test</code>, <code>test:coverage</code>, <code>transit</code> — and a self-chain is what mints placeholders: turbo needs a node in <em>every</em> package to hang the chain on, whether or not that package has such a script. ${ALLP.size} names are 100% placeholder in all ${PKGS} packages: <code>transit</code> (which has no implementation anywhere in the repo — it exists purely as an edge), and the two roll-ups <code>ci:pull_request</code> and <code>ci</code>. The plate's rightmost columns and its leftmost are, in the strictest sense, empty.</p>
 <p><strong>Depth is mostly scaffolding too.</strong> The deepest chain is ${CI.chain} nodes and ${CHAIN_REAL} of them run anything. The longest chain of consecutive real nodes is ${CI.realChain} — and it is ${CI.realChain} <code>test</code> tasks in a row, serialized by <code>^test</code> and nothing else: no task in that chain consumes an artifact from the one above it. That is the price of a self-chain used for ordering rather than for data flow, and it is what a plate makes visible that a node-and-arrow render never does.</p>
-<p><strong>What the plate is not evidence for.</strong> Placeholders are cheap — turbo schedules and skips them, and the phantom share is not a runtime cost. The argument is about legibility: ${phantomPct(CI)}% of what a maintainer sees in <code>--graph</code> output is scaffolding, and the two ratios worth watching are the real-node share per column and the real-edge count. Note also the one tier that never appears here at all: the repo's ${UNCACHED.length} <code>cache:false</code> definitions — four writers, six persistent servers, two live-network readers and one host-bound measurement (<code>docs#check:embeds</code>, #703) — are all outside every <code>ci:*</code> graph by design. A cache hit on any of them would be wrong, and the gate depends on their read-only twins instead (<code>format:check</code> for <code>format</code>).</p>
+<p><strong>What the plate is not evidence for.</strong> Placeholders are cheap — turbo schedules and skips them, and the phantom share is not a runtime cost. The argument is about legibility: ${phantomPct(CI)}% of what a maintainer sees in <code>--graph</code> output is scaffolding, and the two ratios worth watching are the real-node share per column and the real-edge count. Note also the one tier that never appears here at all: the repo's ${UNCACHED.length} <code>cache:false</code> definitions — four writers, six persistent servers, two live-network readers and one host-bound measurement (<code>@www/lit-ui-router.dev#check:embeds</code>, #703) — are all outside every <code>ci:*</code> graph by design. A cache hit on any of them would be wrong, and the gate depends on their read-only twins instead (<code>format:check</code> for <code>format</code>).</p>
 <p><strong>The overlay.</strong> <code>ci:main</code> is not a different pipeline; it swallows <code>ci:pull_request</code> whole and adds ${ODN} nodes across ${OCOLS.length} names — <code>ci:main</code>, <code>test:engines</code>, <code>test:matrix</code>, <code>check:pack</code> — of which ${ODR} are command-bearing. The main-branch graph is ${OPCT}% larger and buys three engine tests, one d.ts back-test and one pack check.</p>
-<p><strong>Where the real edges are, and are not.</strong> The <code>docs:api</code> column is punched in every package it stands in: <code>docs#build</code> names its four producers directly rather than walking <code>^docs:api</code> through devDependencies it never imports (#693). That is this plate's thesis arriving from the other side — scaffolding leaves the graph and the real work stays. It is also why real→real edges are a small fraction of ${fmt(CI.edges)}: most edges land on a node that runs nothing.</p>`,
+<p><strong>Where the real edges are, and are not.</strong> The <code>docs:api</code> column is punched in every package it stands in: <code>@www/lit-ui-router.dev#build</code> names its four producers directly rather than walking <code>^docs:api</code> through devDependencies it never imports (#693). That is this plate's thesis arriving from the other side — scaffolding leaves the graph and the real work stays. It is also why real→real edges are a small fraction of ${fmt(CI.edges)}: most edges land on a node that runs nothing.</p>`,
   key: [
     keyRow(`<rect x="14" y="3" width="15" height="10" class="sk fa"/>`, 'punched — the task runs a command'),
     keyRow(`<rect x="14" y="3" width="15" height="10" stroke="var(--ink-faint)" stroke-width="1" fill="url(#${P}-hp)"/>`, 'unpunched — placeholder node, runs nothing'),

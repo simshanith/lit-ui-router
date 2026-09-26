@@ -81,9 +81,15 @@ writeFileSync(join(set, 'index.html'), readFileSync(join(set, 'gallery.html'), '
 
 // --- _redirects, merged -----------------------------------------------------
 const appRules = readFileSync(join(dist, '_redirects'), 'utf8').trim();
+// filenames the set no longer writes: the survey office is appendix A2 / A2i
+const retired = [
+  ['sheet-14-the-survey-office.html', 'sheet-A2-the-survey-office.html'],
+  ['sheet-14i-the-survey-office-interactive.html', 'sheet-A2i-the-survey-office-interactive.html'],
+];
 const legacy = [
   // /index.html is NOT redirected: it is the app now.
   ...pages.map((f) => `/${f} ${SET}${f} 301`),
+  ...retired.flatMap(([old, now]) => [`/${old} ${SET}${now} 301`, `${SET}${old} ${SET}${now} 301`]),
   `${OLD_APP_MOUNT} ${BASE} 301`,
   `${OLD_APP_MOUNT}/* ${BASE}:splat 301`,
 ];

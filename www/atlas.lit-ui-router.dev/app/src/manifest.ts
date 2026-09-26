@@ -213,7 +213,7 @@ export function findSheet(manifest: Manifest, num: string): SheetRow | undefined
   return allSheets(manifest).find((sheet) => sheet.id === wanted);
 }
 
-/** An appendix plate is letter-first: it carries no altitude and no "OF 14". */
+/** An appendix plate is letter-first: it carries no altitude and no "OF n". */
 export const isAppendix = (num: string): boolean => /^[A-Za-z]/.test(num);
 
 // --- the key index: FORM's keys as filterable, shareable state --------------

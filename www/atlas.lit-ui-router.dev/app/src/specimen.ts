@@ -936,7 +936,7 @@ interface Metric {
  *  A MAINTAINED LITERAL: the specimen measures type before any manifest is
  *  fetched, so it cannot read sheet 7's row — keep it in step with sheet 7. */
 const SAMPLE =
-  'SHEET 7 OF 14 · 1,383 SLOC · 32 MEMBERS · REV F · 2026-09-07 · WHOLE WORKSPACE · 185d414';
+  'SHEET 7 OF 13 · 1,383 SLOC · 32 MEMBERS · REV F · 2026-09-07 · WHOLE WORKSPACE · 185d414';
 
 let scratch: HTMLCanvasElement | null = null;
 

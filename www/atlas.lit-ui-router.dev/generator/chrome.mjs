@@ -8,7 +8,7 @@ const PLATE = JSON.parse(readFileSync(new URL('../data/census-files.json', impor
 export const DATE = PLATE.commitDate.slice(0, 10);
 export const PROJECT = 'THE ALTITUDE ATLAS';
 export const CLIENT = 'lit-ui-router · simshanith';
-export const TOTAL = 14;
+export const TOTAL = 13;
 
 export const CSS = `
 :root {

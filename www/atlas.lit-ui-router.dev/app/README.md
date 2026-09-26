@@ -20,8 +20,8 @@ plate), `public/sheets/atlas.css`, `src/generated/city-init.js`, and `public/man
 per plate (title, rev, ALTITUDE wording, FIT VERDICT line, census plates read, cross-sheet
 references, standalone filename in the flat set), an `issueLog` array, and a `cover` object carrying
 the flat gallery's stat bar, survey, prose column and colophon as rendered HTML, so the routed index
-draws the same bytes the flat one does. Twenty-five fragments: twenty-three sheets, one `appendix`
-row (A1) and one `extras` row, the 3D city.
+draws the same bytes the flat one does. Twenty-five fragments: twenty-one sheets, three `appendix`
+rows (A1, A2, A2i) and one `extras` row, the 3D city.
 
 ## The routes
 
@@ -33,11 +33,13 @@ row (A1) and one `extras` row, the 3D city.
 | `atlas.city`     | `/city`        | `CityView`      | `extra`, `fragment`, **`three`**  |
 | `atlas.specimen` | `/specimen`    | `SpecimenView`  | **`specimen`** (its own element)  |
 | `atlas.log`      | `/log`         | `LogView`       | `manifest` (its `issueLog`)       |
-| `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` 14)       |
+| `atlas.office`   | `/office`      | — `redirectTo`  | — (302 to `atlas.sheet` A2)       |
 | `atlas.about`    | `/about`       | `AboutView`     | —                                 |
 | `atlas.notFound` | — (url-less)   | `NotFoundView`  | — (the `otherwise` projection)    |
 
-The twenty-three sheets are the nineteen SVG plates and four interactive lanes (1i, 2B, 12i, 14i).
+The twenty-one sheets are the eighteen SVG plates and three interactive lanes (1i, 2B, 12i) of the
+ascent; the appendix files A1, A2 and A2i, the survey office's own lane, under the same `/sheet/:num`
+state, and `/sheet/14` and `/sheet/14i` redirect to A2 and A2i.
 `atlas.log` is the set's issue record — every REV across every plate, latest first — read from the
 manifest. The megacanvas is not a state: the flat set publishes the whole reel as one page, so the
 prerender writes `/megacanvas` and `/megacanvas/` → `/set/megacanvas.html` 301 into `_redirects`.
@@ -113,7 +115,7 @@ The app is deliberately two layers, and they do not mix.
 data and shared with the server, states with `component` and `resolve` (`router.ts`), an abstract
 `atlas` shell whose view renders the nav rail and a nested `<ui-view>` (`views.ts`), the
 attribute-part link forms — `srefHref` in the `href`, `srefActiveClass` in the `class`,
-`srefAriaCurrent` in `aria-current` — on every link, `redirectTo` for `/office` → sheet 14, a url-less `atlas.notFound` as
+`srefAriaCurrent` in `aria-current` — on every link, `redirectTo` for `/office` → appendix A2, a url-less `atlas.notFound` as
 the `otherwise` target, the Navigation API location plugin with a `pushState` fallback, document
 titles set on `onSuccess` from `titles.ts` (the same strings the prerender writes), and the cover's
 key index carried as typed query params on `atlas.gallery` — every chip a `uiSref`, every filtered

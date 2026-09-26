@@ -11,7 +11,7 @@ totals reconcile by construction, not by discipline. Probes write
 `www/atlas.lit-ui-router.dev/data/<probe>.json`; sheets import the plate and render figures and provenance
 lines from its fields through lookups that THROW on a missing row. History probes derive
 "today" and their windows from the measured commit's date. `generator/census-atlas.mjs`
-introspects the pipeline at build time, draws it as sheet 14 plus the interactive lane, and
+introspects the pipeline at build time, draws it as appendix A2 plus its interactive lane A2i, and
 throws if the cabinet disagrees with itself. Every number the atlas prints is now
 plate-derived or a declared editorial constant (sheet 7B's rust; placement).
 
@@ -96,7 +96,7 @@ sitting); order is dependency order.
 | I4 | Snapshot-import sheet refactor | sheets read `www/atlas.lit-ui-router.dev/data/*.json`; generated basis lines |
 | I5 | T3 recipes (turbo, nm, bundle 9/10/11, npm dates) | archive+install harness; costliest, least churn |
 | I6 | Pipeline self-portrait: static sheet 14 | house SVG style, introspected at build |
-| I7 | Cytoscape pipeline graph + sprite nodes | NODES/EDGES model, sprite skins; now sheet 14i |
+| I7 | Cytoscape pipeline graph + sprite nodes | NODES/EDGES model, sprite skins; now appendix A2i |
 | I8 | 3D | CSS tilt (retired) → three.js isometric city |
 
 ## Operating notes and traps
@@ -419,7 +419,7 @@ sitting); order is dependency order.
 - `census-atlas.mjs` throws on: a plate with ≠1 writer, a probe naming an unfiled plate, a
   drawing reading an unwritten plate, and any plate disagreeing with the cabinet about the
   ref. It discovers probes as `census-*.mjs` files that write a plate and tiers from which
-  `basis.mjs` primitive each one calls, so a new station joins sheet 14 and 14i with no edit
+  `basis.mjs` primitive each one calls, so a new station joins appendix A2 and A2i with no edit
   — and an unimported `census*.mjs` shows in the drawer struck through as UNWIRED.
 - Sheet numbers come from plate lookups that THROW on a missing row. Nothing numeric is
   hand-pasted except declared editorial (plans, scales, prose history, 7B's rust,
@@ -452,7 +452,7 @@ sitting); order is dependency order.
 
 **Drawing traps**
 
-- `generator/sheet14.mjs`'s `WORD` lookup is a FINITE array (`no` … `fifteen`). It indexes
+- `generator/sheetA2.mjs`'s `WORD` lookup is a FINITE array (`no` … `fifteen`). It indexes
   off the master plate's consumer count; past fifteen it reads `undefined` rather than
   failing loudly.
 - Every house drawing class (`.sk`, `.skf`, `.sks`, `.skr`) declares `fill: none`, and a CSS

@@ -29,7 +29,7 @@ import type { Transition } from '@uirouter/core';
 import type { RedirectLine } from 'lit-ui-router-ssr';
 import type { ExtraRow, Manifest, SheetRow } from './src/manifest.ts';
 import { allSheets, findExtra, findSheet } from './src/manifest.ts';
-import { BASE, MOUNT, href, mountsFor, routes } from './src/routes.ts';
+import { BASE, MOUNT, SHEET_ALIASES, href, mountsFor, routes } from './src/routes.ts';
 import { TITLES, sheetTitle } from './src/titles.ts';
 
 const HERE = dirname(fileURLToPath(import.meta.url));
@@ -193,12 +193,13 @@ const titles = new Map<string, string>([
 ]);
 
 // Verdict-only: /office is a redirect, a bare mount (when the mount is not the
-// root) redirects to the gallery, and a lowercase sheet id redirects to its
-// cased page. None gets a page; each gets a _redirects line.
+// root) redirects to the gallery, and a lowercase or aliased sheet id redirects
+// to its cased page. None gets a page; each gets a _redirects line.
 const verdictOnly: string[] = [
   `${BASE}office`,
   ...(MOUNT === BASE ? [] : [MOUNT]),
   ...PLATES.filter((row) => row.id !== row.num).map((row) => href.sheet(row.id)),
+  ...Object.keys(SHEET_ALIASES).map((alias) => href.sheet(alias)),
 ];
 
 // The megacanvas was retired from the app on 2026-09-05; the flat set still

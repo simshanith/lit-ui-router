@@ -1,11 +1,11 @@
 # www/atlas.lit-ui-router.dev/ — The Altitude Atlas
 
-A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Fourteen
-altitudes on 24 plates — the numbered sheets, their A/B alternates, four interactive lanes, a
-3D city and one appendix study — each in the form that altitude earns. Sheets 7–10 are a survey
+A drawing set: one subject, the lit-ui-router monorepo, surveyed at every altitude. Thirteen
+altitudes on 21 plates — the numbered sheets, their A/B alternates, three interactive lanes and a
+3D city — each in the form that altitude earns, and an appendix of 3 more about the atlas itself. Sheets 7–10 are a survey
 quartet (the workspace by mass, a consumer's node_modules, a deploy on the wire, the inside of
-one bundle); 11 prices every published entry alone; 14 draws the census pipeline that measured
-the rest. The form riffs on an isometric codebase visualization seen in the wild; the notes on
+one bundle); 11 prices every published entry alone; appendix A2 draws the census pipeline that
+measured the rest. The form riffs on an isometric codebase visualization seen in the wild; the notes on
 each sheet argue where that form fits and where it lies.
 
 | Sheet | Altitude | Form |
@@ -31,16 +31,16 @@ each sheet argue where that form fits and where it lies.
 | [12](sheet-12-the-register-plate.html) | PR CI GRAPH | REGISTER PLATE |
 | [12i](sheet-12i-the-register-walked.html) | PR CI GRAPH | INTERACTIVE REGISTER |
 | [13](sheet-13-the-weathering-map.html) | WORKSPACE × TIME | WEATHERING MAP |
-| [14](sheet-14-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
-| [14i](sheet-14i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
 ## Appendix — plates about the atlas, not the codebase
 
 | Plate | Subject | Form |
 | --- | --- | --- |
 | [A1](sheet-A1-the-sprite-study.html) | THE ATLAS ITSELF | SPRITE STUDIES |
+| [A2](sheet-A2-the-survey-office.html) | THE CENSUS PIPELINE | FLOW GRAPH |
+| [A2i](sheet-A2i-the-survey-office-interactive.html) | THE CENSUS PIPELINE | INTERACTIVE GRAPH |
 
-- `megacanvas.html` — the 19 SVG plates on one page, ascent order.
+- `megacanvas.html` — the 18 SVG plates on one page, ascent order.
 - `gallery.html` — cover, index and the full set, interactive lanes included.
 
 **Build and host.** From the repo root, in order:
@@ -78,7 +78,7 @@ the tracked pictures: `thumbs.mjs <outdir> --only <ids> --out <dir> --tuning <fi
 
 Live at <https://atlas.lit-ui-router.dev/> — the app owns the root (`/`, `/sheet/7/`, `/city/`,
 `/log`) and the flat set sits beside it under `/set/`; the two link to each other. The SVG
-sheets need nothing; the interactive plates (1i, 2B, 12i, 14i, 7·3D) load cytoscape 3.31.0 and
+sheets need nothing; the interactive plates (1i, 2B, 12i, 7·3D, A2i) load cytoscape 3.31.0 and
 three.js 0.169.0, which the stage step vendors. `app/` is the same set as a prerendered
 lit-ui-router app (see `app/README.md`); `HISTORY.md` is the verbatim revision record, parsed
 into the app's `/log` at build time. This file is written by `build.mjs`; edit the emitter, not the output.

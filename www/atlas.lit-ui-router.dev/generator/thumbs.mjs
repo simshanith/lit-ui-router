@@ -165,7 +165,7 @@ const TUNING = {
   // the pipeline is one basis fanning into probes, plates and drawings, and
   // stood up as tiers it spends the card's head on the lone node at the top:
   // rung out in rings instead, the fan itself is what the window holds
-  '14i': {
+  a2i: {
     target: '#pg-cy',
     stage: [900, 1200],
     layout: { name: 'concentric', minNodeSpacing: 18 },

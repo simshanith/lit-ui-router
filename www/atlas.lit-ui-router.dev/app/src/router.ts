@@ -11,7 +11,7 @@ import {
   navigationLocationPlugin,
 } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
-import { FILTER_PARAMS, urlOf } from './routes.ts';
+import { FILTER_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
 import { findExtra, findSheet, loadFragment, loadManifest } from './manifest.ts';
 import { titleFor } from './titles.ts';
@@ -109,7 +109,7 @@ export const states: LitStateDeclaration[] = [
   {
     name: 'atlas.office',
     url: urlOf('atlas.office'),
-    redirectTo: { state: 'atlas.sheet', params: { num: '14' } },
+    redirectTo: { state: 'atlas.sheet', params: { num: 'A2' } },
   },
   { name: 'atlas.about', url: urlOf('atlas.about'), component: AboutView },
   // The issue log reads the shell's already-resolved manifest — no resolve of
@@ -190,10 +190,11 @@ export function createRouter(): UIRouterLit {
   // url-less notFound state WITHOUT moving the address bar. A miscased
   // number ('2a') is the sheet under its canonical id: redirect there, so
   // the url, the rail's uiSrefActive and the prerendered directory agree.
+  // An aliased id ('14') redirects the same way, to the plate it names.
   router.transitionService.onBefore({ to: 'atlas.sheet' }, async (transition) => {
     const manifest = await loadManifest();
     const num = String(transition.params().num);
-    const row = findSheet(manifest, num);
+    const row = findSheet(manifest, SHEET_ALIASES[num] ?? num);
     if (!row) {
       return router.stateService.target('atlas.notFound', undefined, {
         location: false,

@@ -387,6 +387,7 @@ resolved →
 
 **Record notes**
 
+- 2026-09-25, no rev clause: service door 3 cites `tools/workers-builds/cloudflare-build.ts:71-76`, the script the `.sh` wrapper execs, and names what those lines run: a global npm install of the `packageManager` pin of pnpm, then `npx turbo @www/lit-ui-router.dev#build`. The box note is reflowed across the same ten lines so the longer name clears the box, and its doubled "the" is gone.
 - 2026-09-11, no rev clause: re-counted at origin/main @ 65e2843 and the CITES rows rekeyed — `check:graph-edges`, `check:task-inputs` and `check:patches` now live at `@tools/repo-checks`, `docs#typecheck:vue` became `@www/lit-ui-router.dev#typecheck:vue`, and `knip` joins the recognised externals.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: this time mise moved and turbo did not. mise stands at 54 tasks (was 52) with 15 `depends` edges between them, up from 6; turbo holds at 22 files and 112 definitions, and the workflow rows are unmoved a sixth time. The turbo inset reads the ci graph at 716 nodes, 225 real, unchanged.
 - 2026-09-14, cabinet refresh at origin/main @ 4223ffc7: turbo moved and the other two machines did not, a second time: 22 turbo files (was 21), 112 definitions (111), of which 68 are member definitions (67), the 77 distinct names unchanged — the new member's own `turbo.json` is the whole of the difference. mise stands at its 52 tasks over 4 homes and the workflow rows are unmoved a fifth time, 8 of 12 workflows entering mise. The turbo inset reads the ci graph at 716 nodes, 225 real. After the record, the frame audit: the `no mise:` list ran clean through the GITHUB ACTIONS panel wall at a depth of 92.9, so it wraps to the panel's own measure now — `NO_MISE_LINES`, 26 characters to a line — and the `branch_ci_gate` footnote drops 522 → 532 to clear it.
@@ -625,6 +626,7 @@ resolved →
 
 **Record notes**
 
+- 2026-09-25, no rev clause: road E's task citation is `@www/lit-ui-router.dev#wrangler:dev`, the `with:` turbo's `e2e` task actually names; the member row keeps the short label `docs` for the site.
 - 2026-09-13, after the refresh, no rev clause: the frame audit, and not one `PLACED` coordinate moved. TESTS road 5 — `@tools/dts-backtest` under the runtime packages — took its lane x 33 → 20, the old lane running 3 units inside №37 `lit-ui-router-effect`'s new src plot at x 30; 20 is west of every plot on the way down. And `cityHero()`'s extent now folds the four district-rect corners in with the mass corners — viewBox 85.4 18 1192.2 754.6 → 20 18 1300 790 — because the hero draws the district frames but was measured off the blocks they gird alone, so the routed cover's city card cut three of the four dashed frames.
 - 2026-09-13, OPEN — flagged on the frame audit, no decision taken and nothing moved: the accent “typecheck reads” trunk (road 4, y = 115) now runs under `lit-ui-router`'s annex, whose south face grew 105.8 → 121, for x 85.3–212, so the “two stubs, one trunk” reading the road was drawn for is lost. Every clear lane below is blocked by the y = 130 package row, so the move is the user's to make.
 - 2026-09-11, no rev clause (the copy is present-state): №15 `@tools/build_and_test` moved x 330 → 300 and №32 `@tools/embed-heights` x 430 → 440 on the works row, after 15's spec annex grew across 32's plot; `iso-hidden.mjs::assertPlots` now stops the build on any such overlap (DESIGN-REVIEW §T53).
@@ -1123,6 +1125,7 @@ resolved →
 
 **Record notes**
 
+- 2026-09-25, no rev clause: the row blocks catch up with the site's rename. The `DOCS + EXAMPLES` rule matched the package name `docs`, so `@www/lit-ui-router.dev` fell through the publishable block's negative test and stood among the published packages; the rule is now the `@www/` scope, the publishable rule excludes it, and the site rows with `examples` under `DOCS + EXAMPLES ×2`. The uncacheable tier cites the site's four `cache:false` definitions under their real package, with the `@www/` scope elided beside `@tools/` so the names clear the reason column, and `check:embeds` reads "reads the HOST" in the tier's own idiom; the two prose citations of `docs#check:embeds` and `docs#build` carry the scoped name.
 - 2026-09-11, no rev clause: re-surveyed at origin/main @ 65e2843, and the hand-traced chain node `docs#build` is now `@www/lit-ui-router.dev#build`.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: the register re-punched at the same 716 nodes and 225 command-bearing, against the same 1,897 dependency edges. No hand table took a row.
 - 2026-09-14, cabinet refresh at origin/main @ 4223ffc7: the register re-punched at 716 nodes and 225 command-bearing (was 697 / 213), against 1,897 dependency edges, up from 1,760, of which 111 join two real tasks, up from 94. `ci:main` reads 756/230. No hand table took a row — `APP_ORDER` is unmoved, no app having been born — and the phantom share and the hand-listed `^self` names stand as they were.
@@ -1145,6 +1148,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 **Record notes**
 
+- 2026-09-25, no rev clause: the lane's row blocks share sheet 12's corrected rule, so `@www/lit-ui-router.dev` is filed under `DOCS + EXAMPLES` here as well and no longer among the publishable packages.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: the same plate walked at the new ref, nothing moved; the lane's head reads 716 NODES · 225 RUN A COMMAND · 1,897 EDGES.
 - 2026-09-14, cabinet refresh at origin/main @ 4223ffc7: the same plate walked at the new ref; the build-time rank-from-edges preset recomputed over the 137 added edges, with the row blocks and the pitch unchanged. The lane's head reads 716 NODES · 225 RUN A COMMAND · 1,897 EDGES · 111 JOIN TWO REAL TASKS.
 - 2026-09-13, cabinet refresh at origin/main @ 9896b3c1: the same plate walked at the new ref; the build-time rank-from-edges preset recomputed over the 193 added edges, with the row blocks and the pitch unchanged.
@@ -1264,6 +1268,7 @@ resolved →
 
 **Record notes**
 
+- 2026-09-25, no rev clause: the plate is filed as appendix A2 (`generator/sheetA2.mjs`, `num: 'A2'`, `appendix: true`), outside the ascent beside A1 — its subject is the atlas measuring itself, not the codebase. The `sub` opens `APPENDIX · META` where it read `ALTITUDE 3½`, the head plate reads `APPENDIX A2 · META`, and thirteen altitudes remain. `/office`, `/sheet/14` and `/sheet/14i` redirect to A2 and A2i; this record's heading keeps the number the revs were issued under.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: re-introspected at the new ref over the same 17 plates and the same station set; no station joined or left.
 - 2026-09-14, cabinet refresh at origin/main @ 4223ffc7: re-introspected at the new ref over the same 17 plates and the same station set — 17 probes, 17 plates, 20 drawings, and no station joined or left. `census-npm.mjs` learned to record a dist-tag map per row this pass, which is a field on a plate and not a station, so the office is unmoved by it. After the record, the frame audit: the bus's reads label nudged 4 units clear of the rail it letters.
 - 2026-09-13, cabinet refresh at origin/main @ 9896b3c1: re-introspected at the new ref over the same 17 plates and the same station set; no station joined or left. The install harness's own lettering, its aria sentence and its notes now say mise-provisioned pnpm, which is what `basis.mjs` has run since the fourth refresh.
@@ -1284,6 +1289,7 @@ _No REV clauses, historical paragraphs or rev-bearing callouts: this plate has o
 
 **Record notes**
 
+- 2026-09-25, no rev clause: the lane is filed as appendix A2i (`sheetA2i` in `generator/pipeline-graph.mjs`), the appendix's interactive row beside A2 and outside the ascent; it mounts at `#pipeline-graph` in the gallery's appendix, the head plate reads `APPENDIX A2i · META · REV A`, and thirteen altitudes remain.
 - 2026-09-23, cabinet refresh at origin/main @ 38c9fa1c: the same office in the lane, re-drawn from the re-introspected pipeline; no station joined or left.
 - 2026-09-14, cabinet refresh at origin/main @ 4223ffc7: the same office in the lane, re-drawn from the re-introspected pipeline; no station joined or left.
 - 2026-09-13, cabinet refresh at origin/main @ 9896b3c1: the same office in the lane, re-drawn from the re-introspected pipeline; no station joined or left.

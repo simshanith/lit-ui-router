@@ -1,6 +1,6 @@
 // The census pipeline, measured by the same rules it measures the city with
 // (INITIATIVES.md I6): build-time INTROSPECTION of www/atlas.lit-ui-router.dev/generator/ and
-// www/atlas.lit-ui-router.dev/data/ — nothing on sheet 14 is hand-listed.  Probes are found by
+// www/atlas.lit-ui-router.dev/data/ — nothing on appendix A2 is hand-listed.  Probes are found by
 // what they WRITE (a writeData call naming a plate); shared instruments are
 // found by being IMPORTED by another generator file; tiers come from which
 // basis.mjs primitive a probe calls (materialize / historyLog / installDeps);

@@ -238,7 +238,7 @@ export const SPECIMEN_MOCK = `
     </div>
     <div class="m-head">
       <span class="proj">The Altitude Atlas — drawing set</span>
-      <span class="shno">SHEET 7 / 14 · ALTITUDE 3½</span>
+      <span class="shno">SHEET 7 / 13 · ALTITUDE 3½</span>
     </div>
     <h3 class="m-title"><span class="w1"><span class="art"><span class="w">The </span></span>Measured</span> City</h3>
     <p class="m-sub">Altitude 3½ — the same city as sheet 3, surveyed by mass · 32 members · 4 districts · counted at origin/main @ 185d414</p>
@@ -313,7 +313,7 @@ export const SPECIMEN_MOCK = `
           <div><span class="fld">Basis</span>origin/main @ 185d414</div>
           <div><span class="fld">Date / rev</span>2026-09-04 · E</div>
           <div class="sig"><span><span class="fld">Drawn by</span><span class="hand">Fable (Claude, AI)</span></span></div>
-          <div class="sig"><span><span class="fld">Sheet</span>7 OF 14</span><span class="chop" aria-hidden="true"></span></div>
+          <div class="sig"><span><span class="fld">Sheet</span>7 OF 13</span><span class="chop" aria-hidden="true"></span></div>
         </div>
         <table class="m-rev">
           <caption>Revisions</caption>

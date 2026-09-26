@@ -38,6 +38,13 @@ export const href = {
 };
 
 /**
+ * Sheet ids that resolve to a plate filed under another id: the survey office
+ * and its lane are appendix A2 and A2i. `/sheet/14` redirects on both sides of
+ * the seam, and HISTORY.md's record headings file under the plate's own id.
+ */
+export const SHEET_ALIASES: Readonly<Record<string, string>> = { '14': 'A2', '14i': 'A2i' };
+
+/**
  * The gallery's filter params — null by default, so an absent key is an
  * absent query param rather than an empty one. Deliberately NOT `dynamic`: a
  * filter change re-enters atlas.gallery, which is what re-renders the index,
@@ -70,11 +77,11 @@ export const routes: RouteDeclaration[] = [
   // view pulls a webfont — and it pulls it on entry, so no other page's
   // payload knows the faces exist.
   { name: 'atlas.specimen', url: '/specimen' },
-  // The survey office is sheet 14 under its own name.
+  // The survey office is appendix A2 under its own name.
   {
     name: 'atlas.office',
     url: '/office',
-    redirectTo: { state: 'atlas.sheet', params: { num: '14' } },
+    redirectTo: { state: 'atlas.sheet', params: { num: 'A2' } },
   },
   { name: 'atlas.about', url: '/about' },
   // The set's issue log — every REV across every plate, latest first. It was
@@ -120,12 +127,17 @@ export function mountsFor(sheetNums?: readonly string[]): Record<string, MountCo
       pattern: `/sheet/${num.toLowerCase()}`,
       to: { state: 'atlas.sheet', params: { num } },
     }));
+  const aliased: RedirectRule[] = Object.entries(SHEET_ALIASES).map(([alias, num]) => ({
+    pattern: `/sheet/${alias}`,
+    to: { state: 'atlas.sheet', params: { num } },
+  }));
 
   return {
     [MOUNT]: {
       routes: narrowed,
       redirects: [
         ...lowercased,
+        ...aliased,
         // A bare mount base (no trailing slash) resolves the empty subpath,
         // which no route claims; send it to the gallery rather than 404ing
         // the front door. Inert at a root mount — `/` is the gallery's own

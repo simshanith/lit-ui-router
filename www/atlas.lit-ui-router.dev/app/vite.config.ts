@@ -6,6 +6,7 @@ import type { Plugin } from 'vite';
 import { createServerRouter } from 'ui-router-server';
 import { serverRouterPlugin } from 'ui-router-server/vite';
 import { viteSingleFile } from 'vite-plugin-singlefile';
+import { allSheets } from './src/manifest.ts';
 import type { Manifest } from './src/manifest.ts';
 import { BASE, mountsFor } from './src/routes.ts';
 
@@ -14,13 +15,14 @@ const DIST = join(HERE, 'dist');
 
 // The generated index is on disk at config time, so the dev server can narrow
 // /sheet/:num to the numbers that were actually drawn — and answer 404 for
-// the ones that were not, exactly as the deployed site will.
+// the ones that were not, exactly as the deployed site will. The appendix is
+// out of the ascent but not out of the url space.
 const manifest = JSON.parse(
   readFileSync(join(HERE, 'public', 'manifest.json'), 'utf8'),
 ) as Manifest;
 
 const serverRouter = createServerRouter({
-  mounts: mountsFor(manifest.sheets.map((sheet) => sheet.num)),
+  mounts: mountsFor(allSheets(manifest).map((sheet) => sheet.num)),
 });
 
 /**
