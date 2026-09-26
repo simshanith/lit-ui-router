@@ -19,7 +19,7 @@
     "lit": "^3.3.3",
     "lit-ui-router": "^1.16.0-rc.1",
     "three": "^0.186.0",
-    "ui-router-navigation-location-plugin": "^0.3.2",
+    "ui-router-navigation-location-plugin": "^1.0.0",
     "ui-router-server": "^0.2.0"
   },
   "devDependencies": {

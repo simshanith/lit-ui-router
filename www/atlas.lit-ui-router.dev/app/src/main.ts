@@ -47,7 +47,7 @@ await booted;
 /** Resolves once the root view's own update — and the microtask after it — is done. */
 const pageSettled = async (): Promise<void> => {
   const view = root.querySelector('ui-view');
-  await (view as unknown as { updateComplete?: Promise<unknown> } | null)?.updateComplete;
+  await view?.updateComplete;
   await Promise.resolve();
 };
 

@@ -490,9 +490,9 @@ sitting); order is dependency order.
   `<base href>`, `emit-app.mjs` and `stage-site.mjs`.
 - Pages 308s `/sheet/2A` onto `/sheet/2A/`, which core's default strictMode rejects —
   `strictMode(false)` in `router.ts` and `config: { strict: false }` on the server mount are
-  load-bearing, or every deep link boots into notFound. The Navigation API plugin also
-  registers no `navigate` interceptor of its own, so the app wires one there or every click
-  is a document load (ask 9).
+  load-bearing, or every deep link boots into notFound. The Navigation API plugin intercepts
+  its own navigations; the app's `intercept` option keeps the reader's scroll across an index
+  filter change (ask 9).
 - No router hook says "the view re-rendered": release view transitions and any post-nav DOM
   read off lit's `updateComplete` (`app/src/experimental/view-rendered.ts`), never off rAF
   counting.

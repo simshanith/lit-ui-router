@@ -140,9 +140,10 @@ the line:
   `dist/sheet/7/index.html` and 308s `/sheet/7` onto `/sheet/7/`; core's default strict matching
   rejected the slash and booted every deep link into `atlas.notFound`. The server mount is compiled
   with the same `strict: false`.
-- A `navigate` listener that calls `event.intercept()` for `isUIRouterNavigateEvent(event)`
-  (`router.ts`). The Navigation API plugin calls `navigation.navigate()` and leaves interception to
-  the app; without the listener every click was a cross-document load.
+- The Navigation API plugin's `intercept` option (`router.ts`). The plugin intercepts the
+  `navigation.navigate()` calls it makes, so every click is a same-document navigation; the app's
+  option returns `scroll: 'manual'` for a key-index filter change, so a chip keeps the reader's
+  place while every other navigation lands at the top.
 - Cased ids are canonical (`/sheet/2A`). `/sheet/2a` redirects to it on both sides: an `onBefore`
   guard in the browser, a redirect rule in the mount, and therefore a `_redirects` line from the
   prerender.

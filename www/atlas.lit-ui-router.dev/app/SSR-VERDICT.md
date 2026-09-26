@@ -19,7 +19,9 @@ The package-level asks in §5 are filed on `simshanith/lit-ui-router`:
 - **7** "the view has re-rendered" has no documented signal — `onSuccess`
   settles before `<ui-view>` swaps; the recipe is `transition.promise` then
   `updateComplete` on every view and its element — #812. Open.
-- **9** the Navigation API plugin's interception hazard — #750 (pre-existing). Open.
+- **9** the Navigation API plugin's interception hazard — #750 (pre-existing).
+  **Shipped in `ui-router-navigation-location-plugin@1.0.0` (#946, closing
+  #945)**; #750 stays open as the docs example ask. See §5.9.
 - **10** static hosts add a trailing slash; `strict: false` on both sides — #807. Open.
 - **8** the resolves generic: a typed `RoutedLitTemplate` rejected at
   `component:` with the error pointing away from the generic — #813. Filed
@@ -328,6 +330,10 @@ Everything that is not a router primitive:
    Not an SSR matter, but found by the same pass, and the reason every
    router-driven navigation was a cross-document load. See ask 9.
 
+   **Status, 2026-09-26.** Retired. The plugin intercepts its own navigations
+   at 1.0.0; `src/router.ts` hands it an `intercept` option that only chooses
+   the scroll behaviour. See ask 9.
+
 ## 5. Concrete package-level asks
 
 Ordered by how much each would have saved me.
@@ -483,6 +489,20 @@ Ordered by how much each would have saved me.
    **Status, 2026-09-13.** Open, #750 (pre-existing), nothing shipped. The
    atlas still wires its own `navigate` interceptor in `src/router.ts`,
    unchanged, and is cited as a ready-made example for the ask.
+
+   **Status, 2026-09-26.** Shipped in
+   `ui-router-navigation-location-plugin@1.0.0` (#946, closing #945): the
+   service intercepts the navigations it starts, and a new `intercept` option
+   returns the `NavigationInterceptOptions` for each one, called once the
+   router transition has committed. #750 stays open as the docs example ask.
+   The atlas takes the plugin at `^1.0.0` and its own `navigate` interceptor
+   is gone from `src/router.ts`. What it passes through `intercept` is
+   `scroll: 'manual'` for a key-index filter change, read off the tail of
+   `successfulTransitions` with `isIndexFilterChange`; that retired
+   `holdScroll()`. A Playwright pass against the built `dist`, with the
+   Navigation API and with it deleted, holds `scrollY` across a chip from 600,
+   900 and 2000 with no scroll event during the swap, and every other
+   navigation lands at 0.
 10. **`ui-router-server` docs: a "static hosts add a slash" note.** The
     prerender recipe (`<subpath>/index.html`) is the layout Pages, Netlify and
     S3-style hosts 308 onto a trailing slash, and core's default `strictMode`

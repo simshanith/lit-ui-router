@@ -29,7 +29,7 @@ export function installAnalytics(router: UIRouterLit): void {
   // Under the pushState fallback every move is already gtag's.
   if (!NAVIGATION_API) return;
 
-  // A SECOND listener, beside router.ts's interceptor: this one only records.
+  // Records the kind only; the location plugin intercepts its own navigations.
   let kind = '';
   window.navigation.addEventListener('navigate', (event) => {
     kind = event.navigationType;

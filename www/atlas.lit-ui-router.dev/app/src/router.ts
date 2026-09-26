@@ -6,10 +6,8 @@ import { hashLocationPlugin, pushStateLocationPlugin } from '@uirouter/core';
 import type { Transition } from '@uirouter/core';
 import { UIRouterLit } from 'lit-ui-router/pure';
 import type { LitStateDeclaration } from 'lit-ui-router';
-import {
-  isUIRouterNavigateEvent,
-  navigationLocationPlugin,
-} from 'ui-router-navigation-location-plugin';
+import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
+import type { UIRouterNavigateEvent } from 'ui-router-navigation-location-plugin';
 import { ARTIFACT } from './mode.ts';
 import { FILTER_PARAMS, SHEET_ALIASES, urlOf } from './routes.ts';
 import type { ExtraRow, Manifest, SheetRow } from './manifest.ts';
@@ -142,39 +140,19 @@ export function isIndexFilterChange(transition: Transition): boolean {
   return transition.from().name === 'atlas.gallery' && transition.to().name === 'atlas.gallery';
 }
 
-/**
- * Keep the reader where they were across an index re-render: a shorter
- * filtered index can collapse the page and let the browser clamp scrollTop.
- * The position goes back once lit has finished the ui-view swap — awaited
- * here rather than through experimental/, which src/*.ts may not import.
- */
-function holdScroll(): void {
-  const top = window.scrollY;
-  const restore = (): void => {
-    if (window.scrollY !== top) window.scrollTo({ top });
-  };
-  const rendered = (): Promise<unknown> =>
-    Promise.all(
-      [...document.querySelectorAll('ui-view')].map(
-        (host) => (host as unknown as { updateComplete?: Promise<unknown> }).updateComplete,
-      ),
-    );
-  void Promise.resolve().then(rendered).then(restore, restore);
-}
-
 export function createRouter(): UIRouterLit {
   const router = new UIRouterLit();
   if (ARTIFACT) router.plugin(hashLocationPlugin);
-  else router.plugin(NAVIGATION_API ? navigationLocationPlugin : pushStateLocationPlugin);
-
-  // CONSUMER FINDING: the Navigation API plugin calls navigation.navigate()
-  // and leaves interception to the app — the sample app wires the same
-  // listener. Without it, every router-driven navigate() is a cross-document
-  // load: the SPA reloads on each click, the view transition never runs.
-  if (NAVIGATION_API) {
-    window.navigation.addEventListener('navigate', (event) => {
-      if (!event.canIntercept || !isUIRouterNavigateEvent(event)) return;
-      event.intercept({ handler: () => Promise.resolve() });
+  else if (!NAVIGATION_API) router.plugin(pushStateLocationPlugin);
+  else {
+    // The plugin intercepts its own navigate() calls and asks for the options
+    // once the transition has committed, so the tail of successfulTransitions
+    // is this navigation's; an index filter change keeps the reader's scroll.
+    router.plugin(navigationLocationPlugin, {
+      intercept: (event: UIRouterNavigateEvent): NavigationInterceptOptions => {
+        const committed = event.info.uiRouter.globals.successfulTransitions.peekTail();
+        return { scroll: committed && isIndexFilterChange(committed) ? 'manual' : 'after-transition' };
+      },
     });
   }
 
@@ -213,8 +191,7 @@ export function createRouter(): UIRouterLit {
   router.transitionService.onSuccess({}, (transition) => {
     // An index filter change stays on the page it re-renders; everything else
     // is a new page and starts at the top.
-    if (isIndexFilterChange(transition)) holdScroll();
-    else window.scrollTo({ top: 0 });
+    if (!isIndexFilterChange(transition)) window.scrollTo({ top: 0 });
     // The prerendered pages carry these titles; the SPA keeps them current.
     const to = transition.to().name;
     const sheet =
