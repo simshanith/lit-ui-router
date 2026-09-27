@@ -21,4 +21,4 @@ _.path = ["{{config_root}}/node_modules/.bin"]
 # server without moving the URLs built from the same resolver.
 depends = ["//:build_www"]
 description = "Serve this site with wrangler on the dev-server port"
-run = "node ./bin/wrangler-dev.ts"
+run = "node ./scripts/wrangler-dev.ts"

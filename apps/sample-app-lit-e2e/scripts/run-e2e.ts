@@ -51,7 +51,7 @@ if (!www) {
   console.error(`run-e2e: no workspace member ${WWW}`);
   process.exit(1);
 }
-const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'bin/wrangler-dev.ts'))}`;
+const server = `node ${JSON.stringify(join(workspaceRoot, www.dir, 'scripts/wrangler-dev.ts'))}`;
 
 // every app is mounted whichever suites run
 serveAndTest(server, test, ['app/', 'app-mobx/', 'app-effect/']);
