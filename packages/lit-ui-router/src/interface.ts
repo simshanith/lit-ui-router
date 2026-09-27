@@ -399,7 +399,12 @@ export type LitViewDeclaration<
 export interface LitStateDeclaration<
   T extends DefaultResolvesType = DefaultResolvesType,
 > extends StateDeclaration {
-  /** The Lit component to render for this state */
+  /**
+   * The Lit component to render for this state.
+   *
+   * A view typed with required resolves is rejected here unless `T` is
+   * threaded onto the declaration, as in `LitStateDeclaration<T>[]`.
+   */
   component?: LitViewDeclaration<T>;
 
   /**

@@ -95,3 +95,7 @@ router.urlService.rules.initial({ state: 'home' });
 `initial` only matches the empty initial URL. For URLs that match no state at
 all, add an `otherwise` rule — see
 [Unmatched URLs (404)](./unmatched-urls).
+
+The object form lands on the state with no params; a landing state that reads
+the query needs the function form — see
+[A landing state that reads the query](./unmatched-urls#a-landing-state-that-reads-the-query).
