@@ -330,10 +330,10 @@ a router from.
 - `withRouterSync(router, run)` - scopes a router to one synchronous call
 - `getScopedRouter()` - reads the router that call scoped
 
-`srefHref`, `srefActiveClass` and `srefAriaCurrent` read the `withRouterSync`
-slot and nothing else, so a nav rendered inside it carries real hrefs and active
-markup; `provideRouter` serves elements that ask by protocol, not attribute
-parts.
+`srefHref`, `srefActiveClass`, `srefAriaCurrent` and `lit-ui-router-effect`'s
+`RouterRefController` read the `withRouterSync` slot and nothing else, so a nav
+rendered inside it carries real hrefs and active markup; `provideRouter` serves
+elements that ask by protocol, not attribute parts.
 
 See [Server-Side Routing](/guides/server-route-matching#the-router-on-the-server).
 

@@ -449,6 +449,10 @@ catalogs:
     lit-ui-router-floor:
       specifier: npm:lit-ui-router@1.7.0
       version: 1.7.0
+  peerFloorEffect:
+    lit-ui-router-floor:
+      specifier: npm:lit-ui-router@1.15.0
+      version: 1.15.0
   publishedDependencies:
     '@oxc-project/runtime':
       specifier: '>=0.50.0'
@@ -1060,8 +1064,8 @@ importers:
         specifier: catalog:workspace
         version: link:../lit-ui-router
       lit-ui-router-floor:
-        specifier: catalog:peerFloor
-        version: lit-ui-router@1.7.0
+        specifier: catalog:peerFloorEffect
+        version: lit-ui-router@1.15.0(@uirouter/core@6.1.2)(lit@3.3.3)
       oxfmt:
         specifier: 'catalog:'
         version: 0.70.0
@@ -6535,6 +6539,12 @@ packages:
 
   lit-html@3.3.3:
     resolution: {integrity: sha512-el8M6jK2o3RXBnrSHX3ZKrsN8zEV63pSExTO1wYJz7QndGYZ8353e2a5PPX+qHe2aGayfnchQmkAojaWAREOIA==}
+
+  lit-ui-router@1.15.0:
+    resolution: {integrity: sha512-bSkXolXTrFvjZwRqz4P/e3qSJycvy3BnqLtlz3doM2DwYDQPBvDiHaoyJHvwjZbtYd99fUJq7HkSC/38Szz9fA==}
+    peerDependencies:
+      '@uirouter/core': ^6.0.8
+      lit: ^2.0.0 || ^3.0.0
 
   lit-ui-router@1.7.0:
     resolution: {integrity: sha512-UK69ySdMwrAILx8aG9TYcNLlg/Q2CCrs1nqwnKumFlQXeNvjf+heH5l1KdfDEyyuBYafrzGxUMOLEZ2esiX3Tw==}
@@ -12526,6 +12536,12 @@ snapshots:
   lit-html@3.3.3:
     dependencies:
       '@types/trusted-types': 2.0.7
+
+  lit-ui-router@1.15.0(@uirouter/core@6.1.2)(lit@3.3.3):
+    dependencies:
+      '@oxc-project/runtime': 0.151.0
+      '@uirouter/core': 6.1.2
+      lit: 3.3.3
 
   lit-ui-router@1.7.0:
     dependencies:
