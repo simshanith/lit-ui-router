@@ -916,6 +916,52 @@ the path, so the worker can serve that app's own 404 page —
 user a way back into the app they were deep-linked into, instead of the
 site-wide page. Everything the worker needs is already in the verdict.
 
+## Parameterized routes and soft 404s
+
+The projection carries url **patterns**, not the records behind them. A
+route like `{ name: 'sheet', url: '/sheet/:num' }` accepts any segment, so
+`/sheet/99` earns a `shell` verdict and a 200 whether or not sheet 99
+exists. The client boots, finds nothing, and renders its in-router
+[404 state](./unmatched-urls) under a URL the server vouched for: the
+[level-2 soft 404](#the-server-support-spectrum), reintroduced by the shape
+of the app's own url. Every `:id` route ships it by default.
+
+When the ids are known at build time, narrow the param to them. An inline
+`{name:regexp}` placeholder replaces the default segment pattern:
+
+```ts
+const ids = ['1', '2A', '12i']; // build-time data: the sheets that exist
+
+const routes: RouteDeclaration[] = [
+  { name: 'sheet', url: `/sheet/{num:(?:${ids.join('|')})}` },
+];
+```
+
+Now `/sheet/99` matches nothing and verdicts `notFound`, a real 404, while
+`/sheet/2A` stays a shell. Keep the group non-capturing: the matcher wraps
+each param's pattern in its own capture group. If ids can contain regex
+metacharacters, escape each one before joining.
+
+Matching is case-sensitive by default, so with cased ids `/sheet/2a` is now
+a 404 too. When the lowercase form should reach the canonical url, add a
+case-insensitive redirect rule per id:
+
+```ts
+const redirects: RedirectRule[] = ids.map((num) => ({
+  pattern: new RegExp(`^/sheet/${num}$`, 'i'),
+  to: { state: 'sheet', params: { num } },
+}));
+```
+
+Rules run before route matching, so `/sheet/2a` 302s to `/sheet/2A`; the
+canonical url matches its own rule too, but a redirect that lands where it
+started is a no-op, and it stays a shell.
+
+This only works for an id set the build can enumerate, and the narrowed
+pattern is as current as the build that produced it. Ids that live in a
+database or API stay `:num`: the shell verdict and the client's 404 state
+are the correct degrade for what the server can't know.
+
 ## Links a server renderer can read
 
 Everything above is the verdict for one URL. The links the page ships are the
