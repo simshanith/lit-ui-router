@@ -1,10 +1,11 @@
 /**
  * EXPERIMENTAL — arrow keys walk the set, like a slide deck.
  *
- * Reads the router's own globals rather than tracking state itself:
- * `router.globals.current` / `.params` are the single source of truth for
- * "which sheet am I on", so this stays correct through back/forward, a deep
- * link, and the `/office` redirect alike.
+ * Takes one `snapshotRoute(router)` per key press rather than tracking state
+ * itself: the router's settled route is the single source of truth for "which
+ * sheet am I on", so this stays correct through back/forward, a deep link, and
+ * the `/office` redirect alike, and a transition that lands while the manifest
+ * loads cannot move the sheet the step is taken from.
  *
  * Focus follows the walk: once the arriving sheet has rendered, its title
  * takes focus (without scrolling — the router already scrolled to the top),
@@ -12,6 +13,7 @@
  * lands on the document rather than on a stale link.
  */
 import type { UIRouterLit } from 'lit-ui-router';
+import { snapshotRoute } from 'lit-ui-router-effect';
 import { loadManifest } from '../manifest.ts';
 import { viewRendered } from './view-rendered.ts';
 
@@ -35,10 +37,11 @@ export function installKeyboardWalk(router: UIRouterLit): void {
     const active = document.activeElement;
     if (active && (TYPING.has(active.tagName) || (active as HTMLElement).isContentEditable))
       return;
-    if (router.globals.current.name !== 'atlas.sheet') return;
+    const route = snapshotRoute(router);
+    if (!route.includes('atlas.sheet')) return;
 
     void loadManifest().then((manifest) => {
-      const here = String(router.globals.params.num).toLowerCase();
+      const here = String(route.params.num).toLowerCase();
       const index = manifest.sheets.findIndex((sheet) => sheet.id === here);
       const next = manifest.sheets[index + step];
       if (!next) return;

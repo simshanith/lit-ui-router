@@ -1,6 +1,8 @@
+import { Effect, Stream } from 'effect';
 import { render } from 'lit';
 import 'lit-ui-router-ssr/register';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
+import { routeRef } from 'lit-ui-router-effect';
 import { onXrefClick } from './fragment.ts';
 import type { XrefDetail } from './fragment.ts';
 import { installLattice } from './lattice.ts';
@@ -33,14 +35,13 @@ installExperimental(router);
 const root = document.getElementById('root');
 if (!root) throw new Error('#root is missing from index.html');
 
-// THE BOOT: start, await the first successful transition, then adopt. The
-// walk wakes every served <ui-view> with the settled router already in hand.
-const booted = new Promise<void>((resolve) => {
-  const off = router.transitionService.onSuccess({}, () => {
-    off();
-    resolve();
-  });
-});
+// THE BOOT: seat the route ref, start, await its first settled snapshot, then
+// adopt. `changes` replays the latest value, so a tick that lands before the
+// stream subscribes is still seen. The walk wakes every served <ui-view> with
+// the settled router already in hand.
+const booted = Effect.runPromise(
+  Stream.runHead(Stream.filter(routeRef(router).changes, (route) => route.transition !== undefined)),
+);
 router.start();
 await booted;
 

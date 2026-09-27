@@ -23,6 +23,7 @@ import '@lit-labs/ssr/lib/install-global-dom-shim.js';
 import { readFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { isDeepStrictEqual } from 'node:util';
 // Type-only, so they are erased and the values still arrive by dynamic import.
 import type { LitStateDeclaration, UIRouterLit as LitRouter } from 'lit-ui-router';
 import type { Transition } from '@uirouter/core';
@@ -61,6 +62,7 @@ await import('lit-ui-router-ssr/register');
 const { UIRouterLit } = await import('lit-ui-router/pure');
 const { installServerLocation } = await import('ui-router-server/location');
 const { prerender } = await import('lit-ui-router-ssr');
+const { RefController, routeRef } = await import('lit-ui-router-effect');
 const views = await import('./src/views.ts');
 
 /**
@@ -182,6 +184,46 @@ const goTo = async (path: string): Promise<void> => {
   await settled;
 };
 
+/** The sheet each `/sheet/*` page is, by path. */
+const sheetOf = new Map(PLATES.map((row): [string, string] => [href.sheet(row.num), row.num]));
+const routeRefFailures: string[] = [];
+let routeRefReads = 0;
+let routeRefMisses = 0;
+let routeRefSheets = 0;
+
+/**
+ * The route ref's construction-time read, against the router the page was
+ * rendered from: a `RefController` on a host that never connects reads a
+ * directly-given ref once, and `.value` must be the settled route.
+ */
+const checkRouteRef = (path: string): void => {
+  const host = {
+    addController() {},
+    removeController() {},
+    requestUpdate() {},
+    updateComplete: Promise.resolve(true),
+  };
+  const { value } = new RefController(host, [routeRef(router)], (route) => route);
+  const { current, params } = router.globals;
+  const sheet = sheetOf.get(path);
+  const misses = [
+    value.current?.name === current.name
+      ? ''
+      : `reads ${String(value.current?.name)}, globals ${current.name}`,
+    isDeepStrictEqual(value.params, Object.fromEntries(Object.entries(params)))
+      ? ''
+      : 'params differ from globals.params',
+    sheet === undefined || value.params.num === sheet
+      ? ''
+      : `reads sheet ${String(value.params.num)}, page is ${sheet}`,
+  ].filter(Boolean);
+  routeRefReads += 1;
+  if (sheet !== undefined) routeRefSheets += 1;
+  if (misses.length === 0) return;
+  routeRefMisses += 1;
+  for (const miss of misses) routeRefFailures.push(`${path}: routeRef ${miss}`);
+};
+
 /** Every path that gets a page, and the `<title>` its document carries. */
 const titles = new Map<string, string>([
   [href.gallery, TITLES.gallery],
@@ -220,6 +262,7 @@ const result = await prerender({
   // own light-DOM elements each fall back to a plain tag around their children.
   renderShell: async (_verdict, { path }) => {
     await goTo(path);
+    checkRouteRef(path);
     return views.page(router);
   },
   document: (body, { path }) => {
@@ -241,3 +284,16 @@ console.log(
 );
 
 if (result.warnings.length > 0) process.exitCode = 1;
+
+// Every render was read, and every plate is a page.
+const rendered = result.tally.shell + result.tally.document;
+if (routeRefReads !== rendered)
+  throw new Error(`prerender: routeRef read ${String(routeRefReads)} of ${String(rendered)} renders`);
+if (routeRefSheets !== PLATES.length)
+  throw new Error(`prerender: routeRef read ${String(routeRefSheets)} of ${String(PLATES.length)} sheets`);
+for (const failure of routeRefFailures) console.error(`prerender: ${failure}`);
+console.log(
+  `routeRef at construction: ${String(routeRefReads - routeRefMisses)}/` +
+    `${String(routeRefReads)} renders match router.globals (${String(routeRefSheets)} sheets by num)`,
+);
+if (routeRefFailures.length > 0) process.exitCode = 1;

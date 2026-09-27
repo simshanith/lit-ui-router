@@ -554,3 +554,85 @@ override), so `stateService.href(...)` returns `#/sheet/7B` rather than
 `/sheet/7B` on the server. This app doesn't hit that gap today — `prerender.ts`
 writes its own paths — but it blocks the sref hand-off (ask 2) from being
 useful once it lands, and needs to ship alongside it.
+
+## 8. `lit-ui-router-effect`
+
+The atlas takes `lit-ui-router-effect@0.1.1` and `effect@3.22.2` from npm. The
+package answers these route reads:
+
+- **The boot** (`src/main.ts`) seats `routeRef(router)` before `router.start()`
+  and awaits the first snapshot that carries a transition, `Stream.runHead`
+  over the ref's `changes`. `changes` replays the latest value, so the boot
+  cannot miss the tick it waits for.
+- **The index filter** (`GalleryView`, `src/views.ts`) reads
+  `snapshotRoute(router).params`: the same settled values on the server and in
+  the browser. With no router, the transition's params answer.
+- **The arrow-key walk** (`src/experimental/keyboard.ts`) takes one
+  `snapshotRoute(router)` per key press, before the manifest loads, so a
+  transition that lands in between cannot move the sheet the step is taken
+  from.
+
+The router's own hooks stay where the package has no answer: `onSuccess` for
+the document title and the scroll, which reads the `sheet` resolve; the
+Navigation API plugin's `intercept`, which reads the tail of `successfulTransitions`;
+the slideshow's `onBefore`, which must run before resolves start; the analytics
+`page_view`, a side effect; and `goTo`'s paired `onSuccess`/`onError` in
+`prerender.ts` (F3).
+
+**The guard.** Once the router settles on each page, `prerender.ts` builds a
+`RefController` over `routeRef(router)` on a host that never connects and
+checks its construction-time `.value` against `router.globals`: the state name,
+the params (deep), and on a `/sheet/*` page the sheet number. A miss prints the
+path and exits 1, and the read counts are checked against the tally and the
+manifest by a throw. The build prints:
+
+```text
+prerendered 29 pages + 1 × 404.html · 26 redirects → _redirects
+routeRef at construction: 30/30 renders match router.globals (24 sheets by num)
+```
+
+Against a build without the package, every prerendered page and `_redirects`
+are byte-identical apart from the main bundle's hashed filename and the About
+page's package list. The boot adopts the same nodes: `/`, `/about/`, `/log/`,
+`/specimen/`, `/sheet/7/` and `/city/` keep every served node, and a filtered
+gallery url drops its inner view's and renders that view cold.
+
+**The cost.** `effect` rides in the main chunk (vite 8.3.0, bytes, gzip -9):
+
+| File                  | Raw before | Raw after | Gzip before | Gzip after | Δ gzip  |
+| --------------------- | ---------- | --------- | ----------- | ---------- | ------- |
+| `index-*.js` (main)   | 187,218    | 366,955   | 57,701      | 112,776    | +55,075 |
+| artifact `index.html` | 7,584,364  | 7,765,964 | —           | —          | —       |
+
+Every other chunk is byte-identical, and the artifact file grows by 181,600
+bytes.
+
+Findings:
+
+- **F1 — the peer range excludes the rc line.** `lit-ui-router-effect@0.1.1`
+  peers on `lit-ui-router ^1.7.0`, and a caret range admits no prerelease, so
+  npm refuses the atlas's `^1.16.0-rc.1` with ERESOLVE. The atlas's answer is
+  a scoped `overrides` entry that hands the package the app's own range
+  (`"$lit-ui-router"`).
+- **F2 — a seek-path controller has no scoped-router fallback.** With no
+  `router` option, `RouterRefController` finds its router from the enclosing
+  `<ui-router>` on connect. Under `prerender()` nothing connects, so it renders
+  `initialValue`, where `srefHref` and `srefActiveClass` fall back to
+  `getScopedRouter()`. Probed on a router settled on `/sheet/7B`: with
+  `router: getScopedRouter()` the controller renders `7B`, without it `INIT`.
+  The fix is `options.router ?? getScopedRouter()`, which raises the
+  `lit-ui-router` peer floor to `^1.15.0`. Filed: #993 (draft PR #994).
+- **F3 — the ref has no failure channel.** `routeRef` is fed by `onSuccess`
+  alone, so every value it holds is settled and a failed transition never
+  reaches it. `goTo` keeps its `onError`, so a page that fails to settle fails
+  the build.
+- **F4 — `options.runtime` with real layers has no consumer.** The atlas has no
+  Effect services and no layers, and every call runs on Effect's default
+  runtime. A `ManagedRuntime` satisfies `RefRuntime` under the atlas's
+  TypeScript 7 config; that is a typecheck result only.
+- **F5 — routed views have no host.** Every routed component is a
+  `RoutedLitTemplate` function, so no element exists for `RefController` or
+  `RouterRefController` to attach to: the atlas's route reads are snapshot
+  reads, and no controller runs in the browser. The guard's stub host is the
+  only construction, and it is given its ref directly. No seek-path controller
+  renders on the server, where it would draw `initialValue` (F2).

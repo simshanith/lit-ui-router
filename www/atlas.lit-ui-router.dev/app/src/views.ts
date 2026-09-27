@@ -11,6 +11,7 @@ import { unsafeHTML } from 'lit/directives/unsafe-html.js';
 import { srefActiveClass, srefAriaCurrent, srefHref } from 'lit-ui-router/pure';
 import type { RoutedLitTemplate, UIRouterLit } from 'lit-ui-router';
 import { uiViewSlot } from 'lit-ui-router-ssr/client';
+import { snapshotRoute } from 'lit-ui-router-effect';
 import type {
   AscentRow,
   ExtraRow,
@@ -702,10 +703,10 @@ export const GalleryView: RoutedLitTemplate<ManifestResolves> = (props) => {
   const city = findExtra(manifest, 'city');
   // ONE line of issue record on the title sheet; the log itself is /log.
   const latest = (manifest.issueLog ?? []).find((entry) => entry.date);
-  // The key index's state is the url's: globals.params is current once the
-  // transition has settled, and the in-flight transition answers before that.
+  // The key index's state is the url's: the router's settled snapshot, the
+  // same read on the server and in the browser; with no router, the transition.
   const filter = readFilter(
-    (props?.router?.globals.params ?? props?.transition?.params()) as Record<string, unknown>,
+    props?.router ? snapshotRoute(props.router).params : props?.transition?.params(),
   );
   const shownAscent = ascent(manifest).filter((entry) => matchesFilter(entry.row.labels, filter));
   const shownAppendix = (manifest.appendix ?? []).filter((row) =>
@@ -1054,6 +1055,8 @@ export const AboutView: RoutedLitTemplate<ManifestResolves> = (props) => {
           <code>lit-ui-router</code>, <code>@uirouter/core</code>,
           <code>ui-router-server</code>,
           <code>ui-router-navigation-location-plugin</code>, <code>lit</code>,
+          <code>lit-ui-router-effect</code> and <code>effect</code> (the boot's
+          settled route, the index filter and the arrow-key walk),
           <code>cytoscape</code> (the four interactive plates) and <code>three</code>
           (the isometric city, imported only by <code>atlas.city</code>); at build
           time, <code>lit-ui-router-ssr</code> and <code>@lit-labs/ssr</code>. All from

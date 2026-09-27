@@ -129,9 +129,13 @@ badges in twenty-five is noise) and `basis` holds its slot with an em dash off t
 The card is therefore an `<article>`, not an `<a>`: the `h3`'s link is the one primary link and
 stretches over the card through a `::after`, and the key block sits above it on `z-index`, so
 nothing interactive is nested inside a link. One finding from that: `rules.initial({ state })` targets the state with no params and
-erases a first-load query; the function form hands `url.search` through (`router.ts`). Nothing in
-`src/*.ts` imports anything from `src/experimental/`. This layer is meant to be liftable into
-`examples/` as-is.
+erases a first-load query; the function form hands `url.search` through (`router.ts`). The boot
+awaits the first settled snapshot of `lit-ui-router-effect`'s `routeRef(router)` (`main.ts`), and the
+gallery reads its filter from `snapshotRoute(router)`, so the server and the browser read the same
+settled route. `package.json` carries a scoped `overrides` entry, which hands
+`lit-ui-router-effect` the app's own `lit-ui-router` range: the package's `^1.7.0` peer does not
+admit a `1.16.0-rc` release. Nothing in `src/*.ts` imports anything from `src/experimental/`. This
+layer is meant to be liftable into `examples/` as-is.
 
 Three base-layer details a Playwright pass against the deployed site taught, each with a comment at
 the line:
@@ -155,7 +159,7 @@ Delete the directory and that one line and the base app is unchanged.
 | --------------------- | ----------------------------------------------- | ---------------------------------------------------- |
 | `view-transitions.ts` | slideshow between sheets (View Transitions API, CSS keyframe fallback) | `onBefore` for the snapshot; `transition.promise` + `viewRendered()` for the release |
 | `view-rendered.ts`    | the missing "view has re-rendered" promise: lit's `updateComplete` on every `<ui-view>`, then on the `<atlas-plate>` it rendered | none — shared by the two below |
-| `keyboard.ts`         | ← / → walk the set; focus lands on the arriving sheet's title | none — reads `router.globals`            |
+| `keyboard.ts`         | ← / → walk the set; focus lands on the arriving sheet's title | none — reads `snapshotRoute(router)`     |
 | `analytics.ts`        | only the `page_view`s gtag cannot see for itself (below), and only if the staged page carries gtag (`VITE_GOOGLE_ANALYTICS_TRACKING_ID` at stage time) | `onSuccess` |
 
 **The analytics rule.** The atlas shares the flagship's GA stream, whose enhanced measurement counts
@@ -197,7 +201,7 @@ checks `matchMedia('(prefers-reduced-motion: reduce)')` before doing any work.
 ## Artifact build
 
 `npm run build:artifact` emits `dist-artifact/index.html` — the whole atlas as ONE self-contained
-file (~2.8 MB; three.js is a quarter of it) that can be published as a claude.ai Artifact. That host
+file (~7.8 MB) that can be published as a claude.ai Artifact. That host
 is strict in four ways, and each one is a line in the build:
 
 - **One file, no fetches — not even same-origin.** `artifact.ts` bakes `public/manifest.json` and
@@ -221,7 +225,7 @@ is strict in four ways, and each one is a line in the build:
 
 `src/mode.ts` is the one flag (`import.meta.env.MODE === 'artifact'`) the readers share; analytics
 is skipped in this mode. Nothing above changes the site build, which prerenders 29 pages +
-`404.html` and 18 redirects.
+`404.html` and 26 redirects.
 
 ## Server side
 
@@ -239,11 +243,13 @@ and is used twice:
   becomes `dist/404.html`. This file supplies the shell html and the titles, registers the same
   route table with the client's components and its own disk-backed resolves, and drives the router
   to each path; the render is `views.page(router)`, and `UiViewRenderer` draws each `<ui-view>`'s
-  routed component into the element's light DOM.
+  routed component into the element's light DOM. Once each page's router settles, a
+  `RefController` over `routeRef(router)` on a host that never connects must read the same route
+  as `router.globals`, or the build exits 1 (`SSR-VERDICT.md` §8).
 
-**The boot (`src/main.ts`).** `router.start()`, await the first successful transition, then
-`hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk wakes every served
-`<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
+**The boot (`src/main.ts`).** Seat `routeRef(router)`, `router.start()`, await the ref's first
+settled snapshot, then `hydrateRoot(root, page(router))` from `lit-ui-router-ssr/client`: the walk
+wakes every served `<ui-view>`, which adopts the nodes it already holds. A cold container — the dev server, the
 artifact build — returns `false` and the same template is rendered instead.
 
 What rendered, what did not, and what the package would need to close the gap is in
