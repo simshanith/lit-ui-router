@@ -26,7 +26,7 @@ pnpm add ui-router-navigation-location-plugin
 yarn add ui-router-navigation-location-plugin
 ```
 
-The type declarations reference the global `Navigation` and `NavigateEvent` types, which TypeScript ships from 6.0. On TypeScript 5.x, also install `@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.
+The type declarations reference the global `Navigation`, `NavigateEvent` and `NavigationInterceptOptions` types, which TypeScript ships from 6.0. On TypeScript 5.x, also install `@types/dom-navigation` and add `"dom-navigation"` to `compilerOptions.types`.
 
 ## Quick Start
 
@@ -46,7 +46,10 @@ router.plugin(navigationLocationPlugin);
 The plugin intercepts the navigations it starts, so a router transition commits as a same-document navigation. The `intercept` option returns the [`NavigationInterceptOptions`](https://developer.mozilla.org/en-US/docs/Web/API/NavigateEvent/intercept#options) for each of those navigations, with the router available as `event.info.uiRouter` — it is where the app's extra work goes: view transitions, analytics, progress UI. The function runs after the router transition has committed, so `handler` governs when `navigation.transition.finished` settles and when the browser resets focus and restores scroll, not the transition itself. `focusReset` and `scroll` pass through.
 
 ```typescript
-import { navigationLocationPlugin } from 'ui-router-navigation-location-plugin';
+import {
+  navigationLocationPlugin,
+  type NavigationLocationPluginOptions,
+} from 'ui-router-navigation-location-plugin';
 
 router.plugin(navigationLocationPlugin, {
   intercept: (event) => ({
@@ -54,8 +57,10 @@ router.plugin(navigationLocationPlugin, {
       // the app's extra work: view transitions, analytics, progress UI…
     },
   }),
-});
+} satisfies NavigationLocationPluginOptions);
 ```
+
+`router.plugin()` types its options as `any`, so `satisfies` is what gives `event` its type under `strict`.
 
 Without the option, the plugin intercepts with a handler that resolves immediately.
 
