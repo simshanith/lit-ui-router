@@ -60,10 +60,13 @@ describe('googleAnalyticsHook page_view', () => {
     vi.stubGlobal('gtag', (command: string, name: string, params: unknown) => {
       if (command === 'event' && name === 'page_view') pageViews.push(params);
     });
+    // the hook traces every page_view decision to console.debug
+    vi.spyOn(console, 'debug').mockImplementation(() => {});
   });
 
   afterEach(() => {
     vi.unstubAllGlobals();
+    vi.restoreAllMocks();
     history.replaceState(null, '', originalHref);
     featureFlags.resetAll();
     sessionStorage.clear();
@@ -113,6 +116,10 @@ describe('googleAnalyticsHook page_view', () => {
     it('sends nothing under pushState — gtag hooks history directly', () => {
       install('pushState')();
       expect(pageViews).toEqual([]);
+      expect(console.debug).toHaveBeenCalledWith(
+        'manual gtag page_view tracking skipped',
+        expect.any(Object),
+      );
     });
 
     it('sends every transition under hash — history is never touched', () => {
