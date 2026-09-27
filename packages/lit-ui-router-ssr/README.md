@@ -113,10 +113,14 @@ document on the server, so it never needs this package on the client.
 
 It imports `lit-ui-router-ssr/register` in place of `lit-ui-router`, ahead of anything else that
 registers `<ui-view>`. That entry defines `<ui-router>` from core and `<ui-view>` with
-`withServedRender(UiView)`. Then the router boots and one call adopts the page:
+`withServedRender(UiView)`. Every value the app takes from the router — `UIRouterLit`, `srefHref`,
+`srefActiveClass`, `srefAriaCurrent` — comes from `lit-ui-router/pure`, which registers nothing;
+the root entry registers the plain `<ui-view>` as a side effect, and imported after this one it
+warns that the tag is already defined. Then the router boots and one call adopts the page:
 
 ```typescript
 import 'lit-ui-router-ssr/register';
+import { UIRouterLit, srefHref } from 'lit-ui-router/pure';
 import { hydrateRoot } from 'lit-ui-router-ssr/client';
 
 router.start();
@@ -125,6 +129,11 @@ const release = hydrateRoot(root, page(router));
 ```
 
 A `<ui-view>` another class already defined throws, naming both ways out.
+
+The build-time entry that calls `prerender()` imports `lit-ui-router-ssr/register` too, after the
+DOM shim and before the views. `UiViewRenderer` draws the served class, and a `<ui-view>` nothing
+defined on the server renders as an inert element with an empty part pair — no error, and every
+page's body missing.
 
 ### An app with its own registry
 
