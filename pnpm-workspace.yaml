@@ -130,6 +130,41 @@ catalogs:
   typescript6:
     typescript: ^6.0.3
     typescript-6: npm:typescript@^6.0.3
+  workspace:
+    '@tools/bootstrap': workspace:*
+    '@tools/build_and_test': workspace:*
+    '@tools/bundle-probe': workspace:*
+    '@tools/compat-guards': workspace:*
+    '@tools/embed-heights': workspace:*
+    '@tools/eslint': workspace:*
+    '@tools/eslint-ts-parser': workspace:*
+    '@tools/happy-dom': workspace:*
+    '@tools/lcov-rebase': workspace:*
+    '@tools/lint-elements': workspace:*
+    '@tools/lit-template-lint': workspace:*
+    '@tools/lit-test-env': workspace:*
+    '@tools/oxc-emit': workspace:*
+    '@tools/release-config': workspace:*
+    '@tools/shared': workspace:*
+    '@tools/typedoc-plugin-lit-ui-router': workspace:*
+    '@tools/vue-check': workspace:*
+    '@tools/warn-lanes': workspace:*
+    '@tools/wintercg-globals': workspace:*
+    '@tools/workers-builds': workspace:*
+    '@www/lit-ui-router.dev': workspace:*
+    eslint-plugin-lit-ui-router: workspace:*
+    examples: workspace:*
+    lit-ui-router: workspace:*
+    lit-ui-router-effect: workspace:*
+    lit-ui-router-mobx: workspace:*
+    lit-ui-router-ssr: workspace:*
+    sample-app-lit-effect: workspace:*
+    sample-app-lit-mobx: workspace:*
+    sample-app-lit-vanilla: workspace:*
+    sample-app-routes: workspace:*
+    sample-app-shared: workspace:*
+    ui-router-navigation-location-plugin: workspace:*
+    ui-router-server: workspace:*
 
 allowBuilds:
   cypress: true
