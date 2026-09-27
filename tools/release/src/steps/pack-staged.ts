@@ -1,7 +1,7 @@
 // The one publish-shape packer, shared by the CI pack task and the publish
 // step. Produces a dev-stripped tarball WITHOUT mutating the source package:
-// the package is copied into an in-workspace staging dir (so `pnpm pack`
-// resolves `catalog:`/`workspace:` against the real workspace, upward), the
+// the package is copied into an in-workspace staging dir (`pnpm pack` is
+// pointed at the real workspace to resolve `catalog:`/`workspace:`), the
 // COPY's manifest is stripped, and pnpm packs there. The source tree is never
 // touched — no strip-in-place, no restore, so a crash can't leave a dirty
 // working tree. Field decisions and the tarball-pick live in ./release-pack.core.ts,
@@ -12,6 +12,7 @@ import { dirname, join } from 'node:path';
 
 import { readProjectManifest } from '@pnpm/workspace.project-manifest-reader';
 
+import { workspaceRoot } from '@tools/bootstrap/root.ts';
 import { defaultStream } from '@tools/shared/exec.ts';
 import { keepEntry } from './pack-staged.core.ts';
 import { pickTarball, strippedManifest } from './release-pack.core.ts';
@@ -43,8 +44,11 @@ export async function packPublishTarball(
       await readProjectManifest(staging);
     await writeProjectManifest(strippedManifest(manifest));
 
+    // pnpm >= 12.6 drops catalogs in a dir no `packages:` glob selects
+    // (pnpm/pnpm#16275); only the NPM_CONFIG_ spelling restores the workspace.
     await defaultStream('pnpm', ['pack', '--pack-destination', staging], {
       cwd: staging,
+      env: { ...process.env, NPM_CONFIG_WORKSPACE_DIR: workspaceRoot },
     });
 
     const packed = join(staging, pickTarball(await readdir(staging)));
