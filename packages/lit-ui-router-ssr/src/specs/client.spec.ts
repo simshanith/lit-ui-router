@@ -560,6 +560,7 @@ const servedDetail = async (): Promise<string> => {
 
 describe('the pin the walk leaves on a served view', () => {
   it('is installed once, however many walks reach the element', async () => {
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
     const { container: first } = serve(await drawShell('/shell'));
     const firstRouter = makeRouter();
     await goTo(firstRouter, '/shell');
@@ -584,6 +585,13 @@ describe('the pin the walk leaves on a served view', () => {
     expect(view.querySelector('h1')?.textContent).toContain('shell hello');
     // One pin, answered once: nothing is left to re-adopt this live view.
     expect(requestContext(view, adoptUiViewContext)).toBeUndefined();
+    // The second walk hands the moved <ui-router> its own router.
+    expect(warn).toHaveBeenCalledWith(
+      expect.stringContaining(
+        'was given a different uiRouter after its first update',
+      ),
+      app,
+    );
   });
 
   it('adopts a descendant without being spent by it', async () => {

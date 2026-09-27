@@ -487,7 +487,7 @@ packageExtensionsChecksum: sha256-Y0sNu5qFH/iCIiJT3szVOHXtBEeSAPVXpkAqOsflEOY=
 
 patchedDependencies:
   '@api-viewer/docs': 6cfa0893375a4ba334488a5b9e4a56178c62231d864b5271bf4c7a25a0e4f9ac
-  lit-dialog: d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a
+  lit-dialog: 37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37
 
 importers:
 
@@ -794,7 +794,7 @@ importers:
         version: 3.3.3
       lit-dialog:
         specifier: 'catalog:'
-        version: 2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a)
+        version: 2.0.1(patch_hash=37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37)
       lit-ui-router:
         specifier: catalog:workspace
         version: link:../../packages/lit-ui-router
@@ -12503,7 +12503,7 @@ snapshots:
       vscode-html-languageservice: 3.1.0
       web-component-analyzer: 2.0.0
 
-  lit-dialog@2.0.1(patch_hash=d37197dba1504e881c6bcb8fed0d928fbcf4203821b2519be07c5d28cb069d5a):
+  lit-dialog@2.0.1(patch_hash=37ea59e3d9469863602cc50f6df73c8ed55814caae1f875ac8f0fa9e45d65a37):
     dependencies:
       lit: 3.3.3
 
