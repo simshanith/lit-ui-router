@@ -149,7 +149,7 @@ description = "Compute the bumped version, branch, commit, push, and open the re
 usage = '''
 flag "--package <package>" help="Package to bump" required=#true env="PACKAGE"
 flag "--increment <increment>" help="Version increment (other/none pair with --other-increment)" required=#true env="INCREMENT" {
-  choices "major" "minor" "patch" "other" "none"
+  choices "major" "minor" "patch" "prerelease" "other" "none"
 }
 flag "--other-increment <other_increment>" help="Custom version for --increment other (e.g. a prerelease)" env="OTHER_INCREMENT"
 flag "--pr-base <pr_base>" help="GitHub PR base branch" required=#true env="PR_BASE"
