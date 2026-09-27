@@ -74,7 +74,7 @@ export interface NavigationLocationPluginOptions {
    *       // view transitions, analytics, progress UI
    *     },
    *   }),
-   * });
+   * } satisfies NavigationLocationPluginOptions);
    * ```
    */
   intercept?: (event: UIRouterNavigateEvent) => NavigationInterceptOptions;
