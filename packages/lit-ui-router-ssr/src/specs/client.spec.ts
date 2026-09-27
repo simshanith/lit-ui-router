@@ -281,6 +281,9 @@ describe('the adopter hydrateRoot provides', () => {
       'holds a nested part in the middle':
         '<p class="lead">lead</p><!--ui-view:lit-part--><span>mid</span><!--ui-view:/lit-part-->' +
         '<p class="plate" id="plate">plate</p>',
+      'holds a node marker beside a nested part':
+        '<!--ui-view:lit-part-->lead<!--ui-view:/lit-part--><!--ui-view:lit-node 0-->' +
+        '<p class="plate" id="plate">plate</p>',
       'holds no nested part': '<p class="plate" id="plate">plate</p>',
     };
 
