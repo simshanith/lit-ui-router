@@ -15,7 +15,7 @@
     "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
-    "@tools/shared": "workspace:*",
+    "@tools/shared": "catalog:workspace",
     "@types/node": "catalog:",
     "lit-analyzer": "catalog:",
     "oxfmt": "catalog:",
