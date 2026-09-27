@@ -467,6 +467,109 @@ catalogs:
     typescript:
       specifier: npm:@typescript/typescript6@^6.0.2
       version: 6.0.2
+  workspace:
+    '@tools/bootstrap':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/build_and_test':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/bundle-probe':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/compat-guards':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/embed-heights':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/eslint':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/eslint-ts-parser':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/happy-dom':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/lcov-rebase':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/lint-elements':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/lit-template-lint':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/lit-test-env':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/oxc-emit':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/release-config':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/shared':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/typedoc-plugin-lit-ui-router':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/vue-check':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/warn-lanes':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/wintercg-globals':
+      specifier: workspace:*
+      version: workspace:*
+    '@tools/workers-builds':
+      specifier: workspace:*
+      version: workspace:*
+    '@www/lit-ui-router.dev':
+      specifier: workspace:*
+      version: workspace:*
+    eslint-plugin-lit-ui-router:
+      specifier: workspace:*
+      version: workspace:*
+    examples:
+      specifier: workspace:*
+      version: workspace:*
+    lit-ui-router:
+      specifier: workspace:*
+      version: workspace:*
+    lit-ui-router-effect:
+      specifier: workspace:*
+      version: workspace:*
+    lit-ui-router-mobx:
+      specifier: workspace:*
+      version: workspace:*
+    lit-ui-router-ssr:
+      specifier: workspace:*
+      version: workspace:*
+    sample-app-lit-effect:
+      specifier: workspace:*
+      version: workspace:*
+    sample-app-lit-mobx:
+      specifier: workspace:*
+      version: workspace:*
+    sample-app-lit-vanilla:
+      specifier: workspace:*
+      version: workspace:*
+    sample-app-routes:
+      specifier: workspace:*
+      version: workspace:*
+    sample-app-shared:
+      specifier: workspace:*
+      version: workspace:*
+    ui-router-navigation-location-plugin:
+      specifier: workspace:*
+      version: workspace:*
+    ui-router-server:
+      specifier: workspace:*
+      version: workspace:*
 
 overrides:
   '@api-viewer/common>lit': ^3.3.3
@@ -572,6 +675,9 @@ importers:
         specifier: catalog:workspace
         version: link:../../www/lit-ui-router.dev
     devDependencies:
+      '@tools/bootstrap':
+        specifier: catalog:workspace
+        version: link:../../tools/bootstrap
       '@tools/shared':
         specifier: catalog:workspace
         version: link:../../tools/shared
@@ -5295,7 +5401,6 @@ packages:
 
   concat-stream@2.0.0:
     resolution: {integrity: sha512-MWufYdFw53ccGjCA+Ol7XJYpAlW6/prSMzuPOTRnJGcGzuhLn4Scrz7qf6o8bROZ514ltazcIFJZevcfbo0x7A==}
-    engines: {'0': node >= 6.0}
 
   concurrently@10.0.5:
     resolution: {integrity: sha512-JaP/CoftUrCcAFW/g//RbgEGwlelnEae6cfBLgH6ZdO6s8jPkn6p9SB9u6pdVxYXoiSnFqseOlHfrEfF82TVOg==}
@@ -5837,7 +5942,6 @@ packages:
 
   extsprintf@1.3.0:
     resolution: {integrity: sha512-11Ndz7Nv+mvAC1j0ktTa7fAb0vLyGGX+rMHNBYQviQDGU0Hw7lhctJANqbPhu9nV9/izT/IntTgZ7Im/9LJs9g==}
-    engines: {'0': node >=0.6.0}
 
   fast-check@3.23.2:
     resolution: {integrity: sha512-h5+1OzzfCC3Ef7VbtKdcv7zsstUQwUDlYpUTvjeUsJAssPgLn7QzbboPtL5ro04Mq0rPOsMzl7q5hIbRs2wD1A==}
@@ -6393,11 +6497,9 @@ packages:
 
   jsonparse@1.3.1:
     resolution: {integrity: sha512-POQXvpdL69+CluYsillJ7SUhKvytYjW9vG/GKpnf+xP8UWgYEM/RaMzHHofbALDiKbbP1W8UEYmgGl39WkPZsg==}
-    engines: {'0': node >= 0.2.0}
 
   jsprim@2.0.2:
     resolution: {integrity: sha512-gqXddjPqQ6G40VdnI6T6yObEC+pDNvyP95wdQhkWkg7crHH3km5qP1FsOXEkzEQwnz6gz5qGTn1c2Y52wP3OyQ==}
-    engines: {'0': node >=0.6.0}
 
   keyv@4.5.4:
     resolution: {integrity: sha512-oxVHkHR/EJf2CNXnWxRLW6mg7JyCCUcG0DtEGmL2ctUo1PNTin1PUil+r/+4r5MpVgC/fn1kjsx7mjSujKqIpw==}
@@ -7889,7 +7991,6 @@ packages:
 
   verror@1.10.0:
     resolution: {integrity: sha512-ZZKSmDAEFOijERBLkmYfJ+vmk3w+7hOLYDNkRCuRuMJGEmqYNCNLyBBFwWKVMhfwaEF3WOd0Zlw86U/WC/+nYw==}
-    engines: {'0': node >=0.6.0}
 
   vfile-message@4.0.3:
     resolution: {integrity: sha512-QTHzsGd1EhbZs4AsQ20JX1rC3cOlt/IWJruk893DfLRr57lcnOeMaWG4K0JrRta4mIJZKth2Au3mM3u03/JWKw==}

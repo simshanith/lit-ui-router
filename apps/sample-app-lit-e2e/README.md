@@ -49,8 +49,10 @@ mise run build_www   # just the build
 ```
 
 The umbrella builds through the same `build_www` and then hands
-`start-server-and-test` the bare `pnpm` form below, not the serve task, so the
-build runs once per `mise run test_e2e`. Without mise,
+`start-server-and-test` the www launcher, `www/lit-ui-router.dev/scripts/wrangler-dev.ts`,
+by path — not the serve task, so the build runs once per `mise run test_e2e`. Nor the `pnpm`
+form below: `start-server-and-test` stops the server with SIGINT, and a
+`pnpm --filter` run reports that as a failed recursive run. Without mise,
 `turbo run wrangler:dev --filter=@www/lit-ui-router.dev` builds and serves the
 same way — `wrangler:dev` declares `dependsOn: ["build"]` — reaching the server
 through a `pnpm run` hop the mise task does not have. Bare

@@ -1,3 +1,6 @@
+#!/usr/bin/env node
+import { join } from 'node:path';
+
 import { binPath, execve } from '@tools/shared/execve.ts';
 import wrangler from 'wrangler/package.json' with { type: 'json' };
 
@@ -17,6 +20,9 @@ if (args.some((arg) => arg === '--port' || arg.startsWith('--port='))) {
   console.error('wrangler-dev.ts: set WWW_DEV_PORT, not --port');
   process.exit(2);
 }
+
+// wrangler reads wrangler.jsonc and .env from cwd, so any caller gets this package's
+process.chdir(join(import.meta.dirname, '..'));
 
 // argv[0] is ours to set; env defaults to process.env
 execve('wrangler-dev', process.execPath, [
