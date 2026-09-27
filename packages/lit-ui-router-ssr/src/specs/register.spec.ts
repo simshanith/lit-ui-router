@@ -59,6 +59,18 @@ describe('lit-ui-router-ssr/register', () => {
     expect(defined.get('ui-view')).toBe(first);
   });
 
+  it("keeps core's root entry silent when it runs after the served register", async () => {
+    const defined = stubRegistry();
+    await load();
+    const served = defined.get('ui-view');
+    const warn = vi.spyOn(console, 'warn').mockImplementation(() => {});
+
+    await import('lit-ui-router');
+
+    expect(defined.get('ui-view')).toBe(served);
+    expect(warn).not.toHaveBeenCalled();
+  });
+
   it('defines a class that answers the slot the enclosing render reaches with noChange', () => {
     const Served = withServedRender(UiView);
 

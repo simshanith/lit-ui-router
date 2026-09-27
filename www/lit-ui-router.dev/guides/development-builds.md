@@ -77,11 +77,13 @@ that renders once with its initial value and never again.
 ## What still warns in production
 
 Two warnings are not part of the split and ship in both builds: `<ui-router>`
-and `<ui-view>` each warn if their tag name is already defined, then skip
-registration. That is a first-definition-wins degradation rather than a
-`define()` throw, and it usually means two copies of the package are loaded —
-worth saying in production, because it is a packaging fault rather than an
-authoring mistake.
+and `<ui-view>` each warn if another class already holds their tag name, name
+that class, then skip registration. That is a first-definition-wins degradation
+rather than a `define()` throw. A subclass of their own element passes silently:
+it is a deliberate extension, and it is how `lit-ui-router-ssr/register` takes
+`<ui-view>`. A foreign class usually means two copies of the package are
+loaded — worth saying in production, because it is a packaging fault rather
+than an authoring mistake.
 
 ## Catching the same problems at author time
 
