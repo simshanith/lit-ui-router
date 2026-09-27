@@ -1096,6 +1096,32 @@ describe('UiView', () => {
       }
     });
 
+    it('should render a late provider’s state in its first update, without a change-in-update warning', async () => {
+      router = createTestRouter(homeStates);
+      router.start();
+      await routerGo(router, 'home');
+      // lit issues each warning once per realm; forget any earlier one so a repeat here is seen.
+      const issued = (globalThis as { litIssuedWarnings?: Set<string> })
+        .litIssuedWarnings;
+      for (const entry of issued ?? []) {
+        if (entry.includes('change-in-update')) issued!.delete(entry);
+      }
+      const warn = vi.spyOn(console, 'warn');
+      const uiView = document.createElement('ui-view');
+      container.appendChild(uiView);
+      const uninstall = provideRouter(container, router);
+      try {
+        expect(await uiView.updateComplete).toBe(true);
+        expect(uiView.querySelector('.home-content')).not.toBeNull();
+        expect(warn).not.toHaveBeenCalledWith(
+          expect.stringContaining('change-in-update'),
+        );
+      } finally {
+        warn.mockRestore();
+        uninstall();
+      }
+    });
+
     it('should re-register with the <ui-router> it is moved under', async () => {
       // Its own declarations per router: registering one twice rebinds it to the later registry.
       const ownHomeStates = (): LitStateDeclaration[] => [
